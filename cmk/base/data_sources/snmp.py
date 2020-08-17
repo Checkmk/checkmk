@@ -345,7 +345,10 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
 
     @property
     def _file_cache(self) -> ABCFileCache:
-        return SNMPFileCache.from_json(self.configure_file_cache(), logger=self._logger)
+        return SNMPFileCache.from_json(
+            self.configurator.file_cache.configure(),
+            logger=self._logger,
+        )
 
     def _execute(
         self,

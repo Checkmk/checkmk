@@ -245,7 +245,7 @@ def _make_host_sections(
     multi_host_sections = MultiHostSections()
     for hostname, ipaddress, sources in nodes:
         for source in sources:
-            source.set_max_cachefile_age(max_cachefile_age)
+            source.configurator.file_cache.max_age = max_cachefile_age
             host_sections = multi_host_sections.setdefault(
                 HostKey(hostname, ipaddress, source.configurator.source_type),
                 source.default_host_sections,

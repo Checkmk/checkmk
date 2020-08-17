@@ -40,7 +40,7 @@ from cmk.base.exceptions import MKAgentError, MKEmptyAgentData, MKIPAddressLooku
 
 from ._cache import SectionStore
 
-__all__ = ["ABCHostSections", "ABCConfigurator", "ABCDataSource", "Mode"]
+__all__ = ["ABCHostSections", "ABCConfigurator", "ABCDataSource", "FileCacheConfigurator", "Mode"]
 
 
 class Mode(enum.Enum):
@@ -163,6 +163,60 @@ class ABCParser(Generic[BoundedAbstractRawData, BoundedAbstractHostSections],
         raise NotImplementedError
 
 
+class FileCacheConfigurator:
+    """Hold the configuration to FileCache."""
+
+    # TODO: Clean these options up! We need to change all call sites to use
+    #       a single DataSources() object during processing first. Then we
+    #       can change these class attributes to object attributes.
+    #
+    # Set by the user via command line to prevent using cached information at all.
+    # Is also set by inventory for SNMP checks to handle the special situation that
+    # the inventory is not allowed to use the regular checking based SNMP data source
+    # cache.
+    disabled: bool = False
+    snmp_disabled: bool = False
+    agent_disabled: bool = False
+    # Set by the code in different situations where we recommend, but not enforce,
+    # to use the cache. The user can always use "--cache" to override this.
+    maybe = False
+    # Is set by the "--cache" command line. This makes the caching logic use
+    # cache files that are even older than the max_cachefile_age of the host/mode.
+    use_outdated = False
+
+    def __init__(
+        self,
+        path: Union[Path, str],
+        fetcher_type: FetcherType,
+        *,
+        max_age: Optional[int] = None,
+        simulation: bool = False,
+    ):
+        super().__init__()
+        self.path = Path(path)
+        self.fetcher_type: FetcherType = fetcher_type
+        self.max_age: Optional[int] = max_age
+        self.simulation: bool = simulation
+
+    @classmethod
+    def reset_maybe(cls):
+        cls.maybe = not cls.disabled
+
+    def configure(self) -> Dict[str, Any]:
+        disabled = self.disabled
+        if self.fetcher_type is FetcherType.SNMP:
+            disabled |= self.snmp_disabled
+        else:
+            disabled |= self.agent_disabled
+        return {
+            "path": str(self.path),
+            "max_age": self.max_age,
+            "disabled": disabled,
+            "use_outdated": self.use_outdated,
+            "simulation": self.simulation,
+        }
+
+
 class ABCConfigurator(abc.ABC):
     """Hold the configuration to fetchers and checkers.
 
@@ -199,7 +253,11 @@ class ABCConfigurator(abc.ABC):
         if not persisted_section_dir:
             persisted_section_dir = Path(cmk.utils.paths.var_dir) / "persisted_sections" / self.id
 
-        self.cache_file_path: Final[Path] = cache_dir / self.hostname
+        self.file_cache = FileCacheConfigurator(
+            cache_dir / self.hostname,
+            self.fetcher_type,
+            simulation=config.simulation_mode,
+        )
         self.persisted_sections_file_path: Final[Path] = persisted_section_dir / self.hostname
 
         self.host_config: Final[HostConfig] = HostConfig.make_host_config(hostname)
@@ -244,21 +302,6 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
                     metaclass=abc.ABCMeta):
     """Base checker class."""
 
-    # TODO: Clean these options up! We need to change all call sites to use
-    #       a single DataSources() object during processing first. Then we
-    #       can change these class attributes to object attributes.
-    #
-    # Set by the user via command line to prevent using cached information at all.
-    # Is also set by inventory for SNMP checks to handle the special situation that
-    # the inventory is not allowed to use the regular checking based SNMP data source
-    # cache.
-    _no_cache = False
-    # Set by the code in different situations where we recommend, but not enforce,
-    # to use the cache. The user can always use "--cache" to override this.
-    _may_use_cache_file = False
-    # Is set by the "--cache" command line. This makes the caching logic use
-    # cache files that are even older than the max_cachefile_age of the host/mode.
-    _use_outdated_cache_file = False
     _use_outdated_persisted_sections = False
 
     def __init__(
@@ -279,8 +322,6 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
             self.configurator.persisted_sections_file_path,
             self._logger,
         )
-
-        self._max_cachefile_age: Optional[int] = None
 
         # Runtime data (managed by self.run()) - Meant for self.get_summary_result()
         self._exception: Optional[Exception] = None
@@ -475,35 +516,6 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     def _file_cache(self) -> ABCFileCache:
         raise NotImplementedError
 
-    def configure_file_cache(self) -> Dict[str, Any]:
-        return {
-            "path": str(self.configurator.cache_file_path),
-            "max_age": self._max_cachefile_age,
-            "agent_disabled": self.is_agent_cache_disabled(),
-            "disabled": self.get_may_use_cache_file(),
-            "use_outdated": self._use_outdated_cache_file,
-            "simulation": config.simulation_mode,
-        }
-
-    def set_max_cachefile_age(self, max_cachefile_age: int) -> None:
-        self._max_cachefile_age = max_cachefile_age
-
-    @classmethod
-    def disable_data_source_cache(cls) -> None:
-        cls._no_cache = True
-
-    @classmethod
-    def is_agent_cache_disabled(cls) -> bool:
-        return cls._no_cache
-
-    @staticmethod
-    def get_may_use_cache_file() -> bool:
-        return ABCDataSource._may_use_cache_file
-
-    @staticmethod
-    def set_may_use_cache_file(state: bool = True) -> None:
-        ABCDataSource._may_use_cache_file = state
-
     def get_summary_result(self) -> ServiceCheckResult:
         """Returns a three element tuple of state, output and perfdata (list) that summarizes
         the execution result of this data source.
@@ -540,7 +552,3 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     @classmethod
     def use_outdated_persisted_sections(cls) -> None:
         cls._use_outdated_persisted_sections = True
-
-    @classmethod
-    def set_use_outdated_cache_file(cls, state: bool = True) -> None:
-        cls._use_outdated_cache_file = state

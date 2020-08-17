@@ -8,7 +8,7 @@ from contextlib import suppress
 
 import pytest  # type: ignore[import]
 
-from cmk.base.data_sources import ABCDataSource
+from cmk.base.data_sources import ABCDataSource, FileCacheConfigurator
 from cmk.base.data_sources.agent import AgentDataSource
 from cmk.base.data_sources.snmp import SNMPDataSource
 
@@ -25,12 +25,10 @@ def reset_mutable_global_state():
             delattr(cls, attr)
 
     yield
-    delete(AgentDataSource, "_use_outdated_cache_file")
     delete(AgentDataSource, "_use_outdated_persisted_sections")
-    delete(SNMPDataSource, "_no_cache")
     delete(SNMPDataSource, "_use_outdated_persisted_sections")
 
-    reset(ABCDataSource, "_no_cache", False)
-    reset(ABCDataSource, "_may_use_cache_file", False)
-    reset(ABCDataSource, "_use_outdated_cache_file", False)
+    reset(FileCacheConfigurator, "disabled", False)
+    reset(FileCacheConfigurator, "maybe", False)
+    reset(FileCacheConfigurator, "use_outdated", False)
     reset(ABCDataSource, "_use_outdated_persisted_sections", False)

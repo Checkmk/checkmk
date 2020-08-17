@@ -107,9 +107,9 @@ def test_attribute_defaults(mode, monkeypatch):
     assert source.hostname == hostname
     assert source.ipaddress == ipaddress
     assert source.id == "agent"
+    assert configurator.file_cache.maybe is False
+
     # From the base class
-    assert source.is_agent_cache_disabled() is False
-    assert source.get_may_use_cache_file() is False
     assert source.exception() is None
 
 

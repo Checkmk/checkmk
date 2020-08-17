@@ -44,32 +44,26 @@ def ipaddress_fixture():
     return "1.2.3.4"
 
 
-@pytest.fixture(name="source")
-def source_fixture(hostname, ipaddress, mode, monkeypatch):
+@pytest.fixture(name="scenario")
+def scenario_fixture(hostname, monkeypatch):
     Scenario().add_host(hostname).apply(monkeypatch)
-    return SNMPDataSource(configurator=SNMPConfigurator.snmp(
-        hostname,
-        ipaddress,
-        mode=mode,
-    ),)
 
 
-def test_data_source_cache_default(source):
-    assert not source.is_agent_cache_disabled()
+@pytest.fixture(name="configurator")
+def configurator_source(scenario, hostname, ipaddress, mode):
+    return SNMPConfigurator.snmp(hostname, ipaddress, mode=mode)
 
 
-def test_disable_data_source_cache(source):
-    assert not source.is_agent_cache_disabled()
-
-    source.disable_data_source_cache()
-    assert source.is_agent_cache_disabled()
+@pytest.fixture(name="source")
+def source_fixture(scenario, configurator):
+    return SNMPDataSource(configurator)
 
 
 @patchfs
 def test_disable_read_to_file_cache(source, monkeypatch, fs):
     # Beginning of setup.
-    source.set_max_cachefile_age(999)
-    source.set_may_use_cache_file()
+    source.configurator.file_cache.max_age = 999
+    type(source.configurator.file_cache).maybe = True
 
     # Patch I/O: It is good enough to patch `store.save_file()`
     # as pyfakefs takes care of the rest.
@@ -83,15 +77,15 @@ def test_disable_read_to_file_cache(source, monkeypatch, fs):
     raw_data: SNMPRawData = {SectionName("X"): table}
     # End of setup.
 
-    assert not source.is_agent_cache_disabled()
+    assert not source.configurator.file_cache.disabled
 
     source._file_cache.write(raw_data)
 
     assert source._file_cache.path.exists()
     assert source._file_cache.read() == raw_data
 
-    source.disable_data_source_cache()
-    assert source.is_agent_cache_disabled()
+    type(source.configurator.file_cache).disabled = True
+    assert source.configurator.file_cache.disabled
 
     assert source._file_cache.read() is None
 
@@ -99,8 +93,8 @@ def test_disable_read_to_file_cache(source, monkeypatch, fs):
 @patchfs
 def test_disable_write_to_file_cache(source, monkeypatch, fs):
     # Beginning of setup.
-    source.set_max_cachefile_age(999)
-    source.set_may_use_cache_file()
+    source.configurator.file_cache.max_age = 999
+    type(source.configurator.file_cache).maybe = True
 
     # Patch I/O: It is good enough to patch `store.save_file()`
     # as pyfakefs takes care of the rest.
@@ -114,10 +108,10 @@ def test_disable_write_to_file_cache(source, monkeypatch, fs):
     raw_data: SNMPRawData = {SectionName("X"): table}
     # End of setup.
 
-    source.disable_data_source_cache()
-    assert source.is_agent_cache_disabled()
+    type(source.configurator.file_cache).disabled = True
+    assert source.configurator.file_cache.disabled
 
-    # Another one bites the dust.
+    # Another instance bites the dust.
     source._file_cache.write(raw_data)
 
     assert not source._file_cache.path.exists()
@@ -127,8 +121,8 @@ def test_disable_write_to_file_cache(source, monkeypatch, fs):
 @patchfs
 def test_write_and_read_file_cache(source, monkeypatch, fs):
     # Beginning of setup.
-    source.set_max_cachefile_age(999)
-    source.set_may_use_cache_file()
+    source.configurator.file_cache.max_age = 999
+    type(source.configurator.file_cache).maybe = True
 
     # Patch I/O: It is good enough to patch `store.save_file()`
     # as pyfakefs takes care of the rest.
@@ -142,7 +136,7 @@ def test_write_and_read_file_cache(source, monkeypatch, fs):
     raw_data: SNMPRawData = {SectionName("X"): table}
     # End of setup.
 
-    assert not source.is_agent_cache_disabled()
+    assert not source.configurator.file_cache.disabled
     assert not source._file_cache.path.exists()
 
     source._file_cache.write(raw_data)
@@ -150,7 +144,7 @@ def test_write_and_read_file_cache(source, monkeypatch, fs):
     assert source._file_cache.path.exists()
     assert source._file_cache.read() == raw_data
 
-    # Another one bites the dust.
+    # Another instance bites the dust.
     assert source._file_cache.read() == raw_data
 
 
@@ -169,11 +163,11 @@ def test_snmp_ipaddress_from_mgmt_board_unresolvable(hostname, monkeypatch):
     assert ip_lookup.lookup_mgmt_board_ip_address(host_config) is None
 
 
-def test_configure_file_cache_serialization(source):
+def test_configure_file_cache_serialization(configurator):
     def json_identity(data):
         return json.loads(json.dumps(data))
 
-    assert json_identity(source.configure_file_cache()) == source.configure_file_cache()
+    assert json_identity(configurator.file_cache.configure()) == configurator.file_cache.configure()
 
 
 def test_attribute_defaults(source, hostname, ipaddress, monkeypatch):
@@ -191,10 +185,9 @@ def test_attribute_defaults(source, hostname, ipaddress, monkeypatch):
 
     assert configurator.on_snmp_scan_error == "raise"
     assert configurator.do_snmp_scan is False
+    assert configurator.file_cache.maybe is False
 
     # From the base class
-    assert source.is_agent_cache_disabled() is False
-    assert source.get_may_use_cache_file() is False
     assert source.exception() is None
 
 

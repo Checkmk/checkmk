@@ -204,7 +204,7 @@ class AutomationTryDiscovery(Automation):
             args = args[1:]
             do_snmp_scan = False
             use_caches = True
-            data_sources.ABCDataSource.set_use_outdated_cache_file()
+            data_sources.FileCacheConfigurator.use_outdated = True
             data_sources.tcp.TCPDataSource.use_only_cache()
 
         elif args[0] == '@scan':
@@ -218,7 +218,7 @@ class AutomationTryDiscovery(Automation):
         else:
             on_error = "warn"
 
-        data_sources.ABCDataSource.set_may_use_cache_file(use_caches)
+        data_sources.FileCacheConfigurator.maybe = use_caches
         hostname = args[0]
         return discovery.get_check_preview(
             hostname,
@@ -1228,7 +1228,7 @@ class AutomationDiagHost(Automation):
                 ipaddress,
                 mode=data_sources.Mode.CHECKING,
         ):
-            source.set_max_cachefile_age(config.check_max_cachefile_age)
+            source.configurator.file_cache.max_age = config.check_max_cachefile_age
             if isinstance(source.configurator, data_sources.programs.DSProgramConfigurator) and cmd:
                 source = data_sources.programs.ProgramDataSource(
                     configurator=data_sources.programs.DSProgramConfigurator(
@@ -1519,9 +1519,7 @@ class AutomationGetAgentOutput(Automation):
         try:
             ipaddress = ip_lookup.lookup_ip_address(host_config)
             if ty == "agent":
-                data_sources.ABCDataSource.set_may_use_cache_file(
-                    not data_sources.ABCDataSource.is_agent_cache_disabled())
-
+                data_sources.FileCacheConfigurator.reset_maybe()
                 agent_output = b""
                 sources = data_sources.make_sources(
                     host_config,
@@ -1529,7 +1527,7 @@ class AutomationGetAgentOutput(Automation):
                     mode=data_sources.Mode.CHECKING,
                 )
                 for source in sources:
-                    source.set_max_cachefile_age(config.check_max_cachefile_age)
+                    source.configurator.file_cache.max_age = config.check_max_cachefile_age
                     if isinstance(source, data_sources.agent.AgentDataSource):
                         # TODO(ml): Call fetcher directly.
                         agent_output += source.run_raw()

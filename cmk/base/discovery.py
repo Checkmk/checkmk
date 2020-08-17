@@ -301,7 +301,7 @@ def _get_rediscovery_mode(params: Dict) -> str:
 def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[CheckPluginName]],
                  arg_only_new: bool) -> None:
     config_cache = config.get_config_cache()
-    use_caches = not arg_hostnames or data_sources.ABCDataSource.get_may_use_cache_file()
+    use_caches = not arg_hostnames or data_sources.FileCacheConfigurator.maybe
     on_error = "raise" if cmk.utils.debug.enabled() else "warn"
 
     host_names = _preprocess_hostnames(arg_hostnames, config_cache)
@@ -680,7 +680,7 @@ def check_discovery(
         do_snmp_scan=params["inventory_check_do_scan"],
         on_error="raise",
     )
-    use_caches = data_sources.ABCDataSource.get_may_use_cache_file()
+    use_caches = data_sources.FileCacheConfigurator.maybe
     multi_host_sections = data_sources.make_host_sections(
         config_cache,
         host_config,

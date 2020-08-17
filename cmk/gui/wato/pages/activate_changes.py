@@ -462,11 +462,11 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                 if not is_logged_in:
                     html.write_text(_("Is not logged in.") + " ")
 
-                if (need_action and
-                        last_state["_state"] == cmk.gui.watolib.activate_changes.STATE_SUCCESS):
-                    html.write_text(_("Activation needed"))
-                elif not last_state:
+                if not last_state:
                     html.write_text(_("Has never been activated"))
+                elif (need_action and
+                      last_state["_state"] == cmk.gui.watolib.activate_changes.STATE_SUCCESS):
+                    html.write_text(_("Activation needed"))
                 else:
                     if html.request.has_var("_finished"):
                         label = _("State")

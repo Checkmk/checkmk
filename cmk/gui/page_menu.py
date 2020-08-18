@@ -110,6 +110,7 @@ class PageMenuCheckbox(ABCPageMenuItem):
 @dataclass
 class PageMenuSearch(ABCPageMenuItem):
     """A text input box right in the menu, primarily for in page quick search"""
+    target_mode: Optional[str] = None
 
 
 @dataclass
@@ -585,7 +586,7 @@ class DropdownEntryRenderer:
         elif isinstance(entry.item, PageMenuCheckbox):
             self._show_checkbox_link_item(entry, entry.item)
         elif isinstance(entry.item, PageMenuSearch):
-            self._show_search_form_item()
+            self._show_search_form_item(entry.item)
         else:
             raise NotImplementedError("Rendering not implemented for %s" % entry.item)
 
@@ -628,9 +629,9 @@ class DropdownEntryRenderer:
         html.span(title)
         html.close_a()
 
-    def _show_search_form_item(self) -> None:
+    def _show_search_form_item(self, item: PageMenuSearch) -> None:
         html.open_div(class_="searchform")
-        search_form()
+        search_form(mode=item.target_mode)
         html.close_div()
 
 

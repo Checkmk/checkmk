@@ -32,7 +32,9 @@ from cmk.gui.page_menu import (
     PageMenuDropdown,
     PageMenuTopic,
     PageMenuEntry,
+    PageMenuSearch,
     make_simple_link,
+    make_display_options_dropdown,
 )
 
 from cmk.gui.valuespec import (
@@ -48,7 +50,6 @@ from cmk.gui.plugins.wato import (
     mode_registry,
     search_form,
     get_search_expression,
-    global_buttons,
 )
 
 
@@ -69,8 +70,25 @@ class ModeCheckPlugins(WatoMode):
     def title(self):
         return _("Catalog of check plugins")
 
-    def buttons(self):
-        global_buttons()
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = super().page_menu(breadcrumb)
+        self._extend_display_dropdown(menu)
+        return menu
+
+    def _extend_display_dropdown(self, menu: PageMenu) -> None:
+        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+        display_dropdown.topics.insert(
+            0,
+            PageMenuTopic(
+                title=_("Search for check plugins"),
+                entries=[
+                    PageMenuEntry(
+                        title="",
+                        icon_name="trans",
+                        item=PageMenuSearch(target_mode="check_plugin_search"),
+                    ),
+                ],
+            ))
 
     def page(self):
         html.help(
@@ -79,8 +97,6 @@ class ModeCheckPlugins(WatoMode):
               "access the rule sets for configuring the parameters of the checks and to "
               "manually create services in case you cannot or do not want to rely on the "
               "automatic service discovery."))
-
-        search_form(title="%s: " % _("Search for check plugins"), mode="check_plugin_search")
 
         menu = MainMenu()
         for topic, _has_second_level, title, helptext in _man_page_catalog_topics():
@@ -115,9 +131,6 @@ class ModeCheckPluginSearch(WatoMode):
 
     def title(self):
         return "%s: %s" % (_("Check plugins matching"), self._search)
-
-    def buttons(self):
-        global_buttons()
 
     def page(self):
         search_form(title="%s: " % _("Search for check plugins"), mode="check_plugin_search")

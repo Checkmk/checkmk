@@ -56,7 +56,7 @@ class ProgramDataSource(CheckMKAgentDataSource):
     def _cpu_tracking_id(self):
         return "ds"
 
-    def _execute(self, check_plugin_names):
+    def _execute(self):
         command_line, command_stdin = self._get_command_line_and_stdin()
         return self._get_agent_info_program(command_line, command_stdin)
 

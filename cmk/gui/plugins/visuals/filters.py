@@ -969,10 +969,12 @@ class FilterHostgroupProblems(Filter):
             "hostsgroups_having_hosts_down",
             "hostsgroups_having_hosts_unreach",
             "hostsgroups_having_hosts_pending",
+            "hostgroups_show_unhandled_host",
             "hostsgroups_having_services_warn",
             "hostsgroups_having_services_crit",
             "hostsgroups_having_services_pending",
             "hostsgroups_having_services_unknown",
+            "hostgroups_show_unhandled_svc",
         ], [])
 
     def display(self) -> None:
@@ -985,6 +987,8 @@ class FilterHostgroupProblems(Filter):
             ("unknown", _("UNKNOWN")),
         ]:
             html.checkbox("hostgroups_having_services_%s" % svc_var, True, label=svc_text)
+        html.br()
+        html.checkbox("hostgroups_show_unhandled_svc", False, label=_("Unhandled service problems"))
 
         html.br()
         html.write_text("Host states:" + " ")
@@ -994,6 +998,8 @@ class FilterHostgroupProblems(Filter):
             ("pending", _("PEND")),
         ]:
             html.checkbox("hostgroups_having_hosts_%s" % host_var, True, label=host_text)
+        html.checkbox("hostgroups_show_unhandled_host", False, label=_("Unhandled host problems"))
+
         html.end_checkbox_group()
 
     def filter(self, infoname):
@@ -1005,6 +1011,12 @@ class FilterHostgroupProblems(Filter):
         for host_var in ["down", "unreach", "pending"]:
             if html.get_checkbox("hostgroups_having_hosts_%s" % host_var):
                 headers.append("Filter: num_hosts_%s > 0\n" % host_var)
+
+        if html.get_checkbox("hostgroups_show_unhandled_host"):
+            return "Filter: num_hosts_unhandled_problems > 0\n"
+
+        if html.get_checkbox("hostgroups_show_unhandled_svc"):
+            return "Filter: num_services_unhandled_problems > 0\n"
 
         len_headers = len(headers)
         if len_headers > 0:

@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
+import socket
 from pathlib import Path
 
 import importlib
@@ -23,6 +24,7 @@ from cmk.fetchers.controller import (
 )
 
 from cmk.base.fetcher_config import FetcherConfig
+from cmk.fetchers.tcp import TCPFetcher
 
 from cmk.utils.paths import core_fetcher_config_dir
 import cmk.utils.paths
@@ -56,6 +58,15 @@ class TestControllerApi:
         ts.add_host("rrd_host")
         ts.set_option("ipaddresses", {"heute": "127.0.0.1", "rrd_host": "127.0.0.2"})
         ts.apply(monkeypatch)
+
+        def _dummy_connect(s):
+            s._socket = socket.socket(s._family, socket.SOCK_STREAM)
+            return s
+
+        # Prevent agent communication
+        monkeypatch.setattr(TCPFetcher, "__enter__", _dummy_connect)
+        monkeypatch.setattr(TCPFetcher, "_raw_data", lambda self: b"<<<check_mk>>>abc")
+
         monkeypatch.setattr("cmk.utils.paths.core_fetcher_config_dir", tmp_path)
         importlib.reload(cmk.fetchers.controller)
 
@@ -82,7 +93,8 @@ class TestControllerApi:
             return '{"fetcher_type": "%s", "status": %d, "payload": "%s"}' % (fetcher, status,
                                                                               payload)
 
-        return '[%s, %s]' % (make_blob("TCP", 50, "Not connected"), make_blob("PIGGYBACK", 0, ""))
+        return '[%s, %s]' % (make_blob("TCP", 0, "<<<check_mk>>>abc"), make_blob(
+            "PIGGYBACK", 0, ""))
 
     @pytest.mark.parametrize("the_host", [
         "heute",
@@ -94,8 +106,7 @@ class TestControllerApi:
         fetcher_config.write(hostname=the_host)
         run_fetchers(serial=str(fetcher_config.serial), host_name=the_host, timeout=35)
         captured = capsys.readouterr()
-        assert captured.out == make_success_answer(expected_blob) + make_failure_answer(
-            data=expected_error, severity="critical") + make_waiting_answer()
+        assert captured.out == make_success_answer(expected_blob) + make_waiting_answer()
 
     @pytest.mark.usefixtures("scenario")
     def test_run_fetchers_bad_file(self, capsys, write_config):

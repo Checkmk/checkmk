@@ -41,7 +41,19 @@ Error Message:
 
 def notify_error(error) {
     mail_build_failed(error)
-    slack_build_failed(error)
+    // Disabled for the moment. It currently does not work because of some
+    // wrong configuration.
+    //
+    // From the build logs:
+    //
+    // [Pipeline] slackSend
+    // Slack Send Pipeline step running, values are - baseUrl: <empty>,
+    // teamDomain: <empty>, channel: build-notifications, color: danger,
+    // botUser: true, tokenCredentialId: <empty>, iconEmoji <empty>, username
+    // <empty>
+    //ERROR: Slack notification failed with exception: java.lang.IllegalArgumentException: the token with the provided ID could not be found and no token was specified
+    //
+    //slack_build_failed(error)
     // after notifying everybody, the error needs to be thrown again
     // This ensures that the build status is set correctly
     throw error

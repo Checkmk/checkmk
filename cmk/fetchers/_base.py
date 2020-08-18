@@ -8,7 +8,7 @@ import abc
 import logging
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Dict, Generic, Optional, Type, Union
+from typing import Any, Dict, Generic, Optional, Type, TypeVar, Union
 
 import cmk.utils
 import cmk.utils.store as store
@@ -22,10 +22,14 @@ class MKFetcherError(MKException):
     """An exception common to the fetchers."""
 
 
+TFetcher = TypeVar("TFetcher", bound="ABCFetcher")
+
+
 class ABCFetcher(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
     """Interface to the data fetchers."""
     @classmethod
-    def from_json(cls, serialized: Dict[str, Any]) -> 'ABCFetcher':
+    @abc.abstractmethod
+    def from_json(cls: Type[TFetcher], serialized: Dict[str, Any]) -> TFetcher:
         """Deserialize from JSON."""
         return cls(**serialized)  # type: ignore[call-arg]
 

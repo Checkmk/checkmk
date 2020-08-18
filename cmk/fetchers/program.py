@@ -9,7 +9,7 @@ import os
 import signal
 import subprocess
 from types import TracebackType
-from typing import Optional, Type, Union
+from typing import Any, Dict, Optional, Type, Union
 
 from six import ensure_binary, ensure_str
 
@@ -33,6 +33,10 @@ class ProgramFetcher(AgentFetcher):
         self._is_cmc = is_cmc
         self._logger = logging.getLogger("cmk.fetchers.program")
         self._process: Optional[subprocess.Popen] = None
+
+    @classmethod
+    def from_json(cls, serialized: Dict[str, Any]) -> 'ProgramFetcher':
+        return super().from_json(serialized)
 
     def __enter__(self) -> 'ProgramFetcher':
         if self._is_cmc:

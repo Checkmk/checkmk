@@ -6,7 +6,7 @@
 
 import logging
 from types import TracebackType
-from typing import List, Optional, Type
+from typing import Any, Dict, List, Optional, Type
 
 import pyghmi.constants as ipmi_const  # type: ignore[import]
 import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import]
@@ -35,6 +35,10 @@ class IPMIFetcher(AgentFetcher):
         self._password = password
         self._logger = logging.getLogger("cmk.fetchers.ipmi")
         self._command: Optional[ipmi_cmd.Command] = None
+
+    @classmethod
+    def from_json(cls, serialized: Dict[str, Any]) -> 'IPMIFetcher':
+        return super().from_json(serialized)
 
     def __enter__(self) -> 'IPMIFetcher':
         self.open()

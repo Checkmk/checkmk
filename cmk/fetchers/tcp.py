@@ -8,7 +8,7 @@ import logging
 import socket
 from hashlib import md5, sha256
 from types import TracebackType
-from typing import Dict, List, Optional, Tuple, Type
+from typing import Any, Dict, List, Optional, Tuple, Type
 
 from Cryptodome.Cipher import AES
 
@@ -35,6 +35,11 @@ class TCPFetcher(AgentFetcher):
         self._encryption_settings = encryption_settings
         self._logger = logging.getLogger("cmk.fetchers.tcp")
         self._socket: Optional[socket.socket] = None
+
+    @classmethod
+    def from_json(cls, serialized: Dict[str, Any]) -> 'TCPFetcher':
+        serialized["address"] = tuple(serialized["address"])
+        return super().from_json(serialized)
 
     def __enter__(self) -> 'TCPFetcher':
         self._logger.debug("Connecting via TCP to %s:%d (%ss timeout)", self._address[0],

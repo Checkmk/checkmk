@@ -7,7 +7,7 @@
 import json
 import logging
 from types import TracebackType
-from typing import List, Optional, Tuple, Type
+from typing import Any, Dict, List, Optional, Tuple, Type
 
 from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo, PiggybackTimeSettings
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
@@ -24,6 +24,10 @@ class PiggyBackFetcher(AgentFetcher):
         self._time_settings = time_settings
         self._logger = logging.getLogger("cmk.fetchers.piggyback")
         self._sources: List[PiggybackRawDataInfo] = []
+
+    @classmethod
+    def from_json(cls, serialized: Dict[str, Any]) -> 'PiggyBackFetcher':
+        return super().from_json(serialized)
 
     def __enter__(self) -> 'PiggyBackFetcher':
         for origin in (self._hostname, self._address):

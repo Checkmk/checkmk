@@ -17,14 +17,6 @@ from cmk.utils.paths import core_fetcher_config_dir
 from cmk.utils.type_defs import HostName
 
 from . import FetcherType
-from ._base import ABCFetcher
-
-
-class FetcherFactory:
-    @staticmethod
-    def make(fetcher_type: str, fetcher_params: Dict[str, Any]) -> ABCFetcher:
-        return FetcherType[fetcher_type].value.from_json(fetcher_params)
-
 
 #
 # At the moment Protocol and API are opened to critic.
@@ -147,11 +139,11 @@ def _run_fetcher(entry: Dict[str, Any], timeout: int) -> Dict[str, Any]:
     """
 
     try:
-        ff = FetcherFactory()
         fetcher_type = entry["fetcher_type"]
         fetcher_params = entry["fetcher_params"]
-        fetcher = ff.make(fetcher_type=fetcher_type, fetcher_params=fetcher_params)
-        fetcher_data = fetcher.data()
+
+        with FetcherType[fetcher_type].value.from_json(fetcher_params) as fetcher:
+            fetcher_data = fetcher.data()
 
         # If data returns bytes -> decode. This is current state of development.
         # SNMP returns not a str, but raw structure. We must serialize this structure and send it.

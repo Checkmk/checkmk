@@ -26,6 +26,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.watolib.rulespecs import rulespec_registry
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 
 from cmk.gui.valuespec import (
     ID,)
@@ -175,6 +176,15 @@ class ModeCheckPluginTopic(WatoMode):
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeCheckPlugins
 
+    def breadcrumb(self) -> Breadcrumb:
+        """Add each individual level of the catalog topics as single breadcrumb item"""
+        parent_cls = self.parent_mode()
+        assert parent_cls is not None
+        breadcrumb = _add_breadcrumb_topic_items(parent_cls().breadcrumb(), self._titles,
+                                                 self._path)
+        breadcrumb.append(self._breadcrumb_item())
+        return breadcrumb
+
     def _from_vars(self):
         self._topic = html.request.get_ascii_input_mandatory("topic", "")
         if not re.match("^[a-zA-Z0-9_./]+$", self._topic):
@@ -257,6 +267,17 @@ class ModeCheckPluginTopic(WatoMode):
             text += "%d %s<br>" % (num_cats, _("sub categories"))
         text += "%d %s" % (num_plugins, _("check plugins"))
         return text
+
+
+def _add_breadcrumb_topic_items(breadcrumb, titles, path):
+    for num_elements in range(1, len(path)):
+        elements = path[:num_elements]
+        breadcrumb.append(
+            BreadcrumbItem(
+                title=titles.get(elements[-1], elements[-1]),
+                url=html.makeuri([("topic", "/".join(elements))]),
+            ))
+    return breadcrumb
 
 
 def _render_manpage_list(titles, manpage_list, path_comp, heading):
@@ -345,6 +366,10 @@ class ModeCheckManPage(WatoMode):
     def permissions(cls):
         return []
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeCheckPluginTopic
+
     def _from_vars(self):
         self._check_type = html.request.get_ascii_input_mandatory("check_type", "")
 
@@ -377,7 +402,7 @@ class ModeCheckManPage(WatoMode):
             }
 
     def title(self):
-        return _("Check plugin manual page") + " - " + self._manpage["header"]["title"]
+        return self._manpage["header"]["title"]
 
     def buttons(self):
         global_buttons()

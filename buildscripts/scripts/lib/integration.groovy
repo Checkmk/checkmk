@@ -12,6 +12,10 @@ def build(Map args) {
             versioning = load 'buildscripts/scripts/lib/versioning.groovy'
             def CMK_VERSION = versioning.get_cmk_version(scm, args.VERSION)
 
+            // Cleanup test results directory before starting the test to prevent previous
+            // runs somehow affecting the current run.
+            sh("[ -d test-results ] && rm -rf test-results || true")
+
             // Initialize our virtual environment before parallelization
             sh("make .venv")
 

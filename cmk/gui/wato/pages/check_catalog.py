@@ -3,9 +3,15 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""Display information about the Checkmk check plugins
+
+The maxium depth of the catalog paths is 3. The top level is being rendered
+like the WATO main menu. The second and third level are being rendered like
+the global settings.
+"""
 
 import re
-from typing import Set, List, Dict, Any
+from typing import Set, List, Dict, Any, Tuple, Optional, Type
 
 from six import ensure_str
 
@@ -37,18 +43,6 @@ from cmk.gui.plugins.wato import (
     global_buttons,
 )
 
-#.
-#   .--Check Plugins-------------------------------------------------------.
-#   |     ____ _               _      ____  _             _                |
-#   |    / ___| |__   ___  ___| | __ |  _ \| |_   _  __ _(_)_ __  ___      |
-#   |   | |   | '_ \ / _ \/ __| |/ / | |_) | | | | |/ _` | | '_ \/ __|     |
-#   |   | |___| | | |  __/ (__|   <  |  __/| | |_| | (_| | | | | \__ \     |
-#   |    \____|_| |_|\___|\___|_|\_\ |_|   |_|\__,_|\__, |_|_| |_|___/     |
-#   |                                               |___/                  |
-#   +----------------------------------------------------------------------+
-#   | Catalog of check plugins                                             |
-#   '----------------------------------------------------------------------'
-
 
 @mode_registry.register
 class ModeCheckPlugins(WatoMode):
@@ -61,50 +55,14 @@ class ModeCheckPlugins(WatoMode):
         return []
 
     def _from_vars(self):
-        self._search = get_search_expression()
-        self._topic = html.request.get_ascii_input("topic")
-        if self._topic and not self._search:
-            if not re.match("^[a-zA-Z0-9_./]+$", self._topic):
-                raise MKUserError("topic", _("Invalid topic"))
-
-            self._path = tuple(self._topic.split("/"))  # e.g. [ "hw", "network" ]
-        else:
-            self._path = tuple()
-
-        for comp in self._path:
-            ID().validate_value(comp, None)  # Beware against code injection!
-
-        self._manpages = self._get_check_catalog()
+        self._manpages = _get_check_catalog(only_path=())
         self._titles = man_pages.man_page_catalog_titles()
 
-        self._has_second_level = None
-        if self._topic and not self._search:
-            for t, has_second_level, title, _helptext in self._man_page_catalog_topics():
-                if t == self._path[0]:
-                    self._has_second_level = has_second_level
-                    self._topic_title = title
-                    break
-
-            if len(self._path) == 2:
-                self._topic_title = self._titles.get(self._path[1], self._path[1])
-
     def title(self):
-        if self._topic and not self._search:
-            heading = "%s - %s" % (_("Catalog of Check Plugins"), self._topic_title)
-        elif self._search:
-            heading = "%s: %s" % (_("Check plugins matching"), self._search)
-        else:
-            heading = _("Catalog of Check Plugins")
-        return heading
+        return _("Catalog of check plugins")
 
     def buttons(self):
         global_buttons()
-        if self._topic:
-            if len(self._path) == 2:
-                back_url = html.makeuri([("topic", self._path[0])])
-            else:
-                back_url = html.makeuri([("topic", "")])
-            html.context_button(_("Back"), back_url, "back")
 
     def page(self):
         html.help(
@@ -114,29 +72,50 @@ class ModeCheckPlugins(WatoMode):
               "manually create services in case you cannot or do not want to rely on the "
               "automatic service discovery."))
 
-        search_form("%s: " % _("Search for check plugins"), "check_plugins")
+        search_form(title="%s: " % _("Search for check plugins"), mode="check_plugin_search")
 
-        # The maxium depth of the catalog paths is 3. The top level is being rendered
-        # like the WATO main menu. The second and third level are being rendered like
-        # the global settings.
+        menu = MainMenu()
+        for topic, _has_second_level, title, helptext in _man_page_catalog_topics():
+            menu.add_item(
+                MenuItem(mode_or_url=html.makeuri([("mode", "check_plugin_topic"),
+                                                   ("topic", topic)]),
+                         title=title,
+                         icon="plugins_" + topic,
+                         permission=None,
+                         description=helptext))
+        menu.show()
 
-        if self._topic and not self._search:
-            self._render_manpage_topic()
 
-        elif self._search:
-            for path, manpages in self._get_manpages_after_search():
-                self._render_manpage_list(manpages, path, self._titles.get(path, path))
+@mode_registry.register
+class ModeCheckPluginSearch(WatoMode):
+    @classmethod
+    def name(cls):
+        return "check_plugin_search"
 
-        else:
-            menu = MainMenu()
-            for topic, _has_second_level, title, helptext in self._man_page_catalog_topics():
-                menu.add_item(
-                    MenuItem(mode_or_url=html.makeuri([("topic", topic)]),
-                             title=title,
-                             icon="plugins_" + topic,
-                             permission=None,
-                             description=helptext))
-            menu.show()
+    @classmethod
+    def permissions(cls):
+        return []
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeCheckPlugins
+
+    def _from_vars(self):
+        self._search = get_search_expression()
+        self._manpages = _get_check_catalog(only_path=())
+        self._titles = man_pages.man_page_catalog_titles()
+
+    def title(self):
+        return "%s: %s" % (_("Check plugins matching"), self._search)
+
+    def buttons(self):
+        global_buttons()
+
+    def page(self):
+        search_form(title="%s: " % _("Search for check plugins"), mode="check_plugin_search")
+
+        for path, manpages in self._get_manpages_after_search():
+            _render_manpage_list(self._titles, manpages, path, self._titles.get(path, path))
 
     def _get_manpages_after_search(self):
         collection: Dict[ManPageCatalogPath, List[Dict]] = {}
@@ -181,42 +160,58 @@ class ModeCheckPlugins(WatoMode):
 
         return list(collection.items())
 
-    def _get_check_catalog(self):
-        def path_prefix_matches(p, op):
-            if op and not p:
-                return False
-            if not op:
-                return True
-            return p[0] == op[0] and path_prefix_matches(p[1:], op[1:])
 
-        def strip_manpage_entry(entry):
-            return {k: v for k, v in entry.items() if k in ["name", "agents", "title"]}
+@mode_registry.register
+class ModeCheckPluginTopic(WatoMode):
+    @classmethod
+    def name(cls):
+        return "check_plugin_topic"
 
-        tree: Dict[str, Any] = {}
-        if len(self._path) > 0:
-            only_path = tuple(self._path)
+    @classmethod
+    def permissions(cls):
+        return []
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeCheckPlugins
+
+    def _from_vars(self):
+        self._topic = html.request.get_ascii_input_mandatory("topic", "")
+        if not re.match("^[a-zA-Z0-9_./]+$", self._topic):
+            raise MKUserError("topic", _("Invalid topic"))
+
+        self._path: Tuple[str, ...] = tuple(self._topic.split("/"))  # e.g. [ "hw", "network" ]
+
+        for comp in self._path:
+            ID().validate_value(comp, None)  # Beware against code injection!
+
+        self._manpages = _get_check_catalog(self._path)
+        self._titles = man_pages.man_page_catalog_titles()
+
+        self._has_second_level = None
+        for t, has_second_level, title, _helptext in _man_page_catalog_topics():
+            if t == self._path[0]:
+                self._has_second_level = has_second_level
+                self._topic_title = title
+                break
+
+        if len(self._path) == 2:
+            self._topic_title = self._titles.get(self._path[1], self._path[1])
+
+    def title(self):
+        return self._topic_title
+
+    def buttons(self):
+        global_buttons()
+        if len(self._path) == 2:
+            back_url = html.makeuri([("topic", self._path[0])])
         else:
-            only_path = ()
+            back_url = html.makeuri([("topic", "")])
+        html.context_button(_("Back"), back_url, "back")
 
-        for path, entries in man_pages.load_man_page_catalog().items():
-            if not path_prefix_matches(path, only_path):
-                continue
-            subtree = tree
-            for component in path[:-1]:
-                subtree = subtree.setdefault(component, {})
-            subtree[path[-1]] = list(map(strip_manpage_entry, entries))
-
-        for p in only_path:
-            try:
-                tree = tree[p]
-            except KeyError:
-                pass
-
-        return tree
-
-    def _render_manpage_topic(self):
+    def page(self):
         if isinstance(self._manpages, list):
-            self._render_manpage_list(self._manpages, self._path[-1], self._topic_title)
+            _render_manpage_list(self._titles, self._manpages, self._path[-1], self._topic_title)
             return
 
         if len(self._path) == 1 and self._has_second_level:
@@ -245,7 +240,7 @@ class ModeCheckPlugins(WatoMode):
                 entries.append((title, subnode, path_comp))
 
             for title, subnode, path_comp in sorted(entries, key=lambda x: x[0].lower()):
-                self._render_manpage_list(subnode, path_comp, title)
+                _render_manpage_list(self._titles, subnode, path_comp, title)
 
     def _get_check_plugin_stats(self, subnode):
         if isinstance(subnode, list):
@@ -263,49 +258,81 @@ class ModeCheckPlugins(WatoMode):
         text += "%d %s" % (num_plugins, _("check plugins"))
         return text
 
-    def _render_manpage_list(self, manpage_list, path_comp, heading):
-        def translate(t):
-            return self._titles.get(t, t)
 
-        html.h2(heading)
-        with table_element(searchable=False, sortable=False, css="check_catalog") as table:
-            for entry in sorted(manpage_list, key=lambda x: x["title"]):
-                if not isinstance(entry, dict):
-                    continue
-                table.row()
-                url = html.makeuri([("mode", "check_manpage"), ("check_type", entry["name"]),
-                                    ("back", html.makeuri([]))])
-                table.cell(_("Type of Check"),
-                           "<a href='%s'>%s</a>" % (url, entry["title"]),
-                           css="title")
-                table.cell(_("Plugin Name"), "<tt>%s</tt>" % entry["name"], css="name")
-                table.cell(_("Agents"),
-                           ", ".join(map(translate, sorted(entry["agents"]))),
-                           css="agents")
+def _render_manpage_list(titles, manpage_list, path_comp, heading):
+    def translate(t):
+        return titles.get(t, t)
 
-    def _man_page_catalog_topics(self):
-        # topic, has_second_level, title, description
-        return [
-            ("hw", True, _("Appliances, other dedicated hardware"),
-             _("Switches, load balancers, storage, UPSes, "
-               "environmental sensors, etc. ")),
-            ("os", True, _("Operating systems"),
-             _("Plugins for operating systems, things "
-               "like memory, CPU, filesystems, etc.")),
-            ("app", False, _("Applications"),
-             _("Monitoring of applications such as "
-               "processes, services or databases")),
-            ("cloud", False, _("Cloud Based Environments"),
-             _("Monitoring of cloud environments like Microsoft Azure")),
-            ("containerization", False, _("Containerization"),
-             _("Monitoring of container and container orchestration software")),
-            ("agentless", False, _("Networking checks without agent"),
-             _("Plugins that directly check networking "
-               "protocols like HTTP or IMAP")),
-            ("generic", False, _("Generic check plugins"),
-             _("Plugins for local agent extensions or "
-               "communication with the agent in general")),
-        ]
+    html.h2(heading)
+    with table_element(searchable=False, sortable=False, css="check_catalog") as table:
+        for entry in sorted(manpage_list, key=lambda x: x["title"]):
+            if not isinstance(entry, dict):
+                continue
+            table.row()
+            url = html.makeuri([("mode", "check_manpage"), ("check_type", entry["name"]),
+                                ("back", html.makeuri([]))])
+            table.cell(_("Type of Check"),
+                       "<a href='%s'>%s</a>" % (url, entry["title"]),
+                       css="title")
+            table.cell(_("Plugin Name"), "<tt>%s</tt>" % entry["name"], css="name")
+            table.cell(_("Agents"),
+                       ", ".join(map(translate, sorted(entry["agents"]))),
+                       css="agents")
+
+
+def _man_page_catalog_topics():
+    # topic, has_second_level, title, description
+    return [
+        ("hw", True, _("Appliances, other dedicated hardware"),
+         _("Switches, load balancers, storage, UPSes, "
+           "environmental sensors, etc. ")),
+        ("os", True, _("Operating systems"),
+         _("Plugins for operating systems, things "
+           "like memory, CPU, filesystems, etc.")),
+        ("app", False, _("Applications"),
+         _("Monitoring of applications such as "
+           "processes, services or databases")),
+        ("cloud", False, _("Cloud Based Environments"),
+         _("Monitoring of cloud environments like Microsoft Azure")),
+        ("containerization", False, _("Containerization"),
+         _("Monitoring of container and container orchestration software")),
+        ("agentless", False, _("Networking checks without agent"),
+         _("Plugins that directly check networking "
+           "protocols like HTTP or IMAP")),
+        ("generic", False, _("Generic check plugins"),
+         _("Plugins for local agent extensions or "
+           "communication with the agent in general")),
+    ]
+
+
+def _get_check_catalog(only_path):
+    def path_prefix_matches(p, op):
+        if op and not p:
+            return False
+        if not op:
+            return True
+        return p[0] == op[0] and path_prefix_matches(p[1:], op[1:])
+
+    def strip_manpage_entry(entry):
+        return {k: v for k, v in entry.items() if k in ["name", "agents", "title"]}
+
+    tree: Dict[str, Any] = {}
+
+    for path, entries in man_pages.load_man_page_catalog().items():
+        if not path_prefix_matches(path, only_path):
+            continue
+        subtree = tree
+        for component in path[:-1]:
+            subtree = subtree.setdefault(component, {})
+        subtree[path[-1]] = list(map(strip_manpage_entry, entries))
+
+    for p in only_path:
+        try:
+            tree = tree[p]
+        except KeyError:
+            pass
+
+    return tree
 
 
 @mode_registry.register

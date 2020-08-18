@@ -1801,9 +1801,10 @@ def main(argv=None):
         if "node_exporter" in exporter_options:
             print(*list(api_data.node_exporter_section(exporter_options["node_exporter"])))
 
-    except Exception:
+    except Exception as e:
         if args.debug:
             raise
-        sys.stderr.write(traceback.format_exc())
+        logging.debug(traceback.format_exc())
+        sys.stderr.write("%s\n" % e)
         return 1
     return 0

@@ -117,7 +117,8 @@ def evaluate_time_series_expression(expression, rrd_data):
         return [expression[1]] * num_points
 
     if expression[0] == "combined" and not cmk_version.is_raw_edition():
-        from cmk.gui.cee.plugins.metrics.graphs import resolve_combined_single_metric_spec
+        # Suppression is needed to silence pylint in CRE environment
+        from cmk.gui.cee.plugins.metrics.graphs import resolve_combined_single_metric_spec  # pylint: disable=no-name-in-module
         metrics = resolve_combined_single_metric_spec(expression[1])
 
         return [(m["line_type"], m["color"], m['title'],

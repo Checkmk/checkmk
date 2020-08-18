@@ -110,7 +110,8 @@ def needed_elements_of_expression(expression):
         for operand in expression[2]:
             yield from needed_elements_of_expression(operand)
     elif expression[0] == "combined" and not cmk_version.is_raw_edition():
-        from cmk.gui.cee.plugins.metrics.graphs import resolve_combined_single_metric_spec
+        # Suppression is needed to silence pylint in CRE environment
+        from cmk.gui.cee.plugins.metrics.graphs import resolve_combined_single_metric_spec  # pylint: disable=no-name-in-module
         metrics = resolve_combined_single_metric_spec(expression[1])
 
         for out in (needed_elements_of_expression(m['expression']) for m in metrics):

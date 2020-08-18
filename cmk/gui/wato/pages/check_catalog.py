@@ -27,6 +27,13 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.watolib.rulespecs import rulespec_registry
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+)
 
 from cmk.gui.valuespec import (
     ID,)
@@ -185,6 +192,11 @@ class ModeCheckPluginTopic(WatoMode):
         breadcrumb.append(self._breadcrumb_item())
         return breadcrumb
 
+    def _breadcrumb_url(self) -> str:
+        """Ensure the URL is computed correctly when linking from man pages to the topic"""
+        return html.makeuri_contextless([("mode", self.name()), ("topic", self._topic)],
+                                        filename="wato.py")
+
     def _from_vars(self):
         self._topic = html.request.get_ascii_input_mandatory("topic", "")
         if not re.match("^[a-zA-Z0-9_./]+$", self._topic):
@@ -210,14 +222,6 @@ class ModeCheckPluginTopic(WatoMode):
 
     def title(self):
         return self._topic_title
-
-    def buttons(self):
-        global_buttons()
-        if len(self._path) == 2:
-            back_url = html.makeuri([("topic", self._path[0])])
-        else:
-            back_url = html.makeuri([("topic", "")])
-        html.context_button(_("Back"), back_url, "back")
 
     def page(self):
         if isinstance(self._manpages, list):
@@ -275,7 +279,8 @@ def _add_breadcrumb_topic_items(breadcrumb, titles, path):
         breadcrumb.append(
             BreadcrumbItem(
                 title=titles.get(elements[-1], elements[-1]),
-                url=html.makeuri([("topic", "/".join(elements))]),
+                url=html.makeuri_contextless([("mode", "check_plugin_topic"),
+                                              ("topic", "/".join(elements))]),
             ))
     return breadcrumb
 
@@ -404,30 +409,42 @@ class ModeCheckManPage(WatoMode):
     def title(self):
         return self._manpage["header"]["title"]
 
-    def buttons(self):
-        global_buttons()
-        if html.request.has_var("back"):
-            back_url = html.get_url_input("back")
-            html.context_button(_("Back"), back_url, "back")
-
-        html.context_button(_("All Check Plugins"),
-                            html.makeuri_contextless([("mode", "check_plugins")]), "check_plugins")
-
-        if self._check_type.startswith("check_"):
-            command = "check_mk_active-" + self._check_type[6:]
-        else:
-            command = "check_mk-" + self._check_type
-
-        url = html.makeuri_contextless([("view_name", "searchsvc"), ("check_command", command),
-                                        ("filled_in", "filter")],
-                                       filename="view.py")
-        html.context_button(_("Find usage"), url, "status")
-
     # TODO
     # We could simply detect on how many hosts and services this plugin
     # is currently in use (Livestatus query) and display this information
     # together with a link for searching. Then we can remove the dumb context
     # button, that will always be shown - even if the plugin is not in use.
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        if self._check_type.startswith("check_"):
+            command = "check_mk_active-" + self._check_type[6:]
+        else:
+            command = "check_mk-" + self._check_type
+        url = html.makeuri_contextless([("view_name", "searchsvc"), ("check_command", command),
+                                        ("filled_in", "filter")],
+                                       filename="view.py")
+
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Monitoring"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Show services using this check"),
+                                    icon_name="status",
+                                    item=make_simple_link(url),
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
+
     def page(self):
         html.open_table(class_=["data", "headerleft"])
 

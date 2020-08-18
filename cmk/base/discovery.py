@@ -532,7 +532,6 @@ def discover_on_host(
                 ipaddress,
                 do_snmp_scan=do_snmp_scan,
                 on_error=on_error,
-                for_check_discovery=True,
             ),
             max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
             selected_raw_sections=None,
@@ -680,7 +679,6 @@ def check_discovery(
         ipaddress,
         do_snmp_scan=params["inventory_check_do_scan"],
         on_error="raise",
-        for_check_discovery=True,
     )
     use_caches = data_sources.ABCDataSource.get_may_use_cache_file()
     multi_host_sections = data_sources.make_host_sections(
@@ -1249,7 +1247,6 @@ def _get_sources_for_discovery(
     *,
     do_snmp_scan: bool,
     on_error: str,
-    for_check_discovery: bool = False,
 ) -> data_sources.DataSources:
     sources = data_sources.make_sources(
         host_config,
@@ -1263,13 +1260,6 @@ def _get_sources_for_discovery(
             configurator.do_snmp_scan = do_snmp_scan
             configurator.use_snmpwalk_cache = False
             configurator.ignore_check_interval = True
-
-            # During discovery, the snmp datasource can never fully rely on the locally cached data,
-            # since the available oid trees depend on the current running checks
-            # We can not disable the data_source_cache per default when caching is set
-            # since this would affect the WATO service discovery page.
-            if for_check_discovery and source.get_may_use_cache_file():
-                data_sources.snmp.SNMPDataSource.disable_data_source_cache()
 
     return sources
 

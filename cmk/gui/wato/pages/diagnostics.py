@@ -35,6 +35,15 @@ from cmk.gui.valuespec import (
     CascadingDropdownChoice,
     DualListChoice,
 )
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+)
+
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.background_job import BackgroundProcessInterface
 from cmk.gui.watolib import (
@@ -73,6 +82,29 @@ class ModeDiagnostics(WatoMode):
 
     def title(self) -> str:
         return _("Diagnostics")
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Configure"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Analyze configuration"),
+                                    icon_name="analyze_config",
+                                    item=make_simple_link("wato.py?mode=analyze_config"),
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
 
     def action(self) -> None:
         if not html.check_transaction():

@@ -29,6 +29,14 @@ from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.globals import html
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+)
 
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -70,6 +78,29 @@ class ModeAnalyzeConfig(WatoMode):
 
     def title(self):
         return _("Analyze configuration")
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Configure"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Support diagnostics"),
+                                    icon_name="diagnostics",
+                                    item=make_simple_link("wato.py?mode=diagnostics"),
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
 
     def action(self):
         if not html.check_transaction():

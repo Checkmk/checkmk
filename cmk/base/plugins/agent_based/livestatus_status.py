@@ -3,6 +3,29 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import time
+from typing import (
+    Dict,
+    Any,
+)
+from cmk.base.api.agent_based.utils import check_levels
+from .agent_based_api.v0 import (
+    register,
+    Service,
+    Result,
+    Metric,
+    state,
+    get_rate,
+    get_value_store,
+    render,
+    check_levels,
+)
+from .agent_based_api.v0.type_defs import (
+    AgentStringTable,
+    CheckGenerator,
+    DiscoveryGenerator,
+    Parameters,
+)
 
 # Example output from agent:
 # <<<livestatus_status:sep(59)>>>
@@ -11,7 +34,7 @@
 # accept_passive_host_checks;accept_passive_service_checks;cached_log_messages;check_external_commands;check_host_freshness;check_service_freshness;connections;connections_rate;enable_event_handlers;enable_flap_detection;enable_notifications;execute_host_checks;execute_service_checks;external_command_buffer_max;external_command_buffer_slots;external_command_buffer_usage;external_commands;external_commands_rate;forks;forks_rate;host_checks;host_checks_rate;interval_length;last_command_check;last_log_rotation;livecheck_overflows;livecheck_overflows_rate;livechecks;livechecks_rate;livestatus_active_connections;livestatus_queued_connections;livestatus_threads;livestatus_version;log_messages;log_messages_rate;nagios_pid;neb_callbacks;neb_callbacks_rate;num_hosts;num_services;obsess_over_hosts;obsess_over_services;process_performance_data;program_start;program_version;requests;requests_rate;service_checks;service_checks_rate
 # 1;1;0;1;0;1;231;1.0327125668e-01;1;1;1;1;1;0;32768;0;0;0.0000000000e+00;0;0.0000000000e+00;0;0.0000000000e+00;60;1359471450;0;0;0.0000000000e+00;0;0.0000000000e+00;1;0;20;2013.01.23;0;0.0000000000e+00;15126;15263;6.5307324420e+00;0;0;0;0;1;1359469039;3.2.3;230;1.0327125668e-01;0;0.0000000000e+00
 
-factory_settings["livestatus_status_default_levels"] = {
+livestatus_status_default_levels = {
     "site_stopped": 2,
     "execute_host_checks": 2,
     "execute_service_checks": 2,
@@ -33,11 +56,13 @@ factory_settings["livestatus_status_default_levels"] = {
     "livestatus_overflows_rate": (0.01, 0.02),
 }
 
+ParsedSection = Dict[str, Any]
 
-def parse_livestatus_status(info):
-    parsed = {}
+
+def parse_livestatus_status(string_table: AgentStringTable):
+    parsed: ParsedSection = {}
     site, headers = None, None
-    for line in info:
+    for line in string_table:
         if line and line[0][0] == "[" and line[0][-1] == "]":
             site = line[0][1:-1]
             parsed[site] = None  # Site is marked as down until overwritten later
@@ -52,13 +77,16 @@ def parse_livestatus_status(info):
     return parsed
 
 
-def parse_livestatus_ssl_certs(info):
-    if not info:
-        return {}
+register.agent_section(
+    name="livestatus_status",
+    parse_function=parse_livestatus_status,
+)
 
-    parsed = {}
+
+def parse_livestatus_ssl_certs(string_table: AgentStringTable):
+    parsed: Dict[str, Dict[str, str]] = {}
     site = None
-    for line in info:
+    for line in string_table:
         if line and line[0][0] == "[" and line[0][-1] == "]":
             site = line[0][1:-1]
             parsed[site] = {}
@@ -70,21 +98,30 @@ def parse_livestatus_ssl_certs(info):
     return parsed
 
 
-def inventory_livestatus_status(sections):
-    return [(site, {}) for (site, status) in sections[0].items() if status is not None]
+register.agent_section(
+    name="livestatus_ssl_certs",
+    parse_function=parse_livestatus_ssl_certs,
+)
 
 
-def check_livestatus_status(item, params, sections):
-    parsed, ssl_certs = sections[0], parse_livestatus_ssl_certs(sections[1])
+def discovery_livestatus_status(section_livestatus_status: ParsedSection,
+                                section_livestatus_ssl_certs: ParsedSection) -> DiscoveryGenerator:
 
-    if item not in parsed:
+    for site, status in section_livestatus_status.items():
+        if status is not None:
+            yield Service(item=site)
+
+
+def check_livestatus_status(item: str, params: Parameters, section_livestatus_status: ParsedSection,
+                            section_livestatus_ssl_certs: ParsedSection) -> CheckGenerator:
+    if item not in section_livestatus_status:
         return
-    status = parsed[item]
+    status = section_livestatus_status[item]
 
     # Ignore down sites. This happens on a regular basis due to restarts
     # of the core. The availability of a site is monitored with 'omd_status'.
     if status is None:
-        yield params["site_stopped"], "Site is currently not running"
+        yield Result(state=state(params["site_stopped"]), summary="Site is currently not running")
         return
 
     # Check Performance counters
@@ -97,8 +134,14 @@ def check_livestatus_status(item, params, sections):
         ("requests", "LivestatusRequests"),
         ("log_messages", "LogMessages"),
     ]:
-        value = get_rate("livestatus_status.%s.%s" % (item, key), this_time, float(status[key]))
-        yield 0, ("%s: %.1f/s" % (title, value)), [(key, value)]
+        value = get_rate(
+            value_store=get_value_store(),
+            key="livestatus_status.%s.%s" % (item, key),
+            time=this_time,
+            value=float(status[key]),
+        )
+        yield Result(state=state.OK, summary="%s: %.1f/s" % (title, value))
+        yield Metric(name=key, value=value)
 
     if status["program_version"].startswith("Check_MK"):
         # We have a CMC here.
@@ -106,32 +149,33 @@ def check_livestatus_status(item, params, sections):
         for factor, human_func, key, title in [
             (1, lambda x: "%.3fs" % x, "average_latency_generic", "Average check latency"),
             (1, lambda x: "%.3fs" % x, "average_latency_cmk", "Average Check_MK latency"),
-            (100, get_percent_human_readable, "helper_usage_generic", "Check helper usage"),
-            (100, get_percent_human_readable, "helper_usage_cmk", "Check_MK helper usage"),
-            (100, get_percent_human_readable, "livestatus_usage", "Livestatus usage"),
+            (100, render.percent, "helper_usage_generic", "Check helper usage"),
+            (100, render.percent, "helper_usage_cmk", "Check_MK helper usage"),
+            (100, render.percent, "livestatus_usage", "Livestatus usage"),
             (1, lambda x: "%.1f/s" % x, "livestatus_overflows_rate", "Livestatus overflow rate"),
         ]:
             value = factor * float(status[key])
-            yield check_levels(value,
-                               key,
-                               params.get(key),
-                               human_readable_func=human_func,
-                               infoname=title)
+            yield from check_levels(value=value,
+                                    metric_name=key,
+                                    levels_upper=params.get(key),
+                                    render_func=human_func,
+                                    label=title)
 
-    yield check_levels(int(status["num_hosts"]),
-                       "monitored_hosts",
-                       params.get("levels_hosts"),
-                       unit="Hosts",
-                       human_readable_func=int)
-    yield check_levels(int(status["num_services"]),
-                       "monitored_services",
-                       params.get("levels_services"),
-                       unit="Services",
-                       human_readable_func=int)
-
+    yield from check_levels(
+        value=int(status["num_hosts"]),
+        metric_name="monitored_hosts",
+        levels_upper=params.get("levels_hosts"),
+        label="Monitored Hosts",
+    )
+    yield from check_levels(
+        value=int(status["num_services"]),
+        metric_name="monitored_services",
+        levels_upper=params.get("levels_services"),
+        label="Services",
+    )
     # Output some general information
-    yield 0, "Core version: %s" % status["program_version"]
-    yield 0, "Livestatus version: %s" % status["livestatus_version"]
+    yield Result(state=state.OK, summary="Core version: %s" % status["program_version"])
+    yield Result(state=state.OK, summary="Livestatus version: %s" % status["livestatus_version"])
 
     # cert_valid_until should only be empty in one case that we know of so far:
     # the value is collected via the linux special agent with the command 'date'
@@ -139,19 +183,18 @@ def check_livestatus_status(item, params, sections):
     # the 'date'-command will return an error and thus no result
     # this happens e.g. for hacky raspberry pi setups that are not officially supported
     pem_path = "/omd/sites/%s/etc/ssl/sites/%s.pem" % (item, item)
-    cert_valid_until = ssl_certs.get(item, {}).get(pem_path)
+    cert_valid_until = section_livestatus_ssl_certs.get(item, {}).get(pem_path)
     if cert_valid_until is not None and cert_valid_until != '':
         days_left = (int(cert_valid_until) - time.time()) / 86400.0
         valid_until_formatted = time.strftime("%Y-%m-%d %H:%M:%S",
                                               time.localtime(int(cert_valid_until)))
-        ssl_state, ssl_infotext, _ssl_perfdata = check_levels(
+
+        yield from check_levels(
             value=days_left,
-            dsname="site_cert_days",
-            infoname="Site certificate validity (until %s)" % valid_until_formatted,
-            unit="days",
-            params=(None, None, params["site_cert_days"][0], params["site_cert_days"][1]),
+            metric_name="site_cert_days",
+            label="Site certificate validity (until %s)" % valid_until_formatted,
+            levels_lower=(params["site_cert_days"][0], params["site_cert_days"][1]),
         )
-        yield ssl_state, ssl_infotext
 
     settings = [
         ("execute_host_checks", "Active host checks are disabled"),
@@ -169,7 +212,7 @@ def check_livestatus_status(item, params, sections):
     # Check settings of enablings. Here we are quiet unless a non-OK state is found
     for settingname, title in settings:
         if status[settingname] != '1' and params[settingname] != 0:
-            yield params[settingname], title
+            yield Result(state=state(params[settingname]), summary=title)
 
     # special considerations for enable_event_handlers
     if status["program_version"].startswith("Check_MK 1.2.6"):
@@ -181,18 +224,17 @@ def check_livestatus_status(item, params, sections):
         # handlers defined, so this is nothing to warn about. Start warn when the
         # user defines his first alert handlers.
         return
-    else:
-        if status["enable_event_handlers"] != '1' and params["enable_event_handlers"] != 0:
-            yield params["enable_event_handlers"], "Alert handlers are disabled"
+    if status["enable_event_handlers"] != '1' and params["enable_event_handlers"] != 0:
+        yield Result(state=state(params["enable_event_handlers"]),
+                     summary="Alert handlers are disabled")
 
 
-check_info['livestatus_status'] = {
-    "parse_function": parse_livestatus_status,
-    "inventory_function": inventory_livestatus_status,
-    "check_function": check_livestatus_status,
-    "service_description": "OMD %s performance",
-    "has_perfdata": True,
-    "group": "livestatus_status",
-    "default_levels_variable": "livestatus_status_default_levels",
-    "extra_sections": ["livestatus_ssl_certs"],
-}
+register.check_plugin(
+    name="livestatus_status",
+    sections=["livestatus_status", "livestatus_ssl_certs"],
+    service_name="OMD %s performance",
+    check_ruleset_name="livestatus_status",
+    discovery_function=discovery_livestatus_status,
+    check_function=check_livestatus_status,
+    check_default_parameters=livestatus_status_default_levels,
+)

@@ -25,7 +25,7 @@ def _get_inv_info():
         check_api.get_check_api_context,
         inventory.get_inventory_context,
     )
-    assert len(inventory_plugins.inv_info) > 100  # sanity check
+    assert len(inventory_plugins.inv_info) > 98  # sanity check
     return inventory_plugins.inv_info.copy()
 
 

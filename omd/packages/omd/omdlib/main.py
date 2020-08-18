@@ -2426,7 +2426,7 @@ def main_update(version_info: VersionInfo, site: SiteContext, global_opts: 'Glob
     #
     # The CORE hook is explicitly called after prepare_and_populate_tmpfs.
     #
-    # TODO: We should check whether or not we can mount the "cmk" command from the CORE hook to
+    # TODO: We should check whether or not we can move the "cmk" command from the CORE hook to
     # another place. Then we could really execute all hooks here.
     config_set_all(site, ignored_hooks=["CORE"])
 
@@ -2434,10 +2434,13 @@ def main_update(version_info: VersionInfo, site: SiteContext, global_opts: 'Glob
     # is being updated (cmk -U). This requires access to the initialized tmpfs.
     prepare_and_populate_tmpfs(version_info, site)
 
-    # Now executed the postponed CORE hook
-    _config_set(site, "CORE")
-
     call_scripts(site, 'update-pre-hooks')
+
+    # Now executed the postponed CORE hook
+    # Please note that this is explicitly done AFTER update-pre-hooks, because that executes
+    # "cmk-update-config" which updates e.g. the autochecks from previous versions to make it
+    # loadable by the code of the NEW version
+    _config_set(site, "CORE")
 
     save_site_conf(site)
 

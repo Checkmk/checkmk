@@ -6,7 +6,7 @@
 
 import os
 import abc
-from typing import Dict
+from typing import Dict, Iterator
 
 import cmk.utils.paths
 
@@ -27,6 +27,14 @@ from cmk.gui.valuespec import (
     ListOf,
     TextAscii,
 )
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+)
 
 from cmk.gui.groups import (
     load_host_group_information,
@@ -36,17 +44,12 @@ from cmk.gui.watolib.groups import (
     load_contact_group_information,
     GroupType,
 )
-from cmk.gui.plugins.wato.utils.main_menu import (
-    MainMenu,
-    MenuItem,
-)
 
 from cmk.gui.plugins.wato import ActionResult
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
     wato_confirm,
-    global_buttons,
 )
 
 
@@ -59,12 +62,67 @@ class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
     def _load_groups(self) -> Dict:
         raise NotImplementedError()
 
+    @abc.abstractmethod
+    def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _rules_url(self) -> str:
+        raise NotImplementedError()
+
     def __init__(self) -> None:
         super(ModeGroups, self).__init__()
         self._groups = self._load_groups()
 
-    def buttons(self) -> None:
-        global_buttons()
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="groups",
+                    title=self.title(),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Add"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Add group"),
+                                    icon_name="new",
+                                    item=make_simple_link(
+                                        watolib.folder_preserving_link([
+                                            ("mode", "edit_%s_group" % self.type_name)
+                                        ])),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                            ],
+                        ),
+                        PageMenuTopic(
+                            title=_("Assign to group"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Rules"),
+                                    icon_name="rulesets",
+                                    item=make_simple_link(self._rules_url()),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Setup"),
+                            entries=list(self._page_menu_entries_related()),
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
 
     def action(self) -> ActionResult:
         if html.request.var('_delete'):
@@ -165,11 +223,6 @@ class ModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
         except KeyError:
             raise MKUserError(None, _("This group does not exist."))
 
-    def buttons(self) -> None:
-        html.context_button(
-            _("All groups"),
-            watolib.folder_preserving_link([("mode", "%s_groups" % self.type_name)]), "back")
-
     def _determine_additional_group_data(self) -> None:
         pass
 
@@ -237,31 +290,18 @@ class ModeHostgroups(ModeGroups):
         return load_host_group_information()
 
     def title(self):
-        return _("Host Groups")
+        return _("Host groups")
 
-    def _page_no_groups(self):
-        menu = MainMenu()
-        menu.add_item(
-            MenuItem(
-                mode_or_url="edit_host_group",
-                title=_("Create new host group"),
-                icon="new",
-                permission="groups",
-                description=_("Host groups are used for visualization and filtering of host"),
-            ))
-        menu.show()
+    def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
+        yield PageMenuEntry(
+            title=_("Service groups"),
+            icon_name="servicegroups",
+            item=make_simple_link(watolib.folder_preserving_link([("mode", "service_groups")])),
+        )
 
-    def buttons(self):
-        super(ModeHostgroups, self).buttons()
-        html.context_button(_("Service groups"),
-                            watolib.folder_preserving_link([("mode", "service_groups")]),
-                            "hostgroups")
-        html.context_button(_("New host group"),
-                            watolib.folder_preserving_link([("mode", "edit_host_group")]), "new")
-        html.context_button(
-            _("Rules"),
-            watolib.folder_preserving_link([("mode", "edit_ruleset"), ("varname", "host_groups")]),
-            "rulesets")
+    def _rules_url(self) -> str:
+        return watolib.folder_preserving_link([("mode", "edit_ruleset"),
+                                               ("varname", "host_groups")])
 
 
 @mode_registry.register
@@ -282,32 +322,18 @@ class ModeServicegroups(ModeGroups):
         return load_service_group_information()
 
     def title(self):
-        return _("Service Groups")
+        return _("Service groups")
 
-    def _page_no_groups(self):
-        menu = MainMenu()
-        menu.add_item(
-            MenuItem(
-                mode_or_url="edit_service_group",
-                title=_("Create new service group"),
-                icon="new",
-                permission="groups",
-                description=_(
-                    "Service groups are used for visualization and filtering of services"),
-            ))
-        menu.show()
+    def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
+        yield PageMenuEntry(
+            title=_("Host groups"),
+            icon_name="hostgroups",
+            item=make_simple_link(watolib.folder_preserving_link([("mode", "host_groups")])),
+        )
 
-    def buttons(self):
-        super(ModeServicegroups, self).buttons()
-        html.context_button(_("Host groups"),
-                            watolib.folder_preserving_link([("mode", "host_groups")]),
-                            "servicegroups")
-        html.context_button(_("New service group"),
-                            watolib.folder_preserving_link([("mode", "edit_service_group")]), "new")
-        html.context_button(
-            _("Rules"),
-            watolib.folder_preserving_link([("mode", "edit_ruleset"),
-                                            ("varname", "service_groups")]), "rulesets")
+    def _rules_url(self) -> str:
+        return watolib.folder_preserving_link([("mode", "edit_ruleset"),
+                                               ("varname", "service_groups")])
 
 
 @mode_registry.register
@@ -329,29 +355,18 @@ class ModeContactgroups(ModeGroups):
 
     def title(self):
         self._members = {}
-        return _("Contact Groups")
+        return _("Contact groups")
 
-    def buttons(self):
-        super(ModeContactgroups, self).buttons()
-        html.context_button(_("New contact group"),
-                            watolib.folder_preserving_link([("mode", "edit_contact_group")]), "new")
-        html.context_button(
-            _("Rules"),
-            watolib.folder_preserving_link([("mode", "rulesets"), ("filled_in", "search"),
-                                            ("search", "contactgroups")]), "rulesets")
+    def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
+        yield PageMenuEntry(
+            title=_("Users"),
+            icon_name="users",
+            item=make_simple_link(watolib.folder_preserving_link([("mode", "users")])),
+        )
 
-    def _page_no_groups(self):
-        menu = MainMenu()
-        menu.add_item(
-            MenuItem(
-                mode_or_url="edit_contact_group",
-                title=_("Create new contact group"),
-                icon="new",
-                permission="users",
-                description=_(
-                    "Contact groups are needed for assigning hosts and services to people (contacts)"
-                )))
-        menu.show()
+    def _rules_url(self) -> str:
+        return watolib.folder_preserving_link([("mode", "rulesets"), ("filled_in", "search"),
+                                               ("search", "contactgroups")])
 
     def _collect_additional_data(self):
         users = userdb.load_users()
@@ -396,7 +411,7 @@ class ModeEditServicegroup(ModeEditGroup):
 
     def title(self):
         if self._new:
-            return _("Create new service group")
+            return _("Add service group")
         return _("Edit service group")
 
 
@@ -423,7 +438,7 @@ class ModeEditHostgroup(ModeEditGroup):
 
     def title(self):
         if self._new:
-            return _("Create new host group")
+            return _("Add host group")
         return _("Edit host group")
 
 
@@ -450,7 +465,7 @@ class ModeEditContactgroup(ModeEditGroup):
 
     def title(self):
         if self._new:
-            return _("Create new contact group")
+            return _("Add contact group")
         return _("Edit contact group")
 
     def _determine_additional_group_data(self):

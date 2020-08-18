@@ -7,7 +7,7 @@ from contextlib import contextmanager
 
 import pytest  # type: ignore[import]
 
-from testlib.base import KNOWN_AUTO_MIGRATION_FAILURES
+from testlib.base import KNOWN_AUTO_MIGRATION_FAILURES  # type: ignore[import]
 
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.type_defs import SectionName, CheckPluginName
@@ -2147,9 +2147,7 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'infoblox_dhcp_stats',
         'infoblox_dns_stats',
         'infoblox_grid_status',
-        'infoblox_node_services',
         'infoblox_replication_status',
-        'infoblox_services',
         'infoblox_temp',
         'informix_dbspaces',
         'informix_locks',

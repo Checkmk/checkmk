@@ -9,7 +9,7 @@ import abc
 import os
 import pprint
 import re
-from typing import Dict, Any
+from typing import Dict, Any, Optional, Type
 
 from cmk.gui.htmllib import Choices
 import cmk.gui.config as config
@@ -21,6 +21,15 @@ import cmk.utils.store as store
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+    make_simple_form_page_menu,
+)
 from cmk.gui.watolib.host_attributes import (
     host_attribute_topic_registry,
     transform_pre_16_host_topics,
@@ -134,6 +143,9 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def title(self) -> str:
         raise NotImplementedError()
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(breadcrumb, form_name="attr", button_name="save")
 
     def _add_extra_attrs_from_html_vars(self):
         pass
@@ -250,7 +262,6 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
 
         forms.end()
         html.show_localization_hint()
-        html.button("save", _("Save"))
         html.hidden_fields()
         html.end_form()
 
@@ -264,6 +275,10 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
     @classmethod
     def permissions(cls):
         return ["users", "custom_attributes"]
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeCustomUserAttrs
 
     @property
     def _type(self):
@@ -316,12 +331,8 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
 
     def title(self):
         if self._new:
-            return _("Create User Attribute")
-        return _("Edit User Attribute")
-
-    def buttons(self):
-        html.context_button(_("Back"), watolib.folder_preserving_link([("mode", "user_attrs")]),
-                            "back")
+            return _("Add user attribute")
+        return _("Edit user attribute")
 
 
 @mode_registry.register
@@ -333,6 +344,10 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
     @classmethod
     def permissions(cls):
         return ["hosts", "manage_hosts", "custom_attributes"]
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeCustomHostAttrs
 
     @property
     def _type(self):
@@ -374,12 +389,8 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
 
     def title(self):
         if self._new:
-            return _("Create Host Attribute")
-        return _("Edit Host Attribute")
-
-    def buttons(self):
-        html.context_button(_("Back"), watolib.folder_preserving_link([("mode", "host_attrs")]),
-                            "back")
+            return _("Add host attribute")
+        return _("Edit host attribute")
 
 
 class ModeCustomAttrs(WatoMode, metaclass=abc.ABCMeta):
@@ -405,6 +416,32 @@ class ModeCustomAttrs(WatoMode, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def _update_config(self):
         raise NotImplementedError()
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="attributes",
+                    title=_("Attributes"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Create"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Add attribute"),
+                                    icon_name="new",
+                                    item=make_simple_link(
+                                        watolib.folder_preserving_link([
+                                            ("mode", "edit_%s_attr" % self._type)
+                                        ])),
+                                ),
+                            ],
+                        ),
+                    ],
+                )
+            ],
+            breadcrumb=breadcrumb,
+        )
 
     def action(self):
         if html.request.var('_delete'):
@@ -464,12 +501,7 @@ class ModeCustomUserAttrs(ModeCustomAttrs):
         update_user_custom_attrs()
 
     def title(self):
-        return _("Custom User Attributes")
-
-    def buttons(self):
-        html.context_button(_("Users"), watolib.folder_preserving_link([("mode", "users")]), "back")
-        html.context_button(_("New attribute"),
-                            watolib.folder_preserving_link([("mode", "edit_user_attr")]), "new")
+        return _("Custom user attributes")
 
 
 @mode_registry.register
@@ -491,12 +523,6 @@ class ModeCustomHostAttrs(ModeCustomAttrs):
 
     def title(self):
         return _("Custom host attributes")
-
-    def buttons(self):
-        html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]),
-                            "back")
-        html.context_button(_("New attribute"),
-                            watolib.folder_preserving_link([("mode", "edit_host_attr")]), "new")
 
     def get_attributes(self):
         return self._attrs

@@ -153,17 +153,34 @@ class ModeBulkCleanup(WatoMode):
 
         html.begin_form("bulkcleanup", method="POST")
         forms.header(_("Attributes to remove from hosts"))
-        if not self._select_attributes_for_bulk_cleanup(hosts):
-            forms.end()
-            html.write_text(_("The selected hosts have no explicit attributes"))
-        else:
-            forms.end()
-            html.button("_save", _("Save & Finish"))
+        self._select_attributes_for_bulk_cleanup(hosts)
         html.hidden_fields()
         html.end_form()
 
     def _select_attributes_for_bulk_cleanup(self, hosts):
-        num_shown = 0
+        attributes = self._get_attributes_for_bulk_cleanup(hosts)
+
+        for attr, is_inherited, num_haveit in attributes:
+            # Legend and Help
+            forms.section(attr.title())
+
+            if attr.is_mandatory() and not is_inherited:
+                html.write_text(
+                    _("This attribute is mandatory and there is no value "
+                      "defined in the host list or any parent folder."))
+            else:
+                label = "clean this attribute on <b>%s</b> hosts" % \
+                    (num_haveit == len(hosts) and "all selected" or str(num_haveit))
+                html.checkbox("_clean_%s" % attr.name(), False, label=label)
+            html.help(attr.help())
+
+        forms.end()
+
+        if not attributes:
+            html.write_text(_("The selected hosts have no explicit attributes"))
+
+    def _get_attributes_for_bulk_cleanup(self, hosts):
+        attributes = []
         for attr in host_attribute_registry.get_sorted_host_attributes():
             attrname = attr.name()
 
@@ -176,7 +193,7 @@ class ModeBulkCleanup(WatoMode):
                 if host.has_explicit_attribute(attrname):
                     num_haveit += 1
 
-            if num_haveit == 0:
+            if not num_haveit:
                 continue
 
             # If the attribute is mandatory and no value is inherited
@@ -189,19 +206,5 @@ class ModeBulkCleanup(WatoMode):
                     break
                 container = container.parent()
 
-            num_shown += 1
-
-            # Legend and Help
-            forms.section(attr.title())
-
-            if attr.is_mandatory() and not is_inherited:
-                html.write_text(
-                    _("This attribute is mandatory and there is no value "
-                      "defined in the host list or any parent folder."))
-            else:
-                label = "clean this attribute on <b>%s</b> hosts" % \
-                    (num_haveit == len(hosts) and "all selected" or str(num_haveit))
-                html.checkbox("_clean_%s" % attrname, False, label=label)
-            html.help(attr.help())
-
-        return num_shown > 0
+            attributes.append((attr, is_inherited, num_haveit))
+        return attributes

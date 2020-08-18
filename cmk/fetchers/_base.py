@@ -37,10 +37,10 @@ class ABCFileCache(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
     ) -> None:
         super().__init__()
         self.path: Final = Path(path)
-        self.max_age: Final = max_age
-        self.disabled: Final = disabled
-        self.use_outdated: Final = use_outdated
-        self.simulation: Final = simulation
+        self.max_age = max_age
+        self.disabled = disabled
+        self.use_outdated = use_outdated
+        self.simulation = simulation
         self._logger: Final = logging.getLogger("")  # TODO(ml): configure the logger
 
     @classmethod
@@ -58,7 +58,12 @@ class ABCFileCache(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     def read(self) -> Optional[BoundedAbstractRawData]:
-        assert self.max_age is not None
+        raw_data = self._read()
+        if raw_data is None and self.simulation:
+            raise MKFetcherError("Got no data (Simulation mode enabled and no cachefile present)")
+        return raw_data
+
+    def _read(self) -> Optional[BoundedAbstractRawData]:
         if not self.path.exists():
             self._logger.debug("Not using cache (Does not exist)")
             return None
@@ -67,13 +72,9 @@ class ABCFileCache(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
             self._logger.debug("Not using cache (Cache usage disabled)")
             return None
 
-        if self.simulation:
-            self._logger.debug("Not using cache (Don't try it)")
-            return None
-
         may_use_outdated = self.simulation or self.use_outdated
         cachefile_age = cmk.utils.cachefile_age(self.path)
-        if not may_use_outdated and cachefile_age > self.max_age:
+        if not may_use_outdated and self.max_age is not None and cachefile_age > self.max_age:
             self._logger.debug("Not using cache (Too old. Age is %d sec, allowed is %s sec)",
                                cachefile_age, self.max_age)
             return None
@@ -110,9 +111,10 @@ TFetcher = TypeVar("TFetcher", bound="ABCFetcher")
 
 class ABCFetcher(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
     """Interface to the data fetchers."""
-    def __init__(self, file_cache: ABCFileCache) -> None:
+    def __init__(self, file_cache: ABCFileCache, logger: logging.Logger) -> None:
         super().__init__()
-        self.file_cache = file_cache
+        self.file_cache: ABCFileCache[BoundedAbstractRawData] = file_cache
+        self._logger = logger
 
     @classmethod
     @abc.abstractmethod
@@ -128,6 +130,23 @@ class ABCFetcher(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
                  traceback: Optional[TracebackType]) -> Optional[bool]:
         """Destroy the data source."""
 
-    @abc.abstractmethod
-    def data(self) -> BoundedAbstractRawData:
+    def fetch(self) -> BoundedAbstractRawData:
         """Return the data from the source."""
+        # TODO(ml): Handle `selected_raw_sections` in SNMP.
+        # TODO(ml): EAFP would significantly simplify the code.
+        raw_data = self._fetch_from_cache()
+        if raw_data:
+            self._logger.log(VERBOSE, "Use cached data")
+            return raw_data
+
+        self._logger.log(VERBOSE, "Execute data source")
+        raw_data = self._fetch_from_io()
+        self.file_cache.write(raw_data)
+        return raw_data
+
+    @abc.abstractmethod
+    def _fetch_from_io(self) -> BoundedAbstractRawData:
+        """Override this method to contact the source and return the raw data."""
+
+    def _fetch_from_cache(self) -> Optional[BoundedAbstractRawData]:
+        return self.file_cache.read()

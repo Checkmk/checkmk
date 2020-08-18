@@ -7,7 +7,6 @@
 from pathlib import Path
 from typing import Any, Dict, Final, Optional
 
-from cmk.utils.log import VERBOSE
 from cmk.utils.paths import tmp_dir
 from cmk.utils.piggyback import get_piggyback_raw_data
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, ServiceCheckResult, SourceType
@@ -108,17 +107,5 @@ class PiggyBackDataSource(AgentDataSource):
         selected_raw_sections: Optional[SelectedRawSections],
     ) -> AgentRawData:
         with PiggyBackFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
-            return fetcher.data()
+            return fetcher.fetch()
         raise MKAgentError("Failed to read data")
-
-    def _get_raw_data(
-        self,
-        *,
-        selected_raw_sections: Optional[SelectedRawSections],
-    ) -> AgentRawData:
-        """Returns the current raw data of this data source
-
-        Special for piggyback: No caching of raw data
-        """
-        self._logger.log(VERBOSE, "Execute data source")
-        return self._execute(selected_raw_sections=selected_raw_sections)

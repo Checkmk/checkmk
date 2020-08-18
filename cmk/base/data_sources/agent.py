@@ -28,8 +28,6 @@ from cmk.utils.type_defs import (
 )
 from cmk.utils.werks import parse_check_mk_version
 
-from cmk.fetchers import AgentFileCache
-from cmk.fetchers._base import ABCFileCache
 from cmk.fetchers.controller import FetcherType
 
 import cmk.base.config as config
@@ -478,10 +476,6 @@ class AgentDataSource(ABCDataSource[AgentRawData, AgentSections, AgentPersistedS
     @property
     def _parser(self) -> ABCParser:
         return AgentParser(self.hostname, self._logger)
-
-    @property
-    def _file_cache(self) -> ABCFileCache:
-        return AgentFileCache.from_json(self.configurator.file_cache.configure())
 
     def run_raw(self) -> AgentRawData:
         """Return raw data from cache or fetcher."""

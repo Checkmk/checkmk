@@ -273,5 +273,5 @@ class ProgramDataSource(AgentDataSource):
     ) -> AgentRawData:
         # TODO(ml): Do something with the selection.
         with ProgramFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
-            return fetcher.data()
+            return fetcher.fetch()
         raise MKAgentError("Failed to read data")

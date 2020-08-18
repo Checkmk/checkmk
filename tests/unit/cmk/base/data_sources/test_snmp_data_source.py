@@ -6,20 +6,11 @@
 
 # pylint: disable=protected-access
 
-import json
-
 import pytest  # type: ignore[import]
-from pyfakefs.fake_filesystem_unittest import patchfs  # type: ignore[import]
 
-# No stub
 from testlib.base import Scenario  # type: ignore[import]
 
-import cmk.utils.store as store
-from cmk.utils.type_defs import SectionName, SourceType
-
-from cmk.snmplib.type_defs import SNMPRawData, SNMPTable
-
-from cmk.fetchers.snmp import SNMPFileCache
+from cmk.utils.type_defs import SourceType
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
@@ -59,95 +50,6 @@ def source_fixture(scenario, configurator):
     return SNMPDataSource(configurator)
 
 
-@patchfs
-def test_disable_read_to_file_cache(source, monkeypatch, fs):
-    # Beginning of setup.
-    source.configurator.file_cache.max_age = 999
-    type(source.configurator.file_cache).maybe = True
-
-    # Patch I/O: It is good enough to patch `store.save_file()`
-    # as pyfakefs takes care of the rest.
-    monkeypatch.setattr(
-        store,
-        "save_file",
-        lambda path, contents: fs.create_file(path, contents=contents),
-    )
-
-    table: SNMPTable = []
-    raw_data: SNMPRawData = {SectionName("X"): table}
-    # End of setup.
-
-    assert not source.configurator.file_cache.disabled
-
-    source._file_cache.write(raw_data)
-
-    assert source._file_cache.path.exists()
-    assert source._file_cache.read() == raw_data
-
-    type(source.configurator.file_cache).disabled = True
-    assert source.configurator.file_cache.disabled
-
-    assert source._file_cache.read() is None
-
-
-@patchfs
-def test_disable_write_to_file_cache(source, monkeypatch, fs):
-    # Beginning of setup.
-    source.configurator.file_cache.max_age = 999
-    type(source.configurator.file_cache).maybe = True
-
-    # Patch I/O: It is good enough to patch `store.save_file()`
-    # as pyfakefs takes care of the rest.
-    monkeypatch.setattr(
-        store,
-        "save_file",
-        lambda path, contents: fs.create_file(path, contents=contents),
-    )
-
-    table: SNMPTable = []
-    raw_data: SNMPRawData = {SectionName("X"): table}
-    # End of setup.
-
-    type(source.configurator.file_cache).disabled = True
-    assert source.configurator.file_cache.disabled
-
-    # Another instance bites the dust.
-    source._file_cache.write(raw_data)
-
-    assert not source._file_cache.path.exists()
-    assert source._file_cache.read() is None
-
-
-@patchfs
-def test_write_and_read_file_cache(source, monkeypatch, fs):
-    # Beginning of setup.
-    source.configurator.file_cache.max_age = 999
-    type(source.configurator.file_cache).maybe = True
-
-    # Patch I/O: It is good enough to patch `store.save_file()`
-    # as pyfakefs takes care of the rest.
-    monkeypatch.setattr(
-        store,
-        "save_file",
-        lambda path, contents: fs.create_file(path, contents=contents),
-    )
-
-    table: SNMPTable = []
-    raw_data: SNMPRawData = {SectionName("X"): table}
-    # End of setup.
-
-    assert not source.configurator.file_cache.disabled
-    assert not source._file_cache.path.exists()
-
-    source._file_cache.write(raw_data)
-
-    assert source._file_cache.path.exists()
-    assert source._file_cache.read() == raw_data
-
-    # Another instance bites the dust.
-    assert source._file_cache.read() == raw_data
-
-
 def test_snmp_ipaddress_from_mgmt_board_unresolvable(hostname, monkeypatch):
     def fake_lookup_ip_address(host_config, family=None, for_mgmt_board=True):
         raise MKIPAddressLookupError("Failed to ...")
@@ -163,19 +65,11 @@ def test_snmp_ipaddress_from_mgmt_board_unresolvable(hostname, monkeypatch):
     assert ip_lookup.lookup_mgmt_board_ip_address(host_config) is None
 
 
-def test_configure_file_cache_serialization(configurator):
-    def json_identity(data):
-        return json.loads(json.dumps(data))
-
-    assert json_identity(configurator.file_cache.configure()) == configurator.file_cache.configure()
-
-
 def test_attribute_defaults(source, hostname, ipaddress, monkeypatch):
     assert source.hostname == hostname
     assert source.ipaddress == ipaddress
     assert source.id == "snmp"
     assert source._cpu_tracking_id == "snmp"
-    assert isinstance(source._file_cache, SNMPFileCache)
 
     configurator = source.configurator
     assert configurator.hostname == hostname
@@ -185,7 +79,6 @@ def test_attribute_defaults(source, hostname, ipaddress, monkeypatch):
 
     assert configurator.on_snmp_scan_error == "raise"
     assert configurator.do_snmp_scan is False
-    assert configurator.file_cache.maybe is False
 
     # From the base class
     assert source.exception() is None

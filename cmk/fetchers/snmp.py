@@ -39,11 +39,10 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         use_snmpwalk_cache: bool,
         snmp_config: SNMPHostConfig,
     ) -> None:
-        super().__init__(file_cache)
+        super().__init__(file_cache, logging.getLogger("cmk.fetchers.snmp"))
         self._oid_infos = oid_infos
         self._use_snmpwalk_cache = use_snmpwalk_cache
         self._snmp_config = snmp_config
-        self._logger = logging.getLogger("cmk.fetchers.snmp")
 
     @classmethod
     def from_json(cls, serialized: Dict[str, Any]) -> 'SNMPFetcher':
@@ -64,7 +63,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
                  traceback: Optional[TracebackType]) -> None:
         pass
 
-    def data(self) -> SNMPRawData:
+    def _fetch_from_io(self) -> SNMPRawData:
         fetched_data: SNMPRawData = {}
         for section_name, oid_info in self._oid_infos.items():
             self._logger.debug("%s: Fetching data", section_name)

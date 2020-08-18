@@ -16,6 +16,7 @@ from .snmp import SNMPFetcher, SNMPFileCache
 from .tcp import TCPFetcher
 
 __all__ = [
+    "MKFetcherError",
     "IPMIFetcher",
     "PiggyBackFetcher",
     "ProgramFetcher",

@@ -143,7 +143,7 @@ def _run_fetcher(entry: Dict[str, Any], timeout: int) -> Dict[str, Any]:
         fetcher_params = entry["fetcher_params"]
 
         with FetcherType[fetcher_type].value.from_json(fetcher_params) as fetcher:
-            fetcher_data = fetcher.data()
+            fetcher_data = fetcher.fetch()
 
         # If data returns bytes -> decode. This is current state of development.
         # SNMP returns not a str, but raw structure. We must serialize this structure and send it.

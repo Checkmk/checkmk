@@ -28,12 +28,11 @@ class TCPFetcher(AgentFetcher):
         timeout: float,
         encryption_settings: Dict[str, str],
     ) -> None:
-        super().__init__(file_cache)
+        super().__init__(file_cache, logging.getLogger("cmk.fetchers.tcp"))
         self._family = socket.AddressFamily(family)
         self._address = address
         self._timeout = timeout
         self._encryption_settings = encryption_settings
-        self._logger = logging.getLogger("cmk.fetchers.tcp")
         self._socket: Optional[socket.socket] = None
 
     @classmethod
@@ -63,7 +62,7 @@ class TCPFetcher(AgentFetcher):
             self._socket.close()
         self._socket = None
 
-    def data(self) -> AgentRawData:
+    def _fetch_from_io(self) -> AgentRawData:
         if self._socket is None:
             raise MKFetcherError("Not connected")
 

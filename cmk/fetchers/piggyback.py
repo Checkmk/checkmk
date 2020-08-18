@@ -15,25 +15,37 @@ from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
 from .agent import AgentFetcher, AgentFileCache
 
 
+class PiggyBackFileCache(AgentFileCache):
+    """Piggy back does not cache raw data.
+
+    This class is a stub.
+
+    """
+    def read(self) -> None:
+        return None
+
+    def write(self, raw_data: AgentRawData) -> None:
+        pass
+
+
 class PiggyBackFetcher(AgentFetcher):
     def __init__(
         self,
-        file_cache: AgentFileCache,
+        file_cache: PiggyBackFileCache,
         hostname: HostName,
         address: Optional[HostAddress],
         time_settings: List[Tuple[Optional[str], str, int]],
     ) -> None:
-        super().__init__(file_cache)
+        super().__init__(file_cache, logging.getLogger("cmk.fetchers.piggyback"))
         self._hostname = hostname
         self._address = address
         self._time_settings = time_settings
-        self._logger = logging.getLogger("cmk.fetchers.piggyback")
         self._sources: List[PiggybackRawDataInfo] = []
 
     @classmethod
     def from_json(cls, serialized: Dict[str, Any]) -> "PiggyBackFetcher":
         return cls(
-            AgentFileCache.from_json(serialized.pop("file_cache")),
+            PiggyBackFileCache.from_json(serialized.pop("file_cache")),
             **serialized,
         )
 
@@ -46,7 +58,7 @@ class PiggyBackFetcher(AgentFetcher):
                  traceback: Optional[TracebackType]) -> None:
         self._sources.clear()
 
-    def data(self) -> AgentRawData:
+    def _fetch_from_io(self) -> AgentRawData:
         raw_data = b""
         raw_data += self._get_main_section()
         raw_data += self._get_source_labels_section()

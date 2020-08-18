@@ -118,5 +118,5 @@ class IPMIManagementBoardDataSource(AgentDataSource):
             selected_raw_section_names = {SectionName("mgmt_ipmi_sensors")}
 
         with IPMIFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
-            return fetcher.data()
+            return fetcher.fetch()
         raise MKAgentError("Failed to read data")

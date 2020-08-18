@@ -20,8 +20,7 @@ from cmk.snmplib.type_defs import (
     SNMPTree,
 )
 
-from cmk.fetchers import factory, FetcherType, SNMPFetcher, SNMPFileCache
-from cmk.fetchers._base import ABCFileCache
+from cmk.fetchers import factory, FetcherType, SNMPFetcher
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
@@ -344,10 +343,6 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
     def _parser(self) -> ABCParser:
         return SNMPParser(self.hostname, self._logger)
 
-    @property
-    def _file_cache(self) -> ABCFileCache:
-        return SNMPFileCache.from_json(self.configurator.file_cache.configure())
-
     def _execute(
         self,
         *,
@@ -358,5 +353,5 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
         configurator.selected_raw_sections = selected_raw_sections  # checking only
         # End of wrong
         with SNMPFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
-            return fetcher.data()
+            return fetcher.fetch()
         raise MKAgentError("Failed to read data")

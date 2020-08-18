@@ -7,16 +7,20 @@
 import json
 import socket
 from collections import namedtuple
+from pathlib import Path
 
 import pytest  # type: ignore[import]
 
-from cmk.snmplib.type_defs import SNMPHostConfig, SNMPTree
+import cmk.utils.store as store
+from cmk.utils.type_defs import SectionName
 
-from cmk.fetchers import AgentFileCache, FetcherType, MKFetcherError, SNMPFileCache
+from cmk.snmplib.type_defs import SNMPHostConfig, SNMPRawData, SNMPTable, SNMPTree
+
+from cmk.fetchers import AgentFileCache, FetcherType, MKFetcherError
 from cmk.fetchers.ipmi import IpmiException, IPMIFetcher
 from cmk.fetchers.piggyback import PiggyBackFetcher
 from cmk.fetchers.program import ProgramFetcher
-from cmk.fetchers.snmp import SNMPFetcher
+from cmk.fetchers.snmp import SNMPFetcher, SNMPFileCache
 from cmk.fetchers.tcp import TCPFetcher
 
 from cmk.base.data_sources import FileCacheConfigurator
@@ -43,6 +47,81 @@ def fc_agent_fixture(fc_conf):
 @pytest.fixture(name="fc_snmp")
 def fc_snmp_fixture(fc_conf):
     return SNMPFileCache.from_json(fc_conf.configure())
+
+
+def clone_file_cache(file_cache):
+    return type(file_cache)(
+        path=file_cache.path,
+        max_age=file_cache.max_age,
+        disabled=file_cache.disabled,
+        use_outdated=file_cache.use_outdated,
+        simulation=file_cache.simulation,
+    )
+
+
+class TestFileCache:
+    @pytest.fixture(autouse=True)
+    def patch_store(self, fs, monkeypatch):
+        # Patching `save_file` is necessary because the store assumes
+        # a real filesystem.
+        monkeypatch.setattr(
+            store,
+            "save_file",
+            lambda path, contents: fs.create_file(path, contents=contents),
+        )
+
+    @pytest.fixture
+    def path(self):
+        return Path("/tmp/file_cache/database")
+
+    @pytest.fixture
+    def file_cache(self, path, fs):
+        return SNMPFileCache(
+            path=path,
+            max_age=999,
+            disabled=False,
+            use_outdated=False,
+            simulation=False,
+        )
+
+    @pytest.fixture
+    def raw_data(self):
+        table: SNMPTable = []
+        raw_data: SNMPRawData = {SectionName("X"): table}
+        return raw_data
+
+    def test_write_and_read(self, file_cache, raw_data):
+        assert not file_cache.disabled
+        assert not file_cache.path.exists()
+
+        file_cache.write(raw_data)
+
+        assert file_cache.path.exists()
+        assert file_cache.read() == raw_data
+
+        # Now with another instance
+        clone = clone_file_cache(file_cache)
+        assert clone.path.exists()
+        assert clone.read() == raw_data
+
+    def test_disabled_write(self, file_cache, raw_data):
+        file_cache.disabled = True
+        assert file_cache.disabled is True
+        assert not file_cache.path.exists()
+
+        file_cache.write(raw_data)
+
+        assert not file_cache.path.exists()
+        assert file_cache.read() is None
+
+    def test_disabled_read(self, file_cache, raw_data):
+        file_cache.write(raw_data)
+        assert file_cache.path.exists()
+        assert file_cache.read() == raw_data
+
+        file_cache.disabled = True
+        assert file_cache.path.exists()
+        assert file_cache.read() is None
 
 
 class TestIPMIFetcher:
@@ -76,33 +155,46 @@ class TestIPMIFetcher:
             0, reading) == [b"0", b"Dingeling", b"FancyDevice", b"3.14", b"C", b"Present"]
 
 
-class TestPiggyBack:
-    def test_deserialization(self, fc_conf):
-        fetcher = PiggyBackFetcher.from_json(
+class TestPiggyBackFetcher:
+    @pytest.fixture(name="fetcher")
+    def fetcher_fixture(self, fc_conf):
+        return PiggyBackFetcher.from_json(
             json_identity({
                 "file_cache": fc_conf.configure(),
                 "hostname": "host",
                 "address": "1.2.3.4",
                 "time_settings": [],
             }))
+
+    def test_deserialization(self, fetcher):
         assert isinstance(fetcher, PiggyBackFetcher)
 
+    def test_file_cache_deserialization(self, fetcher):
+        assert isinstance(fetcher.file_cache, AgentFileCache)
 
-class TestProgram:
-    def test_deserialization(self, fc_conf):
-        fetcher = ProgramFetcher.from_json(
+
+class TestProgramFetcher:
+    @pytest.fixture(name="fetcher")
+    def fetcher_fixture(self, fc_conf):
+        return ProgramFetcher.from_json(
             json_identity({
                 "file_cache": fc_conf.configure(),
                 "cmdline": "/bin/true",
                 "stdin": None,
                 "is_cmc": False,
             }))
+
+    def test_deserialization(self, fetcher):
         assert isinstance(fetcher, ProgramFetcher)
 
+    def test_file_cache_deserialization(self, fetcher):
+        assert isinstance(fetcher.file_cache, AgentFileCache)
 
-class TestSNMP:
-    def test_deserialization(self, fc_conf):
-        fetcher = SNMPFetcher.from_json(
+
+class TestSNMPFetcher:
+    @pytest.fixture(name="fetcher")
+    def fetcher_fixture(self, fc_conf):
+        return SNMPFetcher.from_json(
             json_identity({
                 "file_cache": fc_conf.configure(),
                 "oid_infos": {
@@ -132,12 +224,18 @@ class TestSNMP:
                     record_stats=False,
                 )._asdict(),
             }))
+
+    def test_deserialization(self, fetcher):
         assert isinstance(fetcher, SNMPFetcher)
+
+    def test_file_cache_deserialization(self, fetcher):
+        assert isinstance(fetcher.file_cache, SNMPFileCache)
 
 
 class TestTCPFetcher:
-    def test_deserialization(self, fc_conf):
-        fetcher = TCPFetcher.from_json(
+    @pytest.fixture(name="fetcher")
+    def fetcher_fixture(self, fc_conf):
+        return TCPFetcher.from_json(
             json_identity({
                 "file_cache": fc_conf.configure(),
                 "family": socket.AF_INET,
@@ -147,7 +245,12 @@ class TestTCPFetcher:
                     "encryption": "settings"
                 },
             }))
+
+    def test_deserialization(self, fetcher):
         assert isinstance(fetcher, TCPFetcher)
+
+    def test_file_cache_deserialization(self, fetcher):
+        assert isinstance(fetcher.file_cache, AgentFileCache)
 
     def test_decrypt_plaintext_is_noop(self, fc_agent):
         settings = {"use_regular": "allow"}

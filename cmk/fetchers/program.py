@@ -28,11 +28,10 @@ class ProgramFetcher(AgentFetcher):
         stdin: Optional[str],
         is_cmc: bool,
     ) -> None:
-        super().__init__(file_cache)
+        super().__init__(file_cache, logging.getLogger("cmk.fetchers.program"))
         self._cmdline = cmdline
         self._stdin = stdin
         self._is_cmc = is_cmc
-        self._logger = logging.getLogger("cmk.fetchers.program")
         self._process: Optional[subprocess.Popen] = None
 
     @classmethod
@@ -94,7 +93,7 @@ class ProgramFetcher(AgentFetcher):
         self._process.stderr.close()
         self._process = None
 
-    def data(self) -> AgentRawData:
+    def _fetch_from_io(self) -> AgentRawData:
         if self._process is None:
             raise MKFetcherError("No process")
         stdout, stderr = self._process.communicate(

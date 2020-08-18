@@ -96,10 +96,7 @@ class TestControllerApi:
         return '[%s, %s]' % (make_blob("TCP", 0, "<<<check_mk>>>abc"), make_blob(
             "PIGGYBACK", 0, ""))
 
-    @pytest.mark.parametrize("the_host", [
-        "heute",
-        "rrd_host",
-    ])
+    @pytest.mark.parametrize("the_host", ["heute", "rrd_host"])
     @pytest.mark.usefixtures("scenario")
     def test_run_fetchers(self, the_host, capsys, expected_error, expected_blob):
         fetcher_config = FetcherConfig()

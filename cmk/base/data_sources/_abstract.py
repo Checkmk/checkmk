@@ -21,7 +21,6 @@ from cmk.utils.exceptions import MKSNMPError, MKTerminate, MKTimeout
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
 
-from cmk.fetchers._base import ABCFileCache
 from cmk.fetchers.controller import FetcherType
 from cmk.fetchers.type_defs import BoundedAbstractRawData
 
@@ -443,7 +442,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         self._exception = None
         self._host_sections = None
         try:
-            raw_data = self._get_raw_data(selected_raw_sections=selected_raw_sections,)
+            raw_data = self._execute(selected_raw_sections=selected_raw_sections)
             self._host_sections = self.check(raw_data)
 
             if get_raw_data:
@@ -464,33 +463,6 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
             return self.default_raw_data
         return self.default_host_sections
 
-    def _get_raw_data(
-        self,
-        *,
-        selected_raw_sections: Optional[SelectedRawSections],
-    ) -> BoundedAbstractRawData:
-        """Returns the current raw data of this data source
-
-        It either uses previously cached raw data of this data source or
-        executes the data source to get new data.
-
-        The "raw data" is the raw byte string returned by the source for
-        AgentDataSource sources. The SNMPDataSource source already
-        return the final info data structure.
-        """
-        raw_data = self._file_cache.read()
-        if raw_data:
-            self._logger.log(VERBOSE, "Use cached data")
-            return raw_data
-
-        if raw_data is None and config.simulation_mode:
-            raise MKAgentError("Got no data (Simulation mode enabled and no cachefile present)")
-
-        self._logger.log(VERBOSE, "Execute data source")
-        raw_data = self._execute(selected_raw_sections=selected_raw_sections,)
-        self._file_cache.write(raw_data)
-        return raw_data
-
     @abc.abstractmethod
     def _execute(
         self,
@@ -509,11 +481,6 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     @property
     @abc.abstractmethod
     def _parser(self) -> ABCParser[BoundedAbstractRawData, BoundedAbstractHostSections]:
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
-    def _file_cache(self) -> ABCFileCache:
         raise NotImplementedError
 
     def get_summary_result(self) -> ServiceCheckResult:

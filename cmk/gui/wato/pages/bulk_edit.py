@@ -8,12 +8,18 @@ cleanup is implemented here: the bulk removal of explicit attribute
 values."""
 
 from hashlib import sha256
+from typing import Type, Optional
 
 from six import ensure_binary
 
+from cmk.gui.globals import html
+from cmk.gui.i18n import _
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
+from cmk.gui.wato.pages.folders import ModeFolder
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import PageMenu, make_simple_form_page_menu
 
 from cmk.gui.plugins.wato.utils import (
     mode_registry,
@@ -23,9 +29,6 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.watolib.host_attributes import host_attribute_registry
-
-from cmk.gui.globals import html
-from cmk.gui.i18n import _
 
 
 @mode_registry.register
@@ -38,12 +41,19 @@ class ModeBulkEdit(WatoMode):
     def permissions(cls):
         return ["hosts", "edit_hosts"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeFolder
+
     def title(self):
         return _("Bulk edit hosts")
 
-    def buttons(self):
-        html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]),
-                            "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(
+            breadcrumb,
+            form_name="edit_host",
+            button_name="_save",
+        )
 
     def action(self):
         if not html.check_transaction():
@@ -90,7 +100,6 @@ class ModeBulkEdit(WatoMode):
         html.hidden_field("host_hash", current_host_hash)
         configure_attributes(False, hosts, "bulk", parent=watolib.Folder.current())
         forms.end()
-        html.button("_save", _("Save & Finish"))
         html.hidden_fields()
         html.end_form()
 
@@ -105,14 +114,25 @@ class ModeBulkCleanup(WatoMode):
     def permissions(cls):
         return ["hosts", "edit_hosts"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeFolder
+
     def _from_vars(self):
         self._folder = watolib.Folder.current()
 
     def title(self):
         return _("Bulk removal of explicit attributes")
 
-    def buttons(self):
-        html.context_button(_("Back"), self._folder.url(), "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        hosts = get_hosts_from_checkboxes()
+
+        return make_simple_form_page_menu(
+            breadcrumb,
+            form_name="bulkcleanup",
+            button_name="_save",
+            save_is_enabled=bool(self._get_attributes_for_bulk_cleanup(hosts)),
+        )
 
     def action(self):
         if not html.check_transaction():

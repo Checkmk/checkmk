@@ -7,7 +7,7 @@
 this mode is used."""
 
 import copy
-from typing import List, Tuple, cast
+from typing import List, Tuple, cast, Type, Optional
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
@@ -16,6 +16,9 @@ from cmk.gui.log import logger
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import PageMenu, make_simple_form_page_menu
+from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.bulk_discovery import (
     BulkDiscoveryBackgroundJob,
@@ -40,6 +43,10 @@ class ModeBulkDiscovery(WatoMode):
     @classmethod
     def permissions(cls):
         return ["hosts", "services"]
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeFolder
 
     def _from_vars(self):
         self._start = bool(html.request.var("_start"))
@@ -72,8 +79,13 @@ class ModeBulkDiscovery(WatoMode):
     def title(self):
         return _("Bulk discovery")
 
-    def buttons(self):
-        html.context_button(_("Folder"), Folder.current().url(), "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(
+            breadcrumb,
+            form_name="bulkinventory",
+            button_name="_start",
+            save_title=_("Start"),
+        )
 
     def action(self):
         config.user.need_permission("wato.services")
@@ -136,7 +148,6 @@ class ModeBulkDiscovery(WatoMode):
         vs.render_input("bulkinventory", self._bulk_discovery_params)
         forms.end()
 
-        html.button("_start", _("Start"))
         html.hidden_fields()
         html.end_form()
 

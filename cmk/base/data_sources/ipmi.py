@@ -60,6 +60,7 @@ class IPMIConfigurator(AgentConfigurator):
             raise MKAgentError("Missing IP address")
 
         return {
+            "file_cache": self.file_cache.configure(),
             "address": self.ipaddress,
             "username": self.credentials["username"],
             "password": self.credentials["password"],

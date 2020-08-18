@@ -15,20 +15,20 @@ from Cryptodome.Cipher import AES
 import cmk.utils.debug
 from cmk.utils.type_defs import AgentRawData, HostAddress
 
-from ._base import MKFetcherError
-from .agent import AgentFetcher
+from . import MKFetcherError
+from .agent import AgentFetcher, AgentFileCache
 
 
 class TCPFetcher(AgentFetcher):
     def __init__(
         self,
+        file_cache: AgentFileCache,
         family: socket.AddressFamily,
         address: Tuple[HostAddress, int],
         timeout: float,
         encryption_settings: Dict[str, str],
-    ):
-        # type (...) -> None
-        super(TCPFetcher, self).__init__()
+    ) -> None:
+        super().__init__(file_cache)
         self._family = socket.AddressFamily(family)
         self._address = address
         self._timeout = timeout
@@ -37,9 +37,11 @@ class TCPFetcher(AgentFetcher):
         self._socket: Optional[socket.socket] = None
 
     @classmethod
-    def from_json(cls, serialized: Dict[str, Any]) -> 'TCPFetcher':
-        serialized["address"] = tuple(serialized["address"])
-        return super().from_json(serialized)
+    def from_json(cls, serialized: Dict[str, Any]) -> "TCPFetcher":
+        return cls(
+            AgentFileCache.from_json(serialized.pop("file_cache")),
+            **serialized,
+        )
 
     def __enter__(self) -> 'TCPFetcher':
         self._logger.debug("Connecting via TCP to %s:%d (%ss timeout)", self._address[0],

@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
+from pathlib import Path
 
 import pytest  # type: ignore[import]
 
@@ -91,7 +92,15 @@ def test_attribute_defaults(mode, monkeypatch):
     Scenario().add_host(hostname).apply(monkeypatch)
 
     configurator = TCPConfigurator(hostname, ipaddress, mode=mode)
+    configurator.file_cache.path = Path("/my/path/")
     assert configurator.configure_fetcher() == {
+        "file_cache": {
+            "disabled": False,
+            "max_age": None,
+            "path": "/my/path",
+            "simulation": False,
+            "use_outdated": False,
+        },
         "family": socket.AF_INET,
         "address": (ipaddress, 6556),
         "timeout": 5.0,

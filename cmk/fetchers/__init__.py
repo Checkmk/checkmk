@@ -7,6 +7,7 @@
 
 import enum
 
+from ._base import MKFetcherError
 from .agent import AgentFileCache
 from .ipmi import IPMIFetcher
 from .piggyback import PiggyBackFetcher

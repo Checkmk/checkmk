@@ -91,6 +91,7 @@ class ProgramConfigurator(AgentConfigurator):
 
     def configure_fetcher(self) -> Dict[str, Any]:
         return {
+            "file_cache": self.file_cache.configure(),
             "cmdline": self.cmdline,
             "stdin": self.stdin,
             "is_cmc": config.is_cmc(),

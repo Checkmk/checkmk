@@ -183,6 +183,7 @@ class SNMPConfigurator(ABCConfigurator):
 
     def configure_fetcher(self) -> Dict[str, Any]:
         return {
+            "file_cache": self.file_cache.configure(),
             "oid_infos": {
                 str(name): [tree.to_json() for tree in trees]
                 for name, trees in self._make_oid_infos(
@@ -345,10 +346,7 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
 
     @property
     def _file_cache(self) -> ABCFileCache:
-        return SNMPFileCache.from_json(
-            self.configurator.file_cache.configure(),
-            logger=self._logger,
-        )
+        return SNMPFileCache.from_json(self.configurator.file_cache.configure())
 
     def _execute(
         self,

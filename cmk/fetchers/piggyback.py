@@ -12,13 +12,18 @@ from typing import Any, Dict, List, Optional, Tuple, Type
 from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo, PiggybackTimeSettings
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
 
-from .agent import AgentFetcher
+from .agent import AgentFetcher, AgentFileCache
 
 
 class PiggyBackFetcher(AgentFetcher):
-    def __init__(self, hostname: HostName, address: Optional[HostAddress],
-                 time_settings: List[Tuple[Optional[str], str, int]]) -> None:
-        super(PiggyBackFetcher, self).__init__()
+    def __init__(
+        self,
+        file_cache: AgentFileCache,
+        hostname: HostName,
+        address: Optional[HostAddress],
+        time_settings: List[Tuple[Optional[str], str, int]],
+    ) -> None:
+        super().__init__(file_cache)
         self._hostname = hostname
         self._address = address
         self._time_settings = time_settings
@@ -26,8 +31,11 @@ class PiggyBackFetcher(AgentFetcher):
         self._sources: List[PiggybackRawDataInfo] = []
 
     @classmethod
-    def from_json(cls, serialized: Dict[str, Any]) -> 'PiggyBackFetcher':
-        return super().from_json(serialized)
+    def from_json(cls, serialized: Dict[str, Any]) -> "PiggyBackFetcher":
+        return cls(
+            AgentFileCache.from_json(serialized.pop("file_cache")),
+            **serialized,
+        )
 
     def __enter__(self) -> 'PiggyBackFetcher':
         for origin in (self._hostname, self._address):

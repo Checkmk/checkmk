@@ -46,6 +46,7 @@ class PiggyBackConfigurator(AgentConfigurator):
 
     def configure_fetcher(self) -> Dict[str, Any]:
         return {
+            "file_cache": self.file_cache.configure(),
             "hostname": self.hostname,
             "address": self.ipaddress,
             "time_settings": self.time_settings,

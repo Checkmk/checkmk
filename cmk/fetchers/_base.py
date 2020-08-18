@@ -22,29 +22,7 @@ class MKFetcherError(MKException):
     """An exception common to the fetchers."""
 
 
-TFetcher = TypeVar("TFetcher", bound="ABCFetcher")
-
-
-class ABCFetcher(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
-    """Interface to the data fetchers."""
-    @classmethod
-    @abc.abstractmethod
-    def from_json(cls: Type[TFetcher], serialized: Dict[str, Any]) -> TFetcher:
-        """Deserialize from JSON."""
-        return cls(**serialized)  # type: ignore[call-arg]
-
-    @abc.abstractmethod
-    def __enter__(self) -> 'ABCFetcher':
-        """Prepare the data source."""
-
-    @abc.abstractmethod
-    def __exit__(self, exc_type: Optional[Type[BaseException]], exc_value: Optional[BaseException],
-                 traceback: Optional[TracebackType]) -> Optional[bool]:
-        """Destroy the data source."""
-
-    @abc.abstractmethod
-    def data(self) -> BoundedAbstractRawData:
-        """Return the data from the source."""
+TFileCache = TypeVar("TFileCache", bound="ABCFileCache")
 
 
 class ABCFileCache(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
@@ -56,7 +34,6 @@ class ABCFileCache(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
         disabled: bool,
         use_outdated: bool,
         simulation: bool,
-        logger: logging.Logger,
     ) -> None:
         super().__init__()
         self.path: Final = Path(path)
@@ -64,11 +41,11 @@ class ABCFileCache(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
         self.disabled: Final = disabled
         self.use_outdated: Final = use_outdated
         self.simulation: Final = simulation
-        self._logger: Final = logger
+        self._logger: Final = logging.getLogger("")  # TODO(ml): configure the logger
 
     @classmethod
-    def from_json(cls, serialized: Dict[str, Any], logger: logging.Logger) -> "ABCFileCache":
-        return cls(logger=logger, **serialized)
+    def from_json(cls: Type[TFileCache], serialized: Dict[str, Any]) -> TFileCache:
+        return cls(**serialized)
 
     @staticmethod
     @abc.abstractmethod
@@ -126,3 +103,31 @@ class ABCFileCache(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
             store.save_file(self.path, self._to_cache_file(raw_data))
         except Exception as e:
             raise MKGeneralException("Cannot write cache file %s: %s" % (self.path, e))
+
+
+TFetcher = TypeVar("TFetcher", bound="ABCFetcher")
+
+
+class ABCFetcher(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
+    """Interface to the data fetchers."""
+    def __init__(self, file_cache: ABCFileCache) -> None:
+        super().__init__()
+        self.file_cache = file_cache
+
+    @classmethod
+    @abc.abstractmethod
+    def from_json(cls: Type[TFetcher], serialized: Dict[str, Any]) -> TFetcher:
+        """Deserialize from JSON."""
+
+    @abc.abstractmethod
+    def __enter__(self) -> 'ABCFetcher':
+        """Prepare the data source."""
+
+    @abc.abstractmethod
+    def __exit__(self, exc_type: Optional[Type[BaseException]], exc_value: Optional[BaseException],
+                 traceback: Optional[TracebackType]) -> Optional[bool]:
+        """Destroy the data source."""
+
+    @abc.abstractmethod
+    def data(self) -> BoundedAbstractRawData:
+        """Return the data from the source."""

@@ -49,6 +49,7 @@ class TCPConfigurator(AgentConfigurator):
         assert self.ipaddress
 
         return {
+            "file_cache": self.file_cache.configure(),
             "family": socket.AF_INET6 if self.host_config.is_ipv6_primary else socket.AF_INET,
             "address": (self.ipaddress, self.port or self.host_config.agent_port),
             "timeout": self.timeout or self.host_config.tcp_connect_timeout,

@@ -16,18 +16,19 @@ from six import ensure_binary, ensure_str
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.type_defs import AgentRawData
 
-from ._base import MKFetcherError
-from .agent import AgentFetcher
+from . import MKFetcherError
+from .agent import AgentFetcher, AgentFileCache
 
 
 class ProgramFetcher(AgentFetcher):
     def __init__(
         self,
+        file_cache: AgentFileCache,
         cmdline: Union[bytes, str],
         stdin: Optional[str],
         is_cmc: bool,
     ) -> None:
-        super(ProgramFetcher, self).__init__()
+        super().__init__(file_cache)
         self._cmdline = cmdline
         self._stdin = stdin
         self._is_cmc = is_cmc
@@ -35,8 +36,11 @@ class ProgramFetcher(AgentFetcher):
         self._process: Optional[subprocess.Popen] = None
 
     @classmethod
-    def from_json(cls, serialized: Dict[str, Any]) -> 'ProgramFetcher':
-        return super().from_json(serialized)
+    def from_json(cls, serialized: Dict[str, Any]) -> "ProgramFetcher":
+        return cls(
+            AgentFileCache.from_json(serialized.pop("file_cache")),
+            **serialized,
+        )
 
     def __enter__(self) -> 'ProgramFetcher':
         if self._is_cmc:

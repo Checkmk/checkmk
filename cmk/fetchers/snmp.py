@@ -34,12 +34,12 @@ class SNMPFileCache(ABCFileCache[SNMPRawData]):
 class SNMPFetcher(ABCFetcher[SNMPRawData]):
     def __init__(
         self,
+        file_cache: SNMPFileCache,
         oid_infos: Dict[SectionName, List[SNMPTree]],
         use_snmpwalk_cache: bool,
         snmp_config: SNMPHostConfig,
-    ):
-        # type (...) -> None
-        super(SNMPFetcher, self).__init__()
+    ) -> None:
+        super().__init__(file_cache)
         self._oid_infos = oid_infos
         self._use_snmpwalk_cache = use_snmpwalk_cache
         self._snmp_config = snmp_config
@@ -48,6 +48,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
     @classmethod
     def from_json(cls, serialized: Dict[str, Any]) -> 'SNMPFetcher':
         return cls(
+            SNMPFileCache.from_json(serialized.pop("file_cache")),
             {
                 SectionName(name): [SNMPTree.from_json(tree) for tree in trees
                                    ] for name, trees in serialized["oid_infos"].items()

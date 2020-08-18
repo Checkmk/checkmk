@@ -18,18 +18,19 @@ import cmk.utils.debug
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import AgentRawData, HostAddress
 
-from ._base import MKFetcherError
-from .agent import AgentFetcher
+from . import MKFetcherError
+from .agent import AgentFetcher, AgentFileCache
 
 
 class IPMIFetcher(AgentFetcher):
     def __init__(
         self,
+        file_cache: AgentFileCache,
         address: HostAddress,
         username: str,
         password: str,
     ) -> None:
-        super(IPMIFetcher, self).__init__()
+        super().__init__(file_cache)
         self._address = address
         self._username = username
         self._password = password
@@ -37,8 +38,11 @@ class IPMIFetcher(AgentFetcher):
         self._command: Optional[ipmi_cmd.Command] = None
 
     @classmethod
-    def from_json(cls, serialized: Dict[str, Any]) -> 'IPMIFetcher':
-        return super().from_json(serialized)
+    def from_json(cls, serialized: Dict[str, Any]) -> "IPMIFetcher":
+        return cls(
+            AgentFileCache.from_json(serialized.pop("file_cache")),
+            **serialized,
+        )
 
     def __enter__(self) -> 'IPMIFetcher':
         self.open()

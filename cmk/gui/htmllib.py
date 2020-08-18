@@ -1675,9 +1675,12 @@ class html(ABCHTMLGenerator):
         self.open_body(class_=self._get_body_css_classes())
 
     def _get_body_css_classes(self) -> List[str]:
+        classes = self._body_classes[:]
         if self.screenshotmode:
-            return self._body_classes + ["screenshotmode"]
-        return self._body_classes
+            classes += ["screenshotmode"]
+        if not self.foldable_container_is_open("suggestions", "all", True):
+            classes += ["hide_suggestions"]
+        return classes
 
     def html_foot(self) -> None:
         self.close_html()

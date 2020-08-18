@@ -7,14 +7,6 @@ import "element-closest-polyfill";
 import * as foldable_container from "foldable_container";
 import * as popup_menu from "popup_menu";
 
-var suggestions_id = null;
-
-export function add_suggestions(sugg_id, open) {
-    if (open)
-        utils.add_class(document.body, "suggestions");
-    suggestions_id = sugg_id;
-}
-
 // Closes the active page menu dropdown
 export function close_active_dropdown() {
     popup_menu.close_popup();
@@ -128,17 +120,15 @@ export function close_popup(a) {
 export function toggle_suggestions() {
     var oBody = document.body;
     var open;
-    if (utils.has_class(oBody, "suggestions")) {
-        utils.remove_class(oBody, "suggestions");
+    if (utils.has_class(oBody, "hide_suggestions")) {
+        utils.remove_class(oBody, "hide_suggestions");
+        open = "on";
+    } else {
+        utils.add_class(oBody, "hide_suggestions");
         open = "off";
     }
-    else {
-        utils.add_class(oBody, "suggestions");
-        open = "on";
-    }
-    foldable_container.persist_tree_state("suggestions", suggestions_id, open);
+    foldable_container.persist_tree_state("suggestions", "all", open);
 }
-
 
 export function form_submit(form_name, button_name)
 {

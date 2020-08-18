@@ -5,18 +5,18 @@
 
 body.main {
   tr#suggestions {
-    display: none;
+    display: table-row;
   }
 
-  &.suggestions {
-    tr#suggestions {
-      display: table-row;
+  td.shortcuts {
+    a.suggested {
+      display: none;
     }
+  }
 
-    td.shortcuts {
-      a.suggested {
-        display: none;
-      }
+  &.hide_suggestions {
+    tr#suggestions {
+      display: none;
     }
   }
 }

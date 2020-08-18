@@ -3,202 +3,237 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""Infoblox services and node services
 """
-def scan_infoblox(oid):
-    return "infoblox" in oid(".1.3.6.1.2.1.1.1.0").lower() or \
-           oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.7779.1")
+from typing import Dict, Tuple, Mapping
 
-def parse_infoblox_services(info):
-    map_service_ids = {
-        "1": "dhcp",
-        "2": "dns",
-        "3": "ntp",
-        "4": "tftp",
-        "5": "http-file-dist",
-        "6": "ftp",
-        "7": "bloxtools-move",
-        "8": "bloxtools",
-        "9": "node-status",
-        "10": "disk-usage",
-        "11": "enet-lan",
-        "12": "enet-lan2",
-        "13": "enet-ha",
-        "14": "enet-mgmt",
-        "15": "lcd",
-        "16": "memory",
-        "17": "replication",
-        "18": "db-object",
-        "19": "raid-summary",
-        "20": "raid-disk1",
-        "21": "raid-disk2",
-        "22": "raid-disk3",
-        "23": "raid-disk4",
-        "24": "raid-disk5",
-        "25": "raid-disk6",
-        "26": "raid-disk7",
-        "27": "raid-disk8",
-        "28": "fan1",
-        "29": "fan2",
-        "30": "fan3",
-        "31": "fan4",
-        "32": "fan5",
-        "33": "fan6",
-        "34": "fan7",
-        "35": "fan8",
-        "36": "power-supply1",
-        "37": "power-supply2",
-        "38": "ntp-sync",
-        "39": "cpu1-temp",
-        "40": "cpu2-temp",
-        "41": "sys-temp",
-        "42": "raid-battery",
-        "43": "cpu-usage",
-        "44": "ospf",
-        "45": "bgp",
-        "46": "mgm-service",
-        "47": "subgrid-conn",
-        "48": "network-capacity",
-        "49": "reporting",
-        "50": "dns-cache-acceleration",
-        "51": "ospf6",
-        "52": "swap-usage",
-        "53": "discovery-consolidator",
-        "54": "discovery-collector",
-        "55": "discovery-capacity",
-        "56": "threat-protection",
-        "57": "cloud-api",
-        "58": "threat-analytics",
-        "59": "taxii",
-    }
+from .agent_based_api.v0 import (
+    SNMPTree,
+    register,
+    Service,
+    Result,
+    state,
+    any_of,
+    startswith,
+    contains,
+)
+from .agent_based_api.v0.type_defs import (
+    SNMPStringTable,
+    CheckGenerator,
+    DiscoveryGenerator,
+)
+Section = Dict[str, Tuple[str, str]]
+OID_sysObjectID = ".1.3.6.1.2.1.1.2.0"
 
-    map_status_id = {
-        "1": "working",
-        "2": "warning",
-        "3": "failed",
-        "4": "inactive",
-        "5": "unknown",
-    }
+# note: directly migrated from infoblox.include - it's likely that the object id check is sufficient
+DETECT_INFOBLOX = any_of(contains(".1.3.6.1.2.1.1.1.0", "infoblox"),
+                         startswith(OID_sysObjectID, ".1.3.6.1.4.1.7779.1."))
 
-    parsed = {}
-    for _node, service_id, status_id, description in info:
-        status = map_status_id.get(status_id, "unexpected")
-        if status in ["inactive", "unknown"]:
-            continue
-
-        service_name = map_service_ids[service_id]
-        service_nodes = parsed.setdefault(service_name, [])
-        service_nodes.append((status, description))
-
-    return parsed
-
-
-def inventory_infoblox_services(parsed):
-    for service_name in parsed:
-        yield service_name, None
-
-
-def check_infoblox_services(item, _no_params, parsed):
-    if item in parsed:
-        map_status = {
-            "working": 0,
-            "warning": 1,
-            "failed": 2,
-            "unexpected": 3,
-        }
-        node_data = parsed[item]
-
-        # For a clustered service the best state is used
-        min_status, min_descr = node_data[0]
-        min_state = map_status[min_status]
-
-        for status, descr in node_data[1:]:
-            state = map_status[status]
-            if state < min_state:
-                min_state, min_status, min_descr = state, status, descr
-
-        infotext = "Status: %s" % min_status
-        if min_descr:
-            infotext += " (%s)" % min_descr
-
-        return min_state, infotext
-
-# .1.3.6.1.4.1.7779.3.1.1.2.1.9.1.1.1 1 --> IB-PLATFORMONE-MIB::ibServiceName.dhcp
-# .1.3.6.1.4.1.7779.3.1.1.2.1.9.1.1.2 2 --> IB-PLATFORMONE-MIB::ibServiceName.dns
-# .1.3.6.1.4.1.7779.3.1.1.2.1.9.1.1.3 3 --> IB-PLATFORMONE-MIB::ibServiceName.ntp
-# .1.3.6.1.4.1.7779.3.1.1.2.1.9.1.1.4 4 --> IB-PLATFORMONE-MIB::ibServiceName.tftp
-# .1.3.6.1.4.1.7779.3.1.1.2.1.9.1.1.5 5 --> IB-PLATFORMONE-MIB::ibServiceName.http-file-dist
-# .1.3.6.1.4.1.7779.3.1.1.2.1.9.1.1.6 6 --> IB-PLATFORMONE-MIB::ibServiceName.ftp
-# .1.3.6.1.4.1.7779.3.1.1.2.1.9.1.1.7 7 --> IB-PLATFORMONE-MIB::ibServiceName.bloxtools-move
-# .1.3.6.1.4.1.7779.3.1.1.2.1.9.1.1.8 8 --> IB-PLATFORMONE-MIB::ibServiceName.bloxtools
-# .1.3.6.1.4.1.7779.3.1.1.2.1.9.1.2.1 4 --> IB-PLATFORMONE-MIB::ibServiceStatus.dhcp
-# .1.3.6.1.4.1.7779.3.1.1.2.1.9.1.2.2 4 --> IB-PLATFORMONE-MIB::ibServiceStatus.dns
-# .1.3.6.1.4.1.7779.3.1.1.2.1.9.1.2.3 1 --> IB-PLATFORMONE-MIB::ibServiceStatus.ntp
-# .1.3.6.1.4.1.7779.3.1.1.2.1.9.1.2.4 4 --> IB-PLATFORMONE-MIB::ibServiceStatus.tftp
-# .1.3.6.1.4.1.7779.3.1.1.2.1.9.1.2.5 4 --> IB-PLATFORMONE-MIB::ibServiceStatus.http-file-dist
-# .1.3.6.1.4.1.7779.3.1.1.2.1.9.1.2.6 4 --> IB-PLATFORMONE-MIB::ibServiceStatus.ftp
-# .1.3.6.1.4.1.7779.3.1.1.2.1.9.1.2.7 5 --> IB-PLATFORMONE-MIB::ibServiceStatus.bloxtools-move
-# .1.3.6.1.4.1.7779.3.1.1.2.1.9.1.2.8 4 --> IB-PLATFORMONE-MIB::ibServiceStatus.bloxtools
-# .1.3.6.1.4.1.7779.3.1.1.2.1.9.1.3.1 DHCP Service is inactive --> IB-PLATFORMONE-MIB::ibServiceDesc.dhcp
-# .1.3.6.1.4.1.7779.3.1.1.2.1.9.1.3.2 DNS Service is inactive --> IB-PLATFORMONE-MIB::ibServiceDesc.dns
-# .1.3.6.1.4.1.7779.3.1.1.2.1.9.1.3.3 NTP Service is working --> IB-PLATFORMONE-MIB::ibServiceDesc.ntp
-# .1.3.6.1.4.1.7779.3.1.1.2.1.9.1.3.4 Hard Disk: 0% - TFTP Service is inactive --> IB-PLATFORMONE-MIB::ibServiceDesc.tftp
-# .1.3.6.1.4.1.7779.3.1.1.2.1.9.1.3.5 Hard Disk: 0% - HTTP File Dist Service is inactive --> IB-PLATFORMONE-MIB::ibServiceDesc.http-file-dist
-# .1.3.6.1.4.1.7779.3.1.1.2.1.9.1.3.6 Hard Disk: 0% - FTP Service is inactive --> IB-PLATFORMONE-MIB::ibServiceDesc.ftp
-# .1.3.6.1.4.1.7779.3.1.1.2.1.9.1.3.7 --> IB-PLATFORMONE-MIB::ibServiceDesc.bloxtools-move
-# .1.3.6.1.4.1.7779.3.1.1.2.1.9.1.3.8 CPU: 100%, Memory: 0%, Hard Disk: 0% - --> IB-PLATFORMONE-MIB::ibServiceDesc.bloxtools
-
-check_info['infoblox_services'] = {
-    'parse_function': parse_infoblox_services,
-    'inventory_function': inventory_infoblox_services,
-    'check_function': check_infoblox_services,
-    'service_description': 'Service %s',
-    'snmp_info': (
-        ".1.3.6.1.4.1.7779.3.1.1.2.1.9.1",
-        [
-            "1",  # IB-PLATFORMONE-MIB::ibServiceName
-            "2",  # IB-PLATFORMONE-MIB::ibServiceStatus
-            "3",  # IB-PLATFORMONE-MIB::ibServiceDesc
-        ]),
-    'snmp_scan_function': scan_infoblox,
-    'includes': ["infoblox.include"],
-    'node_info': True,
+SERVICE_ID = {
+    "1": "dhcp",
+    "2": "dns",
+    "3": "ntp",
+    "4": "tftp",
+    "5": "http-file-dist",
+    "6": "ftp",
+    "7": "bloxtools-move",
+    "8": "bloxtools",
+    "9": "node-status",
+    "10": "disk-usage",
+    "11": "enet-lan",
+    "12": "enet-lan2",
+    "13": "enet-ha",
+    "14": "enet-mgmt",
+    "15": "lcd",
+    "16": "memory",
+    "17": "replication",
+    "18": "db-object",
+    "19": "raid-summary",
+    "20": "raid-disk1",
+    "21": "raid-disk2",
+    "22": "raid-disk3",
+    "23": "raid-disk4",
+    "24": "raid-disk5",
+    "25": "raid-disk6",
+    "26": "raid-disk7",
+    "27": "raid-disk8",
+    "28": "fan1",
+    "29": "fan2",
+    "30": "fan3",
+    "31": "fan4",
+    "32": "fan5",
+    "33": "fan6",
+    "34": "fan7",
+    "35": "fan8",
+    "36": "power-supply1",
+    "37": "power-supply2",
+    "38": "ntp-sync",
+    "39": "cpu1-temp",
+    "40": "cpu2-temp",
+    "41": "sys-temp",
+    "42": "raid-battery",
+    "43": "cpu-usage",
+    "44": "ospf",
+    "45": "bgp",
+    "46": "mgm-service",
+    "47": "subgrid-conn",
+    "48": "network-capacity",
+    "49": "reporting",
+    "50": "dns-cache-acceleration",
+    "51": "ospf6",
+    "52": "swap-usage",
+    "53": "discovery-consolidator",
+    "54": "discovery-collector",
+    "55": "discovery-capacity",
+    "56": "threat-protection",
+    "57": "cloud-api",
+    "58": "threat-analytics",
+    "59": "taxii",
 }
-# .1.3.6.1.4.1.7779.3.1.1.2.1.10.1.1.9 9 --> IB-PLATFORMONE-MIB::ibNodeServiceName.node-status
-# .1.3.6.1.4.1.7779.3.1.1.2.1.10.1.1.10 10 --> IB-PLATFORMONE-MIB::ibNodeServiceName.disk-usage
-# .1.3.6.1.4.1.7779.3.1.1.2.1.10.1.1.11 11 --> IB-PLATFORMONE-MIB::ibNodeServiceName.enet-lan
-# .1.3.6.1.4.1.7779.3.1.1.2.1.10.1.1.12 12 --> IB-PLATFORMONE-MIB::ibNodeServiceName.enet-lan2
-# .1.3.6.1.4.1.7779.3.1.1.2.1.10.1.1.13 13 --> IB-PLATFORMONE-MIB::ibNodeServiceName.enet-ha
-# .1.3.6.1.4.1.7779.3.1.1.2.1.10.1.1.14 14 --> IB-PLATFORMONE-MIB::ibNodeServiceName.enet-mgmt
-# .1.3.6.1.4.1.7779.3.1.1.2.1.10.1.1.15 15 --> IB-PLATFORMONE-MIB::ibNodeServiceName.lcd
-# .1.3.6.1.4.1.7779.3.1.1.2.1.10.1.2.9 1 --> IB-PLATFORMONE-MIB::ibNodeServiceStatus.node-status
-# .1.3.6.1.4.1.7779.3.1.1.2.1.10.1.2.10 1 --> IB-PLATFORMONE-MIB::ibNodeServiceStatus.disk-usage
-# .1.3.6.1.4.1.7779.3.1.1.2.1.10.1.2.11 1 --> IB-PLATFORMONE-MIB::ibNodeServiceStatus.enet-lan
-# .1.3.6.1.4.1.7779.3.1.1.2.1.10.1.2.12 5 --> IB-PLATFORMONE-MIB::ibNodeServiceStatus.enet-lan2
-# .1.3.6.1.4.1.7779.3.1.1.2.1.10.1.2.13 5 --> IB-PLATFORMONE-MIB::ibNodeServiceStatus.enet-ha
-# .1.3.6.1.4.1.7779.3.1.1.2.1.10.1.2.14 1 --> IB-PLATFORMONE-MIB::ibNodeServiceStatus.enet-mgmt
-# .1.3.6.1.4.1.7779.3.1.1.2.1.10.1.2.15 5 --> IB-PLATFORMONE-MIB::ibNodeServiceStatus.lcd
-# .1.3.6.1.4.1.7779.3.1.1.2.1.10.1.3.9 Running --> IB-PLATFORMONE-MIB::ibNodeServiceDesc.node-status
-# .1.3.6.1.4.1.7779.3.1.1.2.1.10.1.3.10 15% - Primary drive usage is OK. --> IB-PLATFORMONE-MIB::ibNodeServiceDesc.disk-usage
-# .1.3.6.1.4.1.7779.3.1.1.2.1.10.1.3.11 X.X.X.X --> IB-PLATFORMONE-MIB::ibNodeServiceDesc.enet-lan
-# .1.3.6.1.4.1.7779.3.1.1.2.1.10.1.3.12 --> IB-PLATFORMONE-MIB::ibNodeServiceDesc.enet-lan2
-# .1.3.6.1.4.1.7779.3.1.1.2.1.10.1.3.13 --> IB-PLATFORMONE-MIB::ibNodeServiceDesc.enet-ha
-# .1.3.6.1.4.1.7779.3.1.1.2.1.10.1.3.14 X.X.X.X --> IB-PLATFORMONE-MIB::ibNodeServiceDesc.enet-mgmt
-# .1.3.6.1.4.1.7779.3.1.1.2.1.10.1.3.15 --> IB-PLATFORMONE-MIB::ibNodeServiceDesc.lcd
-check_info['infoblox_node_services'] = {
-    'parse_function': parse_infoblox_services,
-    'inventory_function': inventory_infoblox_services,
-    'check_function': check_infoblox_services,
-    'service_description': 'Node service %s',
-    'snmp_info': (
-        ".1.3.6.1.4.1.7779.3.1.1.2.1.10.1",
-        [
-            "1",  # IB-PLATFORMONE-MIB::ibNodeServiceName
-            "2",  # IB-PLATFORMONE-MIB::ibNodeServiceStatus
-            "3",  # IB-PLATFORMONE-MIB::ibNodeServiceDesc
-        ]),
-    'snmp_scan_function': scan_infoblox,
-    'includes': ["infoblox.include"],
-    'node_info': True,
+STATUS_ID = {
+    "1": "working",
+    "2": "warning",
+    "3": "failed",
+    "4": "inactive",
+    "5": "unknown",
+}
+STATE = {
+    "working": state.OK,
+    "warning": state.WARN,
+    "failed": state.CRIT,
+    "unexpected": state.UNKNOWN,
 }
 
-"""
+
+def parse_infoblox_services(string_table: SNMPStringTable) -> Section:
+    """
+    >>> for item, status in parse_infoblox_services([[
+    ...         ['9', '1', 'Running'],
+    ...         ['10', '1', '2% - Primary drive usage is OK.'],
+    ...         ['11', '1', '11.112.133.14'],
+    ...         ['27', '5', ''],
+    ...         ['28', '1', 'FAN 1: 8725 RPM'],
+    ...         ['43', '1', 'CPU Usage: 5%'],
+    ...         ['57', '5', 'Cloud API service is inactive.'],
+    ...         ]]).items():
+    ...     print(item, status)
+    node-status ('working', 'Running')
+    disk-usage ('working', '2% - Primary drive usage is OK.')
+    enet-lan ('working', '11.112.133.14')
+    fan1 ('working', 'FAN 1: 8725 RPM')
+    cpu-usage ('working', 'CPU Usage: 5%')
+    """
+    return {
+        SERVICE_ID[service_id]: (status, description)
+        for service_id, status_id, description in string_table[0]
+        for status in (STATUS_ID.get(status_id, "unexpected"),)
+        if status not in {"inactive", "unknown"}
+    }
+
+
+def discovery_infoblox_services(section: Section) -> DiscoveryGenerator:
+    """
+    >>> for result in discovery_infoblox_services({
+    ...         'node-status': ('working', 'Running'),
+    ...         'discovery-capacity': ('working', '0% - Discovery capacity usage is OK.'),
+    ... }):
+    ...     print(result)
+    Service(item='node-status', parameters={}, labels=[])
+    Service(item='discovery-capacity', parameters={}, labels=[])
+    """
+    yield from (Service(item=item) for item in section)
+
+
+def check_infoblox_services(item: str, section: Section) -> CheckGenerator:
+    """
+    >>> for result in check_infoblox_services("memory", {
+    ...         'node-status': ('working', 'Running'),
+    ...         'memory': ('working', '14% - System memory usage is OK.'),
+    ...         'discovery-capacity': ('working', '0% - Discovery capacity usage is OK.'),
+    ... }):
+    ...     print(result)
+    Result(state=<state.OK: 0>, summary='Status: working (14% - System memory usage is OK.)', details='Status: working (14% - System memory usage is OK.)')
+    """
+    if not item in section:
+        return
+    status, description = section[item]
+    yield Result(
+        state=STATE[status],
+        summary="Status: %s%s" % (status, description and " (%s)" % description),
+    )
+
+
+def cluster_check_infoblox_services(item: str, section: Mapping[str, Section]) -> CheckGenerator:
+    """
+    >>> for result in cluster_check_infoblox_services("memory", {
+    ...     "node1": {
+    ...         'memory': ('warning', '54% - System memory usage is LOW.'),
+    ...         'replication': ('working', 'Online'),
+    ...     }, "node2": {
+    ...         'memory': ('working', '14% - System memory usage is OK.'),
+    ...         'replication': ('working', 'Online'),
+    ...     }, "node3": {
+    ...         'memory': ('failed', '74% - System memory usage is CRIT.'),
+    ...         'replication': ('working', 'Online'),
+    ... }}):
+    ...     print(result)
+    Result(state=<state.OK: 0>, summary='Status: working (14% - System memory usage is OK.)', details='Status: working (14% - System memory usage is OK.)')
+    """
+    try:
+        status, description = min(
+            (node_section[item] for node_section in section.values() if item in node_section),
+            key=lambda x: STATE[x[0]].value)
+    except ValueError:
+        # no node with given item found
+        return
+    yield Result(
+        state=STATE[status],
+        summary="Status: %s%s" % (status, description and " (%s)" % description),
+    )
+
+
+register.snmp_section(
+    name="infoblox_services",
+    detect=DETECT_INFOBLOX,
+    parse_function=parse_infoblox_services,
+    trees=[
+        SNMPTree(
+            base=".1.3.6.1.4.1.7779.3.1.1.2.1.9.1",
+            oids=[
+                "1",  # IB-PLATFORMONE-MIB::ibServiceName
+                "2",  # IB-PLATFORMONE-MIB::ibServiceStatus
+                "3",  # IB-PLATFORMONE-MIB::ibServiceDesc
+            ]),
+    ],
+)
+
+register.check_plugin(
+    name="infoblox_services",  # name taken from pre-1.7 plugin
+    service_name="Service %s",
+    discovery_function=discovery_infoblox_services,
+    check_function=check_infoblox_services,
+    cluster_check_function=cluster_check_infoblox_services,
+)
+
+register.snmp_section(
+    name="infoblox_node_services",
+    detect=DETECT_INFOBLOX,
+    parse_function=parse_infoblox_services,
+    trees=[
+        SNMPTree(
+            base=".1.3.6.1.4.1.7779.3.1.1.2.1.10.1",
+            oids=[
+                "1",  # IB-PLATFORMONE-MIB::ibNodeServiceName
+                "2",  # IB-PLATFORMONE-MIB::ibNodeServiceStatus
+                "3",  # IB-PLATFORMONE-MIB::ibNodeServiceDesc
+            ]),
+    ],
+)
+
+register.check_plugin(
+    name="infoblox_node_services",  # name taken from pre-1.7 plugin
+    service_name="Node service %s",
+    discovery_function=discovery_infoblox_services,
+    check_function=check_infoblox_services,
+    cluster_check_function=cluster_check_infoblox_services,
+)

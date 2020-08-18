@@ -113,11 +113,6 @@ class PageFetchAgentOutput(AgentOutputPage):
         title = self._title()
         html.header(title, self._breadcrumb(title))
 
-        html.begin_context_buttons()
-        if self._back_url:
-            html.context_button(_("Back"), self._back_url, "back")
-        html.end_context_buttons()
-
         self._action()
 
         if html.request.has_var("_start"):

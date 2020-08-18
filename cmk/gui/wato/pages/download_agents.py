@@ -9,7 +9,7 @@ import os
 import abc
 import glob
 import fnmatch
-from typing import List
+from typing import List, Iterator
 
 import cmk.utils.paths
 import cmk.utils.render
@@ -18,11 +18,18 @@ import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+)
 
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
-    global_buttons,
     folder_preserving_link,
 )
 
@@ -32,25 +39,52 @@ class ABCModeDownloadAgents(WatoMode):
     def permissions(cls) -> List[str]:
         return ["download_agents"]
 
-    def buttons(self) -> None:
-        global_buttons()
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Setup"),
+                            entries=list(self._page_menu_entries_related()),
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
 
+    def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
         if self.name() != "download_agents_windows":
-            html.context_button(_("Windows files"),
-                                folder_preserving_link([("mode", "download_agents_windows")]),
-                                "download_agents")
+            yield PageMenuEntry(
+                title=_("Windows files"),
+                icon_name="download_agents",
+                item=make_simple_link(folder_preserving_link([("mode", "download_agents_windows")
+                                                             ])),
+            )
+
         if self.name() != "download_agents_linux":
-            html.context_button(_("Linux files"),
-                                folder_preserving_link([("mode", "download_agents_linux")]),
-                                "download_agents")
+            yield PageMenuEntry(
+                title=_("Linux files"),
+                icon_name="download_agents",
+                item=make_simple_link(folder_preserving_link([("mode", "download_agents_linux")])),
+            )
+
         if self.name() != "download_agents":
-            html.context_button(_("Other files"),
-                                folder_preserving_link([("mode", "download_agents")]),
-                                "download_agents")
+            yield PageMenuEntry(
+                title=_("Other files"),
+                icon_name="download_agents",
+                item=make_simple_link(folder_preserving_link([("mode", "download_agents")])),
+            )
 
         if watolib.has_agent_bakery():
-            html.context_button(_("Baked agents"),
-                                watolib.folder_preserving_link([("mode", "agents")]), "agents")
+            yield PageMenuEntry(
+                title=_("Baked agents"),
+                icon_name="agents",
+                item=make_simple_link(watolib.folder_preserving_link([("mode", "agents")])),
+            )
 
     @abc.abstractmethod
     def _packed_agents(self):

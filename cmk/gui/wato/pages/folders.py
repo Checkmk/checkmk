@@ -250,7 +250,7 @@ class ModeFolder(WatoMode):
         if config.user.may("wato.services"):
             yield PageMenuEntry(
                 title=_("Discover services"),
-                icon_name="inventory",
+                icon_name="services",
                 item=make_simple_link(self._folder.url([("mode", "bulkinventory"), ("all", "1")])),
             )
 

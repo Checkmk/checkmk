@@ -26,7 +26,17 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.type_defs import PermissionName
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_form_page_menu,
+    make_form_submit_link,
+)
 from cmk.gui.wato.pages.custom_attributes import ModeCustomHostAttrs
+from cmk.gui.wato.pages.folders import ModeFolder
 
 from cmk.gui.valuespec import (
     Hostname,
@@ -57,6 +67,10 @@ class ModeBulkImport(WatoMode):
     def permissions(cls) -> List[PermissionName]:
         return ["hosts", "manage_hosts"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeFolder
+
     def __init__(self) -> None:
         super(ModeBulkImport, self).__init__()
         self._params: Optional[Dict[str, Any]] = None
@@ -69,12 +83,46 @@ class ModeBulkImport(WatoMode):
     def title(self) -> str:
         return _("Bulk host import")
 
-    def buttons(self) -> None:
-        html.context_button(_("Abort"), watolib.folder_preserving_link([("mode", "folder")]),
-                            "abort")
-        if html.request.has_var("file_id"):
-            html.context_button(_("Back"),
-                                watolib.folder_preserving_link([("mode", "bulk_import")]), "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        if not html.request.has_var("file_id"):
+            return make_simple_form_page_menu(
+                breadcrumb,
+                form_name="upload",
+                button_name="_do_upload",
+                save_title=_("Upload"),
+            )
+
+        # preview phase, after first upload
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="actions",
+                    title=_("Actions"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Actions"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Update preview"),
+                                    icon_name="update",
+                                    item=make_form_submit_link("preview", "_do_preview"),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                                PageMenuEntry(
+                                    title=_("Import"),
+                                    icon_name="save",
+                                    item=make_form_submit_link("preview", "_do_import"),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
 
     def action(self) -> ActionResult:
         if html.transaction_valid():
@@ -133,11 +181,17 @@ class ModeBulkImport(WatoMode):
             raise MKUserError(
                 None, _("Failed to read the previously uploaded CSV file. Please upload it again."))
 
-        params = self._vs_parse_params().from_html_vars("_preview")
+        if list(html.request.itervars(prefix="_preview")):
+            params = self._vs_parse_params().from_html_vars("_preview")
+        else:
+            params = {
+                "has_title_line": True,
+            }
+
         self._vs_parse_params().validate_value(params, "_preview")
         self._params = params
         assert self._params is not None
-        self._has_title_line = self._params.get("has_title_line", True)
+        self._has_title_line = self._params.get("has_title_line", False)
 
         # try to detect the CSV format to be parsed
         if "field_delimiter" in params:
@@ -257,7 +311,6 @@ class ModeBulkImport(WatoMode):
 
         self._vs_upload().render_input("_upload", None)
         html.hidden_fields()
-        html.button("_do_upload", _("Upload"))
         html.end_form()
 
     def _vs_upload(self):
@@ -331,7 +384,7 @@ class ModeBulkImport(WatoMode):
                 table.cell(html.render_text(header))
                 attribute_varname = "attribute_%d" % col_num
                 if html.request.var(attribute_varname):
-                    attribute_method = html.request.get_ascii_input_mandatory("attribute_varname")
+                    attribute_method = html.request.get_ascii_input_mandatory(attribute_varname)
                 else:
                     attribute_method = self._try_detect_default_attribute(attributes, header)
                     html.request.del_var(attribute_varname)
@@ -356,8 +409,6 @@ class ModeBulkImport(WatoMode):
             params = self._vs_parse_params().default_value()
         self._vs_parse_params().render_input("_preview", params)
         html.hidden_fields()
-        html.button("_do_preview", _("Update preview"))
-        html.button("_do_import", _("Import"))
 
     def _vs_parse_params(self):
         return Dictionary(

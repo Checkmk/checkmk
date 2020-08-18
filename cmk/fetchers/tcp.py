@@ -30,7 +30,7 @@ class TCPFetcher(AgentFetcher):
         # type (...) -> None
         super(TCPFetcher, self).__init__()
         self._family = socket.AddressFamily(family)
-        self._address = tuple(address)
+        self._address = (address[0], address[1])
         self._timeout = timeout
         self._encryption_settings = encryption_settings
         self._logger = logging.getLogger("cmk.fetchers.tcp")

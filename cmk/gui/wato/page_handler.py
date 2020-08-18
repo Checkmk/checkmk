@@ -180,7 +180,7 @@ def _wato_page_handler(current_mode: str, mode_permissions: List[PermissionName]
                    show_top_heading=display_options.enabled(display_options.T))
 
     # As long as we migrate the buttons to the page menu keep the buttons as fallback
-    if display_options.enabled(display_options.B) and not page_menu.dropdowns:
+    if display_options.enabled(display_options.B):
         # Show contexts buttons
         html.begin_context_buttons()
         mode.buttons()

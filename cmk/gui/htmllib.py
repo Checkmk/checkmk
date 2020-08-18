@@ -1714,12 +1714,12 @@ class html(ABCHTMLGenerator):
 
         self.close_div()  # titlebar
 
-        if page_menu and page_menu.dropdowns:
+        if page_menu:
             PageMenuRenderer().show(page_menu)
 
         self.close_div()  # top_heading
 
-        if page_menu and page_menu.dropdowns:
+        if page_menu:
             PageMenuPopupsRenderer().show(page_menu)
 
         if self.enable_debug:

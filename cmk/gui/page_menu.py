@@ -163,16 +163,15 @@ class PageMenu:
     breadcrumb: Optional[Breadcrumb] = None
 
     def __post_init__(self):
-        if self.dropdowns:
-            # Add the display options dropdown
-            self.dropdowns.append(make_display_options_dropdown())
+        # Add the display options dropdown
+        self.dropdowns.append(make_display_options_dropdown())
 
-            # Add the help dropdown, which shall be shown on all pages
-            self.dropdowns.append(make_help_dropdown())
+        # Add the help dropdown, which shall be shown on all pages
+        self.dropdowns.append(make_help_dropdown())
 
-            # Add the up-entry
-            if self.breadcrumb and len(self.breadcrumb) > 1 and self.breadcrumb[-2].url:
-                self.dropdowns.append(make_up_link(self.breadcrumb))
+        # Add the up-entry
+        if self.breadcrumb and len(self.breadcrumb) > 1 and self.breadcrumb[-2].url:
+            self.dropdowns.append(make_up_link(self.breadcrumb))
 
     def get_dropdown_by_name(self, name: str, deflt: PageMenuDropdown) -> PageMenuDropdown:
         for dropdown in self.dropdowns:

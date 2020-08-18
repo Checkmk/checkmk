@@ -15,7 +15,6 @@ from cmk.gui.page_menu import PageMenu
 from cmk.gui.type_defs import MegaMenu
 from cmk.gui.main_menu import mega_menu_registry
 
-from cmk.gui.plugins.wato.utils.context_buttons import global_buttons
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
 
 NewMode = Union[None, bool, str]
@@ -136,7 +135,7 @@ class WatoMode(metaclass=abc.ABCMeta):
         return PageMenu(breadcrumb=breadcrumb)
 
     def buttons(self) -> None:
-        global_buttons()
+        pass
 
     def action(self) -> ActionResult:
         pass

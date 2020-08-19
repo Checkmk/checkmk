@@ -155,6 +155,7 @@ def patch_data_source_run(mocker):
         ),
         ([], {}),
     ],
+    ids=["host", "cluster", "empty"],
 )
 @pytest.mark.parametrize(
     ("cache"),
@@ -169,13 +170,18 @@ def patch_data_source_run(mocker):
             "disabled": True
         }),
     ],
+    ids=["cache=None", "cache=True", "cache=False"],
 )
-@pytest.mark.parametrize(("force"), [
-    (True, {
-        "_use_outdated_persisted_sections": True
-    }),
-    (False, {}),
-])
+@pytest.mark.parametrize(
+    ("force"),
+    [
+        (True, {
+            "_use_outdated_persisted_sections": True
+        }),
+        (False, {}),
+    ],
+    ids=["force=True", "force=False"],
+)
 @pytest.mark.usefixtures("scenario")
 def test_mode_inventory_caching(hosts, cache, force, monkeypatch, mocker):
     # Plugins have been loaded by module level fixture, disable loading in mode_inventory() to
@@ -366,6 +372,7 @@ def test_mode_dump_agent_explicit_host_no_cache(mocker, capsys):
             },
         ),
     ],
+    ids=["scan=@noscan", "scan=@scan"],
 )
 @pytest.mark.parametrize(
     ("raise_errors"),
@@ -377,6 +384,7 @@ def test_mode_dump_agent_explicit_host_no_cache(mocker, capsys):
             "on_error": "ignore"
         }),
     ],
+    ids=["raise_errors=@raiseerrors", "raise_errors=None"],
 )
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("reset_log_level")
@@ -405,15 +413,20 @@ def test_automation_try_discovery_caching(scan, raise_errors, mocker):
             "on_error": "ignore"
         }),
     ],
+    ids=["raise_errors=@raiserrors", "raise_errors=none"],
 )
-@pytest.mark.parametrize(("scan"), [
-    (None, {
-        "do_snmp_scan": False
-    }),
-    ("@scan", {
-        "do_snmp_scan": True
-    }),
-])
+@pytest.mark.parametrize(
+    ("scan"),
+    [
+        (None, {
+            "do_snmp_scan": False
+        }),
+        ("@scan", {
+            "do_snmp_scan": True
+        }),
+    ],
+    ids=["scan=None", "scan=@scan"],
+)
 @pytest.mark.parametrize(
     ("cache"),
     [
@@ -427,6 +440,7 @@ def test_automation_try_discovery_caching(scan, raise_errors, mocker):
             "max_age": 0
         }),
     ],
+    ids=["cache=@cache", "cache=None"],
 )
 @pytest.mark.usefixtures("scenario")
 def test_automation_discovery_caching(scan, cache, raise_errors, mocker):

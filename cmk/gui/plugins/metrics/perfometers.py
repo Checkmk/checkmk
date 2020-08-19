@@ -1467,9 +1467,16 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
-    "type": "linear",
-    "segments": ["connections_perc_used"],
-    "total": 100,
+    "type": "stacked",
+    "perfometers": [{
+        "type": "linear",
+        "segments": ["connections_perc_used"],
+        "total": 100,
+    }, {
+        "type": "linear",
+        "segments": ["connections_perc_conn_threads"],
+        "total": 100,
+    }],
 })
 
 perfometer_info.append({

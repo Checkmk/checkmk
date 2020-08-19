@@ -149,8 +149,6 @@ check_info['mysql.innodb_io'] = {
 #   +----------------------------------------------------------------------+
 
 
-# TODO: This check should rather output the current number of connections.
-# The historic maximum can be viewed in the RRD data...
 @get_parsed_item_data
 def check_mysql_connections(_no_item, params, data):
     if 'Max_used_connections' not in data:
@@ -160,20 +158,21 @@ def check_mysql_connections(_no_item, params, data):
     # since the server started.
     conn = float(data['Max_used_connections'])
 
-    # Maximum number of possible parallel connections
+    # The number of currently open connections
+    conn_threads = float(data['Threads_connected'])
+
+    # Maximum number of possible parallel connections, set as a global system variable
     max_conn = float(data['max_connections'])
 
     perc_used = conn / max_conn * 100
-
-    value_fmt = '%0.2f%%'
+    perc_conn_threads = conn_threads / max_conn * 100
 
     status_txt = 'Max. parallel connections since server start'
-
     yield check_levels(
         value=perc_used,
         dsname='connections_perc_used',
         params=params.get('perc_used'),
-        human_readable_func=lambda perc_used: value_fmt % perc_used,
+        human_readable_func=get_percent_human_readable,
         infoname=status_txt,
     )
 
@@ -191,10 +190,27 @@ def check_mysql_connections(_no_item, params, data):
         human_readable_func=lambda x: '',
     )
 
+    status_txt = 'Currently open connections'
+    yield check_levels(
+        value=perc_conn_threads,
+        dsname='connections_perc_conn_threads',
+        params=params.get('perc_conn_threads'),
+        human_readable_func=get_percent_human_readable,
+        infoname=status_txt,
+    )
+
+    yield check_levels(
+        value=conn_threads,
+        dsname='connections_conn_threads',
+        params=None,
+        human_readable_func=lambda x: '',
+    )
+
 
 @discover
 def mysql_connections(instance, values):
-    return all(x in values for x in ['Max_used_connections', 'max_connections'])
+    return all(
+        x in values for x in ['Max_used_connections', 'max_connections', 'Threads_connected'])
 
 
 check_info['mysql.connections'] = {

@@ -26,7 +26,7 @@ info = [['[[mysql]]'],
         ['Com_assign_to_keycache', '0'],
         ['Com_alter_db', '0'],
         ['Com_alter_db_upgrade', '0'],
-        ['Threads_connected', '42'],
+        ['Threads_connected', '3'],
         ['Connections', '2'],
         ['Threads_running', '23'],
         ['Innodb_data_read', '1024'],
@@ -248,15 +248,21 @@ checks = {
         ])
     ],
     'connections': [
-        ('mysql', {}, [
-            (0, 'Max. parallel connections since server start: 50.00%', [
-                ('connections_perc_used', 50.0, None, None, None, None),
+        ('mysql', {'perc_used': (75, 80), 'perc_conn_threads': (40, 50)}, [
+            (0, 'Max. parallel connections since server start: 50.0%', [
+                ('connections_perc_used', 50.0, 75, 80, None, None),
             ]),
             (0, '', [
                 ('connections_max_used', 2.0, None, None, None, None),
             ]),
             (0, '', [
                 ('connections_max', 4.0, None, None, None, None),
+            ]),
+            (2, 'Currently open connections: 75.0% (warn/crit at 40.0%/50.0%)', [
+                ('connections_perc_conn_threads', 75.0, 40, 50, None, None),
+            ]),
+            (0, '', [
+                ('connections_conn_threads', 3.0, None, None, None, None),
             ]),
         ])
     ],
@@ -270,8 +276,8 @@ checks = {
     ],
     'sessions': [
         ('mysql', {}, [
-            (0, '42 total', [
-                ('total_sessions', 42, None, None, None, None),
+            (0, '3 total', [
+                ('total_sessions', 3, None, None, None, None),
             ]),
             (0, '23 running', [
                 ('running_sessions', 23, None, None, None, None),

@@ -1359,10 +1359,22 @@ metric_info["connections_max"] = {
     "color": "51/b",
 }
 
+metric_info["connections_conn_threads"] = {
+    "title": _("Currently open connections"),
+    "unit": "count",
+    "color": "31/c",
+}
+
+metric_info["connections_perc_conn_threads"] = {
+    "title": _("Open connections load"),
+    "unit": "%",
+    "color": "31/c",
+}
+
 metric_info["connections_perc_used"] = {
     "title": _("Parallel connections load"),
     "unit": "%",
-    "color": "21/a",
+    "color": "42/a",
 }
 
 metric_info['op_s'] = {
@@ -1934,6 +1946,7 @@ graph_info['DB_connections'] = {
     'title': _('Parallel connections'),
     'metrics': [
         ('connections_max_used', 'area'),
+        ('connections_conn_threads', 'area'),
         ('connections_max', 'line'),
     ],
 }

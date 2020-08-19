@@ -9,7 +9,7 @@ Level: 1
 Version: 1.7.0i1
 
 NetApp volumes collected by the NetApp special agent, which are monitored
-by the check <tt>netapp_api_volumes<\tt>, can now be grouped using the rule
+by the check <tt>netapp_api_volumes</tt>, can now be grouped using the rule
 "Filesystem grouping patterns". This allows for combining multiple volumes into
 a single service. Services corresponding to grouped volumes deliver the same
 performance data as individual volumes and are also configurable via the rule

@@ -7,8 +7,8 @@ Edition: cre
 Knowledge: doc
 Level: 1
 Version: 1.7.0i1
-	
-The check <tt>winperf_phydisk<\tt> now interprets the timespan parameter for
+
+The check <tt>winperf_phydisk</tt> now interprets the timespan parameter for
 computing averaged values correctly (ruleset "Levels on disk IO (old style
 checks)"). Previously, the user was supposed to specify a value in minutes,
 however, the check plugin actually expected a value in seconds. This has been

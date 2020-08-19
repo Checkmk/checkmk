@@ -21,6 +21,6 @@ In case of a command timeout, only the current command is skipped and the
 plugin continues with the next command on the same instance.
 
 Finally, this werk also fixes a bug in the handling of errors for the check
-<tt>mssql_tablespaces<\tt>. Errors such as timeouts reported by the agent
+<tt>mssql_tablespaces</tt>. Errors such as timeouts reported by the agent
 plugin are now displayed in the GUI and the check goes to CRITICAL instead of
 UNKNOWN.

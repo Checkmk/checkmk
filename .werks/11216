@@ -9,7 +9,7 @@ Level: 1
 Version: 1.7.0i1
 
 This werk adds the option to inventorize the kernel configuration parameters
-of Linux systems (output of <tt>sysctl -ae<\tt>). To activate this option, two
+of Linux systems (output of <tt>sysctl -ae</tt>). To activate this option, two
 configuration steps are necessary.
 
 First, the user needs to deploy the corresponding agent plugin via the rule

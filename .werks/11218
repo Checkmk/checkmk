@@ -9,5 +9,5 @@ Level: 1
 Version: 1.7.0i1
 
 The MSSQL agent plugin now tries to connect to the instances using the
-OLE DB provider <tt>MSOLEDBSQL<\tt>. If this fails, the plugin falls back
-to <tt>SQLOLEDB<\tt>, which is the provider that was used up to now.
+OLE DB provider <tt>MSOLEDBSQL</tt>. If this fails, the plugin falls back
+to <tt>SQLOLEDB</tt>, which is the provider that was used up to now.

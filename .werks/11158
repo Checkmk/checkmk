@@ -9,7 +9,7 @@ Level: 1
 Version: 1.7.0i1
 
 The rule "Filesystem grouping patterns" allows for arranging filesystems
-discovered for example by the check <tt>df<\tt> into groups. Up to now, the
+discovered for example by the check <tt>df</tt> into groups. Up to now, the
 rule only allowed for specifying patterns for including a filesystem in a
 group. With this werk, the user can also specify exclusion patterns wich
 prevent filesystems from becoming a member of a group.

@@ -4887,7 +4887,7 @@ class RulespecGroupMonitoringAgentsGenericOptions(RulespecSubGroup):
 def _valuespec_agent_config_only_from():
     return ListOfStrings(
         valuespec=IPNetwork(),
-        title=_("Allowed agent access via IP address"),
+        title=_("Allowed agent access via IP address (Linux, Windows)"),
         help=_("This rule allows you to restrict the access to the "
                "Check_MK agent to certain IP addresses and networks. "
                "Usually you configure just the IP addresses of your "
@@ -4897,8 +4897,12 @@ def _valuespec_agent_config_only_from():
                "or create no rule then <b>all</b> addresses are allowed to "
                "access the agent. IPv6 addresses and networks are also allowed.") +
         _("If you are using the Agent bakery, the configuration will be "
-          "used for restricting network access to the baked agents. Even "
-          "if you don't use the bakery, the configured IP address "
+          "used for restricting network access to the baked agents. On Linux, a systemd "
+          "installation >= systemd 235 or an xinetd installation is needed. Please note "
+          "that the agent will be inaccessible if a Linux host doesn't meet these prerequisites, "
+          "i.e. an activation of a service that can't realize the IP restriction will be "
+          "prevented on agent package installation, see \"Checkmk agent network service (Linux)\" "
+          "ruleset. Even if you don't use the bakery, the configured IP address "
           "restrictions of a host will be verified against the allowed "
           "IP addresses reported by the agent. This is done during "
           "monitoring by the Check_MK service."),

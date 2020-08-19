@@ -169,7 +169,7 @@ def time_series_operator_difference(tsp):
 
 
 def time_series_operator_fraction(tsp):
-    if None in tsp:
+    if None in tsp or tsp[1] == 0:
         return None
     return tsp[0] / tsp[1]
 

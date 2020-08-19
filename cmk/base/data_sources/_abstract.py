@@ -21,6 +21,7 @@ from cmk.utils.exceptions import MKSNMPError, MKTerminate, MKTimeout
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
 
+from cmk.fetchers import ABCFetcher
 from cmk.fetchers.controller import FetcherType
 from cmk.fetchers.type_defs import BoundedAbstractRawData
 
@@ -283,10 +284,21 @@ class ABCConfigurator(abc.ABC):
 
     @abc.abstractmethod
     def configure_fetcher(self) -> Dict[str, Any]:
+        """Return a fetcher configuration suitable to create a fetcher.
+
+        See Also:
+            FetcherType: A fetcher factory.
+
+        """
         raise NotImplementedError
+
+    def make_fetcher(self) -> ABCFetcher:
+        """Create a fetcher with this configuration."""
+        return self.fetcher_type.value.from_json(self.configure_fetcher())
 
     @abc.abstractmethod
     def make_checker(self) -> "ABCDataSource":
+        """Create a checker with this configuration."""
         raise NotImplementedError
 
 

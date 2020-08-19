@@ -7,7 +7,7 @@
 
 import enum
 
-from ._base import MKFetcherError
+from ._base import ABCFetcher, MKFetcherError
 from .agent import AgentFileCache
 from .ipmi import IPMIFetcher
 from .piggyback import PiggyBackFetcher
@@ -16,6 +16,7 @@ from .snmp import SNMPFetcher, SNMPFileCache
 from .tcp import TCPFetcher
 
 __all__ = [
+    "ABCFetcher",
     "MKFetcherError",
     "IPMIFetcher",
     "PiggyBackFetcher",
@@ -27,7 +28,11 @@ __all__ = [
 
 
 class FetcherType(enum.Enum):
-    """Map short name to fetcher class."""
+    """Map short name to fetcher class.
+
+    This enum works as a fetcher factory.
+
+    """
     NONE = None
     IPMI = IPMIFetcher
     PIGGYBACK = PiggyBackFetcher

@@ -33,7 +33,7 @@ from .programs import DSProgramConfigurator, SpecialAgentConfigurator
 from .snmp import SNMPConfigurator
 from .tcp import TCPConfigurator
 
-__all__ = ["DataSources", "make_host_sections", "make_sources"]
+__all__ = ["DataSources", "make_host_sections", "make_configurators", "make_sources"]
 
 DataSources = Iterable[ABCDataSource]
 
@@ -63,10 +63,6 @@ class _Builder:
             self._elems.values(),
             key=lambda c: (isinstance(c, PiggyBackConfigurator), c.id),
         )
-
-    @property
-    def sources(self) -> DataSources:
-        return list(c.make_checker() for c in self.configurators)
 
     def _initialize(self) -> None:
         if self._host_config.is_cluster:
@@ -177,14 +173,24 @@ class _Builder:
         ]
 
 
+def make_configurators(
+    host_config: HostConfig,
+    ipaddress: Optional[HostAddress],
+    *,
+    mode: Mode,
+) -> Iterable[ABCConfigurator]:
+    """Iterable of configurators available for `host_config`."""
+    return _Builder(host_config, ipaddress, mode=mode).configurators
+
+
 def make_sources(
     host_config: HostConfig,
     ipaddress: Optional[HostAddress],
     *,
     mode: Mode,
 ) -> DataSources:
-    """Return a list of sources for DataSources."""
-    return _Builder(host_config, ipaddress, mode=mode).sources
+    """Iterable of checkers available for `host_config`."""
+    return list(c.make_checker() for c in make_configurators(host_config, ipaddress, mode=mode))
 
 
 def make_host_sections(

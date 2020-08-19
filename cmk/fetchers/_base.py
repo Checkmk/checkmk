@@ -17,6 +17,8 @@ from cmk.utils.log import VERBOSE
 
 from .type_defs import BoundedAbstractRawData
 
+__all__ = ["ABCFetcher", "MKFetcherError"]
+
 
 class MKFetcherError(MKException):
     """An exception common to the fetchers."""

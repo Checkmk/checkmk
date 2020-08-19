@@ -51,17 +51,11 @@ class CachedSNMPDetector:
         # Optional set: None: we never tried, empty: we tried, but found nothing
         self._cached_result: Optional[Set[SectionName]] = None
 
-    @staticmethod
-    def sections() -> Iterable[SNMPScanSection]:
-        return [
-            SNMPScanSection(section.name, section.detect_spec)
-            for section in agent_based_register.iter_all_snmp_sections()
-        ]
-
     # TODO (mo): Make this (and the called) function(s) return the sections directly!
     def __call__(
         self,
         snmp_config: SNMPHostConfig,
+        sections: Iterable[SNMPScanSection],
         *,
         on_error,
     ) -> Set[SectionName]:
@@ -71,7 +65,7 @@ class CachedSNMPDetector:
         """
         if self._cached_result is None:
             self._cached_result = gather_available_raw_section_names(
-                self.sections(),
+                sections,
                 on_error=on_error,
                 binary_host=config.get_config_cache().in_binary_hostlist(
                     snmp_config.hostname,
@@ -194,6 +188,39 @@ class SNMPConfigurator(ABCConfigurator):
     def make_checker(self) -> "SNMPDataSource":
         return SNMPDataSource(self)
 
+    def _make_snmp_scan_sections(self) -> Iterable[SNMPScanSection]:
+        """Create list of all SNMP scan specifications.
+
+        Here, we evaluate the rule_dependent_detect_spec-attribute of SNMPSectionPlugin. This
+        attribute is not an official part of the API. It allows for dynamically computing SNMP
+        detection specifications based on user-defined discovery rulesets. This is needed by some
+        check plugins, such as if and if64.
+
+        In case this attribute is not set, we simply use SNMPSectionPlugin.detect_spec, which is
+        the official way for specifying detection conditions.
+        """
+        snmp_scan_sections = []
+        config_cache = config.get_config_cache()
+
+        for snmp_section_plugin in agent_based_register.iter_all_snmp_sections():
+            if snmp_section_plugin.rule_dependent_detect_spec is None:
+                detect_spec = snmp_section_plugin.detect_spec
+            else:
+                # fetch user-defined discovery rules
+                rules_for_host = [
+                    config_cache.host_extra_conf(
+                        self.hostname,
+                        agent_based_register.get_discovery_ruleset(ruleset),
+                    ) for ruleset in snmp_section_plugin.rule_dependent_detect_spec.rulesets
+                ]
+                # call evaluator with these rules, returning an SNMPDetectSpec
+                detect_spec = snmp_section_plugin.rule_dependent_detect_spec.evaluator(
+                    *rules_for_host)
+
+            snmp_scan_sections.append(SNMPScanSection(snmp_section_plugin.name, detect_spec))
+
+        return snmp_scan_sections
+
     def _make_oid_infos(
         self,
         *,
@@ -205,6 +232,7 @@ class SNMPConfigurator(ABCConfigurator):
         if selected_raw_sections is None:
             section_names = self.detector(
                 self.snmp_config,
+                self._make_snmp_scan_sections(),
                 on_error=self.on_snmp_scan_error,
             )
         else:

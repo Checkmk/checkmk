@@ -15,7 +15,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any, cast, Dict, Iterator, List, Optional, Tuple
+from typing import Any, Dict, Iterator, List, Optional, Tuple
 
 from six import ensure_binary, ensure_str
 
@@ -1223,45 +1223,41 @@ class AutomationDiagHost(Automation):
         tcp_connect_timeout: Optional[float],
     ) -> Tuple[int, str]:
         state, output = 0, u""
-        for source in data_sources.make_sources(
+        for configurator in data_sources.make_configurators(
                 host_config,
                 ipaddress,
                 mode=data_sources.Mode.CHECKING,
         ):
-            source.configurator.file_cache.max_age = config.check_max_cachefile_age
-            if isinstance(source.configurator, data_sources.programs.DSProgramConfigurator) and cmd:
-                source = data_sources.programs.ProgramDataSource(
-                    configurator=data_sources.programs.DSProgramConfigurator(
-                        host_config.hostname,
-                        ipaddress,
-                        mode=data_sources.Mode.CHECKING,
-                        template=cmd,
-                    ),)
-            elif isinstance(source, data_sources.tcp.TCPDataSource):
-                configurator = cast(data_sources.tcp.TCPConfigurator, source.configurator)
+            configurator.file_cache.max_age = config.check_max_cachefile_age
+            if isinstance(configurator, data_sources.programs.DSProgramConfigurator) and cmd:
+                configurator = configurator.ds(
+                    configurator.hostname,
+                    configurator.ipaddress,
+                    mode=configurator.mode,
+                    template=cmd,
+                )
+            elif isinstance(configurator, data_sources.tcp.TCPConfigurator):
                 configurator.port = agent_port
                 if tcp_connect_timeout is not None:
                     configurator.timeout = tcp_connect_timeout
-            elif isinstance(source, data_sources.snmp.SNMPDataSource):
+            elif isinstance(configurator, data_sources.snmp.SNMPConfigurator):
                 continue
 
-            # TODO(ml): Call fetcher directly.
-            assert isinstance(source, data_sources.agent.AgentDataSource)
-            source_output = source.run_raw()
-
-            # We really receive a byte string here. The agent sections
-            # may have different encodings and are normally decoded one
-            # by one (AgentDataSource._parse_host_section).  For the
-            # moment we use UTF-8 with fallback to latin-1 by default,
-            # similar to the AgentDataSource, but we do not
-            # respect the ecoding options of sections.
-            # If this is a problem, we would have to apply parse and
-            # decode logic and unparse the decoded output again.
-            output += ensure_str_with_fallback(source_output, encoding="utf-8", fallback="latin-1")
-
-            if source.exception():
+            try:
+                with configurator.make_fetcher() as fetcher:
+                    raw_data = fetcher.fetch()
+                # We really receive a byte string here. The agent sections
+                # may have different encodings and are normally decoded one
+                # by one (AgentDataSource._parse_host_section).  For the
+                # moment we use UTF-8 with fallback to latin-1 by default,
+                # similar to the AgentDataSource, but we do not
+                # respect the ecoding options of sections.
+                # If this is a problem, we would have to apply parse and
+                # decode logic and unparse the decoded output again.
+                output += ensure_str_with_fallback(raw_data, encoding="utf-8", fallback="latin-1")
+            except Exception as exc:
                 state = 1
-                output += "%s" % source.exception()
+                output += str(exc)
 
         return state, output
 
@@ -1520,23 +1516,26 @@ class AutomationGetAgentOutput(Automation):
             ipaddress = ip_lookup.lookup_ip_address(host_config)
             if ty == "agent":
                 data_sources.FileCacheConfigurator.reset_maybe()
-                agent_output = b""
-                for source in data_sources.make_sources(
+                for configurator in data_sources.make_configurators(
                         host_config,
                         ipaddress,
                         mode=data_sources.Mode.CHECKING,
                 ):
-                    source.configurator.file_cache.max_age = config.check_max_cachefile_age
-                    if isinstance(source, data_sources.agent.AgentDataSource):
-                        # TODO(ml): Call fetcher directly.
-                        agent_output += source.run_raw()
+                    configurator.file_cache.max_age = config.check_max_cachefile_age
+                    if not isinstance(configurator, data_sources.agent.AgentConfigurator):
+                        continue
+
+                    with configurator.make_fetcher() as fetcher:
+                        raw_data = fetcher.fetch()
 
                     # Optionally show errors of problematic data sources
-                    source_state, source_output, _source_perfdata = source.get_summary_result()
+                    checker = configurator.make_checker()
+                    checker.check(raw_data)
+                    source_state, source_output, _source_perfdata = checker.get_summary_result()
                     if source_state != 0:
                         success = False
-                        output += "[%s] %s\n" % (source.id, source_output)
-                info = agent_output
+                        output += "[%s] %s\n" % (configurator.id, source_output)
+                    info += raw_data
             else:
                 if not ipaddress:
                     raise MKGeneralException("Failed to gather IP address of %s" % hostname)

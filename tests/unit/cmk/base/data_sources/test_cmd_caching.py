@@ -464,14 +464,6 @@ def test_automation_discovery_caching(scan, cache, raise_errors, mocker):
     assert ABCDataSource.check.call_count == 2  # type: ignore[attr-defined]
 
 
-@pytest.mark.usefixtures("scenario")
-@pytest.mark.usefixtures("patch_data_source")
-def test_automation_diag_host_caching():
-    args = ["ds-test-host1", "agent", "127.0.0.1", "", "6557", "10", "5", "5", ""]
-    cmk.base.automations.check_mk.AutomationDiagHost().execute(args)
-    assert ABCDataSource.check.call_count == 2  # type: ignore[attr-defined]
-
-
 # Globale Optionen:
 # --cache    ->
 # --no-cache ->

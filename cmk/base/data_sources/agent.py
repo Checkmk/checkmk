@@ -51,7 +51,7 @@ from ._abstract import (
     Mode,
 )
 
-__all__ = ["AgentHostSections", "AgentDataSource"]
+__all__ = ["AgentConfigurator", "AgentHostSections", "AgentDataSource"]
 
 
 class AgentHostSections(ABCHostSections[AgentRawData, AgentSections, AgentPersistedSections,

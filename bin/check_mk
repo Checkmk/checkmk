@@ -15,6 +15,8 @@ import logging
 import os
 import sys
 import getopt
+import socket
+import errno
 
 # Needs to be placed before cmk modules, because they are not available
 # when executed as non site user. Alas, this screws up our import ordering
@@ -103,9 +105,18 @@ except (MKGeneralException, MKBailOut) as e:
         raise
     sys.exit(3)
 
+except socket.error as e:
+    if e.errno == errno.EPIPE:
+        # this is not an error, caller closes socket(s) and will kill cmk too
+        sys.exit(4)
+    crash = cmk.base.crash_reporting.CMKBaseCrashReport.from_exception()
+    cmk.base.crash_reporting.CrashReportStore().save(crash)
+    raise
+
 except Exception:
     crash = cmk.base.crash_reporting.CMKBaseCrashReport.from_exception()
     cmk.base.crash_reporting.CrashReportStore().save(crash)
     raise
+
 finally:
     profiling.output_profile()

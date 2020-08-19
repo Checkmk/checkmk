@@ -11,15 +11,6 @@ from typing import Iterator, Optional, Type
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
-
-from cmk.gui.plugins.wato.utils import (
-    mode_registry,
-    configure_attributes,
-    ConfigHostname,
-)
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode
-from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
-
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError, MKAuthException, MKGeneralException, HTTPRedirect
@@ -28,7 +19,6 @@ from cmk.gui.valuespec import (
     Hostname,
     FixedValue,
 )
-from cmk.gui.wato.pages.folders import delete_host_after_confirm, ModeFolder
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
@@ -39,6 +29,16 @@ from cmk.gui.page_menu import (
     make_form_submit_link,
     make_simple_form_page_menu,
 )
+
+from cmk.gui.plugins.wato.utils import (
+    mode_registry,
+    configure_attributes,
+    ConfigHostname,
+)
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode
+from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
+from cmk.gui.watolib.hosts_and_folders import CREHost
+from cmk.gui.wato.pages.folders import delete_host_after_confirm, ModeFolder
 
 
 class ABCHostMode(WatoMode, metaclass=abc.ABCMeta):
@@ -277,7 +277,7 @@ class ModeEditHost(ABCHostMode):
                         self._page_menu_save_topic(),
                         PageMenuTopic(
                             title=_("For this host"),
-                            entries=list(self._page_menu_host_entries()),
+                            entries=list(page_menu_host_entries(self.name(), self._host)),
                         ),
                         PageMenuTopic(
                             title=_("For all hosts on site %s") % self._host.site_id(),
@@ -295,76 +295,6 @@ class ModeEditHost(ABCHostMode):
             ],
             breadcrumb=breadcrumb,
         )
-
-    def _page_menu_host_entries(self) -> Iterator[PageMenuEntry]:
-        yield PageMenuEntry(
-            title=_("Service configuration"),
-            icon_name="services",
-            item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "inventory"),
-                                                ("host", self._host.name())])),
-        )
-
-        if not self._is_cluster():
-            yield PageMenuEntry(
-                title=_("Connection tests"),
-                icon_name="diagnose",
-                item=make_simple_link(
-                    watolib.folder_preserving_link([("mode", "diag_host"),
-                                                    ("host", self._host.name())])),
-            )
-
-        if config.user.may('wato.rulesets'):
-            yield PageMenuEntry(
-                title=_("Effective parameters"),
-                icon_name="rulesets",
-                item=make_simple_link(
-                    watolib.folder_preserving_link([("mode", "object_parameters"),
-                                                    ("host", self._host.name())])),
-            )
-
-        yield make_host_status_link(host_name=self._host.name(), view_name="hoststatus")
-
-        if config.user.may('wato.rulesets') and self._is_cluster():
-            yield PageMenuEntry(
-                title=_("Clustered services"),
-                icon_name="rulesets",
-                item=make_simple_link(
-                    watolib.folder_preserving_link([("mode", "edit_ruleset"),
-                                                    ("varname", "clustered_services")])),
-            )
-
-        if watolib.has_agent_bakery() and config.user.may('wato.download_agents'):
-            yield PageMenuEntry(
-                title=_("Monitoring agent"),
-                icon_name="agents",
-                item=make_simple_link(
-                    watolib.folder_preserving_link([("mode", "agent_of_host"),
-                                                    ("host", self._host.name())])),
-            )
-
-        if not self._host.locked():
-            if config.user.may("wato.rename_hosts"):
-                yield PageMenuEntry(
-                    title=_("Rename"),
-                    icon_name="rename_host",
-                    item=make_simple_link(
-                        watolib.folder_preserving_link([("mode", "rename_host"),
-                                                        ("host", self._host.name())])),
-                )
-
-            if config.user.may("wato.manage_hosts") and config.user.may("wato.clone_hosts"):
-                yield PageMenuEntry(
-                    title=_("Clone"),
-                    icon_name="insert",
-                    item=make_simple_link(self._host.clone_url()),
-                )
-
-            yield PageMenuEntry(
-                title=_("Delete"),
-                icon_name="delete",
-                item=make_simple_link(html.makeactionuri([("delete", "1")])),
-            )
 
     def action(self):
         if html.request.var("_update_dns_cache"):
@@ -401,6 +331,83 @@ class ModeEditHost(ABCHostMode):
         return FixedValue(
             self._host.name(),
             title=_("Hostname"),
+        )
+
+
+def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEntry]:
+    if mode_name != "edit_host":
+        yield PageMenuEntry(
+            title=_("Properties"),
+            icon_name="edit",
+            item=make_simple_link(
+                watolib.folder_preserving_link([("mode", "edit_host"), ("host", host.name())])),
+        )
+
+    if mode_name != "inventory":
+        yield PageMenuEntry(
+            title=_("Service configuration"),
+            icon_name="services",
+            item=make_simple_link(
+                watolib.folder_preserving_link([("mode", "inventory"), ("host", host.name())])),
+        )
+
+    if mode_name != "diag_host" and not host.is_cluster():
+        yield PageMenuEntry(
+            title=_("Connection tests"),
+            icon_name="diagnose",
+            item=make_simple_link(
+                watolib.folder_preserving_link([("mode", "diag_host"), ("host", host.name())])),
+        )
+
+    if mode_name != "object_parameters" and config.user.may('wato.rulesets'):
+        yield PageMenuEntry(
+            title=_("Effective parameters"),
+            icon_name="rulesets",
+            item=make_simple_link(
+                watolib.folder_preserving_link([("mode", "object_parameters"),
+                                                ("host", host.name())])),
+        )
+
+    yield make_host_status_link(host_name=host.name(), view_name="hoststatus")
+
+    if config.user.may('wato.rulesets') and host.is_cluster():
+        yield PageMenuEntry(
+            title=_("Clustered services"),
+            icon_name="rulesets",
+            item=make_simple_link(
+                watolib.folder_preserving_link([("mode", "edit_ruleset"),
+                                                ("varname", "clustered_services")])),
+        )
+
+    if watolib.has_agent_bakery() and config.user.may('wato.download_agents'):
+        yield PageMenuEntry(
+            title=_("Monitoring agent"),
+            icon_name="agents",
+            item=make_simple_link(
+                watolib.folder_preserving_link([("mode", "agent_of_host"), ("host", host.name())])),
+        )
+
+    if mode_name == "edit_host" and not host.locked():
+        if config.user.may("wato.rename_hosts"):
+            yield PageMenuEntry(
+                title=_("Rename"),
+                icon_name="rename_host",
+                item=make_simple_link(
+                    watolib.folder_preserving_link([("mode", "rename_host"),
+                                                    ("host", host.name())])),
+            )
+
+        if config.user.may("wato.manage_hosts") and config.user.may("wato.clone_hosts"):
+            yield PageMenuEntry(
+                title=_("Clone"),
+                icon_name="insert",
+                item=make_simple_link(host.clone_url()),
+            )
+
+        yield PageMenuEntry(
+            title=_("Delete"),
+            icon_name="delete",
+            item=make_simple_link(html.makeactionuri([("delete", "1")])),
         )
 
 

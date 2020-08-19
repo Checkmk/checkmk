@@ -17,11 +17,6 @@ import cmk.gui.forms as forms
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.plugins.wato.utils.context_buttons import host_status_button
-from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.wato.pages.hosts import ModeEditHost
-
-from cmk.gui.valuespec import DictionaryEntry
 from cmk.gui.valuespec import (
     TextAscii,
     DropdownChoice,
@@ -31,7 +26,18 @@ from cmk.gui.valuespec import (
     Password,
     HostAddress,
     FixedValue,
+    DictionaryEntry,
 )
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_form_submit_link,
+)
+from cmk.gui.pages import page_registry, AjaxPage
+from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 
 from cmk.gui.plugins.wato import ActionResult
 from cmk.gui.plugins.wato import (
@@ -76,16 +82,54 @@ class ModeDiagHost(WatoMode):
             raise MKGeneralException(_('This page does not support cluster hosts.'))
 
     def title(self):
-        return _('Diagnostic of host') + " " + self._hostname
+        return _('Test connection to host') + " " + self._hostname
 
-    def buttons(self):
-        html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]),
-                            "back")
-        host_status_button(self._hostname, "hoststatus")
-        html.context_button(_("Properties"), self._host.edit_url(), "edit")
-        if config.user.may('wato.rulesets'):
-            html.context_button(_("Parameters"), self._host.params_url(), "rulesets")
-        html.context_button(_("Services"), self._host.services_url(), "services")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="actions",
+                    title=_("Actions"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Host properties"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Save & Exit"),
+                                    icon_name="save",
+                                    item=make_form_submit_link("diag_host", "_save"),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                            ],
+                        ),
+                        PageMenuTopic(
+                            title=_("Options"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Test"),
+                                    icon_name="save",
+                                    item=make_form_submit_link("diag_host", "_try"),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="hosts",
+                    title=_("Hosts"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("For this host"),
+                            entries=list(page_menu_host_entries(self.name(), self._host)),
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
 
     def action(self) -> ActionResult:
         if not html.check_transaction():
@@ -165,7 +209,6 @@ class ModeDiagHost(WatoMode):
         forms.end()
 
         html.open_div(style="margin-bottom:10px")
-        html.button("_save", _("Save & Exit"))
         html.close_div()
 
         forms.header(_('Options'))
@@ -176,8 +219,6 @@ class ModeDiagHost(WatoMode):
         vs_rules.render_input("vs_rules", value)
         html.help(vs_rules.help())
         forms.end()
-
-        html.button("_try", _("Test"))
 
         html.hidden_fields()
         html.end_form()

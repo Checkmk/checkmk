@@ -730,7 +730,6 @@ class PageMenuPopupsRenderer:
         html.open_div(class_="content")
         html.write(HTML(entry.item.content))
         html.close_div()
-
         html.close_div()
 
         if isinstance(entry.item, PageMenuSidePopup):

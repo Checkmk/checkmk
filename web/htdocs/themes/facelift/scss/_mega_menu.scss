@@ -98,8 +98,8 @@
       left: 64px;
       z-index: 1000;
       height: calc(100vh - #{$page-header-height});
-      background-color: $popup-menu-bg-color;
-      border-right: 4px solid $success;
+      background-color: $base-color;
+      border-right: $popup-border;
       border-left: 1px solid $headline-color;
       visibility: hidden;
 
@@ -189,7 +189,6 @@
               position: fixed;
               z-index: 5;
               padding-top: 22px;
-              background-color: rgb(53, 63, 74);
 
               a.show_all_topics img { display: block; }
             }

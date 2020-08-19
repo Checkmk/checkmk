@@ -154,11 +154,12 @@ export function toggle_filter_group_display(filter_group)
 }
 
 // Scroll to the top after adding new filters
-export function add_filter_scroll_update()
+export function update_filter_list_scroll(filter_list_id)
 {
-    let scrollable = document.getElementById("popup_filter_list").getElementsByClassName("simplebar-content-wrapper")[0];
+    let filter_list = document.getElementById(filter_list_id);
+    let scrollable = filter_list.getElementsByClassName("simplebar-content-wrapper")[0];
     try { // scrollTo() is not supported in IE
-        scrollable.scrollTo({top: 0, left: 0, behavior: "smooth"});
+        setTimeout(() => { scrollable.scrollTo({top: 0, left: 0, behavior: "smooth"}); }, 200);
     }
     catch (e) {
         scrollable.scrollTop = 0;

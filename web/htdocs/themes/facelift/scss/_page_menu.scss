@@ -368,7 +368,7 @@ div#page_menu_popups {
     position: relative;
     display: none;
     padding: 10px;
-    background-color: $form-bg-color;
+    background-color: $base-color;
     border: none;
     border-radius: $popup-filters-border-radius;
 
@@ -391,7 +391,7 @@ div#page_menu_popups {
       a.close_popup img {
         position: absolute;
         top: 1px;
-        right: 6px;
+        right: 16px;
         width: 16px;
         height: auto;
       }
@@ -409,7 +409,7 @@ div#page_menu_popups {
 
 
     select, .tagify__input, span.select2 .select2-selection, input[type="checkbox"] + label::before, input:not(.reset):not([type="submit"])  {
-      background-color: $odd-tr-bg-color;
+      background-color: $bg-color;
     }
 
     input.submit {
@@ -432,46 +432,47 @@ div#page_menu_popups div.side_popup {
   width: 375px;
   height: 100vh;
   padding: 0;
+  border-left: $popup-border;
 
   form {
     width: inherit;
     text-align: left;
 
     div.side_popup_content {
-      height: 100vh;
+      height: calc(100vh - 86px);
       overflow-x: hidden;
       overflow-y: auto;
     }
 
     /* general floatfilter elment styling */
     div.floatfilter {
-      padding: 0;
-      padding-right: 8px;
-      padding-bottom: 3px;
+      padding: 0 8px 3px $spacing;
       margin: 0;
-      background-color: $button-bg-color-default;
+      background-color: $base-color;
       border-style: none;
       border-radius: 0;
       box-shadow: none;
 
       input.neg[type="text"] {
-        width: 84%;
+        width: 81%;
       }
 
       div.legend {
         margin: 0;
-        margin-bottom: 4px;
-        font-size: 10px;
-        font-weight: normal;
+        font-size: 11px;
+        font-weight: bold;
         color: $font-color;
         text-align: left;
-        text-transform: uppercase;
+        text-transform: none;
         border-radius: 0;
+
+        span {
+          border-bottom: $floatfilter-legend-border;
+          padding-bottom: 3px;
+        }
       }
 
-      div.content {
-        padding: 0;
-      }
+      div.content { margin-bottom: 6px; }
 
       span.select2-container--default {
         display: inline-block;
@@ -522,12 +523,10 @@ div#page_menu_popups div.side_popup {
       display: flex;
       align-items: flex-end;
       justify-content: space-between;
-
       padding: 10px;
       margin: 0;
-      border-top: $primary-table-border;
-      border-bottom: $primary-table-border;
-      border-color: $headline-color;
+      border-top: $popup-inner-border;
+      border-bottom: $popup-inner-border;
 
       a.add {
         display: inline-block;
@@ -550,7 +549,7 @@ div#page_menu_popups div.side_popup {
         &:hover, &.active {
           img {
             opacity: 1;
-            filter: brightness(100);
+            filter: $filter-add-button-hover-brightness;
           }
           div.description { color: $font-color; }
         }
@@ -565,13 +564,17 @@ div#page_menu_popups div.side_popup {
         }
 
         input.reset {
+          margin-right: 8px;
           border-color: $font-color;
+          background-color: transparent;
+
+          &:disabled { opacity: .5; }
         }
       }
     }
   }
 
-  div#popup_filter_list {
+  div.popup_filter_list {
     position: fixed;
     top: 0;
     right: 375px;
@@ -580,11 +583,13 @@ div#page_menu_popups div.side_popup {
     height: 100vh;
     padding: 0;
     overflow: auto;
-    background-color: rgb(53, 63, 74);
+    background-color: $base-color;
     border: none;
 
     &.active {
       display: block;
+      border-left: $popup-border;
+      border-right: $popup-inner-border;
     }
 
     div.filter_group:last-child { margin-bottom: 10px; }
@@ -604,6 +609,7 @@ div#page_menu_popups div.side_popup {
 
     ul {
       padding: 0 20px;
+      margin-top: 0;
 
       li {
         list-style: none;

@@ -1065,7 +1065,9 @@ def page_edit_visual(what,
 
 def show_filter(f: Filter) -> None:
     html.open_div(class_=["floatfilter", f.ident])
-    html.div(f.title, class_="legend")
+    html.open_div(class_="legend")
+    html.span(f.title)
+    html.close_div()
     html.open_div(class_="content")
     try:
         with html.plugged():
@@ -1377,9 +1379,10 @@ def show_filter_form(info_list: List[InfoName], mandatory_filters: List[Tuple[st
     vs_filters = VisualFilterListWithAddPopup(info_list=info_list, ignore=mandatory_filter_names)
 
     filter_list_id = VisualFilterListWithAddPopup.filter_list_id(varprefix)
-    _show_filter_form_buttons(filter_list_id)
+    filter_list_selected_id = filter_list_id + "_selected"
+    _show_filter_form_buttons(varprefix, filter_list_id)
 
-    html.open_div(class_="side_popup_content")
+    html.open_div(id_=filter_list_selected_id, class_="side_popup_content")
     try:
         # Configure required single info keys (the ones that are not set by the config)
         if mandatory_filters:
@@ -1404,9 +1407,10 @@ def show_filter_form(info_list: List[InfoName], mandatory_filters: List[Tuple[st
 
     html.hidden_fields()
     html.end_form()
+    html.javascript("cmk.utils.add_simplebar_scrollbar(%s);" % json.dumps(filter_list_selected_id))
 
 
-def _show_filter_form_buttons(filter_list_id: str) -> None:
+def _show_filter_form_buttons(varprefix: str, filter_list_id: str) -> None:
     html.open_div(class_="side_popup_controls")
 
     html.open_a(href="javascript:void(0);",
@@ -1418,12 +1422,11 @@ def _show_filter_form_buttons(filter_list_id: str) -> None:
     html.close_a()
 
     html.open_div(class_="update_buttons")
-    # TODO: This is currently broken. It is unclear to which state exactly to reset to
-    #html.jsbutton("reset",
-    #              _("Reset"),
-    #              cssclass="reset",
-    #              onclick="cmk.valuespecs.listofmultiple_reset('')")
-    html.button("apply", _("Apply filters"), cssclass="apply submit")
+    html.jsbutton("%s_reset" % varprefix,
+                  _("Reset"),
+                  cssclass="reset",
+                  onclick="cmk.valuespecs.listofmultiple_reset('')")
+    html.button("%s_apply" % varprefix, _("Apply filters"), cssclass="apply submit")
     html.close_div()
 
     html.close_div()
@@ -1492,12 +1495,13 @@ class VisualFilterListWithAddPopup(VisualFilterList):
     """Special form of the visual filter list to be used in the views and dashboards"""
     @staticmethod
     def filter_list_id(varprefix: str) -> str:
-        return "%spopup_filter_list" % varprefix
+        return "%s_popup_filter_list" % varprefix
 
     def _show_add_elements(self, varprefix: str) -> None:
         filter_list_id = VisualFilterListWithAddPopup.filter_list_id(varprefix)
+        filter_list_selected_id = filter_list_id + "_selected"
 
-        html.open_div(id_=filter_list_id, class_="filter_list")
+        html.open_div(id_=filter_list_id, class_="popup_filter_list")
         html.more_button(filter_list_id, 1)
         for group in self._grouped_choices:
             if not group.choices:
@@ -1513,7 +1517,7 @@ class VisualFilterListWithAddPopup(VisualFilterList):
                    onclick="cmk.page_menu.toggle_filter_group_display(this.nextSibling)")
 
             # Display all entries of this group
-            html.open_ul()
+            html.open_ul(class_="active")
             for choice in group.choices:
                 filter_name = choice[0]
 
@@ -1523,9 +1527,9 @@ class VisualFilterListWithAddPopup(VisualFilterList):
                 html.a(choice[1].title() or filter_name,
                        href="javascript:void(0)",
                        onclick="cmk.valuespecs.listofmultiple_add(%s, %s, %s, this);"
-                       "cmk.page_menu.add_filter_scroll_update()" %
-                       (json.dumps(varprefix), json.dumps(
-                           self._choice_page_name), json.dumps(self._page_request_vars)),
+                       "cmk.page_menu.update_filter_list_scroll(%s)" %
+                       (json.dumps(varprefix), json.dumps(self._choice_page_name),
+                        json.dumps(self._page_request_vars), json.dumps(filter_list_selected_id)),
                        id_="%s_add_%s" % (varprefix, filter_name))
 
                 html.close_li()
@@ -1536,7 +1540,7 @@ class VisualFilterListWithAddPopup(VisualFilterList):
         html.javascript('cmk.valuespecs.listofmultiple_init(%s);' % json.dumps(varprefix))
         # TODO: Currently does not work, because the filter popup (a parent element) has a simplebar
         # scrollbar. Need to investigate...
-        # html.final_javascript("cmk.utils.add_simplebar_scrollbar(%s);" % json.dumps(filter_list_id))
+        html.final_javascript("cmk.utils.add_simplebar_scrollbar(%s);" % json.dumps(filter_list_id))
 
 
 @page_registry.register_page("ajax_visual_filter_list_get_choice")

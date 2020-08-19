@@ -591,11 +591,12 @@ export function listofmultiple_add(varprefix, choice_page_name, page_request_var
             }
 
             let ident = handler_data.ident;
-            if (!handler_data.trigger) {
-                // Update select2 to make the disabled attribute be recognized by the dropdown
-                // (See https://github.com/select2/select2/issues/3347)
-                var choice_select2 = $(choice).select2();
-                // Unselect the choosen option
+            // Update select2 to make the disabled attribute be recognized by the dropdown
+            // (See https://github.com/select2/select2/issues/3347)
+            let choice = document.getElementById(varprefix + "_choice");
+            if (choice) {
+                let choice_select2 = $(choice).select2();
+                // Unselect the chosen option
                 choice_select2.val(null).trigger("change");
             }
 
@@ -607,7 +608,7 @@ export function listofmultiple_add(varprefix, choice_page_name, page_request_var
                 return;
             }
 
-            tbody.appendChild(new_row);
+            tbody.insertBefore(new_row, tbody.firstChild);
             forms.enable_dynamic_form_elements(new_row);
             utils.execute_javascript_by_object(new_row);
 
@@ -621,6 +622,11 @@ export function listofmultiple_add(varprefix, choice_page_name, page_request_var
             // Put in a line break following the table if the added row is the first
             if (tbody.childNodes.length == 1)
                 table.parentNode.insertBefore(document.createElement("br"), table.nextSibling);
+
+            // Enable the reset button
+            let reset_button = document.getElementById(varprefix + "_reset");
+            if (reset_button)
+                reset_button.disabled = false;
         }
     });
 }
@@ -635,9 +641,9 @@ export function listofmultiple_del(varprefix, ident) {
     var choice = document.getElementById(varprefix + "_choice");
     if (choice) {
         var i;
-        for (i = 0; i < choice.children.length; i++)
-            if (choice.children[i].value == ident)
-                choice.children[i].disabled = false;
+        for (i = 0; i < choice.options.length; i++)
+            if (choice.options[i].value == ident)
+                choice.options[i].disabled = false;
 
         // Update select2 to make the disabled attribute be recognized by the dropdown
         // (See https://github.com/select2/select2/issues/3347)
@@ -667,11 +673,22 @@ export function listofmultiple_del(varprefix, ident) {
         if (br.nodeName == "BR")
             br.parentNode.removeChild(br);
     }
+
+    // Enable the reset button
+    let reset_button = document.getElementById(varprefix + "_reset");
+    if (reset_button)
+        reset_button.disabled = false;
 }
+
+var g_initial_table_html = null;
+var g_initial_active_values = null;
 
 export function listofmultiple_init(varprefix) {
     var table = document.getElementById(varprefix + "_table");
     var tbody = table.getElementsByTagName("tbody")[0];
+    var active = document.getElementById(varprefix + "_active");
+    g_initial_table_html = table.innerHTML;
+    g_initial_active_values = active.value;
 
     let choice_field = document.getElementById(varprefix + "_choice");
     if (choice_field)
@@ -681,9 +698,36 @@ export function listofmultiple_init(varprefix) {
     // Put in a line break following the table if it's not empty
     if (tbody.childNodes.length >= 1)
         table.parentNode.insertBefore(document.createElement("br"), table.nextSibling);
+
+    // Disable the reset button
+    let reset_button = document.getElementById(varprefix + "_reset");
+    if (reset_button)
+        reset_button.disabled = true;
 }
 
-// The <option> elements in the <select> field of the currently choosen
+export function listofmultiple_reset(varprefix) {
+    if (g_initial_table_html) {
+        let active = document.getElementById(varprefix + "_active");
+        let active_choices = active.value.split(";");
+        let i;
+        let choice;
+        for (i = 0; i < active_choices.length; i++) {
+            choice = document.getElementById(varprefix + "_add_" + active_choices[i]);
+            utils.remove_class(choice, "disabled");
+        }
+        let table = document.getElementById(varprefix + "_table");
+        active.value = g_initial_active_values;
+        table.innerHTML = g_initial_table_html;
+        listofmultiple_disable_selected_options(varprefix);
+
+        // Disable the reset button
+        let reset_button = document.getElementById(varprefix + "_reset");
+        reset_button.disabled = true;
+    }
+}
+
+
+// The <option> elements in the <select> field of the currently chosen
 // elements need to be disabled.
 function listofmultiple_disable_selected_options(varprefix)
 {
@@ -692,9 +736,9 @@ function listofmultiple_disable_selected_options(varprefix)
     let choice_field = document.getElementById(varprefix + "_choice");
     let i;
     if (choice_field) {
-        for (i = 0; i < choice_field.children.length; i++) {
-            if (active_choices.indexOf(choice_field.children[i].value) !== -1) {
-                choice_field.children[i].disabled = true;
+        for (i = 0; i < choice_field.options.length; i++) {
+            if (active_choices.indexOf(choice_field.options[i].value) !== -1) {
+                choice_field.options[i].disabled = true;
             }
         }
     }

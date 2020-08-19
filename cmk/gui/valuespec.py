@@ -2095,7 +2095,7 @@ class ListOfMultiple(ValueSpec):
     def del_button(self, varprefix: str, ident: str) -> None:
         js = "cmk.valuespecs.listofmultiple_del(%s, %s)" % (json.dumps(varprefix),
                                                             json.dumps(ident))
-        html.icon_button("#", self._del_label, "delete", onclick=js)
+        html.icon_button("#", self._del_label, "close", onclick=js, class_="delete_button")
 
     def render_input(self, varprefix: str, value: Dict[str, Any]) -> None:
         # Beware: the 'value' is only the default value in case the form
@@ -2157,19 +2157,14 @@ class ListOfMultiple(ValueSpec):
     def show_choice_row(self, varprefix: str, ident: str, value: Dict[str, Any]) -> None:
         prefix = varprefix + '_' + ident
         html.open_tr(id_="%s_row" % prefix)
-        self._show_del_button(varprefix, ident)
         self._show_content(varprefix, ident, value)
         html.close_tr()
 
     def _show_content(self, varprefix: str, ident: str, value: Dict[str, Any]) -> None:
         prefix = varprefix + '_' + ident
         html.open_td(class_=["vlof_content"])
-        self._choice_dict[ident].render_input(prefix, value.get(ident))
-        html.close_td()
-
-    def _show_del_button(self, varprefix: str, ident: str) -> None:
-        html.open_td(class_=["vlof_buttons"])
         self.del_button(varprefix, ident)
+        self._choice_dict[ident].render_input(prefix, value.get(ident))
         html.close_td()
 
     def canonical_value(self) -> Dict[str, Any]:

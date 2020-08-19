@@ -9,7 +9,7 @@ import abc
 import os
 import pprint
 import re
-from typing import Dict, Any, Optional, Type
+from typing import Dict, Any, Optional, Type, Iterable
 
 from cmk.gui.htmllib import Choices
 import cmk.gui.config as config
@@ -438,10 +438,24 @@ class ModeCustomAttrs(WatoMode, metaclass=abc.ABCMeta):
                             ],
                         ),
                     ],
-                )
+                ),
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Setup"),
+                            entries=list(self._page_menu_entries_related()),
+                        ),
+                    ],
+                ),
             ],
             breadcrumb=breadcrumb,
         )
+
+    @abc.abstractmethod
+    def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
+        raise NotImplementedError()
 
     def action(self):
         if html.request.var('_delete'):
@@ -503,6 +517,14 @@ class ModeCustomUserAttrs(ModeCustomAttrs):
     def title(self):
         return _("Custom user attributes")
 
+    def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
+        yield PageMenuEntry(
+            title=_("Users"),
+            icon_name="users",
+            item=make_simple_link(html.makeuri_contextless([("mode", "users")],
+                                                           filename="wato.py")),
+        )
+
 
 @mode_registry.register
 class ModeCustomHostAttrs(ModeCustomAttrs):
@@ -526,3 +548,11 @@ class ModeCustomHostAttrs(ModeCustomAttrs):
 
     def get_attributes(self):
         return self._attrs
+
+    def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
+        yield PageMenuEntry(
+            title=_("Hosts"),
+            icon_name="host",
+            item=make_simple_link(html.makeuri_contextless([("mode", "folder")],
+                                                           filename="wato.py")),
+        )

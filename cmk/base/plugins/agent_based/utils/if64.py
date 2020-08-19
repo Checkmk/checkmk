@@ -57,7 +57,8 @@ def need_if64adm(use_if64adm: BinaryHostRules) -> bool:
     return _evaluate_binary_host_rules(use_if64adm)
 
 
-HAS_ifHCInOctets = exists('.1.3.6.1.2.1.31.1.1.1.6.*')
+OID_ifHCInOctets = '.1.3.6.1.2.1.31.1.1.1.6.*'
+HAS_ifHCInOctets = exists(OID_ifHCInOctets)
 
 _PORT_TYPES = {
     'other': '1',

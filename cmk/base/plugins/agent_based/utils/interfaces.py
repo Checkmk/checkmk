@@ -18,6 +18,7 @@ from typing import (
     Mapping,
     Optional,
     Sequence,
+    Set,
     Tuple,
     TypedDict,
     Union,
@@ -518,6 +519,7 @@ def discover_interfaces(
     rulesets = [_transform_discovery_rules(par) for par in params]
 
     pre_inventory = []
+    seen_indices: Set[str] = set()
     n_times_item_seen: Dict[str, int] = defaultdict(int)
     interface_groups: Dict[str, GroupConfiguration] = {}
 
@@ -537,7 +539,23 @@ def discover_interfaces(
                 discover_single_interface, single_interface_settings = ruleset['discovery_single']
                 break
 
-        # compute item now - also for unmonitored ports - in order to see if it is unique.
+        # add all ways of describing this interface to the seen items (even for unmonitored ports)
+        # to ensure meaningful descriptions
+        pad_portnumbers = single_interface_settings.get(
+            'pad_portnumbers',
+            DISCOVERY_DEFAULT_PARAMETERS['discovery_single'][1]['pad_portnumbers'],
+        )
+
+        for item_appearance in (['index', 'descr', 'alias']
+                                if interface.descr != interface.alias else ['index', 'descr']):
+            n_times_item_seen[_compute_item(
+                item_appearance,
+                interface,
+                section,
+                pad_portnumbers,
+            )] += 1
+
+        # compute actual item name
         item = _compute_item(
             single_interface_settings.get(
                 'item_appearance',
@@ -545,15 +563,11 @@ def discover_interfaces(
             ),
             interface,
             section,
-            single_interface_settings.get(
-                'pad_portnumbers',
-                DISCOVERY_DEFAULT_PARAMETERS['discovery_single'][1]['pad_portnumbers'],
-            ),
+            pad_portnumbers,
         )
-        n_times_item_seen[item] += 1
 
         # discover single interface
-        if discover_single_interface:
+        if discover_single_interface and interface.index not in seen_indices:
             discovered_params_single: DiscoveredParams = {}
             if discovery_monitor_state:
                 discovered_params_single["discovered_oper_status"] = [interface.oper_status]
@@ -569,6 +583,7 @@ def discover_interfaces(
 
             pre_inventory.append(
                 (item, discovered_params_single, int(interface.index), index_as_item))
+            seen_indices.add(interface.index)
 
         # special case: the agent output already set this interface to grouped, in this case, we do
         # not use any matching conditions but instead check if interface.group == group_name, see

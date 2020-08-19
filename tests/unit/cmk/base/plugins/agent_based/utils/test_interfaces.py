@@ -265,6 +265,154 @@ def test_discovery_legacy_parameters_3():
         ]
 
 
+def test_discovery_duplicate_index():
+    ifaces = _create_interfaces(0)
+    for iface in ifaces:
+        iface.index = '1'
+    assert list(interfaces.discover_interfaces(
+        [DEFAULT_DISCOVERY_PARAMS],
+        ifaces,
+    )) == [
+        Service(
+            item='1',
+            parameters={
+                'discovered_oper_status': ['1'],
+                'discovered_speed': 10000000,
+            },
+            labels=[],
+        ),
+    ]
+
+
+def test_discovery_duplicate_descr():
+    ifaces = _create_interfaces(0)
+    for iface in ifaces:
+        iface.descr = 'description'
+    assert list(
+        interfaces.discover_interfaces(
+            [
+                type_defs.Parameters({
+                    **DEFAULT_DISCOVERY_PARAMS,
+                    'discovery_single': (
+                        True,
+                        {
+                            'item_appearance': 'descr',
+                            'pad_portnumbers': True,
+                        },
+                    ),
+                })
+            ],
+            ifaces,
+        )) == [
+            Service(
+                item='description 5',
+                parameters={
+                    'discovered_oper_status': ['1'],
+                    'discovered_speed': 10000000,
+                },
+                labels=[],
+            ),
+            Service(
+                item='description 6',
+                parameters={
+                    'discovered_oper_status': ['1'],
+                    'discovered_speed': 0,
+                },
+                labels=[],
+            ),
+        ]
+
+
+def test_discovery_duplicate_alias():
+    ifaces = _create_interfaces(0)
+    for iface in ifaces:
+        iface.alias = 'alias'
+    assert list(
+        interfaces.discover_interfaces(
+            [
+                type_defs.Parameters({
+                    'discovery_single': (
+                        True,
+                        {
+                            'item_appearance': 'alias',
+                            'pad_portnumbers': True,
+                        },
+                    ),
+                    'matching_conditions': (
+                        False,
+                        {
+                            'match_index': ['5'],
+                        },
+                    ),
+                })
+            ],
+            ifaces,
+        )) == [
+            Service(
+                item='alias 5',
+                parameters={
+                    'discovered_oper_status': ['1'],
+                    'discovered_speed': 10000000,
+                },
+                labels=[],
+            ),
+        ]
+
+
+def test_discovery_partial_duplicate_desc_duplicate_alias():
+    ifaces = _create_interfaces(0)
+    ifaces[3].descr = 'duplicate_descr'
+    ifaces[4].descr = 'duplicate_descr'
+    for iface in ifaces:
+        iface.alias = 'alias'
+    assert list(
+        interfaces.discover_interfaces(
+            [
+                type_defs.Parameters({
+                    'discovery_single': (
+                        True,
+                        {
+                            'item_appearance': 'descr',
+                            'pad_portnumbers': True,
+                        },
+                    ),
+                    'matching_conditions': (
+                        False,
+                        {
+                            'match_index': ['4', '5', '6'],
+                        },
+                    ),
+                })
+            ],
+            ifaces,
+        )) == [
+            Service(
+                item='duplicate_descr 4',
+                parameters={
+                    'discovered_oper_status': ['2'],
+                    'discovered_speed': 10000000,
+                },
+                labels=[],
+            ),
+            Service(
+                item='duplicate_descr 5',
+                parameters={
+                    'discovered_oper_status': ['1'],
+                    'discovered_speed': 10000000,
+                },
+                labels=[],
+            ),
+            Service(
+                item='wlp2s0',
+                parameters={
+                    'discovered_oper_status': ['1'],
+                    'discovered_speed': 0,
+                },
+                labels=[],
+            ),
+        ]
+
+
 def test_discovery_grouped_simple():
     assert list(
         interfaces.discover_interfaces(
@@ -852,6 +1000,62 @@ def test_check_multiple_interfaces(value_store, item, params, result):
             _create_interfaces(4000000),
             timestamp=5,
         )) == result
+
+
+@pytest.mark.parametrize('item, params, result', ITEM_PARAMS_RESULTS)
+def test_check_multiple_interfaces_duplicate_descr(value_store, item, params, result):
+    description = 'description'
+    item = '%s %s' % (description, item)
+    ifaces = _create_interfaces(0)
+    for iface in ifaces:
+        iface.descr = description
+    with pytest.raises(IgnoreResultsError):
+        list(interfaces.check_multiple_interfaces(
+            item,
+            params,
+            ifaces,
+            timestamp=0,
+        ))
+    ifaces = _create_interfaces(4000000)
+    for iface in ifaces:
+        iface.descr = description
+    assert list(interfaces.check_multiple_interfaces(
+        item,
+        params,
+        ifaces,
+        timestamp=5,
+    )) == result
+
+
+@pytest.mark.parametrize('item, params, result', ITEM_PARAMS_RESULTS)
+def test_check_multiple_interfaces_duplicate_alias(value_store, item, params, result):
+    alias = 'alias'
+    index = item
+    item = '%s %s' % (alias, index)
+    ifaces = _create_interfaces(0)
+    for iface in ifaces:
+        iface.alias = alias
+    with pytest.raises(IgnoreResultsError):
+        list(interfaces.check_multiple_interfaces(
+            item,
+            params,
+            ifaces,
+            timestamp=0,
+        ))
+    ifaces = _create_interfaces(4000000)
+    for iface in ifaces:
+        iface.alias = alias
+    assert list(interfaces.check_multiple_interfaces(
+        item,
+        params,
+        ifaces,
+        timestamp=5,
+    )) == [
+        Result(
+            state=state.OK,
+            summary='[%s/%s]' % (alias, ifaces[int(index) - 1].descr),
+        ),
+    ] + result[1:]
 
 
 def test_check_multiple_interfaces_group_simple(value_store):

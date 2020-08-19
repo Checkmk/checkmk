@@ -13,7 +13,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     # failing. These are used in various tests, to predict the
     # expected console output. In an ideal world, this list will (!)
     # be empty. If that is the case, please remove it entirely.
-    ('section', 'if'),
     ('section', 'if_brocade'),
     ('section', 'if_fortigate'),
     ('section', 'if_lancom'),

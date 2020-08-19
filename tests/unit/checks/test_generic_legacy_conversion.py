@@ -2126,7 +2126,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'icom_repeater.pll_volt',
         'icom_repeater.temp',
         'icom_repeater',
-        'if',
         'if64_tplink',
         'if_brocade',
         'if_fortigate',

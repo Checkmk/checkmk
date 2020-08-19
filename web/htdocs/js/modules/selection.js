@@ -239,6 +239,9 @@ function set_rowselection(action, rows) {
 
 // Update the header information (how many rows selected)
 function update_row_selection_information() {
+    if (!utils.has_header_info())
+        return; // Nothing to update
+
     let count = selection_properties.selected_rows.length;
     let current_text = utils.get_header_info();
 

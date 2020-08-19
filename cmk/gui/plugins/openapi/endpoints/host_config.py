@@ -8,13 +8,14 @@
 Hosts can only exist in conjunction with Folders. To get a list of hosts
 you need to access the folder API endpoints.
 """
+import itertools
 import json
+import operator
 
 from connexion import problem  # type: ignore[import]
 
 from cmk.gui import watolib
 from cmk.gui.http import Response
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.openapi.endpoints.folder_config import load_folder
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
@@ -22,7 +23,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     request_schemas,
     response_schemas,
 )
-from cmk.gui.plugins.webapi import check_hostname, validate_host_attributes
+from cmk.gui.plugins.webapi import check_hostname
 
 
 @endpoint_schema(constructors.collection_href('host_config'),
@@ -36,18 +37,8 @@ def create_host(params):
     """Create a host"""
     body = params['body']
     host_name = body['host_name']
-    folder_id = body['folder']
-    attributes = body.get('attributes', {})
-    cluster_nodes = body.get('nodes', [])
 
-    _verify_host_specs(attributes, host_name)
-
-    for node in cluster_nodes:
-        check_hostname(node, should_exist=True)
-
-    folder = _host_folder(folder_id)
-
-    folder.create_hosts([(host_name, attributes, cluster_nodes)])
+    body['folder'].create_hosts([(host_name, body['attributes'], body['nodes'])])
 
     host = watolib.Host.host(host_name)
     return _serve_host(host)
@@ -61,12 +52,6 @@ def _host_folder(folder_id):
     return folder
 
 
-def _verify_host_specs(attributes, host_name):
-    # TODO: move implementation to the host/folder schema so verification does not happen in endpoint
-    check_hostname(host_name, should_exist=False)
-    validate_host_attributes(attributes, new=True)
-
-
 @endpoint_schema(constructors.domain_type_action_href('host_config', 'bulk-create'),
                  'cmk/bulk_create',
                  method='post',
@@ -78,65 +63,13 @@ def bulk_create_hosts(params):
     body = params['body']
     entries = body['entries']
 
-    host_details = {}
-    problematic_hosts = {}
+    for folder, grouped_hosts in itertools.groupby(body['entries'], operator.itemgetter('folder')):
+        folder.create_hosts([
+            (host['host_name'], host['attributes'], host['nodes']) for host in grouped_hosts
+        ])
 
-    for host_create_details in entries:
-        host_name = host_create_details['host_name']
-        attributes = host_create_details.get('attributes', {})
-        cluster_nodes = host_create_details.get('nodes', [])
-
-        try:
-            _verify_host_specs(attributes, host_name)
-        except MKUserError as exc:
-            problematic_hosts[host_name] = str(exc)
-            continue
-
-        faulty_nodes = _verify_cluster_nodes(cluster_nodes)
-
-        if faulty_nodes:
-            problematic_hosts[host_name] = f"Invalid cluster nodes: {' ,'.join(faulty_nodes)}"
-            continue
-
-        try:
-            folder = _host_folder(host_create_details['folder'])
-        except MKUserError as exc:
-            problematic_hosts[host_name] = str(exc)
-            continue
-
-        host_details[host_name] = {
-            'folder': folder,
-            'attributes': attributes,
-            'nodes': cluster_nodes,
-        }
-
-    if problematic_hosts:
-        return problem(
-            status=400,
-            title="Provided host details are faulty",
-            detail=
-            f"The configurations for following host groups are faulty: {' ,'.join(problematic_hosts)}",
-            ext=problematic_hosts,
-        )
-
-    hosts = []
-    for host_name, host_elements in host_details.items():
-        host_elements['folder'].create_hosts([(host_name, host_elements['attributes'],
-                                               host_elements['nodes'])])
-        host = watolib.Host.host(host_name)
-        hosts.append(host)
-
+    hosts = [watolib.Host.host(entry['host_name']) for entry in entries]
     return _host_collection(hosts)
-
-
-def _verify_cluster_nodes(nodes):
-    faulty_nodes = []
-    for node in nodes:
-        try:
-            check_hostname(node, should_exist=True)
-        except MKUserError:
-            faulty_nodes.append(node)
-    return faulty_nodes
 
 
 @endpoint_schema(constructors.collection_href('host_config'),
@@ -176,11 +109,19 @@ def update_host(params):
     """Update a host"""
     host_name = params['host_name']
     body = params['body']
-    attributes = body['attributes']
+    nodes = body['nodes']
+    new_attributes = body['attributes']
+    update_attributes = body['attributes']
+    check_hostname(host_name, should_exist=True)
     host: watolib.CREHost = watolib.Host.host(host_name)
     constructors.require_etag(constructors.etag_of_obj(host))
-    validate_host_attributes(attributes, new=False)
-    host.update_attributes(attributes)
+
+    if new_attributes:
+        host.edit(new_attributes, nodes)
+
+    if update_attributes:
+        host.update_attributes(update_attributes)
+
     return _serve_host(host)
 
 
@@ -194,6 +135,7 @@ def update_host(params):
 def delete(params):
     """Delete a host"""
     host_name = params['host_name']
+    # Parameters can't be validated through marshmallow yet.
     check_hostname(host_name, should_exist=True)
     host = watolib.Host.host(host_name)
     constructors.require_etag(constructors.etag_of_obj(host))
@@ -209,11 +151,7 @@ def delete(params):
 def bulk_delete(params):
     """Bulk delete hosts based upon host names"""
     # TODO: require etag checking (409 Response)
-    entries = params['entries']
-    for host_name in entries:
-        check_hostname(host_name, should_exist=True)
-
-    for host_name in entries:
+    for host_name in params['entries']:
         host = watolib.Host.host(host_name)
         host.folder().delete_hosts([host.name()])
     return Response(status=204)

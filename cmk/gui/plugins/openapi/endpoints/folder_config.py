@@ -7,7 +7,6 @@
 import http.client
 
 from connexion import ProblemException  # type: ignore
-from connexion import problem  # type: ignore[import]
 
 from cmk.gui import watolib
 from cmk.gui.exceptions import MKUserError
@@ -23,7 +22,6 @@ from cmk.gui.wsgi.type_defs import DomainObject
 
 # TODO: Remove all hard-coded response creation in favour of a generic one
 # TODO: Implement formal description (GET endpoint) of move action
-# TODO: Replace connexion request validation with marshmallow and hand-rolled one
 # TODO: throw out connexion
 # TODO: add redoc.js
 
@@ -40,13 +38,8 @@ def create(params):
     put_body = params['body']
     name = put_body['name']
     title = put_body['title']
-    parent = put_body['parent']
+    parent_folder = put_body['parent']
     attributes = put_body.get('attributes', {})
-
-    if parent == "root":
-        parent_folder = watolib.Folder.root_folder()
-    else:
-        parent_folder = load_folder(parent, status=400)
 
     folder = parent_folder.create_subfolder(name, title, attributes)
 
@@ -63,28 +56,12 @@ def bulk_create(params):
     """Bulk create folders"""
     body = params['body']
     entries = body['entries']
-    missing_folders = []
-    for details in entries:
-        parent = details['parent']
-        try:
-            load_folder(parent, status=400)
-        except MKUserError:
-            missing_folders.append(parent)
-
-    if missing_folders:
-        return problem(
-            status=400,
-            title="Missing parent folders",
-            detail=f"The following parent folders do not exist: {' ,'.join(missing_folders)}")
-
     folders = []
     for details in entries:
-        parent_folder = load_folder(details['parent'], status=400)
-
-        folder = parent_folder.create_subfolder(
+        folder = details['parent'].create_subfolder(
             details['name'],
             details['title'],
-            details.get('attributes', {}),
+            details['attributes'],
         )
         folders.append(folder)
 
@@ -109,7 +86,20 @@ def update(params):
 
     post_body = params['body']
     title = post_body['title']
-    attributes = folder.attributes()
+    replace_attributes = post_body.get('attributes')
+    update_attributes = post_body.get('update_attributes')
+
+    attributes = folder.attributes().copy()
+
+    if replace_attributes:
+        attributes = replace_attributes
+
+    if update_attributes:
+        attributes.update(update_attributes)
+
+    # FIXME
+    # You can't update the attributes without updating the title, so the title is mandatory.
+    # This shouldn't be the case though.
     folder.edit(title, attributes)
 
     return _serve_folder(folder)
@@ -262,7 +252,7 @@ def _serialize_folder(folder: CREFolder) -> DomainObject:
             ),
         },
         extensions={
-            'attributes': folder.attributes(),
+            'attributes': folder.attributes().copy(),
         },
     )
 

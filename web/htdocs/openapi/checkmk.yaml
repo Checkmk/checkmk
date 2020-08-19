@@ -495,8 +495,9 @@ components:
           pattern: '[a-fA-F0-9]{32}|root'
           type: string
         attributes:
-          example:
-            foo: bar
+          description: Specific attributes to apply for all hosts in this folder (among
+            other things).
+          example: {}
           type: object
       required:
       - name
@@ -505,18 +506,19 @@ components:
       type: object
     CreateHost:
       properties:
-        host_name:
-          description: The hostname or IP address itself.
-          example: example.com
-          pattern: '[-0-9a-zA-Z_.]+'
-          type: string
         folder:
           description: The folder-id of the folder under which this folder shall be
             created. May be 'root' for the root-folder.
           example: root
           pattern: '[a-fA-F0-9]{32}|root'
           type: string
+        host_name:
+          description: The hostname or IP address of the host to be created.
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
+          type: string
         attributes:
+          description: Attributes to set on the newly created host.
           example:
             ipaddress: 192.168.0.123
           type: object
@@ -528,6 +530,9 @@ components:
           - host2
           - host3
           items:
+            description: The hostname or IP address itself.
+            example: example.com
+            pattern: '[-0-9a-zA-Z_.]+'
             type: string
           type: array
       required:
@@ -969,16 +974,6 @@ components:
             a hexadecimal identifier which is it's 'primary key'. The folder can be
             accessed via the `self`-link provided in the links array.
       type: object
-    InputAttribute:
-      properties:
-        key:
-          type: string
-        value:
-          type: string
-      required:
-      - key
-      - value
-      type: object
     InputContactGroup:
       properties:
         name:
@@ -1232,21 +1227,35 @@ components:
           example: Virtual Servers.
           type: string
         attributes:
-          example:
-          - key: foo
-            value: bar
-          items:
-            $ref: '#/components/schemas/InputAttribute'
-          type: array
+          description: Replace all attributes with the ones given in this field. Already
+            setattributes, not given here, will be removed.
+          example: {}
+          type: object
+        update_attributes:
+          description: Only set the attributes which are given in this field. Already
+            set attributes will not be touched.
+          example: {}
+          type: object
       required:
       - title
       type: object
     UpdateHost:
       properties:
         attributes:
-          example: {}
+          description: Replace all currently set attributes on the host, with these
+            attributes. Any previously set attributes which are not given here will
+            be removed.
+          example:
+            ipaddress: 192.168.0.123
+          type: object
+        update_attributes:
+          description: Just update the hosts attributes with these attributes. The
+            previously set attributes will not be touched.
+          example:
+            ipaddress: 192.168.0.123
           type: object
         nodes:
+          description: Nodes where the host should be the cluster-container of.
           example:
           - host1
           - host2
@@ -2708,9 +2717,8 @@ paths:
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/folder_config/collections/all\"\
           ,\n    json={\n        'name': 'production',\n        'title': 'Production\
-          \ Hosts',\n        'parent': 'root',\n        'attributes': {\n        \
-          \    'foo': 'bar'\n        }\n    },\n)\nresp.raise_for_status()\ndata =\
-          \ resp.json()"
+          \ Hosts',\n        'parent': 'root',\n        'attributes': {}\n    },\n\
+          )\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -2720,27 +2728,25 @@ paths:
           POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
           \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
           \ data=json.dumps({\n        'name': 'production',\n        'title': 'Production\
-          \ Hosts',\n        'parent': 'root',\n        'attributes': {\n        \
-          \    'foo': 'bar'\n        }\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
-          data = json.loads(response.read())"
+          \ Hosts',\n        'parent': 'root',\n        'attributes': {}\n    }).encode('utf-8'),\n\
+          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\ \\\n    --data '{\n          \"attributes\": {\n            \"foo\"\
-          : \"bar\"\n          },\n          \"name\": \"production\",\n         \
-          \ \"parent\": \"root\",\n          \"title\": \"Production Hosts\"\n   \
-          \     }' \\\n    \"$API_URL/domain-types/folder_config/collections/all\""
+          \ \\ \\\n    --data '{\n          \"attributes\": {},\n          \"name\"\
+          : \"production\",\n          \"parent\": \"root\",\n          \"title\"\
+          : \"Production Hosts\"\n        }' \\\n    \"$API_URL/domain-types/folder_config/collections/all\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/folder_config/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    attributes='{\"foo\": \"bar\"}' \\\n    name='production'\
-          \ \\\n    parent='root' \\\n    title='Production Hosts' \\\n    --json"
+          \ application/json\" \\\n    attributes='{}' \\\n    name='production' \\\
+          \n    parent='root' \\\n    title='Production Hosts' \\\n    --json"
   /domain-types/folder_config/actions/bulk-create/invoke:
     post:
       description: ''
@@ -2998,9 +3004,8 @@ paths:
           \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\"\
           ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
           \ The ETag of the object to be modified.\n    },\n    json={\n        'title':\
-          \ 'Virtual Servers.',\n        'attributes': [{\n            'key': 'foo',\n\
-          \            'value': 'bar'\n        }]\n    },\n)\nresp.raise_for_status()\n\
-          data = resp.json()"
+          \ 'Virtual Servers.',\n        'attributes': {},\n        'update_attributes':\
+          \ {}\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -3011,9 +3016,9 @@ paths:
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
           \        \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the\
           \ object to be modified.\n    },\n    data=json.dumps({\n        'title':\
-          \ 'Virtual Servers.',\n        'attributes': [{\n            'key': 'foo',\n\
-          \            'value': 'bar'\n        }]\n    }).encode('utf-8'),\n)\nresponse\
-          \ = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+          \ 'Virtual Servers.',\n        'attributes': {},\n        'update_attributes':\
+          \ {}\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -3021,18 +3026,17 @@ paths:
           \nPASSWORD=\"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\ \\\n    --data '{\n\
-          \          \"attributes\": [\n            {\n              \"key\": \"foo\"\
-          ,\n              \"value\": \"bar\"\n            }\n          ],\n     \
-          \     \"title\": \"Virtual Servers.\"\n        }' \\\n    \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\""
+          \          \"attributes\": {},\n          \"title\": \"Virtual Servers.\"\
+          ,\n          \"update_attributes\": {}\n        }' \\\n    \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    attributes='[{\"\
-          key\": \"foo\", \"value\": \"bar\"}]' \\\n    title='Virtual Servers.' \\\
-          \n    --json"
+          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    attributes='{}'\
+          \ \\\n    title='Virtual Servers.' \\\n    update_attributes='{}' \\\n \
+          \   --json"
   /domain-types/folder_config/actions/bulk-delete/invoke:
     delete:
       description: ''
@@ -3518,7 +3522,7 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/host_config/collections/all\"\
-          ,\n    json={\n        'host_name': 'example.com',\n        'folder': 'root',\n\
+          ,\n    json={\n        'folder': 'root',\n        'host_name': 'example.com',\n\
           \        'attributes': {\n            'ipaddress': '192.168.0.123'\n   \
           \     },\n        'nodes': ['host1', 'host2', 'host3']\n    },\n)\nresp.raise_for_status()\n\
           data = resp.json()"
@@ -3530,9 +3534,9 @@ paths:
           \    f\"{API_URL}/domain-types/host_config/collections/all\",\n    method=\"\
           POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
           \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
-          \ data=json.dumps({\n        'host_name': 'example.com',\n        'folder':\
-          \ 'root',\n        'attributes': {\n            'ipaddress': '192.168.0.123'\n\
-          \        },\n        'nodes': ['host1', 'host2', 'host3']\n    }).encode('utf-8'),\n\
+          \ data=json.dumps({\n        'folder': 'root',\n        'host_name': 'example.com',\n\
+          \        'attributes': {\n            'ipaddress': '192.168.0.123'\n   \
+          \     },\n        'nodes': ['host1', 'host2', 'host3']\n    }).encode('utf-8'),\n\
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -3811,8 +3815,10 @@ paths:
           \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/host_config/example.com\"\
           ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
           \ The ETag of the object to be modified.\n    },\n    json={\n        'attributes':\
-          \ {},\n        'nodes': ['host1', 'host2', 'host3']\n    },\n)\nresp.raise_for_status()\n\
-          data = resp.json()"
+          \ {\n            'ipaddress': '192.168.0.123'\n        },\n        'update_attributes':\
+          \ {\n            'ipaddress': '192.168.0.123'\n        },\n        'nodes':\
+          \ ['host1', 'host2', 'host3']\n    },\n)\nresp.raise_for_status()\ndata\
+          \ = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -3822,9 +3828,10 @@ paths:
           ,\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
           ,\n        \"Accept\": \"application/json\",\n        \"If-Match\": \"a20ceacf346041dc\"\
           ,  # (required) The ETag of the object to be modified.\n    },\n    data=json.dumps({\n\
-          \        'attributes': {},\n        'nodes': ['host1', 'host2', 'host3']\n\
-          \    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
-          data = json.loads(response.read())"
+          \        'attributes': {\n            'ipaddress': '192.168.0.123'\n   \
+          \     },\n        'update_attributes': {\n            'ipaddress': '192.168.0.123'\n\
+          \        },\n        'nodes': ['host1', 'host2', 'host3']\n    }).encode('utf-8'),\n\
+          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -3832,17 +3839,21 @@ paths:
           \nPASSWORD=\"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\ \\\n    --data '{\n\
-          \          \"attributes\": {},\n          \"nodes\": [\n            \"host1\"\
-          ,\n            \"host2\",\n            \"host3\"\n          ]\n        }'\
-          \ \\\n    \"$API_URL/objects/host_config/example.com\""
+          \          \"attributes\": {\n            \"ipaddress\": \"192.168.0.123\"\
+          \n          },\n          \"nodes\": [\n            \"host1\",\n       \
+          \     \"host2\",\n            \"host3\"\n          ],\n          \"update_attributes\"\
+          : {\n            \"ipaddress\": \"192.168.0.123\"\n          }\n       \
+          \ }' \\\n    \"$API_URL/objects/host_config/example.com\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/host_config/example.com\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    attributes='{}'\
-          \ \\\n    nodes='[\"host1\", \"host2\", \"host3\"]' \\\n    --json"
+          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    attributes='{\"\
+          ipaddress\": \"192.168.0.123\"}' \\\n    nodes='[\"host1\", \"host2\", \"\
+          host3\"]' \\\n    update_attributes='{\"ipaddress\": \"192.168.0.123\"}'\
+          \ \\\n    --json"
   /domain-types/host_config/actions/bulk-delete/invoke:
     delete:
       description: ''
@@ -6311,9 +6322,9 @@ tags:
     showWriteOnly={true} />
   name: BulkCreateHost
 - description: "Only the `attributes` and `nodes` values may be changed.\n\nRequired\
-    \ attributes:\n\n  * none\n\nOptional arguments:\n\n  * `attributes`\n  * `nodes`\n\
-    \n<SchemaDefinition schemaRef=\"#/components/schemas/UpdateHost\" showReadOnly={true}\
-    \ showWriteOnly={true} />"
+    \ attributes:\n\n  * none\n\nOptional arguments:\n\n  * `attributes`\n  * `update_attributes`\n\
+    \  * `nodes`\n\n<SchemaDefinition schemaRef=\"#/components/schemas/UpdateHost\"\
+    \ showReadOnly={true} showWriteOnly={true} />"
   name: UpdateHost
   x-displayName: Updating of a host
 - description: <SchemaDefinition schemaRef="#/components/schemas/BulkDeleteHost" showReadOnly={true}

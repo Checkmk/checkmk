@@ -3,8 +3,12 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from marshmallow import ValidationError  # type: ignore[import]
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
+from cmk.gui import watolib
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.livestatus_helpers.commands.downtimes import (
     schedule_host_downtime,
@@ -12,10 +16,13 @@ from cmk.gui.plugins.openapi.livestatus_helpers.commands.downtimes import (
     schedule_service_downtime,
     schedule_servicegroup_service_downtime,
 )
-from cmk.gui.plugins.openapi.utils import param_description, BaseSchema
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME_REGEXP
-from cmk.gui.plugins.openapi.livestatus_helpers.commands.acknowledgments import \
-    acknowledge_host_problem, acknowledge_service_problem
+from cmk.gui.plugins.openapi.utils import param_description, BaseSchema
+from cmk.gui.plugins.openapi.livestatus_helpers.commands.acknowledgments import (
+    acknowledge_host_problem,
+    acknowledge_service_problem,
+)
+from cmk.gui.plugins.webapi import validate_host_attributes
 
 
 class InputAttribute(BaseSchema):
@@ -23,14 +30,98 @@ class InputAttribute(BaseSchema):
     value = fields.String(required=True)
 
 
-HOST_FIELD = fields.String(
+class Hostname(fields.String):
+    """A field representing a hostname.
+
+    """
+    default_error_messages = {
+        'should_exist': 'Host missing: {host_name!r}',
+        'should_not_exist': 'Host {host_name!r} already exists.',
+    }
+
+    def __init__(
+        self,
+        example='example.com',
+        pattern=HOST_NAME_REGEXP,
+        required=True,
+        validate=None,
+        should_exist: bool = True,
+        **kwargs,
+    ):
+        self._should_exist = should_exist
+        super().__init__(
+            example=example,
+            pattern=pattern,
+            required=required,
+            validate=validate,
+            **kwargs,
+        )
+
+    def _validate(self, value):
+        super()._validate(value)
+
+        host = watolib.Host.host(value)
+        if self._should_exist and not host:
+            self.fail("should_exist", host_name=value)
+        elif not self._should_exist and host:
+            self.fail("should_not_exist", host_name=value)
+
+
+EXISTING_HOST_NAME = Hostname(
     description="The hostname or IP address itself.",
-    required=True,
-    pattern=HOST_NAME_REGEXP,
-    example="example.com",
+    should_exist=True,
 )
 
-FOLDER_FIELD = fields.String(
+MONITORED_HOST = fields.String(
+    description="The hostname or IP address itself.",
+    example='example.com',
+    pattern=HOST_NAME_REGEXP,
+    required=True,
+)
+
+
+class FolderField(fields.String):
+    """This field represents a WATO Folder.
+
+    It will return a Folder instance, ready to use.
+    """
+    default_error_messages = {
+        'not_found': "The folder {folder_id!r} could not be found.",
+    }
+    pattern = "[a-fA-F0-9]{32}|root"
+
+    def _deserialize(self, value, attr, data):
+        value = super()._deserialize(value, attr, data)
+        try:
+            if value == 'root':
+                folder = watolib.Folder.root_folder()
+            else:
+                folder = watolib.Folder.by_id(value)
+            return folder
+        except MKUserError:
+            if self.required:
+                self.fail("not_found", folder_id=value)
+
+
+class AttributesField(fields.Dict):
+    default_error_messages = {
+        'attribute_forbidden': "Setting of attribute {attribute!r} is forbidden: {value!r}.",
+    }
+
+    def _validate(self, value):
+        # Special keys:
+        #  - site -> validate against config.allsites().keys()
+        #  - tag_* -> validate_host_tags
+        #  - * -> validate against host_attribute_registry.keys()
+        try:
+            validate_host_attributes(value, new=True)
+            if 'meta_data' in value:
+                self.fail("attribute_forbidden", attribute='meta_data', value=value)
+        except MKUserError as exc:
+            raise ValidationError(str(exc))
+
+
+EXISTING_FOLDER = FolderField(
     description=("The folder-id of the folder under which this folder shall be created. May be "
                  "'root' for the root-folder."),
     pattern="[a-fA-F0-9]{32}|root",
@@ -52,13 +143,22 @@ class CreateHost(BaseSchema):
       * `attributes`
       * `nodes`
     """
-    host_name = HOST_FIELD
-    folder = FOLDER_FIELD
-    attributes = fields.Dict(example={'ipaddress': '192.168.0.123'})
-    nodes = fields.List(fields.String(),
+    host_name = Hostname(
+        description="The hostname or IP address of the host to be created.",
+        required=True,
+        should_exist=False,
+    )
+    folder = EXISTING_FOLDER
+    attributes = AttributesField(
+        description="Attributes to set on the newly created host.",
+        example={'ipaddress': '192.168.0.123'},
+        missing=dict,
+    )
+    nodes = fields.List(EXISTING_HOST_NAME,
                         description="Nodes where the newly created host should be the "
                         "cluster-container of.",
                         required=False,
+                        missing=list,
                         example=["host1", "host2", "host3"])
 
 
@@ -87,10 +187,30 @@ class UpdateHost(BaseSchema):
     Optional arguments:
 
       * `attributes`
+      * `update_attributes`
       * `nodes`
     """
-    attributes = fields.Dict(example={})
-    nodes = fields.List(HOST_FIELD, example=["host1", "host2", "host3"])
+    attributes = AttributesField(
+        description=("Replace all currently set attributes on the host, with these attributes. "
+                     "Any previously set attributes which are not given here will be removed."),
+        example={'ipaddress': '192.168.0.123'},
+        missing=dict,
+        required=False,
+    )
+    update_attributes = AttributesField(
+        description=("Just update the hosts attributes with these attributes. The previously set "
+                     "attributes will not be touched."),
+        example={'ipaddress': '192.168.0.123'},
+        missing=dict,
+        required=False,
+    )
+    nodes = fields.List(
+        EXISTING_HOST_NAME,
+        description="Nodes where the host should be the cluster-container of.",
+        example=["host1", "host2", "host3"],
+        missing=list,
+        required=False,
+    )
 
 
 class InputHostGroup(BaseSchema):
@@ -170,14 +290,19 @@ class CreateFolder(BaseSchema):
         required=True,
         example="Production Hosts",
     )
-    parent = fields.String(
+    parent = FolderField(
         description=("The folder-id of the folder under which this folder shall be created. May be "
                      "'root' for the root-folder."),
         pattern="[a-fA-F0-9]{32}|root",
         example="root",
         required=True,
     )
-    attributes = fields.Dict(example={'foo': 'bar'})
+    attributes = AttributesField(
+        description=("Specific attributes to apply for all hosts in this folder "
+                     "(among other things)."),
+        missing=dict,
+        example={},
+    )
 
 
 class BulkCreateFolder(BaseSchema):
@@ -196,12 +321,24 @@ class BulkCreateFolder(BaseSchema):
 
 class UpdateFolder(BaseSchema):
     """Updating a folder"""
-    title = fields.String(required=True, example="Virtual Servers.")
-    attributes = fields.List(fields.Nested(InputAttribute),
-                             example=[{
-                                 'key': 'foo',
-                                 'value': 'bar'
-                             }])
+    title = fields.String(
+        example="Virtual Servers.",
+        required=True,
+    )
+    attributes = AttributesField(
+        description=("Replace all attributes with the ones given in this field. Already set"
+                     "attributes, not given here, will be removed."),
+        example={},
+        missing=dict,
+        required=False,
+    )
+    update_attributes = AttributesField(
+        description=("Only set the attributes which are given in this field. Already set "
+                     "attributes will not be touched."),
+        example={},
+        missing=dict,
+        required=False,
+    )
 
 
 class CreateDowntimeBase(BaseSchema):
@@ -255,7 +392,7 @@ HOST_DURATION = fields.Integer(
 
 
 class CreateHostDowntime(CreateDowntimeBase):
-    host_name = HOST_FIELD
+    host_name = MONITORED_HOST
     duration = HOST_DURATION
     include_all_services = fields.Boolean(
         required=False,
@@ -266,7 +403,7 @@ class CreateHostDowntime(CreateDowntimeBase):
 
 
 class CreateServiceDowntime(CreateDowntimeBase):
-    host_name = HOST_FIELD
+    host_name = MONITORED_HOST
     service_descriptions = fields.List(
         fields.String(),
         uniqueItems=True,
@@ -354,7 +491,7 @@ class AcknowledgeHostProblem(BaseSchema):
 
 class BulkAcknowledgeHostProblem(AcknowledgeHostProblem):
     entries = fields.List(
-        HOST_FIELD,
+        MONITORED_HOST,
         required=True,
         example=["example.com", "sample.com"],
     )
@@ -393,7 +530,7 @@ class AcknowledgeServiceProblem(BaseSchema):
 
 
 class BulkAcknowledgeServiceProblem(AcknowledgeServiceProblem):
-    host_name = HOST_FIELD
+    host_name = MONITORED_HOST
     entries = fields.List(
         SERVICE_DESCRIPTION_FIELD,
         required=True,
@@ -402,7 +539,7 @@ class BulkAcknowledgeServiceProblem(AcknowledgeServiceProblem):
 
 
 class BulkDeleteDowntime(BaseSchema):
-    host_name = HOST_FIELD
+    host_name = MONITORED_HOST
     entries = fields.List(
         fields.Integer(
             required=True,
@@ -417,7 +554,7 @@ class BulkDeleteDowntime(BaseSchema):
 class BulkDeleteHost(BaseSchema):
     # TODO: addition of etag field
     entries = fields.List(
-        HOST_FIELD,
+        EXISTING_HOST_NAME,
         required=True,
         example=["example", "sample"],
     )
@@ -426,7 +563,7 @@ class BulkDeleteHost(BaseSchema):
 class BulkDeleteFolder(BaseSchema):
     # TODO: addition of etag field
     entries = fields.List(
-        FOLDER_FIELD,
+        EXISTING_FOLDER,
         required=True,
         example=["production", "secondproduction"],
     )

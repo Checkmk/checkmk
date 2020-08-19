@@ -8,6 +8,29 @@ import json
 import uuid
 
 
+def test_openapi_folder_validation(wsgi_app, with_automation_user):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    wsgi_app.call_method(
+        'post',
+        "/NO_SITE/check_mk/api/v0/domain-types/folder_config/collections/all",
+        params=
+        '{"name": "new_folder", "title": "foo", "parent": "abababaabababaababababbbabababab"}',
+        status=400,
+        content_type='application/json',
+    )
+
+    wsgi_app.call_method(
+        'post',
+        "/NO_SITE/check_mk/api/v0/domain-types/folder_config/collections/all",
+        params=
+        '{"name": "new_folder", "title": "foo", "parent": "root", "attributes": {"foo": "bar"}}',
+        status=400,
+        content_type='application/json',
+    )
+
+
 def test_openapi_folders(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))

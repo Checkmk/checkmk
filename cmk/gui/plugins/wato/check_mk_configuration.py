@@ -1247,12 +1247,27 @@ class RulespecGroupMonitoringConfiguration(RulespecGroup):
 
     @property
     def title(self):
-        return _("Monitoring rules")
+        return _("Service monitoring rules")
 
     @property
     def help(self):
         return _(
             "Intervals for checking, retries, clustering, configuration for discovery and similar")
+
+
+@rulespec_group_registry.register
+class RulespecGroupHostsMonitoringRules(RulespecGroup):
+    @property
+    def name(self):
+        return "host_monconf"
+
+    @property
+    def title(self):
+        return _("Host monitoring rules")
+
+    @property
+    def help(self):
+        return _("Configure the monitoring behaviour of hosts")
 
 
 @rulespec_group_registry.register
@@ -1374,10 +1389,10 @@ rulespec_registry.register(
 
 
 @rulespec_group_registry.register
-class RulespecGroupMonitoringConfigurationHostChecks(RulespecSubGroup):
+class RulespecGroupHostsMonitoringRulesHostChecks(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupMonitoringConfiguration
+        return RulespecGroupHostsMonitoringRules
 
     @property
     def sub_group_name(self):
@@ -1385,7 +1400,7 @@ class RulespecGroupMonitoringConfigurationHostChecks(RulespecSubGroup):
 
     @property
     def title(self):
-        return _("Host Checks")
+        return _("Host checks")
 
 
 def _valuespec_host_label_rules():
@@ -1399,7 +1414,7 @@ def _valuespec_host_label_rules():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupMonitoringConfigurationHostChecks,
+        group=RulespecGroupHostsMonitoringRulesHostChecks,
         match_type="dict",
         name="host_label_rules",
         valuespec=_valuespec_host_label_rules,
@@ -3075,7 +3090,7 @@ def _valuespec_extra_host_conf_max_check_attempts():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupMonitoringConfigurationHostChecks,
+        group=RulespecGroupHostsMonitoringRulesHostChecks,
         name="extra_host_conf:max_check_attempts",
         valuespec=_valuespec_extra_host_conf_max_check_attempts,
     ))
@@ -3101,7 +3116,7 @@ def _valuespec_extra_host_conf_check_interval():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupMonitoringConfigurationHostChecks,
+        group=RulespecGroupHostsMonitoringRulesHostChecks,
         name="extra_host_conf:check_interval",
         valuespec=_valuespec_extra_host_conf_check_interval,
     ))
@@ -3125,7 +3140,7 @@ def _valuespec_extra_host_conf_retry_interval():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupMonitoringConfigurationHostChecks,
+        group=RulespecGroupHostsMonitoringRulesHostChecks,
         name="extra_host_conf:retry_interval",
         valuespec=_valuespec_extra_host_conf_retry_interval,
     ))
@@ -3142,7 +3157,7 @@ def _valuespec_extra_host_conf_check_period():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupMonitoringConfigurationHostChecks,
+        group=RulespecGroupHostsMonitoringRulesHostChecks,
         name="extra_host_conf:check_period",
         valuespec=_valuespec_extra_host_conf_check_period,
     ))
@@ -3188,7 +3203,7 @@ def _valuespec_host_check_commands():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupMonitoringConfigurationHostChecks,
+        group=RulespecGroupHostsMonitoringRulesHostChecks,
         name="host_check_commands",
         valuespec=_valuespec_host_check_commands,
     ))
@@ -3203,6 +3218,21 @@ class RulespecGroupMonitoringConfigurationNotifications(RulespecSubGroup):
     @property
     def sub_group_name(self):
         return "notifications"
+
+    @property
+    def title(self):
+        return _("Notifications")
+
+
+@rulespec_group_registry.register
+class RulespecGroupHostsMonitoringRulesNotifications(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupHostsMonitoringRules
+
+    @property
+    def sub_group_name(self):
+        return "host_notifications"
 
     @property
     def title(self):
@@ -3226,7 +3256,7 @@ def _valuespec_extra_host_conf_notifications_enabled():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupMonitoringConfigurationNotifications,
+        group=RulespecGroupHostsMonitoringRulesNotifications,
         name="extra_host_conf:notifications_enabled",
         valuespec=_valuespec_extra_host_conf_notifications_enabled,
     ))
@@ -3283,7 +3313,7 @@ def _valuespec_extra_host_conf_notification_options():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupMonitoringConfigurationNotifications,
+        group=RulespecGroupHostsMonitoringRulesNotifications,
         name="extra_host_conf:notification_options",
         valuespec=_valuespec_extra_host_conf_notification_options,
     ))
@@ -3335,7 +3365,7 @@ def _valuespec_extra_host_conf_notification_period():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupMonitoringConfigurationNotifications,
+        group=RulespecGroupHostsMonitoringRulesNotifications,
         name="extra_host_conf:notification_period",
         valuespec=_valuespec_extra_host_conf_notification_period,
     ))
@@ -3389,7 +3419,7 @@ def _valuespec_extra_host_conf_first_notification_delay():
 rulespec_registry.register(
     HostRulespec(
         factory_default=0.0,
-        group=RulespecGroupMonitoringConfigurationNotifications,
+        group=RulespecGroupHostsMonitoringRulesNotifications,
         name="extra_host_conf:first_notification_delay",
         valuespec=_valuespec_extra_host_conf_first_notification_delay,
     ))
@@ -3444,7 +3474,7 @@ def _valuespec_extra_host_conf_notification_interval():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupMonitoringConfigurationNotifications,
+        group=RulespecGroupHostsMonitoringRulesNotifications,
         name="extra_host_conf:notification_interval",
         valuespec=_valuespec_extra_host_conf_notification_interval,
     ))
@@ -3489,7 +3519,7 @@ def _valuespec_extra_host_conf_flap_detection_enabled():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupMonitoringConfigurationNotifications,
+        group=RulespecGroupHostsMonitoringRulesNotifications,
         name="extra_host_conf:flap_detection_enabled",
         valuespec=_valuespec_extra_host_conf_flap_detection_enabled,
     ))
@@ -3549,7 +3579,7 @@ def _valuespec_extra_host_conf_notes_url():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupMonitoringConfigurationNotifications,
+        group=RulespecGroupHostsMonitoringRulesNotifications,
         name="extra_host_conf:notes_url",
         valuespec=_valuespec_extra_host_conf_notes_url,
     ))
@@ -3605,7 +3635,7 @@ def _help_only_hosts():
 
 rulespec_registry.register(
     BinaryHostRulespec(
-        group=RulespecGroupMonitoringConfigurationInventoryAndCMK,
+        group=RulespecGroupHostsMonitoringRulesHostChecks,
         help_func=_help_only_hosts,
         is_optional=True,
         name="only_hosts",
@@ -3942,6 +3972,21 @@ class RulespecGroupMonitoringConfigurationVarious(RulespecSubGroup):
         return _("Various")
 
 
+@rulespec_group_registry.register
+class RulespecGroupHostsMonitoringRulesVarious(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupHostsMonitoringRules
+
+    @property
+    def sub_group_name(self):
+        return "host_various"
+
+    @property
+    def title(self):
+        return _("Various")
+
+
 def _valuespec_clustered_services_mapping():
     return TextAscii(
         title=_("Clustered services for overlapping clusters"),
@@ -3982,7 +4027,7 @@ def _valuespec_extra_host_conf_service_period():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupMonitoringConfigurationVarious,
+        group=RulespecGroupHostsMonitoringRulesVarious,
         name="extra_host_conf:service_period",
         valuespec=_valuespec_extra_host_conf_service_period,
     ))

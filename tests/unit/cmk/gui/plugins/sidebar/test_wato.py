@@ -55,7 +55,7 @@ def expected_items() -> Dict[str, List[str]]:
 
     hosts_items = [
         'folder',
-        'ruleeditor',
+        'wato.py?mode=rulesets&group=host_monconf',
         'tags',
     ]
 

@@ -153,7 +153,7 @@ class RulespecGroupRegistry(cmk.utils.plugin_registry.Registry[Type[RulespecBase
         """Collect all rulesets that apply to hosts, except those specifying new active or static checks"""
         names: List[str] = []
         hidden_groups = ("static", "checkparams", "activechecks")
-        hidden_main_groups = ("monconf", "agents", "agent")
+        hidden_main_groups = ("host_monconf", "monconf", "agents", "agent")
         for g_class in self.values():
             group = g_class()
             if isinstance(group, RulespecSubGroup) and group.main_group().name in hidden_groups:

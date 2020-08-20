@@ -207,7 +207,7 @@ class MainModulePredefinedConditions(MainModule):
 class MainModuleHostAndServiceParameters(MainModule):
     @property
     def mode_or_url(self):
-        return "ruleeditor"
+        return "wato.py?mode=rulesets&group=host_monconf"
 
     @property
     def topic(self):

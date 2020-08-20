@@ -1281,8 +1281,11 @@ def _expected_rulespec_group_choices():
         ('eventconsole', u'Event Console'),
         ('grouping', u'Grouping'),
         ('inventory', u'Hardware / Software Inventory'),
-        ('monconf', u'Monitoring rules'),
-        ('monconf/host_checks', u'&nbsp;&nbsp;\u2319 Host Checks'),
+        ('host_monconf', u'Host monitoring rules'),
+        ('host_monconf/host_checks', u'&nbsp;&nbsp;\u2319 Host checks'),
+        ('host_monconf/host_notifications', u'&nbsp;&nbsp;\u2319 Notifications'),
+        ('host_monconf/host_various', u'&nbsp;&nbsp;\u2319 Various'),
+        ('monconf', u'Service monitoring rules'),
         ('monconf/inventory_and_check_mk_settings',
          u'&nbsp;&nbsp;\u2319 Discovery and Checkmk settings'),
         ('monconf/notifications', u'&nbsp;&nbsp;\u2319 Notifications'),
@@ -1329,9 +1332,14 @@ def test_rulespec_group_choices(mode, result):
 
 
 @pytest.mark.parametrize("term,result", [
+    ("host_monconf", [
+        'host_monconf',
+        'host_monconf/host_checks',
+        'host_monconf/host_notifications',
+        'host_monconf/host_various',
+    ]),
     ("monconf", [
         'monconf',
-        'monconf/host_checks',
         'monconf/inventory_and_check_mk_settings',
         'monconf/notifications',
         'monconf/service_checks',
@@ -1357,6 +1365,7 @@ def test_rulespec_get_main_groups():
         'activechecks',
         'grouping',
         'monconf',
+        'host_monconf',
         'user_interface',
         'agent',
         'agents',
@@ -1377,8 +1386,10 @@ def test_rulespec_get_all_groups():
     expected_rulespec_groups = [
         'activechecks',
         'grouping',
+        'host_monconf/host_checks',
+        'host_monconf/host_notifications',
+        'host_monconf/host_various',
         'monconf/service_checks',
-        'monconf/host_checks',
         'monconf/notifications',
         'monconf/inventory_and_check_mk_settings',
         'monconf/various',
@@ -1429,8 +1440,10 @@ def test_rulespec_get_host_groups():
 
     expected_rulespec_host_groups = [
         'grouping',
+        'host_monconf/host_checks',
+        'host_monconf/host_notifications',
+        'host_monconf/host_various',
         'monconf/service_checks',
-        'monconf/host_checks',
         'monconf/notifications',
         'monconf/inventory_and_check_mk_settings',
         'monconf/various',

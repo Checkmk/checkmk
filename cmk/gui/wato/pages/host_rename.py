@@ -7,7 +7,7 @@
 
 import os
 import socket
-from typing import List, Dict, Tuple as _Tuple
+from typing import List, Dict, Tuple as _Tuple, Optional, Type
 
 from livestatus import SiteId
 
@@ -25,11 +25,22 @@ from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, MKAuthException
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+    make_simple_form_page_menu,
+)
 from cmk.gui.watolib.hosts_and_folders import validate_host_uniqueness
 from cmk.gui.watolib.notifications import (
     load_notification_rules,
     save_notification_rules,
 )
+from cmk.gui.wato.pages.folders import ModeFolder
+from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 
 from cmk.gui.valuespec import (
     Hostname,
@@ -47,7 +58,6 @@ from cmk.gui.valuespec import (
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
-    global_buttons,
     add_change,
     wato_confirm,
 )
@@ -106,6 +116,10 @@ class ModeBulkRenameHost(WatoMode):
     def permissions(cls):
         return ["hosts", "manage_hosts"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeFolder
+
     def __init__(self):
         super(ModeBulkRenameHost, self).__init__()
 
@@ -115,13 +129,28 @@ class ModeBulkRenameHost(WatoMode):
     def title(self):
         return _("Bulk renaming of hosts")
 
-    def buttons(self):
-        html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]),
-                            "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = make_simple_form_page_menu(breadcrumb,
+                                          form_name="bulk_rename_host",
+                                          button_name="_start",
+                                          save_title=_("Bulk rename"))
+
         host_renaming_job = RenameHostsBackgroundJob()
-        if host_renaming_job.is_available():
-            html.context_button(_("Last result"), host_renaming_job.detail_url(),
-                                "background_job_details")
+        actions_dropdown = menu.dropdowns[0]
+        actions_dropdown.topics.append(
+            PageMenuTopic(
+                title=_("Last result"),
+                entries=[
+                    PageMenuEntry(
+                        title=_("Show last rename result"),
+                        icon_name="background_job_details",
+                        item=make_simple_link(host_renaming_job.detail_url()),
+                        is_enabled=host_renaming_job.is_available(),
+                    ),
+                ],
+            ))
+
+        return menu
 
     def action(self):
         renaming_config = self._vs_renaming_config().from_html_vars("")
@@ -240,7 +269,6 @@ class ModeBulkRenameHost(WatoMode):
     def page(self):
         html.begin_form("bulk_rename_host", method="POST")
         self._vs_renaming_config().render_input("", {})
-        html.button("_start", _("Bulk Rename"))
         html.hidden_fields()
         html.end_form()
 
@@ -346,6 +374,10 @@ class ModeRenameHost(WatoMode):
     def permissions(cls):
         return ["hosts", "manage_hosts"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeEditHost
+
     def _from_vars(self):
         host_name = html.request.get_ascii_input_mandatory("host")
 
@@ -362,14 +394,40 @@ class ModeRenameHost(WatoMode):
         return _("Rename %s %s") % (_("Cluster") if self._host.is_cluster() else _("Host"),
                                     self._host.name())
 
-    def buttons(self):
-        global_buttons()
-        html.context_button(_("Host Properties"), self._host.edit_url(), "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = make_simple_form_page_menu(breadcrumb,
+                                          form_name="rename_host",
+                                          button_name="rename",
+                                          save_title=_("Rename"))
 
-        host_renaming_job = RenameHostBackgroundJob(self._host)
-        if host_renaming_job.is_available():
-            html.context_button(_("Last result"), host_renaming_job.detail_url(),
-                                "background_job_details")
+        host_renaming_job = RenameHostsBackgroundJob()
+        actions_dropdown = menu.dropdowns[0]
+        actions_dropdown.topics.append(
+            PageMenuTopic(
+                title=_("Last result"),
+                entries=[
+                    PageMenuEntry(
+                        title=_("Show last rename result"),
+                        icon_name="background_job_details",
+                        item=make_simple_link(host_renaming_job.detail_url()),
+                        is_enabled=host_renaming_job.is_available(),
+                    ),
+                ],
+            ))
+
+        menu.dropdowns.append(
+            PageMenuDropdown(
+                name="hosts",
+                title=_("Hosts"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("For this host"),
+                        entries=list(page_menu_host_entries(self.name(), self._host)),
+                    ),
+                ],
+            ))
+
+        return menu
 
     def action(self):
         if watolib.get_pending_changes_info():
@@ -423,7 +481,6 @@ class ModeRenameHost(WatoMode):
         html.text_input("newname", "")
         forms.end()
         html.set_focus("newname")
-        html.button("rename", _("Rename host!"), "submit")
         html.hidden_fields()
         html.end_form()
 

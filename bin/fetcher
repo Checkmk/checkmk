@@ -8,6 +8,7 @@ import os
 import argparse
 import logging
 import sys
+from contextlib import suppress
 from typing import NoReturn
 
 from cmk.utils.exceptions import MKTerminate
@@ -76,8 +77,9 @@ def main() -> int:
             command = _read_line()
             if command == "*":
                 break
-            serial, host_name, timeout = command.split(sep=";", maxsplit=2)
-            controller.run_fetchers(serial=serial, host_name=host_name, timeout=int(timeout))
+            with suppress(ValueError):
+                serial, host_name, timeout = command.split(sep=";", maxsplit=2)
+                controller.run_fetchers(serial=serial, host_name=host_name, timeout=int(timeout))
 
         return 0
 

@@ -37,8 +37,10 @@ class TCPFetcher(AgentFetcher):
 
     @classmethod
     def from_json(cls, serialized: Dict[str, Any]) -> "TCPFetcher":
+        address = serialized.pop("address")
         return cls(
             AgentFileCache.from_json(serialized.pop("file_cache")),
+            address=address,
             **serialized,
         )
 

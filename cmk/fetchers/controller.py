@@ -164,7 +164,7 @@ def _run_fetcher(entry: Dict[str, Any], timeout: int) -> Dict[str, Any]:
         return {
             "fetcher_type": fetcher_type,
             "status": 50,  # CRITICAL, see _level.py
-            "payload": str(e),
+            "payload": repr(e),
         }
 
 

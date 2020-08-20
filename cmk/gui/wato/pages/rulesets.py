@@ -57,12 +57,7 @@ from cmk.gui.watolib.rulespecs import (
     Rulespec,
 )
 
-from cmk.gui.plugins.wato.utils.main_menu import (
-    main_module_registry,
-    MainMenu,
-    MenuItem,
-)
-
+from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
@@ -87,97 +82,6 @@ def render_html(text: Union[HTML, str]) -> str:
     if isinstance(text, HTML):
         return text.__html__()
     return text
-
-
-@mode_registry.register
-class ModeRuleEditor(WatoMode):
-    @classmethod
-    def name(cls):
-        return "ruleeditor"
-
-    @classmethod
-    def permissions(cls):
-        return ["rulesets"]
-
-    def __init__(self):
-        super(ModeRuleEditor, self).__init__()
-        self._only_host = html.request.var("host")
-
-    def title(self):
-        if self._only_host:
-            return _("Rules effective on host ") + self._only_host
-        return _("Rule-Based Configuration of Host & Service Parameters")
-
-    def buttons(self):
-        global_buttons()
-
-        if self._only_host:
-            html.context_button(
-                self._only_host,
-                watolib.folder_preserving_link([("mode", "edit_host"), ("host", self._only_host)]),
-                "host")
-
-        html.context_button(
-            _("Used rulesets"),
-            watolib.folder_preserving_link([
-                ("mode", "rulesets"),
-                ("search_p_ruleset_used", DropdownChoice.option_id(True)),
-                ("search_p_ruleset_used_USE", "on"),
-            ]), "usedrulesets")
-
-        html.context_button(
-            _("Ineffective rules"),
-            watolib.folder_preserving_link([("mode", "rulesets"),
-                                            ("search_p_rule_ineffective",
-                                             DropdownChoice.option_id(True)),
-                                            ("search_p_rule_ineffective_USE", "on")]),
-            "rulesets_ineffective")
-
-        html.context_button(
-            _("Deprecated rulesets"),
-            watolib.folder_preserving_link([("mode", "rulesets"),
-                                            ("search_p_ruleset_deprecated",
-                                             DropdownChoice.option_id(True)),
-                                            ("search_p_ruleset_deprecated_USE", "on")]),
-            "rulesets_deprecated")
-
-        rule_search_button()
-        predefined_conditions_button()
-
-    def page(self):
-        if self._only_host:
-            html.h3("%s: %s" % (_("Host"), self._only_host))
-
-        search_form(mode="rulesets")
-
-        menu = MainMenu()
-        main_groups = [g_class() for g_class in rulespec_group_registry.get_main_groups()]
-        for group in sorted(main_groups, key=lambda g: g.title):
-            url_vars: HTTPVariables = [
-                ("mode", "rulesets"),
-                ("group", group.name),
-            ]
-            if self._only_host:
-                url_vars.append(("host", self._only_host))
-            url = watolib.folder_preserving_link(url_vars)
-            if group.name == "static":  # these have moved into their own WATO module
-                continue
-
-            rulegroup = watolib.get_rulegroup(group.name)
-            icon = "rulesets"
-
-            if rulegroup.help:
-                help_text = rulegroup.help.split('\n')[0]  # Take only first line as button text
-            else:
-                help_text = None
-
-            menu.add_item(
-                MenuItem(mode_or_url=url,
-                         title=rulegroup.title,
-                         icon=icon,
-                         permission="rulesets",
-                         description=help_text))
-        menu.show()
 
 
 class RulesetMode(WatoMode):
@@ -244,6 +148,30 @@ class RulesetMode(WatoMode):
         else:
             self._regular_buttons()
 
+        html.context_button(
+            _("Used rulesets"),
+            watolib.folder_preserving_link([
+                ("mode", "rulesets"),
+                ("search_p_ruleset_used", DropdownChoice.option_id(True)),
+                ("search_p_ruleset_used_USE", "on"),
+            ]), "usedrulesets")
+
+        html.context_button(
+            _("Ineffective rules"),
+            watolib.folder_preserving_link([("mode", "rulesets"),
+                                            ("search_p_rule_ineffective",
+                                             DropdownChoice.option_id(True)),
+                                            ("search_p_rule_ineffective_USE", "on")]),
+            "rulesets_ineffective")
+
+        html.context_button(
+            _("Deprecated rulesets"),
+            watolib.folder_preserving_link([("mode", "rulesets"),
+                                            ("search_p_ruleset_deprecated",
+                                             DropdownChoice.option_id(True)),
+                                            ("search_p_ruleset_deprecated_USE", "on")]),
+            "rulesets_deprecated")
+
         rule_search_button(self._search_options, mode=self.name())
         predefined_conditions_button()
 
@@ -251,19 +179,11 @@ class RulesetMode(WatoMode):
         assert self._only_host is not None
 
         html.context_button(
-            _("All Rulesets"),
-            watolib.folder_preserving_link([("mode", "ruleeditor"), ("host", self._only_host)]),
-            "back")
-        html.context_button(
             self._only_host,
             watolib.folder_preserving_link([("mode", "edit_host"), ("host", self._only_host)]),
             "host")
 
     def _regular_buttons(self):
-        if self.name() != "static_checks":
-            html.context_button(_("All Rulesets"),
-                                watolib.folder_preserving_link([("mode", "ruleeditor")]), "back")
-
         if config.user.may("wato.hosts") or config.user.may("wato.seeall"):
             html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]),
                                 "folder")
@@ -455,7 +375,7 @@ def rule_search_button(search_options=None, mode="rulesets"):
 
     html.context_button(title,
                         html.makeuri([
-                            ("mode", "rule_search"),
+                            ("mode", "rule_search_form"),
                             ("back_mode", mode),
                         ],
                                      delvars=["filled_in"]),
@@ -962,7 +882,7 @@ class ModeEditRuleset(WatoMode):
 class ModeRuleSearch(WatoMode):
     @classmethod
     def name(cls):
-        return "rule_search"
+        return "rule_search_form"
 
     @classmethod
     def permissions(cls):

@@ -169,6 +169,41 @@ class MainModuleReadOnly(MainModule):
 
 
 @main_module_registry.register
+class MainModuleRuleSearch(MainModule):
+    @property
+    def mode_or_url(self):
+        return "rulesets"
+
+    @property
+    def topic(self):
+        return MainModuleTopicGeneral
+
+    @property
+    def title(self):
+        return _("Search rules")
+
+    @property
+    def icon(self):
+        return "search"
+
+    @property
+    def permission(self):
+        return "rulesets"
+
+    @property
+    def description(self):
+        return _("Search all rules and rulesets")
+
+    @property
+    def sort_index(self):
+        return 28
+
+    @property
+    def is_advanced(self):
+        return False
+
+
+@main_module_registry.register
 class MainModulePredefinedConditions(MainModule):
     @property
     def mode_or_url(self):

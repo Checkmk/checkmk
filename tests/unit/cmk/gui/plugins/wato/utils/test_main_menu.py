@@ -44,6 +44,7 @@ def test_registered_modules():
         'diagnostics',
         'download_agents',
         'version.py',
+        'rulesets',
         'wato.py?mode=rulesets&group=activechecks',
         'wato.py?mode=rulesets&group=agent',
         'wato.py?mode=rulesets&group=checkparams',

@@ -85,6 +85,7 @@ def expected_items() -> Dict[str, List[str]]:
         'general': [
             'globalvars',
             'read_only',
+            'rulesets',
             'predefined_conditions',
             'timeperiods',
             'passwords',

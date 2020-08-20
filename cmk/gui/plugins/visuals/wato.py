@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from typing import Tuple, Iterator
 
 import cmk.gui.watolib as watolib
 import cmk.gui.sites as sites
@@ -39,7 +40,7 @@ class FilterWatoFolder(Filter):
     def load_wato_data(self):
         self.tree = watolib.Folder.root_folder()
         self.path_to_tree = {}  # will be filled by self.folder_selection
-        self.selection = self.folder_selection(self.tree, "", 0)
+        self.selection = list(self.folder_selection(self.tree))
         self.last_wato_data_update = time.time()
 
     def check_wato_data_update(self):
@@ -53,7 +54,7 @@ class FilterWatoFolder(Filter):
         # least one host in that folder.
         result = sites.live().query(
             "GET hosts\nCache: reload\nColumns: filename\nStats: state >= 0\n")
-        allowed_folders = {""}
+        allowed_folders = {""}  # The root(Main directory)
         for path, _host_count in result:
             # convert '/wato/server/hosts.mk' to 'server'
             folder = path[6:-9]
@@ -66,9 +67,8 @@ class FilterWatoFolder(Filter):
                 subfolder += part
                 allowed_folders.add(subfolder)
 
-        choices: Choices = [("", "")]
-        html.dropdown(self.ident,
-                      choices + [entry for entry in self.selection if entry[0] in allowed_folders])
+        choices: Choices = [entry for entry in self.selection if entry[0] in allowed_folders]
+        html.dropdown(self.ident, choices)
 
     def filter(self, infoname):
         self.check_wato_data_update()
@@ -88,24 +88,19 @@ class FilterWatoFolder(Filter):
         return "Filter: host_filename %s %s\n" % (op, path_regex)
 
     # Construct pair-list of ( folder-path, title ) to be used
-    # by the HTML selection box. This also updates self._tree,
-    # a dictionary from the path to the title.
-    def folder_selection(self, folder, prefix, depth):
-        my_path = folder.path()
-        if depth:
-            title_prefix = (u"\u00a0" * 6 * depth) + u"\u2514\u2500 "
-        else:
-            title_prefix = ""
+    # by the HTML selection box. This also updates self.path_to_tree,
+    # a dictionary from the path to the title, by recursively scanning the
+    # folders
+    def folder_selection(self, folder, depth=0) -> Iterator[Tuple[str, str]]:
+        my_path: str = folder.path()
         self.path_to_tree[my_path] = folder.title()
-        sel = [(my_path, title_prefix + folder.title())]
-        sel += self.sublist(folder.subfolders(), my_path, depth)
-        return sel
 
-    def sublist(self, elements, my_path, depth):
-        sel = []
-        for e in sorted(elements, key=lambda x: x.title().lower()):
-            sel += self.folder_selection(e, my_path, depth + 1)
-        return sel
+        title_prefix = ("\u00a0" * 6 * depth) + "\u2514\u2500 " if depth else ""
+
+        yield (my_path, title_prefix + folder.title())
+
+        for subfolder in sorted(folder.subfolders(), key=lambda x: x.title().lower()):
+            yield from self.folder_selection(subfolder, depth + 1)
 
     def heading_info(self):
         # FIXME: There is a problem with caching data and changing titles of WATO files

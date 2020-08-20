@@ -50,7 +50,6 @@ from cmk.gui.plugins.wato import (
     EventsMode,
     mode_registry,
     wato_confirm,
-    global_buttons,
     make_action_link,
     add_change,
     notification_parameter_registry,
@@ -68,8 +67,10 @@ from cmk.gui.page_menu import (
     PageMenuDropdown,
     PageMenuTopic,
     PageMenuEntry,
+    PageMenuCheckbox,
     make_simple_link,
     make_simple_form_page_menu,
+    make_display_options_dropdown,
 )
 
 
@@ -436,28 +437,71 @@ class ModeNotifications(ABCNotificationsMode):
     def title(self):
         return _("Notification configuration")
 
-    def buttons(self):
-        global_buttons()
-        html.context_button(_("New Rule"),
-                            watolib.folder_preserving_link([("mode", "notification_rule")]), "new")
-        if self._show_user_rules:
-            html.context_button(_("Hide user rules"), html.makeactionuri([("_show_user", "")]),
-                                "users")
-        else:
-            html.context_button(_("Show user rules"), html.makeactionuri([("_show_user", "1")]),
-                                "users")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="notification_rules",
+                    title=_("Notification rules"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Add new"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Add rule"),
+                                    icon_name="new",
+                                    item=make_simple_link(
+                                        watolib.folder_preserving_link([("mode",
+                                                                         "notification_rule")])),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
+        self._extend_display_dropdown(menu)
+        return menu
 
-        if self._show_backlog:
-            html.context_button(_("Hide Analysis"), html.makeactionuri([("_show_backlog", "")]),
-                                "analyze")
-        else:
-            html.context_button(_("Analyse"), html.makeactionuri([("_show_backlog", "1")]),
-                                "analyze")
-
-        if self._show_bulks:
-            html.context_button(_("Hide Bulks"), html.makeactionuri([("_show_bulks", "")]), "bulk")
-        else:
-            html.context_button(_("Show Bulks"), html.makeactionuri([("_show_bulks", "1")]), "bulk")
+    def _extend_display_dropdown(self, menu: PageMenu) -> None:
+        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+        display_dropdown.topics.insert(
+            0,
+            PageMenuTopic(
+                title=_("Toggle elements"),
+                entries=[
+                    PageMenuEntry(
+                        title=_("Show user rules"),
+                        icon_name="trans",
+                        item=PageMenuCheckbox(
+                            is_checked=self._show_user_rules,
+                            check_url=html.makeactionuri([("_show_user", "1")]),
+                            uncheck_url=html.makeactionuri([("_show_user", "")]),
+                        ),
+                    ),
+                    PageMenuEntry(
+                        title=_("Show analysis"),
+                        icon_name="trans",
+                        item=PageMenuCheckbox(
+                            is_checked=self._show_backlog,
+                            check_url=html.makeactionuri([("_show_backlog", "1")]),
+                            uncheck_url=html.makeactionuri([("_show_backlog", "")]),
+                        ),
+                    ),
+                    PageMenuEntry(
+                        title=_("Show bulks"),
+                        icon_name="trans",
+                        item=PageMenuCheckbox(
+                            is_checked=self._show_bulks,
+                            check_url=html.makeactionuri([("_show_bulks", "1")]),
+                            uncheck_url=html.makeactionuri([("_show_bulks", "")]),
+                        ),
+                    ),
+                ],
+            ))
 
     def action(self):
         if html.request.has_var("_show_user"):

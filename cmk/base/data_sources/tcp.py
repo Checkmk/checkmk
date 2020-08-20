@@ -7,13 +7,12 @@
 import socket
 from typing import Optional
 
-from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, SourceType
+from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
-from cmk.fetchers import FetcherType, TCPFetcher
+from cmk.fetchers import FetcherType
 
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.config import HostConfig, SelectedRawSections
-from cmk.base.exceptions import MKAgentError
+from cmk.base.config import HostConfig
 
 from ._abstract import Mode
 from .agent import AgentConfigurator, AgentDataSource, AgentSummarizerDefault
@@ -73,19 +72,6 @@ class TCPDataSource(AgentDataSource):
             configurator,
             summarizer=AgentSummarizerDefault(configurator),
         )
-
-    def _execute(
-        self,
-        *,
-        selected_raw_sections: Optional[SelectedRawSections],
-    ) -> AgentRawData:
-        if TCPConfigurator._use_only_cache:
-            raise MKAgentError("Got no data: No usable cache file present at %s" %
-                               self.configurator.file_cache.path)
-
-        with TCPFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
-            return fetcher.fetch()
-        raise MKAgentError("Failed to read data")
 
     @staticmethod
     def use_only_cache() -> None:

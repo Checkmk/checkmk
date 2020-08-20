@@ -10,14 +10,13 @@ from typing import Any, Dict, Optional
 from six import ensure_str
 
 import cmk.utils.paths
-from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, SourceType
+from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
-from cmk.fetchers import FetcherType, ProgramFetcher
+from cmk.fetchers import FetcherType
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
-from cmk.base.config import SelectedRawSections, SpecialAgentConfiguration
-from cmk.base.exceptions import MKAgentError
+from cmk.base.config import SpecialAgentConfiguration
 
 from ._abstract import Mode
 from .agent import AgentConfigurator, AgentDataSource, AgentSummarizerDefault
@@ -265,13 +264,3 @@ class ProgramDataSource(AgentDataSource):
             configurator,
             summarizer=AgentSummarizerDefault(configurator),
         )
-
-    def _execute(
-        self,
-        *,
-        selected_raw_sections: Optional[SelectedRawSections],
-    ) -> AgentRawData:
-        # TODO(ml): Do something with the selection.
-        with ProgramFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
-            return fetcher.fetch()
-        raise MKAgentError("Failed to read data")

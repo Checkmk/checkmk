@@ -17,7 +17,7 @@ import cmk.utils.log  # TODO: Remove this!
 import cmk.utils.misc
 import cmk.utils.paths
 import cmk.utils.tty as tty
-from cmk.utils.exceptions import MKSNMPError, MKTerminate, MKTimeout
+from cmk.utils.exceptions import MKSNMPError, MKTimeout
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
 
@@ -390,66 +390,6 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
             persisted_sections.update(host_sections.persisted_sections)
             self._section_store.store(persisted_sections)
         return persisted_sections
-
-    def run(
-        self,
-        *,
-        selected_raw_sections: Optional[SelectedRawSections],
-    ) -> ABCHostSections:
-        """
-        :param selected_raw_section: A set of raw sections, that we
-        are interested in.  If set, we assume that these sections should
-        be produced if possible, and any raw section that is not listed
-        here *may* be omitted.
-        """
-        return self._run(selected_raw_sections=selected_raw_sections)
-
-    def _run(
-        self,
-        *,
-        selected_raw_sections: Optional[SelectedRawSections],
-    ) -> BoundedAbstractHostSections:
-        """Wrapper for self._execute() that unifies several things:
-
-        a) Exception handling
-        b) Caching of raw data
-
-        Exceptions: All exceptions are caught and written to self._exception. The caller
-        should use self.get_summary_result() to get the summary result of this data source
-        which also includes information about the happed exception. In case the --debug
-        mode is enabled, the exceptions are raised. self._exception is re-initialized
-        to None when this method is called."""
-        self._exception = None
-        self._host_sections = None
-        try:
-            raw_data = self._execute(selected_raw_sections=selected_raw_sections)
-            return self.check(raw_data)
-
-        except MKTerminate:
-            raise
-
-        except Exception as e:
-            self._logger.log(VERBOSE, "ERROR: %s", e)
-            if cmk.utils.debug.enabled():
-                raise
-            self._exception = e
-
-        return self.default_host_sections
-
-    @abc.abstractmethod
-    def _execute(
-        self,
-        *,
-        selected_raw_sections: Optional[SelectedRawSections],
-    ) -> BoundedAbstractRawData:
-        """Fetches the current agent data from the source specified with
-        hostname and ipaddress and returns the result as "raw data" that is
-        later converted by self._parse() to a HostSection().
-
-        The "raw data" is the raw byte string returned by the source for
-        AgentDataSource sources. The SNMPDataSource source already
-        return the final data structure to be wrapped into HostSections()."""
-        raise NotImplementedError()
 
     @property
     @abc.abstractmethod

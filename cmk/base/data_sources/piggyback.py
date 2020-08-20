@@ -9,13 +9,11 @@ from typing import Any, Dict, Final, Optional
 
 from cmk.utils.paths import tmp_dir
 from cmk.utils.piggyback import get_piggyback_raw_data
-from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, ServiceCheckResult, SourceType
+from cmk.utils.type_defs import HostAddress, HostName, ServiceCheckResult, SourceType
 
-from cmk.fetchers import FetcherType, PiggyBackFetcher
+from cmk.fetchers import FetcherType
 
 import cmk.base.config as config
-from cmk.base.config import SelectedRawSections
-from cmk.base.exceptions import MKAgentError
 
 from ._abstract import Mode
 from .agent import AgentConfigurator, AgentDataSource, AgentHostSections, AgentSummarizer
@@ -100,12 +98,3 @@ class PiggyBackSummarizer(AgentSummarizer):
 class PiggyBackDataSource(AgentDataSource):
     def __init__(self, configurator: PiggyBackConfigurator) -> None:
         super().__init__(configurator, summarizer=PiggyBackSummarizer(configurator))
-
-    def _execute(
-        self,
-        *,
-        selected_raw_sections: Optional[SelectedRawSections],
-    ) -> AgentRawData:
-        with PiggyBackFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
-            return fetcher.fetch()
-        raise MKAgentError("Failed to read data")

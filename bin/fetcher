@@ -10,6 +10,7 @@ import logging
 import sys
 from typing import NoReturn
 
+from cmk.utils.exceptions import MKTerminate
 from cmk.utils.fetcher_crash_reporting import create_fetcher_crash_dump
 from cmk.utils.type_defs import HostName
 
@@ -81,6 +82,9 @@ def main() -> int:
         return 0
 
     # NOTE: Yes, this is too common. But at this moment we have no chance to provide better method.
+    except MKTerminate:
+        return 0
+
     except Exception as e:
         # reporting to site
         result = create_fetcher_crash_dump(serial=serial, host=host_name)

@@ -151,9 +151,7 @@ class ABCHostMode(WatoMode, metaclass=abc.ABCMeta):
     def page(self):
         # Show outcome of host validation. Do not validate new hosts
         errors = None
-        if self._mode != "edit":
-            watolib.Folder.current().show_breadcrump()
-        else:
+        if self._mode == "edit":
             errors = watolib.validate_all_hosts([self._host.name()]).get(
                 self._host.name(), []) + self._host.validation_errors()
 

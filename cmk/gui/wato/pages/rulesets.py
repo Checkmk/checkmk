@@ -221,9 +221,6 @@ class RulesetMode(WatoMode):
                                 watolib.folder_preserving_link([("mode", "agents")]), "agents")
 
     def page(self):
-        if not self._only_host:
-            watolib.Folder.current().show_breadcrump(keepvarnames=True)
-
         search_form(default_value=self._search_options.get("fulltext", ""))
 
         if self._help:
@@ -639,9 +636,6 @@ class ModeEditRuleset(WatoMode):
         rulesets.save()
 
     def page(self):
-        if not self._hostname:
-            self._folder.show_breadcrump(keepvarnames=True)  # = ["mode", "varname"])
-
         if not config.wato_hide_varnames:
             display_varname = '%s["%s"]' % tuple(self._name.split(":")) \
                     if ':' in self._name else self._name

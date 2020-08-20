@@ -363,22 +363,21 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
 
     def check(self, raw_data: BoundedAbstractRawData) -> BoundedAbstractHostSections:
         try:
-            host_sections = self._parser.parse(raw_data)
+            self._host_sections = self._parser.parse(raw_data)
 
             # Add information from previous persisted infos
-            persisted_sections = self._determine_persisted_sections(host_sections)
-            host_sections.add_persisted_sections(persisted_sections, logger=self._logger)
-
-            return host_sections
+            persisted_sections = self._determine_persisted_sections(self._host_sections)
+            self._host_sections.add_persisted_sections(persisted_sections, logger=self._logger)
 
         except Exception as exc:
             self._logger.log(VERBOSE, "ERROR: %s", exc)
             if cmk.utils.debug.enabled():
                 raise
             self._exception = exc
-            return self.default_host_sections
+            self._host_sections = self.default_host_sections
         else:
             self._exception = None
+        return self._host_sections
 
     def _determine_persisted_sections(
         self,

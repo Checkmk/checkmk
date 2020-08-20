@@ -30,7 +30,7 @@ def test_atrributes_wrong_types():
         )
 
 
-def test_atrributes_duplicate_keys():
+def test_attributes_duplicate_keys():
     with pytest.raises(ValueError):
         _ = Attributes(
             path=["software", "os"],
@@ -49,6 +49,17 @@ def test_attributes_instanciated():
     assert attr.path == ["software", "os"]
     assert attr.status_attributes == {"vendor": "emmentaler"}
     assert attr.inventory_attributes == {"version": "42"}
+    assert repr(
+        attr
+    ) == "Attributes(path=['software', 'os'], inventory_attributes={'version': '42'}, status_attributes={'vendor': 'emmentaler'})"
+
+    attr2 = Attributes(
+        path=["software", "os"],
+        status_attributes={"vendor": "camembert"},
+        inventory_attributes={"version": "42"},
+    )
+    assert attr == attr
+    assert attr2 != attr
 
 
 def test_tablerow_missing_key_columns():
@@ -84,3 +95,15 @@ def test_tablerow_instanciated():
     assert table_row.key_columns == {"foo": "bar"}
     assert table_row.status_columns == {"packages": 42}
     assert table_row.inventory_columns == {"vendor": "emmentaler"}
+    assert repr(
+        table_row
+    ) == "TableRow(path=['software', 'os'], key_columns={'foo': 'bar'}, inventory_columns={'vendor': 'emmentaler'}, status_columns={'packages': 42})"
+
+    table_row2 = TableRow(
+        path=["software", "os"],
+        key_columns={"foo": "bar"},
+        status_columns={"packages": 42},
+        inventory_columns={"vendor": "gorgonzola"},
+    )
+    assert table_row == table_row
+    assert table_row2 != table_row

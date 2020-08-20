@@ -14,7 +14,10 @@ def parse_docker_container_labels(info):
 
 
 def inv_docker_container_labels(info, inventory_tree):
-    data = parse_docker_container_labels(info)
+    if isinstance(data, list):
+        data = parse_docker_container_labels(info)
+    else:
+        data = info
     if data is None:
         return
     container = inventory_tree.get_dict("software.applications.docker.container.")

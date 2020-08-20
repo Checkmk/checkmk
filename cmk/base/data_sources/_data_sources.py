@@ -256,9 +256,11 @@ def _make_host_sections(
                 HostKey(hostname, ipaddress, source.configurator.source_type),
                 source.default_host_sections,
             )
-            host_sections.update(
-                # TODO: Select agent / snmp sources before passing
-                source.run(selected_raw_sections=selected_raw_sections))
+            # TODO: Select agent / snmp sources before passing
+            source.configurator.selected_raw_sections = selected_raw_sections
+            with source.configurator.make_fetcher() as fetcher:
+                raw_data = fetcher.fetch()
+            host_sections.update(source.check(raw_data))
 
         # Store piggyback information received from all sources of this host. This
         # also implies a removal of piggyback files received during previous calls.

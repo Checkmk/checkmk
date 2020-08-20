@@ -259,6 +259,7 @@ class ABCConfigurator(abc.ABC):
             simulation=config.simulation_mode,
         )
         self.persisted_sections_file_path: Final[Path] = persisted_section_dir / self.hostname
+        self.selected_raw_sections: Optional[SelectedRawSections] = None
 
         self.host_config: Final[HostConfig] = HostConfig.make_host_config(hostname)
         self._logger: Final[logging.Logger] = logging.getLogger("cmk.base.data_source.%s" % id_)
@@ -359,6 +360,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     def _cpu_tracking_id(self) -> str:
         return self.configurator.cpu_tracking_id
 
+    @cpu_tracking.track
     def check(self, raw_data: BoundedAbstractRawData) -> BoundedAbstractHostSections:
         try:
             self._host_sections = self._parser.parse(raw_data)
@@ -402,7 +404,6 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         """
         return self._run(selected_raw_sections=selected_raw_sections)
 
-    @cpu_tracking.track
     def _run(
         self,
         *,

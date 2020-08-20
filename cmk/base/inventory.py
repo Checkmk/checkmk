@@ -328,7 +328,9 @@ def _do_inv_for_realhost(
                 # TODO(ml): This modifies the SNMP fetcher config dynamically.
                 #           Can the fetcher handle that on its own?
                 configurator.prefetched_sections = host_sections.sections
-                host_sections.update(source.run(selected_raw_sections=None))
+                with source.configurator.make_fetcher() as fetcher:
+                    raw_data = fetcher.fetch()
+                host_sections.update(source.check(raw_data))
 
     if multi_host_sections is None:
         multi_host_sections = data_sources.make_host_sections(

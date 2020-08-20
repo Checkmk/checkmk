@@ -21,7 +21,7 @@ from cmk.base import check_table, config
 from cmk.base.api.agent_based.register import section_plugins
 from cmk.base.api.agent_based.type_defs import CheckPlugin
 from cmk.base.api.agent_based.utils import parse_to_string_table
-from cmk.base.data_sources import make_configurators, Mode
+from cmk.base.data_sources import make_configurators, Mode, ABCDataSource
 from cmk.base.data_sources._data_sources import _make_host_sections, _make_piggybacked_sections
 from cmk.base.data_sources.piggyback import PiggyBackConfigurator
 from cmk.base.data_sources.programs import DSProgramConfigurator, SpecialAgentConfigurator
@@ -115,54 +115,6 @@ def test_host_config_creates_passing_source_configurators(
         ipaddress,
         mode=mode,
     )] == sources
-
-
-def test_piggyback_storage(mode, monkeypatch, mocker):
-    hostname = "testhost"
-    ipaddress = "1.2.3.4"
-    raw_data = b"\n".join((
-        b"<<<<piggyback header>>>>",
-        b"<<<section>>>",
-        b"first line",
-        b"second line",
-        b"<<<<>>>>",
-    ))
-
-    ts = Scenario()
-    ts.add_host(hostname)
-    ts.apply(monkeypatch)
-
-    source = TCPDataSource(configurator=TCPConfigurator(
-        hostname,
-        ipaddress,
-        mode=mode,
-    ),)
-    monkeypatch.setattr(time, "time", lambda: 0)
-    mhs = agent.AgentParser(hostname, logging.getLogger("test")).parse(raw_data)
-    monkeypatch.setattr(
-        type(source),
-        "run",
-        lambda self, *args, selected_raw_sections, **kwargs: mhs,
-    )
-
-    mocker.patch.object(
-        cmk.utils.piggyback,
-        "store_piggyback_raw_data",
-        autospec=True,
-    )
-
-    # End of setup
-
-    _make_host_sections(
-        [(hostname, ipaddress, [source])],
-        max_cachefile_age=0,
-        selected_raw_sections=None,
-    )
-
-    args = cmk.utils.piggyback.store_piggyback_raw_data.call_args.args  # type: ignore[attr-defined]
-
-    assert mhs.piggybacked_raw_data
-    assert args == (hostname, mhs.piggybacked_raw_data)
 
 
 @pytest.fixture(name="agent_section")

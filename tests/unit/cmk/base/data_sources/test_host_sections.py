@@ -16,6 +16,8 @@ from testlib.base import Scenario  # type: ignore[import]
 import cmk.utils.piggyback
 from cmk.utils.type_defs import ParsedSectionName, SectionName, SourceType
 
+from cmk.fetchers import ABCFetcher
+
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
@@ -32,7 +34,7 @@ from cmk.base.data_sources.agent import AgentHostSections
 from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
 from cmk.base.data_sources.piggyback import PiggyBackConfigurator, PiggyBackDataSource
 from cmk.base.data_sources.programs import ProgramConfigurator, ProgramDataSource
-from cmk.base.data_sources.snmp import SNMPConfigurator, SNMPDataSource, SNMPHostSections
+from cmk.base.data_sources.snmp import SNMPConfigurator, SNMPDataSource, SNMPHostSections, CachedSNMPDetector
 from cmk.base.data_sources.tcp import TCPConfigurator, TCPDataSource
 
 _TestSection = collections.namedtuple(
@@ -481,10 +483,12 @@ class TestMakeHostSectionsHosts:
             def _extend_section(self, section_name, section_content):
                 pass
 
+        monkeypatch.setattr(ABCFetcher, "fetch", lambda self: None)
+        monkeypatch.setattr(CachedSNMPDetector, "__call__", lambda *args, **kwargs: frozenset())
         monkeypatch.setattr(
             ABCDataSource,
-            "run",
-            lambda self, *args, selected_raw_sections, **kwargs: DummyHostSection(
+            "check",
+            lambda self, raw_data: DummyHostSection(
                 sections={SectionName("section_name_%s" % self.hostname): [["section_content"]]},
                 cache_info={},
                 piggybacked_raw_data={},
@@ -704,8 +708,8 @@ class TestMakeHostSectionsClusters:
 
         monkeypatch.setattr(
             ABCDataSource,
-            "run",
-            lambda self, *args, selected_raw_sections, **kwargs: DummyHostSection(
+            "check",
+            lambda self, *args, **kwargs: DummyHostSection(
                 sections={SectionName("section_name_%s" % self.hostname): [["section_content"]]},
                 cache_info={},
                 piggybacked_raw_data={},
@@ -796,11 +800,8 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
             return {section_name: True}
         return {}
 
-    def run(_, *args, selected_raw_sections, **kwargs):
-        sections = {}
-        if selected_raw_sections is not None and section_name in selected_raw_sections:
-            sections = {section_name: [[str(section_name)]]}
-        return AgentHostSections(sections=sections)
+    def check(_, *args, **kwargs):
+        return AgentHostSections(sections={section_name: [[str(section_name)]]})
 
     monkeypatch.setattr(
         ip_lookup,
@@ -814,8 +815,8 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
     )
     monkeypatch.setattr(
         ABCDataSource,
-        "run",
-        run,
+        "check",
+        check,
     )
     mocker.patch.object(
         cmk.utils.piggyback,

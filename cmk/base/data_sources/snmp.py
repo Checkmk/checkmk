@@ -133,7 +133,6 @@ class SNMPConfigurator(ABCConfigurator):
         # Attributes below are wrong
         self.use_snmpwalk_cache = True
         self.ignore_check_interval = False
-        self.selected_raw_sections: Optional[SelectedRawSections] = None
         self.prefetched_sections: Sequence[SectionName] = ()
         self.section_store: SectionStore[SNMPPersistedSections] = SectionStore(
             self.persisted_sections_file_path,

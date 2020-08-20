@@ -39,6 +39,7 @@ def test_registered_modules():
         'passwords',
         'analyze_config',
         'auditlog',
+        'icons',
         'background_jobs_overview',
         'ldap_config',
         'diagnostics',

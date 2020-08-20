@@ -6,6 +6,7 @@
 
 import os
 import io
+from typing import Iterable
 
 from PIL import Image, PngImagePlugin  # type: ignore[import]
 
@@ -23,13 +24,21 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     Dictionary,
 )
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+    make_simple_form_page_menu,
+)
 
 from cmk.gui.plugins.wato import ActionResult
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
     wato_confirm,
-    global_buttons,
     make_action_link,
 )
 
@@ -45,14 +54,38 @@ class ModeIcons(WatoMode):
         return ["icons"]
 
     def title(self):
-        return _('Manage Icons')
+        return _("Custom icons")
 
-    def buttons(self):
-        back_url = html.get_url_input("back", "")
-        if back_url:
-            html.context_button(_("Back"), back_url, "back")
-        else:
-            global_buttons()
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = make_simple_form_page_menu(breadcrumb,
+                                          form_name="upload_form",
+                                          button_name="_do_upload",
+                                          save_title=_("Upload"),
+                                          add_abort_link=False)
+
+        menu.dropdowns.insert(
+            1,
+            PageMenuDropdown(
+                name="related",
+                title=_("Related"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Setup"),
+                        entries=list(self._page_menu_entries_related()),
+                    ),
+                ],
+            ))
+
+        return menu
+
+    def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
+        yield PageMenuEntry(
+            title=_("User interface rulesets"),
+            icon_name="rulesets",
+            item=make_simple_link(
+                html.makeuri_contextless([("mode", "rulesets"), ("group", "user_interface")],
+                                         filename="wato.py")),
+        )
 
     def _load_custom_icons(self):
         s = IconSelector()
@@ -140,8 +173,6 @@ class ModeIcons(WatoMode):
 
         html.begin_form('upload_form', method='POST')
         self._vs_upload().render_input('_upload_icon', None)
-        html.button('_do_upload', _('Upload'), 'submit')
-
         html.hidden_fields()
         html.end_form()
 

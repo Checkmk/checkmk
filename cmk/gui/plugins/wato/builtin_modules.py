@@ -941,6 +941,41 @@ class MainModuleAuditLog(MainModule):
 
 
 @main_module_registry.register
+class MainModuleIcons(MainModule):
+    @property
+    def mode_or_url(self):
+        return "icons"
+
+    @property
+    def topic(self):
+        return MainModuleTopicGeneral
+
+    @property
+    def title(self):
+        return _("Custom icons")
+
+    @property
+    def icon(self):
+        return "icons"
+
+    @property
+    def permission(self):
+        return "icons"
+
+    @property
+    def description(self):
+        return _("Extend the Checkmk GUI with your custom icons")
+
+    @property
+    def sort_index(self):
+        return 85
+
+    @property
+    def is_advanced(self):
+        return True
+
+
+@main_module_registry.register
 class MainModuleAnalyzeConfig(MainModule):
     @property
     def mode_or_url(self):

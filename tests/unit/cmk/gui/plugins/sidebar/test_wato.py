@@ -91,6 +91,7 @@ def expected_items() -> Dict[str, List[str]]:
             'wato.py?mode=rulesets&group=user_interface',
             'sites',
             'auditlog',
+            'icons',
         ],
         'hosts': hosts_items,
         'maintenance': maintenance_items,

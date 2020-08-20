@@ -356,7 +356,8 @@ def make_simple_form_page_menu(breadcrumb: Breadcrumb,
                                button_name: Optional[str] = None,
                                save_title: Optional[str] = None,
                                save_icon: str = "save",
-                               save_is_enabled: bool = True) -> PageMenu:
+                               save_is_enabled: bool = True,
+                               add_abort_link: bool = True) -> PageMenu:
     """Factory for creating a simple menu for object edit dialogs that just link back"""
     entries = []
 
@@ -364,7 +365,8 @@ def make_simple_form_page_menu(breadcrumb: Breadcrumb,
         entries.append(
             _make_form_save_link(form_name, button_name, save_title, save_icon, save_is_enabled))
 
-    entries.append(_make_form_abort_link(breadcrumb))
+    if add_abort_link:
+        entries.append(_make_form_abort_link(breadcrumb))
 
     return PageMenu(
         dropdowns=[

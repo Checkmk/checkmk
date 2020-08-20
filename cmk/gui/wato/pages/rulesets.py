@@ -93,13 +93,13 @@ class PageType(Enum):
     RuleSearch = auto()
 
 
-class RulesetMode(WatoMode):
+class ABCRulesetMode(WatoMode):
     """Lists rulesets in their groups.
 
     Besides the simple listing, it is also responsible for displaying rule search results.
     """
     def __init__(self) -> None:
-        super(RulesetMode, self).__init__()
+        super(ABCRulesetMode, self).__init__()
         self._page_type = self._get_page_type(self._search_options)
 
         self._title: str = ""
@@ -286,7 +286,7 @@ class RulesetMode(WatoMode):
 
 
 @mode_registry.register
-class ModeRuleSearch(RulesetMode):
+class ModeRuleSearch(ABCRulesetMode):
     @classmethod
     def name(cls):
         return "rule_search"
@@ -337,7 +337,7 @@ class ModeRuleSearch(RulesetMode):
 
 
 @mode_registry.register
-class ModeRulesetGroup(RulesetMode):
+class ModeRulesetGroup(ABCRulesetMode):
     """Lists rulesets in a ruleset group"""
     @classmethod
     def name(cls):
@@ -379,7 +379,7 @@ class ModeRulesetGroup(RulesetMode):
 
 
 @mode_registry.register
-class ModeStaticChecksRulesets(RulesetMode):
+class ModeStaticChecksRulesets(ABCRulesetMode):
     @classmethod
     def name(cls):
         return "static_checks"

@@ -800,7 +800,7 @@ class ModeEditTimeperiod(WatoMode):
         if not html.check_transaction():
             return
 
-        vs = self._valuespec()
+        vs = self._valuespec()  # returns a Dictionary object
         vs_spec = vs.from_html_vars("timeperiod")
         vs.validate_value(vs_spec, "timeperiod")
         self._timeperiod = self._from_valuespec(vs_spec)
@@ -893,8 +893,7 @@ class ModeEditTimeperiod(WatoMode):
             tp_spec["exclude"] = vs_spec["exclude"]
 
         tp_spec.update(self._exceptions_from_valuespec(vs_spec))
-        tp_spec.update(self._weekdays_from_valuespec(vs_spec))
-
+        tp_spec.update(self._time_exceptions_from_valuespec(vs_spec))
         return tp_spec
 
     def _exceptions_from_valuespec(self, vs_spec):
@@ -904,19 +903,22 @@ class ModeEditTimeperiod(WatoMode):
                 tp_spec[exception_name] = self._time_ranges_from_valuespec(time_ranges)
         return tp_spec
 
-    def _weekdays_from_valuespec(self, vs_spec):
-        weekday_ty, weekday_values = vs_spec["weekdays"]
+    def _time_exceptions_from_valuespec(self, vs_spec):
+        # TODO: time exceptions is either a list of tuples or a dictionary for
+        period_type, exceptions_details = vs_spec["weekdays"]
 
-        if weekday_ty not in ["whole_week", "day_specific"]:
+        if period_type not in ["whole_week", "day_specific"]:
             raise NotImplementedError()
 
         # produce a data structure equal to the "day_specific" structure
-        if weekday_ty == "whole_week":
-            weekday_values = {day: weekday_values for day in defines.weekday_ids()}
+        if period_type == "whole_week":
+            time_exceptions = {day: exceptions_details for day in defines.weekday_ids()}
+        else:  # specific days
+            time_exceptions = exceptions_details
 
         return {
-            day: self._time_ranges_from_valuespec(weekday_values[day])
-            for day, time_ranges in weekday_values.items()
+            day: self._time_ranges_from_valuespec(time_exceptions[day])
+            for day, time_ranges in time_exceptions.items()
             if time_ranges
         }
 
@@ -925,8 +927,8 @@ class ModeEditTimeperiod(WatoMode):
 
     def _time_range_from_valuespec(self, value):
         """Convert a time range specification from valuespec format"""
-        return tuple(map(self._time_from_valuespec, value))
+        return tuple(map(self._format_valuespec_time, value))
 
-    def _time_from_valuespec(self, value):
+    def _format_valuespec_time(self, value):
         """Convert a time specification from valuespec format"""
         return "%02d:%02d" % value

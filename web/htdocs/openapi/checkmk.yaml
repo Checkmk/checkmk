@@ -518,6 +518,69 @@ components:
       - $ref: '#/components/schemas/Link'
       properties: {}
       type: object
+    ConcreteTimePeriod:
+      properties:
+        alias:
+          description: The alias of the time period
+          example: alias
+          type: string
+        active_time_ranges:
+          description: The days for which time ranges were specified
+          example: '{''day'': ''all'', ''time_ranges'': [{''start'': ''12:00'', ''end'':
+            ''14:00''}'
+          items:
+            $ref: '#/components/schemas/ConcreteTimeRangeActive'
+          type: array
+        exceptions:
+          description: Specific day exclusions with their list of time ranges
+          example: '[{''date'': ''2020-01-01'', ''time_ranges'': [{''start'': ''14:00'',
+            ''end'': ''18:00''}]}]'
+          items:
+            $ref: '#/components/schemas/ConcreteTimePeriodException'
+          type: array
+        exclude:
+          description: The collection of time period aliases whose periods are excluded
+          items:
+            description: Name of excluding time period
+            example: holidays
+            type: string
+          type: array
+      type: object
+    ConcreteTimePeriodException:
+      properties:
+        date:
+          description: The date of the time period exception.8601 profile
+          example: '2020-01-01'
+          format: date
+          type: string
+        time_ranges:
+          example: '[{''start'': ''14:00'', ''end'': ''18:00''}]'
+          items:
+            $ref: '#/components/schemas/ConcreteTimeRange'
+          type: array
+      type: object
+    ConcreteTimeRange:
+      properties:
+        end:
+          description: The hour of the time period.
+          example: '14:00'
+          type: string
+        start:
+          description: The hour of the time period.
+          example: '14:00'
+          type: string
+      type: object
+    ConcreteTimeRangeActive:
+      properties:
+        day:
+          description: The day for which the time ranges are specified
+          pattern: monday|tuesday|wednesday|thursday|friday|saturday|sunday
+          type: string
+        time_ranges:
+          items:
+            $ref: '#/components/schemas/ConcreteTimeRange'
+          type: array
+      type: object
     ContactGroup:
       properties:
         links:
@@ -1083,6 +1146,42 @@ components:
       required:
       - name
       type: object
+    InputTimePeriod:
+      properties:
+        name:
+          description: A unique name for the time period.
+          example: first
+          type: string
+        alias:
+          description: An alias for the time period.
+          example: alias
+          type: string
+        active_time_ranges:
+          description: The list of active time ranges.
+          example: '[{''day'': ''monday'',''time_ranges'': [{''start'': ''12:00'',''end'':
+            ''14:00''}]}]'
+          items:
+            $ref: '#/components/schemas/TimeRangeActive'
+          type: array
+        exceptions:
+          example: '[{''date'': ''2020-01-01'', ''time_ranges'': [{''start'': ''14:00'',
+            ''end'': ''18:00''}]}]'
+          items:
+            $ref: '#/components/schemas/TimePeriodException'
+          type: array
+        exclude:
+          description: The collection of time period aliases whose periods are excluded
+          example: '[''alias'']'
+          items:
+            description: The alias for a time period.
+            example: alias
+            type: string
+          type: array
+      required:
+      - active_time_ranges
+      - alias
+      - name
+      type: object
     InstalledVersions:
       properties:
         site:
@@ -1297,6 +1396,47 @@ components:
       - domainType
       - links
       type: object
+    TimePeriodException:
+      properties:
+        date:
+          description: The date of the time period exception.8601 profile
+          example: '2020-01-01'
+          format: date
+          type: string
+        time_ranges:
+          example: '[{''start'': ''14:00'', ''end'': ''18:00''}]'
+          items:
+            $ref: '#/components/schemas/TimeRange'
+          type: array
+      required:
+      - date
+      type: object
+    TimeRange:
+      properties:
+        end:
+          description: The end time of the period's time range
+          example: '16:00'
+          type: string
+        start:
+          description: The start time of the period's time range
+          example: '14:00'
+          type: string
+      required:
+      - end
+      - start
+      type: object
+    TimeRangeActive:
+      properties:
+        day:
+          description: The day for which time ranges are to be specified. The 'all'
+            option allows to specify time ranges for all days.
+          pattern: all|monday|tuesday|wednesday|thursday|friday|saturday|sunday
+          type: string
+        time_ranges:
+          items:
+            $ref: '#/components/schemas/TimeRange'
+          type: array
+      type: object
     UpdateContactGroup:
       properties:
         attributes:
@@ -1435,6 +1575,26 @@ components:
           type: string
       required:
       - name
+      type: object
+    UpdateTimePeriod:
+      properties:
+        alias:
+          description: An alias for the time period
+          example: alias
+          type: string
+        active_time_ranges:
+          description: The list of active time ranges which replaces the existing
+            list of time ranges
+          example: '{''start'': ''12:00'', ''end'': ''14:00''}'
+          items:
+            $ref: '#/components/schemas/TimeRangeActive'
+          type: array
+        exceptions:
+          example: '[{''date'': ''2020-01-01'', ''time_ranges'': [{''start'': ''14:00'',
+            ''end'': ''18:00''}]}]'
+          items:
+            $ref: '#/components/schemas/TimePeriodException'
+          type: array
       type: object
   securitySchemes:
     BearerAuth:
@@ -6425,6 +6585,249 @@ paths:
           \ application/json\" \\\n    entries='[{\"name\": \"windows\", \"attributes\"\
           : {\"name\": \"windows updated\", \"alias\": \"Windows Servers\"}}]' \\\n\
           \    --json"
+  /domain-types/time_period/collections/all:
+    post:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.time_period.create_timeperiod
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InputTimePeriod'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+          headers: {}
+      summary: Create a time period
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.time_period
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/time_period/collections/all\"\
+          ,\n    json={\n        'name': 'first',\n        'alias': 'alias',\n   \
+          \     'active_time_ranges': \"[{'day': 'monday','time_ranges': [{'start':\
+          \ '12:00','end': '14:00'}]}]\",\n        'exceptions': \"[{'date': '2020-01-01',\
+          \ 'time_ranges': [{'start': '14:00', 'end': '18:00'}]}]\",\n        'exclude':\
+          \ \"['alias']\"\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/time_period/collections/all\",\n    method=\"\
+          POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
+          \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
+          \ data=json.dumps({\n        'name': 'first',\n        'alias': 'alias',\n\
+          \        'active_time_ranges': \"[{'day': 'monday','time_ranges': [{'start':\
+          \ '12:00','end': '14:00'}]}]\",\n        'exceptions': \"[{'date': '2020-01-01',\
+          \ 'time_ranges': [{'start': '14:00', 'end': '18:00'}]}]\",\n        'exclude':\
+          \ \"['alias']\"\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\ \\\n    --data '{\n          \"active_time_ranges\": \"[{'day': 'monday','time_ranges':\
+          \ [{'start': '12:00','end': '14:00'}]}]\",\n          \"alias\": \"alias\"\
+          ,\n          \"exceptions\": \"[{'date': '2020-01-01', 'time_ranges': [{'start':\
+          \ '14:00', 'end': '18:00'}]}]\",\n          \"exclude\": \"['alias']\",\n\
+          \          \"name\": \"first\"\n        }' \\\n    \"$API_URL/domain-types/time_period/collections/all\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/time_period/collections/all\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    active_time_ranges='[{'day': 'monday','time_ranges':\
+          \ [{'start': '12:00','end': '14:00'}]}]' \\\n    alias='alias' \\\n    exceptions='[{'date':\
+          \ '2020-01-01', 'time_ranges': [{'start': '14:00', 'end': '18:00'}]}]' \\\
+          \n    exclude='['alias']' \\\n    name='first' \\\n    --json"
+  /objects/time_period/{name}:
+    delete:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.time_period.delete
+      parameters:
+      - $ref: '#/components/parameters/name'
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+          headers: {}
+      summary: Delete a time period
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.time_period
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.delete(\n    f\"{API_URL}/objects/time_period/pathname\"\
+          ,\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/objects/time_period/pathname\",\n    method=\"DELETE\"\
+          ,\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
+          ,\n        \"Accept\": \"application/json\",\n    },\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\\n    \"$API_URL/objects/time_period/pathname\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/objects/time_period/pathname\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    --json"
+    get:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.time_period.show_time_period
+      parameters:
+      - $ref: '#/components/parameters/name'
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConcreteTimePeriod'
+          description: ''
+          headers: {}
+      summary: Show a time period
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.time_period
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/objects/time_period/pathname\"\
+          ,\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/objects/time_period/pathname\",\n    method=\"GET\",\n\
+          \    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
+          ,\n        \"Accept\": \"application/json\",\n    },\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\\n    \"$API_URL/objects/time_period/pathname\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/objects/time_period/pathname\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    --json"
+    put:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.time_period.update_timeperiod
+      parameters:
+      - $ref: '#/components/parameters/name'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTimePeriod'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+          headers: {}
+      summary: Update a time period
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.time_period
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/time_period/pathname\"\
+          ,\n    json={\n        'alias': 'alias',\n        'active_time_ranges':\
+          \ \"{'start': '12:00', 'end': '14:00'}\",\n        'exceptions': \"[{'date':\
+          \ '2020-01-01', 'time_ranges': [{'start': '14:00', 'end': '18:00'}]}]\"\n\
+          \    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/objects/time_period/pathname\",\n    method=\"PUT\",\n\
+          \    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
+          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({\n\
+          \        'alias': 'alias',\n        'active_time_ranges': \"{'start': '12:00',\
+          \ 'end': '14:00'}\",\n        'exceptions': \"[{'date': '2020-01-01', 'time_ranges':\
+          \ [{'start': '14:00', 'end': '18:00'}]}]\"\n    }).encode('utf-8'),\n)\n\
+          response = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\ \\\n    --data '{\n          \"active_time_ranges\": \"{'start': '12:00',\
+          \ 'end': '14:00'}\",\n          \"alias\": \"alias\",\n          \"exceptions\"\
+          : \"[{'date': '2020-01-01', 'time_ranges': [{'start': '14:00', 'end': '18:00'}]}]\"\
+          \n        }' \\\n    \"$API_URL/objects/time_period/pathname\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/time_period/pathname\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    active_time_ranges='{'start': '12:00', 'end':\
+          \ '14:00'}' \\\n    alias='alias' \\\n    exceptions='[{'date': '2020-01-01',\
+          \ 'time_ranges': [{'start': '14:00', 'end': '18:00'}]}]' \\\n    --json"
   /version:
     get:
       description: ''
@@ -6512,7 +6915,7 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/agent/actions/sign\"\
-          ,\n    json={'key_id': 42, 'passphrase': 'sw0rdfish'},\n)\nresp.raise_for_status()\n\
+          ,\n    json={'passphrase': 'sw0rdfish', 'key_id': 42},\n)\nresp.raise_for_status()\n\
           data = resp.json()"
       - label: urllib
         lang: python
@@ -6521,8 +6924,8 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
           \    f\"{API_URL}/domain-types/agent/actions/sign\",\n    method=\"POST\"\
           ,\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
-          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({'key_id':\
-          \ 42, 'passphrase': 'sw0rdfish'}).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({'passphrase':\
+          \ 'sw0rdfish', 'key_id': 42}).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
           data = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -6681,7 +7084,7 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/agent/actions/bake_and_sign\"\
-          ,\n    json={'key_id': 42, 'passphrase': 'sw0rdfish'},\n)\nresp.raise_for_status()\n\
+          ,\n    json={'passphrase': 'sw0rdfish', 'key_id': 42},\n)\nresp.raise_for_status()\n\
           data = resp.json()"
       - label: urllib
         lang: python
@@ -6691,7 +7094,7 @@ paths:
           \    f\"{API_URL}/domain-types/agent/actions/bake_and_sign\",\n    method=\"\
           POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
           \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
-          \ data=json.dumps({'key_id': 42, 'passphrase': 'sw0rdfish'}).encode('utf-8'),\n\
+          \ data=json.dumps({'passphrase': 'sw0rdfish', 'key_id': 42}).encode('utf-8'),\n\
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -7042,6 +7445,14 @@ tags:
     showReadOnly={true} showWriteOnly={true} />
   name: BulkUpdateServiceGroup
   x-displayName: Bulk update service groups
+- name: cmk.gui.plugins.openapi.endpoints.time_period
+  x-displayName: Time periods
+- description: <SchemaDefinition schemaRef="#/components/schemas/InputTimePeriod"
+    showReadOnly={true} showWriteOnly={true} />
+  name: InputTimePeriod
+- description: <SchemaDefinition schemaRef="#/components/schemas/UpdateTimePeriod"
+    showReadOnly={true} showWriteOnly={true} />
+  name: UpdateTimePeriod
 - name: cmk.gui.plugins.openapi.endpoints.version
   x-displayName: Miscellaneous
 - name: cmk.gui.cee.plugins.openapi.endpoints.agent
@@ -7070,6 +7481,7 @@ x-tagGroups:
   - cmk.gui.plugins.openapi.endpoints.service
   - cmk.gui.plugins.openapi.endpoints.service_discovery
   - cmk.gui.plugins.openapi.endpoints.service_group_config
+  - cmk.gui.plugins.openapi.endpoints.time_period
   - cmk.gui.plugins.openapi.endpoints.version
   - cmk.gui.cee.plugins.openapi.endpoints.agent
 - name: Response Schemas
@@ -7104,4 +7516,6 @@ x-tagGroups:
   - BulkInputServiceGroup
   - BulkDeleteServiceGroup
   - BulkUpdateServiceGroup
+  - InputTimePeriod
+  - UpdateTimePeriod
   - AgentSign

@@ -8,6 +8,7 @@ import datetime as dt
 
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
+from cmk.utils.defines import weekday_ids
 from cmk.gui.plugins.openapi import fields, plugins
 from cmk.gui.plugins.openapi.utils import BaseSchema
 
@@ -362,6 +363,53 @@ class User(Linkable):
     roles = fields.List(
         fields.Str(),
         description="list of unique role names that apply to this user (can be empty).",
+    )
+
+
+TIME_FIELD = fields.Time(
+    example="14:00",
+    description="The hour of the time period.",
+)
+
+
+class ConcreteTimeRange(BaseSchema):
+    start = TIME_FIELD
+    end = TIME_FIELD
+
+
+class ConcreteTimeRangeActive(BaseSchema):
+    day = fields.String(description="The day for which the time ranges are specified",
+                        pattern=f"{'|'.join(weekday_ids())}")
+    time_ranges = fields.List(fields.Nested(ConcreteTimeRange))
+
+
+class ConcreteTimePeriodException(BaseSchema):
+    date = fields.Date(
+        example="2020-01-01",
+        description="The date of the time period exception."
+        "8601 profile",
+    )
+    time_ranges = fields.List(
+        fields.Nested(ConcreteTimeRange),
+        example="[{'start': '14:00', 'end': '18:00'}]",
+    )
+
+
+class ConcreteTimePeriod(BaseSchema):
+    alias = fields.String(description="The alias of the time period", example="alias")
+    active_time_ranges = fields.List(
+        fields.Nested(ConcreteTimeRangeActive),
+        description="The days for which time ranges were specified",
+        example="{'day': 'all', 'time_ranges': [{'start': '12:00', 'end': '14:00'}",
+    )
+    exceptions = fields.List(
+        fields.Nested(ConcreteTimePeriodException),
+        description="Specific day exclusions with their list of time ranges",
+        example="[{'date': '2020-01-01', 'time_ranges': [{'start': '14:00', 'end': '18:00'}]}]",
+    )
+    exclude = fields.List(
+        fields.String(description="Name of excluding time period", example="holidays"),
+        description="The collection of time period aliases whose periods are excluded",
     )
 
 

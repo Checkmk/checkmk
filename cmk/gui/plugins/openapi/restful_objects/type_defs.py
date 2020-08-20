@@ -37,6 +37,7 @@ DomainType = Literal[
     'servicegroup',
     'service_discovery',
     'service_group_config',
+    'time_period',
     'user',
 ]  # yapf: disable
 

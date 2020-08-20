@@ -397,6 +397,8 @@ Decimal = _fields.Decimal
 DateTime = _fields.DateTime
 Dict = _fields.Dict
 Constant = _fields.Constant
+Time = _fields.Time
+Date = _fields.Date
 
 # Shortcuts
 Int = Integer
@@ -408,6 +410,7 @@ __all__ = [
     'Boolean',
     'Constant',
     'DateTime',
+    'Date',
     'Decimal',
     'Dict',
     'Int',
@@ -416,4 +419,5 @@ __all__ = [
     'Nested',
     'Str',
     'String',
+    'Time',
 ]

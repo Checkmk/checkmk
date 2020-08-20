@@ -147,8 +147,6 @@ class RulesetMode(WatoMode):
 
         self._search_options: Dict[str, str] = ModeRuleSearchForm().search_options
 
-        self._only_host: Optional[HostName] = html.request.get_ascii_input("host")
-
     @abc.abstractmethod
     def _get_page_type(self, search_options: Dict[str, str]) -> PageType:
         raise NotImplementedError()
@@ -158,17 +156,13 @@ class RulesetMode(WatoMode):
         raise NotImplementedError()
 
     def title(self):
-        if self._only_host:
-            return _("%s - %s") % (self._only_host, self._title)
         return self._title
 
     def buttons(self):
         global_buttons()
 
-        if self._only_host:
-            self._only_host_buttons()
-        else:
-            self._regular_buttons()
+        self._only_host_buttons()
+        self._regular_buttons()
 
         html.context_button(
             _("Used rulesets"),
@@ -198,11 +192,11 @@ class RulesetMode(WatoMode):
         predefined_conditions_button()
 
     def _only_host_buttons(self):
-        assert self._only_host is not None
-
+        if not html.request.has_var("host"):
+            return
+        host_name = html.request.get_ascii_input_mandatory("host")
         html.context_button(
-            self._only_host,
-            watolib.folder_preserving_link([("mode", "edit_host"), ("host", self._only_host)]),
+            host_name, watolib.folder_preserving_link([("mode", "edit_host"), ("host", host_name)]),
             "host")
 
     def _regular_buttons(self):
@@ -258,8 +252,6 @@ class RulesetMode(WatoMode):
                         ("varname", ruleset.name),
                         ("back_mode", self.name()),
                     ]
-                    if self._only_host:
-                        url_vars.append(("host", self._only_host))
                     view_url = html.makeuri(url_vars)
 
                     html.a(ruleset.title(),
@@ -283,10 +275,7 @@ class RulesetMode(WatoMode):
                 forms.end()
 
         if not grouped_rulesets:
-            if self._only_host:
-                msg = _("There are no rules with an exception for the host <b>%s</b>."
-                       ) % self._only_host
-            elif self._search_options:
+            if self._search_options:
                 msg = _("There are no rulesets or rules matching your search.")
             else:
                 msg = _("There are no rules defined in this folder.")

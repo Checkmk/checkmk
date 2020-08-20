@@ -15,6 +15,7 @@ from typing import Any, Dict, Union
 
 from cmk.utils.paths import core_fetcher_config_dir
 from cmk.utils.type_defs import HostName
+import cmk.utils.log
 
 from . import FetcherType
 
@@ -131,6 +132,21 @@ def run_fetchers(serial: str, host_name: HostName, timeout: int) -> None:
     _run_fetchers_from_file(file_name=json_file, timeout=timeout)
 
 
+def load_global_config(serial: int) -> None:
+    global_json_file = build_json_global_config_file_path(serial=str(serial))
+    if not global_json_file.exists():
+        # this happens during development(or filesystem is broken)
+        text = f"fetcher global config {serial} is absent"
+        write_data(make_success_answer(text))
+        write_data(make_failure_answer(text, severity="warning"))
+        write_data(make_waiting_answer())
+        return
+
+    with global_json_file.open() as f:
+        result = json.load(f)["fetcher_config"]
+        cmk.utils.log.logger.setLevel(result["log_level"])
+
+
 def _run_fetcher(entry: Dict[str, Any], timeout: int) -> Dict[str, Any]:
     """ timeout to be used by concrete fetcher implementation
     Examples of correct dictionaries to return:
@@ -213,6 +229,10 @@ def read_json_file(serial: str, host_name: HostName) -> str:
 
 def build_json_file_path(serial: str, host_name: HostName) -> Path:
     return Path("{}/{}/{}.json".format(core_fetcher_config_dir, serial, host_name))
+
+
+def build_json_global_config_file_path(serial: str) -> Path:
+    return Path("{}/{}/global_config.json".format(core_fetcher_config_dir, serial))
 
 
 # Idea is based on the cmk method:

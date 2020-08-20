@@ -42,5 +42,11 @@ class FetcherConfig:
         with self.config_file_path(hostname=hostname).open("w") as f:
             fetcher_configuration.dump(hostname, ipaddress, f)
 
+    def write_global(self):
+        """  Creates global config for fetchers """
+        self.base_path.mkdir(parents=True, exist_ok=True)
+        with (self.base_path / "global_config.json").open("w") as f:
+            fetcher_configuration.dump_global(f)
+
     def config_file_path(self, hostname: HostName) -> Path:
         return self.base_path / f"{hostname}.json"

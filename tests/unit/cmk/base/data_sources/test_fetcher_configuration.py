@@ -76,3 +76,10 @@ def test_generates_correct_sections(file, hostname, tags, fetchers, monkeypatch)
     fetcher_configuration.dump(hostname, "1.2.3.4", file)
     file.seek(0)
     assert [FetcherType[f["fetcher_type"]] for f in json.load(file)["fetchers"]] == fetchers
+
+
+def test_generates_correct_global(file):
+    fetcher_configuration.dump_global(file)
+    file.seek(0)
+    result = json.load(file)["fetcher_config"]
+    assert {'log_level': 5} == result

@@ -10,6 +10,8 @@ from pathlib import Path
 
 import importlib
 
+from typing import List
+
 import pytest  # type: ignore[import]
 
 import cmk.fetchers.controller
@@ -20,7 +22,9 @@ from cmk.fetchers.controller import (
     make_success_answer,
     make_waiting_answer,
     build_json_file_path,
+    build_json_global_config_file_path,
     run_fetchers,
+    load_global_config,
 )
 
 from cmk.base.fetcher_config import FetcherConfig
@@ -28,6 +32,7 @@ from cmk.fetchers.tcp import TCPFetcher
 
 from cmk.utils.paths import core_fetcher_config_dir
 import cmk.utils.paths
+import cmk.utils.log
 
 import testlib.base as base
 
@@ -47,6 +52,10 @@ class TestControllerApi:
         assert build_json_file_path(
             serial="_serial_",
             host_name="buzz") == Path(core_fetcher_config_dir) / "_serial_" / "buzz.json"
+
+    def test_build_json_global_config_file_path(self):
+        assert build_json_global_config_file_path(
+            serial="_serial_") == Path(core_fetcher_config_dir) / "_serial_" / "global_config.json"
 
     @pytest.fixture
     def scenario(self, monkeypatch, tmp_path):
@@ -73,6 +82,14 @@ class TestControllerApi:
         # write_out cannot be used with capsys - monkeypatching this!
         # More complicated method of testing may be written in the future
         monkeypatch.setattr(cmk.fetchers.controller, "write_data", write_to_stdout)
+
+    @pytest.fixture
+    def scenario_short(self, monkeypatch, tmp_path):
+        monkeypatch.setattr("cmk.utils.paths.core_fetcher_config_dir", tmp_path)
+        importlib.reload(cmk.fetchers.controller)
+
+        fetcher_config = FetcherConfig()
+        fetcher_config.write_global()
 
     @staticmethod
     @pytest.fixture
@@ -120,6 +137,20 @@ class TestControllerApi:
         text = f"fetcher file for host 'heute' and {write_config + 1} is absent"
         assert captured.out == make_success_answer(text) + make_failure_answer(
             text, severity="warning") + make_waiting_answer()
+
+    @pytest.mark.usefixtures("scenario_short")
+    def test_log_level(self, capsys, monkeypatch):
+        result: List[int] = []
+
+        def set_level(level: int):
+            result.append(level)
+
+        monkeypatch.setattr(cmk.utils.log.logger, "setLevel", set_level)
+
+        load_global_config(13)
+        captured = capsys.readouterr()
+        assert captured.out == ""
+        assert result == [5]
 
 
 class TestHeader:

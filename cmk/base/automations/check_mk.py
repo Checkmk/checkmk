@@ -1521,24 +1521,22 @@ class AutomationGetAgentOutput(Automation):
             if ty == "agent":
                 data_sources.FileCacheConfigurator.reset_maybe()
                 agent_output = b""
-                sources = data_sources.make_sources(
-                    host_config,
-                    ipaddress,
-                    mode=data_sources.Mode.CHECKING,
-                )
-                for source in sources:
+                for source in data_sources.make_sources(
+                        host_config,
+                        ipaddress,
+                        mode=data_sources.Mode.CHECKING,
+                ):
                     source.configurator.file_cache.max_age = config.check_max_cachefile_age
                     if isinstance(source, data_sources.agent.AgentDataSource):
                         # TODO(ml): Call fetcher directly.
                         agent_output += source.run_raw()
-                info = agent_output
 
-                # Optionally show errors of problematic data sources
-                for source in sources:
+                    # Optionally show errors of problematic data sources
                     source_state, source_output, _source_perfdata = source.get_summary_result()
                     if source_state != 0:
                         success = False
                         output += "[%s] %s\n" % (source.id, source_output)
+                info = agent_output
             else:
                 if not ipaddress:
                     raise MKGeneralException("Failed to gather IP address of %s" % hostname)

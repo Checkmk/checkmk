@@ -383,7 +383,7 @@ class ModeRulesets(RulesetMode):
         return watolib.NonStaticChecksRulesets()
 
     def _set_title_and_help(self):
-        if list(self._search_options.keys()) == ["ruleset_deprecated"]:
+        if _is_deprecated_rulesets_page(self._search_options):
             self._title = _("Deprecated Rulesets")
             self._help = _(
                 "Here you can see a list of all deprecated rulesets (which are not used by Check_MK anymore). If "
@@ -442,10 +442,10 @@ def rule_search_button(search_options=None, mode="rulesets"):
     # search form, but clicked a link in the GUI
     if is_searching:
         search_keys = sorted(search_options.keys())
-        if search_keys == ["ruleset_deprecated", "ruleset_group"] \
-           or search_keys == ["ruleset_deprecated"] \
-           or _is_ineffective_rules_page(search_options) \
-           or _is_used_rulesets_page(search_options):
+        if (search_keys == ["ruleset_deprecated", "ruleset_group"] or
+                _is_deprecated_rulesets_page(search_options) or
+                _is_ineffective_rules_page(search_options) or
+                _is_used_rulesets_page(search_options)):
             is_searching = False
 
     if is_searching:
@@ -461,6 +461,11 @@ def rule_search_button(search_options=None, mode="rulesets"):
                                      delvars=["filled_in"]),
                         "search",
                         hot=is_searching)
+
+
+def _is_deprecated_rulesets_page(search_options):
+    return (list(search_options.keys()) == ["ruleset_deprecated"] and
+            search_options["ruleset_deprecated"])
 
 
 def _is_ineffective_rules_page(search_options):

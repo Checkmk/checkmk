@@ -73,7 +73,7 @@ from cmk.gui.page_menu import (
 )
 
 
-class NotificationsMode(EventsMode):
+class ABCNotificationsMode(EventsMode):
     # TODO: Clean this up. Use inheritance
     @classmethod
     def _rule_match_conditions(cls):
@@ -417,7 +417,7 @@ NotificationRuleLinks = NamedTuple('NotificationRuleLinks', [
 
 
 @mode_registry.register
-class ModeNotifications(NotificationsMode):
+class ModeNotifications(ABCNotificationsMode):
     @classmethod
     def name(cls):
         return "notifications"
@@ -427,7 +427,7 @@ class ModeNotifications(NotificationsMode):
         return ["notifications"]
 
     def __init__(self):
-        super(ModeNotifications, self).__init__()
+        super().__init__()
         options = config.user.load_file("notification_display_options", {})
         self._show_user_rules = options.get("show_user_rules", False)
         self._show_backlog = options.get("show_backlog", False)
@@ -724,9 +724,9 @@ class ModeNotifications(NotificationsMode):
                               default_value="mail")
 
 
-class UserNotificationsMode(NotificationsMode):
+class UserABCNotificationsMode(ABCNotificationsMode):
     def __init__(self):
-        super(UserNotificationsMode, self).__init__()
+        super().__init__()
         self._start_async_repl = False
 
     def _from_vars(self):
@@ -812,7 +812,7 @@ def _get_notification_sync_sites():
 
 
 @mode_registry.register
-class ModeUserNotifications(UserNotificationsMode):
+class ModeUserNotifications(UserABCNotificationsMode):
     @classmethod
     def name(cls):
         return "user_notifications"
@@ -826,7 +826,7 @@ class ModeUserNotifications(UserNotificationsMode):
 
 
 @mode_registry.register
-class ModePersonalUserNotifications(UserNotificationsMode):
+class ModePersonalUserNotifications(UserABCNotificationsMode):
     @classmethod
     def name(cls):
         return "user_notifications_p"
@@ -836,7 +836,7 @@ class ModePersonalUserNotifications(UserNotificationsMode):
         return None
 
     def __init__(self):
-        super(ModePersonalUserNotifications, self).__init__()
+        super().__init__()
         config.user.need_permission("general.edit_notifications")
 
     def main_menu(self):
@@ -878,7 +878,7 @@ class ModePersonalUserNotifications(UserNotificationsMode):
             self._start_async_repl = True
             watolib.log_audit(None, log_what, log_text)
         else:
-            super(ModePersonalUserNotifications, self)._add_change(log_what, log_text)
+            super()._add_change(log_what, log_text)
 
     def title(self):
         return _("Your personal notification rules")
@@ -886,9 +886,9 @@ class ModePersonalUserNotifications(UserNotificationsMode):
 
 # TODO: Split editing of user notification rule and global notification rule
 #       into separate classes
-class EditNotificationRuleMode(NotificationsMode):
+class EditNotificationRuleMode(ABCNotificationsMode):
     def __init__(self):
-        super(EditNotificationRuleMode, self).__init__()
+        super().__init__()
         self._start_async_repl = False
 
     # TODO: Refactor this
@@ -1362,7 +1362,7 @@ class ModeEditPersonalNotificationRule(EditNotificationRuleMode):
         return None
 
     def __init__(self):
-        super(ModeEditPersonalNotificationRule, self).__init__()
+        super().__init__()
         config.user.need_permission("general.edit_notifications")
 
     def _user_id(self):
@@ -1373,7 +1373,7 @@ class ModeEditPersonalNotificationRule(EditNotificationRuleMode):
             self._start_async_repl = True
             watolib.log_audit(None, log_what, log_text)
         else:
-            super(ModeEditPersonalNotificationRule, self)._add_change(log_what, log_text)
+            super()._add_change(log_what, log_text)
 
     def _back_mode(self):
         if config.has_wato_slave_sites():

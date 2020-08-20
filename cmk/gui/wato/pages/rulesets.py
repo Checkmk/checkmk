@@ -233,6 +233,9 @@ class RulesetMode(WatoMode):
         if self._search_options:
             rulesets = watolib.SearchedRulesets(rulesets, self._search_options)
 
+        if self._page_type is PageType.RuleSearch and not html.form_submitted():
+            return  # Do not show the result list when no query has been made
+
         html.open_div(class_="rulesets")
 
         grouped_rulesets = sorted(rulesets.get_grouped(),
@@ -329,24 +332,24 @@ class ModeRulesets(RulesetMode):
 
     def _set_title_and_help(self):
         if self._page_type is PageType.DeprecatedRulesets:
-            self._title = _("Deprecated Rulesets")
+            self._title = _("Search rules: Deprecated Rulesets")
             self._help = _(
                 "Here you can see a list of all deprecated rulesets (which are not used by Check_MK anymore). If "
                 "you have defined some rules here, you might have to migrate the rules to their successors. Please "
                 "refer to the release notes or context help of the rulesets for details.")
 
         elif self._page_type is PageType.IneffectiveRules:
-            self._title = _("Rulesets with ineffective rules")
+            self._title = _("Search rules: Rulesets with ineffective rules")
             self._help = _(
                 "The following rulesets contain rules that do not match to any of the existing hosts."
             )
 
         elif self._page_type is PageType.UsedRulesets:
-            self._title = _("Used rulesets")
+            self._title = _("Search rules: Used rulesets")
             self._help = _("Non-empty rulesets")
 
         elif self._page_type is PageType.RuleSearch:
-            self._title = _("Rulesets")
+            self._title = _("Search rules")
             self._help = None
 
         elif self._page_type is PageType.RulesetGroup:

@@ -768,7 +768,7 @@ class ModeNotifications(ABCNotificationsMode):
                               default_value="mail")
 
 
-class UserABCNotificationsMode(ABCNotificationsMode):
+class ABCUserNotificationsMode(ABCNotificationsMode):
     def __init__(self):
         super().__init__()
         self._start_async_repl = False
@@ -856,7 +856,7 @@ def _get_notification_sync_sites():
 
 
 @mode_registry.register
-class ModeUserNotifications(UserABCNotificationsMode):
+class ModeUserNotifications(ABCUserNotificationsMode):
     @classmethod
     def name(cls):
         return "user_notifications"
@@ -870,7 +870,7 @@ class ModeUserNotifications(UserABCNotificationsMode):
 
 
 @mode_registry.register
-class ModePersonalUserNotifications(UserABCNotificationsMode):
+class ModePersonalUserNotifications(ABCUserNotificationsMode):
     @classmethod
     def name(cls):
         return "user_notifications_p"

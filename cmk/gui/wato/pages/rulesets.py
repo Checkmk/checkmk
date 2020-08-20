@@ -11,7 +11,7 @@ import pprint
 import re
 import json
 from enum import Enum, auto
-from typing import Dict, Generator, List, Optional, Union
+from typing import Dict, Generator, List, Optional, Union, Any, Iterable
 
 from six import ensure_str
 
@@ -49,7 +49,14 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     rule_option_elements,
 )
-from cmk.gui.breadcrumb import BreadcrumbItem
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+)
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulesets import RuleConditions
 from cmk.gui.watolib.rulespecs import (
@@ -57,7 +64,7 @@ from cmk.gui.watolib.rulespecs import (
     rulespec_registry,
     Rulespec,
 )
-
+from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -77,6 +84,8 @@ if watolib.has_agent_bakery():
     import cmk.gui.cee.plugins.wato.agent_bakery.misc as agent_bakery  # pylint: disable=import-error,no-name-in-module
 else:
     agent_bakery = None  # type: ignore[assignment]
+
+SearchOptions = Dict[str, Any]
 
 
 def render_html(text: Union[HTML, str]) -> str:
@@ -145,10 +154,10 @@ class ABCRulesetMode(WatoMode):
             html.request.set_var("search_p_rule_folder_1", DropdownChoice.option_id(True))
             html.request.set_var("search_p_rule_folder_USE", "on")
 
-        self._search_options: Dict[str, str] = ModeRuleSearchForm().search_options
+        self._search_options: SearchOptions = ModeRuleSearchForm().search_options
 
     @abc.abstractmethod
-    def _get_page_type(self, search_options: Dict[str, str]) -> PageType:
+    def _get_page_type(self, search_options: SearchOptions) -> PageType:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -157,56 +166,6 @@ class ABCRulesetMode(WatoMode):
 
     def title(self):
         return self._title
-
-    def buttons(self):
-        global_buttons()
-
-        self._only_host_buttons()
-        self._regular_buttons()
-
-        html.context_button(
-            _("Used rulesets"),
-            watolib.folder_preserving_link([
-                ("mode", "rule_search"),
-                ("search_p_ruleset_used", DropdownChoice.option_id(True)),
-                ("search_p_ruleset_used_USE", "on"),
-            ]), "usedrulesets")
-
-        html.context_button(
-            _("Ineffective rules"),
-            watolib.folder_preserving_link([("mode", "rule_search"),
-                                            ("search_p_rule_ineffective",
-                                             DropdownChoice.option_id(True)),
-                                            ("search_p_rule_ineffective_USE", "on")]),
-            "rulesets_ineffective")
-
-        html.context_button(
-            _("Deprecated rulesets"),
-            watolib.folder_preserving_link([("mode", "rule_search"),
-                                            ("search_p_ruleset_deprecated",
-                                             DropdownChoice.option_id(True)),
-                                            ("search_p_ruleset_deprecated_USE", "on")]),
-            "rulesets_deprecated")
-
-        rule_search_button(self._search_options, mode=self.name())
-        predefined_conditions_button()
-
-    def _only_host_buttons(self):
-        if not html.request.has_var("host"):
-            return
-        host_name = html.request.get_ascii_input_mandatory("host")
-        html.context_button(
-            host_name, watolib.folder_preserving_link([("mode", "edit_host"), ("host", host_name)]),
-            "host")
-
-    def _regular_buttons(self):
-        if config.user.may("wato.hosts") or config.user.may("wato.seeall"):
-            html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]),
-                                "folder")
-
-        if self._group_name == "agents":
-            html.context_button(_("Agent Bakery"),
-                                watolib.folder_preserving_link([("mode", "agents")]), "agents")
 
     def page(self):
         search_form(default_value=self._search_options.get("fulltext", ""))
@@ -335,6 +294,80 @@ class ModeRuleSearch(ABCRulesetMode):
         else:
             raise NotImplementedError()
 
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="rules",
+                    title=_("Rules"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Detailed search"),
+                            entries=[
+                                _page_menu_entry_search_rules(self._search_options,
+                                                              mode=self.name(),
+                                                              page_type=self._page_type),
+                            ],
+                        ),
+                        PageMenuTopic(
+                            title=_("Predefined searches"),
+                            entries=list(_page_menu_entries_predefined_searches()),
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Setup"),
+                            entries=list(self._page_menu_entries_related()),
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
+        return menu
+
+    def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
+        yield _page_menu_entry_predefined_conditions()
+
+
+def _page_menu_entries_predefined_searches() -> Iterable[PageMenuEntry]:
+    yield PageMenuEntry(
+        title=_("Used rulesets"),
+        icon_name="usedrulesets",
+        item=make_simple_link(
+            watolib.folder_preserving_link([
+                ("mode", "rule_search"),
+                ("search_p_ruleset_used", DropdownChoice.option_id(True)),
+                ("search_p_ruleset_used_USE", "on"),
+            ])),
+    )
+
+    yield PageMenuEntry(
+        title=_("Ineffective rules"),
+        icon_name="rulesets_ineffective",
+        item=make_simple_link(
+            watolib.folder_preserving_link([
+                ("mode", "rule_search"),
+                ("search_p_rule_ineffective", DropdownChoice.option_id(True)),
+                ("search_p_rule_ineffective_USE", "on"),
+            ])),
+    )
+
+    yield PageMenuEntry(
+        title=_("Deprecated rulesets"),
+        icon_name="rulesets_deprecated",
+        item=make_simple_link(
+            watolib.folder_preserving_link([
+                ("mode", "rule_search"),
+                ("search_p_ruleset_deprecated", DropdownChoice.option_id(True)),
+                ("search_p_ruleset_deprecated_USE", "on"),
+            ])),
+    )
+
 
 @mode_registry.register
 class ModeRulesetGroup(ABCRulesetMode):
@@ -377,6 +410,62 @@ class ModeRulesetGroup(ABCRulesetMode):
         rulegroup = watolib.get_rulegroup(self._group_name)
         self._title, self._help = rulegroup.title, rulegroup.help
 
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Setup"),
+                            entries=list(self._page_menu_entries_related()),
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
+        return menu
+
+    def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
+        if config.user.may("wato.hosts") or config.user.may("wato.seeall"):
+            current_folder = Folder.current()
+            yield PageMenuEntry(
+                title=_("Hosts in folder: %s") % current_folder.title(),
+                icon_name="folder",
+                item=make_simple_link(current_folder.url()),
+            )
+
+            if html.request.has_var("host"):
+                host_name = html.request.get_ascii_input_mandatory("host")
+                yield PageMenuEntry(
+                    title=_("Host properties of: %s") % host_name,
+                    icon_name="host",
+                    item=make_simple_link(
+                        watolib.folder_preserving_link([("mode", "edit_host"),
+                                                        ("host", host_name)])),
+                )
+
+        yield _page_menu_entry_predefined_conditions()
+
+        if self._group_name == "agents":
+            yield PageMenuEntry(
+                title=_("Agent Bakery"),
+                icon_name="agents",
+                item=make_simple_link(watolib.folder_preserving_link([("mode", "agents")])),
+            )
+
+        yield PageMenuEntry(
+            title=_("Search rules"),
+            icon_name="search",
+            item=make_simple_link(html.makeuri([
+                ("mode", "rulesets"),
+            ])),
+        )
+
+        yield from _page_menu_entries_predefined_searches()
+
 
 @mode_registry.register
 class ModeStaticChecksRulesets(ABCRulesetMode):
@@ -401,6 +490,16 @@ class ModeStaticChecksRulesets(ABCRulesetMode):
         )
 
 
+def _page_menu_entry_predefined_conditions() -> PageMenuEntry:
+    return PageMenuEntry(
+        title=_("Predefined conditions"),
+        icon_name="condition",
+        item=make_simple_link(watolib.folder_preserving_link([
+            ("mode", "predefined_conditions"),
+        ])),
+    )
+
+
 def predefined_conditions_button():
     html.context_button(_("Predef. conditions"),
                         watolib.folder_preserving_link([
@@ -408,7 +507,8 @@ def predefined_conditions_button():
                         ]), "condition")
 
 
-def rule_search_button(search_options, mode):
+def _page_menu_entry_search_rules(search_options: SearchOptions, mode: str,
+                                  page_type: PageType) -> PageMenuEntry:
     is_searching = bool(search_options)
     # Don't highlight the button on "standard page" searches. Meaning the page calls
     # that are no searches from the users point of view because he did not fill the
@@ -426,14 +526,18 @@ def rule_search_button(search_options, mode):
     else:
         title = _("Search")
 
-    html.context_button(title,
-                        html.makeuri([
-                            ("mode", "rule_search_form"),
-                            ("back_mode", mode),
-                        ],
-                                     delvars=["filled_in"]),
-                        "search",
-                        hot=is_searching)
+    return PageMenuEntry(
+        title=title,
+        icon_name="search",
+        item=make_simple_link(
+            html.makeuri([
+                ("mode", "rule_search_form"),
+                ("back_mode", mode),
+            ],
+                         delvars=["filled_in"])),
+        is_shortcut=page_type is PageType.RuleSearch and html.form_submitted(),
+        is_suggested=page_type is PageType.RuleSearch and html.form_submitted(),
+    )
 
 
 def _is_deprecated_rulesets_page(search_options):
@@ -966,7 +1070,7 @@ class ModeRuleSearchForm(WatoMode):
     def _from_vars(self):
         if html.request.var("_reset_search"):
             html.request.del_vars("search_")
-            self.search_options = {}
+            self.search_options: SearchOptions = {}
             return
 
         value = self._valuespec().from_html_vars("search")

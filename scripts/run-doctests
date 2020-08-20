@@ -33,7 +33,7 @@ pushd $REPO_PATH > /dev/null
 
 $PIPENV run pytest --doctest-modules $FILES || (
 EXIT=$?
-if test $EXIT -eq 5; then
+if test $EXIT -eq 5 || test $EXIT -eq 4; then
     # This means no tests have been found.
     exit 0
 else

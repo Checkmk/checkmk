@@ -10,6 +10,7 @@ import itertools
 import pprint
 import re
 import json
+from enum import Enum, auto
 from typing import Dict, Generator, List, Optional, Union
 
 from six import ensure_str
@@ -84,13 +85,25 @@ def render_html(text: Union[HTML, str]) -> str:
     return text
 
 
+class PageType(Enum):
+    DeprecatedRulesets = auto()
+    IneffectiveRules = auto()
+    UsedRulesets = auto()
+    RulesetGroup = auto()
+    RuleSearch = auto()
+
+
 class RulesetMode(WatoMode):
-    def __init__(self):
+    """Lists rulesets in their groups.
+
+    Besides the simple listing, it is also responsible for displaying rule search results.
+    """
+    def __init__(self) -> None:
         super(RulesetMode, self).__init__()
+        self._page_type = self._get_page_type(self._search_options)
 
-        self._title = None
-        self._help = None
-
+        self._title: str = ""
+        self._help: Optional[str] = None
         self._set_title_and_help()
 
     @abc.abstractmethod
@@ -127,9 +140,24 @@ class RulesetMode(WatoMode):
             html.request.set_var("search_p_rule_folder_1", DropdownChoice.option_id(True))
             html.request.set_var("search_p_rule_folder_USE", "on")
 
-        self._search_options = ModeRuleSearch().search_options
+        self._search_options: Dict[str, str] = ModeRuleSearch().search_options
 
         self._only_host: Optional[HostName] = html.request.get_ascii_input("host")
+
+    def _get_page_type(self, search_options: Dict[str, str]) -> PageType:
+        if _is_deprecated_rulesets_page(search_options):
+            return PageType.DeprecatedRulesets
+
+        if _is_ineffective_rules_page(search_options):
+            return PageType.IneffectiveRules
+
+        if _is_used_rulesets_page(search_options):
+            return PageType.UsedRulesets
+
+        if self._group_name is None:
+            return PageType.RuleSearch
+
+        return PageType.RulesetGroup
 
     @abc.abstractmethod
     def _rulesets(self):
@@ -303,30 +331,33 @@ class ModeRulesets(RulesetMode):
         return watolib.NonStaticChecksRulesets()
 
     def _set_title_and_help(self):
-        if _is_deprecated_rulesets_page(self._search_options):
+        if self._page_type is PageType.DeprecatedRulesets:
             self._title = _("Deprecated Rulesets")
             self._help = _(
                 "Here you can see a list of all deprecated rulesets (which are not used by Check_MK anymore). If "
                 "you have defined some rules here, you might have to migrate the rules to their successors. Please "
                 "refer to the release notes or context help of the rulesets for details.")
 
-        elif _is_ineffective_rules_page(self._search_options):
+        elif self._page_type is PageType.IneffectiveRules:
             self._title = _("Rulesets with ineffective rules")
             self._help = _(
                 "The following rulesets contain rules that do not match to any of the existing hosts."
             )
 
-        elif _is_used_rulesets_page(self._search_options):
+        elif self._page_type is PageType.UsedRulesets:
             self._title = _("Used rulesets")
             self._help = _("Non-empty rulesets")
 
-        elif self._group_name is None:
+        elif self._page_type is PageType.RuleSearch:
             self._title = _("Rulesets")
             self._help = None
 
-        else:
+        elif self._page_type is PageType.RulesetGroup:
             rulegroup = watolib.get_rulegroup(self._group_name)
             self._title, self._help = rulegroup.title, rulegroup.help
+
+        else:
+            raise NotImplementedError()
 
 
 @mode_registry.register
@@ -344,8 +375,9 @@ class ModeStaticChecksRulesets(RulesetMode):
 
     def _set_title_and_help(self):
         self._title = _("Manual services")
-        self._help = _("Here you can create explicit checks that are not being created by the "
-                       "automatic service discovery.")
+        self._help = _(
+            "Here you can create explicit checks that are not being created by the automatic service discovery."
+        )
 
 
 def predefined_conditions_button():

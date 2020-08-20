@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional as _Optional
 import livestatus
 
 import cmk.utils.version as cmk_version
+from cmk.utils.prediction import lq_logic
 
 import cmk.gui.utils
 import cmk.gui.config as config
@@ -531,9 +532,6 @@ class FilterMultigroup(Filter):
         html.close_div()
 
     def filter(self, infoname):
-        current = self.selection()
-        if len(current) == 0:
-            return ""  # No group selected = all groups selected, filter unused
         # not (A or B) => (not A) and (not B)
         if self.negateable and html.get_checkbox(self.htmlvars[1]):
             negate = "!"
@@ -541,13 +539,9 @@ class FilterMultigroup(Filter):
         else:
             negate = ""
             op = "Or"
-        filters = u""
-        for group in current:
-            filters += "Filter: %s_groups %s>= %s\n" % (self.what, negate,
-                                                        livestatus.lqencode(group))
-        if len(current) > 1:
-            filters += "%s: %d\n" % (op, len(current))
-        return filters
+
+        current = self.selection()
+        return lq_logic("Filter: %s_groups %s>=" % (self.what, negate), current, op)
 
 
 @filter_registry.register
@@ -2168,14 +2162,11 @@ class FilterLogClass(Filter):
         if not self._filter_used():
             return ""  # Do not apply this filter
 
-        headers = []
-        for l, _c in self.log_classes:
-            if html.get_checkbox("logclass%d" % l):
-                headers.append("Filter: class = %d\n" % l)
+        headers = [str(l) for l, _c in self.log_classes if html.get_checkbox("logclass%d" % l)]
 
-        if len(headers) == 0:
+        if not headers:
             return "Limit: 0\n"  # no class allowed
-        return "".join(headers) + ("Or: %d\n" % len(headers))
+        return lq_logic("Filter: class =", headers, "Or")
 
 
 @filter_registry.register
@@ -2920,19 +2911,14 @@ class FilterECServiceLevelRange(Filter):
 
         filterline = u"Filter: %s_custom_variable_names >= EC_SL\n" % self.info
 
-        filterline_values = []
-        for value, _readable in config.mkeventd_service_levels:
-            if match_lower(value) and match_upper(value):
-                filterline_values.append("Filter: %s_custom_variable_values >= %s" %
-                                         (self.info, livestatus.lqencode(str(value))))
+        filterline_values = [
+            str(value)
+            for value, _readable in config.mkeventd_service_levels
+            if match_lower(value) and match_upper(value)
+        ]
 
-        filterline += "%s\n" % "\n".join(filterline_values)
-
-        len_filterline_values = len(filterline_values)
-        if len_filterline_values > 1:
-            filterline += "Or: %d\n" % len_filterline_values
-
-        return filterline
+        return filterline + lq_logic("Filter: %s_custom_variable_values >=" % self.info,
+                                     filterline_values, "Or")
 
     def double_height(self):
         return True
@@ -3828,18 +3814,7 @@ class EventFilterState(Filter):
             if html.get_checkbox(self.ident + "_" + str(name)):
                 selected.append(str(name))
 
-        if not selected:
-            return ""
-
-        filters = []
-        for sel in sorted(selected):
-            filters.append("Filter: %s = %s" % (self.ident, sel))
-
-        f = "\n".join(filters)
-        if len(filters) > 1:
-            f += "\nOr: %d" % len(filters)
-
-        return f + "\n"
+        return lq_logic("Filter: %s =" % self.ident, sorted(selected), "Or")
 
 
 @filter_registry.register

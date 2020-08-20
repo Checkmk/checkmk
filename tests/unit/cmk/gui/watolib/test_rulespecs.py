@@ -1281,7 +1281,7 @@ def _expected_rulespec_group_choices():
         ('eventconsole', u'Event Console'),
         ('grouping', u'Grouping'),
         ('inventory', u'Hardware / Software Inventory'),
-        ('monconf', u'Monitoring settings'),
+        ('monconf', u'Monitoring rules'),
         ('monconf/host_checks', u'&nbsp;&nbsp;\u2319 Host Checks'),
         ('monconf/inventory_and_check_mk_settings',
          u'&nbsp;&nbsp;\u2319 Discovery and Checkmk settings'),

@@ -215,7 +215,7 @@ class MainModuleHostAndServiceParameters(MainModule):
 
     @property
     def title(self):
-        return _("Monitoring settings")
+        return _("Monitoring rules")
 
     @property
     def icon(self):
@@ -250,7 +250,7 @@ class MainModuleHWSWInventory(MainModule):
 
     @property
     def title(self):
-        return _("HW/SW inventory")
+        return _("HW/SW inventory rules")
 
     @property
     def icon(self):
@@ -777,7 +777,7 @@ class MainModuleUserInterface(MainModule):
 
     @property
     def title(self):
-        return _("User interface")
+        return _("User interface rules")
 
     @property
     def icon(self):
@@ -1084,7 +1084,7 @@ class MainModuleDiagnostics(MainModule):
 
 
 @main_module_registry.register
-class MainModuleMonitoringSettings(MainModule):
+class MainModuleMonitoringRules(MainModule):
     @property
     def mode_or_url(self):
         return "wato.py?mode=rulesets&group=monconf"
@@ -1095,7 +1095,7 @@ class MainModuleMonitoringSettings(MainModule):
 
     @property
     def title(self):
-        return _("Monitoring settings")
+        return _("Monitoring rules")
 
     @property
     def icon(self):
@@ -1107,7 +1107,7 @@ class MainModuleMonitoringSettings(MainModule):
 
     @property
     def description(self):
-        return _("Monitoring settings")
+        return _("Monitoring rules")
 
     @property
     def sort_index(self):
@@ -1119,7 +1119,7 @@ class MainModuleMonitoringSettings(MainModule):
 
 
 @main_module_registry.register
-class MainModuleDiscoverySettings(MainModule):
+class MainModuleDiscoveryRules(MainModule):
     @property
     def mode_or_url(self):
         return "wato.py?mode=rulesets&group=checkparams"
@@ -1130,7 +1130,7 @@ class MainModuleDiscoverySettings(MainModule):
 
     @property
     def title(self):
-        return _("Discovery settings")
+        return _("Discovery rules")
 
     @property
     def icon(self):
@@ -1264,7 +1264,7 @@ class MainModuleOtherAgents(MainModule):
 
 
 @main_module_registry.register
-class MainModuleAgentAccessSettings(MainModule):
+class MainModuleAgentAccessRules(MainModule):
     @property
     def mode_or_url(self):
         return "wato.py?mode=rulesets&group=agent"
@@ -1275,7 +1275,7 @@ class MainModuleAgentAccessSettings(MainModule):
 
     @property
     def title(self):
-        return _("Agent access settings")
+        return _("Agent access rules")
 
     @property
     def icon(self):
@@ -1299,7 +1299,7 @@ class MainModuleAgentAccessSettings(MainModule):
 
 
 @main_module_registry.register
-class MainModuleSNMPSettings(MainModule):
+class MainModuleSNMPRules(MainModule):
     @property
     def mode_or_url(self):
         return "wato.py?mode=rulesets&group=snmp"
@@ -1310,7 +1310,7 @@ class MainModuleSNMPSettings(MainModule):
 
     @property
     def title(self):
-        return _("SNMP settings")
+        return _("SNMP rules")
 
     @property
     def icon(self):

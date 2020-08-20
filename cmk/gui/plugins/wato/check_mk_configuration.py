@@ -1247,7 +1247,7 @@ class RulespecGroupMonitoringConfiguration(RulespecGroup):
 
     @property
     def title(self):
-        return _("Monitoring settings")
+        return _("Monitoring rules")
 
     @property
     def help(self):

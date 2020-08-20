@@ -91,7 +91,7 @@ class ModeDiagnostics(WatoMode):
                     title=_("Related"),
                     topics=[
                         PageMenuTopic(
-                            title=_("Configure"),
+                            title=_("Setup"),
                             entries=[
                                 PageMenuEntry(
                                     title=_("Analyze configuration"),

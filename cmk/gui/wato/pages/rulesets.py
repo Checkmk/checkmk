@@ -111,7 +111,6 @@ class RulesetMode(WatoMode):
         raise NotImplementedError()
 
     def _from_vars(self):
-        self._group_name = html.request.get_ascii_input("group")
 
         #  Explicitly hide deprecated rulesets by default
         if not html.request.has_var("search_p_ruleset_deprecated"):
@@ -120,11 +119,17 @@ class RulesetMode(WatoMode):
 
         # Transform group argument to the "rule search arguments"
         # Keeping this for compatibility reasons for the moment
-        if self._group_name:
-            html.request.set_var("search_p_ruleset_group",
-                                 DropdownChoice.option_id(self._group_name))
+        # This is either given via "group" parameter or via search (see blow)
+        if html.request.has_var("group"):
+            group_name = html.request.get_ascii_input_mandatory("group")
+            html.request.set_var("search_p_ruleset_group", DropdownChoice.option_id(group_name))
             html.request.set_var("search_p_ruleset_group_USE", "on")
             html.request.del_var("group")
+
+        self._group_name: Optional[str] = None
+        if html.request.has_var("search_p_ruleset_group"):
+            self._group_name = _vs_ruleset_group(
+                self.name()).from_html_vars("search_p_ruleset_group")
 
         # Transform the search argument to the "rule search" arguments
         if html.request.has_var("search"):
@@ -140,24 +145,13 @@ class RulesetMode(WatoMode):
             html.request.set_var("search_p_rule_folder_1", DropdownChoice.option_id(True))
             html.request.set_var("search_p_rule_folder_USE", "on")
 
-        self._search_options: Dict[str, str] = ModeRuleSearch().search_options
+        self._search_options: Dict[str, str] = ModeRuleSearchForm().search_options
 
         self._only_host: Optional[HostName] = html.request.get_ascii_input("host")
 
+    @abc.abstractmethod
     def _get_page_type(self, search_options: Dict[str, str]) -> PageType:
-        if _is_deprecated_rulesets_page(search_options):
-            return PageType.DeprecatedRulesets
-
-        if _is_ineffective_rules_page(search_options):
-            return PageType.IneffectiveRules
-
-        if _is_used_rulesets_page(search_options):
-            return PageType.UsedRulesets
-
-        if self._group_name is None:
-            return PageType.RuleSearch
-
-        return PageType.RulesetGroup
+        raise NotImplementedError()
 
     @abc.abstractmethod
     def _rulesets(self):
@@ -179,14 +173,14 @@ class RulesetMode(WatoMode):
         html.context_button(
             _("Used rulesets"),
             watolib.folder_preserving_link([
-                ("mode", "rulesets"),
+                ("mode", "rule_search"),
                 ("search_p_ruleset_used", DropdownChoice.option_id(True)),
                 ("search_p_ruleset_used_USE", "on"),
             ]), "usedrulesets")
 
         html.context_button(
             _("Ineffective rules"),
-            watolib.folder_preserving_link([("mode", "rulesets"),
+            watolib.folder_preserving_link([("mode", "rule_search"),
                                             ("search_p_rule_ineffective",
                                              DropdownChoice.option_id(True)),
                                             ("search_p_rule_ineffective_USE", "on")]),
@@ -194,7 +188,7 @@ class RulesetMode(WatoMode):
 
         html.context_button(
             _("Deprecated rulesets"),
-            watolib.folder_preserving_link([("mode", "rulesets"),
+            watolib.folder_preserving_link([("mode", "rule_search"),
                                             ("search_p_ruleset_deprecated",
                                              DropdownChoice.option_id(True)),
                                             ("search_p_ruleset_deprecated_USE", "on")]),
@@ -303,29 +297,26 @@ class RulesetMode(WatoMode):
 
 
 @mode_registry.register
-class ModeRulesets(RulesetMode):
+class ModeRuleSearch(RulesetMode):
     @classmethod
     def name(cls):
-        return "rulesets"
+        return "rule_search"
 
     @classmethod
     def permissions(cls):
         return ["rulesets"]
 
-    def _topic_breadcrumb_item(self) -> Optional[BreadcrumbItem]:
-        """Return the BreadcrumbItem for the topic of this mode"""
+    def _get_page_type(self, search_options: Dict[str, str]) -> PageType:
+        if _is_deprecated_rulesets_page(search_options):
+            return PageType.DeprecatedRulesets
 
-        url = "wato.py?mode=rulesets&group=%s" % self._group_name
-        main_module = main_module_registry.get(url)
-        if main_module is None:
-            # Anomaly: We should not reach this, but currently we do for some pages. Best we can do
-            # at the moment is not to add a topic in this case.
-            return None
+        if _is_ineffective_rules_page(search_options):
+            return PageType.IneffectiveRules
 
-        return BreadcrumbItem(
-            title=main_module().topic.title,
-            url=None,
-        )
+        if _is_used_rulesets_page(search_options):
+            return PageType.UsedRulesets
+
+        return PageType.RuleSearch
 
     def _rulesets(self):
         return watolib.NonStaticChecksRulesets()
@@ -352,12 +343,50 @@ class ModeRulesets(RulesetMode):
             self._title = _("Search rules")
             self._help = None
 
-        elif self._page_type is PageType.RulesetGroup:
-            rulegroup = watolib.get_rulegroup(self._group_name)
-            self._title, self._help = rulegroup.title, rulegroup.help
-
         else:
             raise NotImplementedError()
+
+
+@mode_registry.register
+class ModeRulesetGroup(RulesetMode):
+    """Lists rulesets in a ruleset group"""
+    @classmethod
+    def name(cls):
+        return "rulesets"
+
+    @classmethod
+    def permissions(cls):
+        return ["rulesets"]
+
+    def _from_vars(self):
+        super()._from_vars()
+        if not self._group_name:
+            raise MKUserError(None, _("The mandatory group name is missing"))
+
+    def _topic_breadcrumb_item(self) -> Optional[BreadcrumbItem]:
+        """Return the BreadcrumbItem for the topic of this mode"""
+
+        url = "wato.py?mode=rulesets&group=%s" % self._group_name
+        main_module = main_module_registry.get(url)
+        if main_module is None:
+            # Anomaly: We should not reach this, but currently we do for some pages. Best we can do
+            # at the moment is not to add a topic in this case.
+            return None
+
+        return BreadcrumbItem(
+            title=main_module().topic.title,
+            url=None,
+        )
+
+    def _get_page_type(self, search_options: Dict[str, str]) -> PageType:
+        return PageType.RulesetGroup
+
+    def _rulesets(self):
+        return watolib.NonStaticChecksRulesets()
+
+    def _set_title_and_help(self):
+        rulegroup = watolib.get_rulegroup(self._group_name)
+        self._title, self._help = rulegroup.title, rulegroup.help
 
 
 @mode_registry.register
@@ -369,6 +398,9 @@ class ModeStaticChecksRulesets(RulesetMode):
     @classmethod
     def permissions(cls):
         return ["rulesets"]
+
+    def _get_page_type(self, search_options: Dict[str, str]) -> PageType:
+        return PageType.RulesetGroup
 
     def _rulesets(self):
         return watolib.StaticChecksRulesets()
@@ -387,7 +419,7 @@ def predefined_conditions_button():
                         ]), "condition")
 
 
-def rule_search_button(search_options=None, mode="rulesets"):
+def rule_search_button(search_options, mode):
     is_searching = bool(search_options)
     # Don't highlight the button on "standard page" searches. Meaning the page calls
     # that are no searches from the users point of view because he did not fill the
@@ -675,7 +707,7 @@ class ModeEditRuleset(WatoMode):
             html.div(_("There are no rules defined in this set."), class_="info")
             return
         match_state = {"matched": False, "keys": set()}
-        search_options = ModeRuleSearch().search_options
+        search_options = ModeRuleSearchForm().search_options
         groups = (
             (folder, folder_rules)  #
             for folder, folder_rules in itertools.groupby(rules, key=lambda rule: rule[0])
@@ -908,7 +940,7 @@ class ModeEditRuleset(WatoMode):
 
 
 @mode_registry.register
-class ModeRuleSearch(WatoMode):
+class ModeRuleSearchForm(WatoMode):
     @classmethod
     def name(cls):
         return "rule_search_form"
@@ -919,7 +951,7 @@ class ModeRuleSearch(WatoMode):
 
     def __init__(self):
         self.back_mode = html.request.get_ascii_input_mandatory("back_mode", "rulesets")
-        super(ModeRuleSearch, self).__init__()
+        super().__init__()
 
     def title(self):
         if self.search_options:
@@ -996,11 +1028,7 @@ class ModeRuleSearch(WatoMode):
                      size=60,
                      mode=RegExpUnicode.infix,
                  )),
-                ("ruleset_group",
-                 DropdownChoice(
-                     title=_("Group"),
-                     choices=lambda: rulespec_group_registry.get_group_choices(self.back_mode),
-                 )),
+                ("ruleset_group", _vs_ruleset_group(self.back_mode)),
                 ("ruleset_name", RegExpUnicode(
                     title=_("Name"),
                     size=60,
@@ -1106,6 +1134,13 @@ class ModeRuleSearch(WatoMode):
                  )),
             ],
         )
+
+
+def _vs_ruleset_group(mode_name: str) -> DropdownChoice:
+    return DropdownChoice(
+        title=_("Group"),
+        choices=lambda: rulespec_group_registry.get_group_choices(mode_name),
+    )
 
 
 class EditRuleMode(WatoMode):

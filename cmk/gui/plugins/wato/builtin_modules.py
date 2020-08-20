@@ -172,7 +172,7 @@ class MainModuleReadOnly(MainModule):
 class MainModuleRuleSearch(MainModule):
     @property
     def mode_or_url(self):
-        return "rulesets"
+        return "rule_search"
 
     @property
     def topic(self):

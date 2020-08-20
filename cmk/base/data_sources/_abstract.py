@@ -320,13 +320,11 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         configurator: ABCConfigurator,
         *,
         summarizer: ABCSummarizer,
-        default_raw_data: BoundedAbstractRawData,
         default_host_sections: BoundedAbstractHostSections,
     ) -> None:
         super().__init__()
         self.configurator = configurator
         self.summarizer = summarizer
-        self.default_raw_data: Final[BoundedAbstractRawData] = default_raw_data
         self.default_host_sections: Final[BoundedAbstractHostSections] = default_host_sections
         self._logger = self.configurator._logger
         self._section_store: SectionStore[BoundedAbstractPersistedSections] = SectionStore(
@@ -402,21 +400,14 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         be produced if possible, and any raw section that is not listed
         here *may* be omitted.
         """
-        result = self._run(
-            selected_raw_sections=selected_raw_sections,
-            get_raw_data=False,
-        )
-        if not isinstance(result, ABCHostSections):
-            raise TypeError("Got invalid type: %r" % result)
-        return result
+        return self._run(selected_raw_sections=selected_raw_sections)
 
     @cpu_tracking.track
     def _run(
         self,
         *,
         selected_raw_sections: Optional[SelectedRawSections],
-        get_raw_data: bool,
-    ) -> Union[BoundedAbstractRawData, BoundedAbstractHostSections]:
+    ) -> BoundedAbstractHostSections:
         """Wrapper for self._execute() that unifies several things:
 
         a) Exception handling
@@ -427,39 +418,11 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         which also includes information about the happed exception. In case the --debug
         mode is enabled, the exceptions are raised. self._exception is re-initialized
         to None when this method is called."""
-        #
-        # This function has two different functionalities depending on `get_raw_data`.
-        #
-        # In short, the code does (mind the types):
-        #
-        # def _run(self, *, ..., get_raw_data : Literal[True]) -> RawData:
-        #     assert get_raw_data is True
-        #     try:
-        #         return fetcher.data()
-        #     except:
-        #         return self.default_raw_data
-        #
-        # *or*
-        #
-        # def _run(self, *, ..., get_raw_data : Literal[False]) -> HostSections:
-        #     assert get_raw_data is False
-        #     try:
-        #         return self.parse(fetcher.data())
-        #     except:
-        #         return self.default_host_sections
-        #
-        # Also note that `get_raw_data()` is only used for Agent sources.
-        #
         self._exception = None
         self._host_sections = None
         try:
             raw_data = self._execute(selected_raw_sections=selected_raw_sections)
-            self._host_sections = self.check(raw_data)
-
-            if get_raw_data:
-                return raw_data
-
-            return self._host_sections
+            return self.check(raw_data)
 
         except MKTerminate:
             raise
@@ -470,8 +433,6 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
                 raise
             self._exception = e
 
-        if get_raw_data:
-            return self.default_raw_data
         return self.default_host_sections
 
     @abc.abstractmethod

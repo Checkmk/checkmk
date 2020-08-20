@@ -469,14 +469,9 @@ class AgentDataSource(ABCDataSource[AgentRawData, AgentSections, AgentPersistedS
         super().__init__(
             configurator,
             summarizer=summarizer,
-            default_raw_data=b"",
             default_host_sections=AgentHostSections(),
         )
 
     @property
     def _parser(self) -> ABCParser:
         return AgentParser(self.hostname, self._logger)
-
-    def run_raw(self) -> AgentRawData:
-        """Return raw data from cache or fetcher."""
-        return self._run(selected_raw_sections=None, get_raw_data=True)

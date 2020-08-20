@@ -335,7 +335,6 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
         super().__init__(
             configurator,
             summarizer=SNMPSummarizer(),
-            default_raw_data={},
             default_host_sections=SNMPHostSections(),
         )
 

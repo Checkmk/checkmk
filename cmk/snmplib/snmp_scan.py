@@ -59,7 +59,7 @@ def _evaluate_snmp_detection_atom(
         # check for "not_exists"
         return pattern == ".*" and not flag
     # ignore case!
-    return bool(regex(pattern, re.IGNORECASE).fullmatch(value)) is flag
+    return bool(regex(pattern, re.IGNORECASE | re.DOTALL).fullmatch(value)) is flag
 
 
 # gather auto_discovered check_plugin_names for this host

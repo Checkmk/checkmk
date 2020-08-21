@@ -55,7 +55,9 @@ from cmk.gui.page_menu import (
     PageMenuDropdown,
     PageMenuTopic,
     PageMenuEntry,
+    PageMenuSearch,
     make_simple_link,
+    make_display_options_dropdown,
 )
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulesets import RuleConditions
@@ -168,8 +170,6 @@ class ABCRulesetMode(WatoMode):
         return self._title
 
     def page(self):
-        search_form(default_value=self._search_options.get("fulltext", ""))
-
         if self._help:
             html.help(self._help)
 
@@ -333,6 +333,10 @@ class ModeRuleSearch(ABCRulesetMode):
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
         yield _page_menu_entry_predefined_conditions()
 
+    def page(self):
+        search_form(default_value=self._search_options.get("fulltext", ""))
+        super().page()
+
 
 def _page_menu_entries_predefined_searches() -> Iterable[PageMenuEntry]:
     yield PageMenuEntry(
@@ -426,6 +430,7 @@ class ModeRulesetGroup(ABCRulesetMode):
             ],
             breadcrumb=breadcrumb,
         )
+        self._extend_display_dropdown(menu)
         return menu
 
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
@@ -465,6 +470,21 @@ class ModeRulesetGroup(ABCRulesetMode):
         )
 
         yield from _page_menu_entries_predefined_searches()
+
+    def _extend_display_dropdown(self, menu: PageMenu) -> None:
+        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+        display_dropdown.topics.insert(
+            0,
+            PageMenuTopic(
+                title=_("Filter"),
+                entries=[
+                    PageMenuEntry(
+                        title="",
+                        icon_name="trans",
+                        item=PageMenuSearch(default_value=self._search_options.get("fulltext", "")),
+                    )
+                ],
+            ))
 
 
 @mode_registry.register

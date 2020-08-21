@@ -111,6 +111,7 @@ class PageMenuCheckbox(ABCPageMenuItem):
 class PageMenuSearch(ABCPageMenuItem):
     """A text input box right in the menu, primarily for in page quick search"""
     target_mode: Optional[str] = None
+    default_value: str = ""
 
 
 @dataclass
@@ -633,7 +634,7 @@ class DropdownEntryRenderer:
 
     def _show_search_form_item(self, item: PageMenuSearch) -> None:
         html.open_div(class_="searchform")
-        search_form(mode=item.target_mode)
+        search_form(mode=item.target_mode, default_value=item.default_value)
         html.close_div()
 
 

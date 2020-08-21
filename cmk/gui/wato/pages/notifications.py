@@ -7,7 +7,7 @@
 
 import abc
 import time
-from typing import List, NamedTuple, Tuple as _Tuple, Union
+from typing import List, NamedTuple, Tuple as _Tuple, Union, Iterator
 
 import cmk.utils.store as store
 
@@ -60,6 +60,7 @@ from cmk.gui.watolib.notifications import (
     load_notification_rules,
     load_user_notification_rules,
 )
+from cmk.gui.wato.pages.users import ModeEditUser
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
@@ -790,18 +791,6 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
     def title(self):
         return _("Custom notification table for user %s") % self._user_id()
 
-    def buttons(self):
-        html.context_button(_("All Users"), watolib.folder_preserving_link([("mode", "users")]),
-                            "back")
-        html.context_button(
-            _("User Properties"),
-            watolib.folder_preserving_link([("mode", "edit_user"), ("edit", self._user_id())]),
-            "edit")
-        html.context_button(
-            _("New Rule"),
-            watolib.folder_preserving_link([("mode", "notification_rule"),
-                                            ("user", self._user_id())]), "new")
-
     def action(self):
         if html.request.has_var("_delete"):
             nr = html.request.get_integer_input_mandatory("_delete")
@@ -865,8 +854,59 @@ class ModeUserNotifications(ABCUserNotificationsMode):
     def permissions(cls):
         return ["users"]
 
+    @classmethod
+    def parent_mode(cls):
+        return ModeEditUser
+
     def _user_id(self):
         return html.request.get_unicode_input("user")
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="notification_rules",
+                    title=_("Notification rules"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Add new"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Add rule"),
+                                    icon_name="new",
+                                    item=make_simple_link(
+                                        watolib.folder_preserving_link([
+                                            ("mode", "notification_rule"),
+                                            ("user", self._user_id()),
+                                        ])),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Setup"),
+                            entries=list(self._page_menu_entries_related()),
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
+        return menu
+
+    def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
+        yield PageMenuEntry(
+            title=_("Users"),
+            icon_name="users",
+            item=make_simple_link(watolib.folder_preserving_link([("mode", "users")])),
+        )
 
 
 @mode_registry.register

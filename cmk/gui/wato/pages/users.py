@@ -421,6 +421,10 @@ class ModeEditUser(WatoMode):
     def permissions(cls):
         return ["users"]
 
+    def _breadcrumb_url(self) -> str:
+        return html.makeuri_contextless([("mode", self.name()), ("edit", self._user_id)],
+                                        filename="wato.py")
+
     def __init__(self):
         super(ModeEditUser, self).__init__()
 
@@ -436,6 +440,13 @@ class ModeEditUser(WatoMode):
     def _from_vars(self):
         # TODO: Should we turn the both fields below into Optional[UserId]?
         self._user_id = html.request.get_unicode_input("edit")  # missing -> new user
+        # This is needed for the breadcrumb computation:
+        # When linking from user notification rules page the request variable is "user"
+        # instead of "edit". We should also change that variable to "user" on this page,
+        # then we can simply use self._user_id.
+        if not self._user_id and html.request.has_var("user"):
+            self._user_id = html.request.get_str_input_mandatory("user")
+
         self._cloneid = html.request.get_unicode_input("clone")  # Only needed in 'new' mode
         # TODO: Nuke the field below? It effectively hides facts about _user_id for mypy.
         self._is_new_user = self._user_id is None

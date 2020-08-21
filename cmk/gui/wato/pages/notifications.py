@@ -7,7 +7,7 @@
 
 import abc
 import time
-from typing import List, NamedTuple, Tuple as _Tuple, Union, Iterator, Dict, Any
+from typing import List, NamedTuple, Tuple as _Tuple, Union, Iterator, Dict, Any, Optional, Type
 
 import cmk.utils.store as store
 
@@ -60,6 +60,7 @@ from cmk.gui.watolib.notifications import (
     load_notification_rules,
     load_user_notification_rules,
 )
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.wato.pages.users import ModeEditUser
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.breadcrumb import Breadcrumb
@@ -859,8 +860,12 @@ class ModeUserNotifications(ABCUserNotificationsMode):
         return ["users"]
 
     @classmethod
-    def parent_mode(cls):
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeEditUser
+
+    def _breadcrumb_url(self) -> str:
+        return html.makeuri_contextless([("mode", self.name()), ("user", self._user_id())],
+                                        filename="wato.py")
 
     def _user_id(self):
         return html.request.get_unicode_input("user")
@@ -1345,11 +1350,8 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                     _("Legacy ASCII Emails do not support bulking. You can either disable notification "
                       "bulking or choose another notification plugin which allows bulking."))
 
-    def buttons(self):
-        html.context_button(
-            _("All Rules"),
-            watolib.folder_preserving_link([("mode", self._back_mode()),
-                                            ("user", self._user_id())]), "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(breadcrumb, form_name="rule", button_name="save")
 
     def action(self):
         if not html.check_transaction():
@@ -1384,7 +1386,6 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         vs.render_input("rule", self._rule)
         vs.set_focus("rule")
         forms.end()
-        html.button("save", _("Save"))
         html.hidden_fields()
         html.end_form()
 
@@ -1399,6 +1400,10 @@ class ModeEditNotificationRule(ABCEditNotificationRuleMode):
     @classmethod
     def permissions(cls):
         return ["notifications"]
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeNotifications
 
     def _load_rules(self) -> List[NotificationRule]:
         return load_notification_rules(lock=html.is_transaction())
@@ -1461,6 +1466,10 @@ class ModeEditUserNotificationRule(ABCEditUserNotificationRuleMode):
     def permissions(cls):
         return ["notifications"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeUserNotifications
+
     def _user_id(self):
         return html.request.get_unicode_input_mandatory("user")
 
@@ -1480,7 +1489,7 @@ class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
         return "notification_rule_p"
 
     @classmethod
-    def parent_mode(cls):
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModePersonalUserNotifications
 
     @classmethod
@@ -1510,6 +1519,3 @@ class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
         if self._new:
             return _("Create new notification rule")
         return _("Edit notification rule %d") % self._edit_nr
-
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb, form_name="rule", button_name="save")

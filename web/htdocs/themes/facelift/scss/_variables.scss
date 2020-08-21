@@ -495,7 +495,7 @@ $scatterdot-hilite-color:		    rgb(0, 185, 255);
 /* TODO:  adapt variables to modern theme */
 $page-header-height:                        58px;
 $button-bg-color-default:                   rgb(53, 63, 74);
-$button-bg-color-secondary:                 rgb(48, 57, 68);
+$button-bg-color-secondary:                 $navbar-color;
 $button-bg-color-secondary-hover:           rgb(53, 63, 74);
 $navigation-bg-color:                       $navbar-color;
 $page-menu-bg-color:                        $white;

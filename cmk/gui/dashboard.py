@@ -483,7 +483,7 @@ def draw_dashboard(name: DashboardName) -> None:
     title = visuals.visual_title('dashboard', board)
 
     # Distance from top of the screen to the lower border of the heading
-    header_height = 95
+    header_height = 104
 
     if not board.get('show_title'):
         # Remove the whole header line

@@ -752,13 +752,6 @@ table.listchoice {
       margin: 0;
     }
   }
-
-  div.floatfilter.double > div.content > & {
-    display: block;
-    height: 80px;
-    overflow: hidden;
-    overflow-y:scroll;
-  }
 }
 
 div.popup_container {
@@ -1405,13 +1398,6 @@ div.info {
   input, select, textarea, div.snapin select, div.snapin & select,
   div.snapin textarea, div.snapin & textarea, #mk_side_search_field {
     box-sizing: content-box;
-  }
-}
-
-.filterform {
-  input, select, textarea, div.snapin select, div.snapin & select,
-  div.snapin textarea, div.snapin & textarea, #mk_side_search_field {
-    column-span: all;
   }
 }
 

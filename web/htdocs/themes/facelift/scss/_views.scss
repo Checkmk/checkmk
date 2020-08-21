@@ -26,60 +26,27 @@ table.filterform {
 }
 
 div.floatfilter {
-  float: left;
-  width: 310px;
-  height: 53px;
+  width: 333px;
   padding: 4px;
-  margin: 0 4px 3px 0;
+  margin: 0 5px 5px 0;
   color: $primary-font-color;
-  background-color: rgba(160, 181, 190, 0.6);
-  border-color: rgb(170, 204, 204) rgb(34, 64, 77) rgb(34, 65, 77) rgb(136, 170, 187);
-  border-style: solid;
-  border-width: 1px;
-  border-radius: 5px;
-  box-shadow: 0.5px 0.5px 1px rgb(68, 68, 68);
-
-  &.double {
-    display: table-cell;
-    height: 120.5px;
-
-    .content {
-      height: 82px;
-    }
-  }
-
-  input[type=text] {
-    width: 100%;
-    box-sizing: border-box;
-
-    &.number {
-      text-align: center;
-    }
-
-    &.neg {
-      width: 229px;
-    }
-  }
+  background-color: $bg-color-secondary;
 
   .legend {
-    width: 300px;
+    width: 100%;
     height: 17px;
-    padding: 3px 5px 0;
-    //margin-bottom: 1px;
+    padding: 5px 8px;
     font-size: 10px;
-    color: rgb(255, 255, 255);
+    color: $secondary-font-color;
+    text-transform: uppercase;
     background-color: $floatfilter-bg-color;
-    border-radius: 5px 5px 0 0;
   }
 
   .content {
-    display: table-cell;
-    width: 311px;
-    //height: 30px;
-    padding-top: 5px;
-    padding-left: 4px;
-    margin-top: 0;
-    margin-left: 0;
+    width: 100%;
+    height: auto;
+    padding: 0;
+    margin: 0;
     text-align: left;
 
     > select {
@@ -111,6 +78,75 @@ div.floatfilter {
     .filtertime select {
       width: 136px;
     }
+
+    select {
+      box-sizing: border-box;
+    }
+
+    .checkbox {
+      display: inline-block;
+      margin: 3px 0;
+
+      &:not(:last-of-type) {
+        margin-right: 8px;
+      }
+    }
+
+    input, select, textarea, #mk_side_search_field {
+      margin-bottom: 0;
+    }
+
+    input[type=text] {
+      width: 100%;
+      box-sizing: border-box;
+
+      &.number {
+        text-align: center;
+      }
+
+      &.neg {
+        width: 229px;
+      }
+    }
+
+    input.neg[type=text] {
+      position: relative;
+      top: -2px;
+      width: 237px;
+    }
+
+    input[type^=radio],
+    select[type^=radio],
+    textarea[type^=radio],
+    [type^=radio]#mk_side_search_field {
+      width: auto;
+      margin-bottom: 0;
+    }
+
+    input[type=radio] {
+      margin-left: 5px;
+    }
+
+    .radiobutton_group {
+      display: inline-block;
+
+      input[type=radio] {
+        margin-left: 0;
+      }
+
+      &:not(:last-of-type) label {
+        margin-right: 5px;
+      }
+    }
+
+    .valuespec_tuple {
+      width: 100%;
+      border-spacing: 2px 2px;
+    }
+
+    nobr {
+      margin-left: 4px;
+    }
   }
 
   &.service_custom_variable, &.host_custom_variable {
@@ -130,19 +166,16 @@ div.floatfilter {
 
   table.vs_duallist {
     width: 300px;
-    border-spacing: 0px 3px !important;
+    border-spacing: 0 3px;
 
     a.control {
-      padding: 0px 6px;
+      padding: 0 6px;
     }
 
-    /* TODO: Get rid of these important styles */
     select {
-      height: 43px !important; /* Is hardcoded to 48px in generated HTML code.
-                                  This is bad but we cannot break compatibility
-                                  with the classic theme for the while. */
-      padding: 0 !important;
-      margin-bottom: 0 !important;
+      height: 43px;
+      padding: 0;
+      margin-bottom: 0;
     }
   }
 
@@ -165,45 +198,33 @@ div.floatfilter {
   &.downtimes span.checkbox {
     white-space: normal;
   }
-}
 
-.filterform > tbody > tr > td div.floatfilter {
-  position: relative;
-  width: 326px;
-  height: auto;
-  margin-right: 5px;
-  margin-bottom: 5px;
-  overflow: auto;
-  background: $bg-color-secondary;
-  border: 1px solid $color-table-border;
-  box-shadow: none;
-  box-sizing: border-box;
+  span.select2 {
+    position: relative;
+  }
 
-
-  &.single {
-    height: 60px;
+  > div.content > span.select2:last-child {
+    width: 100%;
   }
 
   &.double {
-    height: 125px;
-
     &.log_class .content, &.log_state .content {
       table {
-	border-spacing: 6px 0;
+        border-spacing: 6px 0;
 
-	&.alertstatefilter {
-	  td {
-	    vertical-align: top;
-	  }
+        &.alertstatefilter {
+          td {
+            vertical-align: top;
+          }
 
-	  .checkbox {
-	    margin: 3px 3px 0 0;
-	  }
-	}
+          .checkbox {
+            margin: 3px 3px 0 0;
+          }
+        }
       }
 
       .checkbox {
-	margin-bottom: 4px;
+        margin-bottom: 4px;
       }
     }
 
@@ -213,72 +234,6 @@ div.floatfilter {
 
     &.log_state .content table td {
       line-height: 20px;
-    }
-  }
-
-  .legend {
-    width: 100%;
-    height: auto;
-    padding: 5px 8px;
-    color: $secondary-font-color;
-    text-transform: uppercase;
-    box-sizing: border-box;
-  }
-
-  .content {
-    display: block;
-    width: 100%;
-    padding: 2px 6px;
-    box-sizing: border-box;
-
-    select {
-      box-sizing: border-box;
-    }
-
-    .checkbox {
-      margin: 3px 0;
-      display: inline-block;
-
-      &:not(:last-of-type) {
-	margin-right: 8px;
-      }
-    }
-
-    input, select, textarea, #mk_side_search_field {
-      margin-bottom: 0;
-    }
-
-    input[type^=radio],
-    select[type^=radio],
-    textarea[type^=radio],
-    [type^=radio]#mk_side_search_field {
-      width: auto;
-      margin-bottom: 0;
-    }
-
-    input[type=radio] {
-      margin-left: 5px;
-    }
-
-    .radiobutton_group {
-      display: inline-block;
-
-      input[type=radio] {
-	margin-left: 0;
-      }
-
-      &:not(:last-of-type) label {
-	margin-right: 5px;
-      }
-    }
-
-    .valuespec_tuple {
-      width: 100%;
-      border-spacing: 2px 2px;
-    }
-
-    nobr {
-      margin-left: 4px;
     }
   }
 
@@ -313,19 +268,16 @@ div.floatfilter {
     border-color: $select2-border-color;
   }
 
-  &.single span.select2 {
-    position: relative;
-  }
+  &.rangespec table.valuespec_tuple {
+    width: 100%;
 
-  /* TODO: Get rid of this important style */
-  &.single > div.content > span.select2:last-child {
-    width: 100% !important;
-  }
+    span.title {
+      top: 7px;
+    }
 
-  &.single input.neg[type=text] {
-    position: relative;
-    top: -2px;
-    width: 237px;
+    input {
+      padding: 3px;
+    }
   }
 }
 
@@ -384,38 +336,6 @@ table.nform table.valuespec_listof {
     padding-top: 14px;
     padding-bottom: 26px;
     vertical-align: middle;
-  }
-
-  &.filter {
-    .vlof_content .floatfilter {
-      width: 400px;
-      height: auto;
-      background-color: $bg-color-tertiary;
-      border: 1px solid $color-table-border;
-      box-shadow: none;
-
-      .legend {
-        padding: 16px 0 0 16px;
-        font-size: $font-size-global;
-        letter-spacing: $letter-spacing-table;
-        color: $secondary-font-color;
-        text-transform: uppercase;
-      }
-
-      .content {
-        width: 100%;
-        padding: 16px;
-
-        table {
-          border-spacing: 8px 4px;
-        }
-      }
-    }
-
-    .vlof_buttons.filter img {
-      top: 8px;
-      left: -40px;
-    }
   }
 }
 
@@ -927,18 +847,6 @@ table.timeline td.ooservice, div.avlegend.timeline div.state.ooservice {
   background-color: rgb(202, 202, 202);
   background-image: url("images/ooservice.png");
   background-repeat: repeat;
-}
-
-div.floatfilter.rangespec table.valuespec_tuple {
-  width: 100%;
-
-  span.title {
-    top: 7px;
-  }
-
-  input {
-    padding: 3px;
-  }
 }
 
 /* #TODO: Reproduce this html element */

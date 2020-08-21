@@ -425,15 +425,11 @@ div#page_menu_popups div.side_popup {
     }
 
     /* general floatfilter elment styling */
-    div.floatfilter, div.floatfilter.double {
-      display: block;
-      float: none;
-      height: auto;
+    div.floatfilter {
       padding: 0;
       padding-right: 8px;
       padding-bottom: 3px;
       margin: 0;
-      overflow: visible;
       background-color: $button-bg-color-default;
       border-style: none;
       border-radius: 0;
@@ -444,7 +440,6 @@ div#page_menu_popups div.side_popup {
       }
 
       div.legend {
-        width: 100%;
         margin: 0;
         margin-bottom: 4px;
         font-size: 10px;
@@ -456,7 +451,6 @@ div#page_menu_popups div.side_popup {
       }
 
       div.content {
-        height: auto;
         padding: 0;
       }
 
@@ -467,8 +461,6 @@ div#page_menu_popups div.side_popup {
 
     /* case 1: filters in list of valuespec (view filters) */
     table.filterform {
-      width: 100%;
-
       table.valuespec_listof.filter {
         border-spacing: 0;
 
@@ -477,19 +469,23 @@ div#page_menu_popups div.side_popup {
         }
 
         > tbody > tr > td {
-          padding: 11px 0 0 11px;
+          padding: 10px 0 10px 10px;
           border-bottom: 1px solid $headline-color;
-        }
 
-        div.floatfilter {
-          width: 333px;
+          &.vlof_content {
+            padding-right: 10px;
+            padding-left: 5px;
+
+            div.floatfilter {
+              width: 323px;
+            }
+          }
         }
       }
     }
 
     /* case 2: floatfilters in list of valuespec (availability options) */
-    > div.side_popup_content div.simplebar-content > div.floatfilter,
-    > div.side_popup_content div.simplebar-content > div.floatfilter.double {
+    > div.side_popup_content div.simplebar-content > div.floatfilter {
       width: 100%;
       padding: 10px;
       border: none;

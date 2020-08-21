@@ -27,7 +27,7 @@ from cmk.fetchers.controller import (
     load_global_config,
 )
 
-from cmk.base.fetcher_config import FetcherConfig
+from cmk.base.cee.fetcher_config import FetcherConfig
 from cmk.fetchers.tcp import TCPFetcher
 
 from cmk.utils.paths import core_fetcher_config_dir

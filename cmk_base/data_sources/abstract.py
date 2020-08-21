@@ -92,6 +92,7 @@ class DataSource(object):
 
         self._config_cache = config.get_config_cache()
         self._host_config = self._config_cache.get_host_config(self._hostname)
+        self._exit_code_spec = self._host_config.exit_code_spec(self.id())
 
     def _setup_logger(self):
         """Add the source log prefix to the class logger"""
@@ -390,16 +391,16 @@ class DataSource(object):
         exc_msg = "%s" % self._exception
 
         if isinstance(self._exception, MKEmptyAgentData):
-            status = self._host_config.exit_code_spec().get("empty_output", 2)
+            status = self._exit_code_spec.get("empty_output", 2)
 
         elif isinstance(self._exception, (MKAgentError, MKIPAddressLookupError, MKSNMPError)):
-            status = self._host_config.exit_code_spec().get("connection", 2)
+            status = self._exit_code_spec.get("connection", 2)
 
         elif isinstance(self._exception, MKTimeout):
-            status = self._host_config.exit_code_spec().get("timeout", 2)
+            status = self._exit_code_spec.get("timeout", 2)
 
         else:
-            status = self._host_config.exit_code_spec().get("exception", 3)
+            status = self._exit_code_spec.get("exception", 3)
 
         return status, exc_msg + check_api_utils.state_markers[status], []
 
@@ -734,12 +735,12 @@ class CheckMKAgentDataSource(DataSource):
                     expected += ' release %s' % expected_version[1]['release']
             else:
                 expected = expected_version
-            status = self._host_config.exit_code_spec().get("wrong_version", 1)
+            status = self._exit_code_spec.get("wrong_version", 1)
             return (status, "unexpected agent version %s (should be %s)%s" %
                     (agent_version, expected, state_markers[status]))
 
         elif config.agent_min_version and agent_version < config.agent_min_version:
-            status = self._host_config.exit_code_spec().get("wrong_version", 1)
+            status = self._exit_code_spec.get("wrong_version", 1)
             return (status, "old plugin version %s (should be at least %s)%s" %
                     (agent_version, config.agent_min_version, state_markers[status]))
 
@@ -763,7 +764,7 @@ class CheckMKAgentDataSource(DataSource):
         if missing:
             infotexts.append("missing: %s" % " ".join(sorted(missing)))
 
-        mismatch_state = self._host_config.exit_code_spec().get("restricted_address_mismatch", 1)
+        mismatch_state = self._exit_code_spec.get("restricted_address_mismatch", 1)
         assert isinstance(mismatch_state, int)
         return mismatch_state, "Unexpected allowed IP ranges (%s)%s" % (
             ", ".join(infotexts), state_markers[mismatch_state])

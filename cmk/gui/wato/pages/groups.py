@@ -365,7 +365,7 @@ class ModeContactgroups(ModeGroups):
         )
 
     def _rules_url(self) -> str:
-        return watolib.folder_preserving_link([("mode", "rulesets"), ("filled_in", "search"),
+        return watolib.folder_preserving_link([("mode", "rule_search"), ("filled_in", "search"),
                                                ("search", "contactgroups")])
 
     def _collect_additional_data(self):

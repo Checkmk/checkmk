@@ -7,7 +7,7 @@
 
 import abc
 import time
-from typing import List, NamedTuple, Tuple as _Tuple, Union, Iterator
+from typing import List, NamedTuple, Tuple as _Tuple, Union, Iterator, Dict, Any
 
 import cmk.utils.store as store
 
@@ -73,6 +73,8 @@ from cmk.gui.page_menu import (
     make_simple_form_page_menu,
     make_display_options_dropdown,
 )
+
+NotificationRule = Dict[str, Any]
 
 
 class ABCNotificationsMode(EventsMode):
@@ -379,6 +381,8 @@ class ABCNotificationsMode(EventsMode):
 
         if profilemode:
             mode = "notification_rule_p"
+        elif userid:
+            mode = "user_notification_rule"
         else:
             mode = "notification_rule"
 
@@ -876,7 +880,7 @@ class ModeUserNotifications(ABCUserNotificationsMode):
                                     icon_name="new",
                                     item=make_simple_link(
                                         watolib.folder_preserving_link([
-                                            ("mode", "notification_rule"),
+                                            ("mode", "user_notification_rule"),
                                             ("user", self._user_id()),
                                         ])),
                                     is_shortcut=True,
@@ -968,12 +972,38 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
         return _("Your personal notification rules")
 
 
-# TODO: Split editing of user notification rule and global notification rule
-#       into separate classes
 class ABCEditNotificationRuleMode(ABCNotificationsMode):
     def __init__(self):
         super().__init__()
         self._start_async_repl = False
+
+    @abc.abstractmethod
+    def _load_rules(self) -> List[NotificationRule]:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _save_rules(self, rules: List[NotificationRule]) -> None:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _user_id(self):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _back_mode(self):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def title(self) -> str:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _log_text(self, edit_nr: int) -> str:
+        raise NotImplementedError()
+
+    def _rule_from_valuespec(self, rule: NotificationRule) -> NotificationRule:
+        """Optional method to update the rule after editing with the valuespec"""
+        return rule
 
     # TODO: Refactor this
     def _from_vars(self):
@@ -981,17 +1011,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         self._clone_nr = html.request.get_integer_input_mandatory("clone", -1)
         self._new = self._edit_nr < 0
 
-        if self._user_id():
-            self._users = userdb.load_users(lock=html.is_transaction())
-            if self._user_id() not in self._users:
-                raise MKUserError(
-                    None,
-                    _("The user you are trying to edit "
-                      "notification rules for does not exist."))
-            user = self._users[self._user_id()]
-            self._rules = user.setdefault("notification_rules", [])
-        else:
-            self._rules = load_notification_rules(lock=html.is_transaction())
+        self._rules = self._load_rules()
 
         if self._new:
             if self._clone_nr >= 0 and not html.request.var("_clear"):
@@ -1325,47 +1345,19 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                     _("Legacy ASCII Emails do not support bulking. You can either disable notification "
                       "bulking or choose another notification plugin which allows bulking."))
 
-    @abc.abstractmethod
-    def _user_id(self):
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def _back_mode(self):
-        raise NotImplementedError()
-
-    def title(self):
-        if self._new:
-            if self._user_id():
-                return _("Create new notification rule for user %s") % self._user_id()
-            return _("Create new notification rule")
-
-        if self._user_id():
-            return _("Edit notification rule %d of user %s") % (self._edit_nr, self._user_id())
-        return _("Edit notification rule %d") % self._edit_nr
-
     def buttons(self):
         html.context_button(
             _("All Rules"),
-            watolib.folder_preserving_link([("mode", "notifications"),
-                                            ("userid", self._user_id())]), "back")
+            watolib.folder_preserving_link([("mode", self._back_mode()),
+                                            ("user", self._user_id())]), "back")
 
     def action(self):
         if not html.check_transaction():
             return self._back_mode()
 
         vs = self._valuespec()
-        self._rule = vs.from_html_vars("rule")
-        if self._user_id():
-            self._rule["contact_users"] = [self._user_id()]  # Force selection of our user
-
+        self._rule = self._rule_from_valuespec(vs.from_html_vars("rule"))
         vs.validate_value(self._rule, "rule")
-
-        if self._user_id():
-            # User rules are always allow_disable
-            # The parameter is set just after the validation, since the allow_disable
-            # key isn't in the valuespec. Curiously, the validation does not fail
-            # even the allow_disable key is set before the validate_value...
-            self._rule["allow_disable"] = True
 
         if self._new and self._clone_nr >= 0:
             self._rules[self._clone_nr:self._clone_nr] = [self._rule]
@@ -1374,25 +1366,10 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         else:
             self._rules[self._edit_nr] = self._rule
 
-        if self._user_id():
-            userdb.save_users(self._users)
-        else:
-            save_notification_rules(self._rules)
+        self._save_rules(self._rules)
 
-        if self._new:
-            log_what = "new-notification-rule"
-            if self._user_id():
-                log_text = _("Created new notification rule for user %s") % self._user_id()
-            else:
-                log_text = _("Created new notification rule")
-        else:
-            log_what = "edit-notification-rule"
-            if self._user_id():
-                log_text = _("Changed notification rule %d of user %s") % (self._edit_nr,
-                                                                           self._user_id())
-            else:
-                log_text = _("Changed notification rule %d") % self._edit_nr
-        self._add_change(log_what, log_text)
+        log_what = "new-notification-rule" if self._new else "edit-notification-rule"
+        self._add_change(log_what, self._log_text(self._edit_nr))
 
         return self._back_mode()
 
@@ -1414,6 +1391,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
 @mode_registry.register
 class ModeEditNotificationRule(ABCEditNotificationRuleMode):
+    """Edit a global notification rule"""
     @classmethod
     def name(cls):
         return "notification_rule"
@@ -1422,17 +1400,81 @@ class ModeEditNotificationRule(ABCEditNotificationRuleMode):
     def permissions(cls):
         return ["notifications"]
 
+    def _load_rules(self) -> List[NotificationRule]:
+        return load_notification_rules(lock=html.is_transaction())
+
+    def _save_rules(self, rules: List[NotificationRule]) -> None:
+        save_notification_rules(rules)
+
     def _user_id(self):
-        return html.request.get_unicode_input("user")
+        return None
 
     def _back_mode(self):
-        if self._user_id():
-            return "user_notifications"
         return "notifications"
+
+    def title(self) -> str:
+        if self._new:
+            return _("Add notification rule")
+        return _("Edit notification rule %d") % self._edit_nr
+
+    def _log_text(self, edit_nr: int) -> str:
+        if self._new:
+            return _("Created new notification rule")
+        return _("Changed notification rule %d") % edit_nr
+
+
+class ABCEditUserNotificationRuleMode(ABCEditNotificationRuleMode):
+    def _load_rules(self) -> List[NotificationRule]:
+        self._users = userdb.load_users(lock=html.is_transaction())
+        if self._user_id() not in self._users:
+            raise MKUserError(
+                None, _("The user you are trying to edit "
+                        "notification rules for does not exist."))
+        user = self._users[self._user_id()]
+        return user.setdefault("notification_rules", [])
+
+    def _save_rules(self, rules: List[NotificationRule]) -> None:
+        userdb.save_users(self._users)
+
+    def _rule_from_valuespec(self, rule: NotificationRule) -> NotificationRule:
+        # Force selection of our user
+        rule["contact_users"] = [self._user_id()]
+
+        # User rules are always allow_disable
+        rule["allow_disable"] = True
+        return rule
+
+    def _log_text(self, edit_nr: int) -> str:
+        if self._new:
+            return _("Created new notification rule for user %s") % self._user_id()
+        return _("Changed notification rule %d of user %s") % (edit_nr, self._user_id())
 
 
 @mode_registry.register
-class ModeEditPersonalNotificationRule(ABCEditNotificationRuleMode):
+class ModeEditUserNotificationRule(ABCEditUserNotificationRuleMode):
+    """Edit notification rule of a given user"""
+    @classmethod
+    def name(cls):
+        return "user_notification_rule"
+
+    @classmethod
+    def permissions(cls):
+        return ["notifications"]
+
+    def _user_id(self):
+        return html.request.get_unicode_input_mandatory("user")
+
+    def _back_mode(self):
+        return "user_notifications"
+
+    def title(self) -> str:
+        if self._new:
+            return _("Add notification rule for user %s") % self._user_id()
+        return _("Edit notification rule %d of user %s") % (self._edit_nr, self._user_id())
+
+
+@mode_registry.register
+class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
     @classmethod
     def name(cls):
         return "notification_rule_p"

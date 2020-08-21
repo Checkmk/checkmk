@@ -10,36 +10,57 @@
 #  - Size values in KB
 #  - Counters
 #  - Rate counters (per second)
-
-inventory_mssql_counters_rules = []
-
-#TODO if not counters: raise
-
-
-def inventory_mssql_counters_generic(parsed, want_counters, dflt=None):
-    want_counters = set(want_counters)
-    for (obj, instance), node_data in parsed.items():
-        for counters in node_data.values():
-            if not want_counters.intersection(counters):
-                continue
-            yield "%s %s" % (obj, instance), dflt
-
-
-# Previously there was no main check, but we need it because
-# the sub checks
-# - mssql_counters.transactions
-# - mssql_counters.pageactivity
-# - mssql_counters.locks
-# will become cluster aware and thus all subchecks, too, because they share
-# the same section. This main check is just a dummy with the benefit of the
-# parse function.
-
-
-def extract_item_data(item, parsed):
-    obj, instance, *_ = item.split()
-    return {
-        node_name: node_data[(obj, instance)]
-        for node_name, node_data in parsed.items()
-        if (obj, instance) in node_data
-    } or None
 """
+
+from typing import Dict, Tuple, Set, Optional
+from contextlib import suppress
+
+from ..agent_based_api.v0 import Service, IgnoreResultsError, get_rate, GetRateError
+from ..agent_based_api.v0.type_defs import DiscoveryGenerator, ValueStore
+
+Counters = Dict[str, float]
+Section = Dict[Tuple[str, str], Counters]
+
+
+def discovery_mssql_counters_generic(
+    section: Section,
+    want_counters: Set[str],
+    dflt: Optional[Dict[str, str]] = None,
+) -> DiscoveryGenerator:
+    yield from (Service(item="%s %s %s" % (obj, instance, counter), parameters=dflt)
+                for (obj, instance), counters in section.items()
+                for counter in counters
+                if want_counters.intersection(counters))
+
+
+def get_rate_or_none(
+    value_store: ValueStore,
+    key: str,
+    point_in_time: float,
+    value: float,
+) -> Optional[float]:
+    """This is a convienience function which handles exceptions and avoids structures like
+    >> with suppress(GetRateError):
+    >>    a = get_rate()
+    >>    b = get_rate()
+    >>    handle(a,b)
+    which would lead to b being calculated on the third run rather the second
+    """
+    with suppress(GetRateError):
+        return get_rate(value_store, key, point_in_time, value)
+    return None
+
+
+def get_int(mapping: Counters, key: str) -> int:
+    """Try to return an int"""
+    result = mapping.get(key)
+    if isinstance(result, int):
+        return result
+    raise ValueError("Cannot handle %r=%r" % (key, result))
+
+
+def get_item(item: str, section: Section) -> Tuple[Counters, str]:
+    obj, instance, *counter = item.split()
+    if (obj, instance) not in section:
+        raise IgnoreResultsError("Item not found in monitoring data")
+    return section[(obj, instance)], counter[0] if counter else ""

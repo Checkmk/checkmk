@@ -33,6 +33,12 @@ def check_elphase(item, params, parsed):
     if params is None:
         params = {}
 
+    if "name" in parsed[item]:
+        yield 0, "Name: %s" % parsed[item]["name"]
+
+    if "type" in parsed[item]:
+        yield 0, "Type: %s" % parsed[item]["type"]
+
     if "device_state" in parsed[item]:
         device_state, device_state_readable = parsed[item]["device_state"]
         if params.get("map_device_states", []):

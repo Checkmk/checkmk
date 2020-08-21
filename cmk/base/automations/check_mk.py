@@ -86,6 +86,15 @@ class DiscoveryAutomation(Automation):
         discovery.schedule_discovery_check(host_config.hostname)
 
 
+def _set_cache_opts_of_data_sources(use_caches: bool) -> None:
+    if use_caches:
+        data_sources.FileCacheConfigurator.use_outdated = True
+        # TODO why does this only apply to TCP data sources and not
+        # to all agent data sources?
+        data_sources.tcp.TCPConfigurator.use_only_cache = True
+    data_sources.FileCacheConfigurator.maybe = use_caches
+
+
 class AutomationDiscovery(DiscoveryAutomation):
     cmd = "inventory"  # TODO: Rename!
     needs_config = True
@@ -107,17 +116,14 @@ class AutomationDiscovery(DiscoveryAutomation):
         else:
             on_error = "ignore"
 
-        # perform full SNMP scan on SNMP devices?
+        # Do a full service scan
         if args[0] == "@scan":
             args = args[1:]
-
-        # use cache files if present?
-        # TODO: Why is this handling inconsistent with try-inventory?
-        if args[0] == "@cache":
-            args = args[1:]
-            use_caches = True
-        else:
             use_caches = False
+        else:
+            use_caches = True
+
+        _set_cache_opts_of_data_sources(use_caches)
 
         if len(args) < 2:
             raise MKAutomationError("Need two arguments: new|remove|fixall|refresh HOSTNAME")
@@ -194,16 +200,17 @@ class AutomationTryDiscovery(Automation):
 
     def _execute_discovery(
             self, args: List[str]) -> Tuple[discovery.CheckPreviewTable, DiscoveredHostLabels]:
+
         use_caches = False
         if args[0] == '@noscan':
             args = args[1:]
             use_caches = True
-            data_sources.FileCacheConfigurator.use_outdated = True
-            data_sources.tcp.TCPConfigurator.use_only_cache = True
 
         elif args[0] == '@scan':
+            # Do a full service scan
             args = args[1:]
-            use_caches = False
+
+        _set_cache_opts_of_data_sources(use_caches)
 
         if args[0] == '@raiseerrors':
             on_error = "raise"
@@ -211,7 +218,6 @@ class AutomationTryDiscovery(Automation):
         else:
             on_error = "warn"
 
-        data_sources.FileCacheConfigurator.maybe = use_caches
         hostname = args[0]
         return discovery.get_check_preview(
             hostname,

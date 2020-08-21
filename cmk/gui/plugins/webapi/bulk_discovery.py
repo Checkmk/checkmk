@@ -51,12 +51,11 @@ class APICallBulkDiscovery(APICallCollection):
                 _("A bulk discovery job is already running. Please use the "
                   "\"bulk_discovery_status\" call to get the curent status."))
 
-        mode, use_cache, do_scan, bulk_size, error_handling = self._get_parameters_from_request(
-            request)
+        mode, do_scan, bulk_size, error_handling = self._get_parameters_from_request(request)
         tasks = get_tasks(self._get_hosts_from_request(request), bulk_size)
 
         try:
-            job.set_function(job.do_execute, mode, use_cache, do_scan, error_handling, tasks)
+            job.set_function(job.do_execute, mode, do_scan, error_handling, tasks)
             job.start()
             return {
                 "started": True,
@@ -77,9 +76,8 @@ class APICallBulkDiscovery(APICallCollection):
         params["mode"] = request.get("mode", params["mode"])
 
         params["performance"] = (
-            request.get("use_cache", params["performance"][0]),
-            request.get("do_scan", params["performance"][1]),
-            request.get("bulk_size", params["performance"][2]),
+            request.get("do_scan", params["performance"][0]),
+            request.get("bulk_size", params["performance"][1]),
         )
 
         params["error_handling"] = request.get("ignore_single_check_errors",
@@ -90,7 +88,6 @@ class APICallBulkDiscovery(APICallCollection):
             params["mode"],
             params["performance"][0],
             params["performance"][1],
-            params["performance"][2],
             params["error_handling"],
         )
 

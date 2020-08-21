@@ -419,26 +419,10 @@ def test_automation_try_discovery_caching(scan, raise_errors, mocker):
         "@scan",
     ],
 )
-@pytest.mark.parametrize(
-    ("cache"),
-    [
-        (
-            "@cache",
-            {
-                "max_age": 120
-            },
-        ),  # TODO: Why not maybe=True? like try-discovery
-        (None, {
-            "max_age": 0
-        }),
-    ],
-    ids=["cache=@cache", "cache=None"],
-)
 @pytest.mark.usefixtures("scenario")
-def test_automation_discovery_caching(scan, cache, raise_errors, mocker):
+def test_automation_discovery_caching(raise_errors, scan, mocker):
     kwargs = {}
     kwargs.update(raise_errors[1])
-    kwargs.update(cache[1])
 
     _patch_data_source(mocker, **kwargs)
 
@@ -447,11 +431,13 @@ def test_automation_discovery_caching(scan, cache, raise_errors, mocker):
         args.append(raise_errors[0])
     if scan is not None:
         args.append(scan)
-    if cache[0] is not None:
-        args.append(cache[0])
+        check_call_count = 2
+    else:
+        check_call_count = 1
+
     args += ["fixall", "ds-test-host1"]
     cmk.base.automations.check_mk.AutomationDiscovery().execute(args)
-    assert ABCChecker.check.call_count == 2  # type: ignore[attr-defined]
+    assert ABCChecker.check.call_count == check_call_count  # type: ignore[attr-defined]
 
 
 # Globale Optionen:

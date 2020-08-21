@@ -89,8 +89,7 @@ def vs_bulk_discovery(render_form=False, include_subfolders=True):
             ("performance",
              Tuple(title=_("Performance options"),
                    elements=[
-                       Checkbox(label=_("Use cached data if present"), default_value=True),
-                       Checkbox(label=_("Do full SNMP scan for SNMP devices"), default_value=True),
+                       Checkbox(label=_("Do a full service scan"), default_value=True),
                        Integer(label=_("Number of hosts to handle at once"), default_value=10),
                    ])),
             ("error_handling",
@@ -124,12 +123,12 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
     def _back_url(self):
         return Folder.current().url()
 
-    def do_execute(self, mode, use_cache, do_scan, error_handling, tasks, job_interface=None):
+    def do_execute(self, mode, do_scan, error_handling, tasks, job_interface=None):
         self._initialize_statistics()
         job_interface.send_progress_update(_("Bulk discovery started..."))
 
         for task in tasks:
-            self._bulk_discover_item(task, mode, use_cache, do_scan, error_handling, job_interface)
+            self._bulk_discover_item(task, mode, do_scan, error_handling, job_interface)
 
         job_interface.send_progress_update(_("Bulk discovery finished."))
 
@@ -159,12 +158,11 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         self._num_host_labels_total = 0
         self._num_host_labels_added = 0
 
-    def _bulk_discover_item(self, task, mode, use_cache, do_scan, error_handling, job_interface):
+    def _bulk_discover_item(self, task, mode, do_scan, error_handling, job_interface):
         self._num_hosts_total += len(task.host_names)
 
         try:
-            counts, failed_hosts = self._execute_discovery(task, mode, use_cache, do_scan,
-                                                           error_handling)
+            counts, failed_hosts = self._execute_discovery(task, mode, do_scan, error_handling)
             self._process_discovery_results(task, job_interface, counts, failed_hosts)
         except Exception:
             self._num_hosts_failed += len(task.host_names)
@@ -175,11 +173,9 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
                 msg = _("Error during discovery of %s") % (", ".join(task.host_names))
             self._logger.exception(msg)
 
-    def _execute_discovery(self, task, mode, use_cache, do_scan, error_handling):
+    def _execute_discovery(self, task, mode, do_scan, error_handling):
         arguments = [mode] + task.host_names
 
-        if use_cache:
-            arguments = ["@cache"] + arguments
         if do_scan:
             arguments = ["@scan"] + arguments
         if not error_handling:

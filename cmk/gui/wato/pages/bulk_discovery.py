@@ -70,8 +70,8 @@ class ModeBulkDiscovery(WatoMode):
                                      self._bulk_discovery_params["selection"])
 
         # The cast is needed for the moment, because mypy does not understand our data structure here
-        (self._use_cache, self._do_scan,
-         self._bulk_size) = cast(Tuple[bool, bool, int], self._bulk_discovery_params["performance"])
+        (self._do_scan, self._bulk_size) = cast(Tuple[bool, int],
+                                                self._bulk_discovery_params["performance"])
 
         self._mode = self._bulk_discovery_params["mode"]
         self._error_handling = self._bulk_discovery_params["error_handling"]
@@ -94,7 +94,7 @@ class ModeBulkDiscovery(WatoMode):
 
         try:
             html.check_transaction()
-            self._job.set_function(self._job.do_execute, self._mode, self._use_cache, self._do_scan,
+            self._job.set_function(self._job.do_execute, self._mode, self._do_scan,
                                    self._error_handling, tasks)
             self._job.start()
         except Exception as e:

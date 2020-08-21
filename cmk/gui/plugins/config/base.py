@@ -265,7 +265,7 @@ guitests_enabled = False
 bulk_discovery_default_settings = {
     "mode": "new",
     "selection": (True, False, False, False),
-    "performance": (True, True, 10),
+    "performance": (True, 10),
     "error_handling": True,
 }
 

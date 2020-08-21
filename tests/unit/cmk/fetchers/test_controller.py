@@ -15,9 +15,23 @@ from cmk.fetchers.controller import (
     make_waiting_answer,
     build_json_file_path,
     build_json_global_config_file_path,
+    _status_to_microcore_severity,
 )
 
 from cmk.utils.paths import core_fetcher_config_dir
+
+
+@pytest.mark.parametrize("status,severity", [
+    (50, "critical"),
+    (40, "error"),
+    (30, "warning"),
+    (20, "info"),
+    (15, "info"),
+    (10, "debug"),
+    (5, "warning"),
+])
+def test_status_to_severity(status, severity):
+    assert severity == _status_to_microcore_severity(status)
 
 
 class TestControllerApi:

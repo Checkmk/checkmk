@@ -100,6 +100,13 @@ class PageMenuPopup(ABCPageMenuItem):
 
 
 @dataclass
+class PageMenuSidePopup(PageMenuPopup):
+    """A link opening a pre-rendered popup on the right of the page"""
+    content: str
+    css_classes: CSSSpec = None
+
+
+@dataclass
 class PageMenuCheckbox(ABCPageMenuItem):
     """A binary item that can be toggled in the menu directly"""
     is_checked: bool
@@ -669,8 +676,12 @@ class PageMenuPopupsRenderer:
         if entry.name is None:
             raise ValueError("Missing \"name\" attribute on entry \"%s\"" % entry.title)
 
-        html.open_div(id_="popup_%s" % entry.name,
-                      class_=["page_menu_popup"] + html.normalize_css_spec(entry.item.css_classes))
+        classes = ["page_menu_popup"] + html.normalize_css_spec(entry.item.css_classes)
+        if isinstance(entry.item, PageMenuSidePopup):
+            classes.append("side_popup")
+
+        popup_id = "popup_%s" % entry.name
+        html.open_div(id_=popup_id, class_=classes)
 
         html.open_div(class_="head")
         html.h3(entry.title)
@@ -680,8 +691,17 @@ class PageMenuPopupsRenderer:
                onclick="cmk.page_menu.close_popup(this)")
         html.close_div()
 
+        if isinstance(entry.item,
+                      PageMenuSidePopup) and "side_popup_content" not in entry.item.content:
+            raise RuntimeError(
+                "Add a div container with the class \"side_popup_content\" to the popup content")
+
         html.open_div(class_="content")
         html.write(HTML(entry.item.content))
         html.close_div()
 
         html.close_div()
+
+        if isinstance(entry.item, PageMenuSidePopup):
+            html.final_javascript("cmk.page_menu.side_popup_add_simplebar_scrollbar(%s);" %
+                                  json.dumps(popup_id))

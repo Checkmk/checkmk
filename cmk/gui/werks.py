@@ -47,7 +47,7 @@ from cmk.gui.page_menu import (
     PageMenuDropdown,
     PageMenuTopic,
     PageMenuEntry,
-    PageMenuPopup,
+    PageMenuSidePopup,
     make_simple_link,
     make_display_options_dropdown,
 )
@@ -160,10 +160,7 @@ def _extend_display_dropdown(menu, werk_table_options: Dict[str, Any]) -> None:
                 PageMenuEntry(
                     title=_("Filter view"),
                     icon_name="filters",
-                    item=PageMenuPopup(
-                        _render_werk_options_form(werk_table_options),
-                        css_classes=["side_popup"],
-                    ),
+                    item=PageMenuSidePopup(_render_werk_options_form(werk_table_options)),
                     name="filters",
                     is_shortcut=True,
                 ),

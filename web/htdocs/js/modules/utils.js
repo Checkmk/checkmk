@@ -564,5 +564,9 @@ export function toggle_more(trigger, toggle_id, dom_levels_up) {
 }
 
 export function add_simplebar_scrollbar(scrollable_id) {
-    return new SimpleBar(document.getElementById(scrollable_id));
+    return add_simplebar_scrollbar_to_object(document.getElementById(scrollable_id));
+}
+
+export function add_simplebar_scrollbar_to_object(obj) {
+    return new SimpleBar(obj);
 }

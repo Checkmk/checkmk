@@ -488,8 +488,8 @@ div#page_menu_popups div.side_popup {
     }
 
     /* case 2: floatfilters in list of valuespec (availability options) */
-    > div.side_popup_content > div.floatfilter,
-    > div.side_popup_content > div.floatfilter.double {
+    > div.side_popup_content div.simplebar-content > div.floatfilter,
+    > div.side_popup_content div.simplebar-content > div.floatfilter.double {
       width: 100%;
       padding: 10px;
       border: none;

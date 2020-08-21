@@ -42,6 +42,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
     PageMenuEntry,
     PageMenuPopup,
+    PageMenuSidePopup,
     make_display_options_dropdown,
     make_simple_link,
     make_checkbox_selection_topic,
@@ -829,7 +830,7 @@ class GUIViewRenderer(ABCViewRenderer):
         yield PageMenuEntry(
             title=_("Filter view"),
             icon_name="filters_set" if is_filter_set else "filters",
-            item=PageMenuPopup(self._render_filter_form(show_filters), css_classes=["side_popup"]),
+            item=PageMenuSidePopup(self._render_filter_form(show_filters)),
             name="filters",
             is_shortcut=True,
         )
@@ -964,7 +965,9 @@ class ViewFilterList(visuals.VisualFilterList):
             html.close_div()
         html.close_div()
         html.javascript('cmk.valuespecs.listofmultiple_init(%s);' % json.dumps(varprefix))
-        html.javascript("cmk.utils.add_simplebar_scrollbar(%s);" % json.dumps(filter_list_id))
+        # TODO: Currently does not work, because the filter popup (a parent element) has a simplebar
+        # scrollbar. Need to investigate...
+        # html.final_javascript("cmk.utils.add_simplebar_scrollbar(%s);" % json.dumps(filter_list_id))
 
 
 # Load all view plugins

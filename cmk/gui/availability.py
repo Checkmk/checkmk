@@ -203,7 +203,7 @@ def get_av_display_options(what) -> AVOptionValueSpecs:
             [
                 ("filled_in", "search"),
                 ("search", "long_output"),
-                ("mode", "rulesets"),
+                ("mode", "rule_search"),
             ],
             filename="wato.py",
         )

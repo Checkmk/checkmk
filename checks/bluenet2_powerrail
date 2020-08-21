@@ -175,28 +175,40 @@ def parse_bluenet2_powerrail(info):
 
     pre_parsed = {}
     for oidend, _name in info[0]:
-        pre_parsed.setdefault(oidend, {"phases": [], "rcm_phases": []})
+        pre_parsed.setdefault(oidend, {"phases": {}, "rcm_phases": {}, "sockets": {}, "fuses": {}})
 
-    for index, what in [(1, "phases"), (2, "rcm_phases")]:
-        for oidend, identifier in info[index]:
+    for index, what in [(1, "phases"), (2, "rcm_phases"), (4, "sockets"), (5, "fuses")]:
+        for oidend, identifier, name, friendly_name in info[index]:
             inlet_id = ".".join(oidend.split(".")[:2])
             if inlet_id in pre_parsed:
-                pre_parsed[inlet_id][what].append([str(ord(x)) for x in identifier][:-1])
+                pre_parsed[inlet_id][what][u".".join([str(ord(x)) for x in identifier][:-1])] = {
+                        'id': name,
+                        'name': friendly_name
+                    }
 
-    parsed = {"phases": {}, "rcm_phases": {}, "sensors": {}}
+    parsed = {"phases": {}, "rcm_phases": {}, "sensors": {}, "sensors": {}, "fuses": {}}
     for oidend, ty, status, exponent_str, reading_str in info[3]:
         status_info = map_status[status]
         reading = float(reading_str) * 10**int(exponent_str)
         oid_info = oidend.split(".")
-        identifier = oid_info[:-1]
+        identifier = u".".join(oid_info[:-1])
 
         if ty in map_phase_types:
             phase_ty, phase_txt, what = map_phase_types[ty]
             for inlet_id, inlet_info in pre_parsed.items():
-                if identifier in inlet_info[phase_ty]:
+                if identifier in inlet_info[phase_ty].keys():
                     phase_name = get_item_name("%s %s" % (inlet_id, phase_txt), oid_info[3])
-                    parsed[phase_ty].setdefault(phase_name, {})
+                    parsed[phase_ty].setdefault(phase_name, inlet_info[phase_ty][identifier])
                     parsed[phase_ty][phase_name].setdefault(what, (reading, status_info))
+                if identifier in inlet_info["sockets"].keys():
+                    socket_name = "%s %s" % (inlet_id, inlet_info["sockets"][identifier]['id'])
+                    parsed["sockets"].setdefault(socket_name, inlet_info["sockets"][identifier])
+                    parsed["sockets"][socket_name].setdefault(what, (reading, status_info))
+                if identifier in inlet_info["fuses"].keys():
+                    phase_id = identifier.split(".")[3]
+                    fuse_name = "%s.%s %s" % (inlet_id, phase_id, inlet_info["fuses"][identifier]['id'])
+                    parsed["fuses"].setdefault(fuse_name, inlet_info["fuses"][identifier])
+                    parsed["fuses"][fuse_name].setdefault(what, (reading, status_info))
 
         elif ty in map_sensor_types:
             # https://www.bachmann.com/fileadmin/05a_Downloads/BlueNet/BlueNet_BN3000_-_BN7500_V2.02.XX_Bedienungsanleitung_DE_Rev_01.pdf
@@ -239,12 +251,16 @@ check_info["bluenet2_powerrail"] = {
             [
                 OID_END,
                 "4",  # blueNet2PhaseGuid
+                "5",  # blueNet2PhaseName
+                "6",  # blueNet2PhaseFriendlyName
             ]),
         (
             ".1.3.6.1.4.1.31770.2.2.6.6.1",
             [
                 OID_END,
                 "7",  # blueNet2RcmGuid
+                "8",  # blueNet2RcmName
+                "9",  # blueNet2RcmFriendlyName
             ]),
         (
             ".1.3.6.1.4.1.31770.2.2.8",
@@ -254,7 +270,23 @@ check_info["bluenet2_powerrail"] = {
                 "2.1.7",  # bluenet2VariableStatus
                 "2.1.9",  # bluenet2VariableScaling
                 "4.1.5",  # bluenet2VariableDataValue
-            ])
+            ]),
+        (
+            ".1.3.6.1.4.1.31770.2.2.6.5.1",
+            [
+                OID_END,
+                "6",  # blueNet2SocketGuid
+                "7",  # blueNet2SocketName
+                "8",  # blueNet2SocketFriendlyName
+            ]),
+        (
+            ".1.3.6.1.4.1.31770.2.2.6.4.1",
+            [
+                OID_END,
+                "5",  # blueNet2FuseGuid
+                "6",  # blueNet2FuseName
+                "7",  # blueNet2FuseFriendlyName
+            ]),
     ],
     'includes': ["elphase.include"],
     'group': 'el_inphase',
@@ -288,6 +320,50 @@ check_info["bluenet2_powerrail.rcm"] = {
 }
 
 #.
+#   .--sockets-------------------------------------------------------------.
+#   |                                  _        _                          |
+#   |                   ___  ___   ___| | _____| |_ ___                    |
+#   |                  / __|/ _ \ / __| |/ / _ \ __/ __|                   |
+#   |                  \__ \ (_) | (__|   <  __/ |_\__ \                   |
+#   |                  |___/\___/ \___|_|\_\___|\__|___/                   |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+check_info["bluenet2_powerrail.sockets"] = {
+    'inventory_function': lambda parsed: inventory_elphase(parsed["sockets"]),
+    'check_function': lambda item, params, parsed: check_elphase(item, params, parsed["sockets"]
+                                                                ),
+    "service_description": "Socket %s",
+    "has_perfdata": True,
+    'includes': ["elphase.include"],
+    'group': 'ups_outphase',
+}
+
+#.
+#   .--fuses---------------------------------------------------------------.
+#   |                        __                                            |
+#   |                       / _|_   _ ___  ___  ___                        |
+#   |                      | |_| | | / __|/ _ \/ __|                       |
+#   |                      |  _| |_| \__ \  __/\__ \                       |
+#   |                      |_|  \__,_|___/\___||___/                       |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+check_info["bluenet2_powerrail.fuses"] = {
+    'inventory_function': lambda parsed: inventory_elphase(parsed["fuses"]),
+    'check_function': lambda item, params, parsed: check_elphase(item, params, parsed["fuses"]
+                                                                ),
+    "service_description": "Fuse %s",
+    "has_perfdata": True,
+    'includes': ["elphase.include"],
+    'group': 'ups_outphase',
+}
+
+.
 #   .--temperature---------------------------------------------------------.
 #   |      _                                      _                        |
 #   |     | |_ ___ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |

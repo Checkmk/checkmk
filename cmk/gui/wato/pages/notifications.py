@@ -970,7 +970,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
 
 # TODO: Split editing of user notification rule and global notification rule
 #       into separate classes
-class EditNotificationRuleMode(ABCNotificationsMode):
+class ABCEditNotificationRuleMode(ABCNotificationsMode):
     def __init__(self):
         super().__init__()
         self._start_async_repl = False
@@ -1413,7 +1413,7 @@ class EditNotificationRuleMode(ABCNotificationsMode):
 
 
 @mode_registry.register
-class ModeEditNotificationRule(EditNotificationRuleMode):
+class ModeEditNotificationRule(ABCEditNotificationRuleMode):
     @classmethod
     def name(cls):
         return "notification_rule"
@@ -1432,7 +1432,7 @@ class ModeEditNotificationRule(EditNotificationRuleMode):
 
 
 @mode_registry.register
-class ModeEditPersonalNotificationRule(EditNotificationRuleMode):
+class ModeEditPersonalNotificationRule(ABCEditNotificationRuleMode):
     @classmethod
     def name(cls):
         return "notification_rule_p"

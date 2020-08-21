@@ -579,6 +579,15 @@ class NotificationParameterJIRA_ISSUES(NotificationParameter):
                      help=_("The numerical JIRA custom field ID for service problems."),
                      size=10,
                  )),
+                ("site_customid",
+                 TextAscii(
+                     title=_("Site custom field ID"),
+                     help=_("The numerical ID of the JIRA custom field for sites. "
+                            "Please use this option if you have multiple sites in a "
+                            "distributed setup which send their notifications "
+                            "to the same JIRA instance."),
+                     size=10,
+                 )),
                 ("monitoring",
                  HTTPUrl(
                      title=_("Monitoring URL"),

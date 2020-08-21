@@ -26,7 +26,6 @@ SNMPScanSection = NamedTuple("SNMPScanSection", [
 def _evaluate_snmp_detection(
     detect_spec: SNMPDetectSpec,
     s_name: SectionName,
-    do_snmp_scan: bool,
     *,
     backend: ABCSNMPBackend,
 ) -> bool:
@@ -35,8 +34,7 @@ def _evaluate_snmp_detection(
     Return True if and and only if at least all conditions in one "line" are True
     """
     return any(
-        all(
-            _evaluate_snmp_detection_atom(atom, s_name, do_snmp_scan, backend=backend)
+        all(_evaluate_snmp_detection_atom(atom, s_name, backend=backend)
             for atom in alternative)
         for alternative in detect_spec)
 
@@ -44,7 +42,6 @@ def _evaluate_snmp_detection(
 def _evaluate_snmp_detection_atom(
     atom: SNMPDetectAtom,
     s_name: SectionName,
-    do_snmp_scan: bool,
     *,
     backend: ABCSNMPBackend,
 ) -> bool:
@@ -52,7 +49,6 @@ def _evaluate_snmp_detection_atom(
     value = snmp_modes.get_single_oid(
         oid,
         s_name,
-        do_snmp_scan=do_snmp_scan,
         backend=backend,
     )
     if value is None:
@@ -66,7 +62,6 @@ def _evaluate_snmp_detection_atom(
 def gather_available_raw_section_names(
     sections: Iterable[SNMPScanSection],
     on_error: str,
-    do_snmp_scan: bool,
     *,
     binary_host: bool,
     backend: ABCSNMPBackend,
@@ -75,7 +70,6 @@ def gather_available_raw_section_names(
         return _snmp_scan(
             sections,
             on_error=on_error,
-            do_snmp_scan=do_snmp_scan,
             binary_host=binary_host,
             backend=backend,
         )
@@ -95,7 +89,6 @@ OID_SYS_OBJ = ".1.3.6.1.2.1.1.2.0"
 def _snmp_scan(
     sections: Iterable[SNMPScanSection],
     on_error: str = "ignore",
-    do_snmp_scan: bool = True,
     *,
     binary_host: bool,
     backend: ABCSNMPBackend,
@@ -104,13 +97,11 @@ def _snmp_scan(
     console.vverbose("  SNMP scan:\n")
     _snmp_scan_cache_description(
         binary_host=binary_host,
-        do_snmp_scan=do_snmp_scan,
         backend=backend,
     )
 
     found_sections = _snmp_scan_find_sections(
         sections,
-        do_snmp_scan=do_snmp_scan,
         on_error=on_error,
         backend=backend,
     )
@@ -122,7 +113,6 @@ def _snmp_scan(
 def _snmp_scan_cache_description(
     binary_host: bool,
     *,
-    do_snmp_scan: bool,
     backend: ABCSNMPBackend,
 ) -> None:
     if not binary_host:
@@ -132,7 +122,6 @@ def _snmp_scan_cache_description(
         ]:
             value = snmp_modes.get_single_oid(
                 oid,
-                do_snmp_scan=do_snmp_scan,
                 backend=backend,
             )
             if value is None:
@@ -155,7 +144,6 @@ def _snmp_scan_cache_description(
 def _snmp_scan_find_sections(
     sections: Iterable[SNMPScanSection],
     *,
-    do_snmp_scan: bool,
     on_error: str,
     backend: ABCSNMPBackend,
 ) -> Set[SectionName]:
@@ -165,7 +153,6 @@ def _snmp_scan_find_sections(
             if _evaluate_snmp_detection(
                     specs,
                     name,
-                    do_snmp_scan,
                     backend=backend,
             ):
                 found_sections.add(name)

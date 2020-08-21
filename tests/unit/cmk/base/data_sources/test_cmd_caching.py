@@ -96,7 +96,6 @@ def _patch_data_source(mocker, **kwargs):
         "max_age": 0,  # check_max_cachefile_age
         "disabled": False,
         "_use_outdated_persisted_sections": False,
-        "do_snmp_scan": False,
         "on_error": "raise",
         "_use_snmpwalk_cache": True,
         "_ignore_check_interval": True,
@@ -115,7 +114,6 @@ def _patch_data_source(mocker, **kwargs):
 
         elif isinstance(self, SNMPDataSource):
             configurator = cast(SNMPConfigurator, self.configurator)
-            assert configurator.do_snmp_scan == defaults["do_snmp_scan"]
             assert configurator.on_snmp_scan_error == defaults["on_error"]
             assert configurator.use_snmpwalk_cache == defaults["_use_snmpwalk_cache"]
             assert configurator.ignore_check_interval == defaults["_ignore_check_interval"]
@@ -358,7 +356,6 @@ def test_mode_dump_agent_explicit_host_no_cache(mocker, capsys):
         (
             "@noscan",
             {
-                "do_snmp_scan": False,
                 "maybe": True,
                 "max_age": 120,
                 "use_outdated": True,
@@ -367,7 +364,6 @@ def test_mode_dump_agent_explicit_host_no_cache(mocker, capsys):
         (
             "@scan",
             {
-                "do_snmp_scan": True,
                 "maybe": False,
                 "max_age": 0,
             },
@@ -419,14 +415,9 @@ def test_automation_try_discovery_caching(scan, raise_errors, mocker):
 @pytest.mark.parametrize(
     ("scan"),
     [
-        (None, {
-            "do_snmp_scan": False
-        }),
-        ("@scan", {
-            "do_snmp_scan": True
-        }),
+        None,
+        "@scan",
     ],
-    ids=["scan=None", "scan=@scan"],
 )
 @pytest.mark.parametrize(
     ("cache"),
@@ -447,7 +438,6 @@ def test_automation_try_discovery_caching(scan, raise_errors, mocker):
 def test_automation_discovery_caching(scan, cache, raise_errors, mocker):
     kwargs = {}
     kwargs.update(raise_errors[1])
-    kwargs.update(scan[1])
     kwargs.update(cache[1])
 
     _patch_data_source(mocker, **kwargs)
@@ -455,8 +445,8 @@ def test_automation_discovery_caching(scan, cache, raise_errors, mocker):
     args = []
     if raise_errors[0] is not None:
         args.append(raise_errors[0])
-    if scan[0] is not None:
-        args.append(scan[0])
+    if scan is not None:
+        args.append(scan)
     if cache[0] is not None:
         args.append(cache[0])
     args += ["fixall", "ds-test-host1"]

@@ -78,7 +78,6 @@ def test_attribute_defaults(source, hostname, ipaddress, monkeypatch):
     assert configurator.cpu_tracking_id == "snmp"
 
     assert configurator.on_snmp_scan_error == "raise"
-    assert configurator.do_snmp_scan is False
 
     # From the base class
     assert source.exception is None

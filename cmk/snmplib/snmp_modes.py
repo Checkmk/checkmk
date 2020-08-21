@@ -42,7 +42,6 @@ SNMPWalkOptions = Dict[str, List[OID]]
 # Contextes can only be used when check_plugin_name is given.
 def get_single_oid(oid: str,
                    section_name: Optional[SectionName] = None,
-                   do_snmp_scan: bool = True,
                    *,
                    backend: ABCSNMPBackend) -> Optional[SNMPDecodedString]:
     # The OID can end with ".*". In that case we do a snmpgetnext and try to

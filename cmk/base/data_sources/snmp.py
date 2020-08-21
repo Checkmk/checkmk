@@ -64,7 +64,6 @@ class CachedSNMPDetector:
         snmp_config: SNMPHostConfig,
         *,
         on_error,
-        do_snmp_scan,
     ) -> Set[SectionName]:
         """Returns a list of raw sections that shall be processed by this source.
 
@@ -74,7 +73,6 @@ class CachedSNMPDetector:
             self._cached_result = gather_available_raw_section_names(
                 self.sections(),
                 on_error=on_error,
-                do_snmp_scan=do_snmp_scan,
                 binary_host=config.get_config_cache().in_binary_hostlist(
                     snmp_config.hostname,
                     config.snmp_without_sys_descr,
@@ -98,7 +96,6 @@ class SNMPConfigurator(ABCConfigurator):
         persisted_section_dir: Optional[Path] = None,
         title: str,
         on_error: str = "raise",
-        do_snmp_scan: bool = False,
     ):
         super().__init__(
             hostname,
@@ -128,7 +125,6 @@ class SNMPConfigurator(ABCConfigurator):
             self.host_config.snmp_config(self.ipaddress)
             if self.source_type is SourceType.HOST else self.host_config.management_snmp_config)
         self.on_snmp_scan_error = on_error
-        self.do_snmp_scan = do_snmp_scan
         self.detector: Final = CachedSNMPDetector()
         # Attributes below are wrong
         self.use_snmpwalk_cache = True
@@ -210,7 +206,6 @@ class SNMPConfigurator(ABCConfigurator):
             section_names = self.detector(
                 self.snmp_config,
                 on_error=self.on_snmp_scan_error,
-                do_snmp_scan=self.do_snmp_scan,
             )
         else:
             section_names = {s.name for s in selected_raw_sections.values()}

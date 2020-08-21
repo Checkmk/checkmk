@@ -313,11 +313,6 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
         try:
             ipaddress = ip_lookup.lookup_ip_address(host_config)
 
-            # Usually we disable SNMP scan if cmk -I is used without a list of
-            # explicit hosts. But for host that have never been service-discovered
-            # yet (do not have autochecks), we enable SNMP scan.
-            do_snmp_scan = not use_caches or not autochecks.has_autochecks(hostname)
-
             # If check plugins are specified via command line,
             # see which raw sections we may need
             selected_raw_sections: Optional[SelectedRawSections] = None
@@ -333,7 +328,6 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
                 _get_sources_for_discovery(
                     host_config,
                     ipaddress,
-                    do_snmp_scan=do_snmp_scan,
                     on_error=on_error,
                 ),
                 selected_raw_sections=selected_raw_sections,
@@ -484,8 +478,6 @@ def _perform_host_label_discovery(
 
 # determine changed services on host.
 # param mode: can be one of "new", "remove", "fixall", "refresh"
-# param do_snmp_scan: if True, a snmp host will be scanned, otherwise uses only the check types
-#                     previously discovereda
 # param servic_filter: if a filter is set, it controls whether items are touched by the discovery.
 #                       if it returns False for a new item it will not be added, if it returns
 #                       False for a vanished item, that item is kept
@@ -493,7 +485,6 @@ def discover_on_host(
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
     mode: str,
-    do_snmp_scan: bool,
     use_caches: bool,
     service_filters: ServiceFilters,
     on_error: str = "ignore",
@@ -530,7 +521,6 @@ def discover_on_host(
             _get_sources_for_discovery(
                 host_config,
                 ipaddress,
-                do_snmp_scan=do_snmp_scan,
                 on_error=on_error,
             ),
             max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
@@ -677,7 +667,6 @@ def check_discovery(
     sources = _get_sources_for_discovery(
         host_config,
         ipaddress,
-        do_snmp_scan=params["inventory_check_do_scan"],
         on_error="raise",
     )
     use_caches = data_sources.FileCacheConfigurator.maybe
@@ -951,7 +940,6 @@ def _discover_marked_host(config_cache: config.ConfigCache, host_config: config.
             config_cache,
             host_config,
             _get_rediscovery_mode(params),
-            do_snmp_scan=params["inventory_check_do_scan"],
             use_caches=True,
             service_filters=service_filters,
         )
@@ -1245,7 +1233,6 @@ def _get_sources_for_discovery(
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
     *,
-    do_snmp_scan: bool,
     on_error: str,
 ) -> data_sources.DataSources:
     sources = data_sources.make_sources(
@@ -1257,7 +1244,6 @@ def _get_sources_for_discovery(
         if isinstance(source, data_sources.snmp.SNMPDataSource):
             configurator = cast(data_sources.snmp.SNMPConfigurator, source.configurator)
             configurator.on_snmp_scan_error = on_error
-            configurator.do_snmp_scan = do_snmp_scan
             configurator.use_snmpwalk_cache = False
             configurator.ignore_check_interval = True
 
@@ -1545,7 +1531,7 @@ def _get_cluster_services(
     return _merge_manual_services(host_config, cluster_items, on_error), cluster_host_labels
 
 
-def get_check_preview(host_name: HostName, use_caches: bool, do_snmp_scan: bool,
+def get_check_preview(host_name: HostName, use_caches: bool,
                       on_error: str) -> Tuple[CheckPreviewTable, DiscoveredHostLabels]:
     """Get the list of service of a host or cluster and guess the current state of
     all services if possible"""
@@ -1562,7 +1548,6 @@ def get_check_preview(host_name: HostName, use_caches: bool, do_snmp_scan: bool,
         _get_sources_for_discovery(
             host_config,
             ip_address,
-            do_snmp_scan=do_snmp_scan,
             on_error=on_error,
         ),
         max_cachefile_age=config.discovery_max_cachefile_age(use_caches),

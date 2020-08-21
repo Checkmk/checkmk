@@ -109,10 +109,7 @@ class AutomationDiscovery(DiscoveryAutomation):
 
         # perform full SNMP scan on SNMP devices?
         if args[0] == "@scan":
-            do_snmp_scan = True
             args = args[1:]
-        else:
-            do_snmp_scan = False
 
         # use cache files if present?
         # TODO: Why is this handling inconsistent with try-inventory?
@@ -140,7 +137,6 @@ class AutomationDiscovery(DiscoveryAutomation):
                 config_cache,
                 host_config,
                 mode,
-                do_snmp_scan,
                 use_caches,
                 service_filters,
                 on_error=on_error,
@@ -199,17 +195,14 @@ class AutomationTryDiscovery(Automation):
     def _execute_discovery(
             self, args: List[str]) -> Tuple[discovery.CheckPreviewTable, DiscoveredHostLabels]:
         use_caches = False
-        do_snmp_scan = False
         if args[0] == '@noscan':
             args = args[1:]
-            do_snmp_scan = False
             use_caches = True
             data_sources.FileCacheConfigurator.use_outdated = True
             data_sources.tcp.TCPDataSource.use_only_cache()
 
         elif args[0] == '@scan':
             args = args[1:]
-            do_snmp_scan = True
             use_caches = False
 
         if args[0] == '@raiseerrors':
@@ -223,7 +216,6 @@ class AutomationTryDiscovery(Automation):
         return discovery.get_check_preview(
             hostname,
             use_caches=use_caches,
-            do_snmp_scan=do_snmp_scan,
             on_error=on_error,
         )
 

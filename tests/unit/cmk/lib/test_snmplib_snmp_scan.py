@@ -10,7 +10,8 @@ from pathlib import Path
 
 import pytest  # type: ignore[import]
 
-from testlib.base import Scenario
+# No stub file
+from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.utils.type_defs import SectionName
 
@@ -144,7 +145,6 @@ def test_evaluate_snmp_detection(monkeypatch, config_snmp_scan_functions, name, 
     actual_result = snmp_scan._evaluate_snmp_detection(
         converted_detect_spec,
         name,
-        None,  # type: ignore # not used
         backend=None,  # type: ignore  # monkeypatched
     )
     assert actual_result is expected_result
@@ -219,7 +219,6 @@ def test_snmp_scan_cache_description__oid_missing(oid, backend):
     with pytest.raises(snmp_scan.MKSNMPError, match=r"Cannot fetch [\w ]+ OID %s" % oid):
         snmp_scan._snmp_scan_cache_description(
             False,
-            do_snmp_scan=False,
             backend=backend,
         )
 
@@ -234,7 +233,6 @@ def test_snmp_scan_cache_description__success_non_binary(backend):
 
     snmp_scan._snmp_scan_cache_description(
         binary_host=False,
-        do_snmp_scan=False,
         backend=backend,
     )
 
@@ -248,7 +246,6 @@ def test_snmp_scan_cache_description__success_non_binary(backend):
 def test_snmp_scan_cache_description__success_binary(backend):
     snmp_scan._snmp_scan_cache_description(
         binary_host=True,
-        do_snmp_scan=False,
         backend=backend,
     )
 
@@ -265,7 +262,6 @@ def test_snmp_scan_find_plugins__success(backend):
     ]
     found = snmp_scan._snmp_scan_find_sections(
         sections,
-        do_snmp_scan=False,
         on_error="raise",
         backend=backend,
     )
@@ -287,7 +283,6 @@ def test_gather_available_raw_section_names_defaults(backend, mocker):
             for _ in agent_based_register.iter_all_snmp_sections()
         ],
         on_error="raise",
-        do_snmp_scan=False,
         binary_host=False,
         backend=backend,
     ) == {

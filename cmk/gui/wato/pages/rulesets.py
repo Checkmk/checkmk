@@ -437,7 +437,7 @@ class ModeRulesetGroup(ABCRulesetMode):
                 item=make_simple_link(current_folder.url()),
             )
 
-            if html.request.has_var("host"):
+            if html.request.get_ascii_input("host"):
                 host_name = html.request.get_ascii_input_mandatory("host")
                 yield PageMenuEntry(
                     title=_("Host properties of: %s") % host_name,

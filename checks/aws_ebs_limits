@@ -16,9 +16,9 @@ factory_settings['aws_ebs_limits_default_levels'] = {
 
 
 def parse_aws_ebs_limits(info):
-    parsed = []
+    limits_by_region: AWSLimitsByRegion = {}
     for line in parse_aws(info):
-        resource_key, resource_title, limit, amount, region = parse_aws_limit_line(line)
+        resource_key, resource_title, limit, amount, region = line
 
         if resource_key in [
                 "block_store_space_standard",
@@ -35,19 +35,21 @@ def parse_aws_ebs_limits(info):
             human_readable_func = lambda x: "%s/s" % x
         else:
             human_readable_func = int
-        parsed.append((resource_key, resource_title, limit, amount, region, human_readable_func))
-    return parsed
+        limits_by_region.setdefault(region, []).append(
+            [resource_key, resource_title, limit, amount, human_readable_func])
+    return limits_by_region
 
 
+@get_parsed_item_data
 def check_aws_ebs_limits(item, params, parsed):
     return check_aws_limits("ebs", params, parsed)
 
 
 check_info['aws_ebs_limits'] = {
     'parse_function': parse_aws_ebs_limits,
-    'inventory_function': discover_single,
+    'inventory_function': discover(),
     'check_function': check_aws_ebs_limits,
-    'service_description': 'AWS/EBS Limits',
+    'service_description': 'AWS/EBS Limits %s',
     'includes': ['aws.include'],
     'group': 'aws_ebs_limits',
     'default_levels_variable': 'aws_ebs_limits_default_levels',

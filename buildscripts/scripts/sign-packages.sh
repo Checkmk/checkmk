@@ -20,6 +20,16 @@ if [ -z "$GPG_PASSPHRASE" ]; then
     exit 1
 fi
 
+if ! type dpkg-sig >/dev/null 2>&1; then
+    echo "ERROR: dpkg-sig command is missing"
+    exit 1
+fi
+
+if ! type rpm >/dev/null 2>&1; then
+    echo "ERROR: rpm command is missing"
+    exit 1
+fi
+
 # /bauwelt/etc/.gnupg is mounted in RO mode, but the following gpg commands need RW access
 # to the directory. Copy the contents to the container for exclusive + RW access
 cp -a /bauwelt/etc/.gnupg /gnupg

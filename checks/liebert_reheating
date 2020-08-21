@@ -27,7 +27,7 @@ def check_liebert_reheating(_no_item, params, parsed):
 
 
 check_info['liebert_reheating'] = {
-    'parse_function': parse_liebert,
+    'parse_function': parse_liebert_wrapper,
     'inventory_function': inventory_liebert_reheating,
     'check_function': check_liebert_reheating,
     'service_description': 'Reheating Utilization',

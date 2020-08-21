@@ -4,7 +4,9 @@
 // source code package.
 
 #include "DowntimesOrComments.h"
+
 #include <iosfwd>
+
 #include "DowntimeOrComment.h"
 #include "Logger.h"
 

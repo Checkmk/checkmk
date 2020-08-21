@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -144,7 +144,7 @@ def _parameter_valuespec_azure_storageaccounts():
          )),
         ('egress_levels',
          Tuple(
-             title=_("Levels on ingress data in bytes"),
+             title=_("Levels on egress data in bytes"),
              elements=[
                  Float(title=_("Warning at"), unit="B"),
                  Float(title=_("Critical at"), unit="B"),

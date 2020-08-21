@@ -4,11 +4,13 @@
 // source code package.
 
 #include "pnp4nagios.h"
+
 #include <cstddef>
 
 #ifndef CMC
 #include <filesystem>
 #include <system_error>
+
 #include "MonitoringCore.h"
 #endif
 

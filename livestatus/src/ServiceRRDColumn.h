@@ -7,8 +7,13 @@
 #define ServiceRRDColumn_h
 
 #include "config.h"  // IWYU pragma: keep
-#include "RRDColumn.h"
 
+#include <optional>
+#include <string>
+#include <utility>
+
+#include "RRDColumn.h"
+#include "nagios.h"
 class Row;
 
 class ServiceRRDColumn : public RRDColumn {
@@ -16,8 +21,13 @@ public:
     using RRDColumn::RRDColumn;
 
 private:
-    [[nodiscard]] Table table() const override;
-    [[nodiscard]] const void *getObject(Row row) const override;
+    [[nodiscard]] std::optional<std::pair<std::string, std::string>>
+    getHostNameServiceDesc(Row row) const override {
+        if (const auto *svc{columnData<service>(row)}) {
+            return {{svc->host_name, svc->description}};
+        }
+        return {};
+    }
 };
 
 #endif

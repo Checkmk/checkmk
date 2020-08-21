@@ -4,12 +4,15 @@
 // source code package.
 
 #include "InputBuffer.h"
+
 #include <unistd.h>
+
+// IWYU pragma: no_include <type_traits>
 #include <cctype>
 #include <cerrno>
 #include <cstring>
 #include <ostream>
-#include <type_traits>
+
 #include "Logger.h"
 #include "Poller.h"
 

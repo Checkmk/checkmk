@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -8,6 +8,7 @@ import operator
 import functools
 
 import cmk.utils.version as cmk_version
+from cmk.utils.prediction import TimeSeries
 import cmk.gui.escaping as escaping
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
@@ -30,34 +31,32 @@ def compute_graph_curves(metrics, rrd_data):
     curves = []
     for metric_definition in metrics:
         expression = metric_definition["expression"]
-        if expression[0] == "transformation" and expression[1][0] == "forecast":
-            curves.extend(multiline_curves(metric_definition, rrd_data))
-        else:
+        time_series = evaluate_time_series_expression(expression, rrd_data)
+        if len(time_series) == 1 and isinstance(time_series[0], tuple):
+            time_series = time_series[0][3]
 
+        if isinstance(time_series[0], tuple):
+            for line, color, title, ts in time_series:
+                curves.append({
+                    "line_type": line,
+                    'color': color,
+                    'title': "%s - %s" % (metric_definition["title"], title),
+                    'rrddata': ts
+                })
+        else:
             curves.append({
                 "line_type": metric_definition["line_type"],
                 "color": metric_definition["color"],
                 "title": metric_definition["title"],
-                "rrddata": evaluate_time_series_expression(expression, rrd_data),
+                "rrddata": time_series,
             })
+
     return curves
-
-
-def multiline_curves(metric_definition, rrd_data):
-    "For the moment only works on forecast"
-    time_series = evaluate_time_series_expression(metric_definition["expression"], rrd_data)
-    for line, color, title, ts in time_series:
-        yield {
-            "line_type": line,
-            'color': color,
-            'title': "%s - %s" % (metric_definition["title"], title),
-            'rrddata': ts
-        }
 
 
 def evaluate_time_series_expression(expression, rrd_data):
     if rrd_data:
-        num_points = len(list(rrd_data.values())[0])
+        num_points = len(next(iter(rrd_data.values())))
     else:
         num_points = 1
 
@@ -71,6 +70,33 @@ def evaluate_time_series_expression(expression, rrd_data):
         operands_evaluated = evaluate_time_series_expression(operands[0], rrd_data)
         if transform == 'percentile':
             return time_series_operator_perc(operands_evaluated, conf)
+
+        if transform == 'filter_top':
+            if isinstance(operands_evaluated, TimeSeries):
+                return operands_evaluated
+            return operands_evaluated[:conf["amount"]]
+
+        if transform == 'value_sort':
+            if isinstance(operands_evaluated, TimeSeries):
+                return operands_evaluated
+
+            aggr_func = {
+                "min": lambda x: min(x or [0]),
+                "max": lambda x: max(x or [0]),
+                "average": lambda x: sum(x) / float(len(x) or 1),
+            }[conf['aggregation']]
+
+            orderlist = sorted(operands_evaluated,
+                               key=lambda metric: aggr_func(clean_time_series_point(metric[3])),
+                               reverse=conf["reverse"])
+
+            # fix multi-line stack line styling
+            if orderlist[0][0] == 'stack':
+                line_types = ['area'] + ['stack'] * (len(orderlist) - 1)
+                orderlist = [(lt,) + metric[1:] for lt, metric in zip(line_types, orderlist)]
+
+            return orderlist
+
         if transform == 'forecast':
             if cmk_version.is_raw_edition():
                 raise MKGeneralException(
@@ -78,7 +104,8 @@ def evaluate_time_series_expression(expression, rrd_data):
                       "Checkmk Enterprise Editions"))
             # Suppression is needed to silence pylint in CRE environment
             from cmk.gui.cee.plugins.metrics.forecasts import time_series_transform_forecast  # pylint: disable=no-name-in-module
-            return time_series_transform_forecast(operands_evaluated, conf)
+            return time_series_transform_forecast(
+                TimeSeries(operands_evaluated, rrd_data['__range']), conf)
 
     if expression[0] == "rrd":
         key = tuple(expression[1:])
@@ -88,6 +115,14 @@ def evaluate_time_series_expression(expression, rrd_data):
 
     if expression[0] == "constant":
         return [expression[1]] * num_points
+
+    if expression[0] == "combined" and not cmk_version.is_raw_edition():
+        # Suppression is needed to silence pylint in CRE environment
+        from cmk.gui.cee.plugins.metrics.graphs import resolve_combined_single_metric_spec  # pylint: disable=no-name-in-module
+        metrics = resolve_combined_single_metric_spec(expression[1])
+
+        return [(m["line_type"], m["color"], m['title'],
+                 evaluate_time_series_expression(m['expression'], rrd_data)) for m in metrics]
 
     raise NotImplementedError()
 
@@ -134,7 +169,7 @@ def time_series_operator_difference(tsp):
 
 
 def time_series_operator_fraction(tsp):
-    if None in tsp:
+    if None in tsp or tsp[1] == 0:
         return None
     return tsp[0] / tsp[1]
 

@@ -1,20 +1,20 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import print_function
-import sys
-from typing import Dict  # pylint: disable=unused-import
-import hashlib
 import argparse
+import hashlib
+from html.parser import HTMLParser
 import logging
+import sys
+from typing import Dict
+from urllib.parse import urljoin
 import xml.etree.ElementTree as ET
-from HTMLParser import HTMLParser
-from urlparse import urljoin
 
 import requests
+from requests.structures import CaseInsensitiveDict
 import urllib3  # type: ignore[import]
 
 LOGGER = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ def parse_arguments(argv):
 
 
 # The dict key is the section, the values the list of lines
-sections = {}  # type: Dict
+sections: Dict = {}
 
 # Which objects to get
 api_get_objects = [
@@ -119,13 +119,13 @@ class AuthError(RuntimeError):
     pass
 
 
-class HPMSAConnection(object):
+class HPMSAConnection:
     def __init__(self, hostaddress, opt_timeout, debug):
         self._host = hostaddress
         self._base_url = "https://%s/api/" % self._host
         self._timeout = opt_timeout
         self._session = requests.Session()
-        self._session.headers = {"User-agent": "Checkmk special agent_hp_msa"}
+        self._session.headers = CaseInsensitiveDict({"User-agent": "Checkmk special agent_hp_msa"})
         # we cannot use self._session.verify because it will be overwritten by
         # the REQUESTS_CA_BUNDLE env variable
         self._verify_ssl = False
@@ -148,7 +148,12 @@ class HPMSAConnection(object):
         login_url = "login/%s" % login_hash.hexdigest()
         response = self.get(login_url)
         xml_tree = ET.fromstring(response.text)
-        session_key = xml_tree.find("./OBJECT/PROPERTY[@name='response']").text
+        response_element = xml_tree.find("./OBJECT/PROPERTY[@name='response']")
+        if response_element is None:
+            raise Exception("no response element")
+        session_key = response_element.text
+        if not isinstance(session_key, str):
+            raise Exception("invalid response element")
         if session_key.lower() == "authentication unsuccessful":
             raise AuthError("Connecting to %s failed. Please verify host address & login details" %
                             self._base_url)
@@ -183,7 +188,7 @@ def main(argv=None):
                 raise
 
     # Output sections
-    for section, lines in sections.iteritems():
+    for section, lines in sections.items():
         print("<<<hp_msa_%s>>>" % section)
         print("\n".join(x.encode("utf-8") for x in lines))
 

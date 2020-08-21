@@ -7,7 +7,9 @@
 #define TimeAggregator_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
+
 #include "Aggregator.h"
 #include "TimeColumn.h"
 #include "contact_fwd.h"

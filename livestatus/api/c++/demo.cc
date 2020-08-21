@@ -4,6 +4,7 @@
 // source code package.
 
 #include <stdio.h>
+
 #include "Livestatus.h"
 
 const char *query =

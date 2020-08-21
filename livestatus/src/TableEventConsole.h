@@ -7,6 +7,7 @@
 #define TableEventConsole_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <cstdint>
 #include <cstdlib>
@@ -15,6 +16,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+
 #include "Column.h"
 #include "DoubleColumn.h"
 #include "IntColumn.h"

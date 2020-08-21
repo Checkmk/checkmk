@@ -7,6 +7,7 @@
 #define Queue_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <atomic>
 #include <condition_variable>
 #include <mutex>

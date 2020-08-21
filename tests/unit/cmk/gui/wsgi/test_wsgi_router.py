@@ -1,63 +1,39 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-import json
 import os
-import random
-import string
 import typing
-import uuid
 
-import pytest
+import pytest  # type: ignore[import]
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
 if typing.TYPE_CHECKING:
-    import webtest  # pylint: disable=unused-import
-
-# pylint: disable=redefined-outer-name
+    import webtest  # type: ignore[import] # pylint: disable=unused-import
 
 
-def test_normal_auth(
-    wsgi_app,  # type: WebTestAppForCMK
-    with_user,
-):
+def test_normal_auth(wsgi_app, with_user):
     username, password = with_user
-    login = wsgi_app.get('/NO_SITE/check_mk/login.py')  # type: webtest.TestResponse
+    login: 'webtest.TestResponse' = wsgi_app.get('/NO_SITE/check_mk/login.py')
     login.form['_username'] = username
     login.form['_password'] = password
     resp = login.form.submit('_login', index=1)
 
-    assert "Invalid credentials." not in resp.body
+    assert "Invalid credentials." not in resp.text
 
 
-@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="No agent deployment in raw edition")
-def test_deploy_agent(wsgi_app):
-    response = wsgi_app.get('/NO_SITE/check_mk/deploy_agent.py')
-    assert response.body.startswith("ERROR: Missing or invalid")
-
-    response = wsgi_app.get('/NO_SITE/check_mk/deploy_agent.py?mode=agent')
-    assert response.body.startswith("ERROR: Missing host")
-
-
-def test_openapi_version(
-    wsgi_app,  # type: WebTestAppForCMK
-    with_automation_user,
-):
+def test_openapi_version(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     resp = wsgi_app.get("/NO_SITE/check_mk/api/v0/version", status=200)
     assert resp.json['site'] == cmk_version.omd_site()
 
 
-def test_openapi_app_exception(
-    wsgi_app,  # type: WebTestAppForCMK
-    with_automation_user,
-):
+def test_openapi_app_exception(wsgi_app_debug_off, with_automation_user):
+    wsgi_app = wsgi_app_debug_off
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     resp = wsgi_app.get("/NO_SITE/check_mk/api/v0/version?fail=1", status=500)
@@ -66,205 +42,8 @@ def test_openapi_app_exception(
     # TODO: Check CrashReport storage
 
 
-def test_openapi_missing_folder(
-    wsgi_app,  # type: WebTestAppForCMK
-    with_automation_user,
-):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    wsgi_app.get("/NO_SITE/check_mk/api/v0/objects/folder/asdf" + uuid.uuid4().hex, status=404)
-
-
-def test_openapi_hosts(
-    wsgi_app,  # type: WebTestAppForCMK
-    with_automation_user,
-    suppress_automation_calls,
-):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(('Bearer', username + " " + secret))
-
-    base = '/NO_SITE/check_mk/api/v0'
-
-    resp = wsgi_app.call_method(
-        'post',
-        base + "/collections/host",
-        params='{"hostname": "foobar", "folder": "root"}',
-        status=200,
-        content_type='application/json',
-    )
-
-    resp = wsgi_app.follow_link(
-        resp,
-        '.../update',
-        base=base,
-        status=200,
-        params='{"attributes": {}}',
-        headers={'If-Match': resp.headers['ETag']},
-        content_type='application/json',
-    )
-
-    wsgi_app.follow_link(
-        resp,
-        '.../delete',
-        base=base,
-        status=204,
-        headers={'If-Match': resp.headers['ETag']},
-        content_type='application/json',
-    )
-
-
-@pytest.mark.parametrize("group_type", ['host', 'contact', 'service'])
-def test_openapi_groups(
-    group_type,
-    wsgi_app,  # type: WebTestAppForCMK
-    with_automation_user,
-):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(('Bearer', username + " " + secret))
-
-    def _random_string(size):
-        return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(size))
-
-    name = _random_string(10)
-    alias = _random_string(10)
-
-    group = {'name': name, 'alias': alias}
-
-    base = "/NO_SITE/check_mk/api/v0"
-    resp = wsgi_app.call_method(
-        'post',
-        base + "/collections/%s_group" % (group_type,),
-        params=json.dumps(group),
-        status=200,
-        content_type='application/json',
-    )
-
-    resp = wsgi_app.follow_link(
-        resp,
-        'self',
-        base=base,
-        status=200,
-    )
-
-    group['name'] += " updated"
-
-    wsgi_app.follow_link(
-        resp,
-        '.../update',
-        base=base,
-        params=json.dumps(group),
-        headers={'If-Match': 'foo bar'},
-        status=412,
-        content_type='application/json',
-    )
-
-    resp = wsgi_app.follow_link(
-        resp,
-        '.../update',
-        base=base,
-        params=json.dumps(group),
-        headers={'If-Match': resp.headers['ETag']},
-        status=200,
-        content_type='application/json',
-    )
-
-    wsgi_app.follow_link(
-        resp,
-        '.../delete',
-        base=base,
-        headers={'If-Match': resp.headers['ETag']},
-        status=204,
-        content_type='application/json',
-    )
-
-
-def test_openapi_folders(
-    wsgi_app,  # type: WebTestAppForCMK
-    with_automation_user,
-):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(('Bearer', username + " " + secret))
-
-    resp = wsgi_app.call_method('get', "/NO_SITE/check_mk/api/v0/collections/folder", status=200)
-    assert resp.json['value'] == []
-
-    resp = wsgi_app.call_method('post',
-                                "/NO_SITE/check_mk/api/v0/collections/folder",
-                                params='{"name": "new_folder", "title": "foo", "parent": null}',
-                                status=200,
-                                content_type='application/json')
-
-    base = '/NO_SITE/check_mk/api/v0'
-
-    # First test without the proper ETag, fails with 412 (precondition failed)
-    wsgi_app.follow_link(resp,
-                         '.../update',
-                         base=base,
-                         status=400,
-                         params='{"title": "foobar"}',
-                         content_type='application/json')
-    wsgi_app.follow_link(resp,
-                         '.../update',
-                         base=base,
-                         status=412,
-                         headers={'If-Match': 'Witty Sensationalist Header!'},
-                         params='{"title": "foobar"}',
-                         content_type='application/json')
-    # With the right ETag, the operation shall succeed
-    resp = wsgi_app.follow_link(resp,
-                                '.../update',
-                                base=base,
-                                status=200,
-                                headers={'If-Match': resp.headers['ETag']},
-                                params='{"title": "foobar"}',
-                                content_type='application/json')
-    # Even twice, as this is idempotent.
-    resp = wsgi_app.follow_link(resp,
-                                '.../update',
-                                base=base,
-                                status=200,
-                                headers={'If-Match': resp.headers['ETag']},
-                                params='{"title": "foobar"}',
-                                content_type='application/json')
-
-    # Invoke directly for now. Ideally this should be a 2-stage step:
-    #   1. fetch the resource description
-    #   2. send the argument as in the specification
-    wsgi_app.follow_link(resp,
-                         '.../invoke;action="move"',
-                         base=base,
-                         status=400,
-                         headers={'If-Match': resp.headers['ETag']},
-                         params=json.dumps({"destination": 'root'}),
-                         content_type='application/json')
-
-    # Check that unknown folders also give a 400
-    wsgi_app.follow_link(resp,
-                         '.../invoke;action="move"',
-                         base=base,
-                         status=400,
-                         headers={'If-Match': resp.headers['ETag']},
-                         params=json.dumps({"destination": 'asdf'}),
-                         content_type='application/json')
-
-    # Delete all folders.
-    coll = wsgi_app.get("/NO_SITE/check_mk/api/v0/collections/folder", status=200)
-    for entry in coll.json['value']:
-        # Fetch the new E-Tag.
-        resp = wsgi_app.get("/NO_SITE/check_mk/api/v0" + entry['href'], status=200)
-        # With the right ETag, the operation shall succeed
-        wsgi_app.follow_link(resp,
-                             '.../delete',
-                             base=base,
-                             status=204,
-                             headers={'If-Match': resp.headers['ETag']})
-
-
 @pytest.mark.skip
-def test_legacy_webapi(
-    wsgi_app,  # type: WebTestAppForCMK
-    with_automation_user,
-):
+def test_legacy_webapi(wsgi_app, with_automation_user):
     username, password = with_automation_user
     wsgi_app.set_credentials(username, password)
     hostname = 'foobar'
@@ -329,18 +108,18 @@ def test_cmk_run_cron(wsgi_app):
 
 def test_cmk_automation(wsgi_app):
     response = wsgi_app.get("/NO_SITE/check_mk/automation.py", status=200)
-    assert response.body == "Missing secret for automation command."
+    assert response.text == "Missing secret for automation command."
 
 
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="No AJAX graphs in raw edition")
 def test_cmk_ajax_graph_images(wsgi_app):
     resp = wsgi_app.get("/NO_SITE/check_mk/ajax_graph_images.py", status=200)
-    assert resp.body.startswith("You are not allowed")
+    assert resp.text.startswith("You are not allowed")
 
     resp = wsgi_app.get("/NO_SITE/check_mk/ajax_graph_images.py",
                         status=200,
                         extra_environ={'REMOTE_ADDR': '127.0.0.1'})
-    assert resp.body == ""
+    assert resp.text == ""
 
 
 def test_options_disabled(wsgi_app):

@@ -9,7 +9,7 @@ description:
  until the license will expire.
 
 inventory:
- One service for each license will be created
+ One service is created for each license.
 
 item:
  The name of the license

@@ -12,4 +12,4 @@ item:
  The name of the instance
 
 inventory:
- One check per instance is created.
+ One service is created for each instance.

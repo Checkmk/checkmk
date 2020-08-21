@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -425,7 +425,7 @@ def test_mail_content_from_host_context(mocker):
 
     assert content.mailto == 'test@abc.de'
     assert content.subject == 'Check_MK: heute - DOWN -> UP'
-    assert content.from_address == u'checkmk@mysite.com'
+    assert content.from_address == u'NO_SITE@mysite.com'
     assert content.reply_to == u''
     assert content.content_txt == HOST_CONTENT_TXT
     assert content.attachments == []

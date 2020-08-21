@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,15 +7,13 @@
 
 import re
 import abc
-from typing import Any, Dict, List, Optional, Set, Text  # pylint: disable=unused-import
-import six
+from typing import Any, Dict, List, Optional, Set
 
 from cmk.utils.i18n import _
 from cmk.utils.exceptions import MKGeneralException
 
 
-def get_effective_tag_config(tag_config):
-    # type: (Dict) -> TagConfig
+def get_effective_tag_config(tag_config: Dict) -> 'TagConfig':
     # We don't want to access the plain config data structure during GUI code processing
     tags = TagConfig()
     tags.parse_config(tag_config)
@@ -45,15 +43,15 @@ def _validate_tag_id(tag_id):
             _("Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
 
 
-class ABCTag(six.with_metaclass(abc.ABCMeta, object)):
+class ABCTag(metaclass=abc.ABCMeta):
     def __init__(self):
         super(ABCTag, self).__init__()
         # TODO: See below, this was self._initialize()
         # NOTE: All the Optionals below are probably just plain wrong and just
         # an artifact of our broken 2-stage initialization.
-        self.id = None  # type: Optional[str]
-        self.title = None  # type: Optional[Text]
-        self.topic = None  # type: Optional[Text]
+        self.id: Optional[str] = None
+        self.title: Optional[str] = None
+        self.topic: Optional[str] = None
 
     # TODO: We *really* have to nuke these _initialize methods everywhere, they
     # either effectively blocking sane typing or lead to code duplication. The
@@ -119,7 +117,7 @@ class AuxTag(ABCTag):
         return response
 
 
-class AuxTagList(object):
+class AuxTagList:
     def __init__(self):
         self._tags = []
 
@@ -155,7 +153,7 @@ class AuxTagList(object):
                 return
 
     def validate(self):
-        seen = set()  # type: Set[str]
+        seen: Set[str] = set()
         for aux_tag in self._tags:
             aux_tag.validate()
 
@@ -220,7 +218,7 @@ class GroupedTag(ABCTag):
         return {"id": self.id, "title": self.title, "aux_tags": self.aux_tag_ids}
 
 
-class TagGroup(object):
+class TagGroup:
     def __init__(self, data=None):
         super(TagGroup, self).__init__()
         self._initialize()
@@ -280,7 +278,7 @@ class TagGroup(object):
         return {tag.id for tag in self.tags}
 
     def get_dict_format(self):
-        response = {"id": self.id, "title": self.title, "tags": []}  # type: Dict[str, Any]
+        response: Dict[str, Any] = {"id": self.id, "title": self.title, "tags": []}
         if self.topic:
             response["topic"] = self.topic
 
@@ -313,7 +311,7 @@ class TagGroup(object):
         return tag_groups
 
 
-class TagConfig(object):
+class TagConfig:
     """Container object encapsulating a whole set of configured
     tag groups with auxiliary tags"""
     def __init__(self):
@@ -349,7 +347,7 @@ class TagConfig(object):
         return sorted(list(names), key=lambda x: x[1])
 
     def get_tag_groups_by_topic(self):
-        by_topic = {}  # type: Dict[six.text_type, List[six.text_type]]
+        by_topic: Dict[str, List[str]] = {}
         for tag_group in self.tag_groups:
             topic = tag_group.topic or _('Tags')
             by_topic.setdefault(topic, []).append(tag_group)
@@ -358,8 +356,7 @@ class TagConfig(object):
     def tag_group_exists(self, tag_group_id):
         return self.get_tag_group(tag_group_id) is not None
 
-    def get_tag_group(self, tag_group_id):
-        # type: (str) -> Optional[TagGroup]
+    def get_tag_group(self, tag_group_id: str) -> Optional[TagGroup]:
         for group in self.tag_groups:
             if group.id == tag_group_id:
                 return group
@@ -386,7 +383,7 @@ class TagConfig(object):
         return aux_tag_map
 
     def get_aux_tags_by_topic(self):
-        by_topic = {}  # type: Dict[six.text_type, List[six.text_type]]
+        by_topic: Dict[str, List[str]] = {}
         for aux_tag in self.aux_tag_list.get_tags():
             topic = aux_tag.topic or _('Tags')
             by_topic.setdefault(topic, []).append(aux_tag)
@@ -394,7 +391,7 @@ class TagConfig(object):
 
     def get_tag_ids(self):
         """Returns the raw ids of the grouped tags and the aux tags"""
-        response = set()  # type: Set[six.text_type]
+        response: Set[str] = set()
         for tag_group in self.tag_groups:
             response.update(tag_group.get_tag_ids())
 
@@ -467,7 +464,7 @@ class TagConfig(object):
 
     def _validate_ids(self):
         """Make sure that no tag key is used twice as aux_tag ID or tag group id"""
-        seen_ids = set()  # type: Set[six.text_type]
+        seen_ids: Set[str] = set()
         for tag_group in self.tag_groups:
             if tag_group.id in seen_ids:
                 raise MKGeneralException(_("The tag group ID \"%s\" is used twice.") % tag_group.id)
@@ -531,7 +528,7 @@ class TagConfig(object):
             raise MKGeneralException(_("Tag groups with only one choice must have a tag ID."))
 
     def get_dict_format(self):
-        result = {"tag_groups": [], "aux_tags": []}  # type: Dict[str, Any]
+        result: Dict[str, Any] = {"tag_groups": [], "aux_tags": []}
         for tag_group in self.tag_groups:
             result["tag_groups"].append(tag_group.get_dict_format())
 

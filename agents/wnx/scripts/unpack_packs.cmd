@@ -23,6 +23,9 @@ if not exist %out%\asio\include\asio.hpp "no asio.hpp" && goto install
 echo package check success
 goto end
 :install
+@7z -? > nul 2>&1
+@if "%errorlevel%" NEQ "0" powershell Write-Host "7zip must be installed: use choco or windows_setup" -Foreground Red && exit /b 1
+@powershell Write-Host "[+] 7zip found" -Foreground Green
 if "%first%" == "1" (
 echo try to unpack
 call scripts\unpack_all.cmd ..\..\omd\packages %out%

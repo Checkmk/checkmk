@@ -1,26 +1,20 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import division
-import sys
 import ast
 import re
 import socket
 import time
-from typing import Dict, List, Optional, Text, Tuple  # pylint: disable=unused-import
+from typing import Dict, List, Optional, Tuple
+from pathlib import Path
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
-
-import six
+from six import ensure_binary, ensure_str
 
 import livestatus
-from livestatus import SiteId  # pylint: disable=unused-import
+from livestatus import SiteId
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
@@ -36,21 +30,18 @@ from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
 )
-from cmk.gui.valuespec import DropdownChoices  # pylint: disable=unused-import
+from cmk.gui.valuespec import DropdownChoices
 
 
-def _socket_path():
-    # type: () -> Path
+def _socket_path() -> Path:
     return Path(cmk.utils.paths.omd_root, "tmp", "run", "mkeventd", "status")
 
 
-def mib_upload_dir():
-    # type: () -> Path
+def mib_upload_dir() -> Path:
     return cmk.utils.paths.local_mib_dir
 
 
-def mib_dirs():
-    # type: () -> List[Tuple[Path, Text]]
+def mib_dirs() -> List[Tuple[Path, str]]:
     # ASN1 MIB source directory candidates. Non existing dirs are ok.
     return [
         (mib_upload_dir(), _('Custom MIBs')),
@@ -59,7 +50,7 @@ def mib_dirs():
     ]
 
 
-syslog_priorities = [
+syslog_priorities: DropdownChoices = [
     (0, "emerg"),
     (1, "alert"),
     (2, "crit"),
@@ -68,9 +59,9 @@ syslog_priorities = [
     (5, "notice"),
     (6, "info"),
     (7, "debug"),
-]  # type: DropdownChoices
+]
 
-syslog_facilities = [
+syslog_facilities: DropdownChoices = [
     (0, "kern"),
     (1, "user"),
     (2, "mail"),
@@ -96,7 +87,7 @@ syslog_facilities = [
     (22, "local6"),
     (23, "local7"),
     (31, "snmptrap"),
-]  # type: DropdownChoices
+]
 
 phase_names = {
     'counting': _("counting"),
@@ -169,8 +160,7 @@ def eventd_configuration():
     return cfg
 
 
-def daemon_running():
-    # type: () -> bool
+def daemon_running() -> bool:
     return _socket_path().exists()
 
 
@@ -187,19 +177,23 @@ def send_event(event):
         (event["sl"], event["host"], event["ipaddress"], event["application"], event["text"]),
     ]
 
-    execute_command("CREATE", [six.ensure_str(r) for r in rfc], site=event["site"])
+    execute_command("CREATE", [ensure_str(r) for r in rfc], site=event["site"])
 
     return ";".join(rfc)
 
 
 def get_local_ec_status():
     response = livestatus.LocalConnection().query("GET eventconsolestatus")
+    if len(response) == 1:
+        return None  # In case the EC is not running, there may be some
     return dict(zip(response[0], response[1]))
 
 
 def replication_mode():
     try:
         status = get_local_ec_status()
+        if not status:
+            return "stopped"
         return status["status_replication_slavemode"]
     except livestatus.MKLivestatusSocketError:
         return "stopped"
@@ -214,15 +208,15 @@ def query_ec_directly(query):
         sock.sendall(query)
         sock.shutdown(socket.SHUT_WR)
 
-        response_text = ""
+        response_text = b""
         while True:
             chunk = sock.recv(8192)
             response_text += chunk
             if not chunk:
                 break
 
-        return ast.literal_eval(response_text)
-    except SyntaxError as e:
+        return ast.literal_eval(ensure_str(response_text))
+    except SyntaxError:
         raise MKGeneralException(
             _("Invalid response from event daemon: "
               "<pre>%s</pre>") % response_text)
@@ -232,8 +226,9 @@ def query_ec_directly(query):
             _("Cannot connect to event daemon via %s: %s") % (_socket_path(), e))
 
 
-def execute_command(name, args=None, site=None):
-    # type: (str, Optional[List[str]], Optional[SiteId]) -> None
+def execute_command(name: str,
+                    args: Optional[List[str]] = None,
+                    site: Optional[SiteId] = None) -> None:
     if args:
         formated_args = ";" + ";".join(args)
     else:
@@ -262,7 +257,7 @@ def get_total_stats(only_sites):
 
     # First simply add rates. Times must then be averaged
     # weighted by message rate or connect rate
-    total_stats = {}  # type: Dict[str, float]
+    total_stats: Dict[str, float] = {}
     for row in stats_per_site:
         for key, value in row.items():
             if key.endswith("rate"):
@@ -271,8 +266,7 @@ def get_total_stats(only_sites):
     if not total_stats:
         if only_sites is None:
             raise MKGeneralException(_("Got no data from any site"))
-        else:
-            raise MKGeneralException(_("Got no data from this site"))
+        raise MKGeneralException(_("Got no data from this site"))
 
     for row in stats_per_site:
         for time_key, in_relation_to in [
@@ -380,7 +374,7 @@ def event_rule_matches_non_inverted(rule_pack, rule, event):
             return reason
 
     if cmk_version.is_managed_edition():
-        import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+        import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module,import-outside-toplevel
         if "customer" in rule_pack:
             rule_customer_id = rule_pack["customer"]
         else:
@@ -388,7 +382,7 @@ def event_rule_matches_non_inverted(rule_pack, rule, event):
 
         site_customer_id = managed.get_customer_id(config.sites[event["site"]])
 
-        if rule_customer_id != managed.SCOPE_GLOBAL and site_customer_id != rule_customer_id:
+        if rule_customer_id not in (managed.SCOPE_GLOBAL, site_customer_id):
             return _("Wrong customer")
 
     if match_groups is True:
@@ -400,12 +394,12 @@ def check_timeperiod(tpname):
     try:
         livesock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         livesock.connect(cmk.utils.paths.livestatus_unix_socket)
-        livesock.send("GET timeperiods\nFilter: name = %s\nColumns: in\n" % tpname)
+        livesock.send(ensure_binary("GET timeperiods\nFilter: name = %s\nColumns: in\n" % tpname))
         livesock.shutdown(socket.SHUT_WR)
         answer = livesock.recv(100).strip()
-        if answer == "":
+        if answer == b"":
             return _("The timeperiod %s is not known to the local monitoring core") % tpname
-        elif int(answer) == 0:
+        if int(answer) == 0:
             return _("The timeperiod %s is currently not active") % tpname
     except Exception as e:
         if config.debug:
@@ -416,16 +410,15 @@ def check_timeperiod(tpname):
 def match(pattern, text, complete=True):
     if pattern is None:
         return True
+    if complete:
+        if not pattern.endswith("$"):
+            pattern += '$'
+        m = re.compile(pattern, re.IGNORECASE).match(text)
     else:
-        if complete:
-            if not pattern.endswith("$"):
-                pattern += '$'
-            m = re.compile(pattern, re.IGNORECASE).match(text)
-        else:
-            m = re.compile(pattern, re.IGNORECASE).search(text)
-        if m:
-            return m.groups()
-        return False
+        m = re.compile(pattern, re.IGNORECASE).search(text)
+    if m:
+        return m.groups()
+    return False
 
 
 def match_ipv4_network(pattern, ipaddress_text):

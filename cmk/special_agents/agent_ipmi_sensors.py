@@ -1,14 +1,15 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 import errno
-import sys
 import getopt
-import cmk.utils.cmk_subprocess as subprocess
+import os
+import subprocess
+import sys
+from typing import Dict, List, Tuple
 
 
 def agent_ipmi_sensors_usage():
@@ -48,16 +49,16 @@ def parse_data(data, excludes):
     for line in data:
         if line.startswith("ID"):
             continue
-        elif excludes:
+        if excludes:
             has_excludes = False
             for exclude in excludes:
                 if exclude in line:
                     has_excludes = True
                     break
             if not has_excludes:
-                sys.stdout.write(("%s\n" % line).encode("utf-8"))
+                sys.stdout.write("%s\n" % line)
         else:
-            sys.stdout.write(("%s\n" % line).encode("utf-8"))
+            sys.stdout.write("%s\n" % line)
 
 
 def main(sys_argv=None):
@@ -89,7 +90,7 @@ def main(sys_argv=None):
         if o in ['--help']:
             agent_ipmi_sensors_usage()
             return 1
-        elif o in ['--debug']:
+        if o in ['--debug']:
             opt_debug = True
 
         # Common options
@@ -139,7 +140,7 @@ def main(sys_argv=None):
                      "-h", hostname, "-u", username,
                      "-p", password, "-l", privilege_lvl ] + \
                      additional_opts
-        queries = {"_sensors": ([], [])}
+        queries: Dict[str, Tuple[List[str], List[str]]] = {"_sensors": ([], [])}
     elif ipmi_cmd_type == 'ipmitool':
         ipmi_cmd = ["ipmitool", "-H", hostname, "-U", username, "-P", password, "-L", privilege_lvl]
         # As in check_mk_agent
@@ -158,7 +159,7 @@ def main(sys_argv=None):
         sys.stderr.write("Executing: '%s'\n" % ipmi_cmd_str)
 
     errors = []
-    for section, (types, excludes) in queries.iteritems():
+    for section, (types, excludes) in queries.items():
         sys.stdout.write("<<<ipmi%s:sep(124)>>>\n" % section)
         try:
             try:
@@ -172,20 +173,18 @@ def main(sys_argv=None):
                 )
             except OSError as e:
                 if e.errno == errno.ENOENT:  # No such file or directory
-                    raise Exception("Could not find '%s' command (PATH: %s)"\
-                                    % (ipmi_cmd_type, os.environ.get("PATH")))
-                else:
-                    raise
+                    raise Exception("Could not find '%s' command (PATH: %s)" %
+                                    (ipmi_cmd_type, os.environ.get("PATH")))
+                raise
 
             stdout, stderr = p.communicate()
             if stderr:
                 errors.append(stderr)
             parse_data(stdout.splitlines(), excludes)
         except Exception as e:
-            errors.append(e)
+            errors.append(str(e))
 
     if errors:
-        msg = "ERROR: '%s'.\n" % ", ".join(errors)
-        sys.stderr.write(msg.encode("utf-8"))
+        sys.stderr.write("ERROR: '%s'.\n" % ", ".join(errors))
         return 1
     return 0

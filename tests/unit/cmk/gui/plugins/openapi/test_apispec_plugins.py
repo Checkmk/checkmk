@@ -1,19 +1,18 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-# pylint: disable=redefined-outer-name
 
-import pytest
+import pytest  # type: ignore[import]
 
-from apispec import APISpec
-from marshmallow import Schema, fields, post_load
+from apispec import APISpec  # type: ignore[import]
+from marshmallow import Schema, fields, post_load  # type: ignore[import]
 
 from cmk.gui.plugins.openapi.plugins import ValueTypedDictSchema, ValueTypedDictMarshmallowPlugin
 
 
-class Movie(object):
+class Movie:
     def __init__(self, **kw):
         for key, value in kw.items():
             setattr(self, key, value)
@@ -63,8 +62,8 @@ class MoviesSchema(ValueTypedDictSchema):
     value_type = MovieSchema
 
 
-@pytest.fixture()
-def spec():
+@pytest.fixture(name="spec")
+def spec_fixture():
     return APISpec(title='Sensationalist Witty Title',
                    version='1.0.0',
                    openapi_version='3.0.0',

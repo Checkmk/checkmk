@@ -1,18 +1,20 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 import argparse
 import logging
-# opportunity to use lxml.etree as drop-in replacement for ET in the future
+import sys
 import xml.etree.ElementTree as ET
+from typing import Any, Dict, List, Tuple
 
 import requests
 from requests.packages import urllib3  # pylint: disable=import-error
 from cmk.utils.exceptions import MKException
+
+ElementAttributes = Dict[str, str]
 
 # TODO Add functionality in the future
 #import cmk.utils.password_store
@@ -94,6 +96,7 @@ B_SERIES_ENTITIES = [
         ("topSystem", ["Address", "CurrentTime", "Ipv6Addr", "Mode", "Name", "SystemUpTime"]),
     ]),
 ]
+B_SERIES_NECESSARY_SECTIONS = ["ucs_bladecenter_faultinst"]
 
 # Cisco UCS C-Series Rack Servers
 C_SERIES_ENTITIES = [
@@ -173,7 +176,25 @@ C_SERIES_ENTITIES = [
             "ioUtilization",
         ]),
     ]),
+    ("ucs_c_rack_server_led", [
+        ("equipmentIndicatorLed", [
+            "dn",
+            "name",
+            "color",
+            "operState",
+        ]),
+    ]),
+    ("ucs_c_rack_server_faultinst", [
+        ("faultInst", [
+            "severity",
+            "cause",
+            "code",
+            "descr",
+            "affectedDN",
+        ]),
+    ]),
 ]
+C_SERIES_NECESSARY_SECTIONS = ["ucs_c_rack_server_faultinst"]
 
 #.
 #   .--connection----------------------------------------------------------.
@@ -190,7 +211,7 @@ class CommunicationException(MKException):
     pass
 
 
-class Server(object):
+class Server:
     def __init__(self, hostname, username, password, verify_ssl):
         self._url = "https://%s/nuova" % hostname
         self._username = username
@@ -201,7 +222,7 @@ class Server(object):
 
     def login(self):
         logging.debug("Server.login: Login")
-        attributes = {
+        attributes: ElementAttributes = {
             'inName': self._username,
             'inPassword': self._password,
         }
@@ -214,7 +235,7 @@ class Server(object):
 
     def logout(self):
         logging.debug("Server.logout: Logout")
-        attributes = {}
+        attributes: ElementAttributes = {}
         if self._cookie:
             attributes.update({'inCookie': self._cookie})
         self._communicate(ET.Element('aaaLogout', attrib=attributes))
@@ -230,7 +251,7 @@ class Server(object):
         from entities (B_SERIES_ENTITIES, C_SERIES_ENTITIES).
         """
         logging.debug("Server.get_data_from_entities: Try to get entities")
-        data = {}
+        data: Dict[str, List[Tuple[Any, Any]]] = {}
         for header, entries in entities:
             for class_id, attributes in entries:
                 logging.debug(
@@ -277,7 +298,7 @@ class Server(object):
         """
         Returns list of XML trees for class_id or empty list in case no entries are found.
         """
-        attributes = {
+        attributes: ElementAttributes = {
             'classId': class_id,
             'inHierarchical': 'false',
         }
@@ -409,9 +430,11 @@ def main(args=None):
     if "ucsc-c" in model_info.lower():
         logging.debug("Using UCS C-Series Rack Server entities")
         entities = C_SERIES_ENTITIES
+        necessary_sections = C_SERIES_NECESSARY_SECTIONS
     else:
         logging.debug("Using UCS B-Series Blade Server entities")
         entities = B_SERIES_ENTITIES
+        necessary_sections = B_SERIES_NECESSARY_SECTIONS
 
     try:
         data = handle.get_data_from_entities(entities)
@@ -424,13 +447,12 @@ def main(args=None):
         handle.logout()
         return 1
 
-    # "ucs_bladecenter_faultinst" should always be in agent output, even no
-    # data is present
-    section_needed = "ucs_bladecenter_faultinst"
-    if entities == B_SERIES_ENTITIES and section_needed not in data:
-        sys.stdout.write("<<<%s:sep(9)>>>\n" % section_needed)
+    # some sections should always be in agent output, even if there is no data from the server
+    for section in necessary_sections:
+        if section not in data:
+            sys.stdout.write("<<<%s:sep(9)>>>\n" % section)
 
-    for header, class_data in data.iteritems():
+    for header, class_data in data.items():
         sys.stdout.write("<<<%s:sep(9)>>>\n" % header)
         for class_id, values in class_data:
             values_str = "\t".join(["%s %s" % v for v in values])

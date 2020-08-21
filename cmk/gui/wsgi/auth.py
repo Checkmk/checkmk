@@ -1,26 +1,24 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import contextlib
-import functools
 import time
-
-from typing import Optional  # pylint: disable=unused-import
+from typing import Optional
 
 from connexion import problem  # type: ignore[import]
+from six import ensure_str
 
-from cmk.utils.type_defs import UserId  # pylint: disable=unused-import
-from cmk.utils.encoding import ensure_unicode
+from cmk.utils.type_defs import UserId
 
-from cmk.gui.config import clear_user_login, set_user_by_id
+from cmk.gui.config import clear_user_login, set_user_by_id, load_config
 from cmk.gui.exceptions import MKException, MKAuthException, MKUserError
 from cmk.gui.login import verify_automation_secret, set_auth_type
 
 from cmk.gui.wsgi.wrappers import ParameterDict
-from cmk.gui.wsgi.types import RFC7662  # pylint: disable=unused-import
+from cmk.gui.wsgi.type_defs import RFC7662
 
 MK_STATUS = {
     MKUserError: 400,
@@ -28,8 +26,7 @@ MK_STATUS = {
 }
 
 
-def bearer_auth(token):
-    # type: (str) ->  Optional[RFC7662]
+def bearer_auth(token: str) -> Optional[RFC7662]:
     try:
         user_id, secret = token.split(' ', 1)
     except ValueError:
@@ -44,15 +41,14 @@ def bearer_auth(token):
     if "/" in user_id:
         return None
 
-    if verify_automation_secret(UserId(ensure_unicode(user_id)), secret):
+    if verify_automation_secret(UserId(ensure_str(user_id)), secret):
         # Auth with automation secret succeeded - mark transid as unneeded in this case
         return _subject(user_id)
 
     return None
 
 
-def _subject(user_id):
-    # type: (str) -> RFC7662
+def _subject(user_id: str) -> RFC7662:
     # noinspection PyTypeChecker
     return {'sub': user_id, 'iat': int(time.time()), 'active': True}
 
@@ -62,6 +58,7 @@ def verify_user(user_id, token_info):
     if user_id and token_info and user_id == token_info.get('sub'):
         set_user_by_id(user_id)
         set_auth_type("automation")
+        load_config()
         yield
         clear_user_login()
     else:
@@ -69,7 +66,9 @@ def verify_user(user_id, token_info):
 
 
 def with_user(func):
-    @functools.wraps(func)
+    # NOTE: Don't use @functools.wraps here, as under Python3 connexion will only ever check the
+    # signature of the wrapped function (which has no keyword arguments) and only gives us the
+    # context if the wrapped function accepts keyword arguments (which it does not).
     def wrapper(*args, **kw):
         user_id = kw.get('user')
         token_info = kw.get('token_info')

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -8,6 +8,17 @@ import pytest  # type: ignore[import]
 
 from testlib import on_time
 from cmk.gui.plugins.metrics import artwork
+
+
+@pytest.mark.parametrize("_min, _max, mirrored, result", [
+    (5, 15, False, (5, 15)),
+    (None, None, False, (0, 1)),
+    (None, None, True, (-1, 1)),
+    (None, 5, False, (0, 5)),
+    (None, 5, True, (-5, 5)),
+])
+def test_min(_min, _max, mirrored, result):
+    assert artwork._purge_min_max(_min, _max, mirrored) == result
 
 
 @pytest.mark.parametrize("args, result", [
@@ -40,7 +51,7 @@ def test_halfstep_interpolation():
 
 
 @pytest.mark.parametrize("args, result", [
-    pytest.param(([], range(3)), [(0, 0), (0, 1), (0, 2)], id='area'),
+    pytest.param(([], list(range(3))), [(0, 0), (0, 1), (0, 2)], id='area'),
     pytest.param(([], [5, None, 6]), [(0, 5), (None, None), (0, 6)], id='area holes'),
     pytest.param(([0, 0], [1, 2]), [(0, 1), (0, 2)], id='stack'),
     pytest.param(([0, 1], [1, 1]), [(0, 1), (1, 2)], id='stack'),

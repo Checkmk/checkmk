@@ -1,11 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """LDAP configuration and diagnose page"""
 
-import six
+from typing import Iterable, Optional, Type
 
 import cmk.utils.version as cmk_version
 
@@ -24,11 +24,20 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.plugins.userdb.utils import load_connection_config, save_connection_config
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+    make_simple_form_page_menu,
+    make_form_submit_link,
+)
 
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
-    global_buttons,
     add_change,
     make_action_link,
     wato_confirm,
@@ -61,12 +70,50 @@ class ModeLDAPConfig(LDAPMode):
     def title(self):
         return _("LDAP connections")
 
-    def buttons(self):
-        global_buttons()
-        html.context_button(_("Back"), watolib.folder_preserving_link([("mode", "users")]), "back")
-        html.context_button(_("New connection"),
-                            watolib.folder_preserving_link([("mode", "edit_ldap_connection")]),
-                            "new")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="connections",
+                    title=_("Connections"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Add connection"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Add connection"),
+                                    icon_name="new",
+                                    item=make_simple_link(
+                                        watolib.folder_preserving_link([("mode",
+                                                                         "edit_ldap_connection")])),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Setup"),
+                            entries=list(self._page_menu_entries_related()),
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
+
+    def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
+        yield PageMenuEntry(
+            title=_("Users"),
+            icon_name="users",
+            item=make_simple_link(html.makeuri_contextless([("mode", "users")],
+                                                           filename="wato.py")),
+        )
 
     def action(self):
         connections = load_connection_config(lock=True)
@@ -152,6 +199,10 @@ class ModeEditLDAPConnection(LDAPMode):
     def permissions(cls):
         return ["global"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeLDAPConfig
+
     def _from_vars(self):
         self._connection_id = html.request.get_ascii_input("id")
         self._connection_cfg = {}
@@ -179,13 +230,25 @@ class ModeEditLDAPConnection(LDAPMode):
 
     def title(self):
         if self._new:
-            return _("Create new LDAP Connection")
-        return _("Edit LDAP Connection: %s") % html.render_text(self._connection_id)
+            return _("Add LDAP connection")
+        return _("Edit LDAP connection: %s") % html.render_text(self._connection_id)
 
-    def buttons(self):
-        global_buttons()
-        html.context_button(_("Back"), watolib.folder_preserving_link([("mode", "ldap_config")]),
-                            "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = make_simple_form_page_menu(breadcrumb,
+                                          form_name="connection",
+                                          button_name="_save",
+                                          save_title=_("Save"))
+        menu.dropdowns[0].topics[0].entries.insert(
+            1,
+            PageMenuEntry(
+                title=_("Save & test"),
+                icon_name="save",
+                item=make_form_submit_link(form_name="connection", button_name="_test"),
+                is_shortcut=True,
+                is_suggested=True,
+            ))
+
+        return menu
 
     def action(self):
         if not html.check_transaction():
@@ -216,9 +279,8 @@ class ModeEditLDAPConnection(LDAPMode):
         config.user_connections = self._connections  # make directly available on current page
         if html.request.var("_save"):
             return "ldap_config"
-        else:
-            # Fix the case where a user hit "Save & Test" during creation
-            html.request.set_var('id', self._connection_id)
+        # Fix the case where a user hit "Save & Test" during creation
+        html.request.set_var('id', self._connection_id)
 
     def page(self):
         html.open_div(id_="ldap")
@@ -231,8 +293,6 @@ class ModeEditLDAPConnection(LDAPMode):
         vs = self._valuespec()
         vs.render_input("connection", self._connection_cfg)
         vs.set_focus("connection")
-        html.button("_save", _("Save"))
-        html.button("_test", _("Save & Test"))
         html.hidden_fields()
         html.end_form()
         html.close_td()
@@ -305,7 +365,7 @@ class ModeEditLDAPConnection(LDAPMode):
         connection.connect(enforce_new=True, enforce_server=address)
         if connection.user_base_dn_exists():
             return (True, _('The User Base DN could be found.'))
-        elif connection.has_bind_credentials_configured():
+        if connection.has_bind_credentials_configured():
             return (False,
                     _('The User Base DN could not be found. Maybe the provided '
                       'user (provided via bind credentials) has no permission to '
@@ -380,7 +440,7 @@ class ModeEditLDAPConnection(LDAPMode):
                 group_specs = [group_specs]
 
             for group_spec in group_specs:
-                if isinstance(group_spec, six.string_types):
+                if isinstance(group_spec, str):
                     dn = group_spec  # be compatible to old config without connection spec
                 elif not isinstance(group_spec, tuple):
                     continue  # skip non configured ones (old valuespecs allowed None)

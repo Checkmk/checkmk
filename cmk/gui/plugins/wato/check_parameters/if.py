@@ -1,15 +1,17 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, List, Tuple as _Tuple, Union
+
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Alternative,
     CascadingDropdown,
-    defines,
     Dictionary,
+    DictionaryEntry,
     DropdownChoice,
     DualListChoice,
     Integer,
@@ -24,6 +26,7 @@ from cmk.gui.valuespec import (
     TextAscii,
     Transform,
     Tuple,
+    defines,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersDiscovery,
@@ -37,7 +40,7 @@ from cmk.gui.plugins.wato.check_parameters.utils import vs_interface_traffic
 
 
 def transform_if(v):
-    new_traffic = []
+    new_traffic: List[_Tuple[str, _Tuple[str, _Tuple[str, _Tuple[Union[int, float], Any]]]]] = []
 
     if 'traffic' in v and not isinstance(v['traffic'], list):
         warn, crit = v['traffic']
@@ -89,6 +92,13 @@ def _transform_discovery_if_rules(params):
     use_desc = params.pop('use_desc', None)
     if use_desc:
         params['item_appearance'] = 'descr'
+
+    # Up to v1.6, the host rulespec inventory_if_rules had the option to activate the discovery of
+    # the check rmon_stats under this key. However, rmon_stats does honor any of the other options
+    # offered by inventory_if_rules. Therefore, in v1.7, the activation of the discovery of
+    # rmon_stats has been moved to a separate host rulespec (rmon_discovery).
+    params.pop('rmon', None)
+
     return params
 
 
@@ -181,23 +191,6 @@ def _valuespec_inventory_if_rules():
                          '229'
                      ],
                  )),
-                ("rmon",
-                 DropdownChoice(
-                     choices=[
-                         (True,
-                          _("Create extra service with RMON statistics data (if available for the device)"
-                           )),
-                         (False, _('Do not create extra services')),
-                     ],
-                     title=_("Collect RMON statistics data"),
-                     help=
-                     _("If you enable this option, for every RMON capable switch port an additional service will "
-                       "be created which is always OK and collects RMON data. This will give you detailed information "
-                       "about the distribution of packet sizes transferred over the port. Note: currently "
-                       "this extra RMON check does not honor the inventory settings for switch ports. In a future "
-                       "version of Check_MK RMON data may be added to the normal interface service and not add "
-                       "an additional service."),
-                 )),
             ],
             help=_('This rule can be used to control the inventory for network ports. '
                    'You can configure the port types and port states for inventory '
@@ -215,7 +208,7 @@ rulespec_registry.register(
         valuespec=_valuespec_inventory_if_rules,
     ))
 
-vs_elements_if_groups_matches = [
+vs_elements_if_groups_matches: List[DictionaryEntry] = [
     ("iftype",
      Transform(
          DropdownChoice(
@@ -257,6 +250,7 @@ vs_elements_if_groups_group = [
 
 
 def _valuespec_if_groups():
+    node_name_elements: List[DictionaryEntry] = [("node_name", TextAscii(title=_("Node name")))]
     return Transform(Alternative(
         title=_('Network interface groups'),
         help=
@@ -283,9 +277,8 @@ def _valuespec_if_groups():
                                           ListOf(
                                               title=_("Patterns for each node"),
                                               add_label=_("Add pattern"),
-                                              valuespec=Dictionary(elements=[
-                                                  ("node_name", TextAscii(title=_("Node name")))
-                                              ] + vs_elements_if_groups_matches,
+                                              valuespec=Dictionary(elements=node_name_elements +
+                                                                   vs_elements_if_groups_matches,
                                                                    required_keys=["node_name"]),
                                               allow_empty=False,
                                           ))],
@@ -480,6 +473,17 @@ def _parameter_valuespec_if():
                      help=_("Setting levels on the used bandwidth is optional. If you do set "
                             "levels you might also consider using averaging."),
                  )),
+                ("average",
+                 Integer(
+                     title=_("Average values for used bandwidth"),
+                     help=_("By activating the computation of averages, the levels on "
+                            "traffic and speed are applied to the averaged value. That "
+                            "way you can make the check react only on long-time changes, "
+                            "not on one-minute events."),
+                     unit=_("minutes"),
+                     minvalue=1,
+                     default_value=15,
+                 )),
                 (
                     "nucasts",
                     Tuple(
@@ -492,23 +496,78 @@ def _parameter_valuespec_if():
                             Integer(title=_("Critical at"), unit=_("pkts / sec")),
                         ]),
                 ),
+                ("multicast",
+                 Alternative(title=_("Multicast packet rates"),
+                             help=_(
+                                 "These levels make the check go warning or critical whenever the "
+                                 "<b>percentual packet rate</b> or the <b>absolute packet "
+                                 "rate</b> of the monitored interface reaches the given "
+                                 "bounds. The percentual packet rate is computed by "
+                                 "dividing the number of multicast packets by the number "
+                                 "of unicast packets."),
+                             elements=[
+                                 Tuple(title=_("Percentual levels for multicast packets"),
+                                       elements=[
+                                           Percentage(title=_("Warning at"),
+                                                      unit=_("percent packets"),
+                                                      default_value=10.0,
+                                                      display_format='%.3f'),
+                                           Percentage(title=_("Critical at"),
+                                                      unit=_("percent packets"),
+                                                      default_value=20.0,
+                                                      display_format='%.3f')
+                                       ]),
+                                 Tuple(title=_("Absolute levels for multicast packets"),
+                                       elements=[
+                                           Integer(title=_("Warning at"), unit=_("pkts / sec")),
+                                           Integer(title=_("Critical at"), unit=_("pkts / sec"))
+                                       ])
+                             ])),
+                ("broadcast",
+                 Alternative(title=_("Broadcast packet rates"),
+                             help=_(
+                                 "These levels make the check go warning or critical whenever the "
+                                 "<b>percentual packet rate</b> or the <b>absolute packet "
+                                 "rate</b> of the monitored interface reaches the given "
+                                 "bounds. The percentual packet rate is computed by "
+                                 "dividing the number of broadcast packets by the number "
+                                 "of unicast packets."),
+                             elements=[
+                                 Tuple(title=_("Percentual levels for broadcast packets"),
+                                       elements=[
+                                           Percentage(title=_("Warning at"),
+                                                      unit=_("percent packets"),
+                                                      default_value=10.0,
+                                                      display_format='%.3f'),
+                                           Percentage(title=_("Critical at"),
+                                                      unit=_("percent packets"),
+                                                      default_value=20.0,
+                                                      display_format='%.3f')
+                                       ]),
+                                 Tuple(title=_("Absolute levels for broadcast packets"),
+                                       elements=[
+                                           Integer(title=_("Warning at"), unit=_("pkts / sec")),
+                                           Integer(title=_("Critical at"), unit=_("pkts / sec"))
+                                       ])
+                             ])),
+                ("average_bm",
+                 Integer(
+                     title=_("Average values for broad- and multicast packet rates"),
+                     help=_(
+                         "By activating the computation of averages, the levels on "
+                         "broad- and multicast packet rates are applied to "
+                         "the averaged value. That way you can make the check react only on long-time "
+                         "changes, not on one-minute events."),
+                     unit=_("minutes"),
+                     minvalue=1,
+                     default_value=15,
+                 )),
                 ("discards",
                  Tuple(title=_("Absolute levels for discards rates"),
                        elements=[
                            Integer(title=_("Warning at"), unit=_("discards")),
                            Integer(title=_("Critical at"), unit=_("discards"))
                        ])),
-                ("average",
-                 Integer(
-                     title=_("Average values"),
-                     help=_("By activating the computation of averages, the levels on "
-                            "errors and traffic are applied to the averaged value. That "
-                            "way you can make the check react only on long-time changes, "
-                            "not on one-minute events."),
-                     unit=_("minutes"),
-                     minvalue=1,
-                     default_value=15,
-                 )),
                 ("match_same_speed",
                  DropdownChoice(title=_("Speed of interface groups (Netapp only)"),
                                 help=_("Choose the behaviour for different interface speeds in "

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,14 +7,12 @@
 
 import os
 import re
-import threading
 import socket
 import subprocess
-from typing import (  # pylint: disable=unused-import
-    NamedTuple, List, Tuple,
-)
+import threading
+from typing import NamedTuple, List, Tuple
 
-from cmk.utils.type_defs import HostAddress, HostName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostAddress, HostName
 
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
@@ -37,8 +35,7 @@ class AutomationNetworkScan(AutomationCommand):
     def command_name(self):
         return "network-scan"
 
-    def get_request(self):
-        # type: () -> NetworkScanRequest
+    def get_request(self) -> NetworkScanRequest:
         folder_path = html.request.var("folder")
         if folder_path is None:
             raise MKGeneralException(_("Folder path is missing"))
@@ -99,7 +96,7 @@ _FULL_IPV4 = (2**32) - 1
 def _ip_addresses_of_range(spec):
     first_int, last_int = map(_ip_int_from_string, spec)
 
-    addresses = []  # type: List[HostAddress]
+    addresses: List[HostAddress] = []
 
     if first_int > last_int:
         return addresses  # skip wrong config
@@ -113,8 +110,7 @@ def _ip_addresses_of_range(spec):
     return addresses
 
 
-def _ip_int_from_string(ip_str):
-    # type: (str) -> int
+def _ip_int_from_string(ip_str: str) -> int:
     packed_ip = 0
     octets = ip_str.split(".")
     for oc in octets:
@@ -122,9 +118,8 @@ def _ip_int_from_string(ip_str):
     return packed_ip
 
 
-def _string_from_ip_int(ip_int):
-    # type: (int) -> HostAddress
-    octets = []  # type: List[str]
+def _string_from_ip_int(ip_int: int) -> HostAddress:
+    octets: List[str] = []
     for _unused in range(4):
         octets.insert(0, str(ip_int & 0xFF))
         ip_int >>= 8
@@ -193,7 +188,7 @@ def _scan_ip_addresses(folder, ip_addresses):
 
     # Initalize all workers
     threads = []
-    found_hosts = []  # type: List[Tuple[HostName, HostAddress]]
+    found_hosts: List[Tuple[HostName, HostAddress]] = []
     for _t_num in range(parallel_pings):
         t = threading.Thread(target=_ping_worker, args=[ip_addresses, found_hosts])
         t.daemon = True
@@ -207,8 +202,7 @@ def _scan_ip_addresses(folder, ip_addresses):
     return found_hosts
 
 
-def _ping_worker(addresses, hosts):
-    # type: (List[HostAddress], List[Tuple[HostName, HostAddress]]) -> None
+def _ping_worker(addresses: List[HostAddress], hosts: List[Tuple[HostName, HostAddress]]) -> None:
     while True:
         try:
             ipaddress = addresses.pop()
@@ -216,7 +210,6 @@ def _ping_worker(addresses, hosts):
             break
 
         if _ping(ipaddress):
-            # type: (HostAddress) -> None
             try:
                 host_name = socket.gethostbyaddr(ipaddress)[0]
             except socket.error:
@@ -225,9 +218,9 @@ def _ping_worker(addresses, hosts):
             hosts.append((host_name, ipaddress))
 
 
-def _ping(address):
-    # type: (HostAddress) -> bool
+def _ping(address: HostAddress) -> bool:
     return subprocess.Popen(['ping', '-c2', '-w2', address],
                             stdout=open(os.devnull, "a"),
                             stderr=subprocess.STDOUT,
+                            encoding="utf-8",
                             close_fds=True).wait() == 0

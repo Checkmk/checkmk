@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -32,8 +32,6 @@
 # If you want the script to actually remove the folders you need to change
 # the parameter do_remove_folders (just below) to True.
 
-import pprint
-
 
 def remove_nonrelated_site_folders(effective_hosts):
     # Note: most of the paths here are hardcorded
@@ -65,7 +63,7 @@ def remove_nonrelated_site_folders(effective_hosts):
         exec(
             open(cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk").read(), file_vars_g,
             file_vars)
-    except Exception as e:
+    except Exception:
         # Return on any error
         return
     our_site = file_vars.get("distributed_wato_site")
@@ -81,7 +79,7 @@ def remove_nonrelated_site_folders(effective_hosts):
 
     keep_folders = set([])
     total_hosts = 0
-    for host, attributes in effective_hosts.items():
+    for attributes in effective_hosts.values():
         host_folder = attributes[".folder"][".path"]
 
         host_site = None
@@ -103,8 +101,7 @@ def remove_nonrelated_site_folders(effective_hosts):
         for folder in keep_folders:
             if folder.startswith(foldername):
                 return True
-        else:
-            return False
+        return False
 
     remove_folders = []
     for folder in all_folders:

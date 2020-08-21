@@ -1,26 +1,23 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 import errno
 import logging
 import os
 import re
+from pathlib import Path
 import signal
+import subprocess
 import traceback
-from typing import Any, Dict  # pylint: disable=unused-import
+from typing import Any, Dict, List, Tuple, Set
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+from six import ensure_binary, ensure_str
 
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
-import cmk.utils.cmk_subprocess as subprocess
 import cmk.utils.paths
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
@@ -99,8 +96,10 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
     def config_dir(self):
         return liveproxyd_config_dir()
 
-    def save(self, settings, site_specific=False):
-        super(ConfigDomainLiveproxy, self).save(settings, site_specific=site_specific)
+    def save(self, settings, site_specific=False, custom_site_path=None):
+        super(ConfigDomainLiveproxy, self).save(settings,
+                                                site_specific=site_specific,
+                                                custom_site_path=custom_site_path)
         self.activate()
 
     def activate(self):
@@ -108,17 +107,16 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
                   _("Activating changes of Livestatus Proxy configuration"))
 
         try:
-            pidfile = cmk.utils.paths.livestatus_unix_socket + "proxyd.pid"
+            pidfile = Path(cmk.utils.paths.livestatus_unix_socket).with_name("liveproxyd.pid")
             try:
-                pid = int(open(pidfile).read().strip())
+                with pidfile.open(encoding="utf-8") as f:
+                    pid = int(f.read().strip())
+
                 os.kill(pid, signal.SIGUSR1)
-            except IOError as e:  # NOTE: In Python 3 IOError has been merged into OSError!
-                # No liveproxyd running: No reload needed.
-                if e.errno != errno.ENOENT:
-                    raise
             except OSError as e:
-                # PID in pidfiles does not exist: No reload needed.
-                if e.errno != errno.ESRCH:  # [Errno 3] No such process
+                # ENOENT: No liveproxyd running: No reload needed.
+                # ESRCH: PID in pidfiles does not exist: No reload needed.
+                if e.errno not in (errno.ENOENT, errno.ESRCH):
                     raise
             except ValueError:
                 # ignore empty pid file (may happen during locking in
@@ -211,8 +209,10 @@ class ConfigDomainCACertificates(ABCConfigDomain):
             return os.path.join(self.config_dir(), "ca-certificates_sitespecific.mk")
         return os.path.join(self.config_dir(), "ca-certificates.mk")
 
-    def save(self, settings, site_specific=False):
-        super(ConfigDomainCACertificates, self).save(settings, site_specific=site_specific)
+    def save(self, settings, site_specific=False, custom_site_path=None):
+        super(ConfigDomainCACertificates, self).save(settings,
+                                                     site_specific=site_specific,
+                                                     custom_site_path=custom_site_path)
 
         current_config = settings.get("trusted_certificate_authorities", {
             "use_system_wide_cas": True,
@@ -225,7 +225,8 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         # Since this can be called from any WATO page it is not possible to report
         # errors to the user here. The self._update_trusted_cas() method logs the
         # errors - this must be enough for the moment.
-        self._update_trusted_cas(current_config)
+        if not site_specific and custom_site_path is None:
+            self._update_trusted_cas(current_config)
 
         if ConfigDomainLiveproxy.enabled():
             ConfigDomainLiveproxy().activate()
@@ -241,19 +242,21 @@ class ConfigDomainCACertificates(ABCConfigDomain):
             ]
 
     def _update_trusted_cas(self, current_config):
-        trusted_cas, errors = [], []
+        trusted_cas: List[bytes] = []
+        errors: List[str] = []
 
         if current_config["use_system_wide_cas"]:
             trusted, errors = self._get_system_wide_trusted_ca_certificates()
             trusted_cas += trusted
 
-        trusted_cas += current_config["trusted_cas"]
+        trusted_cas += [ensure_binary(e) for e in current_config["trusted_cas"]]
 
-        store.save_file(self.trusted_cas_file, "\n".join(trusted_cas))
+        store.save_bytes_to_file(self.trusted_cas_file, b"\n".join(trusted_cas))
         return errors
 
-    def _get_system_wide_trusted_ca_certificates(self):
-        trusted_cas, errors = set([]), []
+    def _get_system_wide_trusted_ca_certificates(self) -> Tuple[List[bytes], List[str]]:
+        trusted_cas: Set[bytes] = set()
+        errors: List[str] = []
         for p in self.system_wide_trusted_ca_search_paths:
             cert_path = Path(p)
 
@@ -268,7 +271,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
                     trusted_cas.update(self._get_certificates_from_file(cert_file_path))
                 except IOError:
-                    logger.exception("error updating CA")
+                    logger.exception("Error reading certificates from %s", cert_file_path)
 
                     # This error is shown to the user as warning message during "activate changes".
                     # We keep this message for the moment because we think that it is a helpful
@@ -288,11 +291,14 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
         return list(trusted_cas), errors
 
-    def _get_certificates_from_file(self, path):
+    def _get_certificates_from_file(self, path: Path) -> List[bytes]:
         try:
-            return [
-                match.group(0) for match in self._PEM_RE.finditer(open("%s" % path, "rb").read())
-            ]
+            # This IO is done as binary IO, even if the files are text files. Since we work with
+            # arbitrary files here, we can not be sure about the encoding of these files. Since we
+            # only want to concatenate them to a Checkmk global file, it is OK to treat them all as
+            # binary.
+            with path.open("rb") as f:
+                return [match.group(0) for match in self._PEM_RE.finditer(f.read())]
         except IOError as e:
             if e.errno == errno.ENOENT:
                 # Silently ignore e.g. dangling symlinks
@@ -373,25 +379,28 @@ class ConfigDomainOMD(ABCConfigDomain):
     def _load_omd_config(self, path):
         settings = {}
 
-        if not os.path.exists(path):
+        file_path = Path(path)
+
+        if not file_path.exists():
             return {}
 
         try:
-            for line in open(path):
-                line = line.strip()
+            with file_path.open(encoding="utf-8") as f:
+                for line in f:
+                    line = ensure_str(line.strip())
 
-                if line == "" or line.startswith("#"):
-                    continue
+                    if line == "" or line.startswith("#"):
+                        continue
 
-                var, value = line.split("=", 1)
+                    var, value = line.split("=", 1)
 
-                if not var.startswith("CONFIG_"):
-                    continue
+                    if not var.startswith("CONFIG_"):
+                        continue
 
-                key = var[7:].strip()
-                val = value.strip().strip("'")
+                    key = var[7:].strip()
+                    val = value.strip().strip("'")
 
-                settings[key] = val
+                    settings[key] = val
         except Exception as e:
             raise MKGeneralException(_("Cannot read configuration file %s: %s") % (path, e))
 
@@ -404,7 +413,7 @@ class ConfigDomainOMD(ABCConfigDomain):
     # Sadly we can not use the Transform() valuespecs, because each configvar
     # only get's the value associated with it's config key.
     def _from_omd_config(self, omd_config):
-        settings = {}  # type: Dict[str, Any]
+        settings: Dict[str, Any] = {}
 
         for key, value in omd_config.items():
             if value == "on":

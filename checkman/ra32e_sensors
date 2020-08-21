@@ -16,6 +16,5 @@ item:
  connected sensor.
 
 inventory:
- One service for the internal sensor and one
- service for each sensor that delivers temperature
- data.
+ One service is created for the internal sensor and
+ one service is created for each sensor that delivers temperature data.

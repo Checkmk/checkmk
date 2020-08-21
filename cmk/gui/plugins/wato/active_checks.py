@@ -1,11 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-import six
 
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.i18n import _
@@ -50,6 +49,21 @@ from cmk.gui.exceptions import MKUserError
 
 
 @rulespec_group_registry.register
+class RulespecGroupIntegrateNagiosPlugins(RulespecGroup):
+    @property
+    def name(self):
+        return "custom_checks"
+
+    @property
+    def title(self):
+        return _("Integrate Nagios plugins")
+
+    @property
+    def help(self):
+        return _("Integrate custom nagios plugins (so called active checks)")
+
+
+@rulespec_group_registry.register
 class RulespecGroupActiveChecks(RulespecGroup):
     @property
     def name(self):
@@ -57,11 +71,29 @@ class RulespecGroupActiveChecks(RulespecGroup):
 
     @property
     def title(self):
-        return _("Active checks (HTTP, TCP, etc.)")
+        return _("Check networking services")
 
     @property
     def help(self):
         return _("Configure active networking checks like HTTP and TCP")
+
+
+@rulespec_group_registry.register
+class RulespecGroupBI(RulespecGroup):
+    @property
+    def name(self):
+        return "bi"
+
+    @property
+    def title(self):
+        return _("Check state of BI aggregations")
+
+    @property
+    def help(self):
+        return _(
+            "Connect to the local or a remote monitoring host, which uses Check_MK BI to aggregate "
+            "several states to a single BI aggregation, which you want to show up as a single "
+            "service.")
 
 
 # These elements are also used in check_parameters.py
@@ -495,7 +527,7 @@ def _valuespec_active_checks_dns():
                                        "with a dot. Multiple IP addresses within one answer must "
                                        "be separated by comma."),
                             ),
-                            forth=lambda old: isinstance(old, six.string_types) and [old] or old,
+                            forth=lambda old: isinstance(old, str) and [old] or old,
                         ),
                     ),
                     ("expected_authority",
@@ -949,6 +981,11 @@ def _active_checks_http_transform_check_http(params):
     return transformed
 
 
+def _validate_active_check_http_name(value, varprefix):
+    if value.strip() == "^":
+        raise MKUserError(varprefix, _("Please provide a valid name"))
+
+
 def _valuespec_active_checks_http():
     return Transform(
         Dictionary(
@@ -967,7 +1004,9 @@ def _valuespec_active_checks_http():
                          "Will be used in the service description. If the name starts with "
                          "a caret (<tt>^</tt>), the service description will not be prefixed with either "
                          "<tt>HTTP</tt> or <tt>HTTPS</tt>."),
-                     allow_empty=False)),
+                     allow_empty=False,
+                     validate=_validate_active_check_http_name,
+                 )),
                 ("host", _active_checks_http_hostspec()),
                 ("proxy", _active_checks_http_proxyspec()),
                 ("mode",
@@ -1548,7 +1587,7 @@ rulespec_registry.register(
 
 def _valuespec_custom_checks():
     return Dictionary(
-        title=_("Classical active and passive Monitoring checks"),
+        title=_("Integrate Nagios plugins"),
         help=_("With this ruleset you can configure \"classical Monitoring checks\" "
                "to be executed directly on your monitoring server. These checks "
                "will not use Check_MK. It is also possible to configure passive "
@@ -1606,6 +1645,7 @@ def _valuespec_custom_checks():
                       DropdownChoice(
                           title=_("State in case of absent updates"),
                           choices=[
+                              (0, _("OK")),
                               (1, _("WARN")),
                               (2, _("CRIT")),
                               (3, _("UNKNOWN")),
@@ -1626,7 +1666,7 @@ def _valuespec_custom_checks():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupActiveChecks,
+        group=RulespecGroupIntegrateNagiosPlugins,
         match_type="all",
         name="custom_checks",
         valuespec=_valuespec_custom_checks,
@@ -1747,7 +1787,7 @@ def _valuespec_active_checks_bi_aggr():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupActiveChecks,
+        group=RulespecGroupBI,
         match_type="all",
         name="active_checks:bi_aggr",
         valuespec=_valuespec_active_checks_bi_aggr,
@@ -2333,7 +2373,7 @@ def _valuespec_active_checks_by_ssh():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupActiveChecks,
+        group=RulespecGroupIntegrateNagiosPlugins,
         match_type="all",
         name="active_checks:by_ssh",
         valuespec=_valuespec_active_checks_by_ssh,

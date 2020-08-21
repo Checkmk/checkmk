@@ -28,7 +28,7 @@ import sys
 import os
 import subprocess
 import logging
-from typing import TYPE_CHECKING, Optional, Tuple, List  # pylint: disable=unused-import
+from typing import TYPE_CHECKING, Optional, Tuple, List
 
 from cmk.utils.log import VERBOSE
 import cmk.utils.tty as tty
@@ -36,13 +36,15 @@ import cmk.utils.tty as tty
 from omdlib.utils import chdir
 
 if TYPE_CHECKING:
-    from omdlib.contexts import SiteContext  # pylint: disable=unused-import
+    from omdlib.contexts import SiteContext
 
 logger = logging.getLogger("cmk.omd")
 
 
-def call_init_scripts(site, command, daemon=None, exclude_daemons=None):
-    # type: (SiteContext, str, Optional[str], List[str]) -> int
+def call_init_scripts(site: 'SiteContext',
+                      command: str,
+                      daemon: Optional[str] = None,
+                      exclude_daemons: Optional[List[str]] = None) -> int:
     # Restart: Do not restart each service after another,
     # but first do stop all, then start all again! This
     # preserves the order.
@@ -77,8 +79,10 @@ def call_init_scripts(site, command, daemon=None, exclude_daemons=None):
     return 2
 
 
-def check_status(site, display=True, daemon=None, bare=False):
-    # type: (SiteContext, bool, Optional[str], bool) -> int
+def check_status(site: 'SiteContext',
+                 display: bool = True,
+                 daemon: Optional[str] = None,
+                 bare: bool = False) -> int:
     num_running = 0
     num_unused = 0
     num_stopped = 0
@@ -144,8 +148,7 @@ def check_status(site, display=True, daemon=None, bare=False):
 
 
 # TODO: Use site context
-def _init_scripts(sitename):
-    # type: (str) -> Tuple[str, List[str]]
+def _init_scripts(sitename: str) -> Tuple[str, List[str]]:
     rc_dir = "/omd/sites/%s/etc/rc.d" % sitename
     try:
         scripts = sorted(os.listdir(rc_dir))
@@ -154,8 +157,7 @@ def _init_scripts(sitename):
         return rc_dir, []
 
 
-def _call_init_script(scriptpath, command):
-    # type: (str, str) -> bool
+def _call_init_script(scriptpath: str, command: str) -> bool:
     if not os.path.exists(scriptpath):
         sys.stderr.write('ERROR: This daemon does not exist.\n')
         return False

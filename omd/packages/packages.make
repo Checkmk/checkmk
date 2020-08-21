@@ -42,7 +42,15 @@ $(INSTALL_TARGETS): $(BUILD_HELPER_DIR)/%-install: $(BUILD_HELPER_DIR)/%-skel-di
 $(BUILD_HELPER_DIR)/%-skel-dir: $(PRE_INSTALL)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel
 	set -e ; \
-	    PACKAGE_PATH="$(PACKAGE_DIR)/$$(echo "$*" | sed 's/-[0-9.]\+.*//')"; \
+	    PACKAGE_NAME="$$(echo "$*" | sed 's/-[0-9.]\+.*//')"; \
+	    if [ "$$PACKAGE_NAME" = "Python" ]; then \
+		PACKAGE_NAME="Python3" ; \
+	    fi ; \
+	    PACKAGE_PATH="$(PACKAGE_DIR)/$$PACKAGE_NAME"; \
+	    if [ ! -d "$$PACKAGE_PATH" ]; then \
+		echo "ERROR: Package directory does not exist" ; \
+		exit 1; \
+	    fi ; \
 	    if [ -d "$$PACKAGE_PATH/skel" ]; then \
 		tar cf - -C "$$PACKAGE_PATH/skel" \
 		    --exclude="*~" \
@@ -53,6 +61,13 @@ $(BUILD_HELPER_DIR)/%-skel-dir: $(PRE_INSTALL)
 # Rules for patching
 $(BUILD_HELPER_DIR)/%-patching: $(BUILD_HELPER_DIR)/%-unpack
 	set -e ; DIR=$$($(ECHO) $* | $(SED) 's/-[0-9.]\+.*//'); \
+	if [ "$$DIR" = "Python" ]; then \
+	    DIR="Python3" ; \
+	fi ; \
+	if [ ! -d "$(PACKAGE_DIR)/$$DIR" ]; then \
+	    echo "ERROR: Package directory does not exist" ; \
+	    exit 1; \
+	fi ; \
 	for P in $$($(LS) $(PACKAGE_DIR)/$$DIR/patches/*.dif); do \
 	    $(ECHO) "applying $$P..." ; \
 	    $(PATCH) -p1 -b -d $(PACKAGE_BUILD_DIR)/$* < $$P ; \
@@ -132,18 +147,13 @@ include \
     packages/openhardwaremonitor/openhardwaremonitor.make \
     packages/patch/patch.make \
     packages/pnp4nagios/pnp4nagios.make \
-    packages/Python/Python.make \
     packages/Python3/Python3.make \
-    packages/python-modules/python-modules.make \
     packages/python3-modules/python3-modules.make \
     packages/omd/omd.make \
     packages/net-snmp/net-snmp.make \
-    packages/python2-net-snmp/python2-net-snmp.make \
-    packages/mod_wsgi/mod_wsgi.make \
     packages/python3-mod_wsgi/python3-mod_wsgi.make \
     packages/re2/re2.make \
     packages/rrdtool/rrdtool.make \
-    packages/python2-rrdtool/python2-rrdtool.make \
     packages/mk-livestatus/mk-livestatus.make \
     packages/snap7/snap7.make \
     packages/Webinject/Webinject.make \

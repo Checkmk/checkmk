@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -10,9 +10,8 @@ import json
 import ast
 import re
 import logging
+import urllib.parse
 
-import six
-from six.moves.urllib.parse import urlparse
 from bs4 import BeautifulSoup  # type: ignore[import]
 
 import requests
@@ -25,7 +24,17 @@ class APIError(Exception):
 logger = logging.getLogger()
 
 
-class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
+def _get_automation_secret(site):
+    secret_path = "var/check_mk/web/automation/automation.secret"
+    secret = site.read_file(secret_path)
+
+    if secret == "":
+        raise Exception("Failed to read secret from %s" % secret_path)
+
+    return secret
+
+
+class CMKWebSession:
     def __init__(self, site):
         super(CMKWebSession, self).__init__()
         self.transids = []
@@ -93,32 +102,41 @@ class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
                 (response.history[0].status_code, response.history[0].url, response.url)
 
         if self._get_mime_type(response) == "text/html":
-            self.transids += self._extract_transids(response.text)
+            soup = BeautifulSoup(response.text, "lxml")
+
+            self.transids += self._extract_transids(response.text, soup)
             self._find_errors(response.text)
-            self._check_html_page_resources(response.url, response.text)
+            self._check_html_page_resources(response.url, soup)
 
     def _get_mime_type(self, response):
         assert "Content-Type" in response.headers
         return response.headers["Content-Type"].split(";", 1)[0]
 
-    def _extract_transids(self, body):
+    def _extract_transids(self, body, soup):
         """Extract transids from pages used in later actions issued by tests."""
-        return re.findall('name="_transid" value="([^"]+)"', body) + \
-               re.findall('_transid=([0-9/]+)', body)
+
+        transids = set()
+
+        # Extract from form hidden fields
+        for element in soup.findAll(attrs={"name": "_transid"}):
+            transids.add(element["value"])
+
+        # Extract from URLs in the body
+        transids.update(re.findall('_transid=([0-9/]+)', body))
+
+        return list(transids)
 
     def _find_errors(self, body):
         matches = re.search('<div class=error>(.*?)</div>', body, re.M | re.DOTALL)
         assert not matches, "Found error message: %s" % matches.groups()
 
-    def _check_html_page_resources(self, url, body):
-        soup = BeautifulSoup(body, "lxml")
-
-        base_url = urlparse(url).path
+    def _check_html_page_resources(self, url, soup):
+        base_url = urllib.parse.urlparse(url).path
         if ".py" in base_url:
             base_url = os.path.dirname(base_url)
 
         # There might be other resources like iframe, audio, ... but we don't care about them
-        self._check_resources(soup, base_url, "img", "src", ["image/png"])
+        self._check_resources(soup, base_url, "img", "src", ["image/png", "image/svg+xml"])
         self._check_resources(soup, base_url, "script", "src",
                               ["application/javascript", "text/javascript"])
         self._check_resources(soup,
@@ -192,16 +210,20 @@ class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
         if lang:
             assert "value=\"" + lang + "\"" in profile_page
 
-        r = self.post("user_profile.py",
-                      data={
-                          "filled_in": "profile",
-                          "_set_lang": "on",
-                          "ua_start_url_use": "0",
-                          "ua_ui_theme_use": "0",
-                          "language": lang,
-                          "_save": "Save",
-                      },
-                      add_transid=True)
+        r = self.post(
+            "user_profile.py",
+            data={
+                "filled_in": "profile",
+                "ua_start_url_use": "0",
+                "ua_ui_theme_use": "0",
+                # Encoded None using DropdownChoice.option_id
+                "ua_ui_sidebar_position": "dc937b59892604f5a86ac96936cd7ff09e25f18ae6b758e8014a24c7fa039e91",
+                "ua_icons_per_item": "dc937b59892604f5a86ac96936cd7ff09e25f18ae6b758e8014a24c7fa039e91",
+                "ua_ui_basic_advanced_mode": "dc937b59892604f5a86ac96936cd7ff09e25f18ae6b758e8014a24c7fa039e91",
+                "language": lang,
+                "_save": "Save",
+            },
+            add_transid=True)
 
         if lang == "":
             assert "Successfully updated" in r.text, "Body: %s" % r.text
@@ -217,11 +239,7 @@ class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
     #
 
     def _automation_credentials(self):
-        secret_path = "var/check_mk/web/automation/automation.secret"
-        secret = self.site.read_file(secret_path)
-
-        if secret == "":
-            raise Exception("Failed to read secret from %s" % secret_path)
+        secret = _get_automation_secret(self.site)
 
         return {
             "_username": "automation",
@@ -660,7 +678,7 @@ class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
             "request": json.dumps(request),
         })
 
-        assert isinstance(result, six.text_type)
+        assert isinstance(result, str)
         assert result.startswith("Service discovery successful"), "Failed to discover: %r" % result
 
     def bulk_discovery_start(self, request, expect_error=False):
@@ -754,7 +772,7 @@ class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
 
         logger.debug("Result: %r", result)
         assert isinstance(result, dict)
-        assert len(result["sites"]) > 0
+        assert len(result["sites"]) > 0, repr(result)
         involved_sites = list(result["sites"].keys())
 
         for site_id, status in result["sites"].items():
@@ -824,3 +842,88 @@ class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
         for host in hosts:
             assert isinstance(result[host], dict)
         return result
+
+
+class CMKOpenAPISession:
+    VERSION = "v0"
+
+    def __init__(self, site):
+        self.site = site
+        self.session = self._get_session()
+        self.base_url = f"{site.url}api/{self.VERSION}"
+
+    def _get_session(self):
+        session = requests.session()
+        session.headers['Authorization'] = self._get_authentication_header()
+        session.headers['Accept'] = 'application/json'
+
+        return session
+
+    def _get_authentication_header(self):
+        secret = _get_automation_secret(self.site).strip()
+        return f"Bearer automation {secret}"
+
+    def request(self, method, endpoint, header_params=None, query_params=None, request_params=None):
+        url = f"{self.base_url}/{endpoint}"
+        return self.session.request(method,
+                                    url,
+                                    headers=header_params,
+                                    data=query_params,
+                                    json=request_params)
+
+    def add_host(self, host_name, folder="root", nodes=None, attributes=None):
+        request_params = {
+            "folder": folder,
+            "host_name": host_name,
+        }
+        if nodes:
+            request_params["nodes"] = nodes
+        if attributes:
+            request_params["attributes"] = attributes
+
+        resp = self.request("post",
+                            "domain-types/host_config/collections/all",
+                            request_params=request_params)
+        try:
+            resp.raise_for_status()
+        except Exception:
+            print(resp.json())
+            raise
+
+        return resp.json()
+
+    def activate_changes_async(self):
+        resp = self.request("post", "domain-types/activation_run/actions/activate-changes/invoke")
+        resp.raise_for_status()
+        return resp.json()
+
+    def activate_changes_sync(self):
+        resp = self.request("post", "domain-types/activation_run/actions/activate-changes/invoke")
+        resp.raise_for_status()
+        activation_id = resp.json()["id"]
+        self.request("get",
+                     f"objects/activation_run/{activation_id}/actions/wait-for-completion/invoke")
+
+    def get_baking_status(self):
+        return self.request("get", "domain-types/agent/actions/baking_status").json()
+
+    def bake_agents(self):
+        resp = self.request("post", "domain-types/agent/actions/bake")
+        resp.raise_for_status()
+        return resp
+
+    def bake_and_sign_agents(self, key_id, passphrase):
+        request_params = {"key_id": key_id, "passphrase": passphrase}
+        resp = self.request("post",
+                            "domain-types/agent/actions/bake_and_sign",
+                            request_params=request_params)
+        resp.raise_for_status()
+        return resp
+
+    def sign_agents(self, key_id, passphrase):
+        request_params = {"key_id": key_id, "passphrase": passphrase}
+        resp = self.request("post",
+                            "domain-types/agent/actions/sign",
+                            request_params=request_params)
+        resp.raise_for_status()
+        return resp

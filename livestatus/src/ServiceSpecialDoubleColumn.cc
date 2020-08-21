@@ -4,6 +4,7 @@
 // source code package.
 
 #include "ServiceSpecialDoubleColumn.h"
+
 #include "Row.h"
 
 #ifdef CMC
@@ -12,19 +13,20 @@ class Object;
 #else
 #include <cstring>
 #include <ctime>
+
 #include "nagios.h"
 #endif
 
 double ServiceSpecialDoubleColumn::getValue(Row row) const {
 #ifdef CMC
-    if (auto object = columnData<Object>(row)) {
+    if (const auto *object = columnData<Object>(row)) {
         switch (_type) {
             case Type::staleness:
                 return HostSpecialDoubleColumn::staleness(object);
         }
     }
 #else
-    if (auto svc = columnData<service>(row)) {
+    if (const auto *svc = columnData<service>(row)) {
         switch (_type) {
             case Type::staleness: {
                 extern int interval_length;
@@ -45,7 +47,7 @@ double ServiceSpecialDoubleColumn::getValue(Row row) const {
                          svc_member != nullptr; svc_member = svc_member->next) {
                         service *tmp_svc = svc_member->service_ptr;
                         if (strncmp(tmp_svc->check_command_ptr->name,
-                                    "check-mk", 9) == 0) {
+                                    "check-mk", 8) == 0) {
                             return check_result_age /
                                    ((tmp_svc->check_interval == 0
                                          ? 1

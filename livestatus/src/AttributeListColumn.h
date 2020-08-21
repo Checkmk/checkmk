@@ -7,10 +7,12 @@
 #define AttributeListColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <memory>
 #include <string>
 #include <vector>
+
 #include "AttributeListAsIntColumn.h"
 #include "Column.h"
 #include "Filter.h"

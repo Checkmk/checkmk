@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,7 +7,7 @@
 
 # Example header of a notification script:
 
-#!/usr/bin/python
+#!/usr/bin/env python3
 # HTML Emails with included graphs
 # Bulk: yes
 # Argument 1: Full system path to the pnp4nagios index.php for fetching the graphs. Usually auto configured in OMD.
@@ -19,16 +19,11 @@
 
 import os
 import re
-import sys
+from pathlib import Path
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from six import ensure_str
 
 import cmk.utils.paths
-from cmk.utils.encoding import ensure_unicode
-
 from cmk.gui.i18n import _u
 
 
@@ -56,7 +51,7 @@ def _load_user_scripts_from(adir):
     scripts = {}
     if os.path.exists(adir):
         for entry in os.listdir(adir):
-            entry = ensure_unicode(entry)
+            entry = ensure_str(entry)
             if entry == ".f12":
                 continue
             path = adir + "/" + entry

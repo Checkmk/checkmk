@@ -85,6 +85,7 @@ You should find an example configuration file at
 import errno
 import glob
 import logging
+import operator
 import os
 import re
 import shlex
@@ -93,9 +94,30 @@ import time
 from stat import S_ISDIR, S_ISREG
 
 try:
-    import ConfigParser as configparser
-except NameError:  # Python3
-    import configparser
+    import ConfigParser as configparser  # type: ignore[import]
+except ImportError:  # Python3
+    import configparser  # type: ignore[import,no-redef]
+
+
+def ensure_str(s):
+    if sys.version_info[0] >= 3:
+        if isinstance(s, bytes):
+            return s.decode("utf-8")
+    else:
+        if isinstance(s, unicode):  # pylint: disable=undefined-variable
+            return s.encode("utf-8")
+    return s
+
+
+def ensure_text(s):
+    if sys.version_info[0] >= 3:
+        if isinstance(s, bytes):
+            return s.decode("utf-8")
+    else:
+        if isinstance(s, str):
+            return s.decode("utf-8")
+    return s
+
 
 DEFAULT_CFG_FILE = os.path.join(os.getenv('MK_CONFDIR', ''), "filestats.cfg")
 
@@ -113,7 +135,7 @@ def parse_arguments(argv=None):
     parsed_args = {}
 
     if "-h" in argv or "--help" in argv:
-        sys.stderr.write(__doc__)
+        sys.stderr.write(ensure_str(__doc__))
         sys.exit(0)
 
     if "-v" in argv or "--verbose" in argv:
@@ -142,9 +164,7 @@ class FileStat(object):
     def __init__(self, path):
         super(FileStat, self).__init__()
         LOGGER.debug("Creating FileStat(%r)", path)
-        if not isinstance(path, unicode):  # pylint: disable=bad-builtin
-            path = path.decode('utf8')
-        self.path = path
+        self.path = ensure_text(path)
         self.stat_status = 'ok'
         self.size = None
         self.age = None
@@ -261,29 +281,28 @@ class AbstractFilter(object):
         raise NotImplementedError()
 
 
+COMPARATORS = {
+    '<': operator.lt,
+    '<=': operator.le,
+    '>': operator.gt,
+    '>=': operator.ge,
+    '==': operator.eq,
+}
+
+
 class AbstractNumericFilter(AbstractFilter):
     """Common code for filtering by comparing integers"""
     def __init__(self, spec_string):
         super(AbstractNumericFilter, self).__init__()
-        try:
-            spec = FILTER_SPEC_PATTERN.match(spec_string).groupdict()
-        except AttributeError:
+        match = FILTER_SPEC_PATTERN.match(spec_string)
+        if match is None:
             raise ValueError("unable to parse filter spec: %r" % spec_string)
-        operator, value = spec['operator'], spec['value']
-        self._value = int(value)
-        if operator not in ('<', '<=', '>', '>=', '=='):
-            raise ValueError("unknown operator for numeric filter: %r" % operator)
-        self._positive_cmp_results = []
-        if '<' in operator:
-            self._positive_cmp_results.append(1)
-        if '>' in operator:
-            self._positive_cmp_results.append(-1)
-        if '=' in operator:
-            self._positive_cmp_results.append(0)
-
-    def _matches_value(self, other_value):
-        """decide whether an integer value matches"""
-        return self._value.__cmp__(int(other_value)) in self._positive_cmp_results
+        spec = match.groupdict()
+        comp = COMPARATORS.get(spec['operator'])
+        if comp is None:
+            raise ValueError("unknown operator for numeric filter: %r" % spec['operator'])
+        reference = int(spec['value'])
+        self._matches_value = lambda actual: comp(int(actual), reference)
 
     def matches(self, filestat):
         raise NotImplementedError()
@@ -315,9 +334,7 @@ class RegexFilter(AbstractFilter):
     def __init__(self, regex_pattern):
         super(RegexFilter, self).__init__()
         LOGGER.debug("initializing with pattern: %r", regex_pattern)
-        if not isinstance(regex_pattern, unicode):  # pylint: disable=bad-builtin
-            regex_pattern = regex_pattern.decode('utf8')
-        self._regex = re.compile(regex_pattern, re.UNICODE)
+        self._regex = re.compile(ensure_text(regex_pattern), re.UNICODE)
 
     def matches(self, filestat):
         return bool(self._regex.match(filestat.path))

@@ -11,4 +11,4 @@ description:
  See werk 7100 for detailed information.
 
 inventory:
- One service per filesystem is created.
+ One service is created for each filesystem.

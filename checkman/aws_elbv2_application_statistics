@@ -1,0 +1,22 @@
+title: AWS ApplicationELB: Statistics
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the rate of
+
+ - processed bytes
+
+ - IPv6 requests
+
+ - rule evaluations
+
+ for AWS/ApplicationELB services.
+
+ To make this check work you have to configure the related
+ special agent {{Amazon Web Services (AWS)}}.
+
+inventory:
+ One service is created if all required metrics (ProcessedBytes, IPv6ProcessedBytes,
+ IPv6RequestCount, RuleEvaluations) are given.

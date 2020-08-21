@@ -9,11 +9,19 @@
 
 
 def inv_oracle_performance(parsed, status_data_tree):
-    status_node = status_data_tree.get_list("software.applications.oracle.sga:")
+    def get_pga_data(data):
+        pga_data = {}
+        for key, entrylist in data.items():
+            pga_data.setdefault(key, entrylist[0])
+        return pga_data
+
+    sga_status_node = status_data_tree.get_list("software.applications.oracle.sga:")
+    pga_status_node = status_data_tree.get_list("software.applications.oracle.pga:")
+
     for entry, entryinfo in sorted(parsed.items()):
         if "SGA_info" in entryinfo:
             sga_data = entryinfo["SGA_info"]
-            status_node.append({
+            sga_status_node.append({
                 "sid": entry,
                 "fixed_size": sga_data.get("Fixed SGA Size"),
                 "max_size": sga_data.get("Maximum SGA Size"),
@@ -29,6 +37,29 @@ def inv_oracle_performance(parsed, status_data_tree):
                 "granule_size": sga_data.get("Granule Size"),
                 "start_oh_shared_pool": sga_data.get("Startup overhead in Shared Pool"),
                 "free_mem_avail": sga_data.get("Free SGA Memory Available"),
+            })
+        if "PGA_info" in entryinfo:
+            # entryinfo["PGA_info"] = Dict[str, List[int, str]]
+            pga_data = get_pga_data(entryinfo["PGA_info"])
+            pga_status_node.append({
+                "sid": entry,
+                "aggregate_pga_auto_target": pga_data.get("aggregate PGA auto target"),
+                "aggregate_pga_target_parameter": pga_data.get("aggregate PGA target parameter"),
+                "bytes_processed": pga_data.get("bytes processed"),
+                "extra_bytes_read_written": pga_data.get("extra bytes read/written"),
+                "global_memory_bound": pga_data.get("global memory bound"),
+                "maximum_pga_allocated": pga_data.get("maximum PGA allocated"),
+                "maximum_pga_used_for_auto_workareas":
+                    pga_data.get("maximum PGA used for auto workareas"),
+                "maximum_pga_used_for_manual_workareas":
+                    pga_data.get("maximum PGA used for manual workareas"),
+                "total_pga_allocated": pga_data.get("total PGA allocated"),
+                "total_pga_inuse": pga_data.get("total PGA inuse"),
+                "total_pga_used_for_auto_workareas":
+                    pga_data.get("total PGA used for auto workareas"),
+                "total_pga_used_for_manual_workareas":
+                    pga_data.get("total PGA used for manual workareas"),
+                "total_freeable_pga_memory": pga_data.get("total freeable PGA memory"),
             })
 
 

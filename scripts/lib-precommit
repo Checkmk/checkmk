@@ -10,10 +10,11 @@ function python_files() {
         prefix=tests/
     else
         shebang=python3
-        prefix=tests-py3/
+        prefix=tests/
     fi
     for file in $2; do
-        if [[ ${file#"$GIT_ROOT/"} == $prefix* ]]; then
+        relative=${file#"$GIT_ROOT/"}
+        if [[ $relative == $prefix* ]]; then
             echo $file
             continue
         fi
@@ -21,6 +22,10 @@ function python_files() {
             echo $file
             continue
         fi
-
+        # Assume 3 by default
+        if [ $1 -eq 3 ]; then
+            echo $file
+            continue
+        fi
     done
 }

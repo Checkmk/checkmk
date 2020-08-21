@@ -8,22 +8,22 @@ set -e -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 . "${SCRIPT_DIR}/build_lib.sh"
 
-MIRROR_URL="https://sourceware.org/pub/"
+MIRROR_URL="https://ftp.gnu.org/gnu/"
 
-GCC_MAJOR="8"
-GCC_MINOR="3"
+GCC_MAJOR="10"
+GCC_MINOR="1"
 GCC_PATCHLEVEL="0"
 GCC_VERSION="${GCC_MAJOR}.${GCC_MINOR}.${GCC_PATCHLEVEL}"
-GCC_URL="${MIRROR_URL}gcc/releases/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz"
 GCC_ARCHIVE_NAME="gcc-${GCC_VERSION}.tar.gz"
+GCC_URL="${MIRROR_URL}gcc/gcc-${GCC_VERSION}/${GCC_ARCHIVE_NAME}"
 
-BINUTILS_VERSION="2.33.1"
-BINUTILS_URL="${MIRROR_URL}binutils/releases/binutils-${BINUTILS_VERSION}.tar.gz"
+BINUTILS_VERSION="2.34"
 BINUTILS_ARCHIVE_NAME="binutils-${BINUTILS_VERSION}.tar.gz"
+BINUTILS_URL="${MIRROR_URL}binutils/${BINUTILS_ARCHIVE_NAME}"
 
-GDB_VERSION="8.3.1"
-GDB_URL="${MIRROR_URL}gdb/releases/gdb-${GDB_VERSION}.tar.gz"
+GDB_VERSION="9.2"
 GDB_ARCHIVE_NAME="gdb-${GDB_VERSION}.tar.gz"
+GDB_URL="${MIRROR_URL}gdb/${GDB_ARCHIVE_NAME}"
 
 DIR_NAME=gcc-${GCC_VERSION}
 TARGET_DIR=/opt

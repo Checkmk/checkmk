@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,31 +6,23 @@
 """This module cares about Check_MK's file storage accessing. Most important
 functionality is the locked file opening realized with the File() context
 manager."""
-import sys
+
 import ast
 from contextlib import contextmanager
 import errno
 import fcntl
 import logging
 import os
+from pathlib import Path
 import pprint
 import tempfile
-import time
-from typing import (  # pylint: disable=unused-import
-    Any, Union, Dict, Iterator, Text, Optional, AnyStr, cast,
-)
-import six
+from typing import Any, Union, Dict, Iterator, Optional, AnyStr, cast
 
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path
+from six import ensure_binary
 
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, MKTerminate
 from cmk.utils.i18n import _
 from cmk.utils.paths import default_config_dir
-from cmk.utils.encoding import ensure_bytestr
 
 logger = logging.getLogger("cmk.store")
 
@@ -49,14 +41,12 @@ logger = logging.getLogger("cmk.store")
 #   '----------------------------------------------------------------------'
 
 
-def configuration_lockfile():
-    # type: () -> str
+def configuration_lockfile() -> str:
     return default_config_dir + "/multisite.mk"
 
 
 @contextmanager
-def lock_checkmk_configuration():
-    # type: () -> Iterator[None]
+def lock_checkmk_configuration() -> Iterator[None]:
     path = configuration_lockfile()
     aquire_lock(path)
     try:
@@ -66,8 +56,7 @@ def lock_checkmk_configuration():
 
 
 # TODO: Use lock_checkmk_configuration() and nuke this!
-def lock_exclusive():
-    # type: () -> None
+def lock_exclusive() -> None:
     aquire_lock(configuration_lockfile())
 
 
@@ -85,15 +74,13 @@ def lock_exclusive():
 #   '----------------------------------------------------------------------'
 
 
-def mkdir(path, mode=0o770):
-    # type: (Union[Path, str], int) -> None
+def mkdir(path: Union[Path, str], mode: int = 0o770) -> None:
     if not isinstance(path, Path):
         path = Path(path)
     path.mkdir(mode=mode, exist_ok=True)
 
 
-def makedirs(path, mode=0o770):
-    # type: (Union[Path, str], int) -> None
+def makedirs(path: Union[Path, str], mode: int = 0o770) -> None:
     if not isinstance(path, Path):
         path = Path(path)
     path.mkdir(mode=mode, exist_ok=True, parents=True)
@@ -119,8 +106,7 @@ def makedirs(path, mode=0o770):
 # This function generalizes reading from a .mk configuration file. It is basically meant to
 # generalize the exception handling for all file IO. This function handles all those files
 # that are read with exec().
-def load_mk_file(path, default=None, lock=False):
-    # type: (Union[Path, str], Any, bool) -> Any
+def load_mk_file(path: Union[Path, str], default: Any = None, lock: bool = False) -> Any:
     if not isinstance(path, Path):
         path = Path(path)
 
@@ -150,18 +136,15 @@ def load_mk_file(path, default=None, lock=False):
 
 
 # A simple wrapper for cases where you only have to read a single value from a .mk file.
-def load_from_mk_file(path, key, default, lock=False):
-    # type: (Union[Path, str], str, Any, bool) -> Any
+def load_from_mk_file(path: Union[Path, str], key: str, default: Any, lock: bool = False) -> Any:
     return load_mk_file(path, {key: default}, lock=False)[key]
 
 
-def save_mk_file(path, mk_content, add_header=True):
-    # type: (Union[Path, str], str, bool) -> None
+def save_mk_file(path: Union[Path, str], mk_content: str, add_header: bool = True) -> None:
     content = ""
 
     if add_header:
-        content += "# Written by Check_MK store (%s)\n\n" % \
-                    time.strftime("%Y-%m-%d %H:%M:%S")
+        content += "# Written by Checkmk store\n\n"
 
     content += mk_content
     content += "\n"
@@ -169,8 +152,10 @@ def save_mk_file(path, mk_content, add_header=True):
 
 
 # A simple wrapper for cases where you only have to write a single value to a .mk file.
-def save_to_mk_file(path, key, value, pprint_value=False):
-    # type: (Union[Path, str], str, Any, bool) -> None
+def save_to_mk_file(path: Union[Path, str],
+                    key: str,
+                    value: Any,
+                    pprint_value: bool = False) -> None:
     format_func = repr
     if pprint_value:
         format_func = pprint.pformat
@@ -198,24 +183,21 @@ def save_to_mk_file(path, key, value, pprint_value=False):
 # Handle .mk files that are only holding a python data structure and often
 # directly read via file/open and then parsed using eval.
 # TODO: Consolidate with load_mk_file?
-def load_object_from_file(path, default=None, lock=False):
-    # type: (Union[Path, str], Any, bool) -> Any
-    content = cast(Text, _load_data_from_file(path, lock=lock, encoding="utf-8"))
+def load_object_from_file(path: Union[Path, str], default: Any = None, lock: bool = False) -> Any:
+    content = cast(str, _load_data_from_file(path, lock=lock, encoding="utf-8"))
     if not content:
         return default
     return ast.literal_eval(content)
 
 
-def load_text_from_file(path, default=u"", lock=False):
-    # type: (Union[Path, str], Text, bool) -> Text
-    content = cast(Text, _load_data_from_file(path, lock=lock, encoding="utf-8"))
+def load_text_from_file(path: Union[Path, str], default: str = u"", lock: bool = False) -> str:
+    content = cast(str, _load_data_from_file(path, lock=lock, encoding="utf-8"))
     if not content:
         return default
     return content
 
 
-def load_bytes_from_file(path, default=b"", lock=False):
-    # type: (Union[Path, str], bytes, bool) -> bytes
+def load_bytes_from_file(path: Union[Path, str], default: bytes = b"", lock: bool = False) -> bytes:
     content = cast(bytes, _load_data_from_file(path, lock=lock))
     if not content:
         return default
@@ -226,8 +208,9 @@ def load_bytes_from_file(path, default=b"", lock=False):
 # encoding parameter, which doesn't work at all with mypy and various APIs like
 # ast.literal_eval. As a workaround, we use casts, but this isn't a real
 # solution....
-def _load_data_from_file(path, lock=False, encoding=None):
-    # type: (Union[Path, str], bool, Optional[str]) -> Union[None, Text, bytes]
+def _load_data_from_file(path: Union[Path, str],
+                         lock: bool = False,
+                         encoding: Optional[str] = None) -> Union[None, str, bytes]:
     if not isinstance(path, Path):
         path = Path(path)
 
@@ -257,8 +240,7 @@ def _load_data_from_file(path, lock=False, encoding=None):
 
 # A simple wrapper for cases where you want to store a python data
 # structure that is then read by load_data_from_file() again
-def save_object_to_file(path, data, pretty=False):
-    # type: (Union[Path, str], Any, bool) -> None
+def save_object_to_file(path: Union[Path, str], data: Any, pretty: bool = False) -> None:
     if pretty:
         try:
             formatted_data = pprint.pformat(data)
@@ -274,30 +256,26 @@ def save_object_to_file(path, data, pretty=False):
     save_file(path, "%s\n" % formatted_data)
 
 
-def save_text_to_file(path, content, mode=0o660):
-    # type: (Union[Path, str], Text, int) -> None
-    if not isinstance(content, six.text_type):
+def save_text_to_file(path: Union[Path, str], content: str, mode: int = 0o660) -> None:
+    if not isinstance(content, str):
         raise TypeError("content argument must be Text, not bytes")
     _save_data_to_file(path, content.encode("utf-8"), mode)
 
 
-def save_bytes_to_file(path, content, mode=0o660):
-    # type: (Union[Path, str], bytes, int) -> None
-    if not isinstance(content, six.binary_type):
+def save_bytes_to_file(path: Union[Path, str], content: bytes, mode: int = 0o660) -> None:
+    if not isinstance(content, bytes):
         raise TypeError("content argument must be bytes, not Text")
     _save_data_to_file(path, content, mode)
 
 
-def save_file(path, content, mode=0o660):
-    # type: (Union[Path, str], AnyStr, int) -> None
-    # Just to be sure: ensure_bytestr
-    _save_data_to_file(path, ensure_bytestr(content), mode=mode)
+def save_file(path: Union[Path, str], content: AnyStr, mode: int = 0o660) -> None:
+    # Just to be sure: ensure_binary
+    _save_data_to_file(path, ensure_binary(content), mode=mode)
 
 
 # Saving assumes a locked destination file (usually done by loading code)
 # Then the new file is written to a temporary file and moved to the target path
-def _save_data_to_file(path, content, mode=0o660):
-    # type: (Union[Path, str], bytes, int) -> None
+def _save_data_to_file(path: Union[Path, str], content: bytes, mode: int = 0o660) -> None:
     if not isinstance(path, Path):
         path = Path(path)
 
@@ -352,8 +330,8 @@ def _save_data_to_file(path, content, mode=0o660):
         try:
             if tmp_path:
                 os.unlink(tmp_path)
-        except IOError as e:
-            if e.errno != errno.ENOENT:  # No such file or directory
+        except IOError as e2:
+            if e2.errno != errno.ENOENT:  # No such file or directory
                 raise
 
         # TODO: How to handle debug mode or logging?
@@ -377,11 +355,19 @@ def _save_data_to_file(path, content, mode=0o660):
 #   | wait forever.                                                        |
 #   '----------------------------------------------------------------------'
 
-_acquired_locks = {}  # type: Dict[str, int]
+_acquired_locks: Dict[str, int] = {}
 
 
-def aquire_lock(path, blocking=True):
-    # type: (Union[Path, str], bool) -> None
+@contextmanager
+def locked(path: Union[Path, str], blocking: bool = True) -> Iterator[None]:
+    try:
+        aquire_lock(path, blocking)
+        yield
+    finally:
+        release_lock(path)
+
+
+def aquire_lock(path: Union[Path, str], blocking: bool = True) -> None:
     if not isinstance(path, Path):
         path = Path(path)
 
@@ -411,16 +397,14 @@ def aquire_lock(path, blocking=True):
         if os.path.sameopenfile(fd, fd_new):
             os.close(fd_new)
             break
-        else:
-            os.close(fd)
-            fd = fd_new
+        os.close(fd)
+        fd = fd_new
 
     _acquired_locks[str(path)] = fd
     logger.debug("Got lock on %s", path)
 
 
-def try_aquire_lock(path):
-    # type: (Union[Path, str]) -> bool
+def try_aquire_lock(path: Union[Path, str]) -> bool:
     try:
         aquire_lock(path, blocking=False)
         return True
@@ -430,8 +414,7 @@ def try_aquire_lock(path):
         return False
 
 
-def release_lock(path):
-    # type: (Union[Path, str]) -> None
+def release_lock(path: Union[Path, str]) -> None:
     if not isinstance(path, Path):
         path = Path(path)
 
@@ -450,16 +433,14 @@ def release_lock(path):
     logger.debug("Released lock on %s", path)
 
 
-def have_lock(path):
-    # type: (Union[str, Path]) -> bool
+def have_lock(path: Union[str, Path]) -> bool:
     if isinstance(path, Path):
         path = str(path)
 
     return path in _acquired_locks
 
 
-def release_all_locks():
-    # type: () -> None
+def release_all_locks() -> None:
     logger.debug("Releasing all locks")
     logger.debug("_acquired_locks: %r", _acquired_locks)
     for path in list(_acquired_locks.keys()):
@@ -468,8 +449,7 @@ def release_all_locks():
 
 
 @contextmanager
-def cleanup_locks():
-    # type: () -> Iterator[None]
+def cleanup_locks() -> Iterator[None]:
     """Context-manager to release all memorized locks at the end of the block.
 
     This is a hack which should be removed. In order to make this happen, every lock shall

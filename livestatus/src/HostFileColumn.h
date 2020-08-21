@@ -7,38 +7,31 @@
 #define HostFileColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <filesystem>
 #include <functional>
 #include <memory>
-#include <optional>
 #include <string>
 #include <vector>
+
 #include "BlobColumn.h"
 #include "Column.h"
 class Row;
 
+template <class T>
 class HostFileColumn : public BlobColumn {
 public:
     HostFileColumn(const std::string& name, const std::string& description,
                    const Column::Offsets&,
                    std::function<std::filesystem::path()> basepath,
-                   std::function<std::optional<std::filesystem::path>(
-                       const Column&, const Row&)>
-                       filepath);
+                   std::function<std::filesystem::path(const T&)> filepath);
 
     [[nodiscard]] std::unique_ptr<std::vector<char>> getValue(
         Row row) const override;
-    [[nodiscard]] std::filesystem::path basepath() const;
-    [[nodiscard]] std::optional<std::filesystem::path> filepath(
-        const Row&) const;
-    [[nodiscard]] std::optional<std::filesystem::path> abspath(
-        const Row&) const;
 
 private:
     const std::function<std::filesystem::path()> _basepath;
-    const std::function<std::optional<std::filesystem::path>(const Column&,
-                                                             const Row&)>
-        _filepath;
+    const std::function<std::filesystem::path(const T&)> _filepath;
 };
 
 #endif  // HostFileColumn_h

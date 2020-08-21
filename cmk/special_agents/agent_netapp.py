@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -52,17 +52,16 @@ Additionally you may need to make further adjustments for the Ontap 9.5:
      sec log role create -role netapp-monitoring-role -cmddirname \"statistics\" -access readonly
 """
 
-from __future__ import print_function
-
 import argparse
 import re
 import sys
 import time
+from typing import Any, Dict, List
 import warnings
-
-from typing import List
+from xml.dom import minidom  # type: ignore[import]
 
 import requests
+from six import ensure_str
 import urllib3  # type: ignore[import]
 
 from cmk.special_agents.utils import vcrtrace
@@ -199,13 +198,12 @@ def parse_arguments(argv):
 
 
 def prettify(elem):
-    from xml.dom import minidom  # type: ignore[import]
     rough_string = ET.tostring(elem)
     reparsed = minidom.parseString(rough_string)
     return reparsed.toprettyxml(indent="\t")
 
 
-class ErrorMessages(object):
+class ErrorMessages:
     def __init__(self):
         self.messages = set()
 
@@ -224,7 +222,7 @@ class ErrorMessages(object):
         return "\n".join(self.messages)
 
 
-class NetAppConnection(object):
+class NetAppConnection:
     def __init__(self, hostname, user, password):
         self.hostname = hostname
         self.user = user
@@ -293,7 +291,7 @@ class NetAppConnection(object):
 
         response = self.session.send(prepped, verify=False)
 
-        netapp_response = NetAppResponse(response)
+        netapp_response = NetAppResponse(response, self.debug)
 
         if self.debug:
             print("######## GOT RESPONSE #######")
@@ -313,7 +311,7 @@ class NetAppConnection(object):
         return netapp_response
 
     def invoke(self, *args_):
-        invoke_list = [args_[0], map(list, zip(args_[1::2], args_[2::2]))]
+        invoke_list = [args_[0], [list(a) for a in zip(args_[1::2], args_[2::2])]]
         response = self.get_response(invoke_list)
         if response:
             return response.get_results()
@@ -322,7 +320,7 @@ class NetAppConnection(object):
         self.vfiler = name
 
 
-class NetAppNode(object):
+class NetAppNode:
     def __init__(self, xml_element):
         if isinstance(xml_element, str):
             xml_element = ET.Element(xml_element)
@@ -332,7 +330,7 @@ class NetAppNode(object):
     def __getitem__(self, what):
         if what == "name":
             return self.node.tag.split("}")[-1]
-        elif what == "content":
+        if what == "content":
             return self.node.text or ""
 
     def __getattr__(self, what):
@@ -351,7 +349,7 @@ class NetAppNode(object):
         return None
 
     def children_get(self):
-        return map(NetAppNode, self.node)
+        return [NetAppNode(n) for n in self.node]
 
     def append(self, what):
         self.node.append(what)
@@ -385,7 +383,7 @@ class NetAppRootNode(NetAppNode):
 
 
 # NetApp Response Oject, holds the actual content in the NetAppNode member variable
-class NetAppResponse(object):
+class NetAppResponse:
 
     # We have seen devices (NetApp Release 8.3.2P9) occasionally send
     # invalid XML characters, leading to an exception during parsing.
@@ -394,7 +392,8 @@ class NetAppResponse(object):
     # these should never be in an XML output:
     INVALID_XML = re.compile(u'[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]')
 
-    def __init__(self, response):
+    def __init__(self, response, debug):
+        self.status = None
         self.content = None
         self.reason = None
 
@@ -408,14 +407,16 @@ class NetAppResponse(object):
 
         # We except an XML answer (not HTML)
         try:
-            self.content = NetAppNode(ET.fromstring(self.raw_response_text))
-        except ET.ParseError:
             try:
+                self.content = NetAppNode(ET.fromstring(self.raw_response_text))
+            except ET.ParseError:
                 clean = NetAppResponse.INVALID_XML.sub('', self.raw_response_text)
                 self.content = NetAppNode(ET.fromstring(clean))
-            except ET.ParseError as exc:
-                self.status = "parse-exception"
-                self.reason = str(exc)
+        except ET.ParseError as exc:
+            if debug:
+                raise
+            self.status = "parse-exception"
+            self.reason = str(exc)
             return
 
         self.status = self.content.child_get("results").node.attrib["status"]
@@ -429,6 +430,8 @@ class NetAppResponse(object):
         return self.reason
 
     def get_results(self):
+        if self.content is None:
+            raise Exception("no content")
         return self.content.child_get("results")
 
 
@@ -501,6 +504,9 @@ def format_config(instances,
         if node.element["content"]:
             values["%s%s" % (namespace, node.element["name"])] = node.element["content"]
 
+    if instances is None:
+        return ""
+
     for instance in instances.children_get():
         values = {}
         for node in instance.children_get():
@@ -508,10 +514,10 @@ def format_config(instances,
 
         line = []
         if isinstance(config_key, list):
-            instance_key = []
+            instance_key_list = []
             for entry in config_key:
-                instance_key.append(values.get(entry))
-            instance_key = ".".join(instance_key)
+                instance_key_list.append(values.get(entry, ""))
+            instance_key = ".".join(instance_key_list)
         else:
             if skip_missing_config_key and config_key not in values:
                 # The config_key is not available in the xml node
@@ -534,7 +540,7 @@ def format_config(instances,
                 if value and (extra_info_report == "all" or key in extra_info_report):
                     line.append("%s %s" % (key, value))
 
-        result.append(("%s" % delimeter).join(x.encode("utf-8") for x in line))
+        result.append(("%s" % delimeter).join(ensure_str(x) for x in line))
     return "\n".join(result)
 
 
@@ -565,9 +571,8 @@ def format_dict(the_dict, prefix="", report="all", delimeter="\t", as_line=False
         for key, value in values.items():
             line.append("%s %s" % (key, value))
         return ("%s" % delimeter).join(line)
-    else:
-        for key, value in values.items():
-            result.append("%s%s%s%s" % (prefix, key, delimeter, value))
+    for key, value in values.items():
+        result.append("%s%s%s%s" % (prefix, key, delimeter, value))
     return "\n".join(result)
 
 
@@ -673,10 +678,9 @@ def query(args, server, what, return_toplevel_node=False):
 
     if return_toplevel_node:
         return results
-    else:
-        data = results.children_get()
-        if data:
-            return data[0]
+    data = results.children_get()
+    if data:
+        return data[0]
 
 
 def query_counters(args, server, netapp_mode, what):
@@ -763,7 +767,9 @@ def query_counters(args, server, netapp_mode, what):
                     if idx >= max_instances_per_request:
                         break
                     instances_to_query[1].append(["instance-uuid", uuid])
-                    perfobject_node = ["perf-object-get-instances", [["objectname", what]]]
+                    perfobject_node: List[Any] = [
+                        "perf-object-get-instances", [["objectname", what]]
+                    ]
                     perfobject_node[1].append(instances_to_query)
                 response = server.get_response(perfobject_node)
 
@@ -778,36 +784,36 @@ def query_counters(args, server, netapp_mode, what):
                 the_instances = response.get_results().child_get("instances")
                 initial_results.extend_instances_list(the_instances)
             return initial_results.child_get("instances")
-        else:  # 7 Mode
-            perfobject_node = ["perf-object-get-instances-iter-start", [["objectname", what]]]
+        # 7 Mode
+        perfobject_node = ["perf-object-get-instances-iter-start", [["objectname", what]]]
+        response = server.get_response(perfobject_node)
+        results = response.get_results()
+        records = results.child_get_string("records")
+        tag = results.child_get_string("tag")
+
+        if not records or records == "0":
+            return
+
+        responses = []
+        while records != "0":
+            perfobject_node = [
+                "perf-object-get-instances-iter-next", [["tag", tag], ["maximum", "1000"]]
+            ]
             response = server.get_response(perfobject_node)
             results = response.get_results()
             records = results.child_get_string("records")
-            tag = results.child_get_string("tag")
-
+            responses.append(response)
             if not records or records == "0":
-                return
+                perfobject_node = ["perf-object-get-instances-iter-end", [["tag", tag]]]
+                server.get_response(perfobject_node)
+                break
 
-            responses = []
-            while records != "0":
-                perfobject_node = [
-                    "perf-object-get-instances-iter-next", [["tag", tag], ["maximum", "1000"]]
-                ]
-                response = server.get_response(perfobject_node)
-                results = response.get_results()
-                records = results.child_get_string("records")
-                responses.append(response)
-                if not records or records == "0":
-                    perfobject_node = ["perf-object-get-instances-iter-end", [["tag", tag]]]
-                    server.get_response(perfobject_node)
-                    break
-
-            initial_results = responses[0].get_results()
-            for response in responses[1:]:
-                the_instances = response.get_results().child_get("instances")
-                if the_instances:
-                    initial_results.extend_instances_list(the_instances)
-            return initial_results.child_get("instances")
+        initial_results = responses[0].get_results()
+        for response in responses[1:]:
+            the_instances = response.get_results().child_get("instances")
+            if the_instances:
+                initial_results.extend_instances_list(the_instances)
+        return initial_results.child_get("instances")
 
 
 def fetch_netapp_mode(args, server):
@@ -839,7 +845,12 @@ def fetch_license_information(args, server):
     # Some sections are not queried when a license is missing
     try:
         server.suppress_errors = True
-        licenses = {"v1": {}, "v1_disabled": {}, "v2": {}, "v2_disabled": {}}
+        licenses: Dict[str, Dict[str, Dict[str, str]]] = {
+            "v1": {},
+            "v1_disabled": {},
+            "v2": {},
+            "v2_disabled": {}
+        }
         license_info = query(args, server, "license-list-info")
         if license_info:
             licenses["v1"] = create_dict(license_info, custom_key=["service"], is_counter=False)
@@ -1130,7 +1141,7 @@ def process_vserver_status(args, server):
         return
     vserver_dict = create_dict(vservers, custom_key=["vserver-name"], is_counter=False)
     print("<<<netapp_api_vs_status:sep(9)>>>")
-    for vserver, vserver_data in vserver_dict.iteritems():
+    for vserver, vserver_data in vserver_dict.items():
         words = [vserver]
         for key in ("state", "vserver-subtype"):
             if vserver_data.get(key):
@@ -1549,7 +1560,7 @@ def connect(args):
 
 SectionType = List[str]
 
-section_errors = []  # type: SectionType
+section_errors: SectionType = []
 
 
 def main(argv=None):
@@ -1578,3 +1589,7 @@ def main(argv=None):
         return 1
     finally:
         output_error_section(args, server)
+
+
+if __name__ == '__main__':
+    sys.exit(main())

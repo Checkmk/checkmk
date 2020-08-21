@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,22 +6,16 @@
 
 # pylint: disable=redefined-outer-name
 
-from __future__ import print_function
-
+import logging
 import os
+from pathlib import Path
+import pwd
 import re
 import subprocess
 import sys
-import pwd
-import logging
+from typing import List
 
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
-
-import six
+from six import ensure_binary, ensure_str
 
 logger = logging.getLogger()
 
@@ -50,23 +44,36 @@ def is_managed_repo():
     return os.path.exists(cme_path())
 
 
-def virtualenv_path(version=None):
-    if version is None:
-        version = sys.version_info[0]
-
-    venv = subprocess.check_output(
-        [repo_path() + "/scripts/run-pipenv",
-         str(version), "--bare", "--venv"])
-    if not isinstance(venv, six.text_type):
-        venv = venv.decode("utf-8")
-    return Path(venv.rstrip("\n"))
+def virtualenv_path() -> Path:
+    venv = subprocess.check_output([repo_path() + "/scripts/run-pipenv", "--bare", "--venv"])
+    return Path(ensure_str(venv).rstrip("\n"))
 
 
-def current_branch_name():
+def find_git_rm_mv_files(dirpath: Path) -> List[str]:
+    del_files = []
+
+    out = ensure_str(subprocess.check_output([
+        "git",
+        "-C",
+        str(dirpath),
+        "status",
+        str(dirpath),
+    ])).split("\n")
+
+    for line in out:
+        if "deleted:" in line or "renamed:" in line:
+            # Ignore files in subdirs of dirpath
+            if line.split(dirpath.name)[1].count("/") > 1:
+                continue
+
+            filename = line.split("/")[-1]
+            del_files.append(filename)
+    return del_files
+
+
+def current_branch_name() -> str:
     branch_name = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"])
-    if not isinstance(branch_name, six.text_type):
-        branch_name = branch_name.decode("utf-8")
-    return branch_name.split("\n", 1)[0]
+    return ensure_str(branch_name).split("\n", 1)[0]
 
 
 def current_base_branch_name():
@@ -76,10 +83,7 @@ def current_base_branch_name():
     # current branches git log one step by another and check which branches contain these
     # commits. Only search for our main (master + major-version) branches
     commits = subprocess.check_output(["git", "rev-list", "--max-count=30", branch_name])
-    if not isinstance(commits, six.text_type):
-        commits = commits.decode("utf-8")
-
-    for commit in commits.strip().split("\n"):
+    for commit in ensure_str(commits).strip().split("\n"):
         # Asking for remote heads here, since the git repos checked out by jenkins do not create all
         # the branches locally
 
@@ -87,7 +91,7 @@ def current_base_branch_name():
         #
         #heads = subprocess.check_output(
         #    ["git", "branch", "-r", "--format=%(refname)", "--contains", commit])
-        #if not isinstance(heads, six.text_type):
+        #if not isinstance(heads, str):
         #    heads = heads.decode("utf-8")
 
         #for head in heads.strip().split("\n"):
@@ -98,10 +102,7 @@ def current_base_branch_name():
         #        return head
 
         lines = subprocess.check_output(["git", "branch", "-r", "--contains", commit])
-        if not isinstance(lines, six.text_type):
-            lines = lines.decode("utf-8")
-
-        for line in lines.strip().split("\n"):
+        for line in ensure_str(lines).strip().split("\n"):
             if not line:
                 continue
             head = line.split()[0]
@@ -129,8 +130,9 @@ def get_cmk_download_credentials():
 
 
 def get_standard_linux_agent_output():
-    with Path(repo_path(), "tests-py3/integration/cmk/base/test-files/linux-agent-output").open(
-            encoding="utf-8") as f:
+    with Path(
+            repo_path(),
+            "tests/integration/cmk/base/test-files/linux-agent-output").open(encoding="utf-8") as f:
         return f.read()
 
 
@@ -160,6 +162,17 @@ def is_running_as_site_user():
         return False
 
 
+# TODO: Drop this and cleanup all call sites
+def is_gui_py3():
+    return True
+
+
+def api_str_type(s):
+    if not is_gui_py3():
+        return ensure_binary(s)
+    return ensure_str(s)
+
+
 def add_python_paths():
     # make the testlib available to the test modules
     sys.path.insert(0, os.path.dirname(__file__))
@@ -172,7 +185,7 @@ def add_python_paths():
         sys.path.insert(0, os.path.join(cmk_path(), "omd/packages/omd"))
 
 
-class DummyApplication(object):  # pylint: disable=useless-object-inheritance
+class DummyApplication:
     def __init__(self, environ, start_response):
         self._environ = environ
         self._start_response = start_response

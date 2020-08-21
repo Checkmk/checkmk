@@ -16,4 +16,4 @@ item:
  Name configured by user
 
 inventory:
- One item for each service is discovered
+ One service is created for each request.

@@ -4,13 +4,18 @@
 // source code package.
 
 #include "TableContacts.h"
+
 #include <algorithm>
+#include <cstdint>
 #include <iosfwd>
 #include <iterator>
 #include <memory>
+#include <string>
 #include <string_view>
+#include <unordered_map>
 #include <utility>
 #include <vector>
+
 #include "AttributeListLambdaColumn.h"
 #include "AttributesLambdaColumn.h"
 #include "BoolLambdaColumn.h"
@@ -30,86 +35,13 @@ using namespace std::literals;
 
 namespace {
 
-class ContactRow : public TableContacts::IRow {
-public:
-    explicit ContactRow(contact *ct) : contact_{ct} {};
-    [[nodiscard]] const contact *getContact() const override {
-        return contact_;
-    }
-
-private:
-    const contact *contact_;
-};
-
-// The fuchsia-trailing-return warning are all false positives.
-template <typename Member, typename Default>
-class GetAttr {  // NOLINT(fuchsia-trailing-return)
-public:
-    // NOLINTNEXTLINE(fuchsia-trailing-return)
-    GetAttr(Member contact::*m, Default d) : m_{m}, d_{std::move(d)} {}
-    Default operator()(Row row) {
-        auto r = row.rawData<Table::IRow>();
-        if (auto ct =
-                dynamic_cast<const TableContacts::IRow *>(r)->getContact()) {
-            return ct->*m_;
-        }
-        return d_;
-    }
-
-private:
-    Member contact::*m_;
-    Default d_;
-};
-
-// Specialization on Member*: Check if pointer members are nullptr.
-template <typename Member, typename Default>
-class GetAttr<Member *, Default> {
-public:
-    GetAttr(Member *contact::*m, Default d) : m_{m}, d_{std::move(d)} {}
-    Default operator()(Row row) {
-        auto r = row.rawData<Table::IRow>();
-        if (auto ct =
-                dynamic_cast<const TableContacts::IRow *>(r)->getContact()) {
-            return ct->*m_ == nullptr ? d_ : ct->*m_;
-        }
-        return d_;
-    }
-
-private:
-    Member *contact::*m_;
-    Default d_;
-};
-
-template <typename Member>
-class GetTimePeriod {  // NOLINT(fuchsia-trailing-return)
-public:
-    // NOLINTNEXTLINE(fuchsia-trailing-return)
-    GetTimePeriod(Member *contact::*m, bool d) : m_{m}, d_{d} {}
-    bool operator()(Row row) {
-        auto r = row.rawData<Table::IRow>();
-        if (auto ct =
-                dynamic_cast<const TableContacts::IRow *>(r)->getContact()) {
-            return g_timeperiods_cache->inTimeperiod(ct->*m_);
-        }
-        return d_;
-    }
-
-private:
-    Member *contact::*m_;
-    bool d_;
-};
-
 class GetCustomAttribute {
 public:
     GetCustomAttribute(const MonitoringCore *const mc, const AttributeKind kind)
         : mc_{mc}, kind_{kind} {}
-    Attributes operator()(Row row) {
-        auto r = row.rawData<Table::IRow>();
-        if (auto ct =
-                dynamic_cast<const TableContacts::IRow *>(r)->getContact()) {
-            if (auto p = ct->custom_variables) {
-                return mc_->customAttributes(&p, kind_);
-            }
+    Attributes operator()(const contact &ct) {
+        if (const auto *p = ct.custom_variables) {
+            return mc_->customAttributes(&p, kind_);
         }
         return {};
     };
@@ -125,8 +57,8 @@ public:
     GetCustomAttributeElem(const MonitoringCore *const mc,
                            const AttributeKind kind)
         : get_attrs_{mc, kind} {}
-    std::vector<std::string> operator()(Row row) {
-        auto attrs = get_attrs_(row);
+    std::vector<std::string> operator()(const contact &ct) {
+        auto attrs = get_attrs_(ct);
         std::vector<std::string> v(attrs.size());
         std::transform(
             std::cbegin(attrs), std::cend(attrs), std::begin(v),
@@ -140,7 +72,7 @@ private:
 }  // namespace
 
 TableContacts::TableContacts(MonitoringCore *mc) : Table(mc) {
-    addColumns(this, "");
+    addColumns(this, "", -1);
 }
 
 std::string TableContacts::name() const { return "contacts"; }
@@ -148,124 +80,146 @@ std::string TableContacts::name() const { return "contacts"; }
 std::string TableContacts::namePrefix() const { return "contact_"; }
 
 // static
-void TableContacts::addColumns(Table *table, const std::string &prefix) {
-    table->addColumn(std::make_unique<StringLambdaColumn>(
-        prefix + "name", "The login name of the contact person",
-        GetAttr(&contact::name, ""s)));
-    table->addColumn(std::make_unique<StringLambdaColumn>(
-        prefix + "alias", "The full name of the contact",
-        GetAttr(&contact::alias, ""s)));
-    table->addColumn(std::make_unique<StringLambdaColumn>(
-        prefix + "email", "The email address of the contact",
-        GetAttr(&contact::email, ""s)));
-    table->addColumn(std::make_unique<StringLambdaColumn>(
-        prefix + "pager", "The pager address of the contact",
-        GetAttr(&contact::pager, ""s)));
-    table->addColumn(std::make_unique<StringLambdaColumn>(
+void TableContacts::addColumns(Table *table, const std::string &prefix,
+                               int indirect_offset) {
+    Column::Offsets offsets{indirect_offset, 0};
+    table->addColumn(std::make_unique<StringLambdaColumn<contact>>(
+        prefix + "name", "The login name of the contact person", offsets,
+        [](const contact &ct) { return ct.name == nullptr ? ""s : ct.name; }));
+    table->addColumn(std::make_unique<StringLambdaColumn<contact>>(
+        prefix + "alias", "The full name of the contact", offsets,
+        [](const contact &ct) {
+            return ct.alias == nullptr ? ""s : ct.alias;
+        }));
+    table->addColumn(std::make_unique<StringLambdaColumn<contact>>(
+        prefix + "email", "The email address of the contact", offsets,
+        [](const contact &ct) {
+            return ct.email == nullptr ? ""s : ct.email;
+        }));
+    table->addColumn(std::make_unique<StringLambdaColumn<contact>>(
+        prefix + "pager", "The pager address of the contact", offsets,
+        [](const contact &ct) {
+            return ct.pager == nullptr ? ""s : ct.pager;
+        }));
+    table->addColumn(std::make_unique<StringLambdaColumn<contact>>(
         prefix + "host_notification_period",
         "The time period in which the contact will be notified about host problems",
-        GetAttr(&contact::host_notification_period, ""s)));
-    table->addColumn(std::make_unique<StringLambdaColumn>(
+        offsets, [](const contact &ct) {
+            return ct.host_notification_period == nullptr
+                       ? ""s
+                       : ct.host_notification_period;
+        }));
+    table->addColumn(std::make_unique<StringLambdaColumn<contact>>(
         prefix + "service_notification_period",
         "The time period in which the contact will be notified about service problems",
-        GetAttr(&contact::service_notification_period, ""s)));
+        offsets, [](const contact &ct) {
+            return ct.service_notification_period == nullptr
+                       ? ""s
+                       : ct.service_notification_period;
+        }));
     for (int i = 0; i < MAX_CONTACT_ADDRESSES; ++i) {
         std::string b = "address" + std::to_string(i + 1);
-        table->addColumn(std::make_unique<StringLambdaColumn>(
-            prefix + b, "The additional field " + b,
-            [i](Row row) -> std::string {
-                auto r = row.rawData<Table::IRow>();
-                if (auto ct = dynamic_cast<const IRow *>(r)->getContact()) {
-                    return ct->address[i] == nullptr ? ""s : ct->address[i];
-                }
-                return ""s;
+        table->addColumn(std::make_unique<StringLambdaColumn<contact>>(
+            prefix + b, "The additional field " + b, offsets,
+            [i](const contact &ct) {
+                return ct.address[i] == nullptr ? ""s : ct.address[i];
             }));
     }
 
-    table->addColumn(std::make_unique<IntLambdaColumn>(
+    table->addColumn(std::make_unique<IntLambdaColumn<contact>>(
         prefix + "can_submit_commands",
-        "Wether the contact is allowed to submit commands (0/1)",
-        GetAttr(&contact::can_submit_commands, 0)));
-    table->addColumn(std::make_unique<IntLambdaColumn>(
+        "Wether the contact is allowed to submit commands (0/1)", offsets,
+        [](const contact &ct) { return ct.can_submit_commands; }));
+    table->addColumn(std::make_unique<IntLambdaColumn<contact>>(
         prefix + "host_notifications_enabled",
         "Wether the contact will be notified about host problems in general (0/1)",
-        GetAttr(&contact::host_notifications_enabled, 0)));
-    table->addColumn(std::make_unique<IntLambdaColumn>(
+        offsets,
+        [](const contact &ct) { return ct.host_notifications_enabled; }));
+    table->addColumn(std::make_unique<IntLambdaColumn<contact>>(
         prefix + "service_notifications_enabled",
         "Wether the contact will be notified about service problems in general (0/1)",
-        GetAttr(&contact::service_notifications_enabled, 0)));
-    table->addColumn(std::make_unique<BoolLambdaColumn>(
+        offsets,
+        [](const contact &ct) { return ct.service_notifications_enabled; }));
+    table->addColumn(std::make_unique<BoolLambdaColumn<contact>>(
         prefix + "in_host_notification_period",
         "Wether the contact is currently in his/her host notification period (0/1)",
-        GetTimePeriod(&contact::host_notification_period_ptr, false)));
-    table->addColumn(std::make_unique<BoolLambdaColumn>(
+        offsets, [](const contact &ct) {
+            return g_timeperiods_cache->inTimeperiod(
+                ct.host_notification_period_ptr);
+        }));
+    table->addColumn(std::make_unique<BoolLambdaColumn<contact>>(
         prefix + "in_service_notification_period",
         "Wether the contact is currently in his/her service notification period (0/1)",
-        GetTimePeriod(&contact::service_notification_period_ptr, false)));
-    table->addColumn(std::make_unique<ListLambdaColumn>(
+        offsets, [](const contact &ct) {
+            return g_timeperiods_cache->inTimeperiod(
+                ct.service_notification_period_ptr);
+        }));
+    table->addColumn(std::make_unique<ListLambdaColumn<contact>>(
         prefix + "custom_variable_names",
-        "A list of all custom variables of the contact",
+        "A list of all custom variables of the contact", offsets,
         GetCustomAttributeElem<0>{table->core(),
                                   AttributeKind::custom_variables}));
-    table->addColumn(std::make_unique<ListLambdaColumn>(
+    table->addColumn(std::make_unique<ListLambdaColumn<contact>>(
         prefix + "custom_variable_values",
-        "A list of the values of all custom variables of the contact",
+        "A list of the values of all custom variables of the contact", offsets,
         GetCustomAttributeElem<1>{table->core(),
                                   AttributeKind::custom_variables}));
-    table->addColumn(std::make_unique<AttributesLambdaColumn>(
+    table->addColumn(std::make_unique<AttributesLambdaColumn<contact>>(
         prefix + "custom_variables", "A dictionary of the custom variables",
+        offsets,
         GetCustomAttribute{table->core(), AttributeKind::custom_variables}));
 
-    table->addColumn(std::make_unique<ListLambdaColumn>(
-        prefix + "tag_names", "A list of all tags of the contact",
+    table->addColumn(std::make_unique<ListLambdaColumn<contact>>(
+        prefix + "tag_names", "A list of all tags of the contact", offsets,
         GetCustomAttributeElem<0>{table->core(), AttributeKind::tags}));
-    table->addColumn(std::make_unique<ListLambdaColumn>(
+    table->addColumn(std::make_unique<ListLambdaColumn<contact>>(
         prefix + "tag_values",
-        "A list of the values of all tags of the contact",
+        "A list of the values of all tags of the contact", offsets,
         GetCustomAttributeElem<1>{table->core(), AttributeKind::tags}));
-    table->addColumn(std::make_unique<AttributesLambdaColumn>(
-        prefix + "tags", "A dictionary of the tags",
+    table->addColumn(std::make_unique<AttributesLambdaColumn<contact>>(
+        prefix + "tags", "A dictionary of the tags", offsets,
         GetCustomAttribute{table->core(), AttributeKind::tags}));
 
-    table->addColumn(std::make_unique<ListLambdaColumn>(
-        prefix + "label_names", "A list of all labels of the contact",
+    table->addColumn(std::make_unique<ListLambdaColumn<contact>>(
+        prefix + "label_names", "A list of all labels of the contact", offsets,
         GetCustomAttributeElem<0>{table->core(), AttributeKind::labels}));
-    table->addColumn(std::make_unique<ListLambdaColumn>(
+    table->addColumn(std::make_unique<ListLambdaColumn<contact>>(
         prefix + "label_values",
-        "A list of the values of all labels of the contact",
+        "A list of the values of all labels of the contact", offsets,
         GetCustomAttributeElem<1>{table->core(), AttributeKind::labels}));
-    table->addColumn(std::make_unique<AttributesLambdaColumn>(
-        prefix + "labels", "A dictionary of the labels",
+    table->addColumn(std::make_unique<AttributesLambdaColumn<contact>>(
+        prefix + "labels", "A dictionary of the labels", offsets,
         GetCustomAttribute{table->core(), AttributeKind::labels}));
 
-    table->addColumn(std::make_unique<ListLambdaColumn>(
+    table->addColumn(std::make_unique<ListLambdaColumn<contact>>(
         prefix + "label_source_names", "A list of all sources of the contact",
+        offsets,
         GetCustomAttributeElem<0>{table->core(),
                                   AttributeKind::label_sources}));
-    table->addColumn(std::make_unique<ListLambdaColumn>(
+    table->addColumn(std::make_unique<ListLambdaColumn<contact>>(
         prefix + "label_source_values",
-        "A list of the values of all sources of the contact",
+        "A list of the values of all sources of the contact", offsets,
         GetCustomAttributeElem<1>{table->core(),
                                   AttributeKind::label_sources}));
-    table->addColumn(std::make_unique<AttributesLambdaColumn>(
-        prefix + "label_sources", "A dictionary of the label sources",
+    table->addColumn(std::make_unique<AttributesLambdaColumn<contact>>(
+        prefix + "label_sources", "A dictionary of the label sources", offsets,
         GetCustomAttribute{table->core(), AttributeKind::label_sources}));
 
-    table->addColumn(std::make_unique<AttributeBitmaskLambdaColumn>(
+    table->addColumn(std::make_unique<AttributeBitmaskLambdaColumn<contact>>(
         prefix + "modified_attributes",
-        "A bitmask specifying which attributes have been modified",
-        GetAttr{&contact::modified_attributes, 0}));
-    table->addColumn(std::make_unique<AttributeListColumn2>(
+        "A bitmask specifying which attributes have been modified", offsets,
+        [](const contact &ct) { return ct.modified_attributes; }));
+    table->addColumn(std::make_unique<AttributeListColumn2<contact>>(
         prefix + "modified_attributes_list",
-        "A list of all modified attributes",
-        AttributeBitmaskLambdaColumn{
-            ""s, ""s, GetAttr{&contact::modified_attributes, 0}}));
+        "A list of all modified attributes", offsets,
+        AttributeBitmaskLambdaColumn<contact>{
+            ""s, ""s, offsets,
+            [](const contact &ct) { return ct.modified_attributes; }}));
 }
 
 void TableContacts::answerQuery(Query *query) {
-    for (contact *ct = contact_list; ct != nullptr; ct = ct->next) {
-        auto r = ContactRow{ct};
-        if (!query->processDataset(Row{dynamic_cast<Table::IRow *>(&r)})) {
+    for (const contact *ct = contact_list; ct != nullptr; ct = ct->next) {
+        if (!query->processDataset(Row{ct})) {
             break;
         }
     }

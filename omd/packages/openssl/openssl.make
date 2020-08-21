@@ -12,21 +12,34 @@ OPENSSL_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(OPENSSL_DIR)
 #OPENSSL_WORK_DIR := $(PACKAGE_WORK_DIR)/$(OPENSSL_DIR)
 
 # Used by Python3/Python3.make
+ifeq ($(DISTRO_CODE),el8)
+PACKAGE_OPENSSL_DESTDIR := /usr 
+else
 PACKAGE_OPENSSL_DESTDIR := $(OPENSSL_INSTALL_DIR)
 PACKAGE_OPENSSL_LDFLAGS := -L$(PACKAGE_OPENSSL_DESTDIR)/lib
 PACKAGE_OPENSSL_LD_LIBRARY_PATH := $(PACKAGE_OPENSSL_DESTDIR)/lib
 PACKAGE_OPENSSL_INCLUDE_PATH := $(PACKAGE_OPENSSL_DESTDIR)/include
+endif
 
+ifeq ($(DISTRO_CODE),el8)
+$(OPENSSL_BUILD): $(OPENSSL_UNPACK)
+	$(TOUCH) $@
+else
 $(OPENSSL_BUILD): $(OPENSSL_UNPACK)
 	cd $(OPENSSL_BUILD_DIR) && \
 	    ./config --prefix=$(OMD_ROOT) \
-                     --openssldir=$(OMD_ROOT)/etc \
-                     -Wl,-rpath,$(OMD_ROOT)/lib \
-                     enable-md2
+                 --openssldir=$(OMD_ROOT)/etc \
+                 -Wl,-rpath,$(OMD_ROOT)/lib \
+                 enable-md2
 	$(MAKE) -C $(OPENSSL_BUILD_DIR) -j6
 	$(TOUCH) $@
+endif
 
 # This is horrible...
+ifeq ($(DISTRO_CODE),el8)
+$(OPENSSL_INTERMEDIATE_INSTALL): $(OPENSSL_BUILD)
+	$(TOUCH) $@
+else
 $(OPENSSL_INTERMEDIATE_INSTALL): $(OPENSSL_BUILD)
 	$(MKDIR) $(OPENSSL_INSTALL_DIR)
 	$(MAKE) -C $(OPENSSL_BUILD_DIR) DESTDIR=$(OPENSSL_INSTALL_DIR) install_sw
@@ -37,7 +50,14 @@ $(OPENSSL_INTERMEDIATE_INSTALL): $(OPENSSL_BUILD)
 	$(RSYNC) $(OPENSSL_INSTALL_DIR)/$(OMD_ROOT)/* $(OPENSSL_INSTALL_DIR)
 	$(RM) -r $(OPENSSL_INSTALL_DIR)/omd
 	$(TOUCH) $@
+endif
 
+ifeq ($(DISTRO_CODE),el8)
+$(OPENSSL_INSTALL): $(OPENSSL_INTERMEDIATE_INSTALL)
+	$(TOUCH) $@
+else
 $(OPENSSL_INSTALL): $(OPENSSL_INTERMEDIATE_INSTALL)
 	$(RSYNC) $(OPENSSL_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
 	$(TOUCH) $@
+endif
+

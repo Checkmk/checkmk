@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -11,7 +11,6 @@ import socket
 import ssl
 from contextlib import closing
 
-import six
 import pytest  # type: ignore[import]
 
 import omdlib.certs as certs
@@ -51,7 +50,7 @@ def test_lqencode(query_part):
 ])
 def test_quote_dict(inp, expected_result):
     result = livestatus.quote_dict(inp)
-    assert isinstance(result, six.text_type)
+    assert isinstance(result, str)
     assert result == expected_result
 
 

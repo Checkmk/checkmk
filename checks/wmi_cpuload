@@ -28,11 +28,15 @@ def check_wmi_cpuload(item, params, parsed):
 
     try:
         cores = int(computer_system.get(0, "NumberOfLogicalProcessors"))
+        processor_type = ProcessorType.logical
     except (ValueError, KeyError, MKGeneralException):
         # NumberOfLogicalProcessors can be an empty string, not sure why
         cores = int(computer_system.get(0, "NumberOfProcessors"))
+        processor_type = ProcessorType.physical
 
-    return check_cpu_load_generic(params, (load, load5min, load15min), cores)
+    return check_cpu_load_generic(params, (load, load5min, load15min),
+                                  num_cpus=cores,
+                                  processor_type=processor_type)
 
 
 check_info['wmi_cpuload'] = {

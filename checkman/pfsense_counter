@@ -10,5 +10,5 @@ description:
  packets dropped due to memory limitations.
 
 inventory:
- One service per pfSense device will be created.
+ One service is created for each pfSense device.
 

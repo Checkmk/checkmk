@@ -1,9 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+"""Miscellaneous"""
 import sys
 
 import cmk.utils.version as cmk_version
@@ -12,7 +12,10 @@ from cmk.gui.globals import request
 from cmk.gui.plugins.openapi.restful_objects import endpoint_schema, response_schemas
 
 
-@endpoint_schema('/version', method='get', response_schema=response_schemas.InstalledVersions)
+@endpoint_schema('/version',
+                 'cmk/show',
+                 method='get',
+                 response_schema=response_schemas.InstalledVersions)
 def search(param):
     if request.args.get('fail'):
         raise Exception("This is an intentional failure.")

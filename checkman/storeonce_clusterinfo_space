@@ -1,0 +1,15 @@
+title: HPE StoreOnce: Cluster Space
+agents: storeonce
+catalog: hw/storagehw/hpe
+license: GPL
+distribution: check_mk
+description:
+ This check measures the total capacity of the appliance. All rulesets for
+ filesystems can be used and also the states change accordingly to other
+ filesystem services. Additionally the ratio of deduplication is displayed.
+
+item:
+ The fixed statement {{Total Capacity}}
+
+inventory:
+ One service is created.

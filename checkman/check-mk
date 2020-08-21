@@ -1,6 +1,6 @@
-title: Check Retrieval of Information for Checkmk
+title: Checkmk: Retrieval of Information
 agents: linux, openvms, aix, netbsd, macosx, freebsd, openwrt, openbsd, hpux, solaris
-catalog: generic
+catalog: app/cmk
 license: GPL
 distribution: check_mk
 description:

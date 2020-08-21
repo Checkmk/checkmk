@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -16,14 +16,9 @@ from cmk.utils.plugin_loader import load_plugins
 #   |                         |___/                                        |
 #   '----------------------------------------------------------------------'
 
-from cmk.gui.plugins.webapi.utils import (
-    APICallCollection,
-    api_call_collection_registry,
-    validate_host_attributes,
-    validate_config_hash,
-    check_hostname,
-    add_configuration_hash,
-    compute_config_hash,
+from cmk.gui.plugins.webapi.utils import (  # noqa: F401 # pylint: disable=unused-import
+    APICallCollection, api_call_collection_registry, validate_host_attributes, validate_config_hash,
+    check_hostname, add_configuration_hash, compute_config_hash,
 )
 
 #.

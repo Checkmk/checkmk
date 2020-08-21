@@ -1,17 +1,24 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=redefined-outer-name
+from typing import Dict, List, Tuple
+
 import pytest  # type: ignore[import]
 from testlib.base import Scenario
 
 import cmk.base.config as config
 import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
-
 import cmk.utils.version as cmk_version
+
+# NOTE: A lot of signatures regarding rules and rule sets are simply lying:
+# They claim to expect a RuleSpec or Ruleset (from cmk.utils.type_defs), but
+# they are silently handling a very chaotic tuple-based structure, too. We
+# really, really need to fix all those signatures! For now, we just annotate
+# our test data below with horrible hand-made types...
 
 
 @pytest.fixture(autouse=True)
@@ -30,7 +37,7 @@ def ts(monkeypatch):
 
 
 def test_service_extra_conf(ts):
-    ruleset = [
+    ruleset: List[Tuple[str, List[str], List[str], List[str], Dict]] = [
         ("1", [], tuple_rulesets.ALL_HOSTS, tuple_rulesets.ALL_SERVICES, {}),
         ("2", [], tuple_rulesets.ALL_HOSTS, tuple_rulesets.ALL_SERVICES,
          {}),  # Duplicate test to detect caching issues
@@ -99,7 +106,6 @@ def test_host_extra_conf(ts, host_ruleset):
              {"8": True},
              {"9": True}]
 
-
     assert ts.config_cache.host_extra_conf("host2", host_ruleset) == \
             [{"1": True},
              {"2": True},
@@ -115,7 +121,6 @@ def test_host_extra_conf_merged(ts, host_ruleset):
              "7": True,
              "8": True,
              "9": True}
-
 
     assert ts.config_cache.host_extra_conf_merged("host2", host_ruleset) == \
             {"1": True,
@@ -223,18 +228,18 @@ def test_in_extraconf_hostlist():
 
 def test_get_rule_options_regular_rule():
     options = {'description': u'Put all hosts into the contact group "all"'}
-    entry = ('all', [], tuple_rulesets.ALL_HOSTS, options)
+    entry: Tuple[str, List[str], List[str], Dict] = ('all', [], tuple_rulesets.ALL_HOSTS, options)
     assert tuple_rulesets.get_rule_options(entry) == (entry[:-1], options)
 
 
 def test_get_rule_options_empty_options():
-    options = {}
-    entry = ('all', [], tuple_rulesets.ALL_HOSTS, options)
+    options: Dict = {}
+    entry: Tuple[str, List[str], List[str], Dict] = ('all', [], tuple_rulesets.ALL_HOSTS, options)
     assert tuple_rulesets.get_rule_options(entry) == (entry[:-1], options)
 
 
 def test_get_rule_options_missing_options():
-    entry = ('all', [], tuple_rulesets.ALL_HOSTS)
+    entry: Tuple[str, List[str], List[str]] = ('all', [], tuple_rulesets.ALL_HOSTS)
     assert tuple_rulesets.get_rule_options(entry) == (entry, {})
 
 

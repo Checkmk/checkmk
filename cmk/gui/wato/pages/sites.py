@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -11,12 +11,10 @@ import multiprocessing
 import socket
 import contextlib
 import binascii
+import queue
+from typing import Dict, List, NamedTuple, Union, Tuple as _Tuple
 
-from typing import (  # pylint: disable=unused-import
-    Dict, List, NamedTuple, Text, Union, Tuple as _Tuple,
-)
-
-import six
+from six import ensure_binary, ensure_str
 from OpenSSL import crypto  # type: ignore[import]
 from OpenSSL import SSL  # type: ignore[attr-defined]
 # mypy can't find x509 for some reason (is a c extension involved?)
@@ -28,7 +26,7 @@ from cryptography.hazmat.primitives import hashes
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 
-from cmk.gui.sites import SiteStatus  # pylint: disable=unused-import
+from cmk.gui.sites import SiteStatus
 import cmk.gui.sites
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -157,6 +155,7 @@ class ModeEditSite(WatoMode):
                 })
 
         else:
+            assert self._site_id is not None
             try:
                 self._site = configured_sites[self._site_id]
             except KeyError:
@@ -186,6 +185,7 @@ class ModeEditSite(WatoMode):
         if self._new:
             self._site_id = site_spec["id"]
         del site_spec["id"]
+        assert self._site_id is not None
 
         configured_sites = self._site_mgmt.load_sites()
 
@@ -592,7 +592,8 @@ class ModeDistributedMonitoring(WatoMode):
                     "\n", "\n<br>")
                 html.add_user_error("_name", error)
 
-        wato_html_head(_("Login into site \"%s\"") % site["alias"])
+        wato_html_head(title=_("Login into site \"%s\"") % site["alias"],
+                       breadcrumb=self.breadcrumb())
         if error:
             html.show_error(error)
 
@@ -749,7 +750,7 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
 
         site_states = {}
 
-        sites = watolib.SiteManagementFactory().factory().load_sites().items()
+        sites = list(watolib.SiteManagementFactory().factory().load_sites().items())
         replication_sites = [e for e in sites if e[1]["replication"]]
         replication_status = ReplicationStatusFetcher().fetch(replication_sites)
 
@@ -786,7 +787,7 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
                 html.render_span(msg, style="vertical-align:middle"))
 
     def _render_status_connection_status(self, site_id, site):
-        site_status = cmk.gui.sites.states().get(site_id, SiteStatus({}))  # type: SiteStatus
+        site_status: SiteStatus = cmk.gui.sites.states().get(site_id, SiteStatus({}))
         if site.get("disabled", False) is True:
             status = status_msg = "disabled"
         else:
@@ -814,14 +815,13 @@ ReplicationStatus = NamedTuple("ReplicationStatus", [
 ])
 
 
-class ReplicationStatusFetcher(object):
+class ReplicationStatusFetcher:
     """Helper class to retrieve the replication status of all relevant sites"""
     def __init__(self):
         super(ReplicationStatusFetcher, self).__init__()
         self._logger = logger.getChild("replication-status")
 
-    def fetch(self, sites):
-        # type: (List[_Tuple[str, Dict]]) -> Dict[str, PingResult]
+    def fetch(self, sites: List[_Tuple[str, Dict]]) -> Dict[str, PingResult]:
         self._logger.debug("Fetching replication status for %d sites" % len(sites))
         results_by_site = {}
 
@@ -836,18 +836,19 @@ class ReplicationStatusFetcher(object):
             processes.append((site_id, process))
 
         # Now collect the results from the queue until all processes are finished
-        while any([p.is_alive() for site_id, p in processes]):
+        while any(p.is_alive() for site_id, p in processes):
             try:
                 result = result_queue.get_nowait()
                 result_queue.task_done()
                 results_by_site[result.site_id] = result
 
-            except six.moves.queue.Empty:
+            except queue.Empty:
                 time.sleep(0.5)  # wait some time to prevent CPU hogs
 
             except Exception as e:
-                logger.exception("error collecting replication results from site %s", site_id)
-                html.show_error("%s: %s" % (site_id, e))
+                logger.exception("error collecting replication results from site %s",
+                                 result.site_id)
+                html.show_error("%s: %s" % (result.site_id, e))
 
         self._logger.debug("Got results")
         return results_by_site
@@ -1018,11 +1019,11 @@ ChainVerifyResult = NamedTuple("ChainVerifyResult", [
 ])
 
 CertificateDetails = NamedTuple("CertificateDetails", [
-    ("issued_to", Text),
-    ("issued_by", Text),
-    ("valid_from", Text),
-    ("valid_till", Text),
-    ("signature_algorithm", Text),
+    ("issued_to", str),
+    ("issued_by", str),
+    ("valid_from", str),
+    ("valid_till", str),
+    ("signature_algorithm", str),
     ("digest_sha256", str),
     ("serial_number", int),
     ("is_ca", bool),
@@ -1180,8 +1181,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
     def _cert_trusted_css_class(self, cert):
         return "state state0" if cert.verify_result.is_valid else "state state2"
 
-    def _fetch_certificate_details(self):
-        # type: () -> List[CertificateDetails]
+    def _fetch_certificate_details(self) -> List[CertificateDetails]:
         """Creates a list of certificate details for the chain certs"""
         verify_chain_results = self._fetch_certificate_chain_verify_results()
         if not verify_chain_results:
@@ -1193,17 +1193,17 @@ class ModeSiteLivestatusEncryption(WatoMode):
         cert_details = []
         for result in verify_chain_results:
             # use cryptography module over OpenSSL because it is easier to do the x509 parsing
-            crypto_cert = x509.load_pem_x509_certificate(six.ensure_binary(result.cert_pem),
+            crypto_cert = x509.load_pem_x509_certificate(ensure_binary(result.cert_pem),
                                                          default_backend())
 
             cert_details.append(
                 CertificateDetails(
                     issued_to=get_name(crypto_cert.subject),
                     issued_by=get_name(crypto_cert.issuer),
-                    valid_from=six.text_type(crypto_cert.not_valid_before),
-                    valid_till=six.text_type(crypto_cert.not_valid_after),
+                    valid_from=str(crypto_cert.not_valid_before),
+                    valid_till=str(crypto_cert.not_valid_after),
                     signature_algorithm=crypto_cert.signature_hash_algorithm.name,
-                    digest_sha256=six.ensure_str(
+                    digest_sha256=ensure_str(
                         binascii.hexlify(crypto_cert.fingerprint(hashes.SHA256()))),
                     serial_number=crypto_cert.serial_number,
                     is_ca=self._is_ca_certificate(crypto_cert),
@@ -1212,8 +1212,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
 
         return cert_details
 
-    def _is_ca_certificate(self, crypto_cert):
-        # type: (SSL.Certificate) -> bool
+    def _is_ca_certificate(self, crypto_cert: 'SSL.Certificate') -> bool:
         try:
             key_usage = crypto_cert.extensions.get_extension_for_oid(ExtensionOID.KEY_USAGE)
             use_key_for_signing = key_usage.value.key_cert_sign is True
@@ -1229,8 +1228,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
 
         return is_ca and use_key_for_signing
 
-    def _fetch_certificate_chain_verify_results(self):
-        # type: () -> List[ChainVerifyResult]
+    def _fetch_certificate_chain_verify_results(self) -> List[ChainVerifyResult]:
         """Opens a SSL connection and performs a handshake to get the certificate chain"""
 
         ctx = SSL.Context(SSL.SSLv23_METHOD)
@@ -1252,8 +1250,8 @@ class ModeSiteLivestatusEncryption(WatoMode):
 
             return self._verify_certificate_chain(sock, certificate_chain)
 
-    def _verify_certificate_chain(self, connection, certificate_chain):
-        # type: (SSL.Connection, List[crypto.X509]) -> List[ChainVerifyResult]
+    def _verify_certificate_chain(self, connection: SSL.Connection,
+                                  certificate_chain: List[crypto.X509]) -> List[ChainVerifyResult]:
         verify_chain_results = []
 
         # Used to record all certificates and verification results for later displaying

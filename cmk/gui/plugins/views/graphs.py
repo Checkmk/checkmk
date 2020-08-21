@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -57,6 +57,7 @@ multisite_builtin_views.update({
         'linktitle': _('Graphs'),
         'icon': 'pnp',
         'title': _('Service Graphs'),
+        "topic": "history",
     },
     'host_graphs': {
         'browser_reload': 30,
@@ -84,6 +85,7 @@ multisite_builtin_views.update({
         'linktitle': _('Graphs'),
         'icon': 'pnp',
         'title': _('Host Graphs'),
+        "topic": "history",
     },
 })
 

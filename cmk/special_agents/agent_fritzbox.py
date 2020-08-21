@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -31,7 +31,8 @@ import sys
 import getopt
 import pprint
 import socket
-import urllib2
+import urllib.error
+import urllib.request
 import traceback
 
 from cmk.utils.exceptions import MKException
@@ -83,10 +84,10 @@ def get_upnp_info(control, namespace, action, base_urls, opt_debug):
                 sys.stdout.write('============================\n')
                 sys.stdout.write('URL: %s\n' % url)
                 sys.stdout.write('SoapAction: %s\n' % headers['SoapAction'])
-            req = urllib2.Request(url, data, headers)
-            handle = urllib2.urlopen(req)
+            req = urllib.request.Request(url, data.encode('utf-8'), headers)
+            handle = urllib.request.urlopen(req)
             break  # got a good response
-        except urllib2.HTTPError as e:
+        except urllib.error.HTTPError as e:
             if e.code == 500:
                 # Is the result when the old URL can not be found, continue in this
                 # case and revert the order of base urls in the hope that the other

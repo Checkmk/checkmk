@@ -4,26 +4,33 @@
 // source code package.
 
 #include "TableColumns.h"
+
 #include <map>
 #include <memory>
+
 #include "Column.h"
-#include "ColumnsColumn.h"
 #include "Query.h"
 #include "Row.h"
+#include "StringLambdaColumn.h"
 
 TableColumns::TableColumns(MonitoringCore *mc) : Table(mc) {
-    addColumn(std::make_unique<ColumnsColumn>(
-        "table", "The name of the table", Column::Offsets{},
-        ColumnsColumn::Type::table, *this));
-    addColumn(std::make_unique<ColumnsColumn>(
-        "name", "The name of the column within the table", Column::Offsets{},
-        ColumnsColumn::Type::name, *this));
-    addColumn(std::make_unique<ColumnsColumn>(
-        "description", "A description of the column", Column::Offsets{},
-        ColumnsColumn::Type::description, *this));
-    addColumn(std::make_unique<ColumnsColumn>(
+    Column::Offsets offsets{};
+    addColumn(std::make_unique<StringLambdaColumn<Column>>(
+        "table", "The name of the table", offsets, [this](const Column &col) {
+            return this->getValue(col, Type::table);
+        }));
+    addColumn(std::make_unique<StringLambdaColumn<Column>>(
+        "name", "The name of the column within the table", offsets,
+        [this](const Column &col) { return this->getValue(col, Type::name); }));
+    addColumn(std::make_unique<StringLambdaColumn<Column>>(
+        "description", "A description of the column", offsets,
+        [this](const Column &col) {
+            return this->getValue(col, Type::description);
+        }));
+    addColumn(std::make_unique<StringLambdaColumn<Column>>(
         "type", "The data type of the column (int, float, string, list)",
-        Column::Offsets{}, ColumnsColumn::Type::type, *this));
+        offsets,
+        [this](const Column &col) { return this->getValue(col, Type::type); }));
 }
 
 std::string TableColumns::name() const { return "columns"; }
@@ -33,35 +40,34 @@ std::string TableColumns::namePrefix() const { return "column_"; }
 void TableColumns::addTable(const Table &table) { _tables.push_back(&table); }
 
 void TableColumns::answerQuery(Query *query) {
-    for (auto table : _tables) {
+    for (const auto *const table : _tables) {
         table->any_column([&](const auto &c) {
             return !query->processDataset(Row(c.get()));
         });
     }
 }
 
-std::string TableColumns::getValue(const Column *column,
-                                   ColumnsColumn::Type colcol) const {
+std::string TableColumns::getValue(const Column &column, Type colcol) const {
     static const char *typenames[8] = {"int",  "float", "string", "list",
                                        "time", "dict",  "blob",   "null"};
 
     switch (colcol) {
-        case ColumnsColumn::Type::table:
+        case Type::table:
             return tableNameOf(column);
-        case ColumnsColumn::Type::name:
-            return column->name();
-        case ColumnsColumn::Type::description:
-            return column->description();
-        case ColumnsColumn::Type::type:
-            return typenames[static_cast<int>(column->type())];
+        case Type::name:
+            return column.name();
+        case Type::description:
+            return column.description();
+        case Type::type:
+            return typenames[static_cast<int>(column.type())];
     }
     return "";
 }
 
-std::string TableColumns::tableNameOf(const Column *column) const {
-    for (auto table : _tables) {
+std::string TableColumns::tableNameOf(const Column &column) const {
+    for (const auto *const table : _tables) {
         if (table->any_column(
-                [&](const auto &c) { return c.get() == column; })) {
+                [&](const auto &c) { return c.get() == &column; })) {
             return table->name();
         }
     }

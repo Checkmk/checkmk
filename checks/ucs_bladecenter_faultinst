@@ -15,15 +15,6 @@ def inventory_ucs_bladecenter_faultinst(parsed):
 
 
 def check_ucs_bladecenter_faultinst(item, _no_params, parsed):
-    severity_map = {
-        "critical": 2,
-        "major": 1,
-        "warning": 1,
-        "minor": 1,
-        "info": 0,
-        "condition": 0,
-        "cleared": 0,
-    }
     severities = {}
     for values in parsed.get("faultInst", {}).values():
         entry_sev = values.get("Severity").lower()
@@ -35,7 +26,7 @@ def check_ucs_bladecenter_faultinst(item, _no_params, parsed):
         return
 
     for sev, instances in severities.items():
-        sev_state = severity_map.get(sev, 3)
+        sev_state = UCS_FAULTINST_SEVERITY_TO_STATE.get(sev, 3)
 
         # Right now, OK instances are also reported in detail
         # If required we can increase the state level here, so that only WARN+ messages are shown

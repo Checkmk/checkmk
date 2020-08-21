@@ -4,8 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-factory_settings['winperf_cpu_default_levels'] = WINPERF_CPU_CHECK_DEFAULT_PARAMETERS
-
 
 def inventory_win_cpuusage(info):
     for line in info:
@@ -18,11 +16,11 @@ def inventory_win_cpuusage(info):
 
 def check_win_cpuusage(item, params, info):
     if isinstance(params, tuple):
-        warn, crit = params
+        levels = params
     elif isinstance(params, dict):
-        warn, crit = params['levels']
+        levels = params.get('levels')
     else:  # legacy: old params may be None
-        warn, crit = None, None
+        levels = None
 
     for line in info:
         if line[0] == '238:6':
@@ -49,16 +47,15 @@ def check_win_cpuusage(item, params, info):
             else:
                 num_txt = " / %d CPUs" % num_cpus
 
-            infotext = "%d%% used%s" % (int(used_perc), num_txt)
-            state = 0
-            if crit is not None and used_perc >= crit:
-                state = 2
-            elif warn is not None and used_perc >= warn:
-                state = 1
-            if state:
-                infotext += " (warn/crit at %s/%s)" % (get_percent_human_readable(warn),
-                                                       get_percent_human_readable(crit))
-            return state, infotext, [("cpuusage", "%.2f" % used_perc, warn, crit, 0, 100)]
+            return check_levels(
+                used_perc,
+                "cpuusage",
+                levels,
+                human_readable_func=get_percent_human_readable,
+                infoname="Used%s" % num_txt,
+                boundaries=(0, 100),
+            )
+
     return (3, "counter for cpu (238:6) not found")
 
 
@@ -106,8 +103,6 @@ check_info["winperf.cpuusage"] = {
     'inventory_function': inventory_win_cpuusage,
     'service_description': 'CPU Usage',
     'has_perfdata': True,
-    'default_levels_variable': 'winperf_cpu_default_levels',
-    'includes': ["winperf.include"],
 }
 
 check_info["winperf.diskstat"] = {

@@ -35,7 +35,7 @@ def check_couchbase_buckets_vbuckets(_item, params, data):
             "pending_vbuckets",
             params.get("vb_pending_num"),
             infoname="Pending vBuckets",
-            human_readable_func=six.text_type,
+            human_readable_func=str,
         )
 
 
@@ -49,7 +49,7 @@ def check_couchbase_buckets_vbuckets_replica(_item, params, data):
             "vbuckets",
             params.get("vb_replica_num"),
             infoname="Total number",
-            human_readable_func=six.text_type,
+            human_readable_func=str,
         )
 
     item_memory = data.get("vb_replica_itm_memory")

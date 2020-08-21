@@ -1,21 +1,22 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import print_function
-import sys
 import base64
-import urllib2
+import sys
+from urllib.request import Request, urlopen
 import xml.etree.ElementTree as etree
+
+from six import ensure_binary, ensure_str
 
 
 def get_informations(credentials, name, xml_id, org_name):
     server, address, user, password = credentials
     data_url = "/LOG0/CNT/mod_cmd.xml?cmd=xml-count&x="
     address = "http://%s%s%s" % (server, data_url, xml_id)
-    c = False
+    c = None
     for line in etree.parse(get_url(address, user, password)).getroot():
         for child in line:
             if child.get('c'):
@@ -58,10 +59,10 @@ def get_licenses(credentials):
 
 
 def get_url(address, user, password):
-    request = urllib2.Request(address)
-    base64string = base64.encodestring('%s:%s' % (user, password)).replace('\n', '')
-    request.add_header("Authorization", "Basic %s" % base64string)
-    return urllib2.urlopen(request)
+    request = Request(address)
+    base64string = base64.encodebytes(ensure_binary('%s:%s' % (user, password))).replace(b'\n', b'')
+    request.add_header("Authorization", "Basic %s" % ensure_str(base64string))
+    return urlopen(request)
 
 
 def main(sys_argv=None):

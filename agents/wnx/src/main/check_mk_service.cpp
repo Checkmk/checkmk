@@ -52,6 +52,20 @@ void PrintMain() {
     });
 }
 
+void PrintAgentUpdater() {
+    using namespace xlog::internal;
+    PrintBlock("Agent Updater Usage:\n", Colors::green, []() {
+        return fmt::format(
+            "\t{1} <{2}|{3}> [args]\n"
+            "\t{2:<{0}} - register Agent using Updater plugin\n"
+            "\t{3:<{0}} - update Agent using Updater plugin\n",
+            kParamShift,
+            kServiceExeName,  // service name from th project definitions
+            // first Row
+            kAgentRegisterParam, kAgentUpdateParam);
+    });
+}
+
 void PrintSelfCheck() {
     using namespace xlog::internal;
     PrintBlock("Self Checking:\n", Colors::cyan, []() {
@@ -210,7 +224,7 @@ void PrintCap() {
     using namespace xlog::internal;
 
     PrintBlock(
-        "Install Bakery Files, plugins.cap and check_mk.ini, in install folder:\n",
+        "Install Bakery Files and plugins.cap in install folder:\n",
         Colors::pink, []() {
             return fmt::format(
                 "\t{0} {1}\n",
@@ -253,6 +267,7 @@ static void ServiceUsage(std::wstring_view comment) {
 
     try {
         PrintMain();
+        PrintAgentUpdater();
         PrintSelfCheck();
         PrintAdHoc();
         PrintRealtimeTesting();
@@ -269,7 +284,7 @@ static void ServiceUsage(std::wstring_view comment) {
         XLOG::l("Exception is '{}'", e.what());  //
     }
 
-    // undocummneted
+    // undocumented
     // -winnperf ....... command line for runperf
 }
 
@@ -491,6 +506,16 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
 
     if (param == wtools::ConvertToUTF16(kVersionParam)) {
         return cma::srv::ExecVersion();
+    }
+
+    if (param == wtools::ConvertToUTF16(kAgentRegisterParam) ||
+        param == wtools::ConvertToUTF16(kAgentUpdateParam)) {
+        std::vector<std::wstring> params;
+        for (int k = 1; k < argc; k++) {
+            params.emplace_back(Argv[k]);
+        }
+
+        return cma::srv::ExecCmkUpdateAgent(params);
     }
 
     if (param == wtools::ConvertToUTF16(kPatchHashParam)) {

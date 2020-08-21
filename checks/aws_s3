@@ -20,7 +20,10 @@ def parse_aws_s3(info):  # pylint: disable=function-redefined
         storage_key, size_key = row['Id'].split("_")[-2:]
         inst = bucket.setdefault(size_key, {})
         try:
-            inst.setdefault(storage_key, row['Values'][0])
+            # if the entry exists, the first value is the numerical value of the metric and the
+            # second one is the period, which is None here since these are not statistics of type
+            # "Sum"
+            inst.setdefault(storage_key, row['Values'][0][0])
         except (IndexError, ValueError):
             pass
     return parsed

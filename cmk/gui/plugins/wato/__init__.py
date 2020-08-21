@@ -1,8 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# flake8: noqa
+# pylint: disable=unused-import
 
 from cmk.utils.plugin_loader import load_plugins
 
@@ -28,9 +31,9 @@ from cmk.gui.plugins.wato.utils import (
     ac_test_registry,
     add_change,
     add_replication_paths,
+    ReplicationPath,
     global_buttons,
     changelog_button,
-    home_button,
     host_status_button,
     CheckTypeSelection,
     config_domain_registry,
@@ -84,6 +87,15 @@ from cmk.gui.plugins.wato.utils import (
     register_configvar,
     register_check_parameters,
     main_module_registry,
+    MainModuleTopic,
+    MainModuleTopicHosts,
+    MainModuleTopicServices,
+    MainModuleTopicAgents,
+    MainModuleTopicEvents,
+    MainModuleTopicUsers,
+    MainModuleTopicGeneral,
+    MainModuleTopicMaintenance,
+    MainModuleTopicCustom,
     MainModule,
     WatoModule,
     register_modules,

@@ -1,8 +1,7 @@
-FROM debian:buster
-# Tag 10 does not exist yet, need to use buster for now
+FROM debian:10
 
 SHELL ["/bin/bash", "-c"]
-ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
 
 RUN apt-get update \
     && apt-get install -y \
@@ -95,6 +94,11 @@ RUN /opt/install-python.sh
 RUN /opt/install-pipenv.sh
 RUN /opt/install-nodejs.sh
 RUN /opt/install-freetds.sh
+
+# Ensure all our build containers have the jenkins user (with same uid/gid). The non privileged
+# jobs will be executed as this user in the container
+RUN groupadd -g 1000 jenkins \
+    && useradd -m -u 1001 -g 1000 -s /bin/bash jenkins
 
 ARG VERS_TAG
 RUN echo $VERS_TAG > /version.txt

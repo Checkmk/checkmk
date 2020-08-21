@@ -23,24 +23,122 @@
 # Console Login: enable
 # Auto Restart: true
 # Full Core: false
+# Network Information
+#        Host Name: example1
+#        IP Address: 192.168.0.1
+#        Sub Netmask: 255.255.255.128
+#        Gateway: 192.168.0.2
+#        Name Server: 192.168.0.3
+#        Domain Name: example1.example.com
+#
+# Volume Groups Information
+# Inactive VGs
+# ==============================================================================
+# appvg
+# ==============================================================================
+# Active VGs
+# ==============================================================================
+# cow-daag0cvg:
+# PV_NAME           PV STATE          TOTAL PPs   FREE PPs    FREE DISTRIBUTION
+# hdisk663          active            3218        0           00..00..00..00..00
+# hdisk664          active            3218        0           00..00..00..00..00
+# hdisk665          active            3218        0           00..00..00..00..00
+# hdisk666          active            3218        0           00..00..00..00..00
+# ==============================================================================
+# Volume Groups Information
+# Inactive VGs
+# ==============================================================================
+# appvg
+# ==============================================================================
+# Active VGs
+# ==============================================================================
+# free_alt_rootvg:
+# PV_NAME           PV STATE          TOTAL PPs   FREE PPs    FREE DISTRIBUTION
+# hdisk46           active            643         643         129..129..128..128..129
+# ==============================================================================
+# p2zgkbos4vg:
+# PV_NAME           PV STATE          TOTAL PPs   FREE PPs    FREE DISTRIBUTION
+# hdisk5            active            643         0           00..00..00..00..00
+# hdisk18           active            643         0           00..00..00..00..00
+# ==============================================================================
+# INSTALLED RESOURCE LIST
 
 # Note: this is only the header. Much more stuff follows, but is currently
 # not being parsed.
 
+import re
+
+
+def get_tuples_section(info):
+    parsed = {}
+    for line_info in info:
+        if line_info[0] == "Volume Groups Information":
+            break
+
+        if not line_info:
+            continue
+
+        if len(line_info) == 2:
+            key, value = line_info
+            parsed[key] = value.strip()
+
+    return parsed, info
+
+
+def get_inactive_volume_groups(info):
+    result = []
+    begin_parsing = False
+    for line_info in info:
+        if line_info[0] == "Active VGs":
+            break
+
+        if line_info[0].startswith("Inactive VGs"):
+            begin_parsing = True
+            # On the line "Inactive VGs" hence skip two lines to get to the VG names
+            next(info)
+            continue
+
+        if begin_parsing:
+            if line_info[0].startswith("===="):
+                begin_parsing = False
+                continue
+
+            result.append(line_info[0])
+
+    return result, info
+
+
+def get_active_volume_groups(info):
+    result = []
+    begin_parsing = False
+    volume_group_name = ""
+    for line_info in info:
+        if line_info[0].startswith("INSTALLED RESOURCE LIST"):
+            break
+
+        if line_info[0].startswith("PV_NAME"):
+            begin_parsing = True
+            volume_group_name = temp
+            next(info)
+            continue
+        else:
+            temp = line_info[0]
+
+        if begin_parsing:
+            if line_info[0].startswith("===="):
+                begin_parsing = False
+                continue
+
+            result.append([volume_group_name] + line_info[0].split())
+
+    return result
+
 
 def parse_prtconf(info):
-    parsed = {}
-
-    for line in info:
-        if not line:
-            continue
-        if line[0].startswith("========="):
-            break  # ignore the rest of the output currently
-        if len(line) == 2:
-            k, v = line
-            parsed[k] = v.strip()
-
-    return parsed
+    parsed_tuples, info_remaining = get_tuples_section(iter(info))
+    parsed_inactive, info_remaining = get_inactive_volume_groups(info_remaining)
+    parsed_active = get_active_volume_groups(info_remaining)
+    return {"tuples": parsed_tuples, "inactive": parsed_inactive, "active": parsed_active}
 
 
 def _split_vendor(string):
@@ -51,64 +149,109 @@ def _split_vendor(string):
 
 def inv_prtconf(info, inventory_tree):
     parsed = parse_prtconf(info)
+    fill_key_value_pairs(inventory_tree, parsed)
+    fill_volume_groups(inventory_tree, parsed)
 
+
+def fill_key_value_pairs(inventory_tree, parsed):
+    parsed_tuples = parsed["tuples"]
     cpu_dict = inventory_tree.get_dict("hardware.cpu.")
     sys_dict = inventory_tree.get_dict("hardware.system.")
     mem_dict = inventory_tree.get_dict("hardware.memory.")
     fmw_dict = inventory_tree.get_dict("software.firmware.")
-
-    cpu_type = parsed.get("CPU Type")
+    net_dict = inventory_tree.get_dict("networking.")
+    cpu_type = parsed_tuples.get("CPU Type")
     if cpu_type is not None:
         cpu_dict["arch"] = "ppc64" if cpu_type == "64-bit" else "ppc"
 
-    kernel_type = parsed.get("Kernel Type")
+    kernel_type = parsed_tuples.get("Kernel Type")
     if kernel_type is not None:
         os_dict = inventory_tree.get_dict("software.os.")
         os_dict["arch"] = "ppc64" if kernel_type == "64-bit" else "ppc"
 
-    proc_type = parsed.get("Processor Type")
+    proc_type = parsed_tuples.get("Processor Type")
     if proc_type is not None:
         cpu_dict["model"] = proc_type
 
-    proc_impl_mode = parsed.get("Processor Implementation Mode")
+    proc_impl_mode = parsed_tuples.get("Processor Implementation Mode")
     if proc_impl_mode is not None:
         cpu_dict["implementation_mode"] = proc_impl_mode
 
-    max_speed = parsed.get("Processor Clock Speed")
+    max_speed = parsed_tuples.get("Processor Clock Speed")
     if max_speed is not None:
         cpu_dict["max_speed"] = float(max_speed.split()[0]) * 1000 * 1000
 
-    num_cpu = parsed.get("Number Of Processors")
+    num_cpu = parsed_tuples.get("Number Of Processors")
     if num_cpu is not None:
         cpu_dict.setdefault("cpus", int(num_cpu))
 
-    fw_version = parsed.get("Firmware Version")
+    fw_version = parsed_tuples.get("Firmware Version")
     if fw_version is not None:
         vendor, fmw_dict["version"] = _split_vendor(fw_version)
         if vendor:
             fmw_dict["vendor"] = vendor
 
-    fw_platform_level = parsed.get("Platform Firmware level")
+    fw_platform_level = parsed_tuples.get("Platform Firmware level")
     if fw_platform_level is not None:
         fmw_dict["platform_level"] = fw_platform_level
 
-    serial = parsed.get("Machine Serial Number")
+    serial = parsed_tuples.get("Machine Serial Number")
     if serial is not None:
         sys_dict["serial"] = serial
 
-    model = parsed.get("System Model")
+    model = parsed_tuples.get("System Model")
     if model is not None:
         manufacturer, sys_dict["product"] = _split_vendor(model)
         if manufacturer:
             sys_dict["manufacturer"] = manufacturer
 
-    ram = parsed.get("Memory Size")
+    ram = parsed_tuples.get("Memory Size")
     if ram is not None:
         mem_dict["total_ram_usable"] = int(ram.split()[0]) * 1024 * 1024
 
-    swap = parsed.get("Total Paging Space")
+    swap = parsed_tuples.get("Total Paging Space")
     if swap is not None:
         mem_dict["total_swap"] = int(swap.replace("MB", "")) * 1024 * 1024
+
+    domain_name = parsed_tuples.get("Domain Name")
+    if domain_name is not None:
+        net_dict["domain_name"] = domain_name
+
+    gateway = parsed_tuples.get("Gateway")
+    if gateway is not None:
+        net_dict["gateway"] = gateway
+
+    ip_address = parsed_tuples.get("IP Address")
+    if ip_address is not None:
+        net_dict["ip_address"] = ip_address
+
+    name_server = parsed_tuples.get("Name Server")
+    if name_server is not None:
+        net_dict["name_server"] = name_server
+
+    sub_netmask = parsed_tuples.get("Sub Netmask")
+    if sub_netmask is not None:
+        net_dict["sub_netmask"] = sub_netmask
+
+
+def fill_volume_groups(inventory_tree, parsed):
+    path = ".hardware.volumes.physical_volumes.%s:"
+    for item in parsed["active"]:
+        vg_name, pv_name, pv_status, pv_total_partitions, pv_free_partitions, pv_distribution = item
+        node = inventory_tree.get_dict(path % pv_name)
+        node["volume_group_name"] = vg_name
+        node["physical_volume_name"] = pv_name
+        node["physical_volume_status"] = pv_status
+        node["physical_volume_total_partitions"] = pv_total_partitions
+        node["physical_volume_free_partitions"] = pv_free_partitions
+
+    for item in parsed["inactive"]:
+        node = inventory_tree.get_dict(path % item)
+        node["volume_group_name"] = item
+        node["physical_volume_name"] = ""
+        node["physical_volume_status"] = "Inactive"
+        node["physical_volume_total_partitions"] = ""
+        node["physical_volume_free_partitions"] = ""
 
 
 inv_info['prtconf'] = {

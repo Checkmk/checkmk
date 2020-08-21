@@ -1,25 +1,20 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import abc
+from collections.abc import Mapping
+import io
 import operator
 import os
 import time
 import re
 import shutil
 import uuid
+from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
 
-try:
-    from collections.abc import Mapping  # type: ignore[import]
-except ImportError:
-    from collections import Mapping
-
-from typing import Any, Dict, List, Optional, Set, Text, Tuple, Type, Union  # pylint: disable=unused-import
-
-import six
-from livestatus import SiteId  # pylint: disable=unused-import
+from livestatus import SiteId
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
@@ -33,8 +28,8 @@ from cmk.gui.exceptions import (
 )
 from cmk.gui.htmllib import HTML
 from cmk.gui.globals import g, html
-from cmk.gui.type_defs import HTTPVariables  # pylint: disable=unused-import
-from cmk.gui.valuespec import Choices  # pylint: disable=unused-import
+from cmk.gui.type_defs import HTTPVariables, SetOnceDict
+from cmk.gui.valuespec import Choices
 from cmk.gui.watolib.utils import (
     wato_root_dir,
     rename_host_in_list,
@@ -44,6 +39,7 @@ from cmk.gui.watolib.utils import (
     format_config_value,
     ALL_HOSTS,
     ALL_SERVICES,
+    has_agent_bakery,
 )
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.automations import check_mk_automation
@@ -53,6 +49,8 @@ from cmk.gui.watolib.host_attributes import (
     collect_attributes,
 )
 from cmk.gui.plugins.watolib.utils import wato_fileheader
+from cmk.gui.background_job import BackgroundJobAlreadyRunning
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 
 import cmk.utils.version as cmk_version
 
@@ -73,33 +71,29 @@ if cmk_version.is_managed_edition():
 # add, remove      mean just modifications in the data structures
 
 
-class WithPermissions(object):
-    def may(self, how):  # how is "read" or "write"
-        # type: (str) -> bool
+class WithPermissions:
+    def may(self, how: str) -> bool:  # how is "read" or "write"
         try:
             self._user_needs_permission(how)
             return True
         except MKAuthException:
             return False
 
-    def reason_why_may_not(self, how):
-        # type: (str) -> Union[bool, HTML]
+    def reason_why_may_not(self, how: str) -> Union[bool, HTML]:
         try:
             self._user_needs_permission(how)
             return False
         except MKAuthException as e:
             return HTML("%s" % e)
 
-    def need_permission(self, how):
-        # type: (str) -> None
+    def need_permission(self, how: str) -> None:
         self._user_needs_permission(how)
 
-    def _user_needs_permission(self, how):
-        # type: (str) -> None
+    def _user_needs_permission(self, how: str) -> None:
         raise NotImplementedError()
 
 
-class WithUniqueIdentifier(six.with_metaclass(abc.ABCMeta, object)):
+class WithUniqueIdentifier(metaclass=abc.ABCMeta):
     """Provides methods for giving Hosts and Folders unique identifiers.
 
     """
@@ -111,8 +105,7 @@ class WithUniqueIdentifier(six.with_metaclass(abc.ABCMeta, object)):
         # https://github.com/python/mypy/issues/5887 and related issues.
         super(WithUniqueIdentifier, self).__init__(*args, **kw)  # type: ignore[call-arg]
 
-    def id(self):
-        # type: () -> str
+    def id(self) -> str:
         """The unique identifier of this particular instance.
 
         Returns:
@@ -124,8 +117,7 @@ class WithUniqueIdentifier(six.with_metaclass(abc.ABCMeta, object)):
         return self._id
 
     @classmethod
-    def by_id(cls, identifier):
-        # type: (str) -> Any
+    def by_id(cls, identifier: str) -> Any:
         """Return the Folder instance of this particular identifier.
 
         Args:
@@ -139,8 +131,7 @@ class WithUniqueIdentifier(six.with_metaclass(abc.ABCMeta, object)):
             raise MKUserError(None, _("Folder %s not found.") % (identifier,))
         return folders[identifier]
 
-    def persist_instance(self):
-        # type: () -> None
+    def persist_instance(self) -> None:
         """Save the current state of the instance to a file.
 
         """
@@ -154,8 +145,7 @@ class WithUniqueIdentifier(six.with_metaclass(abc.ABCMeta, object)):
         store.makedirs(os.path.dirname(self._store_file_name()))
         store.save_object_to_file(self._store_file_name(), data)
 
-    def load_instance(self):
-        # type: () -> None
+    def load_instance(self) -> None:
         """Load the data of this instance and return it.
 
         The internal state of the object will not be changed.
@@ -178,43 +168,37 @@ class WithUniqueIdentifier(six.with_metaclass(abc.ABCMeta, object)):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _get_identifier(self):
-        # type: () -> str
+    def _get_identifier(self) -> str:
         """The unique identifier of this object."""
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _upgrade_keys(self, data):
-        # type: (Dict[str, Any]) -> Dict[str, Any]
+    def _upgrade_keys(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Upgrade the structure of the store-file."""
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _get_instance_data(self):
-        # type: () -> Dict[str, Any]
+    def _get_instance_data(self) -> Dict[str, Any]:
         """The data to persist to the file."""
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _store_file_name(self):
-        # type: () -> str
+    def _store_file_name(self) -> str:
         """The filename to which to persist this object."""
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _clear_id_cache(self):
-        # type: () -> None
+    def _clear_id_cache(self) -> None:
         """Clear the cache if applicable."""
         raise NotImplementedError()
 
     @classmethod
-    def _mapped_by_id(cls):
-        # type: () -> Dict[str, Any]
+    def _mapped_by_id(cls) -> Dict[str, Any]:
         """Give out a mapping from unique identifiers to class instances."""
         raise NotImplementedError()
 
 
-class WithAttributes(object):
+class WithAttributes:
     """Mixin containing attribute management methods.
 
     Used in the Host and Folder classes."""
@@ -224,7 +208,7 @@ class WithAttributes(object):
         # we implement them, see e.g.
         # https://github.com/python/mypy/issues/5887 and related issues.
         super(WithAttributes, self).__init__(*args, **kw)  # type: ignore[call-arg]
-        self._attributes = {'meta_data': {}}  # type: Dict[str, Any]
+        self._attributes: Dict[str, Any] = {'meta_data': {}}
         self._effective_attributes = None
 
     # .--------------------------------------------------------------------.
@@ -268,16 +252,26 @@ class WithAttributes(object):
         return self._effective_attributes.copy()
 
 
-class BaseFolder(object):
+class BaseFolder:
     """Base class of SearchFolder and Folder. Implements common methods"""
     def hosts(self):
         raise NotImplementedError()
 
+    def breadcrumb(self) -> Breadcrumb:
+        breadcrumb = Breadcrumb()
+
+        for folder in self.parent_folder_chain() + [self]:
+            breadcrumb.append(BreadcrumbItem(
+                title=folder.title(),
+                url=folder.url(),
+            ))
+
+        return breadcrumb
+
     def host_names(self):
         return self.hosts().keys()
 
-    def host(self, host_name):
-        # type: (str) -> CREHost
+    def host(self, host_name: str) -> 'CREHost':
         return self.hosts().get(host_name)
 
     def has_host(self, host_name):
@@ -320,8 +314,7 @@ class BaseFolder(object):
     def is_root(self):
         return not self.has_parent()
 
-    def parent_folder_chain(self):
-        # type: () -> List[CREFolder]
+    def parent_folder_chain(self) -> List:
         folders = []
         folder = self.parent()
         while folder:
@@ -329,82 +322,10 @@ class BaseFolder(object):
             folder = folder.parent()
         return folders[::-1]
 
-    def show_breadcrump(self, link_to_folder=False, keepvarnames=None):
-        if keepvarnames is True:
-            keepvars = []
-        else:
-            if keepvarnames is None:
-                keepvarnames = ["mode"]
-            keepvars = [(name, html.request.var(name)) for name in keepvarnames]
-            if link_to_folder:
-                keepvars.append(("mode", "folder"))
-
-        def render_component(folder):
-            vs = [("folder", folder.path())] + keepvars
-            uri = html.makeuri(vs) if keepvarnames is True else html.makeuri_contextless(vs)
-            return '<a href="%s">%s</a>' % (uri, escaping.escape_attribute(folder.title()))
-
-        def breadcrump_element_start(end='', z_index=0):
-            html.open_li(style="z-index:%d;" % z_index)
-            html.div('', class_=["left", end])
-
-        def breadcrump_element_end(end=''):
-            html.div('', class_=["right", end])
-            html.close_li()
-
-        parts = []
-        for folder in self.parent_folder_chain():
-            parts.append(render_component(folder))
-
-        # The current folder (with link or without link)
-        if link_to_folder:
-            parts.append(render_component(self))
-        else:
-            parts.append(escaping.escape_attribute(self.title()))
-
-        # Render the folder path
-        html.open_div(class_=["folderpath"])
-        html.open_ul()
-        num = 0
-        for part in parts:
-            if num == 0:
-                breadcrump_element_start('end', z_index=100 + num)
-            else:
-                breadcrump_element_start(z_index=100 + num)
-            html.open_div(class_=["content"])
-            html.write(part)
-            html.close_div()
-
-            breadcrump_element_end(num == len(parts) - 1 and
-                                   not (self.has_subfolders() and not link_to_folder) and "end" or
-                                   "")
-            num += 1
-
-        # Render the current folder when having subfolders
-        if not link_to_folder and self.has_subfolders() and self.subfolders(only_visible=True):
-            breadcrump_element_start(z_index=100 + num)
-            html.open_div(class_=["content"])
-            html.open_form(name="folderpath", method="GET")
-            html.dropdown("folder", [("", "")] + self.subfolder_choices(),
-                          class_="folderpath",
-                          onchange="folderpath.submit();")
-            if keepvarnames is True:
-                html.hidden_fields()
-            else:
-                for var in keepvarnames:
-                    html.hidden_field(var, html.request.var(var))
-            html.close_form()
-            html.close_div()
-            breadcrump_element_end('end')
-
-        html.close_ul()
-        html.close_div()
-
     def name(self):
         raise NotImplementedError()
 
-    def title(self):
-        # type: () -> Text
+    def title(self) -> str:
         raise NotImplementedError()
 
     def subfolders(self, only_visible=False):
@@ -472,7 +393,7 @@ def deep_update(original, update, overwrite=True):
 
     """
     # Adapted from https://stackoverflow.com/a/3233356
-    for k, v in six.iteritems(update):
+    for k, v in update.items():
         if isinstance(v, Mapping):
             original[k] = deep_update(original.get(k, {}), v, overwrite=overwrite)
         else:
@@ -482,9 +403,9 @@ def deep_update(original, update, overwrite=True):
 
 
 def update_metadata(
-    attributes,  # type: Dict[str, Any]
-    created_by=None,  # type: Optional[Text]
-):  # type: (...) -> Dict[str, Any]
+    attributes: Dict[str, Any],
+    created_by: Optional[str] = None,
+) -> Dict[str, Any]:
     """Update meta_data timestamps and set created_by if provided.
 
     Args:
@@ -587,6 +508,10 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def root_folder():
         return Folder.folder("")
 
+    # Need this for specifying the correct type
+    def parent_folder_chain(self) -> 'List[CREFolder]':  # pylint: disable=useless-super-delegation
+        return super().parent_folder_chain()
+
     @staticmethod
     def invalidate_caches():
         g.pop('wato_folders', {})
@@ -601,8 +526,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     # the later case we call .current() of SearchFolder() to let it decide whether
     # this is a host search. This method has to return a folder in all cases.
     @staticmethod
-    def current():
-        # type: () -> CREFolder
+    def current() -> 'CREFolder':
         if 'wato_current_folder' in g:
             return g.wato_current_folder
 
@@ -685,8 +609,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def set_root_dir(self, root_dir):
         self._root_dir = _ensure_trailing_slash(root_dir)
 
-    def parent(self):
-        # type: () -> CREFolder
+    def parent(self) -> 'CREFolder':
         """Give the parent instance.
 
         Returns:
@@ -909,21 +832,21 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 os.remove(self.hosts_file_path())
             return
 
-        out = six.StringIO()
+        out = io.StringIO()
         out.write(wato_fileheader())
 
-        all_hosts = []  # type: List[str]
-        clusters = {}  # type: Dict[str, List[str]]
+        all_hosts: List[str] = []
+        clusters: Dict[str, List[str]] = {}
         hostnames = sorted(self.hosts().keys())
         # collect value for attributes that are to be present in Nagios
-        custom_macros = {}  # type: Dict[str, Dict[str, str]]
+        custom_macros: Dict[str, Dict[str, str]] = {}
         # collect value for attributes that are explicitly set for one host
-        explicit_host_settings = {}  # type: Dict[str, Dict[str, str]]
+        explicit_host_settings: Dict[str, Dict[str, str]] = {}
         cleaned_hosts = {}
         host_tags = {}
         host_labels = {}
 
-        attribute_mappings = [
+        attribute_mappings: List[Tuple[str, str, Dict[str, Any], str]] = [
             # host attr, cmk.base variable name, value, title
             ("ipaddress", "ipaddresses", {}, "Explicit IPv4 addresses"),
             ("ipv6address", "ipv6addresses", {}, "Explicit IPv6 addresses"),
@@ -933,7 +856,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             ("management_ipmi_credentials", "management_ipmi_credentials", {},
              "Management board IPMI credentials"),
             ("management_protocol", "management_protocol", {}, "Management board protocol"),
-        ]  # type: List[Tuple[str, str, Dict[str, Any], str]]
+        ]
 
         for hostname in hostnames:
             host = self.hosts()[hostname]
@@ -1210,8 +1133,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             hosts.update(subfolder.all_hosts_recursively())
         return hosts
 
-    def subfolders(self, only_visible=False):
-        # type: (bool) -> List[CREFolder]
+    def subfolders(self, only_visible: bool = False) -> 'List[CREFolder]':
         """Filter subfolder collection by various means.
 
         Args:
@@ -1229,24 +1151,22 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         return subfolders
 
-    def subfolder(self, name):
-        # type: (Text) -> CREFolder
+    def subfolder(self, name: str) -> 'CREFolder':
         """Find a Folder by its name-part.
 
         Args:
-            name (Text): The basename of this Folder, not its path.
+            name (str): The basename of this Folder, not its path.
 
         Returns:
             The found Folder-instance or raises a KeyError.
         """
         return self._subfolders[name]
 
-    def subfolder_by_title(self, title):
-        # type: (Text) -> Optional[CREFolder]
+    def subfolder_by_title(self, title: str) -> 'Optional[CREFolder]':
         """Find a Folder by its title.
 
         Args:
-            title (Text): The `title()` of the folder to retrieve.
+            title (str): The `title()` of the folder to retrieve.
 
         Returns:
             The found Folder-instance or None.
@@ -1254,12 +1174,10 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         """
         return first([f for f in self.subfolders() if f.title() == title])
 
-    def has_subfolder(self, name):
-        # type: (Text) -> bool
+    def has_subfolder(self, name: str) -> bool:
         return name in self._subfolders
 
-    def has_subfolders(self):
-        # type: () -> bool
+    def has_subfolders(self) -> bool:
         return len(self._subfolders) > 0
 
     def subfolder_choices(self):
@@ -1293,25 +1211,22 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return False
 
     def recursive_subfolder_choices(self, pretty=True):
-        result = []  # type: List[Tuple[str, HTML]]
+        result: List[Tuple[str, HTML]] = []
         self._walk_tree(result, 0, pretty)
         result.reverse()
         return result
 
-    def choices_for_moving_folder(self):
-        # type: () -> Choices
+    def choices_for_moving_folder(self) -> Choices:
         return self._choices_for_moving("folder")
 
-    def choices_for_moving_host(self):
-        # type: () -> Choices
+    def choices_for_moving_host(self) -> Choices:
         if self._choices_for_moving_host is not None:
             return self._choices_for_moving_host  # Cached
 
         self._choices_for_moving_host = self._choices_for_moving("host")
         return self._choices_for_moving_host
 
-    def folder_should_be_shown(self, how):
-        # type: (str) -> bool
+    def folder_should_be_shown(self, how: str) -> bool:
         if not config.wato_hide_folders_without_read_permissions:
             return True
 
@@ -1323,9 +1238,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         return has_permission
 
-    def _choices_for_moving(self, what):
-        # type: (str) -> Choices
-        choices = []  # type: Choices
+    def _choices_for_moving(self, what: str) -> Choices:
+        choices: Choices = []
 
         for folder_path, folder in Folder.all_folders().items():
             if not folder.may("write"):
@@ -1347,8 +1261,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         choices.sort(key=lambda x: x[1].lower())
         return choices
 
-    def site_id(self):
-        # type: () -> SiteId
+    def site_id(self) -> SiteId:
         if "site" in self._attributes:
             return self._attributes["site"]
         if self.has_parent():
@@ -1358,16 +1271,14 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             return ds
         raise Exception("unknown site ID")
 
-    def all_site_ids(self):
-        # type: () -> List[SiteId]
-        site_ids = set()  # type: Set[SiteId]
+    def all_site_ids(self) -> List[SiteId]:
+        site_ids: Set[SiteId] = set()
         self._add_all_sites_to_set(site_ids)
         return list(site_ids)
 
     # TODO: Horrible typing depending on optional parameter, which poisons all
     # call sites. Split this method!
-    def title_path(self, withlinks=False):
-        # type: (bool) -> List[Union[HTML, Text]]
+    def title_path(self, withlinks: bool = False) -> List[Union[HTML, str]]:
         if withlinks:
             # In this case, we return a List[HTML]
             return [
@@ -1377,12 +1288,11 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                                                             filename="wato.py"))
                 for folder in self.parent_folder_chain() + [self]
             ]
-        # In this case, we return a List[Text]
+        # In this case, we return a List[str]
         return [folder.title() for folder in self.parent_folder_chain() + [self]]
 
-    # TODO: Actually, we return a List[Text], but title_path()'s typing is broken.
-    def title_path_without_root(self):
-        # type: () -> List[Union[HTML, Text]]
+    # TODO: Actually, we return a List[str], but title_path()'s typing is broken.
+    def title_path_without_root(self) -> List[Union[HTML, str]]:
         if self.is_root():
             return [self.title()]
         return self.title_path()[1:]
@@ -1449,9 +1359,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         return permitted_groups, host_contact_groups, cgconf.get("use_for_services", False)
 
-    def find_host_recursively(self, host_name):
-        # type: (str) -> Optional[CREHost]
-        host = self.host(host_name)  # type: Optional[CREHost]
+    def find_host_recursively(self, host_name: str) -> 'Optional[CREHost]':
+        host: Optional[CREHost] = self.host(host_name)
         if host:
             return host
 
@@ -1461,8 +1370,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 return host
         return None
 
-    def _user_needs_permission(self, how):
-        # type: (str) -> None
+    def _user_needs_permission(self, how: str) -> None:
         if how == "write" and config.user.may("wato.all_folders"):
             return
 
@@ -1492,8 +1400,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             "You may enter the folder as you might have permission on a subfolders, though.")
         raise MKAuthException(reason)
 
-    def need_recursive_permission(self, how):
-        # type: (str) -> None
+    def need_recursive_permission(self, how: str) -> None:
         self.need_permission(how)
         if how == "write":
             self.need_unlocked()
@@ -1503,25 +1410,21 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         for subfolder in self.subfolders():
             subfolder.need_recursive_permission(how)
 
-    def need_unlocked(self):
-        # type: () -> None
+    def need_unlocked(self) -> None:
         if self.locked():
             raise MKAuthException(
                 _("Sorry, you cannot edit the folder %s. It is locked.") % self.title())
 
-    def need_unlocked_hosts(self):
-        # type: () -> None
+    def need_unlocked_hosts(self) -> None:
         if self.locked_hosts():
             raise MKAuthException(_("Sorry, the hosts in the folder %s are locked.") % self.title())
 
-    def need_unlocked_subfolders(self):
-        # type: () -> None
+    def need_unlocked_subfolders(self) -> None:
         if self.locked_subfolders():
             raise MKAuthException(
                 _("Sorry, the sub folders in the folder %s are locked.") % self.title())
 
-    def url(self, add_vars=None):
-        # type: (Optional[HTTPVariables]) -> str
+    def url(self, add_vars: Optional[HTTPVariables] = None) -> str:
         if add_vars is None:
             add_vars = []
 
@@ -1538,8 +1441,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         url_vars += add_vars
         return html.makeuri_contextless(url_vars, filename="wato.py")
 
-    def edit_url(self, backfolder=None):
-        # type: (Optional[CREFolder]) -> str
+    def edit_url(self, backfolder: 'Optional[CREFolder]' = None) -> str:
         if backfolder is None:
             if self.has_parent():
                 backfolder = self.parent()
@@ -1551,24 +1453,20 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             ("backfolder", backfolder.path()),
         ])
 
-    def locked(self):
-        # type: () -> Union[bool, Text]
+    def locked(self) -> Union[bool, str]:
         return self._locked
 
-    def locked_subfolders(self):
-        # type: () -> Union[bool, Text]
+    def locked_subfolders(self) -> Union[bool, str]:
         return self._locked_subfolders
 
-    def locked_hosts(self):
-        # type: () -> Union[bool, Text]
+    def locked_hosts(self) -> Union[bool, str]:
         self._load_hosts_on_demand()
         return self._locked_hosts
 
     # Returns:
     #  None:      No network scan is enabled.
     #  timestamp: Next planned run according to config.
-    def next_network_scan_at(self):
-        # type: () -> Optional[float]
+    def next_network_scan_at(self) -> Optional[float]:
         if "network_scan" not in self._attributes:
             return None
 
@@ -1819,6 +1717,15 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         self.persist_instance()  # num_hosts has changed
         self.save_hosts()
 
+        # 3. Prepare agents for the new hosts
+        if has_agent_bakery():
+            import cmk.gui.cee.plugins.wato.agent_bakery.misc as agent_bakery  # pylint: disable=import-error,no-name-in-module
+            try:
+                agent_bakery.start_bake_agents(host_names=[e[0] for e in entries],
+                                               signing_credentials=None)
+            except BackgroundJobAlreadyRunning:
+                pass
+
     def delete_hosts(self, host_names):
         # 1. Check preconditions
         config.user.need_permission("wato.manage_hosts")
@@ -1854,14 +1761,14 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def _get_parents_of_hosts(self, host_names):
         # Note: Deletion of chosen hosts which are parents
         # is possible if and only if all children are chosen, too.
-        hosts_with_children = {}  # type: Dict[str, List[str]]
+        hosts_with_children: Dict[str, List[str]] = {}
         for child_key, child in Folder.root_folder().all_hosts_recursively().items():
             for host_name in host_names:
                 if host_name in child.parents():
                     hosts_with_children.setdefault(host_name, [])
                     hosts_with_children[host_name].append(child_key)
 
-        result = {}  # type: Dict[str, List[str]]
+        result: Dict[str, List[str]] = {}
         for parent, children in hosts_with_children.items():
             if not set(children) < set(host_names):
                 result.setdefault(parent, children)
@@ -1869,7 +1776,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     # Group the given host names by their site and delete their files
     def _delete_host_files(self, host_names):
-        hosts_by_site = {}  # type: Dict[SiteId, List[str]]
+        hosts_by_site: Dict[SiteId, List[str]] = {}
         for host_name in host_names:
             host = self.hosts()[host_name]
             hosts_by_site.setdefault(host.site_id(), []).append(host_name)
@@ -1975,14 +1882,14 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     def show_locking_information(self):
         self._load_hosts_on_demand()
-        lock_messages = []  # type: List[Text]
+        lock_messages: List[str] = []
 
         # Locked hosts
         if self._locked_hosts is True:
             lock_messages.append(
                 _("Host attributes are locked "
                   "(You cannot create, edit or delete hosts in this folder)"))
-        elif isinstance(self._locked_hosts, Text) and self._locked_hosts:
+        elif isinstance(self._locked_hosts, str) and self._locked_hosts:
             lock_messages.append(self._locked_hosts)
 
         # Locked folder attributes
@@ -1990,7 +1897,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             lock_messages.append(
                 _("Folder attributes are locked "
                   "(You cannot edit the attributes of this folder)"))
-        elif isinstance(self._locked, Text) and self._locked:
+        elif isinstance(self._locked, str) and self._locked:
             lock_messages.append(self._locked)
 
         # Also subfolders are locked
@@ -1998,7 +1905,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             lock_messages.append(
                 _("Subfolders are locked "
                   "(You cannot create or remove folders in this folder)"))
-        elif isinstance(self._locked_subfolders, Text) and self._locked_subfolders:
+        elif isinstance(self._locked_subfolders, str) and self._locked_subfolders:
             lock_messages.append(self._locked_subfolders)
 
         if lock_messages:
@@ -2016,8 +1923,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         folders_by_id.clear_cache()
 
     @classmethod
-    def _mapped_by_id(cls):
-        # type: () -> Dict[str, Type[CREFolder]]
+    def _mapped_by_id(cls) -> 'Dict[str, Type[CREFolder]]':
         return folders_by_id()
 
 
@@ -2031,7 +1937,7 @@ def validate_host_uniqueness(varname, host_name):
             (host_name, host.folder().url(), host.folder().alias_path()))
 
 
-class SearchFolder(BaseFolder):
+class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
     """A virtual folder representing the result of a search."""
     @staticmethod
     def criteria_from_html_vars():
@@ -2080,8 +1986,7 @@ class SearchFolder(BaseFolder):
     def is_search_folder(self):
         return True
 
-    def _user_needs_permission(self, how):
-        # type: (str) -> None
+    def _user_needs_permission(self, how: str) -> None:
         pass
 
     def title(self):
@@ -2163,7 +2068,7 @@ class SearchFolder(BaseFolder):
     # '--------------------------------------------------------------------'
 
     def _group_hostnames_by_folder(self, host_names):
-        by_folder = {}  # type: Dict[str, List[CREHost]]
+        by_folder: Dict[str, List[CREHost]] = {}
         for host_name in host_names:
             host = self.host(host_name)
             by_folder.setdefault(host.folder().path(), []).append(host)
@@ -2253,7 +2158,7 @@ class CREHost(WithPermissions, WithAttributes):
     def id(self):
         return self.name()
 
-    def ident(self):
+    def ident(self) -> str:
         return self.name()
 
     def name(self):
@@ -2263,8 +2168,7 @@ class CREHost(WithPermissions, WithAttributes):
         # Alias cannot be inherited, so no need to use effective_attributes()
         return self.attributes().get("alias")
 
-    def folder(self):
-        # type: () -> CREFolder
+    def folder(self) -> CREFolder:
         return self._folder
 
     def linkinfo(self):
@@ -2291,15 +2195,14 @@ class CREHost(WithPermissions, WithAttributes):
     def parents(self):
         return self.effective_attribute("parents", [])
 
-    def tag_groups(self):
-        # type: () -> dict
+    def tag_groups(self) -> dict:
         """Compute tags from host attributes
         Each tag attribute may set multiple tags.  can set tags (e.g. the SiteAttribute)"""
 
         if self._cached_host_tags is not None:
             return self._cached_host_tags  # Cached :-)
 
-        tag_groups = {}  # type: Dict[str, str]
+        tag_groups: Dict[str, str] = {}
         effective = self.effective_attributes()
         for attr in host_attribute_registry.attributes():
             value = effective.get(attr.name())
@@ -2389,8 +2292,7 @@ class CREHost(WithPermissions, WithAttributes):
     def groups(self):
         return self.folder().groups(self)
 
-    def _user_needs_permission(self, how):
-        # type: (str) -> None
+    def _user_needs_permission(self, how: str) -> None:
         if how == "write" and config.user.may("wato.all_folders"):
             return
 
@@ -2677,11 +2579,11 @@ class CMEFolder(CREFolder):
     def move_subfolder_to(self, subfolder, target_folder):
         target_folder_customer = target_folder._get_customer_id()
         if target_folder_customer != managed.default_customer_id():
-            result_dict = {
+            result_dict: Dict[str, Any] = {
                 "explicit_host_sites": {},  # May be used later on to
                 "explicit_folder_sites": {},  # improve error message
                 "involved_customers": set()
-            }  # type: Dict[str, Any]
+            }
             subfolder._determine_involved_customers(result_dict)
             other_customers = result_dict["involved_customers"] - {target_folder_customer}
             if other_customers:
@@ -2755,7 +2657,7 @@ class CMEFolder(CREFolder):
         result_dict["involved_customers"].update(
             set(map(managed.get_customer_of_site, result_dict["explicit_host_sites"].keys())))
         result_dict["involved_customers"].update(
-            map(managed.get_customer_of_site, result_dict["explicit_folder_sites"].keys()))
+            set(map(managed.get_customer_of_site, result_dict["explicit_folder_sites"].keys())))
 
     def _determine_explicit_set_site_ids(self, result_dict):
         for host in self.hosts().values():
@@ -2784,23 +2686,15 @@ class CMEHost(CREHost):
 
 # TODO: Change to factory?
 if not cmk_version.is_managed_edition():
-    Folder = CREFolder  # type: Type[CREFolder]
-    Host = CREHost  # type: Type[CREHost]
+    Folder: Type[CREFolder] = CREFolder
+    Host: Type[CREHost] = CREHost
 else:
     Folder = CMEFolder
     Host = CMEHost
 
 
-class SetOnceDict(dict):
-    def __setitem__(self, key, value):
-        if key in self:
-            raise ValueError("key %r already set" % (key,))
-        dict.__setitem__(self, key, value)
-
-
 @MemoizeCache
-def folders_by_id():
-    # type: () -> Dict[str, Type[CREFolder]]
+def folders_by_id() -> Dict[str, Type[CREFolder]]:
     """Map all reachable folders via their uuid.uuid4() id.
 
     This will essentially flatten all Folders into one dictionary, yet uniquely identifiable via
@@ -2827,7 +2721,7 @@ def folders_by_id():
         for _sub_folder in _folder.subfolders():
             _update_mapping(_sub_folder, _mapping)
 
-    mapping = SetOnceDict()  # type: Dict[str, Type[CREFolder]]
+    mapping: Dict[str, Type[CREFolder]] = SetOnceDict()
     _update_mapping(Folder.root_folder(), mapping)
     return mapping
 
@@ -2853,7 +2747,7 @@ def validate_all_hosts(hostnames, force_all=False):
         all_hosts = collect_hosts(Folder.root_folder())
 
         if force_all:
-            hostnames = all_hosts.keys()
+            hostnames = list(all_hosts.keys())
 
         for name in hostnames:
             eff = all_hosts[name]
@@ -2880,13 +2774,11 @@ def collect_hosts(folder):
     return hosts_attributes
 
 
-def folder_preserving_link(add_vars):
-    # type: (HTTPVariables) -> str
+def folder_preserving_link(add_vars: HTTPVariables) -> str:
     return Folder.current().url(add_vars)
 
 
-def make_action_link(vars_):
-    # type: (HTTPVariables) -> str
+def make_action_link(vars_: HTTPVariables) -> str:
     return folder_preserving_link(vars_ + [("_transid", html.transaction_manager.get())])
 
 
@@ -2923,8 +2815,7 @@ def check_wato_foldername(htmlvarname, name, just_name=False):
             _("Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
 
 
-def _ensure_trailing_slash(path):
-    # type: (str) -> str
+def _ensure_trailing_slash(path: str) -> str:
     """Ensure one single trailing slash on a pathname.
 
     Examples:

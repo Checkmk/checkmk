@@ -4,10 +4,11 @@
 // source code package.
 
 #include "CommentColumn.h"
+
 #include <algorithm>
 #include <chrono>
-#include <cstdint>
 #include <iterator>
+
 #include "MonitoringCore.h"
 #include "Renderer.h"
 #include "Row.h"
@@ -45,7 +46,7 @@ std::vector<std::string> CommentColumn::getValue(
 }
 
 std::vector<CommentData> CommentColumn::comments_for_row(Row row) const {
-    if (auto data = columnData<void>(row)) {
+    if (const auto *const data = columnData<void>(row)) {
         return _is_service
                    ? _mc->comments_for_service(
                          reinterpret_cast<const MonitoringCore::Service *>(

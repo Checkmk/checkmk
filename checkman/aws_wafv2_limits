@@ -1,0 +1,37 @@
+title: AWS WAFV2: Limits
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors limits for Web Application Firewalls (V2). Per
+ region, the check reports the number of Web Access Control Lists (ACLs),
+ the number of rule groups, the number of IP sets and the number of
+ regex sets. Furthermore, the check monitors the used Web ACL capacity
+ units (WCUs) per Web ACL.
+
+ To make this check work, you have to configure the related special
+ agent {Amazon Web Services (AWS)}. Note that when configuring the agent,
+ there is the option to include Web ACLs in front of CloudFront resources
+ in the monitoring.
+
+ Default levels are set to 80, 90 percent and the default max. value is
+ set to the default limit provided by AWS, ie.:
+
+ - Web ACLs per region: 100
+
+ - Rule groups per region: 100
+
+ - IP sets per region: 100
+
+ - Regex sets per region: 100
+
+ - WCUs per Web ACL: 1,500
+
+ These levels are configurable using the WATO rule "AWS/WAFV2 Limits".
+
+ Note that if limits are enabled, all Web ACLs are fetched, regardless
+ of possibly configured restrictions to names or tags.
+
+inventory:
+ One service is created per monitored AWS region.

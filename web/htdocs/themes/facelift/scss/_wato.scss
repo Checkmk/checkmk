@@ -16,7 +16,7 @@
 
 
 .wato {
-  color: $color-text;
+  color: $font-color;
 }
 
 /* Icon image place inline in some documentation text */
@@ -41,7 +41,7 @@
     border-radius: 0;
 
     &.header_state {
-      color: $color-text !important;
+      color: $font-color !important;
       background: $wato-data-th-bg-color !important;
     }
   }
@@ -308,107 +308,6 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
   box-sizing: border-box;
 }
 
-/* Path to current folder at top of screen */
-.wato div.folderpath {
-  position: relative;
-  left: 4px;
-  height: auto;
-  margin-top: -5px;
-  margin-bottom: 8px;
-
-  ul {
-    padding-left: 0;
-    list-style-type: none;
-
-    li {
-      &:before {
-        position: absolute;
-        top: 0;
-        left: 0;
-        font-size: 29px;
-        font-weight: 800;
-        color: $yellow;
-        content: "»";
-      }
-
-      &:first-child:before {
-        content: " ";
-      }
-    }
-
-    &:after {
-      display: block;
-      width: 0;
-      height: 0;
-      clear: both;
-      content: " ";
-    }
-  }
-
-  li {
-    position: relative;
-    display: block;
-    float: left;
-    height: 44px;
-    padding-right: 20px; /* spacing for the image divs left/right */
-    padding-left: 20px;
-    margin-left: -13px; /* move left border of all items 22px left to make the items overlap */
-    color: rgb(255, 255, 255);
-    background: transparent;
-
-    a {
-      text-decoration: none;
-    }
-
-    div.content {
-      height: auto;
-      padding: 4px;
-      line-height: 33px;
-      color: $color-text;
-      background: none;
-    }
-
-    select {
-      position: relative;
-      right: -6px;
-      z-index: 200;
-      height: auto;
-      margin: 0;
-      font-size: 12px;
-      font-weight: normal;
-      color: rgb(255, 255, 255);
-      background-color: $bg-color-tertiary;
-      box-shadow: none;
-    }
-
-    &:hover {
-      div.content {
-        background-image: none;
-      }
-
-      select {
-        background-color: $color-table-background;
-      }
-    }
-
-    select option {
-      color: $color-text;
-      background-color: $bg-color-tertiary;
-    }
-
-    .left,
-    .right {
-      display: none;
-    }
-  }
-
-  li a,
-  li body.main .popup_menu span,
-  body.main .popup_menu li span {
-    color: $color-text;
-  }
-}
-
 .wato div.floatfolder {
   position: relative;
   left: -14px;
@@ -525,7 +424,7 @@ body.main .popup_menu .wato div.floatfolder div.title span,
 .wato div.floatfolder.locked div.title {
   font-size: 13px;
   font-weight: 500;
-  color: $color-text;
+  color: $font-color;
 }
 
 .wato img.authicon {
@@ -562,7 +461,7 @@ body.main .popup_menu .wato div.floatfolder div.title span,
   padding-left: 1px;
   margin-top: 10px;
   margin-bottom: 10px;
-  color: $color-text;
+  color: $font-color;
 }
 
 /* Controls for the audit log paged mechanism */
@@ -652,14 +551,6 @@ body.main .popup_menu .wato div.floatfolder div.title span,
 .wato td.value img {
   width: 20px;
   height: 20px;
-}
-
-.wato table.ruleeditor img,
-.wato img.ruleyesno {
-  position: relative;
-  top: -3px;
-  width: 22px;
-  height: 22px;
 }
 
 .wato ul.conditions {
@@ -767,7 +658,7 @@ form.search, div.filter_buttons {
 }
 
 .wato form.search {
-  color: $color-text;
+  color: $font-color;
 }
 
 .wato div.mainmenu {
@@ -1024,7 +915,7 @@ div.varname {
     height: 16px;
     text-align: center;
 
-    &.state_success {
+    &.state_success, &.state_warning {
       color: $dark-font-color;
     }
   }
@@ -1034,42 +925,35 @@ div.varname {
     top: 4px;
     left: 0;
     z-index: 0;
+    width: 160px;
     height: 24px;
     padding-top: 10px;
     font-size: 11px;
     color: $black;
-    background: $repprogress-progress-bg-color;
-    border: 1px solid $repprogress-progress-border-color;
     border-radius: $theme-border-radius;
     box-shadow: none;
     box-sizing: border-box;
 
+    &.in_progress {
+      background: $repprogress-progress-bg-color;
+      border-color: $repprogress-progress-border-color;
+    }
+
     &.state_success {
-      /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#bfd255+0,8eb92a+50,72aa00+51,9ecb2d+100;Green+Gloss */
       background: $color-state-success-background;
       border-color: $color-state-success-border;
     }
 
     &.state_error {
-      /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#f3c5bd+0,e86c57+50,ea2803+51,ff6600+75,c72200+100;Red+Gloss */
       background: $color-state-2-background;
       border-color: $color-state-2-border;
     }
 
     &.state_warning {
-      /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#fceabb+0,fccd4d+50,f8b500+51,fbdf93+100;Orange+3D+%235 */
       background: $yellow;
       border-color: $color-state-1-border;
     }
   }
-}
-
-/* TODO: Either remove this style or remove all repprogress styles from above */
-.wato td.details,
-.wato th.header_details,
-.wato td.repprogress,
-.wato th.header_repprogress {
-  display: none;
 }
 
 .wato td.tag-ellipsis {
@@ -1092,7 +976,7 @@ table.data tr.notification_context table {
 
   th {
     padding: 2px 4px;
-    color: $color-text;
+    color: $font-color;
     background-color: $primary-th-bg-color;
     border: 1px solid $color-table-border;
   }
@@ -1158,7 +1042,7 @@ table.data tr.data.dcd_log_entries {
         font-weight: $font-weight-default;
         color: $lightgrey;
         text-align: left;
-        background: $color-sidebar-background;
+        background: $navigation-bg-color;
         border: 1px solid $color-table-border-dark;
         border-radius: $theme-border-radius;
         box-shadow: none;
@@ -1630,7 +1514,7 @@ table.data.analyze_config td.buttons {
   font-size: $theme-font-table-header;
   font-weight: $font-weight-default;
   letter-spacing: $letter-spacing-table;
-  color: $color-text;
+  color: $font-color;
 }
 
 .wato table.data.job_table {

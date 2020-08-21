@@ -16,9 +16,12 @@ export function toggle(treename, id, fetch_url) {
 }
 
 function toggle_tree_state(tree, name, oContainer, fetch_url) {
+    var outer_container = oContainer.parentNode;
     var state;
+
     if (utils.has_class(oContainer, "closed")) {
         utils.change_class(oContainer, "closed", "open");
+        utils.change_class(outer_container, "closed", "open");
 
         if (fetch_url && !oContainer.innerHTML) {
             ajax.call_ajax(fetch_url, {
@@ -36,6 +39,7 @@ function toggle_tree_state(tree, name, oContainer, fetch_url) {
     }
     else {
         utils.change_class(oContainer, "open", "closed");
+        utils.change_class(outer_container, "open", "closed");
         state = "off";
     }
 

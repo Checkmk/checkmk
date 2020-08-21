@@ -1,15 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+from pathlib import Path
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
@@ -31,8 +26,7 @@ class PredefinedConditionStore(WatoSimpleConfigFile):
         user_groups = userdb.contactgroups_of_user(config.user.id)
 
         entries = self.filter_editable_entries(entries)
-        entries.update(dict([(k, v) for k, v in entries.items() if v["shared_with"] in user_groups
-                            ]))
+        entries.update({k: v for k, v in entries.items() if v["shared_with"] in user_groups})
         return entries
 
     def filter_editable_entries(self, entries):
@@ -41,7 +35,7 @@ class PredefinedConditionStore(WatoSimpleConfigFile):
 
         assert config.user.id is not None
         user_groups = userdb.contactgroups_of_user(config.user.id)
-        return dict([(k, v) for k, v in entries.items() if v["owned_by"] in user_groups])
+        return {k: v for k, v in entries.items() if v["owned_by"] in user_groups}
 
     def choices(self):
         return [(ident, entry["title"])

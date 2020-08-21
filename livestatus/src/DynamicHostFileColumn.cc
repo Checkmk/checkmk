@@ -4,29 +4,33 @@
 // source code package.
 
 #include "DynamicHostFileColumn.h"
+
 #include <filesystem>
 #include <stdexcept>
 #include <utility>
-#include "FileSystemHelper.h"
-#include "HostFileColumn.h"
-class Row;
 
-DynamicHostFileColumn::DynamicHostFileColumn(
+#include "FileSystemHelper.h"
+#include "HostFileColumn.h"  // IWYU pragma: keep
+
+template <class T>
+DynamicHostFileColumn<T>::DynamicHostFileColumn(
     const std::string &name, const std::string &description,
-    Column::Offsets offsets, std::function<std::filesystem::path()> basepath,
-    std::function<std::optional<std::filesystem::path>(
-        const Column &, const Row &, const std::string &)>
+    const Column::Offsets &offsets,
+    std::function<std::filesystem::path()> basepath,
+    std::function<std::filesystem::path(const T &, const std::string &)>
         filepath)
-    : DynamicColumn(name, description, std::move(offsets))
+    : DynamicColumn(name, description, offsets)
     , _basepath{std::move(basepath)}
     , _filepath{std::move(filepath)} {}
 
-[[nodiscard]] std::filesystem::path DynamicHostFileColumn::basepath() const {
+template <class T>
+[[nodiscard]] std::filesystem::path DynamicHostFileColumn<T>::basepath() const {
     // This delays the call to mc to after it is constructed.
     return _basepath();
 }
 
-std::unique_ptr<Column> DynamicHostFileColumn::createColumn(
+template <class T>
+std::unique_ptr<Column> DynamicHostFileColumn<T>::createColumn(
     const std::string &name, const std::string &arguments) {
     // Arguments contains a path relative to basepath and possibly escaped.
     if (arguments.empty()) {
@@ -42,9 +46,7 @@ std::unique_ptr<Column> DynamicHostFileColumn::createColumn(
                                  "': '" + f.string() + "' not in '" +
                                  basepath().string() + "'");
     }
-    return std::make_unique<HostFileColumn>(
+    return std::make_unique<HostFileColumn<T>>(
         name, _description, _offsets, _basepath,
-        [=](const Column &col, const Row &row) {
-            return _filepath(col, row, f);
-        });
+        [this, f](const T &r) { return _filepath(r, f); });
 }

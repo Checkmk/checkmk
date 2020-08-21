@@ -11,7 +11,6 @@
 #include <filesystem>
 #include <memory>
 #include <ostream>
-#include <stdexcept>
 #include <utility>
 
 #include "DowntimeOrComment.h"
@@ -21,7 +20,7 @@
 #include "contact_fwd.h"
 #include "pnp4nagios.h"
 
-void NagiosPaths::dump(Logger *logger) {
+void NagiosPaths::dump(Logger *logger) const {
     Notice(logger) << "socket path = '" << _socket << "'";
     Notice(logger) << "pnp path = '" << _pnp << "'";
     Notice(logger) << "inventory path = '" << _mk_inventory << "'";
@@ -102,6 +101,12 @@ std::chrono::system_clock::time_point NagiosCore::last_logfile_rotation() {
     return std::chrono::system_clock::from_time_t(last_log_rotation);
 }
 
+std::chrono::system_clock::time_point NagiosCore::last_config_change() {
+    // NOTE: Nagios doesn't reload, it restarts for config changes.
+    extern time_t program_start;
+    return std::chrono::system_clock::from_time_t(program_start);
+}
+
 size_t NagiosCore::maxLinesPerLogFile() const {
     return _limits._max_lines_per_logfile;
 }
@@ -165,7 +170,6 @@ std::filesystem::path NagiosCore::crashReportPath() const {
     return _paths._crash_reports_path;
 }
 std::filesystem::path NagiosCore::pnpPath() const { return _paths._pnp; }
-std::filesystem::path NagiosCore::rrdPath() const { return pnpPath(); }
 std::filesystem::path NagiosCore::historyFilePath() const {
     extern char *log_file;
     return log_file;
@@ -176,29 +180,6 @@ std::filesystem::path NagiosCore::logArchivePath() const {
 }
 std::filesystem::path NagiosCore::rrdcachedSocketPath() const {
     return _paths._rrdcached_socket;
-}
-[[nodiscard]] MetricLocation NagiosCore::metricLocation(
-    const void *object, const Metric::MangledName &name,
-    const RRDColumn::Table &table) const {
-    switch (table) {
-        case RRDColumn::Table::services: {
-            auto svc = static_cast<const service *>(object);
-            return {rrdPath() / svc->host_name /
-                        pnp_cleanup(std::string{svc->description} + "_" +
-                                    name.string() + ".rrd"),
-                    "1"};
-        }
-        case RRDColumn::Table::hosts: {
-            auto hst = static_cast<const host *>(object);
-            return {rrdPath() / hst->name /
-                        pnp_cleanup(std::string{"_HOST_"} + "_" +
-                                    name.string() + ".rrd"),
-                    "1"};
-        }
-        case RRDColumn::Table::objects:
-            throw std::runtime_error("invalid parameter");
-    }
-    return {};  // make GCC happy :-)
 }
 
 Encoding NagiosCore::dataEncoding() { return _data_encoding; }
@@ -244,9 +225,9 @@ std::string b16decode(const std::string &hex) {
 
 Attributes NagiosCore::customAttributes(const void *holder,
                                         AttributeKind kind) const {
-    auto h = *static_cast<const customvariablesmember *const *>(holder);
+    const auto *h = *static_cast<const customvariablesmember *const *>(holder);
     Attributes attrs;
-    for (auto cvm = h; cvm != nullptr; cvm = cvm->next) {
+    for (const auto *cvm = h; cvm != nullptr; cvm = cvm->next) {
         auto [k, name] = to_attribute_kind(cvm->variable_name);
         if (k == kind) {
             switch (kind) {
@@ -263,6 +244,16 @@ Attributes NagiosCore::customAttributes(const void *holder,
         }
     }
     return attrs;
+}
+
+MetricLocation NagiosCore::metricLocation(
+    const std::string &host_name, const std::string &service_description,
+    const Metric::Name &var) const {
+    return MetricLocation{
+        pnpPath() / host_name /
+            pnp_cleanup(service_description + "_" +
+                        Metric::MangledName(var).string() + ".rrd"),
+        "1"};
 }
 
 bool NagiosCore::answerRequest(InputBuffer &input, OutputBuffer &output) {

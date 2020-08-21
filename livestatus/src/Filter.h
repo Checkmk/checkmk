@@ -7,6 +7,7 @@
 #define Filter_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <bitset>
 #include <chrono>
 #include <cstdint>
@@ -16,6 +17,7 @@
 #include <optional>
 #include <string>
 #include <vector>
+
 #include "contact_fwd.h"
 class Column;
 class Filter;

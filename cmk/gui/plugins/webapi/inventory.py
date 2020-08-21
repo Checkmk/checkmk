@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -25,5 +25,7 @@ class APICallInventory(APICallCollection):
         }
 
     def _get_inventory(self, request):
-        return {host_name: inventory_of_host(host_name, request) \
-                for host_name in request.get("hosts")}
+        return {
+            host_name: inventory_of_host(host_name, request)  #
+            for host_name in request.get("hosts")
+        }

@@ -7,10 +7,12 @@
 #define ListAttributesColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <memory>
 #include <string>
 #include <utility>
+
 #include "Column.h"
 #include "CustomVarsDictColumn.h"
 #include "Filter.h"
@@ -28,24 +30,33 @@ class RowRenderer;
 #include "nagios.h"
 #endif
 
+// TODO(sp): Is there a way to have a default value in the template parameters?
+// Currently it is hardwired to the empty Attributes.
+template <class T>
 class AttributesLambdaColumn : public CustomVarsDictColumn {
 public:
     AttributesLambdaColumn(std::string name, std::string description,
-                           std::function<Attributes(Row)> f)
+                           const Offsets& offsets,
+                           std::function<Attributes(const T&)> f)
         : CustomVarsDictColumn(
-              std::move(name), std::move(description), {},
+              std::move(name), std::move(description), offsets,
               // TODO(ml): The hierarchy of every *LambdaColumn is wrong anyway
               // but this is the easiest way to get rid of the pointer
               // arithmetic by replacing inheritance with delegation without
               // breaking anything. So here we make the "base" ctor happy with a
               // few more junk args.
               nullptr, AttributeKind::tags)
-        , get_value_{f} {}
-    virtual ~AttributesLambdaColumn() = default;
-    Attributes getValue(Row row) const override { return get_value_(row); }
+        , get_value_{std::move(f)} {}
+
+    ~AttributesLambdaColumn() override = default;
+
+    [[nodiscard]] Attributes getValue(Row row) const override {
+        const T* data = columnData<T>(row);
+        return data == nullptr ? Attributes{} : get_value_(*data);
+    }
 
 private:
-    std::function<Attributes(Row)> get_value_;
+    std::function<Attributes(const T&)> get_value_;
 };
 
 #endif

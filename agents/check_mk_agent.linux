@@ -99,6 +99,11 @@ if [ -f "$MK_CONFDIR/encryption.cfg" ]; then
     . "$MK_CONFDIR/encryption.cfg"
 fi
 
+if [ -f "$MK_CONFDIR/exclude_sections.cfg" ]; then
+    # shellcheck source=/dev/null
+    . "$MK_CONFDIR/exclude_sections.cfg"
+fi
+
 if [ "$ENCRYPTED" == "yes" ]; then
     OPENSSL_VERSION=$(openssl version | awk '{print $2}' | awk -F . '{print (($1 * 100) + $2) * 100+ $3}')
     if [ $OPENSSL_VERSION -ge 10000 ]; then
@@ -115,6 +120,18 @@ if [ -e "$MK_CONFDIR/real_time_checks.cfg" ]; then
     # shellcheck source=/dev/null
     . "$MK_CONFDIR/real_time_checks.cfg"
 fi
+
+section_checkmk() {
+    echo "<<<check_mk>>>"
+    echo "Version: 1.7.0i1"
+    echo "AgentOS: linux"
+    echo "Hostname: $(hostname)"
+    echo "AgentDirectory: $MK_CONFDIR"
+    echo "DataDirectory: $MK_VARDIR"
+    echo "SpoolDirectory: $SPOOLDIR"
+    echo "PluginsDirectory: $PLUGINSDIR"
+    echo "LocalDirectory: $LOCALDIR"
+}
 
 #
 # CHECK SECTIONS
@@ -134,7 +151,7 @@ section_mem() {
 }
 
 section_cpu() {
-    if [ "$(uname -m)" = "armv7l" ]; then
+    if [ "$(uname -m)" = "armv7l" ] || [ "$(uname -m)" = "armv6l" ]; then
         CPU_REGEX='^processor'
     else
         CPU_REGEX='^CPU|^processor'
@@ -183,7 +200,7 @@ section_df() {
     # The exclusion list is getting a bit of a problem.
     # -l should hide any remote FS but seems to be all but working.
     local excludefs
-    excludefs="-x smbfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x prl_fs -x squashfs -x devtmpfs"
+    excludefs="-x smbfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x prl_fs -x squashfs -x devtmpfs -x autofs"
     if [ -z "$IS_LXC_CONTAINER" ]; then
         excludefs+=" -x zfs"
     fi
@@ -209,6 +226,827 @@ sections_systemd() {
         systemctl list-unit-files --no-pager
         echo "[all]"
         systemctl --all --no-pager | sed '/^$/q'
+    fi
+}
+
+section_zfs() {
+    if inpath zfs; then
+        echo '<<<zfsget:sep(9)>>>'
+        zfs get -t filesystem,volume -Hp name,quota,used,avail,mountpoint,type 2>/dev/null
+        echo '<<<zfsget>>>'
+        echo '[df]'
+        df -PTlk -t zfs | sed 1d
+    fi
+}
+
+section_nfs_mounts() {
+    if inpath waitmax; then
+        STAT_VERSION=$(stat --version | head -1 | cut -d" " -f4)
+        STAT_BROKE="5.3.0"
+
+        echo '<<<nfsmounts>>>'
+        sed -n '/ nfs4\? /s/[^ ]* \([^ ]*\) .*/\1/p' </proc/mounts |
+            sed 's/\\040/ /g' |
+            while read -r MP; do
+                if [ "$STAT_VERSION" != "$STAT_BROKE" ]; then
+                    waitmax -s 9 5 stat -f -c "$MP ok %b %f %a %s" "$MP" ||
+                        echo "$MP hanging 0 0 0 0"
+                else
+                    waitmax -s 9 5 stat -f -c "$MP ok %b %f %a %s" "$MP" &&
+                        printf '\n' || echo "$MP hanging 0 0 0 0"
+                fi
+            done
+
+        echo '<<<cifsmounts>>>'
+        sed -n '/ cifs\? /s/[^ ]* \([^ ]*\) .*/\1/p' </proc/mounts |
+            sed 's/\\040/ /g' |
+            while read -r MP; do
+                if [ ! -r "$MP" ]; then
+                    echo "$MP Permission denied"
+                elif [ "$STAT_VERSION" != "$STAT_BROKE" ]; then
+                    waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" ||
+                        echo "$MP hanging 0 0 0 0"
+                else
+                    waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" &&
+                        printf '\n' || echo "$MP hanging 0 0 0 0"
+                fi
+            done
+    fi
+}
+
+section_mounts() {
+    echo '<<<mounts>>>'
+    grep ^/dev </proc/mounts | grep -v " squashfs "
+}
+
+section_ps() {
+    if inpath ps; then
+        # processes including username, without kernel processes
+        echo '<<<ps>>>'
+        echo 'dummy section -- refer to section ps_lnx'
+        echo '<<<ps_lnx>>>'
+        CGROUP=""
+        if [ -e /sys/fs/cgroup ]; then
+            CGROUP="cgroup:512,"
+        fi
+        echo "[header] $(ps ax -o "$CGROUP"user:32,vsz,rss,cputime,etime,pid,command --columns 10000)"
+    fi
+}
+
+section_lnx_if() {
+    if inpath ip; then
+        echo '<<<lnx_if>>>'
+        echo "[start_iplink]"
+        ip address
+        echo "[end_iplink]"
+    fi
+
+    echo '<<<lnx_if:sep(58)>>>'
+    sed 1,2d /proc/net/dev
+    sed -e 1,2d /proc/net/dev | cut -d':' -f1 | sort | while read -r eth; do
+        echo "[$eth]"
+        if inpath ethtool; then
+            ethtool "$eth" | grep -E '(Speed|Duplex|Link detected|Auto-negotiation):'
+        else
+            # If interface down we get "Invalid argument"
+            speed=$(cat "/sys/class/net/$eth/speed" 2>/dev/null)
+            if [ -n "$speed" ] && [ $speed -ge 0 ]; then
+                echo -e "\tSpeed: ${speed}Mb/s\n"
+            fi
+        fi
+        echo -e "\tAddress: $(cat "/sys/class/net/$eth/address")\n"
+    done
+}
+
+section_bonding_interfaces() {
+    if [ -e /proc/net/bonding ]; then
+        echo '<<<lnx_bonding:sep(58)>>>'
+        pushd /proc/net/bonding >/dev/null
+        head -v -n 1000 ./*
+        popd >/dev/null
+    fi
+}
+
+section_vswitch_bonding() {
+    if inpath ovs-appctl; then
+        BONDS=$(ovs-appctl bond/list)
+        COL=$(echo "$BONDS" | awk '{for(i=1;i<=NF;i++) {if($i == "bond") printf("%d", i)} exit 0}')
+        echo '<<<ovs_bonding:sep(58)>>>'
+        for bond in $(echo "$BONDS" | sed -e 1d | cut -f"${COL}"); do
+            echo "[$bond]"
+            ovs-appctl bond/show "$bond"
+        done
+    fi
+}
+
+section_tcp() {
+    if inpath waitmax; then
+        echo '<<<tcp_conn_stats>>>'
+        THIS=$(waitmax 5 cat /proc/net/tcp /proc/net/tcp6 2>/dev/null | awk ' /:/ { c[$4]++; } END { for (x in c) { print x, c[x]; } }')
+        if [ $? == 0 ]; then
+            echo "$THIS"
+        elif inpath ss; then
+            ss -ant | grep -v ^State | awk ' /:/ { c[$1]++; } END { for (x in c) { print x, c[x]; } }' |
+                sed -e 's/^ESTAB/01/g;s/^SYN-SENT/02/g;s/^SYN-RECV/03/g;s/^FIN-WAIT-1/04/g;s/^FIN-WAIT-2/05/g;s/^TIME-WAIT/06/g;s/^CLOSED/07/g;s/^CLOSE-WAIT/08/g;s/^LAST-ACK/09/g;s/^LISTEN/0A/g;s/^CLOSING/0B/g;'
+        fi
+    fi
+}
+
+section_multipathing() {
+    if inpath multipath; then
+        if [ -f /etc/multipath.conf ]; then
+            echo '<<<multipath>>>'
+            multipath -l
+        fi
+    fi
+}
+
+section_diskstat() {
+    if [ -z "$IS_DOCKERIZED" ]; then
+        echo '<<<diskstat>>>'
+        date +%s
+        grep -E ' (x?[shv]d[a-z]*[0-9]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+|VxVM.*|mmcblk.*|dasd[a-z]*|bcache[0-9]+|nvme[0-9]+n[0-9]+) ' </proc/diskstats
+        if inpath dmsetup; then
+            echo '[dmsetup_info]'
+            dmsetup info -c --noheadings --separator ' ' -o name,devno,vg_name,lv_name
+        fi
+        if [ -d /dev/vx/dsk ]; then
+            echo '[vx_dsk]'
+            stat -c "%t %T %n" /dev/vx/dsk/*/*
+        fi
+    else
+        echo '<<<docker_container_diskstat>>>'
+        echo "[time]"
+        date +%s
+        for F in io_service_bytes io_serviced; do
+            echo "[$F]"
+            cat "/sys/fs/cgroup/blkio/blkio.throttle.$F"
+        done
+        echo "[names]"
+        for F in /sys/block/*; do
+            echo "${F##*/} $(cat "$F/dev")"
+        done
+    fi
+}
+
+section_chrony() {
+    if inpath chronyc; then
+        # Force successful exit code. Otherwise section will be missing if daemon not running
+        #
+        # The "| cat" has been added for some kind of regression in RedHat 7.5. The
+        # SELinux rules shipped with that release were denying the chronyc call
+        # without cat.
+        run_cached -s chrony 30 "waitmax 5 chronyc -n tracking | cat || true"
+    fi
+}
+
+section_kernel() {
+    if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ]; then
+        echo '<<<kernel>>>'
+        date +%s
+        cat /proc/vmstat /proc/stat
+    fi
+}
+
+section_ipmitool() {
+    if inpath ipmitool; then
+        run_cached -s "ipmi:sep(124)" 300 "waitmax 300 ipmitool sensor list | grep -v 'command failed' | grep -E -v '^[^ ]+ na ' | grep -v ' discrete '"
+        # readable discrete sensor states
+        run_cached -s "ipmi_discrete:sep(124)" 300 "waitmax 300 ipmitool sdr elist compact"
+    fi
+}
+
+section_ipmisensors() {
+    if (type ipmi-sensors && ls /dev/ipmi*) &>/dev/null; then
+        echo '<<<ipmi_sensors>>>'
+        # Newer ipmi-sensors version have new output format; Legacy format can be used
+        if ipmi-sensors --help | grep -q legacy-output; then
+            IPMI_FORMAT="--legacy-output"
+        else
+            IPMI_FORMAT=""
+        fi
+        if ipmi-sensors --help | grep -q " \-\-groups"; then
+            IPMI_GROUP_OPT="-g"
+        else
+            IPMI_GROUP_OPT="-t"
+        fi
+
+        # At least with ipmi-sensors 0.7.16 this group is Power_Unit instead of "Power Unit"
+        run_cached -s ipmi_sensors 300 "for class in Temperature Power_Unit Fan; do
+            ipmi-sensors $IPMI_FORMAT --sdr-cache-directory /var/cache $IPMI_GROUP_OPT \"\$class\" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
+            # In case of a timeout immediately leave loop.
+            if [ $? = 255 ]; then break ; fi
+        done"
+    fi
+}
+
+section_md() {
+    echo '<<<md>>>'
+    cat /proc/mdstat
+}
+
+section_dm_raid() {
+    if inpath dmraid && DMSTATUS=$(waitmax 3 dmraid -r); then
+        echo '<<<dmraid>>>'
+
+        # Output name and status
+        waitmax 20 dmraid -s | grep -e ^name -e ^status
+
+        # Output disk names of the RAID disks
+        DISKS=$(echo "$DMSTATUS" | cut -f1 -d":")
+
+        for disk in $DISKS; do
+            device=$(cat /sys/block/"$(basename "$disk")"/device/model)
+            status=$(echo "$DMSTATUS" | grep "^${disk}")
+            echo "${status} Model: ${device}"
+        done
+    fi
+}
+
+section_cfggen() {
+    if inpath cfggen; then
+        echo '<<<lsi>>>'
+        cfggen 0 DISPLAY |
+            grep -E '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' |
+            sed -e 's/ *//g' -e 's/:/ /'
+    fi
+}
+
+section_megaraid() {
+    if inpath MegaCli; then
+        MegaCli_bin="MegaCli"
+    elif inpath MegaCli64; then
+        MegaCli_bin="MegaCli64"
+    elif inpath megacli; then
+        MegaCli_bin="megacli"
+    elif inpath storcli; then
+        MegaCli_bin="storcli"
+    elif inpath storcli64; then
+        MegaCli_bin="storcli64"
+    else
+        MegaCli_bin="unknown"
+    fi
+
+    if [ "$MegaCli_bin" != "unknown" ]; then
+        echo '<<<megaraid_pdisks>>>'
+        for part in $($MegaCli_bin -EncInfo -aALL -NoLog </dev/null |
+            sed -rn 's/:/ /g; s/[[:space:]]+/ /g; s/^ //; s/ $//; s/Number of enclosures on adapter ([0-9]+).*/adapter \1/g; /^(Enclosure|Device ID|adapter) [0-9]+$/ p'); do
+            [ "$part" = adapter ] && echo ""
+            [ "$part" = 'Enclosure' ] && echo -ne "\ndev2enc"
+            echo -n " $part"
+        done
+        echo
+        $MegaCli_bin -PDList -aALL -NoLog </dev/null |
+            grep -E 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Adapter|Predictive Failure Count'
+        echo '<<<megaraid_ldisks>>>'
+        $MegaCli_bin -LDInfo -Lall -aALL -NoLog </dev/null | grep -E 'Size|State|Number|Adapter|Virtual'
+        echo '<<<megaraid_bbu>>>'
+        $MegaCli_bin -AdpBbuCmd -GetBbuStatus -aALL -NoLog </dev/null | grep -v Exit
+    fi
+}
+
+section_3ware_raid() {
+    if inpath tw_cli; then
+        for C in $(tw_cli show | awk 'NR < 4 { next } { print $1 }'); do
+            echo '<<<3ware_info>>>'
+            tw_cli "/$C" show all | grep -E 'Model =|Firmware|Serial'
+            echo '<<<3ware_disks>>>'
+            tw_cli "/$C" show drivestatus | grep -E 'p[0-9]' | sed "s/^/$C\//"
+            echo '<<<3ware_units>>>'
+            tw_cli "/$C" show unitstatus | grep -E 'u[0-9]' | sed "s/^/$C\//"
+        done
+    fi
+}
+
+section_areca_raid() {
+    if inpath cli64; then
+        run_cached -s arc_raid_status 300 "cli64 rsf info | tail -n +3 | head -n -2"
+    fi
+}
+
+section_vbox_guest() {
+    echo '<<<vbox_guest>>>'
+    if inpath VBoxControl && lsmod | grep vboxguest >/dev/null 2>&1; then
+        VBoxControl -nologo guestproperty enumerate | cut -d, -f1,2
+        [ "${PIPESTATUS[0]}" = 0 ] || echo "ERROR"
+    fi
+}
+
+section_openvpn() {
+    if [ -e /etc/openvpn/openvpn-status.log ]; then
+        echo '<<<openvpn_clients:sep(44)>>>'
+        sed -n -e '/CLIENT LIST/,/ROUTING TABLE/p' </etc/openvpn/openvpn-status.log |
+            sed -e 1,3d -e '$d'
+    fi
+}
+
+section_nvidia() {
+    if inpath nvidia-settings && [ -S /tmp/.X11-unix/X0 ]; then
+        echo '<<<nvidia>>>'
+        for var in GPUErrors GPUCoreTemp; do
+            DISPLAY=:0 waitmax 2 nvidia-settings -t -q $var | sed "s/^/$var: /"
+        done
+    fi
+}
+
+section_drbd() {
+    if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ] && [ -e /proc/drbd ]; then
+        echo '<<<drbd>>>'
+        cat /proc/drbd
+    fi
+}
+
+section_heartbeat() {
+    if [ -S /var/run/heartbeat/crm/cib_ro -o -S /var/run/crm/cib_ro ] || pgrep crmd >/dev/null 2>&1 || pgrep -f pacemaker-controld >/dev/null 2>&1; then
+        echo '<<<heartbeat_crm>>>'
+        TZ=UTC crm_mon -1 -r | grep -v ^$ | sed 's/^ //; /^\sResource Group:/,$ s/^\s//; s/^\s/_/g'
+    fi
+
+    if inpath cl_status; then
+        echo '<<<heartbeat_rscstatus>>>'
+        cl_status rscstatus
+
+        echo '<<<heartbeat_nodes>>>'
+        for NODE in $(cl_status listnodes); do
+            if [ "$NODE" != "$(echo "$HOSTNAME" | tr '[:upper:]' '[:lower:]')" ]; then
+                STATUS=$(cl_status nodestatus "$NODE")
+                echo -n "$NODE $STATUS"
+                for LINK in $(cl_status listhblinks "$NODE" 2>/dev/null); do
+                    echo -n " $LINK $(cl_status hblinkstatus "$NODE" "$LINK")"
+                done
+                echo
+            fi
+        done
+    fi
+}
+
+## Postfix mailqueue monitoring
+## Determine the number of mails and their size in several postfix mail queues
+read_postfix_queue_dirs() {
+    postfix_queue_dir=$1
+    if [ -n "$postfix_queue_dir" ]; then
+        echo '<<<postfix_mailq>>>'
+        echo "[[[${2}]]]"
+        for queue in deferred active; do
+            count=$(find "${postfix_queue_dir}/$queue" -type f | wc -l)
+            size=$(du -s "${postfix_queue_dir}/$queue" | awk '{print $1 }')
+            if [ -z "$size" ]; then
+                size=0
+            fi
+            if [ -z "$count" ]; then
+                echo "Mail queue is empty"
+            else
+                echo "QUEUE_${queue} $size $count"
+            fi
+        done
+    fi
+}
+
+## Postfix mailqueue monitoring
+## Determine the number of mails and their size in several postfix mail queue
+section_mailqueue() {
+    if inpath postconf; then
+        # Check if multi_instance_directories exists in main.cf and is not empty
+        # always takes the last entry, multiple entries possible
+        multi_instances_dirs=$(postconf -c /etc/postfix 2>/dev/null | grep ^multi_instance_directories | sed 's/.*=[[:space:]]*//g')
+        if [ -n "$multi_instances_dirs" ]; then
+            for queue_dir in $multi_instances_dirs; do
+                if [ -n "$queue_dir" ]; then
+                    postfix_queue_dir=$(postconf -c "$queue_dir" 2>/dev/null | grep ^queue_directory | sed 's/.*=[[:space:]]*//g')
+                    read_postfix_queue_dirs "$postfix_queue_dir" "$queue_dir"
+                fi
+            done
+        fi
+        # Always check for the default queue. It can exist even if multiple instances are configured
+        read_postfix_queue_dirs "$(postconf -h queue_directory 2>/dev/null)"
+
+    elif [ -x /usr/sbin/ssmtp ]; then
+        echo '<<<postfix_mailq>>>'
+        mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
+    fi
+
+    # Check status of qmail mailqueue
+    if inpath qmail-qstat; then
+        echo "<<<qmail_stats>>>"
+        qmail-qstat
+    fi
+
+    # Nullmailer queue monitoring
+    if inpath nullmailer-send && [ -d /var/spool/nullmailer/queue ]; then
+        echo '<<<nullmailer_mailq>>>'
+        COUNT=$(find /var/spool/nullmailer/queue -type f | wc -l)
+        SIZE=$(du -s /var/spool/nullmailer/queue | awk '{print $1 }')
+        echo "$SIZE $COUNT"
+    fi
+}
+
+section_omd() {
+    if inpath omd; then
+        echo '<<<labels:sep(0)>>>'
+        echo '{"cmk/check_mk_server": "yes"}'
+
+        run_cached -s omd_status 60 "omd status --bare || true"
+        echo '<<<mknotifyd:sep(0)>>>'
+        date +%s
+        for statefile in /omd/sites/*/var/log/mknotifyd.state; do
+            if [ -e "$statefile" ]; then
+                site=${statefile%/var/log*}
+                site=${site#/omd/sites/}
+                echo "[$site]"
+                grep -v '^#' <"$statefile"
+            fi
+        done
+
+        echo '<<<omd_apache:sep(124)>>>'
+        for statsfile in /omd/sites/*/var/log/apache/stats; do
+            if [ -e "$statsfile" ]; then
+                site=${statsfile%/var/log*}
+                site=${site#/omd/sites/}
+                echo "[$site]"
+                cat "$statsfile"
+                : >"$statsfile"
+                # prevent next section to fail caused by a missing newline at the end of the statsfile
+                echo
+            fi
+        done
+
+        echo '<<<omd_info:sep(59)>>>'
+        echo '[versions]'
+        echo 'version;number;edition;demo'
+        for versiondir in /omd/versions/*; do
+            version=${versiondir#/omd/versions/}
+
+            # filter out special directory 'default'
+            if [[ $version == "default" ]]; then
+                continue
+            fi
+
+            number=$version
+            demo="0"
+            if [[ "$version" == *.demo ]]; then
+                number=${version%.demo}
+                demo="1"
+            fi
+            edition=${number##*.}
+            number=${number%.*}
+            echo "$version;$number;$edition;$demo"
+        done
+        echo '[sites]'
+        echo 'site;used_version;autostart'
+        for sitedir in /omd/sites/*; do
+            site=${sitedir#/omd/sites/}
+            used_version=$(readlink ${sitedir}/version)
+            used_version=${used_version##*/}
+            autostart="0"
+            if grep -q "CONFIG_AUTOSTART[[:blank:]]*=[[:blank:]]*'on'" $sitedir/etc/omd/site.conf; then
+                autostart="1"
+            fi
+            echo "$site;$used_version;$autostart"
+        done
+    fi
+}
+
+section_zpool() {
+    if inpath zpool; then
+        echo "<<<zpool_status>>>"
+        zpool status -x
+        echo "<<<zpool>>>"
+        zpool list
+    fi
+}
+
+section_veritas_cluster() {
+    if [ -x /opt/VRTSvcs/bin/haclus ]; then
+        echo "<<<veritas_vcs>>>"
+        vcshost=$(hostname | cut -d. -f1)
+        waitmax -s 9 2 /opt/VRTSvcs/bin/haclus -display -localclus | grep -e ClusterName -e ClusState
+        waitmax -s 9 2 /opt/VRTSvcs/bin/hasys -display -attribute SysState
+        waitmax -s 9 2 /opt/VRTSvcs/bin/hagrp -display -sys "$vcshost" -attribute State -localclus
+        waitmax -s 9 2 /opt/VRTSvcs/bin/hares -display -sys "$vcshost" -attribute State -localclus
+        waitmax -s 9 2 /opt/VRTSvcs/bin/hagrp -display -attribute TFrozen -attribute Frozen
+    fi
+}
+
+section_omd_core() {
+    if cd /omd/sites; then
+        echo '<<<livestatus_status:sep(59)>>>'
+        for site in *; do
+            if [ -S "/omd/sites/$site/tmp/run/live" ]; then
+                echo "[$site]"
+                echo -e "GET status" |
+                    waitmax 3 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/live"
+            fi
+        done
+
+        echo '<<<livestatus_ssl_certs:sep(124)>>>'
+        for site in *; do
+            echo "[$site]"
+            for PEM_PATH in "/omd/sites/$site/etc/ssl/ca.pem" "/omd/sites/$site/etc/ssl/sites/$site.pem"; do
+                if [ -f "$PEM_PATH" ]; then
+                    CERT_DATE=$(openssl x509 -enddate -noout -in "$PEM_PATH")
+                    CERT_DATE=${CERT_DATE/notAfter=/}
+                    echo "$PEM_PATH|$(date --date="$CERT_DATE" --utc +%s)"
+                fi
+            done
+        done
+
+        echo '<<<mkeventd_status:sep(0)>>>'
+        for site in *; do
+            if [ -S "/omd/sites/$site/tmp/run/mkeventd/status" ]; then
+                echo "[\"$site\"]"
+                echo -e "GET status\nOutputFormat: json" |
+                    waitmax 3 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/mkeventd/status"
+            fi
+        done
+    fi
+}
+
+section_mkbackup() {
+    if ls /omd/sites/*/var/check_mk/backup/*.state >/dev/null 2>&1; then
+        echo "<<<mkbackup>>>"
+        for F in /omd/sites/*/var/check_mk/backup/*.state; do
+            SITE=${F#/*/*/*}
+            SITE=${SITE%%/*}
+
+            JOB_IDENT=${F%.state}
+            JOB_IDENT=${JOB_IDENT##*/}
+
+            if [ "$JOB_IDENT" != "restore" ]; then
+                echo "[[[site:$SITE:$JOB_IDENT]]]"
+                cat "$F"
+                echo
+            fi
+        done
+    fi
+
+    # Collect states of configured CMA backup jobs
+    if inpath mkbackup && ls /var/lib/mkbackup/*.state >/dev/null 2>&1; then
+        echo "<<<mkbackup>>>"
+        for F in /var/lib/mkbackup/*.state; do
+            JOB_IDENT=${F%.state}
+            JOB_IDENT=${JOB_IDENT##*/}
+
+            if [ "$JOB_IDENT" != "restore" ]; then
+                echo "[[[system:$JOB_IDENT]]]"
+                cat "$F"
+                echo
+            fi
+        done
+    fi
+}
+
+section_job() {
+    if pushd "$MK_VARDIR/job" >/dev/null; then
+        echo '<<<job>>>'
+        for username in *; do
+            if [ -d "$username" ] && cd "$username"; then
+                if [ $EUID -eq 0 ]; then
+                    su -s "$SHELL" "$username" -c "head -n -0 -v *"
+                else
+                    head -n -0 -v ./*
+                fi
+                cd ..
+            fi
+        done
+        popd >/dev/null
+    fi
+}
+
+section_thermal() {
+    if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ] && ls /sys/class/thermal/thermal_zone* >/dev/null 2>&1; then
+        echo '<<<lnx_thermal:sep(124)>>>'
+        for F in /sys/class/thermal/thermal_zone*; do
+            line="${F##*/}"
+            if [ ! -e "$F/mode" ]; then line="${line}|-"; else line="${line}|$(cat "$F"/mode)"; fi
+            line="${line}|$(cat "$F"/{type,temp} | tr \\n "|")"
+            for G in $(ls "$F"/trip_point_*_{temp,type}); do
+                line="${line}$(tr <"$G" \\n "|")"
+            done
+            echo "${line%?}"
+        done
+    fi
+}
+
+section_libelle() {
+    if inpath trd; then
+        echo "<<<libelle_business_shadow:sep(58)>>>"
+        trd -s
+    fi
+}
+
+section_http_accelerator() {
+    if inpath varnishstat; then
+        echo "<<<varnish>>>"
+        varnishstat -1
+    fi
+}
+
+section_proxmox() {
+    if inpath pvecm; then
+        echo "<<<pvecm_status:sep(58)>>>"
+        pvecm status
+        echo "<<<pvecm_nodes>>>"
+        pvecm nodes
+    fi
+}
+
+section_haproxy() {
+    for HAPROXY_SOCK in /run/haproxy/admin.sock /var/lib/haproxy/stats; do
+        if [ -r "$HAPROXY_SOCK" ] && inpath socat; then
+            echo "<<<haproxy:sep(44)>>>"
+            echo "show stat" | socat - "UNIX-CONNECT:$HAPROXY_SOCK"
+        fi
+    done
+}
+
+run_fileinfo() {
+    perl -e '
+    use File::Glob "bsd_glob";
+    my @patterns = ();
+    foreach (bsd_glob("$ARGV[0]/fileinfo.cfg"), bsd_glob("$ARGV[0]/fileinfo.d/*")) {
+        open my $handle, "<", $_ or next;
+        while (<$handle>) {
+            chomp;
+            next if /^\s*(#|$)/;
+            my $pattern = $_;
+            $pattern =~ s/\$DATE:(.*?)\$/substr(`date +"$1"`, 0, -1)/eg;
+            push @patterns, $pattern;
+        }
+        warn "error while reading $_: $!\n" if $!;
+        close $handle;
+    }
+    exit if ! @patterns;
+
+    print "<<<fileinfo:sep(124)>>>\n", time, "\n[[[header]]]\nname|status|size|time\n[[[content]]]\n";
+
+    foreach (@patterns) {
+        foreach (bsd_glob("$_")) {
+            if (! -f) {
+                print "$_|missing\n" if ! -d;
+            } elsif (my @infos = stat) {
+                print "$_|ok|$infos[7]|$infos[9]\n";
+            } else {
+                print "$_|stat failed: $!\n";
+            }
+        }
+    }
+    ' -- "$MK_CONFDIR"
+}
+
+run_liveupdate() {
+    if [ -e "$MK_CONFDIR/real_time_checks.cfg" ]; then
+        if [ -z "$REMOTE" ]; then
+            echo "ERROR: \$REMOTE not specified. Not starting Real-Time Checks." >&2
+        elif ! inpath openssl; then
+            echo "ERROR: openssl command is missing. Not starting Real-Time Checks." >&2
+        else
+            run_real_time_checks >/dev/null &
+        fi
+    fi
+}
+
+run_remote_plugin() {
+    if [ -e "$MK_CONFDIR/mrpe.cfg" ]; then
+        grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" |
+            while read -r descr cmdline; do
+                interval=
+                args="-m"
+                # NOTE: Due to an escaping-related bug in some old bash versions
+                # (3.2.x), we have to use an intermediate variable for the pattern.
+                pattern='\(([^\)]*)\)[[:space:]](.*)'
+                if [[ $cmdline =~ $pattern ]]; then
+                    parameters=${BASH_REMATCH[1]}
+                    cmdline=${BASH_REMATCH[2]}
+
+                    # split multiple parameter assignments
+                    for par in $(echo "$parameters" | tr ":" "\n"); do
+                        # split each assignment
+                        key=$(echo "$par" | cut -d= -f1)
+                        value=$(echo "$par" | cut -d= -f2)
+
+                        if [ "$key" = "interval" ]; then
+                            interval=$value
+                        elif [ "$key" = "appendage" ]; then
+                            args="-ma"
+                        fi
+                    done
+                fi
+
+                if [ -z "$interval" ]; then
+                    run_mrpe "$descr" "$cmdline"
+                else
+                    run_cached "$args" "$descr" "$interval" "$cmdline"
+                fi
+            done
+    fi
+}
+
+run_runas_executor() {
+    if [ -e "$MK_CONFDIR/runas.cfg" ]; then
+        grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/runas.cfg" |
+            while read -r type user include; do
+                if [ -d "$include" -o \( "$type" == "mrpe" -a -f "$include" \) ]; then
+                    PREFIX=""
+                    if [ "$user" != "-" ]; then
+                        PREFIX="su $user -c "
+                    fi
+
+                    # mrpe includes
+                    if [ "$type" == "mrpe" ]; then
+                        grep -Ev '^[[:space:]]*($|#)' "$include" |
+                            while read -r descr cmdline; do
+                                interval=
+                                # NOTE: Due to an escaping-related bug in some old bash
+                                # versions (3.2.x), we have to use an intermediate variable
+                                # for the pattern.
+                                pattern='\(([^\)]*)\)[[:space:]](.*)'
+                                if [[ $cmdline =~ $pattern ]]; then
+                                    parameters=${BASH_REMATCH[1]}
+                                    cmdline=${BASH_REMATCH[2]}
+
+                                    # split multiple parameter assignments
+                                    for par in $(echo "$parameters" | tr ":" "\n"); do
+                                        # split each assignment
+                                        IFS='=' read -r key value <<<"${par}"
+                                        if [ "$key" = "interval" ]; then
+                                            interval=$value
+                                        fi
+                                        # no other parameters supported currently
+                                    done
+                                fi
+
+                                if [ -n "$PREFIX" ]; then
+                                    cmdline="$PREFIX'$cmdline'"
+                                fi
+                                if [ -z "$interval" ]; then
+                                    run_mrpe "$descr" "$cmdline"
+                                else
+                                    run_cached -m "$descr" "$interval" "$cmdline"
+                                fi
+                            done
+
+                        # local and plugin includes
+                    elif [ "$type" == "local" -o "$type" == "plugin" ]; then
+                        if [ "$type" == "local" ]; then
+                            echo "<<<local:sep(0)>>>"
+                        fi
+
+                        find "$include" -executable -type f |
+                            while read -r filename; do
+                                if [ -n "$PREFIX" ]; then
+                                    cmdline="$PREFIX\"$filename\""
+                                else
+                                    cmdline=$filename
+                                fi
+
+                                $cmdline
+                            done
+                    fi
+                fi
+            done
+    fi
+}
+
+is_valid_plugin() {
+    # NOTE: Due to an escaping-related bug in some old bash versions
+    # (3.2.x), we have to use an intermediate variable for the pattern.
+    pattern='\.dpkg-(new|old|temp)$'
+    #TODO Maybe we should change this mechanism
+    # shellcheck disable=SC2015
+    [[ -f "$1" && -x "$1" && ! "$1" =~ $pattern ]] && true || false
+}
+
+run_local_checks() {
+    # Local checks
+    echo '<<<local:sep(0)>>>'
+    if cd "$LOCALDIR"; then
+        for skript in ./*; do
+            if is_valid_plugin "$skript"; then
+                ./"$skript"
+            fi
+        done
+        # Call some plugins only every X'th second
+        for skript in [1-9]*/*; do
+            if is_valid_plugin "$skript"; then
+                run_cached "local_${skript//\//\\}" "${skript%/*}" "$skript"
+            fi
+        done
+    fi
+}
+
+run_plugins() {
+    if cd "$PLUGINSDIR"; then
+        for skript in ./*; do
+            if is_valid_plugin "$skript"; then
+                ./"$skript"
+            fi
+        done
+        # Call some plugins only every Xth second
+        for skript in [1-9]*/*; do
+            if is_valid_plugin "$skript"; then
+                run_cached "plugins_${skript//\//\\}" "${skript%/*}" "$skript"
+            fi
+        done
     fi
 }
 
@@ -446,15 +1284,7 @@ get_file_mtime() {
         perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print $mtime."\n";' "${1}"
 }
 
-echo "<<<check_mk>>>"
-echo "Version: 1.7.0i1"
-echo "AgentOS: linux"
-echo "Hostname: $(hostname)"
-echo "AgentDirectory: $MK_CONFDIR"
-echo "DataDirectory: $MK_VARDIR"
-echo "SpoolDirectory: $SPOOLDIR"
-echo "PluginsDirectory: $PLUGINSDIR"
-echo "LocalDirectory: $LOCALDIR"
+section_checkmk
 
 # If we are called via xinetd, try to find only_from configuration
 if [ -n "$REMOTE_HOST" ]; then
@@ -463,836 +1293,169 @@ if [ -n "$REMOTE_HOST" ]; then
     echo
 fi
 
-section_df
+[ -z "$MK_SKIP_DF" ] && section_df
 
-sections_systemd
+[ -z "$MK_SKIP_SYSTEMD" ] && sections_systemd
 
 # Filesystem usage for ZFS
-if inpath zfs; then
-    echo '<<<zfsget:sep(9)>>>'
-    zfs get -t filesystem,volume -Hp name,quota,used,avail,mountpoint,type 2>/dev/null
-    echo '<<<zfsget>>>'
-    echo '[df]'
-    df -PTlk -t zfs | sed 1d
-fi
+[ -z "$MK_SKIP_ZFS" ] && section_zfs
 
 # Check NFS mounts by accessing them with stat -f (System
 # call statfs()). If this lasts more then 2 seconds we
 # consider it as hanging. We need waitmax.
-if inpath waitmax; then
-    STAT_VERSION=$(stat --version | head -1 | cut -d" " -f4)
-    STAT_BROKE="5.3.0"
-
-    echo '<<<nfsmounts>>>'
-    sed -n '/ nfs4\? /s/[^ ]* \([^ ]*\) .*/\1/p' </proc/mounts |
-        sed 's/\\040/ /g' |
-        while read -r MP; do
-            if [ "$STAT_VERSION" != "$STAT_BROKE" ]; then
-                waitmax -s 9 5 stat -f -c "$MP ok %b %f %a %s" "$MP" ||
-                    echo "$MP hanging 0 0 0 0"
-            else
-                waitmax -s 9 5 stat -f -c "$MP ok %b %f %a %s" "$MP" &&
-                    printf '\n' || echo "$MP hanging 0 0 0 0"
-            fi
-        done
-
-    echo '<<<cifsmounts>>>'
-    sed -n '/ cifs\? /s/[^ ]* \([^ ]*\) .*/\1/p' </proc/mounts |
-        sed 's/\\040/ /g' |
-        while read -r MP; do
-            if [ ! -r "$MP" ]; then
-                echo "$MP Permission denied"
-            elif [ "$STAT_VERSION" != "$STAT_BROKE" ]; then
-                waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" ||
-                    echo "$MP hanging 0 0 0 0"
-            else
-                waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" &&
-                    printf '\n' || echo "$MP hanging 0 0 0 0"
-            fi
-        done
-fi
+[ -z "$MK_SKIP_NFS_MOUNTS" ] && section_nfs_mounts
 
 # Check mount options. Filesystems may switch to 'ro' in case
 # of a read error.
-echo '<<<mounts>>>'
-grep ^/dev </proc/mounts | grep -v " squashfs "
+[ -z "$MK_SKIP_MOUNTS" ] && section_mounts
 
-if inpath ps; then
-    # processes including username, without kernel processes
-    echo '<<<ps>>>'
-    echo 'dummy section -- refer to section ps_lnx'
-    echo '<<<ps_lnx>>>'
-    CGROUP=""
-    if [ -e /sys/fs/cgroup ]; then
-        CGROUP="cgroup:512,"
-    fi
-    echo "[header] $(ps ax -o "$CGROUP"user:32,vsz,rss,cputime,etime,pid,command --columns 10000)"
-fi
+[ -z "$MK_SKIP_PS" ] && section_ps
 
 # Memory usage
-section_mem
+[ -z "$MK_SKIP_MEM" ] && section_mem
 
 # Load and number of processes
-section_cpu
+[ -z "$MK_SKIP_CPU" ] && section_cpu
 
 # Uptime
-section_uptime
+[ -z "$MK_SKIP_UPTIME" ] && section_uptime
 
 # New variant: Information about speed and state in one section
-if inpath ip; then
-    echo '<<<lnx_if>>>'
-    echo "[start_iplink]"
-    ip address
-    echo "[end_iplink]"
-fi
-
-echo '<<<lnx_if:sep(58)>>>'
-sed 1,2d /proc/net/dev
-sed -e 1,2d /proc/net/dev | cut -d':' -f1 | sort | while read -r eth; do
-    echo "[$eth]"
-    if inpath ethtool; then
-        ethtool "$eth" | grep -E '(Speed|Duplex|Link detected|Auto-negotiation):'
-    else
-        # If interface down we get "Invalid argument"
-        speed=$(cat "/sys/class/net/$eth/speed" 2>/dev/null)
-        if [ -n "$speed" ] && [ $speed -ge 0 ]; then
-            echo -e "\tSpeed: ${speed}Mb/s\n"
-        fi
-    fi
-    echo -e "\tAddress: $(cat "/sys/class/net/$eth/address")\n"
-done
+[ -z "$MK_SKIP_LNX_IF" ] && section_lnx_if
 
 # Current state of bonding interfaces
-if [ -e /proc/net/bonding ]; then
-    echo '<<<lnx_bonding:sep(58)>>>'
-    pushd /proc/net/bonding >/dev/null
-    head -v -n 1000 ./*
-    popd >/dev/null
-fi
+[ -z "$MK_SKIP_BONDING_IF" ] && section_bonding_interfaces
 
 # Same for Open vSwitch bonding
-if inpath ovs-appctl; then
-    BONDS=$(ovs-appctl bond/list)
-    COL=$(echo "$BONDS" | awk '{for(i=1;i<=NF;i++) {if($i == "bond") printf("%d", i)} exit 0}')
-    echo '<<<ovs_bonding:sep(58)>>>'
-    for bond in $(echo "$BONDS" | sed -e 1d | cut -f"${COL}"); do
-        echo "[$bond]"
-        ovs-appctl bond/show "$bond"
-    done
-fi
+[ -z "$MK_SKIP_VSWITCH_BONDING" ] && section_vswitch_bonding
 
 # Number of TCP connections in the various states
-if inpath waitmax; then
-    echo '<<<tcp_conn_stats>>>'
-    THIS=$(waitmax 5 cat /proc/net/tcp /proc/net/tcp6 2>/dev/null | awk ' /:/ { c[$4]++; } END { for (x in c) { print x, c[x]; } }')
-    if [ $? == 0 ]; then
-        echo "$THIS"
-    elif inpath ss; then
-        ss -ant | grep -v ^State | awk ' /:/ { c[$1]++; } END { for (x in c) { print x, c[x]; } }' |
-            sed -e 's/^ESTAB/01/g;s/^SYN-SENT/02/g;s/^SYN-RECV/03/g;s/^FIN-WAIT-1/04/g;s/^FIN-WAIT-2/05/g;s/^TIME-WAIT/06/g;s/^CLOSED/07/g;s/^CLOSE-WAIT/08/g;s/^LAST-ACK/09/g;s/^LISTEN/0A/g;s/^CLOSING/0B/g;'
-    fi
-fi
+[ -z "$MK_SKIP_TCP" ] && section_tcp
 
 # Linux Multipathing
-if inpath multipath; then
-    if [ -f /etc/multipath.conf ]; then
-        echo '<<<multipath>>>'
-        multipath -l
-    fi
-fi
+[ -z "$MK_SKIP_MULTIPATHING" ] && section_multipathing
 
 # Performancecounter Platten
-if [ -z "$IS_DOCKERIZED" ]; then
-    echo '<<<diskstat>>>'
-    date +%s
-    grep -E ' (x?[shv]d[a-z]*[0-9]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+|VxVM.*|mmcblk.*|dasd[a-z]*|bcache[0-9]+|nvme[0-9]+n[0-9]+) ' </proc/diskstats
-    if inpath dmsetup; then
-        echo '[dmsetup_info]'
-        dmsetup info -c --noheadings --separator ' ' -o name,devno,vg_name,lv_name
-    fi
-    if [ -d /dev/vx/dsk ]; then
-        echo '[vx_dsk]'
-        stat -c "%t %T %n" /dev/vx/dsk/*/*
-    fi
-else
-    echo '<<<docker_container_diskstat>>>'
-    echo "[time]"
-    date +%s
-    for F in io_service_bytes io_serviced; do
-        echo "[$F]"
-        cat "/sys/fs/cgroup/blkio/blkio.throttle.$F"
-    done
-    echo "[names]"
-    for F in /sys/block/*; do
-        echo "${F##*/} $(cat "$F/dev")"
-    done
-fi
+[ -z "$MK_SKIP_DISKSTAT" ] && section_diskstat
 
 # Performancecounter Kernel
-if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ]; then
-    echo '<<<kernel>>>'
-    date +%s
-    cat /proc/vmstat /proc/stat
-fi
+[ -z "$MK_SKIP_KERNEL" ] && section_kernel
 
 # Hardware sensors via IPMI (need ipmitool)
-if inpath ipmitool; then
-    run_cached -s "ipmi:sep(124)" 300 "waitmax 300 ipmitool sensor list | grep -v 'command failed' | grep -E -v '^[^ ]+ na ' | grep -v ' discrete '"
-    # readable discrete sensor states
-    run_cached -s "ipmi_discrete:sep(124)" 300 "waitmax 300 ipmitool sdr elist compact"
-fi
+[ -z "$MK_SKIP_IPMITOOL" ] && section_ipmitool
 
 # IPMI data via ipmi-sensors (of freeipmi). Please make sure, that if you
 # have installed freeipmi that IPMI is really support by your hardware.
-if (type ipmi-sensors && ls /dev/ipmi*) &>/dev/null; then
-    echo '<<<ipmi_sensors>>>'
-    # Newer ipmi-sensors version have new output format; Legacy format can be used
-    if ipmi-sensors --help | grep -q legacy-output; then
-        IPMI_FORMAT="--legacy-output"
-    else
-        IPMI_FORMAT=""
-    fi
-    if ipmi-sensors --help | grep -q " \-\-groups"; then
-        IPMI_GROUP_OPT="-g"
-    else
-        IPMI_GROUP_OPT="-t"
-    fi
-
-    # At least with ipmi-sensors 0.7.16 this group is Power_Unit instead of "Power Unit"
-    run_cached -s ipmi_sensors 300 "for class in Temperature Power_Unit Fan; do
-        ipmi-sensors $IPMI_FORMAT --sdr-cache-directory /var/cache $IPMI_GROUP_OPT \"\$class\" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
-        # In case of a timeout immediately leave loop.
-        if [ $? = 255 ]; then break ; fi
-    done"
-fi
+[ -z "$MK_SKIP_IPMISENSORS" ] && section_ipmisensors
 
 # RAID status of Linux software RAID
-echo '<<<md>>>'
-cat /proc/mdstat
+[ -z "$MK_SKIP_MD" ] && section_md
 
 # RAID status of Linux RAID via device mapper
-if inpath dmraid && DMSTATUS=$(waitmax 3 dmraid -r); then
-    echo '<<<dmraid>>>'
-
-    # Output name and status
-    waitmax 20 dmraid -s | grep -e ^name -e ^status
-
-    # Output disk names of the RAID disks
-    DISKS=$(echo "$DMSTATUS" | cut -f1 -d":")
-
-    for disk in $DISKS; do
-        device=$(cat /sys/block/"$(basename "$disk")"/device/model)
-        status=$(echo "$DMSTATUS" | grep "^${disk}")
-        echo "${status} Model: ${device}"
-    done
-fi
+[ -z "$MK_SKIP_DM_RAID" ] && section_dm_raid
 
 # RAID status of LSI controllers via cfggen
-if inpath cfggen; then
-    echo '<<<lsi>>>'
-    cfggen 0 DISPLAY |
-        grep -E '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' |
-        sed -e 's/ *//g' -e 's/:/ /'
-fi
+[ -z "$MK_SKIP_CFGGEN" ] && section_cfggen
 
 # RAID status of LSI MegaRAID controller via MegaCli. You can download that tool from:
 # http://www.lsi.com/downloads/Public/MegaRAID%20Common%20Files/8.02.16_MegaCLI.zip
-if inpath MegaCli; then
-    MegaCli_bin="MegaCli"
-elif inpath MegaCli64; then
-    MegaCli_bin="MegaCli64"
-elif inpath megacli; then
-    MegaCli_bin="megacli"
-elif inpath storcli; then
-    MegaCli_bin="storcli"
-elif inpath storcli64; then
-    MegaCli_bin="storcli64"
-else
-    MegaCli_bin="unknown"
-fi
-
-if [ "$MegaCli_bin" != "unknown" ]; then
-    echo '<<<megaraid_pdisks>>>'
-    for part in $($MegaCli_bin -EncInfo -aALL -NoLog </dev/null |
-        sed -rn 's/:/ /g; s/[[:space:]]+/ /g; s/^ //; s/ $//; s/Number of enclosures on adapter ([0-9]+).*/adapter \1/g; /^(Enclosure|Device ID|adapter) [0-9]+$/ p'); do
-        [ "$part" = adapter ] && echo ""
-        [ "$part" = 'Enclosure' ] && echo -ne "\ndev2enc"
-        echo -n " $part"
-    done
-    echo
-    $MegaCli_bin -PDList -aALL -NoLog </dev/null |
-        grep -E 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Adapter|Predictive Failure Count'
-    echo '<<<megaraid_ldisks>>>'
-    $MegaCli_bin -LDInfo -Lall -aALL -NoLog </dev/null | grep -E 'Size|State|Number|Adapter|Virtual'
-    echo '<<<megaraid_bbu>>>'
-    $MegaCli_bin -AdpBbuCmd -GetBbuStatus -aALL -NoLog </dev/null | grep -v Exit
-fi
+[ -z "$MK_SKIP_MEGARAID" ] && section_megaraid
 
 # RAID status of 3WARE disk controller (by Radoslaw Bak)
-if inpath tw_cli; then
-    for C in $(tw_cli show | awk 'NR < 4 { next } { print $1 }'); do
-        echo '<<<3ware_info>>>'
-        tw_cli "/$C" show all | grep -E 'Model =|Firmware|Serial'
-        echo '<<<3ware_disks>>>'
-        tw_cli "/$C" show drivestatus | grep -E 'p[0-9]' | sed "s/^/$C\//"
-        echo '<<<3ware_units>>>'
-        tw_cli "/$C" show unitstatus | grep -E 'u[0-9]' | sed "s/^/$C\//"
-    done
-fi
+[ -z "$MK_SKIP_THREE_WARE_RAID" ] && section_3ware_raid
 
 # RAID controllers from areca (Taiwan)
 # cli64 can be found at ftp://ftp.areca.com.tw/RaidCards/AP_Drivers/Linux/CLI/
-if inpath cli64; then
-    run_cached -s arc_raid_status 300 "cli64 rsf info | tail -n +3 | head -n -2"
-fi
+[ -z "$MK_SKIP_ARECA" ] && section_areca_raid
 
 # VirtualBox Guests. Section must always been output. Otherwise the
 # check would not be executed in case no guest additions are installed.
 # And that is something the check wants to detect
-echo '<<<vbox_guest>>>'
-if inpath VBoxControl && lsmod | grep vboxguest >/dev/null 2>&1; then
-    VBoxControl -nologo guestproperty enumerate | cut -d, -f1,2
-    [ "${PIPESTATUS[0]}" = 0 ] || echo "ERROR"
-fi
+[ -z "$MK_SKIP_VBOX_GUEST" ] && section_vbox_guest
 
 # OpenVPN Clients. Currently we assume that the configuration # is in
 # /etc/openvpn. We might find a safer way to find the configuration later.
-if [ -e /etc/openvpn/openvpn-status.log ]; then
-    echo '<<<openvpn_clients:sep(44)>>>'
-    sed -n -e '/CLIENT LIST/,/ROUTING TABLE/p' </etc/openvpn/openvpn-status.log |
-        sed -e 1,3d -e '$d'
-fi
+[ -z "$MK_SKIP_OPENVPN" ] && section_openvpn
 
-section_timesyncd || section_ntp
+if [ -z "$MK_SKIP_TIMESYNCHRONISATION" ]; then
+    section_timesyncd || section_ntp
+fi
 
 # Time synchronization with Chrony
-if inpath chronyc; then
-    # Force successful exit code. Otherwise section will be missing if daemon not running
-    #
-    # The "| cat" has been added for some kind of regression in RedHat 7.5. The
-    # SELinux rules shipped with that release were denying the chronyc call
-    # without cat.
-    run_cached -s chrony 30 "waitmax 5 chronyc -n tracking | cat || true"
-fi
+[ -z "$MK_SKIP_CHRONY" ] && section_chrony
 
-if inpath nvidia-settings && [ -S /tmp/.X11-unix/X0 ]; then
-    echo '<<<nvidia>>>'
-    for var in GPUErrors GPUCoreTemp; do
-        DISPLAY=:0 waitmax 2 nvidia-settings -t -q $var | sed "s/^/$var: /"
-    done
-fi
+[ -z "$MK_SKIP_NVIDIA" ] && section_nvidia
 
-if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ] && [ -e /proc/drbd ]; then
-    echo '<<<drbd>>>'
-    cat /proc/drbd
-fi
+[ -z "$MK_SKIP_DRBD" ] && section_drbd
 
 # Heartbeat monitoring
 # Different handling for heartbeat clusters with and without CRM
 # for the resource state
-if [ -S /var/run/heartbeat/crm/cib_ro -o -S /var/run/crm/cib_ro ] || pgrep crmd >/dev/null 2>&1; then
-    echo '<<<heartbeat_crm>>>'
-    TZ=UTC crm_mon -1 -r | grep -v ^$ | sed 's/^ //; /^\sResource Group:/,$ s/^\s//; s/^\s/_/g'
-fi
-if inpath cl_status; then
-    echo '<<<heartbeat_rscstatus>>>'
-    cl_status rscstatus
+[ -z "$MK_SKIP_HEARTBEAT" ] && section_heartbeat
 
-    echo '<<<heartbeat_nodes>>>'
-    for NODE in $(cl_status listnodes); do
-        if [ "$NODE" != "$(echo "$HOSTNAME" | tr '[:upper:]' '[:lower:]')" ]; then
-            STATUS=$(cl_status nodestatus "$NODE")
-            echo -n "$NODE $STATUS"
-            for LINK in $(cl_status listhblinks "$NODE" 2>/dev/null); do
-                echo -n " $LINK $(cl_status hblinkstatus "$NODE" "$LINK")"
-            done
-            echo
-        fi
-    done
-fi
+[ -z "$MK_SKIP_MAILQUEUE" ] && section_mailqueue
 
-# Postfix mailqueue monitoring
-# Determine the number of mails and their size in several postfix mail queues
-read_postfix_queue_dirs() {
-    postfix_queue_dir=$1
-    if [ -n "$postfix_queue_dir" ]; then
-        echo '<<<postfix_mailq>>>'
-        echo "[[[${2}]]]"
-        for queue in deferred active; do
-            count=$(find "${postfix_queue_dir}/$queue" -type f | wc -l)
-            size=$(du -s "${postfix_queue_dir}/$queue" | awk '{print $1 }')
-            if [ -z "$size" ]; then
-                size=0
-            fi
-            if [ -z "$count" ]; then
-                echo "Mail queue is empty"
-            else
-                echo "QUEUE_${queue} $size $count"
-            fi
-        done
-    fi
-}
-
-# Postfix mailqueue monitoring
-# Determine the number of mails and their size in several postfix mail queues
-if inpath postconf; then
-    # Check if multi_instance_directories exists in main.cf and is not empty
-    # always takes the last entry, multiple entries possible
-    multi_instances_dirs=$(postconf -c /etc/postfix 2>/dev/null | grep ^multi_instance_directories | sed 's/.*=[[:space:]]*//g')
-    if [ -n "$multi_instances_dirs" ]; then
-        for queue_dir in $multi_instances_dirs; do
-            if [ -n "$queue_dir" ]; then
-                postfix_queue_dir=$(postconf -c "$queue_dir" 2>/dev/null | grep ^queue_directory | sed 's/.*=[[:space:]]*//g')
-                read_postfix_queue_dirs "$postfix_queue_dir" "$queue_dir"
-            fi
-        done
-    fi
-    # Always check for the default queue. It can exist even if multiple instances are configured
-    read_postfix_queue_dirs "$(postconf -h queue_directory 2>/dev/null)"
-
-elif [ -x /usr/sbin/ssmtp ]; then
-    echo '<<<postfix_mailq>>>'
-    mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
-
-fi
-
-# Postfix status monitoring. Can handle multiple instances.
-if inpath postfix; then
-    echo "<<<postfix_mailq_status:sep(58)>>>"
-    for i in /var/spool/postfix*/; do
-        if [ -e "$i/pid/master.pid" ]; then
-            if [ -r "$i/pid/master.pid" ]; then
-                postfix_pid=$(sed 's/ //g' <"$i/pid/master.pid") # handle possible spaces in output
-                if readlink -- "/proc/${postfix_pid}/exe" | grep -q ".*postfix/\(s\?bin/\)\?master.*"; then
-                    echo "$i:the Postfix mail system is running:PID:$postfix_pid" | sed 's/\/var\/spool\///g'
-                else
-                    echo "$i:PID file exists but instance is not running!" | sed 's/\/var\/spool\///g'
-                fi
-            else
-                echo "$i:PID file exists but is not readable"
-            fi
-        else
-            echo "$i:the Postfix mail system is not running" | sed 's/\/var\/spool\///g'
-        fi
-    done
-fi
-
-# Check status of qmail mailqueue
-if inpath qmail-qstat; then
-    echo "<<<qmail_stats>>>"
-    qmail-qstat
-fi
-
-# Nullmailer queue monitoring
-if inpath nullmailer-send && [ -d /var/spool/nullmailer/queue ]; then
-    echo '<<<nullmailer_mailq>>>'
-    COUNT=$(find /var/spool/nullmailer/queue -type f | wc -l)
-    SIZE=$(du -s /var/spool/nullmailer/queue | awk '{print $1 }')
-    echo "$SIZE $COUNT"
-fi
-
-# Check status of OMD sites and Check_MK Notification spooler
-if inpath omd; then
-    echo '<<<labels:sep(0)>>>'
-    echo '{"cmk/check_mk_server": "yes"}'
-
-    run_cached -s omd_status 60 "omd status --bare || true"
-    echo '<<<mknotifyd:sep(0)>>>'
-    date +%s
-    for statefile in /omd/sites/*/var/log/mknotifyd.state; do
-        if [ -e "$statefile" ]; then
-            site=${statefile%/var/log*}
-            site=${site#/omd/sites/}
-            echo "[$site]"
-            grep -v '^#' <"$statefile"
-        fi
-    done
-
-    echo '<<<omd_apache:sep(124)>>>'
-    for statsfile in /omd/sites/*/var/log/apache/stats; do
-        if [ -e "$statsfile" ]; then
-            site=${statsfile%/var/log*}
-            site=${site#/omd/sites/}
-            echo "[$site]"
-            cat "$statsfile"
-            : >"$statsfile"
-            # prevent next section to fail caused by a missing newline at the end of the statsfile
-            echo
-        fi
-    done
-
-    echo '<<<omd_info:sep(59)>>>'
-    echo '[versions]'
-    echo 'version;number;edition;demo'
-    for versiondir in /omd/versions/*; do
-        version=${versiondir#/omd/versions/}
-
-        # filter out special directory 'default'
-        if [[ $version == "default" ]]; then
-            continue
-        fi
-
-        number=$version
-        demo="0"
-        if [[ "$version" == *.demo ]]; then
-            number=${version%.demo}
-            demo="1"
-        fi
-        edition=${number##*.}
-        number=${number%.*}
-        echo "$version;$number;$edition;$demo"
-    done
-    echo '[sites]'
-    echo 'site;used_version;autostart'
-    for sitedir in /omd/sites/*; do
-        site=${sitedir#/omd/sites/}
-        used_version=$(readlink ${sitedir}/version)
-        used_version=${used_version##*/}
-        autostart="0"
-        if grep -q "CONFIG_AUTOSTART[[:blank:]]*=[[:blank:]]*'on'" $sitedir/etc/omd/site.conf; then
-            autostart="1"
-        fi
-        echo "$site;$used_version;$autostart"
-    done
-fi
+## Check status of OMD sites and Check_MK Notification spooler
+[ -z "$MK_SKIP_OMD" ] && section_omd
 
 # Welcome the ZFS check on Linux
 # We do not endorse running ZFS on linux if your vendor doesnt support it ;)
 # check zpool status
-if inpath zpool; then
-    echo "<<<zpool_status>>>"
-    zpool status -x
-    echo "<<<zpool>>>"
-    zpool list
-fi
+[ -z "$MK_SKIP_ZPOOL" ] && section_zpool
 
 # Veritas Cluster Server
 # Software is always installed in /opt/VRTSvcs.
 # Secure mode must be off to allow root to execute commands
-if [ -x /opt/VRTSvcs/bin/haclus ]; then
-    echo "<<<veritas_vcs>>>"
-    vcshost=$(hostname | cut -d. -f1)
-    waitmax -s 9 2 /opt/VRTSvcs/bin/haclus -display -localclus | grep -e ClusterName -e ClusState
-    waitmax -s 9 2 /opt/VRTSvcs/bin/hasys -display -attribute SysState
-    waitmax -s 9 2 /opt/VRTSvcs/bin/hagrp -display -sys "$vcshost" -attribute State -localclus
-    waitmax -s 9 2 /opt/VRTSvcs/bin/hares -display -sys "$vcshost" -attribute State -localclus
-    waitmax -s 9 2 /opt/VRTSvcs/bin/hagrp -display -attribute TFrozen -attribute Frozen
-fi
+[ -z "$MK_SKIP_VERITAS" ] && section_veritas_cluster
 
-# Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
-perl -e '
-use File::Glob "bsd_glob";
-my @patterns = ();
-foreach (bsd_glob("$ARGV[0]/fileinfo.cfg"), bsd_glob("$ARGV[0]/fileinfo.d/*")) {
-    open my $handle, "<", $_ or next;
-    while (<$handle>) {
-        chomp;
-        next if /^\s*(#|$)/;
-        my $pattern = $_;
-        $pattern =~ s/\$DATE:(.*?)\$/substr(`date +"$1"`, 0, -1)/eg;
-        push @patterns, $pattern;
-    }
-    warn "error while reading $_: $!\n" if $!;
-    close $handle;
-}
-exit if ! @patterns;
-
-print "<<<fileinfo:sep(124)>>>\n", time, "\n[[[header]]]\nname|status|size|time\n[[[content]]]\n";
-
-foreach (@patterns) {
-    foreach (bsd_glob("$_")) {
-        if (! -f) {
-            print "$_|missing\n" if ! -d;
-        } elsif (my @infos = stat) {
-            print "$_|ok|$infos[7]|$infos[9]\n";
-        } else {
-            print "$_|stat failed: $!\n";
-        }
-    }
-}
-' -- "$MK_CONFDIR"
+## Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
+[ -z "$MK_SKIP_FILEINFO" ] && run_fileinfo
 
 # Get stats about OMD monitoring cores running on this machine.
 # Since cd is a shell builtin the check does not affect the performance
 # on non-OMD machines.
-if cd /omd/sites; then
-    echo '<<<livestatus_status:sep(59)>>>'
-    for site in *; do
-        if [ -S "/omd/sites/$site/tmp/run/live" ]; then
-            echo "[$site]"
-            echo -e "GET status" |
-                waitmax 3 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/live"
-        fi
-    done
-
-    echo '<<<livestatus_ssl_certs:sep(124)>>>'
-    for site in *; do
-        echo "[$site]"
-        for PEM_PATH in "/omd/sites/$site/etc/ssl/ca.pem" "/omd/sites/$site/etc/ssl/sites/$site.pem"; do
-            if [ -f "$PEM_PATH" ]; then
-                CERT_DATE=$(openssl x509 -enddate -noout -in "$PEM_PATH")
-                CERT_DATE=${CERT_DATE/notAfter=/}
-                echo "$PEM_PATH|$(date --date="$CERT_DATE" --utc +%s)"
-            fi
-        done
-    done
-
-    echo '<<<mkeventd_status:sep(0)>>>'
-    for site in *; do
-        if [ -S "/omd/sites/$site/tmp/run/mkeventd/status" ]; then
-            echo "[\"$site\"]"
-            echo -e "GET status\nOutputFormat: json" |
-                waitmax 3 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/mkeventd/status"
-        fi
-    done
-fi
+[ -z "$MK_SKIP_OMD_CORES" ] && section_omd_core
 
 # Collect states of configured Check_MK site backup jobs
-if ls /omd/sites/*/var/check_mk/backup/*.state >/dev/null 2>&1; then
-    echo "<<<mkbackup>>>"
-    for F in /omd/sites/*/var/check_mk/backup/*.state; do
-        SITE=${F#/*/*/*}
-        SITE=${SITE%%/*}
-
-        JOB_IDENT=${F%.state}
-        JOB_IDENT=${JOB_IDENT##*/}
-
-        if [ "$JOB_IDENT" != "restore" ]; then
-            echo "[[[site:$SITE:$JOB_IDENT]]]"
-            cat "$F"
-            echo
-        fi
-    done
-fi
-
-# Collect states of configured CMA backup jobs
-if inpath mkbackup && ls /var/lib/mkbackup/*.state >/dev/null 2>&1; then
-    echo "<<<mkbackup>>>"
-    for F in /var/lib/mkbackup/*.state; do
-        JOB_IDENT=${F%.state}
-        JOB_IDENT=${JOB_IDENT##*/}
-
-        if [ "$JOB_IDENT" != "restore" ]; then
-            echo "[[[system:$JOB_IDENT]]]"
-            cat "$F"
-            echo
-        fi
-    done
-fi
+section_mkbackup
 
 # Get statistics about monitored jobs. Below the job directory there
 # is a sub directory per user that ran a job. That directory must be
 # owned by the user so that a symlink or hardlink attack for reading
 # arbitrary files can be avoided.
-if pushd "$MK_VARDIR/job" >/dev/null; then
-    echo '<<<job>>>'
-    for username in *; do
-        if [ -d "$username" ] && cd "$username"; then
-            if [ $EUID -eq 0 ]; then
-                su -s "$SHELL" "$username" -c "head -n -0 -v *"
-            else
-                head -n -0 -v ./*
-            fi
-            cd ..
-        fi
-    done
-    popd >/dev/null
-fi
+[ -z "$MK_SKIP_JOB" ] && section_job
 
 # Gather thermal information provided e.g. by acpi
 # At the moment only supporting thermal sensors
-if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ] && ls /sys/class/thermal/thermal_zone* >/dev/null 2>&1; then
-    echo '<<<lnx_thermal:sep(124)>>>'
-    for F in /sys/class/thermal/thermal_zone*; do
-        line="${F##*/}"
-        if [ ! -e "$F/mode" ]; then line="${line}|-"; else line="${line}|$(cat "$F"/mode)"; fi
-        line="${line}|$(cat "$F"/{type,temp} | tr \\n "|")"
-        for G in $(ls "$F"/trip_point_*_{temp,type}); do
-            line="${line}$(tr <"$G" \\n "|")"
-        done
-        echo "${line%?}"
-    done
-fi
+[ -z "$MK_SKIP_THERMAL" ] && section_thermal
 
 # Libelle Business Shadow
-if inpath trd; then
-    echo "<<<libelle_business_shadow:sep(58)>>>"
-    trd -s
-fi
+[ -z "$MK_SKIP_LIBELLE" ] && section_libelle
 
 # HTTP Accelerator Statistics
-if inpath varnishstat; then
-    echo "<<<varnish>>>"
-    varnishstat -1
-fi
+[ -z "$MK_SKIP_HTTP_ACCELERATOR" ] && section_http_accelerator
 
 # Proxmox Cluster
-if inpath pvecm; then
-    echo "<<<pvecm_status:sep(58)>>>"
-    pvecm status
-    echo "<<<pvecm_nodes>>>"
-    pvecm nodes
-fi
+[ -z "$MK_SKIP_PROXMOX" ] && section_proxmox
 
-for HAPROXY_SOCK in /run/haproxy/admin.sock /var/lib/haproxy/stats; do
-    if [ -r "$HAPROXY_SOCK" ] && inpath socat; then
-        echo "<<<haproxy:sep(44)>>>"
-        echo "show stat" | socat - "UNIX-CONNECT:$HAPROXY_SOCK"
-    fi
-done
+[ -z "$MK_SKIP_HAPROXY" ] && section_haproxy
 
 # Start new liveupdate process in background on each agent execution. Starting
 # a new live update process will terminate the old one automatically after
 # max. 1 sec.
-if [ -e "$MK_CONFDIR/real_time_checks.cfg" ]; then
-    if [ -z "$REMOTE" ]; then
-        echo "ERROR: \$REMOTE not specified. Not starting Real-Time Checks." >&2
-    elif ! inpath openssl; then
-        echo "ERROR: openssl command is missing. Not starting Real-Time Checks." >&2
-    else
-        run_real_time_checks >/dev/null &
-    fi
-fi
+run_liveupdate
 
 # MK's Remote Plugin Executor
-if [ -e "$MK_CONFDIR/mrpe.cfg" ]; then
-    grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" |
-        while read -r descr cmdline; do
-            interval=
-            args="-m"
-            # NOTE: Due to an escaping-related bug in some old bash versions
-            # (3.2.x), we have to use an intermediate variable for the pattern.
-            pattern='\(([^\)]*)\)[[:space:]](.*)'
-            if [[ $cmdline =~ $pattern ]]; then
-                parameters=${BASH_REMATCH[1]}
-                cmdline=${BASH_REMATCH[2]}
-
-                # split multiple parameter assignments
-                for par in $(echo "$parameters" | tr ":" "\n"); do
-                    # split each assignment
-                    key=$(echo "$par" | cut -d= -f1)
-                    value=$(echo "$par" | cut -d= -f2)
-
-                    if [ "$key" = "interval" ]; then
-                        interval=$value
-                    elif [ "$key" = "appendage" ]; then
-                        args="-ma"
-                    fi
-                done
-            fi
-
-            if [ -z "$interval" ]; then
-                run_mrpe "$descr" "$cmdline"
-            else
-                run_cached "$args" "$descr" "$interval" "$cmdline"
-            fi
-        done
-fi
+run_remote_plugin
 
 # MK's runas Executor
-if [ -e "$MK_CONFDIR/runas.cfg" ]; then
-    grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/runas.cfg" |
-        while read -r type user include; do
-            if [ -d "$include" -o \( "$type" == "mrpe" -a -f "$include" \) ]; then
-                PREFIX=""
-                if [ "$user" != "-" ]; then
-                    PREFIX="su $user -c "
-                fi
-
-                # mrpe includes
-                if [ "$type" == "mrpe" ]; then
-                    grep -Ev '^[[:space:]]*($|#)' "$include" |
-                        while read -r descr cmdline; do
-                            interval=
-                            # NOTE: Due to an escaping-related bug in some old bash
-                            # versions (3.2.x), we have to use an intermediate variable
-                            # for the pattern.
-                            pattern='\(([^\)]*)\)[[:space:]](.*)'
-                            if [[ $cmdline =~ $pattern ]]; then
-                                parameters=${BASH_REMATCH[1]}
-                                cmdline=${BASH_REMATCH[2]}
-
-                                # split multiple parameter assignments
-                                for par in $(echo "$parameters" | tr ":" "\n"); do
-                                    # split each assignment
-                                    IFS='=' read -r key value <<<"${par}"
-                                    if [ "$key" = "interval" ]; then
-                                        interval=$value
-                                    fi
-                                    # no other parameters supported currently
-                                done
-                            fi
-
-                            if [ -n "$PREFIX" ]; then
-                                cmdline="$PREFIX'$cmdline'"
-                            fi
-                            if [ -z "$interval" ]; then
-                                run_mrpe "$descr" "$cmdline"
-                            else
-                                run_cached -m "$descr" "$interval" "$cmdline"
-                            fi
-                        done
-
-                    # local and plugin includes
-                elif [ "$type" == "local" -o "$type" == "plugin" ]; then
-                    if [ "$type" == "local" ]; then
-                        echo "<<<local:sep(0)>>>"
-                    fi
-
-                    find "$include" -executable -type f |
-                        while read -r filename; do
-                            if [ -n "$PREFIX" ]; then
-                                cmdline="$PREFIX\"$filename\""
-                            else
-                                cmdline=$filename
-                            fi
-
-                            $cmdline
-                        done
-                fi
-            fi
-        done
-fi
-
-is_valid_plugin() {
-    # NOTE: Due to an escaping-related bug in some old bash versions
-    # (3.2.x), we have to use an intermediate variable for the pattern.
-    pattern='\.dpkg-(new|old|temp)$'
-    #TODO Maybe we should change this mechanism
-    # shellcheck disable=SC2015
-    [[ -f "$1" && -x "$1" && ! "$1" =~ $pattern ]] && true || false
-}
+run_mrpe
 
 # Local checks
-echo '<<<local:sep(0)>>>'
-if cd "$LOCALDIR"; then
-    for skript in ./*; do
-        if is_valid_plugin "$skript"; then
-            ./"$skript"
-        fi
-    done
-    # Call some plugins only every X'th second
-    for skript in [1-9]*/*; do
-        if is_valid_plugin "$skript"; then
-            run_cached "local_${skript//\//\\}" "${skript%/*}" "$skript"
-        fi
-    done
-fi
+run_local_checks
 
 # Plugins
-if cd "$PLUGINSDIR"; then
-    for skript in ./*; do
-        if is_valid_plugin "$skript"; then
-            ./"$skript"
-        fi
-    done
-    # Call some plugins only every Xth second
-    for skript in [1-9]*/*; do
-        if is_valid_plugin "$skript"; then
-            run_cached "plugins_${skript//\//\\}" "${skript%/*}" "$skript"
-        fi
-    done
-fi
+run_plugins
 
 # Agent output snippets created by cronjobs, etc.
 if [ -d "$SPOOLDIR" ] && [ -r "$SPOOLDIR" ]; then

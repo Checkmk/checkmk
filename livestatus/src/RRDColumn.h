@@ -7,11 +7,15 @@
 #define RRDColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
-#include <ctime>
+#include <optional>
 #include <string>
+#include <utility>
 #include <vector>
+
 #include "Column.h"
+#include "DynamicRRDColumn.h"
 #include "ListColumn.h"
 #include "contact_fwd.h"
 class MonitoringCore;
@@ -21,9 +25,7 @@ class RowRenderer;
 class RRDColumn : public ListColumn {
 public:
     RRDColumn(const std::string &name, const std::string &description,
-              const Column::Offsets &, MonitoringCore *mc, std::string rpn,
-              time_t start_time, time_t end_time, int resolution,
-              int max_entries);
+              const Column::Offsets &, MonitoringCore *mc, RRDColumnArgs args);
 
     void output(Row row, RowRenderer &r, const contact *auth_user,
                 std::chrono::seconds timezone_offset) const override;
@@ -32,19 +34,7 @@ public:
         Row row, const contact *auth_user,
         std::chrono::seconds timezone_offset) const override;
 
-    enum class Table { objects, services, hosts };
-
-private:
-    [[nodiscard]] virtual const void *getObject(Row row) const = 0;
-    [[nodiscard]] virtual Table table() const = 0;
-
-    MonitoringCore *_mc;
-    std::string _rpn;
-    time_t _start_time;
-    time_t _end_time;
-    int _resolution;
-    int _max_entries;
-
+protected:
     struct Data {
         std::chrono::system_clock::time_point start;
         std::chrono::system_clock::time_point end;
@@ -53,6 +43,13 @@ private:
     };
 
     [[nodiscard]] Data getData(Row row) const;
+
+    MonitoringCore *_mc;
+    RRDColumnArgs _args;
+
+private:
+    [[nodiscard]] virtual std::optional<std::pair<std::string, std::string>>
+    getHostNameServiceDesc(Row row) const = 0;
 };
 
 #endif  // RRDColumn_h

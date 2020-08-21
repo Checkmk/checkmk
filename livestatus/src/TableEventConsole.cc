@@ -5,7 +5,9 @@
 
 #include "TableEventConsole.h"
 
+#include <algorithm>  // IWYU pragma: keep
 #include <filesystem>
+#include <functional>  // IWYU pragma: keep
 #include <iosfwd>
 #include <iostream>
 #include <memory>
@@ -167,7 +169,7 @@ void TableEventConsole::answerQuery(Query *query) {
 bool TableEventConsole::isAuthorizedForEvent(Row row,
                                              const contact *ctc) const {
     // TODO(sp) Remove evil casts below.
-    auto c = reinterpret_cast<const MonitoringCore::Contact *>(ctc);
+    const auto *c = reinterpret_cast<const MonitoringCore::Contact *>(ctc);
     // NOTE: Further filtering in the GUI for mkeventd.seeunrelated permission
     bool result = true;
     auto precedence = std::static_pointer_cast<StringEventConsoleColumn>(

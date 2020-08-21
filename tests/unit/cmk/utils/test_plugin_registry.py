@@ -1,8 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Type
 
 # pylint: disable=redefined-outer-name
 import pytest  # type: ignore[import]
@@ -10,16 +11,13 @@ import pytest  # type: ignore[import]
 import cmk.utils.plugin_registry
 
 
-class Plugin(object):  # pylint: disable=useless-object-inheritance
+class Plugin:
     pass
 
 
-class PluginRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return Plugin
-
-    def plugin_name(self, plugin_class):
-        return plugin_class.__name__
+class PluginRegistry(cmk.utils.plugin_registry.Registry[Type[Plugin]]):
+    def plugin_name(self, instance):
+        return instance.__name__
 
 
 @pytest.fixture(scope="module")
@@ -65,8 +63,8 @@ def test_delitem(basic_registry):
     with pytest.raises(KeyError):
         basic_registry.unregister("bla")
 
-    @basic_registry.register  # pylint: disable=unused-variable
-    class DelPlugin(Plugin):
+    @basic_registry.register
+    class DelPlugin(Plugin):  # pylint: disable=unused-variable
         pass
 
     basic_registry.unregister("DelPlugin")

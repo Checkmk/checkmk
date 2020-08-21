@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -43,7 +43,7 @@ def _item_help_logwatch_rules():
 def _valuespec_logwatch_rules():
     return Transform(
         Dictionary(
-            title=_('Logwatch Patterns'),
+            title=_('Logfile patterns'),
             elements=[
                 ("reclassify_patterns",
                  ListOf(

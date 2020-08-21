@@ -6,7 +6,6 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
 echo "Sync WSGI files..."
-sudo rsync -v -a --relative * $ROOT/lib/python/cmk/gui/wsgi/
 sudo rsync -v -a --relative * $ROOT/lib/python3/cmk/gui/wsgi/
 
 if [ "$KILL_SITE_APACHE" = "1" ]; then

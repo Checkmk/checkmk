@@ -4,9 +4,10 @@
 // source code package.
 
 #include "TableCommands.h"
+
 #include <memory>
-#include <utility>
 #include <vector>
+
 #include "Column.h"
 #include "MonitoringCore.h"
 #include "Query.h"
@@ -14,42 +15,28 @@
 #include "StringLambdaColumn.h"
 
 TableCommands::TableCommands(MonitoringCore *mc) : Table(mc) {
-    addColumns(this, "");
+    addColumns(this, "", 0);
 }
 
 std::string TableCommands::name() const { return "commands"; }
 
 std::string TableCommands::namePrefix() const { return "command_"; }
 
-namespace {
-class CommandRow : public TableCommands::IRow {
-public:
-    explicit CommandRow(Command cmd) : cmd_{std::move(cmd)} {};
-    [[nodiscard]] Command getCommand() const override { return cmd_; }
-
-private:
-    Command cmd_;
-};
-}  // namespace
-
 // static
-void TableCommands::addColumns(Table *table, const std::string &prefix) {
-    table->addColumn(std::make_unique<StringLambdaColumn>(
-        prefix + "name", "The name of the command", [](Row row) {
-            auto r = row.rawData<Table::IRow>();
-            return dynamic_cast<const IRow *>(r)->getCommand()._name;
-        }));
-    table->addColumn(std::make_unique<StringLambdaColumn>(
-        prefix + "line", "The shell command line", [](Row row) {
-            auto r = row.rawData<Table::IRow>();
-            return dynamic_cast<const IRow *>(r)->getCommand()._command_line;
-        }));
+void TableCommands::addColumns(Table *table, const std::string &prefix,
+                               int offset) {
+    Column::Offsets offsets{offset};
+    table->addColumn(std::make_unique<StringLambdaColumn<Command>>(
+        prefix + "name", "The name of the command", offsets,
+        [](const Command &cmd) { return cmd._name; }));
+    table->addColumn(std::make_unique<StringLambdaColumn<Command>>(
+        prefix + "line", "The shell command line", offsets,
+        [](const Command &cmd) { return cmd._command_line; }));
 }
 
 void TableCommands::answerQuery(Query *query) {
     for (auto &cmd : core()->commands()) {
-        auto r = CommandRow{cmd};
-        if (!query->processDataset(Row{dynamic_cast<Table::IRow *>(&r)})) {
+        if (!query->processDataset(Row{&cmd})) {
             break;
         }
     }

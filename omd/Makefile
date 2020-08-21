@@ -23,20 +23,15 @@ PACKAGES := \
     libgsf \
     postgresql \
     perl-modules \
-    Python \
     Python3 \
     freetds \
     re2 \
-    python-modules \
     python3-modules \
     rrdtool \
-    python2-rrdtool \
     msitools \
     net-snmp \
-    python2-net-snmp \
     apache-omd \
     mod_fcgid \
-    mod_wsgi \
     python3-mod_wsgi \
     check_mk \
     check_multi \
@@ -117,7 +112,6 @@ DESTDIR ?= $(BUILD_BASE_DIR)/dest
 RPM_TOPDIR := $(BUILD_BASE_DIR)/rpm/topdir
 RPM_BUILDROOT := $(BUILD_BASE_DIR)/rpm/buildroot
 
-NEW_SERIAL=$$(($(OMD_SERIAL) + 1))
 SKEL := $(DESTDIR)$(OMD_ROOT)/skel
 SKEL_PERMISSIONS := $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions
 CMA_PKG_VERSION_TXT := $(shell if [ "$(DISTRO_CODE)" = "stretch" ]; then echo "-2" ; fi )
@@ -298,10 +292,6 @@ setversion:
 # tries to interpret them '/' might occur in custom branches filenames and sed
 # arguments should not contain '/'
 	NEW_OMD_VERSION=$(subst /,-,$(NEW_VERSION)).$(EDITION_SHORT)$(DEMO_SUFFIX) ; \
-	if [ -n "$$NEW_OMD_VERSION" ] && [ "$$NEW_OMD_VERSION" != "$(OMD_VERSION)" ]; then \
-	    sed -ri 's/^(OMD_SERIAL[[:space:]]*= *).*/\1'"$(NEW_SERIAL)/" Makefile.omd ; \
-	fi ; \
-	sed -ri 's/^(OMD_VERSION[[:space:]]*= *).*/\1"'"$$NEW_OMD_VERSION"'"/' packages/omd/omdlib/__init__.py
 
 # Please note: APPLIANCE_*_CMA are defined in omd/packages/appliance/appliance.make
 $(APPLIANCE_INSTALL_CMA): $(PRE_INSTALL)

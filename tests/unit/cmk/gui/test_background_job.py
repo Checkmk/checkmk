@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -9,7 +9,6 @@ import time
 import multiprocessing
 import sys
 
-import six
 import pytest  # type: ignore[import]
 
 import testlib
@@ -19,7 +18,7 @@ import cmk.utils.paths
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 # Loads all GUI modules
-import cmk.gui.modules  # pylint: disable=unused-import
+import cmk.gui.modules
 
 import cmk.gui.log
 
@@ -33,6 +32,7 @@ def debug_logging():
 
 def test_registered_background_jobs():
     expected_jobs = [
+        'ActivateChangesSchedulerBackgroundJob',
         'ParentScanBackgroundJob',
         'DummyBackgroundJob',
         'RenameHostsBackgroundJob',
@@ -49,6 +49,7 @@ def test_registered_background_jobs():
     if not cmk_version.is_raw_edition():
         expected_jobs += [
             'BakeAgentsBackgroundJob',
+            'SignAgentsBackgroundJob',
             'ReportingBackgroundJob',
         ]
 
@@ -58,7 +59,7 @@ def test_registered_background_jobs():
 def test_registered_background_jobs_attributes():
     for job_class in gui_background_job.job_registry.values():
         assert isinstance(job_class.job_prefix, str)
-        assert isinstance(job_class.gui_title(), six.text_type)
+        assert isinstance(job_class.gui_title(), str)
 
 
 @pytest.fixture(autouse=True)

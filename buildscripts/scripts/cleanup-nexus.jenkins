@@ -23,7 +23,7 @@ node (NODE) {
                     NEXUS_CLEAN_CMD += " $ARTIFACT_STORAGE $NEXUS_USER $NEXUS_PWD"
                 }
                 if (PATTERN != '') {
-                    NEXUS_CLEAN_CMD += ' --pattern ' + PATTERN 
+                    NEXUS_CLEAN_CMD += ' --pattern ' + PATTERN
                 }
                 sh(NEXUS_CLEAN_CMD)
             }

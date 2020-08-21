@@ -9,8 +9,10 @@
 // NOTE: We need the 2nd "keep" pragma for deleting DowntimesOrComments. Is this
 // an IWYU bug?
 #include "config.h"  // IWYU pragma: keep
+
 #include <map>
 #include <memory>
+
 #include "DowntimeOrComment.h"  // IWYU pragma: keep
 #include "nagios.h"
 class Logger;

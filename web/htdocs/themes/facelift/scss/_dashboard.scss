@@ -6,16 +6,37 @@
 /* Styles used by the dashboard only */
 body.dashboard {
   overflow: hidden;
+
+  &.main div#main_page_content { padding-bottom: 0; }
+
+  #menu_entry_toggle_edit img.icon {
+    background-size: 16px;
+  }
+
+  #menu_shortcut_toggle_edit img.icon {
+    background-size: 20px;
+  }
+
+  #menu_shortcut_toggle_edit, #menu_entry_toggle_edit {
+    img.icon {
+      background-image: url("images/icon_dashboard_edit.png");
+      background-repeat: no-repeat;
+    }
+
+    &.edit img.icon {
+      background-image: url("images/icon_dashboard_edit_set.png");
+    }
+  }
 }
 
 div#dashboard {
-  position: absolute;
+  position: relative;
   padding: 0;
   margin: 0;
 }
 
-body.dashlet{
-  #data_container{
+body.dashlet {
+  #data_container {
     padding: 0;
     border: none;
   }
@@ -74,13 +95,13 @@ div.dashlet {
     padding-left: 9px;
     margin: 0;
     overflow: hidden;
-    font-size: $font-size-small;
+    font-size: $font-size-default;
+    text-align: center;
     font-weight: 500;
     letter-spacing: 2px;
-    color: $secondary-link-color;
-    text-transform: uppercase;
+    color: $font-color;
     white-space: nowrap;
-    background: $bg-color-secondary;
+    background: $headline-color;
     border: 1px solid $color-table-border;
     border-bottom: none;
     border-radius: $dashlet-title-border-radius;
@@ -187,12 +208,6 @@ div.dashlet {
   }
 }
 
-div.dashlet > div.title span a,
-div.dashlet > div.title span body.main .popup_menu span,
-body.main .popup_menu div.dashlet > div.title span span {
-  color: $secondary-link-color;
-}
-
 div.dashlet > div.title span {
   padding-left: 0; /* left align with titles of contained views */
   position: relative;
@@ -208,7 +223,7 @@ table.dashlet_overview h2 {
 div.dashlet_inner div.stats table.hoststats a,
 div.dashlet_inner div.stats table.hoststats body.main .popup_menu span,
 body.main .popup_menu div.dashlet_inner div.stats table.hoststats span {
-  color: $color-text;
+  color: $font-color;
 }
 
 div.dashlet_inner div.stats {
@@ -286,89 +301,13 @@ div[id^=dashlet] div.title + div.dashlet_inner > div {
 }
 
 iframe[id^=dashlet_iframe] {
-  background: $bg-color-tertiary;
+  background: $bg-color-secondary;
   transition: .15s ease-in-out;
 }
 
 /*
  * Dashboard editing
  */
-#controls_toggle {
-  position: absolute;
-  right: 0;
-  bottom: -41px;
-  z-index: 150;
-  padding: 6px 3px;
-  background-color: rgba(0, 0, 0, 0.5);
-  border-radius: 5px;
-  /* IE < 9 */
-  filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#7f000000', endColorstr='#7f000000');
-
-  &:hover {
-    bottom: -10px;
-  }
-
-  .iconbutton {
-    width: 33px;
-    height: 31px;
-  }
-}
-
-#controls, ul.sub {
-  position: absolute;
-  z-index: 180;
-  display: block;
-  width: 200px;
-  padding: 8px;
-  margin: 0;
-  color: $lightgrey;
-  list-style: none;
-  background-color: $color-sidebar-background;
-  border: 1px solid $color-table-border-dark;
-  border-radius: $theme-border-radius;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-
-  li, {
-    padding: 4px 0;
-    color: $lightgrey;
-  }
-}
-
-#controls {
-  a {
-    display: block;
-    padding: 1px 15px 1px 2px;
-    line-height: 14px;
-    text-align: left;
-    text-decoration: none;
-
-    &:hover {
-      text-decoration: underline;
-    }
-  }
-
-  /* submenu */
-  ul.sub {
-    right: 212px;
-    bottom: 5px;
-  }
-
-  > li > a > img, ul.menu > li > a > img {
-    width: 12px;
-    height: 12px;
-    margin-right: 4px;
-    vertical-align: middle;
-  }
-}
-
-#controls li a,
-#controls li body.main .popup_menu span,
-body.main .popup_menu #controls li span,
-ul.sub li a,
-ul.sub li body.main .popup_menu span,
-body.main .popup_menu ul.sub li span {
-  color: inherit;
-}
 
 /* dashlet controls */
 div.dashlet.edit {
@@ -776,6 +715,42 @@ div.dashlet.single_metric {
     }
   }
 
+  div.single_metric g {
+    a.single_value {
+      width: 100%;
+
+      text {
+	&.state0, &.state0 > a, &.state0 > a:link {
+	  fill: $black;
+	}
+
+	&.state-fill-font, &.no-state-color {
+	  &, > a {
+	    fill: $font-color !important;
+	  }
+	}
+
+	&.state-fill-font {
+	  &.state0, &.state0 > a, &.state0 > a:link {
+	    fill: $color-state-success-background !important;
+	  }
+
+	  &.state1, &.state1 > a, &.state1 > a:link {
+	    fill: $color-state-1-background !important;
+	  }
+
+	  &.state2, &.state2 > a, &.state2 > a:link {
+	    fill: $color-state-2-background !important;
+	  }
+
+	  &.state3, &.state3 > a, &.state3 > a:link {
+	    fill: $color-state-3-background !important;
+	  }
+	}
+      }
+    }
+  }
+
   div.dashlet_inner div.metric {
     height: inherit;
     padding: 0 4px 4px;
@@ -790,46 +765,46 @@ div.dashlet.single_metric {
 	padding: 0;
 	text-align: center;
 	border-radius: 16px;
-      }
 
-      td.metric_value {
-	position: relative;
-	height: 100%;
-	margin: 0 auto;
-	text-align: center;
-	border-radius: 16px;
+	&.metric_value {
+	  position: relative;
+	  height: 100%;
+	  margin: 0 auto;
+	  text-align: center;
+	  border-radius: 16px;
 
-	a {
-	  text-decoration: none;
-	  white-space: nowrap;
-	}
-
-	&.state0, &.state0 > a, &.state0 > a:link {
-	  color: $black;
-	}
-
-	&.state-color-font, &.no-state-color {
-	  &, > a {
-	    color: $color-text !important;
-	    background-color: transparent !important;
+	  a {
+	    text-decoration: none;
+	    white-space: nowrap;
 	  }
-	}
 
-	&.state-color-font {
 	  &.state0, &.state0 > a, &.state0 > a:link {
-	    color: $color-state-success-background !important;
+	    color: $black;
 	  }
 
-	  &.state1, &.state1 > a, &.state1 > a:link {
-	    color: $color-state-1-background !important;
+	  &.state-color-font, &.no-state-color {
+	    &, > a {
+	      color: $font-color !important;
+	      background-color: transparent !important;
+	    }
 	  }
 
-	  &.state2, &.state2 > a, &.state2 > a:link {
-	    color: $color-state-2-background !important;
-	  }
+	  &.state-color-font {
+	    &.state0, &.state0 > a, &.state0 > a:link {
+	      color: $color-state-success-background !important;
+	    }
 
-	  &.state3, &.state3 > a, &.state3 > a:link {
-	    color: $color-state-3-background !important;
+	    &.state1, &.state1 > a, &.state1 > a:link {
+	      color: $color-state-1-background !important;
+	    }
+
+	    &.state2, &.state2 > a, &.state2 > a:link {
+	      color: $color-state-2-background !important;
+	    }
+
+	    &.state3, &.state3 > a, &.state3 > a:link {
+	      color: $color-state-3-background !important;
+	    }
 	  }
 	}
       }
@@ -845,6 +820,90 @@ div.dashlet.single_metric {
 	  text-decoration: underline;
 	}
       }
+    }
+  }
+}
+
+div#dashboard_context_dialog_container {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 50;
+  background-color: rgba(0, 0, 0, 0.6);
+  transition: background-color .1s;
+
+  div#dashboard_context_dialog {
+    position: relative;
+    display: block;
+    width: min-content;
+    margin-top: 100px;
+    margin-right: auto;
+    margin-left: auto;
+
+    a.close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: block;
+      width: 16px;
+      height: 16px;
+
+      font-size: 12px;
+      font-weight: bold;
+      text-align: center;
+      text-decoration: none;
+
+      border: 1px solid;
+      border-radius: 2px;
+    }
+
+    table.nform tr td.legend {
+      width: 300px;
+      min-width: 200px;
+
+      div.title {
+        max-width: 180px;
+      }
+    }
+
+    div.floatfilter, div.floatfilter.double {
+      float: none;
+      height: auto;
+      padding: 0;
+      margin: 0;
+
+      background-color: transparent;
+      border-style: none;
+      border-radius: 0;
+      box-shadow: none;
+
+      div.legend {
+        width: 100%;
+        margin: 0;
+        margin-bottom: 4px;
+        font-size: 10px;
+        font-weight: normal;
+        color: #999;
+        text-align: left;
+        text-transform: uppercase;
+        background-color: #282828;
+        border-bottom: 1px dotted #555;
+        border-radius: 0;
+      }
+
+      div.content {
+        height: auto;
+      }
+    }
+
+    td.vlof_buttons {
+      background-color: #444;
+    }
+
+    td.vlof_buttons {
+      background-color: #444;
     }
   }
 }

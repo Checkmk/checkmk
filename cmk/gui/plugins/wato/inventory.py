@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -8,14 +8,17 @@ import cmk.utils.paths
 import cmk.utils.defines as defines
 
 from cmk.gui.valuespec import (
-    DualListChoice,
     Age,
     Dictionary,
-    Transform,
     DropdownChoice,
-    TextAscii,
+    DualListChoice,
+    ListOfStrings,
     MonitoringState,
+    RegExp,
+    TextAscii,
+    Transform,
 )
+
 from cmk.gui.i18n import _
 
 from cmk.gui.plugins.wato import (
@@ -193,4 +196,45 @@ rulespec_registry.register(
         match_type="dict",
         name="inv_parameters:inv_if",
         valuespec=_valuespec_inv_parameters_inv_if,
+    ))
+
+
+def _valuespec_inv_parameters_lnx_sysctl():
+    return Dictionary(
+        title=_("Inventory of Linux kernel configuration (sysctl)"),
+        help=_("This rule allows for defining regex-patterns for in- and excluding kernel "
+               "configuration parameters in the inventory. By default, no parameters are included. "
+               "Note that some kernel configuration parameters change frequently. Inventorizing "
+               "one of these parameters will lead to frequent changes in the HW/SW inventory, "
+               "which can quickly fill up the temporary file system."),
+        elements=[
+            (
+                "include_patterns",
+                ListOfStrings(
+                    valuespec=RegExp(RegExp.prefix),
+                    title=_("Inclusion patterns"),
+                    help=_("Define patterns for including kernel configuration parameters in the "
+                           "inventory."),
+                ),
+            ),
+            (
+                "exclude_patterns",
+                ListOfStrings(
+                    valuespec=RegExp(RegExp.prefix),
+                    title=_("Exclusion patterns"),
+                    help=_("Define patterns for excluding kernel configuration parameters from the "
+                           "inventory."),
+                ),
+            ),
+        ],
+        optional_keys=False,
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupInventory,
+        match_type="dict",
+        name="inv_parameters:lnx_sysctl",
+        valuespec=_valuespec_inv_parameters_lnx_sysctl,
     ))

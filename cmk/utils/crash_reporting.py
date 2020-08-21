@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -11,28 +11,22 @@ import abc
 import base64
 import contextlib
 import inspect
+from itertools import islice
+import json
+from pathlib import Path
 import pprint
 import sys
 import traceback
-import json
+from typing import Any, Dict, Iterator, Optional, Tuple, Type
 import uuid
-from itertools import islice
-from typing import (  # pylint: disable=unused-import
-    Any, Dict, Iterator, Optional, Text, Tuple, Type,
-)
+import urllib.parse
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error,unused-import
-
-import six
+from six import ensure_str
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.plugin_registry
-from cmk.utils.encoding import ensure_unicode
 
 
 @contextlib.contextmanager
@@ -53,11 +47,10 @@ class RobustJSONEncoder(json.JSONEncoder):
         return "%s" % o
 
 
-class CrashReportStore(object):
+class CrashReportStore:
     _keep_num_crashes = 20
     """Caring about the persistance of crash reports in the local site"""
-    def save(self, crash):
-        # type: (ABCCrashReport) -> None
+    def save(self, crash: 'ABCCrashReport') -> None:
         """Save the crash report instance to it's crash report directory"""
         self._prepare_crash_dump_directory(crash)
 
@@ -68,16 +61,14 @@ class CrashReportStore(object):
                 continue
 
             if fname == "crash.info":
-                store.save_text_to_file(
-                    crash.crash_dir() / fname,
-                    six.text_type(json.dumps(value, cls=RobustJSONEncoder)) + "\n")
+                store.save_text_to_file(crash.crash_dir() / fname,
+                                        str(json.dumps(value, cls=RobustJSONEncoder)) + "\n")
             else:
                 store.save_bytes_to_file(crash.crash_dir() / fname, value)
 
         self._cleanup_old_crashes(crash.crash_dir().parent)
 
-    def _prepare_crash_dump_directory(self, crash):
-        # type: (ABCCrashReport) -> None
+    def _prepare_crash_dump_directory(self, crash: 'ABCCrashReport') -> None:
         crash_dir = crash.crash_dir()
         crash_dir.mkdir(parents=True, exist_ok=True)
 
@@ -88,11 +79,9 @@ class CrashReportStore(object):
             except OSError:
                 pass
 
-    def _cleanup_old_crashes(self, base_dir):
-        # type: (Path) -> None
+    def _cleanup_old_crashes(self, base_dir: Path) -> None:
         """Simple cleanup mechanism: For each crash type we keep up to X crashes"""
-        def uuid_paths(path):
-            # type: (Path) -> Iterator[Path]
+        def uuid_paths(path: Path) -> Iterator[Path]:
             for p in path.iterdir():
                 try:
                     uuid.UUID(str(p.name))
@@ -113,19 +102,16 @@ class CrashReportStore(object):
             with suppress(OSError):
                 crash_dir.rmdir()
 
-    def load_from_directory(self, crash_dir):
-        # type: (Path) -> ABCCrashReport
+    def load_from_directory(self, crash_dir: Path) -> 'ABCCrashReport':
         """Populate the crash info from the given crash directory"""
         return ABCCrashReport.deserialize(self._load_decoded_from_directory(crash_dir))
 
-    def _load_decoded_from_directory(self, crash_dir):
-        # type: (Path) -> Dict[str, Any]
+    def _load_decoded_from_directory(self, crash_dir: Path) -> Dict[str, Any]:
         serialized = self.load_serialized_from_directory(crash_dir)
         serialized["crash_info"] = json.loads(serialized["crash_info"])
         return serialized
 
-    def load_serialized_from_directory(self, crash_dir):
-        # type: (Path) -> Dict[str, bytes]
+    def load_serialized_from_directory(self, crash_dir: Path) -> Dict[str, bytes]:
         """Load the raw serialized crash report from the given directory
 
         Nothing is decoded here, the plain files are read into a dictionary. This creates a
@@ -138,19 +124,19 @@ class CrashReportStore(object):
         return serialized
 
 
-class ABCCrashReport(six.with_metaclass(abc.ABCMeta, object)):
+class ABCCrashReport(metaclass=abc.ABCMeta):
     """Base class for the component specific crash report types"""
 
     # TODO: Can not use this with python 2
     #@abc.abstractclassmethod
     @classmethod
-    def type(cls):
-        # type: () -> Text
+    def type(cls) -> str:
         raise NotImplementedError()
 
     @classmethod
-    def from_exception(cls, details=None, type_specific_attributes=None):
-        # type: (Dict, Dict) -> ABCCrashReport
+    def from_exception(cls,
+                       details: Optional[Dict] = None,
+                       type_specific_attributes: Optional[Dict] = None) -> 'ABCCrashReport':
         """Create a crash info object from the current exception context
 
         details - Is an optional dictionary of crash type specific attributes
@@ -165,19 +151,16 @@ class ABCCrashReport(six.with_metaclass(abc.ABCMeta, object)):
         return cls(**attributes)
 
     @classmethod
-    def deserialize(cls, serialized):
-        # type: (Type[ABCCrashReport], dict) -> ABCCrashReport
+    def deserialize(cls: Type['ABCCrashReport'], serialized: dict) -> 'ABCCrashReport':
         """Deserialize the object"""
         class_ = crash_report_registry[serialized["crash_info"]["crash_type"]]
         return class_(**serialized)
 
-    def _serialize_attributes(self):
-        # type: () -> dict
+    def _serialize_attributes(self) -> dict:
         """Serialize object type specific attributes for transport"""
         return {"crash_info": self.crash_info}
 
-    def serialize(self):
-        # type: () -> Dict
+    def serialize(self) -> Dict:
         """Serialize the object
 
         Nested structures are allowed. Only objects that can be handled by
@@ -188,18 +171,15 @@ class ABCCrashReport(six.with_metaclass(abc.ABCMeta, object)):
 
         return self._serialize_attributes()
 
-    def __init__(self, crash_info):
-        # type: (Dict) -> None
+    def __init__(self, crash_info: Dict) -> None:
         super(ABCCrashReport, self).__init__()
         self.crash_info = crash_info
 
-    def ident(self):
-        # type: () -> Tuple[Text, ...]
+    def ident(self) -> Tuple[str, ...]:
         """Return the identity in form of a tuple of a single crash report"""
         return (self.crash_info["id"],)
 
-    def ident_to_text(self):
-        # type: () -> Text
+    def ident_to_text(self) -> str:
         """Returns the textual representation of the identity
 
         The parts are separated with "@" signs. The "@" signs found in the parts are
@@ -207,22 +187,19 @@ class ABCCrashReport(six.with_metaclass(abc.ABCMeta, object)):
         service descriptions don't have such signs."""
         return "@".join([p.replace("@", "~") for p in self.ident()])
 
-    def crash_dir(self, ident_text=None):
-        # type: (Optional[Text]) -> Path
+    def crash_dir(self, ident_text: Optional[str] = None) -> Path:
         """Returns the path to the crash directory of the current or given crash report"""
         if ident_text is None:
             ident_text = self.ident_to_text()
-        return cmk.utils.paths.crash_dir / six.ensure_str(self.type()) / six.ensure_str(ident_text)
+        return cmk.utils.paths.crash_dir / ensure_str(self.type()) / ensure_str(ident_text)
 
-    def local_crash_report_url(self):
-        # type: () -> Text
+    def local_crash_report_url(self) -> str:
         """Returns the site local URL to the current crash report"""
-        return "crash.py?%s" % six.moves.urllib.parse.urlencode([("component", self.type()),
-                                                                 ("ident", self.ident_to_text())])
+        return "crash.py?%s" % urllib.parse.urlencode([("component", self.type()),
+                                                       ("ident", self.ident_to_text())])
 
 
-def _get_generic_crash_info(type_name, details):
-    # type: (Text, Dict) -> Dict
+def _get_generic_crash_info(type_name: str, details: Dict) -> Dict:
     """Produces the crash info data structure.
 
     The top level keys of the crash info dict are standardized and need
@@ -246,16 +223,16 @@ def _get_generic_crash_info(type_name, details):
     # HACK: copy-n-paste from cmk.utils.exception.MKException.__str__ below.
     # Remove this after migration...
     if exc_value is None or not exc_value.args:
-        exc_txt = six.text_type("")
-    elif len(exc_value.args) == 1 and isinstance(exc_value.args[0], six.binary_type):
+        exc_txt = str("")
+    elif len(exc_value.args) == 1 and isinstance(exc_value.args[0], bytes):
         try:
             exc_txt = exc_value.args[0].decode("utf-8")
         except UnicodeDecodeError:
             exc_txt = u"b%s" % repr(exc_value.args[0])
     elif len(exc_value.args) == 1:
-        exc_txt = six.text_type(exc_value.args[0])
+        exc_txt = str(exc_value.args[0])
     else:
-        exc_txt = six.text_type(exc_value.args)
+        exc_txt = str(exc_value.args)
 
     infos = cmk_version.get_general_version_infos()
     infos.update({
@@ -271,8 +248,7 @@ def _get_generic_crash_info(type_name, details):
     return infos
 
 
-def _get_local_vars_of_last_exception():
-    # type: () -> Text
+def _get_local_vars_of_last_exception() -> str:
     local_vars = {}
     try:
         for key, val in inspect.trace()[-1][0].f_locals.items():
@@ -284,14 +260,13 @@ def _get_local_vars_of_last_exception():
 
     # This needs to be encoded as the local vars might contain binary data which can not be
     # transported using JSON.
-    return ensure_unicode(
+    return ensure_str(
         base64.b64encode(
             _format_var_for_export(pprint.pformat(local_vars).encode("utf-8"),
                                    maxsize=5 * 1024 * 1024)))
 
 
-def _format_var_for_export(val, maxdepth=4, maxsize=1024 * 1024):
-    # type: (Any, int, int) -> Any
+def _format_var_for_export(val: Any, maxdepth: int = 4, maxsize: int = 1024 * 1024) -> Any:
     if maxdepth == 0:
         return "Max recursion depth reached"
 
@@ -306,13 +281,13 @@ def _format_var_for_export(val, maxdepth=4, maxsize=1024 * 1024):
             val[index] = _format_var_for_export(item, maxdepth - 1)
 
     elif isinstance(val, tuple):
-        new_val = ()  # type: Tuple
+        new_val: Tuple = ()
         for item in val:
             new_val += (_format_var_for_export(item, maxdepth - 1),)
         val = new_val
 
     # Check and limit size
-    if isinstance(val, six.string_types):
+    if isinstance(val, str):
         size = len(val)
         if size > maxsize:
             val = val[:maxsize] + "... (%d bytes stripped)" % (size - maxsize)
@@ -320,12 +295,9 @@ def _format_var_for_export(val, maxdepth=4, maxsize=1024 * 1024):
     return val
 
 
-class CrashReportRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return ABCCrashReport
-
-    def plugin_name(self, plugin_class):
-        return plugin_class.type()
+class CrashReportRegistry(cmk.utils.plugin_registry.Registry[Type[ABCCrashReport]]):
+    def plugin_name(self, instance):
+        return instance.type()
 
 
 crash_report_registry = CrashReportRegistry()

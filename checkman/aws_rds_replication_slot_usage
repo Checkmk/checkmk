@@ -1,0 +1,22 @@
+title: AWS RDS: Replication Slot
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the replication slot disk usage of
+ AWS/RDS (PostgreSQL databases only).
+
+ To make this check work you have to configure the related
+ special agent {Amazon Web Services (AWS)}.
+
+ No default levels are set. Upper levels are configurable via the
+ rule "AWS/RDS Disk Usage".
+
+item:
+ Name of the instance and region name (to avoid duplicate services
+ in case of multi-region monitoring).
+
+inventory:
+ One service is created for each database if all required metrics
+ (ReplicationSlotDiskUsage) are given.

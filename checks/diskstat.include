@@ -61,6 +61,12 @@ def with_unused_counter_removal(plugin_name):
     return decorator
 
 
+# ==================================================================================================
+# ==================================================================================================
+# THIS FUNCTION HAS BEEN MIGRATED TO THE NEW CHECK API (OR IS IN THE PROCESS), PLEASE DO NOT TOUCH
+# IT. INSTEAD, MODIFY THE MIGRATED VERSION.
+# ==================================================================================================
+# ==================================================================================================
 def inventory_diskstat_generic(parsed):
     # Skip over on empty data
     if not parsed:
@@ -326,6 +332,12 @@ def _check_diskstat_old(item, params, this_time, info):
 #   '----------------------------------------------------------------------'
 
 
+# ==================================================================================================
+# ==================================================================================================
+# THIS FUNCTION HAS BEEN MIGRATED TO THE NEW CHECK API (OR IS IN THE PROCESS), PLEASE DO NOT TOUCH
+# IT. INSTEAD, MODIFY THE MIGRATED VERSION.
+# ==================================================================================================
+# ==================================================================================================
 def diskstat_select_disk(disks, item):
 
     # In summary mode we add up the throughput values, but
@@ -412,6 +424,12 @@ def diskstat_select_disk(disks, item):
 #       'read_ql'                    : 0.0,
 #       'write_ql'                   : 0.0,
 # }}
+# ==================================================================================================
+# ==================================================================================================
+# THIS FUNCTION HAS BEEN MIGRATED TO THE NEW CHECK API (OR IS IN THE PROCESS), PLEASE DO NOT TOUCH
+# IT. INSTEAD, MODIFY THE MIGRATED VERSION.
+# ==================================================================================================
+# ==================================================================================================
 def check_diskstat_dict(item, params, disks):
     # Take care of previously discovered services
     if item in ("read", "write"):

@@ -1,21 +1,20 @@
-title: APC Symmetra Web/SNMP Management Card: Temperature
+title: APC Symmetra UPS: Battery Temperature
 agents: snmp
-catalog: hw/environment/apc
+catalog: hw/power/apc
 license: GPL
 distribution: check_mk
 description:
- This checks queries a APC Symmetra Web/SNMP management card for attached temperature
- sensors.
- You can configure upper levels for {WARN}/{CRIT} (default: 25, 30).
+ This check monitors battery temperature of APC Symmetra UPS which
+ support the PowerNet-MIB.
+
+ You can configure upper levels for {WARN}/{CRIT} (default: 50, 60).
 
  The service goes {WARN}/{CRIT} if the temperature is higher than these levels.
-
 
  This check uses the PowerNet-MIB.
 
 item:
- The name of the sensor as configured in your management card.
+ Name of the temperature sensor
 
 inventory:
- One item is created for each available temperature sensor.
-
+ One service is created.

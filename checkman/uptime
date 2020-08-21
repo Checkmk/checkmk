@@ -10,5 +10,5 @@ description:
  configurable levels.
 
 inventory:
- One check per system is created if the agent has a section {<<<uptime>>>}.
+ One service is created for each system if the agent has a section {<<<uptime>>>}.
 

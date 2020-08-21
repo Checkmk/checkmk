@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,9 +6,10 @@
 
 import os
 import platform
-import pytest
+import pytest  # type: ignore
 import re
 import subprocess
+from typing import Optional
 from local import (actual_output, src_agent_exe, make_yaml_config, local_test, src_exec_dir,
                    wait_agent, write_config, root_dir, user_dir, get_main_yaml_name,
                    get_user_yaml_name)
@@ -19,7 +20,7 @@ class Globals(object):
     section = 'check_mk'
     alone = True
     output_file = 'agentoutput.txt'
-    only_from = None
+    only_from: Optional[str] = None
     ipv4_to_ipv6 = {'127.0.0.1': '0:0:0:0:0:ffff:7f00:1', '10.1.2.3': '0:0:0:0:0:ffff:a01:203'}
 
 
@@ -94,7 +95,7 @@ def make_only_from_array(ipv4):
 @pytest.fixture
 def expected_output():
     drive_letter = r'[A-Z]:'
-    ipv4 = Globals.only_from.split() if Globals.only_from else None
+    ipv4 = Globals.only_from.split() if Globals.only_from is not None else None
     ___pip = make_only_from_array(ipv4)
     expected = [
         # Note: The first two lines are output with crash_debug = yes in 1.2.8

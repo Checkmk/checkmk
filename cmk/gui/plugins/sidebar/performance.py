@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -23,7 +23,11 @@ class Performance(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("Server Performance")
+        return _("Server performance")
+
+    @classmethod
+    def has_advanced_items(cls):
+        return True
 
     @classmethod
     def description(cls):
@@ -36,8 +40,8 @@ class Performance(SidebarSnapin):
     def show(self):
         only_sites = snapin_site_choice("performance", config.site_choices())
 
-        def write_line(left, right):
-            html.open_tr()
+        def write_line(left, right, advanced):
+            html.open_tr(class_="advanced" if advanced else "basic")
             html.td(left, class_="left")
             html.td(html.render_strong(right), class_="right")
             html.close_tr()
@@ -52,15 +56,15 @@ class Performance(SidebarSnapin):
         finally:
             sites.live().set_only_sites(None)
 
-        for what, col, format_str in \
-            [("Service checks",         0, "%.2f/s"),
-             ("Host checks",            1, "%.2f/s"),
-             ("External commands",      2, "%.2f/s"),
-             ("Livestatus-conn.",       3, "%.2f/s"),
-             ("Process creations",      4, "%.2f/s"),
-             ("New log messages",       5, "%.2f/s"),
-             ("Cached log messages",    6, "%d")]:
-            write_line(what + ":", format_str % sum(row[col] for row in data))
+        for what, advanced, col, format_str in \
+            [("Service checks",         False, 0, "%.2f/s"),
+             ("Host checks",            False, 1, "%.2f/s"),
+             ("External commands",      True, 2, "%.2f/s"),
+             ("Livestatus-conn.",       True, 3, "%.2f/s"),
+             ("Process creations",      True, 4, "%.2f/s"),
+             ("New log messages",       True, 5, "%.2f/s"),
+             ("Cached log messages",    True, 6, "%d")]:
+            write_line(what + ":", format_str % sum(row[col] for row in data), advanced=advanced)
 
         if only_sites is None and len(config.allsites()) == 1:
             try:
@@ -70,7 +74,7 @@ class Performance(SidebarSnapin):
                 sites.live().set_only_sites(None)
             size = sum([row[0] for row in data])
             maxx = sum([row[1] for row in data])
-            write_line(_('Com. buf. max/total'), "%d / %d" % (maxx, size))
+            write_line(_('Com. buf. max/total'), "%d / %d" % (maxx, size), advanced=True)
 
         html.close_table()
 

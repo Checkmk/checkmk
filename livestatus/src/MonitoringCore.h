@@ -90,6 +90,7 @@ public:
                                                    const Contact *contact) = 0;
 
     virtual std::chrono::system_clock::time_point last_logfile_rotation() = 0;
+    virtual std::chrono::system_clock::time_point last_config_change() = 0;
     [[nodiscard]] virtual size_t maxLinesPerLogFile() const = 0;
 
     [[nodiscard]] virtual Command find_command(
@@ -117,10 +118,6 @@ public:
     [[nodiscard]] virtual std::filesystem::path logArchivePath() const = 0;
     [[nodiscard]] virtual std::filesystem::path rrdcachedSocketPath() const = 0;
 
-    virtual MetricLocation metricLocation(
-        const void *object, const Metric::MangledName &name,
-        const RRDColumn::Table &table) const = 0;
-
     virtual Encoding dataEncoding() = 0;
     virtual size_t maxResponseSize() = 0;
     virtual size_t maxCachedMessages() = 0;
@@ -143,6 +140,10 @@ public:
     // iteration, not a copy. The kind parameter is not really OO, either...
     virtual Attributes customAttributes(const void *holder,
                                         AttributeKind kind) const = 0;
+
+    [[nodiscard]] virtual MetricLocation metricLocation(
+        const std::string &host_name, const std::string &service_description,
+        const Metric::Name &var) const = 0;
 
     // Our escape hatch, this should die in the long run...
     template <typename T>

@@ -14,8 +14,12 @@ def parse_netapp_api_volumes(info):
         volume = {}
         name = line[0].split(" ", 1)[1]
         for element in line[1:]:
-            tokens = element.split(" ", 1)
-            volume[tokens[0]] = tokens[1]
+            key, val = element.split(" ", 1)
+            try:
+                val = int(val)
+            except ValueError:
+                pass
+            volume[key] = val
 
         # Clustermode specific
         if "vserver_name" in volume:
@@ -26,63 +30,47 @@ def parse_netapp_api_volumes(info):
     return volumes
 
 
-def inventory_netapp_api_volumes(parsed):
-    for volume in parsed:
-        yield volume, {}
-
-
 def _create_key(protocol, mode, field):
-    return "_".join([protocol, mode, field])
+    if protocol:
+        return "_".join([protocol, mode, field])
+    return "_".join([mode, field])
 
 
-# Cannot use decorator get_parsed_item_data for this check function due to the
-# specific error message for legacy checks with a UUID as item
-def check_netapp_api_volumes(item, params, parsed):
-    volume = parsed.get(item)
-    if not volume:
-        if len(item.split("-")) > 4:
-            return 3, "The service description with a UUID is no longer supported. Please do a rediscovery."
-        return
-
-    if volume.get("state") != "online":
-        return 1, "Volume is %s" % volume.get("state")
-
+def _check_single_netapp_api_volume(item, params, volume):
     mega = 1024.0 * 1024.0
-    size_total = int(volume.get("size-total")) / mega  # fixed: true-division
-    size_avail = int(volume.get("size-available")) / mega  # fixed: true-division
-    inodes_total = int(volume.get("files-total"))
-    inodes_avail = inodes_total - int(volume.get("files-used"))
-    state, info, perf = df_check_filesystem_single(item, size_total, size_avail, 0, inodes_total,
-                                                   inodes_avail, params)
+    size_total = volume["size-total"] / mega  # fixed: true-division
+    size_avail = volume["size-available"] / mega  # fixed: true-division
+    inodes_total = volume["files-total"]
+    inodes_avail = inodes_total - volume["files-used"]
+    state, info, perf = df_check_filesystem_single(
+        item,
+        size_total,
+        size_avail,
+        0,
+        inodes_total,
+        inodes_avail,
+        params,
+    )
 
-    counter_wrapped = False
-    infotexts = []
     now = time.time()
     base = {}
+    metrics_map = {'write_ops': 'write_ops_s'}
 
-    perf_protocols = params.get("perfdata", [])
-    for protocol in ["", "nfs", "cifs", "san", "fcp", "iscsi"]:
-        if protocol not in perf_protocols:
-            continue
+    for protocol in params.get("perfdata", []):
         for mode in ["read", "write", "other"]:
-            for field, format_func in [
-                ("data", get_bytes_human_readable),
-                ("ops", lambda x: "%.2f 1/s" % x),
-                ("latency", lambda x: "%s: %.2f ms" % x),
-            ]:
+            for field in ["data", "ops", "latency"]:
+
                 key = _create_key(protocol, mode, field)
                 value = volume.get(key)
                 if value is None:
                     continue
 
-                value = int(value)
                 try:
                     delta = get_rate("netapp_api_volumes.%s.%s" % (item, key),
                                      now,
                                      value,
                                      onwrap=RAISE)
                 except MKCounterWrapped:
-                    counter_wrapped = True
                     continue
 
                 # Quite hacky.. this base information is used later on by the "latency" field
@@ -121,22 +109,84 @@ def check_netapp_api_volumes(item, params, parsed):
                         divisor = 1.0
                     else:
                         divisor = 1000.0
-                    delta = delta / (divisor * base[_create_key(protocol, mode, "ops")]
-                                    )  # fixed: true-division
-                if protocol == "":
-                    infotexts.append("%s: %s" % (key, format_func(delta)))
+                    delta /= divisor * base[_create_key(
+                        protocol,
+                        mode,
+                        "ops",
+                    )]  # fixed: true-division
 
-                perf.append((key, delta))
-
-    if not counter_wrapped:
-        info += ", " + ", ".join(infotexts)
+                perf.append((metrics_map.get(key, key), delta))
 
     return state, info, perf
 
 
+def _combine_netapp_api_volumes(volumes_in_group, parsed):
+    combined_volume = {}
+    volumes_not_online = {}
+
+    for volume_name in volumes_in_group:
+        volume = parsed[volume_name]
+
+        state = volume.get("state")
+        if volume.get("state") != "online":
+            volumes_not_online[volume_name] = state
+
+        else:
+            for k, v in volume.items():
+                if isinstance(v, int):
+                    combined_volume.setdefault(k, 0)
+                    combined_volume[k] += v
+
+    n_vols_online = len(volumes_in_group) - len(volumes_not_online)
+    if n_vols_online:
+        for k, v in combined_volume.items():
+            if k.endswith('latency'):
+                combined_volume[k] = float(v) / n_vols_online
+
+    return combined_volume, volumes_not_online
+
+
+# Cannot use decorator get_parsed_item_data for this check function due to the
+# specific error message for legacy checks with a UUID as item
+def check_netapp_api_volumes(item, params, parsed):
+    if 'patterns' in params:
+
+        volumes_in_group = mountpoints_in_group(parsed, *params["patterns"])
+        if not volumes_in_group:
+            yield 3, "No volumes matching the patterns of this group"
+            return
+
+        combined_volumes, volumes_not_online = _combine_netapp_api_volumes(
+            volumes_in_group,
+            parsed,
+        )
+
+        if combined_volumes:
+            yield _check_single_netapp_api_volume(item, params, combined_volumes)
+
+        yield 0, "%d volume(s) in group" % len(volumes_in_group)
+        for vol, state in volumes_not_online.items():
+            yield 1, "Volume %s is %s" % (vol, state)
+
+    else:
+        volume = parsed.get(item)
+
+        if not volume:
+            if len(item.split("-")) > 4:
+                yield (3, "The service description with a UUID is no longer supported. Please do a "
+                       "rediscovery.")
+            return
+
+        if volume.get("state") != "online":
+            yield 1, "Volume is %s" % volume.get("state")
+            return
+
+        yield _check_single_netapp_api_volume(item, params, volume)
+
+
 check_info["netapp_api_volumes"] = {
     'check_function': check_netapp_api_volumes,
-    'inventory_function': inventory_netapp_api_volumes,
+    'inventory_function': df_inventory,
     'parse_function': parse_netapp_api_volumes,
     'service_description': 'Volume %s',
     'has_perfdata': True,

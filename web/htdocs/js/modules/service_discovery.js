@@ -5,6 +5,7 @@
 import * as utils from "utils";
 import * as ajax from "ajax";
 import * as async_progress from "async_progress";
+import * as page_menu from "page_menu";
 
 //#   +--------------------------------------------------------------------+
 //#   | Handling of the asynchronous service discovery dialog              |
@@ -24,7 +25,7 @@ export function start(host_name, folder_path, discovery_options, transid, reques
         async_progress.show_info("Updating...");
     }, 2000);
 
-    lock_controls(true);
+    lock_controls(true, get_state_independent_controls().concat(get_page_menu_controls()));
     async_progress.monitor({
         "update_url" : "ajax_service_discovery.py",
         "host_name": host_name,
@@ -85,7 +86,10 @@ function finish(response)
     } else {
         //async_progress.hide_msg();
     }
-    lock_controls(false);
+
+    // Only unlock the "per service" actions here. The page menu entries are unlocked by individual
+    // calls to enable_page_menu_entry depending on the state of the page.
+    lock_controls(false, get_state_independent_controls());
 }
 
 function error(response)
@@ -111,45 +115,41 @@ function update(handler_data, response) {
     g_service_discovery_result = response.discovery_result;
     handler_data.post_data = get_post_data(handler_data.host_name, handler_data.folder_path, response.discovery_options, handler_data.transid);
 
+    // Update the content table
     var container = document.getElementById("service_container");
     container.style.display = "block";
     container.innerHTML = response.body;
     utils.execute_javascript_by_object(container);
 
-    update_activate_changes_button(response);
+    page_menu.update_page_state_top_line(response.pending_changes_info);
 }
 
-function update_activate_changes_button(response)
-{
-    var tmp_container = document.createElement("div");
-    tmp_container.innerHTML = response.changes_button;
-    var context_buttons_container = document.getElementsByClassName("contextlinks")[0];
-    var cur_changes_button = context_buttons_container.childNodes[0];
-    context_buttons_container.replaceChild(tmp_container.childNodes[0].childNodes[0], cur_changes_button);
-}
-
-function lock_controls(lock)
-{
+function get_state_independent_controls() {
     var elements = [];
-    //elements.push(document.getElementById("activate_affected"));
-    //elements.push(document.getElementById("activate_selected"));
-    //// TODO: Remove once new changes mechanism has been implemented
-    //elements.push(document.getElementById("discard_changes_button"));
-
     elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("service_checkbox"), 0));
-    elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("button"), 0));
     elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("service_button"), 0));
+    elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("toggle"), 0));
+    return elements;
+}
 
+function get_page_menu_controls() {
+    return Array.prototype.slice.call(document.getElementsByClassName("action"), 0);
+}
+
+function lock_controls(lock, elements)
+{
+    let element;
     for (var i = 0; i < elements.length; i++) {
-        if (!elements[i])
+        element = elements[i];
+        if (!element)
             continue;
 
         if (lock)
-            utils.add_class(elements[i], "disabled");
+            utils.add_class(element, "disabled");
         else
-            utils.remove_class(elements[i], "disabled");
+            utils.remove_class(element, "disabled");
 
-        elements[i].disabled = lock;
+        element.disabled = lock;
     }
 }
 

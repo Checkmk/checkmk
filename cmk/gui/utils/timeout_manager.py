@@ -5,13 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import signal
-from types import FrameType  # pylint: disable=unused-import
-from typing import Optional  # pylint: disable=unused-import
+from types import FrameType
+from typing import Optional
 from cmk.gui.exceptions import RequestTimeout
 from cmk.gui.i18n import _
 
 
-class TimeoutManager(object):  # pylint: disable=useless-object-inheritance
+class TimeoutManager:
     """Request timeout handling
 
     The system apache process will end the communication with the client after
@@ -30,10 +30,8 @@ class TimeoutManager(object):  # pylint: disable=useless-object-inheritance
     first try to write anything to the client) which will result in an
     exception.
     """
-    def enable_timeout(self, duration):
-        # type: (int) -> None
-        def handle_request_timeout(signum, frame):
-            # type: (int, Optional[FrameType]) -> None
+    def enable_timeout(self, duration: int) -> None:
+        def handle_request_timeout(signum: int, frame: Optional[FrameType]) -> None:
             raise RequestTimeout(
                 _("Your request timed out after %d seconds. This issue may be "
                   "related to a local configuration problem or a request which works "
@@ -43,6 +41,5 @@ class TimeoutManager(object):  # pylint: disable=useless-object-inheritance
         signal.signal(signal.SIGALRM, handle_request_timeout)
         signal.alarm(duration)
 
-    def disable_timeout(self):
-        # type: () -> None
+    def disable_timeout(self) -> None:
         signal.alarm(0)

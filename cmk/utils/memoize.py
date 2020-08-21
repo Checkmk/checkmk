@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,7 +7,7 @@
 It provides a decorator that can be used to cache function results based on the
 given function arguments."""
 
-from typing import Type, Union, Callable, Tuple, Dict, Set, Any  # pylint: disable=unused-import
+from typing import Type, Union, Callable, Tuple, Dict, Set, Any
 
 # The functions that violate this checker are borrowed from official python
 # code and are done for performance reasons.
@@ -17,8 +17,12 @@ from typing import Type, Union, Callable, Tuple, Dict, Set, Any  # pylint: disab
 # Algorithm borrowed from Python 3 functools
 # + Add support for "list" args
 # pylint: disable=dangerous-default-value
-def _make_key(args, kwds, kwd_mark=(object(),), fasttypes={int, str}, type=type, len=len):
-    # type: (Tuple, Dict, Tuple, Set[Type], Callable, Callable) -> Union[int, str, _HashedSeq]
+def _make_key(args: Tuple,
+              kwds: Dict,
+              kwd_mark: Tuple = (object(),),
+              fasttypes: Set[Type] = {int, str},
+              type: Callable = type,
+              len: Callable = len) -> 'Union[int, str, _HashedSeq]':
     """Make a cache key from optionally typed positional and keyword arguments
     The key is constructed in a way that is flat as possible rather than
     as a nested structure that would take more memory.
@@ -60,7 +64,7 @@ class _HashedSeq(list):
 
 
 # TODO: This may be replaced by @functools.lru_cache() in Python 3
-class MemoizeCache(object):
+class MemoizeCache:
     """Simple unbound in memory cache
 
 This decorator can be used to remember the results of single functions. These
@@ -71,13 +75,11 @@ Examples:
 """
     __slots__ = ["_logger", "_cache", "mem_func"]
 
-    def __init__(self, function):
-        # type: (Callable) -> None
+    def __init__(self, function: Callable) -> None:
         self.mem_func = function
-        self._cache = {}  # type: Dict[Union[int, str, _HashedSeq], Any]
+        self._cache: Dict[Union[int, str, _HashedSeq], Any] = {}
 
-    def __call__(self, *args, **kwargs):
-        # type: (Any, Any) -> Any
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
         cache_id = _make_key(args, kwargs)
 
         if cache_id in self._cache:

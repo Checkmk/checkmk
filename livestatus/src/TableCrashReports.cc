@@ -4,33 +4,33 @@
 // source code package.
 
 #include "TableCrashReports.h"
+
 #include <filesystem>
 #include <memory>
-#include <optional>
 #include <string>
+
 #include "Column.h"
 #include "CrashReport.h"
 #include "DynamicColumn.h"
 #include "DynamicHostFileColumn.h"
 #include "MonitoringCore.h"
-#include "OffsetSStringColumn.h"
 #include "Query.h"
 #include "Row.h"
+#include "StringLambdaColumn.h"
 
 TableCrashReports::TableCrashReports(MonitoringCore *mc) : Table(mc) {
-    addColumn(std::make_unique<OffsetSStringColumn>(
-        "id", "The ID of a crash report",
-        Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(CrashReport, _id)}));
-    addColumn(std::make_unique<OffsetSStringColumn>(
+    Column::Offsets offsets{};
+    addColumn(std::make_unique<StringLambdaColumn<CrashReport>>(
+        "id", "The ID of a crash report", offsets,
+        [](const CrashReport &r) { return r._id; }));
+    addColumn(std::make_unique<StringLambdaColumn<CrashReport>>(
         "component", "The component that crashed (gui, agent, check, etc.)",
-        Column::Offsets{-1, -1, -1,
-                        DANGEROUS_OFFSETOF(CrashReport, _component)}));
-    addDynamicColumn(std::make_unique<DynamicHostFileColumn>(
-        "file", "Files related to the crash report (crash.info, etc.)",
-        Column::Offsets{}, [mc] { return mc->crashReportPath(); },
-        [](const Column & /*unused*/, const Row & /*unused*/,
-           const std::string &args) -> std::optional<std::filesystem::path> {
-            return args;
+        offsets, [](const CrashReport &r) { return r._component; }));
+    addDynamicColumn(std::make_unique<DynamicHostFileColumn<CrashReport>>(
+        "file", "Files related to the crash report (crash.info, etc.)", offsets,
+        [mc] { return mc->crashReportPath(); },
+        [](const CrashReport & /*r*/, const std::string &args) {
+            return std::filesystem::path{args};
         }));
 }
 
@@ -41,6 +41,7 @@ std::string TableCrashReports::namePrefix() const { return "crashreport_"; }
 void TableCrashReports::answerQuery(Query *query) {
     mk::crash_report::any(core()->crashReportPath(),
                           [&query](const CrashReport &cr) {
-                              return !query->processDataset(Row(&cr));
+                              const CrashReport *r = &cr;
+                              return !query->processDataset(Row(r));
                           });
 }

@@ -1,0 +1,19 @@
+title: Hepta: Time Synchronization
+agents: snmp
+catalog: hw/time/hopf
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the status of the synchronization.
+
+ This check supports Hepta 8029 and Hepta 8030 devices.
+
+ If the device is synchronized via Radio with high precision, the state will be OK.
+ If the device is synchronized via Radio with low precision, the state will be WARN.
+ If the device synchronization is invalid or it is in mode Crystal, the state will be CRIT.
+
+inventory:
+ One service is created.
+
+item:
+ The fixed statement {{SyncModuleTimeSyncState}}

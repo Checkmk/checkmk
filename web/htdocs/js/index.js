@@ -38,10 +38,12 @@ import * as views from "views";
 import * as reload_pause from "reload_pause";
 import * as graph_integration from "graph_integration";
 import * as dashboard from "dashboard";
+import * as page_menu from "page_menu";
 
 import * as cmk_figures from "cmk_figures";
-import "cmk_figure_plugins";
+import "cmk_figures_plugins";
 
+import * as cmk_tabs from "cmk_tabs";
 
 import * as node_visualization from "node_visualization";
 import * as node_visualization_utils from "node_visualization_utils";
@@ -58,6 +60,28 @@ try {
 } catch(e) {
     graphs = null;
 }
+
+var ntop_interface_details;
+try {
+    ntop_interface_details = require("ntop_interface_details");
+} catch(e) {
+    ntop_interface_details = null;
+}
+
+var ntop_alerts;
+try {
+    ntop_alerts = require("ntop_alerts");
+} catch(e) {
+    ntop_alerts = null;
+}
+
+var ntop_flows;
+try {
+    ntop_flows = require("ntop_flows");
+} catch(e) {
+    ntop_flows = null;
+}
+
 
 $(() => {
     utils.update_header_timer();
@@ -102,6 +126,7 @@ export const cmk_export = {
         graph_integration: graph_integration,
         graphs: graphs,
         dashboard: dashboard,
+        page_menu: page_menu,
         // TODO: node_visualization cleanups
         node_visualization_utils: node_visualization_utils,
         node_visualization_layout_styles: node_visualization_layout_styles,
@@ -109,5 +134,12 @@ export const cmk_export = {
         node_visualization_viewport_layers: node_visualization_viewport_layers,
         node_visualization: node_visualization,
         figures: cmk_figures,
+        tabs: cmk_tabs,
+        ntop: {
+            interface_details: ntop_interface_details,
+            alerts: ntop_alerts,
+            flows: ntop_flows
+        },
+
     }
 };

@@ -1,20 +1,15 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
+from html import escape as html_escape
 import re
-from typing import Text, Union  # pylint: disable=unused-import
-import six
+from typing import Union
 
-if sys.version_info[0] >= 3:
-    from html import escape as html_escape
-else:
-    from future.moves.html import escape as html_escape  # type: ignore[import]
+from six import ensure_str
 
-from cmk.utils.encoding import ensure_unicode
 from cmk.gui.utils.html import HTML
 
 #.
@@ -31,7 +26,7 @@ from cmk.gui.utils.html import HTML
 
 # TODO: Figure out if this should actually be HTMLTagValue or HTMLContent or...
 # All the HTML-related types are slightly chaotic...
-EscapableEntity = Union[None, int, HTML, str, Text]
+EscapableEntity = Union[None, int, HTML, str]
 
 _UNESCAPER_TEXT = re.compile(
     r'&lt;(/?)(h1|h2|b|tt|i|u|br(?: /)?|nobr(?: /)?|pre|a|sup|p|li|ul|ol)&gt;')
@@ -40,8 +35,7 @@ _A_HREF = re.compile(r'&lt;a href=((?:&quot;|&#x27;).*?(?:&quot;|&#x27;))&gt;')
 
 
 # TODO: Cleanup the accepted types!
-def escape_attribute(value):
-    # type: (EscapableEntity) -> Text
+def escape_attribute(value: EscapableEntity) -> str:
     """Escape HTML attributes.
 
     For example: replace '"' with '&quot;', '<' with '&lt;'.
@@ -67,29 +61,27 @@ def escape_attribute(value):
     if value is None:
         return u''
     if attr_type == int:
-        return six.text_type(value)
+        return str(value)
     if isinstance(value, HTML):
         return value.__html__()  # This is HTML code which must not be escaped
-    if isinstance(attr_type, six.text_type):
+    if isinstance(attr_type, str):
         return html_escape(value, quote=True)
-    if isinstance(attr_type, six.binary_type):  # TODO: Not in the signature!
-        return html_escape(six.ensure_str(value), quote=True)
+    if isinstance(attr_type, bytes):  # TODO: Not in the signature!
+        return html_escape(ensure_str(value), quote=True)
     # TODO: What is this case for? Exception?
     return html_escape(u"%s" % value, quote=True)  # TODO: Not in the signature!
 
 
-def unescape_attributes(value):
-    # type: (Union[str, Text]) -> Text
+def unescape_attributes(value: str) -> str:
     # In python3 use html.unescape
-    return ensure_unicode(value  #
-                          .replace("&amp;", "&")  #
-                          .replace("&quot;", "\"")  #
-                          .replace("&lt;", "<")  #
-                          .replace("&gt;", ">"))
+    return ensure_str(value  #
+                      .replace("&amp;", "&")  #
+                      .replace("&quot;", "\"")  #
+                      .replace("&lt;", "<")  #
+                      .replace("&gt;", ">"))
 
 
-def escape_text(text):
-    # type: (EscapableEntity) -> Text
+def escape_text(text: EscapableEntity) -> str:
     """Escape HTML text
 
     We only strip some tags and allow some simple tags
@@ -123,8 +115,7 @@ def escape_text(text):
     return text.replace(u"&amp;nbsp;", u"&nbsp;")
 
 
-def strip_scripts(ht):
-    # type: (Text) -> Text
+def strip_scripts(ht: str) -> str:
     """Strip script tags from text.
 
     This function does not handle all the possible edge cases. Beware.
@@ -162,8 +153,7 @@ def strip_scripts(ht):
     return ht
 
 
-def strip_tags(ht):
-    # type: (EscapableEntity) -> Text
+def strip_tags(ht: EscapableEntity) -> str:
     """Strip all HTML tags from a text.
 
     Args:
@@ -185,10 +175,10 @@ def strip_tags(ht):
     if isinstance(ht, HTML):
         ht = ht.__html__()
 
-    if not isinstance(ht, six.string_types):
+    if not isinstance(ht, str):
         return u"%s" % ht
 
-    ht = ensure_unicode(ht)
+    ht = ensure_str(ht)
 
     while True:
         x = ht.find('<')

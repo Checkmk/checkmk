@@ -12,7 +12,5 @@ description:
  It knows 5 different states ranging from "normal" to "critical", which are
  mapped into corresponding Nagios states.
 
-
-
 inventory:
- There is one service created on inventory named "Global Status"
+ One service named "Global Status" is created.

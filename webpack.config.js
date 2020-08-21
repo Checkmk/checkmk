@@ -16,7 +16,6 @@ module.exports = {
         themes: [
             "./web/htdocs/themes/facelift/theme.scss",
             "./web/htdocs/themes/facelift/cma_facelift.scss",
-            "./web/htdocs/themes/classic/theme.scss",
             "./web/htdocs/themes/modern-dark/theme.scss",
         ],
     },
@@ -37,6 +36,7 @@ module.exports = {
             path.resolve(__dirname, "web/htdocs/js/modules/figures"),
             path.resolve(__dirname, "web/htdocs/js/modules/node_visualization"),
             path.resolve(__dirname, "enterprise/web/htdocs/js/modules"),
+            path.resolve(__dirname, "enterprise/web/htdocs/js/modules/ntop"),
         ]
     },
     module: {

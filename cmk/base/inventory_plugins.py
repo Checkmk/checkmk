@@ -5,21 +5,26 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from typing import Any, Dict, Set, Iterator, Tuple, Optional  # pylint: disable=unused-import
+from typing import Any, Dict, Set
 
 import cmk.utils.paths
 import cmk.utils.debug
+from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.log import console
+from cmk.utils.type_defs import SectionName
 
+import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
-import cmk.base.console as console
 import cmk.base.check_utils
 
-from cmk.base.api import PluginName
+from cmk.base.api.agent_based.register.inventory_plugins_legacy import (
+    create_inventory_plugin_from_legacy,)
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
     create_snmp_section_plugin_from_legacy,)
+from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 
-from cmk.utils.type_defs import CheckPluginName, InventoryPluginName  # pylint: disable=unused-import
+InventoryPluginNameStr = str
 InventoryInfo = Dict[str, Any]
 
 # Inventory plugins have dependencies to check plugins and the inventory
@@ -29,24 +34,24 @@ InventoryInfo = Dict[str, Any]
 #from cmk.base.config import *
 
 # Inventory plugins
-inv_info = {}  # type: Dict[InventoryPluginName, InventoryInfo]
+inv_info: Dict[InventoryPluginNameStr, InventoryInfo] = {}
 # Inventory export hooks
-inv_export = {}  # type: Dict[str, Dict[str, Any]]
+inv_export: Dict[str, Dict[str, Any]] = {}
 # The checks are loaded into this dictionary. Each check
-_plugin_contexts = {}  # type: Dict[str, Dict[str, Any]]
+_plugin_contexts: Dict[str, Dict[str, Any]] = {}
 # becomes a separat sub-dictionary, named by the check name
 # These are the contexts of the check include files
-_include_contexts = {}  # type: Dict[str, Any]
+_include_contexts: Dict[str, Any] = {}
 
 # This is needed for the auto-migration to the new check API.
 # For some reason, inspect.getsourcefile fails to find the
 # right file, so we pass a list of candidates.
-_plugin_file_lookup = {}  # type: Dict[str, str]
+_plugin_file_lookup: Dict[str, str] = {}
 
 
-def load_plugins(get_check_api_context, get_inventory_context):
-    # type: (config.GetCheckApiContext, config.GetInventoryApiContext) -> None
-    loaded_files = set()  # type: Set[str]
+def load_plugins(get_check_api_context: config.GetCheckApiContext,
+                 get_inventory_context: config.GetInventoryApiContext) -> None:
+    loaded_files: Set[str] = set()
     filelist = config.get_plugin_paths(str(cmk.utils.paths.local_inventory_dir),
                                        cmk.utils.paths.inventory_dir)
 
@@ -76,41 +81,60 @@ def load_plugins(get_check_api_context, get_inventory_context):
             _plugin_contexts.setdefault(check_plugin_name, plugin_context)
             _plugin_file_lookup.setdefault(check_plugin_name, f)
 
-    _extract_snmp_sections()
+    _extract_snmp_sections(inv_info, _plugin_file_lookup)
+    _extract_inventory_plugins(inv_info)
 
 
-def _extract_snmp_sections():
-    # type: () -> None
+def _extract_snmp_sections(
+    inf_info: Dict[InventoryPluginNameStr, InventoryInfo],
+    plugin_file_lookup: Dict[str, str],
+) -> None:
     for plugin_name, plugin_info in sorted(inv_info.items()):
         if 'snmp_info' not in plugin_info:
             continue
-        section_name = cmk.base.check_utils.section_name_of(plugin_name)
-        if config.get_registered_section_plugin(PluginName(section_name)):
+        section_name = section_name_of(plugin_name)
+        if isinstance(agent_based_register.get_section_plugin(SectionName(section_name)),
+                      SNMPSectionPlugin):
             continue
 
         fallback_files = ([_include_file_path(i) for i in plugin_info.get('includes', [])] +
-                          [_plugin_file_lookup[plugin_name]])
+                          [plugin_file_lookup[plugin_name]])
 
         try:
-            snmp_section_plugin = create_snmp_section_plugin_from_legacy(
-                section_name,
-                {},
-                plugin_info['snmp_scan_function'],
-                plugin_info['snmp_info'],
-                scan_function_fallback_files=fallback_files,
-            )
+            agent_based_register.add_section_plugin(
+                create_snmp_section_plugin_from_legacy(
+                    section_name,
+                    {},
+                    plugin_info['snmp_scan_function'],
+                    plugin_info['snmp_info'],
+                    scan_function_fallback_files=fallback_files,
+                ))
         except (NotImplementedError, KeyError, AssertionError, ValueError):
             msg = config.AUTO_MIGRATION_ERR_MSG % ('section', plugin_name)
             if cmk.utils.debug.enabled():
                 raise MKGeneralException(msg)
-            # TODO (mo): bring this back:
-            #console.warning(msg)
-        else:
-            config.registered_snmp_sections[snmp_section_plugin.name] = snmp_section_plugin
+            console.warning(msg)
 
 
-def _new_inv_context(get_check_api_context, get_inventory_context):
-    # type: (config.GetCheckApiContext, config.GetInventoryApiContext) -> Dict
+def _extract_inventory_plugins(inf_info: Dict[InventoryPluginNameStr, InventoryInfo],) -> None:
+    for plugin_name, plugin_info in sorted(inv_info.items()):
+        try:
+            agent_based_register.add_inventory_plugin(
+                create_inventory_plugin_from_legacy(
+                    plugin_name,
+                    plugin_info,
+                    # count inherited extra sections from check plugin:
+                    len(config.check_info.get(plugin_name, {}).get("extra_sections", [])),
+                ))
+        except NotImplementedError:
+            msg = config.AUTO_MIGRATION_ERR_MSG % ('inventory', plugin_name)
+            if cmk.utils.debug.enabled():
+                raise MKGeneralException(msg)
+            console.warning(msg)
+
+
+def _new_inv_context(get_check_api_context: config.GetCheckApiContext,
+                     get_inventory_context: config.GetInventoryApiContext) -> Dict:
     # Add the data structures where the inventory plugins register with Check_MK
     context = {
         "inv_info": inv_info,
@@ -128,8 +152,7 @@ def _new_inv_context(get_check_api_context, get_inventory_context):
 # Load the definitions of the required include files for this check
 # Working with imports when specifying the includes would be much cleaner,
 # sure. But we need to deal with the current check API.
-def _load_plugin_includes(check_file_path, plugin_context):
-    # type: (str, Dict) -> None
+def _load_plugin_includes(check_file_path: str, plugin_context: Dict) -> None:
     for name in config.includes_of_plugin(check_file_path):
         path = _include_file_path(name)
         try:
@@ -140,8 +163,7 @@ def _load_plugin_includes(check_file_path, plugin_context):
                 raise
 
 
-def _include_file_path(name):
-    # type: (str) -> str
+def _include_file_path(name: str) -> str:
     local_path = cmk.utils.paths.local_inventory_dir / name
     if local_path.exists():
         return str(local_path)
@@ -150,56 +172,3 @@ def _include_file_path(name):
     if os.path.exists(shared_path):
         return shared_path
     return config.check_include_file_path(name)
-
-
-def is_snmp_plugin(check_plugin_name):
-    # type: (str) -> bool
-    section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
-    return "snmp_info" in inv_info.get(section_name, {}) \
-           or cmk.base.check_utils.is_snmp_check(check_plugin_name)
-
-
-def sorted_inventory_plugins():
-    # type: () -> Iterator[Tuple[CheckPluginName, InventoryInfo]]
-    # First resolve *all* dependencies. This ensures that there
-    # are no cyclic dependencies, and that the 'depends on'
-    # relation is transitive.
-    resolved_dependencies = {}  # type: Dict[str, Set[str]]
-
-    def resolve_plugin_dependencies(plugin_name, known_dependencies=None):
-        # type: (CheckPluginName, Optional[Set[CheckPluginName]]) -> Set[CheckPluginName]
-        '''recursively aggregate all plugin dependencies'''
-        if known_dependencies is None:
-            known_dependencies = set()
-        if plugin_name in resolved_dependencies:
-            known_dependencies.update(resolved_dependencies[plugin_name])
-            return known_dependencies
-
-        try:
-            direct_dependencies = set(inv_info[plugin_name].get('depends_on', []))
-        except KeyError:
-            raise MKGeneralException("unknown plugin dependency: %r" % plugin_name)
-
-        new_dependencies = direct_dependencies - known_dependencies
-        known_dependencies.update(new_dependencies)
-        for dependency in new_dependencies:
-            known_dependencies = resolve_plugin_dependencies(dependency, known_dependencies)
-        return known_dependencies
-
-    for plugin_name in inv_info:
-        resolved_dependencies[plugin_name] = resolve_plugin_dependencies(plugin_name)
-        if plugin_name in resolved_dependencies[plugin_name]:
-            raise MKGeneralException("cyclic plugin dependencies for %r" % plugin_name)
-
-    # The plugins are now a partially ordered set with respect to
-    # the 'depends on' relation. That means we can iteratively
-    # yield the minimal elements
-    remaining_plugins = set(inv_info)
-    yielded_plugins = set()  # type: Set[str]
-    while remaining_plugins:
-        for plugin_name in sorted(remaining_plugins):
-            dependencies = resolved_dependencies[plugin_name]
-            if dependencies <= yielded_plugins:
-                yield plugin_name, inv_info[plugin_name]
-                yielded_plugins.add(plugin_name)
-                remaining_plugins.remove(plugin_name)

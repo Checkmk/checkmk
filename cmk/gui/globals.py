@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -10,7 +10,7 @@
 from functools import partial
 import logging
 
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 from werkzeug.local import LocalProxy, LocalStack
 
@@ -19,13 +19,12 @@ from werkzeug.local import LocalProxy, LocalStack
 # Cyclical import
 
 if TYPE_CHECKING:
-    from typing import Any  # pylint: disable=unused-import
-    from cmk.gui import htmllib, http, config  # pylint: disable=unused-import
+    from cmk.gui import htmllib, http, config
 
 _sentinel = object()
 
 
-class _AppCtxGlobals(object):
+class _AppCtxGlobals:
     def get(self, name, default=None):
         return self.__dict__.get(name, default)
 
@@ -57,7 +56,7 @@ def _lookup_app_object(name):
     return getattr(top, name)
 
 
-class AppContext(object):
+class AppContext:
     def __init__(self, app):
         self.app = app
         self.g = _AppCtxGlobals()
@@ -71,7 +70,7 @@ class AppContext(object):
 
 
 current_app = LocalProxy(partial(_lookup_app_object, "app"))
-g = LocalProxy(partial(_lookup_app_object, "g"))  # type: Any
+g: Any = LocalProxy(partial(_lookup_app_object, "g"))
 
 ######################################################################
 # TODO: This should live somewhere else...
@@ -101,7 +100,7 @@ def _lookup_req_object(name):
     return getattr(top, name)
 
 
-class RequestContext(object):
+class RequestContext:
     def __init__(self, html_obj=None, req=None, resp=None):
         self.html = html_obj
         self.auth_type = None
@@ -161,7 +160,7 @@ local = request_local_attr()  # None as name will get the whole object.
 # LocalProxy is meant as a transparent proxy, so we leave it out to de-confuse
 # mypy. LocalProxy uses a lot of reflection magic, which can't be understood by
 # tools in general.
-user = request_local_attr('user')  # type: config.LoggedInUser
-request = request_local_attr('request')  # type: http.Request
+user: 'config.LoggedInUser' = request_local_attr('user')
+request: 'http.Request' = request_local_attr('request')
 
-html = request_local_attr('html')  # type: htmllib.html
+html: 'htmllib.html' = request_local_attr('html')

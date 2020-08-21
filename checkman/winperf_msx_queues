@@ -23,6 +23,6 @@ item:
  The name of the queue
 
 inventory:
- For each queue that is defined in {winperf_msx_queues} one check
- will be created if the agent outputs the matching performance counters.
+ One service is created for each queue that is defined in {winperf_msx_queues}
+ if the agent outputs the matching performance counters.
 

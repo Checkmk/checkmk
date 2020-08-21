@@ -4,6 +4,7 @@
 // source code package.
 
 #include "ServiceContactsColumn.h"
+
 #include "Row.h"
 
 #ifdef CMC
@@ -11,7 +12,9 @@
 #include "Object.h"
 #include "cmc.h"
 #else
+#include <functional>  // IWYU pragma: keep
 #include <unordered_set>
+
 #include "nagios.h"
 #endif
 
@@ -19,18 +22,18 @@ std::vector<std::string> ServiceContactsColumn::getValue(
     Row row, const contact* /*auth_user*/,
     std::chrono::seconds /*timezone_offset*/) const {
 #ifdef CMC
-    if (auto object = columnData<Object>(row)) {
+    if (const auto* object = columnData<Object>(row)) {
         return object->_contact_list->contactNames();
     }
     return {};
 #else
     std::unordered_set<std::string> names;
-    if (auto svc = columnData<service>(row)) {
-        for (auto cm = svc->contacts; cm != nullptr; cm = cm->next) {
+    if (const auto *svc = columnData<service>(row)) {
+        for (auto *cm = svc->contacts; cm != nullptr; cm = cm->next) {
             names.insert(cm->contact_ptr->name);
         }
-        for (auto cgm = svc->contact_groups; cgm != nullptr; cgm = cgm->next) {
-            for (auto cm = cgm->group_ptr->members; cm != nullptr;
+        for (auto *cgm = svc->contact_groups; cgm != nullptr; cgm = cgm->next) {
+            for (auto *cm = cgm->group_ptr->members; cm != nullptr;
                  cm = cm->next) {
                 names.insert(cm->contact_ptr->name);
             }

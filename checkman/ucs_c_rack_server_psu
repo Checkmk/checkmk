@@ -43,7 +43,7 @@ description:
    unknown
 
 inventory:
-  All PSUs of the rack server are found automatically.
+ One service is created for each PSU of the rack server.
 
 item:
  {{Rack unit}} followed by the index of the rack followed by {{PSU}} and the index of the PSU

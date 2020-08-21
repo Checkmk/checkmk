@@ -1,10 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""This module is meant to be used by active checks that support getting
-credentials from the Check_MK password store.
+"""This module is meant to be used by components (e.g. active checks, notifications, bakelets)
+that support getting credentials from the Check_MK password store.
 
 The module needs to be included and then the script needs to run the
 replace_passwords() function. This should be done early in the script
@@ -21,6 +21,7 @@ import sys
 
 import cmk.utils.paths
 import cmk.utils.store as store
+from cmk.utils.exceptions import MKGeneralException
 
 password_store_path = cmk.utils.paths.var_dir + "/stored_passwords"
 
@@ -68,8 +69,8 @@ def replace_passwords():
             bail_out("pwstore: Password '%s' does not exist" % password_id)
 
         sys.argv[num_arg] = arg[:pos_in_arg] \
-                          + password \
-                          + arg[pos_in_arg+len(password):]
+                            + password \
+                            + arg[pos_in_arg + len(password):]
 
 
 def save(stored_passwords):
@@ -89,4 +90,15 @@ def load():
 
 
 def extract(password_id):
-    return load().get(password_id)
+
+    if not isinstance(password_id, tuple):
+        return load().get(password_id)
+
+    # In case we get a tuple, assume it was coming from a ValueSpec "PasswordFromStore"
+    pw_type, pw_id = password_id
+    if pw_type == "password":
+        return pw_id
+    if pw_type == "store":
+        return load().get(pw_id)
+
+    raise MKGeneralException("Unknown password type.")

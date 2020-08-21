@@ -11,3 +11,6 @@ description:
 inventory:
  One service is created if DHCP is not stopped
 
+cluster:
+  On an cluster this service will be {OK}, if at least one node is {OK}. Otherwise it will
+  assume the worst encountered state.

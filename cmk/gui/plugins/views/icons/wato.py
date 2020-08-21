@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -26,18 +26,21 @@ class WatoIcon(Icon):
               (config.user.may("wato.seeall") or config.user.may("wato.hosts"))
 
         if not may_see_hosts() or html.mobile:
-            return
+            return None
 
         wato_folder = _wato_folder_from_filename(row["host_filename"])
-        if wato_folder is not None:
-            if what == "host":
-                return self._wato_link(wato_folder, row["site"], row["host_name"], "edithost")
-            elif row["service_description"] in ["Check_MK inventory", "Check_MK Discovery"]:
-                return self._wato_link(wato_folder, row["site"], row["host_name"], "inventory")
+        if wato_folder is None:
+            return None
+
+        if what == "host":
+            return self._wato_link(wato_folder, row["site"], row["host_name"], "edithost")
+
+        if row["service_description"] in ["Check_MK inventory", "Check_MK Discovery"]:
+            return self._wato_link(wato_folder, row["site"], row["host_name"], "inventory")
 
     def _wato_link(self, folder, site, hostname, where):
         if not config.wato_enabled:
-            return
+            return None
 
         if display_options.enabled(display_options.X):
             url = "wato.py?folder=%s&host=%s" % \
@@ -51,8 +54,8 @@ class WatoIcon(Icon):
                 help_txt = _("Edit this host")
                 icon = "wato"
             return icon, help_txt, url
-        else:
-            return
+
+        return None
 
 
 @icon_and_action_registry.register
@@ -100,7 +103,8 @@ def _paint_download_host_info(what, row, tags, host_custom_vars, ty):
         # be piggyback data available which should be downloadable.
         if ty == "walk" and "snmp" not in tags:
             return
-        elif ty == "agent" and "snmp" in tags and "tcp" not in tags:
+
+        if ty == "agent" and "snmp" in tags and "tcp" not in tags:
             return
 
         params = [

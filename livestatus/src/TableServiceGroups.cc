@@ -4,19 +4,16 @@
 // source code package.
 
 #include "TableServiceGroups.h"
+
 #include <memory>
+
 #include "Column.h"
-#include "OffsetStringColumn.h"
 #include "Query.h"
 #include "ServiceGroupMembersColumn.h"
 #include "ServiceListStateColumn.h"
+#include "StringLambdaColumn.h"
 #include "auth.h"
 #include "nagios.h"
-
-/* this might be a hack (accessing Nagios' internal structures.
-Ethan: please help me here: how should this be code to be
-portable? */
-extern servicegroup *servicegroup_list;
 
 TableServiceGroups::TableServiceGroups(MonitoringCore *mc) : Table(mc) {
     addColumns(this, "", -1);
@@ -29,28 +26,34 @@ std::string TableServiceGroups::namePrefix() const { return "servicegroup_"; }
 // static
 void TableServiceGroups::addColumns(Table *table, const std::string &prefix,
                                     int indirect_offset) {
-    table->addColumn(std::make_unique<OffsetStringColumn>(
-        prefix + "name", "The name of the service group",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(servicegroup, group_name)}));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
-        prefix + "alias", "An alias of the service group",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(servicegroup, alias)}));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+    Column::Offsets offsets{indirect_offset, 0};
+    table->addColumn(std::make_unique<StringLambdaColumn<servicegroup>>(
+        prefix + "name", "The name of the service group", offsets,
+        [](const servicegroup &r) {
+            return r.group_name == nullptr ? "" : r.group_name;
+        }));
+    table->addColumn(std::make_unique<StringLambdaColumn<servicegroup>>(
+        prefix + "alias", "An alias of the service group", offsets,
+        [](const servicegroup &r) {
+            return r.alias == nullptr ? "" : r.alias;
+        }));
+    table->addColumn(std::make_unique<StringLambdaColumn<servicegroup>>(
         prefix + "notes", "Optional additional notes about the service group",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(servicegroup, notes)}));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+        offsets, [](const servicegroup &r) {
+            return r.notes == nullptr ? "" : r.notes;
+        }));
+    table->addColumn(std::make_unique<StringLambdaColumn<servicegroup>>(
         prefix + "notes_url",
-        "An optional URL to further notes on the service group",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(servicegroup, notes_url)}));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+        "An optional URL to further notes on the service group", offsets,
+        [](const servicegroup &r) {
+            return r.notes_url == nullptr ? "" : r.notes_url;
+        }));
+    table->addColumn(std::make_unique<StringLambdaColumn<servicegroup>>(
         prefix + "action_url",
         "An optional URL to custom notes or actions on the service group",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(servicegroup, action_url)}));
+        offsets, [](const servicegroup &r) {
+            return r.action_url == nullptr ? "" : r.action_url;
+        }));
     table->addColumn(std::make_unique<ServiceGroupMembersColumn>(
         prefix + "members",
         "A list of all members of the service group as host/service pairs",
@@ -110,6 +113,18 @@ void TableServiceGroups::addColumns(Table *table, const std::string &prefix,
                         DANGEROUS_OFFSETOF(servicegroup, members)},
         table->core(), ServiceListStateColumn::Type::num_pending));
     table->addColumn(std::make_unique<ServiceListStateColumn>(
+        prefix + "num_services_handled_problems",
+        "The number of services in the group that have handled problems",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(servicegroup, members)},
+        table->core(), ServiceListStateColumn::Type::num_handled_problems));
+    table->addColumn(std::make_unique<ServiceListStateColumn>(
+        prefix + "num_services_unhandled_problems",
+        "The number of services in the group that have unhandled problems",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(servicegroup, members)},
+        table->core(), ServiceListStateColumn::Type::num_unhandled_problems));
+    table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_ok",
         "The number of services in the group that are OK",
         Column::Offsets{indirect_offset, -1, -1,
@@ -136,8 +151,10 @@ void TableServiceGroups::addColumns(Table *table, const std::string &prefix,
 }
 
 void TableServiceGroups::answerQuery(Query *query) {
-    for (servicegroup *sg = servicegroup_list; sg != nullptr; sg = sg->next) {
-        if (!query->processDataset(Row(sg))) {
+    extern servicegroup *servicegroup_list;
+    for (const auto *sg = servicegroup_list; sg != nullptr; sg = sg->next) {
+        const servicegroup *r = sg;
+        if (!query->processDataset(Row(r))) {
             break;
         }
     }

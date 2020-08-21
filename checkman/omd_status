@@ -1,6 +1,6 @@
 title: Checkmk: Site Status
 agents: linux
-catalog: app/omd
+catalog: app/cmk
 license: GPL
 distribution: check_mk
 description:
@@ -21,3 +21,8 @@ item:
 inventory:
  One service is create for each site where {AUTOSTART} is
  set to {on}, regardless of the current state of the site.
+
+cluster:
+  On a cluster the service will be {CRIT} if a defective or partially running
+  site is encountered on any node. Otherwise it will be {OK} as long as at least
+  one node is runnging the site in question.

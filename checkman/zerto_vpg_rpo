@@ -14,4 +14,4 @@ item:
  The name of the VPG
 
 inventory:
- One service is created per VPG.
+ One service is created for each VPG.

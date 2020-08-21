@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -19,8 +19,7 @@ from cmk.gui.plugins.wato import (
 )
 
 
-def _parameter_valuespec_safenet_hsm_eventstats():
-    # type: () -> Dictionary
+def _parameter_valuespec_safenet_hsm_eventstats() -> Dictionary:
     return Dictionary(elements=[
         ("critical_events",
          Tuple(

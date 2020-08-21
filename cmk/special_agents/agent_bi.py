@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,9 +6,10 @@
 
 import ast
 from multiprocessing.pool import ThreadPool
+from pathlib import Path
 import sys
+from typing import Dict, Set
 
-from pathlib2 import Path
 import requests
 import urllib3  # type: ignore[import]
 
@@ -20,7 +21,7 @@ from cmk.utils.exceptions import MKException
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-class AggregationData(object):
+class AggregationData:
     def __init__(self, bi_rawdata, config, error):
         super(AggregationData, self).__init__()
         self._bi_rawdata = bi_rawdata
@@ -66,7 +67,7 @@ class AggregationData(object):
             self._process_assignments(aggr_tree)
 
         # Output result
-        for target_host, aggregations in self._aggregation_targets.iteritems():
+        for target_host, aggregations in self._aggregation_targets.items():
             if target_host is None:
                 self._output.append("<<<<>>>>")
             else:
@@ -106,7 +107,7 @@ class RawdataException(MKException):
     pass
 
 
-class AggregationRawdataGenerator(object):
+class AggregationRawdataGenerator:
     def __init__(self, config):
         super(AggregationRawdataGenerator, self).__init__()
         self._config = config
@@ -164,8 +165,7 @@ class AggregationRawdataGenerator(object):
                 raise RawdataException(
                     "Error: Unable to parse data from monitoring instance. Please check the login credentials"
                 )
-            else:
-                raise RawdataException("Error: Unable to parse data from monitoring instance")
+            raise RawdataException("Error: Unable to parse data from monitoring instance")
 
         if not isinstance(rawdata, dict):
             raise RawdataException("Error: Unable to process parsed data from monitoring instance")
@@ -180,12 +180,13 @@ class AggregationRawdataGenerator(object):
         return rawdata["result"]
 
 
-class AggregationOutputRenderer(object):
+class AggregationOutputRenderer:
     def render(self, aggregation_data_results):
         connection_info_fields = ["missing_sites", "missing_aggr", "generic_errors"]
-        connection_info = {}
-        for field in connection_info_fields:
-            connection_info[field] = set()
+        connection_info: Dict[str, Set[str]] = {
+            field: set()  #
+            for field in connection_info_fields
+        }
 
         output = []
         for aggregation_result in aggregation_data_results:
@@ -201,9 +202,8 @@ class AggregationOutputRenderer(object):
             sys.exit(1)
 
         sys.stdout.write("<<<bi_aggregation_connection:sep(0)>>>\n")
-        for field in connection_info_fields:
-            connection_info[field] = list(connection_info[field])
-        sys.stdout.write(repr(connection_info) + "\n")
+        result = {field: list(connection_info[field]) for field in connection_info_fields}
+        sys.stdout.write(repr(result) + "\n")
 
         output.append("<<<<>>>>\n")
         sys.stdout.write("\n".join(output))

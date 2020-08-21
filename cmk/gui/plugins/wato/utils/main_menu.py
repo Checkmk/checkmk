@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,16 +6,16 @@
 
 import abc
 import re
-from typing import Optional, Text  # pylint: disable=unused-import
-import six
+from typing import Optional, NamedTuple, List, Type
 
+from cmk.gui.i18n import _l
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.utils.plugin_registry
 from cmk.gui.globals import html
 
 
-class MainMenu(object):
+class MainMenu:
     def __init__(self, items=None, columns=2):
         self._items = items or []
         self._columns = columns
@@ -38,7 +38,7 @@ class MainMenu(object):
         html.close_div()
 
 
-class MenuItem(object):
+class MenuItem:
     def __init__(self, mode_or_url, title, icon, permission, description, sort_index=20):
         self._mode_or_url = mode_or_url
         self._title = title
@@ -72,8 +72,7 @@ class MenuItem(object):
         return self._sort_index
 
     @property
-    def enabled(self):
-        # type: () -> bool
+    def enabled(self) -> bool:
         return True
 
     def may_see(self):
@@ -102,7 +101,24 @@ class MenuItem(object):
             (self.__class__.__name__, self.mode_or_url, self.title, self.icon, self.permission, self.description, self.sort_index)
 
 
-class MainModule(six.with_metaclass(abc.ABCMeta, MenuItem)):
+MainModuleTopic = NamedTuple("MainModuleTopic", [
+    ("name", str),
+    ("title", str),
+    ("icon_name", str),
+    ("sort_index", int),
+])
+
+
+class MainModuleTopicRegistry(cmk.utils.plugin_registry.Registry[MainModuleTopic]):
+    def plugin_name(self, instance: MainModuleTopic) -> str:
+        return instance.name
+
+
+main_module_topic_registry = MainModuleTopicRegistry()
+
+
+# TODO: Rename to ABCMainModule
+class MainModule(MenuItem, metaclass=abc.ABCMeta):
     def __init__(self):
         # TODO: Cleanup hierarchy
         super(MainModule, self).__init__(mode_or_url=None,
@@ -113,42 +129,41 @@ class MainModule(six.with_metaclass(abc.ABCMeta, MenuItem)):
                                          sort_index=None)
 
     @abc.abstractproperty
-    def mode_or_url(self):
-        # type: () -> str
+    def topic(self) -> MainModuleTopic:
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def title(self):
-        # type: () -> Text
+    def mode_or_url(self) -> str:
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def icon(self):
-        # type: () -> str
+    def title(self) -> str:
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def permission(self):
-        # type: () -> Optional[str]
+    def icon(self) -> str:
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def description(self):
-        # type: () -> Text
+    def permission(self) -> Optional[str]:
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def sort_index(self):
-        # type: () -> int
+    def description(self) -> str:
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def sort_index(self) -> int:
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def is_advanced(self) -> bool:
         raise NotImplementedError()
 
 
-class ModuleRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return MainModule
-
-    def plugin_name(self, plugin_class):
-        return plugin_class().mode_or_url
+class ModuleRegistry(cmk.utils.plugin_registry.Registry[Type[MainModule]]):
+    def plugin_name(self, instance):
+        return instance().mode_or_url
 
 
 main_module_registry = ModuleRegistry()
@@ -156,7 +171,6 @@ main_module_registry = ModuleRegistry()
 
 class WatoModule(MenuItem):
     """Used with register_modules() in pre 1.6 versions to register main modules"""
-    pass
 
 
 def register_modules(*args):
@@ -170,15 +184,96 @@ def register_modules(*args):
         cls = type(
             "LegacyMainModule%s" % internal_name.title(), (MainModule,), {
                 "mode_or_url": wato_module.mode_or_url,
+                "topic": MainModuleTopicCustom,
                 "title": wato_module.title,
                 "icon": wato_module.icon,
                 "permission": wato_module.permission,
                 "description": wato_module.description,
                 "sort_index": wato_module.sort_index,
+                "is_advanced": False,
             })
         main_module_registry.register(cls)
 
 
-def get_modules():
+def get_modules() -> List[MainModule]:
     return sorted([m() for m in main_module_registry.values()],
                   key=lambda m: (m.sort_index, m.title))
+
+
+#   .--Topics--------------------------------------------------------------.
+#   |                     _____           _                                |
+#   |                    |_   _|__  _ __ (_) ___ ___                       |
+#   |                      | |/ _ \| '_ \| |/ __/ __|                      |
+#   |                      | | (_) | |_) | | (__\__ \                      |
+#   |                      |_|\___/| .__/|_|\___|___/                      |
+#   |                              |_|                                     |
+#   +----------------------------------------------------------------------+
+#   | Register the builtin topics. These are the ones that may be          |
+#   | referenced by different WATO plugins. Additional individual plugins  |
+#   | are allowed to create their own topics.                              |
+#   '----------------------------------------------------------------------'
+#.
+
+MainModuleTopicHosts = main_module_topic_registry.register(
+    MainModuleTopic(
+        name="hosts",
+        title=_l("Hosts"),
+        icon_name="topic_hosts",
+        sort_index=10,
+    ))
+
+MainModuleTopicServices = main_module_topic_registry.register(
+    MainModuleTopic(
+        name="services",
+        title=_l("Services"),
+        icon_name="topic_services",
+        sort_index=20,
+    ))
+
+MainModuleTopicAgents = main_module_topic_registry.register(
+    MainModuleTopic(
+        name="agents",
+        title=_l("Agents"),
+        icon_name="topic_agents",
+        sort_index=30,
+    ))
+
+MainModuleTopicEvents = main_module_topic_registry.register(
+    MainModuleTopic(
+        name="events",
+        title=_l("Events"),
+        icon_name="topic_events",
+        sort_index=40,
+    ))
+
+MainModuleTopicUsers = main_module_topic_registry.register(
+    MainModuleTopic(
+        name="users",
+        title=_l("Users"),
+        icon_name="topic_users",
+        sort_index=50,
+    ))
+
+MainModuleTopicGeneral = main_module_topic_registry.register(
+    MainModuleTopic(
+        name="general",
+        title=_l("General"),
+        icon_name="topic_general",
+        sort_index=60,
+    ))
+
+MainModuleTopicMaintenance = main_module_topic_registry.register(
+    MainModuleTopic(
+        name="maintenance",
+        title=_l("Maintenance"),
+        icon_name="topic_maintenance",
+        sort_index=70,
+    ))
+
+MainModuleTopicCustom = main_module_topic_registry.register(
+    MainModuleTopic(
+        name="custom",
+        title=_l("Custom"),
+        icon_name="topic_custom",
+        sort_index=150,
+    ))

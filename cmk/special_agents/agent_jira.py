@@ -8,6 +8,8 @@ import argparse
 import json
 import logging
 import sys
+from typing import Any, Dict, Union
+
 from requests.exceptions import ConnectionError as RequestsConnectionError
 import urllib3  # type: ignore[import]
 from jira import JIRA  # type: ignore[import]
@@ -88,7 +90,7 @@ def _handle_project(jira, args):
 
     # get open issues for each project and workflow
     sys.stdout.write("<<<jira_workflow>>>\n")
-    issues_dict = {}
+    issues_dict: Dict[str, Dict[str, int]] = {}
     for project in projects:
         project_name = project["Name"][0]
         for workflow in project.get("Workflow", []):
@@ -132,7 +134,7 @@ def _handle_custom_query(jira, args):
     )]
 
     sys.stdout.write("<<<jira_custom_svc>>>\n")
-    result_dict = {}
+    result_dict: Dict[str, Dict[str, Any]] = {}
     for query in projects:
 
         jql = query["Query"][0]
@@ -170,14 +172,15 @@ def _handle_custom_query(jira, args):
         if issues is None:
             continue
 
-        total = 0
+        total = 0.0
         for issue in issues:
             search_field = getattr(issue.fields, field)
             total += search_field if search_field and isinstance(search_field, float) else 0
 
         if query["Result"][0] == "sum":
             key = "sum"
-            value = total
+            # TODO: Why do we use a float below, but a str in the else part?
+            value: Union[float, str] = total
         else:
             # average
             key = "avg"
@@ -219,8 +222,7 @@ def _handle_search_issues(jira, jql, field, max_results, args, project, svc_desc
         return issues
 
 
-def setup_logging(verbosity):
-    # type: (int) -> None
+def setup_logging(verbosity: int) -> None:
     if verbosity >= 3:
         lvl = logging.DEBUG
     elif verbosity == 2:

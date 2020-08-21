@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -9,11 +9,11 @@ import re
 import pprint
 import base64
 import pickle
-from typing import Any, Text, Union  # pylint: disable=unused-import
+from typing import Any, Union
 
-import six
+from six import ensure_binary, ensure_str
 
-from livestatus import SiteId  # pylint: disable=unused-import
+from livestatus import SiteId
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.rulesets.tuple_rulesets
@@ -96,30 +96,26 @@ def host_attribute_matches(crit, value):
 # to false to configure that this host is monitored by another site (that we don't
 # know about).
 # TODO: Find a better place later. Find a less depressing return type.
-def default_site():
-    # type: () -> Union[bool, None, SiteId]
+def default_site() -> Union[bool, None, SiteId]:
     if config.is_wato_slave_site():
         return False
     return config.default_site()
 
 
-def format_config_value(value):
-    # type: (Any) -> str
+def format_config_value(value: Any) -> str:
     return pprint.pformat(value) if config.wato_pprint_config else repr(value)
 
 
-def mk_repr(x):
-    # type: (Any) -> bytes
-    r = pickle.dumps(x) if config.wato_legacy_eval else six.ensure_binary(repr(x))
+def mk_repr(x: Any) -> bytes:
+    r = pickle.dumps(x) if config.wato_legacy_eval else ensure_binary(repr(x))
     return base64.b64encode(r)
 
 
 # TODO: Deprecate this legacy format with 1.4.0 or later?!
-def mk_eval(s):
-    # type: (Union[bytes, Text]) -> Any
+def mk_eval(s: Union[bytes, str]) -> Any:
     try:
         d = base64.b64decode(s)
-        return pickle.loads(d) if config.wato_legacy_eval else ast.literal_eval(six.ensure_text(d))
+        return pickle.loads(d) if config.wato_legacy_eval else ast.literal_eval(ensure_str(d))
     except Exception:
         raise MKGeneralException(_('Unable to parse provided data: %s') % html.render_text(repr(s)))
 

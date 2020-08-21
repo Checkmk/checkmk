@@ -7,7 +7,9 @@
 #define TableServices_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <string>
+
 #include "Row.h"
 #include "Table.h"
 #include "contact_fwd.h"

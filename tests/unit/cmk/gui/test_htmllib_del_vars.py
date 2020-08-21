@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -29,14 +29,14 @@ def test_del_vars():
         html.del_var_from_env("_password")
 
         # Make test independent of dict sorting
-        assert html.request.query_string in ['foo=foo&bar=bar', 'bar=bar&foo=foo']
+        assert html.request.query_string in [b'foo=foo&bar=bar', b'bar=bar&foo=foo']
 
         assert '_password' not in html.request.args
         assert '_username' not in html.request.args
 
         # Check the request local proxied version too.
         # Make test independent of dict sorting
-        assert request.query_string in ['foo=foo&bar=bar', 'bar=bar&foo=foo']
+        assert request.query_string in [b'foo=foo&bar=bar', b'bar=bar&foo=foo']
         assert '_password' not in request.args
         assert '_username' not in request.args
 

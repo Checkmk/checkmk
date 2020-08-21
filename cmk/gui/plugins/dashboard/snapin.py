@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -55,16 +55,16 @@ class SnapinDashlet(IFrameDashlet):
 
     @classmethod
     def _snapin_choices(cls):
-        import cmk.gui.sidebar as sidebar
+        import cmk.gui.sidebar as sidebar  # pylint: disable=import-outside-toplevel
         return sorted([(k, v.title()) for k, v in sidebar.snapin_registry.items()],
                       key=lambda x: x[1])
 
     def display_title(self):
-        import cmk.gui.sidebar as sidebar
+        import cmk.gui.sidebar as sidebar  # pylint: disable=import-outside-toplevel
         return sidebar.snapin_registry[self._dashlet_spec["snapin"]].title()
 
     def update(self):
-        import cmk.gui.sidebar as sidebar
+        import cmk.gui.sidebar as sidebar  # pylint: disable=import-outside-toplevel
         dashlet = self._dashlet_spec
         snapin = sidebar.snapin_registry.get(self._dashlet_spec['snapin'])
         if not snapin:

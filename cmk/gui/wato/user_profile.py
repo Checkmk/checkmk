@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,8 +6,9 @@
 """Page user can change several aspects of it's own profile"""
 
 import time
-
-import six
+import abc
+from typing import List, Union, Iterator
+from cmk.utils.type_defs import UserId
 
 import cmk.gui.i18n
 import cmk.gui.sites
@@ -16,33 +17,99 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 import cmk.gui.login as login
+
+from cmk.gui.breadcrumb import make_simple_page_breadcrumb
+from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
+from cmk.gui.config import SiteId, SiteConfiguration
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, MKAuthException
-from cmk.gui.i18n import _, _u
+from cmk.gui.i18n import _, _l, _u
 from cmk.gui.globals import html
-from cmk.gui.pages import page_registry, AjaxPage
+from cmk.gui.pages import page_registry, AjaxPage, Page
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+)
 
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.activate_changes import ACTIVATION_TIME_PROFILE_SYNC
 from cmk.gui.wato.pages.users import select_language
 
+from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
 
 
-def user_profile_async_replication_page():
-    html.header(_('Replicate new User Profile'))
+def _user_menu_topics() -> List[TopicMenuTopic]:
+    items = [
+        TopicMenuItem(
+            name="change_password",
+            title=_("Change password"),
+            url="user_change_pw.py",
+            sort_index=10,
+            is_advanced=False,
+            icon_name="topic_change_password",
+        ),
+        TopicMenuItem(
+            name="user_profile",
+            title=_("Edit profile"),
+            url="user_profile.py",
+            sort_index=20,
+            is_advanced=False,
+            icon_name="topic_profile",
+        ),
+        TopicMenuItem(
+            name="logout",
+            title=_("Logout"),
+            url="logout.py",
+            sort_index=30,
+            is_advanced=False,
+            icon_name="sidebar_logout",
+        ),
+    ]
 
-    html.begin_context_buttons()
-    html.context_button(_('User Profile'), 'user_profile.py', 'back')
-    html.end_context_buttons()
+    if rulebased_notifications_enabled() and config.user.may('general.edit_notifications'):
+        items.insert(
+            1,
+            TopicMenuItem(
+                name="notification_rules",
+                title=_("Notification rules"),
+                url="wato.py?mode=user_notifications_p",
+                sort_index=30,
+                is_advanced=False,
+                icon_name="topic_events",
+            ))
 
-    sites = config.user.authorized_login_sites().keys()
+    return [TopicMenuTopic(
+        name="user",
+        title=_("User"),
+        icon_name="topic_profile",
+        items=items,
+    )]
+
+
+mega_menu_registry.register(
+    MegaMenu(
+        name="user",
+        title=_l("User"),
+        icon_name="main_user",
+        sort_index=20,
+        topics=_user_menu_topics,
+    ))
+
+
+def user_profile_async_replication_page() -> None:
+    sites = list(config.user.authorized_login_sites().keys())
     user_profile_async_replication_dialog(sites=sites)
 
     html.footer()
 
 
-def user_profile_async_replication_dialog(sites):
+def user_profile_async_replication_dialog(sites: List[SiteId]) -> None:
     html.p(
         _('In order to activate your changes available on all remote sites, your user profile needs '
           'to be replicated to the remote sites. This is done on this page now. Each site '
@@ -71,9 +138,9 @@ def user_profile_async_replication_dialog(sites):
             estimated_duration = changes_manager.get_activation_time(site_id,
                                                                      ACTIVATION_TIME_PROFILE_SYNC,
                                                                      2.0)
-            html.javascript('cmk.profile_replication.start(\'%s\', %d, \'%s\');' %
-                            (site_id, int(estimated_duration * 1000.0),
-                             six.ensure_str(_('Replication in progress'))))
+            html.javascript(
+                'cmk.profile_replication.start(\'%s\', %d, \'%s\');' %
+                (site_id, int(estimated_duration * 1000.0), _('Replication in progress')))
             num_replsites += 1
         else:
             _add_profile_replication_change(site_id, status_txt)
@@ -86,7 +153,7 @@ def user_profile_async_replication_dialog(sites):
     html.close_div()
 
 
-def _add_profile_replication_change(site_id, result):
+def _add_profile_replication_change(site_id: SiteId, result: Union[bool, str]) -> None:
     """Add pending change entry to make sync possible later for admins"""
     add_change("edit-users",
                _('Profile changed (sync failed: %s)') % result,
@@ -94,204 +161,156 @@ def _add_profile_replication_change(site_id, result):
                need_restart=False)
 
 
-@cmk.gui.pages.register("user_change_pw")
-def page_change_own_password():
-    _show_page_user_profile(change_pw=True)
+class ABCUserProfilePage(Page):
+    @abc.abstractmethod
+    def _page_title(self) -> str:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _action(self) -> bool:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _show_form(self, profile_changed: bool) -> None:
+        raise NotImplementedError()
+
+    def __init__(self, permission: str) -> None:
+        super().__init__()
+        self._verify_requirements(permission)
+
+    @staticmethod
+    def _verify_requirements(permission: str) -> None:
+        if not config.user.id:
+            raise MKUserError(None, _('Not logged in.'))
+
+        if not config.user.may(permission):
+            raise MKAuthException(_("You are not allowed to edit your user profile."))
+
+        if not config.wato_enabled:
+            raise MKAuthException(_('User profiles can not be edited (WATO is disabled).'))
+
+    def page(self) -> None:
+        watolib.init_wato_datastructures(with_wato_lock=True)
+
+        profile_changed = False
+        if html.request.has_var('_save') and html.check_transaction():
+            try:
+                profile_changed = self._action()
+            except MKUserError as e:
+                html.add_user_error(e.varname, e)
+
+        if profile_changed and config.user.authorized_login_sites():
+            title = _('Replicate new user profile')
+        else:
+            title = self._page_title()
+
+        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), title)
+        html.header(title, breadcrumb, user_page_menu(html.myfile, breadcrumb))
+
+        # Now, if in distributed environment where users can login to remote sites, set the trigger for
+        # pushing the new user profile to the remote sites asynchronously
+        if profile_changed and config.user.authorized_login_sites():
+            user_profile_async_replication_page()
+            return
+
+        self._show_form(profile_changed)
 
 
-@cmk.gui.pages.register("user_profile")
-def page_user_profile():
-    _show_page_user_profile(change_pw=False)
+@page_registry.register_page("user_change_pw")
+class UserChangePasswordPage(ABCUserProfilePage):
+    def _page_title(self) -> str:
+        return _("Change password")
 
+    def __init__(self) -> None:
+        super().__init__("general.change_password")
 
-# TODO: Refactor this to page classes
-def _show_page_user_profile(change_pw):
-    start_async_replication = False
+    def _action(self) -> bool:
+        assert config.user.id is not None
 
-    if not config.user.id:
-        raise MKUserError(None, _('Not logged in.'))
-
-    if not config.user.may('general.edit_profile') and not config.user.may(
-            'general.change_password'):
-        raise MKAuthException(_("You are not allowed to edit your user profile."))
-
-    if not config.wato_enabled:
-        raise MKAuthException(_('User profiles can not be edited (WATO is disabled).'))
-
-    success = None
-    if html.request.has_var('_save') and html.check_transaction():
         users = userdb.load_users(lock=True)
+        user = users[config.user.id]
 
+        cur_password = html.request.get_str_input_mandatory('cur_password')
+        password = html.request.get_str_input_mandatory('password')
+        password2 = html.request.get_str_input_mandatory('password2', '')
+
+        # Force change pw mode
+        if not cur_password:
+            raise MKUserError("cur_password", _("You need to provide your current password."))
+
+        if not password:
+            raise MKUserError("password", _("You need to change your password."))
+
+        if cur_password == password:
+            raise MKUserError("password", _("The new password must differ from your current one."))
+
+        if userdb.hook_login(config.user.id, cur_password) is False:
+            raise MKUserError("cur_password", _("Your old password is wrong."))
+
+        if password2 and password != password2:
+            raise MKUserError("password2", _("The both new passwords do not match."))
+
+        watolib.verify_password_policy(password)
+        user['password'] = hash_password(password)
+        user['last_pw_change'] = int(time.time())
+
+        # In case the user was enforced to change it's password, remove the flag
         try:
-            # Profile edit (user options like language etc.)
-            if config.user.may('general.edit_profile'):
-                if not change_pw:
-                    set_lang = html.get_checkbox('_set_lang')
-                    language = html.request.var('language')
-                    # Set the users language if requested
-                    if set_lang:
-                        if language == '':
-                            language = None
-                        # Set custom language
-                        users[config.user.id]['language'] = language
-                        config.user.language = language
-                        html.set_language_cookie(language)
+            del user['enforce_pw_change']
+        except KeyError:
+            pass
 
-                    else:
-                        # Remove the customized language
-                        if 'language' in users[config.user.id]:
-                            del users[config.user.id]['language']
-                        config.user.reset_language()
+        # Increase serial to invalidate old authentication cookies
+        if 'serial' not in user:
+            user['serial'] = 1
+        else:
+            user['serial'] += 1
 
-                    # load the new language
-                    cmk.gui.i18n.localize(config.user.language)
+        userdb.save_users(users)
 
-                    user = users.get(config.user.id)
-                    if user is None:
-                        raise Exception("current user is not in user DB")
-                    if config.user.may('general.edit_notifications') and user.get(
-                            "notifications_enabled"):
-                        value = forms.get_input(watolib.get_vs_flexible_notifications(),
-                                                "notification_method")
-                        users[config.user.id]["notification_method"] = value
+        # Set the new cookie to prevent logout for the current user
+        login.set_auth_cookie(config.user.id)
 
-                    # Custom attributes
-                    if config.user.may('general.edit_user_attributes'):
-                        for name, attr in userdb.get_user_attributes():
-                            if attr.user_editable():
-                                if not attr.permission() or config.user.may(attr.permission()):
-                                    vs = attr.valuespec()
-                                    value = vs.from_html_vars('ua_' + name)
-                                    vs.validate_value(value, "ua_" + name)
-                                    users[config.user.id][name] = value
+        return True
 
-            # Change the password if requested
-            password_changed = False
-            if config.user.may('general.change_password'):
-                cur_password = html.request.var('cur_password')
-                password = html.request.var('password')
-                password2 = html.request.var('password2', '')
+    def _show_form(self, profile_changed: bool) -> None:
+        assert config.user.id is not None
 
-                if change_pw:
-                    # Force change pw mode
-                    if not cur_password:
-                        raise MKUserError("cur_password",
-                                          _("You need to provide your current password."))
-                    if not password:
-                        raise MKUserError("password", _("You need to change your password."))
-                    if cur_password == password:
-                        raise MKUserError("password",
-                                          _("The new password must differ from your current one."))
-
-                if cur_password and password:
-                    if userdb.hook_login(config.user.id, cur_password) is False:
-                        raise MKUserError("cur_password", _("Your old password is wrong."))
-                    if password2 and password != password2:
-                        raise MKUserError("password2", _("The both new passwords do not match."))
-
-                    watolib.verify_password_policy(password)
-                    users[config.user.id]['password'] = hash_password(password)
-                    users[config.user.id]['last_pw_change'] = int(time.time())
-
-                    if change_pw:
-                        # Has been changed, remove enforcement flag
-                        del users[config.user.id]['enforce_pw_change']
-
-                    # Increase serial to invalidate old cookies
-                    if 'serial' not in users[config.user.id]:
-                        users[config.user.id]['serial'] = 1
-                    else:
-                        users[config.user.id]['serial'] += 1
-
-                    password_changed = True
-
-            # Now, if in distributed environment where users can login to remote sites,
-            # set the trigger for pushing the new auth information to the slave sites
-            # asynchronous
-            if config.user.authorized_login_sites():
-                start_async_replication = True
-
-            userdb.save_users(users)
-
-            if password_changed:
-                # Set the new cookie to prevent logout for the current user
-                login.set_auth_cookie(config.user.id)
-
-            success = True
-        except MKUserError as e:
-            html.add_user_error(e.varname, e)
-    else:
         users = userdb.load_users()
 
-    watolib.init_wato_datastructures(with_wato_lock=True)
+        change_reason = html.request.get_ascii_input('reason')
 
-    # When in distributed setup, display the replication dialog instead of the normal
-    # profile edit dialog after changing the password.
-    if start_async_replication:
-        user_profile_async_replication_page()
-        return
-
-    if change_pw:
-        title = _("Change Password")
-    else:
-        title = _("Edit User Profile")
-
-    html.header(title)
-
-    # Rule based notifications: The user currently cannot simply call the according
-    # WATO module due to WATO permission issues. So we cannot show this button
-    # right now.
-    if not change_pw:
-        rulebased_notifications = watolib.load_configuration_settings().get(
-            "enable_rulebased_notifications")
-        if rulebased_notifications and config.user.may('general.edit_notifications'):
-            html.begin_context_buttons()
-            url = "wato.py?mode=user_notifications_p"
-            html.context_button(_("Notifications"), url, "notifications")
-            html.end_context_buttons()
-    else:
-        reason = html.request.var('reason')
-        if reason == 'expired':
+        if change_reason == 'expired':
             html.p(_('Your password is too old, you need to choose a new password.'))
-        else:
+        elif change_reason == 'enforced':
             html.p(_('You are required to change your password before proceeding.'))
 
-    if success:
-        html.reload_sidebar()
-        if change_pw:
+        if profile_changed:
             html.show_message(_("Your password has been changed."))
-            raise HTTPRedirect(html.request.get_str_input_mandatory('_origtarget', 'index.py'))
-        else:
-            html.show_message(_("Successfully updated user profile."))
-            # Ensure theme changes are applied without additional user interaction
-            html.immediate_browser_redirect(0.5, html.makeuri([]))
+            if change_reason:
+                raise HTTPRedirect(html.request.get_str_input_mandatory('_origtarget', 'index.py'))
 
-    if html.has_user_errors():
-        html.show_user_errors()
+        if html.has_user_errors():
+            html.show_user_errors()
 
-    user = users.get(config.user.id)
-    if user is None:
-        html.show_warning(_("Sorry, your user account does not exist."))
-        html.footer()
-        return
+        user = users.get(config.user.id)
+        if user is None:
+            html.show_warning(_("Sorry, your user account does not exist."))
+            html.footer()
+            return
 
-    # Returns true if an attribute is locked and should be read only. Is only
-    # checked when modifying an existing user
-    locked_attributes = userdb.locked_attributes(user.get('connector'))
+        locked_attributes = userdb.locked_attributes(user.get('connector'))
+        if "password" in locked_attributes:
+            raise MKUserError(
+                "cur_password",
+                _("You can not change your password, because it is "
+                  "managed by another system."))
 
-    def is_locked(attr):
-        return attr in locked_attributes
+        html.begin_form("profile", method="POST")
+        html.prevent_password_auto_completion()
+        html.open_div(class_="wato")
+        forms.header(self._page_title())
 
-    html.begin_form("profile", method="POST")
-    html.prevent_password_auto_completion()
-    html.open_div(class_="wato")
-    forms.header(_("Personal Settings"))
-
-    if not change_pw:
-        forms.section(_("Name"), simple=True)
-        html.write_text(user.get("alias", config.user.id))
-
-    if config.user.may('general.change_password') and not is_locked('password'):
         forms.section(_("Current Password"))
         html.password_input('cur_password', autocomplete="new-password")
 
@@ -301,13 +320,99 @@ def _show_page_user_profile(change_pw):
         forms.section(_("New Password Confirmation"))
         html.password_input('password2', autocomplete="new-password")
 
-    if not change_pw and config.user.may('general.edit_profile'):
+        forms.end()
+        html.button("_save", _("Save"))
+        html.close_div()
+        html.hidden_fields()
+        html.end_form()
+        html.footer()
+
+
+@page_registry.register_page("user_profile")
+class UserProfile(ABCUserProfilePage):
+    def _page_title(self) -> str:
+        return _("Edit profile")
+
+    def __init__(self) -> None:
+        super().__init__("general.edit_profile")
+
+    def _action(self) -> bool:
+        assert config.user.id is not None
+
+        users = userdb.load_users(lock=True)
+        user = users[config.user.id]
+
+        language = html.request.get_ascii_input_mandatory('language', "")
+        # Set the users language if requested to set it explicitly
+        if language != "_default_":
+            user['language'] = language
+            config.user.language = language
+            html.set_language_cookie(language)
+
+        else:
+            if 'language' in user:
+                del user['language']
+            config.user.reset_language()
+
+        # load the new language
+        cmk.gui.i18n.localize(config.user.language)
+
+        if config.user.may('general.edit_notifications') and user.get("notifications_enabled"):
+            value = forms.get_input(watolib.get_vs_flexible_notifications(), "notification_method")
+            user["notification_method"] = value
+
+        # Custom attributes
+        if config.user.may('general.edit_user_attributes'):
+            for name, attr in userdb.get_user_attributes():
+                if not attr.user_editable():
+                    continue
+
+                if attr.permission() and not config.user.may(attr.permission()):
+                    continue
+
+                vs = attr.valuespec()
+                value = vs.from_html_vars('ua_' + name)
+                vs.validate_value(value, "ua_" + name)
+                user[name] = value
+
+        userdb.save_users(users)
+
+        return True
+
+    def _show_form(self, profile_changed: bool) -> None:
+        assert config.user.id is not None
+
+        users = userdb.load_users()
+
+        if profile_changed:
+            html.reload_sidebar()
+            html.show_message(_("Successfully updated user profile."))
+            # Ensure theme changes are applied without additional user interaction
+            html.immediate_browser_redirect(0.5, html.makeuri([]))
+
+        if html.has_user_errors():
+            html.show_user_errors()
+
+        user = users.get(config.user.id)
+        if user is None:
+            html.show_warning(_("Sorry, your user account does not exist."))
+            html.footer()
+            return
+
+        html.begin_form("profile", method="POST")
+        html.prevent_password_auto_completion()
+        html.open_div(class_="wato")
+        forms.header(self._page_title())
+
+        forms.section(_("Name"), simple=True)
+        html.write_text(user.get("alias", config.user.id))
+
         select_language(user)
 
         # Let the user configure how he wants to be notified
-        if not rulebased_notifications \
-            and config.user.may('general.edit_notifications') \
-            and user.get("notifications_enabled"):
+        rulebased_notifications = rulebased_notifications_enabled()
+        if (not rulebased_notifications and config.user.may('general.edit_notifications') and
+                user.get("notifications_enabled")):
             forms.section(_("Notifications"))
             html.help(
                 _("Here you can configure how you want to be notified about host and service problems and "
@@ -327,13 +432,12 @@ def _show_page_user_profile(change_pw):
                     else:
                         html.write(vs.value_to_text(value))
 
-    # Save button
-    forms.end()
-    html.button("_save", _("Save"))
-    html.close_div()
-    html.hidden_fields()
-    html.end_form()
-    html.footer()
+        forms.end()
+        html.button("_save", _("Save"))
+        html.close_div()
+        html.hidden_fields()
+        html.end_form()
+        html.footer()
 
 
 @page_registry.register_page("wato_ajax_profile_repl")
@@ -345,7 +449,7 @@ class ModeAjaxProfileReplication(AjaxPage):
         site_id_val = request.get("site")
         if not site_id_val:
             raise MKUserError(None, "The site_id is missing")
-        site_id = six.ensure_str(site_id_val)
+        site_id = site_id_val
         if site_id not in config.sitenames():
             raise MKUserError(None, _("The requested site does not exist"))
 
@@ -355,15 +459,18 @@ class ModeAjaxProfileReplication(AjaxPage):
             raise MKGeneralException(_('The site is marked as dead. Not trying to replicate.'))
 
         site = config.site(site_id)
+        assert config.user.id is not None
         result = self._synchronize_profile(site_id, site, config.user.id)
 
         if result is not True:
+            assert result is not False
             _add_profile_replication_change(site_id, result)
             raise MKGeneralException(result)
 
         return _("Replication completed successfully.")
 
-    def _synchronize_profile(self, site_id, site, user_id):
+    def _synchronize_profile(self, site_id: SiteId, site: SiteConfiguration,
+                             user_id: UserId) -> Union[bool, str]:
         users = userdb.load_users(lock=False)
         if user_id not in users:
             raise MKUserError(None, _('The requested user does not exist'))
@@ -375,3 +482,45 @@ class ModeAjaxProfileReplication(AjaxPage):
         watolib.ActivateChanges().update_activation_time(site_id, ACTIVATION_TIME_PROFILE_SYNC,
                                                          duration)
         return result
+
+
+def user_page_menu(page_name: str, breadcrumb: Breadcrumb) -> PageMenu:
+    return PageMenu(
+        dropdowns=[
+            PageMenuDropdown(
+                name="related",
+                title=_("Related"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("User"),
+                        entries=list(_page_menu_entries_related(page_name)),
+                    ),
+                ],
+            ),
+        ],
+        breadcrumb=breadcrumb,
+    )
+
+
+def _page_menu_entries_related(page_name: str) -> Iterator[PageMenuEntry]:
+    if page_name != "user_change_pw":
+        yield PageMenuEntry(
+            title=_("Change password"),
+            icon_name="topic_change_password",
+            item=make_simple_link("user_change_pw.py"),
+        )
+
+    if page_name != "user_profile":
+        yield PageMenuEntry(
+            title=_("Edit profile"),
+            icon_name="topic_profile",
+            item=make_simple_link("user_profile.py"),
+        )
+
+    if page_name != "user_notifications_p" and rulebased_notifications_enabled(
+    ) and config.user.may('general.edit_notifications'):
+        yield PageMenuEntry(
+            title=_("Notification rules"),
+            icon_name="topic_events",
+            item=make_simple_link("wato.py?mode=user_notifications_p"),
+        )

@@ -1,29 +1,25 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Functions for logging changes and keeping the "Activate Changes" state and finally activating changes."""
 
-import sys
 import ast
 import errno
 import os
 import time
-from typing import Dict  # pylint: disable=unused-import
+from typing import Dict
+from pathlib import Path
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from six import ensure_binary, ensure_str
 
 import cmk.utils
 import cmk.utils.store as store
-from cmk.utils.encoding import ensure_unicode
 
 import cmk.gui.utils
 from cmk.gui import config, escaping
-from cmk.gui.config import SiteId, SiteConfiguration  # pylint: disable=unused-import
+from cmk.gui.config import SiteId, SiteConfiguration
 from cmk.gui.i18n import _
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKGeneralException
@@ -55,7 +51,7 @@ def log_entry(linkinfo, action, message, user_id=None):
         message.replace("\n", "\\n"),
     )
 
-    write_tokens = (ensure_unicode(t) for t in write_tokens_tuple)
+    write_tokens = (ensure_str(t) for t in write_tokens_tuple)
 
     store.makedirs(audit_log_path.parent)
     with audit_log_path.open(mode="a", encoding='utf-8') as f:
@@ -98,7 +94,7 @@ def add_change(action_name,
                                        domains, sites)
 
 
-class ActivateChangesWriter(object):
+class ActivateChangesWriter:
     def add_change(self, action_name, text, obj, add_user, need_sync, need_restart, domains, sites):
         # Default to a core only change
         if domains is None:
@@ -150,14 +146,14 @@ class ActivateChangesWriter(object):
         })
 
 
-class SiteChanges(object):
+class SiteChanges:
     """Manage persisted changes of a single site"""
     def __init__(self, site_id):
         super(SiteChanges, self).__init__()
         self._site_id = site_id
 
-    def _site_changes_path(self):
-        return os.path.join(var_dir, "replication_changes_%s.mk" % self._site_id)
+    def _site_changes_path(self) -> Path:
+        return Path(var_dir) / ("replication_changes_%s.mk" % self._site_id)
 
     # TODO: Implement this locking as context manager
     def load(self, lock=False):
@@ -173,9 +169,10 @@ class SiteChanges(object):
 
         changes = []
         try:
-            for entry in open(path).read().split("\0"):
-                if entry:
-                    changes.append(ast.literal_eval(entry))
+            with path.open("rb") as f:
+                for entry in f.read().split(b"\0"):
+                    if entry:
+                        changes.append(ast.literal_eval(ensure_str(entry)))
         except IOError as e:
             if e.errno == errno.ENOENT:
                 pass
@@ -190,7 +187,8 @@ class SiteChanges(object):
 
     def save(self, changes):
         # First truncate the file
-        open(self._site_changes_path(), "w")
+        with self._site_changes_path().open("wb"):
+            pass
 
         for change_spec in changes:
             self.save_change(change_spec)
@@ -200,12 +198,12 @@ class SiteChanges(object):
         try:
             store.aquire_lock(path)
 
-            with open(path, "a+") as f:
-                f.write(repr(change_spec) + "\0")
+            with path.open("ab+") as f:
+                f.write(ensure_binary(repr(change_spec)) + b"\0")
                 f.flush()
                 os.fsync(f.fileno())
 
-            os.chmod(path, 0o660)
+            path.chmod(0o660)
 
         except Exception as e:
             raise MKGeneralException(_("Cannot write file \"%s\": %s") % (path, e))
@@ -215,7 +213,7 @@ class SiteChanges(object):
 
     def clear(self):
         try:
-            os.unlink(self._site_changes_path())
+            self._site_changes_path().unlink()
         except OSError as e:
             if e.errno == errno.ENOENT:
                 pass  # Not existant -> OK
@@ -227,8 +225,7 @@ def add_service_change(host, action_name, text, need_sync=False):
     add_change(action_name, text, obj=host, sites=[host.site_id()], need_sync=need_sync)
 
 
-def activation_sites():
-    # type: () -> Dict[SiteId, SiteConfiguration]
+def activation_sites() -> Dict[SiteId, SiteConfiguration]:
     """Returns the list of sites that are affected by WATO changes
     These sites are shown on activation page and get change entries
     added during WATO changes."""

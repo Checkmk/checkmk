@@ -13,4 +13,4 @@ item:
  Name of the instance
 
 inventory:
- One item per web service is discovered.
+ One service is created for each web service.

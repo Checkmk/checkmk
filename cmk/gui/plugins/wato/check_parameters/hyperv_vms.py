@@ -1,11 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (Dictionary, MonitoringState, TextAscii)
+from cmk.gui.valuespec import Dictionary, FixedValue, Alternative, MonitoringState, TextAscii
 
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
@@ -13,13 +13,14 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
 )
 
-VM_STATES = sorted([
-    "Other", "Running", "Off", "Stopping", "Saved", "Paused", "Starting", "Reset", "Saving",
-    "Pausing", "Resuming", "FastSaved", "FastSaving", "RunningCritical", "OffCritical",
-    "StoppingCritical", "SavedCritical", "PausedCritical", "StartingCritical", "ResetCritical",
-    "SavingCritical", "PausingCritical", "ResumingCritical", "FastSavedCritical",
-    "FastSavingCritical"
-])
+# these default values were suggested by Aldi Sued
+VM_STATES_DEFVALS = [('FastSaved', 0), ('FastSavedCritical', 2), ('FastSaving', 0),
+                     ('FastSavingCritical', 2), ('Off', 1), ('OffCritical', 2), ('Other', 3),
+                     ('Paused', 0), ('PausedCritical', 2), ('Pausing', 0), ('PausingCritical', 2),
+                     ('Reset', 1), ('ResetCritical', 2), ('Resuming', 0), ('ResumingCritical', 2),
+                     ('Running', 0), ('RunningCritical', 2), ('Saved', 0), ('SavedCritical', 2),
+                     ('Saving', 0), ('SavingCritical', 2), ('Starting', 0), ('StartingCritical', 2),
+                     ('Stopping', 1), ('StoppingCritical', 2)]
 
 
 def _item_spec_hyperv_vms():
@@ -31,14 +32,29 @@ def _item_spec_hyperv_vms():
 
 
 def _parameter_valuespec_hyperv_vms():
-
-    return Dictionary(
-        title=_("Map VM state to monitoring state"),
-        elements=[(vm_state,
-                   MonitoringState(title=_("Monitoring state if VM state is %s" % vm_state),
-                                   help=_("Check result if reported VM state is %s" % vm_state),
-                                   default_value=0)) for vm_state in VM_STATES],
-    )
+    return Alternative(
+        title=_("Translation of VM state to monitoring state"),
+        style="dropdown",
+        elements=[
+            Dictionary(
+                title=_("Direct mapping of VM state to monitoring state"),
+                help=_("Define a direct translation of the possible states of the VM to monitoring "
+                       "states, i.e. to the result of the check. This overwrites the default "
+                       "mapping used by the check."),
+                elements=[(vm_state,
+                           MonitoringState(title=_("Monitoring state if VM state is %s" % vm_state),
+                                           default_value=default_value))
+                          for vm_state, default_value in VM_STATES_DEFVALS]),
+            FixedValue(
+                {"compare_discovery": True},
+                title=_("Compare against discovered state"),
+                totext=_("Compare the current state of the VM against the discovered state"),
+                help=_("Compare the current state of the VM against the state at the point in time "
+                       "when the VM was discovered. If the two states do not match, the service "
+                       "will go to CRIT. Note that this only works if the check is not executed as "
+                       "a manual check. If you choose this option for manual checks, the service "
+                       "will go always to UNKN.")),
+        ])
 
 
 rulespec_registry.register(

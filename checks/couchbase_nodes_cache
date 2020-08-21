@@ -20,7 +20,7 @@ def check_couchbase_nodes_cache(item, params, data):
         miss_rate,
         'cache_misses_rate',
         params.get('cache_misses'),
-        human_readable_func=six.text_type,
+        human_readable_func=str,
         unit="/s",
         infoname="Cache misses",
     )

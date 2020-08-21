@@ -1,24 +1,22 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """WATO-Module for the rules and aggregations of Check_MK BI"""
 
-import os
 import json
 import pprint
-from typing import (  # pylint: disable=unused-import
-    Dict, Any, List, Tuple as _Tuple, Optional as _Optional, Union,
-)
+from typing import Dict, Any, List, Tuple as _Tuple, Optional as _Optional, Union, Type
+from pathlib import Path
 
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 import cmk.gui.escaping as escaping
 
-if cmk_version.is_managed_edition():
+try:
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-else:
+except ImportError:
     managed = None  # type: ignore[assignment]
 
 import cmk.gui.config as config
@@ -31,10 +29,27 @@ from cmk.gui.permissions import (
     Permission,
 )
 from cmk.gui.exceptions import MKUserError, MKGeneralException, MKAuthException
-from cmk.gui.valuespec import (  # pylint: disable=unused-import
-    Text, ValueSpec, Tuple, Transform, Percentage, Integer, Alternative, FixedValue, TextAscii,
-    Dictionary, MonitoringState, IconSelector, ListOf, CascadingDropdown, ListOfStrings, Checkbox,
-    TextUnicode, TextAreaUnicode, Optional, ID, DropdownChoice,
+from cmk.gui.valuespec import (
+    ValueSpec,
+    Tuple,
+    Transform,
+    Percentage,
+    Integer,
+    Alternative,
+    FixedValue,
+    TextAscii,
+    Dictionary,
+    MonitoringState,
+    IconSelector,
+    ListOf,
+    CascadingDropdown,
+    ListOfStrings,
+    Checkbox,
+    TextUnicode,
+    TextAreaUnicode,
+    Optional,
+    ID,
+    DropdownChoice,
 )
 
 from cmk.gui.i18n import _
@@ -49,7 +64,7 @@ from cmk.gui.plugins.wato import (
     MenuItem,
     main_module_registry,
     MainModule,
-    global_buttons,
+    MainModuleTopicServices,
     add_change,
     wato_confirm,
     HostTagCondition,
@@ -57,7 +72,19 @@ from cmk.gui.plugins.wato import (
 )
 
 import cmk.gui.node_visualization
-from cmk.utils.type_defs import ContactgroupName  # pylint: disable=unused-import
+from cmk.utils.type_defs import ContactgroupName
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    PageMenuPopup,
+    make_simple_link,
+    make_form_submit_link,
+    make_simple_form_page_menu,
+    make_checkbox_selection_topic,
+)
 
 BIPack = Dict[str, Any]
 BIAggrOptions = Dict[str, Any]
@@ -74,7 +101,7 @@ BIAggrNode = _Tuple
 #   '----------------------------------------------------------------------'
 
 
-class BIManagement(object):
+class BIManagement:
     def __init__(self):
         # We need to replace the BI constants internally with something
         # that we can replace back after writing the BI-Rules out
@@ -97,8 +124,8 @@ class BIManagement(object):
 
         if not config.user.may("wato.bi_admin"):
             assert config.user.id is not None
-            self._user_contactgroups = userdb.contactgroups_of_user(
-                config.user.id)  # type: _Optional[List[ContactgroupName]]
+            self._user_contactgroups: _Optional[
+                List[ContactgroupName]] = userdb.contactgroups_of_user(config.user.id)
         else:
             self._user_contactgroups = None  # meaning I am admin
 
@@ -106,7 +133,7 @@ class BIManagement(object):
         if html.request.has_var("pack"):
             self._pack_id = html.request.var("pack")
             try:
-                self._pack = self._packs[self._pack_id]  # type: _Optional[BIPack]
+                self._pack: _Optional[BIPack] = self._packs[self._pack_id]
             except KeyError:
                 raise MKUserError("pack", _("This BI pack does not exist."))
         else:
@@ -118,17 +145,20 @@ class BIManagement(object):
     # '--------------------------------------------------------------------'
 
     def _load_config(self):
-        filename = watolib.multisite_dir() + "bi.mk"
+        filename = Path(watolib.multisite_dir()) / "bi.mk"
         try:
-            vars_ = {
+            vars_: Dict[str, Any] = {
                 "aggregation_rules": {},
                 "aggregations": [],
                 "host_aggregations": [],
                 "bi_packs": {},
-            }  # type: Dict[str, Any]
+            }
             vars_.update(self._bi_constants)
-            if os.path.exists(filename):
-                exec(open(filename).read(), vars_, vars_)
+
+            if filename.exists():
+                # TODO: Can be changed to text IO with Python 3
+                with filename.open("rb") as f:
+                    exec(f.read(), vars_, vars_)
             else:
                 exec(bi_example, vars_, vars_)
 
@@ -210,12 +240,11 @@ class BIManagement(object):
         return output
 
     def _convert_pack_to_bi(self, pack):
-        converted_rules = dict([
-            (rule_id, self._convert_rule_to_bi(rule)) for (rule_id, rule) in pack["rules"].items()
-        ])
-        converted_aggregations = []  # type: List[_Tuple[BIAggrOptions, BIAggrGroups, BIAggrNode]]
-        converted_host_aggregations = [
-        ]  # type: List[_Tuple[BIAggrOptions, BIAggrGroups, BIAggrNode]]
+        converted_rules = {
+            rule_id: self._convert_rule_to_bi(rule) for rule_id, rule in pack["rules"].items()
+        }
+        converted_aggregations: List[_Tuple[BIAggrOptions, BIAggrGroups, BIAggrNode]] = []
+        converted_host_aggregations: List[_Tuple[BIAggrOptions, BIAggrGroups, BIAggrNode]] = []
         for aggregation in pack["aggregations"]:
             converted_aggregation = self._convert_aggregation_to_bi(aggregation)
             if aggregation["single_host"]:
@@ -241,13 +270,13 @@ class BIManagement(object):
 
     def _convert_aggregation_to_bi(self, aggr):
         node = self._convert_node_to_bi(aggr["node"])
-        option_keys = [
+        option_keys: List[_Tuple[str, Any]] = [
             ("ID", None),
             ("node_visualization", {}),
             ("hard_states", False),
             ("downtime_aggr_warn", False),
             ("disabled", False),
-        ]  # type: List[_Tuple[str, Any]]
+        ]
 
         if cmk_version.is_managed_edition():
             option_keys.append(("customer", managed.default_customer_id()))
@@ -262,13 +291,13 @@ class BIManagement(object):
     def _convert_node_to_bi(self, node):
         if node[0] == "call":
             return node[1]
-        elif node[0] == "host":
+        if node[0] == "host":
             return (node[1][0], self._bi_constants['HOST_STATE'])
-        elif node[0] == "remaining":
+        if node[0] == "remaining":
             return (node[1][0], self._bi_constants['REMAINING'])
-        elif node[0] == "service":
+        if node[0] == "service":
             return node[1]
-        elif node[0] == "foreach_host":
+        if node[0] == "foreach_host":
             what = node[1][0]
 
             tags = node[1][1]
@@ -287,7 +316,7 @@ class BIManagement(object):
                        + self._convert_node_to_bi(node[1][3])
             return (self._bi_constants["FOREACH_" + what.upper()], tags,
                     hostspec) + self._convert_node_to_bi(node[1][3])
-        elif node[0] == "foreach_service":
+        if node[0] == "foreach_service":
             tags = node[1][0]
             if node[1][1]:
                 spec = node[1][1]
@@ -375,55 +404,52 @@ class BIManagement(object):
         if len(node) == 2:
             if isinstance(node[1], list):
                 return ("call", node)
-            elif node[1] == self._bi_constants['HOST_STATE']:
+            if node[1] == self._bi_constants['HOST_STATE']:
                 return ("host", (node[0],))
-            elif node[1] == self._bi_constants['REMAINING']:
+            if node[1] == self._bi_constants['REMAINING']:
                 return ("remaining", (node[0],))
             return ("service", node)
 
-        else:  # FOREACH_...
+        foreach_spec = node[0]
+        if foreach_spec == self._bi_constants['FOREACH_CHILD_WITH']:
+            # extract the conditions meant for matching the childs
+            child_conditions = list(node[1:3])
+            if child_conditions[1] == self._bi_constants['ALL_HOSTS']:
+                child_conditions[1] = None
+            node = node[0:1] + node[3:]
 
-            foreach_spec = node[0]
-            if foreach_spec == self._bi_constants['FOREACH_CHILD_WITH']:
-                # extract the conditions meant for matching the childs
-                child_conditions = list(node[1:3])
-                if child_conditions[1] == self._bi_constants['ALL_HOSTS']:
-                    child_conditions[1] = None
-                node = node[0:1] + node[3:]
+        # Extract the list of tags
+        if isinstance(node[1], list):
+            tags = node[1]
+            node = node[0:1] + node[2:]
+        else:
+            tags = []
 
-            # Extract the list of tags
-            if isinstance(node[1], list):
-                tags = node[1]
-                node = node[0:1] + node[2:]
-            else:
-                tags = []
+        hostspec = node[1]
+        if hostspec == self._bi_constants['ALL_HOSTS']:
+            hostspec = None
 
-            hostspec = node[1]
-            if hostspec == self._bi_constants['ALL_HOSTS']:
-                hostspec = None
+        if foreach_spec == self._bi_constants['FOREACH_SERVICE']:
+            service = node[2]
+            subnode = self._convert_node_from_bi(node[3:])
+            return ("foreach_service", (tags, hostspec, service, subnode))
 
-            if foreach_spec == self._bi_constants['FOREACH_SERVICE']:
-                service = node[2]
-                subnode = self._convert_node_from_bi(node[3:])
-                return ("foreach_service", (tags, hostspec, service, subnode))
-            else:
-
-                subnode = self._convert_node_from_bi(node[2:])
-                if foreach_spec == self._bi_constants['FOREACH_HOST']:
-                    what = "host"  # type: Union[str, _Tuple]
-                elif foreach_spec == self._bi_constants['FOREACH_CHILD']:
-                    what = "child"
-                elif foreach_spec == self._bi_constants['FOREACH_CHILD_WITH']:
-                    what = ("child_with", child_conditions)
-                elif foreach_spec == self._bi_constants['FOREACH_PARENT']:
-                    what = "parent"
-                return ("foreach_host", (what, tags, hostspec, subnode))
+        subnode = self._convert_node_from_bi(node[2:])
+        if foreach_spec == self._bi_constants['FOREACH_HOST']:
+            what: Union[str, _Tuple] = "host"
+        elif foreach_spec == self._bi_constants['FOREACH_CHILD']:
+            what = "child"
+        elif foreach_spec == self._bi_constants['FOREACH_CHILD_WITH']:
+            what = ("child_with", child_conditions)
+        elif foreach_spec == self._bi_constants['FOREACH_PARENT']:
+            what = "parent"
+        return ("foreach_host", (what, tags, hostspec, subnode))
 
     def get_packs(self):
         return self._packs
 
     def find_aggregation_rule_usages(self):
-        aggregations_that_use_rule = {}  # type: Dict[str, List]
+        aggregations_that_use_rule: Dict[str, List] = {}
         for pack_id, pack in self._packs.items():
             for aggr_id, aggregation in enumerate(pack["aggregations"]):
                 rule_id, _description = self.rule_called_by_node(aggregation["node"])
@@ -477,7 +503,7 @@ class BIManagement(object):
             else:
                 args = _("without arguments")
             return node[1][0], _("Explicit call ") + args
-        elif node[0] == "foreach_host":
+        if node[0] == "foreach_host":
             subnode = node[1][-1]
             if subnode[0] == 'call':
                 if node[1][0] == 'host':
@@ -503,17 +529,8 @@ class ModeBI(WatoMode, BIManagement):
         super(ModeBI, self).__init__()
         self._create_valuespecs()
 
-    def title(self):
-        title = _("Business Intelligence")
-        if self._pack:
-            title += " - " + escaping.escape_attribute(self._pack["title"])
-        return title
-
-    def buttons(self):
-        global_buttons()
-        if self._pack:
-            html.context_button(_("All Packs"), html.makeuri_contextless([("mode", "bi_packs")]),
-                                "back")
+    def title(self) -> str:
+        return (self._pack["title"] + ": ") if self._pack else ""
 
     def _add_change(self, action_name, text):
         site_ids = list(config.wato_slave_sites().keys()) + [config.omd_site()]
@@ -926,11 +943,10 @@ class ModeBI(WatoMode, BIManagement):
                 if ru_id == ruleid:  # Rule is directly being used
                     return level + 1
                 # Check if lower rules use it
-                else:
-                    subrule = self.find_rule_by_id(ru_id)
-                    lv = self.rule_uses_rule(subrule, ruleid, level + 1)
-                    if lv:
-                        return lv
+                subrule = self.find_rule_by_id(ru_id)
+                lv = self.rule_uses_rule(subrule, ruleid, level + 1)
+                if lv:
+                    return lv
         return False
 
     def count_rule_references(self, ruleid):
@@ -1021,11 +1037,66 @@ class ModeBIPacks(ModeBI):
         ModeBI.__init__(self)
         self._contact_group_names = load_contact_group_information()
 
-    def buttons(self):
-        ModeBI.buttons(self)
+    def title(self):
+        return _("Business Intelligence")
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        bi_config_entries = []
         if config.user.may("wato.bi_admin"):
-            html.context_button(_("New BI Pack"),
-                                html.makeuri_contextless([("mode", "bi_edit_pack")]), "new")
+            bi_config_entries.append(
+                PageMenuEntry(
+                    title=_("Add pack"),
+                    icon_name="new",
+                    item=make_simple_link(html.makeuri_contextless([("mode", "bi_edit_pack")])),
+                    is_shortcut=True,
+                    is_suggested=True,
+                ))
+
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="packs",
+                    title=_("Packs"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("BI configuration"),
+                            entries=bi_config_entries,
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="services",
+                    title=_("Services"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Of aggregations"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Monitor state"),
+                                    icon_name="rulesets",
+                                    item=make_simple_link(
+                                        html.makeuri_contextless([
+                                            ("mode", "edit_ruleset"),
+                                            ("varname", "special_agents:bi"),
+                                        ])),
+                                ),
+                                PageMenuEntry(
+                                    title=_("Monitor single state (Deprecated)"),
+                                    icon_name="rulesets",
+                                    item=make_simple_link(
+                                        html.makeuri_contextless([
+                                            ("mode", "edit_ruleset"),
+                                            ("varname", "active_checks:bi_aggr"),
+                                        ])),
+                                    is_advanced=True,
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
 
     def action(self):
         if config.user.may("wato.bi_admin") and html.request.has_var("_delete"):
@@ -1104,10 +1175,14 @@ class ModeBIEditPack(ModeBI):
     def permissions(cls):
         return ["bi_rules", "bi_admin"]
 
+    @classmethod
+    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+        return ModeBIPacks
+
     def title(self):
         if self._pack:
-            return ModeBI.title(self) + " - " + _("Edit BI Pack %s") % self._pack["title"]
-        return ModeBI.title(self) + " - " + _("Create New BI Pack")
+            return _("Edit BI pack %s") % self._pack["title"]
+        return _("Create BI pack")
 
     def action(self):
         if html.check_transaction():
@@ -1129,15 +1204,17 @@ class ModeBIEditPack(ModeBI):
 
         return "bi_packs"
 
-    def buttons(self):
-        html.context_button(_("Abort"), html.makeuri([("mode", "bi_packs")]), "abort")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(breadcrumb,
+                                          form_name="bi_pack",
+                                          button_name="_save",
+                                          save_title=_("Save") if self._pack else _("Create"))
 
     def page(self):
         html.begin_form("bi_pack", method="POST")
         self._vs_pack().render_input("bi_pack", self._pack)
         forms.end()
         html.hidden_fields()
-        html.button("_save", self._pack and _("Save") or _("Create"), "submit")
         if self._pack:
             html.set_focus("bi_pack_p_title")
         else:
@@ -1209,15 +1286,76 @@ class ModeBIAggregations(ModeBI):
     def permissions(cls):
         return ["bi_rules"]
 
-    def title(self):
-        return ModeBI.title(self) + " - " + _("Aggregations")
+    @classmethod
+    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+        return ModeBIPacks
 
-    def buttons(self):
-        ModeBI.buttons(self)
-        html.context_button(_("Rules"), self.url_to_pack([("mode", "bi_rules")]), "aggr")
+    def _breadcrumb_url(self) -> str:
+        return html.makeuri_contextless([("mode", self.name()), ("pack", self._pack_id)],
+                                        filename="wato.py")
+
+    def title(self):
+        return super().title() + _("Aggregations")
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        aggr_entries = []
         if self.have_rules() and self.is_contact_for_pack(self._pack):
-            html.context_button(_("New Aggregation"),
-                                self.url_to_pack([("mode", "bi_edit_aggregation")]), "new")
+            aggr_entries.append(
+                PageMenuEntry(
+                    title=_("Add rule"),
+                    icon_name="new",
+                    item=make_simple_link(self.url_to_pack([("mode", "bi_edit_aggregation")])),
+                    is_shortcut=True,
+                    is_suggested=True,
+                ))
+
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="aggregations",
+                    title=_("Aggregations"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("In this pack"),
+                            entries=aggr_entries,
+                        ),
+                        PageMenuTopic(
+                            title=_("On selected aggregations"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Delete aggregations"),
+                                    icon_name="delete",
+                                    item=make_form_submit_link(
+                                        form_name="bulk_action_form",
+                                        button_name="_bulk_delete_bi_aggregations",
+                                    ),
+                                    is_enabled=bool(self._pack and self._pack["aggregations"]),
+                                ),
+                            ],
+                        ),
+                        make_checkbox_selection_topic(),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="rules",
+                    title=_("Rules"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("In this pack"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Aggregations"),
+                                    icon_name="aggr",
+                                    item=make_simple_link(self.url_to_pack([("mode", "bi_rules")
+                                                                           ]),),
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
 
     def action(self):
         self.must_be_contact_for_pack(self._pack)
@@ -1225,10 +1363,10 @@ class ModeBIAggregations(ModeBI):
         if html.request.var("_del_aggr"):
             return self._delete_after_confirm()
 
-        elif html.request.var("_bulk_delete_bi_aggregations"):
+        if html.request.var("_bulk_delete_bi_aggregations"):
             return self._bulk_delete_after_confirm()
 
-        elif html.request.var("_bulk_move_bi_aggregations"):
+        if html.request.var("_bulk_move_bi_aggregations"):
             return self._bulk_move_after_confirm()
 
     def _delete_after_confirm(self):
@@ -1296,17 +1434,12 @@ class ModeBIAggregations(ModeBI):
                 return ""
 
     def page(self):
-        html.begin_form("bulk_delete_form", method="POST")
+        html.begin_form("bulk_action_form", method="POST")
         self._render_aggregations()
         html.hidden_fields()
         assert self._pack is not None
         if self._pack["aggregations"]:
             fieldstyle = "margin-top:10px"
-            html.button("_bulk_delete_bi_aggregations",
-                        _("Bulk delete"),
-                        "submit",
-                        style=fieldstyle)
-
             move_choices = [(pack_id, attrs["title"])
                             for pack_id, attrs in self._packs.items()
                             if pack_id is not self._pack["id"] and self.is_contact_for_pack(attrs)]
@@ -1336,13 +1469,7 @@ class ModeBIAggregations(ModeBI):
             assert self._pack is not None
             for aggregation_id, aggregation in enumerate(self._pack["aggregations"]):
                 table.row()
-                table.cell(html.render_input("_toggle_group",
-                                             type_="button",
-                                             class_="checkgroup",
-                                             onclick="cmk.selection.toggle_all_rows();",
-                                             value='X'),
-                           sortable=False,
-                           css="checkbox")
+                table.cell("", sortable=False, css="checkbox")
                 html.checkbox("_c_aggregation_%s" % aggregation_id)
 
                 table.cell(_("Actions"), css="buttons")
@@ -1424,29 +1551,113 @@ class ModeBIRules(ModeBI):
     def permissions(cls):
         return ["bi_rules"]
 
+    @classmethod
+    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+        return ModeBIPacks
+
     def __init__(self):
         ModeBI.__init__(self)
         self._view_type = html.request.var("view", "list")
 
+    def _breadcrumb_url(self) -> str:
+        return html.makeuri_contextless([("mode", self.name()), ("pack", self._pack_id)],
+                                        filename="wato.py")
+
     def title(self):
         if self._view_type == "list":
-            return ModeBI.title(self) + " - " + _("Rules")
-        return ModeBI.title(self) + " - " + _("Unused Rules")
+            return super().title() + _("Rules")
+        return super().title() + _("Unused rules")
 
-    def buttons(self):
-        ModeBI.buttons(self)
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        rules_entries = []
+        if self.is_contact_for_pack(self._pack):
+            rules_entries.append(
+                PageMenuEntry(
+                    title=_("Add rule"),
+                    icon_name="new",
+                    item=make_simple_link(self.url_to_pack([("mode", "bi_edit_rule")])),
+                    is_shortcut=True,
+                    is_suggested=True,
+                ))
+
         if self._view_type == "list":
-            html.context_button(_("Aggregations"), self.url_to_pack([("mode", "bi_aggregations")]),
-                                "aggr")
-            if self.is_contact_for_pack(self._pack):
-                html.context_button(
-                    _("New Rule"),
-                    self.url_to_pack([("mode", "bi_edit_rule"), ("pack", self._pack_id)]), "new")
-            html.context_button(_("Unused Rules"),
-                                self.url_to_pack([("mode", "bi_rules"), ("view", "unused")]),
-                                "unusedbirules")
+            unused_rules_title = _("Show only unused rules")
+            unused_rules_url = self.url_to_pack([("mode", "bi_rules")])
         else:
-            html.context_button(_("Back"), html.makeuri([("view", "list")]), "back")
+            unused_rules_title = _("Show all rules")
+            unused_rules_url = self.url_to_pack([("mode", "bi_rules"), ("view", "unused")])
+
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="rules",
+                    title=_("Rules"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("In this pack"),
+                            entries=rules_entries,
+                        ),
+                        PageMenuTopic(
+                            title=_("On selected rules"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Delete rules"),
+                                    icon_name="delete",
+                                    item=make_form_submit_link(
+                                        form_name="bulk_action_form",
+                                        button_name="_bulk_delete_bi_rules",
+                                    ),
+                                    is_enabled=bool(self._pack and self._pack["rules"]),
+                                ),
+                                PageMenuEntry(
+                                    title=_("Move rules"),
+                                    icon_name="move",
+                                    name="move_rules",
+                                    item=PageMenuPopup(self._render_bulk_move_form()),
+                                    is_enabled=bool(self._pack and self._pack["rules"] and
+                                                    self._show_bulk_move_choices()),
+                                ),
+                            ],
+                        ),
+                        make_checkbox_selection_topic(),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="aggregations",
+                    title=_("Aggregations"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("In this pack"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Aggregations"),
+                                    icon_name="aggr",
+                                    item=make_simple_link(
+                                        self.url_to_pack([("mode", "bi_aggregations")]),),
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="view",
+                    title=_("View"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Filter"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=unused_rules_title,
+                                    icon_name="unusedbirules",
+                                    item=make_simple_link(unused_rules_url),
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
 
     def action(self):
         self.must_be_contact_for_pack(self._pack)
@@ -1454,10 +1665,10 @@ class ModeBIRules(ModeBI):
         if html.request.var("_del_rule"):
             return self._delete_after_confirm()
 
-        elif html.request.var("_bulk_delete_bi_rules"):
+        if html.request.var("_bulk_delete_bi_rules"):
             return self._bulk_delete_after_confirm()
 
-        elif html.request.var("_bulk_move_bi_rules"):
+        if html.request.var("_bulk_move_bi_rules"):
             return self._bulk_move_after_confirm()
 
     def _delete_after_confirm(self):
@@ -1549,37 +1760,45 @@ class ModeBIRules(ModeBI):
             menu.show()
             return
 
-        html.begin_form("bulk_delete_form", method="POST")
+        html.begin_form("bulk_action_form", method="POST")
         if self._view_type == "list":
             self.render_rules(_("Rules"), only_unused=False)
         else:
             self.render_rules(_("Unused BI Rules"), only_unused=True)
 
         html.hidden_fields()
-        if self._pack["rules"]:
-            fieldstyle = "margin-top:10px"
-            html.button("_bulk_delete_bi_rules", _("Bulk delete"), "submit", style=fieldstyle)
-
-            move_choices = [(pack_id, attrs["title"])
-                            for pack_id, attrs in self._packs.items()
-                            if pack_id is not self._pack["id"] and self.is_contact_for_pack(attrs)]
-
-            if move_choices:
-                html.button("_bulk_move_bi_rules", _("Bulk move"), "submit", style=fieldstyle)
-
-                if html.request.has_var('bulk_moveto'):
-                    html.javascript('cmk.selection.update_bulk_moveto("%s")' %
-                                    html.request.var('bulk_moveto', ''))
-
-                html.dropdown(
-                    "bulk_moveto",
-                    move_choices,
-                    "@",
-                    onchange="cmk.selection.update_bulk_moveto(this.value)",
-                    class_='bulk_moveto',
-                    style_=fieldstyle,
-                )
         html.end_form()
+
+    def _render_bulk_move_form(self) -> str:
+        with html.plugged():
+            move_choices = self._show_bulk_move_choices()
+            if not move_choices:
+                return ""
+
+            if html.request.has_var('bulk_moveto'):
+                html.javascript('cmk.selection.update_bulk_moveto("%s")' %
+                                html.request.var('bulk_moveto', ''))
+
+            html.dropdown("bulk_moveto",
+                          move_choices,
+                          "@",
+                          onchange="cmk.selection.update_bulk_moveto(this.value)",
+                          class_='bulk_moveto',
+                          label=_("Move to pack: "),
+                          form="form_bulk_action_form")
+
+            html.button("_bulk_move_bi_rules",
+                        _("Bulk move"),
+                        "submit",
+                        form="form_bulk_action_form")
+
+            return html.drain()
+
+    def _show_bulk_move_choices(self):
+        assert self._pack is not None
+        return [(pack_id, attrs["title"])
+                for pack_id, attrs in self._packs.items()
+                if pack_id is not self._pack["id"] and self.is_contact_for_pack(attrs)]
 
     def render_rules(self, title, only_unused):
         aggregations_that_use_rule = self.find_aggregation_rule_usages()
@@ -1597,13 +1816,7 @@ class ModeBIRules(ModeBI):
                 refs = aggr_refs + rule_refs
                 if not only_unused or refs == 0:
                     table.row()
-                    table.cell(html.render_input("_toggle_group",
-                                                 type_="button",
-                                                 class_="checkgroup",
-                                                 onclick="cmk.selection.toggle_all_rows();",
-                                                 value='X'),
-                               sortable=False,
-                               css="checkbox")
+                    table.cell("", sortable=False, css="checkbox")
                     html.checkbox("_c_rule_%s" % rule_id)
 
                     table.cell(_("Actions"), css="buttons")
@@ -1686,18 +1899,21 @@ class ModeBIRuleTree(ModeBI):
     def permissions(cls):
         return ["bi_rules"]
 
+    @classmethod
+    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+        return ModeBIPacks
+
     def __init__(self):
         ModeBI.__init__(self)
-        self._ruleid = html.request.get_ascii_input("id")
+        self._ruleid = html.request.get_ascii_input_mandatory("id")
         if not self.pack_containing_rule(self._ruleid):
             raise MKUserError("id", _("This BI rule does not exist"))
 
     def title(self):
-        return ModeBI.title(self) + " - " + _("Rule Tree of") + " " + self._ruleid
+        return super().title() + _("Rule tree of") + " " + self._ruleid
 
-    def buttons(self):
-        ModeBI.buttons(self)
-        html.context_button(_("Back"), html.makeuri([("mode", "bi_rules")]), "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(breadcrumb)
 
     def page(self):
         _aggr_refs, rule_refs, _level = self.count_rule_references(self._ruleid)
@@ -1735,6 +1951,10 @@ class ModeBIEditAggregation(ModeBI):
     def permissions(cls):
         return ["bi_rules"]
 
+    @classmethod
+    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+        return ModeBIAggregations
+
     def __init__(self):
         ModeBI.__init__(self)
         self._edited_nr = html.request.get_integer_input_mandatory(
@@ -1752,11 +1972,14 @@ class ModeBIEditAggregation(ModeBI):
 
     def title(self):
         if self._new:
-            return ModeBI.title(self) + " - " + _("Create New Aggregation")
-        return ModeBI.title(self) + " - " + _("Edit Aggregation")
+            return super().title() + _("Create aggregation")
+        return super().title() + _("Edit aggregation")
 
-    def buttons(self):
-        html.context_button(_("Abort"), html.makeuri([("mode", "bi_aggregations")]), "abort")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(breadcrumb,
+                                          form_name="biaggr",
+                                          button_name="_save",
+                                          save_is_enabled=self.is_contact_for_pack(self._pack))
 
     def _get_aggregations_by_id(self):
         ids = {}
@@ -1801,8 +2024,6 @@ class ModeBIEditAggregation(ModeBI):
         self._vs_aggregation.render_input("aggr", self._edited_aggregation)
         forms.end()
         html.hidden_fields()
-        if self.is_contact_for_pack(self._pack):
-            html.button("_save", self._new and _("Create") or _("Save"), "submit")
         html.set_focus("aggr_p_groups_0")
         html.end_form()
 
@@ -1828,6 +2049,10 @@ class ModeBIEditRule(ModeBI):
     def permissions(cls):
         return ["bi_rules"]
 
+    @classmethod
+    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+        return ModeBIRules
+
     def __init__(self):
         ModeBI.__init__(self)
         self._ruleid = html.request.get_ascii_input("id")  # In case of Aggregations: index in list
@@ -1838,12 +2063,15 @@ class ModeBIEditRule(ModeBI):
 
     def title(self):
         if self._new:
-            return ModeBI.title(self) + " - " + _("Create New Rule")
-        return ModeBI.title(self) + " - " + _("Edit Rule") + " " + escaping.escape_attribute(
-            self._ruleid)
+            return super().title() + _("Create rule")
+        return super().title() + _("Edit rule") + " " + escaping.escape_attribute(self._ruleid)
 
-    def buttons(self):
-        html.context_button(_("Abort"), html.makeuri([("mode", "bi_rules")]), "abort")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(breadcrumb,
+                                          form_name="birule",
+                                          button_name="_save",
+                                          save_title=_("Create") if self._new else _("Save"),
+                                          save_is_enabled=self.is_contact_for_pack(self._pack))
 
     def action(self):
         self.must_be_contact_for_pack(self._pack)
@@ -2014,8 +2242,6 @@ class ModeBIEditRule(ModeBI):
         self.valuespec().render_input("rule", value)
         forms.end()
         html.hidden_fields()
-        if self.is_contact_for_pack(self._pack):
-            html.button("_save", self._new and _("Create") or _("Save"), "submit")
         if self._new:
             html.set_focus("rule_p_id")
         else:
@@ -2023,7 +2249,7 @@ class ModeBIEditRule(ModeBI):
         html.end_form()
 
     def _may_use_rules_from_packs(self, rulepack):
-        rules_without_permissions = {}  # type: Dict[_Tuple[str, str], Any]
+        rules_without_permissions: Dict[_Tuple[str, str], Any] = {}
         for node in rulepack.get("nodes", []):
             node_type, node_content = node
             if node_type != 'call':
@@ -2261,8 +2487,7 @@ bi_aggregation_functions["best"] = {
 }
 
 
-def vs_count_ok_count(title, defval, defvalperc):
-    # type: (Text, int, int) -> Alternative
+def vs_count_ok_count(title: str, defval: int, defvalperc: int) -> Alternative:
     return Alternative(
         title=title,
         style="dropdown",
@@ -2364,6 +2589,10 @@ class MainModuleBI(MainModule):
         return "bi_packs"
 
     @property
+    def topic(self):
+        return MainModuleTopicServices
+
+    @property
     def title(self):
         return _("Business Intelligence")
 
@@ -2381,7 +2610,11 @@ class MainModuleBI(MainModule):
 
     @property
     def sort_index(self):
-        return 70
+        return 80
+
+    @property
+    def is_advanced(self):
+        return True
 
 
 #.

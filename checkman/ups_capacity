@@ -14,5 +14,5 @@ description:
  be given for the remaining run time for the capacity.
 
 inventory:
- One service per UPS will be created.
+ One service is created for each UPS.
 

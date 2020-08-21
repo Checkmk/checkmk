@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -16,7 +16,10 @@
 #   * [[link4]]
 
 import re
+from pathlib import Path
+
 import cmk.utils.paths
+
 import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -42,9 +45,8 @@ class Wiki(SidebarSnapin):
     def description(cls):
         return _("Shows the Wiki Navigation of the OMD Site")
 
-    def show(self):
-        # type: () -> None
-        filename = cmk.utils.paths.omd_root + '/var/dokuwiki/data/pages/sidebar.txt'
+    def show(self) -> None:
+        filename = Path(cmk.utils.paths.omd_root).joinpath('var/dokuwiki/data/pages/sidebar.txt')
 
         html.open_form(id_="wiki_search",
                        onsubmit="cmk.sidebar.wiki_search('%s');" % config.omd_site())
@@ -60,7 +62,7 @@ class Wiki(SidebarSnapin):
         ul_started = False
         try:
             title = None
-            for line in open(filename).readlines():
+            for line in filename.open(encoding="utf-8").readlines():
                 line = line.strip()
                 if line == "":
                     if ul_started:

@@ -65,7 +65,8 @@ function postgres_instances() {
     # was to use:
     #   pgrep -af bin/postgres 2>/dev/null || pgrep -lf bin/postgres
     # but SLES 11 returns the exit code 0 for a wrong command line.
-    ps -eo pid,command | grep bin/postgres | grep -vE '^[ ]*[0-9]+ grep '
+    # Newer versions of postgres are started with postmaster instead of postgres
+    ps -eo pid,command | grep -E "bin/postgres|bin/postmaster|bin/edb-postgres" | grep -vE '^[ ]*[0-9]+ grep '
 }
 
 
@@ -106,13 +107,11 @@ function postgres_simple_queries() {
     # Here the order of the columns did not match with what the server side expects,
     # with the result, that there was never any active connection shown in the
     # web-gui.
-    CONDITION="$ROW <> $IDLE"
-    CONNECTIONS_QUERY="SELECT d.datname, COUNT(datid) AS current,
-          (SELECT setting AS mc FROM pg_settings WHERE name = 'max_connections') AS mc
-        FROM pg_database d
-        LEFT JOIN pg_stat_activity s ON (s.datid = d.oid) WHERE $CONDITION
-        GROUP BY 1
-        ORDER BY datname;"
+    CONNECTIONS_QUERY="SELECT datname,
+          (SELECT setting AS mc FROM pg_settings WHERE name = 'max_connections') AS mc,
+        COUNT(state) FILTER (WHERE state='idle') AS idle,
+        COUNT(state) FILTER (WHERE state='active') AS active
+        FROM pg_stat_activity group by 1;"
 
     echo "\pset footer off
           \echo '<<<postgres_stat_database:sep(59)>>>${INSTANCE_SECTION}'
@@ -143,7 +142,7 @@ function postgres_stats() {
     # Contains last vacuum time and analyze time
     local LASTVACUUM="SELECT current_database() AS datname, nspname AS sname, relname AS tname,
                           CASE WHEN v IS NULL THEN -1 ELSE round(extract(epoch FROM v)) END AS vtime,
-                          CASE WHEN g IS NULL THEN -1 ELSE round(extract(epoch FROM v)) END AS atime
+                          CASE WHEN g IS NULL THEN -1 ELSE round(extract(epoch FROM g)) END AS atime
                       FROM (SELECT nspname, relname, GREATEST(pg_stat_get_last_vacuum_time(c.oid), pg_stat_get_last_autovacuum_time(c.oid)) AS v,
                                 GREATEST(pg_stat_get_last_analyze_time(c.oid), pg_stat_get_last_autoanalyze_time(c.oid)) AS g
                             FROM pg_class c, pg_namespace n

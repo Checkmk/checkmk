@@ -4,19 +4,21 @@
 // source code package.
 
 #include "RRDColumn.h"
+
 #include <rrd.h>
+
 #include <algorithm>
-#include <chrono>
 #include <cstdlib>
 #include <cstring>
+#include <ctime>
 #include <filesystem>
 #include <iterator>
 #include <ostream>
 #include <set>
-#include <tuple>
 #include <type_traits>
 #include <utility>
-#include <vector>
+
+#include "DynamicRRDColumn.h"
 #include "Logger.h"
 #include "Metric.h"
 #include "MonitoringCore.h"
@@ -31,23 +33,16 @@
 
 RRDColumn::RRDColumn(const std::string &name, const std::string &description,
                      const Column::Offsets &offsets, MonitoringCore *mc,
-                     std::string rpn, time_t start_time, time_t end_time,
-                     int resolution, int max_entries)
-    : ListColumn(name, description, offsets)
-    , _mc(mc)
-    , _rpn(std::move(rpn))
-    , _start_time(start_time)
-    , _end_time(end_time)
-    , _resolution(resolution)
-    , _max_entries(max_entries) {}
+                     RRDColumnArgs args)
+    : ListColumn(name, description, offsets), _mc(mc), _args(std::move(args)) {}
 
 void RRDColumn::output(Row row, RowRenderer &r, const contact * /* auth_user */,
                        std::chrono::seconds /*timezone_offset*/) const {
     // We output meta data as first elements in the list. Note: In Python or
     // JSON we could output nested lists. In CSV mode this is not possible and
     // we rather stay compatible with CSV mode.
-    ListRenderer l(r);
     auto data = getData(row);
+    ListRenderer l(r);
     l.output(data.start);
     l.output(data.end);
     l.output(data.step);
@@ -118,12 +113,8 @@ std::pair<Metric::Name, std::string> getVarAndCF(const std::string &str) {
 // >= --> GE. Or should we also go with GE instead of >=?
 // Look at http://oss.oetiker.ch/rrdtool/doc/rrdgraph_rpn.en.html for details!
 RRDColumn::Data RRDColumn::getData(Row row) const {
-    Logger *logger = _mc->loggerRRD();
-
-    // Get the host/service that all is about
-    const auto *object = getObject(row);
-    if (object == nullptr) {
-        Warning(logger) << "Missing object pointer for RRDColumn";
+    auto host_name_service_description = getHostNameServiceDesc(row);
+    if (!host_name_service_description) {
         return {};
     }
 
@@ -132,15 +123,15 @@ RRDColumn::Data RRDColumn::getData(Row row) const {
     std::vector<std::string> argv_s{
         "rrdtool xport",  // name of program (ignored)
         "-s",
-        std::to_string(_start_time),
+        std::to_string(_args.start_time),
         "-e",
-        std::to_string(_end_time),
+        std::to_string(_args.end_time),
         "--step",
-        std::to_string(_resolution)};
+        std::to_string(_args.resolution)};
 
-    if (_max_entries > 0) {
+    if (_args.max_entries > 0) {
         argv_s.emplace_back("-m");
-        argv_s.emplace_back(std::to_string(_max_entries));
+        argv_s.emplace_back(std::to_string(_args.max_entries));
     }
 
     // We have an RPN like fs_used,1024,*. In order for that to work, we need to
@@ -152,7 +143,7 @@ RRDColumn::Data RRDColumn::getData(Row row) const {
     // faster) way is to look for the names of variables within our RPN
     // expressions and create DEFs just for them - if the according RRD exists.
     std::string converted_rpn;  // convert foo.max -> foo-max
-    std::vector<char> rpn_copy(_rpn.begin(), _rpn.end());
+    std::vector<char> rpn_copy(_args.rpn.begin(), _args.rpn.end());
     rpn_copy.push_back('\0');
     char *scan = &rpn_copy[0];
 
@@ -179,12 +170,10 @@ RRDColumn::Data RRDColumn::getData(Row row) const {
         // MAX. RRDTool does not allow a variable name to contain a '.', but
         // strangely enough, it allows an underscore. Therefore, we replace '.'
         // by '_' here.
-        Metric::Name var{""};
-        std::string cf;
-        tie(var, cf) = getVarAndCF(token);
-
+        auto [var, cf] = getVarAndCF(token);
         auto location =
-            _mc->metricLocation(object, Metric::MangledName(var), table());
+            _mc->metricLocation(host_name_service_description->first,
+                                host_name_service_description->second, var);
         std::string rrd_varname;
         if (location.path_.empty() || location.data_source_name_.empty()) {
             rrd_varname = replace_all(var.string(), ".", '_');
@@ -220,11 +209,11 @@ RRDColumn::Data RRDColumn::getData(Row row) const {
     // RRDTool on the issue
     // https://github.com/oetiker/rrdtool-1.x/issues/1062
 
-    auto rrdcached_socket_path = _mc->rrdcachedSocketPath();
-    if (!rrdcached_socket_path.empty()) {
+    auto *logger = _mc->loggerRRD();
+    if (!_mc->rrdcachedSocketPath().empty()) {
         std::vector<std::string> daemon_argv_s{
             "rrdtool flushcached",  // name of program (ignored)
-            "--daemon", rrdcached_socket_path};
+            "--daemon", _mc->rrdcachedSocketPath()};
 
         for (const auto &rrdfile : touched_rrds) {
             daemon_argv_s.push_back(rrdfile);
@@ -271,13 +260,13 @@ RRDColumn::Data RRDColumn::getData(Row row) const {
     // Now do the actual export. The library function rrd_xport mimicks the
     // command line API of rrd xport, but - fortunately - we get direct access
     // to a binary buffer with doubles. No parsing is required.
-    int xxsize;
-    time_t start;
-    time_t end;
-    unsigned long step;
-    unsigned long col_cnt;
-    char **legend_v;
-    rrd_value_t *rrd_data;
+    int xxsize = 0;
+    time_t start = 0;
+    time_t end = 0;
+    unsigned long step = 0;
+    unsigned long col_cnt = 0;
+    char **legend_v = nullptr;
+    rrd_value_t *rrd_data = nullptr;
 
     // Clear the RRD error float. RRDTool will not do this and immediately fail
     // if an error already occurred.

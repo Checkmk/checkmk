@@ -7,6 +7,7 @@
 #define CrashReport_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <filesystem>
 #include <functional>
 #include <string>

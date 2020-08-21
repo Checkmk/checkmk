@@ -4,6 +4,7 @@
 // source code package.
 
 #include "StringUtils.h"
+
 #include <algorithm>
 #include <cctype>
 #include <sstream>
@@ -68,6 +69,22 @@ std::string rstrip(const std::string &str, const std::string &chars) {
     return pos == std::string::npos ? "" : str.substr(0, pos + 1);
 }
 
+// TODO (sk): unit tests
+std::string_view rstrip(std::string_view str, std::string_view chars) {
+    auto pos = str.find_last_not_of(chars);
+    return (pos == std::string_view::npos)
+               ? std::string_view{str.data(), 0}         // empty
+               : std::string_view{str.data(), pos + 1};  // with data
+}
+
+// TODO (sk): unit tests
+std::string_view lstrip(std::string_view str, std::string_view chars) {
+    auto pos = str.find_first_not_of(chars);
+    return (pos == std::string_view::npos)
+               ? std::string_view{str.data(), 0}
+               : std::string_view{str.data() + pos, str.size() - pos};
+}
+
 std::string strip(const std::string &str, const std::string &chars) {
     return rstrip(lstrip(str, chars), chars);
 }
@@ -103,7 +120,7 @@ std::string replace_all(const std::string &str, const std::string &from,
     result.reserve(str.size());
     size_t added_after_match = from.empty() ? 1 : 0;
     size_t pos = 0;
-    size_t match;
+    size_t match = 0;
     while ((match = str.find(from, pos)) != std::string::npos) {
         result.append(str, pos, match - pos)
             .append(to)

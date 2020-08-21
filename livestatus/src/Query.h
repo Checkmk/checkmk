@@ -9,6 +9,7 @@
 // NOTE: We need the 2nd "keep" pragma for deleting Query. Is this
 // an IWYU bug?
 #include "config.h"  // IWYU pragma: keep
+
 #include <bitset>
 #include <chrono>
 #include <cstdint>
@@ -21,6 +22,7 @@
 #include <string>
 #include <unordered_set>
 #include <vector>
+
 #include "Aggregator.h"  // IWYU pragma: keep
 #include "Filter.h"
 #include "Renderer.h"

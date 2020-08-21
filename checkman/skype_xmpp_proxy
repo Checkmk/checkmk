@@ -1,0 +1,14 @@
+title: Skype for Business: XMPP Proxy
+agents: windows
+catalog: app/skype
+license: GPL
+distribution: check_mk
+description:
+ This check monitors streams on a XMPP Proxy (which is part of the edge server).
+
+ It will report {warn} or {crit} if too many inbound or outbound streams fail
+ to be established.
+
+inventory:
+ One service is created.
+

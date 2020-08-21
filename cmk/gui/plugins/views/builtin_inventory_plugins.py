@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -31,28 +31,45 @@ inventory_displayhints.update({
     ".": {"title": _("Inventory")},
     ".hardware.": {"title": _("Hardware"), "icon": "hardware"},
     ".hardware.chassis.": {"title": _("Chassis")},
-    ".hardware.cpu.": {"title": _("Processor")},
-    ".hardware.cpu.model": {"title": _("Model"), "short": _("CPU Model")},
-    ".hardware.cpu.cache_size": {"title": _("Cache Size"), "paint": "bytes"},
+    ".hardware.cpu.": {
+        "title": _("Processor"),
+        "keyorder": [
+            "arch",
+            "max_speed",
+            "model",
+            "type",
+            "threads",
+            "smt_threads",
+            "sharing_mode",
+            "implementation_mode",
+            "entitlement",
+            "cpu_max_capa",
+            "logical_cpus",
+        ],
+    },
+    ".hardware.cpu.arch": {"title": _("CPU Architecture"), "short": _("CPU Arch")},
     ".hardware.cpu.max_speed": {"title": _("Maximum Speed"), "paint": "hz"},
+    ".hardware.cpu.model": {"title": _("Model"), "short": _("CPU Model")},
+    ".hardware.cpu.threads": {"title": _("Total Number of Hyperthreads"), "paint": "count"},
+    ".hardware.cpu.smt_threads": {"title": _("SMT Threads"), "paint": "count"},
+    ".hardware.cpu.sharing_mode": {"title": _("Shared Processor Mode")},
+    ".hardware.cpu.implementation_mode": {"title": _("Processor Implementation Mode")},
+    ".hardware.cpu.entitlement": {"title": _("Processor Entitled Capacity")},
+    ".hardware.cpu.cpu_max_capa": {"title": _("Processor Max. Capacity")},
+    ".hardware.cpu.cache_size": {"title": _("Cache Size"), "paint": "bytes"},
     ".hardware.cpu.bus_speed": {"title": _("Bus Speed"), "paint": "hz"},
     ".hardware.cpu.voltage": {"title": _("Voltage"), "paint": "volt"},
     ".hardware.cpu.cores_per_cpu": {"title": _("Cores per CPU"), "paint": "count"},
     ".hardware.cpu.threads_per_cpu": {"title": _("Hyperthreads per CPU"), "paint": "count"},
-    ".hardware.cpu.threads": {"title": _("Total Number of Hyperthreads"), "paint": "count"},
-    ".hardware.cpu.smt_threads": {"title": _("Simultaneous multithreading"), "paint": "count"},
-    ".hardware.cpu.sharing_mode": {"title": _("CPU sharing mode")},
     ".hardware.cpu.cpus": {
         "title": _("Number of physical CPUs"), "short": _("CPUs"), "paint": "count"
     },
     ".hardware.cpu.logical_cpus": {
         "title": _("Number of logical CPUs"), "short": _("Logical CPUs"), "paint": "count"
     },
-    ".hardware.cpu.arch": {"title": _("CPU Architecture"), "short": _("CPU Arch")},
     ".hardware.cpu.cores": {
         "title": _("Total Number of Cores"), "short": _("Cores"), "paint": "count"
     },
-    ".hardware.cpu.entitlement": {"title": _("CPU Entitlement")},
     ".hardware.memory.": {"title": _("Memory (RAM)")},
     ".hardware.memory.total_ram_usable": {"title": _("Total usable RAM"), "paint": "bytes_rounded"},
     ".hardware.memory.total_swap": {"title": _("Total swap space"), "paint": "bytes_rounded"},
@@ -81,7 +98,16 @@ inventory_displayhints.update({
     ".hardware.memory.arrays:*.devices:*.": {"title": lambda v: v["locator"]},
     ".hardware.memory.arrays:*.devices:*.size": {"title": _("Size"), "paint": "bytes"},
     ".hardware.memory.arrays:*.devices:*.speed": {"title": _("Speed"), "paint": "hz"},
-    ".hardware.system.": {"title": _("System")},
+    ".hardware.system.": {
+        "title": _("System"),
+        "keyorder": [
+            "manufacturer",
+            "product",
+            "serial",
+            "node_name",
+            "partition_name",
+        ],
+    },
     ".hardware.system.product": {"title": _("Product")},
     ".hardware.system.serial": {"title": _("Serial Number")},
     ".hardware.system.expresscode": {"title": _("Express Servicecode")},
@@ -323,6 +349,20 @@ inventory_displayhints.update({
     ".hardware.storage.disks:*.serial": {"title": _("Serial Number")},
     ".hardware.storage.disks:*.size": {"title": _("Size"), "paint": "size"},
     ".hardware.storage.disks:*.type": {"title": _("Type")},
+    ".hardware.volumes.physical_volumes.*:": {
+        "title": ("Physical Volumes"),
+        "keyorder": [
+            "volume_group_name",
+            "physical_volume_name",
+            "physical_volume_status",
+            "physical_volume_total_partitions",
+            "physical_volume_free_partitions"],
+    },
+    ".hardware.volumes.physical_volumes:*.volume_group_name": {"title": _("Volume Group Name")},
+    ".hardware.volumes.physical_volumes:*.physical_volume_name": {"title": _("Physical Volume Name")},
+    ".hardware.volumes.physical_volumes:*.physical_volume_status": {"title": _("Physical Volume Status")},
+    ".hardware.volumes.physical_volumes:*.physical_volume_total_partitions": {"title" : _("Physical Volume Total Partitions")},
+    ".hardware.volumes.physical_volumes:*.physical_volume_free_partitions": {"title" : _("Physical Volume Free Partitions")},
     ".hardware.video:": {"title": _("Graphic Cards")},
     ".hardware.video:*.": {"title": _("Graphic Card %d")},
     ".hardware.video:*.name": {"title": _("Graphic Card Name"), "short": _("Card Name")},
@@ -349,6 +389,13 @@ inventory_displayhints.update({
     ".software.bios.vendor": {"title": _("Vendor")},
     ".software.bios.version": {"title": _("Version")},
     ".software.bios.date": {"title": _("Date"), "paint": "date"},
+    ".software.firmware": {
+        "title": _("Firmware"),
+        "keyorder": [
+            "vendor",
+            "version",
+        ],
+    },
     ".software.firmware.vendor": {"title": _("Vendor")},
     ".software.firmware.version": {"title": _("Version")},
     ".software.firmware.platform_level": {"title": _("Platform Firmware level")},
@@ -592,6 +639,20 @@ inventory_displayhints.update({
     ".software.applications.citrix.vm.catalog": {"title": _("Catalog")},
     ".software.applications.citrix.vm.agent_version": {"title": _("Agent Version")},
     ".software.applications.oracle.": {"title": _("Oracle DB")},
+    ".software.applications.oracle.systemparameter:": {
+        "title": _("V$SYSTEM_PARAMETER"),
+        "keyorder": [
+            "sid",
+            "name",
+            "value",
+            "isdefault",
+        ],
+        "view": "invorasystemparameter_of_host",
+    },
+    ".software.applications.oracle.systemparameter:*.sid": {"title": _("SID")},
+    ".software.applications.oracle.systemparameter:*.name": {"title": _("Name")},
+    ".software.applications.oracle.systemparameter:*.value": {"title": _("Value")},
+    ".software.applications.oracle.systemparameter:*.isdefault": {"title": _("Is default")},
     ".software.applications.oracle.instance:": {
         "title": _("Instances"),
         "keyorder": [
@@ -690,6 +751,40 @@ inventory_displayhints.update({
     ".software.applications.oracle.sga:*.free_mem_avail": {
         "title": _("Free SGA memory available"), "paint": "size"
     },
+    ".software.applications.oracle.pga:": {
+        "title": _("PGA Info"),
+        "keyorder": [
+            "sid",
+            "aggregate_pga_auto_target",
+            "aggregate_pga_target_parameter",
+            "bytes_processed",
+            "extra_bytes_read_written",
+            "global_memory_bound",
+            "maximum_pga_allocated",
+            "maximum_pga_used_for_auto_workareas",
+            "maximum_pga_used_for_manual_workareas",
+            "total_pga_allocated",
+            "total_pga_inuse",
+            "total_pga_used_for_auto_workareas",
+            "total_pga_used_for_manual_workareas",
+            "total_freeable_pga_memory",
+        ],
+        "view": "invorapga_of_host",
+    },
+    ".software.applications.oracle.pga:*.sid": {"title": _("SID")},
+    ".software.applications.oracle.pga:*.aggregate_pga_auto_target": {"title": _("Aggregate PGA auto target"), "paint": "size"},
+    ".software.applications.oracle.pga:*.aggregate_pga_target_parameter": {"title": _("Aggregate PGA target parameter"), "paint": "size"},
+    ".software.applications.oracle.pga:*.bytes_processed": {"title": _("Bytes processed"), "paint": "size"},
+    ".software.applications.oracle.pga:*.extra_bytes_read_written": {"title": _("Extra bytes read/written"), "paint": "size"},
+    ".software.applications.oracle.pga:*.global_memory_bound": {"title": _("Global memory bound"), "paint": "size"},
+    ".software.applications.oracle.pga:*.maximum_pga_allocated": {"title": _("Maximum PGA allocated"), "paint": "size"},
+    ".software.applications.oracle.pga:*.maximum_pga_used_for_auto_workareas": {"title": _("Maximum PGA used for auto workareas"), "paint": "size"},
+    ".software.applications.oracle.pga:*.maximum_pga_used_for_manual_workareas": {"title": _("Maximum PGA used for manual workareas"), "paint": "size"},
+    ".software.applications.oracle.pga:*.total_pga_allocated": {"title": _("Total PGA allocated"), "paint": "size"},
+    ".software.applications.oracle.pga:*.total_pga_inuse": {"title": _("Total PGA inuse"), "paint": "size"},
+    ".software.applications.oracle.pga:*.total_pga_used_for_auto_workareas": {"title": _("Total PGA used for auto workareas"), "paint": "size"},
+    ".software.applications.oracle.pga:*.total_pga_used_for_manual_workareas": {"title": _("Total PGA used for manual workareas"), "paint": "size"},
+    ".software.applications.oracle.pga:*.total_freeable_pga_memory": {"title": _("Total freeable PGA memory"), "paint": "size"},
     ".software.applications.oracle.tablespaces:": {
         "title": _("Tablespaces"),
         "keyorder": [
@@ -868,7 +963,13 @@ inventory_displayhints.update({
     ".networking.tunnels:*.peername": { "title" : _("Peer Name")  },
     ".networking.tunnels:*.sourceip": { "title" : _("Source IP Address") },
     ".networking.tunnels:*.tunnel_interface": { "title" : _("Tunnel Interface") },
-
+    ".software.kernel_config:": {
+        "title": _("Kernel Configuration (sysctl)"),
+        "keyorder": ["parameter", "value"],
+        "view": "invkernelconfig_of_host",
+    },
+    ".software.kernel_config:*.parameter": {"title": _("Parameter")},
+    ".software.kernel_config:*.value": {"title": _("Value")},
 }
 )
 

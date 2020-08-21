@@ -1,30 +1,31 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # yapf: disable
-# pylint: disable=redefined-outer-name
-import copy
-import pytest  # type: ignore[import]
-import six
-import cmk.gui.config as config
 
+import copy
+from typing import Any, Dict
+
+import pytest  # type: ignore[import]
+
+import cmk.gui.config as config
 import cmk.utils.version as cmk_version
 
-# Make it load all plugins (CEE + CME)
-import cmk.gui.views  # pylint: disable=unused-import
-import cmk.gui.default_permissions
+pytestmark = pytest.mark.usefixtures("load_plugins")
 
 from cmk.gui.globals import html
 from cmk.gui.valuespec import ValueSpec
 import cmk.gui.plugins.views
 from cmk.gui.plugins.views.utils import transform_painter_spec
 from cmk.gui.type_defs import PainterSpec
+import cmk.gui.views
 
-@pytest.fixture()
-def view(register_builtin_html, load_plugins):
+
+@pytest.fixture(name="view")
+def view_fixture(register_builtin_html):
     view_name = "allhosts"
     view_spec = transform_painter_spec(cmk.gui.views.multisite_builtin_views[view_name])
     return cmk.gui.views.View(view_name, view_spec, view_spec.get("context", {}))
@@ -42,6 +43,8 @@ def test_registered_painter_options():
         'ts_date',
         'ts_format',
         'graph_render_options',
+        "refresh",
+        "num_columns",
     ]
 
     names = cmk.gui.plugins.views.painter_option_registry.keys()
@@ -56,18 +59,11 @@ def test_registered_layouts():
     expected = [
         'boxed',
         'boxed_graph',
-        'csv',
-        'csv_export',
         'dataset',
-        'json',
-        'json_export',
-        'jsonp',
         'matrix',
         'mobiledataset',
         'mobilelist',
         'mobiletable',
-        'python',
-        'python-raw',
         'table',
         'tiled',
     ]
@@ -80,94 +76,49 @@ def test_layout_properties():
     expected = {
         'boxed': {
             'checkboxes': True,
-            'hide': False,
             'title': u'Balanced boxes'
         },
         'boxed_graph': {
             'checkboxes': True,
-            'hide': False,
             'title': u'Balanced graph boxes'
-        },
-        'csv': {
-            'checkboxes': False,
-            'hide': True,
-            'title': u'CSV data output'
-        },
-        'csv_export': {
-            'checkboxes': False,
-            'hide': True,
-            'title': u'CSV data export'
         },
         'dataset': {
             'checkboxes': False,
-            'hide': False,
             'title': u'Single dataset'
-        },
-        'json': {
-            'checkboxes': False,
-            'hide': True,
-            'title': u'JSON data output'
-        },
-        'json_export': {
-            'checkboxes': False,
-            'hide': True,
-            'title': u'JSON data export'
-        },
-        'jsonp': {
-            'checkboxes': False,
-            'hide': True,
-            'title': u'JSONP data output'
         },
         'matrix': {
             'checkboxes': False,
             'has_csv_export': True,
             'options': ['matrix_omit_uniform'],
-            'hide': False,
             'title': u'Matrix'
         },
         'mobiledataset': {
             'checkboxes': False,
-            'hide': False,
             'title': u'Mobile: Dataset'
         },
         'mobilelist': {
             'checkboxes': False,
-            'hide': False,
             'title': u'Mobile: List'
         },
         'mobiletable': {
             'checkboxes': False,
-            'hide': False,
             'title': u'Mobile: Table'
-        },
-        'python': {
-            'checkboxes': False,
-            'hide': True,
-            'title': u'Python data output'
-        },
-        'python-raw': {
-            'checkboxes': False,
-            'hide': True,
-            'title': u'Python raw data output'
         },
         'table': {
             'checkboxes': True,
-            'hide': False,
             'title': u'Table'
         },
         'tiled': {
             'checkboxes': True,
-            'hide': False,
             'title': u'Tiles'
         },
     }
 
     for ident, spec in expected.items():
         plugin = cmk.gui.plugins.views.layout_registry[ident]()
-        assert isinstance(plugin.title, six.text_type)
+        assert isinstance(plugin.title, str)
         assert spec["title"] == plugin.title
         assert spec["checkboxes"] == plugin.can_display_checkboxes
-        assert spec["hide"] == plugin.is_hidden
         assert spec.get("has_csv_export", False) == plugin.has_individual_csv_export
 
 
@@ -184,6 +135,20 @@ def test_get_layout_choices():
         ('mobiletable', u'Mobile: Table'),
         ('mobilelist', u'Mobile: List'),
     ])
+
+
+def test_registered_exporters():
+    expected = [
+        'csv',
+        'csv_export',
+        'json',
+        'json_export',
+        'jsonp',
+        'python',
+        'python-raw',
+    ]
+    names = cmk.gui.plugins.views.exporter_registry.keys()
+    assert sorted(expected) == sorted(names)
 
 
 def test_registered_command_groups():
@@ -211,7 +176,7 @@ def test_legacy_register_command_group(monkeypatch):
 
 
 def test_registered_commands():
-    expected = {
+    expected: Dict[str, Dict[str, Any]] = {
         'acknowledge': {
             'group': 'acknowledge',
             'permission': 'action.acknowledge',
@@ -360,7 +325,7 @@ def test_legacy_register_command(monkeypatch):
 # Skip pending discussion with development team.
 @pytest.mark.skip
 def test_registered_datasources():
-    expected = {
+    expected: Dict[str, Dict[str, Any]] = {
         'alert_stats': {
             'add_columns': [
                 'log_alerts_ok', 'log_alerts_warn', 'log_alerts_crit', 'log_alerts_unknown',
@@ -696,7 +661,9 @@ def test_registered_datasources():
         spec = expected[ds.ident]
         assert ds.title == spec["title"]
         if hasattr(ds.table, '__call__'):
-            assert ("func", ds.table.__name__) == spec["table"]
+            # FIXME: ugly getattr so that mypy doesn't complain about missing attribute __name__
+            name = getattr(ds.table, '__name__')
+            assert ("func", name) == spec["table"]
         elif isinstance(ds.table, tuple):
             assert spec["table"][0] == "tuple"
             assert spec["table"][1][0] == ds.table[0].__name__
@@ -710,9 +677,8 @@ def test_registered_datasources():
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-@pytest.mark.usefixtures("load_plugins")
 def test_registered_painters():
-    expected = {
+    expected: Dict[str, Dict[str, Any]] = {
         'aggr_acknowledged': {
             'columns': ['aggr_effective_state'],
             'title': u'Acknowledged'
@@ -4060,7 +4026,7 @@ def test_legacy_register_painter(monkeypatch):
                         cmk.gui.plugins.views.utils.PainterRegistry())
 
     def rendr(row):
-        return "xyz"
+        return ("abc", "xyz")
 
     cmk.gui.plugins.views.utils.register_painter(
         "abc", {
@@ -4084,16 +4050,15 @@ def test_legacy_register_painter(monkeypatch):
     assert painter.sorter == "aaaa"
     assert painter.painter_options == ["opt1"]
     assert painter.printable is False
-    assert painter.render(row={}, cell=None) == "xyz"
+    assert painter.render(row={}, cell=dummy_cell) == ("abc", "xyz")
     assert painter.group_by(row={}) == "xyz"
 
 
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-@pytest.mark.usefixtures("load_plugins")
 def test_registered_sorters():
-    expected = {
+    expected: Dict[str, Dict[str, Any]] = {
         'aggr_group': {
             'columns': ['aggr_group'],
             'title': u'Aggregation group'
@@ -5780,12 +5745,21 @@ def test_get_needed_join_columns(view):
     view = cmk.gui.views.View(view.name, view_spec, view_spec.get("context", {}))
 
     columns = cmk.gui.views._get_needed_join_columns(view.join_cells, view.sorters)
-    assert sorted(columns) == sorted([
+
+    expected_columns = [
         'host_name',
         'service_description',
-    ])
+    ]
 
-@pytest.mark.usefixtures("load_plugins")
+    if cmk_version.is_managed_edition():
+        expected_columns += [
+            "host_custom_variable_names",
+            "host_custom_variable_values",
+        ]
+
+    assert sorted(columns) == sorted(expected_columns)
+
+
 def test_create_view_basics():
     view_name = "allhosts"
     view_spec = cmk.gui.views.multisite_builtin_views[view_name]
@@ -5793,16 +5767,19 @@ def test_create_view_basics():
 
     assert view.name == view_name
     assert view.spec == view_spec
-    assert isinstance(view.datasource, cmk.gui.plugins.views.utils.DataSource)
+    assert isinstance(view.datasource, cmk.gui.plugins.views.utils.ABCDataSource)
     assert isinstance(view.datasource.table, cmk.gui.plugins.views.utils.RowTable)
     assert view.row_limit is None
     assert view.user_sorters is None
+    assert view.want_checkboxes is False
     assert view.only_sites is None
+
 
 def test_view_row_limit(view):
     assert view.row_limit is None
     view.row_limit = 101
     assert view.row_limit == 101
+
 
 @pytest.mark.parametrize("limit,permissions,result", [
     (None, [], 1000),
@@ -5828,10 +5805,12 @@ def test_gui_view_row_limit(register_builtin_html, monkeypatch, mocker, limit, p
     mocker.patch.object(config.user, "role_ids", ["nobody"])
     assert cmk.gui.views.get_limit() == result
 
+
 def test_view_only_sites(view):
     assert view.only_sites is None
     view.only_sites = ["unit"]
     assert view.only_sites == ["unit"]
+
 
 def test_view_user_sorters(view):
     assert view.user_sorters is None
@@ -5839,7 +5818,13 @@ def test_view_user_sorters(view):
     assert view.user_sorters == [("abc", True)]
 
 
-def test_registered_display_hints(load_plugins):
+def test_view_want_checkboxes(view):
+    assert view.want_checkboxes is False
+    view.want_checkboxes = True
+    assert view.want_checkboxes is True
+
+
+def test_registered_display_hints():
     expected = ['.',
     '.hardware.',
     '.hardware.chassis.',
@@ -5943,8 +5928,10 @@ def test_registered_display_hints(load_plugins):
     '.hardware.cpu.cache_size',
     '.hardware.cpu.cores',
     '.hardware.cpu.cores_per_cpu',
+    '.hardware.cpu.cpu_max_capa',
     '.hardware.cpu.cpus',
     '.hardware.cpu.entitlement',
+    '.hardware.cpu.implementation_mode',
     '.hardware.cpu.logical_cpus',
     '.hardware.cpu.max_speed',
     '.hardware.cpu.model',
@@ -6005,6 +5992,12 @@ def test_registered_display_hints(load_plugins):
     '.hardware.video:*.graphic_memory',
     '.hardware.video:*.name',
     '.hardware.video:*.subsystem',
+    '.hardware.volumes.physical_volumes.*:',
+    '.hardware.volumes.physical_volumes:*.volume_group_name',
+    '.hardware.volumes.physical_volumes:*.physical_volume_name',
+    '.hardware.volumes.physical_volumes:*.physical_volume_status',
+    '.hardware.volumes.physical_volumes:*.physical_volume_total_partitions',
+    '.hardware.volumes.physical_volumes:*.physical_volume_free_partitions',
     '.networking.',
     '.networking.addresses:',
     '.networking.addresses:*.address',
@@ -6180,6 +6173,11 @@ def test_registered_display_hints(load_plugins):
     '.software.applications.oracle.dataguard_stats:*.role',
     '.software.applications.oracle.dataguard_stats:*.sid',
     '.software.applications.oracle.dataguard_stats:*.switchover',
+    '.software.applications.oracle.systemparameter:',
+    '.software.applications.oracle.systemparameter:*.sid',
+    '.software.applications.oracle.systemparameter:*.name',
+    '.software.applications.oracle.systemparameter:*.value',
+    '.software.applications.oracle.systemparameter:*.isdefault',
     '.software.applications.oracle.instance:',
     '.software.applications.oracle.instance:*.db_creation_time',
     '.software.applications.oracle.instance:*.db_uptime',
@@ -6191,6 +6189,21 @@ def test_registered_display_hints(load_plugins):
     '.software.applications.oracle.recovery_area:',
     '.software.applications.oracle.recovery_area:*.flashback',
     '.software.applications.oracle.recovery_area:*.sid',
+    ".software.applications.oracle.pga:",
+    ".software.applications.oracle.pga:*.aggregate_pga_auto_target",
+    ".software.applications.oracle.pga:*.aggregate_pga_target_parameter",
+    ".software.applications.oracle.pga:*.bytes_processed",
+    ".software.applications.oracle.pga:*.extra_bytes_read_written",
+    ".software.applications.oracle.pga:*.global_memory_bound",
+    ".software.applications.oracle.pga:*.maximum_pga_allocated",
+    ".software.applications.oracle.pga:*.maximum_pga_used_for_auto_workareas",
+    ".software.applications.oracle.pga:*.maximum_pga_used_for_manual_workareas",
+    ".software.applications.oracle.pga:*.sid",
+    ".software.applications.oracle.pga:*.total_freeable_pga_memory",
+    ".software.applications.oracle.pga:*.total_pga_allocated",
+    ".software.applications.oracle.pga:*.total_pga_inuse",
+    ".software.applications.oracle.pga:*.total_pga_used_for_auto_workareas",
+    ".software.applications.oracle.pga:*.total_pga_used_for_manual_workareas",
     '.software.applications.oracle.sga:',
     '.software.applications.oracle.sga:*.buf_cache_size',
     '.software.applications.oracle.sga:*.data_trans_cache_size',
@@ -6230,9 +6243,13 @@ def test_registered_display_hints(load_plugins):
     '.software.configuration.snmp_info.contact',
     '.software.configuration.snmp_info.location',
     '.software.configuration.snmp_info.name',
+    '.software.firmware',
     '.software.firmware.platform_level',
     '.software.firmware.vendor',
     '.software.firmware.version',
+    '.software.kernel_config:',
+    '.software.kernel_config:*.parameter',
+    '.software.kernel_config:*.value',
     '.software.os.',
     '.software.os.arch',
     '.software.os.install_date',
@@ -6255,9 +6272,9 @@ def test_registered_display_hints(load_plugins):
     '.software.packages:*.vendor',
     '.software.packages:*.version',]
 
-    found = cmk.gui.plugins.views.inventory_displayhints.keys()
-    assert sorted(expected) == sorted(found)
+    assert sorted(expected) == sorted(cmk.gui.plugins.views.inventory_displayhints.keys())
 
-def test_get_inventory_display_hint(load_plugins):
+
+def test_get_inventory_display_hint():
     hint = cmk.gui.plugins.views.inventory_displayhints.get(".software.packages:*.summary")
     assert isinstance(hint, dict)

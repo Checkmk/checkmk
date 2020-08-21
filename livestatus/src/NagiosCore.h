@@ -11,13 +11,13 @@
 #include <chrono>
 #include <cstddef>
 #include <filesystem>
+#include <functional>  // IWYU pragma: keep
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 #include "Metric.h"
 #include "MonitoringCore.h"
-#include "RRDColumn.h"
 #include "Store.h"
 #include "Triggers.h"
 #include "auth.h"
@@ -38,7 +38,7 @@ struct NagiosPaths {
     std::string _mkeventd_socket;
     std::string _rrdcached_socket;
 
-    void dump(Logger *logger);
+    void dump(Logger *logger) const;
 };
 
 struct NagiosLimits {
@@ -69,6 +69,7 @@ public:
                                            const Contact *contact) override;
 
     std::chrono::system_clock::time_point last_logfile_rotation() override;
+    std::chrono::system_clock::time_point last_config_change() override;
     size_t maxLinesPerLogFile() const override;
 
     Command find_command(const std::string &name) const override;
@@ -90,14 +91,9 @@ public:
     std::filesystem::path structuredStatusPath() const override;
     std::filesystem::path crashReportPath() const override;
     std::filesystem::path pnpPath() const override;
-    std::filesystem::path rrdPath() const;
     std::filesystem::path historyFilePath() const override;
     std::filesystem::path logArchivePath() const override;
     std::filesystem::path rrdcachedSocketPath() const override;
-
-    MetricLocation metricLocation(const void *object,
-                                  const Metric::MangledName &name,
-                                  const RRDColumn::Table &table) const override;
 
     Encoding dataEncoding() override;
     size_t maxResponseSize() override;
@@ -117,6 +113,10 @@ public:
 
     Attributes customAttributes(const void *holder,
                                 AttributeKind kind) const override;
+
+    MetricLocation metricLocation(const std::string &host_name,
+                                  const std::string &service_description,
+                                  const Metric::Name &var) const override;
 
     // specific for NagiosCore
     bool answerRequest(InputBuffer &input, OutputBuffer &output);

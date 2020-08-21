@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -43,7 +43,7 @@ class SidebarSnapinCMAWebconf(SidebarSnapin):
 
         self._iconlink(_("Main Menu"), base_url, "home")
 
-        for url, icon, title, _descr in cma_nav.modules():
+        for url, icon, title, _descr in cma_nav.modules():  # type: ignore[attr-defined]
             url = base_url + url
             self._iconlink(title, url, icon)
 

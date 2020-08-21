@@ -52,3 +52,41 @@ def handle_graylog_messages(messages, params):
                        msgs_avg_levels_upper + msgs_avg_levels_lower,
                        infoname="Average number of messages (%s)" %
                        get_age_human_readable(avg * 60))
+
+    diff_key = "msgs_diff"
+    timespan = params.get(diff_key, 1800)
+    diff_levels_upper = params.get('%s_upper' % diff_key, (None, None))
+    diff_levels_lower = params.get('%s_lower' % diff_key, (None, None))
+
+    diff = _get_value_diff("graylog_%s" % diff_key, messages, timespan)
+
+    yield check_levels(
+        diff,
+        "graylog_diff",
+        diff_levels_upper + diff_levels_lower,
+        infoname="Total number of messages last %s" % get_age_human_readable(timespan),
+    )
+
+
+def _get_value_diff(diff_name, svc_value, timespan):
+    this_time = time.time()
+    old_state = get_item_state(diff_name, None)
+
+    # first call: take current value as diff or assume 0.0
+    if old_state is None:
+        diff_val = 0
+        set_item_state(diff_name, (this_time, svc_value))
+        return diff_val
+
+    # Get previous value and time difference
+    last_time, last_val = old_state
+    timedif = this_time - last_time
+    if timedif < 0:
+        timedif = 0
+    if timedif < float(timespan):
+        diff_val = svc_value - last_val
+    else:
+        diff_val = 0
+        set_item_state(diff_name, (this_time, svc_value))
+
+    return diff_val

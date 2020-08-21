@@ -7,6 +7,7 @@
 #define OutputBuffer_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <sstream>
 #include <string>
 class Logger;

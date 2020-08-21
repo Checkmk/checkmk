@@ -1,0 +1,36 @@
+title: Veritas Cluster Service: System
+agents: linux
+catalog: os/services
+license: GPL
+distribution: check_mk
+description:
+ This check needs the {check_mk_agent.linux} agent which provides
+ information about the Veritas Cluster Service if it is installed.
+
+ The check monitors the system state and can have the following states:
+
+ - "RUNNING" will be OK,
+
+ - "EXITED" will be WARN,
+
+ - "FAULTED" will be CRIT,
+
+ - all others will be WARN.
+
+ The check is cluster-aware. In this case
+
+ - if all systems report the same, that state is used,
+
+ - if any system  reports "FAULTED", "UNKNOWN", "ONLINE" or
+   "RUNNING", the respective state will be used (checked in that order)
+
+ - otherwise the states will be concatenated.
+
+item:
+ The system name.
+
+inventory:
+ One service is created for each system.
+
+cluster:
+  On a cluster the service assumes the worst of all encountered node states.

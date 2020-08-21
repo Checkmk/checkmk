@@ -8,12 +8,7 @@ import errno
 import os
 import collections
 import io
-import sys
-
-if sys.version_info[0] >= 3:
-    import pathlib as pathlib_  # pylint: disable=import-error
-else:
-    import pathlib2 as pathlib_  # pylint: disable=import-error
+import pathlib
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -183,12 +178,12 @@ def _logwatch_select_forwarded(discoverable_items):
 
 # Extracts patterns that are relevant for the current host and item.
 # Constructs simple list of pairs: [ ('W', 'crash.exe'), ('C', 'sshd.*test') ]
-def logwatch_precompile(hostname, item, _unused):
+def logwatch_precompile(item: str) -> Dict[str, Any]:
     # Initialize the patterns list with the logwatch_rules
     params = {"reclassify_patterns": []}
 
     # This is the new (-> WATO controlled) variable
-    rules = service_extra_conf(hostname, item, logwatch_rules)
+    rules = service_extra_conf(host_name(), item, logwatch_rules)
 
     for rule in rules:
         if isinstance(rule, dict):
@@ -241,7 +236,7 @@ def inventory_logwatch_single(parsed):
         if not any(
                 logwatch_groups_of_logfile(group_patterns, logfile)
                 for group_patterns in inventory_groups):
-            yield logfile, None  # file was in no group
+            yield logfile, logwatch_precompile(logfile)  # file was in no group
 
 
 def inventory_logwatch_groups(parsed):
@@ -257,8 +252,9 @@ def inventory_logwatch_groups(parsed):
                 inventory.setdefault(group_name, set()).update(pattern_set)
 
     for group_name, patterns in inventory.items():
-        # Convert pattern containers to lists (sets are not possible in autochecks)
-        yield group_name, {"group_patterns": sorted(patterns)}
+        params = {"group_patterns": sorted(patterns)}
+        params.update(logwatch_precompile(group_name))
+        yield group_name, params
 
 
 #.
@@ -281,6 +277,10 @@ def inventory_logwatch_groups(parsed):
 def check_logwatch(item, params, parsed):
     for error_msg in parsed['errors']:
         yield 3, error_msg
+
+    if not isinstance(params, dict) or "reclassify_patterns" not in params:
+        yield 3, "Patterns not found. Please rediscover the services of this host."
+        return
 
     now = time.time()
     last_run = get_item_state("logwatch_last_run_%s" % item, 0)
@@ -306,8 +306,6 @@ check_info['logwatch'] = {
     'group': 'logwatch',
 }
 
-precompile_params['logwatch'] = logwatch_precompile
-
 #.
 #   .--logwatch.groups-----------------------------------------------------.
 #   |              _                                                       |
@@ -317,22 +315,6 @@ precompile_params['logwatch'] = logwatch_precompile
 #   |             |_| \_/\_(_)__, |_|  \___/ \__,_| .__/|___/              |
 #   |                        |___/                |_|                      |
 #   '----------------------------------------------------------------------'
-
-
-def logwatch_group_precompile(hostname, item, params):
-    patterns = []
-    for line in host_extra_conf(hostname, logwatch_groups):
-        for group_name_pattern, pattern in line:
-            if group_name_pattern == item:
-                patterns.append(pattern)
-
-    if params is None:
-        precomped = {}
-    else:
-        precomped = params.copy()
-    precomped["pre_comp_group_patterns"] = patterns
-    precomped.update(logwatch_precompile(hostname, item, None))
-    return precomped
 
 
 def _logwatch_instantiate_matched(match, group_name, inclusion):
@@ -376,6 +358,7 @@ def logwatch_groups_of_logfile(group_patterns, filename):
         else:
             excl_match = fnmatch.fnmatch(filename, exclusion)
 
+        # NOTE: exclusion wins.
         if incl_match and not excl_match:
             found_these_groups.setdefault(group_name, set())
             found_these_groups[group_name].add((inclusion, exclusion))
@@ -385,6 +368,7 @@ def logwatch_groups_of_logfile(group_patterns, filename):
 
 def _logwatch_match_group_patterns(logfile_name, inclusion, exclusion):
 
+    # NOTE: in the grouped sap and fileinfo checks, the *exclusion* pattern wins.
     inclusion_is_regex = inclusion.startswith("~")
     if inclusion_is_regex:
         incl_match = regex(inclusion[1:]).match(logfile_name)
@@ -405,9 +389,11 @@ def check_logwatch_groups(item, params, parsed):
     for error_msg in parsed['errors']:
         yield 3, error_msg
 
-    group_patterns = set(params.get("pre_comp_group_patterns", []))
-    for entry in params.get('group_patterns', []):
-        group_patterns.add(entry)
+    if not isinstance(params, dict) or "reclassify_patterns" not in params:
+        yield 3, "Patterns not found. Please rediscover the services of this host."
+        return
+
+    group_patterns = set(params['group_patterns'])
 
     loglines = []
     for logfile_name, item_data in parsed['logfiles'].items():
@@ -429,8 +415,6 @@ check_info['logwatch.groups'] = {
     'group': 'logwatch',
     'includes': ['eval_regex.include']
 }
-
-precompile_params['logwatch.groups'] = logwatch_group_precompile
 
 #.
 
@@ -535,9 +519,10 @@ class LogwatchBlockCollector(object):
         return "%s messages" % ', '.join(count_txt)
 
 
-def check_logwatch_generic(item, params, loglines, found):
+def check_logwatch_generic(item, patterns, loglines, found):
+    import six
     import hashlib
-    logmsg_dir = pathlib_.Path(logwatch_dir, host_name())
+    logmsg_dir = pathlib.Path(logwatch_dir, host_name())
 
     logmsg_dir.mkdir(parents=True, exist_ok=True)
 
@@ -547,14 +532,6 @@ def check_logwatch_generic(item, params, loglines, found):
     # means, that the corresponding logfile also vanished on the target host.
     if not found and not logmsg_file_path.exists():
         return (3, "log not present anymore")
-
-    # Get the patterns (either compile or reuse the precompiled ones)
-    # Check_MK creates an empty string if the precompile function has
-    # not been executed yet. The precompile function creates an empty
-    # list when no ruless/patterns are defined. In case of the logwatch.groups
-    # checks, params are a tuple with the normal logwatch parameters on the first
-    # and the grouping patterns on the second position
-    patterns = logwatch_precompile(host_name(), item, None) if params in ('', None) else params
 
     block_collector = LogwatchBlockCollector()
     current_block = None
@@ -567,6 +544,7 @@ def check_logwatch_generic(item, params, loglines, found):
         raise MKGeneralException("User %s cannot open file for writing: %s" %
                                  (logwatch_username(), exc))
 
+    # TODO: repr() of a dict may change.
     pattern_hash = hashlib.sha256(repr(patterns).encode()).hexdigest()
     net_lines = 0
     # parse cached log lines
@@ -741,7 +719,8 @@ def _logwatch_filter_accumulated_lines(item_data):
     for node_data in item_data.values():
         for line in node_data['lines']:
             # skip context lines and ignore lines
-            if line[0] not in ('.', 'I'):
+            # skip context lines, ignore lines and empty lines
+            if line[0] not in ['.', 'I'] and len(line) > 1:
                 yield line
 
 

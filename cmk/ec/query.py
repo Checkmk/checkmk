@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from logging import Logger  # pylint: disable=unused-import
-from typing import Any, Callable, List, Optional, Set, Tuple  # pylint: disable=unused-import
+from logging import Logger
+from typing import Any, Callable, List, Optional, Set, Tuple
 
 from cmk.utils.exceptions import MKException
 import cmk.utils.regex
@@ -21,8 +21,7 @@ _StatusServer = Any
 
 class Query:
     @staticmethod
-    def make(status_server, raw_query, logger):
-        # type: (_StatusServer, List[str], Logger) -> Query
+    def make(status_server: _StatusServer, raw_query: List[str], logger: Logger) -> 'Query':
         parts = raw_query[0].split(None, 1)
         if len(parts) != 2:
             raise MKClientError("Invalid query. Need GET/COMMAND plus argument(s)")
@@ -35,8 +34,7 @@ class Query:
             return _QueryCOMMAND(status_server, raw_query, logger)
         raise MKClientError("Invalid method %s (allowed are GET, REPLICATE, COMMAND)" % method)
 
-    def __init__(self, status_server, raw_query, logger):
-        # type: (_StatusServer, List[str], Logger) -> None
+    def __init__(self, status_server: _StatusServer, raw_query: List[str], logger: Logger) -> None:
         super().__init__()
         self.output_format = "python"
         parts = raw_query[0].split(None, 1)
@@ -44,8 +42,7 @@ class Query:
             raise MKClientError("Invalid query. Need GET/COMMAND plus argument(s)")
         self.method, self.method_arg = parts
 
-    def __repr__(self):
-        # type: () -> str
+    def __repr__(self) -> str:
         return self.method + " " + self.method_arg
 
 
@@ -62,8 +59,7 @@ _filter_operators = {
 }
 
 
-def operator_for(name):
-    # type: (str) -> Callable
+def operator_for(name: str) -> Callable:
     func = _filter_operators.get(name)
     if func is None:
         raise MKClientError("Unknown filter operator '%s'" % name)
@@ -71,21 +67,19 @@ def operator_for(name):
 
 
 class QueryGET(Query):
-    def __init__(self, status_server, raw_query, logger):
-        # type: (_StatusServer, List[str], Logger) -> None
+    def __init__(self, status_server: _StatusServer, raw_query: List[str], logger: Logger) -> None:
         super().__init__(status_server, raw_query, logger)
         self.table_name = self.method_arg
         self.table = status_server.table(self.table_name)
         self.requested_columns = self.table.column_names
         # NOTE: history's _get_mongodb and _get_files access filters and limits directly.
-        self.filters = []  # type: List[Tuple[str, str, Callable, str]]
-        self.limit = None  # type: Optional[int]
+        self.filters: List[Tuple[str, str, Callable, str]] = []
+        self.limit: Optional[int] = None
         # NOTE: StatusTableEvents uses only_host for optimization.
-        self.only_host = None  # type: Optional[Set[Any]]
+        self.only_host: Optional[Set[Any]] = None
         self._parse_header_lines(raw_query, logger)
 
-    def _parse_header_lines(self, raw_query, logger):
-        # type: (List[str], Logger) -> None
+    def _parse_header_lines(self, raw_query: List[str], logger: Logger) -> None:
         for line in raw_query[1:]:
             try:
                 header, argument = line.rstrip("\n").split(":", 1)
@@ -93,8 +87,7 @@ class QueryGET(Query):
             except Exception as e:
                 raise MKClientError("Invalid header line '%s': %s" % (line.rstrip(), e))
 
-    def _parse_header_line(self, header, argument, logger):
-        # type: (str, str, Logger) -> None
+    def _parse_header_line(self, header: str, argument: str, logger: Logger) -> None:
         if header == "OutputFormat":
             if argument not in ["python", "plain", "json"]:
                 raise MKClientError(
@@ -113,8 +106,7 @@ class QueryGET(Query):
         else:
             logger.info("Ignoring not-implemented header %s" % header)
 
-    def _parse_filter(self, textspec):
-        # type: (str) -> Tuple[str, str, Callable, Any]
+    def _parse_filter(self, textspec: str) -> Tuple[str, str, Callable, Any]:
         # Examples:
         # id = 17
         # name ~= This is some .* text
@@ -143,16 +135,14 @@ class QueryGET(Query):
         operator_function = operator_for(operator_name)
         return (column, operator_name, lambda x: operator_function(x, argument), argument)
 
-    def requested_column_indexes(self):
-        # type: () -> List[Optional[int]]
+    def requested_column_indexes(self) -> List[Optional[int]]:
         # If a column is not known: Use None as index and None value later.
         return [
             self.table.column_indices.get(column_name)  #
             for column_name in self.requested_columns
         ]
 
-    def filter_row(self, row):
-        # type: (List[Any]) -> bool
+    def filter_row(self, row: List[Any]) -> bool:
         return all(
             predicate(row[self.table.column_indices[column_name]])
             for column_name, _operator_name, predicate, _argument in self.filters)

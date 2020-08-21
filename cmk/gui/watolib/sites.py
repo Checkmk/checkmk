@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,20 +7,18 @@
 import os
 import re
 import time
-import shutil
-import traceback
-from typing import (  # pylint: disable=unused-import
-    NamedTuple, Type,
-)
-import six
+from typing import NamedTuple, Type
+from pathlib import Path
+
+from six import ensure_binary
 
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 
 import cmk.gui.sites
-import cmk.gui.multitar as multitar
+from cmk.gui.sites import SiteConfigurations
 import cmk.gui.config as config
-import cmk.gui.userdb as userdb
+import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.hooks as hooks
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
@@ -54,28 +52,13 @@ from cmk.gui.watolib.automation_commands import (
     AutomationCommand,
     automation_command_registry,
 )
-from cmk.gui.watolib.global_settings import save_site_global_settings
 from cmk.gui.watolib.utils import (
     default_site,
     multisite_dir,
 )
 
-from cmk.gui.plugins.watolib.utils import wato_fileheader
 
-
-class SiteManagementFactory(object):
-    @staticmethod
-    def factory():
-        # type: () -> SiteManagement
-        if cmk_version.is_raw_edition():
-            cls = CRESiteManagement  # type: Type[SiteManagement]
-        else:
-            cls = CEESiteManagement
-
-        return cls()
-
-
-class SiteManagement(object):
+class SiteManagement:
     @classmethod
     def connection_method_valuespec(cls):
         return CascadingDropdown(
@@ -198,7 +181,7 @@ class SiteManagement(object):
                 ("all", _("Sync users with all connections")),
                 ("list", _("Sync with the following LDAP connections"),
                  ListChoice(
-                     choices=userdb.connection_choices,
+                     choices=userdb_utils.connection_choices,
                      allow_empty=False,
                  )),
             ],
@@ -282,7 +265,7 @@ class SiteManagement(object):
         user_sync_valuespec.validate_value(site_configuration.get("user_sync"), "user_sync")
 
     @classmethod
-    def load_sites(cls):
+    def load_sites(cls) -> SiteConfigurations:
         if not os.path.exists(cls._sites_mk()):
             return config.default_single_site_configuration()
 
@@ -350,6 +333,7 @@ class SiteManagement(object):
         del all_sites[site_id]
         cls.save_sites(all_sites)
         cmk.gui.watolib.activate_changes.clear_site_replication_status(site_id)
+        cmk.gui.watolib.activate_changes.remove_site_config_directory(site_id)
         cmk.gui.watolib.changes.add_change("edit-sites",
                                            _("Deleted site %s") % site_id,
                                            domains=domains,
@@ -362,6 +346,17 @@ class SiteManagement(object):
     @classmethod
     def transform_old_connection_params(cls, value):
         return value
+
+
+class SiteManagementFactory:
+    @staticmethod
+    def factory() -> SiteManagement:
+        if cmk_version.is_raw_edition():
+            cls: Type[SiteManagement] = CRESiteManagement
+        else:
+            cls = CEESiteManagement
+
+        return cls()
 
 
 class CRESiteManagement(SiteManagement):
@@ -432,7 +427,7 @@ class CEESiteManagement(SiteManagement):
     @classmethod
     def _transform_old_socket_spec(cls, sock_spec):
         """Transforms pre 1.6 socket configs"""
-        if isinstance(sock_spec, six.string_types):
+        if isinstance(sock_spec, str):
             return "unix", {
                 "path": sock_spec,
             }
@@ -656,7 +651,11 @@ def _update_distributed_wato_file(sites):
         if site.get("replication"):
             distributed = True
         if config.site_is_local(siteid):
-            create_distributed_wato_file(siteid, is_slave=False)
+            cmk.gui.watolib.activate_changes.create_distributed_wato_files(
+                base_dir=Path(cmk.utils.paths.omd_root),
+                site_id=siteid,
+                is_remote=False,
+            )
 
     # Remove the distributed wato file
     # a) If there is no distributed WATO setup
@@ -670,17 +669,6 @@ def is_livestatus_encrypted(site):
     return family_spec in ["tcp", "tcp6"] and address_spec["tls"][0] != "plain_text"
 
 
-def create_distributed_wato_file(siteid, is_slave):
-    output = wato_fileheader()
-    output += ("# This file has been created by the master site\n"
-               "# push the configuration to us. It makes sure that\n"
-               "# we only monitor hosts that are assigned to our site.\n\n")
-    output += "distributed_wato_site = '%s'\n" % siteid
-    output += "is_wato_slave_site = %r\n" % is_slave
-
-    store.save_file(cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk", output)
-
-
 def _delete_distributed_wato_file():
     p = cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk"
     # We do not delete the file but empty it. That way
@@ -692,63 +680,32 @@ def _delete_distributed_wato_file():
 
 PushSnapshotRequest = NamedTuple("PushSnapshotRequest", [
     ("site_id", str),
-    ("tar_content", six.binary_type),
+    ("tar_content", bytes),
 ])
 
 
 @automation_command_registry.register
 class AutomationPushSnapshot(AutomationCommand):
+    """Apply a config sync snapshot create by a pre 1.7 site
+
+    This is kept for compatibility of pre 1.7 central sites with 1.7 remote sites.
+    TODO: This call can be dropped with 1.8.
+    """
     def command_name(self):
         return "push-snapshot"
 
-    def get_request(self):
-        # type: () -> PushSnapshotRequest
+    def get_request(self) -> PushSnapshotRequest:
         site_id = html.request.get_ascii_input_mandatory("siteid")
-        self._verify_slave_site_config(site_id)
+        cmk.gui.watolib.activate_changes.verify_remote_site_config(site_id)
 
         snapshot = html.request.uploaded_file("snapshot")
         if not snapshot:
             raise MKGeneralException(_('Invalid call: The snapshot is missing.'))
 
-        return PushSnapshotRequest(site_id=site_id, tar_content=six.ensure_binary(snapshot[2]))
+        return PushSnapshotRequest(site_id=site_id, tar_content=ensure_binary(snapshot[2]))
 
-    def execute(self, request):
-        # type: (PushSnapshotRequest) -> bool
+    def execute(self, request: PushSnapshotRequest) -> bool:
         with store.lock_checkmk_configuration():
-            multitar.extract_from_buffer(request.tar_content,
-                                         cmk.gui.watolib.activate_changes.get_replication_paths())
-
-            try:
-                self._save_site_globals_on_slave_site(request.tar_content)
-
-                # pending changes are lost
-                cmk.gui.watolib.activate_changes.confirm_all_local_changes()
-
-                hooks.call("snapshot-pushed")
-
-                # Create rule making this site only monitor our hosts
-                create_distributed_wato_file(request.site_id, is_slave=True)
-            except Exception:
-                raise MKGeneralException(
-                    _("Failed to deploy configuration: \"%s\". "
-                      "Please note that the site configuration has been synchronized "
-                      "partially.") % traceback.format_exc())
-
-            cmk.gui.watolib.changes.log_audit(
-                None, "replication",
-                _("Synchronized with master (my site id is %s.)") % request.site_id)
-
-            return True
-
-    def _save_site_globals_on_slave_site(self, tarcontent):
-        tmp_dir = cmk.utils.paths.tmp_dir + "/sitespecific-%s" % id(html)
-        try:
-            if not os.path.exists(tmp_dir):
-                store.mkdir(tmp_dir)
-
-            multitar.extract_from_buffer(tarcontent, [("dir", "sitespecific", tmp_dir)])
-
-            site_globals = store.load_object_from_file(tmp_dir + "/sitespecific.mk", default={})
-            save_site_global_settings(site_globals)
-        finally:
-            shutil.rmtree(tmp_dir)
+            return cmk.gui.watolib.activate_changes.apply_pre_17_sync_snapshot(
+                request.site_id, request.tar_content, Path(cmk.utils.paths.omd_root),
+                cmk.gui.watolib.activate_changes.get_replication_paths())

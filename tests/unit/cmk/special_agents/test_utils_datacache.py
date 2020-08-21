@@ -1,25 +1,32 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-import pytest
-from pathlib2 import Path
+from typing import Any
 
-from cmk.special_agents.utils import DataCache
+from datetime import datetime
+
+from pathlib import Path
+
+import pytest  # type: ignore[import]
+
+from cmk.special_agents.utils import (
+    DataCache,
+    get_seconds_since_midnight,
+)
 
 
 class KeksDose(DataCache):
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 5
 
-    def get_validity_from_args(self, arg):
-        return bool(arg)
+    def get_validity_from_args(self, *args: Any) -> bool:
+        return bool(args[0])
 
-    def get_live_data(self, arg):
+    def get_live_data(self, *args: Any) -> Any:
         return "live data"
 
 
@@ -31,9 +38,6 @@ def test_datacache_init(tmp_path):
 
     tc_debug = KeksDose(tmp_path, 'test', debug=True)
     assert tc_debug.debug
-
-    with pytest.raises(TypeError):
-        DataCache('foo', 'bar')  # pylint: disable=abstract-class-instantiated
 
 
 def test_datacache_timestamp(tmp_path):
@@ -72,3 +76,12 @@ def test_datacache_validity(monkeypatch, tmp_path):
 
     assert not tcache._cache_is_valid()
     assert tcache.get_data(True) == 'live data'
+
+
+@pytest.mark.parametrize("now, result", [
+    ('2020-07-24 00:00:16.0', 16.0),
+    ('2020-07-13 00:01:00.194', 60.194),
+])
+def test_get_seconds_since_midnight(now, result):
+    now = datetime.strptime(now, '%Y-%m-%d %H:%M:%S.%f')
+    assert get_seconds_since_midnight(now) == result

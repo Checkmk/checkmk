@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,10 +7,7 @@
 # pylint: disable=redefined-outer-name
 # Library for pylint checks of Check_MK
 
-from __future__ import print_function
-
 import os
-import sys
 import getpass
 import glob
 import time
@@ -80,7 +77,7 @@ def num_jobs_to_use():
     # these processes consume about 400 MB of rss memory.  To prevent swapping
     # we need to reduce the parallelization of pylint for the moment.
     if getpass.getuser() == "jenkins":
-        return int(multiprocessing.cpu_count() / 8.0)
+        return int(multiprocessing.cpu_count() / 8.0) + 3
     return int(multiprocessing.cpu_count() / 8.0) + 5
 
 
@@ -100,7 +97,7 @@ def get_pylint_files(base_path, file_pattern):
 
 def is_python_file(path, shebang_name=None):
     if shebang_name is None:
-        shebang_name = "python3" if sys.version_info[0] >= 3 else "python"
+        shebang_name = "python3"
 
     if not os.path.isfile(path) or os.path.islink(path):
         return False
@@ -120,7 +117,7 @@ def is_python_file(path, shebang_name=None):
 # python sources
 # TODO: This can be dropped once we have refactored checks/inventory/bakery plugins
 # to real modules
-class CMKFixFileMixin(object):  # pylint: disable=useless-object-inheritance
+class CMKFixFileMixin:
     def handle_message(self, msg):
         new_path, new_line = self._orig_location_from_compiled_file(msg)
 
@@ -132,7 +129,9 @@ class CMKFixFileMixin(object):  # pylint: disable=useless-object-inheritance
         if new_line is not None:
             msg = msg._replace(line=new_line)
 
-        super(CMKFixFileMixin, self).handle_message(msg)
+        # NOTE: I'm too lazy to define a Protocol for this mixin which is
+        # already on death row, so let's use a reflection hack...
+        getattr(super(CMKFixFileMixin, self), "handle_message")(msg)
 
     def _change_path_to_repo_path(self, msg):
         return os.path.relpath(msg.abspath, cmk_path())
@@ -148,22 +147,20 @@ class CMKFixFileMixin(object):  # pylint: disable=useless-object-inheritance
             if line.startswith("# ORIG-FILE: "):
                 orig_file = line.split(": ", 1)[1].strip()
                 break
-
-        if orig_file is None:
-            went_back = None
-
-        return orig_file, went_back
+        return orig_file, (None if orig_file is None else went_back)
 
 
-class CMKOutputScanTimesMixin(object):  # pylint: disable=useless-object-inheritance
+class CMKOutputScanTimesMixin:
     """Prints out the files being checked and the time needed
 
     Can be useful to track down pylint performance issues. Simply make the
     reporter class inherit from this class to use it."""
     def on_set_current_module(self, modname, filepath):
-        super(CMKOutputScanTimesMixin, self).on_set_current_module(modname, filepath)
+        # HACK: See note above.
+        getattr(super(CMKOutputScanTimesMixin, self), "on_set_current_module")(modname, filepath)
         if hasattr(self, "_current_start_time"):
-            print("% 8.3fs %s" % (time.time() - self._current_start_time, self._current_filepath))
+            print("% 8.3fs %s" % (time.time() - getattr(self, "_current_start_time"),
+                                  getattr(self, "_current_filepath")))
 
         print("          %s..." % filepath)
         self._current_name = modname
@@ -172,9 +169,11 @@ class CMKOutputScanTimesMixin(object):  # pylint: disable=useless-object-inherit
         self._current_start_time = time.time()
 
     def on_close(self, stats, previous_stats):
-        super(CMKOutputScanTimesMixin, self).on_close(stats, previous_stats)
+        # HACK: See note above.
+        getattr(super(CMKOutputScanTimesMixin, self), "on_close")(stats, previous_stats)
         if hasattr(self, "_current_start_time"):
-            print("% 8.3fs %s" % (time.time() - self._current_start_time, self._current_filepath))
+            print("% 8.3fs %s" % (time.time() - getattr(self, "_current_start_time"),
+                                  getattr(self, "_current_filepath")))
 
 
 class CMKColorizedTextReporter(CMKFixFileMixin, ColorizedTextReporter):

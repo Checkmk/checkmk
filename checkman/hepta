@@ -1,10 +1,12 @@
-title: Hepta 8030: General Information
+title: Hepta: General Information
 agents: snmp
 catalog: hw/time/hopf
 license: GPL
 distribution: check_mk
 description:
  This check monitors the Device Type, Serial Number, Firmware Version and Data and the device version.
+
+ This check supports Hepta 8029 and Hepta 8030 devices.
 
  One general service is created for showing the following information:
  Device Type ;

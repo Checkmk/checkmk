@@ -22,7 +22,7 @@ repos:
           - id: trailing-whitespace
           - id: check-merge-conflict
             types: [file]
-          - id: check-docstring-first
+#         - id: check-docstring-first
           - id: check-yaml
           - id: end-of-file-fixer
 #    - repo: https://github.com/pre-commit/mirrors-scss-lint
@@ -43,12 +43,6 @@ repos:
             language: script
             files: omd/packages/python3?-modules
             types: [file]
-          - id: flake8
-            name: Check flake8
-            entry: scripts/check-flake8
-            language: script
-            types: [file, python]
-            verbose: true
           - id: pylint
             name: Check pylint
             entry: scripts/check-pylint
@@ -60,19 +54,9 @@ repos:
             language: script
             types: [file, python]
             verbose: true
-          - id: futurize
-            name: Check futurize
-            entry: scripts/check-futurize
-            language: script
-            types: [file, python]
           - id: mypy
             name: Check types with mypy
-            entry: scripts/check-mypy
-            language: script
-            types: [file, python]
-          - id: shebang
-            name: Check shebang lines
-            entry: scripts/check-shebang
+            entry: scripts/run-mypy
             language: script
             types: [file, python]
           - id: licence
@@ -85,3 +69,15 @@ repos:
             entry: scripts/check-absolute-imports
             language: script
             types: [file, python]
+          - id: flake8
+            name: Check flake8
+            entry: scripts/check-flake8
+            language: script
+            types: [file, python]
+            verbose: true
+            #          - id: unit-tests
+            #name: Check affected unit tests
+            #entry: scripts/check-pytest-testmon 127
+            #language: script
+            #types: [file, python]
+            #verbose: true

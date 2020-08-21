@@ -38,7 +38,7 @@ def _append_or_merge(list_node, data, key):
 
 
 def inv_omd_status(info, inventory_tree, status_data_tree):
-    status_info = info[0]
+    status_info = info
     status_node = status_data_tree.get_list("software.applications.check_mk.sites:")
 
     if cmk_version.is_raw_edition():
@@ -63,19 +63,13 @@ def inv_omd_status(info, inventory_tree, status_data_tree):
         "xinetd",
     ]
 
-    for site, status_per_node in status_info.items():
-        best_status = None
-        for status in status_per_node.values():
-            if (not best_status or _overall_status_to_num(status['overall']) <
-                    _overall_status_to_num(best_status['overall'])):
-                best_status = status
-
+    for site, status in status_info.items():
         line = {
             'site': site,
         }
         # create a column for each service
         for service in services:
-            line[service] = _service_status(best_status, service)
+            line[service] = _service_status(status, service)
 
         _append_or_merge(status_node, line, 'site')
 

@@ -947,8 +947,8 @@ msgstr ""
 "<b>Ungültige Regelverwendung</b>Die Regel '%s' benötigt %d Argumente: <tt>%s</"
 "tt>. Sie haben %d Argumente definiert: <tt>%s</tt>"
 
-msgid "<b>N</b> * 100% as each core contributes with 100% at full load"
-msgstr "<b>N</b> * 100%, da jeder Kern mit 100% bei Volllast beiträgt"
+msgid "N * 100% as each core contributes with 100% at full load"
+msgstr "N * 100%, da jeder Kern mit 100% bei Volllast beiträgt"
 
 msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
 msgstr ""
@@ -2070,8 +2070,17 @@ msgstr "Merkmale"
 msgid "AWS/CE Costs and Usage"
 msgstr "AWS/CE Kosten und Nutzung"
 
-msgid "AWS/Cloudwatch Alarms Limits"
-msgstr "Grenzwerte von AWS/Cloudwatch Alarme"
+msgid "AWS/CloudWatch Alarms Limits"
+msgstr "Grenzwerte von AWS/CloudWatch Alarme"
+
+msgid "AWS/DynamoDB Latency"
+msgstr "AWS/DynamoDB Lantenzzeit"
+
+msgid "AWS/DynamoDB Limits"
+msgstr "AWS/DynamoDB Grenzwerte"
+
+msgid "AWS/DynamoDB Read/Write Capacity"
+msgstr "AWS/DynamoDB Lese-/Schreibkapazität"
 
 msgid "AWS/EBS Burst Balance"
 msgstr "AWS/EBS Burst-Balance"
@@ -2084,6 +2093,9 @@ msgstr "AWS/EC2 CPU Guthaben"
 
 msgid "AWS/EC2 Limits"
 msgstr "AWS/EC2-Grenzwerte"
+
+msgid "AWS/ELBApplication target errors"
+msgstr "AWS/ELBApplication Zielfehler"
 
 msgid "AWS/ELB Backend Connection Errors"
 msgstr "AWS/ELB Backend Verbindungsfehler"
@@ -2144,11 +2156,20 @@ msgstr "AWS/S3 Bucket-Anforderungen"
 msgid "AWS/S3 Buckets"
 msgstr "AWS/S3 Buckets"
 
+msgid "AWS/S3 HTTP Errors"
+msgstr "AWS/S3 HTTP-Fehler"
+
 msgid "AWS/S3 Latency"
 msgstr "AWS/S3 Latenzzeit"
 
 msgid "AWS/S3 Limits"
 msgstr "AWS/S3 Grenzwerte"
+
+msgid "AWS/WAFV2 Limits"
+msgstr "AWS/WAFV2 Grenzwerte"
+
+msgid "AWS/WAFV2 Web ACL Requests"
+msgstr "AWS/WAFV2 Web-ACL-Anfragen"
 
 msgid "Abort"
 msgstr "Abbruch"
@@ -4571,6 +4592,16 @@ msgstr ""
 msgid "An Alias or description of this group."
 msgstr "Alias/Beschreibung der Gruppe."
 
+msgid "An AWS region name such as 'eu-central-1'"
+msgstr "Name einer AWS-Region wie z.B. 'eu-central-1'"
+
+msgid ""
+"An AWS region name such as 'eu-central-1' or 'CloudFront' for WAFs in front "
+"of CloudFront resources"
+msgstr ""
+"Name einer AWS-Region wie z.B. 'eu-central-1' oder 'CloudFront' für WAFs vor "
+"CloudFront-Ressourcen"
+
 msgid "An absolute path to a CA certificate"
 msgstr "Ein absoluter Pfad zu einem CA Zertifikat"
 
@@ -6215,9 +6246,11 @@ msgstr "Defekte GUI-Erweiterungen"
 msgid "Browse the catalog of all check plugins, create static checks"
 msgstr "Den Katalog aller Checkplugins durchsuchen, statische Checks erstellen"
 
-#, fuzzy
+msgid "Bucket name"
+msgstr "Bucket-Name"
+
 msgid "Bucket names"
-msgstr "Der Bucketname"
+msgstr "Bucket-Namen"
 
 msgid "Bucket size"
 msgstr "Bucketgröße"
@@ -8442,6 +8475,9 @@ msgstr "Cisco SSL VPN Client Sessions"
 msgid "Cisco Stack Switch Status"
 msgstr "Cisco Stack-Switch-Status"
 
+msgid "Cisco VPN Sessions"
+msgstr "Cisco VPN-Sitzungen"
+
 msgid "Cisco WLAN AP"
 msgstr "Cisco WLAN AP"
 
@@ -8688,8 +8724,11 @@ msgstr "Closing connection"
 msgid "Cloud Based Environments"
 msgstr "Cloud-basierte Umgebungen"
 
-msgid "Cloudwatch"
-msgstr "Cloudwatch"
+msgid "CloudWatch"
+msgstr "CloudWatch"
+
+msgid "CloudWatch Alarms"
+msgstr "CloudWatch-Alarme"
 
 msgid "Cluster"
 msgstr "Cluster"
@@ -8967,6 +9006,24 @@ msgid ""
 msgstr ""
 "Die Kommunikation zwischen verschiedenen Komponenten von Check_MK (z.B. GUI "
 "und Check-Engine) wird in dieser Log-Stufe protokolliert."
+
+msgid "Compare against discovered state"
+msgstr "Vergleiche gegen den Discovery-Zustand"
+
+msgid "Compare the current state of the VM against the discovered state"
+msgstr "Vergleiche den momentanen VM-Zustand gegen den Discovery-Zustand"
+
+msgid ""
+"Compare the current state of the VM against the state at the point in time when "
+"the VM was discovered. If the two states do not match, the service will go to CRIT. "
+"Note that this only works if the check is not executed as a manual check. If you "
+"choose this option for manual checks, the service will always go to UNKN."
+msgstr ""
+"Vergleiche den momentanen Zustand der VM gegen Zustand zum Zeitpunkt der Discovery. "
+"Falls die beiden Zustände nicht übereinstimmen, wird der Service auf CRIT gehen. "
+"Beachten Sie, dass dies nur funktioniert, wenn der Check nicht als manueller Check "
+"ausgeführt wird. Wählen Sie diese Option für manuelle Checks aus, so wird der Service "
+"immer auf UNKN gehen."
 
 msgid ""
 "Compares the maximum number of connections that have been in use "
@@ -11670,8 +11727,8 @@ msgstr "Ungültige Benutzeranmeldung"
 msgid "Default layout"
 msgstr "Voreingestelltes Layout"
 
-msgid "Default levels"
-msgstr "Standardschwellwerte"
+msgid "Default limit set by AWS"
+msgstr "AWS-Standardschwellwerte"
 
 msgid "Default line style"
 msgstr "Voreingestellter Linien Stil"
@@ -11729,12 +11786,38 @@ msgstr "Alter von Verzögerte Dateien"
 msgid "Deferred files in Spool"
 msgstr "Verzögerte Dateien im Spooler"
 
+msgid ""
+"Define a direct translation of the possible states of the VM to monitoring "
+"states, i.e. to the result of the check. This overwrites the default mapping "
+"used by the check."
+msgstr ""
+"Legen Sie eine direkte Zuordnung der möglichen der Status der VM zu den "
+"Monitoringstatus, sprich dem Ergebnis des Checks, fest. Damit überschreiben "
+"Sie die ursprünglich vom Check verwendete Zuordnung."
+
 msgid "Define a range of syslog priorities this rule matches"
 msgstr "Definiere einen Bereich von Sylog Prioritäten auf die Regel zutrifft"
 
 msgid "Define a tolerating time period for activating services"
 msgstr ""
 "Definiere eine Dauer für die sich aktivierende Services toleriert werden"
+
+msgid ""
+"Define a translation of the possible LED colors to monitoring states, i.e. to the "
+"result of the check. This overwrites the default mapping used by the check."
+msgstr ""
+"Definiere eine Übersetzung der möglichen LED-Farben in Monitoring-Status, sprich in "
+"das Ergebnis des Checks. Dies überschreibt die ursprünglich vom Checks verwendete "
+"Zuordnung."
+
+msgid ""
+"Define a translation of the possible states of the MTree to monitoring states, "
+"i.e. to the result of the check. This overwrites the default mapping used by the "
+"check."
+msgstr ""
+"Definiere eine Übersetzung der möglichen MTree-Status in Monitoring-Status, sprich "
+"in das Ergebnis des Checks. Dies überschreibt die ursprünglich vom Checks verwendete "
+"Zuordnung."
 
 msgid ""
 "Define textfiles to be monitored. The full path is necessary. Glob pattern (* "
@@ -12670,6 +12753,9 @@ msgstr "Direkte lokale Zustellung ohne Spooler"
 
 msgid "Direct login to Web GUI allowed"
 msgstr "Direkte Anmeldung an der Weboberfläche erlaubt"
+
+msgid "Direct mapping of VM state to monitoring state"
+msgstr "Direkte Zuordnung des Status der VM zu einem Monitoringstatus"
 
 msgid "Direction"
 msgstr "Richtung"
@@ -18703,18 +18789,18 @@ msgstr ""
 "oder entfernt wurden."
 
 msgid ""
-"Here you can impose various levels the results reported by the mk_filstats "
-"plugin. Note that some levels only apply to a matching putput format (e.g. "
-"max/min count levels are not applied if only the smallest, largest, oldes and "
-"newest file is reported). In order to receive the required data, you must "
-"configure the plugin mk_filestats."
+"Here you can impose various levels on the results reported by the "
+"mk_filstats plugin. Note that some levels only apply to a matching output "
+"format (e.g. max/min count levels are not applied if only the smallest, "
+"largest, oldest and newest file is reported). In order to receive the "
+"required data, you must configure the plugin mk_filestats."
 msgstr ""
 "Hier können Sie die vom mk_filstats-Plugin gemeldeten Ergebnisse auf "
-"verschiedenen Ebenen festlegen. Beachten Sie, dass einige Ebenen nur für ein "
-"passendes Ausgabeformat gelten (z.B. max/min count levels werden nicht "
-"angewendet, wenn nur die kleinste, größte, älteste und neueste Datei gemeldet "
-"werden). Um die erforderlichen Daten zu erhalten, müssen Sie das Plugin "
-"mk_filestats konfigurieren."
+"verschiedenen Schwellwerte festlegen. Beachten Sie, dass einige Schwellwerte "
+"nur für ein passendes Ausgabeformat gelten (z.B. max/min count levels werden "
+"nicht angewendet, wenn nur die kleinste, größte, älteste und neueste Datei "
+"gemeldet wird). Um die erforderlichen Daten zu erhalten, müssen Sie das "
+"Plugin mk_filestats konfigurieren."
 
 msgid ""
 "Here you can make sure that all of your Check_MK agents are running one "
@@ -20284,6 +20370,9 @@ msgstr "Auszuschließende IP-Bereiche"
 
 msgid "IP ranges to scan"
 msgstr "Zu scannende IP-Bereiche"
+
+msgid "IP sets"
+msgstr "IP-Sets"
 
 msgid "IP-Address of Tunnel Endpoint"
 msgstr "IP-Adresse des Tunnelendpunkts"
@@ -22293,6 +22382,11 @@ msgstr "Einschluss-Muster"
 
 msgid "Include Volume name in item"
 msgstr "Volume-Namen in Item verwenden"
+
+msgid
+"Include WAFs in front of CloudFront resources in the monitoring"
+msgstr ""
+"WAFs vor Cloudfront-Resourcen in die Überwachung einschließen"
 
 msgid "Include all subfolders"
 msgstr "Schließe alle Unterordner ein"
@@ -24370,6 +24464,9 @@ msgstr "Schwellwerte für die Anzahl Druckerjobs"
 msgid "Levels of folders to create"
 msgstr "Anzulegende Ordner-Ebenen"
 
+msgid "Levels on average usage"
+msgstr "Schwellwerte für die durchschnittliche Nutzung"
+
 msgid "Levels on CPU utilization of a single process"
 msgstr "Schwellwerte für die CPU Auslastung eines einzelnen Prozesses"
 
@@ -24390,6 +24487,21 @@ msgstr "Werte für den Gesundheitszustand in Prozent"
 
 msgid "Levels on ingress data in bytes"
 msgstr "Schwellwerte für die Eingangscontroller-Daten in Bytes"
+
+msgid "Levels on latency"
+msgstr "Schwellwerte für die Latenzzeit"
+
+msgid "Levels on maximum single-request consumption"
+msgstr "Schwellwerte für den maximalen Verbrauch einzelner Anfragen"
+
+msgid "Levels on minimum single-request consumption"
+msgstr "Schwellwerte für den minimalen Verbrauch einzelner Anfragen"
+
+msgid "Levels on Read/Write Capacity"
+msgstr "Schwellwerte für die Lese-/Schreibkapazität"
+
+msgid "Levels on read capacity"
+msgstr "Schwellwerte für die Lesekapazität"
 
 msgid "Levels on server latency in seconds"
 msgstr "Schwellwerte der Server-Latenzzeit in Sekunden"
@@ -24441,6 +24553,12 @@ msgstr "Schwellwerte für Trends in Grad Celsius pro Zeitspanne"
 msgid "Levels on used capacity in bytes"
 msgstr "Schwellwerte für benutzte Kapazität in Bytes"
 
+msgid "Levels on Web ACL requests"
+msgstr "Schwellwerte für die Web-ACL-Anfragen"
+
+msgid "Levels on write capacity"
+msgstr "Schwellwerte für die Schreibkapazität"
+
 msgid "Levels over an extended time period on a single core CPU utilization"
 msgstr ""
 "Schwellwerte über eine längere Zeit für die CPU-Auslastung des einzelnen Kerns"
@@ -24491,6 +24609,9 @@ msgstr "Begrenze die Pfadlänge in Service-Namen"
 msgid "Limit amount of current events"
 msgstr "Anzahl aktueller Ereignisse begrenzen"
 
+msgid "Limit at (otherwise from AWS API for provisioned tables)"
+msgstr "Grenzwert bei (ansonsten aus der AWS API für Tabellen mit bereitgestellter Kapazität)"
+
 msgid "Limit event lifetime"
 msgstr "Ereignislebensdauer begrenzen"
 
@@ -24498,7 +24619,7 @@ msgid "Limit for upper bound dynamic levels"
 msgstr "Obergrenzen für dynamische Schwellen"
 
 msgid "Limit from AWS API"
-msgstr ""
+msgstr "Grenzwert aus der AWS-API"
 
 msgid "Limit length of mail body"
 msgstr "Länge der Email-Inhalts begrenzen"
@@ -24551,6 +24672,9 @@ msgstr "Limit für die folgenden Hosts"
 
 msgid "Limit to the following services"
 msgstr "Limitiere auf die folgenden Services"
+
+msgid "Limits and levels"
+msgstr "Grenz- und Schwellwerte"
 
 msgid "Limits for the number of used states"
 msgstr "Schwellen für die Anzahl der benutzten Zustände"
@@ -25458,6 +25582,9 @@ msgstr "Untergrenzen für Lüfterdrehzahl von Hardwaregerät"
 msgid "Lower levels for unallocated space"
 msgstr "Untere Schwellen für unallozierten Speicher"
 
+msgid "Lower levels in percentage of limit"
+msgstr "Untere Schwellen in Prozent des Grenzwerts"
+
 msgid "Lower levels on Point-to-site bandwidth in bytes per second"
 msgstr "Unterer Level der Point-to-Site-Bandbreite in Bytes pro Sekunde"
 
@@ -26063,6 +26190,9 @@ msgstr "Mapped memory usage"
 
 msgid "Mapped size"
 msgstr "Mapped size"
+
+msgid "Mapping of MTree state to monitoring state"
+msgstr "Zuordnung MTree-Status -- Monitoring-Status"
 
 msgid "March"
 msgstr "März"
@@ -27282,6 +27412,9 @@ msgstr "Alle gefundenen Instanzen überwachen"
 msgid "Monitor and graph the lanes, if the port has multiple"
 msgstr "Überwache die Lanes, wenn ein Port mehrere hat"
 
+msgid "Monitor CloudFront WAFs"
+msgstr "Cloudfront WAFs überwachen"
+
 msgid "Monitor costs and usage"
 msgstr "Überwachung von Kosten und Nutzung"
 
@@ -27387,6 +27520,27 @@ msgstr "Monitoring-Zustand"
 
 msgid "Monitoring state for any other service state"
 msgstr "Monitoring State für alle übrigen Service Zustände"
+
+msgid "Monitoring state if MTree state is 'deleted'"
+msgstr "Monitoring-Status, falls der MTree-Status 'deleted' ist"
+
+msgid "Monitoring state if MTree state is 'read-only'"
+msgstr "Monitoring-Status, falls der MTree-Status 'read-only' ist"
+
+msgid "Monitoring state if MTree state is 'read-write'"
+msgstr "Monitoring-Status, falls der MTree-Status 'read-write' ist"
+
+msgid "Monitoring state if MTree state is 'replication destination'"
+msgstr "Monitoring-Status, falls der MTree-Status 'replication destination' ist"
+
+msgid "Monitoring state if MTree state is 'retention lock disabled'"
+msgstr "Monitoring-Status, falls der MTree-Status 'retention lock disabled' ist"
+
+msgid "Monitoring state if MTree state is 'retention lock enabled'"
+msgstr "Monitoring-Status, falls der MTree-Status 'retention lock enabled' ist"
+
+msgid "Monitoring state if MTree state is 'unknown'"
+msgstr "Monitoring-Status, falls der MTree-Status 'unknown' ist"
 
 msgid "Monitoring state if a monitored service is not found at all."
 msgstr "Monitoring State wenn ein Service überhaupt nicht gefunden wird."
@@ -29280,7 +29434,7 @@ msgid "Number of active paths"
 msgstr "Anzahl von aktiven Pfaden"
 
 msgid "Number of active sessions"
-msgstr "Anzahl von aktiven Sitzungen"
+msgstr "Anzahl aktiver Sitzungen"
 
 #, python-format
 msgid "Number of agents that have registered for updates: %d"
@@ -33715,6 +33869,12 @@ msgstr "Regulärer Ausdruck für Hostalias"
 msgid "Regex for host name"
 msgstr "Regulärer Ausdruck für Hostnamen"
 
+msgid "Regex sets"
+msgstr "Regex-Sets"
+
+msgid "Region name"
+msgstr "Name der Region"
+
 msgid "Regions to use"
 msgstr "Zu verwendende Regionen"
 
@@ -34811,8 +34971,8 @@ msgstr "rotiert"
 msgid "Rotated Log"
 msgstr "rotiertes Log"
 
-msgid "Rotations per minute"
-msgstr "Umdrehung pro Minute"
+msgid "Revolutions per minute"
+msgstr "Umdrehungen pro Minute"
 
 msgid "Round"
 msgstr "Rund"
@@ -34963,6 +35123,9 @@ msgstr ""
 
 msgid "Rules for the notification of contacts about host and service problems"
 msgstr "Regeln für die Alarmierung von Kontakten über Host- und Serviceprobleme"
+
+msgid "Rule groups"
+msgstr "Regelgruppen"
 
 msgid "Rules in folder"
 msgstr "Regeln im Ordner"
@@ -36748,6 +36911,9 @@ msgstr "Sitzungstimeout bei Inaktivität"
 msgid "Session timeout:"
 msgstr "Sitzungstimeout:"
 
+msgid "Session type"
+msgstr "Sitzungsart"
+
 msgid "Set IPv4 address"
 msgstr "IPv4-Adresse setzen"
 
@@ -36848,6 +37014,12 @@ msgstr "Legen Sie Grenzen und Schwellen für laufende On-Demand-Instanzen fest"
 #, fuzzy
 msgid "Set limits and levels for running on-demand vCPUs on instance Families"
 msgstr "Legen Sie Grenzen und Schwellen für laufende On-Demand-Instanzen fest"
+
+msgid "Set limit and levels for Read Capacity Units"
+msgstr "Grenzwert und Pegel für Lesekapazitätseinheiten festlegen"
+
+msgid "Set limit and levels for Write Capacity Units"
+msgstr "Grenzwert und Pegel für Schreibkapazitätseinheiten festlegen"
 
 msgid "Set lower Levels"
 msgstr "Untere Schwellwerte setzen"
@@ -38417,18 +38589,67 @@ msgid "Specify levels"
 msgstr "Level einstellen"
 
 msgid ""
-"Specify levels for HTTP 400 errors in percentage which refer to the total "
-"number of requests"
+"Specify levels for HTTP 2XX errors in percent which refer to the total "
+"number of requests."
 msgstr ""
-"Geben Sie die Stufen für HTTP 400-Fehler in Prozent an, die sich auf die "
+"Geben Sie die Stufen für HTTP 2XX-Fehler in Prozent an, die sich auf die "
 "Gesamtzahl der Anfragen beziehen."
 
 msgid ""
-"Specify levels for HTTP 500 errors in percentage which refer to the total "
-"number of requests"
+"Specify levels for HTTP 3XX errors in percent which refer to the total "
+"number of requests."
+msgstr ""
+"Geben Sie die Stufen für HTTP 3XX-Fehler in Prozent an, die sich auf die "
+"Gesamtzahl der Anfragen beziehen."
+
+msgid ""
+"Specify levels for HTTP 4XX errors in percent which refer to the total "
+"number of requests."
+msgstr ""
+"Geben Sie die Stufen für HTTP 4XX-Fehler in Prozent an, die sich auf die "
+"Gesamtzahl der Anfragen beziehen."
+
+msgid ""
+"Specify levels for HTTP 5XX errors in percent which refer to the total "
+"number of requests."
+msgstr ""
+"Geben Sie die Stufen für HTTP 5XX-Fehler in Prozent an, die sich auf die "
+"Gesamtzahl der Anfragen beziehen."
+
+msgid ""
+"Specify levels for HTTP 500 errors in percent which refer to the total "
+"number of requests."
 msgstr ""
 "Geben Sie die Stufen für HTTP 500-Fehler in Prozent an, die sich auf die "
 "Gesamtzahl der Anfragen beziehen."
+
+msgid ""
+"Specify levels for HTTP 502 errors in percent which refer to the total "
+"number of requests."
+msgstr ""
+"Geben Sie die Stufen für HTTP 502-Fehler in Prozent an, die sich auf die "
+"Gesamtzahl der Anfragen beziehen."
+
+msgid ""
+"Specify levels for HTTP 503 errors in percent which refer to the total "
+"number of requests."
+msgstr ""
+"Geben Sie die Stufen für HTTP 503-Fehler in Prozent an, die sich auf die "
+"Gesamtzahl der Anfragen beziehen."
+
+msgid ""
+"Specify levels for HTTP 504 errors in percent which refer to the total "
+"number of requests."
+msgstr ""
+"Geben Sie die Stufen für HTTP 504-Fehler in Prozent an, die sich auf die "
+"Gesamtzahl der Anfragen beziehen."
+
+msgid ""
+"Specify levels for Lambda user errors in percent which refer to the total "
+"number of requests."
+msgstr ""
+"Geben Sie die Stufen für Lambda-Benutzerfehler in Prozent an, die sich auf "
+"die Gesamtzahl der Anfragen beziehen."
 
 msgid ""
 "Specify levels for datafiles of a database. Please note that relative levels "
@@ -38547,6 +38768,22 @@ msgstr "Bestimmen Sie die Kontaktgruppen eines automatisch erzeugten Benutzers."
 
 msgid "Specify the initial roles of an automatically created user."
 msgstr "Bestimmen Sie die Rollen für einen automatisch erzeugten Benutzer."
+
+msgid "Specify the LED, for example 'Rack Unit 1 0'."
+msgstr "Geben Sie die LED an, z.B. 'Rack Unit 1 0'."
+
+msgid ""
+"Specify the limit value against which the average consumption is compared to "
+"compute the average usage. If not set, the limit will be fetched from the AWS "
+"API. However, this is not possible for on-demand tables. Therefore, no average "
+"usage can be computed for these tables if this value is not specified."
+msgstr ""
+"Geben Sie den Grenzwert an, gegen den der Durchschnittsverbrauch verglichen "
+"wird, um die durchschnittliche Nutzung zu berechnen. Wird dieser Wert nicht "
+"gesetzt, dann wird ein Wert aus der AWS API geholt. Allerdings ist dies nicht "
+"möglich für On-demand-Tabellen. Daher kann für solche Tabellen keine "
+"Durchschnittsnutzung berechnet werden, falls dieser Wert nicht angegeben "
+"wird."
 
 msgid ""
 "Specify the logical name, e.g. the hostname, of the PLC. This name is used to "
@@ -39049,6 +39286,9 @@ msgstr "Zustandsautomat in ungültigem Zustand"
 
 msgid "State of Citrix VMs"
 msgstr "Status von Citrix-VMs"
+
+msgid "State of EMC Data Domain MTree"
+msgstr "Status von EMC Data Domain MTree"
 
 msgid "State of ESX hosts and virtual machines"
 msgstr "Status von ESX hosts und Virtual Machines"
@@ -40134,6 +40374,9 @@ msgstr "Erkennung von Systemd Services"
 
 msgid "Systemd Services"
 msgstr "Systemd Services"
+
+msgid "Target group name"
+msgstr "Name der Zielgruppe"
 
 msgid "TCP"
 msgstr "TCP"
@@ -41588,9 +41831,6 @@ msgstr "Die beiden neuen Passworte stimmen nicht überein."
 
 msgid "The both passwords do not match."
 msgstr "Die beiden Passwörter stimmen nicht überein."
-
-msgid "The bucket name"
-msgstr "Der Bucketname"
 
 msgid "The cell padding is only applied when rules are being rendered."
 msgstr ""
@@ -49078,6 +49318,9 @@ msgstr "%s übersetzt"
 msgid "Translation of service descriptions"
 msgstr "Übersetzung der Service-Description"
 
+msgid "Translation of VM state to monitoring state"
+msgstr "Übersetzung des Status der VM in einen Monitoringstatus"
+
 msgid "Translations"
 msgstr "Übersetzungen"
 
@@ -49240,6 +49483,15 @@ msgstr "Art der Route"
 
 msgid "Type of table"
 msgstr "Typ der Tabelle"
+
+msgid ""
+"Type of the VPN connection, either 'IPsec RA', 'IPsec L2L', 'AnyConnect SVC', "
+"'WebVPN' or 'Summary'. The last item refers to the overall number of sessions "
+"(summed over all session types)."
+msgstr ""
+"VPN-Verbindungsart, entweder 'IPsec RA', 'IPsec L2L', 'AnyConnect SVC', 'WebVPN' "
+"oder 'Summary'. Der letzte Punkt bezieht sich auf die Gesamtzahl an Sitzungen "
+"(über alle Sitzungsarten aufsummiert)."
 
 msgid "Type of the value"
 msgstr "Werttyp"
@@ -50087,6 +50339,18 @@ msgstr "Obere"
 msgid "Upper Levels for CopyQueue Length"
 msgstr "Schwellwerte für die CopyQueue Length"
 
+msgid "Upper levels for HTTP errors"
+msgstr "Obere Schwellwerte für HTTP-Fehler"
+
+msgid "Upper levels for HTTP & Lambda user errors"
+msgstr "Obere Schwellwerte für HTTP-Fehler & Lambda-Benutzerfehler"
+
+msgid "Upper levels for Load Balancers"
+msgstr "Obere Schwellwerte für Load Balancers"
+
+msgid "Upper levels for Backend"
+msgstr "Obere Schwellwerte Backend"
+
 msgid "Upper Levels for Total Number of DNS queries"
 msgstr "Obere Schwellen für die Gesamtzahl von DNS-Anfragen"
 
@@ -50095,6 +50359,9 @@ msgstr "Obere Schwellen für die Gesamtzahl von DNS-Antworten"
 
 msgid "Upper Levels for Voltage"
 msgstr "Obere Schwellen für Spannung"
+
+msgid "Upper levels in percentage of limit"
+msgstr "Obere Schwellen in Prozent des Grenzwerts"
 
 msgid "Upper Temperature Levels"
 msgstr "Obere Temperaturschwellen"
@@ -50380,6 +50647,33 @@ msgstr "Obere Schwellwerte für tägliche Kosten"
 msgid "Upper levels on number of Point-to-site connections"
 msgstr "Obere Grenzen für die Anzahl der Point-to-Site Verbindungen"
 
+msgid "Upper levels on average latency of successful Query requests"
+msgstr "Obere Schwellwerte für die durchschnittliche Latenzzeit erfolgreicher Query-Anfragen"
+
+msgid "Upper levels on maximum latency of successful Query requests"
+msgstr "Obere Schwellwerte für die maximale Latenzzeit erfolgreicher Query-Anfragen"
+
+msgid "Upper levels on average latency of successful GetItem requests"
+msgstr "Obere Schwellwerte für die durchschnittliche Latenzzeit erfolgreicher GetItem-Anfragen"
+
+msgid "Upper levels on maximum latency of successful GetItem requests"
+msgstr "Obere Schwellwerte für die maximale Latenzzeit erfolgreicher GetItem-Anfragen"
+
+msgid "Upper levels on average latency of successful PutItem requests"
+msgstr "Obere Schwellwerte für die durchschnittliche Latenzzeit erfolgreicher PutItem-Anfragen"
+
+msgid "Upper levels on maximum latency of successful PutItem requests"
+msgstr "Obere Schwellwerte für die maximale Latenzzeit erfolgreicher PutItem-Anfragen"
+
+msgid "Upper levels on percentage of allowed requests"
+msgstr "Obere Schwellwerte für den prozentualen Anteil zugelassener Anfragen"
+
+msgid "Upper levels on percentage of blocked requests"
+msgstr "Obere Schwellwerte für den prozentualen Anteil blockierter Anfragen"
+
+msgid "Upper levels on total request latency"
+msgstr "Obere Schwellwerte für die totale Latenzzeit von Anfragen"
+
 msgid "Upper levels replica lag"
 msgstr "Obere Schwellen für die Replikaverzögerung"
 
@@ -50398,11 +50692,35 @@ msgstr "Obere, prozentuale Schwellen für GET-Anfragen"
 msgid "Upper percentual levels for HEAD requests"
 msgstr "Obere, prozentuale Schwellen für HEAD-Anfragen"
 
-msgid "Upper percentual levels for HTTP 400 errors"
-msgstr "Obere, prozentuale Schwellen HTTP 400-Fehler"
+msgid "Upper percentual levels for HTTP 2XX errors"
+msgstr "Obere prozentuale Schwellen HTTP 2XX-Fehler"
 
-msgid "Upper percentual levels for HTTP 500 errors"
-msgstr "Obere, prozentuale Schwellen für HTTP 500-Fehler"
+msgid "Upper percentual levels for HTTP 3XX errors"
+msgstr "Obere prozentuale Schwellen HTTP 3XX-Fehler"
+
+msgid "Upper percentual levels for HTTP 3XX errors (Application Load Balancers only)"
+msgstr "Obere prozentuale Schwellen HTTP 3XX-Fehler (nur Appplication Load Balancers)"
+
+msgid "Upper percentual levels for HTTP 4XX errors"
+msgstr "Obere prozentuale Schwellen HTTP 4XX-Fehler"
+
+msgid "Upper percentual levels for HTTP 5XX errors"
+msgstr "Obere prozentuale Schwellen HTTP 5XX-Fehler"
+
+msgid "Upper percentual levels for HTTP 500 errors (Application Load Balancers only)"
+msgstr "Obere prozentuale Schwellen für HTTP 500-Fehler (nur Appplication Load Balancers)"
+
+msgid "Upper percentual levels for HTTP 502 errors (Application Load Balancers only)"
+msgstr "Obere prozentuale Schwellen für HTTP 502-Fehler (nur Appplication Load Balancers)"
+
+msgid "Upper percentual levels for HTTP 503 errors (Application Load Balancers only)"
+msgstr "Obere prozentuale Schwellen für HTTP 503-Fehler (nur Appplication Load Balancers)"
+
+msgid "Upper percentual levels for HTTP 504 errors (Application Load Balancers only)"
+msgstr "Obere prozentuale Schwellen für HTTP 504-Fehler (nur Appplication Load Balancers)"
+
+msgid "Upper percentual levels for Lambda user errors"
+msgstr "Obere prozentuale Schwellen für Lambda-Benutzerfehler"
 
 msgid "Upper percentual levels for LIST requests"
 msgstr "Obere, prozentuale Schwellen für LIST-Anfragen"
@@ -52150,6 +52468,12 @@ msgstr "WEB - aktuell bearbeitet Anfragen"
 msgid "WEB - Timed out Active Directory Requests"
 msgstr "WEB - Abgelaufene Active Directory Anfragen"
 
+msgid "Web ACLs"
+msgstr "Web-ACLs"
+
+msgid "Web ACL capacity units (WCUs)"
+msgstr "Web-ACL Kapazitätseinheiten (WCUs)"
+
 msgid "WLAN"
 msgstr "WLAN"
 
@@ -52409,6 +52733,9 @@ msgstr "Web"
 
 msgid "Web API communication"
 msgstr "Web-API-Kommunikation"
+
+msgid "Web Application Firewall (WAFV2)"
+msgstr "Webanwendungs-Firewall (WAFV2)"
 
 msgid "Web Services"
 msgstr "Webservices"
@@ -55953,6 +56280,9 @@ msgstr "Clients"
 msgid "closed"
 msgstr "geschlossen"
 
+msgid "CloudFront WAFs"
+msgstr "CloudFront WAFs"
+
 msgid "collapsed"
 msgstr "zugeklappt"
 
@@ -57534,81 +57864,6 @@ msgstr "Monitoringstatus, falls VM-Status FastSavedCritical ist"
 
 msgid "Monitoring state if VM state is FastSavingCritical"
 msgstr "Monitoringstatus, falls VM-Status FastSavingCritical ist"
-
-msgid "Check result if reported VM state is Other"
-msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Other ist"
-
-msgid "Check result if reported VM state is Running"
-msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Running ist"
-
-msgid "Check result if reported VM state is Off"
-msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Off ist"
-
-msgid "Check result if reported VM state is Stopping"
-msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Stopping ist"
-
-msgid "Check result if reported VM state is Saved"
-msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Saved ist"
-
-msgid "Check result if reported VM state is Paused"
-msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Paused ist"
-
-msgid "Check result if reported VM state is Starting"
-msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Starting ist"
-
-msgid "Check result if reported VM state is Reset"
-msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Reset ist"
-
-msgid "Check result if reported VM state is Saving"
-msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Saving ist"
-
-msgid "Check result if reported VM state is Pausing"
-msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Pausing ist"
-
-msgid "Check result if reported VM state is Resuming"
-msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Resuming ist"
-
-msgid "Check result if reported VM state is FastSaved"
-msgstr "Check-Ergebnis, falls ger gemeldete VM-Status FastSaved ist"
-
-msgid "Check result if reported VM state is FastSaving"
-msgstr "Check-Ergebnis, falls ger gemeldete VM-Status FastSaving ist"
-
-msgid "Check result if reported VM state is RunningCritical"
-msgstr "Check-Ergebnis, falls ger gemeldete VM-Status RunningCritical ist"
-
-msgid "Check result if reported VM state is OffCritical"
-msgstr "Check-Ergebnis, falls ger gemeldete VM-Status OffCritical ist"
-
-msgid "Check result if reported VM state is StoppingCritical"
-msgstr "Check-Ergebnis, falls ger gemeldete VM-Status StoppingCritical ist"
-
-msgid "Check result if reported VM state is SavedCritical"
-msgstr "Check-Ergebnis, falls ger gemeldete VM-Status SavedCritical ist"
-
-msgid "Check result if reported VM state is PausedCritical"
-msgstr "Check-Ergebnis, falls ger gemeldete VM-Status PausedCritical ist"
-
-msgid "Check result if reported VM state is StartingCritical"
-msgstr "Check-Ergebnis, falls ger gemeldete VM-Status StartingCritical ist"
-
-msgid "Check result if reported VM state is ResetCritical"
-msgstr "Check-Ergebnis, falls ger gemeldete VM-Status ResetCritical ist"
-
-msgid "Check result if reported VM state is SavingCritical"
-msgstr "Check-Ergebnis, falls ger gemeldete VM-Status SavingCritical ist"
-
-msgid "Check result if reported VM state is PausingCritical"
-msgstr "Check-Ergebnis, falls ger gemeldete VM-Status PausingCritical ist"
-
-msgid "Check result if reported VM state is ResumingCritical"
-msgstr "Check-Ergebnis, falls ger gemeldete VM-Status ResumingCritical ist"
-
-msgid "Check result if reported VM state is FastSavedCritical"
-msgstr "Check-Ergebnis, falls ger gemeldete VM-Status FastSavedCritical ist"
-
-msgid "Check result if reported VM state is FastSavingCritical"
-msgstr "Check-Ergebnis, falls ger gemeldete VM-Status FastSavingCritical ist"
 
 #, fuzzy
 #~ msgid "Not enough data to process"

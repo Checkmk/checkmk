@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -8,14 +8,14 @@ from cmk.utils.defines import short_service_state_name
 
 import cmk.gui.escaping as escaping
 import cmk.gui.bi as bi
-from cmk.gui.valuespec import (DropdownChoice)
+from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
 from cmk.gui.plugins.views import (
     data_source_registry,
-    DataSource,
+    ABCDataSource,
     RowTable,
     PainterOptions,
     painter_option_registry,
@@ -33,7 +33,7 @@ from cmk.gui.plugins.views import (
 
 
 @data_source_registry.register
-class DataSourceBIAggregations(DataSource):
+class DataSourceBIAggregations(ABCDataSource):
     @property
     def ident(self):
         return "bi_aggregations"
@@ -65,7 +65,7 @@ class RowTableBIAggregations(RowTable):
 
 
 @data_source_registry.register
-class DataSourceBIHostAggregations(DataSource):
+class DataSourceBIHostAggregations(ABCDataSource):
     @property
     def ident(self):
         return "bi_host_aggregations"
@@ -97,7 +97,7 @@ class RowTableBIHostAggregations(RowTable):
 
 
 @data_source_registry.register
-class DataSourceBIHostnameAggregations(DataSource):
+class DataSourceBIHostnameAggregations(ABCDataSource):
     """Similar to host aggregations, but the name of the aggregation
     is used to join the host table rather then the affected host"""
     @property
@@ -131,7 +131,7 @@ class RowTableBIHostnameAggregations(RowTable):
 
 
 @data_source_registry.register
-class DataSourceBIHostnameByGroupAggregations(DataSource):
+class DataSourceBIHostnameByGroupAggregations(ABCDataSource):
     """The same but with group information"""
     @property
     def ident(self):
@@ -254,12 +254,11 @@ class PainterAggrAcknowledged(Painter):
 def paint_aggr_state_short(state, assumed=False):
     if state is None:
         return "", ""
-    else:
-        name = short_service_state_name(state["state"], "")
-        classes = "state svcstate state%s" % state["state"]
-        if assumed:
-            classes += " assumed"
-        return classes, name
+    name = short_service_state_name(state["state"], "")
+    classes = "state svcstate state%s" % state["state"]
+    if assumed:
+        classes += " assumed"
+    return classes, name
 
 
 @painter_registry.register

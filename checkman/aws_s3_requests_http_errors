@@ -1,0 +1,27 @@
+title: AWS S3: HTTP Errors
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the rate of all HTTP requests and the rates
+ of HTTP 4xx and 5xx client error status code requests made
+ to an Amazon S3 bucket. The 4xx- and 5xx-rates are reported
+ both in counts per second and as a fraction of all HTTP
+ requests.
+
+ To make this check work you have to configure the related
+ special agent {Amazon Web Services (AWS)}. Furthermore, you
+ have to enable requests metrics in the AWS/S3 console. This is
+ a paid feature.
+
+ No default levels are set. Upper levels on the fractions are
+ configurable via the rule "AWS/S3 HTTP Errors".
+
+item:
+ Name of the bucket
+
+inventory:
+ One service is created for each bucket if all required metrics
+ (AllRequests, 4xxErrors, 5xxErrors) are given.
+

@@ -10,7 +10,14 @@ node ('windows') {
         checkout(scm)
             windows = load 'buildscripts/scripts/lib/windows.groovy'
     }
-    windows.build(
-        TARGET: 'module'
-    )
+    
+    stage('cached build') {
+        withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
+            windows.build(
+                TARGET: 'cached',
+                CREDS: NEXUS_USERNAME+':'+NEXUS_PASSWORD,
+                CACHE_URL: 'https://artifacts.lan.tribe29.com/repository/omd-build-cache/'
+            )
+        }
+    }
 }

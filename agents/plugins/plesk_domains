@@ -10,7 +10,12 @@
 # <domain>
 
 import sys
-import MySQLdb
+try:
+    import MySQLdb
+except ImportError as e:
+    sys.stdout.write(
+        "<<<plesk_domains>>>\n%s. Please install missing module via pip install <module>." % e)
+    sys.exit(0)
 
 try:
     db = MySQLdb.connect(

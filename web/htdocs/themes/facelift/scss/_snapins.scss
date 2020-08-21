@@ -10,7 +10,7 @@ div.bookmark {
   width: 230px;
   max-width: 230px;
   overflow: hidden;
-  color: $primary-sidebar-font-color;
+  color: $font-color;
   text-overflow: ellipsis;
   -o-text-overflow: ellipsis;
   white-space: nowrap;
@@ -133,10 +133,8 @@ div.snapin table.master_control {
 
 /* Styles shared/inherited by different performance tables */
 %performance-table-shared {
+  width: 100%;
   padding: $performance-table-shared-padding;
-  background-color: $color-table-background-dark;
-  border: 1px solid $color-table-border-dark;
-  border-spacing: 0 4px;
   box-sizing: border-box;
 
   td {
@@ -150,7 +148,6 @@ div.snapin table.master_control {
  */
 table.mkeventd_performance {
   @extend %performance-table-shared;
-  width: $theme-snapin-width - 2px;
   border-radius: 2px;
 
   td {
@@ -196,7 +193,6 @@ div.statea, div.stated {
  */
 table.performance {
   @extend %performance-table-shared;
-  width: $theme-snapin-width - 2px;
   border-radius: 2px;
 
   td {
@@ -227,7 +223,7 @@ table.performance {
   font-size: 24px;
   font-weight: bold;
   letter-spacing: $letter-spacing-table;
-  color: $primary-sidebar-font-color;
+  color: $font-color;
   text-align: center;
   border-spacing: 4px;
 }
@@ -284,41 +280,37 @@ img#speedometerbg, canvas#speedometer {
  * Tactical overview snapin
  */
 div#snapin_tactical_overview {
-  padding-bottom: 6.5px;
+  /* remove the border-spacing of the first and last element */
+  width: calc(100% + 2 * #{$spacing});
 }
 
 table.tacticaloverview {
   width: 100%;
-  margin: 0;
+  /* remove the border-spacing of the first and last element */
+  margin: 0 (-$spacing);
   border-collapse: separate;
-  border-spacing: 2px;
+  border-spacing: $spacing 0;
 
   th {
-    padding: 0;
-    padding-top: 4px;
-    font-size: 11px;
+    font-size: $font-size-small;
     font-weight: normal;
-    line-height: 9px;
+    line-height: 1.6;
     letter-spacing: 0;
     color: $tactical-overview-th-font-color;
-    text-align: center;
-    vertical-align: bottom;
+    text-align: left;
   }
 
   td {
-    height: 14px;
-    padding: 2px;
+    height: 24px;
     text-align: right;
     background: $tactical-overview-td-bg-color;
-    border: 1px solid $color-table-border-dark;
-    border-radius: $theme-border-radius;
+    border-radius: $popup-filters-border-radius;
 
     &.states {
-      background: $color-nuance-6;
       box-shadow: none;
 
       a.link {
-        color: $states-font-color;
+        color: $color-nuance-16;
       }
     }
 
@@ -348,11 +340,11 @@ body.main .popup_menu table.tacticaloverview td span {
   font-size: $font-size-default;
   font-weight: $font-weight-bold;
   letter-spacing: 0;
-  color: $color-text;
+  color: $font-color;
 }
 
 table.tacticaloverview td a.link, table.tacticaloverview td a:hover {
-  color: $color-text;
+  color: $font-color;
 }
 
 div.tacticalalert {
@@ -470,28 +462,9 @@ div.spacertop {
  * WATO folder tree snapin
  */
 #snapin_wato_foldertree {
-  table {
-    width: 100%;
-    margin: 4px 0;
-    border-spacing: 0;
-
-    td {
-      vertical-align: baseline;
-
-      &.label {
-        width: 1px;
-      }
-    }
-  }
-
   select {
-    padding: 6px 0 6px 8px;
-    margin: 1px 0 2px;
+    margin-bottom: 10px;
     clear: both;
-    font-size: $font-size-default;
-    color: $foldertree-snapin-font-color;
-    background-color: $foldertree-snapin-bg-color;
-    border-radius: $theme-border-radius;
     box-sizing: border-box;
   }
 }
@@ -505,7 +478,6 @@ div.spacertop {
     display: none; }
 
   input {
-    float: left;
     margin:  0;
     font-size: 11px;
     background-repeat: no-repeat;
@@ -521,7 +493,7 @@ div.spacertop {
  */
 #snapin_container_wiki div.content {
   font-weight: bold;
-  color: $primary-sidebar-font-color;
+  color: $font-color;
 
   p {
     font-weight: normal;
@@ -554,34 +526,39 @@ div.spacertop {
 
   input {
     width: 100%;
+    padding: 6px 0 6px $spacing;
+    font-size: 14px;
+    background-image: url("images/icon_quicksearch.png");
+    background-position: right $spacing bottom 6px;
+    background-size: 15px;
   }
 
   div.topic {
-    margin-top: 3px;
-    margin-left: 2px;
+    margin: 3px 0 3px 2px;
     font-size: 125%;
   }
 }
 
 #mk_search_results {
-  position: relative;
-  float: left;
+  position: absolute;
+  z-index: 1;
   width: 223px;
+  padding: 12px;
+  margin-top: 2px;
   font-size: 80%;
-  color: $primary-font-color;
-  background-color: $mk-search-results-bg-color;
-  border: $mk-search-results-border;
+  color: $font-color;
 
   a {
     display: block;
     width: 217px;
     padding-left: 5px;
-    color: $primary-font-color;
+    margin-bottom: 5px;
+    color: $font-color;
     text-align: left;
     text-decoration: none;
 
     &:hover, &.active {
-      background-color: $mk-search-results-hover-bg-color;
+      background-color: $snapin-bg-color;
     }
   }
 
@@ -599,7 +576,7 @@ div.spacertop {
  * Micro Core Stats (CMC) snapin
  */
 #snapin_cmc_stats {
-    color: $primary-sidebar-font-color;
+  color: $font-color;
 
   select {
     margin-bottom: 2px;
@@ -608,9 +585,6 @@ div.spacertop {
 
 table.cmc_stats {
   width: $snapin-cmc-table-width;
-  background-color: $color-table-background-dark;
-  border: 1px solid $color-table-border-dark;
-  border-radius: 2px;
   border-spacing: 0 4px;
   box-sizing: border-box;
 
@@ -645,7 +619,7 @@ table.cmc_stats {
 
   div.timerange {
     margin-bottom: 10px;
-    color: $primary-sidebar-font-color;
+    color: $font-color;
 
     table {
       display: inline-block;

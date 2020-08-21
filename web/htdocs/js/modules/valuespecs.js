@@ -540,19 +540,28 @@ export function iconselector_toggle_names(event, varprefix) {
         utils.add_class(icons, "show_names");
 }
 
-export function listofmultiple_add(varprefix, choice_page_name, page_request_vars) {
-    var choice = document.getElementById(varprefix + "_choice");
-    var ident = choice.value;
+export function listofmultiple_add(varprefix, choice_page_name, page_request_vars, trigger) {
+    let ident;
+    if (trigger) {
+        // trigger given: Special case for ViewFilterList style choice rendering
+        ident = trigger.id.replace(varprefix + "_add_", "");
+        utils.add_class(trigger, "disabled");
+    } else {
+        let choice = document.getElementById(varprefix + "_choice");
+        ident = choice.value;
 
-    if (ident == "")
-        return;
+        if (ident == "")
+            return;
 
-    // disable this choice in the "add choice" select field
-    choice.options[choice.selectedIndex].disabled = true;
+        trigger = choice.options[choice.selectedIndex];
+
+        // disable this choice in the "add choice" select field
+        trigger.disabled = true;
+    }
 
     var request = {
         "varprefix": varprefix,
-        "ident": ident,
+        "ident": ident
     };
 
     // Add given valuespec specific request vars
@@ -567,12 +576,13 @@ export function listofmultiple_add(varprefix, choice_page_name, page_request_var
     ajax.call_ajax(choice_page_name + ".py", {
         method: "POST",
         post_data: post_data,
+        handler_data: {
+            trigger: trigger,
+            ident: ident
+        },
         response_handler: function(handler_data, ajax_response) {
             var table = document.getElementById(varprefix + "_table");
             var tbody = table.getElementsByTagName("tbody")[0];
-
-            var choice = document.getElementById(varprefix + "_choice");
-            var ident = choice.value;
 
             var response = JSON.parse(ajax_response);
             if (response.result_code != 0) {
@@ -580,11 +590,14 @@ export function listofmultiple_add(varprefix, choice_page_name, page_request_var
                 return;
             }
 
-            // Update select2 to make the disabled attribute be recognized by the dropdown
-            // (See https://github.com/select2/select2/issues/3347)
-            var choice_select2 = $(choice).select2();
-            // Unselect the choosen option
-            choice_select2.val(null).trigger("change");
+            let ident = handler_data.ident;
+            if (!handler_data.trigger) {
+                // Update select2 to make the disabled attribute be recognized by the dropdown
+                // (See https://github.com/select2/select2/issues/3347)
+                var choice_select2 = $(choice).select2();
+                // Unselect the choosen option
+                choice_select2.val(null).trigger("change");
+            }
 
             var tmp_container = document.createElement("tbody");
             tmp_container.innerHTML = response.result.html_code;
@@ -620,14 +633,21 @@ export function listofmultiple_del(varprefix, ident) {
 
     // Make it choosable from the dropdown field again
     var choice = document.getElementById(varprefix + "_choice");
-    var i;
-    for (i = 0; i < choice.children.length; i++)
-        if (choice.children[i].value == ident)
-            choice.children[i].disabled = false;
+    if (choice) {
+        var i;
+        for (i = 0; i < choice.children.length; i++)
+            if (choice.children[i].value == ident)
+                choice.children[i].disabled = false;
 
-    // Update select2 to make the disabled attribute be recognized by the dropdown
-    // (See https://github.com/select2/select2/issues/3347)
-    $(choice).select2();
+        // Update select2 to make the disabled attribute be recognized by the dropdown
+        // (See https://github.com/select2/select2/issues/3347)
+        $(choice).select2();
+    }
+    else {
+        // trigger given: Special case for ViewFilterList style choice rendering
+        choice = document.getElementById(varprefix + "_add_" + ident);
+        utils.remove_class(choice, "disabled");
+    }
 
     // Remove it from the list of active elements
     var active = document.getElementById(varprefix + "_active");
@@ -653,7 +673,10 @@ export function listofmultiple_init(varprefix) {
     var table = document.getElementById(varprefix + "_table");
     var tbody = table.getElementsByTagName("tbody")[0];
 
-    document.getElementById(varprefix + "_choice").value = "";
+    let choice_field = document.getElementById(varprefix + "_choice");
+    if (choice_field)
+        choice_field.value = "";
+
     listofmultiple_disable_selected_options(varprefix);
     // Put in a line break following the table if it's not empty
     if (tbody.childNodes.length >= 1)
@@ -664,12 +687,23 @@ export function listofmultiple_init(varprefix) {
 // elements need to be disabled.
 function listofmultiple_disable_selected_options(varprefix)
 {
-    var active_choices = document.getElementById(varprefix + "_active").value.split(";");
+    let active_choices = document.getElementById(varprefix + "_active").value.split(";");
 
-    var choice_field = document.getElementById(varprefix + "_choice");
-    for (var i = 0; i < choice_field.children.length; i++) {
-        if (active_choices.indexOf(choice_field.children[i].value) !== -1) {
-            choice_field.children[i].disabled = true;
+    let choice_field = document.getElementById(varprefix + "_choice");
+    let i;
+    if (choice_field) {
+        for (i = 0; i < choice_field.children.length; i++) {
+            if (active_choices.indexOf(choice_field.children[i].value) !== -1) {
+                choice_field.children[i].disabled = true;
+            }
+        }
+    }
+    else {
+        // trigger given: Special case for ViewFilterList style choice rendering
+        let choice;
+        for (i = 0; i < active_choices.length; i++) {
+            choice = document.getElementById(varprefix + "_add_" + active_choices[i]);
+            utils.add_class(choice, "disabled");
         }
     }
 }

@@ -20,21 +20,13 @@ body.side {
   padding: 0;
   margin: 0;
   overflow: hidden;
-  font-family: arial, helvetica, sans-serif;
+  font-family: $font-family-default;
   font-size: 14px;
   font-weight: $font-weight-default;
-  background: $body-side-bg-color;
+  background: $navigation-bg-color;
 
   p {
     color: $darkgrey;
-  }
-
-  .link {
-    color: $lightgrey;
-  }
-
-  .title {
-    color: $lightgrey;
   }
 
   &.screenshotmode {
@@ -46,10 +38,66 @@ body.side {
   }
 }
 
-#check_mk_sidebar {
+#check_mk_navigation {
+  display: flex;
+  flex-direction: column;
   float: left;
+  width: 64px;
+  height: 100%;
+}
+
+#check_mk_sidebar {
+  display: flex;
+  flex-direction: column;
+  float: right;
   width: 280px;
   height: 100%;
+
+  &.folded {
+    display: none;
+  }
+
+  &.left {
+    float: left;
+    border-left: 1px solid $sidebar-border-color;
+  }
+
+  div.shortcuts {
+    display: flex;
+    padding: $spacing;
+    border-bottom: 1px solid $sidebar-border-color;
+
+    a {
+      flex: 1 0 auto;
+      font-size: $font-size-small;
+      line-height: 1.7;
+      text-align: center;
+      text-decoration: none;
+
+      &:hover img {
+        opacity: .5;
+      }
+    }
+
+    img { width: 19px; }
+  }
+
+  #side_content {
+    height: 100%;
+    overflow: auto;
+    color: rgb(0, 0, 0);
+
+    & > .snapin {
+      margin-top: 0;
+    }
+  }
+
+  // needed to place the add_snapin button always at the bottom
+  .simplebar-content {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+  }
 }
 
 #content_area {
@@ -67,27 +115,18 @@ body.side {
 
 /* Top logo part */
 #side_header {
-  position: relative;
-  z-index: 10;
-  height: 64px;
-  margin: 0;
-  background: $color-sidebar-background;
-  border: none;
-  border-bottom: 1px solid $color-sidebar-border;
-  border-radius: 0;
-  box-shadow: 0 0 0 rgba(0, 0, 0, 0.1);
-  box-sizing: border-box;
+  height: 58px;
 
   > a {
     display: block;
     width: 100%;
     height: 100%;
-    margin: 0;
     text-decoration: none;
-    background-image: url("images/mk-logo.png");
-    background-position: 16px center;
+    background-image: url("images/tribe29_icon.svg");
+    background-position: center;
     background-repeat: no-repeat;
-    background-size: auto 30px;
+    background-size: auto 28px;
+    outline: none;
   }
 }
 
@@ -106,40 +145,35 @@ body.main .popup_menu #side_header > span {
 }
 
 #side_fold {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 15;
-  width: 10px;
-  height: 100%;
+  width: 15px;
+  height: 15px;
+  margin: 0 auto;
   cursor: pointer;
 
+  background: no-repeat center / 36% url("images/side_fold.png") $navigation-bg-color;
+  border: 1px solid $img-color;
+  border-radius: 9px;
+
+  &.folded {
+    transform: rotate(180deg);
+  }
+
   &:hover {
-    background-image: url("images/side_fold.png");
-    background-position: 5% 65%;
-    background-repeat: no-repeat;
+    opacity: .5;
   }
 }
 
 #side_version {
-  position: absolute;
-  top: 20px;
-  right: 24px;
-  z-index: 54;
-  max-width: 150px;
-  font-size: 11px;
-  color: $primary-sidebar-font-color;
-  text-align: right;
+  margin: $spacing;
+  font-size: 8px;
+  font-weight: $font-weight-bold;
+  letter-spacing: $letter-spacing-table;
+  color: $font-color-light;
+  text-align: center;
 
   a {
-    font-size: 8px;
-    font-weight: $font-weight-bold;
-    line-height: 1;
-    letter-spacing: $letter-spacing-table;
-    color: $color-text-light;
     text-decoration: none;
     text-rendering: optimizeLegibility;
-    background: none;
 
     &:hover {
       text-decoration: underline;
@@ -147,82 +181,13 @@ body.main .popup_menu #side_header > span {
   }
 
   span.unack_werks {
-    position: absolute;
-    top: 5px;
-    right: -12px;
-    z-index: 15;
     padding: 2px;
-    color: $primary-sidebar-font-color;
+    margin-left: 2px;
+    color: $font-color;
     cursor: pointer;
     background-color: rgb(255, 0, 0);
-    border-radius: 10px;
+    border-radius: 6px;
   }
-}
-
-/* Scrolling part with snapins */
-#side_content {
-  position: relative;
-  z-index: 5;
-  padding-left: 0;
-  overflow: hidden;
-  color: rgb(0, 0, 0);
-
-  &.scroll {
-    overflow-y: scroll;
-  }
-}
-
-/* The footer of the sidebar */
-#side_footer {
-  bottom: 0;
-  left: 0;
-  z-index: 10;
-  height: 48px;
-  padding: 4px 16px;
-  margin: 0;
-  background: $color-sidebar-background;
-  border: none;
-  border-top: 1px solid $color-sidebar-border;
-  border-radius: 0;
-  box-shadow: none;
-  box-sizing: border-box;
-
-  img.iconbutton {
-    position: relative;
-    top: 4px;
-    left: 0;
-    width: 27px;
-    height: 27px;
-    padding: 0;
-    margin-right: 5px;
-    font-size: 9px;
-    background-color: $sidebar-iconbutton-bg-color;
-    border: 1px solid $sidebar-iconbutton-border-color;
-    border-radius: 5px;
-    box-shadow: none;
-  }
-
-  div.copyright {
-    position: relative;
-    top: 13px;
-    right: 0;
-    bottom: 5px;
-    float: right;
-    font-size: $font-size-small;
-    font-weight: $font-weight-bold;
-    letter-spacing: $letter-spacing-table;
-    color: $color-text-light;
-    text-align: right;
-    text-transform: uppercase;
-  }
-}
-
-#side_footer div.copyright a,
-/* TODO: Reproduce these two html elements */
-#side_footer div.copyright body.main .popup_menu span,
-body.main .popup_menu #side_footer div.copyright span {
-  color: $color-text-light;
-  text-decoration: none;
 }
 
 span#msg_label {
@@ -240,26 +205,26 @@ span#msg_label {
 /* General layout of snapins */
 body.side div.snapin, div.add_snapin div.snapin  {
   width: 100%;
-  padding: 0;
-  margin: $snapin-margin;
+  padding: (0.75 * $spacing) (2 * $spacing);
   overflow: hidden;
-  background: $color-sidebar-background;
-  border: $snapin-border;
-  border-top: $snapin-border-top;
-  border-bottom: $snapin-border-bottom;
-  border-radius: 0;
+  background: $navigation-bg-color;
+  border-radius: 4px;
   box-shadow: none;
   box-sizing: border-box;
 }
 
 div.snapin {
+  &.dragging {
+    position: absolute;
+    z-index: 200;
+  }
+
   /* Header of the snapin */
   div.head {
     position: relative;
     height: auto;
-    padding: 8px;
     line-height: 10px; /* affects height of snapin title bar */
-    color: $color-text-light;
+    color: $font-color;
     text-align: left;
     background: transparent;
 
@@ -268,94 +233,101 @@ div.snapin {
     }
 
     b.heading {
-      font-size: $font-size-default;
-      font-weight: 500;
+      padding-bottom: 3px;
+      font-size: $font-size-global;
+      font-weight: $font-weight-bold;
+      line-height: 16px;
       letter-spacing: $letter-spacing-table;
-      text-transform: uppercase;
+      border-bottom: 1px solid $snapin-heading-border-color;
     }
 
-    &.closed div.minisnapin {
+    &.closed span.minisnapin {
       background-image: url("images/icon_maxisnapin.png");
     }
   }
 
-  div.closesnapin {
+  div.snapin_buttons {
     position: absolute;
     right: 5px;
-    width: 8px;
-    height: 2px; /* vertical position of close button */
-    padding: 0;
-    margin-top: 2px;
-    margin-right: 6px;
-    line-height: 0;
+    opacity: 0;
+    transition: opacity 50ms ease-in 50ms;
+  }
+
+  &:hover div.snapin_buttons {
+    opacity: 1;
+    transition: opacity 0s;
+  }
+
+  span.moresnapin {
+    display: inline-block;
+    width: 16px;  /* FIXME: get rid of the animation that uses 4 images */
+    margin-right: 4px;
 
     img {
-      width: 8px;
-      height: 8px;
+      width: 16px;
+      height: 16px;
     }
   }
 
-  div.minisnapin {
-    position: absolute;
-    right: 15px;
-    width: 8px;
-    height: 8px;
-    margin: 2px 6px 0 0; /* vertical position of minimize button */
+  span.closesnapin {
+    display: inline-block;
+    width: 16px;
+
+    img {
+      width: 16px;
+      height: 16px;
+      padding: 0;
+      margin-top: -9px;  /* HACK to align the button */
+    }
+  }
+
+  span.minisnapin {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
     line-height: 0;
     cursor: pointer;
-    background-image: url("images/icon_minisnapin.png");
+    background: no-repeat center / 100% url("images/icon_minisnapin.png");
   }
 
   div.content {
     top: 64px;
     width: 100%;
-    padding: 8px; /* Invisible spacing around hole snapin content */
-    color: $primary-sidebar-font-color;
-    background-color: $color-sidebar-background;
+    padding: $spacing 0 0;
+    color: $font-color;
     box-sizing: border-box;
   }
 
   select {
     width: 100%;
-    height: 100%;
-    padding: 8px;
-    font-size: 11px;
-    color: $color-text;
-    background-color: $bg-color-default;
+    height: 24px;
     background-image: none;
-    border: $primary-border;
-    border-radius: $theme-border-radius;
+    border-radius: $popup-filters-border-radius;
     box-shadow: none;
   }
 
   /*
    * General styles for snapin contents
    */
-  .content_center {
-    margin-right: auto;
-    margin-left:  auto;
-  }
 
   td {
-    color: $primary-sidebar-font-color;
+    color: $font-color;
   }
 
   h3 {
     margin: 2px 0;
     font-size: 100%;
-    color: $primary-sidebar-font-color;
+    color: $font-color;
   }
 
   /* Normal link in snapins */
   a {
     font-weight: normal;
-    color: $primary-sidebar-font-color;
+    color: $font-color;
     text-decoration: none;
 
-    &:hover {
-      color: $snapin-link-hover-color;
-      text-decoration: underline;
-    }
+    &:hover { text-decoration: underline; }
 
     &.iconlink img {
       margin-right: 8px;
@@ -410,7 +382,7 @@ div.snapin {
 
   /* The right-aligned link at the bottom of some snapins like the "views" snapin. */
   div.footnotelink {
-    margin-top: 0px;
+    margin-top: 0;
     text-align: right;
 
     a {
@@ -453,11 +425,36 @@ div.snapin {
   }
 }
 
+#add_snapin {
+  margin-top: auto;
+  text-align: center;
+
+  a {
+    display: block;
+    padding: $spacing 0;
+    text-decoration: none;
+
+    img {
+      width: 28px;
+      height: 28px;
+    }
+
+    div.description {
+      margin-top: 6px;
+      color: #5a6782;
+    }
+  }
+}
+
+div.snapin div.content div.foldable ul.treeangle a.iconlink {
+  padding: 0;
+}
+
 div.snapin div.content div.foldable a.iconlink,
 /* TODO: Reproduce these two html elements */
 div.snapin div.content div.foldable body.main .popup_menu span.iconlink,
 body.main .popup_menu div.snapin div.content div.foldable span.iconlink {
-  padding: 4px 0px;
+  padding: 4px 0;
 }
 
 div.snapin div.content div.foldable a.iconlink:last-of-type,
@@ -479,7 +476,7 @@ div.snapin div.footnotelink a.link,
 /* TODO: Reproduce these two html elements */
 div.snapin div.footnotelink body.main .popup_menu span.link,
 body.main .popup_menu div.snapin div.footnotelink span.link {
-  padding: 0 0;
+  padding: 0;
   margin-right: 16px;
   margin-left: 0;
   font-size: $font-size-small;
@@ -534,15 +531,15 @@ div.add_snapin {
       height: 220px;
       padding: 8px;
       margin: 0 16px 16px 0;
-      background-color: $color-sidebar-background;
-      border: 1px solid $color-table-border-dark;
+      background-color: $snapin-bg-color;
+      border: 1px solid $snapin-bg-color;
       border-radius: 5px;
       box-shadow: 0 0 0 rgba(0, 0, 0, 0.1);
       transition: box-shadow .15s 0s ease-in-out;
     }
 
     *, &:hover * {
-      color: $lightgrey;
+      color: $font-color;
     }
 
     &:hover {
@@ -555,23 +552,21 @@ div.add_snapin {
       font-weight: $font-weight-default;
       line-height: 1.333;
       letter-spacing: $letter-spacing-table;
-      color: $color-nuance-8;
+      color: $snapin-description-font-color;
       text-rendering: optimizeLegibility;
     }
 
     div.snapin {
       height: 116px;
       padding-top: 0;
-      background-color: $color-sidebar-background;
       border: none;
-      border-bottom: 1px solid $color-table-border-dark;
       border-radius: 0;
     }
 
     .head {
       height: auto;
       padding: 8px;
-      color: $color-text-light;
+      color: $font-color;
       text-align: left;
       background: transparent;
 
@@ -588,7 +583,7 @@ div.add_snapin {
     }
 
     .content {
-        color: $color-text;
+      color: $font-color;
     }
   }
 
@@ -644,4 +639,12 @@ span#msg_label {
   color: rgb(255, 0, 0);
   background-color: rgb(255, 255, 255);
   border-radius: 5px;
+}
+
+div.head {
+  position: relative;
+
+  a.more img {
+    top: 0;
+  }
 }

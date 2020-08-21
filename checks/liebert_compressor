@@ -29,7 +29,7 @@ def check_liebert_compressor(item, params, data):
 
 
 check_info['liebert_compressor'] = {
-    'parse_function': parse_liebert,
+    'parse_function': parse_liebert_wrapper,
     'inventory_function': discover(),
     'check_function': check_liebert_compressor,
     'service_description': '%s',

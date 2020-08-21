@@ -1,15 +1,14 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import division
 import cmk.utils.render
 import cmk.gui.utils as utils
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
-from . import (
+from cmk.gui.plugins.views.perfometers import (
     perfometers,
     render_perfometer,
     perfometer_linear,
@@ -44,49 +43,6 @@ def number_human_readable(n, precision=1, unit="B"):
     if abs(n) > base:
         return (f + "k%s") % (n / base, unit)  # fixed: true-division
     return (f + "%s") % (n, unit)
-
-
-def perfometer_esx_vsphere_datastores(row, check_command, perf_data):
-    used_mb = perf_data[0][1]
-    maxx = perf_data[0][-1]
-    # perf data might be incomplete, if trending perfdata is off...
-    uncommitted_mb = 0
-    for entry in perf_data:
-        if entry[0] == "uncommitted":
-            uncommitted_mb = entry[1]
-            break
-
-    perc_used = 100 * (float(used_mb) / float(maxx))
-    perc_uncommitted = 100 * (float(uncommitted_mb) / float(maxx))
-    perc_totally_free = 100 - perc_used - perc_uncommitted
-
-    if perc_used + perc_uncommitted <= 100:
-        # Regular handling, no overcommitt
-        data = [
-            (perc_used, "#00ffc6"),
-            (perc_uncommitted, "#eeccff"),
-            (perc_totally_free, get_themed_perfometer_bg_color()),
-        ]
-    else:
-        # Visualize overcommitted space by scaling to total overcommittment value
-        # and drawing the capacity as red line in the perfometer
-        total = perc_used + perc_uncommitted
-        perc_used_bar = perc_used * 100.0 / total
-        perc_free = (100 - perc_used) * 100.0 / total
-        data = [
-            (perc_used_bar, "#00ffc6"),
-            (perc_free, "#eeccff"),
-            (1, "red"),  # This line visualizes the capacity
-            (perc_uncommitted - perc_free, "#eeccff"),
-        ]
-
-    legend = "%0.2f%%" % perc_used
-    if uncommitted_mb:
-        legend += " (+%0.2f%%)" % perc_uncommitted
-    return legend, render_perfometer(data)
-
-
-perfometers["check_mk-esx_vsphere_datastores"] = perfometer_esx_vsphere_datastores
 
 
 def perfometer_check_mk_mem_used(row, check_command, perf_data):

@@ -7,10 +7,12 @@
 #define AttributeListAsIntColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
+
 #include "Filter.h"
 #include "IntColumn.h"
 #include "contact_fwd.h"
@@ -28,6 +30,8 @@ public:
     int32_t getValue(Row row, const contact *auth_user) const override;
 
     [[nodiscard]] std::vector<std::string> getAttributes(Row row) const;
+
+    static std::vector<std::string> decode(unsigned long mask);
 };
 
 #endif  // AttributeListAsIntColumn_h

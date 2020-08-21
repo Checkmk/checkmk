@@ -87,7 +87,7 @@ def inv_oracle_tablespaces(parsed, inventory_tree, status_data_tree):
                     num_increments += incs
                     increment_size += incsize * incs
 
-                    if db_version >= 11:
+                    if float(db_version) >= 11:
                         # The size of next extent in datafile is ignored when remaining
                         # free space is > then next extend. Oracle uses all space up to the maximum!
                         free_space += df_max_size - df_size

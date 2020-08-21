@@ -38,14 +38,15 @@ make
 2. Build  and copy results t the *out*
 3. Uninstall from backuped python-3.8.exe in *uninstall*
 4. Install to the *to_install*
-4. Backup python-3.8.exe to *uninstall*
 5. Upgrade pip 
 6. Install pipenv
-7. Create .venv in *tmp/work* using ~check_mk/virtual-envs/Windows/3.8/Pipfile~
-8. Process Pipfile.lock in *tmp/work*
-9. Zip *tmp/ready/.venv*
-10. Copy to *artefacts*
-11. Uninstall python from *to_install*
+7. Save whole folder to the *to_save*
+8. Uninstall python from *to_install*
+9. copy ~check_mk/virtual-envs/Windows/3.8/Pipfile~ in *to_save*
+10. Build virtual environemtn *to_save* and copy correct *pyvenv.cfg* into *tO-save/.venv*
+11. Clean virtual environemtn *to_save*
+12. Zip *tmp/to_save* into *tmp/python-3.8.zip*
+13. Copy to *artefacts*
 
 
 
@@ -54,6 +55,8 @@ make
 .
 |
 |-- tmp/
+|    |   python-3.8.zip
+|    |
 |    |-- work/		    * to produce module *
 |    |    |
 |    |    +-- .venv/	* virtual environment *

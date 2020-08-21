@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -33,7 +33,7 @@ from cmk.gui.watolib.user_scripts import (
     user_script_title,
     user_script_choices,
 )
-from cmk.gui.watolib.global_settings import load_configuration_settings
+from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 
 
 def delete_users(users_to_delete):
@@ -122,8 +122,7 @@ def _validate_user_attributes(all_users, user_id, user_attrs, is_new_user=True):
     vs_user_idle_timeout.validate_value(idle_timeout, "idle_timeout")
 
     # Notification settings are only active if we do *not* have rule based notifications!
-    rulebased_notifications = load_configuration_settings().get("enable_rulebased_notifications")
-    if not rulebased_notifications:
+    if not rulebased_notifications_enabled():
         # Notifications
         notifications_enabled = user_attrs.get("notification_enabled")
 

@@ -1,10 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Tuple as _Tuple, Text  # pylint: disable=unused-import
+from typing import Tuple as _Tuple
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
@@ -25,10 +25,8 @@ from cmk.gui.plugins.wato import (
 )
 
 
-def _vs_cisco_dom(which_levels):
-    # type: (str) -> _Tuple[str, Alternative]
-    def _button_text_warn(which_levels):
-        # type: (str) -> Text
+def _vs_cisco_dom(which_levels: str) -> _Tuple[str, Alternative]:
+    def _button_text_warn(which_levels: str) -> str:
         if which_levels == "upper":
             text = _("Warning at")
         elif which_levels == "lower":
@@ -37,8 +35,7 @@ def _vs_cisco_dom(which_levels):
             raise ValueError()
         return text
 
-    def _button_text_crit(which_levels):
-        # type: (str) -> Text
+    def _button_text_crit(which_levels: str) -> str:
         if which_levels == "upper":
             text = _("Critical at")
         elif which_levels == "lower":
@@ -72,13 +69,11 @@ def _vs_cisco_dom(which_levels):
             ]))
 
 
-def _item_spec_cisco_dom():
-    # type: () -> TextAscii
+def _item_spec_cisco_dom() -> TextAscii:
     return TextAscii(title=_("Sensor description if present, sensor index otherwise"))
 
 
-def _parameter_valuespec_cisco_dom():
-    # type: () -> Dictionary
+def _parameter_valuespec_cisco_dom() -> Dictionary:
     return Dictionary(elements=[
         (_vs_cisco_dom("upper")),
         (_vs_cisco_dom("lower")),

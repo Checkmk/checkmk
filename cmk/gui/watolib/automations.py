@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -10,18 +10,17 @@ and similar things."""
 import ast
 import os
 import re
+import subprocess
 import time
 import uuid
-from typing import (  # pylint: disable=unused-import
-    Tuple, Dict, Any, Optional, NamedTuple, Text, Union, Sequence,
-)
+from typing import Tuple, Dict, Any, Optional, NamedTuple, Sequence
+
 import urllib3  # type: ignore[import]
 import requests
-import six
+from six import ensure_str
 
-from livestatus import SiteId, SiteConfiguration  # pylint: disable=unused-import
+from livestatus import SiteId, SiteConfiguration
 
-import cmk.utils.cmk_subprocess as subprocess
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 
@@ -34,13 +33,9 @@ from cmk.gui.log import logger
 import cmk.gui.escaping as escaping
 from cmk.gui.watolib.sites import SiteManagementFactory
 from cmk.gui.watolib.utils import mk_repr
-from cmk.gui.background_job import BackgroundProcessInterface  # pylint: disable=unused-import
+from cmk.gui.background_job import BackgroundProcessInterface
 import cmk.gui.gui_background_job as gui_background_job
-from cmk.gui.exceptions import (
-    MKGeneralException,
-    MKUserError,
-)
-
+from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.watolib.automation_commands import AutomationCommand, automation_command_registry
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
@@ -55,15 +50,14 @@ class MKAutomationException(MKGeneralException):
     pass
 
 
-def check_mk_automation(siteid,
-                        command,
-                        args=None,
-                        indata="",
-                        stdin_data=None,
-                        timeout=None,
-                        sync=True,
-                        non_blocking_http=False):
-    # type: (SiteId, str, Optional[Sequence[Union[str, Text]]], Any, Optional[str], Optional[int], bool, bool) -> Any
+def check_mk_automation(siteid: SiteId,
+                        command: str,
+                        args: Optional[Sequence[str]] = None,
+                        indata: Any = "",
+                        stdin_data: Optional[str] = None,
+                        timeout: Optional[int] = None,
+                        sync: bool = True,
+                        non_blocking_http: bool = False) -> Any:
     if args is None:
         args = []
 
@@ -82,11 +76,14 @@ def check_mk_automation(siteid,
     )
 
 
-def check_mk_local_automation(command, args=None, indata="", stdin_data=None, timeout=None):
-    # type: (str, Optional[Sequence[Union[str, Text]]], Any, Optional[str], Optional[int]) -> Any
+def check_mk_local_automation(command: str,
+                              args: Optional[Sequence[str]] = None,
+                              indata: Any = "",
+                              stdin_data: Optional[str] = None,
+                              timeout: Optional[int] = None) -> Any:
     if args is None:
         args = []
-    new_args = [six.ensure_str(a) for a in args]
+    new_args = [ensure_str(a) for a in args]
 
     if stdin_data is None:
         stdin_data = repr(indata)
@@ -98,7 +95,7 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
     if command in ['restart', 'reload']:
         call_hook_pre_activate_changes()
 
-    cmd = [six.ensure_str(a) for a in cmd]
+    cmd = [ensure_str(a) for a in cmd]
     try:
         # This debug output makes problems when doing bulk inventory, because
         # it garbles the non-HTML response output
@@ -166,15 +163,14 @@ def _hilite_errors(outdata):
     return re.sub("\nError: *([^\n]*)", "\n<div class=err><b>Error:</b> \\1</div>", outdata)
 
 
-def check_mk_remote_automation(site_id,
-                               command,
-                               args,
-                               indata,
-                               stdin_data=None,
-                               timeout=None,
-                               sync=True,
-                               non_blocking_http=False):
-    # type: (SiteId, str, Optional[Sequence[Union[str, Text]]], Any, Optional[str], Optional[int], bool, bool) -> Any
+def check_mk_remote_automation(site_id: SiteId,
+                               command: str,
+                               args: Optional[Sequence[str]],
+                               indata: Any,
+                               stdin_data: Optional[str] = None,
+                               timeout: Optional[int] = None,
+                               sync: bool = True,
+                               non_blocking_http: bool = False) -> Any:
     site = config.site(site_id)
     if "secret" not in site:
         raise MKGeneralException(
@@ -265,7 +261,7 @@ def call_hook_activate_changes():
         hooks.call("activate-changes", cmk.gui.watolib.hosts_and_folders.collect_all_hosts())
 
 
-def do_remote_automation(site, command, vars_, timeout=None):
+def do_remote_automation(site, command, vars_, files=None, timeout=None):
     auto_logger.info("RUN [%s]: %s", site, command)
     auto_logger.debug("VARS: %r", vars_)
 
@@ -278,7 +274,11 @@ def do_remote_automation(site, command, vars_, timeout=None):
            URLEncoder().urlencode_vars([("command", command), ("secret", secret),
                                         ("debug", config.debug and '1' or '')]))
 
-    response = get_url(url, site.get('insecure', False), data=dict(vars_), timeout=timeout)
+    response = get_url(url,
+                       site.get('insecure', False),
+                       data=dict(vars_),
+                       files=files,
+                       timeout=timeout)
 
     auto_logger.debug("RESPONSE: %r", response)
 
@@ -309,10 +309,10 @@ def get_url_raw(url, insecure, auth=None, data=None, files=None, timeout=None):
     if response.status_code == 401:
         raise MKUserError("_passwd", _("Authentication failed. Invalid login/password."))
 
-    elif response.status_code == 503 and "Site Not Started" in response.text:
+    if response.status_code == 503 and "Site Not Started" in response.text:
         raise MKUserError(None, _("Site is not running"))
 
-    elif response.status_code != 200:
+    if response.status_code != 200:
         raise MKUserError(None, _("HTTP Error - %d: %s") % (response.status_code, response.text))
 
     return response
@@ -354,26 +354,25 @@ def do_site_login(site_id, name, password):
         if config.debug:
             message += "<br>" + _("Automation URL:") + " <tt>%s</tt><br>" % url
         raise MKAutomationException(message)
-    elif not response:
+    if not response:
         raise MKAutomationException(_("Empty response from web service"))
-    else:
-        try:
-            eval_response = ast.literal_eval(response)
-        except SyntaxError:
-            raise MKAutomationException(response)
-        if isinstance(eval_response, dict):
-            if cmk_version.is_managed_edition() and eval_response["edition_short"] != "cme":
-                raise MKUserError(
-                    None,
-                    _("The Check_MK Managed Services Edition can only "
-                      "be connected with other sites using the CME."))
-            return eval_response["login_secret"]
-        return eval_response
+    try:
+        eval_response = ast.literal_eval(response)
+    except SyntaxError:
+        raise MKAutomationException(response)
+    if isinstance(eval_response, dict):
+        if cmk_version.is_managed_edition() and eval_response["edition_short"] != "cme":
+            raise MKUserError(
+                None,
+                _("The Check_MK Managed Services Edition can only "
+                  "be connected with other sites using the CME."))
+        return eval_response["login_secret"]
+    return eval_response
 
 
 CheckmkAutomationRequest = NamedTuple("CheckmkAutomationRequest", [
     ("command", str),
-    ("args", Optional[Sequence[Union[str, Text]]]),
+    ("args", Optional[Sequence[str]]),
     ("indata", Any),
     ("stdin_data", Optional[str]),
     ("timeout", Optional[int]),
@@ -389,8 +388,8 @@ CheckmkAutomationGetStatusResponse = NamedTuple("CheckmkAutomationGetStatusRespo
 # calls but have been implemented individually. Does it make sense to refactor them to use this?
 # - Service discovery of a single host (cmk.gui.wato.pages.services._get_check_table)
 # - Fetch agent / SNMP output (cmk.gui.wato.pages.fetch_agent_output.FetchAgentOutputBackgroundJob)
-def _do_check_mk_remote_automation_in_background_job(site_id, automation_request):
-    # type: (SiteId, CheckmkAutomationRequest) -> Any
+def _do_check_mk_remote_automation_in_background_job(
+        site_id: SiteId, automation_request: CheckmkAutomationRequest) -> Any:
     """Execute the automation in a background job on the remote site
 
     It starts the background job using one call. It then polls the remote site, waiting for
@@ -416,8 +415,8 @@ def _do_check_mk_remote_automation_in_background_job(site_id, automation_request
     return result
 
 
-def _start_remote_automation_job(site_config, automation_request):
-    # type: (SiteConfiguration, CheckmkAutomationRequest) -> str
+def _start_remote_automation_job(site_config: SiteConfiguration,
+                                 automation_request: CheckmkAutomationRequest) -> str:
     auto_logger.info("Starting remote automation in background job")
     job_id = do_remote_automation(site_config, "checkmk-remote-automation-start", [
         ("request", repr(tuple(automation_request))),
@@ -430,17 +429,14 @@ def _start_remote_automation_job(site_config, automation_request):
 @automation_command_registry.register
 class AutomationCheckmkAutomationStart(AutomationCommand):
     """Called by do_remote_automation_in_background_job to execute the background job on a remote site"""
-    def command_name(self):
-        # type: () -> str
+    def command_name(self) -> str:
         return "checkmk-remote-automation-start"
 
-    def get_request(self):
-        # type: () -> CheckmkAutomationRequest
+    def get_request(self) -> CheckmkAutomationRequest:
         return CheckmkAutomationRequest(
             *ast.literal_eval(html.request.get_ascii_input_mandatory("request")))
 
-    def execute(self, request):
-        # type: (CheckmkAutomationRequest) -> Tuple
+    def execute(self, request: CheckmkAutomationRequest) -> Tuple:
         job = CheckmkAutomationBackgroundJob(request=request)
         job.set_function(job.execute_automation, request=request)
         job.start()
@@ -451,16 +447,13 @@ class AutomationCheckmkAutomationStart(AutomationCommand):
 class AutomationCheckmkAutomationGetStatus(AutomationCommand):
     """Called by do_remote_automation_in_background_job to get the background job state from on a
     remote site"""
-    def command_name(self):
-        # type: () -> str
+    def command_name(self) -> str:
         return "checkmk-remote-automation-get-status"
 
-    def get_request(self):
-        # type: () -> str
+    def get_request(self) -> str:
         return ast.literal_eval(html.request.get_ascii_input_mandatory("request"))
 
-    def execute(self, request):
-        # type: (str) -> Tuple
+    def execute(self, request: str) -> Tuple:
         job_id = request
         job = CheckmkAutomationBackgroundJob(job_id)
         job_status = job.get_status_snapshot().get_status_as_dict()[job.get_job_id()]
@@ -477,12 +470,12 @@ class CheckmkAutomationBackgroundJob(WatoBackgroundJob):
     job_prefix = "automation-"
 
     @classmethod
-    def gui_title(cls):
-        # type: () -> Text
+    def gui_title(cls) -> str:
         return _("Checkmk automation")
 
-    def __init__(self, job_id=None, request=None):
-        # type: (Optional[str], Optional[CheckmkAutomationRequest]) -> None
+    def __init__(self,
+                 job_id: Optional[str] = None,
+                 request: Optional[CheckmkAutomationRequest] = None) -> None:
         if job_id is not None:
             # Loading an existing job
             super(CheckmkAutomationBackgroundJob, self).__init__(job_id=job_id)
@@ -497,8 +490,8 @@ class CheckmkAutomationBackgroundJob(WatoBackgroundJob):
             title=_("Checkmk automation %s %s") % (request.command, automation_id),
         )
 
-    def execute_automation(self, job_interface, request):
-        # type: (BackgroundProcessInterface, CheckmkAutomationRequest) -> None
+    def execute_automation(self, job_interface: BackgroundProcessInterface,
+                           request: CheckmkAutomationRequest) -> None:
         self._logger.info("Starting automation: %s", request.command)
         self._logger.debug(request)
 

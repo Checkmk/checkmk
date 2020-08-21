@@ -1,11 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import six
 
 import cmk.gui.config as config
 import cmk.gui.views as views
@@ -19,7 +18,7 @@ from cmk.gui.plugins.sidebar import (
 )
 
 
-class HostSnapin(six.with_metaclass(abc.ABCMeta, SidebarSnapin)):
+class HostSnapin(SidebarSnapin, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def _host_mode_ident(self):
         raise NotImplementedError()

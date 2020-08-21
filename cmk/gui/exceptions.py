@@ -4,8 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Text  # pylint: disable=unused-import
-import six
+import http.client
+from typing import Optional
+
 from werkzeug.http import HTTP_STATUS_CODES
 
 from cmk.utils.exceptions import (
@@ -22,8 +23,7 @@ class RequestTimeout(MKTimeout):
 
 class FinalizeRequest(MKException):
     """Is used to end the HTTP request processing from deeper code levels"""
-    def __init__(self, code):
-        # type: (int) -> None
+    def __init__(self, code: int) -> None:
         super(FinalizeRequest, self).__init__("%d %s" % (code, HTTP_STATUS_CODES[code]))
         self.status = code
 
@@ -31,10 +31,9 @@ class FinalizeRequest(MKException):
 class HTTPRedirect(FinalizeRequest):
     """Is used to end the HTTP request processing from deeper code levels
     and making the client request another page after receiving the response."""
-    def __init__(self, url):
-        # type: (str) -> None
-        super(HTTPRedirect, self).__init__(six.moves.http_client.FOUND)
-        self.url = url  # type: str
+    def __init__(self, url: str) -> None:
+        super(HTTPRedirect, self).__init__(http.client.FOUND)
+        self.url: str = url
 
 
 class MKAuthException(MKException):
@@ -50,10 +49,9 @@ class MKConfigError(MKException):
 
 
 class MKUserError(MKException):
-    def __init__(self, varname, message):
-        # type: (Optional[str], Text) -> None
-        self.varname = varname  # type: Optional[str]
-        self.message = message  # type: Text
+    def __init__(self, varname: Optional[str], message: str) -> None:
+        self.varname: Optional[str] = varname
+        self.message: str = message
         super(MKUserError, self).__init__(varname, message)
 
     def __str__(self):

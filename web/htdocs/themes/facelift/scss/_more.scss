@@ -1,0 +1,79 @@
+@charset "UTF-8";
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
+@keyframes fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.advanced {
+  display: none;
+  opacity: 0;
+}
+
+.more {
+  .advanced {
+    display: block;
+    animation: fadein 0s both;
+  }
+
+  td.advanced {
+    display: table-cell;
+  }
+
+  tr.advanced {
+    display: table-row;
+  }
+}
+
+.more.withanimation .advanced {
+  animation: fadein 1s both;
+}
+
+a.more {
+  display: inline-block;
+  width: 26px;
+
+  img {
+    position: absolute;
+    top: 5px;
+    width: auto;
+    padding: 0;
+    margin: 0;
+  }
+}
+
+div.more_container {
+  position: relative;
+  width: 100%;
+
+  a.more {
+    position: absolute;
+    top: -7px;
+    right: -5px;
+  }
+}
+
+.more a.more {
+  img.show_more {
+    z-index: 0;
+    opacity: 0;
+  }
+
+  img.show_less {
+    opacity: 1;
+  }
+}
+
+a.more {
+  img.show_more {
+    z-index: 1;
+    opacity: 1;
+  }
+
+  img.show_less {
+    opacity: 0;
+  }
+}

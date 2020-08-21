@@ -4,6 +4,7 @@
 // source code package.
 
 #include "RendererCSV.h"
+
 #include <ostream>
 class Logger;
 

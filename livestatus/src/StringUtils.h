@@ -7,10 +7,12 @@
 #define StringUtils_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <bitset>
 #include <cstddef>
 #include <ostream>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -36,6 +38,11 @@ std::string lstrip(const std::string &str,
 
 std::string rstrip(const std::string &str,
                    const std::string &chars = " \t\n\v\f\r");
+
+// TODO (sk): unit tests
+std::string_view rstrip(std::string_view str, std::string_view chars);
+// TODO (sk): unit tests
+std::string_view lstrip(std::string_view str, std::string_view chars);
 
 std::string strip(const std::string &str,
                   const std::string &chars = " \t\n\v\f\r");

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -8,18 +8,17 @@ import functools
 import logging
 import sys
 import traceback
+from pathlib import Path
+from typing import AnyStr, Union
 
 import flask
 import werkzeug
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
-
 from connexion import FlaskApi, AbstractApp, RestyResolver, problem  # type: ignore[import]
 from connexion.apps.flask_app import FlaskJSONEncoder  # type: ignore[import]
+from connexion.decorators.validation import RequestBodyValidator  # type: ignore[import]
 from connexion.exceptions import ProblemException  # type: ignore[import]
+from connexion.lifecycle import ConnexionResponse  # type: ignore[import]
 
 from cmk.gui.wsgi.auth import with_user
 from cmk.utils import paths, crash_reporting
@@ -54,17 +53,35 @@ class APICrashReport(crash_reporting.ABCCrashReport):
         return "rest_api"
 
 
+class NopRequestBodyValidator(RequestBodyValidator):
+    """Don't validate the request body.
+    """
+    def validate_schema(self, data: dict, url: AnyStr) -> Union[ConnexionResponse, None]:
+        """Don't."""
+        return None
+
+
+# Disable connexion's Request validation completely. We implement it ourselves.
+# See the @endpoint_schema decorator
+VALIDATOR_MAP = {
+    'body': NopRequestBodyValidator,
+}
+
+
 class CheckmkApiApp(AbstractApp):
-    def __init__(self, import_name, **kwargs):
+    def __init__(self, import_name, debug=False, **kwargs):
         resolver = RestyResolver('cmk.gui.plugins.openapi.endpoints')
         resolver.function_resolver = wrap_result(resolver.function_resolver, with_user)
 
         kwargs.setdefault('resolver', resolver)
-        super(CheckmkApiApp, self).__init__(import_name, api_cls=CheckmkApi, **kwargs)
+        super(CheckmkApiApp, self).__init__(import_name, api_cls=CheckmkApi, debug=debug, **kwargs)
 
     def create_app(self):
         """Will be persisted on self.app, where __call__ will dispatch to."""
         app = flask.Flask(self.import_name)
+        app.config['PROPAGATE_EXCEPTIONS'] = self.debug
+        app.config['DEBUG'] = self.debug
+        app.config['TESTING'] = self.debug
         app.json_encoder = FlaskJSONEncoder
         return app
 
@@ -75,7 +92,8 @@ class CheckmkApiApp(AbstractApp):
         kwargs.setdefault('resolver_error', 501)  # not implemented
         kwargs.setdefault('strict_validation', False)  # 500 on invalid request params
         kwargs.setdefault('validate_responses', False)
-        api = self.add_api(specification, **kwargs)  # type: CheckmkApi
+        kwargs['validator_map'] = VALIDATOR_MAP
+        api: CheckmkApi = self.add_api(specification, **kwargs)
         api.add_swagger_ui()
         self.app.register_blueprint(api.blueprint)
         return api
@@ -127,7 +145,8 @@ class CheckmkApiApp(AbstractApp):
         # other errors we might want to know about in a crash-report.
         self.app.register_error_handler(ProblemException, self._make_error_response)
 
-        self.app.register_error_handler(Exception, self.log_error)
+        if not self.debug:
+            self.app.register_error_handler(Exception, self.log_error)
 
     def run(self, port=None, server=None, debug=None, host=None, **options):
         raise NotImplementedError()

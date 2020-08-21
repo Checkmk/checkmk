@@ -76,8 +76,9 @@ def parse_rabbitmq_cluster(info):
             "messages_publish_rate": cluster.get("message_stats", {}).get("publish_details",
                                                                           {}).get("rate", 0.0),
             "messages_deliver": cluster.get("message_stats", {}).get("deliver_get", 0),
-            "messages_deliver_rate": cluster.get("message_stats", {}).get("deliver_get",
-                                                                          {}).get("rate", 0.0),
+            "messages_deliver_rate": cluster.get("message_stats",
+                                                 {}).get("deliver_get_details",
+                                                         {}).get("rate", 0.0),
         }
 
         object_totals = {

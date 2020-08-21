@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,7 +6,7 @@
 
 import cmk.utils.version as cmk_version
 # Following import is used to trigger plugin loading
-import cmk.gui.wato  # pylint: disable=unused-import
+import cmk.gui.wato  # noqa: F401 # pylint: disable=unused-import
 import cmk.gui.plugins.wato.utils as utils
 
 

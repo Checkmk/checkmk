@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -10,6 +10,7 @@ from cmk.gui.valuespec import (
     Integer,
     Percentage,
     TextAscii,
+    Transform,
     Tuple,
 )
 
@@ -20,10 +21,79 @@ from cmk.gui.plugins.wato import (
 )
 
 
+def _transform_connection_type(params):
+    # The old WATO rule did not differentiate between "active" and "idle"
+    # The old levels were refering to the "active" type
+    for metric_type in ("perc", "abs"):
+        if "levels_%s" % metric_type in params.keys():
+            params["levels_%s_active" % metric_type] = params["levels_%s" % metric_type]
+            params.pop("levels_%s" % metric_type)
+
+    return params
+
+
 def _parameter_valuespec_db_connections():
+    return Transform(
+        Dictionary(
+            help=_("This rule allows you to configure the number of maximum concurrent "
+                   "connections for a given database."),
+            elements=[
+                ("levels_perc_active",
+                 Tuple(
+                     title=_("Percentage of maximum available active connections"),
+                     elements=[
+                         Percentage(title=_("Warning at"),
+                                    unit=_("% of maximum active connections")),
+                         Percentage(title=_("Critical at"),
+                                    unit=_("% of maximum active connections")),
+                     ],
+                 )),
+                ("levels_abs_active",
+                 Tuple(
+                     title=_("Absolute number of active connections"),
+                     elements=[
+                         Integer(title=_("Warning at"), minvalue=0, unit=_("connections")),
+                         Integer(title=_("Critical at"), minvalue=0, unit=_("connections")),
+                     ],
+                 )),
+                ("levels_perc_idle",
+                 Tuple(
+                     title=_("Percentage of maximum available idle connections"),
+                     elements=[
+                         Percentage(title=_("Warning at"), unit=_("% of maximum idle connections")),
+                         Percentage(title=_("Critical at"),
+                                    unit=_("% of maximum idle connections")),
+                     ],
+                 )),
+                ("levels_abs_idle",
+                 Tuple(
+                     title=_("Absolute number of idle connections"),
+                     elements=[
+                         Integer(title=_("Warning at"), minvalue=0, unit=_("idle connections")),
+                         Integer(title=_("Critical at"), minvalue=0, unit=_("idle connections")),
+                     ],
+                 )),
+            ],
+        ),
+        forth=_transform_connection_type,
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="db_connections",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("Name of the database"),),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_db_connections,
+        title=lambda: _("Database Connections (PostgreSQL)"),
+    ))
+
+
+def _parameter_valuespec_db_connections_mongodb():
     return Dictionary(
-        help=_("This rule allows you to configure the number of maximum concurrent "
-               "connections for a given database."),
+        help=_("This rule allows you to configure the number of incoming connections from clients "
+               "to the database server."),
         elements=[
             ("levels_perc",
              Tuple(
@@ -35,7 +105,7 @@ def _parameter_valuespec_db_connections():
              )),
             ("levels_abs",
              Tuple(
-                 title=_("Absolute number of connections"),
+                 title=_("Absolute number of incoming connections"),
                  elements=[
                      Integer(title=_("Warning at"), minvalue=0, unit=_("connections")),
                      Integer(title=_("Critical at"), minvalue=0, unit=_("connections")),
@@ -47,10 +117,10 @@ def _parameter_valuespec_db_connections():
 
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
-        check_group_name="db_connections",
+        check_group_name="db_connections_mongodb",
         group=RulespecGroupCheckParametersApplications,
         item_spec=lambda: TextAscii(title=_("Name of the database"),),
         match_type="dict",
-        parameter_valuespec=_parameter_valuespec_db_connections,
-        title=lambda: _("Database Connections (PostgreSQL/MongoDB)"),
+        parameter_valuespec=_parameter_valuespec_db_connections_mongodb,
+        title=lambda: _("Database Connections (MongoDB)"),
     ))

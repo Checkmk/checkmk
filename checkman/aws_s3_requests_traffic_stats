@@ -1,0 +1,24 @@
+title: AWS S3: Traffic Stats
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the rates of bytes downloaded and
+ uploaded for requests to an AWS S3 bucket. Only requests
+ that contain a request body are counted.
+
+ To make this check work you have to configure the related
+ special agent {Amazon Web Services (AWS)}. Furthermore, you
+ have to enable requests metrics in the AWS/S3 console. This is
+ a paid feature.
+
+ The service is always {OK}.
+
+item:
+ Name of the bucket
+
+inventory:
+ One service is created for each bucket if all required metrics
+ (BytesDownloaded, BytesUploaded) are given.
+

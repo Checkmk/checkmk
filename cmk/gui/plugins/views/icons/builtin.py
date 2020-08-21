@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -55,6 +55,7 @@ from cmk.gui.plugins.views import (
 )
 from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
 from cmk.gui.plugins.views.graphs import cmk_graph_url
+from cmk.gui.utils.popups import MethodAjax
 
 #   .--Action Menu---------------------------------------------------------.
 #   |          _        _   _               __  __                         |
@@ -97,12 +98,11 @@ class ActionMenuIcon(Icon):
             url_vars.append(('_display_options', html.request.var('_display_options')))
         url_vars.append(('_back_url', html.makeuri([])))
 
-        return html.render_popup_trigger(html.render_icon('menu',
-                                                          _('Open the action menu'),
-                                                          cssclass="iconbutton"),
-                                         'action_menu',
-                                         'action_menu',
-                                         url_vars=url_vars)
+        return html.render_popup_trigger(
+            html.render_icon('menu', _('Open the action menu'), cssclass="iconbutton"),
+            'action_menu',
+            MethodAjax(endpoint='action_menu', url_vars=url_vars),
+        )
 
 
 #.

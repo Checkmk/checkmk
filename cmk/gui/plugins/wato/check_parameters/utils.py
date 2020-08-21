@@ -1,14 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for check parameter module internals"""
 
-from typing import List, Tuple as _Tuple  # pylint: disable=unused-import
+from typing import List, Tuple as _Tuple
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
 from cmk.gui.valuespec import (
     Alternative,
     CascadingDropdown,
@@ -24,6 +23,7 @@ from cmk.gui.valuespec import (
     Percentage,
     Transform,
     Tuple,
+    ValueSpec,
 )
 from cmk.gui.plugins.wato import PredictiveLevels
 
@@ -53,7 +53,7 @@ def get_free_used_dynamic_valuespec(what, name, default_value=(80.0, 90.0)):
         title = _("free space")
         course = _("below")
 
-    vs_subgroup = [
+    vs_subgroup: List[ValueSpec] = [
         Tuple(title=_("Percentage %s") % title,
               elements=[
                   Percentage(title=_("Warning if %s") % course, unit="%", minvalue=0.0),
@@ -132,7 +132,7 @@ fs_levels_elements = [
 ]
 
 # Note: This hack is only required on very old filesystem checks (prior August 2013)
-fs_levels_elements_hack = [
+fs_levels_elements_hack: List[_Tuple[str, ValueSpec]] = [
     # Beware: this is a nasty hack that helps us to detect new-style parameters.
     # Something hat has todo with float/int conversion and has not been documented
     # by the one who implemented this.
@@ -141,9 +141,9 @@ fs_levels_elements_hack = [
         totext="",
         title="",
     )),
-]  # type: List[_Tuple[str, ValueSpec]]
+]
 
-fs_reserved_elements = [
+fs_reserved_elements: List[_Tuple[str, ValueSpec]] = [
     ("show_reserved",
      DropdownChoice(
          title=_("Show space reserved for the <tt>root</tt> user"),
@@ -169,7 +169,7 @@ fs_reserved_elements = [
              (False, _("Include reserved space")),
              (True, _("Exclude reserved space")),
          ])),
-]  # type: List[_Tuple[str, ValueSpec]]
+]
 
 fs_inodes_elements = [
     ("inodes_levels",
@@ -296,12 +296,12 @@ size_trend_elements = [
               label=_("Enable generation of performance data from trends"))),
 ]
 
-filesystem_elements = fs_levels_elements \
+filesystem_elements: List[_Tuple[str, ValueSpec]] = fs_levels_elements \
                     + fs_levels_elements_hack \
                     + fs_reserved_elements \
                     + fs_inodes_elements \
                     + fs_magic_elements \
-                    + size_trend_elements  # type: List[_Tuple[str, ValueSpec]]
+                    + size_trend_elements
 
 
 def vs_filesystem(extra_elements=None):

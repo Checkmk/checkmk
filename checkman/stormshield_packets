@@ -14,5 +14,5 @@ item:
  The description of the package
 
 inventory:
- The check creates a service for each interface, which is an ethernet
- or ipsec interface.
+ One service is created for each interface
+ if it is an ethernet or ipsec interface.

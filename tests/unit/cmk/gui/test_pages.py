@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -15,6 +15,9 @@ import cmk.gui.pages
 def test_registered_pages():
     expected_pages = [
         'add_bookmark',
+        'ajax_average_scatterplot_data',
+        'ajax_alerts_bar_chart_dashlet',
+        'ajax_notifications_bar_chart_dashlet',
         'ajax_cascading_render_painer_parameters',
         'ajax_activation_state',
         'ajax_add_visual',
@@ -34,7 +37,7 @@ def test_registered_pages():
         'ajax_service_discovery',
         'ajax_set_foldertree',
         'ajax_set_rowselection',
-        'ajax_set_viewoption',
+        'ajax_single_graph_metric_data',
         'ajax_start_activation',
         'ajax_switch_help',
         'ajax_userdb_sync',
@@ -58,7 +61,6 @@ def test_registered_pages():
         'bi_set_assumption',
         'bookmark_lists',
         'clear_failed_notifications',
-        'count_context_button',
         'create_dashboard',
         'create_view',
         'create_view_dashlet',
@@ -66,13 +68,16 @@ def test_registered_pages():
         'create_link_view_dashlet',
         'create_view_infos',
         'custom_snapins',
+        'edit_custom_snapin',
+        'pagetype_topics',
+        'edit_pagetype_topic',
         'dashboard',
         'dashboard_dashlet',
         'delete_dashlet',
         'download_agent_output',
         'download_crash_report',
+        'download_diagnostics_dump',
         'edit_bookmark_list',
-        'edit_custom_snapin',
         'edit_dashboard',
         'edit_dashboards',
         'edit_dashlet',
@@ -112,6 +117,7 @@ def test_registered_pages():
         'sidebar_snapin',
         'switch_master_state',
         'switch_site',
+        'single_metric_data',
         'tree_openclose',
         'user_change_pw',
         'user_profile',
@@ -143,6 +149,7 @@ def test_registered_pages():
             'download_agent',
             'download_mkp',
             'download_stored_report',
+            'custom_combined_edit_filters',
             'edit_custom_graph',
             'edit_forecast_graph',
             'edit_graph_collection',
@@ -175,9 +182,33 @@ def test_registered_pages():
             'report_thumbnail',
             'sla_configurations',
             'sla_details',
+            'ntop_interface_details',
+            'ajax_ntop_interface_quickstats',
+            'ajax_ntop_interface_stats',
+            'ajax_ntop_interface_traffic',
+            'ajax_ntop_host_ports',
+            'ajax_ntop_host_ports_painter',
+            'ajax_ntop_interface_details',
+            'ajax_ntop_protocol_breakdown',
+            'ajax_ntop_iface_ports_list',
+            'ajax_ntop_host_top_peers_protocols',
+            'ajax_ntop_host_top_peers_protocols_painter',
+            'ajax_ntop_host_top_peers_protocols_bar',
+            'ajax_ntop_host_top_peers_protocols_pie',
+            'ajax_ntop_host_packets',
+            'ajax_ntop_host_applications',
+            'ajax_ntop_flows',
+            'ajax_ntop_engaged_alerts',
+            'ajax_ntop_past_alerts',
+            'ajax_ntop_flow_alerts',
         ]
 
-    assert sorted(cmk.gui.pages.page_registry.keys()) == sorted(expected_pages)
+    # TODO: Depending on how we call the test (single test or whole package) we
+    # see this page or we don't...
+    actual = sorted(p  #
+                    for p in cmk.gui.pages.page_registry.keys()
+                    if p != "switch_customer")
+    assert actual == sorted(expected_pages)
 
 
 def test_pages_register(monkeypatch, capsys):
@@ -188,7 +219,7 @@ def test_pages_register(monkeypatch, capsys):
         sys.stdout.write("123")
 
     handler = cmk.gui.pages.get_page_handler("123handler")
-    assert hasattr(handler, '__call__')
+    assert callable(handler)
 
     handler()
     assert capsys.readouterr()[0] == "123"
@@ -197,14 +228,14 @@ def test_pages_register(monkeypatch, capsys):
 def test_pages_register_handler(monkeypatch, capsys):
     monkeypatch.setattr(cmk.gui.pages, "page_registry", cmk.gui.pages.PageRegistry())
 
-    class PageClass(object):
+    class PageClass:
         def handle_page(self):
             sys.stdout.write("234")
 
     cmk.gui.pages.register_page_handler("234handler", lambda: PageClass().handle_page())
 
     handler = cmk.gui.pages.get_page_handler("234handler")
-    assert hasattr(handler, '__call__')
+    assert callable(handler)
 
     handler()
     assert capsys.readouterr()[0] == "234"
@@ -226,5 +257,8 @@ def test_page_registry_register_page(monkeypatch, capsys):
 
 
 def test_get_page_handler_default():
-    handler = cmk.gui.pages.get_page_handler("123handler", "XYZ")
-    assert handler == "XYZ"
+    def dummy():
+        pass
+
+    handler = cmk.gui.pages.get_page_handler("123handler", dummy)
+    assert handler is dummy

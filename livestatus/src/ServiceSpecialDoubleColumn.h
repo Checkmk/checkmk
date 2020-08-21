@@ -7,7 +7,9 @@
 #define ServiceSpecialDoubleColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <string>
+
 #include "Column.h"
 #include "DoubleColumn.h"
 class Row;

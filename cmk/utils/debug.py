@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,23 +7,19 @@
 debug_mode = False
 
 
-def enabled():
-    # type: () -> bool
+def enabled() -> bool:
     return debug_mode
 
 
-def disabled():
-    # type: () -> bool
+def disabled() -> bool:
     return not debug_mode
 
 
-def enable():
-    # type: () -> None
+def enable() -> None:
     global debug_mode
     debug_mode = True
 
 
-def disable():
-    # type: () -> None
+def disable() -> None:
     global debug_mode
     debug_mode = False

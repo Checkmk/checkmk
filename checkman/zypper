@@ -13,5 +13,5 @@ description:
  locks exist (created by {zypper addlock}).
 
 inventory:
- One service will be created for each system where the {mk_zypper}
+ One service is created for each system where the {mk_zypper}
  plugin produces a non-empty output.

@@ -7,7 +7,9 @@
 #define TableEventConsoleRules_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <string>
+
 #include "TableEventConsole.h"
 class MonitoringCore;
 

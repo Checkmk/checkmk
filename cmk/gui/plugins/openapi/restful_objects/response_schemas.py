@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,52 +6,81 @@
 
 import datetime as dt
 
-from marshmallow import Schema, fields  # type: ignore
-from marshmallow_oneofschema import OneOfSchema  # type: ignore
+from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
-from cmk.gui.plugins.openapi import plugins
+from cmk.gui.plugins.openapi import fields, plugins
+from cmk.gui.plugins.openapi.utils import BaseSchema
 
-
-class ApiError(Schema):
-    code = fields.Str(description="The HTTP status code.")
-    message = fields.Str()
-    title = fields.Str()
+# TODO: Add Enum Field for http methods, action result types and similar fields which can only hold
+#       distinct values
 
 
-class UserSchema(Schema):
+class ApiError(BaseSchema):
+    code = fields.Integer(
+        description="The HTTP status code.",
+        required=True,
+        example=404,
+    )
+    message = fields.Str(
+        description="Detailed information on what exactly went wrong.",
+        required=True,
+        example="The resource could not be found.",
+    )
+    title = fields.Str(
+        description="A summary of the problem.",
+        required=True,
+        example="Not found",
+    )
+    errors = fields.List(
+        fields.String(),
+        allow_none=True,
+        description="Optionally a list of errors used for debugging.",
+        example=None,
+    )
+
+
+class UserSchema(BaseSchema):
     id = fields.Int(dump_only=True)
     name = fields.Str(description="The user's name")
     created = fields.DateTime(dump_only=True,
+                              format="iso8601",
                               default=dt.datetime.utcnow,
                               doc_default="The current datetime")
 
 
-class Link(Schema):
+class LinkSchema(BaseSchema):
     """A Link representation according to A-24 (2.7)
 
     """
+    domainType = fields.Constant("link", required=True)
     rel = fields.String(
         description=("Indicates the nature of the relationship of the related resource to the "
                      "resource that generated this representation"),
         required=True,
+        example="self",
     )
     href = fields.Str(
         description=("The (absolute) address of the related resource. Any characters that are "
                      "invalid in URLs must be URL encoded."),
         required=True,
+        example="https://.../api_resource",
     )
     method = fields.String(
-        description="The HTTP method to use to traverse the link (GET, POST, PUT or DELETE)",
+        description="The HTTP method to use to traverse the link (get, post, put or delete)",
         required=True,
+        pattern="GET|PUT|POST|DELETE",
+        example="GET",
     )
     type = fields.String(
         description="The media type that the linked resource will return",
         required=True,
+        example="application/json",
     )
     title = fields.String(
         description=("string that the consuming application may use to render the link without "
                      "having to traverse the link in advance"),
         allow_none=True,
+        example="The object itself",
     )
     arguments = fields.Dict(
         description=("map that may be used as the basis for any data (arguments or properties) "
@@ -60,9 +89,9 @@ class Link(Schema):
     )
 
 
-class Linkable(Schema):
+class Linkable(BaseSchema):
     links = fields.List(
-        fields.Nested(Link),
+        fields.Nested(LinkSchema),
         required=True,
         description="list of links to other resources.",
     )
@@ -73,26 +102,27 @@ class Parameter(Linkable):
         description=("the Id of this action parameter (typically a concatenation of the parent "
                      "action Id with the parameter name)"),
         required=True,
+        example='folder-move',
     )
-    number = fields.Int(
-        description="the number of the parameter (starting from 0)",
-        required=True,
-    )
-    name = fields.String(
-        description="the name of the parameter",
-        required=True,
-    )
+    number = fields.Int(description="the number of the parameter (starting from 0)",
+                        required=True,
+                        example=0)
+    name = fields.String(description="the name of the parameter",
+                         required=True,
+                         example='destination')
     friendlyName = fields.String(
         description="the action parameter name, formatted for rendering in a UI.",
         required=True,
+        example='The destination folder id',
     )
     description = fields.String(
         description="a description of the action parameter, e.g. to render as a tooltip.",
         required=False,
-    )
+        example='The destination')
     optional = fields.Bool(
         description="indicates whether the action parameter is optional",
         required=False,
+        example=False,
     )
 
     # for string only
@@ -126,6 +156,7 @@ class ObjectMemberBase(Linkable):
         description=('Provides the reason (or the literal "invalid") why a proposed value for a '
                      'property, collection or action argument is invalid. Appears within an '
                      'argument representation 2.9 returned as a response.'),
+        example="invalid",
         allow_none=True,
     )
     x_ro_invalidReason = fields.String(
@@ -138,7 +169,7 @@ class ObjectMemberBase(Linkable):
 
 class ObjectCollectionMember(ObjectMemberBase):
     memberType = fields.Constant('collection')
-    value = fields.List(fields.String())
+    value = fields.List(fields.Nested(LinkSchema()))
 
 
 class ObjectPropertyMember(ObjectMemberBase):
@@ -162,15 +193,81 @@ class ObjectMemberDict(plugins.ValueTypedDictSchema):
     value_type = ObjectMember  # type: ignore[assignment]
 
 
+class ActionResultBase(Linkable):
+    resultType = fields.String(required=True, example='object')
+    result = fields.Dict()
+
+
+class ActionResultObject(ActionResultBase):
+    resultType = fields.Constant('object')
+    value = fields.Dict(required=True,
+                        allow_none=True,
+                        example={'foo': 'bar'},
+                        description="The return value of this action.")
+
+
+class ActionResultScalar(ActionResultBase):
+    resultType = fields.Constant('scalar')
+    value = fields.String(required=True,
+                          allow_none=True,
+                          example="Done.",
+                          description="The return value of this action.")
+
+
+class ActionResult(OneOfSchema):
+    type_field = 'resultType'
+    type_schemas = {
+        'object': ActionResultObject,
+    }
+
+
+class AttributeDict(plugins.ValueTypedDictSchema):
+    value_type = fields.String()
+
+
 class DomainObject(Linkable):
     domainType = fields.String(required=True)
+    # Generic things to ease development. Should be changed for more concrete schemas.
+    id = fields.String()
     title = fields.String()
-    members = fields.Nested(ObjectMemberDict)
+    members = fields.Nested(ObjectMemberDict())
 
 
-class Folder(DomainObject):
+class FolderMembers(BaseSchema):
+    hosts = fields.Nested(
+        ObjectCollectionMember(),
+        description="A list of links pointing to the actual host-resources.",
+    )
+    move = fields.Nested(
+        ObjectActionMember(),
+        description="An action which triggers the move of this folder to another folder.",
+    )
+
+
+class FolderSchema(Linkable):
     domainType = fields.Constant(
-        "folder",
+        "folder_config",
+        required=True,
+    )
+    id = fields.String()
+    title = fields.String()
+    members = fields.Nested(FolderMembers())
+
+
+class ConcreteFolder(OneOfSchema):
+    type_schemas = {
+        'folder_config': FolderSchema,
+        'link': LinkSchema,
+    }
+    type_field = 'domainType'
+
+
+class MoveFolder(BaseSchema):
+    destination = fields.String(
+        description=("The folder-id of the folder to which this folder shall be moved to. May "
+                     "be 'root' for the root-folder."),
+        pattern="[a-fA-F0-9]{32}|root",
+        example="root",
         required=True,
     )
 
@@ -196,48 +293,47 @@ class ContactGroup(DomainObject):
     )
 
 
-class Host(DomainObject):
-    domainType = fields.Constant(
-        "host",
-        required=True,
-    )
+class Configuration(DomainObject):
+    domainType = fields.Constant("config", required=True)
 
 
-class InputAttribute(Schema):
-    key = fields.String(required=True)
-    value = fields.String(required=True)
+class SiteStateMembers(BaseSchema):
+    sites = fields.Dict()
 
 
-class InputHost(Schema):
-    hostname = fields.String()
-    folder_id = fields.String()
-    attributes = fields.Dict()
+class SiteState(Linkable):
+    domainType = fields.Constant("site-state", required=True)
+    members = fields.Nested(SiteStateMembers, description="All the members of the host object.")
 
 
-class InputHostGroup(Schema):
-    name = fields.String(required=True)
-    alias = fields.String()
+class HostMembers(BaseSchema):
+    folder_config = fields.Nested(
+        ConcreteFolder,
+        description="The folder in which this host resides. It is represented by a hexadecimal "
+        "identifier which is it's 'primary key'. The folder can be accessed via the "
+        "`self`-link provided in the links array.")
 
 
-class InputContactGroup(Schema):
-    name = fields.String(required=True)
-    alias = fields.String()
+class HostSchema(Linkable):
+    domainType = fields.Constant("host_config", required=True)
+    id = fields.String()
+    title = fields.String()
+    members = fields.Nested(HostMembers, description="All the members of the host object.")
 
 
-class InputServiceGroup(Schema):
-    name = fields.String(required=True)
-    alias = fields.String()
+class ConcreteHost(OneOfSchema):
+    type_schemas = {
+        'host_config': HostSchema,
+        'link': LinkSchema,
+    }
+    type_field = 'domainType'
 
 
-class InputFolder(Schema):
-    name = fields.String(required=True)
-    title = fields.String(required=True)
-    attributes = fields.List(fields.Nested(InputAttribute))
-
-
-class UpdateFolder(Schema):
-    title = fields.String(required=True)
-    attributes = fields.List(fields.Nested(InputAttribute))
+class HostCollection(Linkable):
+    domainType = fields.Constant("host_config", required=True)
+    id = fields.String()
+    title = fields.String()
+    value = fields.List(fields.Nested(ConcreteHost))
 
 
 class ObjectAction(Linkable):
@@ -245,7 +341,15 @@ class ObjectAction(Linkable):
 
 
 class DomainObjectCollection(Linkable):
-    value = fields.List(fields.Nested(Link))
+    id = fields.String()
+    domainType = fields.String()
+    value = fields.List(fields.Nested(LinkSchema))
+    extensions = fields.Dict()
+
+
+class FolderCollection(DomainObjectCollection):
+    domainType = fields.Constant("folder_config")
+    value = fields.List(fields.Nested(ConcreteFolder))
 
 
 class User(Linkable):
@@ -261,12 +365,17 @@ class User(Linkable):
     )
 
 
-class InstalledVersions(Schema):
-    # TODO: Add properties and documentation.
-    pass
+class InstalledVersions(BaseSchema):
+    site = fields.String(description="The site where this API call was made on.",
+                         example="production")
+    group = fields.String(description="The Apache WSGI application group this call was made on.",
+                          example="de")
+    versions = fields.Dict(description="Some version numbers", example={"checkmk": "1.8.0p1"})
+    edition = fields.String(description="The Checkmk edition.", example="raw")
+    demo = fields.Bool(description="Whether this is a demo version or not.", example=False)
 
 
-class VersionCapabilities(Schema):
+class VersionCapabilities(BaseSchema):
     blobsClobs = fields.Bool(
         required=False,
         description="attachment support",
@@ -288,7 +397,7 @@ class VersionCapabilities(Schema):
     )
 
 
-class Version(Link):
+class Version(LinkSchema):
     specVersion = fields.Str(
         description=('The "major.minor" parts of the version of the spec supported by this '
                      'implementation, e.g. "1.0"'),

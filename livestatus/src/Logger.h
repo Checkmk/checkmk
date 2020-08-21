@@ -7,14 +7,17 @@
 #define Logger_h
 
 #include "config.h"  // IWYU pragma: keep
+
+// The stream-related pragmas are probably caused by
+// https://github.com/include-what-you-use/include-what-you-use/issues/277
 #include <atomic>
 #include <cerrno>
 #include <chrono>
-#include <fstream>
+#include <fstream>  // IWYU pragma: keep
 #include <functional>
 #include <memory>
 #include <mutex>
-#include <sstream>
+#include <sstream>  // IWYU pragma: keep
 #include <string>
 #include <system_error>
 #include <unordered_map>
@@ -35,6 +38,8 @@ enum class LogLevel {
 };
 
 std::ostream &operator<<(std::ostream &os, const LogLevel &c);
+std::ostream &operator<<(std::ostream &os,
+                         const std::chrono::system_clock::time_point &tp);
 
 // -----------------------------------------------------------------------------
 
@@ -310,13 +315,15 @@ class generic_error : public std::system_error {
 public:
     generic_error() : std::system_error(errno, std::generic_category()) {}
 
+    generic_error(int err, const char *what_arg)
+        : std::system_error(err, std::generic_category(), what_arg) {}
+
     explicit generic_error(const char *what_arg)
         : std::system_error(errno, std::generic_category(), what_arg) {}
 
     explicit generic_error(const std::string &what_arg)
         : std::system_error(errno, std::generic_category(), what_arg) {}
 };
-
 std::ostream &operator<<(std::ostream &os, const generic_error &ge);
 
 #endif  // Logger_h

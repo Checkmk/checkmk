@@ -1,26 +1,18 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 import os
-import glob
+from pathlib import Path
+import subprocess
 import traceback
-from typing import (  # pylint: disable=unused-import
-    Dict, Any,
-)
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from typing import Dict, Any
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
-import cmk.utils.cmk_subprocess as subprocess
 
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
@@ -47,6 +39,7 @@ from cmk.gui.plugins.wato import (
     ConfigVariable,
     site_neutral_path,
     add_replication_paths,
+    ReplicationPath,
     wato_fileheader,
 )
 
@@ -239,10 +232,8 @@ class ConfigDomainDiskspace(ABCConfigDomain):
     def config_dir(self):
         return ""  # unused, we override load and save below
 
-    def load(self, site_specific=False):
-        cleanup_settings = {}  # type: Dict[str, Any]
-        exec(open(self.diskspace_config).read(), {}, cleanup_settings)
-
+    def load(self, site_specific=False, custom_site_path=None):
+        cleanup_settings = store.load_mk_file(self.diskspace_config, default={})
         if not cleanup_settings:
             return {}
 
@@ -262,7 +253,10 @@ class ConfigDomainDiskspace(ABCConfigDomain):
             "diskspace_cleanup": cleanup_settings,
         }
 
-    def save(self, settings, site_specific=False):
+    def save(self, settings, site_specific=False, custom_site_path=None):
+        if site_specific:
+            return  # not supported at the moment
+
         config = {}
 
         if "diskspace_cleanup" in settings:
@@ -282,13 +276,10 @@ class ConfigDomainDiskspace(ABCConfigDomain):
 
         store.save_file(self.diskspace_config, output)
 
-    def save_site_globals(self, settings):
-        pass
-
     def default_globals(self):
-        diskspace_context = {}  # type: Dict[str, Any]
+        diskspace_context: Dict[str, Any] = {}
         filename = Path(cmk.utils.paths.omd_root, 'bin', 'diskspace')
-        with (open(str(filename))) as f:
+        with filename.open(encoding="utf-8") as f:
             code = compile(f.read(), str(filename), 'exec')
             exec(code, {}, diskspace_context)
         return {
@@ -382,7 +373,9 @@ class ConfigVariableSiteDiskspaceCleanup(ConfigVariable):
 
 
 add_replication_paths([
-    ("file", "diskspace", ConfigDomainDiskspace.diskspace_config),
+    ReplicationPath(
+        "file", "diskspace",
+        os.path.relpath(ConfigDomainDiskspace.diskspace_config, cmk.utils.paths.omd_root), []),
 ])
 
 #.
@@ -455,17 +448,17 @@ class ConfigDomainApache(ABCConfigDomain):
         }
 
     def _get_value_from_config(self, varname, conv_func, default_value):
-        config_files = [os.path.join(cmk.utils.paths.omd_root, "etc/apache/apache.conf")]
+        config_files = [Path(cmk.utils.paths.omd_root).joinpath("etc/apache/apache.conf")]
         config_files += sorted(
-            glob.glob(os.path.join(cmk.utils.paths.omd_root, "etc/apache/conf.d", "*.conf")))
+            Path(cmk.utils.paths.omd_root).joinpath("etc/apache/conf.d").glob("*.conf"))
 
         value = default_value
 
         for config_file in config_files:
-            if config_file.endswith("zzz_check_mk.conf"):
+            if config_file.name == "zzz_check_mk.conf":
                 continue  # Skip the file written by this config domain
 
-            for line in open(config_file):
+            for line in config_file.open(encoding="utf-8"):
                 if line.lstrip().startswith(varname):
                     raw_value = line.split()[1]
                     value = conv_func(raw_value)
@@ -575,17 +568,17 @@ class ConfigDomainRRDCached(ABCConfigDomain):
         }
 
     def _get_value_from_config(self, varname, conv_func, default_value):
-        config_files = [os.path.join(cmk.utils.paths.omd_root, "etc/rrdcached.conf")]
+        config_files = [Path(cmk.utils.paths.omd_root).joinpath("etc/rrdcached.conf")]
         config_files += sorted(
-            glob.glob(os.path.join(cmk.utils.paths.omd_root, "etc/rrdcached.d", "*.conf")))
+            Path(cmk.utils.paths.omd_root).joinpath("etc/rrdcached.d").glob("*.conf"))
 
         value = default_value
 
         for config_file in config_files:
-            if config_file.endswith("zzz_check_mk.conf"):
+            if config_file.name == "zzz_check_mk.conf":
                 continue  # Skip the file written by this config domain
 
-            for line in open(config_file):
+            for line in config_file.open(encoding="utf-8"):
                 if line.lstrip().startswith(varname):
                     raw_value = line.split("=")[1]
                     value = conv_func(raw_value)

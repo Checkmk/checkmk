@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -8,6 +8,7 @@
 import os
 import sys
 import argparse
+from typing import List
 from cmk.special_agents.utils import vcrtrace
 
 # TODO: is there a better way to do this?
@@ -27,7 +28,10 @@ def parse_arguments(argv):
     parser.add_argument("--vcrtrace",
                         action=vcrtrace(**mk_jolokia.JolokiaInstance.FILTER_SENSITIVE))
 
-    opts_with_help = (t for t in mk_jolokia.DEFAULT_CONFIG_TUPLES if len(t) == 3)
+    opts_with_help: List[List[str]] = []
+    for opt in mk_jolokia.DEFAULT_CONFIG_TUPLES:
+        if len(opt) == 3:
+            opts_with_help.append([str(elem) for elem in opt])
 
     for key, default, help_str in opts_with_help:
         if default is not None:

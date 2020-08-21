@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -36,7 +36,7 @@ def test_transaction_new_id(tm):
     assert tm._new_transids == [trans_id]
 
 
-class MockLoggedInUser(object):
+class MockLoggedInUser:
     def __init__(self, ids):
         self._ids = ids
 
@@ -65,7 +65,8 @@ def test_transaction_valid(tm, transid, ignore_transids, result, mocker, is_exis
     assert tm._ignore_transids is False
     if ignore_transids:
         tm.ignore()
-        assert tm._ignore_transids is True
+        # NOTE: This seems to be a mypy 0.780 bug.
+        assert tm._ignore_transids is True  # type: ignore[comparison-overlap]
 
     if transid is not None:
         tm._request.set_var("_transid", transid)

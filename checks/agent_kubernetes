@@ -16,6 +16,9 @@ def agent_kubernetes_arguments(params, _hostname, ipaddress):
     if params.get('no-cert-check', False):
         args += ["--no-cert-check"]
 
+    if params.get('namespaces'):
+        args += ["--prefix-namespace"]
+
     if "url-prefix" in params:
         args += ["--url-prefix", params["url-prefix"]]
 

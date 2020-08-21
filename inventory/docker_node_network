@@ -3,17 +3,17 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import cmk.base.plugins.agent_based.utils.docker as docker
 
 
 def parse_docker_network(info):
-    # pylint: disable=undefined-variable
-    version = docker_get_version(info)
+    version = docker.get_version(info)
 
     if version is None:
         networks = parse_legacy_docker_network_inspect(info)
         return DeprecatedDict((n["Id"], n) for n in networks)
 
-    networks = (docker_json_get_obj(line) for line in info[1:])
+    networks = (docker.json_get_obj(line) for line in info[1:])
     return {n["Id"]: n for n in networks if n is not None}
 
 
@@ -24,15 +24,13 @@ def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
 
         sorted_container_items = sorted(network["Containers"].items())
 
-        containers = [
-            {
-                "name": container["Name"],
-                "id": docker_get_short_id(container_id),  # pylint: disable=undefined-variable
-                "ipv4_address": container["IPv4Address"],
-                "ipv6_address": container["IPv6Address"],
-                "mac_address": container["MacAddress"],
-            } for container_id, container in sorted_container_items
-        ]
+        containers = [{
+            "name": container["Name"],
+            "id": docker.get_short_id(container_id),
+            "ipv4_address": container["IPv4Address"],
+            "ipv6_address": container["IPv6Address"],
+            "mac_address": container["MacAddress"],
+        } for container_id, container in sorted_container_items]
 
         network_name = network["Name"]
         path = "software.applications.docker.networks.%s." % network_name
@@ -46,7 +44,7 @@ def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
 
         inventory_network.update({
             "name": network_name,
-            "network_id": docker_get_short_id(network_id),  # pylint: disable=undefined-variable
+            "network_id": docker.get_short_id(network_id),
             "scope": network["Scope"],
         })
 
@@ -55,12 +53,12 @@ def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
         except KeyError:
             pass
 
-        labels = docker_format_labels(network)  # pylint: disable=undefined-variable
+        labels = docker.format_labels(network)
         if labels:
             inventory_network["labels"] = labels
 
 
-inv_info["docker_node_network.networks"] = {  # pylint: disable=undefined-variable
-    "includes": ['docker.include', 'legacy_docker.include'],
+inv_info["docker_node_network.networks"] = {
+    "includes": ['legacy_docker.include'],
     "inv_function": inv_docker_node_network_networks,
 }

@@ -11,4 +11,4 @@ description:
  {WARN} is returned.
 
 inventory:
- One service per device.
+ One service is created for each device.

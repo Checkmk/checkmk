@@ -4,6 +4,7 @@
 // source code package.
 
 #include "DowntimeOrComment.h"
+
 #include "MonitoringCore.h"
 
 // TODO(sp): Remove ugly cast.

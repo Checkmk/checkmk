@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -11,11 +11,10 @@ structured monitoring data of Check_MK.
 import gzip
 import re
 import pprint
-from typing import AnyStr, Dict, List, Optional, Set  # pylint: disable=unused-import
+from typing import AnyStr, Dict, List, Optional
 
-import six
+from six import ensure_binary, ensure_str
 
-from cmk.utils.encoding import ensure_unicode
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 
@@ -54,7 +53,7 @@ from cmk.utils.exceptions import MKGeneralException
 #   '----------------------------------------------------------------------'
 
 
-class StructuredDataTree(object):
+class StructuredDataTree:
     """Interface for structured data tree"""
     def __init__(self):
         super(StructuredDataTree, self).__init__()
@@ -74,14 +73,13 @@ class StructuredDataTree(object):
         parent = self._create_hierarchy(path[:-1])
         return parent.add_child(path[-1], child, tuple(path)).get_child_data()
 
-    def _validate_tree_path(self, tree_path):
-        # type: (AnyStr) -> None
+    def _validate_tree_path(self, tree_path: AnyStr) -> None:
         if not tree_path:
             raise MKGeneralException("Empty tree path or zero.")
-        # TODO: Check if six.binary_type/ensure_unicode is necessary.
-        if not isinstance(tree_path, (six.binary_type, six.text_type)):
+        # TODO: Check if bytes/ensure_str is necessary.
+        if not isinstance(tree_path, (bytes, str)):
             raise MKGeneralException("Wrong tree path format. Must be of type string.")
-        tp = ensure_unicode(tree_path)
+        tp = ensure_str(tree_path)
         if not tp.endswith((":", ".")):
             raise MKGeneralException("No valid tree path.")
         if bool(re.compile('[^a-zA-Z0-9_.:-]').search(tp)):
@@ -113,7 +111,7 @@ class StructuredDataTree(object):
         store.save_object_to_file(filepath, output, pretty=pretty)
         # TODO: Can be set to encoding="utf-8" once we are on Python 3 only
         with gzip.open(filepath + ".gz", "wb") as f:
-            f.write(six.ensure_binary(repr(output) + "\n"))
+            f.write(ensure_binary(repr(output) + "\n"))
         # Inform Livestatus about the latest inventory update
         store.save_text_to_file("%s/.last" % path, u"")
 
@@ -150,8 +148,8 @@ class StructuredDataTree(object):
                     self._create_hierarchy_from_data(sub_raw_tree, container, abs_path)
 
     def _get_child_data(self, raw_entries):
-        leaf_data = {}  # type: Dict
-        sub_raw_tree = {}  # type: Dict
+        leaf_data: Dict = {}
+        sub_raw_tree: Dict = {}
         for k, v in raw_entries.items():
             if isinstance(v, dict):
                 # Dict based values mean that current key
@@ -272,7 +270,7 @@ class StructuredDataTree(object):
 #   '----------------------------------------------------------------------'
 
 
-class NodeAttribute(object):
+class NodeAttribute:
     """Interface for all node attributes"""
     def is_empty(self):
         raise NotImplementedError()
@@ -389,7 +387,7 @@ class Container(NodeAttribute):
         return delta_node
 
     def get_raw_tree(self):
-        tree = {}  # type: Dict
+        tree: Dict = {}
         for edge, _, child in self.get_children():
             child_tree = child.get_raw_tree()
             if self._is_nested_numeration_tree(child):
@@ -440,7 +438,7 @@ class Container(NodeAttribute):
         del self._edges[edge]
         parent = self.add_child(edge, Container(), abs_path)
         for nr, entry in enumerate(child_data):
-            attrs = {}  # type: Dict
+            attrs: Dict = {}
             for k, v in entry.items():
                 if isinstance(v, list):
                     numeration = parent.add_child(nr, Container(), abs_path+(nr,))\
@@ -616,7 +614,7 @@ class Leaf(NodeAttribute):
         raise NotImplementedError()
 
     def _get_filtered_entries(self, entries, keys):
-        filtered = {}  # type: Dict
+        filtered: Dict = {}
         for k, v in entries.items():
             if k in keys:
                 filtered.setdefault(k, v)
@@ -658,8 +656,8 @@ class Numeration(Leaf):
         remaining_own_rows, remaining_other_rows, identical_rows =\
             self._get_categorized_rows(other)
 
-        new_rows = []  # type: List
-        removed_rows = []  # type: List
+        new_rows: List = []
+        removed_rows: List = []
         compared_rows = []
         num_new, num_changed, num_removed = 0, 0, 0
         if not remaining_other_rows and remaining_own_rows:
@@ -690,7 +688,7 @@ class Numeration(Leaf):
             delta_node_rows += [
                 {k: _identical_delta_tree_node(v) for k, v in row.items()} for row in identical_rows
             ]
-        delta_node = None  # type: Optional[Numeration]
+        delta_node: Optional[Numeration] = None
         if delta_node_rows:
             delta_node = Numeration()
             delta_node.set_child_data(delta_node_rows)
@@ -698,7 +696,7 @@ class Numeration(Leaf):
                len(removed_rows) + num_removed, delta_node
 
     def _get_categorized_rows(self, other):
-        identical_rows = []  # type: List
+        identical_rows: List = []
         remaining_other_rows = []
         remaining_new_rows = []
         for row in other._numeration:
@@ -726,7 +724,7 @@ class Numeration(Leaf):
             num_new += len(new_entries)
             num_changed += len(changed_entries)
             num_removed += len(removed_entries)
-            row = {}  # type: Dict
+            row: Dict = {}
             for entries in [new_entries, changed_entries, removed_entries]:
                 row.update(entries)
             if keep_identical or new_entries or changed_entries or removed_entries:
@@ -834,7 +832,7 @@ class Attributes(Leaf):
     def compare_with(self, other, keep_identical=False):
         new, changed, removed, identical = \
             _compare_dicts(other._attributes, self._attributes)
-        delta_node = None  # type: Optional[Attributes]
+        delta_node: Optional[Attributes] = None
         if new or changed or removed:
             delta_node = Attributes()
             delta_node.set_child_data(new)
@@ -892,7 +890,7 @@ class Attributes(Leaf):
 #   '----------------------------------------------------------------------'
 
 
-class Node(object):
+class Node:
     """Node contains max. one node attribute per type."""
 
     CHILDREN_NAMES = [Container, Numeration, Attributes]
@@ -974,8 +972,8 @@ def _compare_dicts(old_dict, new_dict):
       identical:    {k: (value, value), ...}
     """
     removed_keys, kept_keys, new_keys = _compare_dict_keys(old_dict, new_dict)
-    identical = {}  # type: Dict
-    changed = {}  # type: Dict
+    identical: Dict = {}
+    changed: Dict = {}
     for k in kept_keys:
         new_value = new_dict[k]
         old_value = old_dict[k]

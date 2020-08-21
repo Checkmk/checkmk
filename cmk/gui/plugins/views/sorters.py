@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,7 +6,6 @@
 
 import abc
 import time
-import six
 
 import cmk.gui.config as config
 import cmk.gui.utils as utils
@@ -142,7 +141,7 @@ class SorterSitealias(Sorter):
             r1["site"])["alias"] < config.site(r2["site"])["alias"])
 
 
-class ABCTagSorter(six.with_metaclass(abc.ABCMeta, Sorter)):
+class ABCTagSorter(Sorter, metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def object_type(self):
         raise NotImplementedError()
@@ -191,7 +190,7 @@ class SorterServiceTags(ABCTagSorter):
         return ["service_tags"]
 
 
-class ABCLabelSorter(six.with_metaclass(abc.ABCMeta, Sorter)):
+class ABCLabelSorter(Sorter, metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def object_type(self):
         raise NotImplementedError()
@@ -529,7 +528,7 @@ def cmp_log_what(col, a, b):
 def log_what(t):
     if "HOST" in t:
         return 1
-    elif "SERVICE" in t or "SVC" in t:
+    if "SERVICE" in t or "SVC" in t:
         return 2
     return 0
 

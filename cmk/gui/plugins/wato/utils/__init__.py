@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -12,15 +12,15 @@ import abc
 import json
 import re
 import subprocess
-from typing import Callable, List, Optional as _Optional, Text, Tuple as _Tuple  # pylint: disable=unused-import
+from typing import Callable, List, Type, Optional as _Optional, Tuple as _Tuple
 
-import six
+from six import ensure_str
 
 import cmk.utils.plugin_registry
 
 import cmk.gui.mkeventd
 import cmk.gui.config as config
-from cmk.gui.config import SiteId, SiteConfiguration, SiteConfigurations  # pylint: disable=unused-import
+from cmk.gui.config import SiteId, SiteConfiguration, SiteConfigurations
 import cmk.gui.userdb as userdb
 import cmk.gui.backup as backup
 import cmk.gui.hooks as hooks
@@ -28,7 +28,7 @@ import cmk.gui.weblib as weblib
 from cmk.gui.pages import page_registry
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html, g
-from cmk.gui.htmllib import Choices, HTML  # pylint: disable=unused-import
+from cmk.gui.htmllib import Choices, HTML
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
     ABCPageListOfMultipleGetChoice, Alternative, CascadingDropdown, Checkbox, Dictionary,
@@ -44,19 +44,22 @@ from cmk.gui.plugins.wato.utils.simple_modes import (  # noqa: F401 # pylint: di
     SimpleEditMode, SimpleListMode, SimpleModeType,
 )
 from cmk.gui.plugins.wato.utils.context_buttons import (  # noqa: F401 # pylint: disable=unused-import
-    changelog_button, global_buttons, home_button, host_status_button,
+    changelog_button, global_buttons, host_status_button,
 )
 from cmk.gui.plugins.wato.utils.html_elements import (  # noqa: F401 # pylint: disable=unused-import
     search_form, wato_confirm,
 )
 from cmk.gui.plugins.wato.utils.main_menu import (  # noqa: F401 # pylint: disable=unused-import
     MainMenu, MainModule, MenuItem, WatoModule, main_module_registry, register_modules,
+    MainModuleTopic, MainModuleTopicHosts, MainModuleTopicServices, MainModuleTopicAgents,
+    MainModuleTopicEvents, MainModuleTopicUsers, MainModuleTopicGeneral, MainModuleTopicMaintenance,
+    MainModuleTopicCustom,
 )
 import cmk.gui.watolib as watolib
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.timeperiods import TimeperiodSelection  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.watolib.users import notification_script_title
-from cmk.gui.watolib.groups import (
+from cmk.gui.groups import (
     load_contact_group_information,
     load_host_group_information,
     load_service_group_information,
@@ -85,10 +88,15 @@ from cmk.gui.watolib import (  # noqa: F401 # pylint: disable=unused-import
     make_action_link, multisite_dir, register_rule, site_neutral_path, user_script_choices,
     user_script_title, wato_fileheader, wato_root_dir,
 )
+from cmk.gui.watolib.config_sync import (  # noqa: F401 # pylint: disable=unused-import
+    ReplicationPath,)
 from cmk.gui.plugins.watolib.utils import (  # noqa: F401 # pylint: disable=unused-import
     ConfigVariable, ConfigVariableGroup, SampleConfigGenerator, config_variable_group_registry,
     config_variable_registry, register_configvar, sample_config_generator_registry,
 )
+
+from cmk.gui.watolib.wato_background_job import WatoBackgroundJob  # noqa: F401 # pylint: disable=unused-import
+
 import cmk.gui.forms as forms
 from cmk.gui.permissions import (
     PermissionSection,
@@ -143,8 +151,7 @@ def monitoring_macro_help():
         "the macro <tt>$_HOSTFOO$</tt> being replaced with <tt>bar</tt> ")
 
 
-def UserIconOrAction(title, help):  # pylint: disable=redefined-builtin
-    # type: (Text, Text) -> DropdownChoice
+def UserIconOrAction(title: str, help: str) -> DropdownChoice:  # pylint: disable=redefined-builtin
     empty_text = _("In order to be able to choose actions here, you need to "
                    "<a href=\"%s\">define your own actions</a>.") % \
                       "wato.py?mode=edit_configvar&varname=user_icons_and_actions"
@@ -171,12 +178,12 @@ def _list_user_icons_and_actions():
 
 
 def SNMPCredentials(  # pylint: disable=redefined-builtin
-    title=None,  # type: _Optional[Text]
-    help=None,  # type: _Optional[ValueSpecHelp]
-    only_v3=False,  # type: bool
-    default_value="public",  # type: _Optional[Text]
-    allow_none=False  # type: bool
-):  # type: (...) -> Alternative
+        title: _Optional[str] = None,
+        help: _Optional[ValueSpecHelp] = None,
+        only_v3: bool = False,
+        default_value: _Optional[str] = "public",
+        allow_none: bool = False,
+        for_ec: bool = False) -> Alternative:
     def alternative_match(x):
         if only_v3:
             # NOTE: Indices are shifted by 1 due to a only_v3 hack below!!
@@ -187,7 +194,7 @@ def SNMPCredentials(  # pylint: disable=redefined-builtin
             if len(x) == 6:
                 return 2  # authPriv
         else:
-            if x is None or isinstance(x, six.string_types):
+            if x is None or isinstance(x, str):
                 return 0  # community only
             if len(x) == 1 or len(x) == 2:
                 return 1  # noAuthNoPriv
@@ -200,10 +207,18 @@ def SNMPCredentials(  # pylint: disable=redefined-builtin
     if allow_none:
         # Wrap match() function defined above
         match = lambda x: 0 if x is None else (alternative_match(x) + 1)
+        elements = [_snmp_no_credentials_element()]
     else:
         match = alternative_match
+        elements = []
 
-    elements = _snmp_credentials_elements(allow_none)
+    elements.extend([
+        _snmpv1_v2_credentials_element(),
+        _snmpv3_no_auth_no_priv_credentials_element(),
+        _snmpv3_auth_no_priv_credentials_element(),
+        _snmpv3_auth_priv_credentials_element(for_ec=for_ec),
+    ])
+
     if only_v3:
         # HACK: This shifts the indices in alternative_match above!!
         # Furthermore, it doesn't work in conjunction with allow_none.
@@ -222,22 +237,24 @@ def SNMPCredentials(  # pylint: disable=redefined-builtin
     )
 
 
-def _snmp_credentials_elements(allow_none):
-    # type: (bool) -> List[ValueSpec]
-    none_elements = []  # type: List[ValueSpec]
-    if allow_none:
-        none_elements = [FixedValue(
-            None,
-            title=_("No explicit credentials"),
-            totext="",
-        )]
+def _snmp_no_credentials_element() -> ValueSpec:
+    return FixedValue(
+        None,
+        title=_("No explicit credentials"),
+        totext="",
+    )
 
-    return none_elements + [
-        Password(
-            title=_("SNMP community (SNMP Versions 1 and 2c)"),
-            allow_empty=False,
-        ),
-        Transform(Tuple(
+
+def _snmpv1_v2_credentials_element() -> ValueSpec:
+    return Password(
+        title=_("SNMP community (SNMP Versions 1 and 2c)"),
+        allow_empty=False,
+    )
+
+
+def _snmpv3_no_auth_no_priv_credentials_element() -> ValueSpec:
+    return Transform(
+        Tuple(
             title=_("Credentials for SNMPv3 without authentication and privacy (noAuthNoPriv)"),
             elements=[
                 FixedValue(
@@ -246,44 +263,73 @@ def _snmp_credentials_elements(allow_none):
                     totext=_("No authentication, no privacy"),
                 ),
                 TextAscii(title=_("Security name"), attrencode=True, allow_empty=False),
-            ]),
-                  forth=lambda x: x if (x and len(x) == 2) else ("noAuthNoPriv", "")),
-        Tuple(
-            title=_("Credentials for SNMPv3 with authentication but without privacy (authNoPriv)"),
-            elements=[
-                FixedValue(
-                    "authNoPriv",
-                    title=_("Security Level"),
-                    totext=_("authentication but no privacy"),
-                ),
-            ] + _snmpv3_auth_elements()),
-        Tuple(title=_("Credentials for SNMPv3 with authentication and privacy (authPriv)"),
-              elements=[
-                  FixedValue(
-                      "authPriv",
-                      title=_("Security Level"),
-                      totext=_("authentication and encryption"),
-                  ),
-              ] + _snmpv3_auth_elements() + [
-                  DropdownChoice(choices=[
-                      ("DES", _("DES")),
-                      ("AES", _("AES")),
-                  ],
-                                 title=_("Privacy protocol")),
-                  Password(
-                      title=_("Privacy pass phrase"),
-                      minlen=8,
-                  ),
-              ]),
+            ],
+        ),
+        forth=lambda x: x if (x and len(x) == 2) else ("noAuthNoPriv", ""),
+    )
+
+
+def _snmpv3_auth_no_priv_credentials_element() -> ValueSpec:
+    return Tuple(
+        title=_("Credentials for SNMPv3 with authentication but without privacy (authNoPriv)"),
+        elements=[
+            FixedValue(
+                "authNoPriv",
+                title=_("Security Level"),
+                totext=_("authentication but no privacy"),
+            ),
+        ] + _snmpv3_auth_protocol_elements(),
+    )
+
+
+def _snmpv3_auth_priv_credentials_element(for_ec: bool = False) -> ValueSpec:
+    priv_protocol_choices = [
+        ("DES", _("CBC-DES")),
+        ("AES", _("AES-128")),
     ]
+    if for_ec:
+        # TODO Remove this var once we use pysnmp in all places
+        # EC uses pysnmp which supports these protocols
+        # netsnmp/inline + classic does not support these protocols
+        priv_protocol_choices.extend([
+            ("3DES-EDE", _("3DES-EDE")),
+            ("AES-192", _("AES-192")),
+            ("AES-256", _("AES-256")),
+            ("AES-192-Blumenthal", _("AES-192-Blumenthal")),
+            ("AES-256-Blumenthal", _("AES-256-Blumenthal")),
+        ])
+
+    return Tuple(
+        title=_("Credentials for SNMPv3 with authentication and privacy (authPriv)"),
+        elements=[
+            FixedValue(
+                "authPriv",
+                title=_("Security Level"),
+                totext=_("authentication and encryption"),
+            ),
+        ] + _snmpv3_auth_protocol_elements() + [
+            DropdownChoice(
+                choices=priv_protocol_choices,
+                title=_("Privacy protocol"),
+            ),
+            Password(
+                title=_("Privacy pass phrase"),
+                minlen=8,
+            ),
+        ],
+    )
 
 
-def _snmpv3_auth_elements():
+def _snmpv3_auth_protocol_elements():
     return [
         DropdownChoice(
             choices=[
-                ("md5", _("MD5")),
-                ("sha", _("SHA1")),
+                ("md5", _("MD5 (MD5-96)")),
+                ("sha", _("SHA-1 (SHA-96)")),
+                ("SHA-224", _("SHA-2 (SHA-224)")),
+                ("SHA-256", _("SHA-2 (SHA-256)")),
+                ("SHA-384", _("SHA-2 (SHA-384)")),
+                ("SHA-512", _("SHA-2 (SHA-512)")),
             ],
             title=_("Authentication protocol"),
         ),
@@ -298,8 +344,7 @@ def _snmpv3_auth_elements():
     ]
 
 
-def IPMIParameters():
-    # type: () -> Dictionary
+def IPMIParameters() -> Dictionary:
     return Dictionary(
         title=_("IPMI credentials"),
         elements=[
@@ -518,10 +563,10 @@ def passwordstore_choices():
 
 
 def PasswordFromStore(  # pylint: disable=redefined-builtin
-    title=None,  # type: _Optional[Text]
-    help=None,  # type: _Optional[ValueSpecHelp]
-    allow_empty=True,  # type: bool
-    size=25,  # type: int
+    title: _Optional[str] = None,
+    help: _Optional[ValueSpecHelp] = None,
+    allow_empty: bool = True,
+    size: int = 25,
 ):  # -> CascadingDropdown
     return CascadingDropdown(
         title=title,
@@ -547,10 +592,10 @@ def PasswordFromStore(  # pylint: disable=redefined-builtin
 
 
 def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
-    title=None,  # type: _Optional[Text]
-    help=None,  # type: _Optional[ValueSpecHelp]
-    allow_empty=True,  # type: bool
-    size=25,  # type: int
+    title: _Optional[str] = None,
+    help: _Optional[ValueSpecHelp] = None,
+    allow_empty: bool = True,
+    size: int = 25,
 ):
     return Transform(
         PasswordFromStore(
@@ -632,7 +677,7 @@ def register_check_parameters(subgroup,
 
     # Added during 1.6 development for easier transition. Convert all legacy subgroup
     # parameters (which are either str/unicode to group classes
-    if isinstance(subgroup, six.string_types):
+    if isinstance(subgroup, str):
         subgroup = get_rulegroup("checkparams/" + subgroup).__class__
 
     # Register rule for discovered checks
@@ -939,7 +984,7 @@ def Levels(**kwargs):
 
     help_txt = kwargs.get("help")
     unit = kwargs.get("unit", "")
-    if not isinstance(unit, six.string_types):
+    if not isinstance(unit, str):
         raise Exception("illegal unit for Levels: %r" % (unit,))
     title = kwargs.get("title")
     default_levels = kwargs.get("default_levels", (0.0, 0.0))
@@ -983,7 +1028,14 @@ def Levels(**kwargs):
 def may_edit_ruleset(varname):
     if varname == "ignored_services":
         return config.user.may("wato.services") or config.user.may("wato.rulesets")
-    if varname in ["custom_checks", "datasource_programs"]:
+    if varname in [
+            "custom_checks",
+            "datasource_programs",
+            "agent_config:mrpe",
+            "agent_config:agent_paths",
+            "agent_config:runas",
+            "agent_config:only_from",
+    ]:
         return config.user.may("wato.rulesets") and config.user.may(
             "wato.add_or_modify_executables")
     if varname == "agent_config:custom_files":
@@ -999,7 +1051,7 @@ class CheckTypeSelection(DualListChoice):
     def get_elements(self):
         checks = get_check_information()
         elements = sorted([
-            (cn, (cn + " - " + six.ensure_text(c["title"]))[:60]) for (cn, c) in checks.items()
+            (cn, (cn + " - " + ensure_str(c["title"]))[:60]) for (cn, c) in checks.items()
         ])
         return elements
 
@@ -1022,10 +1074,15 @@ class ConfigHostname(TextAsciiAutocomplete):
         Called by the webservice with the current input field value and the completions_params to get the list of choices"""
         all_hosts = watolib.Host.all()
         match_pattern = re.compile(value, re.IGNORECASE)
-        return [(h, h) for h in all_hosts.keys() if match_pattern.search(h) is not None]
+        match_list = []
+        for host_name, host_object in all_hosts.items():
+            if match_pattern.search(host_name) is not None and host_object.may("read"):
+                match_list.append(tuple((host_name, host_name)))
+
+        return match_list
 
 
-class EventsMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
+class EventsMode(WatoMode, metaclass=abc.ABCMeta):
     @classmethod
     @abc.abstractmethod
     def _rule_match_conditions(cls):
@@ -1294,19 +1351,16 @@ class EventsMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
                                  _("Changed position of %s %d") % (what_title, from_pos))
 
 
-def sort_sites(sites):
-    # type: (SiteConfigurations) -> List[_Tuple[SiteId, SiteConfiguration]]
+def sort_sites(sites: SiteConfigurations) -> List[_Tuple[SiteId, SiteConfiguration]]:
     """Sort given sites argument by local, followed by remote sites"""
     return sorted(sites.items(),
-                  key=lambda sid_s: (sid_s[1].get("replication"), sid_s[1].get("alias"), sid_s[0]))
+                  key=lambda sid_s:
+                  (sid_s[1].get("replication") or "", sid_s[1].get("alias", ""), sid_s[0]))
 
 
-class ModeRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return WatoMode
-
-    def plugin_name(self, plugin_class):
-        return plugin_class.name()
+class ModeRegistry(cmk.utils.plugin_registry.Registry[Type[WatoMode]]):
+    def plugin_name(self, instance):
+        return instance.name()
 
 
 mode_registry = ModeRegistry()
@@ -1357,6 +1411,7 @@ def configure_attributes(new,
             topic_title,
             isopen=topic_id in ["basic", "address", "data_sources"],
             table_id=topic_id,
+            show_advanced_toggle=True,
         )
 
         if topic_id == "basic":
@@ -1435,7 +1490,7 @@ def configure_attributes(new,
                 while container:
                     if attrname in container.attributes():
                         url = container.edit_url()
-                        inherited_from = _("Inherited from ") + Text(
+                        inherited_from = _("Inherited from ") + str(
                             html.render_a(container.title(), href=url))
 
                         inherited_value = container.attributes()[attrname]
@@ -1521,7 +1576,10 @@ def configure_attributes(new,
                                                      onclick=onclick,
                                                      **checkbox_kwargs)
 
-            forms.section(_u(attr.title()), checkbox=checkbox_code, section_id="attr_" + attrname)
+            forms.section(_u(attr.title()),
+                          checkbox=checkbox_code,
+                          section_id="attr_" + attrname,
+                          is_advanced=attr.is_advanced())
             html.help(attr.help())
 
             if len(values) == 1:
@@ -1642,6 +1700,7 @@ class SiteBackupJobs(backup.Jobs):
                              close_fds=True,
                              stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT,
+                             encoding="utf-8",
                              stdin=open(os.devnull))
         if p.wait() != 0:
             out = "Huh???" if p.stdout is None else p.stdout.read()
@@ -1653,27 +1712,23 @@ def register_hook(name, func):
     hooks.register_from_plugin(name, func)
 
 
-class NotificationParameter(six.with_metaclass(abc.ABCMeta, object)):
+class NotificationParameter(metaclass=abc.ABCMeta):
     @abc.abstractproperty
-    def ident(self):
-        # type: () -> str
+    def ident(self) -> str:
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def spec(self):
-        # type: () -> Dictionary
+    def spec(self) -> Dictionary:
         raise NotImplementedError()
 
 
-class NotificationParameterRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return NotificationParameter
+class NotificationParameterRegistry(cmk.utils.plugin_registry.Registry[Type[NotificationParameter]]
+                                   ):
+    def plugin_name(self, instance):
+        return instance().ident
 
-    def plugin_name(self, plugin_class):
-        return plugin_class().ident
-
-    def registration_hook(self, plugin_class):
-        plugin = plugin_class()
+    def registration_hook(self, instance):
+        plugin = instance()
 
         script_title = notification_script_title(plugin.ident)
 
@@ -2018,11 +2073,11 @@ class HostTagCondition(ValueSpec):
         html.open_td()
         dropdown_id = varprefix + tagtype + "_" + id_
         onchange = "cmk.valuespecs.toggle_tag_dropdown(this, '%stag_sel_%s');" % (varprefix, id_)
-        choices = [
+        choices: Choices = [
             ("ignore", _("ignore")),
             ("is", _("is")),
             ("isnot", _("isnot")),
-        ]  # type: Choices
+        ]
         html.dropdown(dropdown_id, choices, deflt=deflt, onchange=onchange)
         html.close_td()
 
@@ -2134,11 +2189,11 @@ def get_search_expression():
     return search
 
 
-def get_hostnames_from_checkboxes(filterfunc=None):
-    # type: (_Optional[Callable]) -> List[str]
+def get_hostnames_from_checkboxes(filterfunc: _Optional[Callable] = None,
+                                  deflt: bool = False) -> List[str]:
     """Create list of all host names that are select with checkboxes in the current file.
     This is needed for bulk operations."""
-    show_checkboxes = html.request.var("show_checkboxes") == "1"
+    show_checkboxes = html.request.var("show_checkboxes", "1" if deflt else "") == "1"
     if show_checkboxes:
         selected = config.user.get_rowselection(weblib.selection_id(),
                                                 'wato-folder-/' + watolib.Folder.current().path())
@@ -2181,3 +2236,11 @@ def get_check_information():
             "get-check-information")
 
     return g.automation_get_check_information
+
+
+def get_section_information():
+    if 'automation_get_section_information' not in g:
+        g.automation_get_section_information = watolib.check_mk_local_automation(
+            "get-section-information")
+
+    return g.automation_get_section_information

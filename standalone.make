@@ -3,16 +3,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # TODO(sp) We should really use autotools here...
-ifneq ($(shell which g++-9 2>/dev/null),)
-        CXX := g++-9 -std=c++17
+ifneq ($(shell which g++-10 2>/dev/null),)
+        CXX := g++-10 -std=c++2a
+else ifneq ($(shell which clang++-10 2>/dev/null),)
+        CXX := clang++-10 -std=c++2a
+else ifneq ($(shell which g++-9 2>/dev/null),)
+        CXX := g++-9 -std=c++2a
 else ifneq ($(shell which clang++-9 2>/dev/null),)
-        CXX := clang++-9 -std=c++17
+        CXX := clang++-9 -std=c++2a
 else ifneq ($(shell which clang++-8 2>/dev/null),)
-        CXX := clang++-8 -std=c++17
+        CXX := clang++-8 -std=c++2a
 else ifneq ($(shell which g++-8 2>/dev/null),)
-        CXX := g++-8 -std=c++17
+        CXX := g++-8 -std=c++2a
 else ifneq ($(shell which clang++-7 2>/dev/null),)
-        CXX := clang++-7 -std=c++17
+        CXX := clang++-7 -std=c++2a
 else ifneq ($(shell which g++-7 2>/dev/null),)
         CXX := g++-7 -std=c++17
 else ifneq ($(shell which clang++-6.0 2>/dev/null),)
@@ -20,9 +24,9 @@ else ifneq ($(shell which clang++-6.0 2>/dev/null),)
 else ifneq ($(shell which clang++-5.0 2>/dev/null),)
         CXX := clang++-5.0 -std=c++17
 else ifneq ($(shell which g++ 2>/dev/null),)
-        CXX := g++ -std=c++17
+        CXX := g++ -std=c++2a
 else
-        CXX := clang++ -std=c++17
+        CXX := clang++ -std=c++2a
 endif
 
 CXXFLAGS    := -g -O3 -Wall -Wextra

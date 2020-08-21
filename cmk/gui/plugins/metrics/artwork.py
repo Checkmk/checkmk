@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,13 +6,9 @@
 
 import math
 import time
-from typing import (  # pylint: disable=unused-import
-    List, Tuple, Union, Optional, Callable, Iterable, Text,
-)
+from typing import List, Tuple, Union, Optional, Callable, Iterable
 from functools import partial
-
-import six
-from six.moves import zip_longest
+from itertools import zip_longest
 
 import cmk.utils.render
 
@@ -181,7 +177,7 @@ def layout_graph_curves(curves):
     mirrored = False  # True if negative area shows positive values
 
     # Build positive and optional negative stack.
-    stacks = [None, None]  # type: List[Optional[List]]
+    stacks: List[Optional[List]] = [None, None]
 
     # Compute the logical position (i.e. measured in the original unit)
     # of the data points, where stacking and Y-mirroring is being applied.
@@ -369,7 +365,7 @@ def _render_scalar_value(value, unit):
 
 
 def _get_value_at_timestamp(start_time, end_time, step, pin_time, rrddata):
-    nth_value = (pin_time - start_time) / step
+    nth_value = (pin_time - start_time) // step
     if 0 <= nth_value < len(rrddata):
         return rrddata[nth_value]
 
@@ -429,12 +425,12 @@ def compute_graph_v_axis(graph_recipe, graph_data_range, height_ex, layouted_cur
 
     if stepping == "binary":
         base = 16
-        steps = [
+        steps: List[Tuple[float, float]] = [
             (2, 0.5),
             (4, 1),
             (8, 2),
             (16, 4),
-        ]  # type: List[Tuple[float, float]]
+        ]
 
     elif stepping == "time":
         if max_value > 3600 * 24:
@@ -492,7 +488,9 @@ def compute_graph_v_axis(graph_recipe, graph_data_range, height_ex, layouted_cur
 
 
 def compute_v_axis_min_max(graph_recipe, graph_data_range, height, layouted_curves, mirrored):
-    min_value, max_value = _get_min_max_values_from_curves(layouted_curves, mirrored)
+
+    min_value, max_value = _get_min_max_from_curves(layouted_curves)
+    min_value, max_value = _purge_min_max(min_value, max_value, mirrored)
 
     # Apply explicit range if defined in graph
     explicit_min_value, explicit_max_value = graph_recipe["explicit_vertical_range"]
@@ -540,36 +538,34 @@ def compute_v_axis_min_max(graph_recipe, graph_data_range, height, layouted_curv
     return real_range, vrange, min_value, max_value
 
 
-def _get_min_max_values_from_curves(layouted_curves, mirrored):
-    dflt_min_value, dflt_max_value = _get_default_min_max_values(layouted_curves)
+def _purge_min_max(min_value, max_value, mirrored):
     # If all of our data points are None, then we have no
     # min/max values. In this case we assume 0 as a minimum
     # value and 1 as a maximum. Otherwise we will run into
     # an exception
-    if dflt_min_value is None and dflt_max_value is not None and dflt_max_value > 0:
-        min_value = -1 * dflt_max_value if mirrored else 0.0
-
-    elif dflt_max_value is None and dflt_min_value is not None and dflt_min_value < 0:
-        max_value = 1.0
-
-    elif dflt_min_value is None and dflt_max_value is not None:
-        if mirrored:
-            min_value = -1 * dflt_max_value
-        else:
-            min_value = dflt_max_value - 1.0
-
-    elif dflt_max_value is None and dflt_min_value is not None:
-        max_value = dflt_min_value + 1.0
-
-    else:
+    if min_value is None and max_value is None:
         min_value = -1.0 if mirrored else 0.0
         max_value = 1.0
+
+    elif min_value is None and max_value > 0:
+        min_value = -1 * max_value if mirrored else 0.0
+    elif max_value is None and min_value < 0:
+        max_value = 1.0
+
+    elif min_value is None and max_value is not None:
+        if mirrored:
+            min_value = -1 * max_value
+        else:
+            min_value = max_value - 1.0
+
+    elif max_value is None and min_value is not None:
+        max_value = min_value + 1.0
 
     return min_value, max_value
 
 
-def _get_default_min_max_values(layouted_curves):
-    dflt_min_value, dflt_max_value = None, None
+def _get_min_max_from_curves(layouted_curves):
+    min_value, max_value = None, None
 
     # Now make sure that all points are within the range.
     # Enlarge a given range if neccessary.
@@ -578,22 +574,31 @@ def _get_default_min_max_values(layouted_curves):
 
             # Line points
             if isinstance(point, (float, int)):
-                dflt_max_value = max(dflt_max_value, point)
-                if dflt_min_value is None:
-                    dflt_min_value = point
+                if max_value is None:
+                    max_value = point
                 elif point is not None:
-                    dflt_min_value = min(dflt_min_value, point)
+                    max_value = max(max_value, point)
+
+                if min_value is None:
+                    min_value = point
+                elif point is not None:
+                    min_value = min(min_value, point)
 
             # Area points
             elif isinstance(point, tuple):
                 lower, higher = point
-                dflt_max_value = max(dflt_max_value, higher)
-                if dflt_min_value is None:
-                    dflt_min_value = lower
-                elif lower is not None:
-                    dflt_min_value = min(dflt_min_value, lower)
 
-    return dflt_min_value, dflt_max_value
+                if max_value is None:
+                    max_value = higher
+                elif higher is not None:
+                    max_value = max(max_value, higher)
+
+                if min_value is None:
+                    min_value = lower
+                elif lower is not None:
+                    min_value = min(min_value, lower)
+
+    return min_value, max_value
 
 
 # Create labels for the neccessary range
@@ -669,7 +674,7 @@ def render_labels_with_graph_unit(label_specs, unit):
 
 def render_labels(label_specs, render_func=None):
     max_label_length = 0
-    rendered_labels = []  # type: List[Label]
+    rendered_labels: List[Label] = []
 
     for pos, label_value, line_width in label_specs:
         if label_value is not None:
@@ -738,17 +743,17 @@ def compute_graph_t_axis(start_time, end_time, width, step):
     label_shift = 0  # shift seconds to future in order to center it
     label_distance_at_least = 0
     if start_date == end_date:
-        title_label = six.text_type(cmk.utils.render.date(start_time))
+        title_label = str(cmk.utils.render.date(start_time))
     else:
         title_label = u"%s \u2014 %s" % (
-            six.text_type(cmk.utils.render.date(start_time)),
-            six.text_type(cmk.utils.render.date(end_time)),
+            str(cmk.utils.render.date(start_time)),
+            str(cmk.utils.render.date(end_time)),
         )
 
     # TODO: Monatsname und Wochenname lokalisierbar machen
     if start_date == end_date:
-        labelling = "%H:%M"  # type: Union[str, Text, Callable]
-        label_size = 5  # type: Union[int, float]
+        labelling: Union[str, Callable] = "%H:%M"
+        label_size: Union[int, float] = 5
 
     # Less than one week
     elif time_range_days < 7:
@@ -758,7 +763,7 @@ def compute_graph_t_axis(start_time, end_time, width, step):
     elif time_range_days < 32 and start_month == end_month:
         labelling = "%d"
         label_size = 2.5
-        label_shift = 86400 / 2
+        label_shift = 86400 // 2
         label_distance_at_least = 86400
 
     elif start_time_local.tm_year == end_time_local.tm_year:
@@ -786,9 +791,11 @@ def compute_graph_t_axis(start_time, end_time, width, step):
                                       (720, 120), (1440, 360), (2880, 480), (4320, 720),
                                       (5760, 720)]:
         if label_distance_at_least <= dist_minutes * 60:
-            dist_function = partial(
-                dist_equal, distance=dist_minutes * 60, subdivision=subdivision *
-                60)  # type: Callable[[int, int], Iterable[Tuple[int, int, bool]]]
+            dist_function: Callable[[int, int],
+                                    Iterable[Tuple[int, int,
+                                                   bool]]] = partial(dist_equal,
+                                                                     distance=dist_minutes * 60,
+                                                                     subdivision=subdivision * 60)
             break
 
     else:
@@ -808,12 +815,12 @@ def compute_graph_t_axis(start_time, end_time, width, step):
 
     # Now iterate over all label points and compute the labels.
     # TODO: could we run into any problems with daylight saving time here?
-    labels = []  # type: List[Label]
+    labels: List[Label] = []
     seconds_per_char = time_range / (width - 7)
     for pos, line_width, has_label in dist_function(start_time, end_time):
         if has_label:
-            if isinstance(labelling, six.string_types):
-                label = time.strftime(str(labelling), time.localtime(pos))  # type: Optional[str]
+            if isinstance(labelling, str):
+                label: Optional[str] = time.strftime(str(labelling), time.localtime(pos))
             else:
                 label = labelling(pos)
         else:
@@ -866,7 +873,7 @@ def dist_week(start_time, end_time):
 
 def dist_month(start_time, end_time, months):
     # Jump to beginning of month
-    broken = list(time.localtime(start_time))
+    broken = time.localtime(start_time)
     broken_tm_year = broken[0]
     broken_tm_mon = broken[1]
     broken_tm_mday = 1
@@ -930,7 +937,7 @@ def dist_month(start_time, end_time, months):
 def dist_equal(start_time, end_time, distance, subdivision):
     # First align start_time to the next time that can be divided
     # distance, but align this at 00:00 localtime!
-    align_broken = list(time.localtime(start_time))
+    align_broken = time.localtime(start_time)
     align = time.mktime((
         align_broken[0],
         align_broken[1],
@@ -975,8 +982,7 @@ def load_graph_pin():
     return config.user.load_file("graph_pin", None)
 
 
-def save_graph_pin():
-    # type: () -> None
+def save_graph_pin() -> None:
     try:
         pin_timestamp = html.request.get_integer_input("pin")
     except ValueError:

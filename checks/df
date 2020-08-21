@@ -329,7 +329,7 @@ def check_df(item, params, parsed):
             # which will be used during for group matching
             df_blocks, df_inodes = _add_volume_name(df_blocks, df_inodes, volume_info)
 
-    return df_check_filesystem_list(item, params, df_blocks, df_inodes)
+    return df_check_filesystem_list_coroutine(item, params, df_blocks, df_inodes)
 
 
 check_info['df'] = {

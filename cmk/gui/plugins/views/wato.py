@@ -1,10 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Text, Union  # pylint: disable=unused-import
+from typing import Dict, Union
 import cmk.gui.watolib as watolib
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
@@ -16,7 +16,7 @@ from cmk.gui.plugins.views import (
     painter_registry,
     Painter,
 )
-from cmk.gui.type_defs import Row  # pylint: disable=unused-import
+from cmk.gui.type_defs import Row
 
 
 @painter_registry.register
@@ -41,8 +41,7 @@ class PainterHostFilename(Painter):
 
 # TODO: Extremely bad idea ahead! The return type depends on a combination of
 # the values of how and with_links. :-P
-def get_wato_folder(row, how, with_links=True):
-    # type: (Dict, Text, bool) -> Union[Text, HTML]
+def get_wato_folder(row: Dict, how: str, with_links: bool = True) -> Union[str, HTML]:
     filename = row["host_filename"]
     if not filename.startswith("/wato/") or not filename.endswith("/hosts.mk"):
         return ""
@@ -148,17 +147,15 @@ class PainterWatoFolderPlain(Painter):
         return paint_wato_folder(row, "plain")
 
 
-def cmp_wato_folder(r1, r2, how):
-    # type: (Row, Row, str) -> int
+def cmp_wato_folder(r1: Row, r2: Row, how: str) -> int:
     return ((_get_wato_folder_text(r1, how) > _get_wato_folder_text(r2, how)) -
             (_get_wato_folder_text(r1, how) < _get_wato_folder_text(r2, how)))
 
 
-# NOTE: The funny Text() call is only necessary because of the broken typing of
+# NOTE: The funny str() call is only necessary because of the broken typing of
 # get_wato_folder().
-def _get_wato_folder_text(r, how):
-    # type: (Row, str) -> Text
-    return Text(get_wato_folder(r, how, False))
+def _get_wato_folder_text(r: Row, how: str) -> str:
+    return str(get_wato_folder(r, how, False))
 
 
 @sorter_registry.register

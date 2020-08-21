@@ -1,18 +1,14 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import sys
-from typing import Dict, Text  # pylint: disable=unused-import
-import six
+from pathlib import Path
+from typing import Dict
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+from six import ensure_str
 
 # TODO: Import errors from passlib are suppressed right now since now
 # stub files for mypy are not available.
@@ -35,15 +31,13 @@ crypt_context = CryptContext(schemes=[
 ])
 
 
-class Htpasswd(object):
+class Htpasswd:
     """Thin wrapper for loading and saving the htpasswd file"""
-    def __init__(self, path):
-        # type: (Path) -> None
+    def __init__(self, path: Path) -> None:
         super(Htpasswd, self).__init__()
         self._path = path
 
-    def load(self):
-        # type: () -> Dict[Text, Text]
+    def load(self) -> Dict[str, str]:
         """Loads the contents of a valid htpasswd file into a dictionary and returns the dictionary"""
         entries = {}
 
@@ -57,15 +51,14 @@ class Htpasswd(object):
 
         return entries
 
-    def exists(self, user_id):
-        # type: (Text) -> bool
+    def exists(self, user_id: str) -> bool:
         """Whether or not a user exists according to the htpasswd file"""
         return user_id in self.load()
 
-    def save(self, entries):
-        # type: (Dict[Text, Text]) -> None
+    def save(self, entries: Dict[str, str]) -> None:
         """Save the dictionary entries (unicode username and hash) to the htpasswd file"""
-        output = "\n".join("%s:%s" % entry for entry in sorted(entries.items())) + "\n"
+        output = u"\n".join(u"%s:%s" % (ensure_str(e[0]), ensure_str(e[1]))
+                            for e in sorted(entries.items())) + u"\n"
         store.save_text_to_file("%s" % self._path, output)
 
 
@@ -125,7 +118,7 @@ class HtpasswdUserConnector(UserConnector):
         return False
 
     def _is_automation_user(self, user_id):
-        return os.path.isfile(cmk.utils.paths.var_dir + "/web/" + six.ensure_str(user_id) +
+        return os.path.isfile(cmk.utils.paths.var_dir + "/web/" + ensure_str(user_id) +
                               "/automation.secret")
 
     # Validate hashes taken from the htpasswd file. For the moment this function

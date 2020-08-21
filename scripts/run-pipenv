@@ -3,35 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Small helper to execute pipenv with our different virtual environments.
-# The first argument must be the name of the virtual environment in $REPO_PATH/virtual-envs
+# Small helper to execute pipenv with our virtual environment.
 
 set -e -o pipefail
 
 REPO_PATH="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" >/dev/null 2>&1 && pwd)"
-PYTHON_VERSION=$1
-shift
 
-if [ -z "$PYTHON_VERSION" ]; then
-    echo "ERROR: run-pipenv [2|3] PIPENV-ARGS..." >&2
-    exit 1
-fi
-
-# TODO: Intermediate step. will be cleaned up later when we rename the venv directories
-if [ "$PYTHON_VERSION" = "2" ]; then
-    PYTHON_VERSION="2.7"
-elif [ "$PYTHON_VERSION" = "3" ]; then
-    PYTHON_VERSION="3.7"
-fi
-
-if [ ! -d "$REPO_PATH/virtual-envs/$PYTHON_VERSION" ]; then
-    echo "ERROR: Invalid python version $PYTHON_VERSION given." >&2
-    exit 1
-fi
-
-# This is skipped when run-pipenv is called from virtual-envs/venv.make
+# Avoid a loop when building the virtual environment itself.
 if [ -z "$SKIP_MAKEFILE_CALL" ]; then
-    make --silent -C "$REPO_PATH/virtual-envs/$PYTHON_VERSION" .venv 1>&2
+    make --silent -C "$REPO_PATH" .venv 1>&2
 fi
 
 # Enforce a non localized environment. The reason for this configuration is
@@ -54,6 +34,6 @@ PIPENV_VENV_IN_PROJECT=true \
     PIPENV_NOSPIN=true \
     PIPENV_HIDE_EMOJIS=true \
     PIPENV_NO_INHERIT=true \
-    PIPENV_PIPFILE="$REPO_PATH/virtual-envs/$PYTHON_VERSION/Pipfile" \
+    PIPENV_PIPFILE="$REPO_PATH/Pipfile" \
     PIPENV_IGNORE_VIRTUALENVS=1 \
     pipenv "$@"

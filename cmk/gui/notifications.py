@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -22,6 +22,8 @@ from cmk.gui.permissions import (
     PermissionSection,
     declare_permission,
 )
+from cmk.gui.breadcrumb import make_simple_page_breadcrumb
+from cmk.gui.main_menu import mega_menu_registry
 
 g_acknowledgement_time = {}
 g_modified_time = 0.0
@@ -132,14 +134,12 @@ def load_failed_notifications(before=None, after=None, stat_only=False, extra_he
 
         return result
 
-    else:
-        return sites.live().query(query_txt)
+    return sites.live().query(query_txt)
 
 
 def render_notification_table(failed_notifications):
     with table_element() as table:
-        header = dict([(name, idx) for idx, name in enumerate(g_columns)])
-
+        header = {name: idx for idx, name in enumerate(g_columns)}
         for row in failed_notifications:
             table.row()
             table.text_cell(_("Time"),
@@ -153,7 +153,9 @@ def render_notification_table(failed_notifications):
 
 # TODO: We should really recode this to use the view and a normal view command / action
 def render_page_confirm(acktime, prev_url, failed_notifications):
-    html.header(_("Confirm failed notifications"))
+    title = _("Confirm failed notifications")
+    breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
+    html.header(title, breadcrumb)
 
     if failed_notifications:
         html.open_div(class_="really")

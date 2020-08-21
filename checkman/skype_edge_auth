@@ -1,0 +1,14 @@
+title: Skype for Business: Edge Authentication
+agents: windows
+catalog: app/skype
+license: GPL
+distribution: check_mk
+description:
+ This check monitors bad authentication requests per second on a skype
+ edge server.
+
+ The threshold for this can be configured.
+
+inventory:
+ One service is created.
+

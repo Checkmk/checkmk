@@ -1,12 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Dict, Text, Optional, List  # pylint: disable=unused-import
-import six
+from typing import Dict, Optional, List
+from six import ensure_str
 
 import livestatus
 
@@ -91,8 +91,8 @@ class CrashReportsRowTable(RowTable):
             })
         return sorted(rows, key=lambda r: r["crash_time"])
 
-    def get_crash_report_rows(self, only_sites, filter_headers):
-        # type: (Optional[List[config.SiteId]], Text) -> List[Dict[Text, Text]]
+    def get_crash_report_rows(self, only_sites: Optional[List[config.SiteId]],
+                              filter_headers: str) -> List[Dict[str, str]]:
 
         # First fetch the information that is needed to query for the dynamic columns (crash_info,
         # ...)
@@ -116,7 +116,7 @@ class CrashReportsRowTable(RowTable):
 
             try:
                 sites.live().set_prepend_site(False)
-                sites.live().set_only_sites([config.SiteId(six.ensure_str(crash_info["site"]))])
+                sites.live().set_only_sites([config.SiteId(ensure_str(crash_info["site"]))])
 
                 raw_row = sites.live().query_row(
                     "GET crashreports\n"
@@ -132,8 +132,9 @@ class CrashReportsRowTable(RowTable):
 
         return rows
 
-    def _get_crash_report_info(self, only_sites, filter_headers=None):
-        # type: (Optional[List[config.SiteId]], Optional[Text]) -> List[Dict[Text, Text]]
+    def _get_crash_report_info(self,
+                               only_sites: Optional[List[config.SiteId]],
+                               filter_headers: Optional[str] = None) -> List[Dict[str, str]]:
         try:
             sites.live().set_prepend_site(True)
             sites.live().set_only_sites(only_sites)

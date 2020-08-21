@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -160,6 +160,76 @@ class UIThemeUserAttribute(UserAttribute):
                     title=_("Set custom theme"),
                     choices=theme_choices(),
                 ),
+            ],
+        )
+
+    def domain(self):
+        return "multisite"
+
+
+@user_attribute_registry.register
+class UISidebarPosition(UserAttribute):
+    @classmethod
+    def name(cls):
+        return "ui_sidebar_position"
+
+    def topic(self):
+        return "personal"
+
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Sidebar position"),
+            choices=[(None, _("Right")), ("left", _("Left"))],
+            no_preselect_value=False,
+        )
+
+    def domain(self):
+        return "multisite"
+
+
+@user_attribute_registry.register
+class UIIconPlacement(UserAttribute):
+    @classmethod
+    def name(cls):
+        return "icons_per_item"
+
+    def topic(self):
+        return "personal"
+
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Main menu icons"),
+            choices=[(None, _("Per topic")), ("entry", _("Per entry"))],
+            no_preselect_value=False,
+        )
+
+    def domain(self):
+        return "multisite"
+
+
+@user_attribute_registry.register
+class UIBasicAdvancedToggle(UserAttribute):
+    @classmethod
+    def name(cls):
+        return "ui_basic_advanced_mode"
+
+    def topic(self):
+        return "personal"
+
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Basic / advanced mode"),
+            help=_(
+                "In some places like e.g. the main menu Checkmk divides features, "
+                "filters, input fields etc. in two categories - basic and advanced. With this"
+                "option you can set a default mode for unvisited menus. Alternatively, you can "
+                "enforce one mode so that the round button with the three dots is not shown at all."
+            ),
+            choices=[
+                (None, _("Default to basic mode")),
+                ("default_advanced", _("Default to advanced mode")),
+                ("enforce_basic", _("Enforce basic mode")),
+                ("enforce_advanced", _("Enforce advanced mode")),
             ],
         )
 

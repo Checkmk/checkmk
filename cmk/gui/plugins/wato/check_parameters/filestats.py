@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -112,10 +112,10 @@ def _parameter_valuespec_filestats():
                  ],
              )),
         ],
-        help=_("Here you can impose various levels the results reported by the"
+        help=_("Here you can impose various levels on the results reported by the"
                " mk_filstats plugin. Note that some levels only apply to a matching"
-               " putput format (e.g. max/min count levels are not applied if only the"
-               " smallest, largest, oldes and newest file is reported). In order to"
+               " output format (e.g. max/min count levels are not applied if only the"
+               " smallest, largest, oldest and newest file is reported). In order to"
                " receive the required data, you must configure the plugin mk_filestats."),
     )
 

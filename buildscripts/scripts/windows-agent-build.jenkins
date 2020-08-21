@@ -9,7 +9,7 @@ node ('windows') {
     stage('git checkout') {
         checkout(scm)
         windows = load 'buildscripts/scripts/lib/windows.groovy'
-        
+
     }
     windows.build(
         TARGET: 'agent'

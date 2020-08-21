@@ -7,9 +7,10 @@
 #define TableColumns_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <string>
 #include <vector>
-#include "ColumnsColumn.h"
+
 #include "Table.h"
 class Column;
 class MonitoringCore;
@@ -17,6 +18,8 @@ class Query;
 
 class TableColumns : public Table {
 public:
+    enum class Type { table, name, description, type };
+
     explicit TableColumns(MonitoringCore *mc);
 
     [[nodiscard]] std::string name() const override;
@@ -24,9 +27,8 @@ public:
     void answerQuery(Query *query) override;
 
     void addTable(const Table &table);
-    std::string getValue(const Column *column,
-                         ColumnsColumn::Type colcol) const;
-    std::string tableNameOf(const Column *column) const;
+    std::string getValue(const Column &column, Type colcol) const;
+    std::string tableNameOf(const Column &column) const;
 
 private:
     std::vector<const Table *> _tables;

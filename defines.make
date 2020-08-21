@@ -50,10 +50,3 @@ BRANCH_VERSION     := 1.7.0
 SHELL              := /bin/bash
 # TODO: Be more strict - Add this:
 #SHELL              := /bin/bash -e -o pipefail
-
-# Helper for shell checkers / fixers with all shell script the tools
-# should care about
-# TODO: Complete this list
-SHELL_FILES := \
-	agents/check_mk_agent.linux \
-	agents/check_mk_caching_agent.linux

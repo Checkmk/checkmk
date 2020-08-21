@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,31 +6,21 @@
 """This module serves the path structure of the Check_MK environment
 to all components of Check_MK."""
 
-import sys
 import os
-
-from typing import Union  # pylint: disable=unused-import
-
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path
+from pathlib import Path
+from typing import Union
 
 
 # One bright day, when every path is really a Path, this can die... :-)
-def _path(*args):
-    # type: (*Union[str, Path]) -> str
+def _path(*args: Union[str, Path]) -> str:
     return str(Path(*args))
 
 
-def _omd_path(path):
-    # type: (str) -> str
+def _omd_path(path: str) -> str:
     return _path(omd_root, path)
 
 
-def _local_path(global_path):
-    # type: (Union[str, Path]) -> Path
+def _local_path(global_path: Union[str, Path]) -> Path:
     return Path(_path(omd_root, "local", Path(global_path).relative_to(omd_root)))
 
 
@@ -50,6 +40,7 @@ log_dir = _omd_path("var/log")
 precompiled_checks_dir = _omd_path("var/check_mk/precompiled_checks")
 core_autochecks_dir = _omd_path("var/check_mk/core/autochecks")
 base_autochecks_dir = _omd_path("var/check_mk/autochecks")
+core_fetcher_config_dir = _omd_path("var/check_mk/core/fetcher-config")
 autochecks_dir = base_autochecks_dir
 precompiled_hostchecks_dir = _omd_path("var/check_mk/precompiled")
 snmpwalks_dir = _omd_path("var/check_mk/snmpwalks")
@@ -83,6 +74,7 @@ piggyback_dir = Path(tmp_dir, "piggyback")
 piggyback_source_dir = Path(tmp_dir, "piggyback_sources")
 crash_dir = Path(var_dir, "crashes")
 diagnostics_dir = Path(var_dir, "diagnostics")
+site_config_dir = Path(var_dir, "site_configs")
 
 share_dir = _omd_path("share/check_mk")
 checks_dir = _omd_path("share/check_mk/checks")

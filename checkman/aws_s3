@@ -5,13 +5,18 @@ license: GPL
 distribution: check_mk
 description:
  This check monitors the objects of AWS/S3 buckets and reports
- the number of objects, the summarized size and the largest
- object of a bucket.
+
+ - the number of objects
+
+ - the summarized size
+
+ - the largest object of a bucket
+
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}.
 
- There are no default levels set for the bucket size. Upper
- levels are configurable.
+ There are no default levels. Upper levels on the bucket size
+ are configurable via the rule "AWS/S3 Bucket Objects".
 
 item:
  Name of the instance

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -20,12 +20,12 @@ configuration of all roles.
 """
 
 import re
-from typing import (  # pylint: disable=unused-import
-    Optional,)
+from typing import Optional
 
 import cmk.utils.store as store
 
 import cmk.gui.userdb as userdb
+import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
@@ -34,7 +34,7 @@ from cmk.gui.table import table_element
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib import HTML, Choices  # pylint: disable=unused-import
+from cmk.gui.htmllib import HTML, Choices
 from cmk.gui.permissions import (
     permission_section_registry,
     permission_registry,
@@ -53,9 +53,9 @@ from cmk.gui.plugins.wato import (
 )
 
 
-class RoleManagement(object):
+class RoleManagement:
     def __init__(self):
-        self._roles = userdb.load_roles()
+        self._roles = userdb_utils.load_roles()
         super(RoleManagement, self).__init__()
 
     def _save_roles(self):
@@ -332,8 +332,9 @@ class ModeEditRole(RoleManagement, WatoMode):
                   "update or installation of an addons new permissions appear, the user role will get or "
                   "not get those new permissions based on the default settings of the builtin role it's "
                   "based on."))
-            role_choices = [(i, r["alias"]) for i, r in self._roles.items() if r.get("builtin")
-                           ]  # type: Choices
+            role_choices: Choices = [
+                (i, r["alias"]) for i, r in self._roles.items() if r.get("builtin")
+            ]
             html.dropdown("basedon",
                           role_choices,
                           deflt=self._role.get("basedon", "user"),
@@ -373,11 +374,11 @@ class ModeEditRole(RoleManagement, WatoMode):
                 pvalue = self._role["permissions"].get(perm.name)
                 def_value = base_role_id in perm.defaults
 
-                choices = [
+                choices: Choices = [
                     ("yes", _("yes")),
                     ("no", _("no")),
                     ("default", _("default (%s)") % (def_value and _("yes") or _("no"))),
-                ]  # type: Choices
+                ]
                 deflt = {True: "yes", False: "no"}.get(pvalue, "default")
 
                 html.dropdown("perm_" + perm.name, choices, deflt=deflt, style="width: 130px;")
@@ -407,7 +408,7 @@ class ModeRoleMatrix(WatoMode):
         html.context_button(_("Back"), watolib.folder_preserving_link([("mode", "roles")]), "back")
 
     def page(self):
-        role_list = sorted(userdb.load_roles().items(), key=lambda a: (a[1]["alias"], a[0]))
+        role_list = sorted(userdb_utils.load_roles().items(), key=lambda a: (a[1]["alias"], a[0]))
 
         for section in permission_section_registry.get_sorted_sections():
             html.begin_foldable_container("perm_matrix",
@@ -427,7 +428,7 @@ class ModeRoleMatrix(WatoMode):
                         pvalue = role["permissions"].get(perm.name)
                         if pvalue is None:
                             if base_on_id in perm.defaults:
-                                icon_name = "perm_yes_default"  # type: Optional[str]
+                                icon_name: Optional[str] = "perm_yes_default"
                             else:
                                 icon_name = None
                         else:

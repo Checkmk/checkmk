@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // engine to install/remove cap files
 
@@ -29,7 +30,7 @@ enum class Mode { normal, forced };
 
 // main API
 void Install();    // normal installation of all files from the MSI
-void ReInstall();  // forced installation of all files from the MSI
+bool ReInstall();  // forced installation of all files from the MSI
 
 // support
 bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat

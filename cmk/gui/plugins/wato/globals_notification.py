@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -197,7 +197,7 @@ class ConfigVariableNotificationLogging(ConfigVariable):
         # The decprecated value 0 is transformed to the default logging value.
         if level in [0, 1]:
             return 20
-        elif level == 2:
+        if level == 2:
             return 10
         return level
 

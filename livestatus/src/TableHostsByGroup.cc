@@ -4,6 +4,7 @@
 // source code package.
 
 #include "TableHostsByGroup.h"
+
 #include "MonitoringCore.h"
 #include "Query.h"
 #include "Row.h"

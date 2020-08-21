@@ -48,6 +48,10 @@ def parse_aws_elbv2_target_groups(info):
 
 
 def check_aws_elbv2_target_groups(item, params, target_groups):
+
+    if len(target_groups) == 0:
+        raise MKCounterWrapped("Currently no data from AWS")
+
     target_groups_by_state = {}
     for target_group in target_groups:
         for target_health in target_group.get('TargetHealthDescriptions', []):

@@ -9,6 +9,7 @@
 #include <iterator>
 #include <string>
 #include <vector>
+
 #include "Logger.h"
 #include "Metric.h"
 #include "gtest/gtest.h"
@@ -67,8 +68,7 @@ TEST_F(MetricFixture, DirectoryAndFileExist) {
 TEST_F(MetricFixture, ScanRRDFindsMetrics) {
     ASSERT_TRUE(fs::exists(basepath));
     Logger* const logger{Logger::getLogger("test")};
-    Metric::Names names;
-    scan_rrd(basepath, desc, names, logger);
+    auto names = scan_rrd(basepath, desc, logger);
     std::sort(names.begin(), names.end());
     ASSERT_EQ(metrics, names);
 }

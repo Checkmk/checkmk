@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -51,7 +51,7 @@ class ABCViewDashlet(IFrameDashlet):
         view.user_sorters = views.get_user_sorters()
 
         view_renderer = views.GUIViewRenderer(view, show_buttons=False)
-        views.show_view(view, view_renderer)
+        views.process_view(view, view_renderer)
 
     def _get_infos_from_view_spec(self, view_spec):
         ds_name = view_spec["datasource"]
@@ -100,7 +100,7 @@ class ViewDashlet(ABCViewDashlet):
         # Hack for create mode of dashlet editor. The user first selects a datasource and then the
         # single contexts, the dashlet editor needs to use these information.
         if html.myfile == "edit_dashlet" and html.request.has_var("datasource"):
-            ds_name = html.request.var('datasource')
+            ds_name = html.request.get_str_input_mandatory('datasource')
             return views.data_source_registry[ds_name]().infos
 
         return self._get_infos_from_view_spec(self._dashlet_spec)

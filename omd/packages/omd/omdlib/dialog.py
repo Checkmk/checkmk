@@ -29,19 +29,19 @@ import sys
 import subprocess
 import termios
 from tty import setraw
-from typing import TYPE_CHECKING, Tuple, Pattern, Optional, List  # pylint: disable=unused-import
+from typing import TYPE_CHECKING, Tuple, Pattern, Optional, List
 
 from cmk.utils import tty
 from cmk.utils.exceptions import MKTerminate
 
 if TYPE_CHECKING:
-    from omdlib.contexts import SiteContext  # pylint: disable=unused-import
+    from omdlib.contexts import SiteContext
 
 DialogResult = Tuple[bool, str]
 
 
-def dialog_menu(title, text, choices, defvalue, oktext, canceltext):
-    # type: (str, str, List[Tuple[str, str]], Optional[str], str, str) -> DialogResult
+def dialog_menu(title: str, text: str, choices: List[Tuple[str, str]], defvalue: Optional[str],
+                oktext: str, canceltext: str) -> DialogResult:
     args = ["--ok-label", oktext, "--cancel-label", canceltext]
     if defvalue is not None:
         args += ["--default-item", defvalue]
@@ -51,8 +51,8 @@ def dialog_menu(title, text, choices, defvalue, oktext, canceltext):
     return _run_dialog(args)
 
 
-def dialog_regex(title, text, regex, value, oktext, canceltext):
-    # type: (str, str, Pattern, str, str, str) -> DialogResult
+def dialog_regex(title: str, text: str, regex: Pattern, value: str, oktext: str,
+                 canceltext: str) -> DialogResult:
     while True:
         args = [
             "--ok-label", oktext, "--cancel-label", canceltext, "--title", title, "--inputbox",
@@ -68,20 +68,17 @@ def dialog_regex(title, text, regex, value, oktext, canceltext):
             return True, new_value
 
 
-def dialog_yesno(text, yeslabel="yes", nolabel="no"):
-    # type: (str, str, str) -> bool
+def dialog_yesno(text: str, yeslabel: str = "yes", nolabel: str = "no") -> bool:
     state, _response = _run_dialog(
         ["--yes-label", yeslabel, "--no-label", nolabel, "--yesno", text, "0", "0"])
     return state
 
 
-def dialog_message(text, buttonlabel="OK"):
-    # type: (str, str) -> None
+def dialog_message(text: str, buttonlabel: str = "OK") -> None:
     _run_dialog(["--ok-label", buttonlabel, "--msgbox", text, "0", "0"])
 
 
-def _run_dialog(args):
-    # type: (List[str]) -> DialogResult
+def _run_dialog(args: List[str]) -> DialogResult:
     dialog_env = {
         "TERM": os.environ.get("TERM", "linux"),
         # TODO: Why de_DE?
@@ -97,9 +94,8 @@ def _run_dialog(args):
     return os.waitpid(p.pid, 0)[1] == 0, response
 
 
-def user_confirms(site, conflict_mode, title, message, relpath, yes_choice, yes_text, no_choice,
-                  no_text):
-    # type: (SiteContext, str, str, str, str, str, str, str, str) -> bool
+def user_confirms(site: 'SiteContext', conflict_mode: str, title: str, message: str, relpath: str,
+                  yes_choice: str, yes_text: str, no_choice: str, no_text: str) -> bool:
     # Handle non-interactive mode
     if conflict_mode == "abort":
         raise MKTerminate("Update aborted.")
@@ -126,15 +122,13 @@ def user_confirms(site, conflict_mode, title, message, relpath, yes_choice, yes_
 
 
 # TODO: Use standard textwrap module?
-def _wrap_text(text, width):
-    # type: (str, int) -> List[str]
+def _wrap_text(text: str, width: int) -> List[str]:
     def fillup(line, width):
         if len(line) < width:
             line += " " * (width - len(line))
         return line
 
-    def justify(line, width):
-        # type: (str, int) -> str
+    def justify(line: str, width: int) -> str:
         need_spaces = float(width - len(line))
         spaces = float(line.count(' '))
         newline = ""
@@ -174,8 +168,7 @@ def _wrap_text(text, width):
     return wrapped
 
 
-def _getch():
-    # type: () -> str
+def _getch() -> str:
     fd = sys.stdin.fileno()
     old_settings = termios.tcgetattr(fd)
     try:
@@ -188,8 +181,7 @@ def _getch():
     return ch
 
 
-def ask_user_choices(title, message, choices):
-    # type: (str, str, List[Tuple[str, str]]) -> str
+def ask_user_choices(title: str, message: str, choices: List[Tuple[str, str]]) -> str:
     sys.stdout.write("\n")
 
     def pl(line):
@@ -200,7 +192,7 @@ def ask_user_choices(title, message, choices):
     for line in _wrap_text(message, 76):
         pl(line)
     pl("")
-    chars = []  # type: List[str]
+    chars: List[str] = []
     empty_line = " %s%-78s%s\n" % (tty.bgblue + tty.white, "", tty.normal)
     sys.stdout.write(empty_line)
     for choice, choice_title in choices:

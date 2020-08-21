@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -9,9 +9,9 @@ Send notification messages to Slack
 
 Use a slack webhook to send notification messages
 """
-from __future__ import unicode_literals
+from typing import Dict
 
-from typing import Dict  # pylint: disable=unused-import
+from six import ensure_str
 
 import cmk.notification_plugins.utils as utils
 
@@ -26,17 +26,17 @@ COLORS = {
 }
 
 
-def slack_msg(context):
-    # type: (Dict) -> Dict
+def slack_msg(context: Dict) -> Dict:
     """Build the message for slack"""
 
     if context.get('WHAT', None) == "SERVICE":
         color = COLORS.get(context["SERVICESTATE"])
         title = "Service {NOTIFICATIONTYPE} notification".format(**context)
         text = "Host: {host_link} (IP: {HOSTADDRESS})\nService: {service_link}\nState: {SERVICESTATE}".format(
-            host_link=utils.format_link('<%s|%s>', utils.host_url_from_context(context),
+            host_link=utils.format_link(ensure_str('<%s|%s>'), utils.host_url_from_context(context),
                                         context['HOSTNAME']),
-            service_link=utils.format_link('<%s|%s>', utils.service_url_from_context(context),
+            service_link=utils.format_link(ensure_str('<%s|%s>'),
+                                           utils.service_url_from_context(context),
                                            context['SERVICEDESC']),
             **context)
         output = context["SERVICEOUTPUT"]
@@ -44,7 +44,7 @@ def slack_msg(context):
         color = COLORS.get(context["HOSTSTATE"])
         title = "Host {NOTIFICATIONTYPE} notification".format(**context)
         text = "Host: {host_link} (IP: {HOSTADDRESS})\nState: {HOSTSTATE}".format(
-            host_link=utils.format_link('<%s|%s>', utils.host_url_from_context(context),
+            host_link=utils.format_link(ensure_str('<%s|%s>'), utils.host_url_from_context(context),
                                         context['HOSTNAME']),
             **context)
         output = context["HOSTOUTPUT"]

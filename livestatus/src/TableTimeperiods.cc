@@ -4,8 +4,10 @@
 // source code package.
 
 #include "TableTimeperiods.h"
+
 #include <cstdint>
 #include <memory>
+
 #include "Column.h"
 #include "IntLambdaColumn.h"
 #include "Query.h"
@@ -14,49 +16,21 @@
 #include "TimeperiodsCache.h"
 #include "nagios.h"
 
-namespace {
-class TimePeriodRow : TableTimeperiods::IRow {
-public:
-    explicit TimePeriodRow(const timeperiod* tp) : tp_{tp} {}
-    [[nodiscard]] const timeperiod* getTimePeriod() const override {
-        return tp_;
-    }
-
-private:
-    const timeperiod* tp_;
-};
-}  // namespace
-
-struct TimePeriodValue {
-    std::int32_t operator()(Row /*row*/);
-};
-
-std::int32_t TimePeriodValue::operator()(Row row) {
-    extern TimeperiodsCache* g_timeperiods_cache;
-    if (auto tp = row.rawData<TableTimeperiods::IRow>()->getTimePeriod()) {
-        return g_timeperiods_cache->inTimeperiod(tp) ? 1 : 0;
-    }
-    return 1;  // unknown timeperiod is assumed to be 24X7
-}
-
 TableTimeperiods::TableTimeperiods(MonitoringCore* mc) : Table(mc) {
-    addColumn(std::make_unique<StringLambdaColumn>(
-        "name", "The name of the timeperiod", [](Row row) -> std::string {
-            if (auto tp = row.rawData<IRow>()->getTimePeriod()) {
-                return tp->name;
-            }
-            return {};
+    Column::Offsets offsets{};
+    addColumn(std::make_unique<StringLambdaColumn<timeperiod>>(
+        "name", "The name of the timeperiod", offsets,
+        [](const timeperiod& tp) { return tp.name; }));
+    addColumn(std::make_unique<StringLambdaColumn<timeperiod>>(
+        "alias", "The alias of the timeperiod", offsets,
+        [](const timeperiod& tp) { return tp.alias; }));
+    // unknown timeperiod is assumed to be 24X7
+    addColumn(std::make_unique<IntLambdaColumn<timeperiod, 1>>(
+        "in", "Wether we are currently in this period (0/1)", offsets,
+        [](const timeperiod& tp) {
+            extern TimeperiodsCache* g_timeperiods_cache;
+            return g_timeperiods_cache->inTimeperiod(&tp) ? 1 : 0;
         }));
-    addColumn(std::make_unique<StringLambdaColumn>(
-        "alias", "The alias of the timeperiod", [](Row row) -> std::string {
-            if (auto tp = row.rawData<IRow>()->getTimePeriod()) {
-                return tp->alias;
-            }
-            return {};
-        }));
-    addColumn(std::make_unique<IntLambdaColumn>(
-        "in", "Wether we are currently in this period (0/1)",
-        TimePeriodValue{}));
     // TODO(mk): add days and exceptions
 }
 
@@ -65,9 +39,9 @@ std::string TableTimeperiods::name() const { return "timeperiods"; }
 std::string TableTimeperiods::namePrefix() const { return "timeperiod_"; }
 
 void TableTimeperiods::answerQuery(Query* query) {
-    for (timeperiod* tp = timeperiod_list; tp != nullptr; tp = tp->next) {
-        auto r = TimePeriodRow{tp};
-        if (!query->processDataset(Row{&r})) {
+    extern timeperiod* timeperiod_list;
+    for (const timeperiod* tp = timeperiod_list; tp != nullptr; tp = tp->next) {
+        if (!query->processDataset(Row{tp})) {
             break;
         }
     }

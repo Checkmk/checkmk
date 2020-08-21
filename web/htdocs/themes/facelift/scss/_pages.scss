@@ -20,7 +20,7 @@
 '-------------------------------------------------------------------------*/
 
 h1, h2, h3, h4 {
-  color: $color-text;
+  color: $font-color;
 }
 
 h3 {
@@ -44,9 +44,7 @@ h3 {
 body {
   color: rgb(255, 255, 255);
 
-  a, a:link, a:visited {
-    color: rgb(255, 255, 255);
-  }
+  a, a:link, a:visited { color: $font-color; }
 
   &.hidden:after {
     position: absolute;
@@ -60,12 +58,16 @@ body {
   }
 
   &.main {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    height: 100%;
     padding: $main-body-padding;
     margin: 0;
     font-family: $font-family-default;
     font-size: $font-size-default;
     font-weight: $font-weight-default;
-    color: $color-text;
+    color: $font-color;
     background: $color-background;
 
     /* Can be toggled with N/n display option */
@@ -90,18 +92,13 @@ body {
 
     /* The content page header containing the title, user, date */
     table.header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      z-index: 1000;
       width: 100%;
       height: 64px;
       max-width: 100%;
-      padding: 8px 32px;
+      padding: 8px 20px;
       margin: 0 0 5px;
       color: rgb(255, 255, 255);
-      background: $bg-color-secondary;
-      border-bottom: $table-header-border-bottom;
+      background: $bg-color-default;
       border-spacing: 0;
 
       td {
@@ -130,14 +127,36 @@ body {
 	  }
 
 	  a, .popup_menu span, .popup_menu & span {
-	    color: $color-text;
+	    color: $font-color;
 	  }
+
+          div.breadcrumb {
+            font-size: 11px;
+            white-space: nowrap;
+
+            span, a {
+              &:last-child:after {
+                content: "";
+              }
+              color: #ccc;
+              text-decoration: none;
+            }
+
+            a:hover {
+              color: #fff;
+            }
+
+            :after {
+              text-decoration: none;
+              content: " > ";
+            }
+          }
 	}
 
 	&.right {
 	  width: 1%;
 	  font-size: 13px;
-	  color: $color-text;
+	  color: $font-color;
 	  text-align: right;
 
 	  img {
@@ -164,19 +183,6 @@ body {
       }
     }
 
-    hr.header {
-      position: absolute;
-      top: 42px;
-      left: 0;
-      width: 100%;
-      height: 1px;
-      padding: 0;
-      margin: 0;
-      color: rgb(255, 255, 255);
-      background-color: rgb(255, 255, 255);
-      border: none;
-    }
-
     /* TODO: Reproduce this html element */
     div.urldebug {
       position: relative;
@@ -187,33 +193,27 @@ body {
       color: rgb(255, 255, 255);
     }
 
-    /* The content page footer containing optional status icons */
-    table.footer,
-    table.footer .popup_menu a,
-    table.footer .popup_menu span {
-      color: $color-text;
-    }
+    div#main_page_content {
+      flex: 1 1 auto;
+      height: 100%;
+      padding-right: 12px;
+      padding-bottom: 20px;
+      overflow: auto;
 
-    table.footer {
-      width: 100%;
-      margin-top: 10px;
-    }
+      div.simplebar-track { background-color: $simplebar-track-bg-color; }
 
-    table.footer td.left   { text-align: left; }
-    table.footer td.middle { text-align: center; }
-    table.footer td.right  { text-align: right; }
-    table.footer a { color: rgb(34, 68, 102); }
+      div.simplebar-horizontal div.simplebar-scrollbar {
+        height: 6px;
+        &::before { top: 3px; }
+      }
+
+      div.simplebar-vertical {
+        &, div.simplebar-scrollbar { width: 12px; }
+      }
+
+      body.dashboard & { padding-bottom: 0; }
+    }
   }
-}
-
-/* TODO: Check out whether this style and the respective span element within the
- *       header are still needed */
-#headinfo {
-  margin-right: 10px;
-}
-
-div#foot_refresh, div#foot_refresh_time {
-  display: inline-block;
 }
 
 /* TODO: Reproduce all these pause styles */
@@ -290,8 +290,7 @@ div.contextlinks {
   }
 }
 
-div.contextlink,
-div.togglebutton {
+div.contextlink {
   position: relative;
   float: left;
   width: 158px;
@@ -349,7 +348,7 @@ div.togglebutton {
       font-size: $font-size-global;
       font-weight: $font-weight-default;
       letter-spacing: $letter-spacing-default;
-      color: $color-text;
+      color: $font-color;
       text-decoration: none;
       background: $button-background-hover;
       border: 1px solid $color-table-border;
@@ -359,8 +358,7 @@ div.togglebutton {
   }
 }
 
-div.contextlink.down,
-div.down.togglebutton {
+div.contextlink.down {
   a,
   body.main .popup_menu span,
   body.main .popup_menu & span {
@@ -397,54 +395,6 @@ div.contextlink {
   }
 }
 
-/* Specific toggle button styles */
-div.togglebutton {
-  width: 35.75px;
-  height: $button-height;
-
-  &.off {
-    border: $toggle-button-off-border;
-    opacity: 0.5;
-    filter: alpha(opacity=50);
-
-    a,
-    body.main .popup_menu span,
-    body.main .popup_menu & span {
-      &, &:hover {
-        display: block;
-        overflow: hidden;
-        line-height: 18px;
-        color: $color-text;
-        text-decoration: none;
-        text-overflow: ellipsis;
-        cursor: default;
-        background: $bg-color-secondary;
-        border-radius: 5px;
-        box-shadow: none;
-      }
-
-      & {
-        font-size: $font-size-global;
-        font-weight: $font-weight-default;
-        letter-spacing: $letter-spacing-default;
-        cursor: auto;
-        border: none;
-      }
-    }
-  }
-
-  img {
-    width: 18px;
-    height: 18px;
-  }
-
-  &:active:not(.off) img,
-  &.down:not(.off) img {
-    position: relative;
-    left: 1px;
-  }
-}
-
 /*-------------------------------------------------------------------------.
 |            ____        _          _____     _     _                      |
 |           |  _ \  __ _| |_ __ _  |_   _|_ _| |__ | | ___                 |
@@ -469,7 +419,7 @@ table.data {
   width: 100%;
   padding: 0;
   margin: 0;
-  color: $color-text;
+  color: $font-color;
   border-collapse: $data-table-border-collapse;
   border-spacing: $data-table-border-spacing;
   empty-cells: show;
@@ -519,7 +469,7 @@ table.data {
     font-weight: 500;
     line-height: 1.3;
     letter-spacing: $letter-spacing-default;
-    color: $color-text;
+    color: $font-color;
     border: none;
 
     &.buttons {
@@ -655,7 +605,7 @@ table.data {
   }
 
   a {
-    color: $color-text;
+    color: $font-color;
     text-decoration: none;
 
     &:hover {
@@ -755,7 +705,7 @@ table.data {
 }
 
 table.data .popup_menu, body.main table.data .popup_menu {
-  color: $color-text;
+  color: $font-color;
 }
 
 /* Give each table's topmost row a top border */
@@ -819,7 +769,7 @@ tr.groupheader {
     padding: 0;
     margin: 0;
     font-weight: bold;
-    color: $color-text;
+    color: $font-color;
     background: transparent;
     border-style: none;
 
@@ -829,7 +779,7 @@ tr.groupheader {
       font-size: $theme-font-table-header;
       font-weight: $font-weight-default;
       letter-spacing: $letter-spacing-table;
-      color: $color-text;
+      color: $font-color;
       vertical-align: baseline;
 
       &.state {
@@ -848,7 +798,7 @@ tr.groupheader {
         font-size: $theme-font-table-header;
         font-weight: $font-weight-default;
         letter-spacing: $letter-spacing-table;
-        color: $color-text;
+        color: $font-color;
       }
 
       &.state a,
@@ -869,7 +819,7 @@ tr.groupheader {
   a,
   body.main .popup_menu span,
   body.main .popup_menu & span {
-    color: $color-text;
+    color: $font-color;
     text-decoration: none;
   }
 
@@ -975,7 +925,7 @@ input:not(.button), input[type=text], input[type=password],
 select, textarea, div.snapin textarea, #mk_side_search_field, .tagify__input {
   height: auto;
   padding: 3px 6px;
-  color: $color-text;
+  color: $font-color;
   background: $bg-color-default;
   background-image: none;
   border: 1px solid $color-table-border;
@@ -1119,11 +1069,16 @@ table.nform {
   padding: 0;
   margin: 5px 0;
   background: $bg-color-secondary;
-  border: 1px solid $color-table-border;
-  border-spacing: 7px 5px;
+  border-spacing: 0 0;
   border-radius: $primary-border-radius;
   box-shadow: 0 0 0 rgba(0, 0, 0, 0.1);
   empty-cells: show;
+
+  &.closed {
+    tr.heading a.more {
+      display: none;
+    }
+  }
 
   body.main.screenshotmode & {
     background-color: rgb(255, 255, 255);
@@ -1136,7 +1091,7 @@ table.nform {
 
   tr.heading {
     height: auto;
-    background: $bg-color-secondary;
+    background: $headline-color;
 
     > td {
       vertical-align: middle;
@@ -1146,8 +1101,9 @@ table.nform {
     }
 
     td {
+      position: relative;
       height: auto;
-      padding: 3px 4px 0 ;
+      padding: 4px 10px 3px 9px;
       font-size: $font-size-global;
       letter-spacing: $letter-spacing-table;
       color: $secondary-font-color;
@@ -1156,6 +1112,16 @@ table.nform {
 
     img.treeangle.nform {
       margin: 0 8px 0 0;
+    }
+
+    a.more {
+      float: right;
+
+      img {
+        top: 3px;
+        width: 16px;
+        height: 16px;
+      }
     }
   }
 
@@ -1272,9 +1238,7 @@ table.nform {
     background-color: $nform-table-hr-color;
   }
 
-  .ruleset {
-    margin-bottom: 8px;
-  }
+  .ruleset { margin-bottom: 8px; }
 
   tr.open td.content .checkbox {
     display: inline-block;
@@ -1287,14 +1251,24 @@ table.nform {
     vertical-align: middle;
   }
 
-  .title {
-    color: $color-text;
-  }
+  .title { color: $font-color; }
+  #view_p_options_tbl { border-spacing: 4px; }
+  tbody tr:nth-child(1) td { padding-top: 4px; }
 
-  #view_p_options_tbl {
-    border-spacing: 4px;
+  tr td.legend {
+    width: 280px;
+    min-width: 280px;
+    line-height: 22px;
+
+    div.title {
+      max-width: 270px;
+
+      &.withcheckbox { max-width: 241px; }
+    }
   }
 }
+
+form.visual { margin-right: $spacing; }
 
 /*-------------------------------------------------------------------------.
 |                     _        _   _                                       |
@@ -1351,15 +1325,6 @@ form.confirm {
 +--------------------------------------------------------------------------+
 |                                                                          |
 '-------------------------------------------------------------------------*/
-
-body.main table.header td.right a#helpbutton img {
-  margin: 1px 5px;
-}
-
-a#helpbutton.passive {
-  filter: rgb(128, 128, 128);
-  -webkit-filter: grayscale(1);
-}
 
 div.help {
   display: inline-block;
@@ -1491,18 +1456,20 @@ body.main .popup_menu {
   }
 }
 
-body.main .popup_menu a,
-body.main table.footer .popup_menu a,
-body.main .popup_menu span {
-  display: block;
-  padding-top: 1px;
-  padding-bottom: 1px;
-  color: $color-text;
-  text-align: left;
-  text-decoration: none;
+body.main .popup_menu,
+body.main .popup_menu {
+  a, span {
+    display: block;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    color: $font-color;
+    text-align: left;
+    text-decoration: none;
+  }
 
-  &:hover {
+  a:hover {
     text-decoration: underline;
+    cursor: pointer;
   }
 }
 
@@ -1640,7 +1607,7 @@ div.log_output, .crash_report pre {
   font-family: monospace;
   font-weight: $font-weight-default;
   color: $lightgrey;
-  background: $color-sidebar-background;
+  background: $navigation-bg-color;
   border: 1px solid $color-table-border-dark;
   border-radius: $theme-border-radius;
   box-shadow: none;

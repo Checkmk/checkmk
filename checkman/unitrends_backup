@@ -17,4 +17,4 @@ item:
  Name of the application
 
 inventory:
- One Service for each schedule will be created
+ One service is created for each schedule.

@@ -7,7 +7,7 @@ import * as ajax from "ajax";
 import * as quicksearch from "quicksearch";
 
 var g_content_loc   = null;
-var g_sidebar_folded = false;
+var g_scrollbar = null;
 
 
 export function initialize_sidebar(update_interval, refresh, restart, static_) {
@@ -18,13 +18,18 @@ export function initialize_sidebar(update_interval, refresh, restart, static_) {
     sidebar_update_interval = update_interval;
 
     register_edge_listeners();
-    set_sidebar_size();
 
     refresh_snapins = refresh;
     restart_snapins = restart;
     static_snapins = static_;
 
     execute_sidebar_scheduler();
+
+    g_scrollbar = utils.add_simplebar_scrollbar("side_content");
+    g_scrollbar.getScrollElement().addEventListener("scroll", function() {
+        store_scroll_position();
+        return false;
+    }, false);
     register_event_handlers();
     if (is_content_frame_accessible()) {
         update_content_location();
@@ -35,15 +40,8 @@ export function initialize_sidebar(update_interval, refresh, restart, static_) {
 export function register_event_handlers() {
     window.addEventListener("mousemove", function(e) {
         snapinDrag(e);
-        dragScroll(e);
         return false;
     }, false);
-    window.addEventListener("mousedown", startDragScroll, false);
-    window.addEventListener("mouseup", stopDragScroll,  false);
-    window.addEventListener("wheel", scrollWheel, false);
-    window.onresize = function() {
-        set_sidebar_size();
-    };
 }
 
 // This ends drag scrolling when moving the mouse out of the sidebar
@@ -51,23 +49,16 @@ export function register_event_handlers() {
 // This is no 100% solution. When moving the mouse out of browser window
 // without moving the mouse over the edge elements the dragging is not ended.
 export function register_edge_listeners(obj) {
-    let edges;
-    if (!obj)
-        edges = [ parent.frames[0], document.getElementById("side_header"), document.getElementById("side_footer") ];
+    // It is possible to open other domains in the content frame - don't register
+    // the event in that case. It is not permitted by most browsers!
+    if(!is_content_frame_accessible())
+        return;
+
+    const edge = obj ? obj : parent.frames[0];
+    if (window.addEventListener)
+        edge.addEventListener("mousemove", on_mouse_leave, false);
     else
-        edges = [ obj ];
-
-    for(let i = 0; i < edges.length; i++) {
-        // It is possible to open other domains in the content frame - don't register
-        // the event in that case. It is not permitted by most browsers!
-        if(!is_content_frame_accessible())
-            continue;
-
-        if (window.addEventListener)
-            edges[i].addEventListener("mousemove", on_mouse_leave, false);
-        else
-            edges[i].onmousemove = on_mouse_leave;
-    }
+        edge.onmousemove = on_mouse_leave;
 }
 
 function on_mouse_leave(e) {
@@ -77,7 +68,6 @@ function on_mouse_leave(e) {
 }
 
 function stop_snapin_dragging(e) {
-    stopDragScroll(e);
     snapinTerminateDrag(e);
     return false;
 }
@@ -127,12 +117,11 @@ function snapinDrag(event) {
     // It can move e.g. if the scroll wheel is wheeled during dragging...
 
     // Drag the snapin
-    g_snapin_dragging.style.position = "absolute";
+    utils.add_class(g_snapin_dragging, "dragging");
     let newTop = event.clientY  - g_snapin_offset[0] - g_snapin_scroll_top;
     newTop += document.getElementById("side_content").scrollTop;
-    g_snapin_dragging.style.top      = newTop + "px";
-    g_snapin_dragging.style.left     = (event.clientX - g_snapin_offset[1]) + "px";
-    g_snapin_dragging.style.zIndex   = 200;
+    g_snapin_dragging.style.top = newTop + "px";
+    g_snapin_dragging.style.left = (event.clientX - g_snapin_offset[1]) + "px";
 
     // Refresh the drop marker
     removeSnapinDragIndicator();
@@ -152,7 +141,7 @@ function snapinAddBefore(par, o, add) {
     if (o != null) {
         par.insertBefore(add, o);
     } else {
-        par.appendChild(add);
+        par.insertBefore(add, document.getElementById("add_snapin"));
     }
 }
 
@@ -164,13 +153,13 @@ function removeSnapinDragIndicator() {
 }
 
 function snapinDrop(event, targetpos) {
-    if (g_snapin_dragging == false)
+    if (g_snapin_dragging === false)
         return true;
 
     // Reset properties
-    g_snapin_dragging.style.top      = "";
-    g_snapin_dragging.style.left     = "";
-    g_snapin_dragging.style.position = "";
+    utils.remove_class(g_snapin_dragging, "dragging");
+    g_snapin_dragging.style.top = "";
+    g_snapin_dragging.style.left = "";
 
     // Catch quick clicks without movement on the title bar
     // Don't reposition the object in this case.
@@ -196,13 +185,15 @@ function snapinTerminateDrag() {
         return true;
     removeSnapinDragIndicator();
     // Reset properties
-    g_snapin_dragging.style.top      = "";
-    g_snapin_dragging.style.left     = "";
-    g_snapin_dragging.style.position = "";
+    utils.remove_class(g_snapin_dragging, "dragging");
+    g_snapin_dragging.style.top = "";
+    g_snapin_dragging.style.left = "";
     g_snapin_dragging = false;
 }
 
 export function snapin_stop_drag(event) {
+    if (!g_snapin_dragging) return;
+
     if (!event)
         event = window.event;
 
@@ -213,28 +204,22 @@ export function snapin_stop_drag(event) {
 
 function getDivChildNodes(node) {
     const children = [];
-    const childNodes = node.childNodes;
-    for (let i = 0; i < childNodes.length; i++)
-        if(childNodes[i].tagName === "DIV")
-            children.push(childNodes[i]);
+    for (const child of node.childNodes) {
+        if(child.tagName === "DIV") {
+            children.push(child);
+        }
+    }
     return children;
 }
 
 function getSnapinList() {
-    if (g_snapin_dragging === false)
-        return true;
-
     const l = [];
-    const childs = getDivChildNodes(g_snapin_dragging.parentNode);
-    for(let i = 0; i < childs.length; i++) {
-        const child = childs[i];
-        // Skip
-        // - non snapin objects
-        // - currently dragged object
-        if (child.id && child.id.substr(0, 7) == "snapin_" && child.id != g_snapin_dragging.id)
+    for(const child of getDivChildNodes(g_snapin_dragging.parentNode)) {
+        // Skip non snapin objects and the currently dragged object
+        if (child.id && child.id.substr(0, 7) == "snapin_" && child.id != g_snapin_dragging.id) {
             l.push(child);
+        }
     }
-
     return l;
 }
 
@@ -270,9 +255,6 @@ function getSnapinTargetPos() {
     for(let i = 0; i < childs.length; i++) {
         const child = childs[i];
 
-        if (!child.id || child.id.substr(0, 7) != "snapin_" || child.id == g_snapin_dragging.id)
-            continue;
-
         // Initialize with the first snapin in the list
         if (objId === -1) {
             objId = i;
@@ -294,10 +276,9 @@ function getSnapinTargetPos() {
     }
 
     // Is the dragged snapin dragged above the first one?
-    if (objId == 0 && objCorner == 0)
-        return childs[0];
-    else
-        return childs[(parseInt(objId)+1)];
+    return objId === 0 && objCorner === 0 ?
+        childs[0] :
+        childs[objId + 1];
 }
 
 /************************************************
@@ -356,23 +337,6 @@ export function update_content_location() {
     }
 }
 
-// Set the size of the sidebar_content div to fit the whole screen
-// but without scrolling. The height of the header and footer divs need
-// to be treated here.
-export function set_sidebar_size() {
-    const oHeader  = document.getElementById("side_header");
-    const oContent = document.getElementById("side_content");
-    const oFooter  = document.getElementById("side_footer");
-    const height   = utils.page_height();
-
-    // Don't handle zero heights
-    if (height == 0)
-        return;
-
-    // -2 -> take outer border of oHeader and oFooter into account
-    oContent.style.height = (height - oHeader.clientHeight - oFooter.clientHeight - 2) + "px";
-}
-
 var g_scrolling = true;
 
 export function scroll_window(speed){
@@ -384,86 +348,21 @@ export function scroll_window(speed){
     }
 }
 
-/************************************************
- * drag/drop scrollen
- *************************************************/
-
-var g_dragging = false;
-var g_start_y = 0;
-
-function startDragScroll(event) {
-    if (!event)
-        event = window.event;
-
-    const target = utils.get_target(event);
-    const button = utils.get_button(event);
-
-    if (button != "LEFT")
-        return true; // only care about left clicks!
-
-    if (g_sidebar_folded) {
+export function toggle_sidebar()
+{
+    const sidebar = document.getElementById("check_mk_sidebar");
+    if (utils.has_class(sidebar, "folded"))
         unfold_sidebar();
-        return utils.prevent_default_events(event);
-    }
-    else if (!g_sidebar_folded && event.clientX < 10 && target.tagName != "OPTION") {
-        // When clicking on an <option> of the "core performance" snapins, an event
-        // with event.clientX equal 0 is triggered, don"t know why. Filter out clicks
-        // on OPTION tags.
+    else
         fold_sidebar();
-        return utils.prevent_default_events(event);
-    }
-
-    if (g_dragging === false
-        && target.tagName != "A"
-        && target.tagName != "INPUT"
-        && target.tagName != "SELECT"
-        && target.tagName != "OPTION"
-        && !(target.tagName == "DIV" && target.className == "heading")) {
-
-        g_dragging = event;
-        g_start_y = event.clientY;
-
-        return utils.prevent_default_events(event);
-    }
-
-    return true;
-}
-
-function stopDragScroll(){
-    g_dragging = false;
-}
-
-function dragScroll(event) {
-    if (!event)
-        event = window.event;
-
-    if (g_dragging === false)
-        return true;
-
-    event.cancelBubble = true;
-
-    const inhalt = document.getElementById("side_content");
-    const diff = g_start_y - event.clientY;
-
-    inhalt.scrollTop += diff;
-
-    // Opera does not fire onunload event which is used to store the scroll
-    // position. So call the store function manually here.
-    if (utils.browser.is_opera())
-        store_scroll_position();
-
-    g_start_y = event.clientY;
-
-    g_dragging = event;
-    return utils.prevent_default_events(event);
 }
 
 export function fold_sidebar()
 {
-    g_sidebar_folded = true;
     const sidebar = document.getElementById("check_mk_sidebar");
-    sidebar.style.visibility = "hidden";
-    sidebar.style.width = "10px";
+    utils.add_class(sidebar, "folded");
+    const button = document.getElementById("side_fold");
+    utils.add_class(button, "folded");
 
     ajax.get_url("sidebar_fold.py?fold=yes");
 }
@@ -471,37 +370,12 @@ export function fold_sidebar()
 
 function unfold_sidebar()
 {
-    g_sidebar_folded = false;
     const sidebar = document.getElementById("check_mk_sidebar");
-    sidebar.style.removeProperty("visibility");
-    sidebar.style.removeProperty("width");
+    utils.remove_class(sidebar, "folded");
+    const button = document.getElementById("side_fold");
+    utils.remove_class(button, "folded");
 
     ajax.get_url("sidebar_fold.py?fold=");
-}
-
-
-
-/************************************************
- * Mausrad scrollen
- *************************************************/
-
-function handle_scroll(delta) {
-    g_scrolling = true;
-    scroll_window(-delta*20);
-    g_scrolling = false;
-}
-
-/** Event handler for mouse wheel event.
- */
-function scrollWheel(event){
-    // TODO: It's not reliable to detect the scrolling direction with wheel events:
-    // https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent
-    handle_scroll(event.deltaY < 0 ? 1: -1);
-
-    // Opera does not fire onunload event which is used to store the scroll
-    // position. So call the store function manually here.
-    if (utils.browser.is_opera())
-        store_scroll_position();
 }
 
 
@@ -552,14 +426,15 @@ export function add_snapin(name) {
                 }
             }
 
-            const sidebar_content = document.getElementById("side_content");
+            const sidebar_content = g_scrollbar.getContentElement();
             if (sidebar_content) {
                 var tmp = document.createElement("div");
                 tmp.innerHTML = result.content;
                 utils.execute_javascript_by_object(tmp);
 
+                const add_button = sidebar_content.lastChild;
                 while (tmp.childNodes.length) {
-                    sidebar_content.appendChild(tmp.childNodes[0]);
+                    add_button.insertAdjacentElement("beforebegin", tmp.childNodes[0]);
                 }
             }
 
@@ -576,7 +451,7 @@ export function add_snapin(name) {
 // Removes the snapin from the current sidebar and informs the server for persistance
 export function remove_sidebar_snapin(oLink, url)
 {
-    const container = oLink.parentNode.parentNode.parentNode;
+    const container = oLink.parentNode.parentNode.parentNode.parentNode;
     const id = container.id.replace("snapin_container_", "");
 
     ajax.call_ajax(url, {
@@ -623,14 +498,10 @@ function remove_snapin(id)
 
 
 export function toggle_sidebar_snapin(oH2, url) {
-    // oH2 can also be an <a>. In that case it is the minimize
-    // image itself
-
-    let childs;
-    if (oH2.tagName == "A")
-        childs = oH2.parentNode.parentNode.parentNode.childNodes;
-    else
-        childs = oH2.parentNode.parentNode.childNodes;
+    // oH2 is a <b> if it is the snapin title otherwise it is the minimize button.
+    let childs = oH2.tagName == "B" ?
+        oH2.parentNode.parentNode.childNodes :
+        oH2.parentNode.parentNode.parentNode.childNodes;
 
     let oContent, oHead;
     for (const i in childs) {
@@ -709,10 +580,9 @@ export function reset_sidebar_scheduler() {
 }
 
 export function execute_sidebar_scheduler() {
-    if (g_seconds_to_update == null)
-        g_seconds_to_update = sidebar_update_interval;
-    else
-        g_seconds_to_update -= 1;
+    g_seconds_to_update = g_seconds_to_update !== null ?
+        g_seconds_to_update - 1 :
+        sidebar_update_interval;
 
     // Stop reload of the snapins in case the browser window / tab is not visible
     // for the user. Retry after short time.
@@ -748,20 +618,18 @@ export function execute_sidebar_scheduler() {
         }
     }
 
-    // Are there any snapins to be bulk updates?
-    if(to_be_updated.length > 0) {
-        if (g_seconds_to_update <= 0) {
-            url = "sidebar_snapin.py?names=" + to_be_updated.join(",");
-            if (sidebar_restart_time !== null)
-                url += "&since=" + sidebar_restart_time;
+    // Are there any snapins to be bulk updated?
+    if (to_be_updated.length > 0 && g_seconds_to_update <= 0) {
+        url = "sidebar_snapin.py?names=" + to_be_updated.join(",");
+        if (sidebar_restart_time !== null)
+            url += "&since=" + sidebar_restart_time;
 
-            const ids = [], len = to_be_updated.length;
-            for (let i = 0; i < len; i++) {
-                ids.push("snapin_" + to_be_updated[i]);
-            }
-
-            ajax.get_url(url, bulk_update_contents, ids);
+        const ids = [], len = to_be_updated.length;
+        for (let i = 0; i < len; i++) {
+            ids.push("snapin_" + to_be_updated[i]);
         }
+
+        ajax.get_url(url, bulk_update_contents, ids);
     }
 
     if (g_sidebar_notify_interval !== null) {
@@ -792,7 +660,7 @@ function setCookie(cookieName, value,expiredays) {
     const exdate = new Date();
     exdate.setDate(exdate.getDate() + expiredays);
     document.cookie = cookieName + "=" + encodeURIComponent(value) +
-        ((expiredays == null) ? "" : ";expires=" + exdate.toUTCString());
+        ((expiredays == null) ? "" : ";expires=" + exdate.toUTCString() + ";SameSite=Lax");
 }
 
 function getCookie(cookieName) {
@@ -814,11 +682,11 @@ export function initialize_scroll_position() {
     let scrollPos = getCookie("sidebarScrollPos");
     if(!scrollPos)
         scrollPos = 0;
-    document.getElementById("side_content").scrollTop = scrollPos;
+    g_scrollbar.getScrollElement().scrollTop = scrollPos;
 }
 
-export function store_scroll_position() {
-    setCookie("sidebarScrollPos", document.getElementById("side_content").scrollTop, null);
+function store_scroll_position() {
+    setCookie("sidebarScrollPos", g_scrollbar.getScrollElement().scrollTop, null);
 }
 
 /************************************************
@@ -947,6 +815,15 @@ export function set_snapin_site(event, ident, select_field) {
  *************************************************/
 
 export function fetch_nagvis_snapin_contents() {
+    var nagvis_snapin_update_interval = 30;
+
+    // Stop reload of the snapin content in case the browser window / tab is
+    // not visible for the user. Retry after short time.
+    if (!utils.is_window_active()) {
+        setTimeout(function(){ fetch_nagvis_snapin_contents(); }, 250);
+        return;
+    }
+
     // Needs to be fetched via JS from NagVis because it needs to
     // be done in the user context.
     const nagvis_url = "../nagvis/server/core/ajax_handler.php?mod=Multisite&act=getMaps";
@@ -963,12 +840,20 @@ export function fetch_nagvis_snapin_contents() {
                     utils.update_contents("snapin_nagvis_maps", snapin_content_response);
                 },
             });
+
+            setTimeout(function() {
+                fetch_nagvis_snapin_contents();
+            }, nagvis_snapin_update_interval * 1000);
         },
         error_handler: function (_unused, status_code) {
             const msg = document.createElement("div");
             msg.classList.add("message", "error");
             msg.innerHTML = "Failed to update NagVis maps: " + status_code;
             utils.update_contents("snapin_nagvis_maps", msg.outerHTML);
+
+            setTimeout(function() {
+                fetch_nagvis_snapin_contents();
+            }, nagvis_snapin_update_interval * 1000);
         },
         method: "GET"
     });

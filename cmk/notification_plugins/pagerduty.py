@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -8,9 +8,7 @@ Send notification messages to PagerDuty
 =======================================
 
 """
-from __future__ import unicode_literals
-
-from typing import Dict  # pylint: disable=unused-import
+from typing import Dict
 
 from cmk.notification_plugins.utils import host_url_from_context, service_url_from_context, retrieve_from_passwordstore
 
@@ -37,8 +35,7 @@ def pagerduty_severity(state):
     }[state]
 
 
-def pagerduty_msg(context):
-    # type: (Dict) -> Dict
+def pagerduty_msg(context: Dict) -> Dict:
     """Build the PagerDuty incident payload"""
 
     if context.get('WHAT', None) == "SERVICE":

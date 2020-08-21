@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -19,8 +19,7 @@ from cmk.gui.plugins.wato import (
 )
 
 
-def _item_spec_ddn_s2a_wait():
-    # type: () -> DropdownChoice
+def _item_spec_ddn_s2a_wait() -> DropdownChoice:
     return DropdownChoice(title=_("Host or Disk"),
                           choices=[
                               ("Disk", _("Disk")),
@@ -28,8 +27,7 @@ def _item_spec_ddn_s2a_wait():
                           ])
 
 
-def _parameter_valuespec_ddn_s2a_wait():
-    # type: () -> Dictionary
+def _parameter_valuespec_ddn_s2a_wait() -> Dictionary:
     return Dictionary(elements=[
         ("read_avg",
          Tuple(

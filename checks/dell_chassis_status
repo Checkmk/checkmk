@@ -43,9 +43,7 @@ def check_dell_chassis_status(item, _no_params, info):
         "6": ("Non-Recoverable, ", 2),
     }
 
-    things = zip(whats, info[0])
-
-    for what, value in things:
+    for what, value in zip(whats, info[0]):
         if what == "Status":
             descr, status = state_table[value]
             yield status, what + ": " + descr

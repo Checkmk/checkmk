@@ -33,5 +33,7 @@ item:
  See man page of {if} for details
 
 inventory:
+ One service is created for each port that fulfills configurable conditions.
+
  See man page of {if} for details
 

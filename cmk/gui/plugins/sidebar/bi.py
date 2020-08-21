@@ -1,10 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Text, Tuple, Any  # pylint: disable=unused-import
+from typing import Dict, Tuple, Any
 import cmk.gui.bi as bi
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -20,22 +20,18 @@ from cmk.gui.plugins.sidebar import (
 @snapin_registry.register
 class SidebarSnapinAggregationGroupList(SidebarSnapin):
     @staticmethod
-    def type_name():
-        # type: () -> str
+    def type_name() -> str:
         return "biaggr_groups"
 
     @classmethod
-    def title(cls):
-        # type: () -> Text
+    def title(cls) -> str:
         return _("BI Aggregation Groups")
 
     @classmethod
-    def description(cls):
-        # type: () -> Text
+    def description(cls) -> str:
         return _("A direct link to all groups of BI aggregations")
 
-    def show(self):
-        # type: () -> None
+    def show(self) -> None:
         html.open_ul()
         for group in bi.get_aggregation_group_trees():
             bulletlink(group, "view.py?view_name=aggr_group&aggr_group=%s" % html.urlencode(group))
@@ -45,23 +41,19 @@ class SidebarSnapinAggregationGroupList(SidebarSnapin):
 @snapin_registry.register
 class SidebarSnapinAggregationGroupTree(SidebarSnapin):
     @staticmethod
-    def type_name():
-        # type: () -> str
+    def type_name() -> str:
         return "biaggr_groups_tree"
 
     @classmethod
-    def title(cls):
-        # type: () -> Text
+    def title(cls) -> str:
         return _("BI Aggregation Groups Tree")
 
     @classmethod
-    def description(cls):
-        # type: () -> Text
+    def description(cls) -> str:
         return _("A direct link to all groups of BI aggregations organized as tree")
 
-    def show(self):
-        # type: () -> None
-        tree = {}  # type: Dict[Tuple[str, ...], Dict[str, Any]]
+    def show(self) -> None:
+        tree: Dict[Tuple[str, ...], Dict[str, Any]] = {}
         for group in bi.get_aggregation_group_trees():
             self._build_tree(group.split("/"), tree, tuple())
         self._render_tree(tree)

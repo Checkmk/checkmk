@@ -95,7 +95,7 @@ def parse_oracle_tablespaces(info):
             ts_type = 'PERMANENT'
 
         if len(line) == 15:
-            db_version = line[14].split('.')[0]
+            db_version = int(line[14].split('.')[0])
 
         tablespaces.setdefault((node_name, sid, ts_name, db_version), [])
 

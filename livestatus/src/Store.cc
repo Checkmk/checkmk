@@ -4,6 +4,7 @@
 // source code package.
 
 #include "Store.h"
+
 #include <ctime>
 #include <filesystem>
 #include <memory>
@@ -12,6 +13,7 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
+
 #include "CrashReport.h"
 #include "EventConsoleConnection.h"
 #include "InputBuffer.h"
@@ -121,7 +123,7 @@ std::list<std::string> getLines(InputBuffer &input) {
 }  // namespace
 
 void Store::logRequest(const std::string &line,
-                       const std::list<std::string> &lines) {
+                       const std::list<std::string> &lines) const {
     Informational log(logger());
     log << "request: " << line;
     if (logger()->isLoggable(LogLevel::debug)) {
@@ -289,7 +291,7 @@ void Store::answerCommandNagios(const ExternalCommand &command) {
     std::lock_guard<std::mutex> lg(_command_mutex);
     auto command_str = command.str();
     // The Nagios headers are (once again) not const-correct...
-    auto cmd = const_cast<char *>(command_str.c_str());
+    auto *cmd = const_cast<char *>(command_str.c_str());
 #ifdef NAGIOS4
     process_external_command1(cmd);
 #else

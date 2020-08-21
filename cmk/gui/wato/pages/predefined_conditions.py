@@ -1,18 +1,18 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Predefine conditions that can be used in the WATO rule editor"""
 
-from typing import List  # pylint: disable=unused-import
+from typing import List, Optional, Type
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
+from cmk.gui.valuespec import ValueSpec
 from cmk.gui.valuespec import (
     FixedValue,
     Alternative,
@@ -29,6 +29,7 @@ from cmk.gui.watolib.rulespecs import ServiceRulespec
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.plugins.wato import (
+    WatoMode,
     ConfigDomainGUI,
     SimpleModeType,
     SimpleListMode,
@@ -37,8 +38,7 @@ from cmk.gui.plugins.wato import (
 )
 
 
-def dummy_rulespec():
-    # type: () -> ServiceRulespec
+def dummy_rulespec() -> ServiceRulespec:
     return ServiceRulespec(
         name="dummy",
         group=RulespecGroupUserInterface,
@@ -167,6 +167,10 @@ class ModeEditPredefinedCondition(SimpleEditMode):
     def permissions(cls):
         return ["rulesets"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModePredefinedConditions
+
     def __init__(self):
         super(ModeEditPredefinedCondition, self).__init__(
             mode_type=PredefinedConditionModeType(),
@@ -175,14 +179,14 @@ class ModeEditPredefinedCondition(SimpleEditMode):
 
     def _vs_individual_elements(self):
         if config.user.may("wato.edit_all_predefined_conditions"):
-            admin_element = [
+            admin_element: List[ValueSpec] = [
                 FixedValue(
                     None,
                     title=_("Administrators"),
                     totext=_("Administrators (having the permission "
                              "\"Write access to all predefined conditions\")"),
                 )
-            ]  # type: List[ValueSpec]
+            ]
         else:
             admin_element = []
 
@@ -261,8 +265,7 @@ class ModeEditPredefinedCondition(SimpleEditMode):
         new_rulesets.save()
         old_rulesets.save()
 
-    def _rewrite_rules_for(self, conditions):
-        # type: (RuleConditions) -> None
+    def _rewrite_rules_for(self, conditions: RuleConditions) -> None:
         """Apply changed predefined condition to rules
 
         After updating a predefined condition it is necessary to rewrite the

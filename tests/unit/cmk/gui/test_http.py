@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,8 +6,8 @@
 
 import io
 import time
-import pytest  # type: ignore
-import six
+
+import pytest  # type: ignore[import]
 
 from werkzeug.test import create_environ
 
@@ -20,7 +20,7 @@ def test_http_request_allowed_vars():
     environ = dict(create_environ(
         method="POST",
         content_type="application/x-www-form-urlencoded",
-        input_stream=io.BytesIO("asd=x&_Y21rYWRtaW4%3D=aaa&foo%3ABAR_BAZ=abc")),
+        input_stream=io.BytesIO(b"asd=x&_Y21rYWRtaW4%3D=aaa&foo%3ABAR_BAZ=abc")),
                    REQUEST_URI='')
     req = http.Request(environ)
     assert req.var("asd") == "x"
@@ -59,7 +59,7 @@ def test_get_str_input_type():
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_str_input_non_ascii():
-    assert html.request.get_str_input("abc") == b"äbc"
+    assert html.request.get_str_input("abc") == "äbc"
 
 
 @pytest.mark.usefixtures("set_vars")
@@ -76,7 +76,7 @@ def test_get_str_input_mandatory_input_type():
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_str_input_mandatory_non_ascii():
-    assert html.request.get_str_input_mandatory("abc") == b"äbc"
+    assert html.request.get_str_input_mandatory("abc") == "äbc"
 
 
 @pytest.mark.usefixtures("set_vars")
@@ -85,6 +85,42 @@ def test_get_str_input_mandatory_default():
 
     with pytest.raises(MKUserError, match="is missing"):
         html.request.get_str_input_mandatory("zzz")
+
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_binary_input_type():
+    assert html.request.get_binary_input("xyz") == b"x"
+    assert isinstance(html.request.get_str_input("xyz"), str)
+
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_binary_input_non_ascii():
+    assert html.request.get_binary_input("abc") == u"äbc".encode("utf-8")
+
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_binary_input_default():
+    assert html.request.get_binary_input("get_default", b"xyz") == b"xyz"
+    assert html.request.get_binary_input("zzz") is None
+
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_binary_input_mandatory_input_type():
+    assert html.request.get_binary_input_mandatory("xyz") == b"x"
+    assert isinstance(html.request.get_binary_input_mandatory("xyz"), bytes)
+
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_binary_input_mandatory_non_ascii():
+    assert html.request.get_binary_input_mandatory("abc") == u"äbc".encode("utf-8")
+
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_binary_input_mandatory_default():
+    assert html.request.get_binary_input_mandatory("get_default", b"xyz") == b"xyz"
+
+    with pytest.raises(MKUserError, match="is missing"):
+        html.request.get_binary_input_mandatory("zzz")
 
 
 @pytest.mark.usefixtures("set_vars")
@@ -130,7 +166,7 @@ def test_get_ascii_input_mandatory_default():
 @pytest.mark.usefixtures("set_vars")
 def test_get_unicode_input_type():
     assert html.request.get_unicode_input("xyz") == "x"
-    assert isinstance(html.request.get_unicode_input("xyz"), six.text_type)
+    assert isinstance(html.request.get_unicode_input("xyz"), str)
 
 
 @pytest.mark.usefixtures("set_vars")
@@ -147,7 +183,7 @@ def test_get_unicode_input_default():
 @pytest.mark.usefixtures("set_vars")
 def test_get_unicode_input_mandatory_input_type():
     assert html.request.get_unicode_input_mandatory("xyz") == u"x"
-    assert isinstance(html.request.get_unicode_input_mandatory("xyz"), six.text_type)
+    assert isinstance(html.request.get_unicode_input_mandatory("xyz"), str)
 
 
 @pytest.mark.usefixtures("set_vars")
@@ -246,14 +282,14 @@ def test_response_set_http_cookie(register_builtin_html):
     html.response.set_http_cookie("auth_SITE", "user:123456:abcdefg")
 
     assert html.response.headers.getlist("Set-Cookie")[-1] == \
-        "auth_SITE=user:123456:abcdefg; HttpOnly; Path=/"
+        "auth_SITE=user:123456:abcdefg; HttpOnly; Path=/; SameSite=Lax"
 
 
 def test_response_set_http_cookie_secure(register_builtin_html, monkeypatch):
     html.response.set_http_cookie("auth_SITE", "user:123456:abcdefg", secure=True)
 
     assert html.response.headers.getlist("Set-Cookie")[-1] == \
-            "auth_SITE=user:123456:abcdefg; Secure; HttpOnly; Path=/"
+            "auth_SITE=user:123456:abcdefg; Secure; HttpOnly; Path=/; SameSite=Lax"
 
 
 def test_response_del_cookie(register_builtin_html, monkeypatch):
@@ -277,10 +313,11 @@ def test_pre_16_format_cookie_handling(monkeypatch):
     environ = dict(
         create_environ(),
         HTTP_COOKIE=
-        "xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123")
+        u"xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123".encode(
+            "utf-8"))
     request = http.Request(environ)
 
-    assert isinstance(request.cookie("auth_stable"), bytes)
+    assert isinstance(request.cookie("auth_stable"), str)
     assert request.cookie("auth_stable") == "lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b"
 
     assert request.has_cookie("xyz")

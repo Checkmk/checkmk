@@ -1,0 +1,14 @@
+title: Skype for Business: Conferencing
+agents: windows
+catalog: app/skype
+license: GPL
+distribution: check_mk
+description:
+ This check monitors metrics regarding conference calls in Skype.
+
+ It currently monitors the frequency of incomplete calls and the latency
+ of conference allocation and creation.
+
+inventory:
+ One service is created.
+

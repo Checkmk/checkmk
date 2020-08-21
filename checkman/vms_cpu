@@ -11,5 +11,5 @@ description:
  Levels can be set only on {wait} (disk wait) and the utilization.
 
 inventory:
- One check per host is created for OpenVMS systems.
+ One service is created for each OpenVMS host.
 

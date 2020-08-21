@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,10 +7,9 @@
 
 import abc
 import time
-from typing import List, NamedTuple, Text, Tuple as _Tuple, Union  # pylint: disable=unused-import
+from typing import List, NamedTuple, Tuple as _Tuple, Union, Iterator, Dict, Any, Optional, Type
 
 import cmk.utils.store as store
-from cmk.utils.encoding import convert_to_unicode
 
 import cmk.gui.view_utils
 import cmk.gui.wato.user_profile
@@ -23,29 +22,63 @@ import cmk.gui.forms as forms
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.valuespec import (  # pylint: disable=unused-import
-    Age, Alternative, CascadingDropdown, Checkbox, Dictionary, DictionaryEntry, DropdownChoice,
-    EmailAddress, FixedValue, ID, Integer, ListChoice, ListOf, ListOfStrings, RegExp, RegExpUnicode,
-    TextAscii, TextUnicode, Transform, Tuple, rule_option_elements,
+from cmk.gui.valuespec import (
+    Age,
+    Alternative,
+    CascadingDropdown,
+    Checkbox,
+    Dictionary,
+    DictionaryEntry,
+    DropdownChoice,
+    EmailAddress,
+    FixedValue,
+    ID,
+    Integer,
+    ListChoice,
+    ListOf,
+    ListOfStrings,
+    RegExp,
+    RegExpUnicode,
+    TextAscii,
+    TextUnicode,
+    Transform,
+    Tuple,
+    rule_option_elements,
 )
 
 from cmk.gui.plugins.wato import (
     EventsMode,
     mode_registry,
     wato_confirm,
-    global_buttons,
     make_action_link,
     add_change,
     notification_parameter_registry,
 )
+from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.watolib.notifications import (
     save_notification_rules,
     load_notification_rules,
     load_user_notification_rules,
 )
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode
+from cmk.gui.wato.pages.users import ModeEditUser
+from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    PageMenuCheckbox,
+    make_simple_link,
+    make_simple_form_page_menu,
+    make_display_options_dropdown,
+)
+
+NotificationRule = Dict[str, Any]
 
 
-class NotificationsMode(EventsMode):
+class ABCNotificationsMode(EventsMode):
     # TODO: Clean this up. Use inheritance
     @classmethod
     def _rule_match_conditions(cls):
@@ -349,6 +382,8 @@ class NotificationsMode(EventsMode):
 
         if profilemode:
             mode = "notification_rule_p"
+        elif userid:
+            mode = "user_notification_rule"
         else:
             mode = "notification_rule"
 
@@ -389,7 +424,7 @@ NotificationRuleLinks = NamedTuple('NotificationRuleLinks', [
 
 
 @mode_registry.register
-class ModeNotifications(NotificationsMode):
+class ModeNotifications(ABCNotificationsMode):
     @classmethod
     def name(cls):
         return "notifications"
@@ -399,7 +434,7 @@ class ModeNotifications(NotificationsMode):
         return ["notifications"]
 
     def __init__(self):
-        super(ModeNotifications, self).__init__()
+        super().__init__()
         options = config.user.load_file("notification_display_options", {})
         self._show_user_rules = options.get("show_user_rules", False)
         self._show_backlog = options.get("show_backlog", False)
@@ -408,28 +443,71 @@ class ModeNotifications(NotificationsMode):
     def title(self):
         return _("Notification configuration")
 
-    def buttons(self):
-        global_buttons()
-        html.context_button(_("New Rule"),
-                            watolib.folder_preserving_link([("mode", "notification_rule")]), "new")
-        if self._show_user_rules:
-            html.context_button(_("Hide user rules"), html.makeactionuri([("_show_user", "")]),
-                                "users")
-        else:
-            html.context_button(_("Show user rules"), html.makeactionuri([("_show_user", "1")]),
-                                "users")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="notification_rules",
+                    title=_("Notification rules"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Add new"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Add rule"),
+                                    icon_name="new",
+                                    item=make_simple_link(
+                                        watolib.folder_preserving_link([("mode",
+                                                                         "notification_rule")])),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
+        self._extend_display_dropdown(menu)
+        return menu
 
-        if self._show_backlog:
-            html.context_button(_("Hide Analysis"), html.makeactionuri([("_show_backlog", "")]),
-                                "analyze")
-        else:
-            html.context_button(_("Analyse"), html.makeactionuri([("_show_backlog", "1")]),
-                                "analyze")
-
-        if self._show_bulks:
-            html.context_button(_("Hide Bulks"), html.makeactionuri([("_show_bulks", "")]), "bulk")
-        else:
-            html.context_button(_("Show Bulks"), html.makeactionuri([("_show_bulks", "1")]), "bulk")
+    def _extend_display_dropdown(self, menu: PageMenu) -> None:
+        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+        display_dropdown.topics.insert(
+            0,
+            PageMenuTopic(
+                title=_("Toggle elements"),
+                entries=[
+                    PageMenuEntry(
+                        title=_("Show user rules"),
+                        icon_name="trans",
+                        item=PageMenuCheckbox(
+                            is_checked=self._show_user_rules,
+                            check_url=html.makeactionuri([("_show_user", "1")]),
+                            uncheck_url=html.makeactionuri([("_show_user", "")]),
+                        ),
+                    ),
+                    PageMenuEntry(
+                        title=_("Show analysis"),
+                        icon_name="trans",
+                        item=PageMenuCheckbox(
+                            is_checked=self._show_backlog,
+                            check_url=html.makeactionuri([("_show_backlog", "1")]),
+                            uncheck_url=html.makeactionuri([("_show_backlog", "")]),
+                        ),
+                    ),
+                    PageMenuEntry(
+                        title=_("Show bulks"),
+                        icon_name="trans",
+                        item=PageMenuCheckbox(
+                            is_checked=self._show_bulks,
+                            check_url=html.makeactionuri([("_show_bulks", "1")]),
+                            uncheck_url=html.makeactionuri([("_show_bulks", "")]),
+                        ),
+                    ),
+                ],
+            ))
 
     def action(self):
         if html.request.has_var("_show_user"):
@@ -479,8 +557,7 @@ class ModeNotifications(NotificationsMode):
         # Check setting of global notifications. Are they enabled? If not, display
         # a warning here. Note: this is a main.mk setting, so we cannot access this
         # directly.
-        current_settings = watolib.load_configuration_settings()
-        if not current_settings.get("enable_rulebased_notifications"):
+        if not rulebased_notifications_enabled():
             url = 'wato.py?mode=edit_configvar&varname=enable_rulebased_notifications'
             html.show_warning(
                 _("<b>Warning</b><br><br>Rule based notifications are disabled in your global settings. "
@@ -566,7 +643,6 @@ class ModeNotifications(NotificationsMode):
                            title=_("Recent notifications (for analysis)"),
                            sortable=False) as table:
             for nr, context in enumerate(backlog):
-                self._convert_context_to_unicode(context)
                 table.row()
                 table.cell("&nbsp;", css="buttons")
 
@@ -590,9 +666,8 @@ class ModeNotifications(NotificationsMode):
 
                 table.cell(_("Nr."), nr + 1, css="number")
                 if "MICROTIME" in context:
-                    date = time.strftime("%Y-%m-%d %H:%M:%S",
-                                         time.localtime(int(context["MICROTIME"]) /
-                                                        1000000.0))  # type: Text
+                    date: str = time.strftime("%Y-%m-%d %H:%M:%S",
+                                              time.localtime(int(context["MICROTIME"]) / 1000000.0))
                 else:
                     date = (context.get("SHORTDATETIME") or context.get("LONGDATETIME") or
                             context.get("DATE") or _("Unknown date"))
@@ -649,12 +724,6 @@ class ModeNotifications(NotificationsMode):
                 # This dummy row is needed for not destroying the odd/even row highlighting
                 table.row(class_="notification_context hidden")
 
-    def _convert_context_to_unicode(self, context):
-        # Convert all values to unicode
-        for key, value in context.items():
-            if isinstance(value, str):
-                context[key] = convert_to_unicode(value, on_error=u"(Invalid byte sequence)")
-
     # TODO: Refactor this
     def _show_rules(self):
         # Do analysis
@@ -705,9 +774,9 @@ class ModeNotifications(NotificationsMode):
                               default_value="mail")
 
 
-class UserNotificationsMode(NotificationsMode):
+class ABCUserNotificationsMode(ABCNotificationsMode):
     def __init__(self):
-        super(UserNotificationsMode, self).__init__()
+        super().__init__()
         self._start_async_repl = False
 
     def _from_vars(self):
@@ -726,18 +795,6 @@ class UserNotificationsMode(NotificationsMode):
 
     def title(self):
         return _("Custom notification table for user %s") % self._user_id()
-
-    def buttons(self):
-        html.context_button(_("All Users"), watolib.folder_preserving_link([("mode", "users")]),
-                            "back")
-        html.context_button(
-            _("User Properties"),
-            watolib.folder_preserving_link([("mode", "edit_user"), ("edit", self._user_id())]),
-            "edit")
-        html.context_button(
-            _("New Rule"),
-            watolib.folder_preserving_link([("mode", "notification_rule"),
-                                            ("user", self._user_id())]), "new")
 
     def action(self):
         if html.request.has_var("_delete"):
@@ -793,7 +850,7 @@ def _get_notification_sync_sites():
 
 
 @mode_registry.register
-class ModeUserNotifications(UserNotificationsMode):
+class ModeUserNotifications(ABCUserNotificationsMode):
     @classmethod
     def name(cls):
         return "user_notifications"
@@ -802,12 +859,67 @@ class ModeUserNotifications(UserNotificationsMode):
     def permissions(cls):
         return ["users"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeEditUser
+
+    def _breadcrumb_url(self) -> str:
+        return html.makeuri_contextless([("mode", self.name()), ("user", self._user_id())],
+                                        filename="wato.py")
+
     def _user_id(self):
         return html.request.get_unicode_input("user")
 
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="notification_rules",
+                    title=_("Notification rules"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Add new"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Add rule"),
+                                    icon_name="new",
+                                    item=make_simple_link(
+                                        watolib.folder_preserving_link([
+                                            ("mode", "user_notification_rule"),
+                                            ("user", self._user_id()),
+                                        ])),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Setup"),
+                            entries=list(self._page_menu_entries_related()),
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
+        return menu
+
+    def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
+        yield PageMenuEntry(
+            title=_("Users"),
+            icon_name="users",
+            item=make_simple_link(watolib.folder_preserving_link([("mode", "users")])),
+        )
+
 
 @mode_registry.register
-class ModePersonalUserNotifications(UserNotificationsMode):
+class ModePersonalUserNotifications(ABCUserNotificationsMode):
     @classmethod
     def name(cls):
         return "user_notifications_p"
@@ -817,8 +929,39 @@ class ModePersonalUserNotifications(UserNotificationsMode):
         return None
 
     def __init__(self):
-        super(ModePersonalUserNotifications, self).__init__()
+        super().__init__()
         config.user.need_permission("general.edit_notifications")
+
+    def main_menu(self):
+        return mega_menu_registry.menu_user()
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = cmk.gui.wato.user_profile.user_page_menu("user_notifications_p", breadcrumb)
+
+        menu.dropdowns.insert(
+            0,
+            PageMenuDropdown(
+                name="rules",
+                title=_("Rules"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Personal rules"),
+                        entries=[
+                            PageMenuEntry(
+                                title=_("Add rule"),
+                                icon_name="new",
+                                item=make_simple_link(
+                                    watolib.folder_preserving_link([("mode", "notification_rule_p")
+                                                                   ])),
+                                is_shortcut=True,
+                                is_suggested=True,
+                            ),
+                        ],
+                    )
+                ],
+            ))
+
+        return menu
 
     def _user_id(self):
         return config.user.id
@@ -828,24 +971,44 @@ class ModePersonalUserNotifications(UserNotificationsMode):
             self._start_async_repl = True
             watolib.log_audit(None, log_what, log_text)
         else:
-            super(ModePersonalUserNotifications, self)._add_change(log_what, log_text)
+            super()._add_change(log_what, log_text)
 
     def title(self):
         return _("Your personal notification rules")
 
-    def buttons(self):
-        html.context_button(_("Profile"), "user_profile.py", "back")
-        html.context_button(_("New Rule"),
-                            watolib.folder_preserving_link([("mode", "notification_rule_p")]),
-                            "new")
 
-
-# TODO: Split editing of user notification rule and global notification rule
-#       into separate classes
-class EditNotificationRuleMode(NotificationsMode):
+class ABCEditNotificationRuleMode(ABCNotificationsMode):
     def __init__(self):
-        super(EditNotificationRuleMode, self).__init__()
+        super().__init__()
         self._start_async_repl = False
+
+    @abc.abstractmethod
+    def _load_rules(self) -> List[NotificationRule]:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _save_rules(self, rules: List[NotificationRule]) -> None:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _user_id(self):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _back_mode(self):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def title(self) -> str:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _log_text(self, edit_nr: int) -> str:
+        raise NotImplementedError()
+
+    def _rule_from_valuespec(self, rule: NotificationRule) -> NotificationRule:
+        """Optional method to update the rule after editing with the valuespec"""
+        return rule
 
     # TODO: Refactor this
     def _from_vars(self):
@@ -853,17 +1016,7 @@ class EditNotificationRuleMode(NotificationsMode):
         self._clone_nr = html.request.get_integer_input_mandatory("clone", -1)
         self._new = self._edit_nr < 0
 
-        if self._user_id():
-            self._users = userdb.load_users(lock=html.is_transaction())
-            if self._user_id() not in self._users:
-                raise MKUserError(
-                    None,
-                    _("The user you are trying to edit "
-                      "notification rules for does not exist."))
-            user = self._users[self._user_id()]
-            self._rules = user.setdefault("notification_rules", [])
-        else:
-            self._rules = load_notification_rules(lock=html.is_transaction())
+        self._rules = self._load_rules()
 
         if self._new:
             if self._clone_nr >= 0 and not html.request.var("_clear"):
@@ -886,10 +1039,9 @@ class EditNotificationRuleMode(NotificationsMode):
     # TODO: Refactor this mess
     def _vs_notification_rule(self, userid=None):
         if userid:
-            contact_headers = [
-            ]  # type: List[Union[_Tuple[Text, List[str]], _Tuple[Text, str, List[str]]]]
+            contact_headers: List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]] = []
             section_contacts = []
-            section_override = []  # type: List[DictionaryEntry]
+            section_override: List[DictionaryEntry] = []
         else:
             contact_headers = [
                 (_("Contact Selection"), [
@@ -993,7 +1145,7 @@ class EditNotificationRuleMode(NotificationsMode):
                  )),
             ]
 
-        bulk_options = [
+        bulk_options: List[DictionaryEntry] = [
             ("count",
              Integer(
                  title=_("Maximum bulk size"),
@@ -1039,10 +1191,9 @@ class EditNotificationRuleMode(NotificationsMode):
                  size=80,
                  default_value=
                  "Check_MK: $COUNT_NOTIFICATIONS$ notifications for $COUNT_HOSTS$ hosts")),
-        ]  # type: List[DictionaryEntry]
+        ]
 
-        def make_interval_entry():
-            # type: () -> List[DictionaryEntry]
+        def make_interval_entry() -> List[DictionaryEntry]:
             return [
                 ("interval",
                  Age(
@@ -1053,13 +1204,13 @@ class EditNotificationRuleMode(NotificationsMode):
                  )),
             ]
 
-        timeperiod_entry = [
+        timeperiod_entry: List[DictionaryEntry] = [
             ("timeperiod",
              watolib.timeperiods.TimeperiodSelection(
                  title=_("Only bulk notifications during the following timeperiod"),)),
-        ]  # type: List[DictionaryEntry]
+        ]
 
-        bulk_outside_entry = [
+        bulk_outside_entry: List[DictionaryEntry] = [
             ("bulk_outside",
              Dictionary(
                  title=_("Also bulk outside of timeperiod"),
@@ -1069,15 +1220,15 @@ class EditNotificationRuleMode(NotificationsMode):
                  columns=1,
                  optional_keys=["bulk_subject"],
              )),
-        ]  # type: List[DictionaryEntry]
+        ]
 
-        headers_part1 = [
+        headers_part1: List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]] = [
             (_("Rule Properties"),
              ["description", "comment", "disabled", "docu_url", "allow_disable"]),
             (_("Notification Method"), ["notify_plugin", "notify_method", "bulk"]),
-        ]  # type: List[Union[_Tuple[Text, List[str]], _Tuple[Text, str, List[str]]]]
+        ]
 
-        headers_part2 = [
+        headers_part2: List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]] = [
             (_("Conditions"), [
                 "match_site", "match_folder", "match_hosttags", "match_hostgroups", "match_hosts",
                 "match_exclude_hosts", "match_servicegroups", "match_exclude_servicegroups",
@@ -1087,7 +1238,7 @@ class EditNotificationRuleMode(NotificationsMode):
                 "match_escalation", "match_escalation_throttle", "match_sl", "match_host_event",
                 "match_service_event", "match_ec", "match_notification_comment"
             ]),
-        ]  # type: List[Union[_Tuple[Text, List[str]], _Tuple[Text, str, List[str]]]]
+        ]
 
         return Dictionary(
             title=_("Rule Properties"),
@@ -1155,7 +1306,8 @@ class EditNotificationRuleMode(NotificationsMode):
         choices = []
         for script_name, title in watolib.notification_script_choices():
             if script_name in notification_parameter_registry:
-                vs = notification_parameter_registry[script_name]().spec
+                vs: Union[Dictionary,
+                          ListOfStrings] = notification_parameter_registry[script_name]().spec
             else:
                 vs = ListOfStrings(
                     title=_("Call with the following parameters:"),
@@ -1198,47 +1350,16 @@ class EditNotificationRuleMode(NotificationsMode):
                     _("Legacy ASCII Emails do not support bulking. You can either disable notification "
                       "bulking or choose another notification plugin which allows bulking."))
 
-    @abc.abstractmethod
-    def _user_id(self):
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def _back_mode(self):
-        raise NotImplementedError()
-
-    def title(self):
-        if self._new:
-            if self._user_id():
-                return _("Create new notification rule for user %s") % self._user_id()
-            return _("Create new notification rule")
-
-        if self._user_id():
-            return _("Edit notification rule %d of user %s") % (self._edit_nr, self._user_id())
-        return _("Edit notification rule %d") % self._edit_nr
-
-    def buttons(self):
-        html.context_button(
-            _("All Rules"),
-            watolib.folder_preserving_link([("mode", "notifications"),
-                                            ("userid", self._user_id())]), "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(breadcrumb, form_name="rule", button_name="save")
 
     def action(self):
         if not html.check_transaction():
             return self._back_mode()
 
         vs = self._valuespec()
-        self._rule = vs.from_html_vars("rule")
-        if self._user_id():
-            self._rule["contact_users"] = [self._user_id()]  # Force selection of our user
-
+        self._rule = self._rule_from_valuespec(vs.from_html_vars("rule"))
         vs.validate_value(self._rule, "rule")
-
-        if self._user_id():
-            # User rules are always allow_disable
-            # The parameter is set just after the validation, since the allow_disable
-            # key isn't in the valuespec. Curiously, the validation does not fail
-            # even the allow_disable key is set before the validate_value...
-            self._rule["allow_disable"] = True
 
         if self._new and self._clone_nr >= 0:
             self._rules[self._clone_nr:self._clone_nr] = [self._rule]
@@ -1247,25 +1368,10 @@ class EditNotificationRuleMode(NotificationsMode):
         else:
             self._rules[self._edit_nr] = self._rule
 
-        if self._user_id():
-            userdb.save_users(self._users)
-        else:
-            save_notification_rules(self._rules)
+        self._save_rules(self._rules)
 
-        if self._new:
-            log_what = "new-notification-rule"
-            if self._user_id():
-                log_text = _("Created new notification rule for user %s") % self._user_id()
-            else:
-                log_text = _("Created new notification rule")
-        else:
-            log_what = "edit-notification-rule"
-            if self._user_id():
-                log_text = _("Changed notification rule %d of user %s") % (self._edit_nr,
-                                                                           self._user_id())
-            else:
-                log_text = _("Changed notification rule %d") % self._edit_nr
-        self._add_change(log_what, log_text)
+        log_what = "new-notification-rule" if self._new else "edit-notification-rule"
+        self._add_change(log_what, self._log_text(self._edit_nr))
 
         return self._back_mode()
 
@@ -1280,13 +1386,13 @@ class EditNotificationRuleMode(NotificationsMode):
         vs.render_input("rule", self._rule)
         vs.set_focus("rule")
         forms.end()
-        html.button("save", _("Save"))
         html.hidden_fields()
         html.end_form()
 
 
 @mode_registry.register
-class ModeEditNotificationRule(EditNotificationRuleMode):
+class ModeEditNotificationRule(ABCEditNotificationRuleMode):
+    """Edit a global notification rule"""
     @classmethod
     def name(cls):
         return "notification_rule"
@@ -1295,27 +1401,103 @@ class ModeEditNotificationRule(EditNotificationRuleMode):
     def permissions(cls):
         return ["notifications"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeNotifications
+
+    def _load_rules(self) -> List[NotificationRule]:
+        return load_notification_rules(lock=html.is_transaction())
+
+    def _save_rules(self, rules: List[NotificationRule]) -> None:
+        save_notification_rules(rules)
+
     def _user_id(self):
-        return html.request.get_unicode_input("user")
+        return None
 
     def _back_mode(self):
-        if self._user_id():
-            return "user_notifications"
         return "notifications"
+
+    def title(self) -> str:
+        if self._new:
+            return _("Add notification rule")
+        return _("Edit notification rule %d") % self._edit_nr
+
+    def _log_text(self, edit_nr: int) -> str:
+        if self._new:
+            return _("Created new notification rule")
+        return _("Changed notification rule %d") % edit_nr
+
+
+class ABCEditUserNotificationRuleMode(ABCEditNotificationRuleMode):
+    def _load_rules(self) -> List[NotificationRule]:
+        self._users = userdb.load_users(lock=html.is_transaction())
+        if self._user_id() not in self._users:
+            raise MKUserError(
+                None, _("The user you are trying to edit "
+                        "notification rules for does not exist."))
+        user = self._users[self._user_id()]
+        return user.setdefault("notification_rules", [])
+
+    def _save_rules(self, rules: List[NotificationRule]) -> None:
+        userdb.save_users(self._users)
+
+    def _rule_from_valuespec(self, rule: NotificationRule) -> NotificationRule:
+        # Force selection of our user
+        rule["contact_users"] = [self._user_id()]
+
+        # User rules are always allow_disable
+        rule["allow_disable"] = True
+        return rule
+
+    def _log_text(self, edit_nr: int) -> str:
+        if self._new:
+            return _("Created new notification rule for user %s") % self._user_id()
+        return _("Changed notification rule %d of user %s") % (edit_nr, self._user_id())
 
 
 @mode_registry.register
-class ModeEditPersonalNotificationRule(EditNotificationRuleMode):
+class ModeEditUserNotificationRule(ABCEditUserNotificationRuleMode):
+    """Edit notification rule of a given user"""
+    @classmethod
+    def name(cls):
+        return "user_notification_rule"
+
+    @classmethod
+    def permissions(cls):
+        return ["notifications"]
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeUserNotifications
+
+    def _user_id(self):
+        return html.request.get_unicode_input_mandatory("user")
+
+    def _back_mode(self):
+        return "user_notifications"
+
+    def title(self) -> str:
+        if self._new:
+            return _("Add notification rule for user %s") % self._user_id()
+        return _("Edit notification rule %d of user %s") % (self._edit_nr, self._user_id())
+
+
+@mode_registry.register
+class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
     @classmethod
     def name(cls):
         return "notification_rule_p"
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModePersonalUserNotifications
 
     @classmethod
     def permissions(cls):
         return None
 
     def __init__(self):
-        super(ModeEditPersonalNotificationRule, self).__init__()
+        super().__init__()
         config.user.need_permission("general.edit_notifications")
 
     def _user_id(self):
@@ -1326,7 +1508,7 @@ class ModeEditPersonalNotificationRule(EditNotificationRuleMode):
             self._start_async_repl = True
             watolib.log_audit(None, log_what, log_text)
         else:
-            super(ModeEditPersonalNotificationRule, self)._add_change(log_what, log_text)
+            super()._add_change(log_what, log_text)
 
     def _back_mode(self):
         if config.has_wato_slave_sites():
@@ -1337,8 +1519,3 @@ class ModeEditPersonalNotificationRule(EditNotificationRuleMode):
         if self._new:
             return _("Create new notification rule")
         return _("Edit notification rule %d") % self._edit_nr
-
-    def buttons(self):
-        html.context_button(_("All Rules"),
-                            watolib.folder_preserving_link([("mode", "user_notifications_p")]),
-                            "back")

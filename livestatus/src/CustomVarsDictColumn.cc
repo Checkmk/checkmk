@@ -4,8 +4,10 @@
 // source code package.
 
 #include "CustomVarsDictColumn.h"
+
 #include <stdexcept>
 #include <utility>
+
 #include "CustomVarsDictFilter.h"
 #include "Filter.h"
 #include "Renderer.h"
@@ -38,7 +40,7 @@ std::unique_ptr<Aggregator> CustomVarsDictColumn::createAggregator(
 }
 
 Attributes CustomVarsDictColumn::getValue(Row row) const {
-    if (auto p = columnData<void>(row)) {
+    if (const auto *p = columnData<void>(row)) {
         return _mc->customAttributes(p, _kind);
     }
     return {};

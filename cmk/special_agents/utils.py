@@ -1,10 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Place for common code shared among different Check_MK special agents"""
-from __future__ import print_function
 
 import abc
 import argparse
@@ -14,22 +13,18 @@ import errno
 import getopt
 import json
 import logging
+from pathlib import Path
 import pprint
 import sys
 import time
+from typing import Any, Dict, List
+
 import requests
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
-
-import six
 
 import cmk.utils.store as store
 
 
-class AgentJSON(object):
+class AgentJSON:
     def __init__(self, key, title):
         self._key = key
         self._title = title
@@ -76,7 +71,7 @@ USAGE: agent_%s --section_url [{section_name},{url}]
             self.usage()
             sys.exit(0)
 
-        content = {}
+        content: Dict[str, List[str]] = {}
         for section_name, url in sections:
             content.setdefault(section_name, [])
             content[section_name].append(requests.get(url).text.replace("\n", newline_replacement))
@@ -99,32 +94,30 @@ def datetime_serializer(obj):
     raise TypeError("%r is not JSON serializable" % obj)
 
 
-class DataCache(six.with_metaclass(abc.ABCMeta, object)):
-    def __init__(self, cache_file_dir, cache_file_name, debug=False):
-        self._cache_file_dir = Path(cache_file_dir)
+class DataCache(abc.ABC):
+    def __init__(self, cache_file_dir: Path, cache_file_name: str, debug: bool = False) -> None:
+        self._cache_file_dir = cache_file_dir
         self._cache_file = self._cache_file_dir / ("%s.cache" % cache_file_name)
         self.debug = debug
 
-    @abc.abstractproperty
-    def cache_interval(self):
+    @property
+    @abc.abstractmethod
+    def cache_interval(self) -> int:
         """
         Return the time for how long cached data is valid
         """
-        raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_validity_from_args(self, *args):
+    def get_validity_from_args(self, *args: Any) -> bool:
         """
         Decide whether we need to update the cache due to new arguments
         """
-        raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_live_data(self, *args):
+    def get_live_data(self, *args: Any) -> Any:
         """
         This is the function that will be called if no cached data can be found.
         """
-        raise NotImplementedError()
 
     @property
     def cache_timestamp(self):
@@ -199,7 +192,7 @@ class DataCache(six.with_metaclass(abc.ABCMeta, object)):
         store.save_file(str(self._cache_file), json_dump)
 
 
-class _NullContext(object):
+class _NullContext:
     """A context manager that does nothing and is falsey"""
     def __call__(self, *_args, **_kwargs):
         return self
@@ -212,9 +205,6 @@ class _NullContext(object):
 
     def __bool__(self):
         return False
-
-    # python2 uses __nonzero__ instead of __bool__:
-    __nonzero__ = __bool__
 
 
 def vcrtrace(**vcr_init_kwargs):
@@ -243,15 +233,19 @@ def vcrtrace(**vcr_init_kwargs):
     class VcrTraceAction(argparse.Action):
         def __init__(self, *args, **kwargs):
             kwargs.setdefault("metavar", "TRACEFILE")
-            kwargs["help"] = "%s %s" % (vcrtrace.__doc__.split('\n\n')[3], kwargs.get("help", ""))
-            super(VcrTraceAction, self).__init__(*args, nargs=None, default=False, **kwargs)
+            help_part = "" if vcrtrace.__doc__ is None else vcrtrace.__doc__.split('\n\n')[3]
+            kwargs["help"] = "%s %s" % (help_part, kwargs.get("help", ""))
+            # NOTE: There are various mypy issues around the kwargs Kung Fu
+            # below, see e.g. https://github.com/python/mypy/issues/6799.
+            super(VcrTraceAction, self).__init__(  # type: ignore[misc]
+                *args, nargs=None, default=False, **kwargs)
 
         def __call__(self, _parser, namespace, filename, option_string=None):
             if not filename:
                 setattr(namespace, self.dest, _NullContext())
                 return
 
-            import vcr  # type: ignore[import]
+            import vcr  # type: ignore[import] # pylint: disable=import-outside-toplevel
             use_cassette = vcr.VCR(**vcr_init_kwargs).use_cassette
             setattr(namespace, self.dest, lambda **kwargs: use_cassette(filename, **kwargs))
             global_context = use_cassette(filename)
@@ -259,3 +253,8 @@ def vcrtrace(**vcr_init_kwargs):
             global_context.__enter__()
 
     return VcrTraceAction
+
+
+def get_seconds_since_midnight(current_time) -> float:
+    midnight = datetime.datetime.combine(current_time.date(), datetime.datetime.min.time())
+    return (current_time - midnight).total_seconds()

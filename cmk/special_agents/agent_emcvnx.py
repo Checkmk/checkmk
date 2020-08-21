@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -19,10 +19,11 @@
 # <-mirrorview><-snapviews><-sancopy><-reserved> <-cloneview><-metalun>
 # <-migration><-ioportconfig> <-fastcache><-backendbus>
 
-from __future__ import print_function
+import cProfile
 import getopt
 import os
 import sys
+from typing import Any, Dict
 
 
 def usage():
@@ -89,7 +90,7 @@ def main(sys_argv=None):
     mortypes = ['all']
     fetch_agent_info = False
 
-    naviseccli_options = {
+    naviseccli_options: Dict[str, Dict[str, Any]] = {
         "disks": {
             "cmd_options": [(None, "getall -disk")],
             "active": False,
@@ -138,7 +139,6 @@ def main(sys_argv=None):
         if o in ['--debug']:
             opt_debug = True
         elif o in ['--profile']:
-            import cProfile
             g_profile = cProfile.Profile()
             g_profile.enable()
         elif o in ['-u', '--user']:
@@ -148,7 +148,7 @@ def main(sys_argv=None):
         elif o in ['-i', '--modules']:
             mortypes = a.split(',')
         elif o in ['-t', '--timeout']:
-            _opt_timeout = int(a)
+            _opt_timeout = int(a)  # noqa: F841
         elif o in ['-h', '--help']:
             usage()
             sys.exit(0)

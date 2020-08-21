@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,22 +6,17 @@
 
 from builtins import range
 from builtins import object
-try:
-    # Use iter version of filter
-    from future_builtins import filter
-except ImportError:
-    # Python 3 compatibility tweak
-    pass
+
+import sys
 import os
 import platform
-import pytest
-from local import (actual_output, make_yaml_config, local_test, run_subprocess, write_config,
-                   main_exe)
-import sys
+from typing import List
+import pytest  # type: ignore
+from local import (make_yaml_config, local_test, run_subprocess, write_config, main_exe)
 
 
 class Globals(object):
-    param = None
+    param: List[str] = []
 
 
 @pytest.fixture

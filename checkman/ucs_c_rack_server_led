@@ -1,0 +1,43 @@
+title: UCS C-Series Rack Server: Health Status of Fans
+agents: agent_ucs_bladecenter
+catalog: hw/server/cisco
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the LEDs of UCS C-Series Rack Servers. By default, the state of
+ the service depends on the color of the LED as follows:
+
+ - {OK} for blue and green
+
+ - {WARN} for amber
+
+ - {CRIT} for red
+
+ - {UNKN} for all other colors
+
+ This behavior can be changed using the rule "State of Cisco UCS C-Series Rack Server
+ LEDs". Besides the color, the service also reports the name of the LED and its operational
+ state.
+
+ This check supports the following C-Series Rack Server models providing XML API 2.0
+ [Cisco UCS Rack-Mount Servers Cisco IMC XML API 2.0]:
+
+ - Cisco UCS C220 M5 Rack Server
+
+ - Cisco UCS C240 M5 Rack Server
+
+ - Cisco UCS C480 M5 Rack Server
+
+ - Cisco UCS C480 ML M5 Rack Server
+
+ - Cisco UCS C220 M4 Rack Server
+
+ - Cisco UCS C240 M4 Rack Server
+
+ - Cisco UCS C460 M4 Rack Server
+
+item:
+ {{Rack unit}} followed by the index of the rack followed by the index of the LED.
+
+inventory:
+ One service is created for each LED.

@@ -4,7 +4,9 @@
 // source code package.
 
 #include "TimeColumn.h"
+
 #include <chrono>
+
 #include "Aggregator.h"
 #include "Filter.h"
 #include "Renderer.h"

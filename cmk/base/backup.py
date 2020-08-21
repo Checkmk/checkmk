@@ -12,19 +12,17 @@ import shutil
 import tarfile
 import time
 import io
-from typing import List, Tuple  # pylint: disable=unused-import
+from typing import List, Tuple
 
 import cmk.utils.paths
 import cmk.utils.render as render
 from cmk.utils.exceptions import MKGeneralException
-
-import cmk.base.console as console
+from cmk.utils.log import console
 
 BackupPath = Tuple[str, str, str, str, bool]
 
 
-def backup_paths():
-    # type: () -> List[BackupPath]
+def backup_paths() -> List[BackupPath]:
     # TODO: Refactor to named tuples
     # yapf: disable
     return [
@@ -40,8 +38,7 @@ def backup_paths():
     # yapf: enable
 
 
-def do_backup(tarname):
-    # type: (str) -> None
+def do_backup(tarname: str) -> None:
     console.verbose("Creating backup file '%s'...\n", tarname)
     tar = tarfile.open(tarname, "w:gz")
 
@@ -75,8 +72,7 @@ def do_backup(tarname):
     console.verbose("Successfully created backup.\n")
 
 
-def do_restore(tarname):
-    # type: (str) -> None
+def do_restore(tarname: str) -> None:
     console.verbose("Restoring from '%s'...\n", tarname)
 
     if not os.path.exists(tarname):

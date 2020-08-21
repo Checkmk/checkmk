@@ -13,6 +13,9 @@ def build(Map args) {
             if (args.TARGET == "module") {
                 bat 'cd agents\\modules\\windows && call build_the_module.cmd python'
                 ARTIFACTS = 'python-3.8.zip'
+            } else if (args.TARGET == "cached") {
+                bat 'cd agents\\modules\\windows && call build_the_module.cmd cached ' + args.CREDS + ' ' + args.CACHE_URL
+                ARTIFACTS = 'python-3.8.zip'
             } else if (args.TARGET == "agent") {
                 bat 'cd agents\\wnx && call build_release.cmd'
                 ARTIFACTS = "check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,mk_logwatch.exe,mk_jolokia.exe"

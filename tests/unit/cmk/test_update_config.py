@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,8 +7,8 @@
 # pylint: disable=redefined-outer-name
 import argparse
 import sys
-import StringIO
-from pathlib2 import Path
+import io
+from pathlib import Path
 import pytest  # type: ignore[import]
 
 import cmk.utils.log
@@ -44,7 +44,7 @@ def test_update_config_init():
 
 
 def test_main(monkeypatch):
-    buf = StringIO.StringIO()
+    buf = io.StringIO()
     monkeypatch.setattr(sys, "stdout", buf)
     monkeypatch.setattr(update_config.UpdateConfig, "run", lambda self: sys.stdout.write("XYZ\n"))
     assert update_config.main([]) == 0

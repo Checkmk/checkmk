@@ -1,6 +1,6 @@
 title: Checkmk Sites: Apache Access Statistics
 agents: linux
-catalog: app/omd
+catalog: app/cmk
 license: GPL
 distribution: check_mk
 description:

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -67,7 +67,7 @@ def transform_forth_html_mail_url_prefix(p):
 
 
 def local_site_url():
-    return "http://" + socket.gethostname() + "/" + config.omd_site() + "check_mk/",
+    return "http://" + socket.gethostname() + "/" + config.omd_site() + "check_mk/"
 
 
 def _vs_add_common_mail_elements(elements):
@@ -592,11 +592,14 @@ class NotificationParameterServiceNow(NotificationParameter):
                      allow_empty=False,
                  )),
                 ("proxy_url", HTTPProxyReference()),
-                ("username", TextAscii(
-                    title=_("Username"),
-                    size=40,
-                    allow_empty=False,
-                )),
+                ("username",
+                 TextAscii(
+                     title=_("Username"),
+                     help=_("The user, used for login, has to have at least the "
+                            "role 'itil' in servicenow."),
+                     size=40,
+                     allow_empty=False,
+                 )),
                 ("password", PasswordFromStore(
                     title=_("Password of the user"),
                     allow_empty=False,
@@ -605,7 +608,13 @@ class NotificationParameterServiceNow(NotificationParameter):
                  TextAscii(
                      title=_("Caller ID"),
                      help=_("Caller is the user on behalf of whom the incident is being reported "
-                            "within servicenow. Please enter the name of the caller here."),
+                            "within servicenow. Please enter the name of the caller here. "
+                            "It is recommended to user the same user as used for login. "
+                            "Otherwise, your ACL rules in servicenow must be "
+                            "adjusted, so that the user who is used for login "
+                            "can create/edit/resolve incidents on behalf of the "
+                            "caller. Please have a look at servicenow "
+                            "documentation for details."),
                  )),
                 ("host_short_desc",
                  TextAscii(
@@ -777,7 +786,7 @@ class NotificationParameterOpsgenie(NotificationParameter):
                      title=_("Domain (only used for european accounts)"),
                      help=_("If you have an european account, please set the "
                             "domain of your opsgenie. Specify an absolute URL like "
-                            "https://my.app.eu.opsgenie.com "),
+                            "https://api.eu.opsgenie.com."),
                      regex="^https://.*",
                      regex_error=_("The URL must begin with <tt>https</tt>."),
                      size=64,
@@ -936,7 +945,7 @@ class NotificationParameterSpectrum(NotificationParameter):
     def spec(self):
         return Dictionary(
             title=_("Create notification with the following parameters"),
-            optional_keys=None,
+            optional_keys=False,
             elements=[
                 ("destination",
                  IPv4Address(title=_("Destination IP"),

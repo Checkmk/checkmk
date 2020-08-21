@@ -7,12 +7,14 @@
 #define IntFilter_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <bitset>
 #include <chrono>
 #include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
+
 #include "ColumnFilter.h"
 #include "Filter.h"
 #include "contact_fwd.h"

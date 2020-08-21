@@ -1,28 +1,24 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import print_function
-
 import glob
-import sys
-import os
-import pwd
-import subprocess
-import pipes
-import time
-import shutil
 import logging
+import os
+from pathlib import Path
+import pipes
+import pwd
+import shutil
+import subprocess
+import sys
+import time
+import urllib.parse
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+from typing import Union
 
-import six
-from six.moves.urllib.parse import urlparse
+from six import ensure_str
 
 from testlib.utils import (
     cmk_path,
@@ -30,6 +26,7 @@ from testlib.utils import (
     cmc_path,
     virtualenv_path,
     current_base_branch_name,
+    api_str_type,
 )
 from testlib.web_session import CMKWebSession
 from testlib.version import CMKVersion
@@ -37,7 +34,7 @@ from testlib.version import CMKVersion
 logger = logging.getLogger(__name__)
 
 
-class Site(object):  # pylint: disable=useless-object-inheritance
+class Site:
     def __init__(self,
                  site_id,
                  reuse=True,
@@ -58,9 +55,8 @@ class Site(object):  # pylint: disable=useless-object-inheritance
 
         self.http_proto = "http"
         self.http_address = "127.0.0.1"
-        self.url = "%s://%s/%s/check_mk/" % (self.http_proto, self.http_address, self.id)
-
         self._apache_port = None  # internal cache for the port
+
         self._livestatus_port = None
 
     @property
@@ -71,8 +67,14 @@ class Site(object):  # pylint: disable=useless-object-inheritance
 
     @property
     def internal_url(self):
+        """This gives the address-port combination where the site-Apache process listens."""
         return "%s://%s:%s/%s/check_mk/" % (self.http_proto, self.http_address, self.apache_port,
                                             self.id)
+
+    # Previous versions of integration/composition tests needed this distinction. This is no
+    # longer the case and can be safely removed once all tests switch to either one of url
+    # or internal_url.
+    url = internal_url
 
     @property
     def livestatus_port(self):
@@ -99,7 +101,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         assert not path.startswith("http")
         assert "://" not in path
 
-        if "/" not in urlparse(path).path:
+        if "/" not in urllib.parse.urlparse(path).path:
             path = "/%s/check_mk/%s" % (self.id, path)
         return '%s://%s:%d%s' % (self.http_proto, self.http_address, self.apache_port, path)
 
@@ -245,40 +247,22 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         return pwd.getpwuid(os.getuid()).pw_name == self.id
 
     def execute(self, cmd, *args, **kwargs):
-        # Needed during py2/py3 migration
-        from cmk.utils.cmk_subprocess import Popen  # pylint: disable=import-outside-toplevel
         assert isinstance(cmd, list), "The command must be given as list"
 
         kwargs.setdefault("encoding", "utf-8")
-
-        if not self._is_running_as_site_user():
-            sys.stdout.write("Executing (sudo): %s\n" % subprocess.list2cmdline(cmd))
-            cmd = [
+        cmd_txt = (
+            subprocess.list2cmdline(cmd) if self._is_running_as_site_user() else  #
+            " ".join([
                 "sudo", "su", "-l", self.id, "-c",
-                pipes.quote(" ".join([pipes.quote(p) for p in cmd]))
-            ]
-            cmd_txt = " ".join(cmd)
-            return Popen(cmd_txt, shell=True, *args, **kwargs)  # nosec
+                pipes.quote(" ".join(pipes.quote(p) for p in cmd))
+            ]))
+        sys.stdout.write("Executing: %s\n" % cmd_txt)
+        kwargs["shell"] = True
+        return subprocess.Popen(cmd_txt, *args, **kwargs)
 
-        sys.stdout.write("Executing (site): %s\n" % subprocess.list2cmdline(cmd))
-        return Popen(  # nosec
-            subprocess.list2cmdline(cmd), shell=True, *args, **kwargs)
-
-    def omd(self, mode, *args):
-        if not self._is_running_as_site_user():
-            cmd = ["sudo"]
-        else:
-            cmd = []
-
-        cmd += ["/usr/bin/omd", mode]
-
-        if not self._is_running_as_site_user():
-            cmd += [self.id]
-        else:
-            cmd += []
-
-        cmd += args
-
+    def omd(self, mode: str, *args: str) -> int:
+        sudo, site_id = ([], []) if self._is_running_as_site_user() else (["sudo"], [self.id])
+        cmd = sudo + ["/usr/bin/omd", mode] + site_id + list(args)
         sys.stdout.write("Executing: %s\n" % subprocess.list2cmdline(cmd))
         return subprocess.call(cmd)
 
@@ -293,13 +277,13 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             return p.stdout.read()
         return open(self.path(rel_path)).read()
 
-    def delete_file(self, rel_path):
+    def delete_file(self, rel_path, missing_ok=False):
         if not self._is_running_as_site_user():
             p = self.execute(["rm", "-f", self.path(rel_path)])
             if p.wait() != 0:
                 raise Exception("Failed to delete file %s. Exit-Code: %d" % (rel_path, p.wait()))
         else:
-            os.unlink(self.path(rel_path))
+            Path(self.path(rel_path)).unlink(missing_ok=missing_ok)
 
     def delete_dir(self, rel_path):
         if not self._is_running_as_site_user():
@@ -316,7 +300,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             p = self.execute(["tee", self.path(rel_path)],
                              stdin=subprocess.PIPE,
                              stdout=open(os.devnull, "w"))
-            p.communicate(six.ensure_text(content))
+            p.communicate(ensure_str(content))
             p.stdin.close()
             if p.wait() != 0:
                 raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))
@@ -354,6 +338,15 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         else:
             return os.symlink(link_rel_target, os.path.join(self.root, rel_link_name))
 
+    def resolve_path(self, rel_path: Union[str, Path]) -> Path:
+        if not self._is_running_as_site_user():
+            p = self.execute(["readlink", "-e", self.path(rel_path)], stdout=subprocess.PIPE)
+            if p.wait() != 0:
+                raise Exception("Failed to read symlink at %s. Exit-Code: %d" %
+                                (rel_path, p.wait()))
+            return Path(p.stdout.read().strip())
+        return self.path(rel_path).resolve()
+
     def file_exists(self, rel_path):
         if not self._is_running_as_site_user():
             p = self.execute(["test", "-e", self.path(rel_path)], stdout=subprocess.PIPE)
@@ -381,7 +374,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
     def create(self):
         if not self.version.is_installed():
             raise Exception("Version %s not installed. "
-                            "Use \"tests-py3/scripts/install-cmk.py\" or install it manually." %
+                            "Use \"tests/scripts/install-cmk.py\" or install it manually." %
                             self.version.version)
 
         if not self.reuse and self.exists():
@@ -450,20 +443,15 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                 cme_path() + "/cmk/base",
             ]
 
-        # Prevent build problems of livestatus
-        logger.debug("Cleanup git files")
-        assert subprocess.call(["sudo", "git", "clean", "-xfd",
-                                cmk_path() + "/livestatus"]) >> 8 == 0
-
         for path in paths:
             if os.path.exists("%s/.f12" % path):
-                logger.debug("Executing .f12 in \"%s\"...", path)
+                print("Executing .f12 in \"%s\"..." % path)
                 assert os.system(  # nosec
                     "cd \"%s\" ; "
                     "sudo PATH=$PATH ONLY_COPY=1 ALL_EDITIONS=0 SITE=%s "
                     "CHROOT_BASE_PATH=$CHROOT_BASE_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR "
                     "bash .f12" % (path, self.id)) >> 8 == 0
-                logger.debug("Executing .f12 in \"%s\" DONE", path)
+                print("Executing .f12 in \"%s\" DONE" % path)
                 sys.stdout.flush()
 
     def _set_number_of_helpers(self):
@@ -488,12 +476,12 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             })
 
     def _install_test_python_modules(self):
-        venv = virtualenv_path(version=3)
+        venv = virtualenv_path()
         bin_dir = venv / "bin"
-        self._copy_python_modules_from(venv / "lib/python3.7/site-packages")
+        self._copy_python_modules_from(venv / "lib/python3.8/site-packages")
 
         # Some distros have a separate platfrom dependent library directory, handle it....
-        platlib64 = venv / "lib64/python3.7/site-packages"
+        platlib64 = venv / "lib64/python3.8/site-packages"
         if platlib64.exists():
             self._copy_python_modules_from(platlib64)
 
@@ -508,7 +496,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             # Only copy modules that do not exist in regular module path
             if file_name not in enforce_override:
                 if os.path.exists("%s/lib/python/%s" % (self.root, file_name)) \
-                   or os.path.exists("%s/lib/python3.7/site-packages/%s" % (self.root, file_name)):
+                   or os.path.exists("%s/lib/python3.8/site-packages/%s" % (self.root, file_name)):
                     continue
 
             assert os.system("sudo rsync -a --chown %s:%s %s %s/local/lib/python3/" %  # nosec
@@ -642,7 +630,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                 "WATO does not seem to be initialized: %r" % response
 
         logger.debug("Waiting for WATO files to be created...")
-        wait_time = 20
+        wait_time = 20.0
         while self._missing_but_required_wato_files() and wait_time >= 0:
             time.sleep(0.5)
             wait_time -= 0.5
@@ -673,7 +661,8 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                             # TODO: This should obviously be 'str' in Python 3, but the GUI is
                             # currently in Python 2 and expects byte strings. Change this once
                             # the GUI is based on Python 3.
-                            'value': [(b'TESTGROUP', (b'*gwia*', b''))]
+                            'value': [(api_str_type('TESTGROUP'),
+                                       (api_str_type('*gwia*'), api_str_type('')))]
                         },
                     ],
                 }
@@ -737,7 +726,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         return port
 
 
-class SiteFactory(object):  # pylint: disable=useless-object-inheritance
+class SiteFactory:
     def __init__(self,
                  version,
                  edition,

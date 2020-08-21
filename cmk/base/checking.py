@@ -5,57 +5,84 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Performing the actual checks."""
 
-import os
-import signal
-from random import Random
-import time
 import copy
 import errno
-from types import FrameType  # pylint: disable=unused-import
-from typing import (  # pylint: disable=unused-import
-    cast, IO, Union, Any, AnyStr, List, Tuple, Optional, Text, Iterable, Dict,
+import os
+import signal
+import time
+from random import Random
+from types import FrameType
+from typing import (
+    Any,
+    AnyStr,
+    Callable,
+    cast,
+    Dict,
+    IO,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Union,
 )
 
-import six
+from six import ensure_binary, ensure_str
 
-import cmk.utils.version as cmk_version
+import cmk.utils.debug
 import cmk.utils.defines as defines
 import cmk.utils.tty as tty
+import cmk.utils.version as cmk_version
+from cmk.utils.check_utils import maincheckify
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
+from cmk.utils.log import console
 from cmk.utils.regex import regex
-import cmk.utils.debug
-
-import cmk.base.utils
-import cmk.base.core
-import cmk.base.crash_reporting
-import cmk.base.console as console
-import cmk.base.config as config
-import cmk.base.cpu_tracking as cpu_tracking
-import cmk.base.ip_lookup as ip_lookup
-import cmk.base.data_sources as data_sources
-import cmk.base.item_state as item_state
-import cmk.base.check_table as check_table
-from cmk.base.exceptions import MKParseFunctionError
-import cmk.base.check_utils
-import cmk.base.decorator
-import cmk.base.check_api_utils as check_api_utils
-from cmk.base.check_utils import (  # pylint: disable=unused-import
-    ServiceState, ServiceDetails, ServiceAdditionalDetails, ServiceCheckResult, Metric,
-    CheckPluginName, Item, SectionName, CheckParameters,
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    HostAddress,
+    HostName,
+    InventoryPluginName,
+    Metric,
+    SectionName,
+    ServiceAdditionalDetails,
+    ServiceCheckResult,
+    ServiceDetails,
+    ServiceName,
+    ServiceState,
+    SourceType,
 )
-from cmk.utils.type_defs import HostName, HostAddress, ServiceName  # pylint: disable=unused-import
+
+import cmk.base.api.agent_based.register as agent_based_register
+import cmk.base.check_api_utils as check_api_utils
+import cmk.base.check_table as check_table
+import cmk.base.config as config
+import cmk.base.core
+import cmk.base.cpu_tracking as cpu_tracking
+import cmk.base.crash_reporting
+import cmk.base.data_sources as data_sources
+import cmk.base.decorator
+import cmk.base.inventory as inventory
+import cmk.base.ip_lookup as ip_lookup
+import cmk.base.item_state as item_state
+import cmk.base.utils
+from cmk.base.api.agent_based import checking_classes, value_store
+from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
+from cmk.base.api.agent_based.type_defs import CheckGenerator, CheckPlugin, Parameters
+from cmk.base.check_api_utils import MGMT_ONLY as LEGACY_MGMT_ONLY
+from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
+from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
 
 if not cmk_version.is_raw_edition():
-    import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
-    import cmk.base.cee.inline_snmp as inline_snmp  # pylint: disable=no-name-in-module
+    import cmk.base.cee.keepalive as keepalive  # type: ignore[import] # pylint: disable=no-name-in-module
+    from cmk.fetchers.cee.snmp_backend import inline  # type: ignore[import] # pylint: disable=no-name-in-module, import-error, cmk-module-layer-violation
 else:
     keepalive = None  # type: ignore[assignment]
-    inline_snmp = None  # type: ignore[assignment]
+    inline = None  # type: ignore[assignment]
 
 # global variables used to cache temporary values that do not need
 # to be reset after a configuration change.
 # Filedescriptor to open nagios command pipe.
-_nagios_command_pipe = None  # type: Union[bool, IO[bytes], None]
+_nagios_command_pipe: Union[bool, IO[bytes], None] = None
 _checkresult_file_fd = None
 _checkresult_file_path = None
 
@@ -77,55 +104,98 @@ UncleanPerfValue = Union[None, str, float]
 #   | Execute the Check_MK checks on hosts                                 |
 #   '----------------------------------------------------------------------'
 
+ITEM_NOT_FOUND: ServiceCheckResult = (3, "Item not found in monitoring data", [])
+
+RECEIVED_NO_DATA: ServiceCheckResult = (3, "Check plugin received no monitoring data", [])
+
+CHECK_NOT_IMPLEMENTED: ServiceCheckResult = (3, 'Check plugin not implemented', [])
+
 
 @cmk.base.decorator.handle_check_mk_check_result("mk", "Check_MK")
-def do_check(hostname, ipaddress, only_check_plugin_names=None):
-    # type: (HostName, Optional[HostAddress], Optional[List[CheckPluginName]]) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[Text]]
+def do_check(
+    hostname: HostName,
+    ipaddress: Optional[HostAddress],
+    only_check_plugin_names: Optional[Set[CheckPluginName]] = None
+) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[str]]:
     cpu_tracking.start("busy")
-    console.verbose("Check_MK version %s\n", six.ensure_str(cmk_version.__version__))
+    console.verbose("Check_MK version %s\n", cmk_version.__version__)
 
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
 
     exit_spec = host_config.exit_code_spec()
 
-    status = 0  # type: ServiceState
-    infotexts = []  # type: List[ServiceDetails]
-    long_infotexts = []  # type: List[ServiceAdditionalDetails]
-    perfdata = []  # type: List[Text]
+    status: ServiceState = 0
+    infotexts: List[ServiceDetails] = []
+    long_infotexts: List[ServiceAdditionalDetails] = []
+    perfdata: List[str] = []
     try:
         # In case of keepalive we always have an ipaddress (can be 0.0.0.0 or :: when
         # address is unknown). When called as non keepalive ipaddress may be None or
         # is already an address (2nd argument)
         if ipaddress is None and not host_config.is_cluster:
-            ipaddress = ip_lookup.lookup_ip_address(hostname)
+            ipaddress = ip_lookup.lookup_ip_address(host_config)
 
         item_state.load(hostname)
 
-        sources = data_sources.DataSources(hostname, ipaddress)
+        services = _get_filtered_services(
+            host_name=hostname,
+            belongs_to_cluster=len(config_cache.clusters_of(hostname)) > 0,
+            config_cache=config_cache,
+            only_check_plugins=only_check_plugin_names,
+        )
 
-        num_success, missing_sections = \
-            _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_names)
+        # see which raw sections we may need
+        selected_raw_sections = _get_relevant_raw_sections(services, host_config)
+
+        sources = data_sources.make_sources(
+            host_config,
+            ipaddress,
+            mode=data_sources.Mode.CHECKING,
+        )
+        mhs = data_sources.make_host_sections(
+            config_cache,
+            host_config,
+            ipaddress,
+            data_sources.Mode.CHECKING,
+            sources=sources,
+            selected_raw_sections=selected_raw_sections,
+            max_cachefile_age=host_config.max_cachefile_age,
+        )
+        num_success, plugins_missing_data = _do_all_checks_on_host(
+            config_cache,
+            host_config,
+            ipaddress,
+            multi_host_sections=mhs,
+            services=services,
+            only_check_plugins=only_check_plugin_names,
+        )
+        inventory.do_inventory_actions_during_checking_for(
+            config_cache,
+            host_config,
+            ipaddress,
+            sources=sources,
+            multi_host_sections=mhs,
+        )
 
         if _submit_to_core:
             item_state.save(hostname)
 
-        for source in sources.get_data_sources():
-            source_state, source_output, source_perfdata = source.get_summary_result_for_checking()
+        for source in sources:
+            source_state, source_output, source_perfdata = source.get_summary_result()
             if source_output != "":
                 status = max(status, source_state)
-                infotexts.append("[%s] %s" % (source.id(), source_output))
+                infotexts.append("[%s] %s" % (source.id, source_output))
                 perfdata.extend([_convert_perf_data(p) for p in source_perfdata])
 
-        if missing_sections and num_success > 0:
-            missing_sections_status, missing_sections_infotext = \
-                _check_missing_sections(missing_sections, exit_spec)
-            status = max(status, missing_sections_status)
-            infotexts.append(missing_sections_infotext)
-
-        elif missing_sections:
-            infotexts.append("Got no information from host")
-            status = max(status, cast(int, exit_spec.get("empty_output", 2)))
+        if plugins_missing_data:
+            missing_data_status, missing_data_infotext = _check_plugins_missing_data(
+                plugins_missing_data,
+                exit_spec,
+                bool(num_success),
+            )
+            status = max(status, missing_data_status)
+            infotexts.append(missing_data_infotext)
 
         cpu_tracking.end()
         phase_times = cpu_tracking.get_times()
@@ -161,176 +231,320 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
         if config.record_inline_snmp_stats \
            and ipaddress is not None \
            and host_config.snmp_config(ipaddress).is_inline_snmp_host:
-            inline_snmp.save_snmp_stats()
+            inline.snmp_stats_save()
 
 
-def _check_missing_sections(missing_sections, exit_spec):
-    # type: (List[SectionName], config.ExitSpec) -> Tuple[ServiceState, ServiceDetails]
-    specific_missing_sections_spec = \
-        cast(List[config.ExitSpecSection], exit_spec.get("specific_missing_sections", []))
+def _get_relevant_raw_sections(services: List[Service], host_config: config.HostConfig):
+    # see if we can remove this function, once inventory plugins have been migrated to
+    # the new API. In particular, we schould be able to get rid of the imports.
 
-    specific_missing_sections, generic_missing_sections = set(), set()
-    for section in missing_sections:
-        match = False
-        for pattern, status in specific_missing_sections_spec:
+    if host_config.do_status_data_inventory:
+        # This is called during checking, but the inventory plugins are not loaded yet
+        import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
+        from cmk.base.check_api import get_check_api_context  # pylint: disable=import-outside-toplevel
+        inventory_plugins.load_plugins(get_check_api_context, inventory.get_inventory_context)
+        inventory_plugin_names: Iterable[InventoryPluginName] = (
+            InventoryPluginName(name.split('.')[0]) for name in inventory_plugins.inv_info)
+    else:
+        inventory_plugin_names = ()
+
+    return agent_based_register.get_relevant_raw_sections(
+        check_plugin_names=(s.check_plugin_name for s in services),
+        inventory_plugin_names=inventory_plugin_names,
+    )
+
+
+def _check_plugins_missing_data(
+    plugins_missing_data: List[CheckPluginName],
+    exit_spec: config.ExitSpec,
+    some_success: bool,
+) -> Tuple[ServiceState, ServiceDetails]:
+    if not some_success:
+        return (cast(int, exit_spec.get("empty_output", 2)), "Got no information from host")
+
+    specific_plugins_missing_data_spec = cast(
+        List[config.ExitSpecSection],
+        exit_spec.get("specific_missing_sections", []),
+    )
+
+    specific_plugins, generic_plugins = set(), set()
+    for check_plugin_name in plugins_missing_data:
+        for pattern, status in specific_plugins_missing_data_spec:
             reg = regex(pattern)
-            if reg.match(section):
-                match = True
-                specific_missing_sections.add((section, status))
+            if reg.match(str(check_plugin_name)):
+                specific_plugins.add((check_plugin_name, status))
                 break
-        if not match:
-            generic_missing_sections.add(section)
+        else:  # no break
+            generic_plugins.add(str(check_plugin_name))
 
-    generic_missing_sections_status = cast(int, exit_spec.get("missing_sections", 1))
+    generic_plugins_status = cast(int, exit_spec.get("missing_sections", 1))
     infotexts = [
-        "Missing agent sections: %s%s" %
-        (", ".join(sorted(generic_missing_sections)),
-         check_api_utils.state_markers[generic_missing_sections_status])
+        "Missing monitoring data for check plugins: %s%s" % (
+            ", ".join(sorted(generic_plugins)),
+            check_api_utils.state_markers[generic_plugins_status],
+        ),
     ]
 
-    for section, status in sorted(specific_missing_sections):
-        infotexts.append("%s%s" % (section, check_api_utils.state_markers[status]))
-        generic_missing_sections_status = max(generic_missing_sections_status, status)
+    for plugin, status in sorted(specific_plugins):
+        infotexts.append("%s%s" % (plugin, check_api_utils.state_markers[status]))
+        generic_plugins_status = max(generic_plugins_status, status)
 
-    return generic_missing_sections_status, ", ".join(infotexts)
+    return generic_plugins_status, ", ".join(infotexts)
 
 
 # Loops over all checks for ANY host (cluster, real host), gets the data, calls the check
 # function that examines that data and sends the result to the Core.
-def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_names=None):
-    # type: (data_sources.DataSources, config.HostConfig, Optional[HostAddress], Optional[List[str]]) -> Tuple[int, List[SectionName]]
-    hostname = host_config.hostname  # type: HostName
-    config_cache = config.get_config_cache()
-
-    num_success, missing_sections = 0, set()
+def _do_all_checks_on_host(
+    config_cache: config.ConfigCache,
+    host_config: config.HostConfig,
+    ipaddress: Optional[HostAddress],
+    multi_host_sections: MultiHostSections,
+    *,
+    services: List[Service],
+    only_check_plugins: Optional[Set[CheckPluginName]] = None,
+) -> Tuple[int, List[CheckPluginName]]:
+    hostname: HostName = host_config.hostname
+    num_success = 0
+    plugins_missing_data: Set[CheckPluginName] = set()
 
     check_api_utils.set_hostname(hostname)
+    for service in services:
+        success = execute_check(multi_host_sections, host_config, ipaddress, service)
+        if success:
+            num_success += 1
+        else:
+            plugins_missing_data.add(service.check_plugin_name)
 
-    filter_mode = None
+    return num_success, sorted(plugins_missing_data)
 
-    belongs_to_cluster = len(config_cache.clusters_of(hostname)) > 0
-    if belongs_to_cluster:
-        filter_mode = "include_clustered"
 
-    services = check_table.get_precompiled_check_table(hostname,
-                                                       remove_duplicates=True,
-                                                       filter_mode=filter_mode)
+def _get_filtered_services(
+    host_name: HostName,
+    belongs_to_cluster: bool,
+    config_cache: config.ConfigCache,
+    only_check_plugins: Optional[Set[CheckPluginName]] = None,
+) -> List[Service]:
+
+    services = check_table.get_sorted_service_list(
+        host_name,
+        remove_duplicates=True,
+        filter_mode="include_clustered" if belongs_to_cluster else None,
+    )
 
     # When check types are specified via command line, enforce them. Otherwise use the
     # list of checks defined by the check table.
-    if only_check_plugin_names is None:
+    if only_check_plugins is None:
         only_check_plugins = {service.check_plugin_name for service in services}
-    else:
-        only_check_plugins = set(only_check_plugin_names)
 
-    sources.enforce_check_plugin_names(only_check_plugins)
-
-    # Gather the data from the sources
-    multi_host_sections = sources.get_host_sections()
+    def _is_not_of_host(service):
+        return host_name != config_cache.host_of_clustered_service(host_name, service.description)
 
     # Filter out check types which are not used on the node
     if belongs_to_cluster:
-        pos_match = set()
-        neg_match = set()
-        for service in services:
-            if hostname != config_cache.host_of_clustered_service(hostname, service.description):
-                pos_match.add(service.check_plugin_name)
-            else:
-                neg_match.add(service.check_plugin_name)
-        only_check_plugins -= (pos_match - neg_match)
+        removed_plugins = {
+            plugin for plugin in only_check_plugins if all(
+                _is_not_of_host(service) for service in services
+                if service.check_plugin_name == plugin)
+        }
+        only_check_plugins -= removed_plugins
 
-    for service in services:
-        if only_check_plugins is not None and service.check_plugin_name not in only_check_plugins:
-            continue
-
-        if belongs_to_cluster and hostname != config_cache.host_of_clustered_service(
-                hostname, service.description):
-            continue
-
-        success = execute_check(config_cache, multi_host_sections, hostname, ipaddress,
-                                service.check_plugin_name, service.item, service.parameters,
-                                service.description)
-        if success:
-            num_success += 1
-        elif success is None:
-            # If the service is in any timeperiod we do not want to
-            # - increase num_success or
-            # - add to missing sections
-            continue
-        else:
-            missing_sections.add(cmk.base.check_utils.section_name_of(service.check_plugin_name))
-
-    import cmk.base.inventory as inventory  # pylint: disable=import-outside-toplevel
-    inventory.do_inventory_actions_during_checking_for(sources, multi_host_sections, host_config,
-                                                       ipaddress)
-
-    missing_section_list = sorted(missing_sections)
-    return num_success, missing_section_list
+    return [
+        service for service in services
+        if (service.check_plugin_name in only_check_plugins and
+            not (belongs_to_cluster and _is_not_of_host(service)) and
+            not service_outside_check_period(config_cache, host_name, service.description))
+    ]
 
 
-def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_plugin_name, item,
-                  params, description):
-    # type: (config.ConfigCache, data_sources.MultiHostSections, HostName, Optional[HostAddress], CheckPluginName, Item, CheckParameters, ServiceName) -> Optional[bool]
-    # Make a bit of context information globally available, so that functions
-    # called by checks now this context
-    check_api_utils.set_service(check_plugin_name, description)
-    item_state.set_item_state_prefix(check_plugin_name, item)
-
-    # Skip checks that are not in their check period
+def service_outside_check_period(config_cache: config.ConfigCache, hostname: HostName,
+                                 description: ServiceName) -> bool:
     period = config_cache.check_period_of_service(hostname, description)
-    if period is not None:
-        if not cmk.base.core.check_timeperiod(period):
-            console.verbose("Skipping service %s: currently not in timeperiod %s.\n",
-                            six.ensure_str(description), period)
-            return None
+    if period is None:
+        return False
+
+    if cmk.base.core.check_timeperiod(period):
         console.vverbose("Service %s: timeperiod %s is currently active.\n",
-                         six.ensure_str(description), period)
+                         ensure_str(description), period)
+        return False
 
-    section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
+    console.verbose("Skipping service %s: currently not in timeperiod %s.\n",
+                    ensure_str(description), period)
+    return True
 
-    dont_submit = False
-    section_content = None
+
+def execute_check(multi_host_sections: MultiHostSections, host_config: config.HostConfig,
+                  ipaddress: Optional[HostAddress], service: Service) -> bool:
+
+    plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
+
+    # Make a bit of context information globally available, so that functions
+    # called by checks know this context. set_service is needed for predictive levels!
+    # TODO: This should be a context manager, similar to value_store (f.k.a. item_state)
+    # This is used for both legacy and agent_based API.
+    check_api_utils.set_service(str(service.check_plugin_name), service.description)
+
+    # check if we must use legacy mode. remove this block entirely one day
+    if (plugin is not None and host_config.is_cluster and
+            plugin.cluster_check_function.__name__ == "cluster_legacy_mode_from_hell"):
+        return _execute_check_legacy_mode(
+            multi_host_sections,
+            host_config.hostname,
+            ipaddress,
+            service,
+        )
+
+    submit, data_received, result = get_aggregated_result(
+        multi_host_sections,
+        host_config,
+        ipaddress,
+        service,
+        plugin,
+        lambda: determine_check_params(service.parameters),
+    )
+
+    if submit:
+        _submit_check_result(
+            host_config.hostname,
+            service.description,
+            result,
+            multi_host_sections.get_cache_info(plugin.sections) if plugin else None,
+        )
+    elif data_received:
+        console.verbose("%-20s PEND - %s\n", ensure_str(service.description), result[1])
+
+    return data_received
+
+
+def get_aggregated_result(
+    multi_host_sections: MultiHostSections,
+    host_config: config.HostConfig,
+    ipaddress: Optional[HostAddress],
+    service: Service,
+    plugin: Optional[CheckPlugin],
+    params_function: Callable[[], Parameters],
+) -> Tuple[bool, bool, ServiceCheckResult]:
+    """Run the check function and aggregate the subresults
+
+    This function is also called during discovery.
+
+    Returns a triple:
+       bool: should the result be submitted to the core
+       bool: did we receive data for the plugin
+       ServiceCheckResult: The aggregated result as returned by the plugin, or a fallback
+
+    """
+    if plugin is None:
+        return False, True, CHECK_NOT_IMPLEMENTED
+
+    check_function = (plugin.cluster_check_function
+                      if host_config.is_cluster else plugin.check_function)
+
+    source_type = (SourceType.MANAGEMENT
+                   if service.check_plugin_name.is_management_name() else SourceType.HOST)
+
+    kwargs = {}
     try:
-        # TODO: There is duplicate code with discovery._execute_discovery(). Find a common place!
-        try:
-            section_content = multi_host_sections.get_section_content(
+        kwargs = multi_host_sections.get_section_cluster_kwargs(
+            HostKey(host_config.hostname, None, source_type),
+            plugin.sections,
+            service.description,
+        ) if host_config.is_cluster else multi_host_sections.get_section_kwargs(
+            HostKey(host_config.hostname, ipaddress, source_type),
+            plugin.sections,
+        )
+
+        if not kwargs and not service.check_plugin_name.is_management_name():
+            # in 1.6 some plugins where discovered for management boards, but with
+            # the regular host plugins name. In this case retry with the source type
+            # forced to MANAGEMENT:
+            kwargs = multi_host_sections.get_section_cluster_kwargs(
+                HostKey(host_config.hostname, None, SourceType.MANAGEMENT),
+                plugin.sections,
+                service.description,
+            ) if host_config.is_cluster else multi_host_sections.get_section_kwargs(
+                HostKey(host_config.hostname, ipaddress, SourceType.MANAGEMENT),
+                plugin.sections,
+            )
+
+        if not kwargs:  # no data found
+            return False, False, RECEIVED_NO_DATA
+
+        if service.item is not None:
+            kwargs["item"] = service.item
+        if plugin.check_ruleset_name:
+            kwargs["params"] = params_function()
+
+        with value_store.context(plugin.name, service.item):
+            result = _aggregate_results(check_function(**kwargs))
+
+    except (item_state.MKCounterWrapped, checking_classes.IgnoreResultsError) as e:
+        msg = str(e) or "No service summary available"
+        return False, True, (0, msg, [])
+
+    except MKTimeout:
+        raise
+
+    except Exception:
+        if cmk.utils.debug.enabled():
+            raise
+        result = 3, cmk.base.crash_reporting.create_check_crash_dump(
+            host_config.hostname,
+            service.check_plugin_name,
+            kwargs,
+            is_manual_check(host_config.hostname, service.id()),
+            service.description,
+        ), []
+
+    return True, True, result
+
+
+def _execute_check_legacy_mode(multi_host_sections: MultiHostSections, hostname: HostName,
+                               ipaddress: Optional[HostAddress], service: Service) -> bool:
+    legacy_check_plugin_name = _find_legacy_check_name(
+        str(service.check_plugin_name),
+        config.check_info,
+    )
+    if legacy_check_plugin_name is None:
+        _submit_check_result(hostname, service.description, CHECK_NOT_IMPLEMENTED, None)
+        return True
+
+    check_function = config.check_info[legacy_check_plugin_name].get("check_function")
+    if check_function is None:
+        _submit_check_result(hostname, service.description, CHECK_NOT_IMPLEMENTED, None)
+        return True
+
+    # Make a bit of context information globally available, so that functions
+    # called by checks know this context. check_api_utils.set_service has
+    # already been called.
+    item_state.set_item_state_prefix(str(service.check_plugin_name), service.item)
+
+    section_name = legacy_check_plugin_name.split('.')[0]
+
+    section_content = None
+    mgmt_board_info = config.get_management_board_precedence(section_name, config.check_info)
+    try:
+        section_content = multi_host_sections.get_section_content(
+            HostKey(
                 hostname,
                 ipaddress,
-                section_name,
-                for_discovery=False,
-                service_description=description)
-        except MKParseFunctionError as e:
-            x = e.exc_info()
-            # re-raise the original exception to not destory the trace. This may raise a MKCounterWrapped
-            # exception which need to lead to a skipped check instead of a crash
-            # TODO CMK-3729, PEP-3109
-            new_exception = x[0](x[1])
-            new_exception.__traceback__ = x[2]  # type: ignore[attr-defined]
-            raise new_exception
+                SourceType.MANAGEMENT if mgmt_board_info == LEGACY_MGMT_ONLY else SourceType.HOST,
+            ),
+            mgmt_board_info,
+            section_name,
+            for_discovery=False,
+            service_description=service.description,
+        )
 
         # TODO: Move this to a helper function
         if section_content is None:  # No data for this check type
             return False
 
-        # In case of SNMP checks but missing agent response, skip this check.
-        # TODO: This feature predates the 'parse_function', and is not needed anymore.
-        # # Special checks which still need to be called even with empty data
-        # # may declare this.
-        if not section_content and cmk.base.check_utils.is_snmp_check(check_plugin_name) \
-           and not config.check_info[check_plugin_name]["handle_empty_info"]:
-            return False
-
-        check_function = config.check_info[check_plugin_name].get("check_function")
-        if check_function is None:
-            check_function = lambda item, params, section_content: (
-                3, 'UNKNOWN - Check not implemented')
-
         # Call the actual check function
         item_state.reset_wrapped_counters()
 
-        raw_result = check_function(item, determine_check_params(params), section_content)
-        result = sanitize_check_result(raw_result,
-                                       cmk.base.check_utils.is_snmp_check(check_plugin_name))
+        used_params = legacy_determine_check_params(service.parameters)
+        raw_result = check_function(service.item, used_params, section_content)
+        result = sanitize_check_result(raw_result)
         item_state.raise_counter_wrap()
 
     except item_state.MKCounterWrapped as e:
@@ -338,59 +552,78 @@ def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_
         # handling of wrapped counters via exception on their own.
         # Do not submit any check result in that case:
         console.verbose("%-20s PEND - Cannot compute check result: %s\n",
-                        six.ensure_str(description), e)
-        dont_submit = True
+                        ensure_str(service.description), e)
+        # Don't submit to core - we're done.
+        return True
 
     except MKTimeout:
         raise
 
-    except Exception as e:
+    except Exception:
         if cmk.utils.debug.enabled():
             raise
         result = 3, cmk.base.crash_reporting.create_check_crash_dump(
-            hostname, check_plugin_name, item, is_manual_check(hostname, check_plugin_name, item),
-            params, description, section_content), []
+            hostname,
+            service.check_plugin_name,
+            {
+                "item": service.item,
+                "params": used_params,
+                "section_content": section_content
+            },
+            is_manual_check(hostname, service.id()),
+            service.description,
+        ), []
 
-    if not dont_submit:
-        # Now add information about the age of the data in the agent
-        # sections. This is in data_sources.g_agent_cache_info. For clusters we
-        # use the oldest of the timestamps, of course.
-        oldest_cached_at = None
-        largest_interval = None
-
-        def minn(a, b):
-            # type: (Optional[int], Optional[int]) -> Optional[int]
-            if a is None:
-                return b
-            if b is None:
-                return a
-            return min(a, b)
-
-        def maxn(a, b):
-            # type: (Optional[int], Optional[int]) -> Optional[int]
-            if a is None:
-                return b
-            if b is None:
-                return a
-            return max(a, b)
-
-        for host_sections in multi_host_sections.get_host_sections().values():
-            section_entries = host_sections.cache_info
-            if section_name in section_entries:
-                cached_at, cache_interval = section_entries[section_name]
-                oldest_cached_at = minn(oldest_cached_at, cached_at)
-                largest_interval = maxn(largest_interval, cache_interval)
-
-        _submit_check_result(hostname,
-                             description,
-                             result,
-                             cached_at=oldest_cached_at,
-                             cache_interval=largest_interval)
+    _submit_check_result(
+        hostname,
+        service.description,
+        result,
+        _legacy_determine_cache_info(multi_host_sections, SectionName(section_name)),
+    )
     return True
 
 
-def determine_check_params(entries):
-    # type: (CheckParameters) -> CheckParameters
+def _find_legacy_check_name(
+    new_check_plugin_name_str: str,
+    potential_legacy_names: Iterable[str],
+) -> Optional[str]:
+    for pot_legacy_name in potential_legacy_names:
+        if maincheckify(pot_legacy_name) == new_check_plugin_name_str:
+            return pot_legacy_name
+    return None
+
+
+def _legacy_determine_cache_info(multi_host_sections: MultiHostSections,
+                                 section_name: SectionName) -> Optional[Tuple[int, int]]:
+    """Aggregate information about the age of the data in the agent sections
+
+    This is in data_sources.g_agent_cache_info. For clusters we use the oldest
+    of the timestamps, of course.
+    """
+    cached_ats: List[int] = []
+    intervals: List[int] = []
+    for host_sections in multi_host_sections.values():
+        section_entries = host_sections.cache_info
+        if section_name in section_entries:
+            cached_at, cache_interval = section_entries[section_name]
+            cached_ats.append(cached_at)
+            intervals.append(cache_interval)
+
+    return (min(cached_ats), max(intervals)) if cached_ats else None
+
+
+def determine_check_params(entries: LegacyCheckParameters) -> Parameters:
+    # TODO (mo): obviously, we do not want to keep legacy_determine_check_params
+    # around in the long run. This needs cleaning up, once we've gotten
+    # rid of tuple parameters.
+    params = legacy_determine_check_params(entries)
+    # wrap_parameters is a no-op for dictionaries.
+    # For auto-migrated plugins expecting tuples, they will be
+    # unwrapped by a decorator of the original check_function.
+    return Parameters(wrap_parameters(params))
+
+
+def legacy_determine_check_params(entries: LegacyCheckParameters) -> LegacyCheckParameters:
     if not isinstance(entries, cmk.base.config.TimespecificParamList):
         return entries
 
@@ -405,7 +638,7 @@ def determine_check_params(entries):
             entries[0])  # A timespecific rule, determine the correct tuple
 
     # This rule is dictionary based, evaluate all entries and merge matching keys
-    timespecific_entries = {}  # type: Dict[str, Any]
+    timespecific_entries: Dict[str, Any] = {}
     for entry in entries[::-1]:
         if not isinstance(entry, dict):
             # Ignore (old) default parameters like
@@ -418,8 +651,7 @@ def determine_check_params(entries):
     return timespecific_entries
 
 
-def _evaluate_timespecific_entry(entry):
-    # type: (Dict[str, Any]) -> Dict[str, Any]
+def _evaluate_timespecific_entry(entry: Dict[str, Any]) -> Dict[str, Any]:
     # Dictionary entries without timespecific settings
     if "tp_default_value" not in entry:
         return entry
@@ -450,48 +682,114 @@ def _evaluate_timespecific_entry(entry):
     return combined_entry
 
 
-def is_manual_check(hostname, check_plugin_name, item):
-    # type: (HostName, CheckPluginName, Item) -> bool
-    manual_checks = check_table.get_check_table(hostname,
-                                                remove_duplicates=True,
-                                                skip_autochecks=True)
-    return (check_plugin_name, item) in manual_checks
+def is_manual_check(hostname: HostName, service_id: ServiceID) -> bool:
+    return service_id in check_table.get_check_table(
+        hostname,
+        remove_duplicates=True,
+        skip_autochecks=True,
+    )
 
 
-def sanitize_check_result(result, is_snmp):
-    # type: (Union[None, ServiceCheckResult, Tuple, Iterable], bool) -> ServiceCheckResult
+def _add_state_marker(
+    result_str: str,
+    state_marker: str,
+) -> str:
+    return result_str if state_marker in result_str else result_str + state_marker
+
+
+def _aggregate_results(subresults: CheckGenerator) -> ServiceCheckResult:
+
+    perfdata, results = _consume_and_dispatch_result_types(subresults)
+    needs_marker = len(results) > 1
+
+    summaries: List[str] = []
+    details: List[str] = []
+    status = checking_classes.state(0)
+    for result in results:
+        status = checking_classes.state.worst(status, result.state)
+        state_marker = check_api_utils.state_markers[int(result.state)] if needs_marker else ""
+
+        if result.summary:
+            summaries.append(_add_state_marker(
+                result.summary,
+                state_marker,
+            ))
+
+        details.append(_add_state_marker(
+            result.details,
+            state_marker,
+        ))
+
+    # Empty list? Check returned nothing
+    if not details:
+        return ITEM_NOT_FOUND
+
+    if not summaries:
+        count = len(details)
+        summaries.append("Everything looks OK - %d detail%s available" %
+                         (count, "" if count == 1 else "s"))
+
+    all_text = [", ".join(summaries)] + details
+    return int(status), "\n".join(all_text).strip(), perfdata
+
+
+def _consume_and_dispatch_result_types(
+    subresults: CheckGenerator,) -> Tuple[List[Metric], List[checking_classes.Result]]:
+    """Consume *all* check results, and *then* raise, if we encountered
+    an IgnoreResults instance.
+    """
+    ignore_results: List[checking_classes.IgnoreResults] = []
+    results: List[checking_classes.Result] = []
+    perfdata: List[Metric] = []
+
+    for subr in subresults:
+        if isinstance(subr, checking_classes.IgnoreResults):
+            ignore_results.append(subr)
+        elif isinstance(subr, checking_classes.Metric):
+            perfdata.append((subr.name, subr.value) + subr.levels + subr.boundaries)
+        else:
+            assert isinstance(subr, checking_classes.Result)
+            results.append(subr)
+
+    if ignore_results:
+        raise checking_classes.IgnoreResultsError(str(ignore_results[-1]))
+
+    return perfdata, results
+
+
+def sanitize_check_result(
+        result: Union[None, ServiceCheckResult, Tuple, Iterable]) -> ServiceCheckResult:
     if isinstance(result, tuple):
         return cast(ServiceCheckResult, _sanitize_tuple_check_result(result))
 
     if result is None:
-        return _item_not_found(is_snmp)
+        return ITEM_NOT_FOUND
 
-    return _sanitize_yield_check_result(result, is_snmp)
+    return _sanitize_yield_check_result(result)
 
 
 # The check function may return an iterator (using yield) since 1.2.5i5.
 # This function handles this case and converts them to tuple results
-def _sanitize_yield_check_result(result, is_snmp):
-    # type: (Iterable[Any], bool) -> ServiceCheckResult
+def _sanitize_yield_check_result(result: Iterable[Any]) -> ServiceCheckResult:
     subresults = list(result)
 
     # Empty list? Check returned nothing
     if not subresults:
-        return _item_not_found(is_snmp)
+        return ITEM_NOT_FOUND
 
     # Several sub results issued with multiple yields. Make that worst sub check
     # decide the total state, join the texts and performance data. Subresults with
     # an infotext of None are used for adding performance data.
-    perfdata = []  # type: List[Metric]
-    infotexts = []  # type: List[ServiceDetails]
-    status = 0  # type: ServiceState
+    perfdata: List[Metric] = []
+    infotexts: List[ServiceDetails] = []
+    status: ServiceState = 0
 
     for subresult in subresults:
         st, text, perf = _sanitize_tuple_check_result(subresult, allow_missing_infotext=True)
         status = cmk.base.utils.worst_service_state(st, status)
 
         if text:
-            infotexts.append(text + ["", "(!)", "(!!)", "(?)"][st])
+            infotexts.append(text + check_api_utils.state_markers[st])
 
         if perf is not None:
             perfdata += perf
@@ -499,18 +797,11 @@ def _sanitize_yield_check_result(result, is_snmp):
     return status, ", ".join(infotexts), perfdata
 
 
-def _item_not_found(is_snmp):
-    # type: (bool) -> ServiceCheckResult
-    if is_snmp:
-        return 3, "Item not found in SNMP data", []
-
-    return 3, "Item not found in agent output", []
-
-
-# TODO: Cleanup return value: Factor "infotext: Optional[Text]" case out and then make Tuple values
+# TODO: Cleanup return value: Factor "infotext: Optional[str]" case out and then make Tuple values
 # more specific
-def _sanitize_tuple_check_result(result, allow_missing_infotext=False):
-    # type: (Tuple, bool) -> ServiceCheckResultWithOptionalDetails
+def _sanitize_tuple_check_result(
+        result: Tuple,
+        allow_missing_infotext: bool = False) -> ServiceCheckResultWithOptionalDetails:
     if len(result) >= 3:
         state, infotext, perfdata = result[:3]
         _validate_perf_data_values(perfdata)
@@ -523,8 +814,7 @@ def _sanitize_tuple_check_result(result, allow_missing_infotext=False):
     return state, infotext, perfdata
 
 
-def _validate_perf_data_values(perfdata):
-    # type: (Any) -> None
+def _validate_perf_data_values(perfdata: Any) -> None:
     if not isinstance(perfdata, list):
         return
     for v in [value for entry in perfdata for value in entry[1:]]:
@@ -533,29 +823,27 @@ def _validate_perf_data_values(perfdata):
             raise MKGeneralException("Performance data values must not contain spaces")
 
 
-def _sanitize_check_result_infotext(infotext, allow_missing_infotext):
-    # type: (Optional[AnyStr], bool) -> Optional[ServiceDetails]
+def _sanitize_check_result_infotext(infotext: Optional[AnyStr],
+                                    allow_missing_infotext: bool) -> Optional[ServiceDetails]:
     if infotext is None and not allow_missing_infotext:
         raise MKGeneralException("Invalid infotext from check: \"None\"")
 
-    if isinstance(infotext, six.binary_type):
+    if isinstance(infotext, bytes):
         return infotext.decode('utf-8')
 
     return infotext
 
 
-def _convert_perf_data(p):
-    # type: (List[UncleanPerfValue]) -> str
+def _convert_perf_data(p: List[UncleanPerfValue]) -> str:
     # replace None with "" and fill up to 6 values
     normalized = (list(map(_convert_perf_value, p)) + ['', '', '', ''])[0:6]
     return "%s=%s;%s;%s;%s;%s" % tuple(normalized)
 
 
-def _convert_perf_value(x):
-    # type: (UncleanPerfValue) -> str
+def _convert_perf_value(x: UncleanPerfValue) -> str:
     if x is None:
         return ""
-    if isinstance(x, six.string_types):
+    if isinstance(x, str):
         return x
     if isinstance(x, float):
         return ("%.6f" % x).rstrip("0").rstrip(".")
@@ -578,13 +866,8 @@ def _convert_perf_value(x):
 # TODO: Put the core specific things to dedicated files
 
 
-def _submit_check_result(host, servicedesc, result, cached_at=None, cache_interval=None):
-    # type: (HostName, ServiceDetails, ServiceCheckResult, Optional[int], Optional[int]) -> None
-    if not result:
-        result = 3, "Check plugin did not return any result"
-
-    if len(result) != 3:
-        raise MKGeneralException("Invalid check result: %s" % (result,))
+def _submit_check_result(host: HostName, servicedesc: ServiceDetails, result: ServiceCheckResult,
+                         cache_info: Optional[Tuple[int, int]]) -> None:
     state, infotext, perfdata = result
 
     if not (infotext.startswith("OK -") or infotext.startswith("WARN -") or
@@ -593,7 +876,7 @@ def _submit_check_result(host, servicedesc, result, cached_at=None, cache_interv
 
     # make sure that plugin output does not contain a vertical bar. If that is the
     # case then replace it with a Uniocode "Light vertical bar"
-    if isinstance(infotext, six.text_type):
+    if isinstance(infotext, str):
         # regular check results are unicode...
         infotext = infotext.replace(u"|", u"\u2758")
     else:
@@ -609,7 +892,7 @@ def _submit_check_result(host, servicedesc, result, cached_at=None, cache_interv
         # list of perfdata. It is of type string. And it might be
         # needed by the graphing tool in order to choose the correct
         # template. Currently this is used only by mrpe.
-        if len(perfdata) > 0 and isinstance(perfdata[-1], six.string_types):
+        if len(perfdata) > 0 and isinstance(perfdata[-1], str):
             check_command = perfdata[-1]
             del perfdata[-1]
         else:
@@ -624,13 +907,13 @@ def _submit_check_result(host, servicedesc, result, cached_at=None, cache_interv
             perftext = "|" + (" ".join(perftexts))
 
     if _submit_to_core:
-        _do_submit_to_core(host, servicedesc, state, infotext + perftext, cached_at, cache_interval)
+        _do_submit_to_core(host, servicedesc, state, infotext + perftext, cache_info)
 
     _output_check_result(servicedesc, state, infotext, perftexts)
 
 
-def _output_check_result(servicedesc, state, infotext, perftexts):
-    # type: (ServiceName, ServiceState, ServiceDetails, List[str]) -> None
+def _output_check_result(servicedesc: ServiceName, state: ServiceState, infotext: ServiceDetails,
+                         perftexts: List[str]) -> None:
     if _show_perfdata:
         infotext_fmt = "%-56s"
         p = ' (%s)' % (" ".join(perftexts))
@@ -638,17 +921,22 @@ def _output_check_result(servicedesc, state, infotext, perftexts):
         p = ''
         infotext_fmt = "%s"
 
-    console.verbose("%-20s %s%s" + infotext_fmt + "%s%s\n", six.ensure_str(servicedesc), tty.bold,
-                    tty.states[state], six.ensure_str(infotext.split('\n')[0]), tty.normal,
-                    six.ensure_str(p))
+    console.verbose("%-20s %s%s" + infotext_fmt + "%s%s\n", ensure_str(servicedesc),
+                    tty.bold, tty.states[state], ensure_str(infotext.split('\n')[0]), tty.normal,
+                    ensure_str(p))
 
 
-def _do_submit_to_core(host, service, state, output, cached_at=None, cache_interval=None):
-    # type: (HostName, ServiceName, ServiceState, ServiceDetails, Optional[int], Optional[int]) -> None
+def _do_submit_to_core(
+    host: HostName,
+    service: ServiceName,
+    state: ServiceState,
+    output: ServiceDetails,
+    cache_info: Optional[Tuple[int, int]],
+) -> None:
     if _in_keepalive_mode():
+        cached_at, cache_interval = cache_info or (None, None)
         # Regular case for the CMC - check helpers are running in keepalive mode
-        keepalive.add_keepalive_check_result(host, service, state, output, cached_at,
-                                             cache_interval)
+        keepalive.add_check_result(host, service, state, output, cached_at, cache_interval)
 
     elif config.check_submission == "pipe" or config.monitoring_core == "cmc":
         # In case of CMC this is used when running "cmk" manually
@@ -662,15 +950,15 @@ def _do_submit_to_core(host, service, state, output, cached_at=None, cache_inter
                                  "Must be 'pipe' or 'file'" % config.check_submission)
 
 
-def _submit_via_check_result_file(host, service, state, output):
-    # type: (HostName, ServiceName, ServiceState, ServiceDetails) -> None
+def _submit_via_check_result_file(host: HostName, service: ServiceName, state: ServiceState,
+                                  output: ServiceDetails) -> None:
     output = output.replace("\n", "\\n")
     _open_checkresult_file()
     if _checkresult_file_fd:
         now = time.time()
         os.write(
             _checkresult_file_fd,
-            six.ensure_binary("""host_name=%s
+            ensure_binary("""host_name=%s
 service_description=%s
 check_type=1
 check_options=0
@@ -681,11 +969,10 @@ finish_time=%.1f
 return_code=%d
 output=%s
 
-""" % (six.ensure_str(host), six.ensure_str(service), now, now, state, six.ensure_str(output))))
+""" % (ensure_str(host), ensure_str(service), now, now, state, ensure_str(output))))
 
 
-def _open_checkresult_file():
-    # type: () -> None
+def _open_checkresult_file() -> None:
     global _checkresult_file_fd
     global _checkresult_file_path
     if _checkresult_file_fd is None:
@@ -696,8 +983,7 @@ def _open_checkresult_file():
                                      (cmk.utils.paths.check_result_path, e))
 
 
-def _create_nagios_check_result_file():
-    # type: () -> Tuple[int, str]
+def _create_nagios_check_result_file() -> Tuple[int, str]:
     """Create some temporary file for storing the checkresults.
     Nagios expects a seven character long file starting with "c". Since Python3 we can not
     use tempfile.mkstemp anymore since it produces file names with 9 characters length.
@@ -722,18 +1008,17 @@ def _create_nagios_check_result_file():
     raise FileExistsError(errno.EEXIST, "No usable temporary file name found")
 
 
-_name_sequence = None  # type: Optional[_RandomNameSequence]
+_name_sequence: 'Optional[_RandomNameSequence]' = None
 
 
-def _get_candidate_names():
-    # type: () -> _RandomNameSequence
+def _get_candidate_names() -> '_RandomNameSequence':
     global _name_sequence
     if _name_sequence is None:
         _name_sequence = _RandomNameSequence()
     return _name_sequence
 
 
-class _RandomNameSequence(object):  # pylint: disable=useless-object-inheritance
+class _RandomNameSequence:
     """An instance of _RandomNameSequence generates an endless
     sequence of unpredictable strings which can safely be incorporated
     into file names.  Each string is eight characters long.  Multiple
@@ -744,28 +1029,24 @@ class _RandomNameSequence(object):  # pylint: disable=useless-object-inheritance
     characters = "abcdefghijklmnopqrstuvwxyz0123456789_"
 
     @property
-    def rng(self):
-        # type: () -> Random
+    def rng(self) -> Random:
         cur_pid = os.getpid()
         if cur_pid != getattr(self, '_rng_pid', None):
             self._rng = Random()
             self._rng_pid = cur_pid
         return self._rng
 
-    def __iter__(self):
-        # type: () -> _RandomNameSequence
+    def __iter__(self) -> '_RandomNameSequence':
         return self
 
-    def __next__(self):
-        # type: () -> str
+    def __next__(self) -> str:
         c = self.characters
         choose = self.rng.choice
         letters = [choose(c) for dummy in range(6)]
         return ''.join(letters)
 
 
-def _close_checkresult_file():
-    # type: () -> None
+def _close_checkresult_file() -> None:
     global _checkresult_file_fd
     if _checkresult_file_fd is not None and _checkresult_file_path is not None:
         os.close(_checkresult_file_fd)
@@ -775,22 +1056,21 @@ def _close_checkresult_file():
             pass
 
 
-def _submit_via_command_pipe(host, service, state, output):
-    # type: (HostName, ServiceName, ServiceState, ServiceDetails) -> None
+def _submit_via_command_pipe(host: HostName, service: ServiceName, state: ServiceState,
+                             output: ServiceDetails) -> None:
     output = output.replace("\n", "\\n")
     _open_command_pipe()
     if _nagios_command_pipe is not None and not isinstance(_nagios_command_pipe, bool):
         # [<timestamp>] PROCESS_SERVICE_CHECK_RESULT;<host_name>;<svc_description>;<return_code>;<plugin_output>
         msg = "[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" % (time.time(), host, service,
                                                                    state, output)
-        _nagios_command_pipe.write(six.ensure_binary(msg))
+        _nagios_command_pipe.write(ensure_binary(msg))
         # Important: Nagios needs the complete command in one single write() block!
         # Python buffers and sends chunks of 4096 bytes, if we do not flush.
         _nagios_command_pipe.flush()
 
 
-def _open_command_pipe():
-    # type: () -> None
+def _open_command_pipe() -> None:
     global _nagios_command_pipe
     if _nagios_command_pipe is None:
         if not os.path.exists(cmk.utils.paths.nagios_command_pipe_path):
@@ -807,8 +1087,7 @@ def _open_command_pipe():
             raise MKGeneralException("Error writing to command pipe: %s" % e)
 
 
-def _core_pipe_open_timeout(signum, stackframe):
-    # type: (int, Optional[FrameType]) -> None
+def _core_pipe_open_timeout(signum: int, stackframe: Optional[FrameType]) -> None:
     raise IOError("Timeout while opening pipe")
 
 
@@ -825,20 +1104,17 @@ def _core_pipe_open_timeout(signum, stackframe):
 #   '----------------------------------------------------------------------'
 
 
-def show_perfdata():
-    # type: () -> None
+def show_perfdata() -> None:
     global _show_perfdata
     _show_perfdata = True
 
 
-def disable_submit():
-    # type: () -> None
+def disable_submit() -> None:
     global _submit_to_core
     _submit_to_core = False
 
 
-def _in_keepalive_mode():
-    # type: () -> bool
+def _in_keepalive_mode() -> bool:
     if keepalive:
         return keepalive.enabled()
     return False

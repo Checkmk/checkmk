@@ -8,8 +8,12 @@
 # commands are sent by NSCA to the command pipe. Forwards these
 # events to the local event console daemon.
 
-import os, sys, getopt, traceback, time, socket
-import six
+import getopt
+import os
+import socket
+import sys
+import time
+import traceback
 
 opt_debug = False
 opt_verbose = False
@@ -41,7 +45,7 @@ def open_logfile():
 
 
 def log(text):
-    if isinstance(text, six.text_type):
+    if isinstance(text, str):
         text = text.encode("utf-8")
     try:
         g_logfile.write('[%.6f] %s\n' % (time.time(), text))

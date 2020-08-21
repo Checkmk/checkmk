@@ -1,17 +1,16 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (  # pylint: disable=unused-import
-    List,)
+from typing import List, Optional, Type
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.valuespec import ValueSpec, DictionaryEntry  # pylint: disable=unused-import
+from cmk.gui.valuespec import ValueSpec, DictionaryEntry
 from cmk.gui.valuespec import (
     FixedValue,
     PasswordSpec,
@@ -23,6 +22,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.plugins.wato import (
+    WatoMode,
     ConfigDomainCore,
     SimpleModeType,
     SimpleListMode,
@@ -119,6 +119,10 @@ class ModeEditPassword(SimpleEditMode):
     def permissions(cls):
         return ["passwords"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModePasswords
+
     def __init__(self):
         super(ModeEditPassword, self).__init__(
             mode_type=PasswordStoreModeType(),
@@ -127,18 +131,18 @@ class ModeEditPassword(SimpleEditMode):
 
     def _vs_individual_elements(self):
         if config.user.may("wato.edit_all_passwords"):
-            admin_element = [
+            admin_element: List[ValueSpec] = [
                 FixedValue(
                     None,
                     title=_("Administrators"),
                     totext=_("Administrators (having the permission "
                              "\"Write access to all passwords\")"),
                 )
-            ]  # type: List[ValueSpec]
+            ]
         else:
             admin_element = []
 
-        elements = [
+        elements: List[DictionaryEntry] = [
             ("password", PasswordSpec(
                 title=_("Password"),
                 allow_empty=False,
@@ -172,7 +176,7 @@ class ModeEditPassword(SimpleEditMode):
                  choices=self._contact_group_choices,
                  autoheight=False,
              )),
-        ]  # type: List[DictionaryEntry]
+        ]
 
         return elements
 

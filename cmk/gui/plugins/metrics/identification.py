@@ -1,11 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import six
 
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
@@ -31,7 +30,7 @@ from cmk.gui.exceptions import MKUserError
 #   '----------------------------------------------------------------------'
 
 
-class GraphIdentificationTypes(object):
+class GraphIdentificationTypes:
     """Container class for managing all known identification types"""
     def __init__(self):
         super(GraphIdentificationTypes, self).__init__()
@@ -54,7 +53,7 @@ class GraphIdentificationTypes(object):
 graph_identification_types = GraphIdentificationTypes()
 
 
-class GraphIdentification(six.with_metaclass(abc.ABCMeta, object)):
+class GraphIdentification(metaclass=abc.ABCMeta):
     """Abstract base class for all graph identification classes"""
     @classmethod
     def ident(cls):

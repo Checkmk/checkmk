@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -15,6 +15,7 @@ from cmk.gui.log import logger
 from cmk.gui.plugins.wato import (
     main_module_registry,
     MainModule,
+    MainModuleTopicMaintenance,
     WatoMode,
     mode_registry,
 )
@@ -25,6 +26,10 @@ class MainModuleBackgroundJobs(MainModule):
     @property
     def mode_or_url(self):
         return "background_jobs_overview"
+
+    @property
+    def topic(self):
+        return MainModuleTopicMaintenance
 
     @property
     def title(self):
@@ -44,7 +49,11 @@ class MainModuleBackgroundJobs(MainModule):
 
     @property
     def sort_index(self):
-        return 90
+        return 60
+
+    @property
+    def is_advanced(self):
+        return True
 
 
 @mode_registry.register
@@ -73,7 +82,7 @@ class ModeBackgroundJobsOverview(WatoMode):
             html.immediate_browser_redirect(0.8, "")
 
     def action(self):
-        action_handler = gui_background_job.ActionHandler()
+        action_handler = gui_background_job.ActionHandler(self.breadcrumb())
         action_handler.handle_actions()
 
 
@@ -119,7 +128,7 @@ class ModeBackgroundJobDetails(WatoMode):
             html.immediate_browser_redirect(1, "")
 
     def action(self):
-        action_handler = gui_background_job.ActionHandler()
+        action_handler = gui_background_job.ActionHandler(self.breadcrumb())
         action_handler.handle_actions()
         if action_handler.did_delete_job():
             if self._back_url():

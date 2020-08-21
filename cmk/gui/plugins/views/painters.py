@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -9,7 +9,6 @@ from fnmatch import fnmatch
 import os
 import time
 import io
-import six
 
 import cmk.utils.paths
 import cmk.utils.render
@@ -23,11 +22,18 @@ import cmk.gui.sites as sites
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, html
-from cmk.gui.valuespec import (  # pylint: disable=unused-import
-    DateFormat, Dictionary, DictionaryElements, DropdownChoice, Integer, ListChoice,
-    ListChoiceChoices, TextAscii, Timerange,
+from cmk.gui.valuespec import (
+    DateFormat,
+    Dictionary,
+    DictionaryElements,
+    DropdownChoice,
+    Integer,
+    ListChoice,
+    ListChoiceChoices,
+    TextAscii,
+    Timerange,
 )
-from cmk.gui.view_utils import CellContent  # pylint: disable=unused-import
+from cmk.gui.view_utils import CellContent
 
 from cmk.gui.plugins.views.icons import (
     get_icons,
@@ -1598,7 +1604,7 @@ class PainterServiceCustomVariables(Painter):
         return paint_custom_vars('service', row)
 
 
-class ABCPainterCustomVariable(six.with_metaclass(abc.ABCMeta, Painter)):
+class ABCPainterCustomVariable(Painter, metaclass=abc.ABCMeta):
     def title(self, cell):
         return self._dynamic_title
 
@@ -2343,7 +2349,7 @@ class PainterHost(Painter):
 
     @property
     def parameters(self):
-        elements = [
+        elements: DictionaryElements = [
             ("color_choices",
              ListChoice(choices=[
                  ("colorize_up", _("Colorize background if host is up")),
@@ -2355,7 +2361,7 @@ class PainterHost(Painter):
                         title=_("Coloring"),
                         help=_("Here you can configure the background color for specific states. "
                                "The coloring for host in dowtime overrules all other coloring.")))
-        ]  # type: DictionaryElements
+        ]
 
         return Dictionary(elements=elements, title=_("Options"), optional_keys=[])
 
@@ -2786,14 +2792,14 @@ class PainterHostServices(Painter):
 
     @property
     def parameters(self):
-        choices = [
+        choices: ListChoiceChoices = [
             (0, _("OK")),
             (1, _("WARN")),
             (2, _("CRIT")),
             (3, _("UNKN")),
             ("p", _("PEND")),
-        ]  # type: ListChoiceChoices
-        elements = [
+        ]
+        elements: DictionaryElements = [
             ("render_states",
              ListChoice(choices=choices,
                         toggle_all=True,
@@ -2801,7 +2807,7 @@ class PainterHostServices(Painter):
                         title=_("Only show services in this states"),
                         help=_("Here you can configure which services are displayed depending on "
                                "their state. This is a filter at display level not query level.")))
-        ]  # type: DictionaryElements
+        ]
 
         return Dictionary(elements=elements, title=_("Options"))
 
@@ -3829,7 +3835,7 @@ class PainterCommentEntryType(Painter):
             help_txt = _("Acknowledgement")
         else:
             return "", ""
-        code = html.render_icon(icon, help_txt)  # type: CellContent
+        code: CellContent = html.render_icon(icon, help_txt)
         if linkview:
             code = link_to_view(code, row, linkview)
         return "icons", code
@@ -4696,7 +4702,7 @@ class PainterHostTags(Painter):
         return "", render_tag_groups(get_tag_groups(row, "host"), "host", with_links=True)
 
 
-class ABCPainterTagsWithTitles(six.with_metaclass(abc.ABCMeta, Painter)):
+class ABCPainterTagsWithTitles(Painter, metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def object_type(self):
         raise NotImplementedError()
@@ -4818,6 +4824,9 @@ class PainterHostLabels(Painter):
         return "host_labels"
 
     def render(self, row, cell):
+        if html.is_api_call():
+            return "", get_labels(row, "host")
+
         return "", render_labels(get_labels(row, "host"),
                                  "host",
                                  with_links=True,
@@ -4845,6 +4854,9 @@ class PainterServiceLabels(Painter):
         return "service_labels"
 
     def render(self, row, cell):
+        if html.is_api_call():
+            return "", get_labels(row, "service")
+
         return "", render_labels(get_labels(row, "service"),
                                  "service",
                                  with_links=True,

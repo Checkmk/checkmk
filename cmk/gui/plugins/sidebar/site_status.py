@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -11,7 +11,7 @@ from cmk.gui.globals import html
 import cmk.gui.sites as sites
 import cmk.gui.config as config
 
-from . import (
+from cmk.gui.plugins.sidebar import (
     SidebarSnapin,
     snapin_registry,
     render_link,
@@ -37,8 +37,7 @@ class SiteStatus(SidebarSnapin):
         return _("Connection state of each site and button for enabling "
                  "and disabling the site connection")
 
-    def show(self):
-        # type: () -> None
+    def show(self) -> None:
         html.open_table(cellspacing="0", class_="sitestate")
 
         sites.update_site_states_from_dead_sites()

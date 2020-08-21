@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -8,16 +8,15 @@ import re
 
 from bs4 import BeautifulSoup as bs  # type: ignore[import]
 import pytest  # type: ignore[import]
-import six
 
 from cmk.gui.i18n import _
 from cmk.gui.table import table_element
 from cmk.gui.globals import html
-from tools import compare_html
+from tools import compare_html  # type: ignore[import]
 
 
 def read_out_simple_table(text):
-    assert isinstance(text, six.string_types)
+    assert isinstance(text, str)
     # Get the contents of the table as a list of lists
     data = []
     for row in bs(text, 'lxml').findAll('tr'):
@@ -174,7 +173,7 @@ def test_table_cubical(register_builtin_html, monkeypatch, sortable, searchable,
     def save_user_mock(name, data, user, unlock=False):
         pass
 
-    import cmk.gui.config as config
+    import cmk.gui.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
     monkeypatch.setattr(config, "save_user_file", save_user_mock)
 
     # Test data

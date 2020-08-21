@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,18 +6,22 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
-    Age,
     Dictionary,
-    DropdownChoice,
-    MonitoringState,
     TextAscii,
-    Tuple,
 )
 
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
+)
+
+from cmk.gui.plugins.wato.check_parameters.db_jobs import (
+    run_duration,
+    consider_db_status,
+    status_disabled_jobs,
+    status_missing_jobs,
+    missinglog,
 )
 
 
@@ -35,43 +39,11 @@ def _parameter_valuespec_oracle_jobs():
         help=_("A scheduler job is an object in an ORACLE database which could be "
                "compared to a cron job on Unix. "),
         elements=[
-            ("run_duration",
-             Tuple(
-                 title=_("Maximum run duration for last execution"),
-                 help=_("Here you can define an upper limit for the run duration of "
-                        "last execution of the job."),
-                 elements=[
-                     Age(title=_("warning at")),
-                     Age(title=_("critical at")),
-                 ],
-             )),
-            ("disabled",
-             DropdownChoice(
-                 title=_("Job State"),
-                 help=_("The state of the job is ignored per default."),
-                 choices=[
-                     (True, _("Ignore the state of the Job")),
-                     (False, _("Consider the state of the job")),
-                 ],
-             )),
-            ("status_disabled_jobs",
-             MonitoringState(
-                 title=_("Status of service in case of disabled job"),
-                 default_value=0,
-             )),
-            ("status_missing_jobs",
-             MonitoringState(
-                 title=_("Status of service in case of missing job"),
-                 default_value=2,
-             )),
-            ("missinglog",
-             MonitoringState(
-                 default_value=1,
-                 title=_("State in case of Job has no log information"),
-                 help=_("It is possible that a job has no log informations. This also means "
-                        "that the job has no last running state as this is obtained from the log. "
-                        "The last run state is ignored when no log information is found."),
-             )),
+            ("run_duration", run_duration),
+            ("disabled", consider_db_status),
+            ("status_disabled_jobs", status_disabled_jobs),
+            ("status_missing_jobs", status_missing_jobs),
+            ("missinglog", missinglog),
         ],
     )
 

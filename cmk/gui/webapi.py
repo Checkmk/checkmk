@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -8,7 +8,7 @@ import traceback
 import json
 import pprint
 import xml.dom.minidom  # type: ignore[import]
-from typing import Any, Callable, Dict, Text, Tuple, Union  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, Tuple, Union
 
 import dicttoxml  # type: ignore[import]
 
@@ -24,6 +24,7 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.read_only
 import cmk.gui.i18n
+from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import (
@@ -48,7 +49,7 @@ from cmk.gui.plugins.webapi.utils import (  # noqa: F401 # pylint: disable=unuse
     validate_host_attributes,
 )
 
-loaded_with_language = False  # type: Union[bool, None, str]
+loaded_with_language: Union[bool, None, str] = False
 
 
 def load_plugins(force):
@@ -89,9 +90,9 @@ class PermissionWATOAllowedAPI(Permission):
         return config.builtin_role_ids
 
 
-Formatter = Callable[[Dict[str, Any]], Text]
+Formatter = Callable[[Dict[str, Any]], str]
 
-_FORMATTERS = {
+_FORMATTERS: Dict[str, Tuple[Formatter, Formatter]] = {
     "json":
         (json.dumps,
          lambda response: json.dumps(response, sort_keys=True, indent=4, separators=(',', ': '))),
@@ -99,7 +100,7 @@ _FORMATTERS = {
     "xml":
         (dicttoxml.dicttoxml,
          lambda response: xml.dom.minidom.parseString(dicttoxml.dicttoxml(response)).toprettyxml()),
-}  # type: Dict[str, Tuple[Formatter, Formatter]]
+}
 
 
 @cmk.gui.pages.register("webapi")
@@ -135,7 +136,7 @@ def page_api():
         }
     except MKException as e:
         response = {"result_code": 1, "result": _("Check_MK exception: %s") % e}
-    except Exception as e:
+    except Exception:
         if config.debug:
             raise
         logger.exception("error handling web API call")
@@ -220,6 +221,10 @@ def _execute_action_no_lock(api_call, request_object):
     if cmk.gui.watolib.read_only.is_enabled() and \
        not cmk.gui.watolib.read_only.may_override():
         raise MKUserError(None, cmk.gui.watolib.read_only.message())
+
+    # We assume something will be modified and increase the config generation
+    update_config_generation()
+
     return {
         "result_code": 0,
         "result": api_call["handler"](request_object),

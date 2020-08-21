@@ -4,7 +4,9 @@
 // source code package.
 
 #include "TableEventConsoleReplication.h"
+
 #include <memory>
+
 #include "Column.h"
 #include "DynamicColumn.h"
 #include "DynamicEventConsoleReplicationColumn.h"
@@ -13,8 +15,9 @@
 
 TableEventConsoleReplication::TableEventConsoleReplication(MonitoringCore *mc)
     : Table(mc) {
+    Column::Offsets offsets{};
     addDynamicColumn(std::make_unique<DynamicEventConsoleReplicationColumn>(
-        "value", "The replication value", mc, Column::Offsets{}));
+        "value", "The replication value", mc, offsets));
 }
 
 std::string TableEventConsoleReplication::name() const {

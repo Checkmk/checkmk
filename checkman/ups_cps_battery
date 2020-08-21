@@ -8,4 +8,4 @@ description:
  remaining runtime.
 
 inventory:
- One check per device is created.
+ One service is created for each device.

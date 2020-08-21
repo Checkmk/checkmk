@@ -3,15 +3,16 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import cmk.base.plugins.agent_based.utils.docker as docker
 
 
 def parse_docker_node_disk_usage(info):
-    version = docker_get_version(info)  # pylint: disable=undefined-variable
+    version = docker.get_version(info)
 
     if version is None:
         return parse_legacy_docker_system_df(info)  # pylint: disable=undefined-variable
 
-    return {r.get('type'): r for r in map(docker_json_get_obj, info[1:]) if r is not None}  # pylint: disable=undefined-variable
+    return {r.get('type'): r for r in map(docker.json_get_obj, info[1:]) if r is not None}
 
 
 @append_deprecation_warning  # pylint: disable=undefined-variable
@@ -38,7 +39,7 @@ check_info["docker_node_disk_usage"] = {
     "inventory_function": discover(),
     "check_function": check_docker_node_disk_usage,
     "service_description": "Docker disk usage - %s",
-    "includes": ['docker.include', 'legacy_docker.include'],
+    "includes": ['legacy_docker.include'],
     "has_perfdata": True,
     "group": "docker_node_disk_usage",
 }

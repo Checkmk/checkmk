@@ -1,6 +1,6 @@
 title: Checkmk Event Console: Status and Performance
 agents: linux
-catalog: app/omd
+catalog: app/cmk
 license: GPL
 distribution: check_mk
 description:

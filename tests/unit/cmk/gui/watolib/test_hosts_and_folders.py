@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -11,10 +11,11 @@ import shutil
 import pytest  # type: ignore[import]
 from werkzeug.test import create_environ
 
-import cmk.gui.config as config  # pylint: disable=unused-import
-import cmk.gui.watolib as watolib  # pylint: disable=unused-import
+import cmk.gui.config as config
+import cmk.gui.watolib as watolib
 import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
 import cmk.gui.htmllib as htmllib
+from cmk.gui.watolib.utils import has_agent_bakery
 
 from cmk.gui.http import Request
 from cmk.gui.globals import AppContext, RequestContext
@@ -38,6 +39,19 @@ def test_env(mocked_user, load_config, load_plugins):
     # Cleanup WATO folders created by the test
     shutil.rmtree(hosts_and_folders.Folder.root_folder().filesystem_path(), ignore_errors=True)
     os.makedirs(hosts_and_folders.Folder.root_folder().filesystem_path())
+
+
+@pytest.fixture(autouse=True)
+def fake_start_bake_agents(monkeypatch):
+    if not has_agent_bakery():
+        return
+
+    import cmk.gui.cee.plugins.wato.agent_bakery.misc as agent_bakery
+
+    def _fake_start_bake_agents(host_names, signing_credentials):
+        pass
+
+    monkeypatch.setattr(agent_bakery, "start_bake_agents", _fake_start_bake_agents)
 
 
 @pytest.mark.parametrize("attributes,expected_tags", [
@@ -135,7 +149,7 @@ def test_write_and_read_host_attributes(tmp_path, attributes, monkeypatch):
         # Read data back
         read_folder_hosts = read_data_folder.hosts()
         assert len(read_folder_hosts) == 1
-        for _, host in read_folder_hosts.iteritems():
+        for _, host in read_folder_hosts.items():
             assert host.attributes() == attributes
 
 
@@ -256,8 +270,8 @@ def test_mgmt_inherit_protocol(protocol, host_attribute, base_variable, folder_c
     assert data[base_variable]["mgmt-host"] == folder_credentials
 
 
-@pytest.fixture
-def make_folder(mocker, fs):
+@pytest.fixture(name="make_folder")
+def fixture_make_folder(mocker, fs):
     """
     Returns a function to create patched folders for tests. Note that the global setting
     "Hide folders without read permissions" will currently always be set during setup.
@@ -296,7 +310,8 @@ def make_folder(mocker, fs):
                                           parent_folder=parent_folder,
                                           title=title,
                                           root_dir=root_dir)
-        folder._may_see = may_see
+        # Attribute only used for testing
+        folder._may_see = may_see  # type: ignore[attr-defined]
         return folder
 
     return f

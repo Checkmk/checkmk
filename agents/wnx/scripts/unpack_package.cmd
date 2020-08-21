@@ -6,10 +6,8 @@ if "%4%" == "" powershell Write-Host "Invalid out dir root" -ForegroundColor Red
 if "%5%" == "" powershell Write-Host "Invalid out dir name" -ForegroundColor Red && goto usage
 if "%6%" == "" powershell Write-Host "Folder Correction not set" -ForegroundColor Red && goto usage
 
-set unpacker_exe=%1%
+set unpacker_exe=7z
 set unpacker=%unpacker_exe% x -y
-if not exist "%unpacker_exe%" powershell Write-Host "%unpacker_exe% not found" -ForegroundColor Red && goto exit
-powershell Write-Host "%unpacker_exe% found" -ForegroundColor green
 
 set src_dir_name=%2
 set src_file_name=%3
@@ -65,6 +63,6 @@ powershell Write-Host "Usage:" -ForegroundColor DarkGreen
 powershell Write-Host "unpack_package.cmd file_name target_dir_name sourcedir_name" -ForegroundColor DarkGreen
 powershell Write-Host "sourcedir_name is subdirectory in ..\omd\packages" -ForegroundColor DarkGreen
 powershell Write-Host "Example with folder in tarball:" -ForegroundColor DarkGreen
-powershell Write-Host "       unpack_package.cmd 7-zip\7z.exe ..\..\..\omd\packages\googletest googletest-release-1.10.0.tar.gz ..\packages2 googletest" -ForegroundColor DarkGreen
+powershell Write-Host "       unpack_package.cmd 7z ..\..\..\omd\packages\googletest googletest-07d4a6e93d.tar.gz ..\packages2 googletest" -ForegroundColor DarkGreen
 powershell Write-Host "Example without folder in tarball: unpack_package.cmd simpleini-2af65fc        simpleini  simpleini  7-zip\7z.exe ..\packagesx simpleini" -ForegroundColor DarkGreen
 :exit

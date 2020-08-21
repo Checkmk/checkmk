@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -11,6 +11,8 @@ from cmk.gui.plugins.metrics import stats
 @pytest.mark.parametrize("q, array, result", [
     (50, [1], 1),
     (50, [1, 5, 6], 5),
+    (40, [1, 5, 6], 3),
+    (55, [1, 5, 6], 5.5),
     (50, [1, 5, 6, 6], 5.5),
     (100, [1, 5, 6, 6], 6),
     (100, [1, 5, 6], 6),

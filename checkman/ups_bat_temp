@@ -10,5 +10,5 @@ item:
  The identifier of the UPS device
 
 inventory:
- One check for each sensor is created by the inventory
+ One service is created for each sensor.
 

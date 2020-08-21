@@ -49,8 +49,8 @@ def parse_mssql_tablespaces(info):
         values = (to_bytes(*p) for p in pairs[1:])
         data = dict(zip(keys, values))
 
-        if len(line) > 14 and line[14].startswith("ERROR: "):
-            data["error"] = line[14][7:]
+        if len(line) > 14 and line[14].startswith("ERROR:"):
+            data["error"] = ' '.join(line[15:])
 
         parsed.setdefault(item, data)
 

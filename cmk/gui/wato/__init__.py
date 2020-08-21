@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -56,6 +56,7 @@
 # A huge number of imports are here to be compatible with old GUI plugins. Once we dropped support
 # for them, we can remove this here and the imports
 # flake8: noqa
+# pylint: disable=unused-import,cmk-module-layer-violation
 
 import abc
 import ast
@@ -79,24 +80,22 @@ import traceback
 import copy
 import inspect
 from hashlib import sha256
-from typing import TYPE_CHECKING, Type, Any, Dict, Optional as _Optional, Tuple as _Tuple, Union  # pylint: disable=unused-import
-import six
+from typing import TYPE_CHECKING, Type, Any, Dict, Optional as _Optional, Tuple as _Tuple, Union
+from six import ensure_str
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.translations
 import cmk.utils.store as store
-from cmk.utils.encoding import ensure_unicode
 from cmk.utils.regex import regex
 from cmk.utils.defines import short_service_state_name
 import cmk.utils.render as render
-from cmk.utils.type_defs import HostName, HostAddress as TypingHostAddress  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName, HostAddress as TypingHostAddress
 
 import cmk.gui.utils as utils
 import cmk.gui.sites as sites
 import cmk.gui.config as config
 from cmk.gui.table import table_element
-import cmk.gui.multitar as multitar
 import cmk.gui.userdb as userdb
 import cmk.gui.weblib as weblib
 import cmk.gui.mkeventd
@@ -104,6 +103,7 @@ import cmk.gui.forms as forms
 import cmk.gui.backup as backup
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.hosts_and_folders
+from cmk.gui.watolib.activate_changes import update_config_generation
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.i18n
@@ -111,7 +111,7 @@ import cmk.gui.view_utils
 import cmk.gui.plugins.wato.utils
 import cmk.gui.plugins.wato.utils.base_modes
 import cmk.gui.wato.mkeventd
-from cmk.gui.type_defs import PermissionName  # pylint: disable=unused-import
+from cmk.gui.type_defs import PermissionName
 from cmk.gui.pages import page_registry, Page
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
@@ -166,7 +166,7 @@ from cmk.gui.wato.pages.custom_attributes import (
     ModeCustomUserAttrs,
     ModeCustomHostAttrs,
 )
-from cmk.gui.wato.pages.download_agents import ModeDownloadAgents
+from cmk.gui.wato.pages.download_agents import ModeDownloadAgentsOther
 from cmk.gui.wato.pages.folders import (
     ModeFolder,
     ModeAjaxPopupMoveToFolder,
@@ -201,7 +201,6 @@ from cmk.gui.wato.pages.tags import (
 from cmk.gui.wato.pages.hosts import ModeEditHost, ModeCreateHost, ModeCreateCluster
 from cmk.gui.wato.pages.icons import ModeIcons
 from cmk.gui.wato.pages.ldap import ModeLDAPConfig, ModeEditLDAPConnection
-from cmk.gui.wato.pages.main import ModeMain
 from cmk.gui.wato.pages.not_implemented import ModeNotImplemented
 from cmk.gui.wato.pages.notifications import (
     ModeNotifications,
@@ -223,11 +222,8 @@ from cmk.gui.wato.pages.roles import (
     ModeRoleMatrix,
 )
 from cmk.gui.wato.pages.rulesets import (
-    ModeRuleEditor,
-    ModeRulesets,
     ModeStaticChecksRulesets,
     ModeEditRuleset,
-    ModeRuleSearch,
     ModeEditRule,
     ModeCloneRule,
     ModeNewRule,
@@ -266,7 +262,7 @@ wato_root_dir = watolib.wato_root_dir
 multisite_dir = watolib.multisite_dir
 
 # TODO: Kept for old plugin compatibility. Remove this one day
-from cmk.gui.valuespec import *  # pylint: disable=wildcard-import,redefined-builtin
+from cmk.gui.valuespec import *  # pylint: disable=wildcard-import,unused-wildcard-import
 syslog_facilities = cmk.gui.mkeventd.syslog_facilities
 ALL_HOSTS = watolib.ALL_HOSTS
 ALL_SERVICES = watolib.ALL_SERVICES
@@ -343,7 +339,7 @@ from cmk.gui.plugins.watolib.utils import (
     configvar_order,
 )
 
-modes = {}  # type: Dict[Any, Any]
+modes: Dict[Any, Any] = {}
 
 from cmk.gui.plugins.wato.utils.html_elements import (
     wato_confirm,
@@ -356,7 +352,6 @@ from cmk.gui.plugins.wato.utils.html_elements import (
 from cmk.gui.plugins.wato.utils.context_buttons import (
     global_buttons,
     changelog_button,
-    home_button,
     host_status_button,
     service_status_button,
     folder_status_button,
@@ -365,216 +360,19 @@ from cmk.gui.plugins.wato.utils.context_buttons import (
 from cmk.gui.plugins.wato.utils.main_menu import (
     MainMenu,
     MenuItem,
-    get_modules,
     # Kept for compatibility with pre 1.6 plugins
     WatoModule,
     register_modules,
 )
 
+# Import the module to register page handler
+import cmk.gui.wato.page_handler
+
 NetworkScanFoundHosts = List[_Tuple[HostName, TypingHostAddress]]
 NetworkScanResult = Dict[str, Any]
 
 if TYPE_CHECKING:
-    from cmk.gui.watolib.hosts_and_folders import CREFolder  # pylint: disable=unused-import
-
-#.
-#   .--Main----------------------------------------------------------------.
-#   |                        __  __       _                                |
-#   |                       |  \/  | __ _(_)_ __                           |
-#   |                       | |\/| |/ _` | | '_ \                          |
-#   |                       | |  | | (_| | | | | |                         |
-#   |                       |_|  |_|\__,_|_|_| |_|                         |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Der Seitenaufbau besteht aus folgenden Teilen:                       |
-#   | 1. Kontextbuttons: wo kann man von hier aus hinspringen, ohne Aktion |
-#   | 2. Verarbeiten einer Aktion, falls eine gültige Transaktion da ist   |
-#   | 3. Anzeigen von Inhalten                                             |
-#   |                                                                      |
-#   | Der Trick: welche Inhalte angezeigt werden, hängt vom Ausgang der    |
-#   | Aktion ab. Wenn man z.B. bei einem Host bei "Create new host" auf    |
-#   | [Save] klickt, dann kommt bei Erfolg die Inventurseite, bei Miss-    |
-#   | bleibt man auf der Neuanlegen-Seite                                  |
-#   |                                                                      |
-#   | Dummerweise kann ich aber die Kontextbuttons erst dann anzeigen,     |
-#   | wenn ich den Ausgang der Aktion kenne. Daher wird zuerst die Aktion  |
-#   | ausgeführt, welche aber keinen HTML-Code ausgeben darf.              |
-#   `----------------------------------------------------------------------'
-
-
-@cmk.gui.pages.register("wato")
-def page_handler():
-    # type: () -> None
-    initialize_wato_html_head()
-
-    if not config.wato_enabled:
-        raise MKGeneralException(
-            _("WATO is disabled. Please set <tt>wato_enabled = True</tt>"
-              " in your <tt>multisite.mk</tt> if you want to use WATO."))
-
-    # config.current_customer can not be checked with CRE repos
-    if cmk_version.is_managed_edition() and not managed.is_provider(
-            config.current_customer):  # type: ignore[attr-defined]
-        raise MKGeneralException(
-            _("Check_MK can only be configured on "
-              "the managers central site."))
-
-    current_mode = html.request.var("mode") or "main"
-    mode_permissions, mode_class = get_mode_permission_and_class(current_mode)
-
-    display_options.load_from_html()
-
-    if display_options.disabled(display_options.N):
-        html.add_body_css_class("inline")
-
-    # If we do an action, we aquire an exclusive lock on the complete WATO.
-    if html.is_transaction():
-        with store.lock_checkmk_configuration():
-            _wato_page_handler(current_mode, mode_permissions, mode_class)
-    else:
-        _wato_page_handler(current_mode, mode_permissions, mode_class)
-
-
-def _wato_page_handler(current_mode, mode_permissions, mode_class):
-    # type: (str, List[PermissionName], Type[WatoMode]) -> None
-    try:
-        init_wato_datastructures(with_wato_lock=not html.is_transaction())
-    except Exception:
-        # Snapshot must work in any case
-        if current_mode == 'snapshot':
-            pass
-        else:
-            raise
-
-    # Check general permission for this mode
-    if mode_permissions is not None and not config.user.may("wato.seeall"):
-        ensure_mode_permissions(mode_permissions)
-
-    mode = mode_class()
-
-    # Do actions (might switch mode)
-    action_message = None  # type: _Optional[Text]
-    if html.is_transaction():
-        try:
-            config.user.need_permission("wato.edit")
-
-            # Even if the user has seen this mode because auf "seeall",
-            # he needs an explicit access permission for doing changes:
-            if config.user.may("wato.seeall"):
-                if mode_permissions:
-                    ensure_mode_permissions(mode_permissions)
-
-            if cmk.gui.watolib.read_only.is_enabled(
-            ) and not cmk.gui.watolib.read_only.may_override():
-                raise MKUserError(None, cmk.gui.watolib.read_only.message())
-
-            result = mode.action()
-            if isinstance(result, tuple):
-                newmode, action_message = result
-            else:
-                newmode = result
-
-            # If newmode is False, then we shall immediately abort.
-            # This is e.g. the case, if the page outputted non-HTML
-            # data, such as a tarball (in the export function). We must
-            # be sure not to output *any* further data in that case.
-            if newmode is False:
-                return
-
-            # if newmode is not None, then the mode has been changed
-            if newmode is not None:
-                assert not isinstance(newmode, bool)
-                if newmode == "":  # no further information: configuration dialog, etc.
-                    if action_message:
-                        html.show_message(action_message)
-                        wato_html_footer()
-                    return
-                mode_permissions, mode_class = get_mode_permission_and_class(newmode)
-                current_mode = newmode
-                mode = mode_class()
-                html.request.set_var("mode", newmode)  # will be used by makeuri
-
-                # Check general permissions for the new mode
-                if mode_permissions is not None and not config.user.may("wato.seeall"):
-                    for pname in mode_permissions:
-                        if '.' not in pname:
-                            pname = "wato." + pname
-                        config.user.need_permission(pname)
-
-        except MKUserError as e:
-            action_message = "%s" % e
-            html.add_user_error(e.varname, action_message)
-
-        except MKAuthException as e:
-            reason = e.args[0]
-            action_message = reason
-            html.add_user_error(None, reason)
-
-    wato_html_head(mode.title(),
-                   show_body_start=display_options.enabled(display_options.H),
-                   show_top_heading=display_options.enabled(display_options.T))
-
-    if display_options.enabled(display_options.B):
-        # Show contexts buttons
-        html.begin_context_buttons()
-        mode.buttons()
-        html.end_context_buttons()
-
-    if not html.is_transaction() or (cmk.gui.watolib.read_only.is_enabled() and
-                                     cmk.gui.watolib.read_only.may_override()):
-        _show_read_only_warning()
-
-    # Show outcome of action
-    if html.has_user_errors():
-        html.show_user_errors()
-    elif action_message:
-        html.show_message(action_message)
-
-    # Show content
-    mode.handle_page()
-
-    if watolib.is_sidebar_reload_needed():
-        html.reload_sidebar()
-
-    if config.wato_use_git and html.is_transaction():
-        watolib.git.do_git_commit()
-
-    wato_html_footer(display_options.enabled(display_options.Z),
-                     display_options.enabled(display_options.H))
-
-
-def get_mode_permission_and_class(mode_name):
-    # type: (str) -> _Tuple[List[PermissionName], Type[WatoMode]]
-    mode_class = mode_registry.get(mode_name, ModeNotImplemented)
-    mode_permissions = mode_class.permissions()
-
-    if mode_class is None:
-        raise MKGeneralException(_("No such WATO module '<tt>%s</tt>'") % mode_name)
-
-    if inspect.isfunction(mode_class):
-        raise MKGeneralException(
-            _("Deprecated WATO module: Implemented as function. "
-              "This needs to be refactored as WatoMode child class."))
-
-    if mode_permissions is not None and not config.user.may("wato.use"):
-        raise MKAuthException(_("You are not allowed to use WATO."))
-
-    return mode_permissions, mode_class
-
-
-def ensure_mode_permissions(mode_permissions):
-    # type: (List[PermissionName]) -> None
-    for pname in mode_permissions:
-        if '.' not in pname:
-            pname = "wato." + pname
-        config.user.need_permission(pname)
-
-
-def _show_read_only_warning():
-    # type: () -> None
-    if cmk.gui.watolib.read_only.is_enabled():
-        html.show_warning(cmk.gui.watolib.read_only.message())
-
+    from cmk.gui.watolib.hosts_and_folders import CREFolder
 
 #.
 #   .--Network Scan--------------------------------------------------------.
@@ -592,8 +390,7 @@ def _show_read_only_warning():
 # Executed by the multisite cron job once a minute. Is only executed in the
 # master site. Finds the next folder to scan and starts it via WATO
 # automation. The result is written to the folder in the master site.
-def execute_network_scan_job():
-    # type: () -> None
+def execute_network_scan_job() -> None:
     init_wato_datastructures(with_wato_lock=True)
 
     if watolib.is_wato_slave_site():
@@ -615,12 +412,12 @@ def execute_network_scan_job():
               "scan of the folder %s does not exist.") % (run_as, folder.title()))
     config.set_user_by_id(folder.attribute("network_scan")["run_as"])
 
-    result = {
+    result: NetworkScanResult = {
         "start": time.time(),
         "end": True,  # means currently running
         "state": None,
         "output": "The scan is currently running.",
-    }  # type: NetworkScanResult
+    }
 
     # Mark the scan in progress: Is important in case the request takes longer than
     # the interval of the cron job (1 minute). Otherwise the scan might be started
@@ -658,8 +455,7 @@ def execute_network_scan_job():
         config.set_user_by_id(old_user)
 
 
-def find_folder_to_scan():
-    # type: () -> _Optional[CREFolder]
+def find_folder_to_scan() -> '_Optional[CREFolder]':
     """Find the folder which network scan is longest waiting and return the folder object."""
     folder_to_scan = None
     for folder in watolib.Folder.all_folders().values():
@@ -672,16 +468,15 @@ def find_folder_to_scan():
     return folder_to_scan
 
 
-def add_scanned_hosts_to_folder(folder, found):
-    # type: (CREFolder, NetworkScanFoundHosts) -> None
+def add_scanned_hosts_to_folder(folder: 'CREFolder', found: NetworkScanFoundHosts) -> None:
     network_scan_properties = folder.attribute("network_scan")
 
     translation = network_scan_properties.get("translate_names", {})
 
     entries = []
     for host_name, ipaddr in found:
-        host_name = six.ensure_str(
-            cmk.utils.translations.translate_hostname(translation, ensure_unicode(host_name)))
+        host_name = ensure_str(
+            cmk.utils.translations.translate_hostname(translation, ensure_str(host_name)))
 
         attrs = cmk.gui.watolib.hosts_and_folders.update_metadata({}, created_by=_("Network scan"))
 
@@ -699,8 +494,7 @@ def add_scanned_hosts_to_folder(folder, found):
         folder.save()
 
 
-def save_network_scan_result(folder, result):
-    # type: (CREFolder, NetworkScanResult) -> None
+def save_network_scan_result(folder: 'CREFolder', result: NetworkScanResult) -> None:
     # Reload the folder, lock WATO before to protect against concurrency problems.
     with store.lock_checkmk_configuration():
         # A user might have changed the folder somehow since starting the scan. Load the
@@ -724,11 +518,10 @@ def save_network_scan_result(folder, result):
 
 modes = {}
 
-loaded_with_language = False  # type: Union[bool, None, str]
+loaded_with_language: Union[bool, None, str] = False
 
 
-def load_plugins(force):
-    # type: (bool) -> None
+def load_plugins(force: bool) -> None:
     global loaded_with_language
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
@@ -742,7 +535,7 @@ def load_plugins(force):
     if modes:
         raise MKGeneralException(
             _("Deprecated WATO modes found: %r. "
-              "They need to be refactored to new API.") % modes.keys())
+              "They need to be refactored to new API.") % list(modes.keys()))
 
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins

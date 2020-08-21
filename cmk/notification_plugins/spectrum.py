@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,6 +6,7 @@
 
 import subprocess
 import sys
+
 from cmk.notification_plugins import utils
 
 # Note: This script contains an example configuration
@@ -19,9 +20,10 @@ def send_trap(oids, target, community):
     ]
     for oid, value in oids.items():
         # Feel free to add more types. Currently only Integer and Strings are supported
-        oid_type = type(value)
-        oid_id = 'i' if oid_type == int else 's'
-        if oid_type in [str, unicode]:
+        if isinstance(value, int):
+            oid_id = 'i'
+        elif isinstance(value, str):
+            oid_id = 's'
             value = "\"%s\"" % value.replace("\"", " ")
         cmd += [oid, oid_id, "%s" % value]
 
@@ -46,7 +48,7 @@ def main():
     complete_url = "https://" + context["MONITORING_HOST"]
     if "OMD_SITE" in context:
         complete_url += "/" + context["OMD_SITE"]
-    complete_url += context.get("SERVICEURL", context.get("HOSTURL"))
+    complete_url += context.get("SERVICEURL", context.get("HOSTURL", u''))
 
     oids = {
         base_oid + ".1": context['MONITORING_HOST'],

@@ -1,28 +1,22 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
-import sys
+from contextlib import contextmanager
 import ctypes
 import ctypes.util
-from contextlib import contextmanager
-from typing import Generator  # pylint: disable=unused-import
-
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path
+import os
+from pathlib import Path
+import sys
+from typing import Generator
 
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 
 
-def daemonize():
-    # type: () -> None
+def daemonize() -> None:
     # do the UNIX double-fork magic, see Stevens' "Advanced
     # Programming in the UNIX Environment" for details (ISBN 0201563177)
     try:
@@ -62,8 +56,7 @@ def daemonize():
     os.close(so)
 
 
-def closefrom(lowfd):
-    # type: (int) -> None
+def closefrom(lowfd: int) -> None:
     """Closes all file descriptors starting with "lowfd", ignoring errors
 
     Deletes all open file descriptors greater than or equal to lowfd from the
@@ -81,8 +74,7 @@ def closefrom(lowfd):
     os.closerange(lowfd, highfd)
 
 
-def lock_with_pid_file(path):
-    # type: (Path) -> None
+def lock_with_pid_file(path: Path) -> None:
     """
     Use this after daemonizing or in foreground mode to ensure there is only
     one process running.
@@ -97,8 +89,7 @@ def lock_with_pid_file(path):
         f.write(u"%d\n" % os.getpid())
 
 
-def _cleanup_locked_pid_file(path):
-    # type: (Path) -> None
+def _cleanup_locked_pid_file(path: Path) -> None:
     """Cleanup the lock + file acquired by the function above"""
     if not store.have_lock(str(path)):
         return
@@ -112,8 +103,7 @@ def _cleanup_locked_pid_file(path):
 
 
 @contextmanager
-def pid_file_lock(path):
-    # type: (Path) -> Generator[None, None, None]
+def pid_file_lock(path: Path) -> Generator[None, None, None]:
     """Context manager for PID file based locking"""
     lock_with_pid_file(path)
     try:
@@ -122,8 +112,7 @@ def pid_file_lock(path):
         _cleanup_locked_pid_file(path)
 
 
-def set_cmdline(cmdline):
-    # type: (bytes) -> None
+def set_cmdline(cmdline: bytes) -> None:
     """
     Change the process name and process command line on of the running process
     This works at least with Python 2.x on Linux
@@ -134,13 +123,12 @@ def set_cmdline(cmdline):
     # mypy: The type is not detected correctly
     cmdlen = sum([len(argv[i]) for i in range(argc.value)]) + argc.value  # type: ignore[arg-type]
     # TODO: This can probably be simplified...
-    _new_cmdline = ctypes.c_char_p(cmdline.ljust(cmdlen, b'\0'))
+    _new_cmdline = ctypes.c_char_p(cmdline.ljust(cmdlen, b'\0'))  # noqa: F841
 
     set_procname(cmdline)
 
 
-def set_procname(cmdline):
-    # type: (bytes) -> None
+def set_procname(cmdline: bytes) -> None:
     """
     Change the process name of the running process
     This works at least with Python 2.x on Linux

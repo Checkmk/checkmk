@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,17 +7,14 @@
 
 import os
 import socket
-from typing import (  # pylint: disable=unused-import
-    List, Dict, Tuple as _Tuple,
-)
+from typing import List, Dict, Tuple as _Tuple, Optional, Type
 
-from livestatus import SiteId  # pylint: disable=unused-import
+from livestatus import SiteId
 
 from cmk.utils.regex import regex
 import cmk.utils.store as store
-from cmk.utils.type_defs import HostName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName
 
-import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
@@ -28,11 +25,22 @@ from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, MKAuthException
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+    make_simple_form_page_menu,
+)
 from cmk.gui.watolib.hosts_and_folders import validate_host_uniqueness
 from cmk.gui.watolib.notifications import (
     load_notification_rules,
     save_notification_rules,
 )
+from cmk.gui.wato.pages.folders import ModeFolder
+from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 
 from cmk.gui.valuespec import (
     Hostname,
@@ -50,13 +58,15 @@ from cmk.gui.valuespec import (
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
-    global_buttons,
     add_change,
     wato_confirm,
 )
 
+# TODO: I have no clue how to import this correctly...
+from cmk.gui.plugins.wato.bi import BIHostRenamer
+
 try:
-    import cmk.gui.cee.plugins.wato.alert_handling as alert_handling
+    import cmk.gui.cee.plugins.wato.alert_handling as alert_handling  # type: ignore[import]
 except ImportError:
     alert_handling = None  # type: ignore[assignment]
 
@@ -106,6 +116,10 @@ class ModeBulkRenameHost(WatoMode):
     def permissions(cls):
         return ["hosts", "manage_hosts"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeFolder
+
     def __init__(self):
         super(ModeBulkRenameHost, self).__init__()
 
@@ -115,13 +129,28 @@ class ModeBulkRenameHost(WatoMode):
     def title(self):
         return _("Bulk renaming of hosts")
 
-    def buttons(self):
-        html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]),
-                            "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = make_simple_form_page_menu(breadcrumb,
+                                          form_name="bulk_rename_host",
+                                          button_name="_start",
+                                          save_title=_("Bulk rename"))
+
         host_renaming_job = RenameHostsBackgroundJob()
-        if host_renaming_job.is_available():
-            html.context_button(_("Last result"), host_renaming_job.detail_url(),
-                                "background_job_details")
+        actions_dropdown = menu.dropdowns[0]
+        actions_dropdown.topics.append(
+            PageMenuTopic(
+                title=_("Last result"),
+                entries=[
+                    PageMenuEntry(
+                        title=_("Show last rename result"),
+                        icon_name="background_job_details",
+                        item=make_simple_link(host_renaming_job.detail_url()),
+                        is_enabled=host_renaming_job.is_available(),
+                    ),
+                ],
+            ))
+
+        return menu
 
     def action(self):
         renaming_config = self._vs_renaming_config().from_html_vars("")
@@ -155,10 +184,9 @@ class ModeBulkRenameHost(WatoMode):
                 raise MKGeneralException(_("Another host renaming job is already running: %s") % e)
 
             raise HTTPRedirect(host_renaming_job.detail_url())
-        elif c is False:  # not yet confirmed
+        if c is False:  # not yet confirmed
             return ""
-        else:
-            return None  # browser reload
+        return None  # browser reload
 
     def _renaming_collision_error(self, renamings):
         name_collisions = set()
@@ -209,27 +237,26 @@ class ModeBulkRenameHost(WatoMode):
     def _host_renaming_operation(self, operation, hostname):
         if operation == "drop_domain":
             return hostname.split(".", 1)[0]
-        elif operation == "reverse_dns":
+        if operation == "reverse_dns":
             try:
                 reverse_dns = socket.gethostbyaddr(hostname)[0]
                 return reverse_dns
             except Exception:
                 return hostname
-
-        elif operation == ('case', 'upper'):
+        if operation == ('case', 'upper'):
             return hostname.upper()
-        elif operation == ('case', 'lower'):
+        if operation == ('case', 'lower'):
             return hostname.lower()
-        elif operation[0] == 'add_suffix':
+        if operation[0] == 'add_suffix':
             return hostname + operation[1]
-        elif operation[0] == 'add_prefix':
+        if operation[0] == 'add_prefix':
             return operation[1] + hostname
-        elif operation[0] == 'explicit':
+        if operation[0] == 'explicit':
             old_name, new_name = operation[1]
             if old_name == hostname:
                 return new_name
             return hostname
-        elif operation[0] == 'regex':
+        if operation[0] == 'regex':
             match_regex, new_name = operation[1]
             match = regex(match_regex).match(hostname)
             if match:
@@ -242,7 +269,6 @@ class ModeBulkRenameHost(WatoMode):
     def page(self):
         html.begin_form("bulk_rename_host", method="POST")
         self._vs_renaming_config().render_input("", {})
-        html.button("_start", _("Bulk Rename"))
         html.hidden_fields()
         html.end_form()
 
@@ -348,6 +374,10 @@ class ModeRenameHost(WatoMode):
     def permissions(cls):
         return ["hosts", "manage_hosts"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeEditHost
+
     def _from_vars(self):
         host_name = html.request.get_ascii_input_mandatory("host")
 
@@ -364,14 +394,40 @@ class ModeRenameHost(WatoMode):
         return _("Rename %s %s") % (_("Cluster") if self._host.is_cluster() else _("Host"),
                                     self._host.name())
 
-    def buttons(self):
-        global_buttons()
-        html.context_button(_("Host Properties"), self._host.edit_url(), "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = make_simple_form_page_menu(breadcrumb,
+                                          form_name="rename_host",
+                                          button_name="rename",
+                                          save_title=_("Rename"))
 
-        host_renaming_job = RenameHostBackgroundJob(self._host)
-        if host_renaming_job.is_available():
-            html.context_button(_("Last result"), host_renaming_job.detail_url(),
-                                "background_job_details")
+        host_renaming_job = RenameHostsBackgroundJob()
+        actions_dropdown = menu.dropdowns[0]
+        actions_dropdown.topics.append(
+            PageMenuTopic(
+                title=_("Last result"),
+                entries=[
+                    PageMenuEntry(
+                        title=_("Show last rename result"),
+                        icon_name="background_job_details",
+                        item=make_simple_link(host_renaming_job.detail_url()),
+                        is_enabled=host_renaming_job.is_available(),
+                    ),
+                ],
+            ))
+
+        menu.dropdowns.append(
+            PageMenuDropdown(
+                name="hosts",
+                title=_("Hosts"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("For this host"),
+                        entries=list(page_menu_host_entries(self.name(), self._host)),
+                    ),
+                ],
+            ))
+
+        return menu
 
     def action(self):
         if watolib.get_pending_changes_info():
@@ -400,13 +456,13 @@ class ModeRenameHost(WatoMode):
 
             raise HTTPRedirect(host_renaming_job.detail_url())
 
-        elif c is False:  # not yet confirmed
+        if c is False:  # not yet confirmed
             return ""
 
     def _check_new_host_name(self, varname, host_name):
         if not host_name:
             raise MKUserError(varname, _("Please specify a host name."))
-        elif watolib.Folder.current().has_host(host_name):
+        if watolib.Folder.current().has_host(host_name):
             raise MKUserError(varname, _("A host with this name already exists in this folder."))
         validate_host_uniqueness(varname, host_name)
         Hostname().validate_value(host_name, varname)
@@ -425,7 +481,6 @@ class ModeRenameHost(WatoMode):
         html.text_input("newname", "")
         forms.end()
         html.set_focus("newname")
-        html.button("rename", _("Rename host!"), "submit")
         html.hidden_fields()
         html.end_form()
 
@@ -601,12 +656,12 @@ def rename_host_in_multisite(oldname, newname):
 
 
 def rename_host_in_bi(oldname, newname):
-    return cmk.gui.plugins.wato.bi.BIHostRenamer().rename_host(oldname, newname)
+    return BIHostRenamer().rename_host(oldname, newname)
 
 
-def rename_hosts_in_check_mk(renamings):
-    # type: (List[_Tuple[watolib.CREFolder, HostName, HostName]]) -> Dict[str, int]
-    action_counts = {}  # type: Dict[str, int]
+def rename_hosts_in_check_mk(
+        renamings: List[_Tuple[watolib.CREFolder, HostName, HostName]]) -> Dict[str, int]:
+    action_counts: Dict[str, int] = {}
     for site_id, name_pairs in group_renamings_by_site(renamings).items():
         message = _("Renamed host %s") % ", ".join(
             [_("%s into %s") % (oldname, newname) for (oldname, newname) in name_pairs])
@@ -628,7 +683,7 @@ def merge_action_counts(action_counts, new_counts):
 
 
 def group_renamings_by_site(renamings):
-    renamings_per_site = {}  # type: Dict[SiteId, List[_Tuple[HostName, HostName]]]
+    renamings_per_site: Dict[SiteId, List[_Tuple[HostName, HostName]]] = {}
     for folder, oldname, newname in renamings:
         host = folder.host(newname)  # already renamed here!
         site_id = host.site_id()

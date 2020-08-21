@@ -15,5 +15,5 @@ item:
  ID of the phase
 
 inventory:
- Supported.
+ One service is created for each phase.
 

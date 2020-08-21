@@ -7,9 +7,11 @@
 #define OffsetStringServiceMacroColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <memory>
 #include <optional>
 #include <string>
+
 #include "OffsetStringMacroColumn.h"
 #include "nagios.h"
 class MonitoringCore;

@@ -2,6 +2,8 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+import SimpleBar from "simplebar";
+
 import * as ajax from "ajax";
 import * as selection from "selection";
 
@@ -80,7 +82,11 @@ export function is_window_active()
 export function has_class(o, cn) {
     if (typeof(o.className) === "undefined")
         return false;
-    var parts = o.className.split(" ");
+    let classname = o.className;
+    if (o.className.baseVal !== undefined) // SVG className
+        classname = o.className.baseVal;
+
+    var parts = classname.split(" ");
     for (var x=0; x<parts.length; x++) {
         if (parts[x] == cn)
             return true;
@@ -108,11 +114,35 @@ export function change_class(o, a, b) {
     add_class(o, b);
 }
 
+export function toggle_class(o, a, b) {
+    if (has_class(o, a))
+        change_class(o, a, b);
+    else
+        change_class(o, b, a);
+}
+
 // Adds document/window global event handlers
 // TODO: Move the window fallback to the call sites (when necessary) and nuke this function
 export function add_event_handler(type, func, obj) {
     obj = (typeof(obj) === "undefined") ? window : obj;
     obj.addEventListener(type, func, false);
+}
+
+
+export function del_event_handler(type, func, obj) {
+    obj = (typeof(obj) === "undefined") ? window : obj;
+
+    if (obj.removeEventListener) {
+        // W3 stadnard browsers
+        obj.removeEventListener(type, func, false);
+    }
+    else if (obj.detachEvent) {
+        // IE<9
+        obj.detachEvent("on"+type, func);
+    }
+    else {
+        obj["on" + type] = null;
+    }
 }
 
 
@@ -178,11 +208,22 @@ export function update_header_timer() {
     date.innerHTML = date_format.replace(/yyyy/, year).replace(/mm/, month).replace(/dd/, day);
 }
 
+export function has_header_info()
+{
+    return document.getElementById("headinfo") !== null;
+}
+
+export function get_header_info()
+{
+    // Return the current text (minus the separator prepended by update_header_info())
+    return document.getElementById("headinfo").innerHTML.substr(2);
+}
+
 export function update_header_info(text)
 {
-    var oDiv = document.getElementById("headinfo");
-    if (oDiv) {
-        oDiv.innerHTML = text;
+    var container = document.getElementById("headinfo");
+    if (container) {
+        container.innerHTML = ", " + text;
     }
 }
 
@@ -282,36 +323,57 @@ var g_reload_interval = 0; // seconds
 // The error message is only being added on the first error.
 var g_reload_error = false;
 
-// When called with one or more parameters parameters it reschedules the
-// timer to the given interval. If the parameter is 0 the reload is stopped.
-// When called with two parmeters the 2nd one is used as new url.
+// Reschedule the global timer to the given interval.
 export function set_reload(secs, url)
 {
     stop_reload_timer();
     set_reload_interval(secs);
-    if (secs !== 0) {
-        schedule_reload(url);
-    }
+    schedule_reload(url);
 }
 
 
 // Issues the timer for the next page reload. If some timer is already
 // running, this timer is terminated and replaced by the new one.
-export function schedule_reload(url, milisecs)
+export function schedule_reload(url, remaining_ms)
 {
     if (typeof url === "undefined")
         url = ""; // reload current page (or just the content)
 
-    if (typeof milisecs === "undefined")
-        milisecs = parseFloat(g_reload_interval) * 1000; // use default reload interval
+    if (typeof remaining_ms === "undefined") {
+        if (g_reload_interval === 0) {
+            return;  // the reload interval is set to "off"
+        }
+
+        // initialize the timer with the configured interval
+        remaining_ms = parseFloat(g_reload_interval) * 1000;
+    }
+
+    update_page_state_reload_indicator(remaining_ms);
+
+    if (remaining_ms <= 0) {
+        // The time is over. Now trigger the desired actions
+        do_reload(url);
+
+        // Prepare for the next update interval
+        remaining_ms = parseFloat(g_reload_interval) * 1000;
+    }
 
     stop_reload_timer();
-
     g_reload_timer = setTimeout(function() {
-        do_reload(url);
-    }, milisecs);
+        schedule_reload(url, remaining_ms - 1000);
+    }, 1000);
 }
 
+function update_page_state_reload_indicator(remaining_ms) {
+    let icon = document.getElementById("page_state_icon");
+    if (!icon)
+        return; // Not present, no update needed
+
+    let perc = remaining_ms / (g_reload_interval * 1000) * 100;
+
+    icon.style.clipPath = "circle(" + Math.floor(perc) + "% at 100%)";
+    icon.title = "Remaining: " + Math.floor(remaining_ms/1000) + " sec.";
+}
 
 export function stop_reload_timer()
 {
@@ -411,27 +473,8 @@ function handle_content_reload_error(_unused, status_code)
 }
 
 export function set_reload_interval(secs) {
-    update_foot_refresh(secs);
     if (secs !== 0) {
         g_reload_interval = secs;
-    }
-}
-
-function update_foot_refresh(secs)
-{
-    var o = document.getElementById("foot_refresh");
-    var o2 = document.getElementById("foot_refresh_time");
-    if (!o) {
-        return;
-    }
-
-    if(secs == 0) {
-        o.style.display = "none";
-    } else {
-        o.style.display = "inline-block";
-        if(o2) {
-            o2.innerHTML = secs;
-        }
     }
 }
 
@@ -466,27 +509,6 @@ export function wheel_event_name()
         return "mousewheel";
 }
 
-export function count_context_button(oA)
-{
-    // Extract view name from id of parent div element
-    var handler = ajax.call_ajax("count_context_button.py?id=" + oA.parentNode.id, {
-        sync:true
-    });
-    return handler.responseText;
-}
-
-export function unhide_context_buttons(toggle_button)
-{
-    var cells = toggle_button.parentNode.parentNode;
-    var children = cells.children;
-    for (var i = 0; i < children.length; i++) {
-        var node = children[i];
-        if (node.tagName == "DIV" && !has_class(node, "togglebutton"))
-            node.style.display = "";
-    }
-    toggle_button.parentNode.style.display = "none";
-}
-
 var g_tag_groups = {
     "host": {},
     "service": {}
@@ -512,4 +534,35 @@ export function tag_update_value(object_type, prefix, grp) {
         opt.text  = g_tag_groups[object_type][grp][i][1];
         value_select.appendChild(opt);
     }
+}
+
+export function toggle_more(trigger, toggle_id, dom_levels_up) {
+    event.stopPropagation();
+    let container = trigger;
+    let state;
+    for (var i=0; i < dom_levels_up; i++) {
+        container = container.parentNode;
+        while (container.className.includes("simplebar-"))
+            container = container.parentNode;
+    }
+
+    if (has_class(container, "more")) {
+        change_class(container, "more", "less");
+        state = "off";
+    } else {
+        change_class(container, "less", "more");
+        // The class withanimation is used to fade in the formlery
+        // hidden items - which must not be done when they are already
+        // visible when rendering the page.
+        add_class(container, "withanimation");
+        state = "on";
+    }
+
+    ajax.get_url("tree_openclose.py?tree=more_buttons"
+            + "&name=" + encodeURIComponent(toggle_id)
+            + "&state=" + encodeURIComponent (state));
+}
+
+export function add_simplebar_scrollbar(scrollable_id) {
+    return new SimpleBar(document.getElementById(scrollable_id));
 }

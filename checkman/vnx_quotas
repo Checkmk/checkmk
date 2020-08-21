@@ -12,4 +12,4 @@ item:
  The name of the quota
 
 inventory:
- One service is created per quota.
+ One service is created for each quota.

@@ -4,7 +4,9 @@
 // source code package.
 
 #include "HostSpecialIntColumn.h"
+
 #include <filesystem>
+
 #include "MonitoringCore.h"
 #include "Row.h"
 #include "mk_inventory.h"
@@ -22,15 +24,15 @@
 #endif
 
 int32_t HostSpecialIntColumn::getValue(Row row,
-                                       const contact* /* auth_user */) const {
+                                       const contact * /* auth_user */) const {
 #ifdef CMC
-    if (auto object = columnData<Object>(row)) {
+    if (const auto *object = columnData<Object>(row)) {
         switch (_type) {
             case Type::real_hard_state: {
                 if (object->isCurrentStateOK()) {
                     return 0;
                 }
-                auto state = object->state();
+                const auto *const state = object->state();
                 return state->_state_type == StateType::hard
                            ? state->_current_state
                            : state->_last_hard_state;
@@ -43,7 +45,7 @@ int32_t HostSpecialIntColumn::getValue(Row row,
         }
     }
 #else
-    if (auto hst = columnData<host>(row)) {
+    if (const auto* hst = columnData<host>(row)) {
         switch (_type) {
             case Type::real_hard_state:
                 if (hst->current_state == HOST_UP) {

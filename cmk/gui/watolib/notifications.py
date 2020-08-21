@@ -1,21 +1,20 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module for managing the new rule based notifications"""
 
-from typing import Dict, List  # pylint: disable=unused-import
+from typing import Dict, List
 import cmk.utils.store as store
-from cmk.utils.type_defs import UserId, EventRule  # pylint: disable=unused-import
+from cmk.utils.type_defs import UserId, EventRule
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 from cmk.gui.watolib.utils import wato_root_dir
 
 
-def load_notification_rules(lock=False):
-    # type: (bool) -> List[Dict]
+def load_notification_rules(lock: bool = False) -> List[Dict]:
     filename = wato_root_dir() + "notifications.mk"
     notification_rules = store.load_from_mk_file(filename, "notification_rules", [], lock=lock)
 
@@ -30,8 +29,7 @@ def load_notification_rules(lock=False):
     return notification_rules
 
 
-def save_notification_rules(rules):
-    # type: (List[Dict]) -> None
+def save_notification_rules(rules: List[Dict]) -> None:
     store.mkdir(wato_root_dir())
     store.save_to_mk_file(wato_root_dir() + "notifications.mk",
                           "notification_rules",
@@ -39,8 +37,7 @@ def save_notification_rules(rules):
                           pprint_value=config.wato_pprint_config)
 
 
-def load_user_notification_rules():
-    # type: () -> Dict[UserId, List[EventRule]]
+def load_user_notification_rules() -> Dict[UserId, List[EventRule]]:
     rules = {}
     for user_id, user in userdb.load_users().items():
         user_rules = user.get("notification_rules")

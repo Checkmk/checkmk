@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -8,14 +8,9 @@ import pytest  # type: ignore[import]
 
 import cmk.utils.version as cmk_version
 
-# Triggers plugin loading of plugins.wato which registers all the plugins
-import cmk.gui.wato  # pylint: disable=unused-import
 import cmk.gui.watolib as watolib
-import cmk.gui.watolib.rulespecs
 from cmk.gui.valuespec import (
-    ValueSpec,
-    Dictionary,
-)
+    ValueSpec,)
 from cmk.gui.plugins.watolib.utils import (
     config_variable_group_registry,
     ConfigVariableGroup,
@@ -23,8 +18,8 @@ from cmk.gui.plugins.watolib.utils import (
     config_variable_registry,
     configvar_order,
 )
-from cmk.gui.plugins.wato.utils import (
-    register_check_parameters,)
+
+pytestmark = pytest.mark.usefixtures("load_plugins")
 
 
 def test_registered_config_domains():
@@ -56,12 +51,15 @@ def test_registered_automation_commands():
         'activate-changes',
         'push-profiles',
         'check-analyze-config',
+        'diagnostics-dump-get-file',
         'fetch-agent-output-get-file',
         'fetch-agent-output-get-status',
         'fetch-agent-output-start',
         'network-scan',
         'ping',
         'push-snapshot',
+        'get-config-sync-state',
+        'receive-config-sync',
         'service-discovery-job',
         'checkmk-remote-automation-start',
         'checkmk-remote-automation-get-status',
@@ -88,7 +86,6 @@ def test_registered_configvars():
         'bulk_discovery_default_settings',
         'check_mk_perfdata_with_times',
         'cluster_max_cachefile_age',
-        'context_buttons_to_show',
         'crash_report_target',
         'crash_report_url',
         'custom_service_attributes',
@@ -184,6 +181,8 @@ def test_registered_configvars():
         'view_action_defaults',
         'virtual_host_trees',
         'wato_activation_method',
+        'wato_activate_changes_concurrency',
+        'wato_activate_changes_comment_mode',
         'wato_hide_filenames',
         'wato_hide_folders_without_read_permissions',
         'wato_hide_help_in_lists',
@@ -215,6 +214,8 @@ def test_registered_configvars():
             'cmc_config_multiprocessing',
             'cmc_debug_notifications',
             'cmc_dump_core',
+            "cmc_enable_fetchers",
+            "cmc_fetcher_helpers",
             'cmc_flap_settings',
             'cmc_graphite',
             'cmc_import_nagios_state',
@@ -259,6 +260,7 @@ def test_registered_configvars():
             'reporting_use',
             'reporting_view_limit',
             'site_liveproxyd',
+            'ntop_connection',
         ]
 
     registered = sorted(config_variable_registry.keys())
@@ -297,6 +299,7 @@ def test_registered_configvar_groups():
             u'Livestatus Proxy',
             u'Reporting',
             u'Monitoring Core',
+            u'Ntopng',
         ]
 
     registered = sorted(config_variable_group_registry.keys())

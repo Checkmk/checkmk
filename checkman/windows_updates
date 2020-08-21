@@ -14,5 +14,5 @@ description:
  in {agents/windows/plugins}.
 
 inventory:
- One service named {System Updates} is being created for each host.
+ One service named {System Updates} is created for each host.
 

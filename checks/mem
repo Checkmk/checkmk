@@ -16,115 +16,7 @@
 #   |  all of its specific information in /proc/meminfo.                   |
 #   '----------------------------------------------------------------------'
 
-# BEWARE: half of the information and blob entries about /proc/meminfo
-# in the internet is unprecise or even totally wrong!
-
-# <<<mem>>>
-# MemTotal:       24707592 kB
-# MemFree:          441224 kB
-# Buffers:          320672 kB
-# Cached:         19981008 kB
-# SwapCached:         6172 kB
-# Active:          8756876 kB
-# Inactive:       13360444 kB
-# Active(anon):    1481236 kB
-# Inactive(anon):   371260 kB
-# Active(file):    7275640 kB
-# Inactive(file): 12989184 kB
-# Unevictable:      964808 kB
-# Mlocked:          964808 kB
-# SwapTotal:      16777212 kB
-# SwapFree:       16703328 kB
-# Dirty:           4408124 kB
-# Writeback:         38020 kB
-# AnonPages:       2774444 kB
-# Mapped:            69456 kB
-# Shmem:             33772 kB
-# Slab:             861028 kB
-# SReclaimable:     756236 kB
-# SUnreclaim:       104792 kB
-# KernelStack:        4176 kB
-# PageTables:        15892 kB
-# NFS_Unstable:          0 kB
-# Bounce:                0 kB
-# WritebackTmp:          0 kB
-# CommitLimit:    39014044 kB
-# Committed_AS:    3539808 kB
-# VmallocTotal:   34359738367 kB
-# VmallocUsed:      347904 kB
-# VmallocChunk:   34346795572 kB
-# HardwareCorrupted:     0 kB
-# AnonHugePages:         0 kB
-# HugePages_Total:       0
-# HugePages_Free:        0
-# HugePages_Rsvd:        0
-# HugePages_Surp:        0
-# Hugepagesize:       2048 kB
-# DirectMap4k:      268288 kB
-# DirectMap2M:     8112128 kB
-# DirectMap1G:    16777216 kB
-
-# This is from an earlier kernel (CentOS 5.5). Some entries
-# are missing here:
-# <<<mem>>>
-# MemTotal:       377176 kB
-# MemFree:         60112 kB
-# Buffers:         93864 kB
-# Cached:         116364 kB
-# SwapCached:          0 kB
-# Active:         169140 kB
-# Inactive:        84144 kB
-# HighTotal:           0 kB
-# HighFree:            0 kB
-# LowTotal:       377176 kB
-# LowFree:         60112 kB
-# SwapTotal:     2064376 kB
-# SwapFree:      2062756 kB
-# Dirty:             172 kB
-# Writeback:           0 kB
-# AnonPages:       43080 kB
-# Mapped:           8352 kB
-# Slab:            45892 kB
-# PageTables:       3208 kB
-# NFS_Unstable:        0 kB
-# Bounce:              0 kB
-# CommitLimit:   2252964 kB
-# Committed_AS:   125968 kB
-# VmallocTotal: 34359738367 kB
-# VmallocUsed:     18112 kB
-# VmallocChunk: 34359719415 kB
-# HugePages_Total:     0
-# HugePages_Free:      0
-# HugePages_Rsvd:      0
-# Hugepagesize:     2048 kB
-
-# Yet earlier kernel (SLES 9):
-# <<<mem>>>
-# MemTotal: 6224268 kB
-# MemFree: 2913660 kB
-# Buffers: 84712 kB
-# Cached: 1779052 kB
-# SwapCached: 0 kB
-# Active: 1931528 kB
-# Inactive: 1276156 kB
-# HighTotal: 5373824 kB
-# HighFree: 2233984 kB
-# LowTotal: 850444 kB
-# LowFree: 679676 kB
-# SwapTotal: 1052280 kB
-# SwapFree: 1052280 kB
-# Dirty: 55680 kB
-# Writeback: 0 kB
-# Mapped: 1469268 kB
-# Slab: 71724 kB
-# Committed_AS: 2758332 kB
-# PageTables: 7672 kB
-# VmallocTotal: 112632 kB
-# VmallocUsed: 9324 kB
-# VmallocChunk: 103180 kB
-# HugePages_Total: 0
-# HugePages_Free: 0
-# Hugepagesize: 2048 kB
+import cmk.base.plugins.agent_based.utils.memory as memory
 
 factory_settings["mem_linux_default_levels"] = {
     "levels_virtual": ("perc_used", (80.0, 90.0)),
@@ -138,212 +30,68 @@ factory_settings["mem_linux_default_levels"] = {
 }
 
 
-def is_linux_meminfo(meminfo):
-    return "PageTables" in meminfo and "Writeback" in meminfo and "Committed_AS" in meminfo
-
-
-def inventory_mem_linux(info):
-    meminfo = parse_proc_meminfo_bytes(info)
-    if is_linux_meminfo(meminfo):
+def inventory_mem_linux(section):
+    if memory.is_linux_section(section):
         yield None, {}
 
 
-def check_memory_dict(meminfo, params, render_base=1024):
-    """Check a dictionary of Memory entries against levels.
-
-    Only keys of meminfo that are checked below explicitly are considered.
-    All other keys are ignored.
-    """
-    results = collections.OrderedDict()
-
-    # RAM
-    if "MemUsed" in meminfo and "MemTotal" in meminfo:
-        results["ram"] = check_memory_element(
-            "RAM",
-            meminfo["MemUsed"],
-            meminfo["MemTotal"],
-            params.get("levels_ram"),
-            metric_name="mem_used",
-            render_base=render_base,
-            create_percent_metric=True,
-        )
-
-    # Swap
-    if "SwapUsed" in meminfo and meminfo.get("SwapTotal"):
-        results["swap"] = check_memory_element(
-            "Swap",
-            meminfo["SwapUsed"],
-            meminfo["SwapTotal"],
-            params.get("levels_swap"),
-            metric_name="swap_used",
-            render_base=render_base,
-        )
-
-    # Total virtual memory
-    if all(k in meminfo for k in ("MemTotal", "MemUsed", "SwapTotal", "SwapUsed")):
-        virtual_used = meminfo["MemUsed"] + meminfo["SwapUsed"]
-        virtual_total = meminfo["MemTotal"] + meminfo["SwapTotal"]
-        results["virtual"] = check_memory_element(
-            "Total virtual memory",
-            virtual_used,
-            virtual_total,
-            params.get("levels_virtual"),
-            render_base=render_base,
-        )
-
-        # Committed memory, only if we have virtual_total
-        if "Committed_AS" in meminfo:
-            results["committed"] = check_memory_element(
-                "Committed",
-                meminfo["Committed_AS"],
-                virtual_total,
-                params.get("levels_committed"),
-                label_total="virtual memory",
-                metric_name="mem_lnx_committed_as",
-                render_base=render_base,
-            )
-
-        # Commit limit
-        if "CommitLimit" in meminfo:
-            results["commitlimit"] = check_memory_element(
-                "Commit Limit",
-                virtual_total - meminfo["CommitLimit"],
-                virtual_total,
-                params.get("levels_commitlimit"),
-                label_total="virtual memory",
-                render_base=render_base,
-            )
-
-    # Shared memory
-    if "Shmem" in meminfo and "MemTotal" in meminfo:
-        results["shm"] = check_memory_element(
-            "Shared memory",
-            meminfo["Shmem"],
-            meminfo["MemTotal"],
-            params.get("levels_shm"),
-            label_total="RAM",
-            metric_name="mem_lnx_shmem",
-            render_base=render_base,
-        )
-
-    # Page tables
-    if "PageTables" in meminfo and "MemTotal" in meminfo:
-        results["pagetables"] = check_memory_element(
-            "Page tables",
-            meminfo["PageTables"],
-            meminfo["MemTotal"],
-            params.get("levels_pagetables"),
-            label_total="RAM",
-            metric_name="mem_lnx_page_tables",
-            render_base=render_base,
-        )
-
-    # Disk Writeback
-    if "Pending" in meminfo and "MemTotal" in meminfo:
-        results["pending"] = check_memory_element(
-            "Disk Writeback",
-            meminfo["Pending"],
-            meminfo["MemTotal"],
-            params.get("levels_writeback"),
-            label_total="RAM",
-            render_base=render_base,
-        )
-
-    # Available Memory
-    if "MemAvailable" in meminfo and "MemTotal" in meminfo:
-        results["available"] = check_memory_element(
-            "RAM available",
-            meminfo["MemTotal"] - meminfo["MemAvailable"],
-            meminfo["MemTotal"],
-            params.get("levels_available"),
-            show_free=True,
-            render_base=render_base,
-        )
-
-    # VMalloc,
-    # newer kernel version report wrong data,
-    # i.d. both VmallocUsed and Chunk equal zero
-    if "VmallocUsed" in meminfo and "VmallocChunk" in meminfo and (meminfo["VmallocUsed"] +
-                                                                   meminfo["VmallocChunk"]):
-        results["vmalloc"] = check_memory_element(
-            "Largest Free VMalloc Chunk",
-            meminfo["VmallocTotal"] - meminfo["VmallocChunk"],
-            meminfo["VmallocTotal"],
-            params.get("levels_vmalloc"),
-            label_total="VMalloc Area",
-            show_free=True,
-            render_base=render_base,
-        )
-
-    # HardwareCorrupted
-    if "HardwareCorrupted" in meminfo and "MemTotal" in meminfo:
-        results["corrupted"] = check_memory_element(
-            "Hardware Corrupted",
-            meminfo["HardwareCorrupted"],
-            meminfo["MemTotal"],
-            params.get("levels_hardwarecorrupted"),
-            label_total="RAM",
-            render_base=render_base,
-        )
-
-    return results
-
-
-def check_mem_linux(_no_item, params, info):
-    meminfo = parse_proc_meminfo_bytes(info)
-    if not meminfo:
+def check_mem_linux(_no_item, params, section):
+    if not section:
         return
+
+    # quick fix: stop modifying parsed data in place!
+    section = section.copy()
 
     # TODO: Currently some of these values are just set to generate the metrics later
     # See which ones we actually need.
 
     # SReclaimable is not available for older kernels
     # Compute memory used by caches, that can be considered "free"
-    meminfo["Caches"] = meminfo["Cached"] + meminfo["Buffers"] \
-                      + meminfo["SwapCached"] + meminfo.get("SReclaimable", 0)
+    section["Caches"] = section["Cached"] + section["Buffers"] \
+                      + section["SwapCached"] + section.get("SReclaimable", 0)
 
-    meminfo["MemUsed"] = meminfo["MemTotal"] - meminfo["MemFree"] - meminfo["Caches"]
-    meminfo["SwapUsed"] = meminfo["SwapTotal"] - meminfo["SwapFree"]
-    meminfo["TotalTotal"] = meminfo["MemTotal"] + meminfo["SwapTotal"]
-    meminfo["TotalUsed"] = meminfo["MemUsed"] + meminfo["SwapUsed"]
+    section["MemUsed"] = section["MemTotal"] - section["MemFree"] - section["Caches"]
+    section["SwapUsed"] = section["SwapTotal"] - section["SwapFree"]
+    section["TotalTotal"] = section["MemTotal"] + section["SwapTotal"]
+    section["TotalUsed"] = section["MemUsed"] + section["SwapUsed"]
 
     # Disk Writeback
-    meminfo["Pending"] = \
-         meminfo["Dirty"] \
-       + meminfo.get("Writeback", 0) \
-       + meminfo.get("NFS_Unstable", 0) \
-       + meminfo.get("Bounce", 0) \
-       + meminfo.get("WritebackTmp", 0)
+    section["Pending"] = \
+         section["Dirty"] \
+       + section.get("Writeback", 0) \
+       + section.get("NFS_Unstable", 0) \
+       + section.get("Bounce", 0) \
+       + section.get("WritebackTmp", 0)
 
-    results = check_memory_dict(meminfo, params)
+    results = check_memory_dict(section, params)
 
     # show these always:
     yield results.pop("virtual", (0, ""))[:2]
     state, info, perfdata = results.pop("ram", (0, ""))
     yield state, info
-    meminfo["MemUsedPercent"] = perfdata[-1][1]
+    section["MemUsedPercent"] = perfdata[-1][1]
     yield results.pop("swap", (0, ""))[:2]
     # show rest only if not OK:
     for state, infotext, _perf in results.values():
         if state:
             yield state, infotext
 
-    # Now send performance data. We simply output *all* fields of meminfo
+    # Now send performance data. We simply output *all* fields of section
     # except for a few really useless values
     perfdata = []
-    items = sorted(meminfo.items())
+    items = sorted(section.items())
     for name, value in items:
         if name.startswith("DirectMap"):
             continue
         if name.startswith(
-                "Vmalloc") and meminfo["VmallocTotal"] > 2**40:  # useless on 64 Bit system
+                "Vmalloc") and section["VmallocTotal"] > 2**40:  # useless on 64 Bit system
             continue
         if name.startswith("Huge"):
-            if meminfo["HugePages_Total"] == 0:  # omit useless data
+            if section["HugePages_Total"] == 0:  # omit useless data
                 continue
             if name == "Hugepagesize":
                 continue  # not needed
-            value = value * meminfo["Hugepagesize"]  # convert number to actual memory size
+            value = value * section["Hugepagesize"]  # convert number to actual memory size
         perfdata.append((camelcase_to_underscored(name.replace("(", "_").replace(")", "")), value))
     yield 0, "", perfdata
 
@@ -395,46 +143,9 @@ check_info["mem.linux"] = {
 #   | used for unixoide operating systems.                                 |
 #   '----------------------------------------------------------------------'
 
-
-def parse_proc_meminfo(info):
-    parsed = {}
-    for line in info:
-        try:
-            parsed[line[0][:-1]] = int(line[1])
-        except (ValueError, IndexError) as _exc:
-            pass
-    return parsed
-
-
 # The following variable is obsolete. It is kept here so that Check_MK
 # won't fail if it's found in main.mk
 mem_extended_perfdata = None
-
-
-def inventory_mem_used(info):
-    meminfo = parse_proc_meminfo(info)
-    if "MemTotal" in meminfo \
-        and "PageTotal" not in meminfo \
-        and not is_linux_meminfo(meminfo): # handled by more modern check
-        yield None, {}
-
-
-def check_mem_used(_no_item, params, info):
-    meminfo = parse_proc_meminfo(info)
-    for subresult in check_memory(params, meminfo):
-        yield subresult
-
-
-check_info['mem.used'] = {
-    "check_function": check_mem_used,
-    "inventory_function": inventory_mem_used,
-    "service_description": "Memory",
-    "has_perfdata": True,
-    "group": "memory",
-    "default_levels_variable": "memory_default_levels",
-    "includes": ["mem.include"],
-    "handle_real_time_checks": True,
-}
 
 #.
 #   .--mem.win-------------------------------------------------------------.
@@ -456,14 +167,12 @@ factory_settings["memory_win_default_levels"] = {
 }
 
 
-def inventory_mem_win(info):
-    meminfo = parse_proc_meminfo(info)
-    if "MemTotal" in meminfo and "PageTotal" in meminfo:
+def inventory_mem_win(section):
+    if "MemTotal" in section and "PageTotal" in section:
         yield None, {}
 
 
-def check_mem_windows(_no_item, params, info):
-    meminfo = parse_proc_meminfo(info)
+def check_mem_windows(_no_item, params, section):
     now = time.time()
 
     def _get_levels_on_used_mb(param_key, total_mb):
@@ -488,23 +197,23 @@ def check_mem_windows(_no_item, params, info):
                                                   ("Commit charge", "Page", "pagefile",
                                                    "pagefile_used")]:
 
-        total_kb = meminfo.get("%sTotal" % prefix)
-        free_kb = meminfo.get("%sFree" % prefix)
-        if None in (total_kb, free_kb):
+        total = section.get("%sTotal" % prefix)
+        free = section.get("%sFree" % prefix)
+        if None in (total, free):
             continue
+        used = total - free
 
-        total_mb = total_kb / 1024.0
-        free_mb = free_kb / 1024.0
-        used_kb = total_kb - free_kb
+        total_mb = total / 1024.0**2
+        free_mb = free / 1024.0**2
         used_mb = total_mb - free_mb
-        perc = 100.0 * used_kb / total_kb
+        perc = 100.0 * used / total
 
         warn, crit = _get_levels_on_used_mb(paramname, total_mb)
 
         status, infotext, perfdata = check_memory_element(
             title,
-            used_kb * 1024,
-            total_kb * 1024,
+            used,
+            total,
             None,
             metric_name=metric_name,
             create_percent_metric=title == "RAM",
@@ -518,13 +227,14 @@ def check_mem_windows(_no_item, params, info):
         # Do averaging, if configured, just for matching the levels
         if "average" in params:
             average_min = params["average"]
-            used_kb = get_average("mem.win.%s" % paramname,
-                                  now,
-                                  used_kb,
-                                  average_min,
-                                  initialize_zero=False)
+            used_kb = get_average(
+                "mem.win.%s" % paramname,
+                now,
+                used / 1024.0,  # use kB for compatibility
+                average_min,
+                initialize_zero=False)
             used_mb = used_kb / 1024.0
-            perc = 100.0 * used_kb / total_kb
+            perc = 100.0 * used_mb / total_mb
             infotext += ", %d min average: %s (%s)" % (average_min,
                                                        get_percent_human_readable(perc),
                                                        get_bytes_human_readable(used_kb * 1024))
@@ -591,27 +301,24 @@ check_info["mem.win"] = {
 mem_vmalloc_default_levels = (80.0, 90.0, 64, 32)
 
 
-def inventory_mem_vmalloc(info):
-    meminfo = parse_proc_meminfo(info)
-    if is_linux_meminfo(meminfo):
+def inventory_mem_vmalloc(section):
+    if memory.is_linux_section(section):
         return  # handled by new Linux memory check
 
     # newer kernel version report wrong data,
     # i.d. both VmallocUsed and Chunk equal zero
-    if "VmallocTotal" in meminfo and \
-        not (meminfo["VmallocUsed"] == 0 and meminfo["VmallocChunk"] == 0):
+    if "VmallocTotal" in section and not (section["VmallocUsed"] == 0 and
+                                          section["VmallocChunk"] == 0):
         # Do not checks this on 64 Bit systems. They have almost
         # infinitive vmalloc
-        vmalloc = meminfo["VmallocTotal"] / 1024.4
-        if vmalloc < 4096:
+        if section["VmallocTotal"] < 4 * 1024**2:
             yield None, "mem_vmalloc_default_levels"
 
 
-def check_mem_vmalloc(_item, params, info):
-    meminfo = parse_proc_meminfo(info)
-    total_mb = meminfo["VmallocTotal"] / 1024.0
-    used_mb = meminfo["VmallocUsed"] / 1024.0
-    chunk_mb = meminfo["VmallocChunk"] / 1024.0
+def check_mem_vmalloc(_item, params, section):
+    total_mb = section["VmallocTotal"] / 1024.0**2
+    used_mb = section["VmallocUsed"] / 1024.0**2
+    chunk_mb = section["VmallocChunk"] / 1024.0**2
     warn, crit, warn_chunk, crit_chunk = params
 
     state = 0

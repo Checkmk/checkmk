@@ -24,9 +24,9 @@ factory_settings['aws_rds_limits_default_levels'] = {
 
 
 def parse_aws_rds_limits(info):
-    parsed = []
+    limits_by_region: AWSLimitsByRegion = {}
     for line in parse_aws(info):
-        resource_key, resource_title, limit, amount, region = parse_aws_limit_line(line)
+        resource_key, resource_title, limit, amount, region = line
 
         if resource_key == "allocated_storage":
             # Allocated Storage has unit TiB
@@ -36,19 +36,21 @@ def parse_aws_rds_limits(info):
             human_readable_f = get_bytes_human_readable
         else:
             human_readable_f = int
-        parsed.append((resource_key, resource_title, limit, amount, region, human_readable_f))
-    return parsed
+        limits_by_region.setdefault(region, []).append(
+            [resource_key, resource_title, limit, amount, human_readable_f])
+    return limits_by_region
 
 
-def check_aws_rds_limits(item, params, parsed):
-    return check_aws_limits("rds", params, parsed)
+@get_parsed_item_data
+def check_aws_rds_limits(item, params, region_data):
+    return check_aws_limits("rds", params, region_data)
 
 
 check_info['aws_rds_limits'] = {
     'parse_function': parse_aws_rds_limits,
-    'inventory_function': discover_single,
+    'inventory_function': discover(),
     'check_function': check_aws_rds_limits,
-    'service_description': 'AWS/RDS Limits',
+    'service_description': 'AWS/RDS Limits %s',
     'includes': ['aws.include'],
     'group': 'aws_rds_limits',
     'default_levels_variable': 'aws_rds_limits_default_levels',

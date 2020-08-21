@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,11 +6,12 @@
 
 # pylint: disable=redefined-outer-name
 
-import subprocess
 import gettext
+import subprocess
+from pathlib import Path
+
 import pytest  # type: ignore[import]
-import six
-from pathlib2 import Path
+
 from testlib import cmk_path
 
 import cmk.utils.paths
@@ -74,7 +75,7 @@ msgstr "%s"
 
 def test_underscore_without_localization():
     assert i18n.get_current_language() is None
-    assert isinstance(i18n._("bla"), six.text_type)
+    assert isinstance(i18n._("bla"), str)
     assert i18n._("bla") == u"bla"
 
 
@@ -87,6 +88,18 @@ def test_underscore_localization():
     assert i18n.get_current_language() is None
 
 
+def test_lazy_localization():
+    lazy_str = i18n._l("Age")
+
+    assert lazy_str == "Age"
+
+    i18n.localize("de")
+    assert lazy_str == "Alter"
+
+    i18n.unlocalize()
+    assert lazy_str == "Age"
+
+
 def test_init_language_not_existing():
     assert i18n._init_language("xz") is None
 
@@ -97,8 +110,8 @@ def test_init_language_only_builtin():
     assert trans.info()["language"] == "de"
     assert trans.info()["project-id-version"] == "Check_MK Multisite translation 0.1"
 
-    translated = trans.ugettext("bla")
-    assert isinstance(translated, six.text_type)
+    translated = trans.gettext("bla")
+    assert isinstance(translated, str)
     assert translated == "bla"
 
 
@@ -108,8 +121,8 @@ def test_init_language_with_local_modification(local_translation):
     assert trans.info()["language"] == "de"
     assert trans.info()["project-id-version"] == "Locally modified Check_MK translation"
 
-    translated = trans.ugettext("bla")
-    assert isinstance(translated, six.text_type)
+    translated = trans.gettext("bla")
+    assert isinstance(translated, str)
     assert translated == "blub"
 
 
@@ -119,35 +132,35 @@ def test_init_language_with_local_modification_fallback(local_translation):
     assert trans.info()["language"] == "de"
     assert trans.info()["project-id-version"] == "Locally modified Check_MK translation"
 
-    translated = trans.ugettext("bla")
-    assert isinstance(translated, six.text_type)
+    translated = trans.gettext("bla")
+    assert isinstance(translated, str)
     assert translated == "blub"
 
     # This string is localized in the standard file, not in the locally
     # overridden file
-    translated = trans.ugettext("Age")
-    assert isinstance(translated, six.text_type)
+    translated = trans.gettext("Age")
+    assert isinstance(translated, str)
     assert translated == "Alter"
 
 
 def test_init_language_with_package_localization(local_translation):
     trans = i18n._init_language("de")
-
-    translated = trans.ugettext("pkg1")
-    assert isinstance(translated, six.text_type)
+    assert trans is not None
+    translated = trans.gettext("pkg1")
+    assert isinstance(translated, str)
     assert translated == "lala"
 
 
 def test_get_language_alias():
-    assert isinstance(i18n.get_language_alias(None), six.text_type)
+    assert isinstance(i18n.get_language_alias(None), str)
     assert i18n.get_language_alias(None) == "English"
 
-    assert isinstance(i18n.get_language_alias("de"), six.text_type)
+    assert isinstance(i18n.get_language_alias("de"), str)
     assert i18n.get_language_alias("de") == "German"
 
 
 def test_get_language_local_alias(local_translation):
-    assert isinstance(i18n.get_language_alias("de"), six.text_type)
+    assert isinstance(i18n.get_language_alias("de"), str)
     assert i18n.get_language_alias("de") == u"Äxtended German"
 
 

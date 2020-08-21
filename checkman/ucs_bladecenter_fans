@@ -12,5 +12,5 @@ item:
  The component where the fans are located, e.g chassis or switch
 
 inventory:
- One summary check for each component is created
+ One summary service is created for each component.
 

@@ -1,1 +1,0 @@
-../../../../../tests/unit/cmk/utils/rulesets/test_ruleset_transformer.py

@@ -1,12 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import Tuple, List  # pylint: disable=unused-import
-import six
+from typing import Tuple, List
 
 from livestatus import MKLivestatusNotFoundError
 import cmk.gui.sites as sites
@@ -21,7 +20,7 @@ from cmk.gui.plugins.dashboard import (
 )
 
 
-class DashletStats(six.with_metaclass(abc.ABCMeta, Dashlet)):
+class DashletStats(Dashlet, metaclass=abc.ABCMeta):
     @classmethod
     def is_resizable(cls):
         return False
@@ -74,7 +73,7 @@ class DashletStats(six.with_metaclass(abc.ABCMeta, Dashlet)):
         if only_sites:
             try:
                 sites.live().set_only_sites(only_sites)
-                result = sites.live().query_row(query)  # type: List[int]
+                result: List[int] = sites.live().query_row(query)
             finally:
                 sites.live().set_only_sites()
         else:
@@ -98,7 +97,7 @@ class DashletStats(six.with_metaclass(abc.ABCMeta, Dashlet)):
         html.open_table(class_=["hoststats"] + (["narrow"] if len(pies) > 0 else []),
                         style="float:left")
 
-        table_entries = []  # type: List[Tuple]
+        table_entries: List[Tuple] = []
         table_entries += pies
         while len(table_entries) < 6:
             table_entries = table_entries + [(("", None, [], ""), HTML("&nbsp;"))]
@@ -214,8 +213,7 @@ class HostStatsDashlet(DashletStats):
         return 45
 
     @classmethod
-    def infos(cls):
-        # type: () -> List[str]
+    def infos(cls) -> List[str]:
         return ["host"]
 
     def _livestatus_table(self):
@@ -278,8 +276,7 @@ class ServiceStatsDashlet(DashletStats):
         return 50
 
     @classmethod
-    def infos(cls):
-        # type: () -> List[str]
+    def infos(cls) -> List[str]:
         return ['host', 'service']
 
     def _livestatus_table(self):

@@ -16,8 +16,7 @@ from typing import List, Iterable, Dict, Optional
 LISTER = "db2ilist.exe"
 
 
-def make_env(instance):
-    # type: (Optional[str]) -> Dict[str, str]
+def make_env(instance: Optional[str]) -> Dict[str, str]:
     env = os.environ.copy()
     env["DB2CLP"] = "DB20FADE"
     if instance is not None:
@@ -26,12 +25,11 @@ def make_env(instance):
     return env
 
 
-class Database():
+class Database:
     def __init__(self):
         self.args = self._parse_arguments()
 
-    def _parse_arguments(self):
-        # type: () -> argparse.Namespace
+    def _parse_arguments(self) -> argparse.Namespace:
         parser = argparse.ArgumentParser(description='DB2 information')
         parser.add_argument('-v', '--verbose', action='store_true', help='verbose output')
         return parser.parse_args()
@@ -39,21 +37,18 @@ class Database():
     def is_verbose(self):
         return self.args.verbose
 
-    def write_log(self, message):
-        # type:(str) -> None
+    def write_log(self, message: str) -> None:
         if self.is_verbose():
             print(message)
 
     def print_db2_version_header(self):
         print(r"<<<db2_version:sep(1)>>>")
 
-    def print_database_info(self, database):
-        # type: (str) -> None
+    def print_database_info(self, database: str) -> None:
         print(database)
 
     @staticmethod
-    def cleanup_input(data):
-        # type: (str) -> List[str]
+    def cleanup_input(data: str) -> List[str]:
         return [
             _line.replace("\r", "")  #
             for _line in data.split(sep="\n")
@@ -61,8 +56,7 @@ class Database():
         ]
 
     @staticmethod
-    def run_db2(args, instance):
-        # type: (List[str], str) -> Popen
+    def run_db2(args: List[str], instance: str) -> Popen:
         return Popen(args=["db2.exe"] + args,
                      shell=False,
                      stdout=PIPE,
@@ -72,8 +66,7 @@ class Database():
                      encoding="utf-8",
                      env=make_env(instance=instance))
 
-    def list_instances(self):
-        # type: () -> List[str]
+    def list_instances(self) -> List[str]:
         try:
             process = Popen(args=LISTER,
                             shell=False,
@@ -89,8 +82,7 @@ class Database():
                 print(" database list error with Exception {}".format(e,))
             return []
 
-    def check_database(self, instance, name):
-        # type: (str, str) -> List[str]
+    def check_database(self, instance: str, name: str) -> List[str]:
         try:
             process = Database.run_db2(args=["connect", "to", name], instance=instance)
             stdout = process.communicate()[0]
@@ -99,8 +91,7 @@ class Database():
             self.write_log(" database list error with Exception {}".format(e,))
             return []
 
-    def get_list_databases(self, instance):
-        # type: (str) -> List[str]
+    def get_list_databases(self, instance: str) -> List[str]:
         try:
             process = Database.run_db2(args=["list", "db", "directory"], instance=instance)
             stdout = process.communicate()[0]
@@ -109,8 +100,7 @@ class Database():
             self.write_log(" database list error with Exception {}".format(e,))
             return []
 
-    def snapshot_databases(self, instance):
-        # type: (str) -> List[str]
+    def snapshot_databases(self, instance: str) -> List[str]:
         try:
             process = Database.run_db2(args=["get", "snapshot", "for", "dbm"], instance=instance)
             stdout = process.communicate()[0]
@@ -120,8 +110,7 @@ class Database():
             return []
 
     @staticmethod
-    def find_value(key, data):
-        # type: ( str, Iterable[str]) -> str
+    def find_value(key: str, data: Iterable[str]) -> str:
         for d in data:
             if d.find(key) != -1:
                 value = d.split("=")[1]
@@ -130,12 +119,10 @@ class Database():
         return ""
 
     @staticmethod
-    def is_database_presented(db_list):
-        # type: (List[str]) -> bool
+    def is_database_presented(db_list: List[str]) -> bool:
         return len(db_list) > 3
 
-    def process_databases(self, database, port, now, instance):
-        # type: (str, int, int, str) -> None
+    def process_databases(self, database: str, port: int, now: int, instance: str) -> None:
         #before = time.time()
         #process = Database.run_db2(args=["connect", "to", database], instance=instance )
         #stdout = process.communicate()[0]
@@ -195,8 +182,7 @@ class Database():
         #pass
 
     @staticmethod
-    def find_port(instance, database):
-        # type: (str, str) -> str
+    def find_port(instance: str, database: str) -> str:
         return "Port 0"  # default value
 
     @staticmethod
@@ -210,7 +196,7 @@ class Database():
         # Directory entry type = $2
         # .......
         db_name = ""
-        db_names = []  # type: List[str]
+        db_names: List[str] = []
         for entry in db_list:
             line = entry.split("=")
             if len(line) != 2:
@@ -248,7 +234,7 @@ class Database():
 
         for db_name in db_names:
             db.process_databases(database=db_name,
-                                 port=Database.find_port(instance=instance, database=db_name),
+                                 port=int(Database.find_port(instance=instance, database=db_name)),
                                  now=cur_time,
                                  instance=instance)
 
@@ -259,7 +245,7 @@ class Database():
 
     # TODO: use platform independent approach:
     #
-    # class ABCConnector():
+    # class ABCConnector:
     #     @abc.abstractmethod
     #     def run_db2(self, cmd):
     #         raise NotImplementedError()
@@ -287,7 +273,8 @@ class Database():
                           universal_newlines=True,
                           close_fds=True,
                           bufsize=0)
-
+            if shell.stdin is None or shell.stdout is None:
+                raise Exception("Huh? stdin or stdout vanished...")
             shell.stdin.write("@set DB2CLP=DB20FADE\n")
             shell.stdin.write("@db2 connect to SAMPLE\n")
             shell.stdin.write('@db2 -x "SELECT deadlocks from sysibmadm.snapdb"\n')

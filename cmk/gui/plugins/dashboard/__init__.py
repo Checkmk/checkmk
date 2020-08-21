@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -16,14 +16,8 @@ from cmk.utils.plugin_loader import load_plugins
 #   |                         |___/                                        |
 #   '----------------------------------------------------------------------'
 
-from cmk.gui.plugins.dashboard.utils import (
-    builtin_dashboards,
-    dashlet_types,
-    dashlet_registry,
-    IFrameDashlet,
-    Dashlet,
-    GROW,
-    MAX,
+from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=unused-import
+    builtin_dashboards, dashlet_types, dashlet_registry, IFrameDashlet, Dashlet, GROW, MAX,
 )
 
 #.

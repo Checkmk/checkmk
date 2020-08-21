@@ -430,7 +430,7 @@ div.optiondial {
     height: 28px;
     margin-right: 5px;
     margin-bottom: 5px;
-    color: $color-text;
+    color: $font-color;
     background: $bg-color-secondary;
     border: 1px solid $color-table-border;
     box-shadow: none;
@@ -653,7 +653,7 @@ table.data.single {
       }
 
       th {
-	color: $color-text;
+	color: $font-color;
 	background-color: $invtree-th-bg-color;
       }
     }
@@ -762,7 +762,7 @@ table.data.matrix {
   tr.even0, tr.odd0 {
     tbody & td.matrixhead {
       font-weight: $font-weight-bold;
-      color: $color-text;
+      color: $font-color;
     }
   }
 
@@ -1360,7 +1360,7 @@ table.data.headerleft.sla {
             display: table-cell;
             width: 280px;
             font-weight: $font-weight-bold;
-            color: $color-text;
+            color: $font-color;
             background: transparent;
           }
 
@@ -1386,7 +1386,7 @@ table.data.headerleft.sla {
   a,
   body.main .popup_menu span,
   body.main .popup_menu & span {
-    color: $color-text;
+    color: $font-color;
   }
 }
 

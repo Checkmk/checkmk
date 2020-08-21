@@ -8,16 +8,16 @@ set -e -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 . "${SCRIPT_DIR}/build_lib.sh"
 
-PYTHON_VERSION=3.7.6
+PYTHON_VERSION=3.8.3
 PYTHON_DIR_NAME=Python-${PYTHON_VERSION}
 
-PIPENV_VERSION=2549656
-DIR_NAME=pypa-pipenv-${PIPENV_VERSION}
-ARCHIVE_NAME=${DIR_NAME}.tgz
+PIPENV_VERSION=2020.6.2
+ARCHIVE_NAME=v${PIPENV_VERSION}.tar.gz
+DIR_NAME=pipenv-${PIPENV_VERSION}
 TARGET_DIR=/opt
 
 cd "${TARGET_DIR}"
-mirrored_download "${ARCHIVE_NAME}" "https://github.com/pypa/pipenv/tarball/${PIPENV_VERSION}"
+mirrored_download "${ARCHIVE_NAME}" "https://github.com/pypa/pipenv/archive/${ARCHIVE_NAME}"
 tar xf "${ARCHIVE_NAME}"
 cd "${DIR_NAME}"
 pip3 install .

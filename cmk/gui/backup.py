@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -13,16 +13,15 @@
 import abc
 import errno
 import glob
+import json
 import os
+from pathlib import Path
 import shutil
 import signal
 import socket
 import subprocess
 import time
-import json
-from typing import Any, List, Optional, Text, Tuple  # pylint: disable=unused-import
-
-import six
+from typing import Any, List, Optional, Tuple
 
 import cmk.utils.render as render
 import cmk.utils.store as store
@@ -31,13 +30,27 @@ from cmk.utils.schedule import next_scheduled_time
 import cmk.gui.forms as forms
 from cmk.gui.table import table_element
 import cmk.gui.key_mgmt as key_mgmt
-from cmk.gui.valuespec import (  # pylint: disable=unused-import
-    Password, Dictionary, TextUnicode, DropdownChoice, Checkbox, Alternative, FixedValue,
-    CascadingDropdown, ID, AbsoluteDirname, SchedulePeriod, ListOf, Timeofday, ValueSpec,
+from cmk.gui.valuespec import (
+    Password,
+    Dictionary,
+    TextUnicode,
+    DropdownChoice,
+    Checkbox,
+    Alternative,
+    FixedValue,
+    CascadingDropdown,
+    ID,
+    AbsoluteDirname,
+    SchedulePeriod,
+    ListOf,
+    Timeofday,
+    ValueSpec,
 )
 from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.breadcrumb import make_simple_page_breadcrumb
+from cmk.gui.main_menu import mega_menu_registry
 
 #.
 #   .--Config--------------------------------------------------------------.
@@ -93,7 +106,7 @@ def is_canonical(directory):
 
 
 # TODO: Locking!
-class Config(object):
+class Config:
     def __init__(self, file_path):
         self._file_path = file_path
 
@@ -118,7 +131,7 @@ class Config(object):
 #   '----------------------------------------------------------------------'
 
 
-class BackupEntity(object):
+class BackupEntity:
     def __init__(self, ident, config):
         self._ident = ident
         self._config = {}
@@ -141,7 +154,7 @@ class BackupEntity(object):
         self._config = config
 
 
-class BackupEntityCollection(object):
+class BackupEntityCollection:
     def __init__(self, config_file_path, cls, config_attr):
         self._config_path = config_file_path
         self._config = Config(config_file_path).load()
@@ -192,7 +205,7 @@ class BackupEntityCollection(object):
 
 
 # Abstract class for backup jobs (Job) and restore job (RestoreJob)
-class MKBackupJob(object):
+class MKBackupJob:
     @classmethod
     def state_name(cls, state):
         return {
@@ -202,12 +215,12 @@ class MKBackupJob(object):
             None: _("Never executed"),
         }[state]
 
-    def state_file_path(self):
+    def state_file_path(self) -> Path:
         raise NotImplementedError()
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         try:
-            os.unlink(self.state_file_path())
+            self.state_file_path().unlink()
         except OSError as e:
             if e.errno == errno.ENOENT:
                 pass
@@ -216,7 +229,8 @@ class MKBackupJob(object):
 
     def state(self):
         try:
-            state = json.load(open(self.state_file_path()))
+            with self.state_file_path().open(encoding="utf-8") as f:
+                state = json.load(f)
         except IOError as e:
             if e.errno == errno.ENOENT:  # not existant
                 state = {
@@ -235,16 +249,16 @@ class MKBackupJob(object):
             state.update({
                 "state": "finished",
                 "finished": max(state["started"],
-                                os.stat(self.state_file_path()).st_mtime),
+                                self.state_file_path().stat().st_mtime),
                 "success": False,
             })
 
         return state
 
-    def was_started(self):
-        return os.path.exists(self.state_file_path())
+    def was_started(self) -> bool:
+        return self.state_file_path().exists()
 
-    def is_running(self):
+    def is_running(self) -> bool:
         if not self.was_started():
             return False
 
@@ -258,6 +272,7 @@ class MKBackupJob(object):
                              stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT,
                              stdin=open(os.devnull),
+                             encoding="utf-8",
                              env=env)
         if p.stdout is None:
             raise Exception("cannot happen")
@@ -325,13 +340,13 @@ class Job(MKBackupJob, BackupEntity):
 
         return "-".join([p.replace("-", "+") for p in parts])
 
-    def state_file_path(self):
+    def state_file_path(self) -> Path:
         if not is_site():
-            path = "/var/lib/mkbackup"
+            path = Path("/var/lib/mkbackup")
         else:
-            path = "%s/var/check_mk/backup" % os.environ["OMD_ROOT"]
+            path = Path(os.environ["OMD_ROOT"], "var/check_mk/backup")
 
-        return "%s/%s.state" % (path, self.ident())
+        return path / ("%s.state" % self.ident())
 
     def _start_command(self):
         return [mkbackup_path(), "backup", "--background", self.ident()]
@@ -493,23 +508,23 @@ class Jobs(BackupEntityCollection):
         self.save_cronjobs()
 
     def save_cronjobs(self):
-        with open(self._cronjob_path, "w") as f:
+        with Path(self._cronjob_path).open("w", encoding="utf-8") as f:
             self._write_cronjob_header(f)
             for job in self.objects.values():
                 cron_config = job.cron_config()
                 if cron_config:
-                    f.write("%s\n" % "\n".join(cron_config))
+                    f.write(u"%s\n" % "\n".join(cron_config))
 
         self._apply_cron_config()
 
     def _write_cronjob_header(self, f):
-        f.write("# Written by mkbackup configuration\n")
+        f.write(u"# Written by mkbackup configuration\n")
 
     def _apply_cron_config(self):
         pass
 
 
-class PageBackup(object):
+class PageBackup:
     def title(self):
         raise NotImplementedError()
 
@@ -592,7 +607,7 @@ class PageBackup(object):
         self.jobs().show_list(editable=self._may_edit_config())
 
 
-class PageEditBackupJob(object):
+class PageEditBackupJob:
     def __init__(self):
         super(PageEditBackupJob, self).__init__()
         job_ident = html.request.var("job")
@@ -607,7 +622,7 @@ class PageEditBackupJob(object):
                 raise MKUserError("_job", _("This job is currently running."))
 
             self._new = False
-            self._ident = job_ident  # type: Optional[str]
+            self._ident: Optional[str] = job_ident
             self._job_cfg = job.to_config()
             self._title = _("Edit backup job: %s") % job.title()
         else:
@@ -785,11 +800,11 @@ class PageEditBackupJob(object):
         html.end_form()
 
 
-class PageAbstractBackupJobState(object):
+class PageAbstractBackupJobState:
     def __init__(self):
         super(PageAbstractBackupJobState, self).__init__()
-        self._job = None  # type: Optional[MKBackupJob]
-        self._ident = None  # type: Optional[str]
+        self._job: Optional[MKBackupJob] = None
+        self._ident: Optional[str] = None
 
     def jobs(self):
         raise NotImplementedError()
@@ -821,7 +836,7 @@ class PageAbstractBackupJobState(object):
 
         html.open_table(class_=["data", "backup_job"])
 
-        css = "state0"  # type: Optional[str]
+        css: Optional[str] = "state0"
         state_txt = job.state_name(state["state"])
         if state["state"] == "finished":
             if not state["success"]:
@@ -913,8 +928,7 @@ class Target(BackupEntity):
             raise NotImplementedError()
         return self.type_class()(self.type_params())
 
-    def show_backup_list(self, only_type):
-        # type: (str) -> None
+    def show_backup_list(self, only_type: str) -> None:
         with table_element(sortable=False, searchable=False) as table:
 
             for backup_ident, info in sorted(self.backups().items()):
@@ -1014,7 +1028,7 @@ class Targets(BackupEntityCollection):
         target.type().validate_local_directory(path, varprefix)
 
 
-class PageBackupTargets(object):
+class PageBackupTargets:
     def title(self):
         raise NotImplementedError()
 
@@ -1069,7 +1083,7 @@ class PageBackupTargets(object):
         return True
 
 
-class PageEditBackupTarget(object):
+class PageEditBackupTarget:
     def __init__(self):
         super(PageEditBackupTarget, self).__init__()
         target_ident = html.request.var("target")
@@ -1081,7 +1095,7 @@ class PageEditBackupTarget(object):
                 raise MKUserError("target", _("This backup target does not exist."))
 
             self._new = False
-            self._ident = target_ident  # type: Optional[str]
+            self._ident: Optional[str] = target_ident
             self._target_cfg = target.to_config()
             self._title = _("Edit backup target: %s") % target.title()
         else:
@@ -1207,14 +1221,13 @@ class SystemBackupTargetsReadOnly(Targets):
 #   '----------------------------------------------------------------------'
 
 
-class ABCBackupTargetType(six.with_metaclass(abc.ABCMeta, object)):
+class ABCBackupTargetType(metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def ident(self):
         raise NotImplementedError()
 
     @classmethod
-    def choices(cls):
-        # type: (Any) -> List[Tuple[Text, Text, ValueSpec]]
+    def choices(cls: Any) -> List[Tuple[str, str, ValueSpec]]:
         choices = []
         # TODO: subclasses with the same name may be registered multiple times, due to execfile
         # TODO: DO NOT USE __subclasses__, EVER! (Unless you are writing a debugger etc.)
@@ -1300,7 +1313,8 @@ class BackupTargetLocal(ABCBackupTargetType):
         # Check write access for the site user
         try:
             test_file_path = os.path.join(value, "write_test_%d" % time.time())
-            open(test_file_path, "w")
+            with open(test_file_path, "wb"):
+                pass
             os.unlink(test_file_path)
         except IOError:
             if is_cma():
@@ -1340,7 +1354,8 @@ class BackupTargetLocal(ABCBackupTargetType):
 
     # TODO: Duplicate code with mkbackup
     def _load_backup_info(self, path):
-        info = json.load(open(path))
+        with Path(path).open(encoding="utf-8") as f:
+            info = json.load(f)
 
         # Load the backup_id from the second right path component. This is the
         # base directory of the mkbackup.info file. The user might have moved
@@ -1499,10 +1514,10 @@ class RestoreJob(MKBackupJob):
     def title(self):
         return _("Restore")
 
-    def state_file_path(self):
+    def state_file_path(self) -> Path:
         if not is_site():
-            return "/var/lib/mkbackup/restore.state"
-        return "/tmp/restore-%s.state" % os.environ["OMD_SITE"]
+            return Path("/var/lib/mkbackup/restore.state")
+        return Path("/tmp/restore-%s.state" % os.environ["OMD_SITE"])
 
     def complete(self):
         self.cleanup()
@@ -1519,7 +1534,7 @@ class RestoreJob(MKBackupJob):
         super(RestoreJob, self).start(env)
 
 
-class PageBackupRestore(object):
+class PageBackupRestore:
     def __init__(self):
         self._load_target()
         super(PageBackupRestore, self).__init__()
@@ -1655,7 +1670,9 @@ class PageBackupRestore(object):
 
         # Special handling for Check_MK / CMA differences
         if is_site():
-            html.header(_("Insert passphrase"))
+            title = _("Insert passphrase")
+            breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_setup(), title)
+            html.header(title, breadcrumb)
             html.begin_context_buttons()
             html.context_button(_("Back"), html.makeuri([("mode", "backup_restore")]), "back")
             html.end_context_buttons()

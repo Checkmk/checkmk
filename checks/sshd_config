@@ -74,7 +74,7 @@ def check_sshd_config(_no_item, params, parsed):
 
     for option, val in parsed.items():
         state = 0
-        infotext = "%s: %s" % (option, convert(val, six.text_type))
+        infotext = "%s: %s" % (option, convert(val, str))
 
         expected = params.get(option)
         if expected and expected != val:

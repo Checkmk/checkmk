@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -10,10 +10,11 @@
 Special agent for monitoring Zerto application with Check_MK.
 """
 
-import logging
-import json
-import sys
 import argparse
+import json
+import logging
+import sys
+
 import requests
 
 from cmk.utils.exceptions import MKException
@@ -54,7 +55,7 @@ def parse_arguments(argv):
     return args
 
 
-class ZertoRequest(object):
+class ZertoRequest:
     def __init__(self, connection_url, session_id):
         self._endpoint = "%s/vms" % connection_url
         self._headers = {'x-zerto-session': session_id, 'content-type': 'application/json'}
@@ -72,7 +73,7 @@ class ZertoRequest(object):
         return data
 
 
-class ZertoConnection(object):
+class ZertoConnection:
     def __init__(self, hostaddress, username, password):
         self._credentials = username, password
         self._host = hostaddress

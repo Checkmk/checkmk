@@ -9,13 +9,16 @@
 
 // https://github.com/include-what-you-use/include-what-you-use/issues/166
 // IWYU pragma: no_include <ext/alloc_traits.h>
+// IWYU pragma: no_include <type_traits>
 #include "config.h"
+
 #include <fcntl.h>
 #include <pthread.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/un.h>
 #include <unistd.h>
+
 #include <algorithm>
 #include <atomic>
 #include <cerrno>
@@ -29,8 +32,8 @@
 #include <optional>
 #include <sstream>
 #include <string>
-#include <type_traits>
 #include <vector>
+
 #include "Average.h"
 #include "ChronoUtils.h"
 #include "InputBuffer.h"
@@ -165,7 +168,6 @@ void livestatus_cleanup_after_fork() {
     // store_deinit();
     struct stat st;
 
-    int i;
     // We need to close our server and client sockets. Otherwise
     // our connections are inherited to host and service checks.
     // If we close our client connection in such a situation,
@@ -178,7 +180,7 @@ void livestatus_cleanup_after_fork() {
     // Es sind ja auch Dateideskriptoren offen, die von Threads gehalten
     // werden und nicht mehr in der Queue sind. Und in store_deinit()
     // wird mit mutexes rumgemacht....
-    for (i = 3; i < g_max_fd_ever; i++) {
+    for (int i = 3; i < g_max_fd_ever; i++) {
         if (0 == fstat(i, &st) && S_ISSOCK(st.st_mode)) {
             close(i);
         }
@@ -187,7 +189,7 @@ void livestatus_cleanup_after_fork() {
 
 void *main_thread(void *data) {
     tl_info = static_cast<ThreadInfo *>(data);
-    auto logger = fl_core->loggerLivestatus();
+    auto *logger = fl_core->loggerLivestatus();
     auto last_update_status = std::chrono::system_clock::now();
     while (!fl_should_terminate) {
         do_statistics();
@@ -224,7 +226,7 @@ void *main_thread(void *data) {
 
 void *client_thread(void *data) {
     tl_info = static_cast<ThreadInfo *>(data);
-    auto logger = fl_core->loggerLivestatus();
+    auto *logger = fl_core->loggerLivestatus();
     while (!fl_should_terminate) {
         g_num_queued_connections--;
         g_livestatus_active_connections++;
@@ -293,7 +295,7 @@ void start_threads() {
         return;
     }
 
-    auto logger = fl_core->loggerLivestatus();
+    auto *logger = fl_core->loggerLivestatus();
     logger->setLevel(fl_livestatus_log_level);
     logger->setUseParentHandlers(false);
     try {
@@ -313,7 +315,7 @@ void start_threads() {
 
     pthread_attr_t attr;
     pthread_attr_init(&attr);
-    size_t defsize;
+    size_t defsize = 0;
     if (pthread_attr_getstacksize(&attr, &defsize) == 0) {
         Debug(fl_logger_nagios) << "default stack size is " << defsize;
     }
@@ -455,12 +457,12 @@ int broker_host(int event_type __attribute__((__unused__)),
 int broker_check(int event_type, void *data) {
     int result = NEB_OK;
     if (event_type == NEBCALLBACK_SERVICE_CHECK_DATA) {
-        auto c = static_cast<nebstruct_service_check_data *>(data);
+        auto *c = static_cast<nebstruct_service_check_data *>(data);
         if (c->type == NEBTYPE_SERVICECHECK_PROCESSED) {
             counterIncrement(Counter::service_checks);
         }
     } else if (event_type == NEBCALLBACK_HOST_CHECK_DATA) {
-        auto c = static_cast<nebstruct_host_check_data *>(data);
+        auto *c = static_cast<nebstruct_host_check_data *>(data);
         if (c->type == NEBTYPE_HOSTCHECK_PROCESSED) {
             counterIncrement(Counter::host_checks);
         }
@@ -470,7 +472,7 @@ int broker_check(int event_type, void *data) {
 }
 
 int broker_comment(int event_type __attribute__((__unused__)), void *data) {
-    auto co = static_cast<nebstruct_comment_data *>(data);
+    auto *co = static_cast<nebstruct_comment_data *>(data);
     fl_core->registerComment(co);
     counterIncrement(Counter::neb_callbacks);
     fl_core->triggers().notify_all(Triggers::Kind::comment);
@@ -478,7 +480,7 @@ int broker_comment(int event_type __attribute__((__unused__)), void *data) {
 }
 
 int broker_downtime(int event_type __attribute__((__unused__)), void *data) {
-    auto dt = static_cast<nebstruct_downtime_data *>(data);
+    auto *dt = static_cast<nebstruct_downtime_data *>(data);
     fl_core->registerDowntime(dt);
     counterIncrement(Counter::neb_callbacks);
     fl_core->triggers().notify_all(Triggers::Kind::downtime);
@@ -499,7 +501,7 @@ int broker_log(int event_type __attribute__((__unused__)),
 
 // called twice (start/end) for each external command, even builtin ones
 int broker_command(int event_type __attribute__((__unused__)), void *data) {
-    auto sc = static_cast<nebstruct_external_command_data *>(data);
+    auto *sc = static_cast<nebstruct_external_command_data *>(data);
     if (sc->type == NEBTYPE_EXTERNALCOMMAND_START) {
         counterIncrement(Counter::commands);
         if (sc->command_type == CMD_CUSTOM_COMMAND &&
@@ -532,14 +534,14 @@ void livestatus_log_initial_states() {
     extern scheduled_downtime *scheduled_downtime_list;
     // It's a bit unclear if we need to log downtimes of hosts *before*
     // their corresponding service downtimes, so let's play safe...
-    for (auto dt = scheduled_downtime_list; dt != nullptr; dt = dt->next) {
+    for (auto *dt = scheduled_downtime_list; dt != nullptr; dt = dt->next) {
         if (dt->is_in_effect != 0 && dt->type == HOST_DOWNTIME) {
             Informational(fl_logger_nagios)
                 << "HOST DOWNTIME ALERT: " << dt->host_name << ";STARTED;"
                 << dt->comment;
         }
     }
-    for (auto dt = scheduled_downtime_list; dt != nullptr; dt = dt->next) {
+    for (auto *dt = scheduled_downtime_list; dt != nullptr; dt = dt->next) {
         if (dt->is_in_effect != 0 && dt->type == SERVICE_DOWNTIME) {
             Informational(fl_logger_nagios)
                 << "SERVICE DOWNTIME ALERT: " << dt->host_name << ";"
@@ -551,7 +553,7 @@ void livestatus_log_initial_states() {
 
 int broker_event(int event_type __attribute__((__unused__)), void *data) {
     counterIncrement(Counter::neb_callbacks);
-    auto ts = static_cast<struct nebstruct_timed_event_struct *>(data);
+    auto *ts = static_cast<struct nebstruct_timed_event_struct *>(data);
     if (ts->event_type == EVENT_LOG_ROTATION) {
         if (g_thread_running == 1) {
             livestatus_log_initial_states();
@@ -565,7 +567,7 @@ int broker_event(int event_type __attribute__((__unused__)), void *data) {
 }
 
 int broker_process(int event_type __attribute__((__unused__)), void *data) {
-    auto ps = static_cast<struct nebstruct_process_struct *>(data);
+    auto *ps = static_cast<struct nebstruct_process_struct *>(data);
     switch (ps->type) {
         case NEBTYPE_PROCESS_START:
             fl_core = new NagiosCore(fl_paths, fl_limits, fl_authorization,
@@ -880,21 +882,19 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
 }
 
 void omd_advertize(Logger *logger) {
-    Notice(logger) << "Livestatus by Mathias Kettner started with PID "
+    Notice(logger) << "Livestatus by tribe29 GmbH started with PID "
                    << getpid();
     Notice(logger) << "version " << VERSION << " compiled " << BUILD_DATE
                    << " on " << BUILD_HOSTNAME;
     Notice(logger) << "built with " << BUILD_CXX << ", using "
                    << RegExp::engine() << " regex engine";
-    Notice(logger) << "please visit us at http://mathias-kettner.de/";
+    Notice(logger) << "please visit us at https://checkmk.com/";
     fl_paths.dump(logger);
     if (char *omd_site = getenv("OMD_SITE")) {
         Informational(logger)
-            << "running on OMD site " << omd_site << ", cool.";
+            << "running on Checkmk site " << omd_site << ", cool.";
     } else {
-        Notice(logger)
-            << "Hint: Please try out OMD - the Open Monitoring Distribution";
-        Notice(logger) << "Please visit OMD at http://omdistro.org";
+        Notice(logger) << "Hint: Please try out Checkmk (https://checkmk.com/)";
     }
 }
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -8,7 +8,7 @@ import getopt
 import os
 import sys
 import time
-import six
+from typing import Any, Dict, List, NoReturn, Optional
 
 import livestatus
 
@@ -54,7 +54,7 @@ define timeperiod {
 
 def encode_row(row):
     for key, val in row.items():
-        if isinstance(val, six.text_type):
+        if isinstance(val, str):
             row[key] = val.encode("utf-8")
 
 
@@ -69,27 +69,32 @@ def encode_row(row):
 #   | The actual livedump                                                  |
 #   '----------------------------------------------------------------------'
 
-g_connection = None
-opt_socket = None
+g_connection: Optional[livestatus.SingleSiteConnection] = None
+opt_socket: Optional[str] = None
 
 
 def connect():
     global g_connection, opt_socket
-
-    # TODO: Fix the code and remove the pragma below!
-    if not opt_socket and not omd_root():  # pylint: disable=used-before-assignment
+    if not opt_socket and not omd_root():
         bail_out("Please specify the URL of the livestatus socket.")
-    elif omd_root():
+    if omd_root():
         opt_socket = "unix:%s/tmp/run/live" % omd_root()
-
+    elif opt_socket is None:
+        bail_out("No socket specified")
     g_connection = livestatus.SingleSiteConnection(opt_socket)
+
+
+def run_query(query: livestatus.QueryTypes) -> List[Dict[str, Any]]:
+    if g_connection is None:
+        bail_out("No connection")
+    return g_connection.query_table_assoc(query)
 
 
 def livedump_config():
     if opt_dump_templates:
         dump_templates()
 
-    check_commands = set([])
+    check_commands = set()
 
     def prepare_row(row):
         encode_row(row)
@@ -105,7 +110,7 @@ def livedump_config():
          "max_check_attempts contacts contact_groups\n" + \
          opt_host_headers + \
          opt_host_only_headers
-    for row in g_connection.query_table_assoc(query):
+    for row in run_query(query):
         prepare_row(row)
         row["groupstring"] = ",".join(row["groups"])
         sys.stdout.write("define host {\n" "  use                livedump-host\n")
@@ -139,7 +144,7 @@ def livedump_config():
          "max_check_attempts contacts\n" + \
          opt_host_headers + \
          opt_service_headers
-    for row in g_connection.query_table_assoc(query):
+    for row in run_query(query):
         prepare_row(row)
         if row["groups"]:
             row["groupstring"] = "service_groups " + ",".join(row["groups"])
@@ -170,7 +175,7 @@ def livedump_state():
         + opt_host_headers \
         + opt_host_only_headers
 
-    for row in g_connection.query_table_assoc(query):
+    for row in run_query(query):
         encode_row(row)
         row["now"] = now
 
@@ -197,7 +202,7 @@ output=%(plugin_output)s|%(perf_data)s
         + opt_host_headers \
         + opt_service_headers
 
-    for row in g_connection.query_table_assoc(query):
+    for row in run_query(query):
         row["now"] = now
         encode_row(row)
 
@@ -246,7 +251,7 @@ def verbose(x):
         sys.stderr.write("%s\n" % x)
 
 
-def bail_out(x):
+def bail_out(x: str) -> NoReturn:
     sys.stderr.write("%s\n" % x)
     sys.exit(1)
 
@@ -317,7 +322,6 @@ long_options = [
 
 opt_verbose = False
 opt_debug = False
-opt_socket = None
 opt_mark_mode = False
 opt_prefix = ""
 opt_host_headers = ""
@@ -386,4 +390,4 @@ try:
 except Exception as e:
     if opt_debug:
         raise
-    bail_out(e)
+    bail_out(str(e))

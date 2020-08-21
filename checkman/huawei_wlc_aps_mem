@@ -1,0 +1,13 @@
+title: Huawei WLAN Access Controller
+agents: snmp
+catalog: hw/network/huawei
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the memory utilization of the created access-points of a Huawei WLAN Access Controller (e.g. AC6508).
+
+item:
+ The access-point's SSID.
+
+inventory:
+ One service per found access-point is created.

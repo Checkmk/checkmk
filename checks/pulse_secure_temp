@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.base.plugins.agent_based.utils.pulse_secure as pulse_secure
+
 factory_settings["pulse_secure_temp_def_levels"] = {"levels": (70., 75.)}
 
 
@@ -18,7 +20,7 @@ def check_pulse_secure_temp(item, params, parsed):
 
 
 check_info["pulse_secure_temp"] = {
-    "parse_function": lambda info: parse_pulse_secure(info, 'IVE'),
+    "parse_function": lambda info: pulse_secure.parse_pulse_secure(info, 'IVE'),
     "inventory_function": discover(),
     "check_function": check_pulse_secure_temp,
     "service_description": "Pulse Secure %s Temperature",
@@ -28,8 +30,8 @@ check_info["pulse_secure_temp"] = {
         [
             "42",  # iveTemperature
         ]),
-    "snmp_scan_function": scan_pulse_secure,
+    "snmp_scan_function": pulse_secure.scan_pulse_secure,
     "group": "temperature",
-    "includes": ["pulse_secure.include", "temperature.include"],
+    "includes": ["temperature.include"],
     "default_levels_variable": "pulse_secure_temp_def_levels",
 }

@@ -107,7 +107,7 @@ declare_invtable_view(
 declare_joined_inventory_table_view(
     tablename = "invMULTITABLE",
     title_singular = _("TITLE MULTITABLE SINGULAR"),
-    titl_plural = _("TITLE MULTITABLE PLURAL"),
+    title_plural = _("TITLE MULTITABLE PLURAL"),
     tables = [
         "invTABLE1",
         "invTABLE2",

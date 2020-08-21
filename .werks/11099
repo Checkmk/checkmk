@@ -1,0 +1,11 @@
+Title: Cisco UCS check plugins: add support for UCS C220 M4S devices
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1588591044
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+

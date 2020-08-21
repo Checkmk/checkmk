@@ -5,11 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import textwrap
-from typing import Union, Tuple, Callable, Optional, Dict, List  # pylint: disable=unused-import
+from typing import Union, Tuple, Callable, Optional, Dict, List
 
 from cmk.utils.plugin_loader import load_plugins
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
-from cmk.utils.type_defs import HostName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName
 
 import cmk.base.config as config
 
@@ -23,17 +23,15 @@ Options = List[Tuple[OptionSpec, Argument]]
 Arguments = List[str]
 
 
-class Modes(object):  # pylint: disable=useless-object-inheritance
-    def __init__(self):
-        # type: () -> None
+class Modes:
+    def __init__(self) -> None:
         # TODO: This disable is needed because of a pylint bug. Remove one day.
         super(Modes, self).__init__()  # pylint: disable=bad-super-call
-        self._mode_map = {}  # type: Dict[OptionName, Mode]
-        self._modes = []  # type: List[Mode]
-        self._general_options = []  # type: List[Option]
+        self._mode_map: Dict[OptionName, Mode] = {}
+        self._modes: List[Mode] = []
+        self._general_options: List[Option] = []
 
-    def register(self, mode):
-        # type: (Mode) -> None
+    def register(self, mode: 'Mode') -> None:
         self._modes.append(mode)
 
         self._mode_map[mode.long_option] = mode
@@ -42,20 +40,19 @@ class Modes(object):  # pylint: disable=useless-object-inheritance
                 raise TypeError()
             self._mode_map[mode.short_option] = mode
 
-    def exists(self, opt):
-        # type: (OptionName) -> bool
+    def exists(self, opt: OptionName) -> bool:
         try:
             self._get(opt)
             return True
         except KeyError:
             return False
 
-    def call(self, opt, arg, all_opts, all_args):
-        # type: (str, Optional[Argument], Options, Arguments) -> int
+    def call(self, opt: str, arg: Optional[Argument], all_opts: Options,
+             all_args: Arguments) -> int:
         mode = self._get(opt)
         sub_options = mode.get_sub_options(all_opts)
 
-        handler_args = []  # type: List
+        handler_args: List = []
         if mode.sub_options:
             handler_args.append(sub_options)
 
@@ -70,25 +67,21 @@ class Modes(object):  # pylint: disable=useless-object-inheritance
 
         return handler(*handler_args)
 
-    def _get(self, opt):
-        # type: (str) -> Mode
+    def _get(self, opt: str) -> 'Mode':
         opt_name = self._strip_dashes(opt)
         return self._mode_map[opt_name]
 
-    def _strip_dashes(self, opt):
-        # type: (str) -> str
+    def _strip_dashes(self, opt: str) -> str:
         if opt.startswith("--"):
             return opt[2:]
         if opt.startswith("-"):
             return opt[1:]
         raise NotImplementedError()
 
-    def get(self, name):
-        # type: (OptionName) -> Mode
+    def get(self, name: OptionName) -> 'Mode':
         return self._mode_map[name]
 
-    def short_getopt_specs(self):
-        # type: () -> str
+    def short_getopt_specs(self) -> str:
         options = ""
         for mode in self._modes:
             options += "".join(mode.short_getopt_specs())
@@ -96,17 +89,15 @@ class Modes(object):  # pylint: disable=useless-object-inheritance
             options += "".join(option.short_getopt_specs())
         return options
 
-    def long_getopt_specs(self):
-        # type: () -> List[str]
-        options = []  # type: List[str]
+    def long_getopt_specs(self) -> List[str]:
+        options: List[str] = []
         for mode in self._modes:
             options += mode.long_getopt_specs()
         for option in self._general_options:
             options += option.long_getopt_specs()
         return options
 
-    def short_help(self):
-        # type: () -> str
+    def short_help(self) -> str:
         texts = []
         for mode in self._modes:
             text = mode.short_help_text(" cmk %-36s")
@@ -114,8 +105,7 @@ class Modes(object):  # pylint: disable=useless-object-inheritance
                 texts.append(text)
         return "\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
 
-    def long_help(self):
-        # type: () -> str
+    def long_help(self) -> str:
         texts = []
         for mode in self._modes:
             text = mode.long_help_text()
@@ -123,24 +113,24 @@ class Modes(object):  # pylint: disable=useless-object-inheritance
                 texts.append(text)
         return "\n\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
 
-    def non_config_options(self):
-        # type: () -> List[str]
-        options = []  # type: List[str]
+    def non_config_options(self) -> List[str]:
+        options: List[str] = []
         for mode in self._modes:
             if not mode.needs_config:
                 options += mode.options()
         return options
 
-    def non_checks_options(self):
-        # type: () -> List[str]
-        options = []  # type: List[str]
+    def non_checks_options(self) -> List[str]:
+        options: List[str] = []
         for mode in self._modes:
             if not mode.needs_checks:
                 options += mode.options()
         return options
 
-    def parse_hostname_list(self, args, with_clusters=True, with_foreign_hosts=False):
-        # type: (List[str], bool, bool) -> List[HostName]
+    def parse_hostname_list(self,
+                            args: List[str],
+                            with_clusters: bool = True,
+                            with_foreign_hosts: bool = False) -> List[HostName]:
         config_cache = config.get_config_cache()
         if with_foreign_hosts:
             valid_hosts = config_cache.all_configured_realhosts()
@@ -174,12 +164,10 @@ class Modes(object):  # pylint: disable=useless-object-inheritance
     # GENERAL OPTIONS
     #
 
-    def register_general_option(self, option):
-        # type: (Option) -> None
+    def register_general_option(self, option: 'Option') -> None:
         self._general_options.append(option)
 
-    def process_general_options(self, all_opts):
-        # type: (Options) -> None
+    def process_general_options(self, all_opts: Options) -> None:
         for o, a in all_opts:
             option = self._get_general_option(o)
             if not option:
@@ -193,8 +181,7 @@ class Modes(object):  # pylint: disable=useless-object-inheritance
             else:
                 option.handler_function()
 
-    def general_option_help(self):
-        # type: () -> str
+    def general_option_help(self) -> str:
         texts = []
         for option in self._general_options:
             text = option.short_help_text(fmt="  %-21s")
@@ -202,8 +189,7 @@ class Modes(object):  # pylint: disable=useless-object-inheritance
                 texts.append("%s" % text)
         return "\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
 
-    def _get_general_option(self, opt):
-        # type: (str) -> Optional[Option]
+    def _get_general_option(self, opt: str) -> 'Optional[Option]':
         opt_name = self._strip_dashes(opt)
         for option in self._general_options:
             if opt_name in [option.long_option, option.short_option]:
@@ -211,18 +197,17 @@ class Modes(object):  # pylint: disable=useless-object-inheritance
         return None
 
 
-class Option(object):  # pylint: disable=useless-object-inheritance
+class Option:
     def __init__(self,
-                 long_option,
-                 short_help,
-                 short_option=None,
-                 argument=False,
-                 argument_descr=None,
-                 argument_conv=None,
-                 argument_optional=False,
-                 count=False,
-                 handler_function=None):
-        # type: (str, str, str, bool, str, ConvertFunction, bool, bool, OptionFunction) -> None
+                 long_option: str,
+                 short_help: str,
+                 short_option: Optional[str] = None,
+                 argument: bool = False,
+                 argument_descr: Optional[str] = None,
+                 argument_conv: Optional[ConvertFunction] = None,
+                 argument_optional: bool = False,
+                 count: bool = False,
+                 handler_function: Optional[OptionFunction] = None) -> None:
         # TODO: This disable is needed because of a pylint bug. Remove one day.
         super(Option, self).__init__()  # pylint: disable=bad-super-call
         self.long_option = long_option
@@ -240,28 +225,23 @@ class Option(object):  # pylint: disable=useless-object-inheritance
         self.argument_optional = argument_optional
         self.handler_function = handler_function
 
-    def name(self):
-        # type: () -> str
+    def name(self) -> str:
         return self.long_option
 
-    def options(self):
-        # type: () -> List[str]
+    def options(self) -> List[str]:
         options = []
         if self.short_option:
             options.append("-%s" % self.short_option)
         options.append("--%s" % self.long_option)
         return options
 
-    def has_short_option(self):
-        # type: () -> bool
+    def has_short_option(self) -> bool:
         return self.short_option is not None
 
-    def takes_argument(self):
-        # type: () -> bool
+    def takes_argument(self) -> bool:
         return self.argument
 
-    def short_help_text(self, fmt):
-        # type: (str) -> Optional[str]
+    def short_help_text(self, fmt: str) -> Optional[str]:
         if self.short_help is None:
             return None
 
@@ -284,8 +264,7 @@ class Option(object):  # pylint: disable=useless-object-inheritance
         )
         return wrapper.fill(self.short_help)
 
-    def short_getopt_specs(self):
-        # type: () -> List[str]
+    def short_getopt_specs(self) -> List[str]:
         if not self.has_short_option():
             return []
 
@@ -296,8 +275,7 @@ class Option(object):  # pylint: disable=useless-object-inheritance
             spec += ":"
         return [spec]
 
-    def long_getopt_specs(self):
-        # type: () -> List[str]
+    def long_getopt_specs(self) -> List[str]:
         spec = self.long_option
         if self.argument and not self.argument_optional:
             spec += "="
@@ -306,21 +284,18 @@ class Option(object):  # pylint: disable=useless-object-inheritance
 
 class Mode(Option):
     def __init__(self,
-                 long_option,
-                 handler_function,
-                 short_help,
-                 short_option=None,
-                 argument=False,
-                 argument_descr=None,
-                 argument_conv=None,
-                 argument_optional=False,
-                 long_help=None,
-                 needs_config=True,
-                 needs_checks=True,
-                 sub_options=None):
-        # type: (OptionName, ModeFunction, str, Optional[OptionName], bool, Optional[str], ConvertFunction, bool, Optional[List[str]], bool, bool, Optional[List[Option]]) -> None
-        # TODO: This disable is needed because of a pylint bug. Remove one day.
-        # pylint: disable=bad-super-call
+                 long_option: OptionName,
+                 handler_function: ModeFunction,
+                 short_help: str,
+                 short_option: Optional[OptionName] = None,
+                 argument: bool = False,
+                 argument_descr: Optional[str] = None,
+                 argument_conv: Optional[ConvertFunction] = None,
+                 argument_optional: bool = False,
+                 long_help: Optional[List[str]] = None,
+                 needs_config: bool = True,
+                 needs_checks: bool = True,
+                 sub_options: Optional[List[Option]] = None) -> None:
         super(Mode, self).__init__(long_option,
                                    short_help,
                                    short_option,
@@ -334,16 +309,14 @@ class Mode(Option):
         self.needs_checks = needs_checks
         self.sub_options = sub_options or []
 
-    def short_getopt_specs(self):
-        # type: () -> List[str]
+    def short_getopt_specs(self) -> List[str]:
         # TODO: This disable is needed because of a pylint bug. Remove one day.
         specs = super(Mode, self).short_getopt_specs()  # pylint: disable=bad-super-call
         for option in self.sub_options:
             specs += option.short_getopt_specs()
         return specs
 
-    def long_getopt_specs(self):
-        # type: () -> List[str]
+    def long_getopt_specs(self) -> List[str]:
         # TODO: This disable is needed because of a pylint bug. Remove one day.
         specs = super(Mode, self).long_getopt_specs()  # pylint: disable=bad-super-call
         for option in self.sub_options:
@@ -354,12 +327,11 @@ class Mode(Option):
     #  -i, --inventory does a HW/SW-Inventory for all, one or several
     #  hosts. If you add the option -f, --force then persisted sections
     #  will be used even if they are outdated.
-    def long_help_text(self):
-        # type: () -> Optional[str]
+    def long_help_text(self) -> Optional[str]:
         if not self.long_help and not self.sub_options:
             return None
 
-        text = []  # type: List[str]
+        text: List[str] = []
 
         option_text = "  "
         if self.short_option:
@@ -392,12 +364,12 @@ class Mode(Option):
 
         return "\n\n".join(text)
 
-    def get_sub_options(self, all_opts):
-        # type: (Options) -> Optional[Dict[OptionName, Union[Argument, int, bool]]]
+    def get_sub_options(
+            self, all_opts: Options) -> Optional[Dict[OptionName, Union[Argument, int, bool]]]:
         if not self.sub_options:
             return None
 
-        options = {}  # type: Dict[OptionName, Union[Argument, int, bool]]
+        options: Dict[OptionName, Union[Argument, int, bool]] = {}
 
         for o, a in all_opts:
             for option in self.sub_options:
@@ -407,7 +379,7 @@ class Mode(Option):
                 if a and not option.takes_argument():
                     raise MKGeneralException("No argument to %s expected." % o)
 
-                val = a  # type: Union[Argument, bool]
+                val: Union[Argument, bool] = a
                 if not option.takes_argument():
                     if option.count:
                         value = options.setdefault(option.name(), 0)

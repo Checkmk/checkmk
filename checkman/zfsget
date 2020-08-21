@@ -35,3 +35,6 @@ description:
 
 item:
  The mountpoint of the filesystem
+
+inventory:
+ One service is created for each mountpoint.

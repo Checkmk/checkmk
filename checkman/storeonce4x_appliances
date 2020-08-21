@@ -1,0 +1,15 @@
+title: HPE StoreOnce REST API 4.x: Appliances
+agents: storeonce4x
+catalog: hw/storagehw/hpe
+license: GPL
+distribution: check_mk
+description:
+ This checks monitors the state of a storeonce appliance.
+ The service state is determined by the "applianceStateString"
+ The appliance's serial number, software version and product name are displayed.
+
+item:
+ The appliance's host name.
+
+inventory:
+ One service per appliance is created.

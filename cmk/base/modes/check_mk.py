@@ -6,49 +6,57 @@
 
 import os
 import sys
-from typing import Optional, Dict, List  # pylint: disable=unused-import
+from pathlib import Path
+from typing import Dict, List, Optional, Set, TypedDict
 
-import six
+from six import ensure_str
 
-import cmk.utils.version as cmk_version
-import cmk.utils.tty as tty
-import cmk.utils.paths
-import cmk.utils.log as log
 import cmk.utils.debug
-import cmk.utils.store as store
-from cmk.utils.exceptions import MKBailOut
+import cmk.utils.log as log
+import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
-from cmk.utils.type_defs import TagValue, HostgroupName  # pylint: disable=unused-import
+import cmk.utils.store as store
+import cmk.utils.tty as tty
+import cmk.utils.version as cmk_version
+from cmk.utils.check_utils import maincheckify
+from cmk.utils.diagnostics import (
+    DiagnosticsModesParameters,
+    OPT_CHECKMK_CONFIG_FILES,
+    OPT_CHECKMK_OVERVIEW,
+    OPT_LOCAL_FILES,
+    OPT_OMD_CONFIG,
+    OPT_PERFORMANCE_GRAPHS,
+)
+from cmk.utils.exceptions import MKBailOut, MKGeneralException
+from cmk.utils.log import console
+from cmk.utils.type_defs import CheckPluginName, HostAddress, HostgroupName, HostName, TagValue
 
-import cmk.base.data_sources as data_sources
-import cmk.base.console as console
+import cmk.snmplib.snmp_modes as snmp_modes
+
+import cmk.fetchers.factory as snmp_factory
+
+import cmk.base.api.agent_based.register as agent_based_register
+import cmk.base.backup
+import cmk.base.check_api as check_api
+import cmk.base.check_utils
 import cmk.base.config as config
+import cmk.base.core
+import cmk.base.core_nagios
+import cmk.base.data_sources as data_sources
+import cmk.base.diagnostics
 import cmk.base.discovery as discovery
+import cmk.base.dump_host
 import cmk.base.inventory as inventory
 import cmk.base.inventory_plugins as inventory_plugins
-import cmk.base.check_api as check_api
-import cmk.base.snmp as snmp
 import cmk.base.ip_lookup as ip_lookup
-import cmk.base.profiling as profiling
-import cmk.base.core
-import cmk.base.data_sources.abstract
-import cmk.base.core_nagios
-import cmk.base.parent_scan
-import cmk.base.dump_host
-import cmk.base.backup
-import cmk.base.packaging
 import cmk.base.localize
-import cmk.base.diagnostics
-from cmk.utils.type_defs import HostName, HostAddress  # pylint: disable=unused-import
-
-from cmk.base.modes import (
-    modes,
-    Mode,
-    Option,
-    keepalive_option,
-)
-import cmk.base.check_utils
+import cmk.base.obsolete_output as out
+import cmk.base.packaging
+import cmk.base.parent_scan
+import cmk.base.profiling as profiling
+from cmk.base.api.agent_based.register.check_plugins import CheckPlugin
 from cmk.base.core_factory import create_core
+from cmk.base.modes import keepalive_option, Mode, modes, Option
 
 # TODO: Investigate all modes and try to find out whether or not we can
 # set needs_checks=False for them. This would save a lot of IO/time for
@@ -71,8 +79,7 @@ from cmk.base.core_factory import create_core
 _verbosity = 0
 
 
-def option_verbosity():
-    # type: () -> None
+def option_verbosity() -> None:
     global _verbosity
     _verbosity += 1
     log.logger.setLevel(log.verbosity_to_log_level(_verbosity))
@@ -89,10 +96,9 @@ modes.register_general_option(
 _verbosity = 0
 
 
-def option_cache():
-    # type: () -> None
-    data_sources.abstract.DataSource.set_may_use_cache_file()
-    data_sources.abstract.DataSource.set_use_outdated_cache_file()
+def option_cache() -> None:
+    data_sources.FileCacheConfigurator.maybe = True
+    data_sources.FileCacheConfigurator.use_outdated = True
 
 
 modes.register_general_option(
@@ -105,9 +111,8 @@ modes.register_general_option(
     ))
 
 
-def option_no_cache():
-    # type: () -> None
-    cmk.base.data_sources.abstract.DataSource.disable_data_source_cache()
+def option_no_cache() -> None:
+    cmk.base.data_sources.FileCacheConfigurator.disabled = True
 
 
 modes.register_general_option(
@@ -118,8 +123,7 @@ modes.register_general_option(
     ))
 
 
-def option_no_tcp():
-    # type: () -> None
+def option_no_tcp() -> None:
     data_sources.tcp.TCPDataSource.use_only_cache()
 
 
@@ -133,9 +137,8 @@ modes.register_general_option(
     ))
 
 
-def option_usewalk():
-    # type: () -> None
-    snmp.enforce_use_stored_walks()
+def option_usewalk() -> None:
+    snmp_factory.force_stored_walks()
     ip_lookup.enforce_localhost()
 
 
@@ -147,8 +150,7 @@ modes.register_general_option(
     ))
 
 
-def option_debug():
-    # type: () -> None
+def option_debug() -> None:
     cmk.utils.debug.enable()
 
 
@@ -160,8 +162,7 @@ modes.register_general_option(
     ))
 
 
-def option_profile():
-    # type: () -> None
+def option_profile() -> None:
     profiling.enable()
 
 
@@ -173,8 +174,7 @@ modes.register_general_option(
     ))
 
 
-def option_fake_dns(a):
-    # type: (str) -> None
+def option_fake_dns(a: str) -> None:
     ip_lookup.enforce_fake_dns(a)
 
 
@@ -200,17 +200,15 @@ modes.register_general_option(
 #   '----------------------------------------------------------------------'
 
 
-def mode_list_hosts(options, args):
-    # type: (Dict, List[str]) -> None
+def mode_list_hosts(options: Dict, args: List[str]) -> None:
     hosts = _list_all_hosts(args, options)
-    console.output("\n".join(hosts))
+    out.output("\n".join(hosts))
     if hosts:
-        console.output("\n")
+        out.output("\n")
 
 
 # TODO: Does not care about internal group "check_mk"
-def _list_all_hosts(hostgroups, options):
-    # type: (List[HostgroupName], Dict) -> List[HostName]
+def _list_all_hosts(hostgroups: List[HostgroupName], options: Dict) -> List[HostName]:
     config_cache = config.get_config_cache()
 
     hostnames = set()
@@ -273,16 +271,14 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_list_tag(args):
-    # type: (List[str]) -> None
+def mode_list_tag(args: List[str]) -> None:
     hosts = _list_all_hosts_with_tags(args)
-    console.output("\n".join(sorted(hosts)))
+    out.output("\n".join(sorted(hosts)))
     if hosts:
-        console.output("\n")
+        out.output("\n")
 
 
-def _list_all_hosts_with_tags(tags):
-    # type: (List[TagValue]) -> List[HostName]
+def _list_all_hosts_with_tags(tags: List[TagValue]) -> List[HostName]:
     config_cache = config.get_config_cache()
     hosts = []
 
@@ -318,38 +314,48 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_list_checks():
-    # type: () -> None
+def mode_list_checks() -> None:
     import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
-    all_check_manuals = man_pages.all_man_pages()
+    all_check_manuals = {maincheckify(n): k for n, k in man_pages.all_man_pages().items()}
 
-    checks_sorted = sorted(
-        list(config.check_info.items()) +
-        [("check_" + name, entry) for (name, entry) in config.active_check_info.items()])
+    legacy_check_plugins = {maincheckify(name) for name in config.check_info}
 
-    for check_plugin_name, check in checks_sorted:
-        man_filename = all_check_manuals.get(check_plugin_name)
-        try:
-            if 'command_line' in check:
-                what = 'active'
-                ty_color = tty.blue
-            elif cmk.base.check_utils.is_snmp_check(check_plugin_name):
-                what = 'snmp'
+    registered_checks = [(p.name, p) for p in agent_based_register.iter_all_check_plugins()]
+    active_checks = [("check_%s" % name, entry) for name, entry in config.active_check_info.items()]
+    # TODO clean mixed typed list up:
+    all_checks = registered_checks + active_checks  # type: ignore[operator]
+
+    for plugin_name, check in sorted(all_checks, key=lambda x: str(x[0])):
+        if not isinstance(check, CheckPlugin):  # active check
+            what = 'active'
+            ty_color = tty.blue
+        else:
+            if str(plugin_name) in legacy_check_plugins:
+                what = 'auto migrated'
                 ty_color = tty.magenta
             else:
-                what = 'tcp'
+                what = ''
                 ty_color = tty.yellow
 
-            if man_filename:
-                title = open(man_filename).readlines()[0].split(":", 1)[1].strip()
-            else:
-                title = "(no man page present)"
+        title = _get_check_plugin_title(str(plugin_name), all_check_manuals)
 
-            console.output(
-                (tty.bold + "%-44s" + tty.normal + ty_color + " %-6s " + tty.normal + "%s\n") %
-                (check_plugin_name, what, title))
-        except Exception as e:
-            console.error("ERROR in check %r: %s\n" % (check_plugin_name, e))
+        out.output((tty.bold + "%-44s" + tty.normal + ty_color + " %-13s " + tty.normal + "%s\n") %
+                   (plugin_name, what, title))
+
+
+def _get_check_plugin_title(
+    check_plugin_name: str,
+    all_man_pages: Dict[str, str],
+) -> str:
+
+    man_filename = all_man_pages.get(check_plugin_name)
+    if man_filename is None:
+        return "(no man page present)"
+
+    try:
+        return cmk.utils.man_pages.get_title_from_man_page(Path(man_filename))
+    except MKGeneralException:
+        return "(failed to read man page)"
 
 
 modes.register(
@@ -372,8 +378,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_dump_agent(hostname):
-    # type: (HostName) -> None
+def mode_dump_agent(hostname: HostName) -> None:
     try:
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
@@ -381,23 +386,31 @@ def mode_dump_agent(hostname):
         if host_config.is_cluster:
             raise MKBailOut("Can not be used with cluster hosts")
 
-        ipaddress = ip_lookup.lookup_ip_address(hostname)
-        sources = data_sources.DataSources(hostname, ipaddress)
-        sources.set_max_cachefile_age(config.check_max_cachefile_age)
+        ipaddress = ip_lookup.lookup_ip_address(host_config)
 
-        output = b"".join(source.run_raw()
-                          for source in sources.get_data_sources()
-                          if isinstance(source, data_sources.abstract.CheckMKAgentDataSource))
-
+        output = []
         # Show errors of problematic data sources
         has_errors = False
-        for source in sources.get_data_sources():
-            source_state, source_output, _source_perfdata = source.get_summary_result_for_checking()
+        for source in data_sources.make_sources(
+                host_config,
+                ipaddress,
+                mode=data_sources.Mode.CHECKING,
+        ):
+            source.configurator.file_cache.max_age = config.check_max_cachefile_age
+            if isinstance(source, data_sources.agent.AgentDataSource):
+                # TODO(ml): Call fetcher directly.
+                output.append(source.run_raw())
+
+            source_state, source_output, _source_perfdata = source.get_summary_result()
             if source_state != 0:
-                console.error("ERROR [%s]: %s\n", source.id(), six.ensure_str(source_output))
+                console.error(
+                    "ERROR [%s]: %s\n",
+                    source.id,
+                    ensure_str(source_output),
+                )
                 has_errors = True
 
-        console.output(six.ensure_str(output, errors="surrogateescape"))
+        out.output(ensure_str(b"".join(output), errors="surrogateescape"))
         if has_errors:
             sys.exit(1)
     except Exception as e:
@@ -430,8 +443,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_dump_hosts(hostlist):
-    # type: (List[HostName]) -> None
+def mode_dump_hosts(hostlist: List[HostName]) -> None:
     config_cache = config.get_config_cache()
     if not hostlist:
         hostlist = sorted(config_cache.all_active_hosts())
@@ -465,8 +477,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_paths():
-    # type: () -> None
+def mode_paths() -> None:
     inst = 1
     conf = 2
     data = 3
@@ -536,16 +547,15 @@ def mode_paths():
          "Locally installed localizations"),
     ]
 
-    def show_paths(title, t):
-        # type: (str, int) -> None
+    def show_paths(title: str, t: int) -> None:
         if t != inst:
-            console.output("\n")
-        console.output(tty.bold + title + tty.normal + "\n")
+            out.output("\n")
+        out.output(tty.bold + title + tty.normal + "\n")
         for path, filedir, typp, descr in paths:
             if typp == t:
                 if filedir == directory:
                     path += "/"
-                console.output("  %-47s: %s%s%s\n" % (descr, tty.bold + tty.blue, path, tty.normal))
+                out.output("  %-47s: %s%s%s\n" % (descr, tty.bold + tty.blue, path, tty.normal))
 
     for title, t in [
         ("Files copied or created during installation", inst),
@@ -576,8 +586,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_backup(tarname):
-    # type: (str) -> None
+def mode_backup(tarname: str) -> None:
     cmk.base.backup.do_backup(tarname)
 
 
@@ -595,8 +604,7 @@ modes.register(
     ))
 
 
-def mode_restore(tarname):
-    # type: (str) -> None
+def mode_restore(tarname: str) -> None:
     cmk.base.backup.do_restore(tarname)
 
 
@@ -624,8 +632,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_packaging(args):
-    # type: (List[str]) -> None
+def mode_packaging(args: List[str]) -> None:
     cmk.base.packaging.do_packaging(args)
 
 
@@ -657,8 +664,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_localize(args):
-    # type: (List[str]) -> None
+def mode_localize(args: List[str]) -> None:
     cmk.base.localize.do_localize(args)
 
 
@@ -708,8 +714,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_update_dns_cache():
-    # type: () -> None
+def mode_update_dns_cache() -> None:
     ip_lookup.update_dns_cache()
 
 
@@ -731,8 +736,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_cleanup_piggyback():
-    # type: () -> None
+def mode_cleanup_piggyback() -> None:
     time_settings = config.get_config_cache().get_piggybacked_hosts_time_settings()
     piggyback.cleanup_piggyback_files(time_settings)
 
@@ -755,8 +759,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_scan_parents(options, args):
-    # type: (Dict, List[str]) -> None
+def mode_scan_parents(options: Dict, args: List[str]) -> None:
     config.load(exclude_parents_mk=True)
 
     if "procs" in options:
@@ -800,9 +803,8 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_snmptranslate(walk_filename):
-    # type: (str) -> None
-    snmp.do_snmptranslate(walk_filename)
+def mode_snmptranslate(walk_filename: str) -> None:
+    snmp_modes.do_snmptranslate(walk_filename)
 
 
 modes.register(
@@ -830,18 +832,31 @@ modes.register(
 #   |                               |_|                                    |
 #   '----------------------------------------------------------------------'
 
-_oids = []  # type: List[str]
-_extra_oids = []  # type: List[str]
+_oids: List[str] = []
+_extra_oids: List[str] = []
 
 
-def mode_snmpwalk(options, args):
-    # type: (Dict, List[str]) -> None
+def mode_snmpwalk(options: Dict, hostnames: List[str]) -> None:
     if _oids:
         options["oids"] = _oids
     if _extra_oids:
         options["extraoids"] = _extra_oids
+    if "oids" in options and "extraoids" in options:
+        raise MKGeneralException("You cannot specify --oid and --extraoid at the same time.")
 
-    snmp.do_snmpwalk(options, args)
+    if not hostnames:
+        raise MKBailOut("Please specify host names to walk on.")
+
+    config_cache = config.get_config_cache()
+
+    for hostname in hostnames:
+        host_config = config_cache.get_host_config(hostname)
+        ipaddress = ip_lookup.lookup_ip_address(host_config)
+        if not ipaddress:
+            raise MKGeneralException("Failed to gather IP address of %s" % hostname)
+
+        snmp_config = config.HostConfig.make_snmp_config(hostname, ipaddress)
+        snmp_modes.do_snmpwalk(options, backend=snmp_factory.backend(snmp_config))
 
 
 modes.register(
@@ -891,11 +906,26 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_snmpget(args):
-    # type: (List[str]) -> None
+def mode_snmpget(args: List[str]) -> None:
     if not args:
         raise MKBailOut("You need to specify an OID.")
-    snmp.do_snmpget(args[0], args[1:])
+
+    config_cache = config.get_config_cache()
+    oid, *hostnames = args
+
+    if not hostnames:
+        hostnames.extend(host for host in config_cache.all_active_realhosts()
+                         if config_cache.get_host_config(host).is_snmp_host)
+
+    assert hostnames
+    for hostname in hostnames:
+        host_config = config_cache.get_host_config(hostname)
+        ipaddress = ip_lookup.lookup_ip_address(host_config)
+        if not ipaddress:
+            raise MKGeneralException("Failed to gather IP address of %s" % hostname)
+
+        snmp_config = config.HostConfig.make_snmp_config(hostname, ipaddress)
+        snmp_modes.do_snmpget(oid, backend=snmp_factory.backend(snmp_config))
 
 
 modes.register(
@@ -923,8 +953,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_flush(hosts):
-    # type: (List[HostName]) -> None
+def mode_flush(hosts: List[HostName]) -> None:
     config_cache = config.get_config_cache()
 
     if not hosts:
@@ -933,13 +962,13 @@ def mode_flush(hosts):
     for host in hosts:
         host_config = config_cache.get_host_config(host)
 
-        console.output("%-20s: " % host)
+        out.output("%-20s: " % host)
         flushed = False
 
         # counters
         try:
             os.remove(cmk.utils.paths.counters_dir + "/" + host)
-            console.output(tty.bold + tty.blue + " counters")
+            out.output(tty.bold + tty.blue + " counters")
             flushed = True
         except OSError:
             pass
@@ -957,14 +986,14 @@ def mode_flush(hosts):
                     except OSError:
                         pass
             if d == 1:
-                console.output(tty.bold + tty.green + " cache")
+                out.output(tty.bold + tty.green + " cache")
             elif d > 1:
-                console.output(tty.bold + tty.green + " cache(%d)" % d)
+                out.output(tty.bold + tty.green + " cache(%d)" % d)
 
         # piggy files from this as source host
         d = piggyback.remove_source_status_file(host)
         if d:
-            console.output(tty.bold + tty.magenta + " piggyback(1)")
+            out.output(tty.bold + tty.magenta + " piggyback(1)")
 
         # logfiles
         log_dir = cmk.utils.paths.logwatch_dir + "/" + host
@@ -979,24 +1008,24 @@ def mode_flush(hosts):
                     except OSError:
                         pass
             if d > 0:
-                console.output(tty.bold + tty.magenta + " logfiles(%d)" % d)
+                out.output(tty.bold + tty.magenta + " logfiles(%d)" % d)
 
         # autochecks
         count = host_config.remove_autochecks()
         if count:
             flushed = True
-            console.output(tty.bold + tty.cyan + " autochecks(%d)" % count)
+            out.output(tty.bold + tty.cyan + " autochecks(%d)" % count)
 
         # inventory
         path = cmk.utils.paths.var_dir + "/inventory/" + host
         if os.path.exists(path):
             os.remove(path)
-            console.output(tty.bold + tty.yellow + " inventory")
+            out.output(tty.bold + tty.yellow + " inventory")
 
         if not flushed:
-            console.output("(nothing)")
+            out.output("(nothing)")
 
-        console.output(tty.normal + "\n")
+        out.output(tty.normal + "\n")
 
 
 modes.register(
@@ -1027,8 +1056,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_dump_nagios_config(args):
-    # type: (List[HostName]) -> None
+def mode_dump_nagios_config(args: List[HostName]) -> None:
     from cmk.base.core_nagios import create_config  # pylint: disable=import-outside-toplevel
     create_config(sys.stdout, args if len(args) else None)
 
@@ -1050,8 +1078,7 @@ modes.register(
     ))
 
 
-def mode_update_no_precompile(options):
-    # type: (Dict) -> None
+def mode_update_no_precompile(options: Dict) -> None:
     from cmk.base.core_config import do_update  # pylint: disable=import-outside-toplevel
     do_update(create_core(options), with_precompile=False)
 
@@ -1089,8 +1116,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_compile():
-    # type: () -> None
+def mode_compile() -> None:
     cmk.base.core_nagios.precompile_hostchecks()
 
 
@@ -1113,8 +1139,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_update(options):
-    # type: (Dict) -> None
+def mode_update(options: Dict) -> None:
     from cmk.base.core_config import do_update  # pylint: disable=import-outside-toplevel
     do_update(create_core(options), with_precompile=True)
 
@@ -1154,8 +1179,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_restart():
-    # type: () -> None
+def mode_restart() -> None:
     cmk.base.core.do_restart(create_core())
 
 
@@ -1178,8 +1202,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_reload():
-    # type: () -> None
+def mode_reload() -> None:
     cmk.base.core.do_reload(create_core())
 
 
@@ -1202,8 +1225,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_man(args):
-    # type: (List[str]) -> None
+def mode_man(args: List[str]) -> None:
     import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
     if args:
         man_pages.ConsoleManPageRenderer(args[0]).paint()
@@ -1239,8 +1261,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_browse_man():
-    # type: () -> None
+def mode_browse_man() -> None:
     import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
     man_pages.print_man_page_browser()
 
@@ -1265,8 +1286,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_inventory(options, args):
-    # type: (Dict, List[str]) -> None
+def mode_inventory(options: Dict, args: List[str]) -> None:
     inventory_plugins.load_plugins(check_api.get_check_api_context, inventory.get_inventory_context)
     config_cache = config.get_config_cache()
 
@@ -1276,12 +1296,11 @@ def mode_inventory(options, args):
     else:
         # No hosts specified: do all hosts and force caching
         hostnames = sorted(config_cache.all_active_hosts())
-        data_sources.abstract.DataSource.set_may_use_cache_file(
-            not data_sources.abstract.DataSource.is_agent_cache_disabled())
+        data_sources.FileCacheConfigurator.reset_maybe()
         console.verbose("Doing HW/SW inventory on all hosts\n")
 
     if "force" in options:
-        data_sources.abstract.CheckMKAgentDataSource.use_outdated_persisted_sections()
+        data_sources.agent.AgentDataSource.use_outdated_persisted_sections()
 
     inventory.do_inv(hostnames)
 
@@ -1318,8 +1337,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_inventory_as_check(options, hostname):
-    # type: (Dict, HostName) -> int
+def mode_inventory_as_check(options: Dict, hostname: HostName) -> int:
     inventory_plugins.load_plugins(check_api.get_check_api_context, inventory.get_inventory_context)
 
     return inventory.do_inv_check(hostname, options)
@@ -1375,8 +1393,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_automation(args):
-    # type: (List[str]) -> None
+def mode_automation(args: List[str]) -> None:
     import cmk.base.automations as automations  # pylint: disable=import-outside-toplevel
 
     if not args:
@@ -1408,8 +1425,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_notify(options, args):
-    # type: (Dict, List[str]) -> Optional[int]
+def mode_notify(options: Dict, args: List[str]) -> Optional[int]:
     import cmk.base.notify as notify  # pylint: disable=import-outside-toplevel
     with store.lock_checkmk_configuration():
         config.load(with_conf_d=True, validate_hosts=False)
@@ -1447,8 +1463,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_discover_marked_hosts():
-    # type: () -> None
+def mode_discover_marked_hosts() -> None:
     discovery.discover_marked_hosts(create_core())
 
 
@@ -1476,8 +1491,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_check_discovery(hostname):
-    # type: (HostName) -> None
+def mode_check_discovery(hostname: HostName) -> int:
     return discovery.check_discovery(hostname, ipaddress=None)
 
 
@@ -1506,23 +1520,48 @@ modes.register(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+_ChecksOption = Optional[Set[CheckPluginName]]
 
-def mode_discover(options, args):
-    # type: (Dict, List[str]) -> None
+
+def _convert_checks_argument(arg: str) -> _ChecksOption:
+    if arg == "@all":
+        # this is the same as ommitting the option entirely.
+        return None
+    try:
+        # kindly forgive empty strings
+        return {CheckPluginName(maincheckify(n)) for n in arg.split(",") if n}
+    except ValueError as exc:
+        raise MKBailOut("Error in --checks argument: %s" % exc)
+
+
+_option_checks = Option(
+    long_option="checks",
+    short_help="Restrict discovery/checking to these check plugins",
+    argument=True,
+    argument_descr="C",
+    argument_conv=_convert_checks_argument,
+)
+
+DiscoverOptions = TypedDict(
+    'DiscoverOptions',
+    {
+        'checks': _ChecksOption,
+        'discover': int,
+    },
+    total=False,
+)
+
+
+def mode_discover(options: DiscoverOptions, args: List[str]) -> None:
     hostnames = modes.parse_hostname_list(args)
     if not hostnames:
         # In case of discovery without host restriction, use the cache file
         # by default. Otherwise Check_MK would have to connect to ALL hosts.
         # This will make Check_MK only contact hosts in case the cache is not
         # new enough.
-        data_sources.abstract.DataSource.set_may_use_cache_file(
-            not data_sources.abstract.DataSource.is_agent_cache_disabled())
+        data_sources.FileCacheConfigurator.reset_maybe()
 
-    check_plugin_names = options.get("checks")
-    if check_plugin_names is not None:
-        check_plugin_names = set(check_plugin_names)
-
-    discovery.do_discovery(set(hostnames), check_plugin_names, options["discover"] == 1)
+    discovery.do_discovery(set(hostnames), options.get("checks"), options["discover"] == 1)
 
 
 modes.register(
@@ -1539,9 +1578,8 @@ modes.register(
              "If configured to do so, this will queue those hosts for automatic "
              "discover-marked-hosts",
              "Can be restricted to certain check types. Write '--checks df -I' if "
-             "you just want to look for new filesystems. Use 'check_mk -L' for a "
-             "list of all check types. Use 'tcp' for all TCP based checks and "
-             "'snmp' for all SNMP based checks.",
+             "you just want to look for new filesystems. Use 'cmk -L' for a "
+             "list of all check types.",
              "-II does the same as -I but deletes all existing checks of the "
              "specified types and hosts."
          ],
@@ -1552,13 +1590,7 @@ modes.register(
                  short_help="Delete existing services before starting discovery",
                  count=True,
              ),
-             Option(
-                 long_option="checks",
-                 short_help="Restrict discovery to certain check types",
-                 argument=True,
-                 argument_descr="C",
-                 argument_conv=lambda x: list(config.check_info) if x == "@all" else x.split(","),
-             ),
+             _option_checks,
          ]))
 
 #.
@@ -1571,9 +1603,20 @@ modes.register(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+CheckingOptions = TypedDict(
+    'CheckingOptions',
+    {
+        'no-submit': bool,
+        'perfdata': bool,
+        'checks': _ChecksOption,
+        'keepalive': bool,
+        'keepalive-fd': int,
+    },
+    total=False,
+)
 
-def mode_check(options, args):
-    # type: (Dict, List[str]) -> None
+
+def mode_check(options: CheckingOptions, args: List[str]) -> None:
     import cmk.base.checking as checking  # pylint: disable=import-outside-toplevel
     import cmk.base.item_state as item_state  # pylint: disable=import-outside-toplevel
     try:
@@ -1585,9 +1628,9 @@ def mode_check(options, args):
         # handle CMC check helper
         keepalive.enable()
         if "keepalive-fd" in options:
-            keepalive.set_keepalive_fd(options["keepalive-fd"])
+            keepalive.fd.set_(options["keepalive-fd"])
 
-        keepalive.do_check_keepalive()
+        keepalive.check.do_keepalive()
         return
 
     if "perfdata" in options:
@@ -1598,8 +1641,8 @@ def mode_check(options, args):
         item_state.continue_on_counter_wrap()
 
     # handle adhoc-check
-    hostname = args[0]  # type: HostName
-    ipaddress = None  # type: Optional[HostAddress]
+    hostname: HostName = args[0]
+    ipaddress: Optional[HostAddress] = None
     if len(args) == 2:
         ipaddress = args[1]
 
@@ -1638,13 +1681,7 @@ modes.register(
                  short_option="p",
                  short_help="Also show performance data (use with -v)",
              ),
-             Option(
-                 long_option="checks",
-                 short_help="Restrict discovery to certain check types",
-                 argument=True,
-                 argument_descr="C",
-                 argument_conv=lambda x: list(config.check_info) if x == "@all" else x.split(","),
-             ),
+             _option_checks,
              keepalive_option,
              Option(
                  long_option="keepalive-fd",
@@ -1666,9 +1703,8 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_version():
-    # type: () -> None
-    console.output(
+def mode_version() -> None:
+    out.output(
         """This is Check_MK version %s %s
 Copyright (C) 2009 Mathias Kettner
 
@@ -1687,7 +1723,8 @@ Copyright (C) 2009 Mathias Kettner
     the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
     Boston, MA 02111-1307, USA.
 
-""", cmk_version.__version__, six.ensure_str(cmk_version.edition_short().upper()))
+""", cmk_version.__version__,
+        cmk_version.edition_short().upper())
 
 
 modes.register(
@@ -1711,9 +1748,8 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_help():
-    # type: () -> None
-    console.output("""WAYS TO CALL:
+def mode_help() -> None:
+    out.output("""WAYS TO CALL:
 %s
 
 OPTIONS:
@@ -1750,9 +1786,42 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_create_diagnostics_dump():
-    # type: () -> None
-    cmk.base.diagnostics.create_diagnostics_dump()
+def mode_create_diagnostics_dump(options: DiagnosticsModesParameters) -> None:
+    cmk.base.diagnostics.create_diagnostics_dump(
+        cmk.utils.diagnostics.deserialize_modes_parameters(options))
+
+
+def _get_diagnostics_dump_sub_options() -> List[Option]:
+    sub_options = [
+        Option(
+            long_option=OPT_LOCAL_FILES,
+            short_help=("Pack a list of installed, unpacked, optional files below $OMD_ROOT/local. "
+                        "This also includes information about installed MKPs."),
+        ),
+        Option(
+            long_option=OPT_OMD_CONFIG,
+            short_help="Pack content of 'etc/omd/site.conf'",
+        ),
+        Option(
+            long_option=OPT_CHECKMK_OVERVIEW,
+            short_help="Pack HW/SW inventory node 'Software > Applications > Checkmk'",
+        ),
+        Option(
+            long_option=OPT_CHECKMK_CONFIG_FILES,
+            short_help="Pack configuration files '*.mk' and '*.conf' from etc/check_mk",
+            argument=True,
+            argument_descr="FILE,FILE...",
+        ),
+    ]
+
+    if not cmk_version.is_raw_edition():
+        sub_options.append(
+            Option(
+                long_option=OPT_PERFORMANCE_GRAPHS,
+                short_help=(
+                    "Pack performance graphs like CPU load and utilization of Checkmk Server"),
+            ))
+    return sub_options
 
 
 modes.register(
@@ -1766,4 +1835,5 @@ modes.register(
         ],
         needs_config=False,
         needs_checks=False,
+        sub_options=_get_diagnostics_dump_sub_options(),
     ))

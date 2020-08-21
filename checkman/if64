@@ -19,7 +19,8 @@ description:
  port status changes (i.e. is down), when the link speed changes (e.g. a
  port expected to be set to 1GBit/s operates only at 100MBit/s), when the
  absolute or procentual traffic of a port exceeds certain levels or if the
- rate of errors or discards exceeds configurable limits.
+ rate of errors or discards or the multicast or broadcast packet rate exceeds
+ configurable limits.
 
  As of Checkmk version 1.1.9i1 this check supports averaging the in- and
  outgoing traffic over a configurable range of time by using an exponentially

@@ -1,0 +1,19 @@
+title: HPE StoreOnce REST API 4.x: Appliance's summaries
+agents: storeonce4x
+catalog: hw/storagehw/hpe
+license: GPL
+distribution: check_mk
+description:
+ This checks monitors the summaries state of a HP StoreOnce appliance.
+ The summaries for the following sub systems (if configured) are displayed:
+ <li> Cat stores
+ <li> NAS Shares
+ <li> VTL Libraries
+ <li> NAS Replication Mapping
+ <li> VTL Replication Mapping
+
+item:
+ The appliance's host name.
+
+inventory:
+ One service per appliance hostname is created.

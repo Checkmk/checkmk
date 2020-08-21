@@ -4,10 +4,12 @@
 // source code package.
 
 #include "TimeperiodsCache.h"
+
+// IWYU pragma: no_include <type_traits>
 #include <ostream>
 #include <string>
-#include <type_traits>
 #include <utility>
+
 #include "Logger.h"
 
 extern timeperiod *timeperiod_list;

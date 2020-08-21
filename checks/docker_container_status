@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
+import cmk.base.plugins.agent_based.utils.docker as docker
 
 RESTART_POLICIES_TO_DISCOVER = ("always",)
 
@@ -31,10 +32,10 @@ def parse_docker_container_status(info):
     When a container got piggyback data from multiple hosts (e.g. a cluster) this results
     in multiple JSON objects handed over to this check.
     '''
-    version = docker_get_version(info)  # pylint: disable=undefined-variable
+    version = docker.get_version(info)  # pylint: disable=undefined-variable
 
     index = 0 if version is None else 1
-    parsed = docker_json_get_obj(info[index]) or {} if info[index:] else {}  # pylint: disable=undefined-variable
+    parsed = docker.json_get_obj(info[index]) or {} if info[index:] else {}  # pylint: disable=undefined-variable
 
     if version is None:
         return DeprecatedDict(parsed)  # pylint: disable=undefined-variable
@@ -95,7 +96,7 @@ check_info["docker_container_status.health"] = {
     "inventory_function": discover_docker_container_status_health,
     "check_function": check_docker_container_status_health,
     "service_description": "Docker container health",
-    'includes': ['docker.include', 'legacy_docker.include'],
+    'includes': ['legacy_docker.include'],
 }
 
 #.
@@ -162,7 +163,7 @@ check_info['docker_container_status'] = {
     'service_description': 'Docker container status',
     # needed to decide wether we must discover .uptime subcheck:
     'extra_sections': ['uptime'],
-    'includes': ['docker.include', 'legacy_docker.include'],
+    'includes': ['legacy_docker.include'],
 }
 
 #   .--Uptime--------------------------------------------------------------.
@@ -210,6 +211,6 @@ check_info["docker_container_status.uptime"] = {
     "inventory_function": discover_docker_container_status_uptime,
     "check_function": check_docker_container_status_uptime,
     "service_description": "Uptime",
-    "includes": ['docker.include', 'uptime.include'],
+    "includes": ['uptime.include'],
     "group": "uptime",
 }

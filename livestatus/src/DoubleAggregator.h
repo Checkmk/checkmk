@@ -7,7 +7,9 @@
 #define DoubleAggregator_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
+
 #include "Aggregator.h"
 #include "DoubleColumn.h"
 #include "contact_fwd.h"

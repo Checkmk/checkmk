@@ -1,13 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Dict, List
+
 import shutil
-# No stub file
 import pytest  # type: ignore[import]
-# No stub file
 from testlib import cmk_path  # type: ignore[import]
 
 from cmk.utils.exceptions import MKGeneralException
@@ -147,7 +147,7 @@ def test_structured_data_NodeAttribute_is_equal(na_x, na_y):
         assert not na_x.is_equal(na_y)
 
 
-@pytest.mark.parametrize("node_attribute,result", zip(node_attributes, [0, 12]))
+@pytest.mark.parametrize("node_attribute,result", list(zip(node_attributes, [0, 12])))
 def test_structured_data_NodeAttribute_count_entries(node_attribute, result):
     assert node_attribute.count_entries() == result
 
@@ -524,7 +524,7 @@ def test_structured_data_StructuredDataTree_is_equal_save_and_load(tree, tmp_pat
 
 
 @pytest.mark.parametrize("tree,result",
-                         zip(trees, [
+                         list(zip(trees, [
                              21,
                              9,
                              10,
@@ -537,7 +537,7 @@ def test_structured_data_StructuredDataTree_is_equal_save_and_load(tree, tmp_pat
                              6185,
                              2,
                              16653,
-                         ]))
+                         ])))
 def test_structured_data_StructuredDataTree_count_entries(tree, result):
     assert tree.count_entries() == result
 
@@ -549,41 +549,43 @@ def test_structured_data_StructuredDataTree_compare_with_self(tree):
 
 
 @pytest.mark.parametrize("tree_old,tree_new,result",
-                         zip(trees_old, trees_new, [
-                             (2, 2, 1),
-                             (0, 2, 1),
-                             (1, 0, 1),
-                             (2, 3, 16),
-                             (1, 1, 1),
-                             (1, 1, 2),
-                         ]))
+                         list(
+                             zip(trees_old, trees_new, [
+                                 (2, 2, 1),
+                                 (0, 2, 1),
+                                 (1, 0, 1),
+                                 (2, 3, 16),
+                                 (1, 1, 1),
+                                 (1, 1, 2),
+                             ])))
 def test_structured_data_StructuredDataTree_compare_with(tree_old, tree_new, result):
     new, changed, removed, _delta = tree_new.compare_with(tree_old)
     assert (new, changed, removed) == result
 
 
 @pytest.mark.parametrize("tree,edges_t,edges_f",
-                         zip(trees_old, [
-                             ["hardware", "networking"],
-                             ["networking"],
-                             ["hardware"],
-                             ["hardware", "software", "networking"],
-                             ["hardware"],
-                             ["hardware", "software", "networking"],
-                         ], [
-                             ["", "foobar", "software"],
-                             ["", "foobar", "hardware", "software"],
-                             ["", "foobar", "software", "networking"],
-                             [
-                                 "",
-                                 "foobar",
-                             ],
-                             ["", "foobar", "software", "networking"],
-                             [
-                                 "",
-                                 "foobar",
-                             ],
-                         ]))
+                         list(
+                             zip(trees_old, [
+                                 ["hardware", "networking"],
+                                 ["networking"],
+                                 ["hardware"],
+                                 ["hardware", "software", "networking"],
+                                 ["hardware"],
+                                 ["hardware", "software", "networking"],
+                             ], [
+                                 ["", "foobar", "software"],
+                                 ["", "foobar", "hardware", "software"],
+                                 ["", "foobar", "software", "networking"],
+                                 [
+                                     "",
+                                     "foobar",
+                                 ],
+                                 ["", "foobar", "software", "networking"],
+                                 [
+                                     "",
+                                     "foobar",
+                                 ],
+                             ])))
 def test_structured_data_StructuredDataTree_has_edge(tree, edges_t, edges_f):
     for edge_t in edges_t:
         assert tree.has_edge(edge_t)
@@ -591,10 +593,10 @@ def test_structured_data_StructuredDataTree_has_edge(tree, edges_t, edges_f):
         assert not tree.has_edge(edge_f)
 
 
-@pytest.mark.parametrize("tree,len_children", zip(
+@pytest.mark.parametrize("tree,len_children", list(zip(
     trees_old,
     [2, 1, 1, 4, 1, 4],
-))
+)))
 def test_structured_data_StructuredDataTree_get_children(tree, len_children):
     tree_children = tree.get_children()
     for entry in tree_children:
@@ -735,7 +737,7 @@ def test_structured_data_StructuredDataTree_building_tree():
     def plugin_nested_list():
         node = struct_tree.get_list("level0_2.level1_nested_list:")
         for index in range(10):
-            array = {"foo": []}
+            array: Dict[str, List[Dict[str, str]]] = {"foo": []}
             for a, b in [("nl1", "NL1"), ("nl2", "NL2")]:
                 array["foo"].append({a: "%s-%s" % (b, index)})
             node.append(array)
@@ -767,7 +769,7 @@ def test_structured_data_StructuredDataTree_building_tree():
     assert list(level1_nested_list_con._edges) == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 
-@pytest.mark.parametrize("zipped_trees", zip(old_trees, new_trees))
+@pytest.mark.parametrize("zipped_trees", list(zip(old_trees, new_trees)))
 def test_delta_structured_data_tree_serialization(zipped_trees):
     old_tree = StructuredDataTree()
     new_tree = StructuredDataTree()

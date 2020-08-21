@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,7 +6,6 @@
 """Checker for incorrect string translation functions."""
 
 import re
-import six
 
 import astroid  # type: ignore[import]
 
@@ -27,7 +26,7 @@ def register(linter):
 
 
 def is_constant_string(first):
-    return isinstance(first, astroid.Const) and isinstance(first.value, six.string_types)
+    return isinstance(first, astroid.Const) and isinstance(first.value, str)
 
 
 def parent_is_HTML(node):

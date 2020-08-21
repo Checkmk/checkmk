@@ -4,6 +4,7 @@
 // source code package.
 
 #include "ContactGroupsColumn.h"
+
 #include "Row.h"
 
 #ifdef CMC
@@ -19,14 +20,14 @@ std::vector<std::string> ContactGroupsColumn::getValue(
     std::chrono::seconds /*timezone_offset*/) const {
     std::vector<std::string> names;
 #ifdef CMC
-    if (auto object = columnData<Object>(row)) {
+    if (const auto *object = columnData<Object>(row)) {
         for (const auto &name : object->_contact_list->groupNames()) {
             names.push_back(name);
         }
     }
 #else
-    if (auto p = columnData<contactgroupsmember *>(row)) {
-        for (auto cgm = *p; cgm != nullptr; cgm = cgm->next) {
+    if (const auto *p = columnData<contactgroupsmember *>(row)) {
+        for (auto *cgm = *p; cgm != nullptr; cgm = cgm->next) {
             names.emplace_back(cgm->group_ptr->group_name);
         }
     }

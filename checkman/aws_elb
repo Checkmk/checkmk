@@ -6,8 +6,6 @@ distribution: check_mk
 description:
  This check monitors the
 
- - request count
-
  - surge queue length
 
  - spill over count
@@ -19,11 +17,12 @@ description:
 
  When the surge queue length reaches the maximum of 1,024 queued
  request, the spillover is incremented and new requests are dropped.
- The service goes {WARN} in this case
+ The service goes to {CRIT} in this case
 
  Otherwise the service is {OK}.
 
  Levels are configurable for surge queue length and spillover.
 
 inventory:
- One service is created if all required metrics (SurgeQueueLength, SpilloverCount) are given.
+ One service is created if all required metrics (SurgeQueueLength,
+ SpilloverCount) are given.

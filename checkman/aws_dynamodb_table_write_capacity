@@ -1,0 +1,24 @@
+title: AWS DynamoDB: Write Capacity
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the write capacity of DynamoDB tables based on the
+ Cloudwatch metric "ConsumedWriteCapacityUnits". It reports both the
+ average consumption as well as the minimum and maximum consumption of
+ individual requests. The check also computes the average usage in
+ percent based on a limit value on the average consumption. For
+ provisioned tables, this limit value can be fetched from the API. For
+ on-demand tables, you have to configure a limit value yourself,
+ otherwise, the average usage will not be computed.
+
+ Upper and lower levels for this check can be configured using the
+ rule "AWS/DynamoDB Read/Write Capacity". By default, there are upper
+ levels on the average usage at 80/90%.
+
+ To make this check work, you have to configure the related special
+ agent {Amazon Web Services (AWS)}.
+
+inventory:
+ One service is created.

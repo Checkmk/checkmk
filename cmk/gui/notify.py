@@ -1,16 +1,17 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+import subprocess
 import time
-from typing import Any, Dict, List, Tuple  # pylint: disable=unused-import
-import six
+from typing import Any, Dict, List, Tuple
+
+from six import ensure_str
 
 import cmk.utils.store as store
-import cmk.utils.cmk_subprocess as subprocess
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
@@ -26,16 +27,24 @@ from cmk.gui.permissions import (
     permission_registry,
 )
 from cmk.gui.exceptions import MKInternalError, MKAuthException, MKUserError
-from cmk.gui.valuespec import (  # pylint: disable=unused-import
-    AbsoluteDate, CascadingDropdown, CascadingDropdownChoice, Dictionary, DualListChoice,
-    ListChoice, Optional, TextAreaUnicode,
+from cmk.gui.valuespec import (
+    AbsoluteDate,
+    CascadingDropdown,
+    CascadingDropdownChoice,
+    Dictionary,
+    DualListChoice,
+    ListChoice,
+    Optional,
+    TextAreaUnicode,
 )
+from cmk.gui.breadcrumb import make_simple_page_breadcrumb
+from cmk.gui.main_menu import mega_menu_registry
 
 
 def get_gui_messages(user_id=None):
     if user_id is None:
         user_id = config.user.id
-    path = config.config_dir + "/" + six.ensure_str(user_id) + '/messages.mk'
+    path = config.config_dir + "/" + ensure_str(user_id) + '/messages.mk'
     messages = store.load_object_from_file(path, default=[])
 
     # Delete too old messages
@@ -64,13 +73,12 @@ def delete_gui_message(msg_id):
 def save_gui_messages(messages, user_id=None):
     if user_id is None:
         user_id = config.user.id
-    path = config.config_dir + "/" + six.ensure_str(user_id) + '/messages.mk'
+    path = config.config_dir + "/" + ensure_str(user_id) + '/messages.mk'
     store.mkdir(os.path.dirname(path))
     store.save_object_to_file(path, messages)
 
 
-def _notify_methods():
-    # type: () -> Dict[str, Dict[str, Any]]
+def _notify_methods() -> Dict[str, Dict[str, Any]]:
     return {
         'gui_popup': {
             'title': _('Popup Message in the GUI (shows up alert window)'),
@@ -120,7 +128,9 @@ def page_notify():
     if not config.user.may("general.notify"):
         raise MKAuthException(_("You are not allowed to use the notification module."))
 
-    html.header(_('Notify Users'))
+    title = _('Notify users')
+    breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_setup(), title)
+    html.header(title, breadcrumb)
 
     html.begin_context_buttons()
     html.context_button(_("Users"), "wato.py?mode=users", "back")
@@ -147,7 +157,7 @@ def page_notify():
 
 
 def _vs_notify():
-    dest_choices = [
+    dest_choices: List[CascadingDropdownChoice] = [
         ('broadcast', _('Everybody (Broadcast)')),
         ('list', _('A list of specific users'),
          DualListChoice(
@@ -157,7 +167,7 @@ def _vs_notify():
              allow_empty=False,
          )),
         #('contactgroup', _('All members of a contact group')),
-    ]  # type: List[CascadingDropdownChoice]
+    ]
 
     if config.save_user_access_times:
         dest_choices.append(('online', _('All online users')))
@@ -205,14 +215,14 @@ def _validate_msg(msg, varprefix):
     if not msg.get('methods'):
         raise MKUserError('methods', _('Please select at least one notification method.'))
 
-    valid_methods = _notify_methods().keys()
+    valid_methods = set(_notify_methods().keys())
     for method in msg['methods']:
         if method not in valid_methods:
             raise MKUserError('methods', _('Invalid notitification method selected.'))
 
     # On manually entered list of users validate the names
     if isinstance(msg['dest'], tuple) and msg['dest'][0] == 'list':
-        existing = config.multisite_users.keys()
+        existing = set(config.multisite_users.keys())
         for user_id in msg['dest'][1]:
             if user_id not in existing:
                 raise MKUserError('dest', _('A user with the id "%s" does not exist.') % user_id)
@@ -243,7 +253,7 @@ def _process_notify_message(msg):
         num_success[method] = 0
 
     # Now loop all notitification methods to send the notifications
-    errors = {}  # type: Dict[str, List[Tuple]]
+    errors: Dict[str, List[Tuple]] = {}
     for user_id in recipients:
         for method in msg['methods']:
             try:
@@ -334,7 +344,7 @@ def notify_mail(user_id, msg):
     # FIXME: Maybe use the configured mail command for Check_MK-Notify one day
     # TODO: mail does not accept umlauts: "contains invalid character '\303'" in mail
     #       addresses. handle this correctly.
-    command = ["mail", "-s", six.ensure_str(subject), six.ensure_str(user['email'])]
+    command = ["mail", "-s", ensure_str(subject), ensure_str(user['email'])]
 
     # Make sure that mail(x) is using UTF-8. Otherwise we cannot send notifications
     # with non-ASCII characters. Unfortunately we do not know whether C.UTF-8 is

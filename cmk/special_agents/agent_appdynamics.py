@@ -1,16 +1,18 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import getopt
-import httplib
 import json
 import socket
 import sys
-
+from typing import Any, Dict
 from base64 import b64encode
+from http.client import HTTPConnection
+
+from six import ensure_binary, ensure_str
 
 
 def usage():
@@ -113,14 +115,14 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
 
         # Initialize server connection
         try:
-            connection = httplib.HTTPConnection(arg_host, opt_port)
+            connection = HTTPConnection(arg_host, opt_port)
 
             if opt_verbose:
                 sys.stdout.write('Connecting to %s:%s...\n' % (arg_host, opt_port))
             connection.connect()
 
-            auth = b64encode('%s:%s' % (opt_username, opt_password))
-            headers = {'Authorization': 'Basic ' + auth}
+            auth = b64encode(ensure_binary('%s:%s' % (opt_username, opt_password)))
+            headers = {'Authorization': 'Basic ' + ensure_str(auth)}
             for obj in ['Agent', '*|*']:
                 connection.request('GET',
                                    url % {
@@ -143,7 +145,7 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
                 raise
             return 1
 
-    grouped_data = {}
+    grouped_data: Dict[str, Dict[str, Dict[str, Any]]] = {}
     for metric in data:
         path_parts = metric['metricPath'].split('|')
         if len(path_parts) == 7:  # Unit missing
@@ -164,18 +166,18 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
                     .setdefault(typename, {})\
                     .setdefault(item, {})[unit] = value
 
-    for node, applications in grouped_data.iteritems():
+    for node, applications in grouped_data.items():
         sys.stdout.write('<<<<%s>>>>\n' % node)
-        for application, types in applications.iteritems():
-            for typename, items in types.iteritems():
+        for application, types in applications.items():
+            for typename, items in types.items():
                 typename = typename.lower().replace(' ', '_')
                 if typename in ['app', 'memory', 'sessions', 'web_container_runtime']:
                     sys.stdout.write('<<<appdynamics_%s:sep(124)>>>\n' %
                                      (typename.replace("_runtime", "")))
-                    for item, values in items.iteritems():
+                    for item, values in items.items():
                         if values:
                             output_items = [application, item]
-                            for name, value in values.iteritems():
+                            for name, value in values.items():
                                 if not name:
                                     output_items.append('%s' % value)
                                 else:

@@ -14,5 +14,4 @@ item:
  The index of the route
 
 inventory:
- One check for each service is created by the inventory
- which is on "up"-state.
+ One service is created for each route if it is on "up"-state.

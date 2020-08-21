@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -9,15 +9,17 @@
 import copy
 from functools import partial
 import os
-import six
+from typing import Any, Dict, List
+
+from six import ensure_str
 
 import cmk.utils.version as cmk_version
 
 import cmk.utils.tags
-import cmk.gui.escaping as escaping
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
+
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.exceptions import (
     MKException,
@@ -26,18 +28,16 @@ from cmk.utils.exceptions import (
 
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import (
-    MKUserError,
-    MKAuthException,
-)
+    MKUserError,)
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 import cmk.gui.watolib.users
 from cmk.gui.watolib.tags import (
     TagConfigFile,)
-from cmk.gui.watolib.groups import (
-    load_contact_group_information,
+from cmk.gui.groups import (
     load_host_group_information,
     load_service_group_information,
 )
+from cmk.gui.watolib.groups import load_contact_group_information
 
 import cmk.gui.bi as bi
 
@@ -247,7 +247,7 @@ class APICallHosts(APICallCollection):
         check_hostname(hostname, should_exist=False)
 
         # Validate folder
-        if folder_path != "" and folder_path != "/":
+        if folder_path not in ('', '/'):
             folders = folder_path.split("/")
             for foldername in folders:
                 watolib.check_wato_foldername(None, foldername, just_name=True)
@@ -277,7 +277,7 @@ class APICallHosts(APICallCollection):
         return self._bulk_action(request, "add")
 
     def _bulk_action(self, request, action_name):
-        result = {
+        result: Dict[str, Any] = {
             "succeeded_hosts": [],
             "failed_hosts": {},
         }
@@ -386,7 +386,7 @@ class APICallHosts(APICallCollection):
         if unknown_hosts:
             raise MKUserError(None, _("No such host(s): %s") % ", ".join(unknown_hosts))
 
-        grouped_by_folders = {}
+        grouped_by_folders: Dict[watolib.CREFolder, List[Any]] = {}
         for hostname in delete_hostnames:
             grouped_by_folders.setdefault(all_hosts[hostname].folder(), []).append(hostname)
 
@@ -595,7 +595,7 @@ class APICallUsers(APICallCollection):
                     userdb.locked_attributes(connector_id)
 
             locked_attributes = locked_attributes_by_connection[connector_id]
-            for attr in set_attributes.keys() + unset_attributes:
+            for attr in list(set_attributes.keys()) + unset_attributes:
                 if attr in locked_attributes:
                     raise MKUserError(
                         None,
@@ -660,14 +660,14 @@ class APICallRules(APICallCollection):
         collection.load()
         ruleset = collection.get(ruleset_name)
 
-        ruleset_dict = {}
+        ruleset_dict: Dict[str, List[Any]] = {}
         for folder, _rule_index, rule in ruleset.get_rules():
             ruleset_dict.setdefault(folder.path(), []).append(rule.to_web_api())
 
         return ruleset_dict
 
     def _get(self, request):
-        ruleset_name = six.ensure_str(request["ruleset_name"])
+        ruleset_name = ensure_str(request["ruleset_name"])
         ruleset_dict = self._get_ruleset_configuration(ruleset_name)
         response = {"ruleset": ruleset_dict}
         add_configuration_hash(response, ruleset_dict)
@@ -676,7 +676,7 @@ class APICallRules(APICallCollection):
     def _set(self, request):
         # Py2: This encoding here should be kept Otherwise and unicode encoded text will be written
         # into the configuration file with unknown side effects
-        ruleset_name = six.ensure_str(request["ruleset_name"])
+        ruleset_name = ensure_str(request["ruleset_name"])
 
         # Future validation, currently the rule API actions are admin only, so the check is pointless
         # may_edit_ruleset(ruleset_name)
@@ -876,6 +876,17 @@ class APICallHosttags(APICallCollection):
                         if "$ne" in tag_spec:
                             used_tags.add((tag_group_id, tag_spec["$ne"]))
                             continue
+
+                        if "$or" in tag_spec:
+                            for tag_id in tag_spec["$or"]:
+                                used_tags.add((tag_group_id, tag_id))
+                            continue
+
+                        if "$nor" in tag_spec:
+                            for tag_id in tag_spec["$nor"]:
+                                used_tags.add((tag_group_id, tag_id))
+                            continue
+
                         raise NotImplementedError()
 
                     used_tags.add((tag_group_id, tag_spec))
@@ -1011,7 +1022,19 @@ class APICallSites(APICallCollection):
         if not site:
             raise MKUserError(None, _("Site id not found: %s") % request["site_id"])
 
-        secret = watolib.do_site_login(request["site_id"], request["username"], request["password"])
+        response = watolib.do_site_login(request["site_id"], request["username"],
+                                         request["password"])
+
+        if isinstance(response, dict):
+            if cmk_version.is_managed_edition() and response["edition_short"] != "cme":
+                raise MKUserError(
+                    None,
+                    _("The Check_MK Managed Services Edition can only "
+                      "be connected with other sites using the CME."))
+            secret = response["login_secret"]
+        else:
+            secret = response
+
         site["secret"] = secret
         site_mgmt.save_sites(all_sites)
 
@@ -1087,7 +1110,8 @@ class APICallOther(APICallCollection):
             # Do an actual discovery on the nodes -> data is written
             result = watolib.check_mk_automation(host_attributes.get("site"), "try-inventory",
                                                  ["@scan"] + [hostname])
-            counts = {"new": 0, "old": 0}
+            # TODO: This *way* too general, even for our very low standards...
+            counts: Dict[Any, Any] = {"new": 0, "old": 0}
             for entry in result["check_table"]:
                 if entry[0] in counts:
                     counts[entry[0]] += 1
@@ -1134,41 +1158,21 @@ class APICallOther(APICallCollection):
 
     def _activate_changes(self, request):
         mode = request.get("mode", "dirty")
-        if request.get("allow_foreign_changes"):
-            allow_foreign_changes = bool(int(request.get("allow_foreign_changes")))
-        else:
-            allow_foreign_changes = False
-
-        sites = request.get("sites")
-
-        changes = watolib.ActivateChanges()
-        changes.load()
-
-        if changes.has_foreign_changes():
-            if not config.user.may("wato.activateforeign"):
-                raise MKAuthException(_("You are not allowed to activate changes of other users."))
-            if not allow_foreign_changes:
-                raise MKAuthException(_("There are changes from other users and foreign changes "\
-                                        "are not allowed in this API call."))
-
-        if mode == "specific":
-            for site in sites:
-                if site not in config.allsites().keys():
-                    raise MKUserError(None, _("Unknown site %s") % escaping.escape_attribute(site))
-
-        manager = watolib.ActivateChangesManager()
-        manager.load()
-
-        if not manager.has_changes():
-            raise MKUserError(None, _("Currently there are no changes to activate."))
-
-        if not sites:
-            sites = manager.dirty_and_active_activation_sites()
-
+        allow_foreign_changes = bool(int(request.get("allow_foreign_changes") or "0"))
         comment = request.get("comment", "").strip()
-        if comment == "":
+        if not comment:
             comment = None
 
-        manager.start(sites, comment=comment, activate_foreign=allow_foreign_changes)
-        manager.wait_for_completion()
-        return manager.get_state()
+        if mode == 'specific':
+            sites = request.get('sites', [])
+            if not sites:
+                raise MKUserError(None, _("No site given."))
+        else:
+            sites = []
+
+        activation_id = watolib.activate_changes_start(
+            sites,
+            comment,
+            force_foreign_changes=allow_foreign_changes,
+        )
+        return watolib.activate_changes_wait(activation_id)

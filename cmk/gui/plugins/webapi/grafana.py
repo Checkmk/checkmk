@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -13,9 +13,7 @@ from cmk.gui.plugins.webapi import (
 
 import cmk.gui.sites as sites
 import cmk.gui.config as config
-import cmk.gui.visuals as visuals
 import cmk.gui.availability as availability
-from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.plugins.metrics.utils import (
@@ -134,20 +132,17 @@ class APICallGrafanaConnector(APICallCollection):
         except ImportError:
             raise MKGeneralException(_("Currently not supported with this Check_MK Edition"))
 
-        presentation = request.get("presentation", "sum")
+        if "presentation" not in request:
+            request['presentation'] = 'sum'
+        presentation = request["presentation"]
         if presentation not in combined_graph_presentations:
             raise MKGeneralException(_("The requested item %s does not exist") % presentation)
-
-        single_infos = request["single_infos"]
-        datasource_name = request["datasource"]
-        context = request["context"]
 
         # The grafana connector needs the template title for making them
         # selectable by the user. We extend the graph identification here.
         # Otherwise we would need more API calls
         response = []
-        for graph_identification in matching_combined_graphs(datasource_name, single_infos,
-                                                             presentation, context):
+        for graph_identification in matching_combined_graphs(request):
             graph_template_id = graph_identification[1]["graph_template"]
             graph_title = dict(get_graph_template_choices()).get(graph_template_id,
                                                                  graph_template_id)
@@ -159,9 +154,14 @@ class APICallGrafanaConnector(APICallCollection):
         return response
 
     def _get_graph_annotations(self, request):
+        if "host" in request["context"]:
+            single_infos = ["host"]
+        else:
+            single_infos = []
+
         filter_headers, only_sites = self._get_filter_headers_of_context(datasource_name="services",
                                                                          context=request["context"],
-                                                                         single_infos=[])
+                                                                         single_infos=single_infos)
 
         return {
             "availability_timelines": self._get_availability_timelines(
@@ -174,29 +174,12 @@ class APICallGrafanaConnector(APICallCollection):
 
     def _get_filter_headers_of_context(self, datasource_name, context, single_infos):
         try:
-            from cmk.gui.cee.plugins.metrics.graphs import get_matching_filters
+            from cmk.gui.cee.plugins.metrics.graphs import get_filter_headers_of_context
         except ImportError:
             raise MKGeneralException(_("Currently not supported with this Check_MK Edition"))
 
         datasource = data_source_registry[datasource_name]()
-
-        # Note: our context/visuals/filters systems is not yet independent of
-        # URL variables. This is not nice but needs a greater refactoring, so
-        # we need to live with the current situation for the while.
-        with html.stashed_vars():
-            visuals.add_context_to_uri_vars(context, single_infos)
-
-            # Prepare Filter headers for Livestatus
-            filter_headers = ""
-            for filt in get_matching_filters(datasource.infos):
-                filter_headers += filt.filter(datasource.table)
-
-            if html.request.var("site"):
-                only_sites = [html.request.var("site")]
-            else:
-                only_sites = None
-
-            return filter_headers, only_sites
+        return get_filter_headers_of_context(datasource, context, single_infos)
 
     def _get_availability_timelines(self, start_time, end_time, only_sites, filter_headers):
         avoptions = availability.get_default_avoptions()

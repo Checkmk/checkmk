@@ -53,7 +53,7 @@ input, select, textarea {
   font-family: arial, helvetica, sans-serif;
   vertical-align: middle;
   background-color: rgb(255, 255, 255);
-  border: 1px rgb(115, 118, 122) solid;
+  border: none;
   outline-style: none;
   outline-width: medium;
 }
@@ -61,7 +61,10 @@ input, select, textarea {
 /* consistent dropdown field styling for all browsers */
 select:not([multiple]) {
   padding-right: 2.5em;
-  background: $bg-color-default url("images/select_arrow.png") right 50% / 20px 11px no-repeat;
+  background-image: url("images/select_arrow.png");
+  background-position: right 50%;
+  background-repeat: no-repeat;
+  background-size: 20px 11px;
   -webkit-appearance: none;  /* Removes default chrome and safari style */
   -moz-appearance: none;     /* Removes default style Firefox */
 }
@@ -95,10 +98,6 @@ td.checkbox input[type="checkbox"] + label:before {
 input[type="checkbox"] {
   display: none;
 
-  &[disabled] + label:before {
-    display: none;
-  }
-
   + label:before {
     display: inline-block;
     width: 12.5px;
@@ -107,17 +106,15 @@ input[type="checkbox"] {
     margin: -2px 4px 0 0;
     font-size: 12px;
     vertical-align: middle;
-    background-color: $bg-color-default;
-    border: 1px $checkbox-border-color solid;
+    background-color: $form-bg-color;
+    border: 1px $form-bg-color solid;
     content: "\00a0";
-    box-shadow: 0.1px 1px 1.2px 0 $checkbox-shadow inset;
   }
 
   &:checked {
     + label:before {
       color: $checkbox-checked-color;
       text-align: center;
-      background-color: $checkbox-checked-bg-color;
       content: "\2716";
     }
 
@@ -341,8 +338,8 @@ div.livestatus.message {
 '-------------------------------------------------------------------------*/
 
 img.treeangle {
-  width: 13px;
-  height: 12px;
+  width: 9px;
+  height: 8px;
   margin-top: 0;
   margin-right: 3px;
   vertical-align: middle;
@@ -373,7 +370,7 @@ img.treeangle {
 
 b.treeangle.title {
   font-weight: bold;
-  color: rgb(255, 255, 255);
+  color: $font-color;
   cursor: pointer;
 
   table.data & {
@@ -428,10 +425,7 @@ div.really {
   border-color: rgb(136, 0, 0);
 }
 
-div.success {
-  background-color: $success-alert-bg-color;
-  border: 1px solid $success-alert-border-color;
-}
+div.success { background-color: $base-color; }
 
 div.message {
   color: rgb(0, 0, 0);
@@ -527,6 +521,10 @@ td.dictleft div.dictelement {
 
   * {
     font-size: 11px;
+  }
+
+  &:empty {
+    margin: 0;
   }
 
   &.indent {
@@ -802,7 +800,7 @@ div#hover_menu {
   }
 
   div.message {
-    color: $primary-sidebar-font-color;
+    color: $font-color;
     background-color: $black;
   }
 
@@ -896,7 +894,7 @@ div.popup_trigger.colorpicker div.popup_menu {
 .cp-input {
   float: left;
   margin-top: 2px;
-  color: $color-text;
+  color: $font-color;
 
   input, select, textarea,
   div.snapin select, div.snapin & select,
@@ -1106,21 +1104,22 @@ table.modifydowntimes > tbody > tr {
   }
 
   .select2-dropdown {
-    background-color: $bg-color-default;
-    border: $primary-border;
+    background-color: $select2-dropdown-bg-color;
+    border: $button-bg-color-default;
   }
 
   .select2-results__option {
     color: $select2-rendered-color;
-    background-color: $bg-color-default;
+    background-color: $select2-dropdown-bg-color;
   }
 
   .select2-results__option[aria-selected=true] {
-    background-color: $select2-selected-bg-color;
+    background-color: $select2-dropdown-bg-color;
   }
 
   .select2-results__option--highlighted[aria-selected] {
-    background-color: $select2-highlighted-bg-color;
+    background-color: $select2-dropdown-highlight-color;
+    color: $font-color;
   }
 }
 
@@ -1180,6 +1179,7 @@ div.vs_age.inline {
 }
 
 html {
+  height: 100%;
   font-size: $font-size-global;
 }
 
@@ -1189,7 +1189,7 @@ html {
   font-size: $font-size-default;
   font-weight: $font-weight-default;
   letter-spacing: $letter-spacing-table;
-  color: $color-text;
+  color: $font-color;
   transition: color .15s ease-in-out;
 }
 
@@ -1303,7 +1303,7 @@ div.graph_with_timeranges {
       width: calc(100% - 16px);
       padding: 8px 0;
       font-weight: $font-weight-default;
-      color: $color-text;
+      color: $font-color;
       text-shadow: none;
       box-sizing: border-box;
     }
@@ -1368,7 +1368,7 @@ div.timerange {
 }
 
 body.main.visible div.foldable .title {
-  color: $color-text;
+  color: $font-color;
 }
 
 div.color {
@@ -1379,7 +1379,7 @@ div.color {
 
 /* TODO: Reproduce this element then get rid of important styles */
 th.header_state {
-  color: $color-text !important;
+  color: $font-color !important;
   background: transparent !important;
 
   &:hover {
@@ -1398,7 +1398,7 @@ div.info {
   font-size: $font-size-default;
   font-weight: 500;
   letter-spacing: $letter-spacing-default;
-  color: $color-text;
+  color: $font-color;
 }
 
 .age {
@@ -1417,7 +1417,7 @@ div.info {
 
 body.main a, body.main .popup_menu span, body.main .popup_menu a,
 body.main a:link, body.main a:visited {
-  color: $color-text;
+  color: $font-color;
 }
 
 img.glass {
@@ -1426,4 +1426,15 @@ img.glass {
 
 tr.hidden {
   display: none;
+}
+
+
+.simplebar-scrollbar::before {
+  left: 5px;
+  background: $success;
+  border-radius: 0;
+}
+
+.simplebar-scrollbar.simplebar-visible::before {
+  opacity: 1;
 }

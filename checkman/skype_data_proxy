@@ -1,0 +1,15 @@
+title: Skype for Business: Data Proxy
+agents: windows
+catalog: app/skype
+license: GPL
+distribution: check_mk
+description:
+ This check monitors throttling on a skype dataproxy.
+
+ It will report {crit} if the system is throttling at all,
+ in addition it will report the current number of server connections
+ being throttled.
+
+inventory:
+ One service is created for each server.
+

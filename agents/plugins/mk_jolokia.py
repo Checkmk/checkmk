@@ -7,14 +7,24 @@
 import os
 import socket
 import sys
-import urllib2
+
+# Continue if typing cannot be imported, e.g. for running unit tests
+try:
+    from typing import List, Dict, Tuple, Any, Optional, Union, Callable
+except:
+    pass
+
+if sys.version_info[0] >= 3:
+    from urllib.parse import quote  # pylint: disable=import-error,no-name-in-module
+else:
+    from urllib2 import quote  # type: ignore[attr-defined] # pylint: disable=import-error
 
 try:
     try:
         import simplejson as json
     except ImportError:
-        import json
-except ImportError, import_error:
+        import json  # type: ignore[no-redef]
+except ImportError:
     sys.stdout.write(
         "<<<jolokia_info>>>\n"
         "Error: mk_jolokia requires either the json or simplejson library."
@@ -26,7 +36,7 @@ try:
     import requests
     from requests.auth import HTTPDigestAuth
     from requests.packages import urllib3
-except ImportError, import_error:
+except ImportError:
     sys.stdout.write("<<<jolokia_info>>>\n"
                      "Error: mk_jolokia requires the requests library."
                      " Please install it on the monitored system.\n")
@@ -44,7 +54,7 @@ MBEAN_SECTIONS = {
     'jvm_runtime': ("java.lang:type=Runtime/Uptime,Name",),
     'jvm_garbagecollectors':
         ("java.lang:name=*,type=GarbageCollector/CollectionCount,CollectionTime,Name",),
-}
+}  # type: Dict[str, Tuple[str, ...]]
 
 MBEAN_SECTIONS_SPECIFIC = {
     'tomcat': {
@@ -94,7 +104,7 @@ QUERY_SPECS_LEGACY = [
      "", [], True),
     ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "CacheHits", "",
      [], True),
-]
+]  # type: List[Tuple[str, str, str, List, bool]]
 
 QUERY_SPECS_SPECIFIC_LEGACY = {
     "weblogic": [
@@ -120,8 +130,8 @@ QUERY_SPECS_SPECIFIC_LEGACY = {
                                                                               "context"], False),],
 }
 
-AVAILABLE_PRODUCTS = sorted(set(QUERY_SPECS_SPECIFIC_LEGACY.keys() +
-                                MBEAN_SECTIONS_SPECIFIC.keys()))
+AVAILABLE_PRODUCTS = sorted(
+    set(QUERY_SPECS_SPECIFIC_LEGACY.keys()) | set(MBEAN_SECTIONS_SPECIFIC.keys()))
 
 # Default global configuration: key, value [, help]
 DEFAULT_CONFIG_TUPLES = (
@@ -139,15 +149,15 @@ DEFAULT_CONFIG_TUPLES = (
     ("service_url", None),
     ("service_user", None),
     ("service_password", None),
-    ("product", None, "Product description. Available: %s. If not provided," \
-                      " we try to detect the product from the jolokia info section." % \
-                      ", ".join(AVAILABLE_PRODUCTS)),
+    ("product", None, "Product description. Available: %s. If not provided,"
+     " we try to detect the product from the jolokia info section." %
+     ", ".join(AVAILABLE_PRODUCTS)),
     ("timeout", 1.0, "Connection/read timeout for requests."),
     ("custom_vars", []),
     # List of instances to monitor. Each instance is a dict where
     # the global configuration values can be overridden.
     ("instances", [{}]),
-)
+)  # type: Tuple[Tuple[Union[Optional[str], float, List[Any]], ...], ...]
 
 
 class SkipInstance(RuntimeError):
@@ -159,7 +169,7 @@ class SkipMBean(RuntimeError):
 
 
 def get_default_config_dict():
-    return dict(tup[:2] for tup in DEFAULT_CONFIG_TUPLES)
+    return dict([(elem[0], elem[1]) for elem in DEFAULT_CONFIG_TUPLES])
 
 
 def write_section(name, iterable):
@@ -169,7 +179,7 @@ def write_section(name, iterable):
 
 
 def cached(function):
-    cache = {}
+    cache = {}  # type: Dict[str, Callable]
 
     def cached_function(*args):
         key = repr(args)
@@ -274,7 +284,7 @@ class JolokiaInstance(object):
         session.verify = self._config["verify"]
         if session.verify is False:
             urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
-        session.timeout = self._config["timeout"]
+        session.timeout = self._config["timeout"]  # type: ignore[attr-defined]
 
         auth_method = self._config.get("mode")
         if auth_method is None:
@@ -322,9 +332,13 @@ class JolokiaInstance(object):
             raw_response = self._session.post(self.base_url,
                                               data=post_data,
                                               verify=self._session.verify)
-        except () if DEBUG else requests.exceptions.ConnectionError:
+        except requests.exceptions.ConnectionError:
+            if DEBUG:
+                raise
             raise SkipInstance("Cannot connect to server at %s" % self.base_url)
-        except () if DEBUG else Exception as exc:
+        except Exception as exc:
+            if DEBUG:
+                raise
             sys.stderr.write("ERROR: %s\n" % exc)
             raise SkipMBean(exc)
 
@@ -407,7 +421,7 @@ def extract_item(key, itemspec):
     components = path.split(",")
     comp_dict = dict(c.split('=') for c in components if c.count('=') == 1)
 
-    item = ()
+    item = ()  # type: Tuple[Any, ...]
     for pathkey in itemspec:
         if pathkey in comp_dict:
             right = comp_dict[pathkey]
@@ -455,7 +469,9 @@ def _get_queries(do_search, inst, itemspec, title, path, mbean):
 
     try:
         value = fetch_var(inst, "search", mbean)
-    except () if DEBUG else SkipMBean:
+    except SkipMBean:
+        if DEBUG:
+            raise
         return []
 
     try:
@@ -463,7 +479,7 @@ def _get_queries(do_search, inst, itemspec, title, path, mbean):
     except IndexError:
         return []
 
-    return [("%s/%s" % (urllib2.quote(mbean_exp), path), path, itemspec) for mbean_exp in paths]
+    return [("%s/%s" % (quote(mbean_exp), path), path, itemspec) for mbean_exp in paths]
 
 
 def _process_queries(inst, queries):
@@ -475,7 +491,9 @@ def _process_queries(inst, queries):
             raise SkipInstance()
         except SkipMBean:
             continue
-        except () if DEBUG else Exception:
+        except Exception:
+            if DEBUG:
+                raise
             continue
 
 
@@ -488,10 +506,10 @@ def query_instance(inst):
     write_section('jolokia_metrics', generate_values(inst, QUERY_SPECS_LEGACY))
 
     sections_specific = MBEAN_SECTIONS_SPECIFIC.get(inst.product, {})
-    for section_name, mbeans in sections_specific.iteritems():
+    for section_name, mbeans in sections_specific.items():
         write_section('jolokia_%s' % section_name, generate_json(inst, mbeans))
-    for section_name, mbeans in MBEAN_SECTIONS.iteritems():
-        write_section('jolokia_%s' % section_name, generate_json(inst, mbeans))
+    for section_name, mbeans_tups in MBEAN_SECTIONS.items():
+        write_section('jolokia_%s' % section_name, generate_json(inst, mbeans_tups))
 
     write_section('jolokia_generic', generate_values(inst, inst.custom_vars))
 
@@ -500,7 +518,7 @@ def generate_jolokia_info(inst):
     # Determine type of server
     try:
         data = fetch_var(inst, "version", "")
-    except (SkipInstance, SkipMBean), exc:
+    except (SkipInstance, SkipMBean) as exc:
         yield inst.name, "ERROR", str(exc)
         raise SkipInstance(exc)
 
@@ -538,28 +556,35 @@ def generate_json(inst, mbeans):
             yield inst.name, mbean, json.dumps(obj['value'])
         except (IOError, socket.timeout):
             raise SkipInstance()
-        except SkipMBean if DEBUG else Exception:
+        except SkipMBean:
             pass
+        except Exception:
+            if DEBUG:
+                raise
 
 
 def yield_configured_instances(custom_config=None):
+    custom_config = load_config(custom_config)
 
+    # Generate list of instances to monitor. If the user has defined
+    # instances in his configuration, we will use this (a list of dicts).
+    individual_configs = custom_config.pop("instances", [{}])
+    for cfg in individual_configs:
+        keys = set(cfg.keys()) | set(custom_config.keys())
+        conf_dict = dict((k, cfg.get(k, custom_config.get(k))) for k in keys)
+        if VERBOSE:
+            sys.stderr.write("DEBUG: configuration: %r\n" % conf_dict)
+        yield conf_dict
+
+
+def load_config(custom_config):
     if custom_config is None:
         custom_config = get_default_config_dict()
 
     conffile = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "jolokia.cfg")
     if os.path.exists(conffile):
         exec(open(conffile).read(), {}, custom_config)
-
-    # Generate list of instances to monitor. If the user has defined
-    # instances in his configuration, we will use this (a list of dicts).
-    individual_configs = custom_config.pop("instances", [{}])
-    for cfg in individual_configs:
-        keys = set(cfg.keys() + custom_config.keys())
-        conf_dict = dict((k, cfg.get(k, custom_config.get(k))) for k in keys)
-        if VERBOSE:
-            sys.stderr.write("DEBUG: configuration: %r\n" % conf_dict)
-        yield conf_dict
+    return custom_config
 
 
 def main(configs_iterable=None):

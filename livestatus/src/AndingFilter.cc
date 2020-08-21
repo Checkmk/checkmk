@@ -4,12 +4,14 @@
 // source code package.
 
 #include "AndingFilter.h"
+
 #include <algorithm>
 #include <iterator>
 #include <memory>
 #include <ostream>
 #include <type_traits>
 #include <vector>
+
 #include "Filter.h"
 #include "OringFilter.h"
 #include "Row.h"

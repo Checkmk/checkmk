@@ -1,18 +1,16 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import division
+from typing import Optional, List, Tuple
 
-from typing import Optional, Dict, Text, Any, List, Tuple  # pylint: disable=unused-import
-
-from cmk.gui.type_defs import PermissionName  # pylint: disable=unused-import
+from cmk.gui.type_defs import PermissionName
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.config as config
-from cmk.gui.htmllib import HTMLContent  # pylint: disable=unused-import
-from cmk.gui.sites import SiteId  # pylint: disable=unused-import
+from cmk.gui.htmllib import HTMLContent
+from cmk.gui.sites import SiteId
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
@@ -26,32 +24,26 @@ from cmk.gui.plugins.sidebar import (
 @snapin_registry.register
 class SidebarSnapinCustomers(SidebarSnapin):
     @staticmethod
-    def type_name():
-        # type: () -> str
+    def type_name() -> str:
         return "mkeventd_performance"
 
     @classmethod
-    def title(cls):
-        # type: () -> Text
+    def title(cls) -> str:
         return _("Event Console Performance")
 
     @classmethod
-    def description(cls):
-        # type: () -> Text
+    def description(cls) -> str:
         return _("Monitor the performance of the Event Console")
 
     @classmethod
-    def allowed_roles(cls):
-        # type: () -> List[PermissionName]
+    def allowed_roles(cls) -> List[PermissionName]:
         return ["admin"]
 
     @classmethod
-    def refresh_regularly(cls):
-        # type: () -> bool
+    def refresh_regularly(cls) -> bool:
         return True
 
-    def show(self):
-        # type: () -> None
+    def show(self) -> None:
         only_sites = snapin_site_choice("mkeventd_performance",
                                         config.get_event_console_site_choices())
 
@@ -66,10 +58,11 @@ class SidebarSnapinCustomers(SidebarSnapin):
             html.tr(html.render_td("%s:" % left) + html.render_td(right))
         html.close_table()
 
-    def _mkeventd_performance_entries(self, only_sites):
-        # type: (Optional[List[SiteId]]) -> List[Tuple[float, HTMLContent, HTMLContent]]
+    def _mkeventd_performance_entries(
+            self,
+            only_sites: Optional[List[SiteId]]) -> List[Tuple[float, HTMLContent, HTMLContent]]:
         status = mkeventd.get_total_stats(only_sites)  # combination of several sites
-        entries = []  # type: List[Tuple[float, HTMLContent, HTMLContent]]
+        entries: List[Tuple[float, HTMLContent, HTMLContent]] = []
 
         # TODO: Reorder these values and create a useful order.
         # e.g. Client connects and Time per client request after

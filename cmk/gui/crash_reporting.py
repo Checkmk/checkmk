@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,20 +6,20 @@
 
 import abc
 import base64
-import tarfile
 import io
-import time
-import pprint
-import traceback
 import json
-from typing import Dict, Text, Optional  # pylint: disable=unused-import
-import six
+import pprint
+import tarfile
+import time
+import traceback
+from typing import Dict, Mapping, Optional, Type
+
+from six import ensure_str
 
 import livestatus
 
 import cmk.utils.version as cmk_version
 import cmk.utils.crash_reporting
-from cmk.utils.encoding import ensure_unicode
 
 import cmk.gui.pages
 import cmk.gui.i18n
@@ -38,12 +38,15 @@ from cmk.gui.valuespec import (
 )
 import cmk.gui.config as config
 import cmk.gui.forms as forms
+from cmk.gui.breadcrumb import make_simple_page_breadcrumb, Breadcrumb
+from cmk.gui.main_menu import mega_menu_registry
 
 CrashReportStore = cmk.utils.crash_reporting.CrashReportStore
 
 
-def handle_exception_as_gui_crash_report(details=None, plain_error=False, fail_silently=False):
-    # type: (Optional[Dict], bool, bool) -> None
+def handle_exception_as_gui_crash_report(details: Optional[Dict] = None,
+                                         plain_error: bool = False,
+                                         fail_silently: bool = False) -> None:
     crash = GUICrashReport.from_exception(details=details)
     CrashReportStore().save(crash)
 
@@ -51,8 +54,7 @@ def handle_exception_as_gui_crash_report(details=None, plain_error=False, fail_s
     show_crash_dump_message(crash, plain_error, fail_silently)
 
 
-def show_crash_dump_message(crash, plain_text, fail_silently):
-    # type: (GUICrashReport, bool, bool) -> None
+def show_crash_dump_message(crash: 'GUICrashReport', plain_text: bool, fail_silently: bool) -> None:
     """Create a crash dump from a GUI exception and display a message to the user"""
 
     title = _("Internal error")
@@ -85,7 +87,7 @@ def show_crash_dump_message(crash, plain_text, fail_silently):
     if fail_silently:
         return
 
-    html.header(title)
+    html.header(title, Breadcrumb())
     html.show_error(message)
     html.footer()
 
@@ -114,7 +116,7 @@ class GUICrashReport(cmk.utils.crash_reporting.ABCCrashReport):
         },)
 
 
-class ABCCrashReportPage(six.with_metaclass(abc.ABCMeta, cmk.gui.pages.Page)):
+class ABCCrashReportPage(cmk.gui.pages.Page, metaclass=abc.ABCMeta):
     def __init__(self):
         super(ABCCrashReportPage, self).__init__()
         self._crash_id = html.request.get_unicode_input_mandatory("crash_id")
@@ -132,10 +134,9 @@ class ABCCrashReportPage(six.with_metaclass(abc.ABCMeta, cmk.gui.pages.Page)):
                 (self._crash_id, self._site_id))
         return row
 
-    def _get_crash_report_row(self, crash_id, site_id):
-        # type: (Text, Text) -> Optional[Dict[Text, Text]]
+    def _get_crash_report_row(self, crash_id: str, site_id: str) -> Optional[Dict[str, str]]:
         rows = CrashReportsRowTable().get_crash_report_rows(
-            only_sites=[config.SiteId(six.ensure_str(site_id))],
+            only_sites=[config.SiteId(ensure_str(site_id))],
             filter_headers="Filter: id = %s" % livestatus.lqencode(crash_id))
         if not rows:
             return None
@@ -152,14 +153,15 @@ class ABCCrashReportPage(six.with_metaclass(abc.ABCMeta, cmk.gui.pages.Page)):
 @cmk.gui.pages.page_registry.register_page("crash")
 class PageCrash(ABCCrashReportPage):
     def page(self):
-        html.header(_("Crash report: %s") % self._crash_id)
+        title = _("Crash report: %s") % self._crash_id
+        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
+        html.header(title, breadcrumb)
         row = self._get_crash_row()
         crash_info = self._get_crash_info(row)
 
         # Do not reveal crash context information to unauthenticated users or not permitted
         # users to prevent disclosure of internal information
         if not config.user.may("general.see_crash_reports"):
-            html.header(_("Internal error"))
             html.show_error("<b>%s:</b> %s" % (_("Internal error"), crash_info["exc_value"]))
             html.p(
                 _("An internal error occurred while processing your request. "
@@ -211,10 +213,11 @@ class PageCrash(ABCCrashReportPage):
             vs.validate_value(details, "_report")
 
             # Make the resulting page execute the crash report post request
-            url_encoded_params = html.urlencode_vars(details.items() + [
-                ("crashdump",
-                 base64.b64encode(_pack_crash_report(self._get_serialized_crash_report()))),
-            ])
+            url_encoded_params = html.urlencode_vars(
+                list(details.items()) + [
+                    ("crashdump",
+                     base64.b64encode(_pack_crash_report(self._get_serialized_crash_report()))),
+                ])
             html.open_div(id_="pending_msg", style="display:none")
             html.show_message(_("Submitting crash report..."))
             html.close_div()
@@ -256,12 +259,10 @@ class PageCrash(ABCCrashReportPage):
 
         return details
 
-    def _get_version(self):
-        # type: () -> str
+    def _get_version(self) -> str:
         return cmk_version.__version__
 
-    def _get_crash_report_target(self):
-        # type: () -> str
+    def _get_crash_report_target(self) -> str:
         return config.crash_report_target
 
     def _vs_crash_report(self):
@@ -364,14 +365,13 @@ class PageCrash(ABCCrashReportPage):
         return report_renderer_registry.get(crash_type, report_renderer_registry["generic"])()
 
 
-class ABCReportRenderer(six.with_metaclass(abc.ABCMeta, object)):
+class ABCReportRenderer(metaclass=abc.ABCMeta):
     """Render crash type individual GUI elements"""
 
     # TODO: Can not use this with python 2
     #@abc.abstractclassmethod
     @classmethod
-    def type(cls):
-        # type: () -> Text
+    def type(cls) -> str:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -383,12 +383,9 @@ class ABCReportRenderer(six.with_metaclass(abc.ABCMeta, object)):
         raise NotImplementedError()
 
 
-class ReportRendererRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return ABCReportRenderer
-
-    def plugin_name(self, plugin_class):
-        return plugin_class.type()
+class ReportRendererRegistry(cmk.utils.plugin_registry.Registry[Type[ABCReportRenderer]]):
+    def plugin_name(self, instance):
+        return instance.type()
 
 
 report_renderer_registry = ReportRendererRegistry()
@@ -526,7 +523,7 @@ def _crash_row(title, infotext, odd=True, legend=False, pre=False):
 # Local vars are a base64 encoded repr of the python dict containing the local vars of
 # the exception context. Decode it!
 def format_local_vars(local_vars):
-    return ensure_unicode(base64.b64decode(local_vars))
+    return ensure_str(base64.b64decode(local_vars))
 
 
 def format_params(params):
@@ -550,11 +547,10 @@ class PageDownloadCrashReport(ABCCrashReportPage):
 
         html.response.headers['Content-Disposition'] = 'Attachment; filename=%s' % filename
         html.response.headers['Content-Type'] = 'application/x-tar'
-        html.write(_pack_crash_report(self._get_serialized_crash_report()))
+        html.write_binary(_pack_crash_report(self._get_serialized_crash_report()))
 
 
-def _pack_crash_report(serialized_crash_report):
-    # type: (Dict[str, Optional[bytes]]) -> bytes
+def _pack_crash_report(serialized_crash_report: Mapping[str, Optional[bytes]]) -> bytes:
     """Returns a byte string representing the current crash report in tar archive format"""
     buf = io.BytesIO()
     with tarfile.open(mode="w:gz", fileobj=buf) as tar:

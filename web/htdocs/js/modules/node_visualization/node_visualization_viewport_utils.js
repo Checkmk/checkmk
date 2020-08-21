@@ -443,7 +443,7 @@ export class AbstractGUINode {
     }
 
     _state_to_text(state) {
-        let monitoring_states = {"0": "OK", "1": "WARN", "2": "CRIT", "3": "UNKOWN"}
+        let monitoring_states = {"0": "OK", "1": "WARN", "2": "CRIT", "3": "UNKNOWN"}
         return monitoring_states[state]
     }
 

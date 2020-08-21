@@ -13,4 +13,4 @@ item:
  The name of the container.
 
 inventory:
- One item per storage container will be discovered.
+ One service is created for each storage container.

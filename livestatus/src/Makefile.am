@@ -2,7 +2,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-CLANG_VERSION ?= 8
+CLANG_VERSION ?= 10
 
 CPPCHECK ?= cppcheck
 CPPCHECK_NEB_RESULT ?= cppcheck-result.xml
@@ -17,7 +17,7 @@ INCLUDES_DIR := includes
 LIBS_DIR := libs
 
 PACKAGE_ASIO := $(abs_top_srcdir)/omd/packages/asio
-ASIO_VERSION := asio-asio-1-14-0
+ASIO_VERSION := asio-asio-1-18-0
 ASIO_INCLUDE := $(INCLUDES_DIR)/asio
 
 RRDTOOL_VERSION := rrdtool-1.7.1
@@ -27,7 +27,7 @@ RRDTOOL_LD_FLAGS := -lrrd -L$(RRDTOOL_SRC_DIR)/.libs
 RRDTOOL_CPPFLAGS := -I$(RRDTOOL_SRC_DIR)
 
 PACKAGE_GOOGLETEST := $(abs_top_srcdir)/omd/packages/googletest
-GOOGLETEST_VERSION := googletest-release-1.10.0
+GOOGLETEST_VERSION := googletest-07d4a6e93d
 GOOGLETEST_INCLUDE := $(INCLUDES_DIR)/googletest
 
 .PHONY: unit-test tidy iwyu cppcheck cppcheck-xml documentation
@@ -35,6 +35,7 @@ GOOGLETEST_INCLUDE := $(INCLUDES_DIR)/googletest
 AM_CPPFLAGS = \
     -I.. \
     -isystem $(ASIO_INCLUDE) \
+    -DASIO_DISABLE_CONCEPTS \
     @RE2_CPPFLAGS@
 
 AM_LDFLAGS = \
@@ -98,10 +99,8 @@ liblivestatus_a_SOURCES = \
         BlobColumn.cc \
         Column.cc \
         ColumnFilter.cc \
-        ColumnsColumn.cc \
         CommentColumn.cc \
         ContactGroupsColumn.cc \
-        ContactGroupsMemberColumn.cc \
         CountAggregator.cc \
         CrashReport.cc \
         CustomTimeperiodColumn.cc \
@@ -117,20 +116,16 @@ liblivestatus_a_SOURCES = \
         DowntimesOrComments.cc \
         DynamicColumn.cc \
         DynamicEventConsoleReplicationColumn.cc \
-        DynamicHostFileColumn.cc \
-        DynamicHostRRDColumn.cc \
+        DynamicHostFileColumn-impl.cc \
         DynamicRRDColumn.cc \
-        DynamicServiceRRDColumn.cc \
         EventConsoleConnection.cc \
         FileSystemHelper.cc \
         Filter.cc \
         HostContactsColumn.cc \
-        HostFileColumn.cc \
+        HostFileColumn-impl.cc \
         HostGroupsColumn.cc \
         HostListColumn.cc \
         HostListStateColumn.cc \
-        HostMetricsColumn.cc \
-        HostRRDColumn.cc \
         HostServiceState.cc \
         HostSpecialDoubleColumn.cc \
         HostSpecialIntColumn.cc \
@@ -148,16 +143,9 @@ liblivestatus_a_SOURCES = \
         Metric.cc \
         NagiosCore.cc \
         NullColumn.cc \
-        OffsetBoolColumn.cc \
-        OffsetDoubleColumn.cc \
-        OffsetIntColumn.cc \
-        OffsetPerfdataColumn.cc \
-        OffsetSStringColumn.cc \
-        OffsetStringColumn.cc \
         OffsetStringHostMacroColumn.cc \
         OffsetStringMacroColumn.cc \
         OffsetStringServiceMacroColumn.cc \
-        OffsetTimeColumn.cc \
         OringFilter.cc \
         OutputBuffer.cc \
         PerfdataAggregator.cc \
@@ -175,8 +163,6 @@ liblivestatus_a_SOURCES = \
         ServiceGroupsColumn.cc \
         ServiceListColumn.cc \
         ServiceListStateColumn.cc \
-        ServiceMetricsColumn.cc \
-        ServiceRRDColumn.cc \
         ServiceSpecialDoubleColumn.cc \
         ServiceSpecialIntColumn.cc \
         StatsColumn.cc \
@@ -282,7 +268,7 @@ livestatus.o: $(liblivestatus_a_OBJECTS)
 # NOTE: Using make's -B flag destroys all dependencies via the am--depfiles
 # target, so we use a cruel sed hack below. :-P
 compile_commands.json: $(unixcat_SOURCES) $(test_neb_SOURCES) $(liblivestatus_a_SOURCES)
-	@$(MAKE) -nwk $$(echo " $^" | sed 's/ / -W /g') | $(top_srcdir)/scripts/run-pipenv 2 run compiledb
+	@$(MAKE) -nwk $$(echo " $^" | sed 's/ / -W /g') | $(top_srcdir)/scripts/run-pipenv run compiledb
 
 tidy: compile_commands.json
 	$(RUN_CLANG_TIDY) -quiet -j6 $(FILES_TO_CHECK)

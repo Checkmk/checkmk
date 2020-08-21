@@ -1,13 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
+import http.client as http_client
 import os
 import traceback
-import six
 
 import livestatus
 
@@ -29,6 +29,7 @@ from cmk.gui.exceptions import (
 from cmk.gui.globals import html, request, RequestContext, AppContext
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 
 # TODO
 #  * derive all exceptions from werkzeug's http exceptions.
@@ -136,7 +137,19 @@ def _page_not_found():
     if html.request.has_var("_plain_error"):
         html.write(_("Page not found"))
     else:
-        html.header(_("Page not found"))
+        title = _("Page not found")
+        html.header(
+            title,
+            Breadcrumb([
+                BreadcrumbItem(
+                    title="Nowhere",
+                    url=None,
+                ),
+                BreadcrumbItem(
+                    title=title,
+                    url="javascript:document.location.reload(false)",
+                ),
+            ]))
         html.show_error(_("This page was not found. Sorry."))
     html.footer()
 
@@ -223,7 +236,7 @@ def _render_exception(e, title=""):
         html.write("%s%s\n" % (title, e))
 
     elif not _fail_silently():
-        html.header(title)
+        html.header(title, Breadcrumb())
         html.show_error(e)
         html.footer()
 
@@ -242,7 +255,7 @@ def profiling_middleware(func):
     return profiler
 
 
-class CheckmkApp(object):
+class CheckmkApp:
     """The Check_MK GUI WSGI entry point"""
     def __init__(self):
         # TODO: Just inline profiling_middleware, getting rid of this useless meta-Kung-Fu.
@@ -274,7 +287,7 @@ def _process_request(environ, start_response):  # pylint: disable=too-many-branc
         page_handler = get_and_wrap_page(html.myfile)
         response = page_handler()
         # If page_handler didn't raise we assume everything is OK.
-        response.status_code = six.moves.http_client.OK
+        response.status_code = http_client.OK
     except HTTPRedirect as e:
         # This can't be a new Response as it can have already cookies set/deleted by the pages.
         # We can't return the response because the Exception has been raised instead.
@@ -304,11 +317,11 @@ def _process_request(environ, start_response):  # pylint: disable=too-many-branc
 
     except livestatus.MKLivestatusException as e:
         response = _render_exception(e, title=_("Livestatus problem"))
-        response.status_code = six.moves.http_client.BAD_GATEWAY
+        response.status_code = http_client.BAD_GATEWAY
 
     except MKUnauthenticatedException as e:
         response = _render_exception(e, title=_("Not authenticated"))
-        response.status_code = six.moves.http_client.UNAUTHORIZED
+        response.status_code = http_client.UNAUTHORIZED
 
     except MKConfigError as e:
         response = _render_exception(e, title=_("Configuration error"))

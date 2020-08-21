@@ -9,7 +9,7 @@
 # as well as the ibm_db2 Python DBI driver for DB2:
 #  https://pypi.python.org/pypi/ibm_db
 """Check_MK SQL Test"""
-from typing import List, Optional, Tuple, NoReturn  # pylint: disable=unused-import
+from typing import List, Optional, Tuple, NoReturn
 import argparse
 import logging
 import os
@@ -28,27 +28,24 @@ DEFAULT_PORTS = {
     "db2": 50000,
 }
 
-MP_INF = (float('-inf'), float('+inf'))  # type: Tuple[float, float]
+MP_INF: Tuple[float, float] = (float('-inf'), float('+inf'))
 
 #   . parse commandline argumens
 
 
-def levels(values):
-    # type: (str) -> Tuple[float, float]
+def levels(values: str) -> Tuple[float, float]:
     lower, upper = values.split(':')
     _lower = float(lower) if lower else MP_INF[0]
     _upper = float(upper) if upper else MP_INF[1]
     return (_lower, _upper)
 
 
-def sql_cmd_piece(values):
-    # type: (str) -> str
+def sql_cmd_piece(values: str) -> str:
     """Parse every piece of the SQL command (replace \\n and \\;)"""
     return values.replace(r"\n", "\n").replace(r"\;", ";")
 
 
-def parse_args(argv):
-    # type: (List[str]) -> argparse.Namespace
+def parse_args(argv: List[str]) -> argparse.Namespace:
     """Parse commandline arguments (incl password store and logging set up)"""
     this = str(os.path.basename(argv[0]))
     help_fmt = argparse.RawDescriptionHelpFormatter
@@ -196,8 +193,7 @@ def parse_args(argv):
 #.
 
 
-def bail_out(exit_code, output):
-    # type: (int, str) -> NoReturn
+def bail_out(exit_code: int, output: str) -> NoReturn:
     state_txt = ["OK", "WARN", "CRIT", "UNKNOWN"][exit_code]
     sys.stdout.write("%s - %s\n" % (state_txt, output))
     sys.exit(exit_code)
@@ -239,9 +235,9 @@ def mysql_execute(cursor, cmd, inpt, procedure):
     return _default_execute(cursor, cmd, inpt, procedure)
 
 
-def mssql_connect(host, port, db_name, user, pwd):
-    import pymssql  # type: ignore[import] # pylint: disable=import-outside-toplevel
-    return pymssql.connect(host=host, port=port, database=db_name, user=user, password=pwd)
+# def mssql_connect(host, port, db_name, user, pwd):
+#    import pymssql  # type: ignore[import] # pylint: disable=import-outside-toplevel
+#    return pymssql.connect(host=host, port=port, database=db_name, user=user, password=pwd)
 
 
 def mssql_execute(cursor, cmd, _inpt, procedure):
@@ -338,7 +334,7 @@ def connect(dbms, host, port, db_name, user, pwd):
     return {
         'postgres': postgres_connect,
         'mysql': mysql_connect,
-        'mssql': mssql_connect,
+        # 'mssql': mssql_connect,
         'oracle': oracle_connect,
         'db2': db2_connect,
     }[dbms](host, port, db_name, user, pwd)
@@ -412,8 +408,7 @@ def process_result(result, warn, crit, metrics=False, debug=False):
     return state, text + perf
 
 
-def main(argv=None):
-    # type: (Optional[List[str]]) -> None
+def main(argv: Optional[List[str]] = None) -> None:
     args = parse_args(argv or sys.argv)
 
     try:

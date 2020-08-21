@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -10,36 +10,27 @@ does not offer stable APIs. The code may change at any time."""
 
 __version__ = "1.7.0i1"
 
-import os
-import sys
 import errno
+import os
+from pathlib import Path
+import subprocess
+import sys
 import time
-from typing import (  # pylint: disable=unused-import
-    Text, Dict, Any,
-)
-import six
+from typing import Any, Dict
+
+from six import ensure_str
 
 import cmk.utils.paths
-from cmk.utils.encoding import ensure_unicode
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
-import cmk.utils.cmk_subprocess as subprocess
-
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
 
 
-def omd_version():
-    # type: () -> Text
+def omd_version() -> str:
     version_link = Path(cmk.utils.paths.omd_root).joinpath("version")
-    return ensure_unicode(version_link.resolve().name)
+    return ensure_str(version_link.resolve().name)
 
 
-def omd_site():
-    # type: () -> str
+def omd_site() -> str:
     try:
         return os.environ["OMD_SITE"]
     except KeyError:
@@ -48,33 +39,28 @@ def omd_site():
               "only execute this in an OMD site."))
 
 
-def edition_short():
-    # type: () -> Text
+def edition_short() -> str:
     """Can currently either return \"cre\" or \"cee\"."""
     parts = omd_version().split(".")
     if parts[-1] == "demo":
-        return six.text_type(parts[-2])
+        return str(parts[-2])
 
-    return six.text_type(parts[-1])
+    return str(parts[-1])
 
 
-def is_enterprise_edition():
-    # type: () -> bool
+def is_enterprise_edition() -> bool:
     return edition_short() == "cee"
 
 
-def is_raw_edition():
-    # type: () -> bool
+def is_raw_edition() -> bool:
     return edition_short() == "cre"
 
 
-def is_managed_edition():
-    # type: () -> bool
+def is_managed_edition() -> bool:
     return edition_short() == "cme"
 
 
-def is_demo():
-    # type: () -> bool
+def is_demo() -> bool:
     parts = omd_version().split(".")
     return parts[-1] == "demo"
 
@@ -92,8 +78,7 @@ def is_demo():
 # and diagnostics.
 
 
-def get_general_version_infos():
-    # type: () -> Dict[str, Any]
+def get_general_version_infos() -> Dict[str, Any]:
     return {
         "time": time.time(),
         "os": _get_os_info(),
@@ -105,8 +90,7 @@ def get_general_version_infos():
     }
 
 
-def _get_os_info():
-    # type: () -> Text
+def _get_os_info() -> str:
     if "OMD_ROOT" in os.environ:
         return open(os.environ["OMD_ROOT"] + "/share/omd/distro.info").readline().split(
             "=", 1)[1].strip()
@@ -131,8 +115,7 @@ def _get_os_info():
     return "UNKNOWN"
 
 
-def _current_monitoring_core():
-    # type: () -> Text
+def _current_monitoring_core() -> str:
     try:
         p = subprocess.Popen(
             ["omd", "config", "show", "CORE"],
@@ -142,7 +125,7 @@ def _current_monitoring_core():
             stderr=open(os.devnull, "w"),
             encoding="utf-8",
         )
-        return p.communicate()[0]
+        return p.communicate()[0].rstrip()
     except OSError as e:
         # Allow running unit tests on systems without omd installed (e.g. on travis)
         if e.errno != errno.ENOENT:

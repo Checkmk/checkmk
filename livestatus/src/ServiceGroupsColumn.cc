@@ -4,6 +4,7 @@
 // source code package.
 
 #include "ServiceGroupsColumn.h"
+
 #include "Row.h"
 
 #ifdef CMC
@@ -21,7 +22,7 @@ std::vector<std::string> ServiceGroupsColumn::getValue(
     std::vector<std::string> group_names;
 #ifdef CMC
     (void)_mc;  // HACK
-    if (auto object = columnData<Object>(row)) {
+    if (const auto *object = columnData<Object>(row)) {
         for (const auto &og : object->_groups) {
             if (og->isContactAuthorized(auth_user)) {
                 group_names.push_back(og->name());
@@ -29,9 +30,9 @@ std::vector<std::string> ServiceGroupsColumn::getValue(
         }
     }
 #else
-    if (auto p = columnData<objectlist *>(row)) {
+    if (const auto *p = columnData<objectlist *>(row)) {
         for (objectlist *list = *p; list != nullptr; list = list->next) {
-            auto sg = static_cast<servicegroup *>(list->object_ptr);
+            auto *sg = static_cast<servicegroup *>(list->object_ptr);
             if (is_authorized_for_service_group(_mc, sg, auth_user)) {
                 group_names.emplace_back(sg->group_name);
             }

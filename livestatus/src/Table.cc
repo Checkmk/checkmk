@@ -4,9 +4,14 @@
 // source code package.
 
 #include "Table.h"
+
+#include <cstdlib>
+#include <ostream>
 #include <stdexcept>
+
 #include "Column.h"
 #include "DynamicColumn.h"
+#include "Logger.h"
 #include "MonitoringCore.h"
 #include "StringUtils.h"
 #include "nagios.h"
@@ -16,6 +21,13 @@ Table::Table(MonitoringCore *mc) : _mc(mc) {}
 Table::~Table() = default;
 
 void Table::addColumn(std::unique_ptr<Column> col) {
+    if (_columns.contains(col->name())) {
+        // NOTE: We can't uses Table::logger() here, because there might be no
+        // monitoring core yet. We get called *very* early...
+        Emergency(col->logger()) << "overwriting column '" << col->name()
+                                 << "' in table '" << name() << "'";
+        ::abort();
+    }
     _columns.emplace(col->name(), std::move(col));
 }
 

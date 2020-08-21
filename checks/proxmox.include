@@ -6,8 +6,8 @@
 
 import json
 
-OK, WARN, CRIT = 0, 1, 2
-
 
 def parse_proxmox(raw_info):
-    return json.loads(raw_info[0][0]) if raw_info else []
+    from_json = json.loads(raw_info[0][0])
+    assert isinstance(from_json, dict)
+    return from_json if raw_info else {}

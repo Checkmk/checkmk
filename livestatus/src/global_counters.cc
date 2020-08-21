@@ -4,6 +4,7 @@
 // source code package.
 
 #include "global_counters.h"
+
 #include <ctime>
 #include <vector>
 
@@ -29,11 +30,13 @@ constexpr double rating_weight = 0.25;
 double lerp(double a, double b, double t) { return (1 - t) * a + t * b; }
 }  // namespace
 
+void counterReset(Counter which) { counter(which) = {0.0, 0.0, 0.0}; }
+
 void counterIncrement(Counter which) { counter(which).value++; }
 
-const double *counterAddress(Counter which) { return &counter(which).value; }
+double counterValue(Counter which) { return counter(which).value; }
 
-const double *counterRateAddress(Counter which) { return &counter(which).rate; }
+double counterRate(Counter which) { return counter(which).rate; }
 
 void do_statistics() {
     time_t now = time(nullptr);

@@ -4,58 +4,44 @@
 // source code package.
 
 #include "HostFileColumn.h"
+
 #include <filesystem>
 #include <sstream>
 #include <utility>
+
 #include "Logger.h"
 #include "Row.h"
 
-HostFileColumn::HostFileColumn(
+template <class T>
+HostFileColumn<T>::HostFileColumn(
     const std::string& name, const std::string& description,
     const Column::Offsets& offsets,
     std::function<std::filesystem::path()> basepath,
-    std::function<std::optional<std::filesystem::path>(const Column&,
-                                                       const Row&)>
-        filepath)
+    std::function<std::filesystem::path(const T&)> filepath)
     : BlobColumn(name, description, offsets)
     , _basepath(std::move(basepath))
     , _filepath(std::move(filepath)) {}
 
-[[nodiscard]] std::filesystem::path HostFileColumn::basepath() const {
-    return _basepath();
-}
-
-[[nodiscard]] std::optional<std::filesystem::path> HostFileColumn::filepath(
-    const Row& row) const {
-    return _filepath(*this, row);
-}
-
-[[nodiscard]] std::optional<std::filesystem::path> HostFileColumn::abspath(
-    const Row& row) const {
-    if (auto f = filepath(row)) {
-        return basepath() / *f;
-    }
-    return {};
-}
-
-std::unique_ptr<std::vector<char>> HostFileColumn::getValue(Row row) const {
-    if (!std::filesystem::exists(basepath())) {
+template <class T>
+std::unique_ptr<std::vector<char>> HostFileColumn<T>::getValue(Row row) const {
+    if (!std::filesystem::exists(_basepath())) {
         // The basepath is not configured.
         return nullptr;
     }
-    auto path = abspath(row);
-    if (!path) {
+    const T* data = columnData<T>(row);
+    if (data == nullptr) {
         return nullptr;
     }
-    if (!std::filesystem::is_regular_file(*path)) {
-        Warning(logger()) << *path << " is not a regular file";
+    std::filesystem::path path = _basepath() / _filepath(*data);
+    if (!std::filesystem::is_regular_file(path)) {
+        Warning(logger()) << path << " is not a regular file";
         return nullptr;
     }
-    auto file_size = std::filesystem::file_size(*path);
+    auto file_size = std::filesystem::file_size(path);
     std::ifstream ifs;
-    ifs.open(*path, std::ifstream::in | std::ifstream::binary);
+    ifs.open(path, std::ifstream::in | std::ifstream::binary);
     if (!ifs.is_open()) {
-        generic_error ge("cannot open " + path->string());
+        generic_error ge("cannot open " + path.string());
         Warning(logger()) << ge;
         return nullptr;
     }
@@ -63,7 +49,7 @@ std::unique_ptr<std::vector<char>> HostFileColumn::getValue(Row row) const {
     auto buffer = std::make_unique<std::vector<char>>(file_size);
     buffer->assign(iterator{ifs}, iterator{});
     if (buffer->size() != file_size) {
-        Warning(logger()) << "premature EOF reading " << *path;
+        Warning(logger()) << "premature EOF reading " << path;
         return nullptr;
     }
     return buffer;

@@ -4,14 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Code for predictive monitoring / anomaly detection"""
-from __future__ import division
-from typing import Optional, List, Any, cast, Dict, Union, Callable, Tuple  # pylint: disable=unused-import
 
 import json
 import logging
 import math
 import os
 import time
+from typing import Optional, List, Any, cast, Dict, Union, Callable, Tuple, TypedDict
 
 import cmk.utils.debug
 import cmk.utils
@@ -20,10 +19,17 @@ import cmk.utils.store as store
 from cmk.utils.log import VERBOSE
 import cmk.utils.prediction
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import HostName, ServiceName, MetricName  # pylint: disable=unused-import
-from cmk.utils.prediction import (  # pylint: disable=unused-import
-    Timestamp, Timegroup, TimeSeriesValues, Seconds, TimeWindow, RRDColumnFunction, PredictionInfo,
-    ConsolidationFunctionName, EstimatedLevels,
+from cmk.utils.type_defs import HostName, ServiceName, MetricName
+from cmk.utils.prediction import (
+    Timestamp,
+    Timegroup,
+    TimeSeriesValues,
+    Seconds,
+    TimeWindow,
+    RRDColumnFunction,
+    PredictionInfo,
+    ConsolidationFunctionName,
+    EstimatedLevels,
 )
 
 logger = logging.getLogger("cmk.prediction")
@@ -36,38 +42,47 @@ DataStat = List[DataStatValue]
 DataStats = List[DataStat]
 PredictionParameters = Dict[str, Any]
 
+# TODO: This is somehow related to cmk.utils.prediction.PreditionInfo,
+# but using this *instead* of PredicionInfo (==Dict) is not possible.
+PredictionData = TypedDict(
+    'PredictionData',
+    {
+        "columns": List[str],
+        "points": DataStats,
+        "num_points": int,
+        "data_twindow": List[Timestamp],
+        "step": Seconds,
+    },
+    total=False,
+)
 
-def window_start(timestamp, span):
-    # type: (int, int) -> int
+
+def window_start(timestamp: int, span: int) -> int:
     """If time is partitioned in SPAN intervals, how many seconds is TIMESTAMP away from the start
 
     It works well across time zones, but has an unfair behavior with daylight savings time."""
     return (timestamp - cmk.utils.prediction.timezone_at(timestamp)) % span
 
 
-def group_by_wday(t):
-    # type: (Timestamp) -> Tuple[Timegroup, Timestamp]
+def group_by_wday(t: Timestamp) -> Tuple[Timegroup, Timestamp]:
     wday = time.localtime(t).tm_wday
     return defines.weekday_ids()[wday], window_start(t, 86400)
 
 
-def group_by_day(t):
-    # type: (Timestamp) -> Tuple[Timegroup, Timestamp]
+def group_by_day(t: Timestamp) -> Tuple[Timegroup, Timestamp]:
     return "everyday", window_start(t, 86400)
 
 
-def group_by_day_of_month(t):
-    # type: (Timestamp) -> Tuple[Timegroup, Timestamp]
+def group_by_day_of_month(t: Timestamp) -> Tuple[Timegroup, Timestamp]:
     mday = time.localtime(t).tm_mday
     return str(mday), window_start(t, 86400)
 
 
-def group_by_everyhour(t):
-    # type: (Timestamp) -> Tuple[Timegroup, Timestamp]
+def group_by_everyhour(t: Timestamp) -> Tuple[Timegroup, Timestamp]:
     return "everyhour", window_start(t, 3600)
 
 
-prediction_periods = {
+prediction_periods: Dict[str, PeriodInfo] = {
     "wday": {
         "slice": 86400,  # 7 slices
         "groupby": group_by_wday,
@@ -91,8 +106,8 @@ prediction_periods = {
 }
 
 
-def get_prediction_timegroup(t, period_info):
-    # type: (Timestamp, PeriodInfo) -> Tuple[Timegroup, Timestamp, Timestamp, Seconds]
+def get_prediction_timegroup(
+        t: Timestamp, period_info: PeriodInfo) -> Tuple[Timegroup, Timestamp, Timestamp, Seconds]:
     """
     Return:
     timegroup: name of the group, like 'monday' or '12'
@@ -112,8 +127,8 @@ def get_prediction_timegroup(t, period_info):
     return timegroup, from_time, until_time, rel_time
 
 
-def time_slices(timestamp, horizon, period_info, timegroup):
-    # type: (Timestamp, Seconds, PeriodInfo, Timegroup) -> TimeSlices
+def time_slices(timestamp: Timestamp, horizon: Seconds, period_info: PeriodInfo,
+                timegroup: Timegroup) -> TimeSlices:
     "Collect all slices back into the past until time horizon is reached"
     timestamp = int(timestamp)
     abs_begin = timestamp - horizon
@@ -137,8 +152,9 @@ def time_slices(timestamp, horizon, period_info, timegroup):
     return slices
 
 
-def retrieve_grouped_data_from_rrd(rrd_column, time_windows):
-    # type: (RRDColumnFunction, TimeSlices) -> Tuple[TimeWindow, List[TimeSeriesValues]]
+def retrieve_grouped_data_from_rrd(
+        rrd_column: RRDColumnFunction,
+        time_windows: TimeSlices) -> Tuple[TimeWindow, List[TimeSeriesValues]]:
     "Collect all time slices and up-sample them to same resolution"
     from_time = time_windows[0][0]
 
@@ -154,11 +170,10 @@ def retrieve_grouped_data_from_rrd(rrd_column, time_windows):
     return twindow, [ts.bfill_upsample(twindow, shift) for ts, shift in slices]
 
 
-def data_stats(slices):
-    # type: (List[TimeSeriesValues]) -> DataStats
+def data_stats(slices: List[TimeSeriesValues]) -> DataStats:
     "Statistically summarize all the upsampled RRD data"
 
-    descriptors = []  # type: DataStats
+    descriptors: DataStats = []
 
     for time_column in zip(*slices):
         point_line = [x for x in time_column if x is not None]
@@ -176,8 +191,8 @@ def data_stats(slices):
     return descriptors
 
 
-def calculate_data_for_prediction(time_windows, rrd_datacolumn):
-    # type: (TimeSlices, RRDColumnFunction) -> Dict
+def calculate_data_for_prediction(time_windows: TimeSlices,
+                                  rrd_datacolumn: RRDColumnFunction) -> PredictionData:
     twindow, slices = retrieve_grouped_data_from_rrd(rrd_datacolumn, time_windows)
 
     descriptors = data_stats(slices)
@@ -191,16 +206,14 @@ def calculate_data_for_prediction(time_windows, rrd_datacolumn):
     }
 
 
-def save_predictions(pred_file, info, data_for_pred):
-    # type: (str, PredictionInfo, Dict) -> None
+def save_predictions(pred_file: str, info: PredictionInfo, data_for_pred: PredictionData) -> None:
     with open(pred_file + '.info', "w") as fname:
         json.dump(info, fname)
     with open(pred_file, "w") as fname:
         json.dump(data_for_pred, fname)
 
 
-def stdev(point_line, average):
-    # type: (List[float], float) -> float
+def stdev(point_line: List[float], average: float) -> float:
     samples = len(point_line)
     # In the case of a single data-point an unbiased standard deviation is
     # undefined. In this case we take the magnitude of the measured value
@@ -210,8 +223,8 @@ def stdev(point_line, average):
     return math.sqrt(abs(sum(p**2 for p in point_line) - average**2 * samples) / float(samples - 1))
 
 
-def is_prediction_up2date(pred_file, timegroup, params):
-    # type: (str, Timegroup, PredictionParameters) -> bool
+def is_prediction_up2date(pred_file: str, timegroup: Timegroup,
+                          params: PredictionParameters) -> bool:
     """Check, if we need to (re-)compute the prediction file.
 
     This is the case if:
@@ -241,10 +254,16 @@ def is_prediction_up2date(pred_file, timegroup, params):
 # levels_factor: this multiplies all absolute levels. Usage for example
 # in the cpu.loads check the multiplies the levels by the number of CPU
 # cores.
-def get_levels(hostname, service_description, dsname, params, cf, levels_factor=1.0):
-    # type: (HostName, ServiceName, MetricName, PredictionParameters, ConsolidationFunctionName, float) -> Tuple[int, EstimatedLevels]
+def get_levels(
+    hostname: HostName,
+    service_description: ServiceName,
+    dsname: MetricName,
+    params: PredictionParameters,
+    cf: ConsolidationFunctionName,
+    levels_factor: float = 1.0,
+) -> Tuple[Optional[float], EstimatedLevels]:
     now = int(time.time())
-    period_info = prediction_periods[params["period"]]  # type: Dict
+    period_info: Dict = prediction_periods[params["period"]]
 
     timegroup, rel_time = cast(GroupByFunction, period_info["groupby"])(now)
 
@@ -254,9 +273,12 @@ def get_levels(hostname, service_description, dsname, params, cf, levels_factor=
     pred_file = os.path.join(pred_dir, timegroup)
     cmk.utils.prediction.clean_prediction_files(pred_file)
 
-    data_for_pred = None
+    data_for_pred: Optional[PredictionData] = None
     if is_prediction_up2date(pred_file, timegroup, params):
-        data_for_pred = cmk.utils.prediction.retrieve_data_for_prediction(pred_file, timegroup)
+        # Suppression: I am not sure how to check what this function returns
+        #              For now I hope this is compatible.
+        data_for_pred = cmk.utils.prediction.retrieve_data_for_prediction(  # type: ignore[assignment]
+            pred_file, timegroup)
 
     if data_for_pred is None:
         logger.log(VERBOSE, "Calculating prediction data for time group %s", timegroup)
@@ -269,14 +291,14 @@ def get_levels(hostname, service_description, dsname, params, cf, levels_factor=
 
         data_for_pred = calculate_data_for_prediction(time_windows, rrd_datacolumn)
 
-        info = {
+        info: PredictionInfo = {
             u"time": now,
             u"range": time_windows[0],
             u"cf": cf,
             u"dsname": dsname,
             u"slice": period_info["slice"],
             u"params": params,
-        }  # type: PredictionInfo
+        }
         save_predictions(pred_file, info, data_for_pred)
 
     # Find reference value in data_for_pred

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -9,63 +9,70 @@ import cmk.base.autochecks as autochecks
 import cmk.utils.tags
 
 KNOWN_AUTO_MIGRATION_FAILURES = [
-    # this is a sorted (!) list of auto conversions currently
+    # this is a list of auto conversions currently
     # failing. These are used in various tests, to predict the
     # expected console output. In an ideal world, this list will (!)
     # be empty. If that is the case, please remove it entirely.
-    ('section', 'bluecat_dhcp'),
-    ('section', 'bluecat_dns'),
-    ('section', 'checkpoint_fan'),
-    ('section', 'checkpoint_firewall'),
-    ('section', 'checkpoint_ha_problems'),
-    ('section', 'checkpoint_ha_status'),
-    ('section', 'checkpoint_memory'),
-    ('section', 'checkpoint_packets'),
-    ('section', 'checkpoint_powersupply'),
-    ('section', 'checkpoint_svn_status'),
-    ('section', 'checkpoint_temp'),
-    ('section', 'checkpoint_tunnels'),
-    ('section', 'checkpoint_voltage'),
-    ('section', 'cisco_mem_asa'),
-    ('section', 'cisco_mem_asa64'),
-    ('section', 'cisco_wlc'),
-    ('section', 'domino_tasks'),
-    ('section', 'f5_bigip_cluster'),
-    ('section', 'f5_bigip_cluster_status'),
-    ('section', 'f5_bigip_cluster_status.v11_2'),
-    ('section', 'f5_bigip_cluster_status_v11_2'),
-    ('section', 'f5_bigip_cluster_v11'),
-    ('section', 'f5_bigip_vcmpfailover'),
-    ('section', 'f5_bigip_vcmpguests'),
-    ('section', 'hr_mem'),
     ('section', 'if'),
     ('section', 'if64'),
     ('section', 'if64adm'),
     ('section', 'if_brocade'),
     ('section', 'if_fortigate'),
     ('section', 'if_lancom'),
-    ('section', 'infoblox_node_services'),
-    ('section', 'infoblox_services'),
     ('section', 'juniper_trpz_aps'),
     ('section', 'juniper_trpz_aps_sessions'),
+    ('section', 'logwatch'),
+    ('section', 'mssql_counters'),
     ('section', 'netscaler_sslcertificates'),
     ('section', 'netscaler_vserver'),
+    ('section', 'oracle_asm_diskgroup'),
+    ('section', 'oracle_rman'),
+    ('section', 'oracle_tablespaces'),
     ('section', 'printer_pages'),
-    ('section', 'pulse_secure_users'),
-    ('section', 'ucd_mem'),
+    ('section', 'services'),
+    ('section', 'site_object_status'),
+    ('section', 'site_object_counts'),
+    ('section', 'tsm_stagingpools'),
+    ('check', 'docker_container_status'),
+    ('check', 'docker_container_status_health'),
+    ('check', 'docker_container_status_uptime'),
+    ('check', 'if64'),
+    ('check', 'if64adm'),
+    ('check', 'if_fortigate'),
+    ('check', 'ipmi'),
+    ('check', 'juniper_trpz_aps'),
+    ('check', 'juniper_trpz_aps_sessions'),
+    ('check', 'k8s_stats_fs'),
+    ('check', 'k8s_stats_network'),
+    ('check', 'livestatus_status'),
+    ('check', 'logwatch'),
+    ('check', 'logwatch_ec'),
+    ('check', 'logwatch_ec_single'),
+    ('check', 'logwatch_groups'),
+    ('check', 'mssql_counters'),
+    ('check', 'mssql_counters_cache_hits'),
+    ('check', 'mssql_counters_file_sizes'),
+    ('check', 'mssql_counters_locks'),
+    ('check', 'mssql_counters_locks_per_batch'),
+    ('check', 'mssql_counters_pageactivity'),
+    ('check', 'mssql_counters_sqlstats'),
+    ('check', 'mssql_counters_transactions'),
+    ('check', 'netapp_api_vf_stats'),
+    ('check', 'netapp_api_vf_stats_traffic'),
+    ('check', 'netscaler_sslcertificates'),
+    ('check', 'netscaler_vserver'),
+    ('check', 'oracle_asm_diskgroup'),
+    ('check', 'oracle_rman'),
+    ('check', 'oracle_tablespaces'),
+    ('check', 'ps_perf'),
+    ('check', 'services'),
+    ('check', 'services_summary'),
+    ('check', 'site_object_counts'),
+    ('check', 'tsm_stagingpools'),
 ]
 
-KNOWN_AUTO_MIGRATION_FAILURES_INV = [
-    # this is a sorted (!) list of auto conversions currently
-    # failing. These are used in various tests, to predict the
-    # expected console output. In an ideal world, this list will (!)
-    # be empty. If that is the case, please remove it entirely.
-    ('section', 'checkpoint_inv_tunnels'),
-    ('section', 'inv_if'),
-]
 
-
-class Scenario(object):  # pylint: disable=useless-object-inheritance
+class Scenario:
     """Helper class to modify the Check_MK base configuration for unit tests"""
     def __init__(self, site_id="unit"):
         super(Scenario, self).__init__()
@@ -181,7 +188,6 @@ class Scenario(object):  # pylint: disable=useless-object-inheritance
 
             monkeypatch.setattr(
                 autochecks.AutochecksManager, "_read_raw_autochecks_uncached",
-                lambda self, hostname, service_description, get_check_variables: self.
-                _raw_autochecks.get(hostname, []))
+                lambda self, hostname, service_description: self._raw_autochecks.get(hostname, []))
 
         return self.config_cache

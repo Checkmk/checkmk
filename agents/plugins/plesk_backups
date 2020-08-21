@@ -16,7 +16,12 @@ import time
 # Bandit complains about insecure protocol (B321). THis is the only possible protocol. Allow it.
 from ftplib import FTP  # nosec
 
-import MySQLdb
+try:
+    import MySQLdb
+except ImportError as e:
+    sys.stdout.write(
+        "<<<plesk_backups>>>\n%s. Please install missing module via pip install <module>." % e)
+    sys.exit(0)
 
 
 def connect():
@@ -70,7 +75,7 @@ domains = get_domains()
 #   7. Auf FTP neues Verzeichnis anlegen: <kunde>_2012<monat>
 #   8. Konfiguration in Plesk anpassen
 output = ['<<<plesk_backups>>>']
-for domain, p in domains.iteritems():
+for domain, p in domains.items():
     try:
         if not p:
             output.append('%s 4' % domain)  # Backup nicht konfiguriert

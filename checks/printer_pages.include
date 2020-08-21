@@ -11,8 +11,7 @@
 
 # Scan functions for some special printers that have their own MIBS
 def scan_ricoh_printer(oid):
-    return ".1.3.6.1.4.1.367.1.1" in oid(".1.3.6.1.2.1.1.2.0") \
-           and oid(".1.3.6.1.4.1.367.3.2.1.2.19.5.1.5.1") is not None
+    raise NotImplementedError("already migrated")
 
 
 def scan_canon_printer(oid):

@@ -1,33 +1,35 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+from typing import Any, Dict
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Age,
     Alternative,
+    CascadingDropdown,
     Checkbox,
     Dictionary,
     DropdownChoice,
+    DropdownChoices,
     Filesize,
     FixedValue,
     Integer,
+    Labels,
+    ListChoice,
+    ListOf,
+    MonitoringState,
     Percentage,
     RegExp,
     TextAscii,
     TextUnicode,
     Transform,
     Tuple,
-    ListOf,
-    ListChoice,
-    MonitoringState,
-    CascadingDropdown,
-    Labels,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupManualChecksApplications,
@@ -39,10 +41,13 @@ from cmk.gui.plugins.wato import (
     ManualCheckParameterRulespec,
     CheckParameterRulespecWithItem,
 )
-from cmk.gui.htmllib import HTML
 
 
 def process_level_elements():
+    cpu_rescale_max_choices: DropdownChoices = [
+        (True, _("100% is all cores at full load")),
+        (False, _("N * 100% as each core contributes with 100% at full load")),
+    ]
     return [
         ("cpu_rescale_max",
          DropdownChoice(
@@ -54,11 +59,7 @@ def process_level_elements():
                     "can be rescaled down, making 100% the maximum and thinking "
                     "in terms of total CPU utilization."),
              default_value=True,
-             choices=[
-                 (True, _("100% is all cores at full load")),
-                 (False,
-                  HTML(_("<b>N</b> * 100% as each core contributes with 100% at full load"))),
-             ],
+             choices=cpu_rescale_max_choices,
              invalid_choice_title=_("Unspecified.") + " " +
              _("Starting from version 1.6.0 this value must be configured. "
                "Read Werk #6646 for further information."),
@@ -128,14 +129,26 @@ def process_level_elements():
                  Percentage(title=_("Critical at"), default_value=98, maxvalue=10000),
              ],
          )),
+        ("min_age",
+         Tuple(
+             title=_("Minimum allowed age"),
+             help=_("Set lower levels on the age of the process (not the consumed CPU time, "
+                    "but the real time)."),
+             elements=[
+                 Age(title=_("Warning at"), default_value=3600),
+                 Age(title=_("Critical at"), default_value=1800),
+             ],
+         )),
         ("max_age",
-         Tuple(title=_("Maximum allowed age"),
-               help=_("Alarms you if the age of the process (not the consumed CPU "
-                      "time, but the real time) exceed the configured levels."),
-               elements=[
-                   Age(title=_("Warning at"), default_value=3600),
-                   Age(title=_("Critical at"), default_value=7200),
-               ])),
+         Tuple(
+             title=_("Maximum allowed age"),
+             help=_("Set upper levels on the age of the process (not the consumed CPU time, "
+                    "but the real time)."),
+             elements=[
+                 Age(title=_("Warning at"), default_value=3600),
+                 Age(title=_("Critical at"), default_value=7200),
+             ],
+         )),
         ("virtual_levels",
          Tuple(
              title=_("Virtual memory usage"),
@@ -487,7 +500,7 @@ rulespec_registry.register(
 # configuration we allow reading old discovery rules and ship these
 # settings in an optional sub-dictionary.
 def convert_inventory_processes(old_dict):
-    new_dict = {"default_params": {}}
+    new_dict: Dict[str, Dict[str, Any]] = {"default_params": {}}
     for key in old_dict:
         if key in [
                 'levels',

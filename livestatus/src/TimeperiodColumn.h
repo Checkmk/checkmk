@@ -7,7 +7,9 @@
 #define TimeperiodColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <cstdint>
+
 #include "IntColumn.h"
 #include "contact_fwd.h"
 class Row;

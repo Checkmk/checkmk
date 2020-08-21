@@ -14,28 +14,21 @@ import * as ajax from "ajax";
 //#   |                      |_|                |___/ |___/                |
 //#   '--------------------------------------------------------------------'
 
-export function enable()
-{
-    var help = document.getElementById("helpbutton");
-    help.style.display = "inline-block";
-}
+let is_help_active = false;
 
 export function toggle()
 {
-    var help = document.getElementById("helpbutton");
-    if (utils.has_class(help, "active")) {
-        utils.remove_class(help, "active");
-        utils.add_class(help, "passive");
+    if (is_help_active) {
         switch_help(false);
     } else {
-        utils.add_class(help, "active");
-        utils.remove_class(help, "passive");
         switch_help(true);
     }
 }
 
 function switch_help(how)
 {
+    is_help_active = how;
+
     // recursive scan for all div class=help elements
     var helpdivs = document.getElementsByClassName("help");
     var i;

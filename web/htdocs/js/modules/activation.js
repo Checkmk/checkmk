@@ -5,6 +5,7 @@
 import * as ajax from "ajax";
 import * as async_progress from "async_progress";
 import * as utils from "utils";
+import * as page_menu from "page_menu";
 
 //#.
 //#   .-Activation---------------------------------------------------------.
@@ -54,7 +55,7 @@ export function activate_changes(mode, site_id)
 
     var comment = "";
     var comment_field = document.getElementsByName("activate_p_comment")[0];
-    if (comment_field.value != "")
+    if (comment_field && comment_field.value != "")
         comment = comment_field.value;
 
     var activate_foreign = 0;
@@ -83,8 +84,6 @@ function start_activation(sites, activate_until, comment, activate_foreign)
     });
 
     lock_activation_controls(true);
-    hide_last_results();
-    show_details(false);
 }
 
 function handle_start_activation(_unused, response_json)
@@ -113,16 +112,11 @@ function handle_start_activation(_unused, response_json)
 function handle_start_activation_error(_unused, status_code, error_msg)
 {
     async_progress.show_error("Failed to start activation ["+status_code+"]: " + error_msg);
-    finish_activation();
 }
 
 function lock_activation_controls(lock)
 {
     var elements = [];
-    elements.push(document.getElementById("activate_affected"));
-    elements.push(document.getElementById("activate_selected"));
-    // TODO: Remove once new changes mechanism has been implemented
-    elements.push(document.getElementById("discard_changes_button"));
 
     elements = elements.concat(Array.prototype.slice.call(document.getElementsByName("activate_p_comment"), 0));
     elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("site_checkbox"), 0));
@@ -139,40 +133,10 @@ function lock_activation_controls(lock)
 
         elements[i].disabled = lock ? "disabled" : false;
     }
-}
 
-function hide_last_results()
-{
-    var elements = [];
-    elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("last_result"), 0));
-    elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("header_last_result"), 0));
-
-    for (var i = 0; i < elements.length; i++) {
-        elements[i].style.display = "none";
-    }
-}
-
-function show_details(show)
-{
-    var elements = [];
-    elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("details"), 0));
-    elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("header_details"), 0));
-
-    for (var i = 0; i < elements.length; i++) {
-        elements[i].style.display = show ? "table-cell" : "none";
-    }
-}
-
-// Make the cells visible which are needed during sync
-function show_progress(show)
-{
-    var elements = [];
-    elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("repprogress"), 0));
-    elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("header_repprogress"), 0));
-
-    for (var i = 0; i < elements.length; i++) {
-        elements[i].style.display = show ? "table-cell" : "none";
-    }
+    page_menu.enable_menu_entry("activate_affected", !lock);
+    page_menu.enable_menu_entry("activate_selected", !lock);
+    page_menu.enable_menu_entry("discard_changes", !lock);
 }
 
 function is_activation_progress_finished(response)
@@ -208,27 +172,30 @@ function update_activation_state(_unused_handler_data, response)
             }
         }
 
+        // Due to the asynchroneous nature of the activate changes site scheduler
+        // the site state file may not be present within the first seconds
         if (is_empty)
-            throw "Empty site state for " + site_id;
+            continue
 
         update_site_activation_state(site_state);
     }
 }
 
-function update_site_activation_state(site_state)
+export function update_site_activation_state(site_state)
 {
     // Show status text (overlay text on the progress bar)
     var msg = document.getElementById("site_" + site_state["_site_id"] + "_status");
     msg.innerHTML = site_state["_status_text"];
 
     if (site_state["_phase"] == "done") {
+        utils.remove_class(msg, "in_progress");
         utils.add_class(msg, "state_" + site_state["_state"]);
+    } else {
+        utils.add_class(msg, "in_progress");
     }
 
     // Show status details
     if (site_state["_status_details"]) {
-        show_details(true);
-
         msg = document.getElementById("site_" + site_state["_site_id"] + "_details");
         msg.innerHTML = site_state["_status_details"];
     }
@@ -241,12 +208,15 @@ function update_site_progress(site_state)
     var max_width = 160;
 
     var progress = document.getElementById("site_" + site_state["_site_id"] + "_progress");
-    show_progress(true);
 
     if (site_state["_phase"] == "done") {
         progress.style.width = max_width + "px";
+
+        utils.remove_class(progress, "in_progress");
         utils.add_class(progress, "state_" + site_state["_state"]);
         return;
+    } else {
+        utils.add_class(progress, "in_progress");
     }
 
     // TODO: Visualize overdue
@@ -263,14 +233,9 @@ function update_site_progress(site_state)
     progress.style.width = width + "px";
 }
 
-function finish_activation()
+function finish_activation(result)
 {
-    async_progress.show_info("Activation has finished. Reloading in 1 second.");
-    lock_activation_controls(false);
-
-    // Maybe change this not to make a reload and only update the relevant
-    // parts of the activate changes page.
-    utils.schedule_reload("", 1000);
+    utils.schedule_reload(utils.makeuri({"_finished": "1"}), 1000);
 
     // Trigger a reload of the sidebar (to update changes in WATO snapin)
     utils.reload_sidebar();

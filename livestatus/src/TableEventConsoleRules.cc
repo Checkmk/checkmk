@@ -4,17 +4,19 @@
 // source code package.
 
 #include "TableEventConsoleRules.h"
+
 #include <memory>
+
 #include "Column.h"
 
 TableEventConsoleRules::TableEventConsoleRules(MonitoringCore *mc)
     : TableEventConsole(mc) {
+    Column::Offsets offsets{};
     addColumn(std::make_unique<StringEventConsoleColumn>(
-        "rule_id", "The ID of the rule", Column::Offsets{}));
+        "rule_id", "The ID of the rule", offsets));
 
     addColumn(std::make_unique<IntEventConsoleColumn>(
-        "rule_hits", "The times rule matched an incoming message",
-        Column::Offsets{}));
+        "rule_hits", "The times rule matched an incoming message", offsets));
 }
 
 std::string TableEventConsoleRules::name() const { return "eventconsolerules"; }

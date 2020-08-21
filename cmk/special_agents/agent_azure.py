@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,23 +7,28 @@
 Special agent azure: Monitoring Azure cloud applications with Checkmk
 """
 import abc
-import json
-import time
-import datetime
-import string
-import sys
 import argparse
+import datetime
+import json
 import logging
 from multiprocessing import Process, Lock, Queue
-from Queue import Empty as QueueEmpty
-import adal  # type: ignore[import]
-import requests
+from pathlib import Path
+from queue import Empty as QueueEmpty
+import string
+import sys
+import time
+from typing import Any, List, Tuple
 
-from pathlib2 import Path
+import adal  # type: ignore[import] # pylint: disable=import-error
+import requests
 
 from cmk.utils.paths import tmp_dir
 
-from cmk.special_agents.utils import DataCache, vcrtrace
+from cmk.special_agents.utils import (
+    DataCache,
+    vcrtrace,
+    get_seconds_since_midnight,
+)
 import cmk.utils.password_store
 
 cmk.utils.password_store.replace_passwords()
@@ -157,9 +162,7 @@ class ApiErrorMissingData(ApiError):
     pass
 
 
-class BaseApiClient(object):
-    __METACLASS__ = abc.ABCMeta
-
+class BaseApiClient(metaclass=abc.ABCMeta):
     AUTHORITY = 'https://login.microsoftonline.com'
 
     def __init__(self, base_url):
@@ -293,7 +296,7 @@ class MgmtApiClient(BaseApiClient):
 # For now the passed commandline arguments are used to create it.
 
 
-class GroupConfig(object):
+class GroupConfig:
     def __init__(self, name):
         super(GroupConfig, self).__init__()
         if not name:
@@ -317,7 +320,7 @@ class GroupConfig(object):
         return "[%s]\n" % self.name + "\n".join("resource: %s" % r for r in self.resources)
 
 
-class ExplicitConfig(object):
+class ExplicitConfig:
     def __init__(self, raw_list=()):
         super(ExplicitConfig, self).__init__()
         self.groups = {}
@@ -356,7 +359,7 @@ class ExplicitConfig(object):
         return "\n".join(str(group) for group in self.groups.values())
 
 
-class TagBasedConfig(object):
+class TagBasedConfig:
     def __init__(self, required, key_values):
         super(TagBasedConfig, self).__init__()
         self._required = required
@@ -379,7 +382,7 @@ class TagBasedConfig(object):
         return '\n'.join(lines)
 
 
-class Selector(object):
+class Selector:
     def __init__(self, args):
         super(Selector, self).__init__()
         self._explicit_config = ExplicitConfig(raw_list=args.explicit_config)
@@ -400,7 +403,7 @@ class Selector(object):
         return "\n".join(lines)
 
 
-class Section(object):
+class Section:
     LOCK = Lock()
 
     def __init__(self, name, piggytargets, separator, options):
@@ -458,7 +461,7 @@ class UsageSection(Section):
         self.add(usage_details.dumpinfo())
 
 
-class IssueCollecter(object):
+class IssueCollecter:
     def __init__(self):
         super(IssueCollecter, self).__init__()
         self._list = []
@@ -528,7 +531,7 @@ def get_attrs_from_uri(uri):
     return attrs
 
 
-class AzureResource(object):
+class AzureResource:
     def __init__(self, info):
         super(AzureResource, self).__init__()
         self.info = info
@@ -543,7 +546,8 @@ class AzureResource(object):
         self.metrics = []
 
     def dumpinfo(self):
-        lines = [("Resource",), (json.dumps(self.info),)]
+        # TODO: Hmmm, should the variable-length tuples actually be lists?
+        lines: List[Tuple] = [("Resource",), (json.dumps(self.info),)]
         if self.metrics:
             lines += [("metrics following", len(self.metrics))]
             lines += [(json.dumps(m),) for m in self.metrics]
@@ -585,13 +589,14 @@ class MetricCache(DataCache):
         return AZURE_CACHE_FILE_PATH / subdir
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return self.timedelta.seconds
 
-    def get_validity_from_args(self, *args):
+    def get_validity_from_args(self, *args: Any) -> bool:
         return True
 
-    def get_live_data(self, mgmt_client, resource_id, err):  # pylint: disable=arguments-differ
+    def get_live_data(self, *args: Any) -> Any:
+        mgmt_client, resource_id, err = args
         metricnames, interval, aggregation, filter_ = self.metric_definition
 
         raw_metrics = mgmt_client.metrics(resource_id,
@@ -632,13 +637,12 @@ class UsageClient(DataCache):
         self._client = client
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         """Return the upper limit for allowed cache age.
 
         Data is updated at midnight, so the cache should not be older than the day.
         """
-        utc_today_start = NOW.combine(NOW.date(), datetime.time(0))
-        cache_interval = (NOW - utc_today_start).seconds
+        cache_interval = int(get_seconds_since_midnight(NOW))
         LOGGER.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
@@ -646,17 +650,17 @@ class UsageClient(DataCache):
     def offerid_has_no_consuption_api(cls, errmsg):
         return any(s in errmsg for s in cls.NO_CONSUPTION_API)
 
-    def get_validity_from_args(self, *args):
+    def get_validity_from_args(self, *args: Any) -> bool:
         return True
 
-    def get_live_data(self):  # pylint: disable=arguments-differ
+    def get_live_data(self, *args: Any) -> Any:
         LOGGER.debug("UsageClient: get live data")
 
         try:
             # (mo) I am unable to get the filter for usage_end working :-(
             unfiltered_usages = self._client.usagedetails()
         except ApiError as exc:
-            if self.offerid_has_no_consuption_api(exc.message):
+            if self.offerid_has_no_consuption_api(exc.args[0]):
                 return []
             raise
         LOGGER.debug('unfiltered usage details: %d', len(unfiltered_usages))
@@ -721,7 +725,9 @@ def gather_metrics(mgmt_client, resource, debug=False):
                                                resource.info['id'],
                                                err,
                                                use_cache=cache.cache_interval > 60)
-        except () if debug else ApiError as exc:
+        except ApiError as exc:
+            if debug:
+                raise
             err.add("exception", resource.info['id'], str(exc))
             LOGGER.exception(exc)
     return err
@@ -792,8 +798,9 @@ def get_mapper(debug, sequential, timeout):
             for args in args_iter:
                 try:
                     yield func(args)
-                except () if debug else Exception:
-                    pass
+                except Exception:
+                    if debug:
+                        raise
 
         return sequential_mapper
 
@@ -810,7 +817,7 @@ def get_mapper(debug, sequential, timeout):
         Note that the order of the results does not correspond
         to that of the arguments.
         '''
-        queue = Queue()
+        queue: Queue[Tuple[Any, bool, Any]] = Queue()
         jobs = {}
 
         def produce(id_, args):
@@ -847,7 +854,9 @@ def main_graph_client(args):
     try:
         graph_client.login(args.tenant, args.client, args.secret)
         write_section_ad(graph_client)
-    except () if args.debug else Exception as exc:
+    except Exception as exc:
+        if args.debug:
+            raise
         write_exception_to_agent_info_section(exc, "Graph client")
 
 
@@ -861,7 +870,9 @@ def main_subscription(args, selector, subscription):
         monitored_resources = [r for r in all_resources if selector.do_monitor(r)]
 
         monitored_groups = sorted(set(r.info['group'] for r in monitored_resources))
-    except () if args.debug else Exception as exc:
+    except Exception as exc:
+        if args.debug:
+            raise
         write_exception_to_agent_info_section(exc, "Management client")
         return
 

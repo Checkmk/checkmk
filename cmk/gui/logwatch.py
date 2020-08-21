@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,7 +6,7 @@
 
 import time
 import datetime
-from typing import Any, Dict, List, Optional  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional
 
 import livestatus
 
@@ -17,7 +17,10 @@ import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException
-from cmk.gui.type_defs import HTTPVariables  # pylint: disable=unused-import
+from cmk.gui.type_defs import HTTPVariables
+from cmk.gui.breadcrumb import make_simple_page_breadcrumb
+from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.plugins.views.utils import make_host_breadcrumb
 
 #   .--HTML Output---------------------------------------------------------.
 #   |     _   _ _____ __  __ _        ___        _               _         |
@@ -69,7 +72,9 @@ def button_all_logfiles():
 
 # Shows a list of all problematic logfiles grouped by host
 def show_log_list():
-    html.header(_("All Problematic Logfiles"))
+    title = _("All problematic logfiles")
+    breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
+    html.header(title, breadcrumb)
 
     html.begin_context_buttons()
     html.context_button(_("Analyze Patterns"),
@@ -112,7 +117,8 @@ def analyse_url(site, host_name, file_name='', match=''):
 
 # Shows all problematic logfiles of a host
 def show_host_log_list(site, host_name):
-    html.header(_("Logfiles of host %s") % host_name)
+    title = _("Logfiles of host %s") % host_name
+    html.header(title, make_host_breadcrumb(host_name))
 
     html.begin_context_buttons()
     html.context_button(_("Services"), services_url(site, host_name), 'services')
@@ -165,7 +171,9 @@ def list_logs(site, host_name, logfile_names):
 def show_file(site, host_name, file_name):
     int_filename = form_file_to_int(file_name)
 
-    html.header(_("Logfiles of Host %s: %s") % (host_name, file_name))
+    title = _("Logfiles of Host %s: %s") % (host_name, file_name)
+    html.header(title, make_host_breadcrumb(host_name))
+
     html.begin_context_buttons()
     html.context_button(_("Services"), services_url(site, host_name), 'services')
     html.context_button(_("All Logfiles of Host"), html.makeuri([('file', '')]))
@@ -197,7 +205,7 @@ def show_file(site, host_name, file_name):
         html.footer()
         return
 
-    elif log_chunks == []:
+    if log_chunks == []:
         html.end_context_buttons()
         html.show_message(_("This logfile contains no unacknowledged messages."))
         html.footer()
@@ -253,7 +261,7 @@ def ack_button(site=None, host_name=None, int_filename=None):
     else:
         label = _("Clear Logs")
 
-    urivars = [('_ack', '1')]  # type: HTTPVariables
+    urivars: HTTPVariables = [('_ack', '1')]
     if int_filename:
         urivars.append(("file", int_filename))
     html.context_button(label, html.makeactionuri(urivars), 'delete')
@@ -286,7 +294,14 @@ def do_log_ack(site, host_name, file_name):
                 logs_to_ack.append((this_site, this_host, file_name, file_display))
         ack_msg = _('log file %s on all hosts') % file_name
 
-    html.header(_("Acknowledge %s") % html.render_text(ack_msg))
+    title = _("Acknowledge %s") % html.render_text(ack_msg)
+
+    if host_name:
+        breadcrumb = make_host_breadcrumb(host_name)
+    else:
+        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
+
+    html.header(title, breadcrumb)
 
     html.begin_context_buttons()
     button_all_logfiles()
@@ -317,8 +332,9 @@ def do_log_ack(site, host_name, file_name):
         try:
             acknowledge_logfile(this_site, this_host, int_filename, display_name)
         except Exception as e:
-            html.show_error(_('The log file <tt>%s</tt> of host <tt>%s</tt> could not be deleted: %s.') % \
-                                      (display_name, this_host, e))
+            html.show_error(
+                _('The log file <tt>%s</tt> of host <tt>%s</tt> could not be deleted: %s.') %
+                (display_name, this_host, e))
             html.footer()
             return
 
@@ -350,9 +366,9 @@ def acknowledge_logfile(site, host_name, int_filename, display_name):
 
 
 def parse_file(site, host_name, file_name, hidecontext=False):
-    log_chunks = []  # type: List[Dict[str, Any]]
+    log_chunks: List[Dict[str, Any]] = []
     try:
-        chunk = None  # type: Optional[Dict[str, Any]]
+        chunk: Optional[Dict[str, Any]] = None
         lines = get_logfile_lines(site, host_name, file_name)
         if lines is None:
             return None
@@ -366,7 +382,7 @@ def parse_file(site, host_name, file_name, hidecontext=False):
                 continue
 
             if line[:3] == '<<<':  # new chunk begins
-                log_lines = []  # type: List[Dict[str, Any]]
+                log_lines: List[Dict[str, Any]] = []
                 chunk = {'lines': log_lines}
                 log_chunks.append(chunk)
 
@@ -471,9 +487,9 @@ nagios_illegal_chars = '`;~!$%^&*|\'"<>?,()='
 def level_name(level):
     if level == 'W':
         return 'WARN'
-    elif level == 'C':
+    if level == 'C':
         return 'CRIT'
-    elif level == 'O':
+    if level == 'O':
         return 'OK'
     return 'OK'
 
@@ -481,9 +497,9 @@ def level_name(level):
 def level_state(level):
     if level == 'W':
         return 1
-    elif level == 'C':
+    if level == 'C':
         return 2
-    elif level == 'O':
+    if level == 'O':
         return 0
     return 0
 

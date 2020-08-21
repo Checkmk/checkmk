@@ -10,4 +10,4 @@ item:
  Name of the watchdog device
 
 inventory:
- the status service will be automatically inventorized.
+ One service is created.

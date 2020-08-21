@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -40,7 +40,7 @@ def apache_env(app):
     return _add_apache_env
 
 
-class OverrideRequestMethod(object):
+class OverrideRequestMethod:
     """Middleware to allow inflexible clients to override the HTTP request method.
 
     Common convention is to allow for an X-HTTP-Method-Override HTTP header to be set.

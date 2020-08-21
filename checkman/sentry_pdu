@@ -14,5 +14,5 @@ item:
  The ID of the plug as given by the device
 
 inventory:
- One service per plug will be created
+ One service is created for each plug.
 

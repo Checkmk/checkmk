@@ -7,11 +7,13 @@
 #define PerfdataAggregator_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <map>
 #include <memory>
 #include <string>
 #include <utility>
+
 #include "Aggregator.h"
 #include "Column.h"
 #include "contact_fwd.h"

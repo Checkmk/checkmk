@@ -1,0 +1,20 @@
+title: Papouch TH2E Devices: Dew Point Sensors
+agents: snmp
+catalog: hw/environment/papouch
+license: GPL
+distribution: check_mk
+description:
+ This check monitors dew point sensors of Papouch TH2E devices.
+
+ The device sends the state itself. The check is OK if the
+ state is OK. it goes UNKNOWN if the sensor isn't available
+ any more. The check reports WARN, if there's an over or
+ under flow and it is CRIT if there's an error.
+ Lower and upper levels are configurable. There are no
+ default levels set.
+
+item:
+ The dew point sensor identifier.
+
+inventory:
+ One service is created for each sensor.

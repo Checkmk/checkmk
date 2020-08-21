@@ -4,6 +4,7 @@
 // source code package.
 
 #include "ColumnFilter.h"
+
 #include "AndingFilter.h"
 
 std::unique_ptr<Filter> ColumnFilter::partialFilter(

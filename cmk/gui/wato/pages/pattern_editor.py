@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,7 +7,9 @@
 
 import re
 
-from cmk.utils.type_defs import CheckPluginName, HostName, ServiceName, Item  # pylint: disable=unused-import
+from six import ensure_str
+
+from cmk.utils.type_defs import CheckPluginNameStr, HostName, ServiceName, Item
 
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
@@ -26,7 +28,7 @@ from cmk.gui.plugins.wato import (
 
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place
-#import cmk.base.export  # pylint: disable=cmk-module-layer-violation
+import cmk.base.export
 
 
 @mode_registry.register
@@ -57,12 +59,12 @@ class ModePatternEditor(WatoMode):
 
     def title(self):
         if not self._hostname and not self._item:
-            return _("Logfile Pattern Analyzer")
-        elif not self._hostname:
-            return _("Logfile Patterns of Logfile %s on all Hosts") % (self._item)
-        elif not self._item:
-            return _("Logfile Patterns of Host %s") % (self._hostname)
-        return _("Logfile Patterns of Logfile %s on Host %s") % (self._item, self._hostname)
+            return _("Logfile pattern analyzer")
+        if not self._hostname:
+            return _("Logfile patterns of logfile %s on all hosts") % (self._item)
+        if not self._item:
+            return _("Logfile patterns of Host %s") % (self._hostname)
+        return _("Logfile patterns of logfile %s on host %s") % (self._item, self._hostname)
 
     def buttons(self):
         global_buttons()
@@ -78,11 +80,11 @@ class ModePatternEditor(WatoMode):
                                          filename="logwatch.py"), 'logwatch')
 
         html.context_button(
-            _('Edit Logfile Rules'),
+            _('Logfile patterns'),
             watolib.folder_preserving_link([
                 ('mode', 'edit_ruleset'),
                 ('varname', 'logwatch_rules'),
-            ]), 'edit')
+            ]), 'rulesets')
 
     def page(self):
         html.help(
@@ -121,7 +123,7 @@ class ModePatternEditor(WatoMode):
         collection.load()
         ruleset = collection.get("logwatch_rules")
 
-        html.h3(_('Logfile Patterns'))
+        html.h3(_('Logfile patterns'))
         if ruleset.is_empty():
             html.open_div(class_="info")
             html.write_text('There are no logfile patterns defined. You may create '
@@ -221,17 +223,13 @@ class ModePatternEditor(WatoMode):
                     ("varname", "logwatch_rules"),
                     ("rulenr", rulenr),
                     ("host", self._hostname),
-                    ("item", watolib.mk_repr(self._item)),
+                    ("item", ensure_str(watolib.mk_repr(self._item))),
                     ("rule_folder", folder.path()),
                 ])
                 html.icon_button(edit_url, _("Edit this rule"), "edit")
 
             html.end_foldable_container()
 
-    def _get_service_description(self, hostname, check_plugin_name, item):
-        # type: (HostName, CheckPluginName, Item) -> ServiceName
-        # TODO: re-enable once the GUI is using Python3
-        #return cmk.base.export.service_description(hostname, check_plugin_name, item)
-        assert item is not None
-        return watolib.check_mk_local_automation("get-service-name",
-                                                 [hostname, check_plugin_name, item])
+    def _get_service_description(self, hostname: HostName, check_plugin_name: CheckPluginNameStr,
+                                 item: Item) -> ServiceName:
+        return cmk.base.export.service_description(hostname, check_plugin_name, item)

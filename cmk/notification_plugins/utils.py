@@ -1,42 +1,39 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from email.utils import formataddr
+from html import escape as html_escape
 import os
 from quopri import encodestring
 import re
 import socket
+import subprocess
 import sys
-from html import escape as html_escape  # type: ignore[import]
-from typing import AnyStr, Dict, List, Text, Tuple  # pylint: disable=unused-import
+from typing import Dict, List, Tuple
 
 import requests
 
 from cmk.utils.notify import find_wato_folder
 import cmk.utils.paths
 import cmk.utils.password_store
-import cmk.utils.cmk_subprocess as subprocess
 
 
-def collect_context():
-    # type: () -> Dict[str, Text]
+def collect_context() -> Dict[str, str]:
     return {
-        var[7:]: value.decode("utf-8")
-        for (var, value) in os.environ.items()
+        var[7:]: value  #
+        for var, value in os.environ.items()
         if var.startswith("NOTIFY_")
     }
 
 
-def format_link(template, url, text):
-    # type: (AnyStr, AnyStr, AnyStr) -> AnyStr
+def format_link(template: str, url: str, text: str) -> str:
     return template % (url, text) if url else text
 
 
-def format_address(display_name, email_address):
-    # type: (Text, Text) -> Text
+def format_address(display_name: str, email_address: str) -> str:
     """
     Returns an email address with an optional display name suitable for an email header like From or Reply-To.
     The function handles the following cases:
@@ -62,8 +59,7 @@ def default_from_address():
     return os.environ.get("OMD_SITE", "checkmk") + "@" + socket.getfqdn()
 
 
-def _base_url(context):
-    # type: (Dict[str, AnyStr]) -> AnyStr
+def _base_url(context: Dict[str, str]) -> str:
     if context.get("PARAMETER_URL_PREFIX"):
         url_prefix = context["PARAMETER_URL_PREFIX"]
     elif context.get("PARAMETER_URL_PREFIX_MANUAL"):
@@ -78,14 +74,12 @@ def _base_url(context):
     return re.sub('/check_mk/?', '', url_prefix, count=1)
 
 
-def host_url_from_context(context):
-    # type: (Dict[str, AnyStr]) -> AnyStr
+def host_url_from_context(context: Dict[str, str]) -> str:
     base = _base_url(context)
     return base + context['HOSTURL'] if base else ''
 
 
-def service_url_from_context(context):
-    # type: (Dict[str, AnyStr]) -> AnyStr
+def service_url_from_context(context: Dict[str, str]) -> str:
     base = _base_url(context)
     return base + context['SERVICEURL'] if base and context['WHAT'] == 'SERVICE' else ''
 
@@ -178,12 +172,13 @@ def send_mail_sendmail(m, target, from_address):
     cmd = [_sendmail_path()]
     if from_address:
         cmd += ['-F', from_address, "-f", from_address]
-    cmd += ["-i", target.encode("utf-8")]
+    cmd += ["-i", target]
 
     try:
         p = subprocess.Popen(
             cmd,
             stdin=subprocess.PIPE,
+            encoding="utf-8",
         )
     except OSError:
         raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")
@@ -196,8 +191,7 @@ def send_mail_sendmail(m, target, from_address):
     return 0
 
 
-def _sendmail_path():
-    # type: () -> str
+def _sendmail_path() -> str:
     # We normally don't deliver the sendmail command, but our notification integration tests
     # put some fake sendmail command into the site to prevent actual sending of mails.
     for path in [
@@ -210,8 +204,7 @@ def _sendmail_path():
     raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")
 
 
-def read_bulk_contexts():
-    # type: () -> Tuple[Dict[str, str], List[Dict[str, str]]]
+def read_bulk_contexts() -> Tuple[Dict[str, str], List[Dict[str, str]]]:
     parameters = {}
     contexts = []
     in_params = True
@@ -221,7 +214,7 @@ def read_bulk_contexts():
         line = line.strip()
         if not line:
             in_params = False
-            context = {}  # type: Dict[str, str]
+            context: Dict[str, str] = {}
             contexts.append(context)
         else:
             try:

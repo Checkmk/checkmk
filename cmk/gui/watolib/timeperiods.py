@@ -1,13 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict  # pylint: disable=unused-import
+from typing import Dict
 
 import cmk.utils.store as store
-from cmk.utils.type_defs import TimeperiodName, TimeperiodSpec  # pylint: disable=unused-import
+from cmk.utils.type_defs import TimeperiodName, TimeperiodSpec
 
 import cmk.gui.config as config
 from cmk.gui.i18n import _
@@ -18,8 +18,7 @@ from cmk.gui.globals import g
 TimeperiodSpecs = Dict[TimeperiodName, TimeperiodSpec]
 
 
-def builtin_timeperiods():
-    # type: () -> TimeperiodSpecs
+def builtin_timeperiods() -> TimeperiodSpecs:
     return {
         "24X7": {
             "alias": _("Always"),
@@ -34,8 +33,7 @@ def builtin_timeperiods():
     }
 
 
-def load_timeperiods():
-    # type: () -> TimeperiodSpecs
+def load_timeperiods() -> TimeperiodSpecs:
     if "timeperiod_information" in g:
         return g.timeperiod_information
     timeperiods = store.load_from_mk_file(wato_root_dir() + "timeperiods.mk", "timeperiods", {})
@@ -45,8 +43,7 @@ def load_timeperiods():
     return timeperiods
 
 
-def save_timeperiods(timeperiods):
-    # type: (TimeperiodSpecs) -> None
+def save_timeperiods(timeperiods: TimeperiodSpecs) -> None:
     store.mkdir(wato_root_dir())
     store.save_to_mk_file(wato_root_dir() + "timeperiods.mk",
                           "timeperiods",
@@ -55,9 +52,8 @@ def save_timeperiods(timeperiods):
     g.timeperiod_information = timeperiods
 
 
-def _filter_builtin_timeperiods(timeperiods):
-    # type: (TimeperiodSpecs) -> TimeperiodSpecs
-    builtin_keys = builtin_timeperiods().keys()
+def _filter_builtin_timeperiods(timeperiods: TimeperiodSpecs) -> TimeperiodSpecs:
+    builtin_keys = set(builtin_timeperiods().keys())
     return {k: v for k, v in timeperiods.items() if k not in builtin_keys}
 
 

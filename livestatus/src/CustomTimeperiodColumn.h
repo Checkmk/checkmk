@@ -7,9 +7,11 @@
 #define CustomTimeperiodColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <cstdint>
 #include <string>
 #include <utility>
+
 #include "Column.h"
 #include "IntColumn.h"
 #include "nagios.h"

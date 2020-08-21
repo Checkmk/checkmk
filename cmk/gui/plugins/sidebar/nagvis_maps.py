@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -34,9 +34,10 @@ class NagVisMaps(SidebarSnapin):
 
     @classmethod
     def refresh_regularly(cls):
-        return True
+        return False
 
     def show(self):
+        html.div(_("Loading maps..."), class_="loading")
         html.javascript("cmk.sidebar.fetch_nagvis_snapin_contents()")
 
     def page_handlers(self):
@@ -92,12 +93,14 @@ class NagVisMaps(SidebarSnapin):
     def _sub_state_class(self, map_cfg):
         if map_cfg["summary_in_downtime"]:
             return "stated"
-        elif map_cfg["summary_problem_has_been_acknowledged"]:
+        if map_cfg["summary_problem_has_been_acknowledged"]:
             return "statea"
+        return None
 
     def _stale_class(self, map_cfg):
         if map_cfg["summary_stale"]:
             return "stale"
+        return None
 
     def _state_title(self, map_cfg):
         title = map_cfg["summary_state"]

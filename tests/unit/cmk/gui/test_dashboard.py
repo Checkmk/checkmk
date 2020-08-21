@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -35,6 +35,11 @@ class DummyDashlet(dashboard.Dashlet):
 
 def test_dashlet_registry_plugins():
     expected_plugins = [
+        'average_scatterplot',
+        'alerts_bar_chart',
+        'barplot',
+        'gauge',
+        'notifications_bar_chart',
         'hoststats',
         'notify_failed_notifications',
         'mk_logo',
@@ -54,6 +59,8 @@ def test_dashlet_registry_plugins():
     if not cmk_version.is_raw_edition():
         expected_plugins += [
             'custom_graph',
+            'ntop_alerts',
+            'ntop_flows',
         ]
 
     dashboard._transform_old_dict_based_dashlets()
@@ -135,7 +142,7 @@ _attr_map = [
     ("resizable", "is_resizable", True),
     ("size", "initial_size", dashboard.Dashlet.minimum_size),
     ("parameters", "vs_parameters", None),
-    ("opt_params", "opt_parameters", None),
+    ("opt_params", "opt_parameters", False),
     ("validate_params", "validate_parameters_func", None),
     ("refresh", "initial_refresh_interval", False),
     ("allowed", "allowed_roles", config.builtin_role_ids),
@@ -283,7 +290,7 @@ def test_dashlet_type_defaults(register_builtin_html):
     assert dashboard.Dashlet.initial_position() == (1, 1)
     assert dashboard.Dashlet.initial_refresh_interval() is False
     assert dashboard.Dashlet.vs_parameters() is None
-    assert dashboard.Dashlet.opt_parameters() is None
+    assert dashboard.Dashlet.opt_parameters() is False
     assert dashboard.Dashlet.validate_parameters_func() is None
     assert dashboard.Dashlet.styles() is None
     assert dashboard.Dashlet.script() is None

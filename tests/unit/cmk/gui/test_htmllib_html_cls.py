@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,7 +7,7 @@
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 import cmk.gui.config as config
-from tools import compare_html
+from tools import compare_html  # type: ignore[import]
 
 
 def test_render_help_empty(register_builtin_html):
@@ -26,7 +26,8 @@ def test_render_help_html(register_builtin_html):
     assert html.have_help is False
     assert compare_html(html.render_help(HTML("<abc>")),
                         HTML("<div style=\"display:none\" class=\"help\"><abc></div>"))
-    assert html.have_help is True
+    # NOTE: This seems to be a mypy 0.780 bug.
+    assert html.have_help is True  # type: ignore[comparison-overlap]
 
 
 def test_render_help_text(register_builtin_html):

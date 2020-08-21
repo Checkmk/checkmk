@@ -4,89 +4,112 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections import OrderedDict
 import ast
+import contextlib
 import copy
 import inspect
+import itertools
 import marshal
 import numbers
 import os
 import py_compile
 import struct
 import sys
-import itertools
-import contextlib
-from typing import (  # pylint: disable=unused-import
-    Iterator, Iterable, Set, Text, Any, Callable, Dict, List, Tuple, Union, Optional, cast,
+from collections import OrderedDict
+from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
+from pathlib import Path
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Literal,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
 )
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from six import ensure_str
 
-if sys.version_info[0] >= 3:
-    from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER  # pylint: disable=no-name-in-module,import-error
-else:
-    from py_compile import MAGIC as _MAGIC_NUMBER  # type: ignore[attr-defined] # pylint: disable=no-name-in-module,ungrouped-imports
-
-import six
-
-import cmk.utils.version as cmk_version
+import cmk.utils
+from cmk.utils.check_utils import (
+    maincheckify,
+    unwrap_parameters,
+)
+import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
-from cmk.utils.regex import regex
-import cmk.utils.translations
-import cmk.utils.tags
-import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
-import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
-import cmk.utils.store as store
-import cmk.utils
-from cmk.utils.labels import LabelManager
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
-from cmk.utils.exceptions import MKGeneralException, MKTerminate
-from cmk.utils.encoding import convert_to_unicode
 import cmk.utils.piggyback as piggyback
-from cmk.utils.plugin_loader import load_plugins_with_exceptions
-from cmk.utils.type_defs import (  # pylint: disable=unused-import
-    HostName, ServiceName, Item, HostAddress, CheckPluginName, ActiveCheckPluginName,
-    TimeperiodName, ServicegroupName, Labels, RulesetName, ContactgroupName, HostgroupName,
-    LabelSources, TagValue, Tags, TagList, TagGroups, Ruleset, CheckVariables)
+import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
+import cmk.utils.store as store
+import cmk.utils.tags
+import cmk.utils.translations
+import cmk.utils.version as cmk_version
+from cmk.utils.check_utils import section_name_of
+from cmk.utils.encoding import ensure_str_with_fallback
+from cmk.utils.exceptions import MKGeneralException, MKTerminate
+from cmk.utils.labels import LabelManager
+from cmk.utils.log import console
+import cmk.utils.migrated_check_variables
+from cmk.utils.regex import regex
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
+from cmk.utils.type_defs import (
+    ActiveCheckPluginName,
+    BuiltinBakeryHostName,
+    CheckPluginName,
+    CheckPluginNameStr,
+    CheckVariables,
+    ContactgroupName,
+    HostAddress,
+    HostgroupName,
+    HostName,
+    Item,
+    Labels,
+    LabelSources,
+    Ruleset,
+    RulesetName,
+    SectionName,
+    ServicegroupName,
+    ServiceName,
+    TagGroups,
+    TagList,
+    Tags,
+    TagValue,
+    TimeperiodName,
+)
 
-from cmk.base.caching import config_cache as _config_cache, runtime_cache as _runtime_cache
+from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-import; these are required in the modules' namespace to load the configuration!
+    OIDBytes, OIDCached, SNMPScanFunction, SNMPCredentials, SNMPHostConfig, SNMPTiming)
+
+import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
-import cmk.base.console as console
-import cmk.base.default_config as default_config
-import cmk.base.check_utils
 import cmk.base.check_api_utils as check_api_utils
-import cmk.base.cleanup
-import cmk.base.snmp_utils
-from cmk.base.snmp_utils import (  # pylint: disable=unused-import
-    OIDBytes, OIDCached,  # these are required in the modules' namespace to load the configuration!
-    ScanFunction, SNMPCredentials,
+import cmk.base.check_utils
+import cmk.base.default_config as default_config
+from cmk.base.api.agent_based.register.check_plugins_legacy import create_check_plugin_from_legacy
+from cmk.base.api.agent_based.register.section_plugins_legacy import (
+    create_agent_section_plugin_from_legacy,
+    create_snmp_section_plugin_from_legacy,
 )
-from cmk.base.check_utils import (  # pylint: disable=unused-import
-    SectionName, CheckParameters, DiscoveredService,
+from cmk.base.api.agent_based.type_defs import (
+    CheckPlugin,
+    Parameters,
+    SectionPlugin,
+    SNMPSectionPlugin,
 )
-try:
-    from cmk.base.api import PluginName
-    from cmk.base.api.agent_based.section_types import AgentSectionPlugin, SNMPSectionPlugin
-    from cmk.base.api.agent_based.register.section_plugins_legacy import (
-        create_agent_section_plugin_from_legacy,
-        create_snmp_section_plugin_from_legacy,
-    )
-except ImportError:
-    # API is only Python3. This script is still called by python2 modules,
-    # which for the moment don't require the API and for the time being we
-    # just let this import fail.
-    pass
+from cmk.base.caching import config_cache as _config_cache
+from cmk.base.caching import runtime_cache as _runtime_cache
+from cmk.base.check_utils import LegacyCheckParameters, Service
+from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # TODO: Prefix helper functions with "_".
-
-# This is mainly needed for pylint to detect all available
-# configuration options during static analysis. The defaults
-# are loaded later with load_default_config() again.
-from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 service_service_levels = []
 host_service_levels = []
@@ -94,9 +117,9 @@ host_service_levels = []
 AllHosts = List[str]
 ShadowHosts = Dict[str, Dict]
 AllClusters = Dict[str, List[HostName]]
-ExitSpecSection = Tuple[Text, int]
+ExitSpecSection = Tuple[str, int]
 ExitSpec = Dict[str, Union[int, List[ExitSpecSection]]]
-AgentTargetVersion = Union[None, Text, Tuple[str, str], Tuple[str, Dict[str, str]]]
+AgentTargetVersion = Union[None, str, Tuple[str, str], Tuple[str, Dict[str, str]]]
 RRDConfig = Dict[str, Any]
 CheckContext = Dict[str, Any]
 InventoryContext = Dict[str, Any]
@@ -104,32 +127,39 @@ GetCheckApiContext = Callable[[], Dict[str, Any]]
 GetInventoryApiContext = Callable[[], Dict[str, Any]]
 CheckIncludes = List[str]
 DiscoveryCheckParameters = Dict
+SpecialAgentConfiguration = NamedTuple(
+    "SpecialAgentConfiguration",
+    [
+        ("args", Union[str, List[str]]),
+        ("stdin", Optional[str]),  # TODO: Why do we need to distinguish between "" and None???
+    ])
+SpecialAgentInfoFunctionResult = Union[str, List[Union[str, Tuple[str, str, str]]],
+                                       SpecialAgentConfiguration]
 SpecialAgentInfoFunction = Callable[[Dict[str, Any], HostName, Optional[HostAddress]],
-                                    Union[str, List[str]]]
+                                    SpecialAgentInfoFunctionResult]
 HostCheckCommand = Union[None, str, Tuple[str, Union[int, str]]]
 PingLevels = Dict[str, Union[int, Tuple[float, float]]]
 ObjectAttributes = Dict  # TODO: Improve this. Have seen Dict[str, Union[str, unicode, int]]
-GroupDefinitions = Dict[str, Text]
+GroupDefinitions = Dict[str, str]
 RecurringDowntime = Dict[str, Union[int, str]]
 CheckInfo = Dict  # TODO: improve this type
 IPMICredentials = Dict[str, str]
 ManagementCredentials = Union[SNMPCredentials, IPMICredentials]
+SelectedRawSections = Dict[SectionName, SectionPlugin]
 
 
 class TimespecificParamList(list):
     pass
 
 
-def get_variable_names():
-    # type: () -> List[str]
+def get_variable_names() -> List[str]:
     """Provides the list of all known configuration variables."""
     return [k for k in default_config.__dict__ if k[0] != "_"]
 
 
-def get_default_config():
-    # type: () -> Dict[str, Any]
+def get_default_config() -> Dict[str, Any]:
     """Provides a dictionary containing the Check_MK default configuration"""
-    cfg = {}  # type: Dict[str, Any]
+    cfg: Dict[str, Any] = {}
     for key in get_variable_names():
         value = getattr(default_config, key)
 
@@ -140,25 +170,21 @@ def get_default_config():
     return cfg
 
 
-def load_default_config():
-    # type: () -> None
+def load_default_config() -> None:
     globals().update(get_default_config())
 
 
-def register(name, default_value):
-    # type: (str, Any) -> None
+def register(name: str, default_value: Any) -> None:
     """Register a new configuration variable within Check_MK base."""
     setattr(default_config, name, default_value)
 
 
-def _add_check_variables_to_default_config():
-    # type: () -> None
+def _add_check_variables_to_default_config() -> None:
     """Add configuration variables registered by checks to config module"""
-    default_config.__dict__.update(get_check_variable_defaults())
+    default_config.__dict__.update(_get_check_variable_defaults())
 
 
-def _clear_check_variables_from_default_config(variable_names):
-    # type: (List[str]) -> None
+def _clear_check_variables_from_default_config(variable_names: List[str]) -> None:
     """Remove previously registered check variables from the config module"""
     for varname in variable_names:
         try:
@@ -174,8 +200,7 @@ def _clear_check_variables_from_default_config(variable_names):
 # config module because they are not needed there anymore.
 #
 # And also remove it from the default config (in case it was present)
-def set_check_variables_for_checks():
-    # type: () -> None
+def set_check_variables_for_checks() -> None:
     global_dict = globals()
     cvn = check_variable_names()
 
@@ -200,8 +225,9 @@ def set_check_variables_for_checks():
 #   '----------------------------------------------------------------------'
 
 
-def load(with_conf_d=True, validate_hosts=True, exclude_parents_mk=False):
-    # type: (bool, bool, bool) -> None
+def load(with_conf_d: bool = True,
+         validate_hosts: bool = True,
+         exclude_parents_mk: bool = False) -> None:
     _initialize_config()
 
     vars_before_config = all_nonfunction_vars()
@@ -223,8 +249,7 @@ def load(with_conf_d=True, validate_hosts=True, exclude_parents_mk=False):
     _verify_no_deprecated_variables_used()
 
 
-def load_packed_config():
-    # type: () -> None
+def load_packed_config() -> None:
     """Load the configuration for the CMK helpers of CMC
 
     These files are written by PackedConfig().
@@ -237,14 +262,12 @@ def load_packed_config():
     PackedConfig().load()
 
 
-def _initialize_config():
-    # type: () -> None
+def _initialize_config() -> None:
     _add_check_variables_to_default_config()
     load_default_config()
 
 
-def _perform_post_config_loading_actions():
-    # type: () -> None
+def _perform_post_config_loading_actions() -> None:
     """These tasks must be performed after loading the Check_MK base configuration"""
     # First cleanup things (needed for e.g. reloading the config)
     _config_cache.clear_all()
@@ -258,19 +281,16 @@ def _perform_post_config_loading_actions():
         set_check_variables_for_checks()
 
 
-class SetFolderPathAbstract(object):  # pylint: disable=useless-object-inheritance
-    def __init__(self, the_object):
-        # type: (Iterable) -> None
+class SetFolderPathAbstract:
+    def __init__(self, the_object: Iterable) -> None:
         # TODO: Cleanup this somehow to work nicer with mypy
         super(SetFolderPathAbstract, self).__init__(the_object)  # type: ignore[call-arg]
-        self._current_path = None  # type: Optional[str]
+        self._current_path: Optional[str] = None
 
-    def set_current_path(self, current_path):
-        # type: (Optional[str]) -> None
+    def set_current_path(self, current_path: Optional[str]) -> None:
         self._current_path = current_path
 
-    def _set_folder_paths(self, new_hosts):
-        # type: (List[str]) -> None
+    def _set_folder_paths(self, new_hosts: List[str]) -> None:
         if self._current_path is None:
             return
         for hostname in strip_tags(list(new_hosts)):
@@ -278,22 +298,19 @@ class SetFolderPathAbstract(object):  # pylint: disable=useless-object-inheritan
 
 
 class SetFolderPathList(SetFolderPathAbstract, list):
-    def __iadd__(self, new_hosts):
-        # type: (Iterable[Any]) -> SetFolderPathList
+    def __iadd__(self, new_hosts: Iterable[Any]) -> 'SetFolderPathList':
         assert isinstance(new_hosts, list)
         self._set_folder_paths(new_hosts)
         return super(SetFolderPathList, self).__iadd__(new_hosts)
 
     # Probably unused
-    def __add__(self, new_hosts):
-        # type: (Iterable[Any]) -> SetFolderPathList
+    def __add__(self, new_hosts: Iterable[Any]) -> 'SetFolderPathList':
         assert isinstance(new_hosts, list)
         self._set_folder_paths(new_hosts)
         return SetFolderPathList(super(SetFolderPathList, self).__add__(new_hosts))
 
     # Probably unused
-    def append(self, new_host):
-        # type: (str) -> None
+    def append(self, new_host: str) -> None:
         self._set_folder_paths([new_host])
         super(SetFolderPathList, self).append(new_host)
 
@@ -306,14 +323,20 @@ class SetFolderPathDict(SetFolderPathAbstract, dict):
         return super(SetFolderPathDict, self).update(new_hosts)
 
     # Probably unused
-    def __setitem__(self, cluster_name, value):
-        # type: (Any, Any) -> Any
+    def __setitem__(self, cluster_name: Any, value: Any) -> Any:
         self._set_folder_paths([cluster_name])
         return super(SetFolderPathDict, self).__setitem__(cluster_name, value)
 
 
-def _load_config(with_conf_d, exclude_parents_mk):
-    # type: (bool, bool) -> None
+def cleanup_fs_used_marker_flag(log):
+    # Test if User migrated during 1.6 to new name fs_used. If so delete marker flag file
+    old_config_flag = os.path.join(cmk.utils.paths.omd_root, 'etc/check_mk/conf.d/fs_cap.mk')
+    if os.path.exists(old_config_flag):
+        log('remove flag %s\n' % old_config_flag)
+        os.remove(old_config_flag)
+
+
+def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> None:
     helper_vars = {
         "FOLDER_PATH": None,
     }
@@ -327,6 +350,8 @@ def _load_config(with_conf_d, exclude_parents_mk):
     global_dict = globals()
     global_dict.update(helper_vars)
 
+    cleanup_fs_used_marker_flag(console.info)  # safety cleanup for 1.6->1.7 update
+
     for path in _get_config_file_paths(with_conf_d):
         _f = str(path)
         # During parent scan mode we must not read in old version of parents.mk!
@@ -338,8 +363,8 @@ def _load_config(with_conf_d, exclude_parents_mk):
             # within the configuration file. The FOLDER_PATH is only used by
             # rules.mk files these days, but may also be used in some legacy
             # config files or files generated by 3rd party mechanisms.
-            current_path = None  # type: Optional[str]
-            folder_path = None  # type: Optional[str]
+            current_path: Optional[str] = None
+            folder_path: Optional[str] = None
             if _f.startswith(cmk.utils.paths.check_mk_config_dir + "/"):
                 current_path = _f[len(cmk.utils.paths.check_mk_config_dir):]
                 folder_path = os.path.dirname(current_path[1:])
@@ -374,14 +399,16 @@ def _load_config(with_conf_d, exclude_parents_mk):
     for helper_var in helper_vars:
         del global_dict[helper_var]
 
+    _collect_discovery_parameter_rulesets_from_globals(global_dict)
+    _transform_plugin_names_from_160_to_170(global_dict)
+
     # Revert specialised SetFolderPath classes back to normal, because it improves
     # the lookup performance and the helper_vars are no longer available anyway..
     all_hosts = list(all_hosts)
     clusters = dict(clusters)
 
 
-def _transform_mgmt_config_vars_from_140_to_150():
-    # type: () -> None
+def _transform_mgmt_config_vars_from_140_to_150() -> None:
     #FIXME We have to transform some configuration variables from host attributes
     # to cmk.base configuration variables because during the migration step from
     # 1.4.0 to 1.5.0 some config variables are not known in cmk.base. These variables
@@ -396,9 +423,37 @@ def _transform_mgmt_config_vars_from_140_to_150():
                 var.setdefault(hostname, attributes[name])
 
 
+def _transform_plugin_names_from_160_to_170(global_dict: Dict[str, Any]) -> None:
+    # Pre 1.7.0 check plugin names may have dots or dashes (one case) in them.
+    # Now they don't, and we have to translate all variables that may use them:
+    if "service_descriptions" in global_dict:
+        global_dict["service_descriptions"] = {
+            maincheckify(k): v for k, v in global_dict["service_descriptions"].items()
+        }
+    if "use_new_descriptions_for" in global_dict:
+        global_dict["use_new_descriptions_for"] = [
+            maincheckify(n) for n in global_dict["use_new_descriptions_for"]
+        ]
+    if "ignored_checktypes" in global_dict:
+        global_dict["ignored_checktypes"] = [
+            maincheckify(n) for n in global_dict["ignored_checktypes"]
+        ]
+
+
+def _collect_discovery_parameter_rulesets_from_globals(global_dict: Dict[str, Any],) -> None:
+    # list of discovery ruleset names which are used in migrated AND in legacy code; can be removed
+    # once we have no such cases any more
+    partially_migrated = ["diskstat_inventory"]
+    for ruleset_name in agent_based_register.iter_all_discovery_rulesets():
+        var_name = str(ruleset_name)
+        if var_name in global_dict:
+            agent_based_register.set_discovery_ruleset(ruleset_name, global_dict[var_name])
+            if var_name not in partially_migrated:
+                del global_dict[var_name]
+
+
 # Create list of all files to be included during configuration loading
-def _get_config_file_paths(with_conf_d):
-    # type: (bool) -> List[Path]
+def _get_config_file_paths(with_conf_d: bool) -> List[Path]:
     list_of_files = [Path(cmk.utils.paths.main_config_file)]
     if with_conf_d:
         list_of_files += sorted(Path(cmk.utils.paths.check_mk_config_dir).glob("**/*.mk"),
@@ -409,15 +464,13 @@ def _get_config_file_paths(with_conf_d):
     return list_of_files
 
 
-def _initialize_derived_config_variables():
-    # type: () -> None
+def _initialize_derived_config_variables() -> None:
     global service_service_levels, host_service_levels
     service_service_levels = extra_service_conf.get("_ec_sl", [])
     host_service_levels = extra_host_conf.get("_ec_sl", [])
 
 
-def get_derived_config_variable_names():
-    # type: () -> Set[str]
+def get_derived_config_variable_names() -> Set[str]:
     """These variables are computed from other configuration variables and not configured directly.
 
     The origin variable (extra_service_conf) should not be exported to the helper config. Only
@@ -425,8 +478,7 @@ def get_derived_config_variable_names():
     return {"service_service_levels", "host_service_levels"}
 
 
-def _verify_non_duplicate_hosts():
-    # type: () -> None
+def _verify_non_duplicate_hosts() -> None:
     duplicates = duplicate_hosts()
     if duplicates:
         # TODO: Raise an exception
@@ -434,8 +486,7 @@ def _verify_non_duplicate_hosts():
         sys.exit(3)
 
 
-def verify_non_invalid_variables(vars_before_config):
-    # type: (Set[str]) -> None
+def verify_non_invalid_variables(vars_before_config: Set[str]) -> None:
     # Check for invalid configuration variables
     vars_after_config = all_nonfunction_vars()
     ignored_variables = {
@@ -455,8 +506,7 @@ def verify_non_invalid_variables(vars_before_config):
         sys.exit(1)
 
 
-def _verify_no_deprecated_variables_used():
-    # type: () -> None
+def _verify_no_deprecated_variables_used() -> None:
     if isinstance(snmp_communities, dict):
         console.error("ERROR: snmp_communities cannot be a dict any more.\n")
         sys.exit(1)
@@ -479,32 +529,28 @@ def _verify_no_deprecated_variables_used():
         sys.exit(1)
 
 
-def _verify_no_deprecated_check_rulesets():
-    # type: () -> None
+def _verify_no_deprecated_check_rulesets() -> None:
     deprecated_rulesets = [
         ("services", "inventory_services"),
-        ("domino_tasks", "inv_domino_tasks"),
-        ("ps", "inventory_processes"),
         ("logwatch", "logwatch_patterns"),
     ]
     for check_plugin_name, varname in deprecated_rulesets:
         check_context = get_check_context(check_plugin_name)
-        if check_context[varname]:
+        if check_context.get(varname):
             console.warning(
                 "Found rules for deprecated ruleset %r. These rules are not applied "
                 "anymore. In case you still need them, you need to migrate them by hand. "
                 "Otherwise you can remove them from your configuration." % varname)
 
 
-def all_nonfunction_vars():
-    # type: () -> Set[str]
+def all_nonfunction_vars() -> Set[str]:
     return {
         name for name, value in globals().items()
         if name[0] != '_' and not hasattr(value, '__call__')
     }
 
 
-class PackedConfig(object):  # pylint: disable=useless-object-inheritance
+class PackedConfig:
     """The precompiled host checks and the CMC Check_MK helpers use a
     "precompiled" part of the Check_MK configuration during runtime.
 
@@ -532,17 +578,14 @@ class PackedConfig(object):  # pylint: disable=useless-object-inheritance
         "extra_nagios_conf",
     ]
 
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         super(PackedConfig, self).__init__()
         self._path = os.path.join(cmk.utils.paths.var_dir, "base", "precompiled_check_config.mk")
 
-    def save(self):
-        # type: () -> None
+    def save(self) -> None:
         self._write(self._pack())
 
-    def _pack(self):
-        # type: () -> str
+    def _pack(self) -> str:
         helper_config = ("#!/usr/bin/env python\n"
                          "# encoding: utf-8\n"
                          "# Created by Check_MK. Dump of the currently active configuration\n\n")
@@ -553,8 +596,7 @@ class PackedConfig(object):  # pylint: disable=useless-object-inheritance
         active_hosts = config_cache.all_active_hosts()
         active_clusters = config_cache.all_active_clusters()
 
-        def filter_all_hosts(all_hosts_orig):
-            # type: (AllHosts) -> List[HostName]
+        def filter_all_hosts(all_hosts_orig: AllHosts) -> List[HostName]:
             all_hosts_red = []
             for host_entry in all_hosts_orig:
                 hostname = host_entry.split("|", 1)[0]
@@ -562,8 +604,7 @@ class PackedConfig(object):  # pylint: disable=useless-object-inheritance
                     all_hosts_red.append(host_entry)
             return all_hosts_red
 
-        def filter_clusters(clusters_orig):
-            # type: (AllClusters) -> Dict[HostName, List[HostName]]
+        def filter_clusters(clusters_orig: AllClusters) -> Dict[HostName, List[HostName]]:
             clusters_red = {}
             for cluster_entry, cluster_nodes in clusters_orig.items():
                 clustername = cluster_entry.split("|", 1)[0]
@@ -571,15 +612,15 @@ class PackedConfig(object):  # pylint: disable=useless-object-inheritance
                     clusters_red[cluster_entry] = cluster_nodes
             return clusters_red
 
-        def filter_hostname_in_dict(values):
-            # type: (Dict[HostName, Dict[str, str]]) -> Dict[HostName, Dict[str, str]]
+        def filter_hostname_in_dict(
+                values: Dict[HostName, Dict[str, str]]) -> Dict[HostName, Dict[str, str]]:
             values_red = {}
             for hostname, attributes in values.items():
                 if hostname in active_hosts:
                     values_red[hostname] = attributes
             return values_red
 
-        filter_var_functions = {
+        filter_var_functions: Dict[str, Callable[[Any], Any]] = {
             "all_hosts": filter_all_hosts,
             "clusters": filter_clusters,
             "host_attributes": filter_hostname_in_dict,
@@ -587,7 +628,7 @@ class PackedConfig(object):  # pylint: disable=useless-object-inheritance
             "ipv6addresses": filter_hostname_in_dict,
             "explicit_snmp_communities": filter_hostname_in_dict,
             "hosttags": filter_hostname_in_dict
-        }  # type: Dict[str, Callable[[Any], Any]]
+        }
 
         #
         # Add modified Check_MK base settings
@@ -619,7 +660,7 @@ class PackedConfig(object):  # pylint: disable=useless-object-inheritance
         # Add modified check specific Check_MK base settings
         #
 
-        check_variable_defaults = get_check_variable_defaults()
+        check_variable_defaults = _get_check_variable_defaults()
 
         for varname, val in get_check_variables().items():
             if val == check_variable_defaults[varname]:
@@ -632,11 +673,10 @@ class PackedConfig(object):  # pylint: disable=useless-object-inheritance
 
         return helper_config
 
-    def _packable(self, varname, val):
-        # type: (str, Any) -> bool
+    def _packable(self, varname: str, val: Any) -> bool:
         """Checks whether or not a variable can be written to the config.mk
         and read again from it."""
-        if isinstance(val, six.string_types + (int, bool)) or not val:
+        if isinstance(val, (str, int, bool)) or not val:
             return True
 
         try:
@@ -645,8 +685,7 @@ class PackedConfig(object):  # pylint: disable=useless-object-inheritance
         except SyntaxError:
             return False
 
-    def _write(self, helper_config):
-        # type: (str) -> None
+    def _write(self, helper_config: str) -> None:
         store.makedirs(os.path.dirname(self._path))
 
         store.save_file(self._path + ".orig", helper_config + "\n")
@@ -657,8 +696,7 @@ class PackedConfig(object):  # pylint: disable=useless-object-inheritance
 
         os.rename(self._path + ".compiled", self._path)
 
-    def load(self):
-        # type: () -> None
+    def load(self) -> None:
         _initialize_config()
         with open(self._path, "rb") as f:
             exec(marshal.load(f), globals())
@@ -666,8 +704,7 @@ class PackedConfig(object):  # pylint: disable=useless-object-inheritance
 
 
 @contextlib.contextmanager
-def set_use_core_config(use_core_config):
-    # type: (bool) -> Iterator[None]
+def set_use_core_config(use_core_config: bool) -> Iterator[None]:
     """The keepalive helpers should always use the core configuration that
     has been created with "cmk -U". This includes the dynamic configuration
     parts like the autochecks.
@@ -706,8 +743,7 @@ def set_use_core_config(use_core_config):
 #   '----------------------------------------------------------------------'
 
 
-def strip_tags(tagged_hostlist):
-    # type: (List[str]) -> List[str]
+def strip_tags(tagged_hostlist: List[str]) -> List[str]:
     cache = _config_cache.get_dict("strip_tags")
 
     cache_id = tuple(tagged_hostlist)
@@ -719,23 +755,22 @@ def strip_tags(tagged_hostlist):
         return result
 
 
-def _get_shadow_hosts():
-    # type: () -> ShadowHosts
+def _get_shadow_hosts() -> ShadowHosts:
     # Only available with CEE
     return shadow_hosts if "shadow_hosts" in globals() else {}  # type: ignore[name-defined] # pylint: disable=undefined-variable
 
 
 # This function should only be used during duplicate host check! It has to work like
 # all_active_hosts() but with the difference that duplicates are not removed.
-def _all_active_hosts_with_duplicates():
-    # type: () -> List[str]
+def _all_active_hosts_with_duplicates() -> List[str]:
     return _filter_active_hosts(get_config_cache(),
                                 (strip_tags(list(all_hosts)) + strip_tags(list(clusters)) +
                                  strip_tags(list(_get_shadow_hosts()))))
 
 
-def _filter_active_hosts(config_cache, hostlist, keep_offline_hosts=False):
-    # type: (ConfigCache, Iterable[str], bool) -> List[str]
+def _filter_active_hosts(config_cache: 'ConfigCache',
+                         hostlist: Iterable[str],
+                         keep_offline_hosts: bool = False) -> List[str]:
     """Returns a set of active hosts for this site"""
     if only_hosts is None:
         if distributed_wato_site is None:
@@ -761,17 +796,15 @@ def _filter_active_hosts(config_cache, hostlist, keep_offline_hosts=False):
     ]
 
 
-def _host_is_member_of_site(config_cache, hostname, site):
-    # type: (ConfigCache, str, str) -> bool
+def _host_is_member_of_site(config_cache: 'ConfigCache', hostname: str, site: str) -> bool:
     # hosts without a site: tag belong to all sites
     return config_cache.tags_of_host(hostname).get("site",
                                                    distributed_wato_site) == distributed_wato_site
 
 
-def duplicate_hosts():
-    # type: () -> List[str]
-    seen_hostnames = set()  # type: Set[str]
-    duplicates = set()  # type: Set[str]
+def duplicate_hosts() -> List[str]:
+    seen_hostnames: Set[str] = set()
+    duplicates: Set[str] = set()
 
     for hostname in _all_active_hosts_with_duplicates():
         if hostname in seen_hostnames:
@@ -787,8 +820,7 @@ def duplicate_hosts():
 # are the hosts which have the tag "offline".
 #
 # This is not optimized for performance, so use in specific situations.
-def all_offline_hosts():
-    # type: () -> Set[str]
+def all_offline_hosts() -> Set[str]:
     config_cache = get_config_cache()
 
     hostlist = set(
@@ -806,8 +838,7 @@ def all_offline_hosts():
     }
 
 
-def all_configured_offline_hosts():
-    # type: () -> Set[str]
+def all_configured_offline_hosts() -> Set[str]:
     config_cache = get_config_cache()
     hostlist = config_cache.all_configured_realhosts().union(config_cache.all_configured_clusters())
 
@@ -838,8 +869,7 @@ def all_configured_offline_hosts():
 
 
 # Cleanup! .. some day
-def _get_old_cmciii_temp_description(item):
-    # type: (Item) -> Tuple[bool, ServiceName]
+def _get_old_cmciii_temp_description(item: Item) -> Tuple[bool, ServiceName]:
     if item is None:
         raise TypeError()
 
@@ -863,13 +893,13 @@ _old_service_descriptions = {
     # While using the old description, don't append the item, even when discovered
     # with the new check which creates an item.
     "barracuda_mailqueues": lambda item: (False, "Mail Queue"),
-    "brocade_sys.mem": "Memory used",
+    "brocade_sys_mem": "Memory used",
     "casa_cpu_temp": "Temperature %s",
     "cisco_mem": "Mem used %s",
     "cisco_mem_asa": "Mem used %s",
     "cisco_mem_asa64": "Mem used %s",
-    "cmciii.temp": _get_old_cmciii_temp_description,
-    "cmciii.psm_current": "%s",
+    "cmciii_temp": _get_old_cmciii_temp_description,
+    "cmciii_psm_current": "%s",
     "cmciii_lcp_airin": "LCP Fanunit Air IN",
     "cmciii_lcp_airout": "LCP Fanunit Air OUT",
     "cmciii_lcp_water": "LCP Fanunit Water %s",
@@ -880,22 +910,22 @@ _old_service_descriptions = {
     "docker_container_mem": "Memory used",
     "enterasys_temp": lambda item: (False, "Temperature"),
     "esx_vsphere_datastores": "fs_%s",
-    "esx_vsphere_hostsystem.mem_usage": "Memory used",
-    "esx_vsphere_hostsystem.mem_usage_cluster": "Memory usage",
-    "etherbox.temp": "Sensor %s",
+    "esx_vsphere_hostsystem_mem_usage": "Memory used",
+    "esx_vsphere_hostsystem_mem_usage_cluster": "Memory usage",
+    "etherbox_temp": "Sensor %s",
     "fortigate_memory": "Memory usage",
     "fortigate_memory_base": "Memory usage",
-    "fortigate_node.memory": "Memory usage %s",
+    "fortigate_node_memory": "Memory usage %s",
     "hr_fs": "fs_%s",
     "hr_mem": "Memory used",
     "huawei_switch_mem": "Memory used %s",
     "hyperv_vm": "hyperv_vms",
     "ibm_svc_mdiskgrp": "MDiskGrp %s",
     "ibm_svc_system": "IBM SVC Info",
-    "ibm_svc_systemstats.cache": "IBM SVC Cache Total",
-    "ibm_svc_systemstats.diskio": "IBM SVC Throughput %s Total",
-    "ibm_svc_systemstats.disk_latency": "IBM SVC Latency %s Total",
-    "ibm_svc_systemstats.iops": "IBM SVC IOPS %s Total",
+    "ibm_svc_systemstats_cache": "IBM SVC Cache Total",
+    "ibm_svc_systemstats_diskio": "IBM SVC Throughput %s Total",
+    "ibm_svc_systemstats_disk_latency": "IBM SVC Latency %s Total",
+    "ibm_svc_systemstats_iops": "IBM SVC IOPS %s Total",
     "innovaphone_mem": "Memory used",
     "innovaphone_temp": lambda item: (False, "Temperature"),
     "juniper_mem": "Memory Utilization %s",
@@ -903,20 +933,20 @@ _old_service_descriptions = {
     "juniper_trpz_mem": "Memory used",
     "liebert_bat_temp": lambda item: (False, "Battery Temp"),
     "logwatch": "LOG %s",
-    "logwatch.groups": "LOG %s",
-    "mem.used": "Memory used",
-    "mem.win": "Memory and pagefile",
+    "logwatch_groups": "LOG %s",
+    "mem_used": "Memory used",
+    "mem_win": "Memory and pagefile",
     "mknotifyd": "Notification Spooler %s",
-    "mknotifyd.connection": "Notification Connection %s",
+    "mknotifyd_connection": "Notification Connection %s",
     "mssql_backup": "%s Backup",
     "mssql_blocked_sessions": lambda item: (False, "MSSQL Blocked Sessions"),
-    "mssql_counters.cache_hits": "%s",
-    "mssql_counters.file_sizes": "%s File Sizes",
-    "mssql_counters.locks": "%s Locks",
-    "mssql_counters.locks_per_batch": "%s Locks per Batch",
-    "mssql_counters.pageactivity": "%s Page Activity",
-    "mssql_counters.sqlstats": "%s",
-    "mssql_counters.transactions": "%s Transactions",
+    "mssql_counters_cache_hits": "%s",
+    "mssql_counters_file_sizes": "%s File Sizes",
+    "mssql_counters_locks": "%s Locks",
+    "mssql_counters_locks_per_batch": "%s Locks per Batch",
+    "mssql_counters_pageactivity": "%s Page Activity",
+    "mssql_counters_sqlstats": "%s",
+    "mssql_counters_transactions": "%s Transactions",
     "mssql_databases": "%s Database",
     "mssql_datafiles": "Datafile %s",
     "mssql_tablespaces": "%s Sizes",
@@ -924,10 +954,10 @@ _old_service_descriptions = {
     "mssql_versions": "%s Version",
     "netscaler_mem": "Memory used",
     "nullmailer_mailq": lambda item: (False, "Nullmailer Queue"),
-    "nvidia.temp": "Temperature NVIDIA %s",
+    "nvidia_temp": "Temperature NVIDIA %s",
     "postfix_mailq": lambda item: (False, "Postfix Queue"),
     "ps": "proc_%s",
-    "ps.perf": "proc_%s",
+    "ps_perf": "proc_%s",
     "qmail_stats": lambda item: (False, "Qmail Queue"),
     "raritan_emx": "Rack %s",
     "raritan_pdu_inlet": "Input Phase %s",
@@ -937,44 +967,43 @@ _old_service_descriptions = {
     "statgrab_mem": "Memory used",
     "tplink_mem": "Memory used",
     "ups_bat_temp": "Temperature Battery %s",
-    "vms_diskstat.df": "fs_%s",
+    "vms_diskstat_df": "fs_%s",
     "wmic_process": "proc_%s",
     "zfsget": "fs_%s",
 }
 
 
-def service_description(hostname, check_plugin_name, item):
-    # type: (HostName, CheckPluginName, Item) -> ServiceName
-    if check_plugin_name not in check_info:
+def service_description(
+    hostname: HostName,
+    check_plugin_name: CheckPluginName,
+    item: Item,
+) -> ServiceName:
+    plugin = agent_based_register.get_check_plugin(check_plugin_name)
+    if plugin is None:
         if item:
             return "Unimplemented check %s / %s" % (check_plugin_name, item)
         return "Unimplemented check %s" % check_plugin_name
 
+    plugin_name_str = str(plugin.name)
     # use user-supplied service description, if available
     add_item = True
-    descr_format = service_descriptions.get(check_plugin_name)
+    descr_format = service_descriptions.get(plugin_name_str)
     if not descr_format:
+        old_descr = _old_service_descriptions.get(plugin_name_str)
         # handle renaming for backward compatibility
-        if check_plugin_name in _old_service_descriptions and \
-            check_plugin_name not in use_new_descriptions_for:
-
-            # Can be a fucntion to generate the old description more flexible.
-            old_descr = _old_service_descriptions[check_plugin_name]
+        if old_descr and plugin_name_str not in use_new_descriptions_for:
+            # Can be a function to generate the old description more flexible.
             if callable(old_descr):
                 add_item, descr_format = old_descr(item)
             else:
                 descr_format = old_descr
 
         else:
-            descr_format = check_info[check_plugin_name]["service_description"]
+            descr_format = plugin.service_name
 
-    descr_format = six.ensure_text(descr_format)
+    descr_format = ensure_str(descr_format)
 
-    # Note: we strip the service description (remove spaces).
-    # One check defines "Pages %s" as a description, but the item
-    # can by empty in some cases. Nagios silently drops leading
-    # and trailing spaces in the configuration file.
-    if add_item and isinstance(item, six.string_types + (numbers.Integral,)):
+    if add_item and isinstance(item, (str, numbers.Integral)):
         if "%s" not in descr_format:
             descr_format += " %s"
         descr = descr_format % (item,)
@@ -983,15 +1012,14 @@ def service_description(hostname, check_plugin_name, item):
 
     if "%s" in descr:
         raise MKGeneralException(
-            "Found '%%s' in service description (Host: %s, Check type: %s, Item: %s). "
+            "Found '%%s' in service description (Host: %s, Check plugin: %s, Item: %s). "
             "Please try to rediscover the service to fix this issue." %
-            (hostname, check_plugin_name, item))
+            (hostname, plugin.name, item))
 
     return get_final_service_description(hostname, descr)
 
 
-def _old_active_http_check_service_description(params):
-    # type: (Union[Dict, Tuple]) -> str
+def _old_active_http_check_service_description(params: Union[Dict, Tuple]) -> str:
     name = params[0] if isinstance(params, tuple) else params["name"]
     return name[1:] if name.startswith("^") else "HTTP %s" % name
 
@@ -1001,8 +1029,8 @@ _old_active_check_service_descriptions = {
 }
 
 
-def active_check_service_description(hostname, active_check_name, params):
-    # type: (HostName, ActiveCheckPluginName, Dict) -> ServiceName
+def active_check_service_description(hostname: HostName, active_check_name: ActiveCheckPluginName,
+                                     params: Dict) -> ServiceName:
     if active_check_name not in active_check_info:
         return "Unimplemented check %s" % active_check_name
 
@@ -1018,16 +1046,20 @@ def active_check_service_description(hostname, active_check_name, params):
     return get_final_service_description(hostname, description)
 
 
-def get_final_service_description(hostname, description):
-    # type: (HostName, ServiceName) -> ServiceName
+def get_final_service_description(hostname: HostName, description: ServiceName) -> ServiceName:
     translations = get_service_translations(hostname)
     if translations:
         # Translate
         description = cmk.utils.translations.translate_service_description(
             translations, description)
 
-    # Sanitize; Remove illegal characters from a service description
+    # Note: we strip the service description (remove spaces).
+    # One check defines "Pages %s" as a description, but the item
+    # can by empty in some cases. Nagios silently drops leading
+    # and trailing spaces in the configuration file.
     description = description.strip()
+
+    # Sanitize; Remove illegal characters from a service description
     cache = _config_cache.get_dict("final_service_description")
     try:
         new_description = cache[description]
@@ -1039,28 +1071,36 @@ def get_final_service_description(hostname, description):
     return new_description
 
 
-def service_ignored(hostname, check_plugin_name, description):
-    # type: (HostName, Optional[CheckPluginName], Optional[ServiceName]) -> bool
-    if check_plugin_name and check_plugin_name in ignored_checktypes:
-        return True
+def service_ignored(
+    host_name: HostName,
+    check_plugin_name: Optional[CheckPluginName],
+    description: Optional[ServiceName],
+) -> bool:
+    if check_plugin_name is not None:
+        check_plugin_name_str = str(check_plugin_name)
 
-    if check_plugin_name and _checktype_ignored_for_host(hostname, check_plugin_name):
-        return True
+        if str(check_plugin_name) in ignored_checktypes:
+            return True
 
-    if description is not None \
-       and get_config_cache().in_boolean_serviceconf_list(hostname, description, ignored_services):
-        return True
+        if _checktype_ignored_for_host(host_name, check_plugin_name_str):
+            return True
 
-    return False
+    return (description is not None and get_config_cache().in_boolean_serviceconf_list(
+        host_name,
+        description,
+        ignored_services,
+    ))
 
 
-def _checktype_ignored_for_host(host, checktype):
-    # type: (HostName, CheckPluginName) -> bool
-    if checktype in ignored_checktypes:
-        return True
-    ignored = get_config_cache().host_extra_conf(host, ignored_checks)
+def _checktype_ignored_for_host(
+    host_name: HostName,
+    check_plugin_name_str: str,
+) -> bool:
+    ignored = get_config_cache().host_extra_conf(host_name, ignored_checks)
     for e in ignored:
-        if checktype == e or (isinstance(e, list) and checktype in e):
+        if isinstance(e, str) and check_plugin_name_str == maincheckify(e):
+            return True
+        if isinstance(e, list) and check_plugin_name_str in [maincheckify(n) for n in e]:
             return True
     return False
 
@@ -1070,8 +1110,7 @@ def _checktype_ignored_for_host(host, checktype):
 # b) It only affects the Nagios core - CMC does not implement service dependencies
 # c) This function implements some specific regex replacing match+replace which makes it incompatible to
 #    regular service rulesets. Therefore service_extra_conf() can not easily be used :-/
-def service_depends_on(hostname, servicedesc):
-    # type: (HostName, ServiceName) -> List[ServiceName]
+def service_depends_on(hostname: HostName, servicedesc: ServiceName) -> List[ServiceName]:
     """Return a list of services this services depends upon"""
     deps = []
     config_cache = get_config_cache()
@@ -1082,7 +1121,7 @@ def service_depends_on(hostname, servicedesc):
 
         if len(entry) == 3:
             depname, hostlist, patternlist = entry
-            tags = []  # type: List[str]
+            tags: List[str] = []
         elif len(entry) == 4:
             depname, tags, hostlist, patternlist = entry
         else:
@@ -1115,43 +1154,39 @@ def service_depends_on(hostname, servicedesc):
 #   '----------------------------------------------------------------------'
 
 
-def is_cmc():
-    # type: () -> bool
+def is_cmc() -> bool:
     """Whether or not the site is currently configured to use the Microcore."""
     return monitoring_core == "cmc"
 
 
-def translate_piggyback_host(sourcehost, backedhost):
-    # type: (HostName, HostName) -> HostName
+def translate_piggyback_host(sourcehost: HostName, backedhost: HostName) -> HostName:
     translation = _get_piggyback_translations(sourcehost)
 
     # To make it possible to match umlauts we need to change the hostname
     # to a unicode string which can then be matched with regexes etc.
     # We assume the incoming name is correctly encoded in UTF-8
-    decoded_backedhost = convert_to_unicode(backedhost,
-                                            fallback_encoding=fallback_agent_output_encoding)
-    return six.ensure_str(cmk.utils.translations.translate_hostname(translation,
-                                                                    decoded_backedhost))
+    decoded_backedhost = ensure_str_with_fallback(backedhost,
+                                                  encoding="utf-8",
+                                                  fallback=fallback_agent_output_encoding)
+    return ensure_str(cmk.utils.translations.translate_hostname(translation, decoded_backedhost))
 
 
-def _get_piggyback_translations(hostname):
-    # type: (HostName) -> cmk.utils.translations.TranslationOptions
+def _get_piggyback_translations(hostname: HostName) -> cmk.utils.translations.TranslationOptions:
     """Get a dict that specifies the actions to be done during the hostname translation"""
     rules = get_config_cache().host_extra_conf(hostname, piggyback_translation)
-    translations = {}  # type: cmk.utils.translations.TranslationOptions
+    translations: cmk.utils.translations.TranslationOptions = {}
     for rule in rules[::-1]:
         translations.update(rule)
     return translations
 
 
-def get_service_translations(hostname):
-    # type: (HostName) -> cmk.utils.translations.TranslationOptions
+def get_service_translations(hostname: HostName) -> cmk.utils.translations.TranslationOptions:
     translations_cache = _config_cache.get_dict("service_description_translations")
     if hostname in translations_cache:
         return translations_cache[hostname]
 
     rules = get_config_cache().host_extra_conf(hostname, service_description_translation)
-    translations = {}  # type: cmk.utils.translations.TranslationOptions
+    translations: cmk.utils.translations.TranslationOptions = {}
     for rule in rules[::-1]:
         for k, v in rule.items():
             if isinstance(v, list):
@@ -1164,8 +1199,10 @@ def get_service_translations(hostname):
     return translations
 
 
-def prepare_check_command(command_spec, hostname, description):
-    # type: (Union[str, List[str]], HostName, Optional[ServiceName]) -> str
+# TODO: Why do we include int and float in the signature/code below?
+def prepare_check_command(command_spec: Union[str, List[Union[int, float, str, Tuple[str, str,
+                                                                                     str]]]],
+                          hostname: HostName, description: Optional[ServiceName]) -> str:
     """Prepares a check command for execution by Check_MK.
 
     This function either accepts a string or a list of arguments as
@@ -1174,24 +1211,22 @@ def prepare_check_command(command_spec, hostname, description):
     will be completed by the executed program later to get the password from
     the password store.
     """
-    if isinstance(command_spec, six.string_types):
+    if isinstance(command_spec, str):
         return command_spec
 
     if not isinstance(command_spec, list):
         raise NotImplementedError()
 
-    passwords = []  # type: List[Tuple[str, str, str]]
-    formated = []  # type: List[str]
+    passwords: List[Tuple[str, str, str]] = []
+    formated: List[str] = []
     for arg in command_spec:
-        arg_type = type(arg)
-
-        if arg_type in [int, float]:
+        if isinstance(arg, (int, float)):
             formated.append("%s" % arg)
 
-        elif isinstance(arg, six.string_types):
+        elif isinstance(arg, str):
             formated.append(cmk.utils.quote_shell_string(arg))
 
-        elif arg_type == tuple and len(arg) == 3:
+        elif isinstance(arg, tuple) and len(arg) == 3:
             pw_ident, preformated_arg = arg[1:]
             try:
                 password = stored_passwords[pw_ident]["password"]
@@ -1220,8 +1255,7 @@ def prepare_check_command(command_spec, hostname, description):
     return " ".join(formated)
 
 
-def get_http_proxy(http_proxy):
-    # type: (Tuple[str, str]) -> Optional[str]
+def get_http_proxy(http_proxy: Tuple[str, str]) -> Optional[str]:
     """Returns proxy URL to be used for HTTP requests
 
     Pass a value configured by the user using the HTTPProxyReference valuespec to this function
@@ -1248,15 +1282,6 @@ def get_http_proxy(http_proxy):
     return None
 
 
-def get_registered_section_plugin(plugin_name):
-    # type: (PluginName) -> Optional[Union[AgentSectionPlugin, SNMPSectionPlugin]]
-    if plugin_name in registered_agent_sections:
-        return registered_agent_sections[plugin_name]
-    if plugin_name in registered_snmp_sections:
-        return registered_snmp_sections[plugin_name]
-    return None
-
-
 #.
 #   .--Host matching-------------------------------------------------------.
 #   |  _   _           _                     _       _     _               |
@@ -1274,8 +1299,7 @@ hosttags_match_taglist = tuple_rulesets.hosttags_match_taglist
 
 # Slow variant of checking wether a service is matched by a list
 # of regexes - used e.g. by cmk --notify
-def in_extraconf_servicelist(service_patterns, service):
-    # type: (List[Text], Text) -> bool
+def in_extraconf_servicelist(service_patterns: List[str], service: str) -> bool:
     optimized_pattern = tuple_rulesets.convert_pattern_list(service_patterns)
     if not optimized_pattern:
         return False
@@ -1310,48 +1334,48 @@ NEGATE = tuple_rulesets.NEGATE
 # TODO: Refactor this.
 
 # The checks are loaded into this dictionary. Each check
-_check_contexts = {}  # type: Dict[str, Any]
+_check_contexts: Dict[str, Any] = {}
 # has a separate sub-dictionary, named by the check name.
 # It is populated with the includes and the check itself.
 
 # The following data structures will be filled by the checks
 # all known checks
-check_info = {}  # type: Dict[str, Dict[str, Any]]
+check_info: Dict[str, Dict[str, Any]] = {}
 # library files needed by checks
-check_includes = {}  # type: Dict[str, List[Any]]
+check_includes: Dict[str, List[Any]] = {}
 # optional functions for parameter precompilation
-precompile_params = {}  # type: Dict[str, Callable[[str, str, Dict[str, Any]], Any]]
+precompile_params: Dict[str, Callable[[str, str, Dict[str, Any]], Any]] = {}
 # dictionary-configured checks declare their default level variables here
-check_default_levels = {}  # type: Dict[str, Any]
+check_default_levels: Dict[str, Any] = {}
 # factory settings for dictionary-configured checks
-factory_settings = {}  # type: Dict[str, Dict[str, Any]]
+factory_settings: Dict[str, Dict[str, Any]] = {}
 # variables (names) in checks/* needed for check itself
-check_config_variables = []  # type:  List[Any]
+check_config_variables: List[Any] = []
 # whichs OIDs to fetch for which check (for tabular information)
-snmp_info = {}  # type: Dict[str, Union[Tuple[Any], List[Tuple[Any]]]]
+snmp_info: Dict[str, Union[Tuple[Any], List[Tuple[Any]]]] = {}
 # SNMP autodetection
-snmp_scan_functions = {}  # type: Dict[str, ScanFunction]
+snmp_scan_functions: Dict[str, SNMPScanFunction] = {}
 # definitions of active "legacy" checks
-active_check_info = {}  # type: Dict[str, Dict[str, Any]]
-special_agent_info = {}  # type: Dict[str, SpecialAgentInfoFunction]
-
-# The following data structures hold information registered by the API functions
-# with the correspondig name, e.g. register.agent_section -> registered_agent_sections
-registered_agent_sections = {}  # type: Dict[PluginName, AgentSectionPlugin]
-registered_snmp_sections = {}  # type: Dict[PluginName, SNMPSectionPlugin]
+active_check_info: Dict[str, Dict[str, Any]] = {}
+special_agent_info: Dict[str, SpecialAgentInfoFunction] = {}
 
 # Names of variables registered in the check files. This is used to
 # keep track of the variables needed by each file. Those variables are then
 # (if available) read from the config and applied to the checks module after
 # reading in the configuration of the user.
-_check_variables = {}  # type: Dict[str, List[Any]]
+_check_variables: Dict[str, List[Any]] = {}
 # keeps the default values of all the check variables
-_check_variable_defaults = {}  # type: Dict[str, Any]
+_check_variable_defaults: Dict[str, Any] = {}
 _all_checks_loaded = False
 
 # workaround: set of check-groups that are to be treated as service-checks even if
 #   the item is None
 service_rule_groups = {"temperature"}
+
+
+def discovery_max_cachefile_age(use_caches: bool) -> int:
+    return inventory_max_cachefile_age if use_caches else 0
+
 
 #.
 #   .--Loading-------------------------------------------------------------.
@@ -1366,21 +1390,13 @@ service_rule_groups = {"temperature"}
 #   '----------------------------------------------------------------------'
 
 
-def load_all_checks(get_check_api_context):
-    # type: (GetCheckApiContext) -> None
+def load_all_checks(get_check_api_context: GetCheckApiContext) -> None:
     """Load all checks and includes"""
     global _all_checks_loaded
 
     _initialize_data_structures()
 
-    for plugin, exception in load_plugins_with_exceptions(
-            "cmk.base.plugins.agent_based",
-            cmk.utils.paths.agent_based_plugins_dir,
-            cmk.utils.paths.local_agent_based_plugins_dir,
-    ):
-        console.error("Error in agent based plugin %s: %s\n", plugin, exception)
-        if cmk.utils.debug.enabled():
-            raise exception
+    agent_based_register.load_all_plugins()
 
     # LEGACY CHECK PLUGINS
     filelist = get_plugin_paths(str(cmk.utils.paths.local_checks_dir), cmk.utils.paths.checks_dir)
@@ -1389,8 +1405,7 @@ def load_all_checks(get_check_api_context):
     _all_checks_loaded = True
 
 
-def _initialize_data_structures():
-    # type: () -> None
+def _initialize_data_structures() -> None:
     """Initialize some data structures which are populated while loading the checks"""
     global _all_checks_loaded
     _all_checks_loaded = False
@@ -1410,13 +1425,9 @@ def _initialize_data_structures():
     active_check_info.clear()
     special_agent_info.clear()
 
-    registered_agent_sections.clear()
-    registered_snmp_sections.clear()
 
-
-def get_plugin_paths(*dirs):
-    # type: (str) -> List[str]
-    filelist = []  # type: List[str]
+def get_plugin_paths(*dirs: str) -> List[str]:
+    filelist: List[str] = []
     for directory in dirs:
         filelist += _plugin_pathnames_in_directory(directory)
     return filelist
@@ -1430,11 +1441,10 @@ def get_plugin_paths(*dirs):
 # NOTE: The given file names should better be absolute, otherwise
 # we depend on the current working directory, which is a bad idea,
 # especially in tests.
-def load_checks(get_check_api_context, filelist):
-    # type: (GetCheckApiContext, List[str]) -> None
+def load_checks(get_check_api_context: GetCheckApiContext, filelist: List[str]) -> None:
     cmk_global_vars = set(get_variable_names())
 
-    loaded_files = set()  # type: Set[str]
+    loaded_files: Set[str] = set()
 
     for f in filelist:
         if f[0] == "." or f[-1] == "~":
@@ -1501,48 +1511,43 @@ def load_checks(get_check_api_context, filelist):
 
         # Save check variables for e.g. after config loading that the config can
         # be added to the check contexts
-        for varname, value in new_check_vars.items():
+        _set_check_variable_defaults(
+            variables=new_check_vars,
+            # Keep track of which variable needs to be set to which context
+            context_idents=list(new_checks) + list(new_active_checks),
             # Do not allow checks to override Check_MK builtin global variables. Silently
             # skip them here. The variables will only be locally available to the checks.
-            if varname in cmk_global_vars:
-                continue
+            skip_names=cmk_global_vars,
+        )
 
-            if varname.startswith("_"):
-                continue
-
-            # NOTE: Classes and builtin functions are callable, too!
-            if callable(value) or inspect.ismodule(value):
-                continue
-
-            _check_variable_defaults[varname] = value
-
-            # Keep track of which variable needs to be set to which context
-            context_ident_list = _check_variables.setdefault(varname, [])
-            context_ident_list += new_checks
-            context_ident_list += new_active_checks
+    # add variables corresponding to check plugins that may have been migrated to new API
+    migrated_vars = vars(cmk.utils.migrated_check_variables)
+    _set_check_variable_defaults(
+        migrated_vars,
+        ["__migrated_plugins_variables__"],
+    )
+    _check_contexts.setdefault("__migrated_plugins_variables__", migrated_vars)
 
     # Now convert check_info to new format.
     convert_check_info()
     _extract_agent_and_snmp_sections()
+    _extract_check_plugins()
     verify_checkgroup_members()
     initialize_check_type_caches()
 
 
-def all_checks_loaded():
-    # type: () -> bool
+def all_checks_loaded() -> bool:
     """Whether or not all(!) checks have been loaded into the current process"""
     return _all_checks_loaded
 
 
-def any_check_loaded():
-    # type: () -> bool
+def any_check_loaded() -> bool:
     """Whether or not some checks have been loaded into the current process"""
     return bool(_check_contexts)
 
 
 # Constructs a new check context dictionary. It contains the whole check API.
-def new_check_context(get_check_api_context):
-    # type: (GetCheckApiContext) -> CheckContext
+def new_check_context(get_check_api_context: GetCheckApiContext) -> CheckContext:
     # Add the data structures where the checks register with Check_MK
     context = {
         "check_info": check_info,
@@ -1565,8 +1570,7 @@ def new_check_context(get_check_api_context):
 # Load the definitions of the required include files for this check
 # Working with imports when specifying the includes would be much cleaner,
 # sure. But we need to deal with the current check API.
-def load_check_includes(check_file_path, check_context):
-    # type: (str, CheckContext) -> None
+def load_check_includes(check_file_path: str, check_context: CheckContext) -> None:
     for include_file_name in cached_includes_of_plugin(check_file_path):
         include_file_path = check_include_file_path(include_file_name)
         try:
@@ -1581,16 +1585,14 @@ def load_check_includes(check_file_path, check_context):
             continue
 
 
-def check_include_file_path(include_file_name):
-    # type: (str) -> str
+def check_include_file_path(include_file_name: str) -> str:
     local_path = cmk.utils.paths.local_checks_dir / include_file_name
     if local_path.exists():
         return str(local_path)
     return os.path.join(cmk.utils.paths.checks_dir, include_file_name)
 
 
-def cached_includes_of_plugin(check_file_path):
-    # type: (str) -> CheckIncludes
+def cached_includes_of_plugin(check_file_path: str) -> CheckIncludes:
     cache_file_path = _include_cache_file_path(check_file_path)
     try:
         return _get_cached_check_includes(check_file_path, cache_file_path)
@@ -1602,8 +1604,7 @@ def cached_includes_of_plugin(check_file_path):
     return includes
 
 
-def _get_cached_check_includes(check_file_path, cache_file_path):
-    # type: (str, str) -> CheckIncludes
+def _get_cached_check_includes(check_file_path: str, cache_file_path: str) -> CheckIncludes:
     check_stat = os.stat(check_file_path)
     cache_stat = os.stat(cache_file_path)
 
@@ -1629,14 +1630,12 @@ def _get_cached_check_includes(check_file_path, cache_file_path):
     return x.split("|")
 
 
-def _write_check_include_cache(cache_file_path, includes):
-    # type: (str, CheckIncludes) -> None
+def _write_check_include_cache(cache_file_path: str, includes: CheckIncludes) -> None:
     store.makedirs(os.path.dirname(cache_file_path))
     store.save_file(cache_file_path, "%s\n" % "|".join(includes))
 
 
-def _include_cache_file_path(path):
-    # type: (str) -> str
+def _include_cache_file_path(path: str) -> str:
     is_local = path.startswith(str(cmk.utils.paths.local_checks_dir))
     return os.path.join(cmk.utils.paths.include_cache_dir, "local" if is_local else "builtin",
                         os.path.basename(path))
@@ -1647,12 +1646,10 @@ def _include_cache_file_path(path):
 # check_info[...] = { "includes": [...] }
 # inv_info[...] = { "includes": [...] }
 # check_includes[...] = [...]
-def includes_of_plugin(check_file_path):
-    # type: (str) -> CheckIncludes
+def includes_of_plugin(check_file_path: str) -> CheckIncludes:
     include_names = OrderedDict()
 
-    def _load_from_check_info(node):
-        # type: (ast.Assign) -> None
+    def _load_from_check_info(node: ast.Assign) -> None:
         if not isinstance(node.value, ast.Dict):
             return
 
@@ -1670,8 +1667,7 @@ def includes_of_plugin(check_file_path):
                     raise MKGeneralException("Includes must be a list of include file names, "
                                              "found '%s'" % type(val))
 
-    def _load_from_check_includes(node):
-        # type: (ast.Assign) -> None
+    def _load_from_check_includes(node: ast.Assign) -> None:
         if isinstance(node.value, ast.List):
             for element in node.value.elts:
                 if not isinstance(element, ast.Str):
@@ -1695,8 +1691,7 @@ def includes_of_plugin(check_file_path):
     return list(include_names)
 
 
-def _plugin_pathnames_in_directory(path):
-    # type: (str) -> List[str]
+def _plugin_pathnames_in_directory(path: str) -> List[str]:
     if path and os.path.exists(path):
         return sorted([
             path + "/" + f
@@ -1707,8 +1702,7 @@ def _plugin_pathnames_in_directory(path):
 
 
 # TODO: Check if this totally non-portable Kung Fu still works with Python 3!
-def load_precompiled_plugin(path, check_context):
-    # type: (str, CheckContext) -> None
+def load_precompiled_plugin(path: str, check_context: CheckContext) -> None:
     """Loads the given check or check include plugin into the given
     check context.
 
@@ -1720,7 +1714,7 @@ def load_precompiled_plugin(path, check_context):
     # https://docs.python.org/3/library/py_compile.html
     # https://www.python.org/dev/peps/pep-0552/
     # HACK:
-    header_size = 16 if sys.version_info[0] >= 3 else 8
+    header_size = 16
     precompiled_path = _precompiled_plugin_path(path)
 
     if not _is_plugin_precompiled(path, precompiled_path):
@@ -1731,8 +1725,7 @@ def load_precompiled_plugin(path, check_context):
     exec(marshal.loads(open(precompiled_path, "rb").read()[header_size:]), check_context)
 
 
-def _is_plugin_precompiled(path, precompiled_path):
-    # type: (str, str) -> bool
+def _is_plugin_precompiled(path: str, precompiled_path: str) -> bool:
     if not os.path.exists(precompiled_path):
         return False
 
@@ -1743,11 +1736,10 @@ def _is_plugin_precompiled(path, precompiled_path):
     if file_magic != _MAGIC_NUMBER:
         return False
 
-    if sys.version_info[0] >= 3:
-        # Skip the hash and assure that the timestamp format is used, i.e. the hash is 0.
-        # For further details see: https://www.python.org/dev/peps/pep-0552/#id15
-        file_hash = int(struct.unpack("I", f.read(4))[0])
-        assert file_hash == 0
+    # Skip the hash and assure that the timestamp format is used, i.e. the hash is 0.
+    # For further details see: https://www.python.org/dev/peps/pep-0552/#id15
+    file_hash = int(struct.unpack("I", f.read(4))[0])
+    assert file_hash == 0
 
     try:
         origin_file_mtime = struct.unpack("I", f.read(4))[0]
@@ -1760,35 +1752,54 @@ def _is_plugin_precompiled(path, precompiled_path):
     return True
 
 
-def _precompiled_plugin_path(path):
-    # type: (str) -> str
+def _precompiled_plugin_path(path: str) -> str:
     is_local = path.startswith(str(cmk.utils.paths.local_checks_dir))
     return os.path.join(cmk.utils.paths.precompiled_checks_dir, "local" if is_local else "builtin",
                         os.path.basename(path))
 
 
-def check_variable_names():
-    # type: () -> List[str]
+def check_variable_names() -> List[str]:
     return list(_check_variables)
 
 
-def get_check_variable_defaults():
-    # type: () -> CheckVariables
+def _get_check_variable_defaults() -> CheckVariables:
     """Returns the check variable default settings. These are the settings right
     after loading the checks."""
     return _check_variable_defaults
 
 
-def set_check_variables(check_variables):
-    # type: (CheckVariables) -> None
+def _set_check_variable_defaults(
+    variables: Dict[str, Any],
+    context_idents: List[str],
+    skip_names: Optional[Set[str]] = None,
+):
+    """Save check variables for e.g. after config loading that the config can
+    be added to the check contexts."""
+    for varname, value in variables.items():
+        if skip_names is not None and varname in skip_names:
+            continue
+
+        if varname.startswith("_"):
+            continue
+
+        # NOTE: Classes and builtin functions are callable, too!
+        if callable(value) or inspect.ismodule(value):
+            continue
+
+        _check_variable_defaults[varname] = value
+
+        # Keep track of which variable needs to be set to which context
+        _check_variables.setdefault(varname, []).extend(context_idents)
+
+
+def set_check_variables(check_variables: CheckVariables) -> None:
     """Update the check related config variables in the relevant check contexts"""
     for varname, value in check_variables.items():
         for context_ident in _check_variables[varname]:
             _check_contexts[context_ident][varname] = value
 
 
-def get_check_variables():
-    # type: () -> CheckVariables
+def get_check_variables() -> CheckVariables:
     """Returns the currently effective check variable settings
 
     Since the variables are only stored in the individual check contexts and not stored
@@ -1801,25 +1812,23 @@ def get_check_variables():
     return check_config
 
 
-def get_check_context(check_plugin_name):
-    # type: (CheckPluginName) -> CheckContext
+def get_check_context(check_plugin_name: CheckPluginNameStr) -> CheckContext:
     """Returns the context dictionary of the given check plugin"""
     return _check_contexts[check_plugin_name]
 
 
 # FIXME: Clear / unset all legacy variables to prevent confusions in other code trying to
 # use the legacy variables which are not set by newer checks.
-def convert_check_info():
-    # type: () -> None
-    check_info_defaults = {
+def convert_check_info() -> None:
+    check_info_defaults: CheckInfo = {
         "check_function": None,
         "inventory_function": None,
         "parse_function": None,
         "group": None,
         "snmp_info": None,
         "snmp_scan_function": None,
-        # TODO: The 'handle_empty_info' feature predates the 'parse_function'
-        #        and is not needed anymore.
+        # The 'handle_empty_info' feature predates the 'parse_function'
+        # and is not needed nor used anymore.
         "handle_empty_info": False,
         "handle_real_time_checks": False,
         "default_levels_variable": None,
@@ -1828,10 +1837,10 @@ def convert_check_info():
         "service_description": None,
         "has_perfdata": False,
         "management_board": None,
-    }  # type: CheckInfo
+    }
 
     for check_plugin_name, info in check_info.items():
-        section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
+        section_name = section_name_of(check_plugin_name)
 
         if not isinstance(info, dict):
             # Convert check declaration from old style to new API
@@ -1851,8 +1860,8 @@ def convert_check_info():
                 # Sometimes the scan function is assigned to the check_plugin_name
                 # rather than to the base name.
                 "snmp_scan_function": scan_function,
-                # TODO: The 'handle_empty_info' feature predates the 'parse_function'
-                #        and is not needed anymore.
+                # The 'handle_empty_info' feature predates the 'parse_function'
+                # and is not needed nor used anymore.
                 "handle_empty_info": False,
                 "handle_real_time_checks": False,
                 "default_levels_variable": check_default_levels.get(check_plugin_name),
@@ -1882,7 +1891,7 @@ def convert_check_info():
     # Make sure that setting for node_info of check and subcheck matches
     for check_plugin_name, info in check_info.items():
         if "." in check_plugin_name:
-            section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
+            section_name = section_name_of(check_plugin_name)
             if section_name not in check_info:
                 if info["node_info"]:
                     raise MKGeneralException("Invalid check implementation: node_info for %s is "
@@ -1898,7 +1907,7 @@ def convert_check_info():
     # original arrays. Note: these information is tied to a "agent section",
     # not to a check. Several checks may use the same SNMP info and scan function.
     for check_plugin_name, info in check_info.items():
-        section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
+        section_name = section_name_of(check_plugin_name)
         if info["snmp_info"] and section_name not in snmp_info:
             snmp_info[section_name] = info["snmp_info"]
 
@@ -1907,46 +1916,79 @@ def convert_check_info():
 
 
 AUTO_MIGRATION_ERR_MSG = ("Failed to auto-migrate legacy plugin to %s: %s\n"
-                          "Please refer to Werk 10601 for more information.")
+                          "Please refer to Werk 10601 for more information.\n")
 
 
-def _extract_agent_and_snmp_sections():
-    # type: () -> None
+def _extract_agent_and_snmp_sections() -> None:
     """Here comes the next layer of converting-to-"new"-api.
 
     For the new check-API in cmk/base/api/agent_based, we use the accumulated information
-    in check_info, snmp_scan_functions and snmp_info to create API compliant plugin objects.
+    in check_info, snmp_scan_functions and snmp_info to create API compliant section plugins.
     """
-    for check_plugin_name in sorted(check_info):
-        section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
-        is_snmp_plugin = section_name in snmp_info
+    # start with the "main"-checks, the ones without '.' in their names:
+    for check_plugin_name in sorted(check_info, key=lambda name: ('.' in name, name)):
+        section_name = section_name_of(check_plugin_name)
 
-        if get_registered_section_plugin(PluginName(section_name)):
+        if agent_based_register.is_registered_section_plugin(SectionName(section_name)):
             continue
 
         check_info_dict = check_info.get(section_name, check_info[check_plugin_name])
         try:
-            if is_snmp_plugin:
-                snmp_section_plugin = create_snmp_section_plugin_from_legacy(
-                    section_name,
-                    check_info_dict,
-                    snmp_scan_functions[section_name],
-                    snmp_info[section_name],
-                )
-                registered_snmp_sections[snmp_section_plugin.name] = snmp_section_plugin
+            if section_name in snmp_info:
+                agent_based_register.add_section_plugin(
+                    create_snmp_section_plugin_from_legacy(
+                        section_name,
+                        check_info_dict,
+                        snmp_scan_functions[section_name],
+                        snmp_info[section_name],
+                    ))
             else:
-                agent_section_plugin = create_agent_section_plugin_from_legacy(
-                    section_name,
-                    check_info_dict,
-                )
-                registered_agent_sections[agent_section_plugin.name] = agent_section_plugin
+                agent_based_register.add_section_plugin(
+                    create_agent_section_plugin_from_legacy(
+                        section_name,
+                        check_info_dict,
+                    ))
         except (NotImplementedError, KeyError, AssertionError, ValueError):
             # TODO (mo): Clean this up once we have a solution for the plugins currently
             # failing here. For now we need too keep it commented out, because we can't
             # test otherwise.
             #if cmk.utils.debug.enabled():
             #    raise MKGeneralException(exc)
+            # TODO (mo): Prevent any stdio output here. It will kill the process immediately.
+            #     This piece of code is a part of microcore subrpocess "cmk --checker'
+            #     Microcore expected in stdout some correctly formatted data. If no, then process will
+            #     be killed on sight. Sdterr is ok.
             #console.warning(AUTO_MIGRATION_ERR_MSG % ("section", check_plugin_name))
+            #console.vverbose(AUTO_MIGRATION_ERR_MSG % ("section", check_plugin_name))
+            pass
+
+
+def _extract_check_plugins() -> None:
+    """Here comes the next layer of converting-to-"new"-api.
+
+    For the new check-API in cmk/base/api/agent_based, we use the accumulated information
+    in check_info to create API compliant check plugins.
+    """
+    for check_plugin_name, check_info_dict in sorted(check_info.items()):
+        # skip pure section declarations:
+        if check_info_dict.get("service_description") is None:
+            continue
+        try:
+            agent_based_register.add_check_plugin(
+                create_check_plugin_from_legacy(
+                    check_plugin_name,
+                    check_info_dict,
+                    check_info.get(check_plugin_name.split('.')[0], {}).get('extra_sections', []),
+                    factory_settings,
+                    get_check_context,
+                ))
+        except (NotImplementedError, KeyError, AssertionError, ValueError):
+            # TODO (mo): Clean this up once we have a solution for the plugins currently
+            # failing here. For now we need too keep it commented out, because we can't
+            # test otherwise.
+            #if cmk.utils.debug.enabled():
+            #    raise MKGeneralException(exc)
+            #console.warning(AUTO_MIGRATION_ERR_MSG % ("check plugin", check_plugin_name))
             pass
 
 
@@ -1954,8 +1996,7 @@ def _extract_agent_and_snmp_sections():
 # all or none an item. Mixed checkgroups lead to strange exceptions when processing
 # the check parameters. So it is much better to catch these errors in a central place
 # with a clear error message.
-def verify_checkgroup_members():
-    # type: () -> None
+def verify_checkgroup_members() -> None:
     groups = checks_by_checkgroup()
 
     for group_name, check_entries in groups.items():
@@ -1978,9 +2019,8 @@ def verify_checkgroup_members():
                 "Without item: %s)" % (group_name, ", ".join(with_item), ", ".join(without_item)))
 
 
-def checks_by_checkgroup():
-    # type: () -> Dict[RulesetName, List[Tuple[CheckPluginName, CheckInfo]]]
-    groups = {}  # type: Dict[RulesetName, List[Tuple[CheckPluginName, CheckInfo]]]
+def checks_by_checkgroup() -> Dict[RulesetName, List[Tuple[CheckPluginNameStr, CheckInfo]]]:
+    groups: Dict[RulesetName, List[Tuple[CheckPluginNameStr, CheckInfo]]] = {}
     for check_plugin_name, check in check_info.items():
         group_name = check["group"]
         if group_name:
@@ -1990,14 +2030,13 @@ def checks_by_checkgroup():
 
 
 # These caches both only hold the base names of the checks
-def initialize_check_type_caches():
-    # type: () -> None
+def initialize_check_type_caches() -> None:
     snmp_cache = _runtime_cache.get_set("check_type_snmp")
     snmp_cache.update(snmp_info)
 
     tcp_cache = _runtime_cache.get_set("check_type_tcp")
     for check_plugin_name in check_info:
-        section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
+        section_name = section_name_of(check_plugin_name)
         if section_name not in snmp_cache:
             tcp_cache.add(section_name)
 
@@ -2015,42 +2054,61 @@ def initialize_check_type_caches():
 #   '----------------------------------------------------------------------'
 
 
-def discoverable_tcp_checks():
-    # type: () -> Set[CheckPluginName]
-    types = set()
-    for check_plugin_name, check in check_info.items():
-        if cmk.base.check_utils.is_tcp_check(check_plugin_name) and check["inventory_function"]:
-            types.add(check_plugin_name)
-    return types
+def get_discovery_parameters(
+    host_name: HostName,
+    check_plugin: CheckPlugin,
+) -> Union[None, Parameters, List[Parameters]]:
+    if check_plugin.discovery_ruleset_name is None:
+        return None
+
+    config_cache = get_config_cache()
+    rules = agent_based_register.get_discovery_ruleset(check_plugin.discovery_ruleset_name)
+
+    if check_plugin.discovery_ruleset_type == "all":
+        host_rules = config_cache.host_extra_conf(host_name, rules)
+        host_rules.append(check_plugin.discovery_default_parameters)
+        return [Parameters(d) for d in host_rules]
+
+    if check_plugin.discovery_ruleset_type == "merged":
+        params = check_plugin.discovery_default_parameters.copy()
+        params.update(config_cache.host_extra_conf_merged(host_name, rules))
+        return Parameters(params)
+
+    # validation should have prevented this
+    raise NotImplementedError("unknown discovery rule set type %r" %
+                              check_plugin.discovery_ruleset_type)
 
 
-def discoverable_snmp_checks():
-    # type: () -> Set[CheckPluginName]
-    types = set()
-    for check_plugin_name, check in check_info.items():
-        if cmk.base.check_utils.is_snmp_check(check_plugin_name) and check["inventory_function"]:
-            types.add(check_plugin_name)
-    return types
-
-
-def compute_check_parameters(host, checktype, item, params):
-    # type: (HostName, CheckPluginName, Item, CheckParameters) -> Optional[CheckParameters]
+def compute_check_parameters(host: HostName,
+                             checktype: Union[CheckPluginNameStr, CheckPluginName],
+                             item: Item,
+                             params: LegacyCheckParameters,
+                             for_static_checks: bool = False) -> Optional[LegacyCheckParameters]:
     """Compute parameters for a check honoring factory settings,
     default settings of user in main.mk, check_parameters[] and
     the values code in autochecks (given as parameter params)"""
-    if checktype not in check_info:  # handle vanished checktype
+    # TODO (mo): The signature of this function has been broadened to accept CheckPluginNameStr
+    # *or* CheckPluginName alternatively (to ease migration).
+    # Once we're ready, it should only accept the CheckPluginName (or even the plugin itself, we will
+    # see)
+    if isinstance(checktype, CheckPluginName):
+        plugin_name = checktype
+    else:
+        plugin_name = CheckPluginName(maincheckify(checktype))
+
+    plugin = agent_based_register.get_check_plugin(plugin_name)
+    if plugin is None:  # handle vanished check plugin
         return None
 
-    params = _update_with_default_check_parameters(checktype, params)
-    params = _update_with_configured_check_parameters(host, checktype, item, params)
+    params = _update_with_default_check_parameters(plugin, params)
+    if not for_static_checks:
+        params = _update_with_configured_check_parameters(host, plugin, item, params)
 
     return params
 
 
-def _update_with_default_check_parameters(checktype, params):
-    # type: (CheckPluginName, CheckParameters) -> CheckParameters
-    # Handle dictionary based checks
-    def_levels_varname = check_info[checktype].get("default_levels_variable")
+def _update_with_default_check_parameters(plugin: CheckPlugin,
+                                          params: LegacyCheckParameters) -> LegacyCheckParameters:
 
     # Handle case where parameter is None but the type of the
     # default value is a dictionary. This is for example the
@@ -2060,52 +2118,46 @@ def _update_with_default_check_parameters(checktype, params):
     # None as a parameter. We convert that to an empty dictionary
     # that will be updated with the factory settings and default
     # levels, if possible.
-    if params is None and def_levels_varname:
-        fs = factory_settings.get(def_levels_varname)
-        if isinstance(fs, dict):
-            params = {}
+    if params is None:
+        params = {}
 
-    # Honor factory settings for dict-type checks. Merge
-    # dict type checks with multiple matching rules
-    if isinstance(params, dict):
+    if not isinstance(params, dict):
+        # if discovered params is not updateable, it wins
+        return params
 
-        # Start with factory settings
-        if def_levels_varname:
-            new_params = factory_settings.get(def_levels_varname, {}).copy()
-        else:
-            new_params = {}
+    default_params = unwrap_parameters(plugin.check_default_parameters)
+    if not isinstance(default_params, dict):
+        # if default params are not updatetable, discovered params win
+        return params
 
-        # Merge user's default settings onto it
-        check_context = _check_contexts[checktype]
-        if def_levels_varname and def_levels_varname in check_context:
-            def_levels = check_context[def_levels_varname]
-            if isinstance(def_levels, dict):
-                new_params.update(def_levels)
-
-        # Merge params from inventory onto it
-        new_params.update(params)
-        params = new_params
-
-    return params
+    # Merge params from inventory onto default parameters (if params is not updateable, it wins):
+    return {**default_params, **params}
 
 
-def _update_with_configured_check_parameters(host, checktype, item, params):
-    # type: (HostName, CheckPluginName, Item, CheckParameters) -> CheckParameters
-    descr = service_description(host, checktype, item)
+def _update_with_configured_check_parameters(
+        host: HostName, plugin: CheckPlugin, item: Item,
+        params: LegacyCheckParameters) -> LegacyCheckParameters:
+    descr = service_description(host, plugin.name, item)
 
     config_cache = get_config_cache()
 
     # Get parameters configured via checkgroup_parameters
-    entries = _get_checkgroup_parameters(config_cache, host, checktype, item, descr)
+    entries = _get_checkgroup_parameters(
+        config_cache,
+        host,
+        str(plugin.check_ruleset_name),
+        item,
+        descr,
+    ) if plugin.check_ruleset_name is not None else []
 
     # Get parameters configured via check_parameters
     entries += config_cache.service_extra_conf(host, descr, check_parameters)
 
     if entries:
-        if _has_timespecific_params(entries):
+        if has_timespecific_params(entries):
             # some parameters include timespecific settings
             # these will be executed just before the check execution
-            return TimespecificParamList(entries + [params])
+            return set_timespecific_param_list(entries, params)
 
         # loop from last to first (first must have precedence)
         for entry in entries[::-1]:
@@ -2121,19 +2173,23 @@ def _update_with_configured_check_parameters(host, checktype, item, params):
     return params
 
 
-def _has_timespecific_params(entries):
-    # type: (List[CheckParameters]) -> bool
+def has_timespecific_params(entries: Any) -> bool:
+    if entries is None:
+        return False
+    if isinstance(entries, dict) and "tp_default_value" in entries:
+        return True
     for entry in entries:
         if isinstance(entry, dict) and "tp_default_value" in entry:
             return True
     return False
 
 
-def _get_checkgroup_parameters(config_cache, host, checktype, item, descr):
-    # type: (ConfigCache, HostName, CheckPluginName, Item, ServiceName) -> List[CheckParameters]
-    checkgroup = check_info[checktype]["group"]
-    if not checkgroup:
-        return []
+def set_timespecific_param_list(entries, params):
+    return TimespecificParamList(entries + [params])
+
+
+def _get_checkgroup_parameters(config_cache: 'ConfigCache', host: HostName, checkgroup: RulesetName,
+                               item: Item, descr: ServiceName) -> List[LegacyCheckParameters]:
     rules = checkgroup_parameters.get(checkgroup)
     if rules is None:
         return []
@@ -2147,8 +2203,8 @@ def _get_checkgroup_parameters(config_cache, host, checktype, item, descr):
         # integers or something else here. Convert them to unicode for easier handling
         # in the following code.
         # TODO: This should be strictly validated by the check API in 1.7.
-        if item is not None and not isinstance(item, six.string_types):
-            item = six.text_type(item)
+        if item is not None and not isinstance(item, str):
+            item = str(item)
 
         # checks with an item need service-specific rules
         match_object = config_cache.ruleset_match_object_for_checkgroup_parameters(
@@ -2158,156 +2214,20 @@ def _get_checkgroup_parameters(config_cache, host, checktype, item, descr):
                                                                     rules,
                                                                     is_binary=False))
     except MKGeneralException as e:
-        raise MKGeneralException(str(e) + " (on host %s, checktype %s)" % (host, checktype))
+        raise MKGeneralException(str(e) + " (on host %s, checkgroup %s)" % (host, checkgroup))
 
 
-def filter_by_management_board(hostname,
-                               found_check_plugin_names,
-                               for_mgmt_board,
-                               for_discovery=False,
-                               for_inventory=False):
-    # type: (HostName, Set[CheckPluginName], bool, bool, bool) -> Set[CheckPluginName]
-    """
-    In order to decide which check is used for which data source
-    we have to filter the found check plugins. This is done via
-    the check_info key "management_board". There are three values
-    with the following meanings:
-    - MGMT_ONLY
-        These check plugins
-        - are only used for management board data sources,
-        - have the prefix 'mgmt_' in their name,
-        - have the prefix 'Management Interface:' in their service description.
-        - If there is an equivalent host check plugin then it must be 'HOST_ONLY'.
-
-    - HOST_PRECEDENCE
-        - Default value for all check plugins.
-        - It does not have to be declared in the check_info.
-        - Special situation for SNMP management boards:
-            - If a host is not a SNMP host these checks are used for
-              the SNMP management boards.
-            - If a host is a SNMP host these checks are used for
-              the host itself.
-
-    - HOST_ONLY
-        These check plugins
-        - are used for 'real' host data sources, not for host management board data sources
-        - there is an equivalent 'MGMT_ONLY'-management board check plugin.
-    """
-
-    mgmt_only, host_precedence_snmp, host_only_snmp, host_precedence_tcp, host_only_tcp =\
-        _get_categorized_check_plugins(found_check_plugin_names, for_inventory=for_inventory)
-
-    config_cache = get_config_cache()
-    host_config = config_cache.get_host_config(hostname)
-
-    final_collection = set()  # type: Set[CheckPluginName]
-    if not host_config.has_management_board:
-        if host_config.is_snmp_host:
-            final_collection.update(host_precedence_snmp)
-            final_collection.update(host_only_snmp)
-        if host_config.is_agent_host:
-            final_collection.update(host_precedence_tcp)
-            final_collection.update(host_only_tcp)
-        return final_collection
-
-    if for_mgmt_board:
-        final_collection.update(mgmt_only)
-        if not host_config.is_snmp_host:
-            final_collection.update(host_precedence_snmp)
-            if not for_discovery:
-                # Migration from 1.4 to 1.5:
-                # in 1.4 TCP hosts with SNMP management boards discovered TCP and
-                # SNMP checks, eg. uptime and snmp_uptime.  During checking phase
-                # these checks should be executed
-                # further on.
-                # In versions >= 1.5 there are management board specific check
-                # plugins, eg. mgmt_snmp_uptime.
-                # After a re-discovery Check_MK finds the uptime check plugin for
-                # the TCP host and the mgmt_snmp_uptime check for the SNMP
-                # management board. Moreover Check_MK eliminates 'HOST_ONLT'
-                # checks like snmp_uptime.
-                final_collection.update(host_only_snmp)
-
-    else:
-        if host_config.is_snmp_host:
-            final_collection.update(host_precedence_snmp)
-            final_collection.update(host_only_snmp)
-        if host_config.is_agent_host:
-            final_collection.update(host_precedence_tcp)
-            final_collection.update(host_only_tcp)
-
-    return final_collection
-
-
-def _get_categorized_check_plugins(check_plugin_names, for_inventory=False):
-    # type: (Set[CheckPluginName], bool) -> Tuple[Set[CheckPluginName], Set[CheckPluginName], Set[CheckPluginName], Set[CheckPluginName], Set[CheckPluginName]]
-    # Local import needed to prevent import cycle. Sorry for this hack :-/
-    import cmk.base.inventory_plugins  # pylint: disable=redefined-outer-name,import-outside-toplevel
-
-    if for_inventory:
-        is_snmp_check_f = cmk.base.inventory_plugins.is_snmp_plugin
-        plugins_info = cmk.base.inventory_plugins.inv_info
-    else:
-        is_snmp_check_f = cmk.base.check_utils.is_snmp_check
-        plugins_info = check_info
-
-    mgmt_only = set()
-    host_precedence_snmp = set()
-    host_precedence_tcp = set()
-    host_only_snmp = set()
-    host_only_tcp = set()
-
-    for check_plugin_name in check_plugin_names:
-        lookup_plugin_name = check_plugin_name
-        if check_plugin_name not in plugins_info:
-            # Some plugins do not properly specify a main check.
-            # This is accounted for at various places, and in order to migrate to the new check API
-            # we need to add this one: If we don't find the section, we just look at the first
-            # matching subcheck.
-            # The 'is_snmp_*' functions convert to section_name anyway, so this only affects
-            # '_get_management_board_precedence'.
-            for name in plugins_info:
-                if cmk.base.check_utils.section_name_of(name) == check_plugin_name:
-                    lookup_plugin_name = name
-                    break
-
-        if lookup_plugin_name not in plugins_info:
-            msg = "Unknown plugin file %s" % check_plugin_name
-            if cmk.utils.debug.enabled():
-                raise MKGeneralException(msg)
-            console.verbose("%s\n" % msg)
-            continue
-
-        is_snmp_check_ = is_snmp_check_f(lookup_plugin_name)
-        mgmt_board = _get_management_board_precedence(lookup_plugin_name, plugins_info)
-        if mgmt_board == check_api_utils.HOST_PRECEDENCE:
-            if is_snmp_check_:
-                host_precedence_snmp.add(check_plugin_name)
-            else:
-                host_precedence_tcp.add(check_plugin_name)
-
-        elif mgmt_board == check_api_utils.MGMT_ONLY:
-            mgmt_only.add(check_plugin_name)
-
-        elif mgmt_board == check_api_utils.HOST_ONLY:
-            if is_snmp_check_:
-                host_only_snmp.add(check_plugin_name)
-            else:
-                host_only_tcp.add(check_plugin_name)
-
-    return mgmt_only, host_precedence_snmp, host_only_snmp,\
-           host_precedence_tcp, host_only_tcp
-
-
-def _get_management_board_precedence(check_plugin_name, plugins_info):
-    # type: (CheckPluginName, CheckInfo) -> str
-    mgmt_board = plugins_info[check_plugin_name].get("management_board")
+def get_management_board_precedence(check_plugin_name: CheckPluginNameStr,
+                                    plugins_info: CheckInfo) -> str:
+    # TODO(mo): The first .get() has been added as quick fix for an issue during new Check-API
+    # development. This should not be kept after the situation in clearer.
+    mgmt_board = plugins_info.get(check_plugin_name, {}).get("management_board")
     if mgmt_board is None:
         return check_api_utils.HOST_PRECEDENCE
     return mgmt_board
 
 
-cmk.base.cleanup.register_cleanup(check_api_utils.reset_hostname)
+cmk.utils.cleanup.register_cleanup(check_api_utils.reset_hostname)
 
 #.
 #   .--Host Configuration--------------------------------------------------.
@@ -2326,9 +2246,8 @@ cmk.base.cleanup.register_cleanup(check_api_utils.reset_hostname)
 #   +----------------------------------------------------------------------+
 
 
-class HostConfig(object):  # pylint: disable=useless-object-inheritance
-    def __init__(self, config_cache, hostname):
-        # type: (ConfigCache, str) -> None
+class HostConfig:
+    def __init__(self, config_cache: 'ConfigCache', hostname: str) -> None:
         super(HostConfig, self).__init__()
         self.hostname = hostname
 
@@ -2350,11 +2269,9 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
             self._config_cache.ruleset_matcher, hostname)
 
         # Basic types
-        self.is_tcp_host = self._config_cache.in_binary_hostlist(hostname, tcp_hosts)  # type: bool
-        self.is_snmp_host = self._config_cache.in_binary_hostlist(hostname,
-                                                                  snmp_hosts)  # type: bool
-        self.is_usewalk_host = self._config_cache.in_binary_hostlist(hostname,
-                                                                     usewalk_hosts)  # type: bool
+        self.is_tcp_host: bool = self._config_cache.in_binary_hostlist(hostname, tcp_hosts)
+        self.is_snmp_host: bool = self._config_cache.in_binary_hostlist(hostname, snmp_hosts)
+        self.is_usewalk_host: bool = self._config_cache.in_binary_hostlist(hostname, usewalk_hosts)
 
         if self.tag_groups["piggyback"] == "piggyback":
             self.is_piggyback_host = True
@@ -2364,9 +2281,9 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
             self.is_piggyback_host = self.has_piggyback_data
 
         # Agent types
-        self.is_agent_host = self.is_tcp_host or self.is_piggyback_host  # type: bool
+        self.is_agent_host: bool = self.is_tcp_host or self.is_piggyback_host
         self.management_protocol = management_protocol.get(hostname)
-        self.has_management_board = self.management_protocol is not None  # type: bool
+        self.has_management_board: bool = self.management_protocol is not None
 
         self.is_ping_host = not self.is_snmp_host and\
                             not self.is_agent_host and\
@@ -2392,10 +2309,17 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         self.is_ipv6_primary = (not self.is_ipv4v6_host and self.is_ipv6_host) \
                                 or (self.is_ipv4v6_host and self._primary_ip_address_family_of() == "ipv6")
 
+    @staticmethod
+    def make_snmp_config(hostname: HostName, address: HostAddress) -> SNMPHostConfig:
+        return get_config_cache().get_host_config(hostname).snmp_config(address)
+
+    @staticmethod
+    def make_host_config(hostname: HostName) -> 'HostConfig':
+        return get_config_cache().get_host_config(hostname)
+
     @property
-    def has_piggyback_data(self):
-        # type: () -> bool
-        time_settings = self.piggybacked_host_files  # type: List[Tuple[Optional[str], str, int]]
+    def has_piggyback_data(self) -> bool:
+        time_settings: List[Tuple[Optional[str], str, int]] = self.piggybacked_host_files
         time_settings.append((None, "max_cache_age", piggyback_max_cachefile_age))
 
         if piggyback.has_piggyback_raw_data(self.hostname, time_settings):
@@ -2405,15 +2329,14 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
                     self.hostname).exists()
 
     @property
-    def piggybacked_host_files(self):
-        # type: () -> List[Tuple[Optional[str], str, int]]
+    def piggybacked_host_files(self) -> List[Tuple[Optional[str], str, int]]:
         rules = self._config_cache.host_extra_conf(self.hostname, piggybacked_host_files)
         if rules:
             return self._flatten_piggybacked_host_files_rule(rules[0])
         return []
 
-    def _flatten_piggybacked_host_files_rule(self, rule):
-        # type: (Dict[str, Any]) -> List[Tuple[Optional[str], str, int]]
+    def _flatten_piggybacked_host_files_rule(
+            self, rule: Dict[str, Any]) -> List[Tuple[Optional[str], str, int]]:
         """This rule is a first match rule.
 
         Max cache age, validity period and state are configurable wihtin this
@@ -2423,7 +2346,7 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
             (HOST, KEY): VALUE
         Then piggyback.py:_get_piggyback_processed_file_info can evaluate the
         parameters generically."""
-        flat_rule = []  # type: List[Tuple[Optional[str], str, int]]
+        flat_rule: List[Tuple[Optional[str], str, int]] = []
 
         max_cache_age = rule.get('global_max_cache_age')
         if max_cache_age is not None and max_cache_age != "global":
@@ -2467,21 +2390,18 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         return flat_rule
 
     @property
-    def check_mk_check_interval(self):
-        # type: () -> int
+    def check_mk_check_interval(self) -> int:
         return self._config_cache.extra_attributes_of_service(self.hostname,
                                                               'Check_MK')['check_interval']
 
-    def _primary_ip_address_family_of(self):
-        # type: () -> str
+    def _primary_ip_address_family_of(self) -> str:
         rules = self._config_cache.host_extra_conf(self.hostname, primary_address_family)
         if rules:
             return rules[0]
         return "ipv4"
 
     @property
-    def alias(self):
-        # type: () -> Text
+    def alias(self) -> str:
 
         # Alias by explicit matching
         alias = self._explicit_host_attributes.get("alias")
@@ -2501,8 +2421,7 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
 
     # TODO: Move cluster/node parent handling to this function
     @property
-    def parents(self):
-        # type: () -> List[str]
+    def parents(self) -> List[str]:
         """Returns the parents of a host configured via ruleset "parents"
 
         Use only those parents which are defined and active in all_hosts"""
@@ -2516,9 +2435,8 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
 
         return used_parents
 
-    def snmp_config(self, ipaddress):
-        # type: (HostAddress) -> cmk.base.snmp_utils.SNMPHostConfig
-        return cmk.base.snmp_utils.SNMPHostConfig(
+    def snmp_config(self, ipaddress: HostAddress) -> SNMPHostConfig:
+        return SNMPHostConfig(
             is_ipv6_primary=self.is_ipv6_primary,
             hostname=self.hostname,
             ipaddress=ipaddress,
@@ -2535,10 +2453,10 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
             character_encoding=self._snmp_character_encoding(),
             is_usewalk_host=self.is_usewalk_host,
             is_inline_snmp_host=self._is_inline_snmp_host(),
+            record_stats=record_inline_snmp_stats,
         )
 
-    def _snmp_credentials(self):
-        # type: () -> SNMPCredentials
+    def _snmp_credentials(self) -> SNMPCredentials:
         """Determine SNMP credentials for a specific host
 
         It the host is found int the map snmp_communities, that community is
@@ -2557,8 +2475,7 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         # nothing configured for this host -> use default
         return snmp_default_community
 
-    def snmp_credentials_of_version(self, snmp_version):
-        # type: (int) -> Optional[SNMPCredentials]
+    def snmp_credentials_of_version(self, snmp_version: int) -> Optional[SNMPCredentials]:
         for entry in self._config_cache.host_extra_conf(self.hostname, snmp_communities):
             if snmp_version == 3 and not isinstance(entry, tuple):
                 continue
@@ -2570,73 +2487,65 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
 
         return None
 
-    def _snmp_port(self):
-        # type: () -> int
+    def _snmp_port(self) -> int:
         ports = self._config_cache.host_extra_conf(self.hostname, snmp_ports)
         if not ports:
             return 161
         return ports[0]
 
-    def _snmp_timing(self):
-        # type: () -> cmk.base.snmp_utils.SNMPTiming
+    def _snmp_timing(self) -> SNMPTiming:
         timing = self._config_cache.host_extra_conf(self.hostname, snmp_timing)
         if not timing:
             return {}
         return timing[0]
 
-    def _bulk_walk_size(self):
-        # type: () -> int
+    def _bulk_walk_size(self) -> int:
         bulk_sizes = self._config_cache.host_extra_conf(self.hostname, snmp_bulk_size)
         if not bulk_sizes:
             return 10
         return bulk_sizes[0]
 
-    def _snmp_character_encoding(self):
-        # type: () -> Optional[str]
+    def _snmp_character_encoding(self) -> Optional[str]:
         entries = self._config_cache.host_extra_conf(self.hostname, snmp_character_encodings)
         if not entries:
             return None
         return entries[0]
 
-    def _is_inline_snmp_host(self):
-        # type: () -> bool
+    def _is_inline_snmp_host(self) -> bool:
         # TODO: Better use "inline_snmp" once we have moved the code to an own module
         has_inline_snmp = "netsnmp" in sys.modules
         return has_inline_snmp and use_inline_snmp \
                and not self._config_cache.in_binary_hostlist(self.hostname, non_inline_snmp_hosts)
 
-    def _is_cluster(self):
-        # type: () -> bool
+    def _is_cluster(self) -> bool:
         """Checks whether or not the given host is a cluster host
         all_configured_clusters() needs to be used, because this function affects
         the agent bakery, which needs all configured hosts instead of just the hosts
         of this site"""
         return self.hostname in self._config_cache.all_configured_clusters()
 
-    def snmp_check_interval(self, section_name):
-        # type: (str) -> Optional[int]
-        """Return the check interval of SNMP check sections
+    def snmp_fetch_interval(self, section_name: SectionName) -> Optional[int]:
+        """Return the fetch interval of SNMP sections
 
-        This has been added to reduce the check interval of single SNMP checks (or
-        more precise: sections) to be executed less frequent that the "Check_MK"
-        service is executed.
+        This has been added to reduce the fetch interval of single SNMP sections
+        to be executed less frequently than the "Check_MK" service is executed.
         """
-        if not cmk.base.check_utils.is_snmp_check(section_name):
-            return None  # no values at all for non snmp checks
+        section = agent_based_register.get_section_plugin(section_name)
+        if not isinstance(section, SNMPSectionPlugin):
+            return None  # no values at all for non snmp section
 
         # Previous to 1.5 "match" could be a check name (including subchecks) instead of
         # only main check names -> section names. This has been cleaned up, but we still
         # need to be compatible. Strip of the sub check part of "match".
         for match, minutes in self._config_cache.host_extra_conf(self.hostname,
                                                                  snmp_check_interval):
-            if match is None or match.split(".")[0] == section_name:
+            if match is None or match.split(".")[0] == str(section_name):
                 return minutes  # use first match
 
         return None
 
     @property
-    def agent_port(self):
-        # type: () -> int
+    def agent_port(self) -> int:
         ports = self._config_cache.host_extra_conf(self.hostname, agent_ports)
         if not ports:
             return agent_port
@@ -2644,8 +2553,7 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         return ports[0]
 
     @property
-    def tcp_connect_timeout(self):
-        # type: () -> float
+    def tcp_connect_timeout(self) -> float:
         timeouts = self._config_cache.host_extra_conf(self.hostname, tcp_connect_timeouts)
         if not timeouts:
             return tcp_connect_timeout
@@ -2653,16 +2561,34 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         return timeouts[0]
 
     @property
-    def agent_encryption(self):
-        # type: () -> Dict[str, str]
+    def agent_encryption(self) -> Dict[str, str]:
         settings = self._config_cache.host_extra_conf(self.hostname, agent_encryption)
         if not settings:
             return {'use_regular': 'disable', 'use_realtime': 'enforce'}
         return settings[0]
 
     @property
-    def agent_target_version(self):
-        # type: () -> AgentTargetVersion
+    def agent_description(self) -> str:
+        if self.is_all_agents_host:
+            return "Normal Checkmk agent, all configured special agents"
+
+        if self.is_all_special_agents_host:
+            return "No Checkmk agent, all configured special agents"
+
+        if self.is_tcp_host:
+            return "Normal Checkmk agent, or special agent if configured"
+
+        return "No agent"
+
+    @property
+    def agent_exclude_sections(self) -> Dict[str, str]:
+        settings = self._config_cache.host_extra_conf(self.hostname, agent_exclude_sections)
+        if not settings:
+            return {}
+        return settings[0]
+
+    @property
+    def agent_target_version(self) -> AgentTargetVersion:
         agent_target_versions = self._config_cache.host_extra_conf(self.hostname,
                                                                    check_mk_agent_target_versions)
         if not agent_target_versions:
@@ -2682,8 +2608,7 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         return spec  # return the whole spec in case of an "at least version" config
 
     @property
-    def datasource_program(self):
-        # type: () -> Optional[str]
+    def datasource_program(self) -> Optional[str]:
         """Return the command line to execute instead of contacting the agent
 
         In case no datasource program is configured for a host return None
@@ -2695,9 +2620,8 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         return programs[0]
 
     @property
-    def special_agents(self):
-        # type: () -> List[Tuple[str, Dict]]
-        matched = []  # type: List[Tuple[str, Dict]]
+    def special_agents(self) -> List[Tuple[str, Dict]]:
+        matched: List[Tuple[str, Dict]] = []
         # Previous to 1.5.0 it was not defined in which order the special agent
         # rules overwrite each other. When multiple special agents were configured
         # for a single host a "random" one was picked (depending on the iteration
@@ -2711,8 +2635,7 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         return matched
 
     @property
-    def only_from(self):
-        # type: () -> Union[None, List[str], str]
+    def only_from(self) -> Union[None, List[str], str]:
         """The agent of a host may be configured to be accessible only from specific IPs"""
         ruleset = agent_config.get("only_from", [])
         if not ruleset:
@@ -2725,8 +2648,7 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         return entries[0]
 
     @property
-    def explicit_check_command(self):
-        # type: () -> HostCheckCommand
+    def explicit_check_command(self) -> HostCheckCommand:
         entries = self._config_cache.host_extra_conf(self.hostname, host_check_commands)
         if not entries:
             return None
@@ -2737,9 +2659,8 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         return entries[0]
 
     @property
-    def ping_levels(self):
-        # type: () -> PingLevels
-        levels = {}  # type: PingLevels
+    def ping_levels(self) -> PingLevels:
+        levels: PingLevels = {}
 
         values = self._config_cache.host_extra_conf(self.hostname, ping_levels)
         # TODO: Use host_extra_conf_merged?)
@@ -2749,14 +2670,12 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         return levels
 
     @property
-    def icons_and_actions(self):
-        # type: () -> List[str]
+    def icons_and_actions(self) -> List[str]:
         return list(set(self._config_cache.host_extra_conf(self.hostname, host_icons_and_actions)))
 
     @property
-    def extra_host_attributes(self):
-        # type: () -> ObjectAttributes
-        attrs = {}  # type: ObjectAttributes
+    def extra_host_attributes(self) -> ObjectAttributes:
+        attrs: ObjectAttributes = {}
         attrs.update(self._explicit_host_attributes)
 
         for key, ruleset in extra_host_conf.items():
@@ -2776,8 +2695,7 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         return attrs
 
     @property
-    def _explicit_host_attributes(self):
-        # type: () -> ObjectAttributes
+    def _explicit_host_attributes(self) -> ObjectAttributes:
         if self._explicit_attributes_lookup is not None:
             return self._explicit_attributes_lookup
 
@@ -2790,8 +2708,7 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         return self._explicit_attributes_lookup
 
     @property
-    def discovery_check_parameters(self):
-        # type: () -> Optional[DiscoveryCheckParameters]
+    def discovery_check_parameters(self) -> Optional[DiscoveryCheckParameters]:
         """Compute the parameters for the discovery check for a host
 
         Note:
@@ -2806,8 +2723,7 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
 
         return entries[0]
 
-    def default_discovery_check_parameters(self):
-        # type: () -> DiscoveryCheckParameters
+    def default_discovery_check_parameters(self) -> DiscoveryCheckParameters:
         """Support legacy single value global configurations. Otherwise return the defaults"""
         return {
             "check_interval": inventory_check_interval,
@@ -2816,8 +2732,8 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
             "inventory_check_do_scan": inventory_check_do_scan,
         }
 
-    def add_service_discovery_check(self, params, service_discovery_name):
-        # type: (Optional[Dict[Text, Any]], Text) -> bool
+    def add_service_discovery_check(self, params: Optional[Dict[str, Any]],
+                                    service_discovery_name: str) -> bool:
         if not params:
             return False
 
@@ -2832,35 +2748,31 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
 
         return True
 
-    def inventory_parameters(self, section_name):
-        # type: (str) -> Dict
+    def inventory_parameters(self, section_name: str) -> Dict:
         return self._config_cache.host_extra_conf_merged(self.hostname,
                                                          inv_parameters.get(section_name, []))
 
     @property
-    def inventory_export_hooks(self):
-        # type: () -> List[Tuple[str, Dict]]
-        hooks = []  # type: List[Tuple[str, Dict]]
+    def inventory_export_hooks(self) -> List[Tuple[str, Dict]]:
+        hooks: List[Tuple[str, Dict]] = []
         for hookname, ruleset in sorted(inv_exports.items(), key=lambda x: x[0]):
             entries = self._config_cache.host_extra_conf(self.hostname, ruleset)
             if entries:
                 hooks.append((hookname, entries[0]))
         return hooks
 
-    def notification_plugin_parameters(self, plugin_name):
-        # type: (CheckPluginName) -> Dict
+    def notification_plugin_parameters(self, plugin_name: CheckPluginNameStr) -> Dict:
         return self._config_cache.host_extra_conf_merged(
             self.hostname, notification_parameters.get(plugin_name, []))
 
     @property
-    def active_checks(self):
-        # type: () -> List[Tuple[str, List[Any]]]
+    def active_checks(self) -> List[Tuple[str, List[Any]]]:
         """Returns the list of active checks configured for this host
 
         These are configured using the active check formalization of WATO
         where the whole parameter set is configured using valuespecs.
         """
-        configured_checks = []  # type: List[Tuple[str, List[Any]]]
+        configured_checks: List[Tuple[str, List[Any]]] = []
         for plugin_name, ruleset in sorted(active_checks.items(), key=lambda x: x[0]):
             # Skip Check_MK HW/SW Inventory for all ping hosts, even when the
             # user has enabled the inventory for ping only hosts
@@ -2876,14 +2788,13 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         return configured_checks
 
     @property
-    def custom_checks(self):
-        # type: () -> List[Dict]
+    def custom_checks(self) -> List[Dict]:
         """Return the free form configured custom checks without formalization"""
         return self._config_cache.host_extra_conf(self.hostname, custom_checks)
 
     @property
-    def static_checks(self):
-        # type: () -> List[Tuple[RulesetName, CheckPluginName, Item, CheckParameters]]
+    def static_checks(
+            self) -> List[Tuple[RulesetName, CheckPluginNameStr, Item, LegacyCheckParameters]]:
         """Returns a table of all "manual checks" configured for this host"""
         matched = []
         for checkgroup_name in static_checks:
@@ -2900,8 +2811,7 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         return matched
 
     @property
-    def hostgroups(self):
-        # type: () -> List[HostgroupName]
+    def hostgroups(self) -> List[HostgroupName]:
         """Returns the list of hostgroups of this host
 
         If the host has no hostgroups it will be added to the default hostgroup
@@ -2912,10 +2822,9 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         return groups
 
     @property
-    def contactgroups(self):
-        # type: () -> List[ContactgroupName]
+    def contactgroups(self) -> List[ContactgroupName]:
         """Returns the list of contactgroups of this host"""
-        cgrs = []  # type: List[ContactgroupName]
+        cgrs: List[ContactgroupName] = []
 
         # host_contactgroups may take single values as well as lists as item value.
         #
@@ -2945,19 +2854,20 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         return list(set(cgrs))
 
     @property
-    def management_address(self):
-        # type: () -> Optional[HostAddress]
-        attributes_of_host = host_attributes.get(self.hostname, {})
-        if attributes_of_host.get("management_address"):
-            return attributes_of_host["management_address"]
+    def management_address(self) -> Optional[HostAddress]:
+        mgmt_ip_address = host_attributes.get(self.hostname, {}).get("management_address")
+        if mgmt_ip_address:
+            return mgmt_ip_address
+
+        if self.is_ipv6_primary:
+            return ipv6addresses.get(self.hostname)
 
         return ipaddresses.get(self.hostname)
 
     @property
-    def management_credentials(self):
-        # type: () -> Optional[ManagementCredentials]
+    def management_credentials(self) -> Optional[ManagementCredentials]:
         protocol = self.management_protocol
-        default_value = None  # type: Optional[ManagementCredentials]
+        default_value: Optional[ManagementCredentials] = None
         if protocol == "snmp":
             credentials_variable, default_value = management_snmp_credentials, snmp_default_community
         elif protocol == "ipmi":
@@ -2983,8 +2893,7 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         return default_value
 
     @property
-    def management_snmp_config(self):
-        # type: () -> cmk.base.snmp_utils.SNMPHostConfig
+    def management_snmp_config(self) -> SNMPHostConfig:
         if self.management_protocol != "snmp":
             raise MKGeneralException("Management board is not configured to be contacted via SNMP")
 
@@ -2992,7 +2901,7 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         if address is None:
             raise MKGeneralException("Management board address is not configured")
 
-        return cmk.base.snmp_utils.SNMPHostConfig(
+        return SNMPHostConfig(
             is_ipv6_primary=self.is_ipv6_primary,
             hostname=self.hostname,
             ipaddress=address,
@@ -3009,11 +2918,11 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
             character_encoding=self._snmp_character_encoding(),
             is_usewalk_host=self.is_usewalk_host,
             is_inline_snmp_host=self._is_inline_snmp_host(),
+            record_stats=record_inline_snmp_stats,
         )
 
     @property
-    def additional_ipaddresses(self):
-        # type: () -> Tuple[List[HostAddress], List[HostAddress]]
+    def additional_ipaddresses(self) -> Tuple[List[HostAddress], List[HostAddress]]:
         #TODO Regarding the following configuration variables from WATO
         # there's no inheritance, thus we use 'host_attributes'.
         # Better would be to use cmk.base configuration variables,
@@ -3021,17 +2930,16 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         return (host_attributes.get(self.hostname, {}).get("additional_ipv4addresses", []),
                 host_attributes.get(self.hostname, {}).get("additional_ipv6addresses", []))
 
-    def exit_code_spec(self, data_source_id=None):
-        # type: (Optional[str]) -> ExitSpec
-        spec = {}  # type: ExitSpec
+    def exit_code_spec(self, data_source_id: Optional[str] = None) -> ExitSpec:
+        spec: ExitSpec = {}
         # TODO: Can we use host_extra_conf_merged?
         specs = self._config_cache.host_extra_conf(self.hostname, check_mk_exit_status)
         for entry in specs[::-1]:
             spec.update(entry)
         return self._merge_with_data_source_exit_code_spec(spec, data_source_id)
 
-    def _merge_with_data_source_exit_code_spec(self, spec, data_source_id):
-        # type: (Dict, Optional[str]) -> ExitSpec
+    def _merge_with_data_source_exit_code_spec(self, spec: Dict,
+                                               data_source_id: Optional[str]) -> ExitSpec:
         if data_source_id is not None:
             try:
                 return spec["individual"][data_source_id]
@@ -3047,8 +2955,9 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         return spec
 
     @property
-    def do_status_data_inventory(self):
-        # type: () -> bool
+    def do_status_data_inventory(self) -> bool:
+        if self.is_cluster:
+            return False
 
         # TODO: Use dict(self.active_checks).get("cmk_inv", [])?
         rules = active_checks.get('cmk_inv')
@@ -3068,26 +2977,34 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         return params.get('status_data_inventory', False)
 
     @property
-    def service_level(self):
-        # type: () -> Optional[int]
+    def service_level(self) -> Optional[int]:
         entries = self._config_cache.host_extra_conf(self.hostname, host_service_levels)
         if not entries:
             return None
         return entries[0]
 
-    def set_autochecks(self, new_items):
-        # type: (List[DiscoveredService]) -> None
+    def set_autochecks(
+        self,
+        new_services: Sequence[Service],
+    ) -> None:
         """Merge existing autochecks with the given autochecks for a host and save it"""
         if self.is_cluster:
             if self.nodes:
-                autochecks.set_autochecks_of_cluster(self.nodes, self.hostname, new_items,
-                                                     self._config_cache.host_of_clustered_service,
-                                                     service_description)
+                autochecks.set_autochecks_of_cluster(
+                    self.nodes,
+                    self.hostname,
+                    new_services,
+                    self._config_cache.host_of_clustered_service,
+                    service_description,  # top level function!
+                )
         else:
-            autochecks.set_autochecks_of_real_hosts(self.hostname, new_items, service_description)
+            autochecks.set_autochecks_of_real_hosts(
+                self.hostname,
+                new_services,
+                service_description,  # top level function!
+            )
 
-    def remove_autochecks(self):
-        # type: () -> int
+    def remove_autochecks(self) -> int:
         """Remove all autochecks of a host while being cluster-aware
 
         Cluster aware means that the autocheck files of the nodes are handled. Instead
@@ -3098,6 +3015,14 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
             autochecks.remove_autochecks_of_host(
                 hostname, self._config_cache.host_of_clustered_service, service_description)  #
             for hostname in hostnames)
+
+    @property
+    def max_cachefile_age(self) -> int:
+        return check_max_cachefile_age if self.nodes is None else cluster_max_cachefile_age
+
+    @property
+    def is_dyndns_host(self) -> bool:
+        return self._config_cache.in_binary_hostlist(self.hostname, dyndns_hosts)
 
 
 #.
@@ -3119,14 +3044,12 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
 
 # TODO: Shouldn't we find a better place for the *_of_service() methods?
 # Wouldn't it be better to make them part of HostConfig?
-class ConfigCache(object):  # pylint: disable=useless-object-inheritance
-    def __init__(self):
-        # type: () -> None
+class ConfigCache:
+    def __init__(self) -> None:
         super(ConfigCache, self).__init__()
         self._initialize_caches()
 
-    def initialize(self):
-        # type: () -> None
+    def initialize(self) -> None:
         self._initialize_caches()
         self._setup_clusters_nodes_cache()
 
@@ -3157,19 +3080,16 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
 
         self.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(self._all_active_hosts)
 
-    def _initialize_caches(self):
-        # type: () -> None
+    def _initialize_caches(self) -> None:
         self.check_table_cache = _config_cache.get_dict("check_tables")
 
-        self._cache_is_snmp_check = _runtime_cache.get_dict("is_snmp_check")
-        self._cache_is_tcp_check = _runtime_cache.get_dict("is_tcp_check")
-        self._cache_section_name_of = {}  # type: Dict[CheckPluginName, SectionName]
+        self._cache_section_name_of: Dict[CheckPluginNameStr, str] = {}
 
-        self._cache_match_object_service = {
-        }  # type: Dict[Tuple[HostName, ServiceName], RulesetMatchObject]
-        self._cache_match_object_service_checkgroup = {
-        }  # type: Dict[Tuple[HostName, Item, ServiceName], RulesetMatchObject]
-        self._cache_match_object_host = {}  # type: Dict[HostName, RulesetMatchObject]
+        self._cache_match_object_service: Dict[Tuple[HostName, ServiceName],
+                                               RulesetMatchObject] = {}
+        self._cache_match_object_service_checkgroup: Dict[Tuple[HostName, Item, ServiceName],
+                                                          RulesetMatchObject] = {}
+        self._cache_match_object_host: Dict[HostName, RulesetMatchObject] = {}
 
         # Host lookup
 
@@ -3180,34 +3100,37 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
         self._all_active_realhosts = set()
 
         # Reference hostname -> dirname including /
-        self._host_paths = self._get_host_paths(host_paths)  # type: Dict[HostName, str]
+        self._host_paths: Dict[HostName, str] = self._get_host_paths(host_paths)
 
         # Host tags
-        self._hosttags = {}  # type: Dict[HostName, TagList]
+        self._hosttags: Dict[HostName, TagList] = {}
 
         # Autochecks cache
         self._autochecks_manager = autochecks.AutochecksManager()
 
         # Caches for nodes and clusters
-        self._clusters_of_cache = {}  # type: Dict[HostName, List[HostName]]
-        self._nodes_of_cache = {}  # type: Dict[HostName, List[HostName]]
+        self._clusters_of_cache: Dict[HostName, List[HostName]] = {}
+        self._nodes_of_cache: Dict[HostName, List[HostName]] = {}
 
         # Keep HostConfig instances created with the current configuration cache
-        self._host_configs = {}  # type: Dict[HostName, HostConfig]
+        self._host_configs: Dict[HostName, HostConfig] = {}
 
-    def _discovered_labels_of_service(self, hostname, service_desc):
-        # type: (HostName, ServiceName) -> Labels
-        return self._autochecks_manager.discovered_labels_of(hostname, service_desc,
-                                                             service_description,
-                                                             get_check_variables).to_dict()
+    def _discovered_labels_of_service(
+        self,
+        hostname: HostName,
+        service_desc: ServiceName,
+    ) -> Labels:
+        return self._autochecks_manager.discovered_labels_of(
+            hostname,
+            service_desc,
+            service_description,  # this is the global function!
+        ).to_dict()
 
-    def get_tag_to_group_map(self):
-        # type: () -> TagGroups
+    def get_tag_to_group_map(self) -> TagGroups:
         tags = cmk.utils.tags.get_effective_tag_config(tag_config)
         return ruleset_matcher.get_tag_to_group_map(tags)
 
-    def get_host_config(self, hostname):
-        # type: (HostName) -> HostConfig
+    def get_host_config(self, hostname: HostName) -> HostConfig:
         """Returns a HostConfig instance for the given host
 
         It lazy initializes the host config object and caches the objects during the livetime
@@ -3220,15 +3143,13 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
         host_config = self._host_configs[hostname] = config_class(self, hostname)
         return host_config
 
-    def invalidate_host_config(self, hostname):
-        # type: (HostName) -> None
+    def invalidate_host_config(self, hostname: HostName) -> None:
         try:
             del self._host_configs[hostname]
         except KeyError:
             pass
 
-    def _get_host_paths(self, config_host_paths):
-        # type: (Dict[HostName, str]) -> Dict[HostName, str]
+    def _get_host_paths(self, config_host_paths: Dict[HostName, str]) -> Dict[HostName, str]:
         """Reference hostname -> dirname including /"""
         host_dirs = {}
         for hostname, filename in config_host_paths.items():
@@ -3238,12 +3159,10 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
             host_dirs[hostname] = dirname_of_host
         return host_dirs
 
-    def host_path(self, hostname):
-        # type: (HostName) -> str
+    def host_path(self, hostname: HostName) -> str:
         return self._host_paths.get(hostname, "/")
 
-    def _collect_hosttags(self, tag_to_group_map):
-        # type: (TagGroups) -> None
+    def _collect_hosttags(self, tag_to_group_map: TagGroups) -> None:
         """Calculate the effective tags for all configured hosts
 
         WATO ensures that all hosts configured with WATO have host_tags set, but there may also be hosts defined
@@ -3272,8 +3191,7 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
             host_tags[shadow_host_name] = self._tag_list_to_tag_groups(
                 tag_to_group_map, self._hosttags[shadow_host_name])
 
-    def _tag_groups_to_tag_list(self, host_path, tag_groups):
-        # type: (str, Dict[str, str]) -> Set[str]
+    def _tag_groups_to_tag_list(self, host_path: str, tag_groups: Dict[str, str]) -> Set[str]:
         # The pre 1.6 tags contained only the tag group values (-> chosen tag id),
         # but there was a single tag group added with it's leading tag group id. This
         # was the internal "site" tag that is created by HostAttributeSite.
@@ -3282,15 +3200,14 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
         tags.add("site:%s" % tag_groups["site"])
         return tags
 
-    def _tag_list_to_tag_groups(self, tag_to_group_map, tag_list):
-        # type: (TagGroups, TagList) -> Tags
+    def _tag_list_to_tag_groups(self, tag_to_group_map: TagGroups, tag_list: TagList) -> Tags:
         # This assumes all needed aux tags of grouped are already in the tag_list
 
         # Ensure the internal mandatory tag groups are set for all hosts
         # TODO: This immitates the logic of cmk.gui.watolib.CREHost.tag_groups which
         # is currently responsible for calculating the host tags of a host.
         # Would be better to untie the GUI code there and move it over to cmk.utils.tags.
-        tag_groups = {
+        tag_groups: Tags = {
             'piggyback': 'auto-piggyback',
             'networking': 'lan',
             'agent': 'cmk-agent',
@@ -3298,7 +3215,7 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
             'snmp_ds': 'no-snmp',
             'site': cmk_version.omd_site(),
             'address_family': 'ip-v4-only',
-        }  # type: Tags
+        }
 
         for tag_id in tag_list:
             # Assume it's an aux tag in case there is a tag configured without known group
@@ -3310,8 +3227,7 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
     # Kept for compatibility with pre 1.6 sites
     # TODO: Clean up all call sites one day (1.7?)
     # TODO: check all call sites and remove this
-    def tag_list_of_host(self, hostname):
-        # type: (HostName) -> Set[TagValue]
+    def tag_list_of_host(self, hostname: HostName) -> Set[TagValue]:
         """Returns the list of all configured tags of a host. In case
         a host has no tags configured or is not known, it returns an
         empty list."""
@@ -3322,8 +3238,7 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
         return self._tag_groups_to_tag_list("/", self.tags_of_host(hostname))
 
     # TODO: check all call sites and remove this or make it private?
-    def tags_of_host(self, hostname):
-        # type: (HostName) -> Tags
+    def tags_of_host(self, hostname: HostName) -> Tags:
         """Returns the dict of all configured tag groups and values of a host
 
         In case you have a HostConfig object available better use HostConfig.tag_groups"""
@@ -3344,18 +3259,16 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
             'address_family': 'ip-v4-only',
         }
 
-    def tags_of_service(self, hostname, svc_desc):
-        # type: (HostName, ServiceName) -> Tags
+    def tags_of_service(self, hostname: HostName, svc_desc: ServiceName) -> Tags:
         """Returns the dict of all configured tags of a service
         It takes all explicitly configured tag groups into account.
         """
-        tags = {}  # type: Tags
+        tags: Tags = {}
         for entry in self.service_extra_conf(hostname, svc_desc, service_tag_rules):
             tags.update(entry)
         return tags
 
-    def labels_of_service(self, hostname, svc_desc):
-        # type: (HostName, ServiceName) -> Labels
+    def labels_of_service(self, hostname: HostName, svc_desc: ServiceName) -> Labels:
         """Returns the effective set of service labels from all available sources
 
         1. Discovered labels
@@ -3365,14 +3278,13 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
         """
         return self.labels.labels_of_service(self.ruleset_matcher, hostname, svc_desc)
 
-    def label_sources_of_service(self, hostname, svc_desc):
-        # type: (HostName, ServiceName) -> LabelSources
+    def label_sources_of_service(self, hostname: HostName, svc_desc: ServiceName) -> LabelSources:
         """Returns the effective set of service label keys with their source identifier instead of the value
         Order and merging logic is equal to labels_of_service()"""
         return self.labels.label_sources_of_service(self.ruleset_matcher, hostname, svc_desc)
 
-    def extra_attributes_of_service(self, hostname, description):
-        # type: (HostName, ServiceName) -> Dict[str, Any]
+    def extra_attributes_of_service(self, hostname: HostName,
+                                    description: ServiceName) -> Dict[str, Any]:
         attrs = {
             "check_interval": 1.0,  # 1 minute
         }
@@ -3395,29 +3307,34 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
 
         return attrs
 
-    def icons_and_actions_of_service(self, hostname, description, checkname, params):
-        # type: (HostName, ServiceName, Optional[CheckPluginName], CheckParameters) -> List[str]
+    def icons_and_actions_of_service(
+        self,
+        hostname: HostName,
+        description: ServiceName,
+        check_plugin_name: Optional[CheckPluginName],
+        params: LegacyCheckParameters,
+    ) -> List[str]:
         actions = set(self.service_extra_conf(hostname, description, service_icons_and_actions))
 
         # Some WATO rules might register icons on their own
-        if checkname:
-            checkgroup = check_info[checkname]["group"]
-            if checkgroup in ['ps', 'services'] and isinstance(params, dict):
+        if check_plugin_name:
+            plugin = agent_based_register.get_check_plugin(check_plugin_name)
+            if (plugin is not None and str(plugin.check_ruleset_name) in ('ps', 'services') and
+                    isinstance(params, dict)):
                 icon = params.get('icon')
                 if icon:
                     actions.add(icon)
 
         return list(actions)
 
-    def servicegroups_of_service(self, hostname, description):
-        # type: (HostName, ServiceName) -> List[ServicegroupName]
+    def servicegroups_of_service(self, hostname: HostName,
+                                 description: ServiceName) -> List[ServicegroupName]:
         """Returns the list of servicegroups of this services"""
         return self.service_extra_conf(hostname, description, service_groups)
 
-    def contactgroups_of_service(self, hostname, description):
-        # type: (HostName, ServiceName) -> List[str]
+    def contactgroups_of_service(self, hostname: HostName, description: ServiceName) -> List[str]:
         """Returns the list of contactgroups of this service"""
-        cgrs = set()  # type: Set[str]
+        cgrs: Set[str] = set()
         cgrs.update(self.service_extra_conf(hostname, description, service_contactgroups))
 
         if monitoring_core == "nagios" and enable_rulebased_notifications:
@@ -3425,39 +3342,40 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
 
         return list(cgrs)
 
-    def passive_check_period_of_service(self, hostname, description):
-        # type: (HostName, ServiceName) -> str
+    def passive_check_period_of_service(self, hostname: HostName, description: ServiceName) -> str:
         return self.get_service_ruleset_value(hostname, description, check_periods, deflt="24X7")
 
-    def custom_attributes_of_service(self, hostname, description):
-        # type: (HostName, ServiceName) -> Dict[str, str]
+    def custom_attributes_of_service(self, hostname: HostName,
+                                     description: ServiceName) -> Dict[str, str]:
         return dict(
             itertools.chain(
                 *self.service_extra_conf(hostname, description, custom_service_attributes)))
 
-    def service_level_of_service(self, hostname, description):
-        # type: (HostName, ServiceName) -> Optional[int]
-        return self.get_service_ruleset_value(hostname,
-                                              description,
-                                              service_service_levels,
-                                              deflt=None)
+    def service_level_of_service(self, hostname: HostName,
+                                 description: ServiceName) -> Optional[int]:
+        return self.get_service_ruleset_value(
+            hostname,
+            description,
+            service_service_levels,
+            deflt=None,
+        )
 
-    def check_period_of_service(self, hostname, description):
-        # type: (HostName, ServiceName) -> Optional[TimeperiodName]
+    def check_period_of_service(self, hostname: HostName,
+                                description: ServiceName) -> Optional[TimeperiodName]:
         entry = self.get_service_ruleset_value(hostname, description, check_periods, deflt=None)
         if entry == "24X7":
             return None
         return entry
 
-    def get_explicit_service_custom_variables(self, hostname, description):
-        # type: (HostName, ServiceName) -> Dict[str, str]
+    def get_explicit_service_custom_variables(self, hostname: HostName,
+                                              description: ServiceName) -> Dict[str, str]:
         try:
             return explicit_service_custom_variables[(hostname, description)]
         except KeyError:
             return {}
 
-    def ruleset_match_object_of_service(self, hostname, svc_desc):
-        # type: (HostName, ServiceName) -> RulesetMatchObject
+    def ruleset_match_object_of_service(self, hostname: HostName,
+                                        svc_desc: ServiceName) -> RulesetMatchObject:
         """Construct the object that is needed to match this service to rulesets
 
         Please note that the host attributes like host_folder and host_tags are
@@ -3474,15 +3392,16 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
         if cache_id in self._cache_match_object_service:
             return self._cache_match_object_service[cache_id]
 
-        result = RulesetMatchObject(host_name=hostname,
-                                    service_description=svc_desc,
-                                    service_labels=self.labels.labels_of_service(
-                                        self.ruleset_matcher, hostname, svc_desc))
+        result = RulesetMatchObject(
+            host_name=hostname,
+            service_description=svc_desc,
+            service_labels=self.labels.labels_of_service(self.ruleset_matcher, hostname, svc_desc),
+        )
         self._cache_match_object_service[cache_id] = result
         return result
 
-    def ruleset_match_object_for_checkgroup_parameters(self, hostname, item, svc_desc):
-        # type: (HostName, Item, ServiceName) -> RulesetMatchObject
+    def ruleset_match_object_for_checkgroup_parameters(self, hostname: HostName, item: Item,
+                                                       svc_desc: ServiceName) -> RulesetMatchObject:
         """Construct the object that is needed to match checkgroup parameters rulesets
 
         Please note that the host attributes like host_folder and host_tags are
@@ -3495,15 +3414,15 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
         if cache_id in self._cache_match_object_service_checkgroup:
             return self._cache_match_object_service_checkgroup[cache_id]
 
-        result = RulesetMatchObject(host_name=hostname,
-                                    service_description=item,
-                                    service_labels=self.labels.labels_of_service(
-                                        self.ruleset_matcher, hostname, svc_desc))
+        result = RulesetMatchObject(
+            host_name=hostname,
+            service_description=item,
+            service_labels=self.labels.labels_of_service(self.ruleset_matcher, hostname, svc_desc),
+        )
         self._cache_match_object_service_checkgroup[cache_id] = result
         return result
 
-    def ruleset_match_object_of_host(self, hostname):
-        # type: (HostName) -> RulesetMatchObject
+    def ruleset_match_object_of_host(self, hostname: HostName) -> RulesetMatchObject:
         """Construct the object that is needed to match the host rulesets
 
         Please note that the host attributes like host_folder and host_tags are
@@ -3519,177 +3438,151 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
         self._cache_match_object_host[hostname] = match_object
         return match_object
 
-    def get_autochecks_of(self, hostname):
-        # type: (HostName) -> List[cmk.base.check_utils.Service]
-        return self._autochecks_manager.get_autochecks_of(hostname, compute_check_parameters,
-                                                          service_description, get_check_variables)
+    def get_autochecks_of(self, hostname: HostName) -> List[cmk.base.check_utils.Service]:
+        return self._autochecks_manager.get_autochecks_of(
+            hostname,
+            compute_check_parameters,
+            service_description,  # this is the global function!
+        )
 
-    def section_name_of(self, section):
-        # type: (CheckPluginName) -> SectionName
+    def section_name_of(self, section: CheckPluginNameStr) -> str:
         try:
             return self._cache_section_name_of[section]
         except KeyError:
-            section_name = cmk.base.check_utils.section_name_of(section)
+            section_name = section_name_of(section)
             self._cache_section_name_of[section] = section_name
             return section_name
 
-    def is_snmp_check(self, check_plugin_name):
-        # type: (CheckPluginName) -> bool
-        try:
-            return self._cache_is_snmp_check[check_plugin_name]
-        except KeyError:
-            snmp_checks = _runtime_cache.get_set("check_type_snmp")
-            result = self.section_name_of(check_plugin_name) in snmp_checks
-            self._cache_is_snmp_check[check_plugin_name] = result
-            return result
-
-    def is_tcp_check(self, check_plugin_name):
-        # type: (CheckPluginName) -> bool
-        try:
-            return self._cache_is_tcp_check[check_plugin_name]
-        except KeyError:
-            tcp_checks = _runtime_cache.get_set("check_type_tcp")
-            result = self.section_name_of(check_plugin_name) in tcp_checks
-            self._cache_is_tcp_check[check_plugin_name] = result
-            return result
-
-    def host_extra_conf_merged(self, hostname, ruleset):
-        # type: (HostName, Ruleset) -> Dict[str, Any]
+    def host_extra_conf_merged(self, hostname: HostName, ruleset: Ruleset) -> Dict[str, Any]:
         return self.ruleset_matcher.get_host_ruleset_merged_dict(
-            self.ruleset_match_object_of_host(hostname), ruleset)
+            self.ruleset_match_object_of_host(hostname),
+            ruleset,
+        )
 
-    def host_extra_conf(self, hostname, ruleset):
-        # type: (HostName, Ruleset) -> List
+    def host_extra_conf(self, hostname: HostName, ruleset: Ruleset) -> List:
         return list(
             self.ruleset_matcher.get_host_ruleset_values(
-                self.ruleset_match_object_of_host(hostname), ruleset, is_binary=False))
+                self.ruleset_match_object_of_host(hostname),
+                ruleset,
+                is_binary=False,
+            ))
 
     # TODO: Cleanup external in_binary_hostlist call sites
-    def in_binary_hostlist(self, hostname, ruleset):
-        # type: (HostName, Ruleset) -> bool
+    def in_binary_hostlist(self, hostname: HostName, ruleset: Ruleset) -> bool:
         return self.ruleset_matcher.is_matching_host_ruleset(
             self.ruleset_match_object_of_host(hostname), ruleset)
 
-    def service_extra_conf(self, hostname, description, ruleset):
-        # type: (HostName, ServiceName, Ruleset) -> List
+    def service_extra_conf(self, hostname: HostName, description: ServiceName,
+                           ruleset: Ruleset) -> List:
         """Compute outcome of a service rule set that has an item."""
         return list(
-            self.ruleset_matcher.get_service_ruleset_values(self.ruleset_match_object_of_service(
-                hostname, description),
-                                                            ruleset,
-                                                            is_binary=False))
+            self.ruleset_matcher.get_service_ruleset_values(
+                self.ruleset_match_object_of_service(hostname, description),
+                ruleset,
+                is_binary=False,
+            ))
 
-    def get_service_ruleset_value(self, hostname, description, ruleset, deflt):
-        # type: (HostName, ServiceName, Ruleset, Any) -> Any
+    def get_service_ruleset_value(self, hostname: HostName, description: ServiceName,
+                                  ruleset: Ruleset, deflt: Any) -> Any:
         """Compute first match service ruleset outcome with fallback to a default value"""
         return next(
-            self.ruleset_matcher.get_service_ruleset_values(self.ruleset_match_object_of_service(
-                hostname, description),
-                                                            ruleset,
-                                                            is_binary=False), deflt)
+            self.ruleset_matcher.get_service_ruleset_values(
+                self.ruleset_match_object_of_service(hostname, description),
+                ruleset,
+                is_binary=False,
+            ), deflt)
 
-    def service_extra_conf_merged(self, hostname, description, ruleset):
-        # type: (HostName, ServiceName, Ruleset) -> Dict[str, Any]
+    def service_extra_conf_merged(self, hostname: HostName, description: ServiceName,
+                                  ruleset: Ruleset) -> Dict[str, Any]:
         return self.ruleset_matcher.get_service_ruleset_merged_dict(
             self.ruleset_match_object_of_service(hostname, description), ruleset)
 
-    def in_boolean_serviceconf_list(self, hostname, description, ruleset):
-        # type: (HostName, ServiceName, Ruleset) -> bool
+    def in_boolean_serviceconf_list(self, hostname: HostName, description: ServiceName,
+                                    ruleset: Ruleset) -> bool:
         """Compute outcome of a service rule set that just say yes/no"""
         return self.ruleset_matcher.is_matching_service_ruleset(
             self.ruleset_match_object_of_service(hostname, description), ruleset)
 
-    def all_active_hosts(self):
-        # type: () -> Set[HostName]
+    def all_active_hosts(self) -> Set[HostName]:
         """Returns a set of all active hosts"""
         return self._all_active_hosts
 
-    def _get_all_active_hosts(self):
-        # type: () -> Set[HostName]
-        hosts = set()  # type: Set[HostName]
+    def _get_all_active_hosts(self) -> Set[HostName]:
+        hosts: Set[HostName] = set()
         hosts.update(self.all_active_realhosts(), self.all_active_clusters())
         return hosts
 
-    def all_active_realhosts(self):
-        # type: () -> Set[HostName]
+    def all_active_realhosts(self) -> Set[HostName]:
         """Returns a set of all host names to be handled by this site hosts of other sites or disabled hosts are excluded"""
         return self._all_active_realhosts
 
-    def _get_all_active_realhosts(self):
-        # type: () -> Set[HostName]
+    def _get_all_active_realhosts(self) -> Set[HostName]:
         return set(_filter_active_hosts(self, self._all_configured_realhosts))
 
-    def all_configured_realhosts(self):
-        # type: () -> Set[HostName]
+    def all_configured_realhosts(self) -> Set[HostName]:
         return self._all_configured_realhosts
 
-    def _get_all_configured_realhosts(self):
-        # type: () -> Set[HostName]
+    def _get_all_configured_realhosts(self) -> Set[HostName]:
         """Returns a set of all host names, regardless if currently disabled or
         monitored on a remote site. Does not return cluster hosts."""
         return set(strip_tags(all_hosts))
 
-    def _get_all_configured_shadow_hosts(self):
-        # type: () -> Set[HostName]
+    def _get_all_configured_shadow_hosts(self) -> Set[HostName]:
         """Returns a set of all shadow host names, regardless if currently disabled or
         monitored on a remote site"""
         return set(_get_shadow_hosts())
 
-    def all_configured_hosts(self):
-        # type: () -> Set[HostName]
+    def all_configured_hosts(self) -> Set[HostName]:
         return self._all_configured_hosts
 
-    def _get_all_configured_hosts(self):
-        # type: () -> Set[HostName]
+    def _get_all_configured_hosts(self) -> Set[HostName]:
         """Returns a set of all hosts, regardless if currently disabled or monitored on a remote site."""
-        hosts = set()  # type: Set[HostName]
-        hosts.update(self.all_configured_realhosts(), self.all_configured_clusters(),
-                     self._get_all_configured_shadow_hosts())
+        hosts: Set[HostName] = set()
+        hosts.update(
+            self.all_configured_realhosts(),
+            self.all_configured_clusters(),
+            self._get_all_configured_shadow_hosts(),
+        )
         return hosts
 
-    def _setup_clusters_nodes_cache(self):
-        # type: () -> None
+    def _setup_clusters_nodes_cache(self) -> None:
         for cluster, hosts in clusters.items():
             clustername = cluster.split('|', 1)[0]
             for name in hosts:
                 self._clusters_of_cache.setdefault(name, []).append(clustername)
             self._nodes_of_cache[clustername] = hosts
 
-    def clusters_of(self, hostname):
-        # type: (str) -> List[HostName]
+    def clusters_of(self, hostname: str) -> List[HostName]:
         """Returns names of cluster hosts the host is a node of"""
         return self._clusters_of_cache.get(hostname, [])
 
     # TODO: cleanup None case
-    def nodes_of(self, hostname):
-        # type: (str) -> Optional[List[HostName]]
+    def nodes_of(self, hostname: str) -> Optional[List[HostName]]:
         """Returns the nodes of a cluster. Returns None if no match.
 
         Use host_config.nodes instead of this method to get the node list"""
         return self._nodes_of_cache.get(hostname)
 
-    def all_active_clusters(self):
-        # type: () -> Set[HostName]
+    def all_active_clusters(self) -> Set[HostName]:
         """Returns a set of all cluster host names to be handled by this site hosts of other sites or disabled hosts are excluded"""
         return self._all_active_clusters
 
-    def _get_all_active_clusters(self):
-        # type: () -> Set[HostName]
+    def _get_all_active_clusters(self) -> Set[HostName]:
         return set(_filter_active_hosts(self, self.all_configured_clusters()))
 
-    def all_configured_clusters(self):
-        # type: () -> Set[HostName]
+    def all_configured_clusters(self) -> Set[HostName]:
         """Returns a set of all cluster names
         Regardless if currently disabled or monitored on a remote site. Does not return normal hosts.
         """
         return self._all_configured_clusters
 
-    def _get_all_configured_clusters(self):
-        # type: () -> Set[HostName]
+    def _get_all_configured_clusters(self) -> Set[HostName]:
         return set(strip_tags(list(clusters)))
 
-    def host_of_clustered_service(self, hostname, servicedesc, part_of_clusters=None):
-        # type: (HostName, Text, Optional[List[str]]) -> str
+    def host_of_clustered_service(self,
+                                  hostname: HostName,
+                                  servicedesc: str,
+                                  part_of_clusters: Optional[List[str]] = None) -> str:
         """Return hostname to assign the service to
         Determine weather a service (found on a physical host) is a clustered
         service and - if yes - return the cluster host of the service. If no,
@@ -3726,9 +3619,11 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
 
         return hostname
 
-    def get_piggybacked_hosts_time_settings(self, piggybacked_hostname=None):
-        # type: (Optional[HostName]) -> List[Tuple[Optional[str], str, int]]
-        time_settings = []  # type: List[Tuple[Optional[str], str, int]]
+    def get_piggybacked_hosts_time_settings(
+            self,
+            piggybacked_hostname: Optional[HostName] = None
+    ) -> List[Tuple[Optional[str], str, int]]:
+        time_settings: List[Tuple[Optional[str], str, int]] = []
         for source_hostname in sorted(piggyback.get_source_hostnames(piggybacked_hostname)):
             time_settings.extend(self.get_host_config(source_hostname).piggybacked_host_files)
 
@@ -3737,15 +3632,13 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
         return time_settings
 
     # TODO: Remove old name one day
-    def service_discovery_name(self):
-        # type: () -> ServiceName
-        if 'cmk-inventory' in use_new_descriptions_for:
+    def service_discovery_name(self) -> ServiceName:
+        if 'cmk_inventory' in use_new_descriptions_for:
             return u'Check_MK Discovery'
         return u'Check_MK inventory'
 
 
-def get_config_cache():
-    # type: () -> ConfigCache
+def get_config_cache() -> ConfigCache:
     config_cache = _config_cache.get_dict("config_cache")
     if not config_cache:
         cache_class = ConfigCache if cmk_version.is_raw_edition() else CEEConfigCache
@@ -3757,44 +3650,41 @@ def get_config_cache():
 # configuration settings are not held in cmk.base.config namespace anymore.
 class CEEConfigCache(ConfigCache):
     """Encapsulates the CEE specific functionality"""
-    def rrd_config_of_service(self, hostname, description):
-        # type: (HostName, ServiceName) -> Optional[RRDConfig]
+    def rrd_config_of_service(self, hostname: HostName,
+                              description: ServiceName) -> Optional[RRDConfig]:
         return self.get_service_ruleset_value(hostname,
                                               description,
                                               cmc_service_rrd_config,
                                               deflt=None)
 
-    def recurring_downtimes_of_service(self, hostname, description):
-        # type: (HostName, ServiceName) -> List[RecurringDowntime]
+    def recurring_downtimes_of_service(self, hostname: HostName,
+                                       description: ServiceName) -> List[RecurringDowntime]:
         return self.service_extra_conf(hostname, description, service_recurring_downtimes)  # type: ignore[name-defined] # pylint: disable=undefined-variable
 
-    def flap_settings_of_service(self, hostname, description):
-        # type: (HostName, ServiceName) -> Tuple[float, float, float]
+    def flap_settings_of_service(self, hostname: HostName,
+                                 description: ServiceName) -> Tuple[float, float, float]:
         return self.get_service_ruleset_value(
             hostname,
             description,
             cmc_service_flap_settings,  # type: ignore[name-defined] # pylint: disable=undefined-variable
             deflt=cmc_flap_settings)  # type: ignore[name-defined] # pylint: disable=undefined-variable
 
-    def log_long_output_of_service(self, hostname, description):
-        # type: (HostName, ServiceName) -> bool
+    def log_long_output_of_service(self, hostname: HostName, description: ServiceName) -> bool:
         return self.get_service_ruleset_value(
             hostname,
             description,
             cmc_service_long_output_in_monitoring_history,  # type: ignore[name-defined] # pylint: disable=undefined-variable
             deflt=False)
 
-    def state_translation_of_service(self, hostname, description):
-        # type: (HostName, ServiceName) -> Dict
+    def state_translation_of_service(self, hostname: HostName, description: ServiceName) -> Dict:
         entries = self.service_extra_conf(hostname, description, service_state_translation)  # type: ignore[name-defined] # pylint: disable=undefined-variable
 
-        spec = {}  # type: Dict
+        spec: Dict = {}
         for entry in entries[::-1]:
             spec.update(entry)
         return spec
 
-    def check_timeout_of_service(self, hostname, description):
-        # type: (HostName, ServiceName) -> int
+    def check_timeout_of_service(self, hostname: HostName, description: ServiceName) -> int:
         """Returns the check timeout in seconds"""
         return self.get_service_ruleset_value(
             hostname,
@@ -3802,23 +3692,24 @@ class CEEConfigCache(ConfigCache):
             cmc_service_check_timeout,  # type: ignore[name-defined] # pylint: disable=undefined-variable
             deflt=cmc_check_timeout)  # type: ignore[name-defined] # pylint: disable=undefined-variable
 
-    def graphite_metrics_of_service(self, hostname, description):
-        # type: (HostName, ServiceName) -> Optional[List[str]]
+    def graphite_metrics_of_service(self, hostname: HostName,
+                                    description: ServiceName) -> Optional[List[str]]:
         return self.get_service_ruleset_value(
             hostname,
             description,
             cmc_graphite_service_metrics,  # type: ignore[name-defined] # pylint: disable=undefined-variable
             deflt=None)
 
-    def matched_agent_config_entries(self, hostname):
-        # type: (Union[bool, HostName]) -> Dict[str, Any]
+    def matched_agent_config_entries(
+            self, hostname: Union[HostName,
+                                  Literal[BuiltinBakeryHostName.GENERIC]]) -> Dict[str, Any]:
         matched = {}
-        for varname, ruleset in list(agent_config.items()) + [("agent_port", agent_ports),
-                                                              ("agent_encryption", agent_encryption)
-                                                             ]:
-            # mypy compatible check of cmk.base.cee.agent_bakyery.GENERIC_AGENT
-            # GENERIC_AGENT = True
-            if isinstance(hostname, bool):
+        for varname, ruleset in list(
+                agent_config.items()) + [("agent_port", agent_ports),
+                                         ("agent_encryption", agent_encryption),
+                                         ("agent_exclude_sections", agent_exclude_sections)]:
+
+            if hostname is BuiltinBakeryHostName.GENERIC:
                 matched[varname] = self.ruleset_matcher.get_values_for_generic_agent_host(ruleset)
             else:
                 matched[varname] = self.host_extra_conf(hostname, ruleset)
@@ -3832,21 +3723,18 @@ class CEEConfigCache(ConfigCache):
 class CEEHostConfig(HostConfig):
     """Encapsulates the CEE specific functionality"""
     @property
-    def rrd_config(self):
-        # type: () -> Optional[RRDConfig]
+    def rrd_config(self) -> Optional[RRDConfig]:
         entries = self._config_cache.host_extra_conf(self.hostname, cmc_host_rrd_config)
         if not entries:
             return None
         return entries[0]
 
     @property
-    def recurring_downtimes(self):
-        # type: () -> List[RecurringDowntime]
+    def recurring_downtimes(self) -> List[RecurringDowntime]:
         return self._config_cache.host_extra_conf(self.hostname, host_recurring_downtimes)  # type: ignore[name-defined] # pylint: disable=undefined-variable
 
     @property
-    def flap_settings(self):
-        # type: () -> Tuple[float, float, float]
+    def flap_settings(self) -> Tuple[float, float, float]:
         values = self._config_cache.host_extra_conf(self.hostname, cmc_host_flap_settings)  # type: ignore[name-defined] # pylint: disable=undefined-variable
         if not values:
             return cmc_flap_settings  # type: ignore[name-defined] # pylint: disable=undefined-variable
@@ -3854,8 +3742,7 @@ class CEEHostConfig(HostConfig):
         return values[0]
 
     @property
-    def log_long_output(self):
-        # type: () -> bool
+    def log_long_output(self) -> bool:
         entries = self._config_cache.host_extra_conf(self.hostname,
                                                      cmc_host_long_output_in_monitoring_history)  # type: ignore[name-defined] # type: ignore[name-defined] # pylint: disable=undefined-variable
         if not entries:
@@ -3863,25 +3750,22 @@ class CEEHostConfig(HostConfig):
         return entries[0]
 
     @property
-    def state_translation(self):
-        # type: () -> Dict
+    def state_translation(self) -> Dict:
         entries = self._config_cache.host_extra_conf(self.hostname, host_state_translation)  # type: ignore[name-defined] # pylint: disable=undefined-variable
 
-        spec = {}  # type: Dict
+        spec: Dict = {}
         for entry in entries[::-1]:
             spec.update(entry)
         return spec
 
     @property
-    def smartping_settings(self):
-        # type: () -> Dict
+    def smartping_settings(self) -> Dict:
         settings = {"timeout": 2.5}
         settings.update(
             self._config_cache.host_extra_conf_merged(self.hostname, cmc_smartping_settings))  # type: ignore[name-defined] # pylint: disable=undefined-variable
         return settings
 
     @property
-    def lnx_remote_alert_handlers(self):
-        # type: () -> List[Dict[str, str]]
+    def lnx_remote_alert_handlers(self) -> List[Dict[str, str]]:
         return self._config_cache.host_extra_conf(self.hostname,
                                                   agent_config.get("lnx_remote_alert_handlers", []))

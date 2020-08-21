@@ -4,6 +4,7 @@
 // source code package.
 
 #include "TimeperiodColumn.h"
+
 #include "Row.h"
 
 #ifdef CMC
@@ -16,12 +17,12 @@
 int32_t TimeperiodColumn::getValue(Row row,
                                    const contact* /* auth_user */) const {
 #ifdef CMC
-    if (auto tp = columnData<Timeperiod>(row)) {
+    if (const auto* tp = columnData<Timeperiod>(row)) {
         return tp->isActive() ? 1 : 0;
     }
 #else
     extern TimeperiodsCache* g_timeperiods_cache;
-    if (auto tp = columnData<timeperiod>(row)) {
+    if (const auto* tp = columnData<timeperiod>(row)) {
         return g_timeperiods_cache->inTimeperiod(tp) ? 1 : 0;
     }
 #endif

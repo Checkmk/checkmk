@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -18,11 +18,7 @@ import abc
 import math
 import string
 import json
-from typing import (  # pylint: disable=unused-import
-    Any, List, Tuple, Union, Dict, Set, Optional, Text,
-)
-
-import six
+from typing import Any, List, Tuple, Union, Dict, Set, Optional, Type
 
 import cmk.utils
 import cmk.utils.version as cmk_version
@@ -39,6 +35,7 @@ from cmk.gui.plugins.metrics.html_render import (
     host_service_graph_popup_cmk,
     host_service_graph_dashlet_cmk,
 )
+from cmk.gui.utils.popups import MethodAjax
 
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKInternalError
@@ -67,11 +64,10 @@ RequiredMetricNames = Set[str]
 #   |  Typical code for loading Multisite plugins of this module           |
 #   '----------------------------------------------------------------------'
 # Datastructures and functions needed before plugins can be loaded
-loaded_with_language = False  # type: Union[bool, None, str]
+loaded_with_language: Union[bool, None, str] = False
 
 
-def load_plugins(force):
-    # type: (bool) -> None
+def load_plugins(force: bool) -> None:
     global loaded_with_language
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
@@ -84,23 +80,20 @@ def load_plugins(force):
     loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
-def fixup_graph_info():
-    # type: () -> None
+def fixup_graph_info() -> None:
     # create back link from each graph to its id.
     for graph_id, graph in graph_info.items():
         graph["id"] = graph_id
 
 
-def fixup_unit_info():
-    # type: () -> None
+def fixup_unit_info() -> None:
     # create back link from each unit to its id.
     for unit_id, unit in unit_info.items():
         unit["id"] = unit_id
         unit.setdefault("description", unit["title"])
 
 
-def fixup_perfometer_info():
-    # type: () -> None
+def fixup_perfometer_info() -> None:
     _convert_legacy_tuple_perfometers(perfometer_info)
     _precalculate_some_perfometer_caches(perfometer_info)
 
@@ -110,8 +103,8 @@ def fixup_perfometer_info():
 # old known formats from tuple to dict.
 # All shipped perfometers have been converted to the dict format with 1.5.0i3.
 # TODO: Remove this one day.
-def _convert_legacy_tuple_perfometers(perfometers):
-    # type: (List[Union[LegacyPerfometer, Perfometer]]) -> None
+def _convert_legacy_tuple_perfometers(
+        perfometers: List[Union[LegacyPerfometer, Perfometer]]) -> None:
     for index, perfometer in reversed(list(enumerate(perfometers))):
         if isinstance(perfometer, dict):
             continue
@@ -147,8 +140,8 @@ def _convert_legacy_tuple_perfometers(perfometers):
             perfometers.pop(index)
 
 
-def _precalculate_some_perfometer_caches(perfometers):
-    # type: (List[Union[LegacyPerfometer, Perfometer]]) -> None
+def _precalculate_some_perfometer_caches(
+        perfometers: List[Union[LegacyPerfometer, Perfometer]]) -> None:
     for perfometer in perfometers:
         if not isinstance(perfometer, dict):
             raise MKGeneralException(_("Legacy performeter encountered: %r") % perfometer)
@@ -164,12 +157,11 @@ def _precalculate_some_perfometer_caches(perfometers):
         perfometer["_required_names"] = required_trivial_metric_names
 
 
-def _perfometer_expressions(perfometer):
-    # type: (Perfometer) -> List[PerfometerExpression]
+def _perfometer_expressions(perfometer: Perfometer) -> List[PerfometerExpression]:
     """Returns all metric expressions of a perfometer
     This is used for checking which perfometer can be displayed for a given service later.
     """
-    required = []  # type: List[PerfometerExpression]
+    required: List[PerfometerExpression] = []
 
     if perfometer["type"] == "linear":
         required += perfometer["segments"][:]
@@ -197,8 +189,8 @@ def _perfometer_expressions(perfometer):
     return required
 
 
-def _required_trivial_metric_names(required_expressions):
-    # type: (List[PerfometerExpression]) -> Optional[RequiredMetricNames]
+def _required_trivial_metric_names(
+        required_expressions: List[PerfometerExpression]) -> Optional[RequiredMetricNames]:
     """Extract the trivial metric names from a list of expressions.
     Ignores numeric parts. Returns None in case there is a non trivial
     metric found. This means the trivial filtering can not be used.
@@ -208,7 +200,7 @@ def _required_trivial_metric_names(required_expressions):
     allowed_chars = string.ascii_letters + string.digits + "_"
 
     for entry in required_expressions:
-        if isinstance(entry, six.string_types):
+        if isinstance(entry, str):
             if any(char not in allowed_chars for char in entry):
                 # Found a non trivial metric expression. Totally skip this mechanism
                 return None
@@ -232,8 +224,7 @@ def _required_trivial_metric_names(required_expressions):
 # A few helper function to be used by the definitions
 
 
-def metric_to_text(metric, value=None):
-    # type: (Dict[str, Any], Optional[Union[int, float]]) -> Text
+def metric_to_text(metric: Dict[str, Any], value: Optional[Union[int, float]] = None) -> str:
     if value is None:
         value = metric["value"]
     return metric["unit"]["render"](value)
@@ -256,8 +247,8 @@ age_human_readable = cmk.utils.render.approx_age
 #   '----------------------------------------------------------------------'
 
 
-def translate_perf_data(perf_data_string, check_command=None):
-    # type: (str, Optional[str]) -> TranslatedMetrics
+def translate_perf_data(perf_data_string: str,
+                        check_command: Optional[str] = None) -> TranslatedMetrics:
     perf_data, check_command = parse_perf_data(perf_data_string, check_command)
     return translate_metrics(perf_data, check_command)
 
@@ -275,9 +266,8 @@ def translate_perf_data(perf_data_string, check_command=None):
 #   '----------------------------------------------------------------------'
 
 
-class Perfometers(object):
-    def get_matching_perfometers(self, translated_metrics):
-        # type: (TranslatedMetrics) -> List[Perfometer]
+class Perfometers:
+    def get_matching_perfometers(self, translated_metrics: TranslatedMetrics) -> List[Perfometer]:
         perfometers = []
         for perfometer in perfometer_info:
             if not isinstance(perfometer, dict):
@@ -286,8 +276,8 @@ class Perfometers(object):
                 perfometers.append(perfometer)
         return perfometers
 
-    def _perfometer_possible(self, perfometer, translated_metrics):
-        # type: (Perfometer, TranslatedMetrics) -> bool
+    def _perfometer_possible(self, perfometer: Perfometer,
+                             translated_metrics: TranslatedMetrics) -> bool:
         if not translated_metrics:
             return False
 
@@ -314,8 +304,8 @@ class Perfometers(object):
 
         return True
 
-    def _skip_perfometer_by_trivial_metrics(self, required_metric_names, translated_metrics):
-        # type: (RequiredMetricNames, TranslatedMetrics) -> bool
+    def _skip_perfometer_by_trivial_metrics(self, required_metric_names: RequiredMetricNames,
+                                            translated_metrics: TranslatedMetrics) -> bool:
         """Whether or not a perfometer can be skipped by simple metric name matching instead of expression evaluation
 
         Performance optimization: Try to reduce the amount of perfometers to evaluate by
@@ -330,8 +320,8 @@ class Perfometers(object):
         available_metric_names = set(translated_metrics.keys())
         return not required_metric_names.issubset(available_metric_names)
 
-    def _total_values_exists(self, value, translated_metrics):
-        # type: (Union[str, int, float], TranslatedMetrics) -> bool
+    def _total_values_exists(self, value: Union[str, int, float],
+                             translated_metrics: TranslatedMetrics) -> bool:
         """
         Only if the value has a suffix like ':min'/':max' we need to check if the value actually exists in the scalar data
         The value could be a percentage value (e.g. '100.0') in this case no need to look here for missing data
@@ -352,22 +342,19 @@ class Perfometers(object):
 MetricRendererStack = List[List[Tuple[Union[int, float], str]]]
 
 
-class MetricometerRenderer(six.with_metaclass(abc.ABCMeta, object)):
+class MetricometerRenderer(metaclass=abc.ABCMeta):
     """Abstract base class for all metricometer renderers"""
     @classmethod
-    def type_name(cls):
-        # type: () -> str
+    def type_name(cls) -> str:
         raise NotImplementedError()
 
-    def __init__(self, perfometer, translated_metrics):
-        # type: (Perfometer, TranslatedMetrics) -> None
+    def __init__(self, perfometer: Perfometer, translated_metrics: TranslatedMetrics) -> None:
         super(MetricometerRenderer, self).__init__()
         self._perfometer = perfometer
         self._translated_metrics = translated_metrics
 
     @abc.abstractmethod
-    def get_stack(self):
-        # type: () -> MetricRendererStack
+    def get_stack(self) -> MetricRendererStack:
         """Return a list of perfometer elements
 
         Each element is represented by a 2 element tuple where the first element is
@@ -375,8 +362,7 @@ class MetricometerRenderer(six.with_metaclass(abc.ABCMeta, object)):
         """
         raise NotImplementedError()
 
-    def get_label(self):
-        # type: () -> Text
+    def get_label(self) -> str:
         """Returns the label to be shown on top of the rendered stack
 
         When the perfometer type definition has a "label" element, this will be used.
@@ -397,25 +383,20 @@ class MetricometerRenderer(six.with_metaclass(abc.ABCMeta, object)):
         return self._get_type_label()
 
     @abc.abstractmethod
-    def _get_type_label(self):
-        # type: () -> Text
+    def _get_type_label(self) -> str:
         """Returns the label for this perfometer type"""
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_sort_number(self):
-        # type: () -> int
+    def get_sort_number(self) -> int:
         """Returns the number to sort this perfometer with compared to the other
         performeters in the current performeter sort group"""
         raise NotImplementedError()
 
 
-class MetricometerRendererRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return MetricometerRenderer
-
-    def plugin_name(self, plugin_class):
-        return plugin_class.type_name()
+class MetricometerRendererRegistry(cmk.utils.plugin_registry.Registry[Type[MetricometerRenderer]]):
+    def plugin_name(self, instance):
+        return instance.type_name()
 
     def get_renderer(self, perfometer, translated_metrics):
         subclass = self[perfometer["type"]]
@@ -428,41 +409,37 @@ renderer_registry = MetricometerRendererRegistry()
 @renderer_registry.register
 class MetricometerRendererLogarithmic(MetricometerRenderer):
     @classmethod
-    def type_name(cls):
-        # type: () -> str
+    def type_name(cls) -> str:
         return "logarithmic"
 
-    def __init__(self, perfometer, translated_metrics):
-        # type: (Perfometer, TranslatedMetrics) -> None
+    def __init__(self, perfometer: Perfometer, translated_metrics: TranslatedMetrics) -> None:
         super(MetricometerRendererLogarithmic, self).__init__(perfometer, translated_metrics)
 
         if self._perfometer is not None and "metric" not in self._perfometer:
             raise MKGeneralException(
                 _("Missing key \"metric\" in logarithmic perfometer: %r") % self._perfometer)
 
-    def get_stack(self):
-        # type: () -> MetricRendererStack
+    def get_stack(self) -> MetricRendererStack:
         value, _unit, color = evaluate(self._perfometer["metric"], self._translated_metrics)
         return [
             self.get_stack_from_values(value, self._perfometer["half_value"],
                                        self._perfometer["exponent"], color)
         ]
 
-    def _get_type_label(self):
-        # type: () -> Text
+    def _get_type_label(self) -> str:
         value, unit, _color = evaluate(self._perfometer["metric"], self._translated_metrics)
         return unit["render"](value)
 
-    def get_sort_number(self):
-        # type: () -> int
+    def get_sort_number(self) -> int:
         """Returns the number to sort this perfometer with compared to the other
         performeters in the current performeter sort group"""
         value, _unit, _color = evaluate(self._perfometer["metric"], self._translated_metrics)
         return value
 
     @staticmethod
-    def get_stack_from_values(value, half_value, base, color):
-        # type: (Union[str, int, float], Union[int, float], Union[int, float], str) -> List[Tuple[Union[int, float], str]]
+    def get_stack_from_values(value: Union[str, int, float], half_value: Union[int, float],
+                              base: Union[int, float],
+                              color: str) -> List[Tuple[Union[int, float], str]]:
         # Negative values are printed like positive ones (e.g. time offset)
         value = abs(float(value))
         if value == 0.0:
@@ -482,12 +459,10 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
 @renderer_registry.register
 class MetricometerRendererLinear(MetricometerRenderer):
     @classmethod
-    def type_name(cls):
-        # type: () -> str
+    def type_name(cls) -> str:
         return "linear"
 
-    def get_stack(self):
-        # type: () -> MetricRendererStack
+    def get_stack(self) -> MetricRendererStack:
         entry = []
 
         summed = self._get_summed_values()
@@ -511,15 +486,13 @@ class MetricometerRendererLinear(MetricometerRenderer):
 
         return [entry]
 
-    def _get_type_label(self):
-        # type: () -> Text
+    def _get_type_label(self) -> str:
         # Use unit of first metrics for output of sum. We assume that all
         # stackes metrics have the same unit anyway
         _value, unit, _color = evaluate(self._perfometer["segments"][0], self._translated_metrics)
         return unit["render"](self._get_summed_values())
 
-    def get_sort_number(self):
-        # type: () -> int
+    def get_sort_number(self) -> int:
         """Use the first segment value for sorting"""
         value, _unit, _color = evaluate(self._perfometer["segments"][0], self._translated_metrics)
         return value
@@ -535,12 +508,10 @@ class MetricometerRendererLinear(MetricometerRenderer):
 @renderer_registry.register
 class MetricometerRendererStacked(MetricometerRenderer):
     @classmethod
-    def type_name(cls):
-        # type: () -> str
+    def type_name(cls) -> str:
         return "stacked"
 
-    def get_stack(self):
-        # type: () -> MetricRendererStack
+    def get_stack(self) -> MetricRendererStack:
         stack = []
         for sub_perfometer in self._perfometer["perfometers"]:
             renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
@@ -550,8 +521,7 @@ class MetricometerRendererStacked(MetricometerRenderer):
 
         return stack
 
-    def _get_type_label(self):
-        # type: () -> Text
+    def _get_type_label(self) -> str:
         sub_labels = []
         for sub_perfometer in self._perfometer["perfometers"]:
             renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
@@ -565,8 +535,7 @@ class MetricometerRendererStacked(MetricometerRenderer):
 
         return " / ".join(sub_labels)
 
-    def get_sort_number(self):
-        # type: () -> int
+    def get_sort_number(self) -> int:
         """Use the number of the first stack element."""
         sub_perfometer = self._perfometer["perfometers"][0]
         renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
@@ -576,8 +545,7 @@ class MetricometerRendererStacked(MetricometerRenderer):
 @renderer_registry.register
 class MetricometerRendererDual(MetricometerRenderer):
     @classmethod
-    def type_name(cls):
-        # type: () -> str
+    def type_name(cls) -> str:
         return "dual"
 
     def __init__(self, perfometer, translated_metrics):
@@ -588,9 +556,8 @@ class MetricometerRendererDual(MetricometerRenderer):
                 _("Perf-O-Meter of type 'dual' must contain exactly "
                   "two definitions, not %d") % len(perfometer["perfometers"]))
 
-    def get_stack(self):
-        # type: () -> MetricRendererStack
-        content = []  # type: List[Tuple[Union[int, float], str]]
+    def get_stack(self) -> MetricRendererStack:
+        content: List[Tuple[Union[int, float], str]] = []
         for nr, sub_perfometer in enumerate(self._perfometer["perfometers"]):
             renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
 
@@ -606,8 +573,7 @@ class MetricometerRendererDual(MetricometerRenderer):
 
         return [content]
 
-    def _get_type_label(self):
-        # type: () -> Text
+    def _get_type_label(self) -> str:
         sub_labels = []
         for sub_perfometer in self._perfometer["perfometers"]:
             renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
@@ -621,8 +587,7 @@ class MetricometerRendererDual(MetricometerRenderer):
 
         return " / ".join(sub_labels)
 
-    def get_sort_number(self):
-        # type: () -> int
+    def get_sort_number(self) -> int:
         """Sort by max(left, right)
 
         E.g. for traffic graphs it seems to be useful to
@@ -649,8 +614,7 @@ class MetricometerRendererDual(MetricometerRenderer):
 
 # This page is called for the popup of the graph icon of hosts/services.
 @cmk.gui.pages.register("host_service_graph_popup")
-def page_host_service_graph_popup():
-    # type: () -> None
+def page_host_service_graph_popup() -> None:
     site_id = html.request.var('site')
     host_name = html.request.var('host_name')
     service_description = html.request.get_unicode_input('service')
@@ -671,8 +635,7 @@ def page_host_service_graph_popup():
 
 
 @cmk.gui.pages.register("graph_dashlet")
-def page_graph_dashlet():
-    # type: () -> None
+def page_graph_dashlet() -> None:
     spec = html.request.var("spec")
     if not spec:
         raise MKUserError("spec", _("Missing spec parameter"))
@@ -699,8 +662,8 @@ def page_graph_dashlet():
 #   '----------------------------------------------------------------------'
 
 
-def render_metrics_table(translated_metrics, host_name, service_description):
-    # type: (TranslatedMetrics, str, Text) -> str
+def render_metrics_table(translated_metrics: TranslatedMetrics, host_name: str,
+                         service_description: str) -> str:
     # TODO: Don't paste together strings by hand, use our HTML utilities.
     output = "<table class=metricstable>"
     for metric_name, metric in sorted(translated_metrics.items(), key=lambda x: x[1]["title"]):
@@ -712,16 +675,16 @@ def render_metrics_table(translated_metrics, host_name, service_description):
             output += "<td>"
             output += str(
                 html.render_popup_trigger(
-                    html.render_icon("custom_graph",
+                    html.render_icon("menu",
                                      title=_("Add this metric to dedicated graph"),
                                      cssclass="iconbutton"),
                     ident="add_metric_to_graph_" + host_name + ";" + str(service_description),
-                    what="add_metric_to_graph",
-                    url_vars=[
-                        ("host", host_name),
-                        ("service", service_description),
-                        ("metric", metric_name),
-                    ]))
+                    method=MethodAjax(endpoint="add_metric_to_graph",
+                                      url_vars=[
+                                          ("host", host_name),
+                                          ("service", service_description),
+                                          ("metric", metric_name),
+                                      ])))
             output += "</td>"
         output += "</tr>"
     output += "</table>"

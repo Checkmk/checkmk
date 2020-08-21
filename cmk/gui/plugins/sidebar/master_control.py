@@ -1,10 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Text, List, Tuple  # pylint: disable=unused-import
+from typing import Dict, List, Tuple
 
 import time
 
@@ -14,35 +14,34 @@ import cmk.gui.sites as sites
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.plugins.sidebar import (  # pylint: disable=unused-import
-    PageHandlers, SidebarSnapin, snapin_registry, write_snapin_exception,
+from cmk.gui.plugins.sidebar import (
+    PageHandlers,
+    SidebarSnapin,
+    snapin_registry,
+    write_snapin_exception,
 )
 
 
 @snapin_registry.register
 class MasterControlSnapin(SidebarSnapin):
     @staticmethod
-    def type_name():
-        # type: () -> str
+    def type_name() -> str:
         return "master_control"
 
     @classmethod
-    def title(cls):
-        # type: () -> Text
+    def title(cls) -> str:
         return _("Master Control")
 
     @classmethod
-    def description(cls):
-        # type: () -> Text
+    def description(cls) -> str:
         return _("Buttons for switching globally states such as enabling "
                  "checks and notifications")
 
-    def show(self):
-        # type: () -> None
+    def show(self) -> None:
         items = self._core_toggles()
         sites.update_site_states_from_dead_sites()
 
-        site_status_info = {}  # type: Dict[sites.SiteId, List]
+        site_status_info: Dict[sites.SiteId, List] = {}
         try:
             sites.live().set_prepend_site(True)
             for row in sites.live().query("GET status\nColumns: %s" %
@@ -65,8 +64,7 @@ class MasterControlSnapin(SidebarSnapin):
                 if not config.is_single_local_site():
                     html.end_foldable_container()
 
-    def _core_toggles(self):
-        # type: () -> List[Tuple[str, Text]]
+    def _core_toggles(self) -> List[Tuple[str, str]]:
         return [
             ("enable_notifications", _("Notifications")),
             ("execute_service_checks", _("Service checks")),
@@ -77,8 +75,9 @@ class MasterControlSnapin(SidebarSnapin):
             ("enable_event_handlers", _("Alert handlers")),
         ]
 
-    def _show_master_control_site(self, site_id, site_status_info, items):
-        # type: (sites.SiteId, Dict[sites.SiteId, List], List[Tuple[str, Text]]) -> None
+    def _show_master_control_site(self, site_id: sites.SiteId, site_status_info: Dict[sites.SiteId,
+                                                                                      List],
+                                  items: List[Tuple[str, str]]) -> None:
         site_state = sites.states().get(site_id)
 
         if not site_state:
@@ -113,7 +112,8 @@ class MasterControlSnapin(SidebarSnapin):
             # Do not show event handlers on Check_MK Micro Core
             if is_cmc and title == _("Event handlers"):
                 continue
-            elif not is_cmc and title == _("Alert handlers"):
+
+            if not is_cmc and title == _("Alert handlers"):
                 continue
 
             colvalue = site_info[i]
@@ -139,18 +139,15 @@ class MasterControlSnapin(SidebarSnapin):
         html.close_table()
 
     @classmethod
-    def allowed_roles(cls):
-        # type: () -> List[str]
+    def allowed_roles(cls) -> List[str]:
         return ["admin"]
 
-    def page_handlers(self):
-        # type: () -> PageHandlers
+    def page_handlers(self) -> PageHandlers:
         return {
             "switch_master_state": self._ajax_switch_masterstate,
         }
 
-    def _ajax_switch_masterstate(self):
-        # type: () -> None
+    def _ajax_switch_masterstate(self) -> None:
         html.set_output_format("text")
 
         if not config.user.may("sidesnap.master_control"):
@@ -184,8 +181,9 @@ class MasterControlSnapin(SidebarSnapin):
 
         sites.live().command("[%d] %s" % (int(time.time()), command), site)
         sites.live().set_only_sites([site])
-        sites.live().query("GET status\nWaitTrigger: program\nWaitTimeout: 10000\nWaitCondition: %s = %d\nColumns: %s\n" % \
-               (column, state, column))
+        sites.live().query(
+            "GET status\nWaitTrigger: program\nWaitTimeout: 10000\nWaitCondition: %s = %d\nColumns: %s\n"
+            % (column, state, column))
         sites.live().set_only_sites()
 
         self.show()

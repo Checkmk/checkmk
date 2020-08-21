@@ -155,7 +155,7 @@ def check_heartbeat_crm(_no_item, params, info):
     now = time.time()
     delta = now - dt
     if delta > params['max_age']:
-        yield 3, u'Ignoring reported data (Status output too old: %s)' % (
+        yield 2, u'Ignoring reported data (Status output too old: %s)' % (
             get_age_human_readable(delta),)
         return
 

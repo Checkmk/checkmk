@@ -6,20 +6,20 @@
 
 import abc
 import signal
-from types import FrameType  # pylint: disable=unused-import
-from typing import NoReturn, Dict, Any, List, Optional  # pylint: disable=unused-import
-import six
+from types import FrameType
+from typing import NoReturn, Dict, Any, List, Optional
 
 import cmk.utils.debug
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.plugin_loader import load_plugins
 from cmk.utils.exceptions import MKException
 import cmk.utils.python_printer as python_printer
+from cmk.utils.log import console
 
 import cmk.base.config as config
-import cmk.base.console as console
 import cmk.base.profiling as profiling
 import cmk.base.check_api as check_api
+import cmk.base.obsolete_output as out
 
 
 # TODO: Inherit from MKGeneralException
@@ -27,21 +27,17 @@ class MKAutomationError(MKException):
     pass
 
 
-class Automations(object):  # pylint: disable=useless-object-inheritance
-    def __init__(self):
-        # type: () -> None
-        # TODO: This disable is needed because of a pylint bug. Remove one day.
-        super(Automations, self).__init__()  # pylint: disable=bad-super-call
-        self._automations = {}  # type: Dict[str, Automation]
+class Automations:
+    def __init__(self) -> None:
+        super(Automations, self).__init__()
+        self._automations: Dict[str, Automation] = {}
 
-    def register(self, automation):
-        # type: (Automation) -> None
+    def register(self, automation: 'Automation') -> None:
         if automation.cmd is None:
             raise TypeError()
         self._automations[automation.cmd] = automation
 
-    def execute(self, cmd, args):
-        # type: (str, List[str]) -> Any
+    def execute(self, cmd: str, args: List[str]) -> Any:
         self._handle_generic_arguments(args)
 
         try:
@@ -73,13 +69,12 @@ class Automations(object):  # pylint: disable=useless-object-inheritance
         finally:
             profiling.output_profile()
 
-        console.output(python_printer.pformat(result))
-        console.output('\n')
+        out.output(python_printer.pformat(result))
+        out.output('\n')
 
         return 0
 
-    def _handle_generic_arguments(self, args):
-        # type: (List[str]) -> None
+    def _handle_generic_arguments(self, args: List[str]) -> None:
         """Handle generic arguments (currently only the optional timeout argument)"""
         if len(args) > 1 and args[0] == "--timeout":
             args.pop(0)
@@ -89,19 +84,17 @@ class Automations(object):  # pylint: disable=useless-object-inheritance
                 signal.signal(signal.SIGALRM, self._raise_automation_timeout)
                 signal.alarm(timeout)
 
-    def _raise_automation_timeout(self, signum, stackframe):
-        # type: (int, Optional[FrameType]) -> NoReturn
+    def _raise_automation_timeout(self, signum: int, stackframe: Optional[FrameType]) -> NoReturn:
         raise MKTimeout("Action timed out.")
 
 
-class Automation(six.with_metaclass(abc.ABCMeta, object)):
-    cmd = None  # type: Optional[str]
+class Automation(metaclass=abc.ABCMeta):
+    cmd: Optional[str] = None
     needs_checks = False
     needs_config = False
 
     @abc.abstractmethod
-    def execute(self, args):
-        # type: (List[str]) -> Any
+    def execute(self, args: List[str]) -> Any:
         raise NotImplementedError()
 
 

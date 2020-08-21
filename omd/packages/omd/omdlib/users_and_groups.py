@@ -27,12 +27,12 @@ import pwd
 import grp
 import os
 import subprocess
-from typing import Union, List, Tuple, Optional, TYPE_CHECKING  # pylint: disable=unused-import
+from typing import Union, List, Optional, TYPE_CHECKING
 import psutil  # type: ignore[import]
 
 if TYPE_CHECKING:
-    from omdlib.contexts import SiteContext  # pylint: disable=unused-import
-    from omdlib.version_info import VersionInfo  # pylint: disable=unused-import
+    from omdlib.contexts import SiteContext
+    from omdlib.version_info import VersionInfo
 
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKTerminate
@@ -50,8 +50,7 @@ from cmk.utils.exceptions import MKTerminate
 #   '----------------------------------------------------------------------'
 
 
-def find_processes_of_user(username):
-    # type: (str) -> List[str]
+def find_processes_of_user(username: str) -> List[str]:
     try:
         p = subprocess.Popen(["pgrep", "-u", username],
                              stdin=open(os.devnull, "r"),
@@ -65,8 +64,7 @@ def find_processes_of_user(username):
         return []
 
 
-def groupdel(groupname):
-    # type: (str) -> None
+def groupdel(groupname: str) -> None:
     try:
         p = subprocess.Popen(["groupdel", groupname],
                              stdin=open(os.devnull, "r"),
@@ -84,8 +82,10 @@ def groupdel(groupname):
 
 
 # TODO: Cleanup: Change uid/gid to int
-def useradd(version_info, site, uid=None, gid=None):
-    # type: (VersionInfo, SiteContext, Optional[str], Optional[str]) -> None
+def useradd(version_info: 'VersionInfo',
+            site: 'SiteContext',
+            uid: Optional[str] = None,
+            gid: Optional[str] = None) -> None:
     # Create user for running site 'name'
     _groupadd(site.name, gid)
     useradd_options = version_info.USERADD_OPTIONS
@@ -108,8 +108,7 @@ def useradd(version_info, site, uid=None, gid=None):
 
 
 # TODO: refactor gid to int
-def _groupadd(groupname, gid=None):
-    # type: (str, Optional[str]) -> None
+def _groupadd(groupname: str, gid: Optional[str] = None) -> None:
     cmd = ["groupadd"]
     if gid is not None:
         cmd += ["-g", "%d" % int(gid)]
@@ -123,14 +122,12 @@ def _groupadd(groupname, gid=None):
         raise MKTerminate("Cannot create group for site user.")
 
 
-def _add_user_to_group(version_info, user, group):
-    # type: (VersionInfo, str, str) -> bool
+def _add_user_to_group(version_info: 'VersionInfo', user: str, group: str) -> bool:
     cmd = version_info.ADD_USER_TO_GROUP % {"user": user, "group": group}
     return os.system(cmd + " >/dev/null") == 0  # nosec
 
 
-def userdel(name):
-    # type: (str) -> None
+def userdel(name: str) -> None:
     if user_exists(name):
         try:
             p = subprocess.Popen(["userdel", "-r", name],
@@ -153,16 +150,14 @@ def userdel(name):
         groupdel(name)
 
 
-def user_id(name):
-    # type: (str) -> Union[bool, int]
+def user_id(name: str) -> Union[bool, int]:
     try:
         return pwd.getpwnam(name).pw_uid
     except Exception:
         return False
 
 
-def user_exists(name):
-    # type: (str) -> bool
+def user_exists(name: str) -> bool:
     try:
         pwd.getpwnam(name)
         return True
@@ -170,8 +165,7 @@ def user_exists(name):
         return False
 
 
-def group_exists(name):
-    # type: (str) -> bool
+def group_exists(name: str) -> bool:
     try:
         grp.getgrnam(name)
         return True
@@ -179,19 +173,18 @@ def group_exists(name):
         return False
 
 
-def group_id(name):
-    # type: (str) -> int
+def group_id(name: str) -> int:
     return grp.getgrnam(name).gr_gid
 
 
-def user_logged_in(name):
-    # type: (str) -> bool
+def user_logged_in(name: str) -> bool:
     """Check if processes of named user are existing"""
     return any(p for p in psutil.process_iter() if p.username() == name)
 
 
-def user_verify(version_info, site, allow_populated=False):
-    # type: (VersionInfo, SiteContext, bool) -> bool
+def user_verify(version_info: 'VersionInfo',
+                site: 'SiteContext',
+                allow_populated: bool = False) -> bool:
     name = site.name
 
     if not user_exists(name):
@@ -228,8 +221,7 @@ def user_verify(version_info, site, allow_populated=False):
     return True
 
 
-def _file_owner_verify(path, uid, gid):
-    # type: (str, int, int) -> bool
+def _file_owner_verify(path: str, uid: int, gid: int) -> bool:
     try:
         s = os.stat(path)
         if s.st_uid != uid or s.st_gid != gid:
@@ -239,8 +231,7 @@ def _file_owner_verify(path, uid, gid):
     return True
 
 
-def _user_has_group(user, group):
-    # type: (str, str) -> bool
+def _user_has_group(user: str, group: str) -> bool:
     try:
         u = _user_by_id(user_id(user))
         g = _group_by_id(u.pw_gid)
@@ -254,18 +245,15 @@ def _user_has_group(user, group):
         return False
 
 
-def _user_by_id(id_):
-    # type: (int) -> pwd.struct_passwd
+def _user_by_id(id_: int) -> pwd.struct_passwd:
     return pwd.getpwuid(id_)
 
 
-def _group_by_id(id_):
-    # type: (int) -> grp.struct_group
+def _group_by_id(id_: int) -> grp.struct_group:
     return grp.getgrgid(id_)
 
 
-def switch_to_site_user(site):
-    # type: (SiteContext) -> None
+def switch_to_site_user(site: 'SiteContext') -> None:
     p = pwd.getpwnam(site.name)
     uid = p.pw_uid
     gid = p.pw_gid
@@ -282,8 +270,7 @@ def switch_to_site_user(site):
     os.setuid(uid)
 
 
-def _groups_of(username):
-    # type: (str) -> List[int]
+def _groups_of(username: str) -> List[int]:
     group_ids = {g.gr_gid for g in grp.getgrall() if username in g.gr_mem}
     group_ids.add(pwd.getpwnam(username).pw_gid)
     return list(group_ids)

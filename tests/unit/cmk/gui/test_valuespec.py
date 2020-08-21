@@ -1,10 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
+import pytest  # type: ignore[import]
+
 from cmk.gui.exceptions import MKUserError
 import cmk.gui.valuespec as vs
 from testlib import on_time
@@ -13,23 +14,27 @@ from testlib import on_time
 @pytest.mark.parametrize("entry, result", [
     ("m0", ((1567296000.0, 1567702200.0), "September 2019")),
     ("m1", ((1564617600.0, 1567296000.0), "August 2019")),
-    ("m3", ((1559347200.0, 1567296000.0), "June 2019 - August 2019")),
+    ("m3", ((1559347200.0, 1567296000.0), u"June 2019 — August 2019")),
     ("y1", ((1514764800.0, 1546300800.0), "2018")),
     ("y0", ((1546300800.0, 1567702200.0), "2019")),
     ("4h", ((1567687800.0, 1567702200.0), u"Last 4 hours")),
     ("25h", ((1567612200.0, 1567702200.0), u"Last 25 hours")),
     ("8d", ((1567011000.0, 1567702200.0), u"Last 8 days")),
+    ("15d", ((1566406200.0, 1567702200.0), u"Last 15 days")),
     ("35d", ((1564678200.0, 1567702200.0), u"Last 35 days")),
     ("400d", ((1533142200.0, 1567702200.0), u"Last 400 days")),
     ("d0", ((1567641600.0, 1567702200.0), u"Today")),
     ("d1", ((1567555200.0, 1567641600.0), u"Yesterday")),
+    ("d7", ((1567036800.0, 1567123200.0), u"2019-08-29")),
+    ("d8", ((1566950400.0, 1567036800.0), u"2019-08-28")),
     ("w0", ((1567382400.0, 1567702200.0), u"This week")),
     ("w1", ((1566777600.0, 1567382400.0), u"Last week")),
+    ("w2", ((1566172800.0, 1566777600.0), u"2019-08-19 — 2019-08-25")),
     (("date", (1536098400.0, 1567288800.0)),
-     ((1536098400.0, 1567296000.0), "2018-09-04 ... 2019-09-01")),
+     ((1536098400.0, 1567375200.0), u"2018-09-04 — 2019-09-01")),
     (("until", 1577232000), ((1567702200.0, 1577232000.0), u"2019-12-25")),
     (("time", (1549374782.0, 1567687982.0)),
-     ((1549374782.0, 1567687982.0), "2019-02-05 ... 2019-09-05")),
+     ((1549374782.0, 1567687982.0), u"2019-02-05 — 2019-09-05")),
     (("age", 2 * 3600), ((1567695000.0, 1567702200.0), u"The last 2 hours")),
     (("next", 3 * 3600), ((1567702200.0, 1567713000.0), u"The next 3 hours")),
 ])
@@ -42,12 +47,12 @@ def test_timerange(entry, result):
     ("m0", "2019-09-15 15:09", ((1567296000.0, 1568560140.0), "September 2019")),
     ("m1", "2019-01-12", ((1543622400.0, 1546300800.0), "December 2018")),
     ("m-1", "2019-09-15 15:09", ((1567296000.0, 1569888000.0), "September 2019")),
-    ("m2", "2019-02-12", ((1543622400.0, 1548979200.0), "December 2018 - January 2019")),
-    ("m3", "2019-02-12", ((1541030400.0, 1548979200.0), "November 2018 - January 2019")),
-    ("m-3", "2019-02-12", ((1548979200.0, 1556668800.0), "February 2019 - April 2019")),
-    ("m-3", "2018-12-12", ((1543622400.0, 1551398400.0), "December 2018 - February 2019")),
-    ("m6", "2019-02-12", ((1533081600.0, 1548979200.0), "August 2018 - January 2019")),
-    ("m-6", "2019-02-12", ((1548979200.0, 1564617600.0), "February 2019 - July 2019")),
+    ("m2", "2019-02-12", ((1543622400.0, 1548979200.0), u"December 2018 — January 2019")),
+    ("m3", "2019-02-12", ((1541030400.0, 1548979200.0), u"November 2018 — January 2019")),
+    ("m-3", "2019-02-12", ((1548979200.0, 1556668800.0), u"February 2019 — April 2019")),
+    ("m-3", "2018-12-12", ((1543622400.0, 1551398400.0), u"December 2018 — February 2019")),
+    ("m6", "2019-02-12", ((1533081600.0, 1548979200.0), u"August 2018 — January 2019")),
+    ("m-6", "2019-02-12", ((1548979200.0, 1564617600.0), u"February 2019 — July 2019")),
     ("y0", "2019-09-15", ((1546300800.0, 1568505600.0), "2019")),
     ("y1", "2019-09-15", ((1514764800.0, 1546300800.0), "2018")),
     ("y-1", "2019-09-15", ((1546300800.0, 1577836800.0), "2019")),
@@ -125,10 +130,10 @@ def test_timerange_value_to_json_conversion():
     with on_time("2020-03-02", "UTC"):
         for choice in vs.Timerange().choices():
             if choice[0] == "age":
-                choice = (("age", 12345), "The last..., 3 hours 25 minutes 45 seconds")
+                choice = (("age", 12345), "The last..., 3 hours 25 minutes 45 seconds", None)
             elif choice[0] == "date":
                 choice = (("date", (1582671600.0, 1582844400.0)),
-                          "Date range, 2020-02-25, 2020-02-27")
+                          "Date range, 2020-02-25, 2020-02-27", None)
             assert vs.Timerange().value_to_text(choice[0]) == choice[1]
             json_value = vs.Timerange().value_to_json(choice[0])
             assert vs.Timerange().value_from_json(json_value) == choice[0]
@@ -195,10 +200,10 @@ def test_email_validation_non_compliance(address):
 @pytest.mark.parametrize(
     "address",
     [
-        "text",
-        "user@foo",
-        "\t\n a@localhost \t\n",  # whitespace is removed in from_html_vars
-        "אሗ@test.com",  # UTF-8 encoded bytestrings are not allowed
+        b"text",
+        b"user@foo",
+        b"\t\n a@localhost \t\n",  # whitespace is removed in from_html_vars
+        u"אሗ@test.com".encode("utf-8"),  # UTF-8 encoded bytestrings are not allowed
         u"text",
         u"user@foo",
         u"\t\n a@localhost \t\n",  # whitespace is removed in from_html_vars

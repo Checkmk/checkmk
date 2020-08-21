@@ -1,10 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 import abc
 import logging
 import os
@@ -12,12 +11,8 @@ import re
 import io
 import time
 import zipfile
-from typing import Callable, Dict, List, Optional as _Optional, Text, TypeVar, Union  # pylint: disable=unused-import
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+from typing import Callable, Dict, List, Optional as _Optional, TypeVar, Union, Type
+from pathlib import Path
 
 from pysmi.compiler import MibCompiler  # type: ignore[import]
 from pysmi.parser.smiv1compat import SmiV1CompatParser  # type: ignore[import]
@@ -29,7 +24,6 @@ from pysmi.codegen.pysnmp import PySnmpCodeGen  # type: ignore[import]
 from pysmi.reader.callback import CallbackReader  # type: ignore[import]
 from pysmi.searcher.stub import StubSearcher  # type: ignore[import]
 from pysmi.error import PySmiError  # type: ignore[import]
-import six
 
 import cmk.utils.version as cmk_version
 import cmk.utils.log
@@ -53,7 +47,7 @@ import cmk.gui.mkeventd
 import cmk.gui.watolib as watolib
 import cmk.gui.hooks as hooks
 from cmk.gui.table import table_element
-from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry  # pylint: disable=unused-import
+from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry
 from cmk.gui.valuespec import (
     TextUnicode,
     DropdownChoice,
@@ -84,7 +78,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML, Choices  # pylint: disable=unused-import
+from cmk.gui.htmllib import HTML, Choices
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.permissions import (
     Permission,
@@ -110,7 +104,6 @@ from cmk.gui.plugins.wato.utils import (
     get_search_expression,
     add_change,
     changelog_button,
-    home_button,
     make_action_link,
     rulespec_group_registry,
     RulespecGroup,
@@ -119,6 +112,7 @@ from cmk.gui.plugins.wato.utils import (
     ServiceRulespec,
     main_module_registry,
     MainModule,
+    MainModuleTopicEvents,
     wato_confirm,
     search_form,
     site_neutral_path,
@@ -127,9 +121,10 @@ from cmk.gui.plugins.wato.utils import (
 )
 
 from cmk.gui.plugins.wato.check_mk_configuration import (
+    RulespecGroupMonitoringConfigurationServiceChecks,
+    RulespecGroupHostsMonitoringRulesHostChecks,
     ConfigVariableGroupUserInterface,
     ConfigVariableGroupWATO,
-    RulespecGroupGrouping,
 )
 from cmk.gui.plugins.wato.globals_notification import ConfigVariableGroupNotifications
 
@@ -208,7 +203,7 @@ def ActionList(vs, **kwargs):
 
 class RuleState(CascadingDropdown):
     def __init__(self, **kwargs):
-        choices = [
+        choices: List[CascadingDropdownChoice] = [
             (0, _("OK")),
             (1, _("WARN")),
             (2, _("CRIT")),
@@ -248,12 +243,12 @@ class RuleState(CascadingDropdown):
                         'First the CRITICAL pattern is tested, then WARNING and OK at last. '
                         'When none of the patterns matches, the events state is set to UNKNOWN.'),
              )),
-        ]  # type: List[CascadingDropdownChoice]
+        ]
         CascadingDropdown.__init__(self, choices=choices, **kwargs)
 
 
 def vs_mkeventd_rule_pack(fixed_id=None, fixed_title=None):
-    elements = []  # type: List[DictionaryEntry]
+    elements: List[DictionaryEntry] = []
     if fixed_id:
         elements.append(("id",
                          FixedValue(
@@ -724,6 +719,7 @@ def vs_mkeventd_rule(customer=None):
          RegExpUnicode(
              title=_("Match syslog application (tag)"),
              help=_("Regular expression for matching the syslog tag (case insenstive)"),
+             size=64,
              mode=RegExp.infix,
              case_sensitive=False,
          )),
@@ -979,13 +975,8 @@ def vs_mkeventd_rule(customer=None):
 def load_mkeventd_rules():
     rule_packs = ec.load_rule_packs()
 
-    # Add information about rule hits: If we are running on OMD then we know
-    # the path to the state retention file of mkeventd and can read the rule
-    # statistics directly from that file.
-    rule_stats = {}  # type: Dict[str, int]
-    for rule_id, count in sites.live().query("GET eventconsolerules\nColumns: rule_id rule_hits\n"):
-        rule_stats.setdefault(rule_id, 0)
-        rule_stats[rule_id] += count
+    # TODO: We should really separate the rule stats from this "config load logic"
+    rule_stats = _get_rule_stats_from_ec()
 
     for rule_pack in rule_packs:
         pack_hits = 0
@@ -996,6 +987,17 @@ def load_mkeventd_rules():
         rule_pack["hits"] = pack_hits
 
     return rule_packs
+
+
+def _get_rule_stats_from_ec() -> Dict[str, int]:
+    # Add information about rule hits: If we are running on OMD then we know
+    # the path to the state retention file of mkeventd and can read the rule
+    # statistics directly from that file.
+    rule_stats: Dict[str, int] = {}
+    for rule_id, count in sites.live().query("GET eventconsolerules\nColumns: rule_id rule_hits\n"):
+        rule_stats.setdefault(rule_id, 0)
+        rule_stats[rule_id] += count
+    return rule_stats
 
 
 def save_mkeventd_rules(rule_packs):
@@ -1034,7 +1036,7 @@ class SampleConfigGeneratorECSampleRulepack(SampleConfigGenerator):
 #   '----------------------------------------------------------------------'
 
 
-class ABCEventConsoleMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
+class ABCEventConsoleMode(WatoMode, metaclass=abc.ABCMeta):
     # NOTE: This class is obviously still abstract, but pylint fails to see
     # this, even in the presence of the meta class assignment below, see
     # https://github.com/PyCQA/pylint/issues/179.
@@ -1104,7 +1106,13 @@ class ABCEventConsoleMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
         html.context_button(_("Rule Packs"),
                             html.makeuri_contextless([("mode", "mkeventd_rule_packs")]), "back")
 
-    def _config_button(self):
+    def _config_buttons(self):
+        if config.user.may("mkeventd.config") and config.user.may("wato.rulesets"):
+            html.context_button(
+                _("Rulesets"),
+                html.makeuri_contextless([("mode", "rulesets"), ("group", "eventconsole")]),
+                "rulesets")
+
         if config.user.may("mkeventd.config"):
             html.context_button(_("Settings"),
                                 html.makeuri_contextless([("mode", "mkeventd_config")]),
@@ -1202,7 +1210,6 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
     def buttons(self):
         self._changes_button()
-        home_button()
         if config.user.may("mkeventd.edit"):
             html.context_button(_("New Rule Pack"),
                                 html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack")]),
@@ -1212,7 +1219,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 make_action_link([("mode", "mkeventd_rule_packs"), ("_reset_counters", "1")]),
                 "resetcounters")
         self._status_button()
-        self._config_button()
+        self._config_buttons()
         self._mibs_button()
 
     def action(self):
@@ -1260,7 +1267,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     _("Copied the event rules from the master "
                       "into the local configuration"))
                 return None, _("Copied rules from master")
-            elif c is False:
+            if c is False:
                 return ""
 
         # Move rule packages
@@ -1380,7 +1387,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 type_ = ec.RulePackType.type_of(rule_pack, id_to_mkp)
 
                 if id_ in found_packs:
-                    css_matches_search = "matches_search"  # type: _Optional[str]
+                    css_matches_search: _Optional[str] = "matches_search"
                 else:
                     css_matches_search = None
 
@@ -1510,7 +1517,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 table.cell(_("Hits"), hits is not None and hits or '', css="number")
 
     def _filter_mkeventd_rule_packs(self, search_expression, rule_packs):
-        found_packs = {}  # type: Dict[str, List[ec.ECRuleSpec]]
+        found_packs: Dict[str, List[ec.ECRuleSpec]] = {}
         for rule_pack in rule_packs:
             if search_expression in rule_pack["id"].lower() \
                or search_expression in rule_pack["title"].lower():
@@ -1526,8 +1533,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 T = TypeVar('T')
 
 
-def _deref(x):
-    # type: (Union[T, Callable[[], T]]) -> T
+def _deref(x: Union[T, Callable[[], T]]) -> T:
     return x() if callable(x) else x
 
 
@@ -1658,7 +1664,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         if not self._rules:
             html.show_message(_("This package does not yet contain any rules."))
             return
-        elif search_expression and not found_rules:
+        if search_expression and not found_rules:
             html.show_message(_("No rules found."))
             return
 
@@ -1674,7 +1680,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             have_match = False
             for nr, rule in enumerate(self._rules):
                 if rule in found_rules:
-                    css_matches_search = "matches_search"  # type: _Optional[str]
+                    css_matches_search: _Optional[str] = "matches_search"
                 else:
                     css_matches_search = None
 
@@ -1803,7 +1809,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 # Move rule to other pack
                 if len(self._rule_packs) > 1:
                     table.cell(_("Move to pack..."))
-                    choices = [("", u"")]  # type: Choices
+                    choices: Choices = [("", u"")]
                     choices += [(pack["id"], pack["title"])
                                 for pack in self._rule_packs
                                 if pack is not self._rule_pack]
@@ -1840,7 +1846,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         self._new = self._edit_nr < 0
 
         if self._new:
-            self._rule_pack = {"rules": []}  # type: ec.ECRulePack
+            self._rule_pack: ec.ECRulePack = {"rules": []}
         else:
             try:
                 self._rule_pack = self._rule_packs[self._edit_nr]
@@ -1982,7 +1988,6 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         return _("Edit rule %s") % self._rules[self._edit_nr]["id"]
 
     def buttons(self):
-        home_button()
         self._rules_button()
         self._changes_button()
         if self._clone_nr >= 0:
@@ -2000,7 +2005,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         if not self._new and old_id != self._rule["id"]:
             raise MKUserError("rule_p_id",
                               _("It is not allowed to change the ID of an existing rule."))
-        elif self._new:
+        if self._new:
             for pack in self._rule_packs:
                 for r in pack["rules"]:
                     if r["id"] == self._rule["id"]:
@@ -2037,7 +2042,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         while num_repl > num_groups:
             repl = "\\%d" % num_repl
             for name, value in self._rule.items():
-                if name.startswith("set_") and isinstance(value, six.string_types):
+                if name.startswith("set_") and isinstance(value, str):
                     if repl in value:
                         raise MKUserError(
                             "rule_p_" + name,
@@ -2107,9 +2112,8 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
         return _("Local server status")
 
     def buttons(self):
-        home_button()
         self._rules_button()
-        self._config_button()
+        self._config_buttons()
         self._mibs_button()
 
     def action(self):
@@ -2127,22 +2131,27 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
             watolib.log_audit(None, "mkeventd-switchmode",
                               _("Switched replication slave mode to %s") % new_mode)
             return None, _("Switched to %s mode") % new_mode
-        elif c is False:
+        if c is False:
             return ""
         return
 
     def page(self):
         self._verify_ec_enabled()
 
+        warning = _("The Event Console Daemon is currently not running. ")
+        warning += _(
+            "Please make sure that you have activated it with <tt>omd config set MKEVENTD on</tt> "
+            "before starting this site.")
+
         if not cmk.gui.mkeventd.daemon_running():
-            warning = _("The Event Console Daemon is currently not running. ")
-            warning += _(
-                "Please make sure that you have activated it with <tt>omd config set MKEVENTD on</tt> "
-                "before starting this site.")
             html.show_warning(warning)
             return
 
         status = cmk.gui.mkeventd.get_local_ec_status()
+        if not status:
+            html.show_warning(warning)
+            return
+
         repl_mode = status["status_replication_slavemode"]
         html.h3(_("Current status of local Event Console"))
         html.open_ul()
@@ -2209,7 +2218,6 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, GlobalSettingsMode):
         return _('Event Console Configuration')
 
     def buttons(self):
-        home_button()
         self._rules_button()
         self._changes_button()
         html.context_button(_("Server Status"),
@@ -2255,7 +2263,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, GlobalSettingsMode):
             if action == "_reset":
                 return "mkeventd_config", msg
             return "mkeventd_config"
-        elif c is False:
+        if c is False:
             return ""
 
     def _edit_mode(self):
@@ -2307,19 +2315,16 @@ class ModeEventConsoleEditGlobalSetting(EditGlobalSettingMode):
     def permissions(cls):
         return ["mkeventd.config"]
 
+    @classmethod
+    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+        return ModeEventConsoleSettings
+
     def __init__(self):
         super(ModeEventConsoleEditGlobalSetting, self).__init__()
         self._need_restart = None
 
     def title(self):
         return _("Event Console Configuration")
-
-    def buttons(self):
-        html.context_button(_("Abort"),
-                            watolib.folder_preserving_link([("mode", "mkeventd_config")]), "abort")
-
-    def _back_mode(self):
-        return "mkeventd_config"
 
     def _affected_sites(self):
         return _get_event_console_sync_sites()
@@ -2344,11 +2349,10 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         return _('SNMP MIBs for Trap Translation')
 
     def buttons(self):
-        home_button()
         self._rules_button()
         self._changes_button()
         self._status_button()
-        self._config_button()
+        self._config_buttons()
 
     def action(self):
         if html.request.has_var("_delete"):
@@ -2374,8 +2378,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                 except Exception as e:
                     if config.debug:
                         raise
-                    else:
-                        raise MKUserError("_upload_mib", "%s" % e)
+                    raise MKUserError("_upload_mib", "%s" % e)
 
         elif html.request.var("_bulk_delete_custom_mibs"):
             return self._bulk_delete_custom_mibs_after_confirm()
@@ -2522,7 +2525,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                 for filename in selected_custom_mibs:
                     self._delete_mib(filename, custom_mibs[filename]["name"])
                 return
-            elif c is False:
+            if c is False:
                 return ""  # not yet confirmed
             return  # browser reload
 
@@ -2569,8 +2572,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         for path, title in cmk.gui.mkeventd.mib_dirs():
             self._show_mib_table(path, title)
 
-    def _show_mib_table(self, path, title):
-        # type: (Path, Text) -> None
+    def _show_mib_table(self, path: Path, title: str) -> None:
         is_custom_dir = path == cmk.gui.mkeventd.mib_upload_dir()
 
         if is_custom_dir:
@@ -2609,9 +2611,8 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
             html.hidden_fields()
             html.end_form()
 
-    def _load_snmp_mibs(self, path):
-        # type: (Path) -> Dict[str, Dict]
-        found = {}  # type: Dict[str, Dict]
+    def _load_snmp_mibs(self, path: Path) -> Dict[str, Dict]:
+        found: Dict[str, Dict] = {}
 
         if not path.exists():
             return found
@@ -2626,9 +2627,8 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
             found[file_obj.name] = self._parse_snmp_mib_header(file_obj)
         return found
 
-    def _parse_snmp_mib_header(self, path):
-        # type: (Path) -> Dict[str, Union[int, str]]
-        mib = {"size": path.stat().st_size}  # type: Dict[str, Union[int, str]]
+    def _parse_snmp_mib_header(self, path: Path) -> Dict[str, Union[int, str]]:
+        mib: Dict[str, Union[int, str]] = {"size": path.stat().st_size}
 
         # read till first "OBJECT IDENTIFIER" declaration
         head = ''
@@ -2769,6 +2769,10 @@ class MainModuleEventConsole(MainModule):
         return "mkeventd_rule_packs"
 
     @property
+    def topic(self):
+        return MainModuleTopicEvents
+
+    @property
     def title(self):
         return _("Event Console")
 
@@ -2786,11 +2790,15 @@ class MainModuleEventConsole(MainModule):
 
     @property
     def sort_index(self):
-        return 68
+        return 20
 
     @property
     def enabled(self):
         return config.mkeventd_enabled
+
+    @property
+    def is_advanced(self):
+        return True
 
 
 #.
@@ -3495,7 +3503,7 @@ class ConfigVariableEventConsoleSNMPCredentials(ConfigVariable):
             Dictionary(
                 elements=[
                     ("description", TextUnicode(title=_("Description"),)),
-                    ("credentials", SNMPCredentials()),
+                    ("credentials", SNMPCredentials(for_ec=True)),
                     ("engine_ids",
                      ListOfStrings(
                          valuespec=TextAscii(
@@ -3780,11 +3788,11 @@ class RulespecGroupEventConsole(RulespecGroup):
 def convert_mkevents_hostspec(value):
     if isinstance(value, list):
         return value
-    elif value == "$HOSTADDRESS$":
+    if value == "$HOSTADDRESS$":
         return ["$HOSTADDRESS$"]
-    elif value == "$HOSTNAME$":
+    if value == "$HOSTNAME$":
         return ["$HOSTNAME$"]
-    elif value == "$HOSTNAME$/$HOSTADDRESS$":
+    if value == "$HOSTNAME$/$HOSTADDRESS$":
         return ["$HOSTNAME$", "$HOSTADDRESS$"]
     # custom
     return value
@@ -3946,7 +3954,7 @@ def _valuespec_extra_host_conf__ec_sl():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupGrouping,
+        group=RulespecGroupHostsMonitoringRulesHostChecks,
         name="extra_host_conf:_ec_sl",
         valuespec=_valuespec_extra_host_conf__ec_sl,
     ))
@@ -3963,7 +3971,7 @@ def _valuespec_extra_service_conf__ec_sl():
 
 rulespec_registry.register(
     ServiceRulespec(
-        group=RulespecGroupGrouping,
+        group=RulespecGroupMonitoringConfigurationServiceChecks,
         item_type="service",
         name="extra_service_conf:_ec_sl",
         valuespec=_valuespec_extra_service_conf__ec_sl,

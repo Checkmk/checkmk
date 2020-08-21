@@ -7,13 +7,16 @@
 #define Poller_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <poll.h>
+
 #include <asio/basic_socket.hpp>
 #include <cerrno>
 #include <chrono>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
 #include "BitMask.h"
 #include "Logger.h"
 
@@ -45,9 +48,10 @@ public:
             // The cast below is OK because int has at least 32 bits on all
             // platforms we care about: The timeout is then limited to 24.85
             // days, which should be more than enough for our needs.
-            retval = ::poll(&_pollfds[0], _pollfds.size(),
+            retval = ::poll(_pollfds.data(), _pollfds.size(),
                             static_cast<int>(millis.count()));
         } while (retval == -1 && errno == EINTR);
+
         return retval;
     }
 
@@ -55,18 +59,20 @@ public:
     [[nodiscard]] bool wait(std::chrono::duration<Rep, Period> timeout,
                             const int fd, const PollEvents e,
                             Logger* const logger) {
-        this->addFileDescriptor(fd, e);
-        if (const int retval = this->poll(timeout); retval == -1) {
+        addFileDescriptor(fd, e);
+        const int retval = poll(timeout);
+        if (retval == -1) {
             generic_error ge{"Polling failed"};
             Error(logger) << ge;
             return false;
-        } else if (retval == 0) {
+        }
+        if (retval == 0) {
             errno = ETIMEDOUT;
             generic_error ge{"Polling failed"};
             Debug(logger) << ge;
             return false;
         }
-        if (!this->isFileDescriptorSet(fd, e)) {
+        if (!isFileDescriptorSet(fd, e)) {
             errno = EBADF;
             generic_error ge{"Polling failed"};
             Error(logger) << ge;
@@ -79,9 +85,11 @@ public:
     [[nodiscard]] bool wait(std::chrono::duration<Rep, Period> timeout,
                             const int fd, const PollEvents e) {
         this->addFileDescriptor(fd, e);
-        if (const int retval = this->poll(timeout); retval == -1) {
+        const int retval = this->poll(timeout);
+        if (retval == -1) {
             return false;
-        } else if (retval == 0) {
+        }
+        if (retval == 0) {
             errno = ETIMEDOUT;
             return false;
         }
@@ -93,6 +101,7 @@ public:
     }
 
     void addFileDescriptor(int fd, PollEvents e) {
+        // TODO (ml): potential problem with same fd
         _fd_to_pollfd[fd] = _pollfds.size();
         _pollfds.push_back({fd, toMask(e), 0});
     }
@@ -117,6 +126,9 @@ public:
     }
 
 private:
+    friend class PollerFixture_ToMask_Test;       // CONTEXT: Google-Fuchsia
+    friend class PollerFixture_Descriptors_Test;  // whitebox style testing
+
     std::vector<pollfd> _pollfds;
     std::unordered_map<int, size_t> _fd_to_pollfd;
 
@@ -129,5 +141,4 @@ private:
             (is_empty_bit_mask(e & PollEvents::hup) ? 0 : POLLHUP));
     }
 };
-
 #endif  // Poller_h

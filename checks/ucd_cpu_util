@@ -9,8 +9,10 @@
 #    UCD-SNMP-MIB::ssCpuRawSystem.0 = Counter32: 98206536
 #    UCD-SNMP-MIB::ssCpuRawIdle.0 = Counter32: 3896034232
 #    UCD-SNMP-MIB::ssCpuRawWait.0 = Counter32: 325152257
-#    UCD-SNMP-MIB::ssCpuRawKernel.0 = Counter32: 96265777
 #    UCD-SNMP-MIB::ssCpuRawInterrupt.0 = Counter32: 1940759
+#    UCD-SNMP-MIB::ssIORawSent.0 = Counter32: 898622850
+#    UCD-SNMP-MIB::ssIORawReceived.0 = Counter32: 445747508
+#    UCD-SNMP-MIB::ssCpuRawSoftIRQ.0 = Counter32: 277402
 
 # Although this variable is no longer used we keep it for backwards
 # compatibility so that old configs in automation calls autocheck do not
@@ -23,10 +25,13 @@ def parse_ucd_cpu_util(info):
         return {}
 
     parsed = {}
-    error, raw_cpu_user, raw_cpu_nice, raw_cpu_system, raw_cpu_idle, \
-    raw_cpu_wait, raw_io_send, raw_io_received = info[0]
+    error, raw_cpu_user, raw_cpu_nice, raw_cpu_system, raw_cpu_idle, raw_cpu_wait, \
+    raw_cpu_interrupt, raw_io_send, raw_io_received, raw_cpu_softirq = info[0]
 
-    raw_cpu_ticks = [raw_cpu_user, raw_cpu_nice, raw_cpu_system, raw_cpu_idle, raw_cpu_wait]
+    raw_cpu_ticks = [
+        raw_cpu_user, raw_cpu_nice, raw_cpu_system, raw_cpu_idle, raw_cpu_wait, raw_cpu_interrupt,
+        raw_cpu_softirq
+    ]
 
     try:
         parsed = {
@@ -51,14 +56,8 @@ def check_ucd_cpu_util(item, params, parsed):
     if error != 'systemStats':
         yield 1, 'Error: %s' % error
 
-    # calculate the rate for every value
     cpu_ticks = cpu_info(['cpu'] + parsed['raw_cpu_ticks'])
-    rates = []
-    for key, val in list(cpu_ticks._asdict().items())[1:]:
-        rates.append(get_rate(key, now, val))
-
-    cpu_rates = cpu_info(['cpu'] + rates)
-    for result in check_cpu_util_unix(cpu_rates, params):
+    for result in check_cpu_util_unix(cpu_ticks, params):
         yield result
 
     perfdata = [('read_blocks', get_rate('io_received', now,
@@ -82,10 +81,12 @@ check_info["ucd_cpu_util"] = {
             "52",  # ssCpuRawSystem
             "53",  # ssCpuRawIdle
             "54",  # ssCpuRawWait
+            "56",  # ssCpuRawInterrupt
             "57",  # ssIORawSent
             "58",  # ssIORawReceived
+            "61",  # ssCpuRawSoftIRQ
         ]),
     'snmp_scan_function': prefer_hr_else_ucd,
-    'includes': ["ucd_hr.include", "transforms.include", "cpu_util.include"],
+    'includes': ["ucd_hr.include", "cpu_util.include"],
     'group': 'cpu_iowait',
 }

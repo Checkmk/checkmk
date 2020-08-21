@@ -4,7 +4,7 @@
 
 LANGUAGES := de ro
 SHELL 	  := /bin/bash -e -o pipefail
-PIPENV3   := ../scripts/run-pipenv 3
+PIPENV    := ../scripts/run-pipenv
 
 .PHONY: $(LANGUAGES)
 
@@ -16,7 +16,7 @@ help:
 	@echo "update-[de|ro] - Aktualisiert die PO-Datei mit neuen Texten"
 
 setup:
-	sudo apt-get install gettext poedit python-polib
+	sudo apt-get install gettext poedit python3-polib
 
 all:
 	for lang in $(LANGUAGES) ; do \
@@ -49,7 +49,7 @@ cleanup-%:
 
 de:
 	$(MAKE) update-$@
-	$(PIPENV3) run ./add-authors $@
+	$(PIPENV) run ./add-authors $@
 	POEDITOR=$$(which poedit 2>/dev/null || which virtaal 2>/dev/null) ; \
 	if [ -z "$$POEDITOR" ]; then \
 	    echo "ERROR: Unable to find PO file editor (poedit or virtual)" ; \
@@ -66,4 +66,4 @@ ro:
 
 
 test-%:
-	@L=$@ ; L=$${L#*-} ; $(PIPENV3) run ./blame $$L
+	@L=$@ ; L=$${L#*-} ; $(PIPENV) run ./blame $$L

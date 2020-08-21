@@ -13,7 +13,7 @@ set uninstall_dir=%cd%\tmp\uninstall
 set pexe=%build_dir%\win32\%p_full_name%.exe
 set pexe_uninstall=%uninstall_dir%\%p_full_name%.exe
 set install_dir=%cd%\tmp\to_install
-set work_dir=%cd%\tmp\work
+set save_dir=%cd%\tmp\to_save
 set build_msi=python\%p_name%\Tools\msi
 call %1
 cd %cur_dir%

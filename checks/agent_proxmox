@@ -7,11 +7,23 @@
 
 def agent_proxmox_arguments(params, hostname, ipaddress):
     return [
-        "-u",
-        params["username"],
-        "-p",
-        passwordstore_get_cmdline("%s", params["password"]),
-        hostname,
+        str(elem)  # non-str get ignored silently - so turn all elements into `str`
+        for chunk in (
+            ("-u", params["username"])  #
+            if "username" in params else (),
+            ("-p", passwordstore_get_cmdline("%s", params["password"]))  #
+            if "password" in params else (),
+            ("--port", params["port"])  #
+            if "port" in params else (),
+            ("--no-cert-check",)  #
+            if params.get("no-cert-check") else (),
+            ("--timeout", params["timeout"])  #
+            if "timeout" in params else (),
+            ("--log-cutoff-weeks", params["log-cutoff-weeks"])  #
+            if "log-cutoff-weeks" in params else (),
+            (hostname,),
+        )
+        for elem in chunk
     ]
 
 

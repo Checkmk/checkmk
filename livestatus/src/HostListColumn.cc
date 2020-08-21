@@ -4,13 +4,16 @@
 // source code package.
 
 #include "HostListColumn.h"
+
 #include <algorithm>
 #include <iterator>
+
 #include "Renderer.h"
 #include "Row.h"
 
 #ifdef CMC
 #include <unordered_set>
+
 #include "Host.h"
 #include "LogEntry.h"
 #include "State.h"
@@ -51,7 +54,7 @@ std::vector<HostListColumn::Member> HostListColumn::getMembers(
     std::vector<Member> members;
 #ifdef CMC
     (void)_mc;  // HACK
-    if (auto p = columnData<std::unordered_set<Host *>>(row)) {
+    if (const auto *p = columnData<std::unordered_set<Host *>>(row)) {
         for (const auto &hst : *p) {
             if (auth_user == nullptr || hst->hasContact(auth_user)) {
                 members.emplace_back(
@@ -62,7 +65,7 @@ std::vector<HostListColumn::Member> HostListColumn::getMembers(
         }
     }
 #else
-    if (auto p = columnData<hostsmember *>(row)) {
+    if (const auto *const p = columnData<hostsmember *>(row)) {
         for (const hostsmember *mem = *p; mem != nullptr; mem = mem->next) {
             host *hst = mem->host_ptr;
             if (auth_user == nullptr ||

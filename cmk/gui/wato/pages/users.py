@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -9,13 +9,14 @@ import base64
 import traceback
 import time
 
-import six
+from six import ensure_str
 
 import cmk.utils.version as cmk_version
 import cmk.utils.render as render
 from cmk.utils.type_defs import UserId, timeperiod_spec_alias
 
 import cmk.gui.userdb as userdb
+import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.escaping as escaping
@@ -23,7 +24,7 @@ from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
-from cmk.gui.htmllib import Choices, HTML  # pylint: disable=unused-import
+from cmk.gui.htmllib import Choices, HTML
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.plugins.userdb.utils import (
     cleanup_connection_id,
@@ -42,6 +43,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.users import delete_users, edit_users
 from cmk.gui.watolib.groups import load_contact_group_information
+from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -131,7 +133,7 @@ class ModeUsers(WatoMode):
             return self._bulk_delete_users_after_confirm()
 
         elif html.check_transaction():
-            action_handler = gui_background_job.ActionHandler()
+            action_handler = gui_background_job.ActionHandler(self.breadcrumb())
             action_handler.handle_actions()
             if action_handler.did_acknowledge_job():
                 self._job_snapshot = userdb.UserSyncBackgroundJob().get_status_snapshot()
@@ -211,11 +213,11 @@ class ModeUsers(WatoMode):
 
         users = userdb.load_users()
 
-        entries = users.items()
+        entries = list(users.items())
 
         html.begin_form("bulk_delete_form", method="POST")
 
-        roles = userdb.load_roles()
+        roles = userdb_utils.load_roles()
         timeperiods = watolib.timeperiods.load_timeperiods()
         contact_groups = load_contact_group_information()
 
@@ -234,8 +236,7 @@ class ModeUsers(WatoMode):
                            css="checkbox")
 
                 if uid != config.user.id:
-                    html.checkbox("_c_user_%s" %
-                                  six.ensure_str(base64.b64encode(uid.encode("utf-8"))))
+                    html.checkbox("_c_user_%s" % ensure_str(base64.b64encode(uid.encode("utf-8"))))
 
                 user_connection_id = cleanup_connection_id(user.get('connector'))
                 connection = get_connection(user_connection_id)
@@ -256,7 +257,7 @@ class ModeUsers(WatoMode):
 
                 notifications_url = watolib.folder_preserving_link([("mode", "user_notifications"),
                                                                     ("user", uid)])
-                if watolib.load_configuration_settings().get("enable_rulebased_notifications"):
+                if rulebased_notifications_enabled():
                     html.icon_button(notifications_url, _("Custom notification table of this user"),
                                      "notifications")
 
@@ -362,7 +363,7 @@ class ModeUsers(WatoMode):
                 #                                                vs_authorized_sites().default_value())))
 
                 # notifications
-                if not watolib.load_configuration_settings().get("enable_rulebased_notifications"):
+                if not rulebased_notifications_enabled():
                     table.cell(_("Notifications"))
                     if not cgs:
                         html.i(_("not a contact"))
@@ -420,6 +421,10 @@ class ModeEditUser(WatoMode):
     def permissions(cls):
         return ["users"]
 
+    def _breadcrumb_url(self) -> str:
+        return html.makeuri_contextless([("mode", self.name()), ("edit", self._user_id)],
+                                        filename="wato.py")
+
     def __init__(self):
         super(ModeEditUser, self).__init__()
 
@@ -427,7 +432,7 @@ class ModeEditUser(WatoMode):
         # boxes and to check for validity.
         self._contact_groups = load_contact_group_information()
         self._timeperiods = watolib.timeperiods.load_timeperiods()
-        self._roles = userdb.load_roles()
+        self._roles = userdb_utils.load_roles()
 
         if cmk_version.is_managed_edition():
             self._vs_customer = managed.vs_customer()
@@ -435,6 +440,13 @@ class ModeEditUser(WatoMode):
     def _from_vars(self):
         # TODO: Should we turn the both fields below into Optional[UserId]?
         self._user_id = html.request.get_unicode_input("edit")  # missing -> new user
+        # This is needed for the breadcrumb computation:
+        # When linking from user notification rules page the request variable is "user"
+        # instead of "edit". We should also change that variable to "user" on this page,
+        # then we can simply use self._user_id.
+        if not self._user_id and html.request.has_var("user"):
+            self._user_id = html.request.get_str_input_mandatory("user")
+
         self._cloneid = html.request.get_unicode_input("clone")  # Only needed in 'new' mode
         # TODO: Nuke the field below? It effectively hides facts about _user_id for mypy.
         self._is_new_user = self._user_id is None
@@ -562,13 +574,10 @@ class ModeEditUser(WatoMode):
         ]
 
         # Language configuration
-        set_lang = html.get_checkbox("_set_lang")
-        language = html.request.var("language")
-        if set_lang:
-            if language == "":
-                language = None
+        language = html.request.get_ascii_input_mandatory("language", "")
+        if language != "_default_":
             user_attrs["language"] = language
-        elif not set_lang and "language" in user_attrs:
+        elif "language" in user_attrs:
             del user_attrs["language"]
 
         # Contact groups
@@ -850,10 +859,10 @@ class ModeEditUser(WatoMode):
             user_np = self._user.get("notification_period")
             if not isinstance(user_np, str):
                 raise Exception("invalid notification period %r" % (user_np,))
-            html.dropdown("notification_period",
-                          [(id_, "%s" % (tp["alias"])) for (id_, tp) in self._timeperiods.items()],
-                          deflt=user_np,
-                          ordered=True)
+            choices: Choices = [
+                (id_, "%s" % (tp["alias"])) for (id_, tp) in self._timeperiods.items()
+            ]
+            html.dropdown("notification_period", choices, deflt=user_np, ordered=True)
             html.help(
                 _("Only during this time period the "
                   "user will get notifications about host or service alerts."))
@@ -937,10 +946,11 @@ class ModeEditUser(WatoMode):
 
     def _rbn_enabled(self):
         # Check if rule based notifications are enabled (via WATO)
-        return watolib.load_configuration_settings().get("enable_rulebased_notifications")
+        return rulebased_notifications_enabled()
 
-    def _pw_suffix(self):
-        return 'new' if self._user_id is None else base64.b64encode(self._user_id.encode("utf-8"))
+    def _pw_suffix(self) -> str:
+        return 'new' if self._user_id is None else ensure_str(
+            base64.b64encode(self._user_id.encode("utf-8")))
 
     def _is_locked(self, attr):
         """Returns true if an attribute is locked and should be read only. Is only
@@ -985,30 +995,17 @@ class ModeEditUser(WatoMode):
 
 
 def select_language(user):
-    languages = [l for l in get_languages() if not config.hide_language(l[0])]  # type: Choices
-    if languages:
-        active = 'language' in user
-        forms.section(_("Language"), checkbox=('_set_lang', active, 'language'))
-        default_label = _('Default: %s') % get_language_alias(config.default_language)
-        html.div(default_label,
-                 class_="inherited",
-                 id_="attr_default_language",
-                 style="display: none" if active else "")
-        html.open_div(id_="attr_entry_language", style="display: none" if not active else "")
+    languages: Choices = [l for l in get_languages() if not config.hide_language(l[0])]
+    if not languages:
+        return
 
-        language = user.get('language') if user.get('language') is not None else ''
+    current_language = user.get("language")
+    if current_language is None:
+        current_language = "_default_"
 
-        # Transform 'en' configured language to empty string for compatibility reasons
-        if language == "en":
-            language = ""
+    languages.insert(0, ("_default_", _("Use the default language (%s)") %
+                         get_language_alias(config.default_language)))
 
-        html.dropdown("language", languages, deflt=language)
-        html.close_div()
-        html.help(
-            _('Configure the default language '
-              'to be used by the user in the user interface here. If you do not check '
-              'the checkbox, then the system default will be used.<br><br>'
-              'Note: currently Multisite is internationalized '
-              'but comes without any actual localisations (translations). If you want to '
-              'create you own translation, you find <a href="%(url)s">documentation online</a>.') %
-            {"url": "https://checkmk.com/checkmk_multisite_cmk.gui.i18n.html"})
+    forms.section(_("Language"))
+    html.dropdown("language", languages, deflt=current_language)
+    html.help(_('Configure the language to be used by the user in the user interface here.'))

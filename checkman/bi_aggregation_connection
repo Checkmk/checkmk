@@ -1,6 +1,6 @@
 title: Checkmk: Status Information for BI Aggregation Connection
 agents: BI
-catalog: app/omd
+catalog: app/cmk
 license: GPL
 distribution: check_mk
 description:

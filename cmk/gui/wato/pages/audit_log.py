@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,6 +7,7 @@
 
 import re
 import time
+from typing import List, Tuple, Iterator
 
 import cmk.utils.render as render
 
@@ -21,13 +22,19 @@ from cmk.gui.valuespec import (
     Integer,
     AbsoluteDate,
 )
-from cmk.gui.plugins.wato.utils.context_buttons import (
-    changelog_button,
-    home_button,
-)
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import WatoMode, mode_registry, wato_confirm
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    PageMenuPopup,
+    make_simple_link,
+    make_display_options_dropdown,
+)
 
 
 @mode_registry.register
@@ -49,15 +56,112 @@ class ModeAuditLog(WatoMode):
     def title(self):
         return _("Audit log")
 
-    def buttons(self):
-        changelog_button()
-        home_button()
-        if self._log_exists() and config.user.may("wato.clear_auditlog") \
-           and config.user.may("wato.auditlog") and config.user.may("wato.edit"):
-            html.context_button(_("Download"), html.makeactionuri([("_action", "csv")]), "download")
-            if config.user.may("wato.edit"):
-                html.context_button(_("Clear Log"), html.makeactionuri([("_action", "clear")]),
-                                    "trash")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="log",
+                    title=_("Actions"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Actions"),
+                            entries=list(self._page_menu_entries_actions()),
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="export",
+                    title=_("Export"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Export"),
+                            entries=list(self._page_menu_entries_export()),
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Setup"),
+                            entries=list(self._page_menu_entries_setup()),
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
+
+        self._extend_display_dropdown(menu)
+        return menu
+
+    def _page_menu_entries_setup(self) -> Iterator[PageMenuEntry]:
+        if config.user.may("wato.sites"):
+            yield PageMenuEntry(
+                title=_("View changes"),
+                icon_name="activate",
+                item=make_simple_link(watolib.folder_preserving_link([("mode", "changelog")])),
+            )
+
+    def _page_menu_entries_actions(self) -> Iterator[PageMenuEntry]:
+        if not self._log_exists():
+            return
+
+        if not config.user.may("wato.auditlog"):
+            return
+
+        if not config.user.may("wato.edit"):
+            return
+
+        if config.user.may("wato.clear_auditlog"):
+            yield PageMenuEntry(
+                title=_("Clear log"),
+                icon_name="trash",
+                item=make_simple_link(html.makeactionuri([("_action", "clear")])),
+            )
+
+    def _page_menu_entries_export(self) -> Iterator[PageMenuEntry]:
+        if not self._log_exists():
+            return
+
+        if not config.user.may("wato.auditlog"):
+            return
+
+        if not config.user.may("wato.edit"):
+            return
+
+        if not config.user.may("general.csv_export"):
+            return
+
+        yield PageMenuEntry(
+            title=_("Export CSV"),
+            icon_name="download_csv",
+            item=make_simple_link(html.makeactionuri([("_action", "csv")])),
+        )
+
+    def _extend_display_dropdown(self, menu: PageMenu) -> None:
+        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+
+        display_dropdown.topics.insert(
+            0,
+            PageMenuTopic(
+                title=_("Filter"),
+                entries=[
+                    PageMenuEntry(
+                        title=_("Filter view"),
+                        icon_name="filters_set" if html.form_submitted("options") else "filters",
+                        item=PageMenuPopup(self._render_filter_form()),
+                        name="filters",
+                        is_shortcut=True,
+                    ),
+                ],
+            ))
+
+    def _render_filter_form(self) -> str:
+        with html.plugged():
+            self._display_audit_log_options()
+            return html.drain()
 
     def _log_exists(self):
         return self.log_path.exists()
@@ -93,8 +197,6 @@ class ModeAuditLog(WatoMode):
     def _display_daily_audit_log(self, log):
         log, times = self._get_next_daily_paged_log(log)
 
-        self._display_audit_log_options()
-
         self._display_page_controls(*times)
 
         if display_options.enabled(display_options.T):
@@ -106,8 +208,6 @@ class ModeAuditLog(WatoMode):
 
     def _display_multiple_days_audit_log(self, log):
         log = self._get_multiple_days_log_entries(log)
-
-        self._display_audit_log_options()
 
         if display_options.enabled(display_options.T):
             html.h3(
@@ -138,8 +238,8 @@ class ModeAuditLog(WatoMode):
             log_today, times = self._paged_log_from(log, start)
             if len(log) == 0 or len(log_today) > 0:
                 return log_today, times
-            else:  # No entries today, but log not empty -> go back in time
-                start -= 24 * 3600
+            # No entries today, but log not empty -> go back in time
+            start -= 24 * 3600
 
     def _get_start_date(self):
         if self._options["start"] == "now":
@@ -172,9 +272,7 @@ class ModeAuditLog(WatoMode):
             if t >= end_time:
                 # This log is too new
                 continue
-            elif first_log_index is None \
-                  and t < end_time \
-                  and t >= start_time:
+            if first_log_index is None and start_time <= t < end_time:
                 # This is a log for this day. Save the first index
                 if first_log_index is None:
                     first_log_index = index
@@ -290,7 +388,7 @@ class ModeAuditLog(WatoMode):
         if c:
             self._clear_audit_log()
             return None, _("Cleared audit log.")
-        elif c is False:  # not yet confirmed
+        if c is False:  # not yet confirmed
             return ""
         return None  # browser reload
 
@@ -359,14 +457,14 @@ class ModeAuditLog(WatoMode):
             if linkinfo == '-':
                 linkinfo = ''
 
-            if self._filter_entry(user, action, text):
+            if self._filter_entry(user, action, text):  # TODO: Already filtered?!
                 continue
 
             html.write_text(','.join((render.date(int(t)), render.time_of_day(int(t)), linkinfo,
                                       user, action, '"' + text + '"')) + '\n')
         return False
 
-    def _parse_audit_log(self):
+    def _parse_audit_log(self) -> List[Tuple[int, str, str, str, str]]:
         if not self.log_path.exists():
             return []
 
@@ -374,18 +472,11 @@ class ModeAuditLog(WatoMode):
         with self.log_path.open(encoding="utf-8") as fp:
             for line in fp:
                 splitted = line.rstrip().split(None, 4)
-
                 if len(splitted) == 5 and splitted[0].isdigit():
-                    splitted[0] = int(splitted[0])
-
-                    user, action, text = splitted[2:]
-                    if self._filter_entry(user, action, text):
-                        continue
-
-                    entries.append(splitted)
-
+                    t, linkinfo, user, action, text = splitted
+                    if not self._filter_entry(user, action, text):
+                        entries.append((int(t), linkinfo, user, action, text))
         entries.reverse()
-
         return entries
 
     def _filter_entry(self, user, action, text):

@@ -1,21 +1,16 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 import threading
 import time
 import os
 import stat
-import six
+from pathlib import Path
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # noqa: F401 # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # noqa: F401 # pylint: disable=import-error,unused-import
-
+from six import ensure_binary
 import pytest  # type: ignore[import]
 from testlib import import_module
 
@@ -109,12 +104,12 @@ def test_load_data_from_not_permitted_file(tmp_path, path_type):
 @pytest.mark.parametrize("path_type", [str, Path])
 def test_load_data_from_file_dict(tmp_path, path_type):
     locked_file = tmp_path / "test"
-    locked_file.write_bytes(six.ensure_binary(repr({"1": 2, "ä": u"ß"})))
+    locked_file.write_bytes(ensure_binary(repr({"1": 2, "ä": u"ß"})))
 
     data = store.load_object_from_file(path_type(locked_file))
     assert isinstance(data, dict)
     assert data["1"] == 2
-    assert isinstance(data["ä"], six.text_type)
+    assert isinstance(data["ä"], str)
     assert data["ä"] == u"ß"
 
 
@@ -235,6 +230,21 @@ def test_save_to_mk_file(tmp_path, path_type):
 @pytest.mark.parametrize("path_type", [str, Path])
 def test_aquire_lock_not_existing(tmp_path, path_type):
     store.aquire_lock(path_type(tmp_path / "asd"))
+
+
+@pytest.mark.parametrize("path_type", [str, Path])
+def test_locked(tmp_path, path_type):
+    locked_file = tmp_path / "locked_file"
+    locked_file.write_text(u"", encoding="utf-8")
+
+    path = path_type(locked_file)
+
+    assert store.have_lock(path) is False
+
+    with store.locked(path):
+        assert store.have_lock(path) is True
+
+    assert store.have_lock(path) is False
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
@@ -390,7 +400,7 @@ def test_locking(tmp_path, path_type):
 
         # Take lock with store1
         t1.do = "lock"
-        while range(20):
+        for _dummy in range(20):
             if store1.have_lock(path):
                 break
             time.sleep(0.01)
@@ -404,7 +414,7 @@ def test_locking(tmp_path, path_type):
 
         # And now unlock store1 and check whether store2 has the lock now
         t1.do = "unlock"
-        while range(20):
+        for _dummy in range(20):
             if not store1.have_lock(path):
                 break
             time.sleep(0.01)

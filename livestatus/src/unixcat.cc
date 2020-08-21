@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <sys/un.h>
 #include <unistd.h>
+
 #include <cerrno>
 #include <chrono>
 #include <csignal>
@@ -16,6 +17,7 @@
 #include <iostream>
 #include <ratio>
 #include <string>
+
 #include "Poller.h"
 
 int copy_data(int from, int to);
@@ -124,8 +126,8 @@ int main(int argc, char **argv) {
 
     thread_info toleft_info = {sock, 1, 0, 1};
     thread_info toright_info = {0, sock, 1, 0};
-    pthread_t toright_thread;
-    pthread_t toleft_thread;
+    pthread_t toright_thread{};
+    pthread_t toleft_thread{};
     if (pthread_create(&toright_thread, nullptr, copy_thread, &toright_info) !=
             0 ||
         pthread_create(&toleft_thread, nullptr, copy_thread, &toleft_info) !=

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -13,22 +13,40 @@ connexion is disabled.
 
 """
 import functools
-from typing import (  # pylint: disable=unused-import
-    Any, Set, Dict, Optional, List, Union, Literal, Tuple,
-)
+from types import FunctionType
+from typing import Any, Dict, List, Optional, Sequence, Set, Union
 
-import apispec  # type: ignore
-import apispec.utils  # type: ignore
-from connexion import problem  # type: ignore
-import six
+import apispec  # type: ignore[import]
+import apispec.utils  # type: ignore[import]
+from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[import]
+from connexion import problem, ProblemException  # type: ignore[import]
 from marshmallow import Schema  # type: ignore[import]
+from werkzeug.utils import import_string
 
-from cmk.gui.plugins.openapi.restful_objects.response_schemas import ApiError
-from cmk.gui.plugins.openapi.restful_objects.specification import (
-    add_operation,
+from cmk.gui.plugins.openapi.restful_objects.code_examples import code_samples
+from cmk.gui.plugins.openapi.restful_objects.parameters import (
+    ETAG_HEADER_PARAM,
     ETAG_IF_MATCH_HEADER,
-    PARAM_RE,
-    SPEC,
+)
+from cmk.gui.plugins.openapi.restful_objects.params import path_parameters
+from cmk.gui.plugins.openapi.restful_objects.response_schemas import ApiError
+from cmk.gui.plugins.openapi.restful_objects.specification import find_all_parameters, SPEC
+from cmk.gui.plugins.openapi.restful_objects.type_defs import (
+    AnyParameterAndReference,
+    ENDPOINT_REGISTRY,
+    EndpointName,
+    ETagBehaviour,
+    HTTPMethod,
+    OpenAPITag,
+    OperationSpecType,
+    ParamDict,
+    ParameterReference,
+    PrimitiveParameter,
+    RequestSchema,
+    ResponseSchema,
+    ResponseType,
+    SchemaInstanceOrClass,
+    ValidatorType,
 )
 
 
@@ -36,31 +54,30 @@ def _constantly(arg):
     return lambda *args, **kw: arg
 
 
-_SEEN_PATHS = set()  # type: Set[Tuple[str, str]]
+_SEEN_ENDPOINTS: Set[FunctionType] = set()
 
-ETagBehaviour = Union[Literal["input"], Literal["output"], Literal["both"]]
-
-# Only these methods are supported.
-HTTPMethod = Union[Literal["get"], Literal["post"], Literal["put"], Literal["delete"]]
-
-Parameter = str
-
-ResponseSchema = Optional[Schema]
-RequestSchema = Optional[Schema]
+# FIXME: Group of endpoints is currently derived from module-name. This prevents sub-packages.
 
 
-def endpoint_schema(
-    path,  # type: str
-    method='get',  # type: HTTPMethod
-    parameters=None,  # type: List[Parameter]
-    output_empty=False,  # type: bool
-    response_schema=None,  # type: ResponseSchema
-    request_schema=None,  # type: RequestSchema
-    request_body_required=True,  # type: bool
-    error_schema=ApiError,  # type: Schema
-    etag=None,  # type: ETagBehaviour
-    **options  # type: dict
-):
+def _reduce_to_primitives(
+    parameters: Optional[Sequence[AnyParameterAndReference]],
+) -> List[Union[PrimitiveParameter, ParameterReference]]:
+    return [p.to_dict() if isinstance(p, ParamDict) else p for p in (parameters or [])]
+
+
+def endpoint_schema(path: str,
+                    name: EndpointName,
+                    method: HTTPMethod = 'get',
+                    parameters: Optional[Sequence[AnyParameterAndReference]] = None,
+                    content_type: str = 'application/json',
+                    output_empty: bool = False,
+                    response_schema: ResponseSchema = None,
+                    request_schema: RequestSchema = None,
+                    request_body_required: bool = True,
+                    error_schema: Schema = ApiError,
+                    etag: Optional[ETagBehaviour] = None,
+                    will_do_redirects: bool = False,
+                    **options: dict):
     """Mark the function as a REST-API endpoint.
 
     Notes:
@@ -69,43 +86,55 @@ def endpoint_schema(
         before reading out the APISpec instance.
 
     Args:
-        path (str):
+        path:
             The URI. Can contain 0-N placeholders like this: /path/{placeholder1}/{placeholder2}.
             These variables have to be defined elsewhere first. See the `specification` module.
 
-        method (str):
+        name:
+            The name of the endpoint. This is the name where this endpoint is "registered" under
+            and can only be used once globally.
+
+        method:
             The HTTP method under which the endpoint should be accessible. Methods are written
             lowercase in the OpenAPI YAML-file, though both upper and lower-cased method-names
             are supported here.
 
-        parameters (list):
+        content_type:
+            The content-type under which this endpoint shall be executed. Multiple endpoints may
+            be defined for any one URL, but only one endpoint per url-content-type combination.
+
+        parameters:
             A list of parameter-names which are required by this endpoint. These parameters have
             to be defined elsewhere.
 
-        output_empty (bool):
+        output_empty:
             When set to `True`, no output will be sent to the client and the HTTP status code
             will be set to 204 (OK, no-content). No response validation will be done.
 
-        response_schema (marshmallow.Schema):
+        response_schema:
             The Schema with which to validate the HTTP response.
 
-        request_schema (marshmallow.Schema):
+        request_schema:
             The Schema with which to validate the HTTP request. This will not validate HTTP
             headers though.
 
-        request_body_required (bool):
+        request_body_required:
             If set to True (default), a `response_schema` will be required.
 
-        error_schema (marshmallow.Schema):
+        error_schema:
             The Schema class with which to validate an HTTP error sent by the endpoint.
 
-        etag (str):
+        etag:
             One of 'input', 'output', 'both'. When set to 'input' a valid ETag is required in
             the 'If-Match' request header. When set to 'output' a ETag is sent to the client
             with the 'ETag' response header. When set to 'both', it will act as if set to
             'input' and 'output' at the same time.
 
-        **options (dict):
+        will_do_redirects:
+            This endpoint can also emit a 302 response (moved temporarily) code. Setting this to
+            true will add this to the specification and documentation. Defaults to False.
+
+        **options:
             Various keys which will be directly applied to the OpenAPI operation object.
 
     Returns:
@@ -124,104 +153,104 @@ def endpoint_schema(
     # Everything inside of it needs the decorated function for filling out the spec.
     #
 
-    path_and_method = (path, method)
-    if path_and_method in _SEEN_PATHS:
-        raise ValueError("%s [%s] must be unique. Already defined." % path_and_method)
-    _SEEN_PATHS.add(path_and_method)
-
     if etag is not None and etag not in ('input', 'output', 'both'):
         raise ValueError("etag must be one of 'input', 'output', 'both'.")
 
-    if not output_empty and response_schema is None:
-        raise ValueError("'output_schema' required when output is to be sent!")
+    primitive_parameters = _reduce_to_primitives(parameters)
+    del parameters
 
-    if output_empty and response_schema:
-        raise ValueError("On empty output 'output_schema' may not be used.")
+    _verify_parameters(path, primitive_parameters)
 
-    if parameters is None:
-        parameters = []
+    def _add_api_spec(func):
+        module_obj = import_string(func.__module__)
+        module_name = module_obj.__name__
+        operation_id = func.__module__ + "." + func.__name__
 
-    param_names = _names_of(parameters)
+        ENDPOINT_REGISTRY.add_endpoint(
+            module_name,
+            name,
+            method,
+            path,
+            find_all_parameters(primitive_parameters),
+        )
 
-    for path_param in PARAM_RE.findall(path):
-        if path_param not in param_names:
-            raise ValueError("Param %r, which is used in the HTTP path, was not specified." %
-                             (path_param,))
+        if not output_empty and response_schema is None:
+            raise ValueError(f"{operation_id}: 'response_schema' required when "
+                             f"output will be sent!")
 
-    for param in parameters:
-        if isinstance(param, dict):
-            # If a parameter gets specified twice, adding it here will throw an exception.
-            # This is desired behaviour as it prevents unintentional naming clashes, which can be
-            # dangerous because parameters can be specified in different locations.
-            SPEC.components.parameter(param['name'], param['in'], param)
+        if output_empty and response_schema:
+            raise ValueError(f"{operation_id}: On empty output 'output_schema' may not be used.")
 
-    global_param_names = SPEC.components.to_dict().get('parameters', {}).keys()
-    for param in parameters:
-        if isinstance(param, six.string_types) and param not in global_param_names:
-            raise ValueError("Param %r, which is required, was specified nowhere." % (param,))
+        headers: Dict[str, PrimitiveParameter] = {}
+        if etag in ('output', 'both'):
+            headers.update(ETAG_HEADER_PARAM.header_dict())
 
-    # We don't(!) support any endpoint without an output schema.
-    # Just define one!
-    if response_schema:
-        path_item = {
-            '200': {
+        responses: ResponseType = {}
+
+        # We don't(!) support any endpoint without an output schema.
+        # Just define one!
+        if response_schema is not None:
+            responses['200'] = {
                 'content': {
-                    'application/json': {
+                    content_type: {
                         'schema': response_schema
                     },
                 },
                 'description': apispec.utils.dedent(response_schema.__doc__ or ''),
+                'headers': headers,
             }
+
+        if will_do_redirects:
+            responses['302'] = {
+                'description':
+                    ('Either the resource has moved or has not yet completed. Please see this '
+                     'resource for further information.')
+            }
+
+        # Actually, iff you don't want to give out anything, then we don't need a schema.
+        if output_empty:
+            responses['204'] = {
+                'description': 'Operation done successfully. No further output.',
+                'headers': headers,
+            }
+
+        tag_obj: OpenAPITag = {
+            'name': module_name,
         }
+        docstring_name = _docstring_name(module_obj.__doc__)
+        if docstring_name:
+            tag_obj['x-displayName'] = docstring_name
+        docstring_desc = _docstring_description(module_obj.__doc__)
+        if docstring_desc:
+            tag_obj['description'] = docstring_desc
+        _add_tag(tag_obj, tag_group='Endpoints')
 
-    # Actually, iff you don't want to give out anything, then we don't need a schema.
-    if output_empty:
-        path_item = {'204': {'description': 'Operation done successfully. No further output.'}}
-
-    def _add_api_spec(func):
-        operation_spec = {
-            'operationId': func.__module__ + "." + func.__name__,
+        operation_spec: OperationSpecType = {
+            'operationId': operation_id,
+            'tags': [module_name],
+            'description': '',
             'responses': {
                 'default': {
                     'description': 'Any unsuccessful or unexpected result.',
                     'content': {
-                        'application/json': {
+                        'application/problem+json': {
                             'schema': error_schema,
                         }
                     }
                 }
             },
-            'parameters': [],
+            'parameters': primitive_parameters,
         }
 
-        if param_names:
-            operation_spec['parameters'].extend(parameters)
-
         if etag in ('input', 'both'):
-            operation_spec['parameters'].append(ETAG_IF_MATCH_HEADER)
+            operation_spec['parameters'].append(ETAG_IF_MATCH_HEADER.to_dict())
 
-        if etag in ('output', 'both'):
-            # We can't put this completely in a schema because 'headers' is a map. We therefore
-            # have to duplicate it every time.
-
-            # NOTE: Be aware that this block only works under the assumption that only one(!)
-            # http_status defined `operation_spec`. If this assumption no longer holds this block
-            # needs to be refactored.
-            path_item[path_item.keys()[0]]['headers'] = {
-                'ETag': {
-                    'schema': {
-                        'type': 'string',
-                        'pattern': '[0-9a-fA-F]{32}',
-                    },
-                    'description': ('The HTTP ETag header for this resource. It identifies the '
-                                    'current state of the object and needs to be sent along for '
-                                    'subsequent modifications.')
-                }
-            }
-
-        operation_spec['responses'].update(path_item)
+        operation_spec['responses'].update(responses)
 
         if request_schema is not None:
+            tag = _tag_from_schema(request_schema)
+            _add_tag(tag, tag_group='Request Schemas')
+
             operation_spec['requestBody'] = {
                 'required': request_body_required,
                 'content': {
@@ -231,34 +260,152 @@ def endpoint_schema(
                 }
             }
 
+        operation_spec['x-codeSamples'] = code_samples(path, method, request_schema, operation_spec)
+
         # If we don't have any parameters we remove the empty list, so the spec will not have it.
         if not operation_spec['parameters']:
             del operation_spec['parameters']
 
-        operation_spec.update(_docstring_keys(func))
+        docstring_name = _docstring_name(func.__doc__)
+        if docstring_name:
+            operation_spec['summary'] = docstring_name
+        docstring_desc = _docstring_description(func.__doc__)
+        if docstring_desc:
+            operation_spec['description'] = docstring_desc
+
         apispec.utils.deepupdate(operation_spec, options)
 
-        add_operation(path, method, operation_spec)
-
-        if response_schema is None and request_schema is None:
-            return func
+        if func not in _SEEN_ENDPOINTS:
+            # NOTE:
+            # Only add the endpoint to the spec if not already done. We don't want
+            # to add it multiple times. While this shouldn't be happening, doctest
+            # sometimes complains that it would be happening. Not sure why. Anyways,
+            # it's not a big deal as long as the SPEC is written correctly.
+            SPEC.path(path=path, operations={method.lower(): operation_spec})
+            _SEEN_ENDPOINTS.add(func)
 
         return wrap_with_validation(func, request_schema, response_schema)
 
     return _add_api_spec
 
 
-def wrap_with_validation(func, _request_schema, response_schema):
-    """Wrap a function """
+def _verify_parameters(
+    path: str,
+    parameters: List[Union[PrimitiveParameter, ParameterReference]],
+):
+    """Verifies matching of parameters to the placeholders used in an URL-Template
+
+    This works both ways, ensuring that no parameter is supplied which is then not used and that
+    each template-variable in the URL-template has a corresponding parameter supplied,
+    either globally or locally.
+
+    Args:
+        path:
+            The URL-Template, for eample: '/user/{username}'
+
+        parameters:
+            A list of parameters. A parameter can either be a string referencing a
+            globally defined parameter by name, or a dict containing a full parameter.
+
+    Examples:
+
+        In case of success, this function will return nothing.
+
+          >>> _verify_parameters('/foo/{bar}', [{'name': 'bar', 'in': 'path'}])
+
+        Yet, when problems are found, ValueErrors are raised.
+
+          >>> _verify_parameters('/foo', [{'name': 'foo', 'in': 'path'}])
+          Traceback (most recent call last):
+          ...
+          ValueError: Param 'foo', which is specified as 'path', not used in path. Found params: []
+
+          >>> _verify_parameters('/foo/{bar}', [])
+          Traceback (most recent call last):
+          ...
+          ValueError: Param 'bar', which is used in the HTTP path, was not specified.
+
+          >>> _verify_parameters('/foo/{foobazbar}', ['foobazbar'])
+          Traceback (most recent call last):
+          ...
+          ValueError: Param 'foobazbar', assumed globally defined, was not found.
+
+    Returns:
+        Nothing.
+
+    Raises:
+        ValueError in case of a mismatch.
+
+    """
+    param_names = _names_of(parameters)
+    path_params = path_parameters(path)
+    for path_param in path_params:
+        if path_param not in param_names:
+            raise ValueError(
+                f"Param {repr(path_param)}, which is used in the HTTP path, was not specified.")
+
+    for param in parameters:
+        if isinstance(param, dict) and param['in'] == 'path' and param['name'] not in path_params:
+            raise ValueError(
+                f"Param {repr(param['name'])}, which is specified as 'path', not used in path. "
+                f"Found params: {path_params}")
+
+    find_all_parameters(parameters, errors='raise')
+
+
+def _assign_to_tag_group(tag_group: str, name: str) -> None:
+    for group in SPEC.options.setdefault('x-tagGroups', []):
+        if group['name'] == tag_group:
+            group['tags'].append(name)
+            break
+    else:
+        raise ValueError(f"x-tagGroup {tag_group} not found. Please add it to specification.py")
+
+
+def _add_tag(tag: OpenAPITag, tag_group: Optional[str] = None) -> None:
+    name = tag['name']
+    if name in [t['name'] for t in SPEC._tags]:
+        return
+
+    SPEC.tag(tag)
+    if tag_group is not None:
+        _assign_to_tag_group(tag_group, name)
+
+
+def wrap_with_validation(func, request_schema: RequestSchema, response_schema: ResponseSchema):
+    """Wrap a function with schema validation logic.
+
+    Args:
+        func: The function to wrap
+
+        request_schema:
+            Optionally, a request-schema which actually won't get used, as long as the `connexion`
+            library still does the input-validation.
+
+        response_schema:
+            Optionally, a response-schema, which *will* get validated if passed.
+
+    Returns:
+        The wrapping function.
+    """
+    if response_schema is None and request_schema is None:
+        return func
+
+    validate_response: ValidatorType
+
     if response_schema:
         validate_response = response_schema().validate
     else:
         validate_response = _constantly(None)
 
     @functools.wraps(func)
-    def _validating_wrapper(*args, **kw):
-        # noinspection PyArgumentList
-        response = func(*args, **kw)
+    def _validating_wrapper(param):
+        body = schema_loads(request_schema, param.get('body', {}))
+        if body is not None:
+            param['body'] = body
+
+        # FIXME ARGH
+        response = func(param)
         if not hasattr(response, 'original_data'):
             return response
 
@@ -271,8 +418,8 @@ def wrap_with_validation(func, _request_schema, response_schema):
             # Hope we never get here in production.
             return problem(
                 status=500,
-                title=u"Server was about to send an invalid response.",
-                detail=u"This is an error of the implementation.",
+                title="Server was about to send an invalid response.",
+                detail="This is an error of the implementation.",
                 ext={'errors': errors},
             )
         return response
@@ -280,41 +427,214 @@ def wrap_with_validation(func, _request_schema, response_schema):
     return _validating_wrapper
 
 
-def _docstring_keys(func):
-    # type: (Any) -> Dict[str, str]
-    if not func.__doc__:
-        return {}
-
-    parts = apispec.utils.dedent(func.__doc__).split("\n\n", 1)
-    if len(parts) == 1:
-        return {
-            'summary': func.__doc__.strip(),
-        }
-    elif len(parts) == 2:
-        summary, long_desc = parts
-        return {
-            'summary': summary.strip(),
-            'description': long_desc.strip(),
-        }
-
-    return {}
-
-
-def _names_of(params):
-    """
-
-    Args:
-        params:
-
-    Returns:
+def _schema_name(schema_name: str):
+    """Remove the suffix 'Schema' from a schema-name.
 
     Examples:
 
+        >>> _schema_name("BakeSchema")
+        'Bake'
+
+        >>> _schema_name("BakeSchemaa")
+        'BakeSchemaa'
+
+    Args:
+        schema_name:
+            The name of the Schema.
+
+    Returns:
+        The name of the Schema, maybe stripped of the suffix 'Schema'.
+
+    """
+    return schema_name[:-6] if schema_name.endswith("Schema") else schema_name
+
+
+def _schema_definition(schema_name: str):
+    ref = f'#/components/schemas/{_schema_name(schema_name)}'
+    return f'<SchemaDefinition schemaRef="{ref}" showReadOnly={{true}} showWriteOnly={{true}} />'
+
+
+def _tag_from_schema(schema: SchemaInstanceOrClass) -> OpenAPITag:
+    """Construct a Tag-Dict from a Schema instance or class
+
+    Examples:
+
+        >>> from marshmallow import Schema, fields
+
+        >>> class TestSchema(Schema):
+        ...      '''My docstring title.\\n\\nMore docstring.'''
+        ...      field = fields.String()
+
+        >>> expected = {
+        ...    'x-displayName': 'My docstring title.',
+        ...    'description': ('More docstring.\\n\\n'
+        ...                    '<SchemaDefinition schemaRef="#/components/schemas/Test" '
+        ...                    'showReadOnly={true} showWriteOnly={true} />'),
+        ...    'name': 'Test'
+        ... }
+
+        >>> tag = _tag_from_schema(TestSchema)
+        >>> assert tag == expected, tag
+
+        >>> tag = _tag_from_schema(TestSchema())
+        >>> assert tag == expected, tag
+
+    Args:
+        schema (marshmallow.Schema):
+            A marshmallow Schema class or instance.
+
+    Returns:
+        A dict containing the tag name and the description, which is taken from
+
+    """
+    if getattr(schema, '__name__', None) is None:
+        return _tag_from_schema(schema.__class__)
+
+    tag: OpenAPITag = {'name': _schema_name(schema.__name__)}
+    docstring_name = _docstring_name(schema.__doc__)
+    if docstring_name:
+        tag['x-displayName'] = docstring_name
+    docstring_desc = _docstring_description(schema.__doc__)
+    if docstring_desc:
+        tag['description'] = docstring_desc
+
+    tag['description'] = tag.get('description', '')
+    if tag['description']:
+        tag['description'] += '\n\n'
+    tag['description'] += _schema_definition(schema.__name__)
+
+    return tag
+
+
+def _docstring_name(docstring: Union[Any, str, None]) -> Optional[str]:
+    """Split the docstring by title and rest.
+
+    This is part of the rest.
+
+    >>> _docstring_name(_docstring_name.__doc__)
+    'Split the docstring by title and rest.'
+
+    Args:
+        docstring:
+
+    Returns:
+        A string or nothing.
+
+    """ ""
+    if not docstring:
+        return None
+    parts = apispec.utils.dedent(docstring).split("\n\n", 1)
+    if len(parts) > 0:
+        return parts[0].strip()
+    return None
+
+
+def _docstring_description(docstring: Union[Any, str, None]) -> Optional[str]:
+    """Split the docstring by title and rest.
+
+    This is part of the rest.
+
+    >>> _docstring_description(_docstring_description.__doc__).split("\\n")[0]
+    'This is part of the rest.'
+
+    Args:
+        docstring:
+
+    Returns:
+        A string or nothing.
+
+    """
+    if not docstring:
+        return None
+    parts = apispec.utils.dedent(docstring).split("\n\n", 1)
+    if len(parts) > 1:
+        return parts[1].strip()
+    return None
+
+
+def _names_of(params: Sequence[AnyParameterAndReference]) -> Sequence[ParameterReference]:
+    """Give a list of parameter names
+
+    Both dictionary and string form are supported. See examples.
+
+    Args:
+        params: A list of params (dict or string).
+
+    Returns:
+        A list of parameter names.
+
+    Examples:
         >>> _names_of(['a', 'b', 'c'])
         ['a', 'b', 'c']
 
         >>> _names_of(['a', {'name': 'b'}, 'c'])
         ['a', 'b', 'c']
 
+    Examples:
+
+        >>> _names_of(['a', 'b', 'c'])
+        ['a', 'b', 'c']
+
+        >>> _names_of(['a', {'name': 'b'}, ParamDict.create('c', 'query')])
+        ['a', 'b', 'c']
+
     """
-    return [p['name'] if isinstance(p, dict) else p for p in params]
+    return [p['name'] if isinstance(p, (dict, ParamDict)) else p for p in params]
+
+
+def schema_loads(schema, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Validate a schema and populate it with the defaults.
+
+    Examples:
+
+        >>> from marshmallow import Schema
+        >>> from cmk.gui.plugins.openapi import fields
+        >>> class Foo(Schema):
+        ...      integer = fields.Integer(required=True)
+        ...      hello = fields.String(enum=['World'], required=True)
+        ...      default_value = fields.String(missing='was populated')
+
+        If not all required fields are passed, a ProblemException is being raised.
+
+            >>> schema_loads(Foo, {})
+            Traceback (most recent call last):
+            ...
+            connexion.exceptions.ProblemException
+
+            >>> schema_loads(Foo, {'hello': 'Bob', 'integer': 10})
+            Traceback (most recent call last):
+            ...
+            connexion.exceptions.ProblemException
+
+        If validation passes, missing keys are populated with default values as well.
+
+            >>> expected = {
+            ...     'default_value': 'was populated',
+            ...     'hello': 'World',
+            ...     'integer': 10,
+            ... }
+            >>> res = schema_loads(Foo, {'hello': 'World', 'integer': "10"})
+            >>> assert res == expected, res
+
+    Args:
+        schema:
+            A marshmallow schema class, schema instance or name of a schema.
+        data:
+            A dictionary with data that should be checked against the schema.
+
+    Returns:
+        A new dictionary with the values converted and the defaults populated.
+
+    """
+    if schema is None:
+        return None
+    schema_ = resolve_schema_instance(schema)
+    result = schema_.load(data)
+    if result.errors:
+        raise ProblemException(
+            status=400,
+            title="The request could not be validated.",
+            detail="There is an error in your submitted data.",
+            ext={'errors': result.errors},
+        )
+    return result.data

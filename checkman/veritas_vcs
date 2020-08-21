@@ -11,13 +11,16 @@ description:
  on at least one node then the custer will be considered "RUNNING".
 
  If the state of the cluster is
- 
+
  - "RUNNING" then the service state will be OK,
- 
+
  - otherwise CRIT.
 
 item:
  The cluster name.
 
 inventory:
- One service per cluster is created.
+ One service is created for each cluster.
+
+cluster:
+  On a cluster the service assumes the worst of all encountered node states.

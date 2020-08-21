@@ -272,14 +272,7 @@ just to signal that real build script was not called -->
     </DirectoryRef>
     
     <DirectoryRef Id="install">
-        <Component Id="check_mk_ini_" Guid="{9B0003D1-BBF0-4F6D-8CFE-7F74C1EDE1B0}">
-            <File Id="check_mk_ini"
-                  Source="resources\check_mk.ini"
-                  KeyPath="yes"
-                  Checksum="yes"
-                  DiskId="2"/>
-        </Component>
-        
+       
         <Component Id="check_mk_install_yml_" Guid="{31886DF5-F17B-46AD-BEBF-4B4925A18390}">
             <File Id="check_mk_install_yml"
                   Source="resources\check_mk.install.yml"
@@ -445,7 +438,6 @@ just to signal that real build script was not called -->
       <ComponentRef Id="perf_counters32_" />
       <ComponentRef Id="perf_counters64_" />
       -->
-      <ComponentRef Id="check_mk_ini_" />
       <ComponentRef Id="check_mk_install_yml_" />
       <ComponentRef Id="plugins_cap_" />
       <ComponentRef Id="checkmk.dat" />

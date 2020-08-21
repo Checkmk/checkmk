@@ -24,7 +24,9 @@
 # "maxsize" : ( 8000,  9000 ),  in bytes
 # "minage"  : ( 600,  1200 ),  in seconds
 # "maxage"  : ( 6000, 12000 ), in seconds
+
 import collections
+import typing
 
 fileinfo_groups = []
 
@@ -92,66 +94,58 @@ def parse_fileinfo(info):
     return parsed
 
 
+def _match(name: str, pattern: str) -> typing.Union[bool, typing.Match]:
+    return (regex(pattern[1:]).match(name) if pattern.startswith("~") else  #
+            fnmatch.fnmatch(name, pattern))
+
+
 def fileinfo_groups_get_group_name(group_patterns, filename, reftime):
     found_these_groups = {}
     for group_name, pattern in group_patterns:
         if isinstance(pattern, str):  # support old format
-            pattern = (pattern, '')
+            inclusion, exclusion = pattern, ''
+        else:
+            inclusion, exclusion = pattern
 
-        inclusion, exclusion = pattern
-        inclusion_is_regex = False
-        exclusion_is_regex = False
+        if _match(filename, exclusion):
+            continue
 
-        if inclusion.startswith("~"):
-            inclusion_is_regex = True
-            inclusion = inclusion[1:]
-        if exclusion.startswith("~"):
-            exclusion_is_regex = True
-            exclusion = exclusion[1:]
+        inclusion = (("~" + fileinfo_process_date(inclusion[1:], reftime))
+                     if inclusion.startswith("~") else fileinfo_process_date(inclusion, reftime))
 
-        inclusion = fileinfo_process_date(inclusion, reftime)
+        incl_match = _match(filename, inclusion)
+        if not incl_match:
+            continue
 
         matches = []
         num_perc_s = 0
-        if inclusion_is_regex:
-            incl_match = regex(inclusion).match(filename)
-            if incl_match:
-                num_perc_s = group_name.count("%s")
-                matches = [g and g or "" for g in incl_match.groups()]
+        if incl_match is not True:  # it's match object then!
+            num_perc_s = group_name.count("%s")
+            matches = [g and g or "" for g in incl_match.groups()]
+
+            if len(matches) < num_perc_s:
+                raise MKGeneralException(
+                    "Invalid entry in inventory_fileinfo_groups: "
+                    "group name '%s' contains %d times '%%s', but regular expression "
+                    "'%s' contains only %d subexpression(s)." %
+                    (group_name, num_perc_s, inclusion, len(matches)))
+
+        if matches:
+            for nr, group in enumerate(matches):
+                inclusion = instantiate_regex_pattern_once(inclusion, group)
+                group_name = group_name.replace("%%%d" % (nr + 1), group)
+
+            this_group_name = group_name % tuple(matches[:num_perc_s])
+            this_pattern = ("~%s" % inclusion, exclusion)
+
         else:
-            incl_match = fnmatch.fnmatch(filename, inclusion)
+            this_group_name = group_name
+            this_pattern = pattern
 
-        if exclusion_is_regex:
-            excl_match = regex(exclusion).match(filename)
-        else:
-            excl_match = fnmatch.fnmatch(filename, exclusion)
-
-        if len(matches) < num_perc_s:
-            raise MKGeneralException(
-                "Invalid entry in inventory_fileinfo_groups: "
-                "group name '%s' contains %d times '%%s', but regular expression "
-                "'%s' contains only %d subexpression(s)." %
-                (group_name, num_perc_s, inclusion, len(matches)))
-
-        this_group_name = None
-        if incl_match and not excl_match:
-            if matches:
-                for nr, group in enumerate(matches):
-                    inclusion = instantiate_regex_pattern_once(inclusion, group)
-                    group_name = group_name.replace("%%%d" % (nr + 1), group)
-
-                this_group_name = group_name % tuple(matches[:num_perc_s])
-                this_pattern = ("~%s" % inclusion, exclusion)
-
-            else:
-                this_group_name = group_name
-                this_pattern = pattern
-
-        if this_group_name is not None:
-            found_these_groups.setdefault(this_group_name, set())
-            found_these_groups[this_group_name].add(this_pattern)
+        found_these_groups.setdefault(this_group_name, set()).add(this_pattern)
 
     # Convert pattern containers to lists (sets are not possible in autochecks)
+    # It is possible now. keep this to not break the "append" in the check function
     return dict([(k, list(v)) for k, v in found_these_groups.items()])
 
 
@@ -237,24 +231,6 @@ def check_fileinfo(item, params, parsed):
         return params.get("state_missing", 3), "File not found"
 
 
-# FIXME the following does not apply anymore, because "%s" is allowed in group_name
-# WHAT TO DO WITH precompile?
-# Extracts patterns that are relevant for the current host and item.
-# Constructs simple list of patterns and makes them available for the check
-def fileinfo_groups_precompile(hostname, item, params):
-    patterns = []
-    for line in host_extra_conf(hostname, fileinfo_groups):
-        for group_name_pattern, pattern in line:
-            if group_name_pattern == item:
-                patterns.append(pattern)
-
-    # TODO: Cleanup this separation violation. This should be accessed through the check API
-    import cmk.base.checking
-    precomped = cmk.base.checking.determine_check_params(params).copy()
-    precomped['precompiled_patterns'] = patterns
-    return precomped
-
-
 def _filename_matches(filename, reftime, inclusion, exclusion):
     date_inclusion = ""
     inclusion_is_regex = False
@@ -304,10 +280,12 @@ def check_fileinfo_groups(_item, params, parsed):
         yield 3, "Missing reference timestamp"
         return
 
-    # Old format does not support '%s' in group name
-    group_patterns = set(params.get('precompiled_patterns', []))
-    for entry in params.get('group_patterns', []):
-        group_patterns.add(entry)
+    try:
+        group_patterns = set(params['group_patterns'])
+    except KeyError:
+        yield 3, ("No group pattern found in autocheck. Please rediscover the services "
+                  "of this host to get this fixed automatically")
+        return
 
     # Start counting values on all files
     for file_stat in parsed['files'].values():
@@ -422,7 +400,7 @@ def _fileinfo_check_function(check_definition, params, outof_range_txt):
         infotexts.append(infotext)
 
         # because strings go into infos but not into perfdata
-        if isinstance(value, six.integer_types):
+        if isinstance(value, int):
             allperfdata.append(perfdata)
         else:
             allperfdata.append([])
@@ -483,5 +461,3 @@ check_info['fileinfo.groups'] = {
     "group": "fileinfo-groups",
     "includes": ["eval_regex.include"],
 }
-
-precompile_params['fileinfo.groups'] = fileinfo_groups_precompile

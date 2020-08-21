@@ -855,6 +855,7 @@ TEST(AgentConfig, WorkConfig) {
                        {
                            // name, type
                            {vars::kEnabled, YAML::NodeType::Scalar},
+                           {vars::kModulesPython, YAML::NodeType::Scalar},
                            {vars::kModulesTable, YAML::NodeType::Sequence}
                            //
                        });
@@ -874,8 +875,8 @@ TEST(AgentConfig, WorkConfig) {
                       values::kModulesCmdPython);
             auto exts_array = entry[vars::kModulesExts];
             ASSERT_EQ(exts_array.size(), 2);
-            EXPECT_EQ(exts_array[0].as<std::string>(), ".py");
-            EXPECT_EQ(exts_array[1].as<std::string>(), ".tribe29.py");
+            EXPECT_EQ(exts_array[0].as<std::string>(), ".checkmk.py");
+            EXPECT_EQ(exts_array[1].as<std::string>(), ".py");
             pos++;
         }
 
@@ -893,6 +894,11 @@ TEST(AgentConfig, WorkConfig) {
         auto mode =
             GetVal(groups::kSystem, vars::kCleanupUninstall, std::string("xx"));
         EXPECT_TRUE(mode == values::kCleanupSmart);
+    }
+
+    {
+        auto mode = GetVal(groups::kSystem, vars::kWaitNetwork, 1);
+        EXPECT_TRUE(mode == defaults::kServiceWaitNetwork);
     }
 
     {

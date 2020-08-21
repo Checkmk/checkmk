@@ -4,35 +4,29 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import cast, Any, Callable  # pylint: disable=unused-import
-import six
+from typing import cast, Any, Callable
+
+from six import ensure_str
 
 import cmk.utils.version as cmk_version
 import cmk.utils.debug
 import cmk.utils.defines as defines
-from cmk.utils.exceptions import MKGeneralException, MKTimeout
+from cmk.utils.exceptions import MKGeneralException, MKTimeout, MKSNMPError
+from cmk.utils.log import console
 
 import cmk.base.config as config
-import cmk.base.console as console
+import cmk.base.obsolete_output as out
 import cmk.base.crash_reporting
-from cmk.base.exceptions import MKAgentError, MKSNMPError, MKIPAddressLookupError
-from cmk.base.check_utils import CheckPluginName  # pylint: disable=unused-import
-from cmk.utils.type_defs import HostName, ServiceName  # pylint: disable=unused-import
-
-if not cmk_version.is_raw_edition():
-    import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
-else:
-    keepalive = None  # type: ignore[assignment]
+from cmk.base.exceptions import MKAgentError, MKIPAddressLookupError
+from cmk.utils.type_defs import CheckPluginNameStr, HostName, ServiceName
 
 
-def handle_check_mk_check_result(check_plugin_name, description):
-    # type: (CheckPluginName, ServiceName) -> Callable
+def handle_check_mk_check_result(check_plugin_name: CheckPluginNameStr,
+                                 description: ServiceName) -> Callable:
     """Decorator function used to wrap all functions used to execute the "Check_MK *" checks
     Main purpose: Equalize the exception handling of all such functions"""
-    def wrap(check_func):
-        # type: (Callable) -> Callable
-        def wrapped_check_func(hostname, *args, **kwargs):
-            # type: (HostName, Any, Any) -> int
+    def wrap(check_func: Callable) -> Callable:
+        def wrapped_check_func(hostname: HostName, *args: Any, **kwargs: Any) -> int:
             host_config = config.get_config_cache().get_host_config(hostname)
             exit_spec = host_config.exit_code_spec()
 
@@ -59,7 +53,7 @@ def handle_check_mk_check_result(check_plugin_name, description):
                 if cmk.utils.debug.enabled():
                     raise
                 crash_output = cmk.base.crash_reporting.create_check_crash_dump(
-                    hostname, check_plugin_name, None, False, None, description, [])
+                    hostname, check_plugin_name, {}, False, description)
                 infotexts.append(crash_output.replace("Crash dump:\n", "Crash dump:\\n"))
                 status = max(status, cast(int, exit_spec.get("exception", 3)))
 
@@ -73,10 +67,15 @@ def handle_check_mk_check_result(check_plugin_name, description):
             output_txt += "\n"
 
             if _in_keepalive_mode():
-                keepalive.add_keepalive_active_check_result(hostname, output_txt)
-                console.verbose(six.ensure_str(output_txt))
+                if not cmk_version.is_raw_edition():
+                    import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
+                else:
+                    keepalive = None  # type: ignore[assignment]
+
+                keepalive.add_active_check_result(hostname, output_txt)
+                console.verbose(ensure_str(output_txt))
             else:
-                console.output(six.ensure_str(output_txt))
+                out.output(ensure_str(output_txt))
 
             return status
 
@@ -85,6 +84,9 @@ def handle_check_mk_check_result(check_plugin_name, description):
     return wrap
 
 
-def _in_keepalive_mode():
-    # type: () -> bool
+def _in_keepalive_mode() -> bool:
+    if not cmk_version.is_raw_edition():
+        import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
+    else:
+        keepalive = None  # type: ignore[assignment]
     return bool(keepalive and keepalive.enabled())

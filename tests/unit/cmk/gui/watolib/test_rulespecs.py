@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -10,7 +10,7 @@ import pytest  # type: ignore[import]
 import cmk.utils.version as cmk_version
 
 # Triggers plugin loading of plugins.wato which registers all the plugins
-import cmk.gui.wato  # pylint: disable=unused-import
+import cmk.gui.wato
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.rulespecs
 from cmk.gui.exceptions import MKGeneralException
@@ -20,11 +20,11 @@ from cmk.gui.watolib.rulespecs import (
     RulespecGroup,
     RulespecSubGroup,
     RulespecRegistry,
-    Rulespec,
     HostRulespec,
     rulespec_registry,
     CheckTypeGroupSelection,
     RulespecGroupManualChecks,
+    ManualCheckParameterRulespec,
 )
 from cmk.gui.valuespec import (
     Dictionary,
@@ -119,7 +119,6 @@ def test_grouped_rulespecs():
             'static_checks:brocade_optical',
             'static_checks:fortigate_sessions',
             'static_checks:fortigate_node_sessions',
-            'static_checks:f5_bigip_cluster_v11',
             'static_checks:cisco_asa_failover',
             'static_checks:threepar_ports',
             'static_checks:ipsecvpn',
@@ -232,7 +231,6 @@ def test_grouped_rulespecs():
             'checkgroup_parameters:brocade_optical',
             'checkgroup_parameters:fortigate_sessions',
             'checkgroup_parameters:fortigate_node_sessions',
-            'checkgroup_parameters:f5_bigip_cluster_v11',
             'checkgroup_parameters:cisco_asa_failover',
             'checkgroup_parameters:threepar_ports',
             'checkgroup_parameters:ipsecvpn',
@@ -442,7 +440,6 @@ def test_grouped_rulespecs():
             'static_checks:mailqueue_length',
             'static_checks:mail_queue_length',
             'static_checks:mail_latency',
-            'static_checks:omd_status',
             'static_checks:services',
             'static_checks:solaris_services',
             'static_checks:winperf_ts_sessions',
@@ -1260,13 +1257,13 @@ def test_grouped_rulespecs():
         rulespec_names = [rulespec.name for rulespec in rulespec_registry.get_by_group(group_name)]
         assert sorted(by_group[group_name]) == sorted(rulespec_names)
 
+
 def _expected_rulespec_group_choices():
     expected = [
-        ('activechecks', u'Active checks (HTTP, TCP, etc.)'),
+        ('activechecks', u'Check networking services'),
         ('agent', u'Access to Agents'),
         ('agent/check_mk_agent', u'&nbsp;&nbsp;\u2319 Check_MK Agent'),
         ('agent/general_settings', u'&nbsp;&nbsp;\u2319 General Settings'),
-        ('agent/snmp', u'&nbsp;&nbsp;\u2319 SNMP'),
         ('agents', u'Monitoring Agents'),
         ('agents/generic_options', u'&nbsp;&nbsp;\u2319 Generic Options'),
         ('checkparams', u'Parameters for discovered services'),
@@ -1280,19 +1277,26 @@ def _expected_rulespec_group_choices():
          u'&nbsp;&nbsp;\u2319 Temperature, Humidity, Electrical Parameters, etc.'),
         ('checkparams/hardware', u'&nbsp;&nbsp;\u2319 Hardware, BIOS'),
         ('checkparams/virtualization', u'&nbsp;&nbsp;\u2319 Virtualization'),
-        ('datasource_programs', u'Datasource Programs'),
+        ('datasource_programs', u'Other integrations'),
         ('eventconsole', u'Event Console'),
         ('grouping', u'Grouping'),
         ('inventory', u'Hardware / Software Inventory'),
-        ('monconf', u'Monitoring Configuration'),
-        ('monconf/host_checks', u'&nbsp;&nbsp;\u2319 Host Checks'),
+        ('host_monconf', u'Host monitoring rules'),
+        ('host_monconf/host_checks', u'&nbsp;&nbsp;\u2319 Host checks'),
+        ('host_monconf/host_notifications', u'&nbsp;&nbsp;\u2319 Notifications'),
+        ('host_monconf/host_various', u'&nbsp;&nbsp;\u2319 Various'),
+        ('monconf', u'Service monitoring rules'),
         ('monconf/inventory_and_check_mk_settings',
-         u'&nbsp;&nbsp;\u2319 Inventory and Check_MK settings'),
+         u'&nbsp;&nbsp;\u2319 Discovery and Checkmk settings'),
         ('monconf/notifications', u'&nbsp;&nbsp;\u2319 Notifications'),
         ('monconf/service_checks', u'&nbsp;&nbsp;\u2319 Service Checks'),
         ('monconf/various', u'&nbsp;&nbsp;\u2319 Various'),
         ('user_interface', u'User Interface'),
-
+        ('bi', 'Check state of BI aggregations'),
+        ('custom_checks', 'Integrate Nagios plugins'),
+        ('custom_integrations', 'Custom integrations'),
+        ('snmp', 'SNMP settings'),
+        ('vm_cloud_container', 'VM, Cloud, Container'),
     ]
 
     if not cmk_version.is_raw_edition():
@@ -1311,7 +1315,7 @@ def _expected_rulespec_group_choices():
 @pytest.mark.parametrize("mode,result", [
     ("rulesets", _expected_rulespec_group_choices()),
     ("static_checks", [
-        ('static', u'Manual Checks'),
+        ('static', u'Manual services'),
         ('static/applications', u'&nbsp;&nbsp;\u2319 Applications, Processes & Services'),
         ('static/hardware', u'&nbsp;&nbsp;\u2319 Hardware, BIOS'),
         ('static/networking', u'&nbsp;&nbsp;\u2319 Networking'),
@@ -1328,9 +1332,14 @@ def test_rulespec_group_choices(mode, result):
 
 
 @pytest.mark.parametrize("term,result", [
+    ("host_monconf", [
+        'host_monconf',
+        'host_monconf/host_checks',
+        'host_monconf/host_notifications',
+        'host_monconf/host_various',
+    ]),
     ("monconf", [
         'monconf',
-        'monconf/host_checks',
         'monconf/inventory_and_check_mk_settings',
         'monconf/notifications',
         'monconf/service_checks',
@@ -1342,7 +1351,6 @@ def test_rulespec_group_choices(mode, result):
         'agent',
         'agent/check_mk_agent',
         'agent/general_settings',
-        'agent/snmp',
     ]),
 ])
 def test_rulespec_get_matching_group_names(term, result):
@@ -1357,6 +1365,7 @@ def test_rulespec_get_main_groups():
         'activechecks',
         'grouping',
         'monconf',
+        'host_monconf',
         'user_interface',
         'agent',
         'agents',
@@ -1365,6 +1374,11 @@ def test_rulespec_get_main_groups():
         'datasource_programs',
         'inventory',
         'eventconsole',
+        'bi',
+        'custom_checks',
+        'custom_integrations',
+        'snmp',
+        'vm_cloud_container',
     ])
 
 
@@ -1372,16 +1386,23 @@ def test_rulespec_get_all_groups():
     expected_rulespec_groups = [
         'activechecks',
         'grouping',
+        'host_monconf/host_checks',
+        'host_monconf/host_notifications',
+        'host_monconf/host_various',
         'monconf/service_checks',
-        'monconf/host_checks',
         'monconf/notifications',
         'monconf/inventory_and_check_mk_settings',
         'monconf/various',
         'user_interface',
         'agent/general_settings',
-        'agent/snmp',
         'agent/check_mk_agent',
         'agents/generic_options',
+        'bi',
+        'custom_checks',
+        'custom_integrations',
+        'snmp',
+        'vm_cloud_container',
+        'checkparams/hardware',
         'checkparams/networking',
         'static/networking',
         'checkparams/applications',
@@ -1419,19 +1440,25 @@ def test_rulespec_get_host_groups():
 
     expected_rulespec_host_groups = [
         'grouping',
+        'host_monconf/host_checks',
+        'host_monconf/host_notifications',
+        'host_monconf/host_various',
         'monconf/service_checks',
-        'monconf/host_checks',
         'monconf/notifications',
         'monconf/inventory_and_check_mk_settings',
         'monconf/various',
         'user_interface',
         'agent/general_settings',
-        'agent/snmp',
         'agent/check_mk_agent',
         'agents/generic_options',
         'datasource_programs',
         'inventory',
         'eventconsole',
+        'bi',
+        'custom_checks',
+        'custom_integrations',
+        'snmp',
+        'vm_cloud_container',
     ]
 
     if not cmk_version.is_raw_edition():
@@ -1445,8 +1472,6 @@ def test_rulespec_get_host_groups():
 
     group_names = watolib.rulespec_group_registry.get_host_rulespec_group_names()
     assert sorted(group_names) == sorted(expected_rulespec_host_groups)
-
-
 
 
 def test_legacy_register_rule(monkeypatch):
@@ -1535,14 +1560,14 @@ def test_legacy_register_rule_attributes(monkeypatch):
     assert spec.factory_default == "humpf"
 
 
-@pytest.fixture()
-def patch_rulespec_registries(monkeypatch):
+@pytest.fixture(name="patch_rulespec_registries")
+def fixture_patch_rulespec_registries(monkeypatch):
     group_registry = watolib.RulespecGroupRegistry()
     group_registry.register(RulespecGroupManualChecks)
-    rulespec_registry = RulespecRegistry(group_registry)
+    test_rulespec_registry = RulespecRegistry(group_registry)
     monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry", group_registry)
-    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_registry", rulespec_registry)
-    monkeypatch.setattr(cmk.gui.plugins.wato.utils, "rulespec_registry", rulespec_registry)
+    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_registry", test_rulespec_registry)
+    monkeypatch.setattr(cmk.gui.plugins.wato.utils, "rulespec_registry", test_rulespec_registry)
 
 
 def test_register_check_parameters(patch_rulespec_registries):
@@ -1590,6 +1615,7 @@ def test_register_check_parameters(patch_rulespec_registries):
     assert "static_checks:bla_params" in rulespec_names
     assert len(rulespec_names) == 1
     rulespec = cmk.gui.watolib.rulespecs.rulespec_registry["static_checks:bla_params"]
+    assert isinstance(rulespec, ManualCheckParameterRulespec)
 
     # Static checks rulespecs are always
     # a) host rulespecs
@@ -1702,52 +1728,7 @@ def test_rulespecs_get_by_group():
         name = "dummy_name",
         group = DummyGroup,
         valuespec = lambda: FixedValue(None)
-        ))
+    ))
     result = registry.get_by_group("group")
     assert len(result) == 1
     assert isinstance(result[0], HostRulespec)
-
-
-# These tests make adding new elements needlessly painful.
-# Skip pending discussion with development team.
-@pytest.mark.skip
-def test_registered_rulespecs():
-    names = rulespec_registry.keys()
-    assert sorted(expected_rulespecs.keys()) == sorted(names)
-
-    for rulespec in rulespec_registry.values():
-        spec = expected_rulespecs[rulespec.name]
-
-        assert rulespec.title == spec["title"]
-        assert rulespec.help == spec["help"]
-        assert rulespec.group_name == spec["group_name"]
-        assert rulespec.valuespec.__class__.__name__ == spec["valuespec_class_name"]
-
-        if isinstance(rulespec, cmk.gui.watolib.rulespecs.ABCHostRulespec):
-            assert rulespec.item_name is None
-            # Static checks rulespecs are always host rulespecs, but have an item_spec for rendering
-            # the item configured in the value oO. A little bit surprising. Needs to be cleaned up
-            if not rulespec.name.startswith("static_checks:"):
-                assert rulespec.item_spec is None
-            assert rulespec.item_type is None
-            assert rulespec.item_help is None
-            assert rulespec.item_enum is None
-
-        assert rulespec.item_name == spec["item_name"], rulespec.title
-
-        if rulespec.name.startswith(
-                "static_checks:") and spec["item_spec_class_name"] == "NoneType":
-            # was changed during plugin rewrite. Instead of implicitly changing None to FixedValue
-            # during registration the classes now default to a FixedValue(None, ...)
-            item_spec_class_name = "FixedValue"
-        else:
-            item_spec_class_name = spec["item_spec_class_name"]
-
-        assert rulespec.item_spec.__class__.__name__ == item_spec_class_name, rulespec.name
-        assert rulespec.item_type == spec["item_type"]
-        assert rulespec.item_help == spec["item_help"]
-        assert rulespec.item_enum == spec["item_enum"]
-        assert rulespec.match_type == spec["match_type"]
-        assert rulespec.factory_default == spec["factory_default"]
-        assert rulespec.is_optional == spec["is_optional"]
-        assert rulespec.is_deprecated == spec["is_deprecated"]

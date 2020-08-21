@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -8,6 +8,7 @@ import sys
 import getopt
 import socket
 import traceback
+from typing import Any, Dict, Optional, List, Tuple, Union
 
 import snap7  # type: ignore[import]
 from snap7.snap7types import S7AreaCT, S7AreaDB, S7AreaMK, S7AreaPA, S7AreaPE, S7AreaTM  # type: ignore[import]
@@ -88,7 +89,7 @@ def main(sys_argv=None):
     short_options = 'h:t:d'
     long_options = ['help', 'timeout=', 'debug']
 
-    devices = []
+    devices: List[Dict[str, Any]] = []
     opt_debug = False
     opt_timeout = 10
 
@@ -129,7 +130,7 @@ def main(sys_argv=None):
 
             if ':' in p[0]:
                 area_name, db_number = p[0].split(':')
-                area = (area_name, int(db_number))
+                area: Tuple[str, Optional[int]] = (area_name, int(db_number))
             elif p[0] in ["merker", "input", "output", "counter", "timer"]:
                 area = (p[0], None)
             else:
@@ -138,8 +139,8 @@ def main(sys_argv=None):
             byte, bit = map(int, p[1].split('.'))
 
             if ':' in p[2]:
-                typename, size = p[2].split(':')
-                datatype = typename, int(size)
+                typename, size_str = p[2].split(':')
+                datatype: Union[Tuple[str, int], str] = (typename, int(size_str))
             else:
                 datatype = p[2]
 
@@ -181,12 +182,12 @@ def main(sys_argv=None):
             # We want to have a minimum number of reads. We try to only use
             # a single read and detect the memory area to fetch dynamically
             # based on the configured values
-            addresses = {}
+            addresses: Dict = {}
             start_address = None
             end_address = None
             for area, (byte, bit), datatype, valuetype, ident in device['values']:
                 if isinstance(datatype, tuple):
-                    size = datatype[1]
+                    size: Optional[int] = datatype[1]
                 else:
                     size = datatypes[datatype][0]
                 addresses.setdefault(area, [None, None])
@@ -195,7 +196,8 @@ def main(sys_argv=None):
                 if start_address is None or byte < start_address:
                     addresses[area][0] = byte
 
-                end = byte + size
+                # TODO: Is the None case correct?
+                end = byte + (0 if size is None else size)
                 if end_address is None or end > end_address:
                     addresses[area][1] = end
 

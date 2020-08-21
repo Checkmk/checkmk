@@ -1,14 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import division
 import os
 import time
 import json
-from typing import Any, Dict, List  # pylint: disable=unused-import
+from typing import Any, Dict, List
 
 import livestatus
 import cmk.utils.paths
@@ -19,6 +18,7 @@ import cmk.gui.pages
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.plugins.views.utils import make_service_breadcrumb
 from cmk.gui.exceptions import MKGeneralException
 
 graph_size = 2000, 700
@@ -30,7 +30,8 @@ def page_graph():
     service = html.request.get_str_input_mandatory("service")
     dsname = html.request.get_str_input_mandatory("dsname")
 
-    html.header(_("Prediction for %s - %s - %s") % (host, service, dsname))
+    breadcrumb = make_service_breadcrumb(host, service)
+    html.header(_("Prediction for %s - %s - %s") % (host, service, dsname), breadcrumb)
 
     # Get current value from perf_data via Livestatus
     current_value = get_current_perfdata(host, service, dsname)
@@ -44,7 +45,7 @@ def page_graph():
     # Load all prediction information, sort by time of generation
     tg_name = html.request.var("timegroup")
     timegroup = None
-    timegroups = []  # type: List[prediction.PredictionInfo]
+    timegroups: List[prediction.PredictionInfo] = []
     now = time.time()
     for f in os.listdir(pred_dir):
         if not f.endswith(".info"):
@@ -63,7 +64,7 @@ def page_graph():
 
     timegroups.sort(key=lambda x: x["range"][0])
 
-    choices = [(tg_info["name"], tg_info["name"].title()) for tg_info in timegroups]
+    choices = [(tg_info_["name"], tg_info_["name"].title()) for tg_info_ in timegroups]
 
     if not timegroup:
         if not timegroups:
@@ -161,7 +162,7 @@ def compute_vertical_scala(low, high):
         factor = 1024.0**5
 
     v = 0.0
-    vert_scala = []  # type: List[List[Any]]
+    vert_scala: List[List[Any]] = []
     steps = (max(0, high) - min(0, low)) / factor  # fixed: true-division
     if steps < 3:
         step = 0.2 * factor
@@ -207,7 +208,7 @@ def get_current_perfdata(host, service, dsname):
 # Compute check levels from prediction data and check parameters
 def swap_and_compute_levels(tg_data, tg_info):
     columns = tg_data["columns"]
-    swapped = {c: [] for c in columns}  # type: Dict[Any, List[Any]]
+    swapped: Dict[Any, List[Any]] = {c: [] for c in columns}
     for step in tg_data["points"]:
         row = dict(zip(columns, step))
         for k, v in row.items():

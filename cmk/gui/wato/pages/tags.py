@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,14 +6,15 @@
 """Manage the variable config.wato_host_tags -> The set of tags to be assigned
 to hosts and that is the basis of the rules."""
 
-from typing import Any, Dict, List, Set, Text, Tuple as _Tuple, Union  # pylint: disable=unused-import
+from typing import Any, Dict, List, Set, Tuple as _Tuple, Union
 import abc
 from enum import Enum
-import six
+
+import cmk.utils.tags
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
-from cmk.gui.table import table_element, Table  # pylint: disable=unused-import
+from cmk.gui.table import table_element, Table
 import cmk.gui.forms as forms
 from cmk.gui.exceptions import (
     MKUserError,
@@ -36,10 +37,10 @@ from cmk.gui.valuespec import (
     Transform,
 )
 
-import cmk.utils.tags
+from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.watolib.tags import TagConfigFile
-from cmk.gui.watolib.rulesets import Ruleset  # pylint: disable=unused-import
-from cmk.gui.watolib.hosts_and_folders import CREHost, CREFolder  # pylint: disable=unused-import
+from cmk.gui.watolib.rulesets import Ruleset
+from cmk.gui.watolib.hosts_and_folders import CREHost, CREFolder
 
 from cmk.gui.plugins.wato.utils.main_menu import (
     MainMenu,
@@ -59,7 +60,7 @@ from cmk.gui.plugins.wato import (
 )
 
 
-class ABCTagMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
+class ABCTagMode(WatoMode, metaclass=abc.ABCMeta):
     # NOTE: This class is obviously still abstract, but pylint fails to see
     # this, even in the presence of the meta class assignment below, see
     # https://github.com/PyCQA/pylint/issues/179.
@@ -86,8 +87,8 @@ class ABCTagMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
         self._effective_config.parse_config(self._tag_config.get_dict_format())
         self._effective_config += self._builtin_config
 
-    def _get_tags_using_aux_tag(self, aux_tag):
-        # type: (cmk.utils.tags.AuxTag) -> Set[cmk.utils.tags.GroupedTag]
+    def _get_tags_using_aux_tag(self,
+                                aux_tag: cmk.utils.tags.AuxTag) -> Set[cmk.utils.tags.GroupedTag]:
         return {
             tag  #
             for tag_group in self._effective_config.tag_groups
@@ -133,9 +134,11 @@ class ModeTags(ABCTagMode):
 
         if not html.request.has_var("_repair") and self._is_cleaning_up_user_tag_group_to_builtin(
                 del_id):
-            message = _("Transformed the user tag group \"%s\" to builtin.") % del_id
+            message: Union[bool,
+                           str] = _("Transformed the user tag group \"%s\" to builtin.") % del_id
         else:
-            message = _rename_tags_after_confirmation(OperationRemoveTagGroup(del_id))
+            message = _rename_tags_after_confirmation(self.breadcrumb(),
+                                                      OperationRemoveTagGroup(del_id))
             if message is True:  # no confirmation yet
                 c = wato_confirm(
                     _("Confirm deletion of the tag group '%s'") % del_id,
@@ -193,7 +196,7 @@ class ModeTags(ABCTagMode):
                         _("You cannot delete this auxiliary tag. "
                           "It is being used in the tag group <b>%s</b>.") % group.title)
 
-        message = _rename_tags_after_confirmation(OperationRemoveAuxTag(del_id))
+        message = _rename_tags_after_confirmation(self.breadcrumb(), OperationRemoveAuxTag(del_id))
         if message is True:  # no confirmation yet
             c = wato_confirm(
                 _("Confirm deletion of the auxiliary tag '%s'") % del_id,
@@ -311,8 +314,7 @@ class ModeTags(ABCTagMode):
         delete_url = make_action_link([("mode", "tags"), ("_delete", tag_group.id)])
         html.icon_button(delete_url, _("Delete this tag group"), "delete")
 
-    def _render_aux_tag_list(self):
-        # type: () -> None
+    def _render_aux_tag_list(self) -> None:
         with table_element("auxtags",
                            _("Auxiliary tags"),
                            help=_(
@@ -338,8 +340,7 @@ class ModeTags(ABCTagMode):
                                for tag in self._get_tags_using_aux_tag(aux_tag)
                                if tag.id is not None)))
 
-    def _show_aux_tag_icons(self, aux_tag):
-        # type: (cmk.utils.tags.AuxTag) -> None
+    def _show_aux_tag_icons(self, aux_tag: cmk.utils.tags.AuxTag) -> None:
         if aux_tag.id in self._builtin_config.aux_tag_list.get_tag_ids():
             html.i("(%s)" % _("builtin"))
             return
@@ -350,7 +351,7 @@ class ModeTags(ABCTagMode):
         html.icon_button(delete_url, _("Delete this auxiliary tag"), "delete")
 
 
-class ABCEditTagMode(six.with_metaclass(abc.ABCMeta, ABCTagMode)):
+class ABCEditTagMode(ABCTagMode, metaclass=abc.ABCMeta):
     @classmethod
     def permissions(cls):
         return ["hosttags"]
@@ -410,38 +411,32 @@ class ABCEditTagMode(six.with_metaclass(abc.ABCMeta, ABCTagMode)):
 @mode_registry.register
 class ModeTagUsage(ABCTagMode):
     @classmethod
-    def name(cls):
-        # type: () -> str
+    def name(cls) -> str:
         return "tag_usage"
 
     @classmethod
-    def permissions(cls):
-        # type: () -> List[str]
+    def permissions(cls) -> List[str]:
         return ["hosttags"]
 
-    def title(self):
-        # type: () -> Text
+    def title(self) -> str:
         return _("Tag usage")
 
-    def buttons(self):
-        # type: () -> None
+    def buttons(self) -> None:
         html.context_button(_("All tags"), watolib.folder_preserving_link([("mode", "tags")]),
                             "back")
 
-    def page(self):
-        # type: () -> None
+    def page(self) -> None:
         self._show_tag_list()
         self._show_aux_tag_list()
 
-    def _show_tag_list(self):
-        # type: () -> None
+    def _show_tag_list(self) -> None:
         with table_element("tag_usage", _("Tags")) as table:
             for tag_group in self._effective_config.tag_groups:
                 for tag in tag_group.tags:
                     self._show_tag_row(table, tag_group, tag)
 
-    def _show_tag_row(self, table, tag_group, tag):
-        # type: (Table, cmk.utils.tags.TagGroup, cmk.utils.tags.GroupedTag) -> None
+    def _show_tag_row(self, table: Table, tag_group: cmk.utils.tags.TagGroup,
+                      tag: cmk.utils.tags.GroupedTag) -> None:
         table.row()
 
         table.cell(_("Actions"), css="buttons")
@@ -471,8 +466,7 @@ class ModeTagUsage(ABCTagMode):
         if affected_rulesets:
             _show_affected_rulesets(affected_rulesets)
 
-    def _show_tag_group_icons(self, tag_group):
-        # type: (cmk.utils.tags.TagGroup) -> None
+    def _show_tag_group_icons(self, tag_group: cmk.utils.tags.TagGroup) -> None:
         # Tag groups were made builtin with ~1.4. Previously users could modify
         # these groups.  These users now have the modified tag groups in their
         # user configuration and should be able to cleanup this using the GUI
@@ -485,14 +479,12 @@ class ModeTagUsage(ABCTagMode):
         edit_url = watolib.folder_preserving_link([("mode", "edit_tag"), ("edit", tag_group.id)])
         html.icon_button(edit_url, _("Edit this tag group"), "edit")
 
-    def _show_aux_tag_list(self):
-        # type: () -> None
+    def _show_aux_tag_list(self) -> None:
         with table_element("aux_tag_usage", _("Auxiliary tags")) as table:
             for aux_tag in self._effective_config.aux_tag_list.get_tags():
                 self._show_aux_tag_row(table, aux_tag)
 
-    def _show_aux_tag_row(self, table, aux_tag):
-        # type: (Table, cmk.utils.tags.AuxTag) -> None
+    def _show_aux_tag_row(self, table: Table, aux_tag: cmk.utils.tags.AuxTag) -> None:
         table.row()
 
         table.cell(_("Actions"), css="buttons")
@@ -521,8 +513,7 @@ class ModeTagUsage(ABCTagMode):
         if affected_rulesets:
             _show_affected_rulesets(affected_rulesets)
 
-    def _show_aux_tag_icons(self, aux_tag):
-        # type: (cmk.utils.tags.AuxTag) -> None
+    def _show_aux_tag_icons(self, aux_tag: cmk.utils.tags.AuxTag) -> None:
         if aux_tag.id in self._builtin_config.aux_tag_list.get_tag_ids():
             html.i("(%s)" % _("builtin"))
             return
@@ -614,8 +605,7 @@ class ModeEditTagGroup(ABCEditTagMode):
     def name(cls):
         return "edit_tag"
 
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         super(ModeEditTagGroup, self).__init__()
 
         tg = self._tag_config.get_tag_group(self._id)
@@ -693,7 +683,7 @@ class ModeEditTagGroup(ABCEditTagMode):
         operation = OperationReplaceGroupedTags(tg_id, remove_tag_ids, replace_tag_ids)
 
         # Now check, if any folders, hosts or rules are affected
-        message = _rename_tags_after_confirmation(operation)
+        message = _rename_tags_after_confirmation(self.breadcrumb(), operation)
         if message:
             self._save_tags_and_update_hosts(changed_hosttags_config.get_dict_format())
             add_change("edit-hosttags", _("Edited host tag group %s (%s)") % (message, self._id))
@@ -793,22 +783,20 @@ class TagCleanupMode(Enum):
     REPAIR = "repair"  # Remove tags from rules
 
 
-class ABCOperation(six.with_metaclass(abc.ABCMeta, object)):
+class ABCOperation(metaclass=abc.ABCMeta):
     """Base for all tag cleanup operations"""
     @abc.abstractmethod
-    def confirm_title(self):
-        # type: () -> Text
+    def confirm_title(self) -> str:
         raise NotImplementedError()
 
 
-class ABCTagGroupOperation(six.with_metaclass(abc.ABCMeta, ABCOperation)):
+class ABCTagGroupOperation(ABCOperation, metaclass=abc.ABCMeta):
     # NOTE: This class is obviously still abstract, but pylint fails to see
     # this, even in the presence of the meta class assignment below, see
     # https://github.com/PyCQA/pylint/issues/179.
 
     # pylint: disable=abstract-method
-    def __init__(self, tag_group_id):
-        # type: (str) -> None
+    def __init__(self, tag_group_id: str) -> None:
         super(ABCTagGroupOperation, self).__init__()
         self.tag_group_id = tag_group_id
 
@@ -824,8 +812,8 @@ class OperationRemoveAuxTag(ABCTagGroupOperation):
 
 
 class OperationReplaceGroupedTags(ABCOperation):
-    def __init__(self, tag_group_id, remove_tag_ids, replace_tag_ids):
-        # type: (str, List[str], Dict[str, str]) -> None
+    def __init__(self, tag_group_id: str, remove_tag_ids: List[str],
+                 replace_tag_ids: Dict[str, str]) -> None:
         super(OperationReplaceGroupedTags, self).__init__()
         self.tag_group_id = tag_group_id
         self.remove_tag_ids = remove_tag_ids
@@ -835,7 +823,8 @@ class OperationReplaceGroupedTags(ABCOperation):
         return _("Confirm tag modifications")
 
 
-def _rename_tags_after_confirmation(operation):
+def _rename_tags_after_confirmation(breadcrumb: Breadcrumb,
+                                    operation: ABCOperation) -> Union[bool, str]:
     """Handle renaming and deletion of tags
 
     Find affected hosts, folders and rules. Remove or fix those rules according
@@ -886,7 +875,7 @@ def _rename_tags_after_confirmation(operation):
             message += html.drain()
 
     if message:
-        wato_html_head(operation.confirm_title())
+        wato_html_head(title=operation.confirm_title(), breadcrumb=breadcrumb)
         html.open_div(class_="really")
         html.h3(_("Your modifications affect some objects"))
         html.write_text(message)
@@ -928,8 +917,7 @@ def _rename_tags_after_confirmation(operation):
     return True
 
 
-def _show_aux_tag_used_by_tags(tags):
-    # type: (Set[cmk.utils.tags.GroupedTag]) -> None
+def _show_aux_tag_used_by_tags(tags: Set[cmk.utils.tags.GroupedTag]) -> None:
     if not tags:
         return
 
@@ -951,8 +939,7 @@ def _show_aux_tag_used_by_tags(tags):
     html.close_ul()
 
 
-def _show_affected_folders(affected_folders):
-    # type: (List[CREFolder]) -> None
+def _show_affected_folders(affected_folders: List[CREFolder]) -> None:
     html.open_ul()
     for folder in affected_folders:
         html.open_li()
@@ -961,8 +948,7 @@ def _show_affected_folders(affected_folders):
     html.close_ul()
 
 
-def _show_affected_hosts(affected_hosts):
-    # type: (List[CREHost]) -> None
+def _show_affected_hosts(affected_hosts: List[CREHost]) -> None:
     html.open_ul()
     html.open_li()
     for nr, host in enumerate(affected_hosts):
@@ -978,8 +964,7 @@ def _show_affected_hosts(affected_hosts):
     html.close_ul()
 
 
-def _show_affected_rulesets(affected_rulesets):
-    # type: (List[Ruleset]) -> None
+def _show_affected_rulesets(affected_rulesets: List[Ruleset]) -> None:
     html.open_ul()
     for ruleset in affected_rulesets:
         html.open_li()
@@ -990,8 +975,7 @@ def _show_affected_rulesets(affected_rulesets):
     html.close_ul()
 
 
-def _is_removing_tags(operation):
-    # type: (ABCOperation) -> bool
+def _is_removing_tags(operation: ABCOperation) -> bool:
     if isinstance(operation, (OperationRemoveAuxTag, OperationRemoveTagGroup)):
         return True
 
@@ -1050,7 +1034,7 @@ def _change_host_tags_in_hosts(operation, mode, folder):
 
 
 def _change_host_tags_in_host_or_folder(operation, mode, host_or_folder):
-    affected = []  # type: List[Union[watolib.CREHost, watolib.CREFolder]]
+    affected: List[Union[watolib.CREHost, watolib.CREFolder]] = []
 
     attrname = "tag_" + operation.tag_group_id
     attributes = host_or_folder.attributes()
@@ -1110,7 +1094,7 @@ def _change_host_tags_in_rules(operation, mode, folder):
 
 
 def _change_host_tags_in_rule(operation, mode, ruleset, rule):
-    affected_rulesets = set()  # type: Set[watolib.FolderRulesets]
+    affected_rulesets: Set[watolib.FolderRulesets] = set()
     if operation.tag_group_id not in rule.conditions.host_tags:
         return affected_rulesets  # The tag group is not used
 
@@ -1131,7 +1115,7 @@ def _change_host_tags_in_rule(operation, mode, ruleset, rule):
     if not isinstance(operation, OperationReplaceGroupedTags):
         raise NotImplementedError()
 
-    tag_map = list(operation.replace_tag_ids.items())  # type: List[_Tuple[str, Any]]
+    tag_map: List[_Tuple[str, Any]] = list(operation.replace_tag_ids.items())
     tag_map += [(tag_id, False) for tag_id in operation.remove_tag_ids]
 
     # Removal or renaming of single tag choices

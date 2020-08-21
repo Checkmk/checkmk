@@ -1,4 +1,5 @@
 import * as d3 from "d3";
+import * as crossfilter from "crossfilter2";
 
 // The FigureRegistry holds all figure class templates
 class FigureRegistry{
@@ -16,6 +17,7 @@ class FigureRegistry{
 }
 
 export let figure_registry = new FigureRegistry();
+
 
 // Data update scheduler
 // Receives one function pointer which is regularly called
@@ -90,13 +92,18 @@ class Scheduler {
 // Registered hooks will be call on receiving data
 export class MultiDataFetcher {
     constructor() {
+        this.reset();
+        this.scheduler = new Scheduler(()=>this._schedule_operations(), 1);
+    }
+
+    reset() {
+        // Urls to call
         // {"url": {"body": {"interval": 10}}
         this._fetch_operations = {};
 
+        // Hooks to call when receiving data
         // {"url": {"body": [funcA, funcB]}}
         this._fetch_hooks = {};
-
-        this.scheduler = new Scheduler(()=>this._schedule_operations(), 1);
     }
 
     subscribe_hook(post_url, post_body, subscriber_func) {
@@ -155,7 +162,7 @@ export class MultiDataFetcher {
 
 
     _fetch(post_url, post_body) {
-        // TODO: improve error handling, d3js uses promises
+        // TODO: improve error handling, d3js supports promises
         d3.json(encodeURI(post_url),
             {
                 credentials: "include",
@@ -170,9 +177,13 @@ export class MultiDataFetcher {
 
     _fetch_callback(post_url, post_body, api_response) {
         let response = api_response.result;
-        let data = response.data;
+        let data = response.figure_response;
 
         let now = Math.floor(new Date().getTime()/1000);
+
+        if (this._fetch_operations[post_url] == undefined ||
+            this._fetch_operations[post_url][post_body] == undefined)
+            return;
         this._fetch_operations[post_url][post_body].last_update  = now;
         this._fetch_operations[post_url][post_body].fetch_in_progress = false;
 
@@ -183,25 +194,39 @@ export class MultiDataFetcher {
     }
 }
 
+
+// Base class for all cmk_figure based figures
+// Introduces
+//  - Figure sizing
+//  - Post url and body
+//  - Automatic update of data via scheduler
+//  - Various hooks for each phase
+//  - Loading icon
 export class FigureBase {
     static ident() {
         return "figure_base_class";
     }
 
-    constructor(div_selector, width, height) {
+    constructor(div_selector, fixed_size=null) {
         this._div_selector = div_selector;                          // The main container
         this._div_selection = d3.select(this._div_selector);  // The d3-seletion of the main container
 
+        this.svg = null;  // The svg representing the figure
+        this.plot = null; // The plot representing the drawing area, is shifted by margin
 
-        // Expecting absolute 124px ranges from enclosing div
-        if (width == undefined)
-            width = parseInt(this._div_selection.style("width"));
-        if (height == undefined)
-            height = parseInt(this._div_selection.style("height"));
+        if (fixed_size !== null)
+            this._fixed_size = fixed_size;
+        else
+            this._fixed_size = null;
+        this.margin = { top: 10, right: 10, bottom: 10, left: 10 };
 
+        this._div_selection
+            .classed(this.constructor.ident(), true)
+            .classed("cmk_figure", true)
+            .datum(this);
 
-        this._div_selection.classed(this.constructor.ident(), true);
-        this._size = {width: width, height: height};
+        // Parameters used for profiling
+        this._fetch_start = 0;
         this._fetch_data_latency = 0;
 
         // List of hooks which may modify data received from api call
@@ -222,9 +247,61 @@ export class FigureBase {
         this._post_url = "";
         this._post_body = "";
 
-        // Parameters used for profiling
-        this._fetch_start = 0;
-        this._fetch_data_latency = 0;
+        // Current data of this figure
+        this._data = {data: [], plot_definitions: []};
+
+        this._crossfilter = new crossfilter.default();
+    }
+
+    initialize(with_debugging) {
+        if (with_debugging)
+            this._add_scheduler_debugging();
+        this.show_loading_image();
+    }
+
+
+    add_plot_definition(plot_definition) {
+        this._data.plot_definitions.push(plot_definition);
+    }
+
+    add_data(data) {
+        this._data.data = this._data.data.concat(data);
+    }
+
+    remove_plot_definition(plot_definition) {
+        let plot_id = plot_definition.id;
+        for (let idx in this._data.plot_definitions) {
+            let plot_def = this._data.plot_definitions[idx];
+            if (plot_def.id == plot_id) {
+                this._data.plot_definitions.splice(+idx, 1);
+                return;
+            }
+        }
+    }
+
+    resize () {
+        let new_size = this._fixed_size;
+        if (new_size === null) {
+            new_size = {
+                width: this._div_selection.node().parentNode.offsetWidth,
+                height: this._div_selection.node().parentNode.offsetHeight
+            };
+        }
+        this.figure_size = new_size;
+        this.plot_size = {
+            width: this.figure_size.width - this.margin.left - this.margin.right,
+            height: this.figure_size.height - this.margin.top - this.margin.bottom
+        };
+    }
+
+    show_loading_image() {
+        this._div_selection.selectAll("div.loading_img").data([null]).enter()
+            .insert("div", ":first-child")
+            .classed("loading_img", true);
+    }
+
+    remove_loading_image() {
+        this._div_selection.selectAll("div.loading_img").remove();
     }
 
     subscribe_data_pre_processor_hook(func) {
@@ -271,10 +348,6 @@ export class FigureBase {
     }
 
     _fetch_data() {
-        // API Spec is WIP
-        // {
-        //
-        // }
         let post_settings = this.get_post_settings();
 
         if (!post_settings.url)
@@ -291,23 +364,26 @@ export class FigureBase {
                 }
             }
         ).then(json_data=>this._process_api_response(json_data)).catch(
-            ()=>this._show_error_info("Error fetching data")
-        );
+            ()=> {
+                this._show_error_info("Error fetching data");
+                this.remove_loading_image();
+            });
     }
 
     _process_api_response(api_response) {
         // Current api data format
         // {"result_code": 0, "result": {
-        //      "data": {},    // data relevant for rendering
+        //      "figure_response": {
+        //         "plot_definitions": [] // definitions for the plots to render
+        //         "data": []             // the actual data
+        //      },
         // }}
         if (api_response.result_code != 0) {
             this._show_error_info(api_response.result);
             return;
         }
         this._clear_error_info();
-
-        let data = api_response.result;
-        this.process_data(data);
+        this.process_data(api_response.result.figure_response);
         this._fetch_data_latency = +(new Date() - this._fetch_start) / 1000;
     }
 
@@ -317,6 +393,7 @@ export class FigureBase {
         });
         this._call_pre_render_hooks(data);
         this.update_data(data);
+        this.remove_loading_image();
         this.update_gui(data);
         this._call_post_render_hooks(data);
     }
@@ -342,11 +419,16 @@ export class FigureBase {
     }
 
     // Triggers data update mechanics in a figure, e.g. store some data from response
-    update_data() {}
+    update_data(data) {
+        this._data = data;
+    }
 
     // Triggers gui update mechanics in a figure, e.g. rendering
     update_gui() {}
 
+    // Simple re-rendering of existing data
+    // TODO: merge with update_gui?
+    render() {}
 
     // Adds some basic debug features for the scheduler
     _add_scheduler_debugging() {
@@ -372,28 +454,81 @@ export class FigureBase {
             .attr("value", "Force")
             .on("click", ()=>this.scheduler.force_update());
     }
+
+    render_title(title) {
+        if (!this.svg)
+            return;
+
+        this.svg.selectAll(".title").data([title])
+            .join("text")
+            .text(d=>d)
+            .attr("y", 18)
+            .attr("x", this.figure_size.width/2)
+            .attr("text-anchor", "middle")
+            .classed("title", true);
+    }
 }
 
-
-// Class which handles the display of a tooltips
-export class FigureTooltip {
-    constructor(div_selection) {
-        this._setup_tooltip(div_selection);
+// Base class for dc.js based figures (using crossfilter)
+export class DCFigureBase extends FigureBase {
+    constructor(div_selector, crossfilter, graph_group) {
+        super(div_selector);
+        this._crossfilter = crossfilter; // Shared dataset
+        this._graph_group = graph_group; // Shared group among graphs
+        this._dc_chart = null;
     }
 
-    _setup_tooltip(div_selection) {
-        this._tooltip = div_selection
-            .append("div")
-            .style("opacity", 0)
-            .attr("class", "tooltip")
-            // TODO: move styling to scss
+    get_dc_chart() {
+        return this._dc_chart;
+    }
+}
+
+// Class which handles the display of a tooltip
+// It generates basic tooltips and handles its correct positioning
+export class FigureTooltip {
+    constructor(tooltip_selection) {
+        this._tooltip = tooltip_selection;
+        this._tooltip.style("opacity", 0)
             .style("position", "absolute")
+            .classed("tooltip", true);
+        this.figure_size = { width: null, height: null };
+        this.plot_size = { width: null, height: null };
+    }
+
+    update_sizes(figure_size, plot_size) {
+        this.figure_size = figure_size;
+        this.plot_size = plot_size;
+    }
+
+    update_position() {
+        let ev = (("sourceEvent" in d3.event) ? d3.event.sourceEvent : d3.event);
+        let tooltip_size = { width: this._tooltip.node().offsetWidth, height: this._tooltip.node().offsetHeight };
+        let render_to_the_left = this.figure_size.width - ev.layerX < tooltip_size.width + 20;
+        let render_upwards = this.figure_size.height - ev.layerY < tooltip_size.height - 16;
+
+        this._tooltip
+            .style("left", ()=>{
+                if (!render_to_the_left)
+                    return ev.layerX + 20 + "px";
+                return "auto";
+            })
+            .style("right", ()=>{
+                if (render_to_the_left)
+                    return this.plot_size.width - ev.layerX + 75 + "px";
+                return "auto";
+            })
+            .style("bottom", ()=>{
+                if (render_upwards)
+                    return "6px";
+                return "auto";
+            })
+            .style("top", ()=>{
+                if (!render_upwards)
+                    return ev.layerY - 20 + "px";
+                return "auto";
+            })
             .style("pointer-events", "none")
-            .style("background-color", "white")
-            .style("border", "solid")
-            .style("border-width", "2px")
-            .style("border-radius", "5px")
-            .style("padding", "5px");
+            .style("opacity", 1);
     }
 
     add_support(node) {
@@ -405,38 +540,61 @@ export class FigureTooltip {
 
     _mouseover(){
         let node_data = d3.select(d3.event.target).datum();
-        if (node_data.tooltip == undefined)
+        if (node_data == undefined || node_data.tooltip == undefined)
             return;
 
         this._tooltip.style("opacity", 1);
-        d3.select(d3.event.target).style("stroke", "black")
-            .style("opacity", 0.8);
     }
 
     _mousemove(){
         let node_data = d3.select(d3.event.target).datum();
-        this._tooltip.html(node_data.tooltip)
-            .style("left", (d3.event.layerX+20) + "px")
-            .style("top", d3.event.layerY + "px");
+        if (node_data == undefined || node_data.tooltip == undefined)
+            return;
+        this._tooltip.html(node_data.tooltip);
+        this.update_position();
     }
 
     _mouseleave(){
         this._tooltip.style("opacity", 0);
-        d3.select(d3.event.target).style("stroke", "none")
-            .style("opacity", null);
     }
 }
 
-// Helper function to set a list of classes for a node
-export function set_classes(node, list_of_classes) {
-    let node_selection = d3.select(node);
-    let existing_classes = [...node.classList];
-    existing_classes.forEach(classname=>{
-        node_selection.classed(classname, false);
-    });
-    if (!list_of_classes)
-        return;
-    list_of_classes.forEach(new_class=>{
-        node_selection.classed(new_class, true);
-    });
+export class FigureLegend {
+    constructor(legend_selection) {
+        this._legend = legend_selection;
+        this._legend.classed("legend", true);
+    }
+
+    _dragstart() {
+        this._dragged_object = d3.select(d3.event.sourceEvent.currentTarget);
+    }
+
+    _drag() {
+        this._dragged_object.style("position", "absolute")
+            .style("top", d3.event.y + "px")
+            .style("right", -d3.event.x + "px");
+    }
+
+    _dragend() {
+        this._dragged_object.remove();
+
+        let point_in_rect = (r,p)=>((p.x > r.x1 && p.x < r.x2) && (p.y > r.y1 && p.y < r.y2));
+        let renderer_instances = d3.selectAll("svg.renderer");
+        let target_renderer = null;
+        renderer_instances.each((d, idx, nodes)=>{
+            let rect = nodes[idx].getBoundingClientRect();
+            let x1 = rect.left;
+            let x2 = x1 + rect.width;
+            let y1 = rect.top;
+            let y2 = y1 + rect.height;
+            if (point_in_rect({x1: x1, y1: y1, x2: x2, y2: y2}, {x: d3.event.sourceEvent.clientX, y: d3.event.sourceEvent.clientY}))
+                target_renderer = d;
+        });
+
+        if (target_renderer != null && target_renderer != d3.event.subject.renderer)
+            d3.event.subject.migrate_to(target_renderer);
+    }
+
+
+
 }

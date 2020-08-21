@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -9,6 +9,7 @@
 
 import sys
 from email.mime.text import MIMEText
+
 from cmk.notification_plugins import utils
 
 opt_debug = '-d' in sys.argv
@@ -126,7 +127,7 @@ def main():
     if bulk_mode:
         content_txt = ""
         parameters, contexts = utils.read_bulk_contexts()
-        hosts = set([])
+        hosts = set()
         for context in contexts:
             context.update(parameters)
             content_txt += construct_content(context)

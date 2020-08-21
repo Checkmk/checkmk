@@ -36,9 +36,9 @@ global:
     # password
     passphrase: secret
 
-    # Do only execute programs and scripts with
-    # the following suffixes (in local and plugins).
-    execute: [exe, bat, vbs, cmd, ps1]
+    # Allowed file extensions. The agent launches the program(script) only 
+    # when its extension is on the list of allowed ones. 
+    execute: [exe, bat, vbs, cmd, ps1] # Supported: vbs, ps1, py, pl, exe, cmd, bat
 
     # Run sync scripts in parallel (to each other). Default is "async"
     async: yes
@@ -256,7 +256,7 @@ modules:
     table:
         - name: 'python-3.8'              # this is name of the zip file and folder where  zip is installed to
           exts: ['.checkmk.py', '.py' ]   # list of extensions to be used automatically
-          exec: 'Scripts\python.exe {}'   # command line, exe is relative to folder modules
+          exec: '.venv\Scripts\python.exe {}'   # command line, exe is relative to folder modules
     
 
 system:
@@ -269,11 +269,14 @@ system:
 
     cleanup_uninstall: smart # allowed none, smart and all
 
+    wait_network: 30
+
     service:
         restart_on_crash: yes  # service will restart if crashed, you may set no to disable restarting
                                # no may be used if you have serious problems with crasghing and starting
         error_mode: log        # ignore or log
         start_mode: auto       # Possible values are: auto - service starts with boot, demand - requires manual starting
+                               # delayed - serice started automatically(delayed)
                                # disabled - service cannot be started manually and should be enabled
 
 

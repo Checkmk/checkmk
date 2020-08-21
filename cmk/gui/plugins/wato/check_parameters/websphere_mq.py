@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -54,7 +54,7 @@ def websphere_mq_common_elements():
 def transform_websphere_mq_queues(source):
     if isinstance(source, tuple):
         return {"message_count": source}
-    elif "messages_not_processed_age" in source:
+    if "messages_not_processed_age" in source:
         age_params = source["messages_not_processed_age"]
         source["messages_not_processed"] = {}
         source["messages_not_processed"]["age"] = age_params

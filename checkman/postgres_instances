@@ -12,5 +12,5 @@ item:
  Name of the database in upper case letters
 
 inventory:
-  One service per instance is created.
+ One service is created for each instance.
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -39,7 +39,7 @@ def _parameter_valuespec_vm_guest_tools():
             ("guestToolsUnmanaged",
              MonitoringState(
                  title=_("VMware Tools is installed, but it is not managed by VMWare"),
-                 default_value=1,
+                 default_value=0,
              )),
         ],
     )

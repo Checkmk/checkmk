@@ -29,7 +29,7 @@ def check_liebert_temp_general(item, params, data):
 
 
 check_info['liebert_temp_general'] = {
-    'parse_function': parse_liebert,
+    'parse_function': parse_liebert_wrapper,
     'inventory_function': discover(),
     'check_function': check_liebert_temp_general,
     'service_description': '%s',

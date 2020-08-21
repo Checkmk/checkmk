@@ -13,7 +13,7 @@ import time
 from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
-from typing import List, Dict, Optional  # pylint: disable=unused-import
+from typing import List, Dict, Optional
 import requests
 
 import dockerpty  # type: ignore[import]
@@ -30,8 +30,8 @@ _DOCKER_BUILD_ID = 1
 logger = logging.getLogger()
 
 
-def execute_tests_in_container(distro_name, docker_tag, version, result_path, command, interactive):
-    # type: (str, str, CMKVersion, Path, List[str], bool) -> int
+def execute_tests_in_container(distro_name: str, docker_tag: str, version: CMKVersion,
+                               result_path: Path, command: List[str], interactive: bool) -> int:
     client = _docker_client()
     info = client.info()
     logger.info("Docker version: %s", info["ServerVersion"])
@@ -54,7 +54,7 @@ def execute_tests_in_container(distro_name, docker_tag, version, result_path, co
                 # Important to workaround really high default of docker which results
                 # in problems when trying to close all FDs in Python 2.
                 ulimits=[
-                    docker.types.Ulimit(name="nofile", soft=1024, hard=1024),
+                    docker.types.Ulimit(name="nofile", soft=2048, hard=2048),
                 ],
                 binds=[":".join([k, v["bind"], v["mode"]]) for k, v in _runtime_volumes().items()],
                 # Our SNMP integration tests need SNMP. For this reason we enable the IPv6 support
@@ -75,22 +75,22 @@ def execute_tests_in_container(distro_name, docker_tag, version, result_path, co
             logger.info("+-------------------------------------------------")
             logger.info("| Next steps:")
             logger.info("| ")
-            logger.info("| /git/scripts/run-pipenv 3 shell")
+            logger.info("| /git/scripts/run-pipenv shell")
             logger.info("| cd /git")
             logger.info("| ")
             logger.info("| ... start whatever test you want, for example:")
             logger.info("| ")
-            logger.info("| make -C tests-py3 test-integration")
+            logger.info("| make -C tests test-integration")
             logger.info("| ")
             logger.info("|   Execute all integration tests")
             logger.info("| ")
-            logger.info("| tests-py3/scripts/run-integration-test.py "
-                        "tests-py3/integration/livestatus/test_livestatus.py")
+            logger.info("| tests/scripts/run-integration-test.py "
+                        "tests/integration/livestatus/test_livestatus.py")
             logger.info("| ")
             logger.info("|   Execute some integration tests")
             logger.info("| ")
-            logger.info("| tests-py3/scripts/run-integration-test.py "
-                        "tests-py3/integration/livestatus/test_livestatus.py "
+            logger.info("| tests/scripts/run-integration-test.py "
+                        "tests/integration/livestatus/test_livestatus.py "
                         "-k test_service_custom_variables ")
             logger.info("| ")
             logger.info("|   Execute a single test")
@@ -119,8 +119,8 @@ def _docker_client():
     return docker.from_env(timeout=1200)
 
 
-def _get_or_load_image(client, image_name_with_tag):
-    # type: (docker.DockerClient, str) -> Optional[docker.Image]
+def _get_or_load_image(client: 'docker.DockerClient',
+                       image_name_with_tag: str) -> Optional['docker.Image']:
     try:
         image = client.images.get(image_name_with_tag)
         logger.info("  Available locally (%s)", image.short_id)
@@ -142,7 +142,8 @@ def _get_or_load_image(client, image_name_with_tag):
             return image
 
     except docker.errors.ImageNotFound:
-        logger.info("  Not available locally, try to pull")
+        logger.info("  Not available locally, try to pull "
+                    "(May take some time. Grab a coffee or two...)")
 
     try:
         image = client.images.pull(image_name_with_tag)
@@ -170,8 +171,8 @@ def _handle_api_error(e):
     raise e
 
 
-def _create_cmk_image(client, base_image_name, docker_tag, version):
-    # type: (docker.DockerClient, str, str, CMKVersion) -> str
+def _create_cmk_image(client: 'docker.DockerClient', base_image_name: str, docker_tag: str,
+                      version: CMKVersion) -> str:
     base_image_name_with_tag = "%s:%s" % (base_image_name, docker_tag)
 
     # This installs the requested Checkmk Edition+Version into the new image, for this reason we add
@@ -230,7 +231,7 @@ def _create_cmk_image(client, base_image_name, docker_tag, version):
         logger.info("Install Checkmk version")
         assert _exec_run(
             container,
-            ["scripts/run-pipenv", "3", "run", "/git/tests-py3/scripts/install-cmk.py"],
+            ["scripts/run-pipenv", "run", "/git/tests/scripts/install-cmk.py"],
             workdir="/git",
             environment=_container_env(version),
             stream=True,
@@ -258,14 +259,7 @@ def _create_cmk_image(client, base_image_name, docker_tag, version):
 
 
 def _image_build_volumes():
-    return {
-        # To get access to the test scripts and for updating the version from
-        # the current git checkout. Will also be used for updating the image with
-        # the current git state
-        testlib.repo_path(): {
-            "bind": "/git-lowerdir",
-            "mode": "ro",
-        },
+    volumes = {
         # Used to gather the Checkmk package from. In case it is not available
         # the package will be downloaded from the download server
         "/bauwelt/download": {
@@ -279,17 +273,40 @@ def _image_build_volumes():
             "mode": "ro",
         }
     }
+    volumes.update(_git_repos())
+    return volumes
 
 
-def _runtime_volumes():
-    return {
+def _git_repos():
+    # This ensures that we can also work with git-worktrees. For this, the original git repository
+    # needs to be mapped into the container as well.
+    repo_path = testlib.repo_path()
+    git_entry = os.path.join(repo_path, '.git')
+    repos = {
         # To get access to the test scripts and for updating the version from
         # the current git checkout. Will also be used for updating the image with
         # the current git state
-        testlib.repo_path(): {
+        repo_path: {
             "bind": "/git-lowerdir",
             "mode": "ro",
         },
+    }
+    if os.path.isfile(git_entry):  # if not, it's a directory
+        with open(git_entry, "r") as f:
+            real_path = f.read()
+            real_path = real_path[8:]  # skip "gitdir: "
+            real_path = real_path.split("/.git")[0]  # cut off .git/...
+
+        repos[real_path] = {
+            "bind": real_path,
+            "mode": "ro",
+        }
+
+    return repos
+
+
+def _runtime_volumes():
+    volumes = {
         # For whatever reason the image can not be started when nothing is mounted
         # at the file mount that was used while building the image. This is not
         # really needed during runtime of the test. We could mount any file.
@@ -298,10 +315,11 @@ def _runtime_volumes():
             "mode": "ro",
         }
     }
+    volumes.update(_git_repos())
+    return volumes
 
 
-def _container_env(version):
-    # type: (CMKVersion) -> Dict[str, str]
+def _container_env(version: CMKVersion) -> Dict[str, str]:
     return {
         "LANG": "C",
         "PIPENV_PIPFILE": "/git/Pipfile",
@@ -402,7 +420,7 @@ def container_exec(container,
     return ContainerExec(container.client, exec_id, output)
 
 
-class ContainerExec(object):  # pylint: disable=useless-object-inheritance
+class ContainerExec:
     def __init__(self, client, container_id, output):
         self.client = client
         self.id = container_id
@@ -437,8 +455,8 @@ class ContainerExec(object):  # pylint: disable=useless-object-inheritance
         return self.poll()
 
 
-def _copy_directory(container, src_path, dest_path):
-    # type: (docker.types.containers.Container, Path, Path) -> None
+def _copy_directory(container: 'docker.types.containers.Container', src_path: Path,
+                    dest_path: Path) -> None:
     logger.info("Copying %s from container to %s", src_path, dest_path)
 
     tar_stream = BytesIO()
@@ -501,14 +519,13 @@ def _setup_virtual_environments(container, version):
     logger.info("Prepare virtual environment")
     assert _exec_run(
         container,
-        ["make", ".venv-3.7"],
+        ["make", ".venv"],
         workdir="/git",
         environment=_container_env(version),
         stream=True,
     ) == 0
 
-    assert _exec_run(container, ["test", "-d", "/git/virtual-envs/2.7/.venv"]) == 0
-    assert _exec_run(container, ["test", "-d", "/git/virtual-envs/3.7/.venv"]) == 0
+    assert _exec_run(container, ["test", "-d", "/git/.venv"]) == 0
 
 
 def _cleanup_previous_virtual_environments(container, version):
@@ -518,28 +535,26 @@ def _cleanup_previous_virtual_environments(container, version):
     logger.info("Cleanup previous virtual environments")
     assert _exec_run(
         container,
-        ["rm", "-rf", "virtual-envs/3.7/.venv", "virtual-envs/2.7/.venv"],
+        ["rm", "-rf", ".venv"],
         workdir="/git",
         environment=_container_env(version),
         stream=True,
     ) == 0
 
-    assert _exec_run(container, ["test", "-n", "/virtual-envs/2.7/.venv"]) == 0
-    assert _exec_run(container, ["test", "-n", "/virtual-envs/3.7/.venv"]) == 0
+    assert _exec_run(container, ["test", "-n", "/.venv"]) == 0
 
 
 def _persist_virtual_environments(container, version):
     logger.info("Persisting virtual environments for later use")
     assert _exec_run(
         container,
-        ["rsync", "-aR", "virtual-envs/2.7/.venv", "virtual-envs/3.7/.venv", "/"],
+        ["rsync", "-aR", ".venv", "/"],
         workdir="/git",
         environment=_container_env(version),
         stream=True,
     ) == 0
 
-    assert _exec_run(container, ["test", "-d", "/virtual-envs/2.7/.venv"]) == 0
-    assert _exec_run(container, ["test", "-d", "/virtual-envs/3.7/.venv"]) == 0
+    assert _exec_run(container, ["test", "-d", "/.venv"]) == 0
 
 
 def _reuse_persisted_virtual_environment(container, version):

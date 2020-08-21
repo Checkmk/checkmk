@@ -18,4 +18,8 @@ item:
  The sid instance name followed by a {{-}} followed by the file type and the volume ID
 
 inventory:
- One service is created per instance, file type and volume.
+ One service is created for each instance, file type and volume.
+
+cluster:
+  On a cluster the first dataset of a node that is encountered
+  is evaluated.

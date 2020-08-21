@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -12,7 +12,7 @@ import sys
 import getopt
 import pprint
 import socket
-import urllib2
+import urllib.request
 import traceback
 
 from cmk.utils.exceptions import MKException
@@ -53,8 +53,8 @@ def get_allnet_ip_sensoric_info(host_address, opt_debug):
         sys.stdout.write('URL: %s\n' % url)
 
     try:
-        req = urllib2.Request(url, None, headers)
-        handle = urllib2.urlopen(req)
+        req = urllib.request.Request(url, None, headers)
+        handle = urllib.request.urlopen(req)
     except Exception:
         if opt_debug:
             sys.stdout.write('----------------------------\n')

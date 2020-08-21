@@ -1,9 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import six
+from typing import Type
+from six import ensure_str
 
 import cmk
 import cmk.utils.plugin_registry
@@ -18,6 +19,7 @@ import cmk.gui.background_job as background_job
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, html
 from cmk.gui.htmllib import HTML
+from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
@@ -277,6 +279,12 @@ class GUIBackgroundJob(GUIBackgroundJobSnapshottedFunctions):
 
         super(GUIBackgroundJob, self).__init__(job_id, logger=logger, **kwargs)
 
+    @classmethod
+    def gui_title(cls) -> str:
+        # FIXME: This method cannot be made abstract since GUIBackgroundJob is
+        # instantiated in various places.
+        raise NotImplementedError()
+
     def get_status_snapshot(self):
         return GUIBackgroundStatusSnapshot(self)
 
@@ -299,12 +307,9 @@ class GUIBackgroundJob(GUIBackgroundJobSnapshottedFunctions):
         return None
 
 
-class GUIBackgroundJobRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return GUIBackgroundJob
-
-    def plugin_name(self, plugin_class):
-        return plugin_class.__name__
+class GUIBackgroundJobRegistry(cmk.utils.plugin_registry.Registry[Type[GUIBackgroundJob]]):
+    def plugin_name(self, instance):
+        return instance.__name__
 
 
 job_registry = GUIBackgroundJobRegistry()
@@ -317,7 +322,7 @@ job_registry = GUIBackgroundJobRegistry()
 #
 # TODO: BackgroundJob should provide an explicit status object, which we can use
 # here without any metaprogramming Kung Fu and arcane inheritance hierarchies.
-class GUIBackgroundStatusSnapshot(object):
+class GUIBackgroundStatusSnapshot:
     def __init__(self, job):
         super(GUIBackgroundStatusSnapshot, self).__init__()
         self._job_status = job.get_status()
@@ -424,7 +429,7 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
 #   +----------------------------------------------------------------------+
 
 
-class JobRenderer(object):
+class JobRenderer:
     @classmethod
     def show_job_details(cls, job_id, job_status):
         """Renders the complete job details in a single table with left headers"""
@@ -475,12 +480,12 @@ class JobRenderer(object):
 
         # Dynamic data
         loginfo = job_status.get("loginfo")
-        runtime_info = six.ensure_text(cmk.utils.render.timespan(job_status.get("duration", 0)))
+        runtime_info = ensure_str(cmk.utils.render.timespan(job_status.get("duration", 0)))
         if job_status["state"] == background_job.JobStatusStates.RUNNING \
             and job_status.get("estimated_duration") is not None:
             runtime_info += u" (%s: %s)" % (
                 _("estimated duration"),
-                six.ensure_text(cmk.utils.render.timespan(job_status["estimated_duration"])))
+                ensure_str(cmk.utils.render.timespan(job_status["estimated_duration"])))
         for left, right in [
             (_("Runtime"), runtime_info),
             (_("PID"), job_status["pid"] or ""),
@@ -650,13 +655,14 @@ class JobRenderer(object):
 #   +----------------------------------------------------------------------+
 
 
-class ActionHandler(object):
+class ActionHandler:
     stop_job_var = "_stop_job"
     delete_job_var = "_delete_job"
     acknowledge_job_var = "_acknowledge_job"
 
-    def __init__(self):
+    def __init__(self, breadcrumb: Breadcrumb):
         super(ActionHandler, self).__init__()
+        self._breadcrumb = breadcrumb
         self._did_acknowledge_job = False
         self._did_stop_job = False
         self._did_delete_job = False
@@ -674,7 +680,7 @@ class ActionHandler(object):
         if html.request.var(self.stop_job_var):
             self.stop_job()
             return True
-        elif html.request.var(self.delete_job_var):
+        if html.request.var(self.delete_job_var):
             self.delete_job()
             return True
         return False
@@ -706,7 +712,8 @@ class ActionHandler(object):
         if not job.is_available():
             return
 
-        html.header("Interuption of job")
+        title = _("Interuption of job")
+        html.header(title, self._breadcrumb)
         if self.confirm_dialog_opened() and not job.is_active():
             html.show_message(_("No longer able to stop job. Background job just finished."))
             return
@@ -726,7 +733,8 @@ class ActionHandler(object):
         if not job.is_available():
             return
 
-        html.header("Deletion of job")
+        title = _("Deletion of job")
+        html.header(title, self._breadcrumb)
         c = html.confirm(_("Delete job %s%s?") % (job_id, self._get_extra_info(job)))
         if c and job.may_delete():
             job.delete()

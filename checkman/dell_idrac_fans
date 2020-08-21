@@ -18,4 +18,4 @@ item:
  Index of the cooling device
 
 inventory:
- One service is created for each fan.
+ One service is created for each fan that is not in the state "other" or "unknown".

@@ -4,13 +4,15 @@
 // source code package.
 
 #include "CustomVarsExplicitColumn.h"
+
 #include <unordered_map>
 #include <utility>
+
 #include "MonitoringCore.h"
 #include "Row.h"
 
 std::string CustomVarsExplicitColumn::getValue(Row row) const {
-    if (auto p = columnData<void>(row)) {
+    if (const auto *p = columnData<void>(row)) {
         auto attrs = _mc->customAttributes(p, AttributeKind::custom_variables);
         auto it = attrs.find(_varname);
         if (it != attrs.end()) {

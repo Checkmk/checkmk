@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -9,7 +9,7 @@ import pytest  # type: ignore[import]
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 
 # Triggers plugin loading of plugins.wato which registers all the plugins
-import cmk.gui.wato  # pylint: disable=unused-import
+import cmk.gui.wato  # noqa: F401 # pylint: disable=unused-import
 
 from cmk.gui.exceptions import MKGeneralException
 import cmk.gui.config as config

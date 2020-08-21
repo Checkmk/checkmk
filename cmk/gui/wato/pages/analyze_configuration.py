@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -12,10 +12,10 @@ import time
 import multiprocessing
 import traceback
 import ast
-from typing import (  # pylint: disable=unused-import
-    Dict, Any,
-)
-import six
+from typing import Any, Dict, Tuple
+import queue
+
+from livestatus import SiteId
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -29,6 +29,14 @@ from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.globals import html
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+)
 
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -70,6 +78,29 @@ class ModeAnalyzeConfig(WatoMode):
 
     def title(self):
         return _("Analyze configuration")
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Configure"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Support diagnostics"),
+                                    icon_name="diagnostics",
+                                    item=make_simple_link("wato.py?mode=diagnostics"),
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
 
     def action(self):
         if not html.check_transaction():
@@ -245,9 +276,10 @@ class ModeAnalyzeConfig(WatoMode):
         results_by_site = {}
 
         # Results are fetched simultaneously from the remote sites
-        result_queue = multiprocessing.JoinableQueue()
+        result_queue: multiprocessing.Queue[Tuple[SiteId, str]] = multiprocessing.JoinableQueue()
 
         processes = []
+        site_id = SiteId("unknown_site")
         for site_id in test_sites:
             process = multiprocessing.Process(target=self._perform_tests_for_site,
                                               args=(site_id, result_queue))
@@ -255,7 +287,7 @@ class ModeAnalyzeConfig(WatoMode):
             processes.append((site_id, process))
 
         # Now collect the results from the queue until all processes are finished
-        while any([p.is_alive() for site_id, p in processes]):
+        while any(p.is_alive() for site_id, p in processes):
             try:
                 site_id, results_data = result_queue.get_nowait()
                 result_queue.task_done()
@@ -264,7 +296,7 @@ class ModeAnalyzeConfig(WatoMode):
                 if result["state"] == 1:
                     raise MKGeneralException(result["response"])
 
-                elif result["state"] == 0:
+                if result["state"] == 0:
                     test_results = []
                     for result_data in result["response"]:
                         result = ACResult.from_repr(result_data)
@@ -281,7 +313,7 @@ class ModeAnalyzeConfig(WatoMode):
                 else:
                     raise NotImplementedError()
 
-            except six.moves.queue.Empty:
+            except queue.Empty:
                 time.sleep(0.5)  # wait some time to prevent CPU hogs
 
             except Exception as e:
@@ -295,7 +327,7 @@ class ModeAnalyzeConfig(WatoMode):
         self._logger.debug("Got test results")
 
         # Group results by category in first instance and then then by test
-        results_by_category = {}  # type: Dict[str, Dict[str, Dict[str, Any]]]
+        results_by_category: Dict[str, Dict[str, Dict[str, Any]]] = {}
         for site_id, results in results_by_site.items():
             for result in results:
                 category_results = results_by_category.setdefault(result.category, {})
@@ -316,7 +348,8 @@ class ModeAnalyzeConfig(WatoMode):
 
     # Executes the tests on the site. This method is executed in a dedicated
     # subprocess (One per site)
-    def _perform_tests_for_site(self, site_id, result_queue):
+    def _perform_tests_for_site(self, site_id: SiteId,
+                                result_queue: 'multiprocessing.Queue[Tuple[SiteId, str]]') -> None:
         self._logger.debug("[%s] Starting" % site_id)
         try:
             # Would be better to clean all open fds that are not needed, but we don't

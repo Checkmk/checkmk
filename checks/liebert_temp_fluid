@@ -48,7 +48,7 @@ def check_liebert_temp_fluid(item, params, parsed):
 
 
 check_info['liebert_temp_fluid'] = {
-    'parse_function': parse_liebert,
+    'parse_function': parse_liebert_wrapper,
     'inventory_function': discover(lambda key, _value: "Set Point" in key),
     'check_function': check_liebert_temp_fluid,
     'service_description': '%s',

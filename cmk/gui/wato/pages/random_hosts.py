@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,11 +6,11 @@
 """This module allows the creation of large numbers of random hosts
 for test and development."""
 
-from typing import List, Tuple, Dict  # pylint: disable=unused-import
+from typing import List, Tuple, Dict
 
 import random
 
-from cmk.utils.type_defs import HostName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName
 
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
@@ -70,7 +70,7 @@ class ModeRandomHosts(WatoMode):
 
     def _create_random_hosts(self, folder, count, folders, levels):
         if levels == 0:
-            hosts_to_create = []  # type: List[Tuple[HostName, Dict, None]]
+            hosts_to_create: List[Tuple[HostName, Dict, None]] = []
             while len(hosts_to_create) < count:
                 host_name = "random_%010d" % int(random.random() * 10000000000)
                 hosts_to_create.append((host_name, {"ipaddress": "127.0.0.1"}, None))

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,8 +7,7 @@
 import abc
 import json
 import inspect
-from typing import Any, Callable, Dict, Mapping, Optional, Text, Type  # pylint: disable=unused-import
-import six
+from typing import Any, Callable, Dict, Mapping, Optional, Type
 
 import cmk.utils.plugin_registry
 from cmk.gui.globals import html
@@ -21,49 +20,56 @@ PageResult = Any
 AjaxPageResult = Dict[str, Any]
 
 
-class Page(six.with_metaclass(abc.ABCMeta, object)):
-    #TODO: Use when we are using python3 abc.abstractmethod
+# At the moment pages are simply callables that somehow render content for the HTTP response
+# and send it to the client.
+#
+# At least for HTML pages we should standardize the pages a bit more since there are things all pages do
+# - Create a title, render the header
+# - Have a breadcrumb
+# - Optional: Handle actions
+# - Render the page
+#
+# TODO: Check out the WatoMode class and find out how to do this. Looks like handle_page() could
+# implement parts of the cmk.gui.wato.page_handler.page_handler() logic.
+class Page(metaclass=abc.ABCMeta):
+    # TODO: In theory a page class could be registered below multiple URLs. For this case it would
+    # be better to move the ident out of the class, to the registry. At the moment the URL is stored
+    # in self._ident by PageRegistry.register_page().
+    # In practice this is no problem at the moment, because each page is accessible only through a
+    # single endpoint.
     @classmethod
-    def ident(cls):
-        # type: () -> str
+    def ident(cls) -> str:
         raise NotImplementedError()
 
-    def handle_page(self):
-        # type: () -> None
+    def handle_page(self) -> None:
         self.page()
 
     @abc.abstractmethod
-    def page(self):
-        # type: () -> PageResult
+    def page(self) -> PageResult:
         """Override this to implement the page functionality"""
         raise NotImplementedError()
 
 
 # TODO: Clean up implicit _from_vars() procotocol
-class AjaxPage(six.with_metaclass(abc.ABCMeta, Page)):
+class AjaxPage(Page, metaclass=abc.ABCMeta):
     """Generic page handler that wraps page() calls into AJAX respones"""
     def __init__(self):
         super(AjaxPage, self).__init__()
         self._from_vars()
 
-    def _from_vars(self):
-        # type: () -> None
+    def _from_vars(self) -> None:
         """Override this method to set mode specific attributes based on the
         given HTTP variables."""
-        pass
 
-    def webapi_request(self):
-        # type: () -> Dict[Text, Text]
+    def webapi_request(self) -> Dict[str, str]:
         return html.get_request()
 
     @abc.abstractmethod
-    def page(self):
-        # type: () -> AjaxPageResult
+    def page(self) -> AjaxPageResult:
         """Override this to implement the page functionality"""
         raise NotImplementedError()
 
-    def handle_page(self):
-        # type: () -> None
+    def handle_page(self) -> None:
         """The page handler, called by the page registry"""
         html.set_output_format("json")
         try:
@@ -81,19 +87,12 @@ class AjaxPage(six.with_metaclass(abc.ABCMeta, Page)):
         html.write(json.dumps(response))
 
 
-class PageRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        # type: () -> Type[Page]
-        return Page
+class PageRegistry(cmk.utils.plugin_registry.Registry[Type[Page]]):
+    def plugin_name(self, instance: Type[Page]) -> str:
+        return instance.ident()
 
-    def plugin_name(self, plugin_class):
-        # type: (Type[Page]) -> str
-        return plugin_class.ident()
-
-    def register_page(self, path):
-        # type: (str) -> Callable[[Type[Page]], Type[Page]]
-        def wrap(plugin_class):
-            # type: (Type[Page]) -> Type[Page]
+    def register_page(self, path: str) -> Callable[[Type[Page]], Type[Page]]:
+        def wrap(plugin_class: Type[Page]) -> Type[Page]:
             if not inspect.isclass(plugin_class):
                 raise NotImplementedError()
 
@@ -112,8 +111,7 @@ page_registry = PageRegistry()
 
 # TODO: Refactor all call sites to sub classes of Page() and change the
 # registration to page_registry.register("path")
-def register(path):
-    # type: (str) -> Callable[[PageHandlerFunc], PageHandlerFunc]
+def register(path: str) -> Callable[[PageHandlerFunc], PageHandlerFunc]:
     """Register a function to be called when the given URL is called.
 
     In case you need to register some callable like staticmethods or
@@ -122,8 +120,7 @@ def register(path):
 
     It is essentially a decorator that calls register_page_handler().
     """
-    def wrap(wrapped_callable):
-        # type: (PageHandlerFunc) -> PageHandlerFunc
+    def wrap(wrapped_callable: PageHandlerFunc) -> PageHandlerFunc:
         cls_name = "PageClass%s" % path.title().replace(":", "")
         LegacyPageClass = type(cls_name, (Page,), {
             "_wrapped_callable": (wrapped_callable,),
@@ -137,21 +134,20 @@ def register(path):
 
 
 # TODO: replace all call sites by directly calling page_registry.register_page("path")
-def register_page_handler(path, page_func):
-    # type: (str, PageHandlerFunc) -> PageHandlerFunc
+def register_page_handler(path: str, page_func: PageHandlerFunc) -> PageHandlerFunc:
     """Register a function to be called when the given URL is called."""
     wrap = register(path)
     return wrap(page_func)
 
 
-def get_page_handler(name, dflt=None):
-    # type: (str, Optional[PageHandlerFunc]) -> Optional[PageHandlerFunc]
+def get_page_handler(name: str,
+                     dflt: Optional[PageHandlerFunc] = None) -> Optional[PageHandlerFunc]:
     """Returns either the page handler registered for the given name or None
 
     In case dflt is given it returns dflt instead of None when there is no
     page handler for the requested name."""
     # NOTE: Workaround for our non-generic registries... :-/
-    pr = page_registry  # type: Mapping[str, Type[Page]]
+    pr: Mapping[str, Type[Page]] = page_registry
     handle_class = pr.get(name)
     if handle_class is None:
         return dflt

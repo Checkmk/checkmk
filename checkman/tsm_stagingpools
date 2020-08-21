@@ -26,5 +26,5 @@ item:
 
 
 inventory:
- The check creates one item per staging pool found.
+ One service is created for each staging pool.
 

@@ -6,7 +6,7 @@
 
 
 def inv_snmp_os(info):
-    sys_descr, sys_obj, _sys_uptime, _sys_name = info[0]
+    sys_descr, sys_obj, _sys_uptime, _sys_name = info[0][0]
     descr_short = sys_descr.split()
     descr_long = sys_descr.split(",")
     node = inv_tree("software.os.")
@@ -26,13 +26,4 @@ def inv_snmp_os(info):
 
 inv_info['snmp_os'] = {
     "inv_function": inv_snmp_os,
-    'snmp_info': (
-        '.1.3.6.1.2.1.1',
-        [
-            '1.0',  # sysDescr
-            '2.0',  # sysObjectID
-            '3.0',  # sysUpTime
-            '5.0',  # sysName
-        ]),
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.1.0"),
 }

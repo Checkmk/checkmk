@@ -15,4 +15,4 @@ item:
  The name of the instance (optional), the library name and the drive name each seperated with {{/}}
 
 inventory:
- The check inventorizes all tape drives as reported by TSM.
+ One service is created for each tape drive reported by TSM.

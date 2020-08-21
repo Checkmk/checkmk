@@ -1,23 +1,16 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import print_function
-from typing import Optional, Tuple  # pylint: disable=unused-import
-
-import sys
+from pathlib import Path
 import re
-
+import sys
+from typing import Optional, Tuple
 import uuid
-import yaml
 
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path
+import yaml
 
 TRADITIONAL_UUID = "{BAEBF560-7308-4D53-B426-903EA74B1D7E}"
 MSI_PACKAGE_CODE_MARKER = "Intel;1033"
@@ -40,27 +33,23 @@ def parse_command_line(argv):
     return patch_mode, f_name, mask
 
 
-def generate_uuid():
-    # type: () -> str
+def generate_uuid() -> str:
     return ("{%s}" % uuid.uuid1()).upper()
 
 
 # converts any text to SHA-1 based uuid
-def generate_uuid_from_base(base):
-    # type: (str) -> str
+def generate_uuid_from_base(base: str) -> str:
     return ("{%s}" % uuid.uuid5(uuid.NAMESPACE_DNS, base)).upper()
 
 
-def write_state_file(path_to_state, pos, code):
-    # type: (Optional[Path], int, str) -> None
+def write_state_file(path_to_state: Optional[Path], pos: int, code: str) -> None:
     if path_to_state is not None:
         state = {"msi_info": {"package_code_pos": pos, "package_code_value": code}}
         with path_to_state.open("w", encoding="utf-8") as f:
             yaml.dump(state, f, encoding='utf-8', allow_unicode=True)
 
 
-def load_state_file(path_to_state):
-    # type: (Optional[Path]) -> Tuple[int, str]
+def load_state_file(path_to_state: Optional[Path]) -> Tuple[int, str]:
 
     if path_to_state is not None and path_to_state.exists():
         with path_to_state.open("r", encoding="utf-8") as f:
@@ -76,8 +65,10 @@ def load_state_file(path_to_state):
 # optionally can save state file with results of patching
 # by default amsk is TRADITIONAL
 # by default uuid is generated
-def patch_package_code(f_name, mask=None, package_code=None, state_file=None):
-    # type: (str, Optional[str], Optional[str], Optional[Path]) -> bool
+def patch_package_code(f_name: str,
+                       mask: Optional[str] = None,
+                       package_code: Optional[str] = None,
+                       state_file: Optional[Path] = None) -> bool:
 
     p = Path(f_name)
     if not p.exists():
@@ -104,8 +95,9 @@ def patch_package_code(f_name, mask=None, package_code=None, state_file=None):
 
 
 # engine to patch MSI file using already existsing state file
-def patch_package_code_by_state_file(f_name, state_file, package_code=None):
-    # type: (str, Path, Optional[str]) -> bool
+def patch_package_code_by_state_file(f_name: str,
+                                     state_file: Path,
+                                     package_code: Optional[str] = None) -> bool:
 
     p = Path(f_name)
     if not p.exists():
@@ -119,16 +111,16 @@ def patch_package_code_by_state_file(f_name, state_file, package_code=None):
     return patch_package_code(f_name, mask=id_, package_code=package_code)
 
 
-def valid_uuid(uuid_value):
-    # type: (str) -> bool
+def valid_uuid(uuid_value: str) -> bool:
     match = regex.match(uuid_value)
     return bool(match)
 
 
 # engine to patch MSI file with new code
 # search for 'Intel;1033' marker, add offset and patch code
-def patch_package_code_by_marker(f_name, package_code=None, state_file=None):
-    # type: (str, Optional[str], Optional[Path]) -> bool
+def patch_package_code_by_marker(f_name: str,
+                                 package_code: Optional[str] = None,
+                                 state_file: Optional[Path] = None) -> bool:
 
     p = Path(f_name)
     if not p.exists():
@@ -167,12 +159,12 @@ if __name__ == '__main__':
 
     if mode == "code":
         success = patch_package_code(f_name=file_name, mask=param)
-        exit(0 if success else 1)
+        sys.exit(0 if success else 1)
 
     if mode == "1033":
         out_state_file = None if param == "" else Path(param)
         success = patch_package_code_by_marker(f_name=file_name, state_file=out_state_file)
-        exit(0 if success else 1)
+        sys.exit(0 if success else 1)
 
     print("Invalid mode '{}'".format(mode))
-    exit(1)
+    sys.exit(1)

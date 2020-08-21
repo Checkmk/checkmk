@@ -61,7 +61,7 @@ def parse_nfsiostat(info):
     # at most a re-ordering of these values (in check_nfsiostat_parames) and
     # changing the check to include new metrics (via swtiches/flags)
     parsed = {m[0]: m[1:] for m in re.findall(r'(\S+:/\S+)%s' % \
-        (r'.*?([\d.]+)' * 16), str(new_info).strip('[]'), flags=re.DOTALL)}
+        (r'.*?(\d+\.\d+|\d+)' * 16), str(new_info).strip('[]'), flags=re.DOTALL)}
     return parsed
 
 
@@ -108,6 +108,6 @@ check_info['nfsiostat'] = {
     'inventory_function': inventory_nfsiostat,
     'check_function': check_nfsiostat,
     'service_description': 'NFS IO stats %s',
-    'group': 'nfsiostat',
+    'group': 'nfsiostats',
     'has_perfdata': True,
 }

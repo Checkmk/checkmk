@@ -5,11 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper to register a new-sytyle section based on config.check_info
 """
-from typing import Callable, List
+from typing import Callable, Dict, List
 import os.path
-import sys
 import ast
 import inspect
+
+from cmk.snmplib.type_defs import SNMPDetectSpec
+
 from cmk.base.api.agent_based.utils import (
     all_of,
     any_of,
@@ -21,31 +23,37 @@ from cmk.base.api.agent_based.utils import (
     equals,
     not_equals,
 )
-from cmk.base.api.agent_based.section_types import SNMPDetectSpec
 from cmk.base.api.agent_based.register.section_plugins import _validate_detect_spec
+from cmk.base.plugins.agent_based.utils import checkpoint, ucd_hr_detection, printer
 
-if sys.version_info[0] >= 3:
-
-    def _is_none(expr):
-        # type: (ast.AST) -> bool
-        return isinstance(expr, ast.NameConstant) and expr.value is None
-
-    def _is_false(expr):
-        # type: (ast.AST) -> bool
-        return isinstance(expr, ast.NameConstant) and expr.value is False
-else:
-
-    def _is_none(expr):
-        # type: (ast.AST) -> bool
-        return isinstance(expr, ast.Name) and expr.id == 'None'
-
-    def _is_false(expr):
-        # type: (ast.AST) -> bool
-        return isinstance(expr, ast.Name) and expr.id == 'False'
+MIGRATED_SCAN_FUNCTIONS: Dict[str, SNMPDetectSpec] = {
+    # I am not sure why the following suppressions are needed.
+    # 'reveal_type(DETECT)' in checkpoint shows that mypy does know the type in principle
+    # If I add an explicit typehint to 'DETECT' in checkpoint, these suppressions are not needed.
+    "scan_checkpoint": checkpoint.DETECT,  # type: ignore[has-type]
+    "scan_ricoh_printer": printer.DETECT_RICOH,  # type: ignore[has-type]
+    "_is_ucd": ucd_hr_detection.UCD,  # type: ignore[has-type]
+    "is_ucd": ucd_hr_detection.UCD,  # type: ignore[has-type]
+    "is_hr": ucd_hr_detection.HR,  # type: ignore[has-type]
+    "prefer_hr_else_ucd": ucd_hr_detection.PREFER_HR_ELSE_UCD,  # type: ignore[has-type]
+    "is_ucd_mem": ucd_hr_detection.USE_UCD_MEM,  # type: ignore[has-type]
+    "is_hr_mem": ucd_hr_detection.USE_HR_MEM,  # type: ignore[has-type]
+    "_is_ucd_mem": ucd_hr_detection._UCD_MEM,  # type: ignore[has-type]
+}
 
 
-def _explicit_conversions(function_name):
-    # type: (str) -> SNMPDetectSpec
+def _is_none(expr: ast.AST) -> bool:
+    return isinstance(expr, ast.NameConstant) and expr.value is None
+
+
+def _is_false(expr: ast.AST) -> bool:
+    return isinstance(expr, ast.NameConstant) and expr.value is False
+
+
+def _explicit_conversions(function_name: str) -> SNMPDetectSpec:
+    if function_name in MIGRATED_SCAN_FUNCTIONS:
+        return MIGRATED_SCAN_FUNCTIONS[function_name]
+
     if function_name == 'has_ifHCInOctets':
         return exists('.1.3.6.1.2.1.31.1.1.1.6.*')
 
@@ -54,29 +62,6 @@ def _explicit_conversions(function_name):
             startswith('.1.3.6.1.2.1.1.2.0', '.1.3.6.1.4.1.231'),
             startswith('.1.3.6.1.2.1.1.2.0', '.1.3.6.1.4.1.311'),
             startswith('.1.3.6.1.2.1.1.2.0', '.1.3.6.1.4.1.8072'),
-        )
-
-    if function_name == '_is_ucd':
-        return any_of(
-            contains(".1.3.6.1.2.1.1.1.0", "linux"),
-            contains(".1.3.6.1.2.1.1.1.0", "cmc-tc"),
-            contains(".1.3.6.1.2.1.1.1.0", "hp onboard administrator"),
-            contains(".1.3.6.1.2.1.1.1.0", "barracuda"),
-            contains(".1.3.6.1.2.1.1.1.0", "pfsense"),
-            contains(".1.3.6.1.2.1.1.1.0", "genugate"),
-            contains(".1.3.6.1.2.1.1.1.0", "bomgar"),
-            contains(".1.3.6.1.2.1.1.1.0", "pulse secure"),
-            all_of(
-                equals('.1.3.6.1.2.1.1.2.0', '.1.3.6.1.4.1.8072.3.2.10'),
-                contains(".1.3.6.1.2.1.1.1.0", "version"),
-                contains(".1.3.6.1.2.1.1.1.0", "serial"),
-            ),
-        )
-
-    if function_name == 'scan_ricoh_printer':
-        return all_of(
-            contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.367.1.1"),
-            exists(".1.3.6.1.4.1.367.3.2.1.2.19.5.1.5.1"),
         )
 
     if function_name == 'is_fsc':
@@ -91,8 +76,8 @@ def _explicit_conversions(function_name):
             startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.789"),
         )
 
-    if function_name == '_has_table_8':
-        return exists(".1.3.6.1.4.1.9.9.109.1.1.1.1.8.*")
+    if function_name == '_has_table_2':
+        return exists(".1.3.6.1.4.1.9.9.109.1.1.1.1.2.*")
 
     if function_name == '_is_cisco':
         return contains(".1.3.6.1.2.1.1.1.0", "cisco")
@@ -103,8 +88,8 @@ def _explicit_conversions(function_name):
     raise NotImplementedError(function_name)
 
 
-def _get_scan_function_ast(name, snmp_scan_function, fallback_files):
-    # type: (str, Callable, List[str]) -> ast.AST
+def _get_scan_function_ast(name: str, snmp_scan_function: Callable,
+                           fallback_files: List[str]) -> ast.AST:
     src_file_name = inspect.getsourcefile(snmp_scan_function)
     read_files = fallback_files if src_file_name is None else [src_file_name]
 
@@ -149,8 +134,7 @@ def _get_scan_function_ast(name, snmp_scan_function, fallback_files):
     raise ValueError(ast.dump(tree))
 
 
-def _get_expression_from_function(name, scan_func_ast):
-    # type: (str, ast.AST) -> ast.AST
+def _get_expression_from_function(name: str, scan_func_ast: ast.AST) -> ast.AST:
     body = scan_func_ast.body  # type: ignore
     if isinstance(scan_func_ast, ast.Lambda):
         return body
@@ -166,8 +150,7 @@ def _get_expression_from_function(name, scan_func_ast):
     raise NotImplementedError("%s\n%s" % (name, ast.dump(scan_func_ast)))
 
 
-def _is_oid_function(expr):
-    # type: (ast.AST) -> bool
+def _is_oid_function(expr: ast.AST) -> bool:
     """Return True iff we are sure this is *ultimately* a call to oid(.)
 
     E.g.: The ast for '''oid(".1.2.3").lower()''' should return True.
@@ -185,8 +168,7 @@ def _is_oid_function(expr):
     raise ValueError(ast.dump(expr))
 
 
-def _ast_convert_to_str(arg):
-    # type: (ast.AST) -> str
+def _ast_convert_to_str(arg: ast.AST) -> str:
     if isinstance(arg, ast.Str):
         return arg.s
     if isinstance(arg, ast.Call):
@@ -202,8 +184,7 @@ def _ast_convert_to_str(arg):
     raise ValueError(ast.dump(arg))
 
 
-def _ast_convert_compare(comp_ast):
-    # type: (ast.Compare) -> SNMPDetectSpec
+def _ast_convert_compare(comp_ast: ast.Compare) -> SNMPDetectSpec:
     assert len(comp_ast.ops) == 1
     if isinstance(comp_ast.ops[0], ast.In):
         assert len(comp_ast.comparators) == 1
@@ -259,8 +240,7 @@ def _ast_convert_compare(comp_ast):
     raise ValueError(ast.dump(comp_ast))
 
 
-def _ast_convert_bool(bool_ast):
-    # type: (ast.BoolOp) -> SNMPDetectSpec
+def _ast_convert_bool(bool_ast: ast.BoolOp) -> SNMPDetectSpec:
     if isinstance(bool_ast.op, ast.And):
         return all_of(*(_ast_convert_dispatcher(v) for v in bool_ast.values))
 
@@ -270,21 +250,19 @@ def _ast_convert_bool(bool_ast):
     raise ValueError(ast.dump(bool_ast))
 
 
-def _ast_convert_unary(unop_ast):
-    # type: (ast.UnaryOp) -> SNMPDetectSpec
+def _ast_convert_unary(unop_ast: ast.UnaryOp) -> SNMPDetectSpec:
     if isinstance(unop_ast.op, ast.Not):
         operand = _ast_convert_dispatcher(unop_ast.operand)
         _validate_detect_spec(operand)
         # We can only negate atomic specs, for now
         if len(operand) == 1 and len(operand[0]) == 1:
             oidstr, pattern, result = operand[0][0]
-            return [[(oidstr, pattern, not result)]]
+            return SNMPDetectSpec([[(oidstr, pattern, not result)]])
         raise NotImplementedError("cannot negate operand")
     raise ValueError(ast.dump(unop_ast))
 
 
-def _ast_convert_call(call_ast):
-    # type: (ast.Call) -> SNMPDetectSpec
+def _ast_convert_call(call_ast: ast.Call) -> SNMPDetectSpec:
     if isinstance(call_ast.func, ast.Name):
         if call_ast.func.id == 'bool':
             assert _is_oid_function(call_ast.args[0])
@@ -296,7 +274,7 @@ def _ast_convert_call(call_ast):
                 '_is_fsc_or_windows',
                 'scan_ricoh_printer',
                 'is_netapp_filer',
-                '_has_table_8',
+                '_has_table_2',
                 '_is_cisco',
                 '_is_cisco_nexus',
         ):
@@ -304,7 +282,8 @@ def _ast_convert_call(call_ast):
 
         if call_ast.func.id in (
                 'if64_disabled',
-                'scan_f5_bigip_cluster_status',
+                'scan_f5_bigip_cluster_status_pre_11_2',
+                'scan_f5_bigip_cluster_status_11_2_upwards',
                 'scan_cisco_mem_asa64',
         ):
             raise NotImplementedError(call_ast.func.id)
@@ -332,8 +311,7 @@ def _ast_convert_call(call_ast):
     raise ValueError(ast.dump(call_ast))
 
 
-def _ast_convert_dispatcher(arg):
-    # type: (ast.AST) -> SNMPDetectSpec
+def _ast_convert_dispatcher(arg: ast.AST) -> SNMPDetectSpec:
 
     if isinstance(arg, ast.UnaryOp):
         return _ast_convert_unary(arg)
@@ -350,17 +328,24 @@ def _ast_convert_dispatcher(arg):
     raise ValueError(ast.dump(arg))
 
 
-def create_detect_spec(name, snmp_scan_function, fallback_files):
-    # type: (str, Callable, List[str]) -> SNMPDetectSpec
+def create_detect_spec(name: str, snmp_scan_function: Callable,
+                       fallback_files: List[str]) -> SNMPDetectSpec:
     if name in ("if", "if64"):
         raise NotImplementedError(name)
+    if snmp_scan_function.__name__ in MIGRATED_SCAN_FUNCTIONS:
+        try:
+            _ = snmp_scan_function(lambda x, default=None: "")
+        except NotImplementedError as exc:
+            if str(exc) == "already migrated":
+                return MIGRATED_SCAN_FUNCTIONS[snmp_scan_function.__name__]
+        raise NotImplementedError("please remove migrated code entirely")
 
     scan_func_ast = _get_scan_function_ast(name, snmp_scan_function, fallback_files)
 
     expression_ast = _get_expression_from_function(name, scan_func_ast)
 
     if _is_false(expression_ast):
-        spec = []
+        spec = SNMPDetectSpec()
     else:
         spec = _ast_convert_dispatcher(expression_ast)
 

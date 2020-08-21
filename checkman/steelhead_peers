@@ -13,4 +13,4 @@ item:
  The name of the host
 
 inventory:
- One check for each peer will be created.
+ One service is created for each peer.

@@ -1,10 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import NamedTuple, List  # pylint: disable=unused-import
+from typing import NamedTuple, List
 
 import cmk.utils.store as store
 
@@ -17,7 +17,7 @@ from cmk.gui.valuespec import (
     Tuple,
     Integer,
 )
-from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
+from cmk.gui.valuespec import ValueSpec
 
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.automations import check_mk_automation
@@ -37,15 +37,14 @@ DiscoveryTask = NamedTuple("DiscoveryTask", [
 ])
 
 
-def get_tasks(hosts_to_discover, bulk_size):
-    # type: (List[DiscoveryHost], int) -> List[DiscoveryTask]
+def get_tasks(hosts_to_discover: List[DiscoveryHost], bulk_size: int) -> List[DiscoveryTask]:
     """Create a list of tasks for the job
 
     Each task groups the hosts together that are in the same folder and site. This is
     mainly done to reduce the overhead of site communication and loading/saving of files
     """
     current_site_and_folder = None
-    tasks = []  # type: List[DiscoveryTask]
+    tasks: List[DiscoveryTask] = []
 
     for site_id, folder_path, host_name in sorted(hosts_to_discover):
         if not tasks or (site_id, folder_path) != current_site_and_folder or \
@@ -58,7 +57,7 @@ def get_tasks(hosts_to_discover, bulk_size):
 
 
 def vs_bulk_discovery(render_form=False, include_subfolders=True):
-    selection_elements = []  # type: List[ValueSpec]
+    selection_elements: List[ValueSpec] = []
 
     if include_subfolders:
         selection_elements.append(Checkbox(label=_("Include all subfolders"), default_value=True))

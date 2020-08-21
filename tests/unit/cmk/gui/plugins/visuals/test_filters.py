@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -12,13 +12,16 @@ import cmk.utils.version as cmk_version
 import cmk.utils.tags
 
 import cmk.gui.config
-import cmk.gui.views # Triggers plugin loading
-import cmk.gui.visuals # Triggers plugin loading
 import cmk.gui.inventory
 from cmk.gui.globals import html
 import cmk.gui.plugins.visuals
 
+# Triggers plugin loading
+import cmk.gui.views
+import cmk.gui.visuals
+
 from testlib import on_time
+
 
 # In general filters should not affect livestatus query in case there is no variable set for them
 @pytest.mark.parametrize("filter_ident", cmk.gui.plugins.visuals.utils.filter_registry.keys())
@@ -31,7 +34,8 @@ def test_filters_filter_with_empty_request(register_builtin_html, filter_ident):
     with html.stashed_vars():
         html.request.del_vars()
 
-        filt = cmk.gui.plugins.visuals.utils.filter_registry[filter_ident]()
+        # FIXME: register instances in filter_registry (CMK-5137)
+        filt = cmk.gui.plugins.visuals.utils.filter_registry[filter_ident]()  # type: ignore[call-arg]
         assert filt.filter(infoname="bla") == expected_filter
 
 
@@ -493,8 +497,10 @@ filter_tests = [
     ),
 ]
 
+
 def filter_test_id(t):
     return t.ident + ":" + ",".join(["=".join(p) for p in t.request_vars])
+
 
 @pytest.mark.parametrize("test", filter_tests, ids=filter_test_id)
 def test_filters_filter(register_builtin_html, test, monkeypatch):
@@ -509,7 +515,8 @@ def test_filters_filter(register_builtin_html, test, monkeypatch):
         for key, val in test.request_vars:
             html.request.set_var(key, val)
 
-        filt = cmk.gui.plugins.visuals.utils.filter_registry[test.ident]()
+        # FIXME: register instances in filter_registry (CMK-5137)
+        filt = cmk.gui.plugins.visuals.utils.filter_registry[test.ident]()  # type: ignore[call-arg]
         assert filt.filter(infoname="bla") == test.expected_filters
 
 FilterTableTest = namedtuple("FilterTableTest", [
@@ -518,6 +525,7 @@ FilterTableTest = namedtuple("FilterTableTest", [
     "rows",
     "expected_rows",
 ])
+
 
 def get_inventory_data_patch(inventory, path):
     return inventory[path]
@@ -973,6 +981,7 @@ filter_table_tests = [
     #),
 ]
 
+
 @pytest.mark.parametrize("test", filter_table_tests)
 @pytest.mark.usefixtures("load_plugins")
 def test_filters_filter_table(register_builtin_html, test, monkeypatch):
@@ -986,7 +995,7 @@ def test_filters_filter_table(register_builtin_html, test, monkeypatch):
         }[host_name]
 
     if not cmk_version.is_raw_edition():
-        import cmk.gui.cee.agent_bakery as agent_bakery # pylint: disable=redefined-outer-name
+        import cmk.gui.cee.agent_bakery as agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel,no-name-in-module
         monkeypatch.setattr(agent_bakery, "get_cached_deployment_status", deployment_states)
 
     # Needed for FilterInvFloat test
@@ -1007,8 +1016,10 @@ def test_filters_filter_table(register_builtin_html, test, monkeypatch):
 
         # TODO: Fix this for real...
         if not cmk_version.is_raw_edition or test.ident != "deployment_has_agent":
-            filt = cmk.gui.plugins.visuals.utils.filter_registry[test.ident]()
+            # FIXME: register instances in filter_registry (CMK-5137)
+            filt = cmk.gui.plugins.visuals.utils.filter_registry[test.ident]()  # type: ignore[call-arg]
             assert filt.filter_table(test.rows) == test.expected_rows
+
 
 # Filter form is not really checked. Only checking that no exception occurs
 def test_filters_display_with_empty_request(register_builtin_html):
@@ -1016,6 +1027,7 @@ def test_filters_display_with_empty_request(register_builtin_html):
         html.request.del_vars()
 
         for filter_class in cmk.gui.plugins.visuals.utils.filter_registry.values():
-            filt = filter_class()
+            # FIXME: register instances in filter_registry (CMK-5137)
+            filt = filter_class()  # type: ignore[call-arg]
             with html.plugged():
-                _unused = filt.display()
+                filt.display()

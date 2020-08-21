@@ -19,15 +19,16 @@ factory_settings['aws_glacier_limits_default_levels'] = {
 }
 
 
-def check_aws_glacier_limits(item, params, parsed):
-    return check_aws_limits("glacier", params, parsed)
+@get_parsed_item_data
+def check_aws_glacier_limits(item, params, region_data):
+    return check_aws_limits("glacier", params, region_data)
 
 
 check_info['aws_glacier_limits'] = {
     'parse_function': parse_aws_limits_generic,
-    'inventory_function': discover_single,
+    'inventory_function': discover(),
     'check_function': check_aws_glacier_limits,
-    'service_description': 'AWS/Glacier Limits',
+    'service_description': 'AWS/Glacier Limits %s',
     'includes': ['aws.include'],
     'group': 'aws_glacier_limits',
     'default_levels_variable': 'aws_glacier_limits_default_levels',

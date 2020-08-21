@@ -18,15 +18,14 @@ TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
 		      --exclude=__pycache__ --exclude=*.pyc
 # We could add clang's -Wshorten-64-to-32 and g++'c/clang's -Wsign-conversion here.
 CXX_FLAGS          := -g -O3 -Wall -Wextra
-CLANG_VERSION      := 8
+CLANG_VERSION      := 10
 CLANG_FORMAT       := clang-format-$(CLANG_VERSION)
 SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 export CPPCHECK    := cppcheck
 export DOXYGEN     := doxygen
 export IWYU_TOOL   := $(realpath scripts/iwyu_tool)
 ARTIFACT_STORAGE   := https://artifacts.lan.tribe29.com
-PIPENV2            := scripts/run-pipenv 2
-PIPENV3            := scripts/run-pipenv 3
+PIPENV             := scripts/run-pipenv
 
 M4_DEPS            := $(wildcard m4/*) configure.ac
 CONFIGURE_DEPS     := $(M4_DEPS) aclocal.m4
@@ -62,7 +61,7 @@ PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs
 RRDTOOL_VERS       := $(shell egrep -h "RRDTOOL_VERS\s:=\s" omd/packages/rrdtool/rrdtool.make | sed 's/RRDTOOL_VERS\s:=\s//')
 
 WEBPACK_MODE       ?= production
-THEMES             := classic facelift modern-dark
+THEMES             := facelift modern-dark
 THEME_CSS_FILES    := $(addprefix web/htdocs/themes/,$(addsuffix /theme.css,$(THEMES)))
 THEME_JSON_FILES   := $(addprefix web/htdocs/themes/,$(addsuffix /theme.json,$(THEMES)))
 THEME_IMAGE_DIRS   := $(addprefix web/htdocs/themes/,$(addsuffix /images,$(THEMES)))
@@ -71,12 +70,14 @@ THEME_RESOURCES    := $(THEME_CSS_FILES) $(THEME_JSON_FILES) $(THEME_IMAGE_DIRS)
 OPENAPI_DOC        := web/htdocs/openapi/api-documentation.html
 OPENAPI_SPEC       := web/htdocs/openapi/checkmk.yaml
 
+LOCK_FD := 200
+LOCK_PATH := .venv.lock
+
 .PHONY: all analyze build check check-binaries check-permissions check-version \
         clean compile-neb-cmc cppcheck dist documentation format format-c \
-        format-linux format-python format-python2 format-python3 \
-	format-shell GTAGS headers help install \
+        format-python format-shell GTAGS headers help install \
         iwyu mrproper mrclean optimize-images packages setup setversion tidy version \
-        am--refresh skel .venv .venv-2.7 .venv-3.7 openapi openapi-doc
+        am--refresh skel openapi openapi-doc
 
 
 help:
@@ -121,7 +122,6 @@ dist: $(DISTNAME).tar.gz config.h.in $(DIST_DEPS)
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise agents/plugins/cmk-update-agent
 	$(MAKE) -C enterprise agents/plugins/cmk-update-agent-32
-	$(MAKE) -C enterprise agents/windows/plugins/cmk-update-agent.exe
 endif
 	set -e -o pipefail ; EXCLUDES= ; \
 	if [ -d .git ]; then \
@@ -163,6 +163,7 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)
 	$(MAKE) -C agents build
+	$(MAKE) -C doc/plugin-api apidoc html
 	tar cf $(DISTNAME)/bin.tar $(TAROPTS) -C bin $$(cd bin ; ls)
 	gzip $(DISTNAME)/bin.tar
 	tar czf $(DISTNAME)/lib.tar.gz $(TAROPTS) \
@@ -192,14 +193,20 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 	tar czf $(DISTNAME)/livestatus.tar.gz $(TAROPTS) -C mk-livestatus-$(VERSION) $$(cd mk-livestatus-$(VERSION) ; ls -A )
 	rm -rf mk-livestatus-$(VERSION)
 
-	tar cf $(DISTNAME)/doc.tar $(TAROPTS) -C doc $$(cd doc ; ls)
+	tar cf $(DISTNAME)/doc.tar $(TAROPTS) -C doc --exclude plugin-api $$(cd doc ; ls)
+	tar rf $(DISTNAME)/doc.tar $(TAROPTS) \
+	    -C doc \
+	    --transform "s/^plugin-api\/build/plugin-api/" \
+	    plugin-api/build/html
 	tar rf $(DISTNAME)/doc.tar $(TAROPTS) COPYING AUTHORS ChangeLog
 	tar rf $(DISTNAME)/doc.tar $(TAROPTS) livestatus/api --exclude "*~" --exclude "*.pyc" --exclude ".gitignore" --exclude .f12
 	gzip $(DISTNAME)/doc.tar
 
+	make -C agents/plugins
 	cd agents ; tar czf ../$(DISTNAME)/agents.tar.gz $(TAROPTS) \
 		--exclude check_mk_agent.spec \
 		--exclude special/lib \
+		--exclude plugins/Makefile \
 		cfg_examples \
 		plugins \
 		sap \
@@ -221,8 +228,6 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 		windows/CONTENTS \
 		windows/mrpe \
 		windows/plugins
-	cd $(DISTNAME) ; ../scripts/make_package_info $(VERSION) > package_info
-	install -m 755 scripts/*.{sh,py} $(DISTNAME)
 	install -m 644 COPYING AUTHORS ChangeLog standalone.make $(DISTNAME)
 	echo "$(VERSION)" > $(DISTNAME)/VERSION
 	tar czf $(DISTNAME).tar.gz $(TAROPTS) $(DISTNAME)
@@ -244,10 +249,10 @@ omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe:
 omd/packages/openhardwaremonitor/OpenHardwareMonitorLib.dll: omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe
 
 .werks/werks: $(WERKS)
-	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV2) run scripts/precompile-werks.py .werks .werks/werks cre
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run scripts/precompile-werks.py .werks .werks/werks cre
 
 ChangeLog: .werks/werks
-	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV2) run scripts/create-changelog.py ChangeLog .werks/werks
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run scripts/create-changelog.py ChangeLog .werks/werks
 
 packages:
 	$(MAKE) -C agents packages
@@ -277,9 +282,8 @@ setversion:
 	$(MAKE) -C omd NEW_VERSION=$(NEW_VERSION) setversion
 	sed -ri 's/^(VERSION[[:space:]]*:?= *).*/\1'"$(NEW_VERSION)/" defines.make ; \
 	sed -i 's/^AC_INIT.*/AC_INIT([MK Livestatus], ['"$(NEW_VERSION)"'], [mk@mathias-kettner.de])/' configure.ac ; \
-	sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' bin/mkbackup ; \
+	sed -i 's/^VERSION = ".*/VERSION = "$(NEW_VERSION)"/' bin/mkbackup ; \
 	sed -i 's/^__version__ = ".*"$$/__version__ = "$(NEW_VERSION)"/' cmk/utils/version.py bin/mkbench bin/livedump; \
-	sed -i 's/^VERSION=.*/VERSION='"$(NEW_VERSION)"'/' scripts/setup.sh ; \
 	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion
 	$(MAKE) -C docker NEW_VERSION=$(NEW_VERSION) setversion
 ifeq ($(ENTERPRISE),yes)
@@ -290,15 +294,21 @@ headers:
 	doc/helpers/headrify
 
 
-$(OPENAPI_SPEC): $(shell find cmk/gui/plugins/openapi -name "*.py")
+$(OPENAPI_SPEC): $(shell find cmk/gui/plugins/openapi -name "*.py") $(shell find cmk/gui/cee/plugins/openapi -name "*.py")
 	@export PYTHONPATH=${REPO_PATH} ; \
-	$(PIPENV2) run python cmk/gui/plugins/openapi/specgen.py > $@
+	export TMPFILE=$$(mktemp);  \
+	$(PIPENV) run python -m cmk.gui.openapi > $$TMPFILE && \
+	mv $$TMPFILE $@
 
-$(OPENAPI_DOC): $(OPENAPI_SPEC) node_modules
+
+$(OPENAPI_DOC): $(OPENAPI_SPEC) node_modules/.bin/redoc-cli
 	node_modules/.bin/redoc-cli bundle -o $(OPENAPI_DOC) $(OPENAPI_SPEC) && \
 		sed -i 's/\s\+$$//' $(OPENAPI_DOC) && \
 		echo >> $(OPENAPI_DOC)  # fix trailing whitespaces and end of file newline
 
+openapi-clean:
+	rm -f $(OPENAPI_SPEC)
+openapi: $(OPENAPI_SPEC)
 openapi-doc: $(OPENAPI_DOC)
 
 
@@ -316,7 +326,25 @@ optimize-images:
 # TODO: The --unsafe-perm was added because the CI executes this as root during
 # tests and building versions. Once we have the then build system this should not
 # be necessary anymore.
-node_modules: package.json package-lock.json
+#
+# NOTE 1: What we actually want are grouped targets, but this would require GNU
+# make >= 4.3, so we use the common workaround of an intermediate target.
+#
+# NOTE 2: NPM people have a totally braindead idea about reproducible builds
+# which almost all other people consider a bug, so we have to touch our target
+# files. Read https://github.com/npm/npm/issues/20439 and be amazed...
+#
+# NOTE 3: NPM sometimes terminates with a very unhelpful "npm ERR! cb() never
+# called!" message, where the underlying reason seems to be quite obscure, see
+# https://npm.community/t/crash-npm-err-cb-never-called/858.
+.INTERMEDIATE: .ran-npm
+node_modules/.bin/webpack: .ran-npm
+node_modules/.bin/redoc-cli: .ran-npm
+.ran-npm: package.json package-lock.json
+	@echo "npm version: $$(npm --version)"
+	@echo "node version: $$(node --version)"
+	@echo "open file descriptor limit (soft): $$(ulimit -Sn)"
+	@echo "open file descriptor limit (hard): $$(ulimit -Hn)"
 	@if curl --silent --output /dev/null --head '${ARTIFACT_STORAGE}/#browse/browse:npm-proxy'; then \
 	    REGISTRY=--registry=${ARTIFACT_STORAGE}/repository/npm-proxy/ ; \
             export SASS_BINARY_SITE='${ARTIFACT_STORAGE}/repository/archives/'; \
@@ -326,17 +354,18 @@ node_modules: package.json package-lock.json
 	    echo "Installing from public registry" ; \
         fi ; \
 	npm install --audit=false --unsafe-perm $$REGISTRY
+	touch node_modules/.bin/webpack node_modules/.bin/redoc-cli
 
-web/htdocs/js/%_min.js: node_modules webpack.config.js $(JAVASCRIPT_SOURCES)
+web/htdocs/js/%_min.js: node_modules/.bin/webpack webpack.config.js $(JAVASCRIPT_SOURCES)
 	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
 
-web/htdocs/themes/%/theme.css: node_modules webpack.config.js postcss.config.js web/htdocs/themes/%/theme.scss web/htdocs/themes/%/scss/*.scss
+web/htdocs/themes/%/theme.css: node_modules/.bin/webpack webpack.config.js postcss.config.js web/htdocs/themes/%/theme.scss web/htdocs/themes/%/scss/*.scss
 	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
 
 # This target is used to generate a css file for the virtual appliance. It is
 # called from the cma git's Makefile and the built css file is moved to
 # ~/git/cma/skel/usr/share/cma/webconf/htdocs/
-web/htdocs/themes/facelift/cma_facelift.css: node_modules webpack.config.js postcss.config.js web/htdocs/themes/facelift/cma_facelift.scss web/htdocs/themes/facelift/scss/*.scss
+web/htdocs/themes/facelift/cma_facelift.css: node_modules/.bin/webpack webpack.config.js postcss.config.js web/htdocs/themes/facelift/cma_facelift.scss web/htdocs/themes/facelift/scss/*.scss
 	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
 
 # TODO(sp) The target below is not correct, we should not e.g. remove any stuff
@@ -356,17 +385,19 @@ clean:
 
 mrproper:
 	git clean -d --force -x \
+	    --exclude="**/.vscode"\
+	    --exclude="**/.idea"\
 	    --exclude='\.werks/.last'\
 	    --exclude='\.werks/.my_ids'
 
 mrclean:
 	git clean -d --force -x \
+	    --exclude="**/.vscode"\
+	    --exclude="**/.idea" \
 	    --exclude='\.werks/.last' \
 	    --exclude='\.werks/.my_ids' \
-	    --exclude="Pipfile" \
-	    --exclude="Pipfile.lock" \
-	    --exclude=".venv*" \
-	    --exclude="virtual-envs/*/.venv/"
+	    --exclude=".venv" \
+	    --exclude=".venv.lock"
 
 setup:
 # librrd-dev is still needed by the python rrd package we build in our virtual environment
@@ -375,32 +406,39 @@ setup:
 	    autoconf \
 	    bear \
 	    build-essential \
-	    clang-7 \
-	    clang-format-7 \
-	    clang-tidy-7 \
+	    clang-10 \
+	    clang-format-10 \
+	    clang-tidy-10 \
+	    clang-tools-10 \
+	    clangd-10 \
+	    libclang-10-dev \
+	    libclang-common-10-dev \
+	    libclang1-10 \
+	    libjpeg-dev \
 	    doxygen \
 	    figlet \
 	    g++ \
-	    libclang-7-dev \
 	    libpcap-dev \
 	    librrd-dev \
 	    libxml2-dev \
 	    libpango1.0-dev \
-	    llvm-7-dev \
 	    libsasl2-dev \
 	    libldap2-dev \
 	    libkrb5-dev \
-	    libmysqlclient-dev \
+	    libmariadb-dev-compat \
 	    pngcrush \
 	    valgrind \
+	    shellcheck \
 	    direnv \
-	    python-pip \
-	    python3.7-dev \
+	    python3-pip \
+	    python3.8-dev \
+	    python-setuptools \
 	    chrpath \
 	    enchant \
 	    ksh \
-	    p7zip-full
-	sudo -H pip install -U pipenv
+	    p7zip-full \
+	    zlib1g-dev
+	sudo -H pip install -U pipenv wheel
 	$(MAKE) -C web setup
 	$(MAKE) -C omd setup
 	$(MAKE) -C omd openhardwaremonitor-setup
@@ -485,7 +523,7 @@ endif
 # Not really perfect rules, but better than nothing
 analyze: config.h
 	$(MAKE) -C livestatus clean
-	cd livestatus && $(SCAN_BUILD) -o ../clang-analyzer $(MAKE) CXXFLAGS="-std=c++17"
+	cd livestatus && $(SCAN_BUILD) -o ../clang-analyzer $(MAKE) CXXFLAGS="-std=c++2a"
 
 # GCC-like output on stderr intended for human consumption.
 cppcheck: config.h
@@ -506,34 +544,21 @@ format: format-python format-c format-shell
 # TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in
 # src/configure.ac, but this needs at least automake-1.13, which in turn is only
 # available from e.g. Ubuntu Saucy (13) onwards, so some magic is needed.
-format-c: format-linux
-
-format-linux:
+format-c:
 	$(CLANG_FORMAT) -style=file -i $(FILES_TO_FORMAT_LINUX)
 
-format-python: format-python3 format-python2
-
-format-python2:
+format-python:
 # Explicitly specify --style [FILE] to prevent costly searching in parent directories
 # for each file specified via command line
 #
 # Saw some mixed up lines on stdout after adding the --parallel option. Leaving it on
 # for the moment to get the performance boost this option brings.
-	PYTHON_FILES=$${PYTHON_FILES-$$(scripts/find-python-files 2)} ; \
-	$(PIPENV3) run yapf --parallel --style .style.yapf --verbose -i $$PYTHON_FILES
-
-format-python3:
-# Explicitly specify --style [FILE] to prevent costly searching in parent directories
-# for each file specified via command line
-#
-# Saw some mixed up lines on stdout after adding the --parallel option. Leaving it on
-# for the moment to get the performance boost this option brings.
-	PYTHON_FILES=$${PYTHON_FILES-$$(scripts/find-python-files 3)} ; \
-	$(PIPENV3) run yapf --parallel --style .style.yapf --verbose -i $$PYTHON_FILES
+	if test -z "$$PYTHON_FILES"; then ./scripts/find-python-files; else echo "$$PYTHON_FILES"; fi | \
+	xargs -n 1500 $(PIPENV) run yapf --parallel --style .style.yapf --verbose -i
 
 
 format-shell:
-	sudo docker run --rm -v "$(realpath .):/sh" -w /sh peterdavehello/shfmt shfmt -w -i 4 -ci $(SHELL_FILES)
+	$(MAKE)	-C tests format-shell
 
 
 # Note: You need the doxygen and graphviz packages.
@@ -543,20 +568,40 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src documentation
 endif
 
-.venv-2.7:
-	$(MAKE) -C virtual-envs/2.7 .venv
-	$(MAKE) -C virtual-envs/3.7 .venv
-	rm -rf {Pipfile,Pipfile.lock,.venv*}
-	ln -s virtual-envs/2.7/{Pipfile,Pipfile.lock,.venv} .
+# TODO: The line: sed -i "/\"markers\": \"extra == /d" Pipfile.lock; \
+# can be removed if pipenv fixes this issue.
+# See: https://github.com/pypa/pipenv/issues/3140
+#      https://github.com/pypa/pipenv/issues/3026
+# The recent pipenv version 2018.10.13 has a bug that places wrong markers in the
+# Pipfile.lock. This leads to an error when installing packages with this
+# markers and prints an error message. Example:
+# Ignoring pyopenssl: markers 'extra == "security"' don't match your environment
+# TODO: pipenv and make don't really cooperate nicely: Locking alone already
+# creates a virtual environment with setuptools/pip/wheel. This could lead to a
+# wrong up-to-date status of it later, so let's remove it here. What we really
+# want is a check if the contents of .venv match the contents of Pipfile.lock.
+# We should do this via some move-if-change Kung Fu, but for now rm suffices.
+Pipfile.lock: Pipfile
+	@( \
+	    echo "Locking Python requirements..." ; \
+	    flock $(LOCK_FD); \
+	    $(PIPENV) lock; \
+	    sed -i "/\"markers\": \"extra == /d" Pipfile.lock; \
+	    rm -rf .venv \
+	) $(LOCK_FD)>$(LOCK_PATH)
 
-.venv-3.7:
-	$(MAKE) -C virtual-envs/2.7 .venv
-	$(MAKE) -C virtual-envs/3.7 .venv
-	rm -rf {Pipfile,Pipfile.lock,.venv*}
-	ln -s virtual-envs/3.7/{Pipfile,Pipfile.lock,.venv} .
-
-# This alias is for compatibility: The target .venv should refer to 2.7 for the moment
-.venv: .venv-2.7
+# Remake .venv everytime Pipfile or Pipfile.lock are updated. Using the 'sync'
+# mode installs the dependencies exactly as speciefied in the Pipfile.lock.
+# This is extremely fast since the dependencies do not have to be resolved.
+# Cleanup partially created pipenv. This makes us able to automatically repair
+# broken virtual environments which may have been caused by network issues.
+.venv: Pipfile.lock
+	@( \
+	    echo "Creating .venv..." ; \
+	    flock $(LOCK_FD); \
+	    $(RM) -r .venv; \
+	    ( SKIP_MAKEFILE_CALL=1 $(PIPENV) sync --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
+	) $(LOCK_FD)>$(LOCK_PATH)
 
 # This dummy rule is called from subdirectories whenever one of the
 # top-level Makefile's dependencies must be updated.  It does not

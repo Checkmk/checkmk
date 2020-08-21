@@ -45,7 +45,7 @@ def check_esx_vsphere_datastores(item, params, data):
     mib = 1024.0**2
     size_bytes = data.get("capacity")
     avail_bytes = data.get("freeSpace")
-    if size_bytes is None or avail_bytes is None:
+    if size_bytes is None or size_bytes == 0 or avail_bytes is None:
         return
 
     yield df_check_filesystem_single(  # pylint: disable=undefined-variable

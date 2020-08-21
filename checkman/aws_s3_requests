@@ -4,19 +4,22 @@ catalog: cloud/aws
 license: GPL
 distribution: check_mk
 description:
- This check monitors the number of get, put, delete, head,
- post, select and list requests made for objects in an AWS
- S3 bucket.
+ This check monitors the total number of requests and the
+ number of get, put, delete, head post, select and list
+ requests made for objects in an AWS S3 bucket. Values are
+ reported in counts per second and as a fraction of the
+ total number of requests.
+
  To make this check work you have to configure the related
- special agent {Amazon Web Services (AWS)}.
+ special agent {Amazon Web Services (AWS)}. Furthermore, you
+ have to enable requests metrics in the AWS/S3 console. This is
+ a paid feature.
 
- No default levels are set. Upper levels are configurable.
-
- You have to enable requests metrics in AWS/S3 console. This
- is a paid feature
+ No default levels are set. Upper levels on the fractions are
+ configurable.
 
 item:
- Name of the instance
+ Name of the bucket
 
 inventory:
  One service is created for each bucket if all required metrics

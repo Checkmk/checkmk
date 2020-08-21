@@ -1,10 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List  # pylint: disable=unused-import
+from typing import Any, Dict, List
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
@@ -235,7 +235,7 @@ class VirtualHostTree(SidebarSnapin):
         if "_state" in tree:
             return tree["_state"]
 
-        states = map(self._tag_tree_worst_state, tree.values())
+        states = [self._tag_tree_worst_state(s) for s in tree.values()]
         for x in states:
             if x == 2:
                 return 2
@@ -274,7 +274,7 @@ function virtual_host_tree_enter(path)
 
     def _compute_tag_tree(self, tree_spec):
         tag_groups, topics = self._get_tag_config()
-        tree = {}  # type: Dict[Any, Any]
+        tree: Dict[Any, Any] = {}
         for host_row in self._get_all_hosts():
             self._add_host_to_tree(tree_spec, tree, host_row, tag_groups, topics)
         return tree
@@ -389,7 +389,7 @@ function virtual_host_tree_enter(path)
     # Prepare list of host tag groups and topics
     def _get_tag_config(self):
         tag_groups = {}
-        topics = {}  # type: Dict[str, List[Any]]
+        topics: Dict[str, List[Any]] = {}
         for tag_group in config.tags.tag_groups:
             if tag_group.topic:
                 topics.setdefault(tag_group.topic, []).append(tag_group)

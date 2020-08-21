@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,7 +6,8 @@
 
 import os
 import io
-import six
+from typing import Iterable
+
 from PIL import Image, PngImagePlugin  # type: ignore[import]
 
 import cmk.utils.paths
@@ -23,13 +24,21 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     Dictionary,
 )
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+    make_simple_form_page_menu,
+)
 
-from cmk.gui.plugins.wato import ActionResult  # pylint: disable=unused-import
+from cmk.gui.plugins.wato import ActionResult
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
     wato_confirm,
-    global_buttons,
     make_action_link,
 )
 
@@ -45,14 +54,38 @@ class ModeIcons(WatoMode):
         return ["icons"]
 
     def title(self):
-        return _('Manage Icons')
+        return _("Custom icons")
 
-    def buttons(self):
-        back_url = html.get_url_input("back", "")
-        if back_url:
-            html.context_button(_("Back"), back_url, "back")
-        else:
-            global_buttons()
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = make_simple_form_page_menu(breadcrumb,
+                                          form_name="upload_form",
+                                          button_name="_do_upload",
+                                          save_title=_("Upload"),
+                                          add_abort_link=False)
+
+        menu.dropdowns.insert(
+            1,
+            PageMenuDropdown(
+                name="related",
+                title=_("Related"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Setup"),
+                        entries=list(self._page_menu_entries_related()),
+                    ),
+                ],
+            ))
+
+        return menu
+
+    def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
+        yield PageMenuEntry(
+            title=_("User interface rulesets"),
+            icon_name="rulesets",
+            item=make_simple_link(
+                html.makeuri_contextless([("mode", "rulesets"), ("group", "user_interface")],
+                                         filename="wato.py")),
+        )
 
     def _load_custom_icons(self):
         s = IconSelector()
@@ -90,8 +123,7 @@ class ModeIcons(WatoMode):
                 _('Your icon conflicts with a Check_MK builtin icon. Please '
                   'choose another name for your icon.'))
 
-    def action(self):
-        # type: () -> ActionResult
+    def action(self) -> ActionResult:
         if html.request.has_var("_delete"):
             icon_name = html.request.var("_delete")
             if icon_name in self._load_custom_icons():
@@ -106,6 +138,9 @@ class ModeIcons(WatoMode):
                     return None
 
         elif html.request.has_var("_do_upload"):
+            if not html.check_transaction():
+                return None
+
             vs_upload = self._vs_upload()
             icon_info = vs_upload.from_html_vars('_upload_icon')
             vs_upload.validate_value(icon_info, '_upload_icon')
@@ -119,7 +154,7 @@ class ModeIcons(WatoMode):
         im.info['Comment'] = icon_info['category']
         meta = PngImagePlugin.PngInfo()
         for k, v in im.info.items():
-            if isinstance(v, (six.binary_type, six.text_type)):
+            if isinstance(v, (bytes, str)):
                 meta.add_text(k, v, 0)
 
         # and finally save the image
@@ -132,15 +167,12 @@ class ModeIcons(WatoMode):
             # Might happen with interlaced PNG files and PIL version < 1.1.7
             raise MKUserError(None, _('Unable to upload icon: %s') % e)
 
-    def page(self):
-        # type: () -> None
+    def page(self) -> None:
         html.h3(_("Upload Icon"))
         html.p(_("Allowed are single PNG image files with a maximum size of 80x80 px."))
 
         html.begin_form('upload_form', method='POST')
         self._vs_upload().render_input('_upload_icon', None)
-        html.button('_do_upload', _('Upload'), 'submit')
-
         html.hidden_fields()
         html.end_form()
 

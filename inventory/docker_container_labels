@@ -3,12 +3,13 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import cmk.base.plugins.agent_based.utils.docker as docker
 
 
 def parse_docker_container_labels(info):
-    version = docker_get_version(info)
+    version = docker.get_version(info)
     index = 0 if version is None else 1
-    data = docker_json_get_obj(info[index]) if info[index:] else None
+    data = docker.json_get_obj(info[index]) if info[index:] else None
     return data
 
 
@@ -17,10 +18,9 @@ def inv_docker_container_labels(info, inventory_tree):
     if data is None:
         return
     container = inventory_tree.get_dict("software.applications.docker.container.")
-    container["labels"] = docker_format_labels({"Labels": data})
+    container["labels"] = docker.format_labels({"Labels": data})
 
 
 inv_info['docker_container_labels'] = {
-    'includes': ['docker.include'],
     'inv_function': inv_docker_container_labels,
 }

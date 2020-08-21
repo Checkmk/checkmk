@@ -40,7 +40,7 @@ def check_liebert_maintenance(_no_item, params, parsed):
 
 
 check_info['liebert_maintenance'] = {
-    'parse_function': lambda info: parse_liebert_without_unit(info, int),
+    'parse_function': lambda info: parse_liebert_without_unit_wrapper(info, int),
     'inventory_function': inventory_liebert_maintenance,
     'check_function': check_liebert_maintenance,
     'service_description': 'Maintenance',

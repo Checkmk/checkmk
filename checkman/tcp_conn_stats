@@ -8,7 +8,7 @@ description:
  which are: {ESTABLISHED}, {SYN_SENT}, {SYN_RECV}, {LAST_ACK}, {CLOSE_WAIT}, {TIME_WAIT}, {CLOSED}, {CLOSING}, {FIN_WAIT1}, {FIN_WAIT2}.
 
 inventory:
- If there is at least one TCP connection, then one check will be created.
+ One service is created if there is at least one TCP connection.
  On agents supporting {tcp_conn_stats} this should always be the case since at
  least the connection to the agent should be shown.
 

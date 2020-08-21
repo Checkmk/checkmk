@@ -4,6 +4,7 @@
 // source code package.
 
 #include "StringFilter.h"
+
 #include "Filter.h"
 #include "RegExp.h"
 #include "Row.h"

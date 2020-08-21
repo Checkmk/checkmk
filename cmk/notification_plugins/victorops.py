@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -9,16 +9,14 @@ Send notification messages to VictorOPS
 
 Create a JSON message to be sent to VictorOPS REST API
 """
-from __future__ import unicode_literals
-
-from typing import Dict  # pylint: disable=unused-import
+from typing import Dict
 
 from cmk.notification_plugins.utils import host_url_from_context, service_url_from_context
 
 
 def translate_states(state):
     if state in ['OK', 'UP']:
-        return 'OK'
+        return 'RECOVERY'
     if state in ['CRITICAL', 'DOWN']:
         return 'CRITICAL'
     if state in ['UNKNOWN', 'UNREACHABLE']:
@@ -26,9 +24,8 @@ def translate_states(state):
     return state  # This is WARNING
 
 
-def victorops_msg(context):
-    # type: (Dict) -> Dict
-    """Build the message for slack"""
+def victorops_msg(context: Dict) -> Dict:
+    """Build the message for VictorOps"""
 
     if context.get('WHAT', None) == "SERVICE":
         state = translate_states(context["SERVICESTATE"])

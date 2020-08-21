@@ -38,6 +38,8 @@ info = [
 discovery = {
     '': [],
     'rcm': [],
+    'sockets': [],
+    'fuses': [],
     'temp': [
         (u'Sensor Master 4/255', {}), (u'Sensor PDU 1 4/1', {}),
         (u'Sensor PDU 2 4/1', {})

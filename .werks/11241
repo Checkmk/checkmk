@@ -1,0 +1,15 @@
+Title: Status of the Check_MK services: Fix unhandled 'State in case of restricted address missmatch' parameter
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p17
+Date: 1597996447
+Class: fix
+
+Within the ruleset {{Status of the Checkmk services}} there's a parameter
+{{State in case of restricted address missmatch}} where you can overwrite the
+default state {{WARN}} if the {{Check_MK}} service reports
+{{Unexpected allowed IP ranges}}. This option was introduced in Checkmk version
+1.6.0 and not handled by the {{Check_MK}} service, ie. the configure state of
+this option had no effect.

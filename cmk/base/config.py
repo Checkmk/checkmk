@@ -2940,14 +2940,19 @@ class HostConfig:
 
     def _merge_with_data_source_exit_code_spec(self, spec: Dict,
                                                data_source_id: Optional[str]) -> ExitSpec:
+        if 'restricted_address_mismatch' not in spec:
+            spec['restricted_address_mismatch'] = 1
+
         if data_source_id is not None:
             try:
-                return spec["individual"][data_source_id]
+                return dict({"restricted_address_mismatch": spec["restricted_address_mismatch"]}.items() +
+                            spec["individual"][data_source_id].items())
             except KeyError:
                 pass
 
         try:
-            return spec["overall"]
+            return dict({"restricted_address_mismatch": spec["restricted_address_mismatch"]}.items() +
+                        spec["overall"].items())
         except KeyError:
             pass
 

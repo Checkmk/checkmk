@@ -8,9 +8,14 @@
 
 import pytest  # type: ignore[import]
 
-from cmk.base.plugins.agent_based.agent_based_api.v0 import Service
+from cmk.base.plugins.agent_based.agent_based_api.v0 import Service, Result, Metric, state
 
 from cmk.base.plugins.agent_based.mssql_counters_section import parse_mssql_counters
+from cmk.base.plugins.agent_based.mssql_counters_cache_hits import (
+    discovery_mssql_counters_cache_hits,
+    check_mssql_counters_cache_hits,
+    cluster_check_mssql_counters_cache_hits,
+)
 
 big_string_table = [
     ['None', 'utc_time', 'None', '19.08.2020 14:25:04'],
@@ -271,6 +276,41 @@ big_services = [
 ])
 def test_parse_mssql_counters(string_table, expected_parsed_data):
     assert parse_mssql_counters(string_table) == expected_parsed_data
+
+
+@pytest.mark.parametrize("params,section,expected_services", [
+    ({}, big_parsed_data, big_services),
+])
+def test_discovery_mssql_counters_cache_hits(params, section, expected_services):
+    results = list(discovery_mssql_counters_cache_hits(params, section))
+    print(",\n".join(str(r) for r in results))
+    assert results == expected_services
+
+
+@pytest.mark.parametrize("item,section,expected_results", [
+    ('MSSQL_VEEAMSQL2012:Catalog_Metadata tempdb cache_hit_ratio', big_parsed_data, [
+        Result(state=state.OK, summary='99.5%'),
+        Metric('cache_hit_ratio', 99.50596864711571),
+    ]),
+])
+def test_check_mssql_counters_cache_hits(item, section, expected_results):
+    results = list(check_mssql_counters_cache_hits(item, section))
+    print(",\n".join(str(r) for r in results))
+    assert results == expected_results
+
+
+@pytest.mark.parametrize("item,section,expected_results", [
+    ('MSSQL_VEEAMSQL2012:Catalog_Metadata tempdb cache_hit_ratio', {
+        "node1": big_parsed_data
+    }, [
+        Result(state=state.OK, summary='[node1] 99.5%'),
+        Metric('cache_hit_ratio', 99.50596864711571),
+    ]),
+])
+def test_cluster_check_mssql_counters_cache_hits(item, section, expected_results):
+    results = list(cluster_check_mssql_counters_cache_hits(item, section))
+    print(",\n".join(str(r) for r in results))
+    assert results == expected_results
 
 
 _ = __name__ == "__main__" and pytest.main(["-svv", "-T=unit", __file__])

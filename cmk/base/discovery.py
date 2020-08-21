@@ -652,6 +652,19 @@ def check_discovery(
     hostname: HostName,
     ipaddress: Optional[HostAddress],
 ) -> Tuple[int, List[str], List[str], List[Tuple]]:
+
+    # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:
+    # 1. use caches as default:
+    #    - Set FileCacheConfigurator.maybe = True (set max_cachefile_age, else 0)
+    #    - Set FileCacheConfigurator.use_outdated = True
+    # 2. Then these settings are used to read cache file or not
+    # 3. If params['inventory_check_do_scan'] = True in 'Periodic service discovery'
+    #    then caching is disabled, but only for SNMP data sources:
+    #    - FileCacheConfigurator.snmp_disabled = True
+    #      -> FileCacheConfigurator.disabled = True
+    #    For agent-based data sources we do not disable cache because of some special
+    #    cases (eg. logwatch) in order to prevent stealing data (log lines etc.)
+
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
 
@@ -668,7 +681,9 @@ def check_discovery(
         host_config,
         ipaddress,
         on_error="raise",
+        disable_snmp_caches=params['inventory_check_do_scan'],
     )
+
     use_caches = data_sources.FileCacheConfigurator.maybe
     multi_host_sections = data_sources.make_host_sections(
         config_cache,
@@ -1234,6 +1249,7 @@ def _get_sources_for_discovery(
     ipaddress: Optional[HostAddress],
     *,
     on_error: str,
+    disable_snmp_caches: bool = False,
 ) -> data_sources.Checkers:
     sources = data_sources.make_checkers(
         host_config,
@@ -1246,6 +1262,7 @@ def _get_sources_for_discovery(
             configurator.on_snmp_scan_error = on_error
             configurator.use_snmpwalk_cache = False
             configurator.ignore_check_interval = True
+            configurator.file_cache.snmp_disabled = disable_snmp_caches
 
     return sources
 

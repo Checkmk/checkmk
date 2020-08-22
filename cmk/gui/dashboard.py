@@ -742,40 +742,28 @@ def _fallback_dashlet(name: DashboardName, board: DashboardConfig, dashlet_spec:
 
 # TODO: Use new generic popup dialogs once they are merged from the current UX rework
 # TODO: Synchronize this with the view mechanic
-def _render_filter_form(board: DashboardConfig, board_context: VisualContext,
-                        unconfigured_single_infos: Set[str]) -> str:
+def _render_filter_form(mandatory_filters: List[Tuple[str, ValueSpec]],
+                        context: VisualContext) -> str:
     with html.plugged():
         html.begin_form("dashboard_context_dialog", method="GET", add_transid=False)
 
         forms.header(_("Dashboard context"))
+        mandatory_filter_names = [f[0] for f in mandatory_filters]
 
         try:
             # Configure required single info keys (the ones that are not set by the config)
-            single_context_filters = []
-            for info_key in unconfigured_single_infos:
-                info = visuals.visual_info_registry[info_key]()
-
-                for filter_name, valuespec in info.single_spec:
-                    single_context_filters.append(filter_name)
-                    forms.section(valuespec.title())
-                    valuespec.render_input(filter_name, None)
+            for filter_name, valuespec in mandatory_filters:
+                forms.section(valuespec.title())
+                valuespec.render_input(filter_name, None)
             forms.section_close()
-
-            # Configure required context filters set in the dashboard config
-            if board["mandatory_context_filters"]:
-                forms.section(_("Required context"))
-                for filter_key in board["mandatory_context_filters"]:
-                    valuespec = visuals.VisualFilter(filter_key)
-                    valuespec.render_input(filter_key, board_context.get(filter_key))
 
             # Give the user the option to redefine filters configured in the dashboard config
             # and also give the option to add some additional filters
             forms.section(_("Additional context"))
             # Like _dashboard_info_handler we assume that only host / service filters are relevant
             vs_filters = visuals.VisualFilterList(info_list=["host", "service"],
-                                                  ignore=board["mandatory_context_filters"] +
-                                                  single_context_filters)
-            vs_filters.render_input("", board_context)
+                                                  ignore=mandatory_filter_names)
+            vs_filters.render_input("", context)
         except Exception:
             crash_reporting.handle_exception_as_gui_crash_report()
 
@@ -791,6 +779,23 @@ def _render_filter_form(board: DashboardConfig, board_context: VisualContext,
         html.end_form()
 
         return html.drain()
+
+
+def _get_mandatory_filters(board: DashboardConfig,
+                           unconfigured_single_infos: Set[str]) -> List[Tuple[str, ValueSpec]]:
+    mandatory_filters: List[Tuple[str, ValueSpec]] = []
+
+    # Get required single info keys (the ones that are not set by the config)
+    for info_key in unconfigured_single_infos:
+        info = visuals.visual_info_registry[info_key]()
+        mandatory_filters += info.single_spec
+
+    # Get required context filters set in the dashboard config
+    if board["mandatory_context_filters"]:
+        for filter_key in board["mandatory_context_filters"]:
+            mandatory_filters.append((filter_key, visuals.VisualFilter(filter_key)))
+
+    return mandatory_filters
 
 
 def _page_menu(breadcrumb: Breadcrumb, name: DashboardName, board: DashboardConfig,
@@ -872,6 +877,8 @@ def _extend_display_dropdown(menu: PageMenu, board: DashboardConfig, board_conte
                              unconfigured_single_infos: Set[str]) -> None:
     display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
 
+    mandatory_filters = _get_mandatory_filters(board, unconfigured_single_infos)
+
     display_dropdown.topics.insert(
         0,
         PageMenuTopic(title=_("Filter"),
@@ -880,8 +887,7 @@ def _extend_display_dropdown(menu: PageMenu, board: DashboardConfig, board_conte
                               title=_("Filter"),
                               icon_name="filters",
                               item=PageMenuPopup(
-                                  _render_filter_form(board, board_context,
-                                                      unconfigured_single_infos)),
+                                  _render_filter_form(mandatory_filters, board_context)),
                               name="filters",
                               is_shortcut=True,
                           ),

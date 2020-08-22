@@ -7,7 +7,7 @@
 parameters. This is a host/service overview page over all things that can be
 modified via rules."""
 
-from typing import List, Tuple as _Tuple, Optional, Type
+from typing import List, Tuple as _Tuple, Optional, Type, Iterator
 
 from six import ensure_str
 
@@ -25,16 +25,19 @@ from cmk.gui.watolib.rulespecs import (
     rulespec_group_registry,
     rulespec_registry,
 )
-from cmk.gui.wato.pages.hosts import ModeEditHost
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+)
+from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
+from cmk.gui.plugins.wato.utils.context_buttons import make_service_status_link
 
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
-)
-
-from cmk.gui.plugins.wato.utils.context_buttons import (
-    host_status_button,
-    service_status_button,
 )
 
 
@@ -71,30 +74,36 @@ class ModeObjectParameters(WatoMode):
             title += " / " + self._service
         return title
 
-    def buttons(self):
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="hosts",
+                    title=_("Hosts"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("For this host"),
+                            entries=list(page_menu_host_entries(self.name(), self._host)),
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="services",
+                    title=_("Services"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("For this service"),
+                            entries=list(self._page_menu_service_entries()),
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
+
+    def _page_menu_service_entries(self) -> Iterator[PageMenuEntry]:
         if self._service:
-            prefix = _("Host-")
-        else:
-            prefix = u""
-        html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]),
-                            "back")
-        if self._service:
-            service_status_button(self._hostname, self._service)
-        else:
-            host_status_button(self._hostname, "hoststatus")
-        html.context_button(
-            prefix + _("Properties"),
-            watolib.folder_preserving_link([("mode", "edit_host"), ("host", self._hostname)]),
-            "edit")
-        html.context_button(
-            _("Services"),
-            watolib.folder_preserving_link([("mode", "inventory"), ("host", self._hostname)]),
-            "services")
-        if not self._host.is_cluster():
-            html.context_button(
-                prefix + _("Diagnostic"),
-                watolib.folder_preserving_link([("mode", "diag_host"), ("host", self._hostname)]),
-                "diagnose")
+            yield make_service_status_link(self._host.name(), self._service)
 
     def page(self):
         all_rulesets = watolib.AllRulesets()

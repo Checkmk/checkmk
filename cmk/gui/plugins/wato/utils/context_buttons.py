@@ -28,46 +28,37 @@ def changelog_button():
                         hot)
 
 
-def host_status_button(hostname, viewname):
-    html.context_button(
-        _("Status"), "view.py?" + html.urlencode_vars([
-            ("view_name", viewname),
-            ("filename", watolib.Folder.current().path() + "/hosts.mk"),
-            ("host", hostname),
-            ("site", ""),
-        ]), "status")
-
-
 def make_host_status_link(host_name: str, view_name: str) -> PageMenuEntry:
     return PageMenuEntry(
         title=_("Monitoring status"),
         icon_name="status",
         item=make_simple_link(
-            html.makeuri_contextless([
-                ("view_name", view_name),
-                ("filename", watolib.Folder.current().path() + "/hosts.mk"),
-                ("host", host_name),
-                ("site", ""),
-            ],
-                                     filename="view.py")),
+            html.makeuri_contextless(
+                [
+                    ("view_name", view_name),
+                    ("filename", watolib.Folder.current().path() + "/hosts.mk"),
+                    ("host", host_name),
+                    ("site", ""),
+                ],
+                filename="view.py",
+            )),
     )
 
 
-def service_status_button(hostname, servicedesc):
-    html.context_button(
-        _("Status"), "view.py?" + html.urlencode_vars([
-            ("view_name", "service"),
-            ("host", hostname),
-            ("service", servicedesc),
-        ]), "status")
-
-
-def folder_status_button(viewname="allhosts"):
-    html.context_button(
-        _("Status"), "view.py?" + html.urlencode_vars([
-            ("view_name", viewname),
-            ("wato_folder", watolib.Folder.current().path()),
-        ]), "status")
+def make_service_status_link(host_name: str, service_name: str) -> PageMenuEntry:
+    return PageMenuEntry(
+        title=_("Monitoring status"),
+        icon_name="status",
+        item=make_simple_link(
+            html.makeuri_contextless(
+                [
+                    ("view_name", "service"),
+                    ("host", host_name),
+                    ("service", service_name),
+                ],
+                filename="view.py",
+            )),
+    )
 
 
 def make_folder_status_link(folder: watolib.CREFolder, view_name: str) -> PageMenuEntry:

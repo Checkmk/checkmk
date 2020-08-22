@@ -740,62 +740,6 @@ def _fallback_dashlet(name: DashboardName, board: DashboardConfig, dashlet_spec:
     return dashlet_type(name, board, dashlet_id, dashlet_spec)
 
 
-# TODO: Synchronize this with the view mechanic
-def _render_filter_form(mandatory_filters: List[Tuple[str, ValueSpec]],
-                        context: VisualContext) -> str:
-    with html.plugged():
-        html.show_user_errors()
-
-        html.begin_form("filter", method="GET", add_transid=False)
-        _show_filter_form_buttons()
-
-        mandatory_filter_names = [f[0] for f in mandatory_filters]
-
-        html.open_div(class_="side_popup_content")
-        try:
-            # Configure required single info keys (the ones that are not set by the config)
-            if mandatory_filters:
-                html.h2(_("Mandatory context"))
-                for filter_name, valuespec in mandatory_filters:
-                    html.h3(valuespec.title())
-                    valuespec.render_input(filter_name, None)
-
-            # Give the user the option to redefine filters configured in the dashboard config
-            # and also give the option to add some additional filters
-            if mandatory_filters:
-                html.h3(_("Additional context"))
-
-            # Like _dashboard_info_handler we assume that only host / service filters are relevant
-            vs_filters = visuals.VisualFilterList(info_list=["host", "service"],
-                                                  ignore=mandatory_filter_names)
-            vs_filters.render_input("", context)
-        except Exception:
-            crash_reporting.handle_exception_as_gui_crash_report()
-        html.close_div()
-
-        forms.end()
-
-        html.hidden_fields()
-        html.end_form()
-
-        return html.drain()
-
-
-def _show_filter_form_buttons() -> None:
-    html.open_div(class_="side_popup_controls")
-
-    html.open_div(class_="update_buttons")
-    # TODO: This is currently broken. It is unclear to which state exactly to reset to
-    #html.jsbutton("reset",
-    #              _("Reset"),
-    #              cssclass="reset",
-    #              onclick="cmk.valuespecs.listofmultiple_reset('')")
-    html.button("_submit", _("Apply filters"), cssclass="apply submit")
-    html.close_div()
-
-    html.close_div()
-
-
 def _get_mandatory_filters(board: DashboardConfig,
                            unconfigured_single_infos: Set[str]) -> List[Tuple[str, ValueSpec]]:
     mandatory_filters: List[Tuple[str, ValueSpec]] = []
@@ -893,6 +837,8 @@ def _extend_display_dropdown(menu: PageMenu, board: DashboardConfig, board_conte
     display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
 
     mandatory_filters = _get_mandatory_filters(board, unconfigured_single_infos)
+    # Like _dashboard_info_handler we assume that only host / service filters are relevant
+    info_list = ["host", "service"]
 
     display_dropdown.topics.insert(
         0,
@@ -902,7 +848,8 @@ def _extend_display_dropdown(menu: PageMenu, board: DashboardConfig, board_conte
                               title=_("Filter"),
                               icon_name="filters",
                               item=PageMenuSidePopup(
-                                  _render_filter_form(mandatory_filters, board_context)),
+                                  visuals.render_filter_form(info_list, mandatory_filters,
+                                                             board_context)),
                               name="filters",
                               is_shortcut=True,
                           ),

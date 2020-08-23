@@ -30,7 +30,8 @@ class TCPFetcher(AgentFetcher):
     ) -> None:
         super().__init__(file_cache, logging.getLogger("cmk.fetchers.tcp"))
         self._family = socket.AddressFamily(family)
-        self._address = address
+        # json has no builtin tuple, we have to convert
+        self._address = tuple(address) if isinstance(address, list) else address
         self._timeout = timeout
         self._encryption_settings = encryption_settings
         self._socket: Optional[socket.socket] = None

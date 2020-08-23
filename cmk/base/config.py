@@ -2945,14 +2945,14 @@ class HostConfig:
 
         if data_source_id is not None:
             try:
-                return dict({"restricted_address_mismatch": spec["restricted_address_mismatch"]}.items() +
-                            spec["individual"][data_source_id].items())
+                return dict({"restricted_address_mismatch": spec["restricted_address_mismatch"]},
+                            **spec["individual"][data_source_id])
             except KeyError:
                 pass
 
         try:
-            return dict({"restricted_address_mismatch": spec["restricted_address_mismatch"]}.items() +
-                        spec["overall"].items())
+            return dict({"restricted_address_mismatch": spec["restricted_address_mismatch"]},
+                        **spec["overall"])
         except KeyError:
             pass
 

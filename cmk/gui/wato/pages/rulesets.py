@@ -686,6 +686,10 @@ class ModeEditRuleset(WatoMode):
         except KeyError:
             pass
 
+    def _breadcrumb_url(self) -> str:
+        return html.makeuri_contextless([("mode", self.name()), ("varname", self._name)],
+                                        filename="wato.py")
+
     def title(self) -> str:
         assert self._rulespec.title is not None
         title = self._rulespec.title

@@ -5,8 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mode for trying out the logwatch patterns"""
 
+from typing import Optional, Type, Iterable
 import re
-
 from six import ensure_str
 
 from cmk.utils.type_defs import CheckPluginNameStr, HostName, ServiceName, Item
@@ -18,11 +18,18 @@ from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
-
+from cmk.gui.wato.pages.rulesets import ModeEditRuleset
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+)
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
-    global_buttons,
     ConfigHostname,
 )
 
@@ -40,6 +47,20 @@ class ModePatternEditor(WatoMode):
     @classmethod
     def permissions(cls):
         return ["pattern_editor"]
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeEditRuleset
+
+    def breadcrumb(self) -> Breadcrumb:
+        # The ModeEditRuleset.breadcrumb_item does not know anything about the fact that this mode
+        # is a child of the logwatch_rules ruleset. It can not construct the correct link to the
+        # logwatch_rules ruleset in the breadcrumb. We hand over the ruleset variable name that we
+        # are interested in to the mode. It's a bit hacky to do it this way, but it's currently the
+        # only way to get these information to the modes breadcrumb method.
+        with html.stashed_vars():
+            html.request.set_var("varname", "logwatch_rules")
+            return super().breadcrumb()
 
     def _from_vars(self):
         self._hostname = self._vs_host().from_html_vars("host")
@@ -66,25 +87,43 @@ class ModePatternEditor(WatoMode):
             return _("Logfile patterns of Host %s") % (self._hostname)
         return _("Logfile patterns of logfile %s on host %s") % (self._item, self._hostname)
 
-    def buttons(self):
-        global_buttons()
-        if self._host:
-            if self._item:
-                title = _("Show Logfile")
-            else:
-                title = _("Host Logfiles")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Monitoring"),
+                            entries=list(self._page_menu_entries_related()),
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
+        return menu
 
-            html.context_button(
-                title,
-                html.makeuri_contextless([("host", self._hostname), ("file", self._item)],
-                                         filename="logwatch.py"), 'logwatch')
+    def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
+        if not self._host:
+            return
 
-        html.context_button(
-            _('Logfile patterns'),
-            watolib.folder_preserving_link([
-                ('mode', 'edit_ruleset'),
-                ('varname', 'logwatch_rules'),
-            ]), 'rulesets')
+        yield PageMenuEntry(
+            title=_("Host log files"),
+            icon_name="logwatch",
+            item=make_simple_link(
+                html.makeuri_contextless([("host", self._hostname)], filename="logwatch.py")),
+        )
+
+        if self._item:
+            yield PageMenuEntry(
+                title=("Show log file"),
+                icon_name="logwatch",
+                item=make_simple_link(
+                    html.makeuri_contextless([("host", self._hostname), ("file", self._item)],
+                                             filename="logwatch.py")),
+            )
 
     def page(self):
         html.help(

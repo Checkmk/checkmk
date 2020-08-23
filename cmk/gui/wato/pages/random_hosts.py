@@ -6,7 +6,7 @@
 """This module allows the creation of large numbers of random hosts
 for test and development."""
 
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional, Type
 
 import random
 
@@ -16,7 +16,9 @@ import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import PageMenu, make_simple_form_page_menu
+from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
@@ -34,10 +36,19 @@ class ModeRandomHosts(WatoMode):
         return ["hosts", "random_hosts"]
 
     def title(self):
-        return _("Random Hosts")
+        return _("Add random hosts")
 
-    def buttons(self):
-        html.context_button(_("Folder"), watolib.Folder.current().url(), "back")
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeFolder
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(
+            breadcrumb,
+            form_name="random",
+            button_name="start",
+            save_title=_("Start!"),
+        )
 
     def action(self):
         if not html.check_transaction():
@@ -47,11 +58,11 @@ class ModeRandomHosts(WatoMode):
         folders = html.request.get_integer_input_mandatory("folders")
         levels = html.request.get_integer_input_mandatory("levels")
         created = self._create_random_hosts(watolib.Folder.current(), count, folders, levels)
-        return "folder", _("Created %d random hosts.") % created
+        return "folder", _("Added %d random hosts.") % created
 
     def page(self):
         html.begin_form("random")
-        forms.header(_("Create Random Hosts"))
+        forms.header(_("Add random hosts"))
         forms.section(_("Number to create"))
         html.write_text("%s: " % _("Hosts to create in each folder"))
         html.text_input("count", default_value="10", cssclass="number")
@@ -64,7 +75,6 @@ class ModeRandomHosts(WatoMode):
         html.text_input("levels", default_value="1", cssclass="number")
 
         forms.end()
-        html.button("start", _("Start!"), "submit")
         html.hidden_fields()
         html.end_form()
 

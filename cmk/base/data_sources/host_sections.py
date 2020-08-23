@@ -26,9 +26,10 @@ import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.item_state as item_state
 from cmk.base.api.agent_based.type_defs import SectionPlugin
-from cmk.base.check_api_utils import HOST_ONLY as LEGACY_HOST_ONLY
-from cmk.base.check_api_utils import HOST_PRECEDENCE as LEGACY_HOST_PRECEDENCE
-from cmk.base.check_api_utils import MGMT_ONLY as LEGACY_MGMT_ONLY
+from cmk.base.check_api_utils import (
+    HOST_PRECEDENCE as LEGACY_HOST_PRECEDENCE,
+    MGMT_ONLY as LEGACY_MGMT_ONLY,
+)
 from cmk.base.check_utils import (
     AbstractSectionContent,
     FinalSectionContent,
@@ -367,13 +368,6 @@ class MultiHostSections(collections.abc.MutableMapping):
             except KeyError:
                 continue
 
-            host_section_content = self._update_with_node_column(
-                host_section_content,
-                check_plugin_name,
-                node_key.hostname,
-                for_discovery,
-            )
-
             if section_content is None:
                 section_content = host_section_content[:]
             else:
@@ -384,15 +378,7 @@ class MultiHostSections(collections.abc.MutableMapping):
 
         assert isinstance(section_content, list)
 
-        section_content = self._update_with_parse_function(section_content, section_name)
-        section_contents = self._update_with_extra_sections(
-            host_key,
-            section_content,
-            LEGACY_MGMT_ONLY if host_key.source_type is SourceType.MANAGEMENT else LEGACY_HOST_ONLY,
-            section_name,
-            for_discovery,
-        )
-        return section_contents
+        return self._update_with_parse_function(section_content, section_name)
 
     def _get_host_entries(self, host_key: HostKey) -> List[HostKey]:
         host_config = self._config_cache.get_host_config(host_key.hostname)
@@ -404,65 +390,6 @@ class MultiHostSections(collections.abc.MutableMapping):
                     ip_lookup.lookup_ip_address(self._config_cache.get_host_config(hostname)),
                     host_key.source_type) for hostname in host_config.nodes
         ]
-
-    # DEPRECATED
-    # This function is only kept for the legacy cluster mode from hell
-    def _update_with_extra_sections(
-        self,
-        host_key: HostKey,
-        section_content: ParsedSectionContent,
-        management_board_info: str,
-        section_name: SectionName,
-        for_discovery: bool,
-    ) -> Union[ParsedSectionContent, List[ParsedSectionContent]]:
-        """Adds additional agent sections to the section_content the check receives.
-
-        Please note that this is not a check/subcheck individual setting. This option is related
-        to the agent section.
-        """
-        extra_sections = config.check_info.get(str(section_name), {}).get("extra_sections", [])
-        if not extra_sections:
-            return section_content
-
-        # In case of extra_sections the existing info is wrapped into a new list to which all
-        # extra sections are appended
-        return [section_content] + [
-            self.get_section_content(
-                host_key,
-                management_board_info,
-                extra_section_name,
-                for_discovery,
-            ) for extra_section_name in extra_sections
-        ]
-
-    # DEPRECATED
-    # This function is only kept for the legacy cluster mode from hell
-    @staticmethod
-    def _update_with_node_column(section_content: AbstractSectionContent,
-                                 check_plugin_name: CheckPluginNameStr, hostname: HostName,
-                                 for_discovery: bool) -> AbstractSectionContent:
-        """Add cluster node information to the section content
-
-        If the check want's the node column, we add an additional column (as the first column) with the
-        name of the node or None in case of non-clustered nodes.
-
-        Whether or not a node info is requested by a check is not a property of the agent section. Each
-        check/subcheck can define the requirement on it's own.
-
-        When called for the discovery, the node name is always set to "None". During the discovery of
-        services we behave like a non-cluster because we don't know whether or not the service will
-        be added to the cluster or the node. This decision is made later during creation of the
-        configuation. This means that the discovery function must work independent from the node info.
-        """
-        if check_plugin_name not in config.check_info or not config.check_info[check_plugin_name][
-                "node_info"]:
-            return section_content  # unknown check_plugin_name or does not want node info -> do nothing
-
-        node_name: Optional[HostName] = None
-        if not for_discovery and config.get_config_cache().clusters_of(hostname):
-            node_name = hostname
-
-        return MultiHostSections._add_node_column(section_content, node_name)
 
     # DEPRECATED
     # This function is only kept for the legacy cluster mode from hell

@@ -562,6 +562,7 @@ def _execute_check_legacy_mode(multi_host_sections: MultiHostSections, hostname:
             section_name,
             for_discovery=False,
             service_description=service.description,
+            check_info=config.check_info,
         )
 
         # TODO: Move this to a helper function

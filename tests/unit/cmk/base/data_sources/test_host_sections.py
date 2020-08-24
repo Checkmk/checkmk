@@ -431,6 +431,7 @@ def test_get_section_content(monkeypatch, hostname, nodes, host_entries, cluster
         "section_plugin_name",
         False,
         service_description=service_descr,
+        check_info={},  # only for parse_function lookup, not needed in this test
     )
     assert expected_result == section_content,\
            "Section content: Expected '%s' but got '%s'" % (expected_result, section_content)
@@ -441,6 +442,7 @@ def test_get_section_content(monkeypatch, hostname, nodes, host_entries, cluster
         "section_plugin_name",
         False,
         service_description=service_descr,
+        check_info={},  # only for parse_function lookup, not needed in this test
     )
     assert expected_result == section_content,\
            "Section content: Expected '%s' but got '%s'" % (expected_result, section_content)
@@ -451,6 +453,7 @@ def test_get_section_content(monkeypatch, hostname, nodes, host_entries, cluster
         "section_plugin_name",
         False,
         service_description=service_descr,
+        check_info={},  # only for parse_function lookup, not needed in this test
     )
     assert section_content is None, \
            "Section content: Expected 'None' but got '%s'" % (section_content,)

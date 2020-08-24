@@ -254,12 +254,15 @@ class MultiHostSections(collections.abc.MutableMapping):
     # DEPRECATED
     # This function is only kept for the legacy cluster mode from hell
     def get_section_content(
-            self,
-            host_key: HostKey,
-            management_board_info: str,
-            check_plugin_name: CheckPluginNameStr,
-            for_discovery: bool,
-            service_description: Optional[ServiceName] = None) -> FinalSectionContent:
+        self,
+        host_key: HostKey,
+        management_board_info: str,
+        check_plugin_name: CheckPluginNameStr,
+        for_discovery: bool,
+        service_description: Optional[ServiceName] = None,
+        *,
+        check_info: Dict[str, Dict[str, Any]],
+    ) -> FinalSectionContent:
         """Prepares the section_content construct for a Check_MK check on ANY host
 
         The section_content construct is then handed over to the check, inventory or
@@ -298,6 +301,7 @@ class MultiHostSections(collections.abc.MutableMapping):
             SectionName(section_name),
             for_discovery,
             nodes_of_clustered_service,
+            check_info,
         )
 
         # If we found nothing, see if we must check the management board:
@@ -309,6 +313,7 @@ class MultiHostSections(collections.abc.MutableMapping):
                 SectionName(section_name),
                 for_discovery,
                 nodes_of_clustered_service,
+                check_info,
             )
 
         self._section_content_cache[cache_key] = section_content
@@ -349,12 +354,9 @@ class MultiHostSections(collections.abc.MutableMapping):
     # DEPRECATED
     # This function is only kept for the legacy cluster mode from hell
     def _get_section_content(
-        self,
-        host_key: HostKey,
-        check_plugin_name: CheckPluginNameStr,
-        section_name: SectionName,
-        for_discovery: bool,
-        nodes_of_clustered_service: Optional[List[HostName]],
+        self, host_key: HostKey, check_plugin_name: CheckPluginNameStr, section_name: SectionName,
+        for_discovery: bool, nodes_of_clustered_service: Optional[List[HostName]],
+        check_info: Dict[str, Dict[str, Any]]
     ) -> Union[None, ParsedSectionContent, List[ParsedSectionContent]]:
         # Now get the section_content from the required hosts and merge them together to
         # a single section_content. For each host optionally add the node info.
@@ -378,7 +380,11 @@ class MultiHostSections(collections.abc.MutableMapping):
 
         assert isinstance(section_content, list)
 
-        return self._update_with_parse_function(section_content, section_name)
+        return self._update_with_parse_function(
+            section_content,
+            section_name,
+            check_info,
+        )
 
     def _get_host_entries(self, host_key: HostKey) -> List[HostKey]:
         host_config = self._config_cache.get_host_config(host_key.hostname)
@@ -418,6 +424,7 @@ class MultiHostSections(collections.abc.MutableMapping):
     def _update_with_parse_function(
         section_content: AbstractSectionContent,
         section_name: SectionName,
+        check_info: Dict[str, Dict[str, Any]],
     ) -> ParsedSectionContent:
         """Transform the section_content using the defined parse functions.
 
@@ -435,7 +442,7 @@ class MultiHostSections(collections.abc.MutableMapping):
         # API (or migrated manually)
         if not agent_based_register.is_registered_section_plugin(section_name):
             # use legacy parse function for unmigrated sections
-            parse_function = config.check_info.get(str(section_name), {}).get("parse_function")
+            parse_function = check_info.get(str(section_name), {}).get("parse_function")
         else:
             section_plugin = agent_based_register.get_section_plugin(section_name)
             parse_function = cast(Callable[[AbstractSectionContent], ParsedSectionContent],

@@ -9,7 +9,7 @@ usable in all components of Check_MK
 Please try to find a better place for the things you want to put here."""
 
 from contextlib import contextmanager
-from inspect import getfullargspec as _getargspec
+import inspect
 import itertools
 import os
 from pathlib import Path
@@ -119,8 +119,7 @@ def cachefile_age(path: Union[Path, str]) -> float:
 
 
 def getfuncargs(func: Callable) -> List[str]:
-    # pylint is too dumb to see that we do NOT use the deprecated variant. :-P
-    return _getargspec(func).args  # pylint: disable=deprecated-method
+    return list(inspect.signature(func).parameters)
 
 
 def make_kwargs_for(function: Callable, **kwargs: Any) -> Dict[str, Any]:

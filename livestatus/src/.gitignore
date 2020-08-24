@@ -2,6 +2,7 @@
 *.la
 *.o
 *.o.tmp
+*.pu
 *.so
 .clangd/
 .cproject

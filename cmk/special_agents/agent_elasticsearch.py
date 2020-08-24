@@ -37,8 +37,9 @@ def main(argv=None):
                 url = url_base + sections[section]
 
                 auth = (args.user, args.password) if args.user and args.password else None
+                certcheck = False if args.no_cert_check else True
                 try:
-                    response = requests.get(url, auth=auth, verify=args.no_cert_check)
+                    response = requests.get(url, auth=auth, verify=certcheck)
                 except requests.exceptions.RequestException as e:
                     sys.stderr.write("Error: %s\n" % e)
                     if args.debug:

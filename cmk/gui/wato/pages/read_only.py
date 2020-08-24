@@ -14,6 +14,11 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    make_simple_form_page_menu,
+)
 
 from cmk.gui.valuespec import (
     Tuple,
@@ -28,7 +33,6 @@ from cmk.gui.valuespec import (
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
-    global_buttons,
 )
 
 
@@ -49,10 +53,13 @@ class ModeManageReadOnly(WatoMode):
     def title(self):
         return _("Manage configuration read only mode")
 
-    def buttons(self):
-        global_buttons()
-        html.context_button(_("Back"), watolib.folder_preserving_link([("mode", "globalvars")]),
-                            "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(
+            breadcrumb,
+            form_name="read_only",
+            button_name="_save",
+            add_abort_link=False,
+        )
 
     def action(self):
         settings = self._vs().from_html_vars("_read_only")
@@ -60,6 +67,7 @@ class ModeManageReadOnly(WatoMode):
         self._settings = settings
 
         self._save()
+        return "read_only", _("Saved read only settings")
 
     def _save(self):
         store.save_to_mk_file(watolib.multisite_dir() + "read_only.mk",
@@ -74,7 +82,6 @@ class ModeManageReadOnly(WatoMode):
               "read only can disable it again when another permitted user enabled it before."))
         html.begin_form("read_only", method="POST")
         self._vs().render_input("_read_only", self._settings)
-        html.button('_save', _('Save'), 'submit')
         html.hidden_fields()
         html.end_form()
 

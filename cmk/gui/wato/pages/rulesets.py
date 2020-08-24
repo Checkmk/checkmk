@@ -1296,7 +1296,7 @@ def _vs_ruleset_group(mode_name: str) -> DropdownChoice:
 class EditRuleMode(WatoMode):
     @classmethod
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
-        return ModeRulesetGroup
+        return ModeEditRuleset
 
     def _from_vars(self):
         self._name = html.request.get_ascii_input_mandatory("varname")

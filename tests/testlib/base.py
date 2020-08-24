@@ -27,7 +27,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('section', 'oracle_rman'),
     ('section', 'oracle_tablespaces'),
     ('section', 'printer_pages'),
-    ('section', 'services'),
     ('section', 'site_object_status'),
     ('section', 'site_object_counts'),
     ('section', 'tsm_stagingpools'),
@@ -60,8 +59,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('check', 'oracle_rman'),
     ('check', 'oracle_tablespaces'),
     ('check', 'ps_perf'),
-    ('check', 'services'),
-    ('check', 'services_summary'),
     ('check', 'site_object_counts'),
     ('check', 'tsm_stagingpools'),
 ]

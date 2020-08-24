@@ -534,7 +534,6 @@ def _verify_no_deprecated_variables_used() -> None:
 
 def _verify_no_deprecated_check_rulesets() -> None:
     deprecated_rulesets = [
-        ("services", "inventory_services"),
         ("logwatch", "logwatch_patterns"),
     ]
     for check_plugin_name, varname in deprecated_rulesets:

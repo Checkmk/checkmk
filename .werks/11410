@@ -1,0 +1,11 @@
+Title: Tag configuration page: Fixed exception when a tag groups empty default choice had an aux tag
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1598260811
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.6.0p17
+
+

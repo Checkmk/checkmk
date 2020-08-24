@@ -11,7 +11,7 @@ import pprint
 import re
 import json
 from enum import Enum, auto
-from typing import Dict, Generator, List, Optional, Union, Any, Iterable
+from typing import Dict, Generator, List, Optional, Union, Any, Iterable, Type
 
 from six import ensure_str
 
@@ -56,8 +56,10 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
     PageMenuEntry,
     PageMenuSearch,
-    make_simple_link,
     make_display_options_dropdown,
+    make_simple_link,
+    make_form_submit_link,
+    make_simple_form_page_menu,
 )
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulesets import RuleConditions
@@ -334,7 +336,11 @@ class ModeRuleSearch(ABCRulesetMode):
         yield _page_menu_entry_predefined_conditions()
 
     def page(self):
-        search_form(default_value=self._search_options.get("fulltext", ""))
+        # When the detailed search form is involved, don't show the quick search field on the result
+        # page
+        if not html.form_submitted("rule_search"):
+            search_form(title="%s: " % _("Quick search"),
+                        default_value=self._search_options.get("fulltext", ""))
         super().page()
 
 
@@ -1066,6 +1072,10 @@ class ModeRuleSearchForm(WatoMode):
     def permissions(cls):
         return ["rulesets"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeRuleSearch
+
     def __init__(self):
         self.back_mode = html.request.get_ascii_input_mandatory("back_mode", "rulesets")
         super().__init__()
@@ -1075,9 +1085,22 @@ class ModeRuleSearchForm(WatoMode):
             return _("Refine search")
         return _("Search rulesets and rules")
 
-    def buttons(self):
-        global_buttons()
-        html.context_button(_("Back"), html.makeuri([("mode", self.back_mode)]), "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = make_simple_form_page_menu(breadcrumb,
+                                          form_name="rule_search",
+                                          button_name="_do_search",
+                                          save_title=_("Search"))
+        action_topic = menu.dropdowns[0].topics[0]
+        action_topic.entries.insert(
+            1,
+            PageMenuEntry(
+                title=_("Reset"),
+                icon_name="reset",
+                item=make_form_submit_link("rule_search", "_reset_search"),
+                is_shortcut=True,
+                is_suggested=True,
+            ))
+        return menu
 
     def page(self):
         html.begin_form("rule_search", method="GET")
@@ -1086,8 +1109,6 @@ class ModeRuleSearchForm(WatoMode):
         valuespec = self._valuespec()
         valuespec.render_input_as_form("search", self.search_options)
 
-        html.button("_do_search", _("Search"))
-        html.button("_reset_search", _("Reset"))
         html.hidden_fields()
         html.end_form()
 

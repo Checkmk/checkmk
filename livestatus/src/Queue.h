@@ -24,19 +24,19 @@ public:
     using reference = typename storage_t::reference;
     using const_reference = typename storage_t::const_reference;
 
-    Queue();
+    Queue() = default;
     explicit Queue(size_type limit);
     Queue(const Queue&) = delete;
     Queue& operator=(const Queue&) = delete;
-    Queue(Queue&&) = default;
-    Queue& operator=(Queue&&) = default;
+    Queue(Queue&&) noexcept = default;
+    Queue& operator=(Queue&&) noexcept = default;
     ~Queue();
     [[nodiscard]] size_type approx_size() const;
     [[nodiscard]] std::optional<size_type> limit() const;
-    [[nodiscard]] bool try_push(const_reference);
-    [[nodiscard]] bool try_push(value_type&&);
-    [[nodiscard]] bool push(const_reference);
-    [[nodiscard]] bool push(value_type&&);
+    [[nodiscard]] bool try_push(const_reference elem);
+    [[nodiscard]] bool try_push(value_type&& elem);
+    [[nodiscard]] bool push(const_reference elem);
+    [[nodiscard]] bool push(value_type&& elem);
     std::optional<value_type> try_pop();
     std::optional<value_type> pop();
     void join();
@@ -49,9 +49,6 @@ private:
     std::condition_variable cv_;
     std::atomic_bool joinable_ = false;
 };
-
-template <typename S>
-Queue<S>::Queue() {}
 
 template <typename S>
 Queue<S>::Queue(size_type limit) : limit_{limit} {}

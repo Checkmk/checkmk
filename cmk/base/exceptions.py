@@ -10,8 +10,10 @@ from typing import Tuple, Type
 
 from cmk.utils.exceptions import MKException, MKGeneralException
 
+from cmk.fetchers import MKFetcherError
 
-class MKAgentError(MKException):
+
+class MKAgentError(MKFetcherError):
     pass
 
 

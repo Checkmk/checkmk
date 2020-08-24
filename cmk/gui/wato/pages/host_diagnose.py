@@ -345,8 +345,8 @@ class ModeAjaxDiagHost(AjaxPage):
         if not config.user.may('wato.diag_host'):
             raise MKAuthException(_('You are not permitted to perform this action.'))
 
-        #if not html.check_transaction():
-        #    raise MKAuthException(_("Invalid transaction"))
+        if not html.check_transaction():
+            raise MKAuthException(_("Invalid transaction"))
 
         request = self.webapi_request()
 

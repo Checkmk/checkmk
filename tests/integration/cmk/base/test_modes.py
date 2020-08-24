@@ -203,7 +203,6 @@ def test_dump_agent_missing_arg(execute):
         assert p.returncode == 1
 
 
-@pytest.mark.skip("TODO(ml)")
 def test_dump_agent_error(execute):
     output_long = None
     for opt in ["--dump-agent", "-d"]:

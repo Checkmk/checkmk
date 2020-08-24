@@ -35,13 +35,13 @@ from cmk.gui.valuespec import (
     CascadingDropdownChoice,
     DualListChoice,
 )
-from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
     PageMenuTopic,
     PageMenuEntry,
     make_simple_link,
+    make_simple_form_page_menu,
 )
 
 import cmk.gui.gui_background_job as gui_background_job
@@ -81,30 +81,33 @@ class ModeDiagnostics(WatoMode):
         return None
 
     def title(self) -> str:
-        return _("Diagnostics")
+        return _("Support diagnostics")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return PageMenu(
-            dropdowns=[
-                PageMenuDropdown(
-                    name="related",
-                    title=_("Related"),
-                    topics=[
-                        PageMenuTopic(
-                            title=_("Setup"),
-                            entries=[
-                                PageMenuEntry(
-                                    title=_("Analyze configuration"),
-                                    icon_name="analyze_config",
-                                    item=make_simple_link("wato.py?mode=analyze_config"),
-                                ),
-                            ],
-                        ),
-                    ],
-                ),
-            ],
-            breadcrumb=breadcrumb,
-        )
+    def page_menu(self, breadcrumb) -> PageMenu:
+        menu = make_simple_form_page_menu(breadcrumb,
+                                          form_name="diagnostics",
+                                          button_name="_start",
+                                          save_title="Start",
+                                          add_abort_link=False)
+        menu.dropdowns.insert(
+            1,
+            PageMenuDropdown(
+                name="related",
+                title=_("Related"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Setup"),
+                        entries=[
+                            PageMenuEntry(
+                                title=_("Analyze configuration"),
+                                icon_name="analyze_config",
+                                item=make_simple_link("wato.py?mode=analyze_config"),
+                            ),
+                        ],
+                    ),
+                ],
+            ))
+        return menu
 
     def action(self) -> None:
         if not html.check_transaction():
@@ -128,7 +131,6 @@ class ModeDiagnostics(WatoMode):
         vs_diagnostics = self._vs_diagnostics()
         vs_diagnostics.render_input("diagnostics", {})
 
-        html.button("_start", _("Start"))
         html.hidden_fields()
         html.end_form()
 

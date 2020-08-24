@@ -18,6 +18,11 @@ def main(argv=None):
 
     args = parse_arguments(argv)
 
+    if args.no_cert_check
+        verify_ssl = False
+    else
+        verify_ssl = True
+
     sys.stdout.write('<<<check_mk>>>\n')
     for host in args.hosts:
         url_base = "%s://%s:%d" % (args.proto, host, args.port)
@@ -38,7 +43,7 @@ def main(argv=None):
 
                 auth = (args.user, args.password) if args.user and args.password else None
                 try:
-                    response = requests.get(url, auth=auth)
+                    response = requests.get(url, auth=auth, verify=verify_ssl)
                 except requests.exceptions.RequestException as e:
                     sys.stderr.write("Error: %s\n" % e)
                     if args.debug:
@@ -87,7 +92,7 @@ def parse_arguments(argv):
     parser.add_argument("--debug",
                         action="store_true",
                         help="Debug mode: let Python exceptions come through")
-
+    parser.add_argument('--no-cert-check', action='store_true', help='Disable certificate verification')
     parser.add_argument(
         "hosts",
         metavar="HOSTNAME",

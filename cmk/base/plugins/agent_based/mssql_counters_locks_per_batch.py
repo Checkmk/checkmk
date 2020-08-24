@@ -3,85 +3,162 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""
-def inventory_mssql_counters_locks_per_batch(parsed):
-    db_names = [(obj.split(":")[0], node_name)
-                for node_name, node_data in parsed.items()
-                for (obj, _instance) in node_data
-                if ":" in obj]
 
-    for db_name, node_name in db_names:
-        node_data = parsed[node_name]
-        if "lock_requests/sec" not in node_data.get(("%s:Locks" % db_name, "_Total"), {}):
-            continue
-        if "batch_requests/sec" not in node_data.get(("%s:SQL_Statistics" % db_name, "None"), {}):
-            continue
-        yield db_name, {}
+from typing import Mapping
+import time
 
+from .agent_based_api.v0 import (
+    Service,
+    IgnoreResults,
+    IgnoreResultsError,
+    register,
+    check_levels,
+    get_value_store,
+)
 
-def check_mssql_counters_locks_per_batch(item, params, parsed):
-    locks_key = ("%s:Locks" % item, "_Total")
-    data_locks_data = {
-        node_name: node_data[locks_key]
-        for node_name, node_data in parsed.items()
-        if locks_key in node_data
-    }
-    stats_key = ("%s:SQL_Statistics" % item, "None")
-    data_stats_data = {
-        node_name: node_data[stats_key]
-        for node_name, node_data in parsed.items()
-        if stats_key in node_data
-    }
+from .agent_based_api.v0.type_defs import (
+    Parameters,
+    CheckGenerator,
+    DiscoveryGenerator,
+    ValueStore,
+)
 
-    if not any(list(data_locks_data.values()) + list(data_stats_data.values())):
-        # Assume general connection problem to the database, which is reported
-        # by the "X Instance" service and skip this check.
-        raise MKCounterWrapped("Failed to connect to database")
-
-    for node_name in set(list(data_locks_data) + list(data_stats_data)):
-        data_locks = data_locks_data[node_name]
-        data_stats = data_stats_data[node_name]
-        now = data_locks.get('utc_time', data_stats.get('utc_time'))
-        if now is None:
-            now = time.time()
-
-        locks = data_locks["lock_requests/sec"]
-        batches = data_stats["batch_requests/sec"]
-
-        lock_rate = get_rate("mssql_counters_locks_per_batch.%s.%s.locks" % (node_name, item), now,
-                             locks)
-        batch_rate = get_rate("mssql_counters_locks_per_batch.%s.%s.batches" % (node_name, item),
-                              now, batches)
-
-        if batch_rate == 0:
-            lock_per_batch = 0
-        else:
-            lock_per_batch = lock_rate / batch_rate  # fixed: true-division
-
-        node_info = ""
-        if node_name:
-            node_info = "[%s] " % node_name
-        infotext = "%s%.1f" % (node_info, lock_per_batch)
-        state = 0
-
-        warn, crit = params.get('locks_per_batch', (None, None))
-        if crit is not None and lock_per_batch >= crit:
-            state = 2
-        elif warn is not None and lock_per_batch >= warn:
-            state = 1
-
-        if state:
-            infotext += " (warn/crit at %.1f/%.1f per second)" % (warn, crit)
-
-        yield state, infotext, [("locks_per_batch", lock_per_batch, warn, crit)]
+from .utils.mssql_counters import Section, get_rate_or_none, get_int
 
 
-check_info["mssql_counters.locks_per_batch"] = {
-    "inventory_function": inventory_mssql_counters_locks_per_batch,
-    "check_function": check_mssql_counters_locks_per_batch,
-    "service_description": "MSSQL %s Locks per Batch",
-    "has_perfdata": True,
-    "group": "mssql_stats",
-    'node_info': True,
-}
-"""
+def discovery_mssql_counters_locks_per_batch(section: Section) -> DiscoveryGenerator:
+    """
+    >>> for result in discovery_mssql_counters_locks_per_batch({
+    ...     ('MSSQL_VEEAMSQL2012:Batch_Resp_Statistics', 'CPU_Time:Total(ms)'): { 'batches_>=000000ms_&_<000001ms': 0, 'batches_>=000001ms_&_<000002ms': 668805},
+    ...     ('MSSQL_VEEAMSQL2012:SQL_Statistics', 'None'): { 'batch_requests/sec': 22476651, 'forced_parameterizations/sec': 0, 'auto-param_attempts/sec': 1133, 'failed_auto-params/sec': 1027, 'safe_auto-params/sec': 8, 'unsafe_auto-params/sec': 98, 'sql_compilations/sec': 2189403, 'sql_re-compilations/sec': 272134, 'sql_attention_rate': 199, 'guided_plan_executions/sec': 0, 'misguided_plan_executions/sec': 0},
+    ...     ('MSSQL_VEEAMSQL2012:Locks', '_Total'): { 'lock_requests/sec': 3900449701, 'lock_timeouts/sec': 86978, 'number_of_deadlocks/sec': 19, 'lock_waits/sec': 938, 'lock_wait_time_(ms)': 354413, 'average_wait_time_(ms)': 354413, 'average_wait_time_base': 938, 'lock_timeouts_(timeout_>_0)/sec': 0},
+    ... }):
+    ...   print(result)
+    Service(item='MSSQL_VEEAMSQL2012', parameters={}, labels=[])
+    """
+    db_names = (
+        db_name  #
+        for (obj, instance), counters in section.items() if ":" in obj
+        for db_name in (obj.split(":")[0],))
+
+    yield from (
+        Service(item=item_name) for item_name in set(  #
+            db_name for db_name in db_names
+            if "lock_requests/sec" in section.get(("%s:Locks" % db_name, "_Total"), {})
+            if "batch_requests/sec" in section.get(("%s:SQL_Statistics" % db_name, "None"), {})))
+
+
+def _check_common(
+    value_store: ValueStore,
+    node_name: str,
+    item: str,
+    params: Parameters,
+    section: Section,
+) -> CheckGenerator:
+    data_locks = section.get(("%s:Locks" % item, "_Total"), {})
+    data_stats = section.get(("%s:SQL_Statistics" % item, "None"), {})
+
+    if not data_locks and not data_stats:
+        raise IgnoreResultsError("Item not found in monitoring data")
+
+    now = data_locks.get('utc_time', data_stats.get('utc_time')) or time.time()
+    lock_rate_base = get_int(data_locks, "lock_requests/sec")
+    batch_rate_base = get_int(data_stats, "batch_requests/sec")
+
+    lock_rate = get_rate_or_none(
+        value_store,
+        "mssql_counters_locks_per_batch.%s.%s.locks" % (node_name, item),
+        now,
+        lock_rate_base,
+    )
+    batch_rate = get_rate_or_none(
+        value_store,
+        "mssql_counters_locks_per_batch.%s.%s.batches" % (node_name, item),
+        now,
+        batch_rate_base,
+    )
+    if lock_rate is None or batch_rate is None:
+        yield IgnoreResults("Cannot calculate rates yet")
+        return
+
+    yield from check_levels(
+        lock_rate / batch_rate if batch_rate else 0,
+        levels_upper=params.get('locks_per_batch'),
+        metric_name="locks_per_batch",
+        render_func=lambda v: "%s%.1f" % (node_name and "[%s] " % node_name, v),
+    )
+
+
+def _check_base(
+    value_store: ValueStore,
+    item: str,
+    params: Parameters,
+    section: Section,
+) -> CheckGenerator:
+    """
+    >>> from contextlib import suppress
+    >>> vs = {}
+    >>> for i in range(2):
+    ...   with suppress(IgnoreResultsError):
+    ...     for result in _check_base(vs, "MSSQL_VEEAMSQL2012", {}, {
+    ...         ('MSSQL_VEEAMSQL2012:SQL_Statistics', 'None'): {'batch_requests/sec': 22476651+i, 'forced_parameterizations/sec': 0, 'auto-param_attempts/sec': 1133, 'failed_auto-params/sec': 1027, 'safe_auto-params/sec': 8, 'unsafe_auto-params/sec': 98, 'sql_compilations/sec': 2189403, 'sql_re-compilations/sec': 272134, 'sql_attention_rate': 199, 'guided_plan_executions/sec': 0, 'misguided_plan_executions/sec': 0},
+    ...         ('MSSQL_VEEAMSQL2012:Locks', '_Total'): {'lock_requests/sec': 3900449701+i, 'lock_timeouts/sec': 86978, 'number_of_deadlocks/sec': 19, 'lock_waits/sec': 938, 'lock_wait_time_(ms)': 354413, 'average_wait_time_(ms)': 354413, 'average_wait_time_base': 938, 'lock_timeouts_(timeout_>_0)/sec': 0},
+    ...     }):
+    ...       print(result)
+    Cannot calculate rates yet
+    Result(state=<state.OK: 0>, summary='1.0', details='1.0')
+    Metric('locks_per_batch', 1.0, levels=(None, None), boundaries=(None, None))
+    """
+    yield from _check_common(value_store, "", item, params, section)
+
+
+def check_mssql_counters_locks_per_batch(
+    item: str,
+    params: Parameters,
+    section: Section,
+) -> CheckGenerator:
+    yield from _check_base(get_value_store(), item, params, section)
+
+
+def _cluster_check_base(
+    value_store: ValueStore,
+    item: str,
+    params: Parameters,
+    section: Mapping[str, Section],
+) -> CheckGenerator:
+    """
+    >>> from contextlib import suppress
+    >>> vs = {}
+    >>> for i in range(2):
+    ...   with suppress(IgnoreResultsError):
+    ...     for result in _cluster_check_base(vs, "MSSQL_VEEAMSQL2012", {}, {"node1": {
+    ...         ('MSSQL_VEEAMSQL2012:SQL_Statistics', 'None'): {'batch_requests/sec': 22476651+i, 'forced_parameterizations/sec': 0, 'auto-param_attempts/sec': 1133, 'failed_auto-params/sec': 1027, 'safe_auto-params/sec': 8, 'unsafe_auto-params/sec': 98, 'sql_compilations/sec': 2189403, 'sql_re-compilations/sec': 272134, 'sql_attention_rate': 199, 'guided_plan_executions/sec': 0, 'misguided_plan_executions/sec': 0},
+    ...         ('MSSQL_VEEAMSQL2012:Locks', '_Total'): {'lock_requests/sec': 3900449701+i, 'lock_timeouts/sec': 86978, 'number_of_deadlocks/sec': 19, 'lock_waits/sec': 938, 'lock_wait_time_(ms)': 354413, 'average_wait_time_(ms)': 354413, 'average_wait_time_base': 938, 'lock_timeouts_(timeout_>_0)/sec': 0},
+    ...     }}):
+    ...       print(result)
+    Cannot calculate rates yet
+    Result(state=<state.OK: 0>, summary='[node1] 1.0', details='[node1] 1.0')
+    Metric('locks_per_batch', 1.0, levels=(None, None), boundaries=(None, None))
+    """
+    for node_name, node_section in section.items():
+        yield from _check_common(value_store, node_name, item, params, node_section)
+
+
+def cluster_check_mssql_counters_locks_per_batch(
+    item: str,
+    params: Parameters,
+    section: Mapping[str, Section],
+) -> CheckGenerator:
+    yield from _cluster_check_base(get_value_store(), item, params, section)
+
+
+register.check_plugin(
+    name="mssql_counters_locks_per_batch",
+    sections=['mssql_counters'],
+    service_name="MSSQL %s Locks per Batch",
+    discovery_function=discovery_mssql_counters_locks_per_batch,
+    check_default_parameters={},
+    check_ruleset_name="mssql_stats",
+    check_function=check_mssql_counters_locks_per_batch,
+    cluster_check_function=cluster_check_mssql_counters_locks_per_batch,
+)

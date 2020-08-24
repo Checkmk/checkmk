@@ -8,7 +8,14 @@
 
 import pytest  # type: ignore[import]
 
-from cmk.base.plugins.agent_based.agent_based_api.v0 import Service, Result, Metric, state
+from cmk.base.plugins.agent_based.agent_based_api.v0 import (
+    Service,
+    Result,
+    Metric,
+    IgnoreResults,
+    state,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v0.type_defs import ValueStore
 
 from cmk.base.plugins.agent_based.mssql_counters_section import parse_mssql_counters
 from cmk.base.plugins.agent_based.mssql_counters_cache_hits import (
@@ -20,6 +27,11 @@ from cmk.base.plugins.agent_based.mssql_counters_file_sizes import (
     discovery_mssql_counters_file_sizes,
     check_mssql_counters_file_sizes,
     cluster_check_mssql_counters_file_sizes,
+)
+from cmk.base.plugins.agent_based.mssql_counters_locks_per_batch import (
+    discovery_mssql_counters_locks_per_batch,
+    _check_base as check_locks_per_batch_base,
+    _cluster_check_base as cluster_check_locks_per_batch_base,
 )
 
 big_string_table = [
@@ -322,7 +334,7 @@ def test_cluster_check_mssql_counters_cache_hits(item, section, expected_results
     (big_parsed_data, [
         Service(item='MSSQL_VEEAMSQL2012 tempdb data_file(s)_size_(kb)'),
         Service(item='MSSQL_VEEAMSQL2012 tempdb log_file(s)_size_(kb)'),
-        ]),
+    ]),
 ])
 def test_discovery_mssql_counters_file_sizes(section, expected_services):
     results = list(discovery_mssql_counters_file_sizes(section=section))
@@ -336,7 +348,6 @@ def test_discovery_mssql_counters_file_sizes(section, expected_services):
         Metric('data_files', 168886272.0),
         Result(state=state.OK, summary='Log files total: 13.3 MiB'),
         Metric('log_files', 13950976.0),
-
     ]),
 ])
 def test_check_mssql_counters_file_sizes(item, params, section, expected_results):
@@ -360,11 +371,59 @@ def test_check_mssql_counters_file_sizes(item, params, section, expected_results
     ]),
 ])
 def test_cluster_check_mssql_counters_file_sizes(item, params, section, expected_results):
-    results = list(cluster_check_mssql_counters_file_sizes(
-        item=item,
-        params=params,
-        section=section,
-    ))
+    results = list(
+        cluster_check_mssql_counters_file_sizes(
+            item=item,
+            params=params,
+            section=section,
+        ))
+    print(",\n".join(str(r) for r in results))
+    assert results == expected_results
+
+
+@pytest.mark.parametrize("section,expected_services", [
+    (big_parsed_data, [Service(item='MSSQL_VEEAMSQL2012')]),
+])
+def test_discovery_mssql_counters_locks_per_batch(section, expected_services):
+    results = list(discovery_mssql_counters_locks_per_batch(section))
+    print(",\n".join(str(r) for r in results))
+    assert results == expected_services
+
+
+@pytest.mark.parametrize("item,params,section,expected_results", [
+    ("MSSQL_VEEAMSQL2012", {}, big_parsed_data, [
+        IgnoreResults(value="Cannot calculate rates yet"),
+        Result(state=state.OK, summary='0.0'),
+        Metric('locks_per_batch', 0.0),
+    ]),
+])
+def test_check_mssql_locks_per_batch(item, params, section, expected_results):
+    # re-run check_locks_per_batch_base() once in order to get rates
+    vs: ValueStore = {}
+    results = []
+    for _ in range(2):
+        for result in check_locks_per_batch_base(vs, item, params, section):
+            results.append(result)
+    print(",\n".join(str(r) for r in results))
+    assert results == expected_results
+
+
+@pytest.mark.parametrize("item,params,section,expected_results", [
+    ("MSSQL_VEEAMSQL2012", {}, {
+        "node1": big_parsed_data
+    }, [
+        IgnoreResults(value="Cannot calculate rates yet"),
+        Result(state=state.OK, summary='[node1] 0.0'),
+        Metric('locks_per_batch', 0.0),
+    ]),
+])
+def test_cluster_check_mssql_locks_per_batch(item, params, section, expected_results):
+    # re-run cluster_check_locks_per_batch_base() once in order to get rates
+    vs: ValueStore = {}
+    results = []
+    for _ in range(2):
+        for result in cluster_check_locks_per_batch_base(vs, item, params, section):
+            results.append(result)
     print(",\n".join(str(r) for r in results))
     assert results == expected_results
 

@@ -880,8 +880,7 @@ class GUIViewRenderer(ABCViewRenderer):
             return ""
 
         with html.plugged():
-            if display_options.enabled(display_options.F) and len(show_filters) > 0:
-                show_filter_form(self.view, show_filters)
+            show_filter_form(self.view, show_filters)
             return html.drain()
 
     def _render_painter_options_form(self) -> str:

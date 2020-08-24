@@ -694,8 +694,8 @@ class PageMenuPopupsRenderer:
                onclick="cmk.page_menu.close_popup(this)")
         html.close_div()
 
-        if isinstance(entry.item,
-                      PageMenuSidePopup) and "side_popup_content" not in entry.item.content:
+        if (isinstance(entry.item, PageMenuSidePopup) and entry.item.content and
+                "side_popup_content" not in entry.item.content):
             raise RuntimeError(
                 "Add a div container with the class \"side_popup_content\" to the popup content")
 

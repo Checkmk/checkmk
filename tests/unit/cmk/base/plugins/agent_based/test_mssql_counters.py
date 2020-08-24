@@ -16,6 +16,11 @@ from cmk.base.plugins.agent_based.mssql_counters_cache_hits import (
     check_mssql_counters_cache_hits,
     cluster_check_mssql_counters_cache_hits,
 )
+from cmk.base.plugins.agent_based.mssql_counters_file_sizes import (
+    discovery_mssql_counters_file_sizes,
+    check_mssql_counters_file_sizes,
+    cluster_check_mssql_counters_file_sizes,
+)
 
 big_string_table = [
     ['None', 'utc_time', 'None', '19.08.2020 14:25:04'],
@@ -309,6 +314,57 @@ def test_check_mssql_counters_cache_hits(item, section, expected_results):
 ])
 def test_cluster_check_mssql_counters_cache_hits(item, section, expected_results):
     results = list(cluster_check_mssql_counters_cache_hits(item, section))
+    print(",\n".join(str(r) for r in results))
+    assert results == expected_results
+
+
+@pytest.mark.parametrize("section,expected_services", [
+    (big_parsed_data, [
+        Service(item='MSSQL_VEEAMSQL2012 tempdb data_file(s)_size_(kb)'),
+        Service(item='MSSQL_VEEAMSQL2012 tempdb log_file(s)_size_(kb)'),
+        ]),
+])
+def test_discovery_mssql_counters_file_sizes(section, expected_services):
+    results = list(discovery_mssql_counters_file_sizes(section=section))
+    print(",\n".join(str(r) for r in results))
+    assert results == expected_services
+
+
+@pytest.mark.parametrize("item,params,section,expected_results", [
+    ("MSSQL_VEEAMSQL2012 tempdb cache_hit_ratio", {}, big_parsed_data, [
+        Result(state=state.OK, summary='Data files: 161 MiB'),
+        Metric('data_files', 168886272.0),
+        Result(state=state.OK, summary='Log files total: 13.3 MiB'),
+        Metric('log_files', 13950976.0),
+
+    ]),
+])
+def test_check_mssql_counters_file_sizes(item, params, section, expected_results):
+    results = list(check_mssql_counters_file_sizes(
+        item=item,
+        params=params,
+        section=section,
+    ))
+    print(",\n".join(str(r) for r in results))
+    assert results == expected_results
+
+
+@pytest.mark.parametrize("item,params,section,expected_results", [
+    ("MSSQL_VEEAMSQL2012 tempdb cache_hit_ratio", {}, {
+        "node1": big_parsed_data
+    }, [
+        Result(state=state.OK, summary='[node1] Data files: 161 MiB'),
+        Metric('data_files', 168886272.0),
+        Result(state=state.OK, summary='[node1] Log files total: 13.3 MiB'),
+        Metric('log_files', 13950976.0),
+    ]),
+])
+def test_cluster_check_mssql_counters_file_sizes(item, params, section, expected_results):
+    results = list(cluster_check_mssql_counters_file_sizes(
+        item=item,
+        params=params,
+        section=section,
+    ))
     print(",\n".join(str(r) for r in results))
     assert results == expected_results
 

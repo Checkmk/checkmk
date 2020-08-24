@@ -365,7 +365,8 @@ def make_simple_form_page_menu(breadcrumb: Breadcrumb,
                                save_title: Optional[str] = None,
                                save_icon: str = "save",
                                save_is_enabled: bool = True,
-                               add_abort_link: bool = True) -> PageMenu:
+                               add_abort_link: bool = True,
+                               abort_url: Optional[str] = None) -> PageMenu:
     """Factory for creating a simple menu for object edit dialogs that just link back"""
     entries = []
 
@@ -374,7 +375,7 @@ def make_simple_form_page_menu(breadcrumb: Breadcrumb,
             _make_form_save_link(form_name, button_name, save_title, save_icon, save_is_enabled))
 
     if add_abort_link:
-        entries.append(_make_form_abort_link(breadcrumb))
+        entries.append(_make_form_abort_link(breadcrumb, abort_url))
 
     return PageMenu(
         dropdowns=[
@@ -408,15 +409,17 @@ def _make_form_save_link(form_name: str,
     )
 
 
-def _make_form_abort_link(breadcrumb: Breadcrumb) -> PageMenuEntry:
-    if not breadcrumb or len(breadcrumb) < 2 or not breadcrumb[-2].url:
-        raise ValueError("Can not create back link for this page")
+def _make_form_abort_link(breadcrumb: Breadcrumb, abort_url: Optional[str]) -> PageMenuEntry:
+    if not abort_url:
+        if not breadcrumb or len(breadcrumb) < 2 or not breadcrumb[-2].url:
+            raise ValueError("Can not create back link for this page")
+        abort_url = breadcrumb[-2].url
+    assert abort_url is not None
 
-    parent_item = breadcrumb[-2]
     return PageMenuEntry(
         title=_("Abort"),
         icon_name="abort",
-        item=make_simple_link(parent_item.url),
+        item=make_simple_link(abort_url),
         is_shortcut=True,
         is_suggested=True,
     )

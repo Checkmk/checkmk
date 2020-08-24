@@ -220,6 +220,11 @@ class ModeDiagHost(WatoMode):
         html.help(vs_rules.help())
         forms.end()
 
+        # When clicking "Save & Test" on the "Edit host" page, this will be set
+        # to immediately execute the tests using the just saved settings
+        if html.request.has_var("_start_on_load"):
+            html.final_javascript("cmk.page_menu.form_submit('diag_host', '_try');")
+
         html.hidden_fields()
         html.end_form()
 

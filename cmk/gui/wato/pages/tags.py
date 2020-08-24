@@ -6,7 +6,7 @@
 """Manage the variable config.wato_host_tags -> The set of tags to be assigned
 to hosts and that is the basis of the rules."""
 
-from typing import Any, Dict, List, Set, Tuple as _Tuple, Union
+from typing import Any, Dict, List, Set, Tuple as _Tuple, Union, Optional, Type
 import abc
 from enum import Enum
 
@@ -36,8 +36,15 @@ from cmk.gui.valuespec import (
     ID,
     Transform,
 )
-
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+    make_simple_form_page_menu,
+)
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.rulesets import Ruleset
 from cmk.gui.watolib.hosts_and_folders import CREHost, CREFolder
@@ -54,7 +61,6 @@ from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
     wato_confirm,
-    global_buttons,
     make_action_link,
     add_change,
 )
@@ -110,14 +116,50 @@ class ModeTags(ABCTagMode):
     def title(self):
         return _("Tag groups")
 
-    def buttons(self):
-        global_buttons()
-        html.context_button(_("New tag group"),
-                            watolib.folder_preserving_link([("mode", "edit_tag")]), "new")
-        html.context_button(_("New aux tag"),
-                            watolib.folder_preserving_link([("mode", "edit_auxtag")]), "new")
-        html.context_button(_("Tag usage"), watolib.folder_preserving_link([("mode", "tag_usage")]),
-                            "tag")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="tags",
+                    title=_("Tags"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Add tags"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Add tag group"),
+                                    icon_name="new",
+                                    item=make_simple_link(
+                                        watolib.folder_preserving_link([("mode", "edit_tag")])),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                                PageMenuEntry(
+                                    title=_("Add aux tag"),
+                                    icon_name="ical",
+                                    item=make_simple_link(
+                                        watolib.folder_preserving_link([("mode", "edit_auxtag")])),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                            ],
+                        ),
+                        PageMenuTopic(
+                            title=_("Analyze"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Tag usage"),
+                                    icon_name="tag",
+                                    item=make_simple_link(
+                                        watolib.folder_preserving_link([("mode", "tag_usage")])),
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
 
     def action(self):
         if html.request.has_var("_delete"):
@@ -418,12 +460,12 @@ class ModeTagUsage(ABCTagMode):
     def permissions(cls) -> List[str]:
         return ["hosttags"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeTags
+
     def title(self) -> str:
         return _("Tag usage")
-
-    def buttons(self) -> None:
-        html.context_button(_("All tags"), watolib.folder_preserving_link([("mode", "tags")]),
-                            "back")
 
     def page(self) -> None:
         self._show_tag_list()
@@ -528,6 +570,10 @@ class ModeEditAuxtag(ABCEditTagMode):
     def name(cls):
         return "edit_auxtag"
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeTags
+
     def __init__(self):
         super(ModeEditAuxtag, self).__init__()
 
@@ -544,12 +590,11 @@ class ModeEditAuxtag(ABCEditTagMode):
 
     def title(self):
         if self._new:
-            return _("Create new auxiliary tag")
+            return _("Add auxiliary tag")
         return _("Edit auxiliary tag")
 
-    def buttons(self):
-        html.context_button(_("All tags"), watolib.folder_preserving_link([("mode", "tags")]),
-                            "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(breadcrumb, form_name="aux_tag", button_name="save")
 
     def action(self):
         if not html.check_transaction():
@@ -585,7 +630,6 @@ class ModeEditAuxtag(ABCEditTagMode):
 
         forms.end()
         html.show_localization_hint()
-        html.button("save", _("Save"))
         html.hidden_fields()
         html.end_form()
 
@@ -605,6 +649,10 @@ class ModeEditTagGroup(ABCEditTagMode):
     def name(cls):
         return "edit_tag"
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeTags
+
     def __init__(self) -> None:
         super(ModeEditTagGroup, self).__init__()
 
@@ -619,12 +667,11 @@ class ModeEditTagGroup(ABCEditTagMode):
 
     def title(self):
         if self._new:
-            return _("Create new tag group")
+            return _("Add tag group")
         return _("Edit tag group")
 
-    def buttons(self):
-        html.context_button(_("All tags"), watolib.folder_preserving_link([("mode", "tags")]),
-                            "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(breadcrumb, form_name="tag_group", button_name="save")
 
     def action(self):
         if not html.check_transaction():
@@ -699,7 +746,6 @@ class ModeEditTagGroup(ABCEditTagMode):
         forms.end()
         html.show_localization_hint()
 
-        html.button("save", _("Save"))
         html.hidden_fields()
         html.end_form()
 

@@ -400,17 +400,11 @@ def mode_dump_agent(hostname: HostName) -> None:
             if not isinstance(configurator, data_sources.agent.AgentConfigurator):
                 continue
 
+            with configurator.make_fetcher() as fetcher:
+                raw_data = fetcher.fetch()
+
             checker = configurator.make_checker()
-
-            raw_data = configurator.default_raw_data
-            try:
-                with configurator.make_fetcher() as fetcher:
-                    raw_data = fetcher.fetch()
-            except Exception as exc:
-                checker.exception = exc
-            else:
-                checker.check(raw_data)
-
+            checker.check(raw_data)
             source_state, source_output, _source_perfdata = checker.get_summary_result()
             if source_state != 0:
                 console.error(

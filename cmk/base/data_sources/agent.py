@@ -59,7 +59,7 @@ class AgentHostSections(ABCHostSections[AgentRawData, AgentSections, AgentPersis
     pass
 
 
-class AgentConfigurator(ABCConfigurator[AgentRawData]):
+class AgentConfigurator(ABCConfigurator):
     """Configure agent checkers and fetchers.
 
     Args:
@@ -89,7 +89,6 @@ class AgentConfigurator(ABCConfigurator[AgentRawData]):
             source_type=source_type,
             fetcher_type=fetcher_type,
             description=description,
-            default_raw_data=AgentRawData(),
             id_=id_,
             cpu_tracking_id=cpu_tracking_id,
             cache_dir=Path(cmk.utils.paths.tcp_cache_dir) if main_data_source else None,

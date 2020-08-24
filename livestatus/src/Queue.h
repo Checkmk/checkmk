@@ -140,7 +140,10 @@ std::optional<typename Queue<S>::value_type> Queue<S>::pop() {
 
 template <typename S>
 void Queue<S>::join() {
-    joinable_ = true;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        joinable_ = true;
+    }
     cv_.notify_all();
 }
 

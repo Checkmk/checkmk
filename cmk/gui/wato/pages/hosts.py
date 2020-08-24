@@ -79,7 +79,7 @@ class ABCHostMode(WatoMode, metaclass=abc.ABCMeta):
             return
 
         yield PageMenuEntry(
-            title=_("Service configuration"),
+            title=_("Save & go to service configuration"),
             shortcut_title=_("Save & go to service configuration"),
             icon_name="save_to_services",
             item=make_form_submit_link(form_name="edit_host", button_name="services"),
@@ -88,16 +88,20 @@ class ABCHostMode(WatoMode, metaclass=abc.ABCMeta):
         )
 
         yield PageMenuEntry(
-            title=_("Folder"),
+            title=_("Save & go to folder"),
             icon_name="save_to_folder",
             item=make_form_submit_link(form_name="edit_host", button_name="save"),
+            is_shortcut=True,
+            is_suggested=True,
         )
 
         if not self._is_cluster():
             yield PageMenuEntry(
-                title=_("Connection tests"),
+                title=_("Save & go to connection tests"),
                 icon_name="save_to_diagnose",
                 item=make_form_submit_link(form_name="edit_host", button_name="diag_host"),
+                is_shortcut=True,
+                is_suggested=True,
             )
 
     def _is_cluster(self):

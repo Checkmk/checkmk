@@ -95,7 +95,7 @@ class ModeDiagHost(WatoMode):
                             title=_("Host properties"),
                             entries=[
                                 PageMenuEntry(
-                                    title=_("Save & Exit"),
+                                    title=_("Save & go to host properties"),
                                     icon_name="save",
                                     item=make_form_submit_link("diag_host", "_save"),
                                     is_shortcut=True,

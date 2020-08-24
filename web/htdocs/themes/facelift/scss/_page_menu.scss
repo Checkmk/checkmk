@@ -159,7 +159,8 @@ div#top_heading {
       border-bottom: 2px solid $page-menu-bg-color;
 
       &.disabled {
-        display: none;
+        pointer-events: none;
+        filter: grayscale(100%) brightness(55%);
       }
 
       &:focus {

@@ -189,6 +189,11 @@ class ModeDiagHost(WatoMode):
 
         html.button("_try", _("Test"))
 
+        # When clicking "Save & Test" on the "Edit host" page, this will be set
+        # to immediately execute the tests using the just saved settings
+        if html.request.has_var("_start_on_load"):
+            html.final_javascript("document.getElementById('_try').click();")
+
         html.hidden_fields()
         html.end_form()
 

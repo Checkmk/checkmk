@@ -304,7 +304,7 @@ class ModeEditHost(HostMode):
         if html.request.var("services"):
             return "inventory"
         elif html.request.var("diag_host"):
-            html.request.set_var("_try", "1")
+            html.request.set_var("_start_on_load", "1")
             return "diag_host"
         return "folder"
 

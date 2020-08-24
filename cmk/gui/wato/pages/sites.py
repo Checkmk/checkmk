@@ -12,7 +12,7 @@ import socket
 import contextlib
 import binascii
 import queue
-from typing import Dict, List, NamedTuple, Union, Tuple as _Tuple
+from typing import Dict, List, NamedTuple, Union, Tuple as _Tuple, Optional, Type
 
 from six import ensure_binary, ensure_str
 from OpenSSL import crypto  # type: ignore[import]
@@ -73,7 +73,7 @@ def _site_detail_buttons(site_id, site, current_mode):
     if current_mode != "edit_site":
         html.context_button(
             _("Edit site"),
-            watolib.folder_preserving_link([("mode", "edit_site"), ("edit", site_id)]), "edit")
+            watolib.folder_preserving_link([("mode", "edit_site"), ("site", site_id)]), "edit")
 
     if current_mode != "site_livestatus_encryption":
         encrypted_url = watolib.folder_preserving_link([("mode", "site_livestatus_encryption"),
@@ -111,11 +111,15 @@ class ModeEditSite(WatoMode):
     def permissions(cls):
         return ["sites"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeDistributedMonitoring
+
     def __init__(self):
         super(ModeEditSite, self).__init__()
         self._site_mgmt = watolib.SiteManagementFactory().factory()
 
-        self._site_id = html.request.get_ascii_input("edit")
+        self._site_id = html.request.get_ascii_input("site")
         self._clone_id = html.request.get_ascii_input("clone")
         self._new = self._site_id is None
 
@@ -655,7 +659,7 @@ class ModeDistributedMonitoring(WatoMode):
 
     def _show_buttons(self, table, site_id, site):
         table.cell(_("Actions"), css="buttons")
-        edit_url = watolib.folder_preserving_link([("mode", "edit_site"), ("edit", site_id)])
+        edit_url = watolib.folder_preserving_link([("mode", "edit_site"), ("site", site_id)])
         html.icon_button(edit_url, _("Properties"), "edit")
 
         clone_url = watolib.folder_preserving_link([("mode", "edit_site"), ("clone", site_id)])
@@ -904,6 +908,10 @@ class ModeEditSiteGlobals(GlobalSettingsMode):
     def permissions(cls):
         return ["sites"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeEditSite
+
     def __init__(self):
         super(ModeEditSiteGlobals, self).__init__()
         self._site_id = html.request.get_ascii_input_mandatory("site")
@@ -1040,6 +1048,10 @@ class ModeSiteLivestatusEncryption(WatoMode):
     @classmethod
     def permissions(cls):
         return ["sites"]
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeEditSite
 
     def __init__(self):
         super(ModeSiteLivestatusEncryption, self).__init__()

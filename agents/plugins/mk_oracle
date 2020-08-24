@@ -2757,12 +2757,21 @@ fetch_custom_section_variable() {
     local section_name=$1
     local section_var=
     local section_dummy=
-    if declare -p "$1_${ORACLE_SID^^}" > /dev/null 2>&1; then
-        section_dummy="$1_${ORACLE_SID^^}"
+    local sid_upper=
+    local sid_lower=
+    # Disabling shellcheck because false-positive warning regarding
+    # single quotes. AWK needs these single quotes to work as inteded.
+    # shellcheck disable=SC2016
+    sid_upper=$(echo "$ORACLE_SID" | "$AWK" '{ print toupper($0) }')
+    # shellcheck disable=SC2016
+    sid_lower=$(echo "$ORACLE_SID" | "$AWK" '{ print tolower($0) }')
+
+    if declare -p "$1_${sid_upper}" > /dev/null 2>&1; then
+        section_dummy="$1_${sid_upper}"
         section_var=${!section_dummy}
     else
-        if declare -p "$1_${ORACLE_SID,,}" > /dev/null 2>&1; then
-            section_dummy="$1_${ORACLE_SID,,}"
+        if declare -p "$1_${sid_lower}" > /dev/null 2>&1; then
+            section_dummy="$1_${sid_lower}"
             section_var=${!section_dummy}
         else
             section_var="${!section_name}"

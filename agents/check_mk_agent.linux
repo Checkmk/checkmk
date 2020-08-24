@@ -1116,7 +1116,8 @@ run_cached() {
         if [ $((NOW - CF_ATIME)) -ge $((MAXAGE * 2)) ]; then
             # Kill the process still accessing that file in case
             # it is still running. This avoids overlapping processes!
-            fuser -k -9 "$CACHEFILE.new" >/dev/null 2>&1
+            # Also kill all it's subprocesses from the same pgid
+            kill -9 -$(ps -o pgid $(fuser "$CACHEFILE.new" | rev | cut -d':' -f1 | rev ) | tail -1) >/dev/null 2>&1
             rm -f "$CACHEFILE.new"
         fi
     fi

@@ -27,13 +27,13 @@ from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, MK
 from cmk.gui.i18n import _, _l, _u
 from cmk.gui.globals import html
 from cmk.gui.pages import page_registry, AjaxPage, Page
-from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
     PageMenuTopic,
     PageMenuEntry,
     make_simple_link,
+    make_simple_form_page_menu,
 )
 
 from cmk.gui.watolib.changes import add_change
@@ -189,6 +189,14 @@ class ABCUserProfilePage(Page):
         if not config.wato_enabled:
             raise MKAuthException(_('User profiles can not be edited (WATO is disabled).'))
 
+    def _page_menu(self, breadcrumb) -> PageMenu:
+        menu = make_simple_form_page_menu(breadcrumb,
+                                          form_name="profile",
+                                          button_name="save",
+                                          add_abort_link=False)
+        menu.dropdowns.insert(1, page_menu_dropdown_user_related(html.myfile))
+        return menu
+
     def page(self) -> None:
         watolib.init_wato_datastructures(with_wato_lock=True)
 
@@ -205,7 +213,7 @@ class ABCUserProfilePage(Page):
             title = self._page_title()
 
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), title)
-        html.header(title, breadcrumb, user_page_menu(html.myfile, breadcrumb))
+        html.header(title, breadcrumb, self._page_menu(breadcrumb))
 
         # Now, if in distributed environment where users can login to remote sites, set the trigger for
         # pushing the new user profile to the remote sites asynchronously
@@ -321,7 +329,6 @@ class UserChangePasswordPage(ABCUserProfilePage):
         html.password_input('password2', autocomplete="new-password")
 
         forms.end()
-        html.button("_save", _("Save"))
         html.close_div()
         html.hidden_fields()
         html.end_form()
@@ -433,7 +440,6 @@ class UserProfile(ABCUserProfilePage):
                         html.write(vs.value_to_text(value))
 
         forms.end()
-        html.button("_save", _("Save"))
         html.close_div()
         html.hidden_fields()
         html.end_form()
@@ -484,21 +490,16 @@ class ModeAjaxProfileReplication(AjaxPage):
         return result
 
 
-def user_page_menu(page_name: str, breadcrumb: Breadcrumb) -> PageMenu:
-    return PageMenu(
-        dropdowns=[
-            PageMenuDropdown(
-                name="related",
-                title=_("Related"),
-                topics=[
-                    PageMenuTopic(
-                        title=_("User"),
-                        entries=list(_page_menu_entries_related(page_name)),
-                    ),
-                ],
+def page_menu_dropdown_user_related(page_name: str) -> PageMenuDropdown:
+    return PageMenuDropdown(
+        name="related",
+        title=_("Related"),
+        topics=[
+            PageMenuTopic(
+                title=_("User"),
+                entries=list(_page_menu_entries_related(page_name)),
             ),
         ],
-        breadcrumb=breadcrumb,
     )
 
 

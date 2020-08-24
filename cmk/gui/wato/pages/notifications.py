@@ -936,32 +936,32 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
         return mega_menu_registry.menu_user()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = cmk.gui.wato.user_profile.user_page_menu("user_notifications_p", breadcrumb)
-
-        menu.dropdowns.insert(
-            0,
-            PageMenuDropdown(
-                name="rules",
-                title=_("Rules"),
-                topics=[
-                    PageMenuTopic(
-                        title=_("Personal rules"),
-                        entries=[
-                            PageMenuEntry(
-                                title=_("Add rule"),
-                                icon_name="new",
-                                item=make_simple_link(
-                                    watolib.folder_preserving_link([("mode", "notification_rule_p")
-                                                                   ])),
-                                is_shortcut=True,
-                                is_suggested=True,
-                            ),
-                        ],
-                    )
-                ],
-            ))
-
-        return menu
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="rules",
+                    title=_("Rules"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Personal rules"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Add rule"),
+                                    icon_name="new",
+                                    item=make_simple_link(
+                                        watolib.folder_preserving_link([("mode",
+                                                                         "notification_rule_p")])),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                            ],
+                        )
+                    ],
+                ),
+                cmk.gui.wato.user_profile.page_menu_dropdown_user_related("user_notifications_p"),
+            ],
+            breadcrumb=breadcrumb,
+        )
 
     def _user_id(self):
         return config.user.id

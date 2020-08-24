@@ -186,7 +186,7 @@ def parse_bluenet2_powerrail(info):
                         'name': friendly_name
                     }
 
-    parsed = {"phases": {}, "rcm_phases": {}, "sensors": {}, "sensors": {}, "fuses": {}}
+    parsed = {"phases": {}, "rcm_phases": {}, "sensors": {}, "sockets": {}, "fuses": {}}
     for oidend, ty, status, exponent_str, reading_str in info[3]:
         status_info = map_status[status]
         reading = float(reading_str) * 10**int(exponent_str)

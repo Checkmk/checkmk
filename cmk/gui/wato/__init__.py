@@ -186,7 +186,6 @@ from cmk.gui.wato.pages.groups import (
     ModeHostgroups,
     ModeServicegroups,
     ModeContactgroups,
-    ModeEditGroup,
     ModeEditHostgroup,
     ModeEditServicegroup,
     ModeEditContactgroup,

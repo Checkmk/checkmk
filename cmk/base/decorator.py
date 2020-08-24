@@ -14,6 +14,8 @@ import cmk.utils.defines as defines
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, MKSNMPError
 from cmk.utils.log import console
 
+from cmk.fetchers import MKFetcherError
+
 import cmk.base.config as config
 import cmk.base.obsolete_output as out
 import cmk.base.crash_reporting
@@ -41,7 +43,7 @@ def handle_check_mk_check_result(check_plugin_name: CheckPluginNameStr,
                 infotexts.append("Timed out")
                 status = max(status, cast(int, exit_spec.get("timeout", 2)))
 
-            except (MKAgentError, MKSNMPError, MKIPAddressLookupError) as e:
+            except (MKAgentError, MKFetcherError, MKSNMPError, MKIPAddressLookupError) as e:
                 infotexts.append("%s" % e)
                 status = cast(int, exit_spec.get("connection", 2))
 

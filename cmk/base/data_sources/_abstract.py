@@ -217,7 +217,7 @@ class FileCacheConfigurator:
         }
 
 
-class ABCConfigurator(abc.ABC):
+class ABCConfigurator(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
     """Hold the configuration to fetchers and checkers.
 
     At best, this should only hold static data, that is, every
@@ -235,6 +235,7 @@ class ABCConfigurator(abc.ABC):
         source_type: SourceType,
         fetcher_type: FetcherType,
         description: str,
+        default_raw_data: BoundedAbstractRawData,
         id_: str,
         cpu_tracking_id: str,
         cache_dir: Optional[Path] = None,
@@ -246,6 +247,7 @@ class ABCConfigurator(abc.ABC):
         self.source_type: Final[SourceType] = source_type
         self.fetcher_type: Final[FetcherType] = fetcher_type
         self.description: Final[str] = description
+        self.default_raw_data: Final = default_raw_data
         self.id: Final[str] = id_
         self.cpu_tracking_id: Final[str] = cpu_tracking_id
         if not cache_dir:
@@ -334,7 +336,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         )
 
         # Runtime data (managed by self.run()) - Meant for self.get_summary_result()
-        self._exception: Optional[Exception] = None
+        self.exception: Optional[Exception] = None
         self._host_sections: Optional[BoundedAbstractHostSections] = None
 
     def __repr__(self):
@@ -373,10 +375,10 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
             self._logger.log(VERBOSE, "ERROR: %s", exc)
             if cmk.utils.debug.enabled():
                 raise
-            self._exception = exc
+            self.exception = exc
             self._host_sections = self.default_host_sections
         else:
-            self._exception = None
+            self.exception = None
         return self._host_sections
 
     def _determine_persisted_sections(
@@ -404,19 +406,19 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         "Check_MK HW/SW Inventory" services."""
         assert self.configurator.mode is not Mode.NONE
 
-        if not self._exception:
+        if not self.exception:
             assert self._host_sections is not None
             return self.summarizer.summarize(self._host_sections)
 
-        exc_msg = "%s" % self._exception
+        exc_msg = "%s" % self.exception
 
-        if isinstance(self._exception, MKEmptyAgentData):
+        if isinstance(self.exception, MKEmptyAgentData):
             status = self.configurator.host_config.exit_code_spec().get("empty_output", 2)
 
-        elif isinstance(self._exception, (MKAgentError, MKIPAddressLookupError, MKSNMPError)):
+        elif isinstance(self.exception, (MKAgentError, MKIPAddressLookupError, MKSNMPError)):
             status = self.configurator.host_config.exit_code_spec().get("connection", 2)
 
-        elif isinstance(self._exception, MKTimeout):
+        elif isinstance(self.exception, MKTimeout):
             status = self.configurator.host_config.exit_code_spec().get("timeout", 2)
 
         else:
@@ -424,10 +426,6 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         status = cast(int, status)
 
         return status, exc_msg + check_api_utils.state_markers[status], []
-
-    def exception(self) -> Optional[Exception]:
-        """Provides exceptions happened during last self.run() call or None"""
-        return self._exception
 
     @classmethod
     def use_outdated_persisted_sections(cls) -> None:

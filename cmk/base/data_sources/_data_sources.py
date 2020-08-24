@@ -243,7 +243,7 @@ def _make_host_sections(
     Communication errors are not raised through by this functions. All agent related errors are
     caught by the source.run() method and saved in it's _exception attribute. The caller should
     use source.get_summary_result() to get the state, output and perfdata of the agent excecution
-    or source.exception() to get the exception object.
+    or source.exception to get the exception object.
     """
     console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
     # Special agents can produce data for the same check_plugin_name on the same host, in this case

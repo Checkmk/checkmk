@@ -107,6 +107,7 @@ class SNMPConfigurator(ABCConfigurator):
             source_type=source_type,
             fetcher_type=FetcherType.SNMP,
             description=SNMPConfigurator._make_description(hostname, ipaddress, title=title),
+            default_raw_data={},
             id_=id_,
             cpu_tracking_id=cpu_tracking_id,
             cache_dir=cache_dir,

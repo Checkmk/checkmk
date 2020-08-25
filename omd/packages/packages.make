@@ -124,7 +124,6 @@ include \
     packages/apache-omd/apache-omd.make \
     packages/stunnel/stunnel.make \
     packages/check_mk/check_mk.make \
-    packages/check_multi/check_multi.make \
     packages/check_mysql_health/check_mysql_health.make \
     packages/check_oracle_health/check_oracle_health.make \
     packages/dokuwiki/dokuwiki.make \

@@ -34,7 +34,6 @@ PACKAGES := \
     mod_fcgid \
     python3-mod_wsgi \
     check_mk \
-    check_multi \
     check_mysql_health \
     check_oracle_health \
     Webinject \

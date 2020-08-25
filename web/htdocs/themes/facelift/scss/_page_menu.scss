@@ -15,8 +15,20 @@ body.main {
   }
 
   &.hide_suggestions {
+    td.shortcuts {
+      a.suggested {
+        display: inline-block;
+      }
+    }
+
     tr#suggestions {
       display: none;
+    }
+  }
+
+  &.hide_suggestions {
+    a#menu_shortcut_toggle_suggestions {
+      transform: rotate(180deg);
     }
   }
 }

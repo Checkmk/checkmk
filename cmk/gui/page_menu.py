@@ -137,6 +137,12 @@ class PageMenuEntry:
     shortcut_title: Optional[str] = None
     css_classes: CSSSpec = None
 
+    def __post_init__(self):
+        # Enforce all shortcuts to be suggested links. The user can then toggle all entries between
+        # the suggested button format and the smaller shortcut buttons.
+        if self.is_shortcut and self.name not in ["toggle_suggestions", "up"]:
+            self.is_suggested = True
+
 
 @dataclass
 class PageMenuTopic:
@@ -204,6 +210,7 @@ class PageMenu:
     @property
     def shortcuts(self) -> Iterator[PageMenuEntry]:
         has_suggestions = False
+        shortcuts = []
         for entry in self._entries:
             if not entry.is_shortcut:
                 continue
@@ -211,7 +218,7 @@ class PageMenu:
             if entry.is_suggested:
                 has_suggestions = True
 
-            yield entry
+            shortcuts.append(entry)
 
         if has_suggestions:
             yield PageMenuEntry(
@@ -220,6 +227,8 @@ class PageMenu:
                 item=make_javascript_link("cmk.page_menu.toggle_suggestions()"),
                 name="toggle_suggestions",
             )
+
+        yield from shortcuts
 
     @property
     def suggestions(self) -> Iterator[PageMenuEntry]:
@@ -337,6 +346,7 @@ def make_up_link(breadcrumb: Breadcrumb) -> PageMenuDropdown:
                         title=parent_item.title,
                         icon_name="up",
                         item=make_simple_link(parent_item.url),
+                        name="up",
                         is_list_entry=False,
                         is_shortcut=True,
                     ),

@@ -227,7 +227,7 @@
       z-index: 100;
       display: none;
       cursor: default;
-      background-color: rgba(0, 0, 0, 0.1);
+      background-color: $popup-shadow-color;
     }
 
     &.active {

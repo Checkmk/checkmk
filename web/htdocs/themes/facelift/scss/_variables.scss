@@ -494,9 +494,11 @@ $scatterdot-hilite-color:		    rgb(0, 185, 255);
 /* TODO:  move variables defined for the UX project to the correct place */
 /* TODO:  adapt variables to modern theme */
 $page-header-height:                        58px;
+$popup-shadow-color:                        rgba(255, 255, 255, 0.2);
+$button-font-color-default:                 $black;
 $button-bg-color-default:                   rgb(53, 63, 74);
 $button-bg-color-secondary:                 $navbar-color;
-$button-bg-color-secondary-hover:           rgb(53, 63, 74);
+$button-bg-color-secondary-hover:           $base-color;
 $navigation-bg-color:                       $navbar-color;
 $page-menu-bg-color:                        $white;
 $snapin-bg-color:                           $navbar-color;

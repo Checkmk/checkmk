@@ -235,6 +235,8 @@ class ModeFolder(WatoMode):
                 title=_("Add host"),
                 icon_name="new",
                 item=make_simple_link(self._folder.url([("mode", "newhost")])),
+                is_shortcut=True,
+                is_suggested=True,
             )
             yield PageMenuEntry(
                 title=_("Add cluster"),
@@ -379,6 +381,8 @@ class ModeFolder(WatoMode):
                     title=_("Add subfolder"),
                     icon_name="newfolder",
                     item=make_simple_link(self._folder.url([("mode", "newfolder")])),
+                    is_shortcut=True,
+                    is_suggested=True,
                 )
 
         yield make_folder_status_link(watolib.Folder.current(), view_name="allhosts")

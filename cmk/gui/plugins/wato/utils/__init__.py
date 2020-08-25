@@ -1082,7 +1082,7 @@ class ConfigHostname(TextAsciiAutocomplete):
         return match_list
 
 
-class EventsMode(WatoMode, metaclass=abc.ABCMeta):
+class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
     @classmethod
     @abc.abstractmethod
     def _rule_match_conditions(cls):

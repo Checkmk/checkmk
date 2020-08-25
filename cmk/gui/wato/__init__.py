@@ -276,7 +276,6 @@ from cmk.gui.plugins.wato import (
     sort_sites,
     Levels,
     PredictiveLevels,
-    EventsMode,
     mode_registry,
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,

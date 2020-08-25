@@ -47,7 +47,7 @@ from cmk.gui.valuespec import (
 )
 
 from cmk.gui.plugins.wato import (
-    EventsMode,
+    ABCEventsMode,
     mode_registry,
     wato_confirm,
     make_action_link,
@@ -78,7 +78,7 @@ from cmk.gui.page_menu import (
 NotificationRule = Dict[str, Any]
 
 
-class ABCNotificationsMode(EventsMode):
+class ABCNotificationsMode(ABCEventsMode):
     # TODO: Clean this up. Use inheritance
     @classmethod
     def _rule_match_conditions(cls):

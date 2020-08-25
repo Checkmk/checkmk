@@ -54,7 +54,7 @@ from cmk.gui.plugins.wato.utils import (
     ABCHostAttributeValueSpec,
     ABCHostAttributeNagiosText,
     host_attribute_registry,
-    EventsMode,
+    ABCEventsMode,
     folder_preserving_link,
     get_search_expression,
     ContactGroupSelection,

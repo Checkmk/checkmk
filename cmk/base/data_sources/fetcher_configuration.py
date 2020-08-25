@@ -12,7 +12,7 @@ from cmk.utils.type_defs import HostAddress, HostName
 import cmk.base.config as config
 
 from ._abstract import Mode
-from ._data_sources import make_checkers
+from ._data_sources import make_configurators
 
 __all__ = ["dump", "dumps"]
 
@@ -39,9 +39,9 @@ def _make(
 ) -> Dict[Literal["fetchers"], List[Dict[str, Any]]]:
     return {
         "fetchers": [{
-            "fetcher_type": s.configurator.fetcher_type.name,
-            "fetcher_params": s.configurator.configure_fetcher(),
-        } for s in make_checkers(
+            "fetcher_type": c.fetcher_type.name,
+            "fetcher_params": c.configure_fetcher(),
+        } for c in make_configurators(
             config.HostConfig.make_host_config(hostname),
             ipaddress,
             mode=Mode.NONE,

@@ -59,7 +59,6 @@ def get_text(context):
         if notification_type in [ "PROBLEM", "RECOVERY" ]:
             host_state = context['HOSTSTATE']
             description += ' (' + host_state + ')'
-            service_problem_id = context['SERVICEPROBLEMID']
         else:
             description += ' (' + host_state + ')'
 

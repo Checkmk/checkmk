@@ -15,7 +15,7 @@ from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
 from .agent import AgentFetcher, AgentFileCache
 
 
-class PiggyBackFileCache(AgentFileCache):
+class PiggybackFileCache(AgentFileCache):
     """Piggy back does not cache raw data.
 
     This class is a stub.
@@ -28,10 +28,10 @@ class PiggyBackFileCache(AgentFileCache):
         pass
 
 
-class PiggyBackFetcher(AgentFetcher):
+class PiggybackFetcher(AgentFetcher):
     def __init__(
         self,
-        file_cache: PiggyBackFileCache,
+        file_cache: PiggybackFileCache,
         hostname: HostName,
         address: Optional[HostAddress],
         time_settings: List[Tuple[Optional[str], str, int]],
@@ -43,15 +43,15 @@ class PiggyBackFetcher(AgentFetcher):
         self._sources: List[PiggybackRawDataInfo] = []
 
     @classmethod
-    def from_json(cls, serialized: Dict[str, Any]) -> "PiggyBackFetcher":
+    def from_json(cls, serialized: Dict[str, Any]) -> "PiggybackFetcher":
         return cls(
-            PiggyBackFileCache.from_json(serialized.pop("file_cache")),
+            PiggybackFileCache.from_json(serialized.pop("file_cache")),
             **serialized,
         )
 
-    def __enter__(self) -> 'PiggyBackFetcher':
+    def __enter__(self) -> 'PiggybackFetcher':
         for origin in (self._hostname, self._address):
-            self._sources.extend(PiggyBackFetcher._raw_data(origin, self._time_settings))
+            self._sources.extend(PiggybackFetcher._raw_data(origin, self._time_settings))
         return self
 
     def __exit__(self, exc_type: Optional[Type[BaseException]], exc_value: Optional[BaseException],

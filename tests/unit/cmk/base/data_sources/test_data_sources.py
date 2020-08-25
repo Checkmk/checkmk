@@ -18,7 +18,7 @@ from cmk.base.api.agent_based.type_defs import CheckPlugin
 from cmk.base.api.agent_based.utils import parse_to_string_table
 from cmk.base.data_sources import make_configurators, Mode
 from cmk.base.data_sources._data_sources import _make_piggybacked_sections
-from cmk.base.data_sources.piggyback import PiggyBackConfigurator
+from cmk.base.data_sources.piggyback import PiggybackConfigurator
 from cmk.base.data_sources.programs import DSProgramConfigurator, SpecialAgentConfigurator
 from cmk.base.data_sources.snmp import SNMPConfigurator
 from cmk.base.data_sources.tcp import TCPConfigurator
@@ -45,13 +45,13 @@ def make_scenario(hostname, tags):
 
 
 @pytest.mark.parametrize("hostname, tags, sources", [
-    ("agent-host", {}, [TCPConfigurator, PiggyBackConfigurator]),
+    ("agent-host", {}, [TCPConfigurator, PiggybackConfigurator]),
     (
         "ping-host",
         {
             "agent": "no-agent"
         },
-        [PiggyBackConfigurator],
+        [PiggybackConfigurator],
     ),
     (
         "snmp-host",
@@ -59,7 +59,7 @@ def make_scenario(hostname, tags):
             "agent": "no-agent",
             "snmp_ds": "snmp-v2"
         },
-        [SNMPConfigurator, PiggyBackConfigurator],
+        [SNMPConfigurator, PiggybackConfigurator],
     ),
     (
         "snmp-host",
@@ -67,7 +67,7 @@ def make_scenario(hostname, tags):
             "agent": "no-agent",
             "snmp_ds": "snmp-v1"
         },
-        [SNMPConfigurator, PiggyBackConfigurator],
+        [SNMPConfigurator, PiggybackConfigurator],
     ),
     (
         "dual-host",
@@ -75,21 +75,21 @@ def make_scenario(hostname, tags):
             "agent": "cmk-agent",
             "snmp_ds": "snmp-v2"
         },
-        [TCPConfigurator, SNMPConfigurator, PiggyBackConfigurator],
+        [TCPConfigurator, SNMPConfigurator, PiggybackConfigurator],
     ),
     (
         "all-agents-host",
         {
             "agent": "all-agents"
         },
-        [DSProgramConfigurator, SpecialAgentConfigurator, PiggyBackConfigurator],
+        [DSProgramConfigurator, SpecialAgentConfigurator, PiggybackConfigurator],
     ),
     (
         "all-special-host",
         {
             "agent": "special-agents"
         },
-        [SpecialAgentConfigurator, PiggyBackConfigurator],
+        [SpecialAgentConfigurator, PiggybackConfigurator],
     ),
 ])
 def test_host_config_creates_passing_source_configurators(

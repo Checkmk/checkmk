@@ -10,7 +10,7 @@ import enum
 from ._base import ABCFetcher, MKFetcherError
 from .agent import AgentFileCache
 from .ipmi import IPMIFetcher
-from .piggyback import PiggyBackFetcher
+from .piggyback import PiggybackFetcher
 from .program import ProgramFetcher
 from .snmp import SNMPFetcher, SNMPFileCache
 from .tcp import TCPFetcher
@@ -19,7 +19,7 @@ __all__ = [
     "ABCFetcher",
     "MKFetcherError",
     "IPMIFetcher",
-    "PiggyBackFetcher",
+    "PiggybackFetcher",
     "ProgramFetcher",
     "SNMPFetcher",
     "TCPFetcher",
@@ -35,7 +35,7 @@ class FetcherType(enum.Enum):
     """
     NONE = None
     IPMI = IPMIFetcher
-    PIGGYBACK = PiggyBackFetcher
+    PIGGYBACK = PiggybackFetcher
     PROGRAM = ProgramFetcher
     SNMP = SNMPFetcher
     TCP = TCPFetcher

@@ -32,7 +32,7 @@ from cmk.base.data_sources import (
 )
 from cmk.base.data_sources.agent import AgentHostSections
 from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
-from cmk.base.data_sources.piggyback import PiggyBackConfigurator
+from cmk.base.data_sources.piggyback import PiggybackConfigurator
 from cmk.base.data_sources.programs import ProgramConfigurator
 from cmk.base.data_sources.snmp import SNMPConfigurator, SNMPHostSections, CachedSNMPDetector
 from cmk.base.data_sources.tcp import TCPConfigurator
@@ -569,7 +569,7 @@ class TestMakeHostSectionsHosts:
     @pytest.mark.parametrize(
         "source",
         [
-            lambda hostname, ipaddress, *, mode: PiggyBackConfigurator(
+            lambda hostname, ipaddress, *, mode: PiggybackConfigurator(
                 hostname,
                 ipaddress,
                 mode=mode,

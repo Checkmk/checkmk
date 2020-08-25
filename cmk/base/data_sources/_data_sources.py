@@ -28,7 +28,7 @@ from ._abstract import ABCConfigurator, ABCChecker, Mode
 from .agent import AgentHostSections
 from .host_sections import HostKey, MultiHostSections
 from .ipmi import IPMIConfigurator
-from .piggyback import PiggyBackConfigurator
+from .piggyback import PiggybackConfigurator
 from .programs import DSProgramConfigurator, SpecialAgentConfigurator
 from .snmp import SNMPConfigurator
 from .tcp import TCPConfigurator
@@ -61,7 +61,7 @@ class _Builder:
         # Always execute piggyback at the end
         return sorted(
             self._elems.values(),
-            key=lambda c: (isinstance(c, PiggyBackConfigurator), c.id),
+            key=lambda c: (isinstance(c, PiggybackConfigurator), c.id),
         )
 
     def _initialize(self) -> None:
@@ -94,7 +94,7 @@ class _Builder:
             ))
 
         if "no-piggyback" not in self._host_config.tags:
-            self._add(PiggyBackConfigurator(
+            self._add(PiggybackConfigurator(
                 self._hostname,
                 self._ipaddress,
                 mode=self._mode,

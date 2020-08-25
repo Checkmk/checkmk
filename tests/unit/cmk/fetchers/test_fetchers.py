@@ -18,7 +18,7 @@ from cmk.snmplib.type_defs import SNMPHostConfig, SNMPRawData, SNMPTable, SNMPTr
 
 from cmk.fetchers import AgentFileCache, FetcherType, MKFetcherError
 from cmk.fetchers.ipmi import IpmiException, IPMIFetcher
-from cmk.fetchers.piggyback import PiggyBackFetcher
+from cmk.fetchers.piggyback import PiggybackFetcher
 from cmk.fetchers.program import ProgramFetcher
 from cmk.fetchers.snmp import SNMPFetcher, SNMPFileCache
 from cmk.fetchers.tcp import TCPFetcher
@@ -155,10 +155,10 @@ class TestIPMIFetcher:
             0, reading) == [b"0", b"Dingeling", b"FancyDevice", b"3.14", b"C", b"Present"]
 
 
-class TestPiggyBackFetcher:
+class TestPiggybackFetcher:
     @pytest.fixture(name="fetcher")
     def fetcher_fixture(self, fc_conf):
-        return PiggyBackFetcher.from_json(
+        return PiggybackFetcher.from_json(
             json_identity({
                 "file_cache": fc_conf.configure(),
                 "hostname": "host",
@@ -167,7 +167,7 @@ class TestPiggyBackFetcher:
             }))
 
     def test_deserialization(self, fetcher):
-        assert isinstance(fetcher, PiggyBackFetcher)
+        assert isinstance(fetcher, PiggybackFetcher)
 
     def test_file_cache_deserialization(self, fetcher):
         assert isinstance(fetcher.file_cache, AgentFileCache)

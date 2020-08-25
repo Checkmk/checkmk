@@ -19,7 +19,7 @@ from ._abstract import Mode
 from .agent import AgentConfigurator, AgentHostSections, AgentSummarizer
 
 
-class PiggyBackConfigurator(AgentConfigurator):
+class PiggybackConfigurator(AgentConfigurator):
     def __init__(
         self,
         hostname: HostName,
@@ -33,7 +33,7 @@ class PiggyBackConfigurator(AgentConfigurator):
             mode=mode,
             source_type=SourceType.HOST,
             fetcher_type=FetcherType.PIGGYBACK,
-            description=PiggyBackConfigurator._make_description(hostname),
+            description=PiggybackConfigurator._make_description(hostname),
             id_="piggyback",
             cpu_tracking_id="agent",
             main_data_source=False,
@@ -49,16 +49,16 @@ class PiggyBackConfigurator(AgentConfigurator):
             "time_settings": self.time_settings,
         }
 
-    def make_summarizer(self) -> "PiggyBackSummarizer":
-        return PiggyBackSummarizer(self)
+    def make_summarizer(self) -> "PiggybackSummarizer":
+        return PiggybackSummarizer(self)
 
     @staticmethod
     def _make_description(hostname: HostName):
         return "Process piggyback data from %s" % (Path(tmp_dir) / "piggyback" / hostname)
 
 
-class PiggyBackSummarizer(AgentSummarizer):
-    def __init__(self, configurator: PiggyBackConfigurator):
+class PiggybackSummarizer(AgentSummarizer):
+    def __init__(self, configurator: PiggybackConfigurator):
         super().__init__()
         self.configurator = configurator
 

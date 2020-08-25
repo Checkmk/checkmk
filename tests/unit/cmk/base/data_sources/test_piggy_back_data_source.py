@@ -10,7 +10,7 @@ from testlib.base import Scenario
 
 from cmk.base.data_sources import Mode
 from cmk.base.data_sources.agent import AgentHostSections
-from cmk.base.data_sources.piggyback import PiggyBackConfigurator
+from cmk.base.data_sources.piggyback import PiggybackConfigurator
 
 
 @pytest.fixture(name="mode", params=(mode for mode in Mode if mode is not Mode.NONE))
@@ -23,7 +23,7 @@ def test_attribute_defaults(monkeypatch, ipaddress, mode):
     hostname = "testhost"
     Scenario().add_host(hostname).apply(monkeypatch)
 
-    configurator = PiggyBackConfigurator(hostname, ipaddress, mode=mode)
+    configurator = PiggybackConfigurator(hostname, ipaddress, mode=mode)
     assert configurator.hostname == hostname
     assert configurator.ipaddress == ipaddress
     assert configurator.mode is mode

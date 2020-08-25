@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Optional, Type, Iterator
 import traceback
 
 import cmk.gui.gui_background_job as gui_background_job
@@ -11,6 +12,14 @@ from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.log import logger
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+)
 
 from cmk.gui.plugins.wato import (
     main_module_registry,
@@ -96,12 +105,41 @@ class ModeBackgroundJobDetails(WatoMode):
     def permissions(cls):
         return []
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeBackgroundJobsOverview
+
     def title(self):
         return _("Background job details")
 
-    def buttons(self):
-        if self._back_url():
-            html.context_button(_("Back"), self._back_url(), "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Setup"),
+                            entries=list(self._page_menu_entries_related()),
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
+
+    def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
+        back_url = self._back_url()
+        # Small hack to not have a "up" and "back" link both pointing to the parent mode
+        if back_url and "mode=background_jobs_overview" not in back_url:
+            yield PageMenuEntry(
+                title=_("Back"),
+                icon_name="back",
+                item=make_simple_link(back_url),
+                is_shortcut=True,
+                is_suggested=True,
+            )
 
     def _back_url(self):
         return html.get_url_input("back_url", deflt="")

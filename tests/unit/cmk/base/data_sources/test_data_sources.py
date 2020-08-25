@@ -4,29 +4,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
-import time
-
 import pytest  # type: ignore[import]
 
 # No stub file
 from testlib.base import Scenario  # type: ignore[import]
 
-import cmk.utils.piggyback
 from cmk.utils.type_defs import CheckPluginName
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.data_sources.agent as agent
 from cmk.base import check_table, config
 from cmk.base.api.agent_based.register import section_plugins
 from cmk.base.api.agent_based.type_defs import CheckPlugin
 from cmk.base.api.agent_based.utils import parse_to_string_table
-from cmk.base.data_sources import make_configurators, Mode, ABCDataSource
-from cmk.base.data_sources._data_sources import _make_host_sections, _make_piggybacked_sections
+from cmk.base.data_sources import make_configurators, Mode
+from cmk.base.data_sources._data_sources import _make_piggybacked_sections
 from cmk.base.data_sources.piggyback import PiggyBackConfigurator
 from cmk.base.data_sources.programs import DSProgramConfigurator, SpecialAgentConfigurator
 from cmk.base.data_sources.snmp import SNMPConfigurator
-from cmk.base.data_sources.tcp import TCPConfigurator, TCPDataSource
+from cmk.base.data_sources.tcp import TCPConfigurator
 
 
 @pytest.fixture(name="mode", params=Mode)

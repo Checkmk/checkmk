@@ -7,45 +7,41 @@ description:
  This check monitors the operational status, link speed, traffic, packet
  counts, discards and errors of network interfaces of a Linux host using
  data sent by the Checkmk agent. This check replaces the old checks
- {netctr}, {netif.link} and {netif.counters} that have been in use up to
- and including version 1.1.10. As opposed to the old checks {lnx_if} is
+ {netctr}, {netif.link} and {netif.counters} which have been in use up to
+ and including version 1.1.10. As opposed to the old checks, {lnx_if} is
  fully compatible with {if} and {if64} and shares all of its features,
  including Perf-O-Meter, averaging, flexible configuration and NagVis
  weathermaps.
 
- Please note that the agent does only send information about the current
- link speed setting and link status if {ethtool} is installed and supported
- by the NIC.
+ Please note that the agent only sends information about the current link speed
+ setting and link status if {ethtool} is installed and supported by the NIC.
 
- Depending on the check parameters this check can go WARN or CRIT when the
+ Depending on the check parameters, this check can go WARN or CRIT when the
  port status changes (i.e. is down), when the link speed changes (e.g. a
  port expected to be set to 1GBit/s operates only at 100MBit/s), when the
  absolute or procentual traffic of a port exceeds certain levels or if the
  rate of errors or discards exceeds configurable limits.
 
- This check supports averaging the in- and
- outgoing traffic over a configurable range of time by using an exponentially
- weighted moving average - just as Linux does for the CPU load averages.
- The averaging can be configured on a per host and per port base. This is
- done by adding a key {"average"} to the parameter dictionary with the number
- of minutes that the average should cover as its key. Port with averaging
- turned on output two additional performance values: the averaged traffic
- in bytes. If you have configured traffic levels, then those levels are
- applied to the averaged values.
+ This check supports averaging the in- and outgoing traffic over a configurable
+ time range by using an exponentially weighted moving average - just as Linux
+ does for the CPU load averages. The averaging can be configured on a per-host
+ and per-port base. Ports with averaging turned on output two additional
+ performance values: the averaged traffic in bytes. If you have configured traffic
+ levels, then those levels are applied to the averaged values.
 
 item:
  There are three allowed ways to specify a port: {1}: the last component of
  the SNMP OID number (as string), the {ifDescr} of the port or the {ifAlias} of
- the port. If you are using the alias, you have to make sure that it is unique
- by configuring useful aliases in the switch. Checkmk does not check for uniqueness.
+ the port. If you use the alias, you have to make sure that it is unique by
+ configuring useful aliases in the switch. Checkmk does not check for uniqueness.
 
 inventory:
  One service is created for each port that fulfills configurable conditions (rule
  "Network Interface and Switch Port Discovery").
- Per default these are ports which are currently found {up} and are of types
- {6} (ethernetCsmacd), {32} (frameRelay) or {117} (gigabitEthernet).
+ By default, these are ports which are currently found {up} and are of types {6}
+ (ethernetCsmacd), {32} (frameRelay) or {117} (gigabitEthernet).
 
- {Grouping:} In some situations you do not want to monitor a single
+ {Grouping:} In some situations, you do not want to monitor a single
  interface but a group of interfaces that together form a pool.
  This check supports such pools by defining groups. The data of all members is
  accumulated and put together in a single grouped interface service.

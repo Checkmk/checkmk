@@ -166,6 +166,10 @@ class ModeEditSite(WatoMode):
             return _("Add site connection")
         return _("Edit site connection %s") % self._site_id
 
+    def _breadcrumb_url(self) -> str:
+        return html.makeuri_contextless([("mode", self.name()), ("site", self._site_id)],
+                                        filename="wato.py")
+
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(breadcrumb, form_name="site", button_name="save")
         if not self._new and isinstance(self._site_id, str):
@@ -951,6 +955,10 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
     def title(self):
         return _("Edit site specific global settings of %s") % self._site_id
 
+    def _breadcrumb_url(self) -> str:
+        return html.makeuri_contextless([("mode", self.name()), ("site", self._site_id)],
+                                        filename="wato.py")
+
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
@@ -1046,6 +1054,10 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
     def permissions(cls):
         return ["global"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeEditSiteGlobals
+
     def _from_vars(self):
         super()._from_vars()
         self._site_id = html.request.var("site")
@@ -1061,12 +1073,6 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
 
     def title(self):
         return _("Site-specific global configuration for %s") % self._site_id
-
-    def buttons(self):
-        html.context_button(
-            _("Abort"),
-            watolib.folder_preserving_link([("mode", "edit_site_globals"),
-                                            ("site", self._site_id)]), "abort")
 
     def _affected_sites(self):
         return [self._site_id]

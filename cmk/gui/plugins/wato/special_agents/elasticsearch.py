@@ -72,6 +72,17 @@ def _valuespec_special_agents_elasticsearch():
                 ),
             ),
             (
+                "no-cert-check",
+                DropdownChoice(
+                    title=_("SSL certificate verification"),
+                    choices=[
+                        (False, _("Verify the certificate")),
+                        (True, _("Ignore certificate errors (insecure)")),
+                    ],
+                    default_value=False,
+                ),
+            ),
+            (
                 "infos",
                 ListChoice(
                     title=_("Informations to query"),

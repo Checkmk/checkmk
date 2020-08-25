@@ -1,0 +1,11 @@
+Title: agent_elasticsearch: add option to disable validation of TLS certificate
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1654170159
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+

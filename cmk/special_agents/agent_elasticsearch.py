@@ -32,8 +32,9 @@ def agent_elasticsearch_main(args: Args) -> None:
                 url = url_base + sections[section]
 
                 auth = (args.user, args.password) if args.user and args.password else None
+                certcheck = not args.no_cert_check
                 try:
-                    response = requests.get(url, auth=auth)
+                    response = requests.get(url, auth=auth, verify=certcheck)
                 except requests.exceptions.RequestException as e:
                     sys.stderr.write("Error: %s\n" % e)
                     if args.debug:
@@ -75,6 +76,9 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
         type=lambda x: x.split(" "),
         default="cluster_health nodes stats",
         help="Space-separated list of modules to query. Possible values: cluster_health, nodes, stats (default: all)",
+    )
+    parser.add_argument(
+        "--no-cert-check", action="store_true", help="Disable certificate verification"
     )
     parser.add_argument(
         "hosts",

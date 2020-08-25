@@ -34,6 +34,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
     PageMenuEntry,
     make_simple_link,
+    make_simple_form_page_menu,
 )
 
 from cmk.gui.groups import (
@@ -183,7 +184,7 @@ class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
                 self._show_row_cells(table, name, group)
 
 
-class ModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
+class ABCModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def type_name(self) -> GroupType:
         raise NotImplementedError()
@@ -198,7 +199,7 @@ class ModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
         self.group = {}
         self._groups = self._load_groups()
 
-        super(ModeEditGroup, self).__init__()
+        super().__init__()
 
     def _from_vars(self) -> None:
         self._name = html.request.get_ascii_input("edit")  # missing -> new group
@@ -246,6 +247,9 @@ class ModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
     def _show_extra_page_elements(self):
         pass
 
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(breadcrumb, form_name="group", button_name="save")
+
     def page(self) -> None:
         html.begin_form("group")
         forms.header(_("Properties"))
@@ -261,13 +265,12 @@ class ModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
             html.set_focus("alias")
 
         forms.section(_("Alias"))
-        html.help(_("An Alias or description of this group."))
+        html.help(_("An alias or description of this group."))
         html.text_input("alias", self.group["alias"])
 
         self._show_extra_page_elements()
 
         forms.end()
-        html.button("save", _("Save"))
         html.hidden_fields()
         html.end_form()
 
@@ -389,7 +392,7 @@ class ModeContactgroups(ModeGroups):
 
 
 @mode_registry.register
-class ModeEditServicegroup(ModeEditGroup):
+class ModeEditServicegroup(ABCModeEditGroup):
     @property
     def type_name(self):
         return "service"
@@ -416,7 +419,7 @@ class ModeEditServicegroup(ModeEditGroup):
 
 
 @mode_registry.register
-class ModeEditHostgroup(ModeEditGroup):
+class ModeEditHostgroup(ABCModeEditGroup):
     @property
     def type_name(self):
         return "host"
@@ -443,7 +446,7 @@ class ModeEditHostgroup(ModeEditGroup):
 
 
 @mode_registry.register
-class ModeEditContactgroup(ModeEditGroup):
+class ModeEditContactgroup(ABCModeEditGroup):
     @property
     def type_name(self):
         return "contact"

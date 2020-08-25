@@ -14,14 +14,9 @@ import cmk.base.config as config
 from ._abstract import Mode
 from ._data_sources import make_sources
 
-__all__ = ["dump", "dumps", "dump_global"]
+__all__ = ["dump", "dumps"]
 
 # TODO (sk): class?
-
-
-def dump_global(file_: IO[str]) -> None:
-    """Dump the global configuration to into `file_`."""
-    file_.write(json.dumps(_make_global()))
 
 
 def dump(hostname: HostName, ipaddress: Optional[HostAddress], file_: IO[str]) -> None:
@@ -52,8 +47,3 @@ def _make(
             mode=Mode.NONE,
         )]
     }
-
-
-def _make_global() -> Dict[Literal["fetcher_config"], Dict[str, Any]]:
-    """ Generates global configuration """
-    return {"fetcher_config": {"log_level": config.cmc_log_levels["cmk.helper"]}}

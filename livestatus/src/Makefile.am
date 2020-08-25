@@ -7,6 +7,7 @@ CLANG_VERSION ?= 10
 CPPCHECK ?= cppcheck
 CPPCHECK_NEB_RESULT ?= cppcheck-result.xml
 DOXYGEN ?= doxygen
+PLANTUTML_VERSION ?= 1.2020.16
 IWYU_TOOL ?= $(abs_top_srcdir)/scripts/iwyu_tool
 RUN_CLANG_TIDY ?= \
     $(abs_top_srcdir)/scripts/run-clang-tidy.py \
@@ -285,8 +286,11 @@ cppcheck-xml: compile_commands.json
 	$(CPPCHECK) -UCMC --enable=all --suppressions-list=$(abs_top_srcdir)/.cppcheck-suppressions --inline-suppr --project=compile_commands.json --quiet --template=gcc --xml --xml-version=2 2> $(CPPCHECK_NEB_RESULT)
 	sed -i "s%\\(<location.* file=\"\\)\\([^/]\\)%\\1$(subdir)/\\2%" $(CPPCHECK_NEB_RESULT)
 
-documentation:
+documentation: doc/plantuml.jar
 	$(DOXYGEN) doc/Doxyfile
+
+doc/plantuml.jar:
+	wget https://master.dl.sourceforge.net/project/plantuml/$(PLANTUTML_VERSION)/plantuml.$(PLANTUTML_VERSION).jar -O $@
 
 all-local: livestatus.o
 

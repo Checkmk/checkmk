@@ -2421,7 +2421,7 @@ DIAFILE_DIRS           =
 # generate a warning when it encounters a \startuml command in this case and
 # will not generate output for the diagram.
 
-PLANTUML_JAR_PATH      =
+PLANTUML_JAR_PATH      = doc
 
 # When using plantuml, the PLANTUML_CFG_FILE tag can be used to specify a
 # configuration file for plantuml.

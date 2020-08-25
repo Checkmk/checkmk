@@ -51,7 +51,7 @@ from ._abstract import (
     Mode,
 )
 
-__all__ = ["AgentHostSections", "AgentDataSource"]
+__all__ = ["AgentConfigurator", "AgentHostSections", "AgentDataSource"]
 
 
 class AgentHostSections(ABCHostSections[AgentRawData, AgentSections, AgentPersistedSections,
@@ -59,7 +59,7 @@ class AgentHostSections(ABCHostSections[AgentRawData, AgentSections, AgentPersis
     pass
 
 
-class AgentConfigurator(ABCConfigurator):
+class AgentConfigurator(ABCConfigurator[AgentRawData]):
     """Configure agent checkers and fetchers.
 
     Args:
@@ -89,6 +89,7 @@ class AgentConfigurator(ABCConfigurator):
             source_type=source_type,
             fetcher_type=fetcher_type,
             description=description,
+            default_raw_data=AgentRawData(),
             id_=id_,
             cpu_tracking_id=cpu_tracking_id,
             cache_dir=Path(cmk.utils.paths.tcp_cache_dir) if main_data_source else None,
@@ -469,14 +470,9 @@ class AgentDataSource(ABCDataSource[AgentRawData, AgentSections, AgentPersistedS
         super().__init__(
             configurator,
             summarizer=summarizer,
-            default_raw_data=b"",
             default_host_sections=AgentHostSections(),
         )
 
     @property
     def _parser(self) -> ABCParser:
         return AgentParser(self.hostname, self._logger)
-
-    def run_raw(self) -> AgentRawData:
-        """Return raw data from cache or fetcher."""
-        return self._run(selected_raw_sections=None, get_raw_data=True)

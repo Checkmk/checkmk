@@ -1198,9 +1198,9 @@ class ABCFolderMode(WatoMode, metaclass=abc.ABCMeta):
         new = self._folder.name() is None
         is_enabled = new or not watolib.Folder.current().locked()
 
-        # TODO: Shouldn't we tell make_simple_form_page_menu() how many levels
-        # to go up instead of constructing some wrong breadcrumb here? Investigate
-        # all call sites
+        # When backfolder is set, we have the special situation that we want to redirect the user
+        # two breadcrumb layers up. This is a very specific case, so we realize this locally instead
+        # of using a generic approach. Just like it done locally by the action method.
         if html.request.has_var("backfolder"):
             breadcrumb = make_folder_breadcrumb(
                 watolib.Folder.folder(html.request.var("backfolder")))

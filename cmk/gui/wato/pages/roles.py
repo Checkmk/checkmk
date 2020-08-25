@@ -20,7 +20,7 @@ configuration of all roles.
 """
 
 import re
-from typing import Optional
+from typing import Optional, Type
 
 import cmk.utils.store as store
 
@@ -35,19 +35,26 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib import HTML, Choices
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    PageMenuSearch,
+    make_simple_link,
+    make_simple_form_page_menu,
+    make_display_options_dropdown,
+)
 from cmk.gui.permissions import (
     permission_section_registry,
     permission_registry,
 )
 
-from cmk.gui.plugins.wato.utils.html_elements import (
-    search_form,)
-
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
     wato_confirm,
-    global_buttons,
     make_action_link,
     get_search_expression,
 )
@@ -97,12 +104,32 @@ class ModeRoles(RoleManagement, WatoMode):
         return ["users"]
 
     def title(self):
-        return _("Roles & Permissions")
+        return _("Roles & permissions")
 
-    def buttons(self):
-        global_buttons()
-        html.context_button(_("Matrix"), watolib.folder_preserving_link([("mode", "role_matrix")]),
-                            "matrix")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="roles",
+                    title=_("Roles"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Overview"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Permission matrix"),
+                                    icon_name="matrix",
+                                    item=make_simple_link(
+                                        watolib.folder_preserving_link([("mode", "role_matrix")])),
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
+        return menu
 
     def action(self):
         if html.request.var("_delete"):
@@ -223,6 +250,10 @@ class ModeEditRole(RoleManagement, WatoMode):
     def permissions(cls):
         return ["users"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeRoles
+
     def __init__(self):
         super(ModeEditRole, self).__init__()
 
@@ -239,11 +270,30 @@ class ModeEditRole(RoleManagement, WatoMode):
             raise MKUserError("edit", _("This role does not exist."))
 
     def title(self):
-        return _("Edit user role %s") % self._role_id
+        return _("Edit role %s") % self._role_id
 
-    def buttons(self):
-        html.context_button(_("All Roles"), watolib.folder_preserving_link([("mode", "roles")]),
-                            "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = make_simple_form_page_menu(
+            breadcrumb,
+            form_name="role",
+            button_name="save",
+        )
+        self._extend_display_dropdown(menu)
+        return menu
+
+    def _extend_display_dropdown(self, menu: PageMenu) -> None:
+        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+
+        display_dropdown.topics.insert(
+            0,
+            PageMenuTopic(
+                title=_("Filter permissions"),
+                entries=[PageMenuEntry(
+                    title="",
+                    icon_name="trans",
+                    item=PageMenuSearch(),
+                )],
+            ))
 
     def action(self):
         if html.form_submitted("search"):
@@ -304,7 +354,6 @@ class ModeEditRole(RoleManagement, WatoMode):
 
     def page(self):
         search = get_search_expression()
-        search_form(_("Search for permissions: "), "edit_role")
 
         html.begin_form("role", method="POST")
 
@@ -385,7 +434,6 @@ class ModeEditRole(RoleManagement, WatoMode):
                 html.help(perm.description)
 
         forms.end()
-        html.button("save", _("Save"))
         html.hidden_fields()
         html.end_form()
 
@@ -400,12 +448,12 @@ class ModeRoleMatrix(WatoMode):
     def permissions(cls):
         return ["users"]
 
-    def title(self):
-        return _("Role & Permission Matrix")
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeRoles
 
-    def buttons(self):
-        global_buttons()
-        html.context_button(_("Back"), watolib.folder_preserving_link([("mode", "roles")]), "back")
+    def title(self):
+        return _("Permission matrix")
 
     def page(self):
         role_list = sorted(userdb_utils.load_roles().items(), key=lambda a: (a[1]["alias"], a[0]))

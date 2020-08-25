@@ -239,7 +239,7 @@ class TestTCPFetcher:
             json_identity({
                 "file_cache": fc_conf.configure(),
                 "family": socket.AF_INET,
-                "address": "1.2.3.4",
+                "address": ["1.2.3.4", 6556],
                 "timeout": 0.1,
                 "encryption_settings": {
                     "encryption": "settings"
@@ -247,7 +247,9 @@ class TestTCPFetcher:
             }))
 
     def test_deserialization(self, fetcher):
+        # TODO (ml): Probably we have to check here everything
         assert isinstance(fetcher, TCPFetcher)
+        assert isinstance(fetcher._address, tuple)
 
     def test_file_cache_deserialization(self, fetcher):
         assert isinstance(fetcher.file_cache, AgentFileCache)

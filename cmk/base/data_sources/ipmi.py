@@ -7,7 +7,6 @@
 from typing import Any, cast, Dict, Final, Optional
 
 from cmk.utils.type_defs import (
-    AgentRawData,
     HostAddress,
     HostName,
     SectionName,
@@ -16,9 +15,9 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
-from cmk.fetchers import FetcherType, IPMIFetcher
+from cmk.fetchers import FetcherType
 
-from cmk.base.config import HostConfig, IPMICredentials, SelectedRawSections
+from cmk.base.config import HostConfig, IPMICredentials
 from cmk.base.exceptions import MKAgentError
 
 from ._abstract import Mode
@@ -106,17 +105,3 @@ class IPMISummarizer(AgentSummarizer):
 class IPMIManagementBoardDataSource(AgentDataSource):
     def __init__(self, configurator: IPMIConfigurator) -> None:
         super().__init__(configurator, summarizer=IPMISummarizer())
-
-    def _execute(
-        self,
-        *,
-        selected_raw_sections: Optional[SelectedRawSections],
-    ) -> AgentRawData:
-        if selected_raw_sections is None:
-            # pylint: disable=unused-variable
-            # TODO(ml): Should we pass that to the fetcher?
-            selected_raw_section_names = {SectionName("mgmt_ipmi_sensors")}
-
-        with IPMIFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
-            return fetcher.fetch()
-        raise MKAgentError("Failed to read data")

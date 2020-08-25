@@ -12,7 +12,7 @@ import socket
 import contextlib
 import binascii
 import queue
-from typing import Dict, List, NamedTuple, Union, Tuple as _Tuple
+from typing import Dict, List, NamedTuple, Union, Tuple as _Tuple, Optional, Type, Iterator
 
 from six import ensure_binary, ensure_str
 from OpenSSL import crypto  # type: ignore[import]
@@ -57,28 +57,19 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.log import logger
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+    make_simple_form_page_menu,
+)
 
 from cmk.gui.watolib.sites import is_livestatus_encrypted
 from cmk.gui.watolib.activate_changes import clear_site_replication_status
 from cmk.gui.wato.pages.global_settings import GlobalSettingsMode, is_a_checkbox
-
-
-def _site_detail_buttons(site_id, site, current_mode):
-    if current_mode != "edit_site_globals" and _site_globals_editable(site_id, site):
-        html.context_button(
-            _("Site globals"),
-            watolib.folder_preserving_link([("mode", "edit_site_globals"), ("site", site_id)]),
-            "configuration")
-
-    if current_mode != "edit_site":
-        html.context_button(
-            _("Edit site"),
-            watolib.folder_preserving_link([("mode", "edit_site"), ("edit", site_id)]), "edit")
-
-    if current_mode != "site_livestatus_encryption":
-        encrypted_url = watolib.folder_preserving_link([("mode", "site_livestatus_encryption"),
-                                                        ("site", site_id)])
-        html.context_button(_("Status encryption"), encrypted_url, "encrypted")
 
 
 def _site_globals_editable(site_id, site):
@@ -111,11 +102,15 @@ class ModeEditSite(WatoMode):
     def permissions(cls):
         return ["sites"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeDistributedMonitoring
+
     def __init__(self):
         super(ModeEditSite, self).__init__()
         self._site_mgmt = watolib.SiteManagementFactory().factory()
 
-        self._site_id = html.request.get_ascii_input("edit")
+        self._site_id = html.request.get_ascii_input("site")
         self._clone_id = html.request.get_ascii_input("clone")
         self._new = self._site_id is None
 
@@ -163,15 +158,15 @@ class ModeEditSite(WatoMode):
 
     def title(self):
         if self._new:
-            return _("Create new site connection")
+            return _("Add site connection")
         return _("Edit site connection %s") % self._site_id
 
-    def buttons(self):
-        super(ModeEditSite, self).buttons()
-        html.context_button(_("All Sites"), watolib.folder_preserving_link([("mode", "sites")]),
-                            "back")
-        if not self._new:
-            _site_detail_buttons(self._site_id, self._site, current_mode=self.name())
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = make_simple_form_page_menu(breadcrumb, form_name="site", button_name="save")
+        if not self._new and isinstance(self._site_id, str):
+            menu.dropdowns.insert(
+                1, _page_menu_dropdown_site_details(self._site_id, self._site, self.name()))
+        return menu
 
     def action(self):
         if not html.check_transaction():
@@ -230,7 +225,6 @@ class ModeEditSite(WatoMode):
         self._valuespec().render_input("site", self._site)
 
         forms.end()
-        html.button("save", _("Save"))
         html.hidden_fields()
         html.end_form()
 
@@ -464,10 +458,31 @@ class ModeDistributedMonitoring(WatoMode):
     def title(self):
         return _("Distributed Monitoring")
 
-    def buttons(self):
-        super(ModeDistributedMonitoring, self).buttons()
-        html.context_button(_("New connection"),
-                            watolib.folder_preserving_link([("mode", "edit_site")]), "new")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="connections",
+                    title=_("Connections"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Connections"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Add connection"),
+                                    icon_name="new",
+                                    item=make_simple_link(
+                                        html.makeuri_contextless([("mode", "edit_site")]),),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
 
     def action(self):
         delete_id = html.request.get_ascii_input("_delete")
@@ -655,7 +670,7 @@ class ModeDistributedMonitoring(WatoMode):
 
     def _show_buttons(self, table, site_id, site):
         table.cell(_("Actions"), css="buttons")
-        edit_url = watolib.folder_preserving_link([("mode", "edit_site"), ("edit", site_id)])
+        edit_url = watolib.folder_preserving_link([("mode", "edit_site"), ("site", site_id)])
         html.icon_button(edit_url, _("Properties"), "edit")
 
         clone_url = watolib.folder_preserving_link([("mode", "edit_site"), ("clone", site_id)])
@@ -904,6 +919,10 @@ class ModeEditSiteGlobals(GlobalSettingsMode):
     def permissions(cls):
         return ["sites"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeEditSite
+
     def __init__(self):
         super(ModeEditSiteGlobals, self).__init__()
         self._site_id = html.request.get_ascii_input_mandatory("site")
@@ -927,11 +946,13 @@ class ModeEditSiteGlobals(GlobalSettingsMode):
     def title(self):
         return _("Edit site specific global settings of %s") % self._site_id
 
-    def buttons(self):
-        super(ModeEditSiteGlobals, self).buttons()
-        html.context_button(_("All Sites"), watolib.folder_preserving_link([("mode", "sites")]),
-                            "back")
-        _site_detail_buttons(self._site_id, self._site, current_mode=self.name())
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                _page_menu_dropdown_site_details(self._site_id, self._site, self.name()),
+            ],
+            breadcrumb=breadcrumb,
+        )
 
     # TODO: Consolidate with ModeEditGlobals.action()
     def action(self):
@@ -1041,6 +1062,10 @@ class ModeSiteLivestatusEncryption(WatoMode):
     def permissions(cls):
         return ["sites"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeEditSite
+
     def __init__(self):
         super(ModeSiteLivestatusEncryption, self).__init__()
         self._site_id = html.request.get_ascii_input_mandatory("site")
@@ -1054,11 +1079,13 @@ class ModeSiteLivestatusEncryption(WatoMode):
     def title(self):
         return _("Livestatus encryption of %s") % self._site_id
 
-    def buttons(self):
-        super(ModeSiteLivestatusEncryption, self).buttons()
-        html.context_button(_("All Sites"), watolib.folder_preserving_link([("mode", "sites")]),
-                            "back")
-        _site_detail_buttons(self._site_id, self._site, current_mode=self.name())
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                _page_menu_dropdown_site_details(self._site_id, self._site, self.name()),
+            ],
+            breadcrumb=breadcrumb,
+        )
 
     def action(self):
         if not html.check_transaction():
@@ -1275,3 +1302,45 @@ class ModeSiteLivestatusEncryption(WatoMode):
                 ))
 
         return verify_chain_results
+
+
+def _page_menu_dropdown_site_details(site_id: str, site: Dict,
+                                     current_mode: str) -> PageMenuDropdown:
+    return PageMenuDropdown(
+        name="connections",
+        title=_("Connections"),
+        topics=[
+            PageMenuTopic(
+                title=_("This connection"),
+                entries=list(_page_menu_entries_site_details(site_id, site, current_mode)),
+            ),
+        ],
+    )
+
+
+def _page_menu_entries_site_details(site_id: str, site: Dict,
+                                    current_mode: str) -> Iterator[PageMenuEntry]:
+    if current_mode != "edit_site_globals" and _site_globals_editable(site_id, site):
+        yield PageMenuEntry(
+            title=_("Global settings"),
+            icon_name="configuration",
+            item=make_simple_link(
+                html.makeuri_contextless([("mode", "edit_site_globals"), ("site", site_id)]),),
+        )
+
+    if current_mode != "edit_site":
+        yield PageMenuEntry(
+            title=_("Edit connection"),
+            icon_name="edit",
+            item=make_simple_link(
+                html.makeuri_contextless([("mode", "edit_site"), ("site", site_id)]),),
+        )
+
+    if current_mode != "site_livestatus_encryption":
+        yield PageMenuEntry(
+            title=_("Status encryption"),
+            icon_name="encrypted",
+            item=make_simple_link(
+                html.makeuri_contextless([("mode", "site_livestatus_encryption"),
+                                          ("site", site_id)]),),
+        )

@@ -119,7 +119,7 @@ def test_attribute_defaults(mode, monkeypatch):
     assert configurator.file_cache.maybe is False
 
     # From the base class
-    assert source.exception() is None
+    assert source.exception is None
 
 
 class TestSummaryResult:

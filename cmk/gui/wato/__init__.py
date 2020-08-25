@@ -186,7 +186,6 @@ from cmk.gui.wato.pages.groups import (
     ModeHostgroups,
     ModeServicegroups,
     ModeContactgroups,
-    ModeEditGroup,
     ModeEditHostgroup,
     ModeEditServicegroup,
     ModeEditContactgroup,
@@ -352,9 +351,6 @@ from cmk.gui.plugins.wato.utils.html_elements import (
 from cmk.gui.plugins.wato.utils.context_buttons import (
     global_buttons,
     changelog_button,
-    host_status_button,
-    service_status_button,
-    folder_status_button,
 )
 
 from cmk.gui.plugins.wato.utils.main_menu import (

@@ -228,28 +228,20 @@ class TestAgentSummaryResult:
 
     @pytest.mark.usefixtures("scenario")
     def test_with_exception(self, source):
-        source._exception = Exception()
-        assert source.exception()
-
+        source.exception = Exception()
         assert source.get_summary_result() == (3, "(?)", [])
 
     @pytest.mark.usefixtures("scenario")
     def test_with_MKEmptyAgentData_exception(self, source):
-        source._exception = MKEmptyAgentData()
-        assert source.exception()
-
+        source.exception = MKEmptyAgentData()
         assert source.get_summary_result() == (2, "(!!)", [])
 
     @pytest.mark.usefixtures("scenario")
     def test_with_MKAgentError_exception(self, source):
-        source._exception = MKAgentError()
-        assert source.exception()
-
+        source.exception = MKAgentError()
         assert source.get_summary_result() == (2, "(!!)", [])
 
     @pytest.mark.usefixtures("scenario")
     def test_with_MKTimeout_exception(self, source):
-        source._exception = MKTimeout()
-        assert source.exception()
-
+        source.exception = MKTimeout()
         assert source.get_summary_result() == (2, "(!!)", [])

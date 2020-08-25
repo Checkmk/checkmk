@@ -17,7 +17,7 @@ import cmk.utils.log  # TODO: Remove this!
 import cmk.utils.misc
 import cmk.utils.paths
 import cmk.utils.tty as tty
-from cmk.utils.exceptions import MKSNMPError, MKTerminate, MKTimeout
+from cmk.utils.exceptions import MKSNMPError, MKTimeout
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
 
@@ -217,7 +217,7 @@ class FileCacheConfigurator:
         }
 
 
-class ABCConfigurator(abc.ABC):
+class ABCConfigurator(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
     """Hold the configuration to fetchers and checkers.
 
     At best, this should only hold static data, that is, every
@@ -235,6 +235,7 @@ class ABCConfigurator(abc.ABC):
         source_type: SourceType,
         fetcher_type: FetcherType,
         description: str,
+        default_raw_data: BoundedAbstractRawData,
         id_: str,
         cpu_tracking_id: str,
         cache_dir: Optional[Path] = None,
@@ -246,6 +247,7 @@ class ABCConfigurator(abc.ABC):
         self.source_type: Final[SourceType] = source_type
         self.fetcher_type: Final[FetcherType] = fetcher_type
         self.description: Final[str] = description
+        self.default_raw_data: Final = default_raw_data
         self.id: Final[str] = id_
         self.cpu_tracking_id: Final[str] = cpu_tracking_id
         if not cache_dir:
@@ -259,6 +261,7 @@ class ABCConfigurator(abc.ABC):
             simulation=config.simulation_mode,
         )
         self.persisted_sections_file_path: Final[Path] = persisted_section_dir / self.hostname
+        self.selected_raw_sections: Optional[SelectedRawSections] = None
 
         self.host_config: Final[HostConfig] = HostConfig.make_host_config(hostname)
         self._logger: Final[logging.Logger] = logging.getLogger("cmk.base.data_source.%s" % id_)
@@ -320,13 +323,11 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         configurator: ABCConfigurator,
         *,
         summarizer: ABCSummarizer,
-        default_raw_data: BoundedAbstractRawData,
         default_host_sections: BoundedAbstractHostSections,
     ) -> None:
         super().__init__()
         self.configurator = configurator
         self.summarizer = summarizer
-        self.default_raw_data: Final[BoundedAbstractRawData] = default_raw_data
         self.default_host_sections: Final[BoundedAbstractHostSections] = default_host_sections
         self._logger = self.configurator._logger
         self._section_store: SectionStore[BoundedAbstractPersistedSections] = SectionStore(
@@ -335,7 +336,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         )
 
         # Runtime data (managed by self.run()) - Meant for self.get_summary_result()
-        self._exception: Optional[Exception] = None
+        self.exception: Optional[Exception] = None
         self._host_sections: Optional[BoundedAbstractHostSections] = None
 
     def __repr__(self):
@@ -361,6 +362,7 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     def _cpu_tracking_id(self) -> str:
         return self.configurator.cpu_tracking_id
 
+    @cpu_tracking.track
     def check(self, raw_data: BoundedAbstractRawData) -> BoundedAbstractHostSections:
         try:
             self._host_sections = self._parser.parse(raw_data)
@@ -373,10 +375,10 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
             self._logger.log(VERBOSE, "ERROR: %s", exc)
             if cmk.utils.debug.enabled():
                 raise
-            self._exception = exc
+            self.exception = exc
             self._host_sections = self.default_host_sections
         else:
-            self._exception = None
+            self.exception = None
         return self._host_sections
 
     def _determine_persisted_sections(
@@ -391,104 +393,6 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
             self._section_store.store(persisted_sections)
         return persisted_sections
 
-    def run(
-        self,
-        *,
-        selected_raw_sections: Optional[SelectedRawSections],
-    ) -> ABCHostSections:
-        """
-        :param selected_raw_section: A set of raw sections, that we
-        are interested in.  If set, we assume that these sections should
-        be produced if possible, and any raw section that is not listed
-        here *may* be omitted.
-        """
-        result = self._run(
-            selected_raw_sections=selected_raw_sections,
-            get_raw_data=False,
-        )
-        if not isinstance(result, ABCHostSections):
-            raise TypeError("Got invalid type: %r" % result)
-        return result
-
-    @cpu_tracking.track
-    def _run(
-        self,
-        *,
-        selected_raw_sections: Optional[SelectedRawSections],
-        get_raw_data: bool,
-    ) -> Union[BoundedAbstractRawData, BoundedAbstractHostSections]:
-        """Wrapper for self._execute() that unifies several things:
-
-        a) Exception handling
-        b) Caching of raw data
-
-        Exceptions: All exceptions are caught and written to self._exception. The caller
-        should use self.get_summary_result() to get the summary result of this data source
-        which also includes information about the happed exception. In case the --debug
-        mode is enabled, the exceptions are raised. self._exception is re-initialized
-        to None when this method is called."""
-        #
-        # This function has two different functionalities depending on `get_raw_data`.
-        #
-        # In short, the code does (mind the types):
-        #
-        # def _run(self, *, ..., get_raw_data : Literal[True]) -> RawData:
-        #     assert get_raw_data is True
-        #     try:
-        #         return fetcher.data()
-        #     except:
-        #         return self.default_raw_data
-        #
-        # *or*
-        #
-        # def _run(self, *, ..., get_raw_data : Literal[False]) -> HostSections:
-        #     assert get_raw_data is False
-        #     try:
-        #         return self.parse(fetcher.data())
-        #     except:
-        #         return self.default_host_sections
-        #
-        # Also note that `get_raw_data()` is only used for Agent sources.
-        #
-        self._exception = None
-        self._host_sections = None
-        try:
-            raw_data = self._execute(selected_raw_sections=selected_raw_sections)
-            self._host_sections = self.check(raw_data)
-
-            if get_raw_data:
-                return raw_data
-
-            return self._host_sections
-
-        except MKTerminate:
-            raise
-
-        except Exception as e:
-            self._logger.log(VERBOSE, "ERROR: %s", e)
-            if cmk.utils.debug.enabled():
-                raise
-            self._exception = e
-
-        if get_raw_data:
-            return self.default_raw_data
-        return self.default_host_sections
-
-    @abc.abstractmethod
-    def _execute(
-        self,
-        *,
-        selected_raw_sections: Optional[SelectedRawSections],
-    ) -> BoundedAbstractRawData:
-        """Fetches the current agent data from the source specified with
-        hostname and ipaddress and returns the result as "raw data" that is
-        later converted by self._parse() to a HostSection().
-
-        The "raw data" is the raw byte string returned by the source for
-        AgentDataSource sources. The SNMPDataSource source already
-        return the final data structure to be wrapped into HostSections()."""
-        raise NotImplementedError()
-
     @property
     @abc.abstractmethod
     def _parser(self) -> ABCParser[BoundedAbstractRawData, BoundedAbstractHostSections]:
@@ -502,19 +406,19 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         "Check_MK HW/SW Inventory" services."""
         assert self.configurator.mode is not Mode.NONE
 
-        if not self._exception:
+        if not self.exception:
             assert self._host_sections is not None
             return self.summarizer.summarize(self._host_sections)
 
-        exc_msg = "%s" % self._exception
+        exc_msg = "%s" % self.exception
 
-        if isinstance(self._exception, MKEmptyAgentData):
+        if isinstance(self.exception, MKEmptyAgentData):
             status = self.configurator.host_config.exit_code_spec().get("empty_output", 2)
 
-        elif isinstance(self._exception, (MKAgentError, MKIPAddressLookupError, MKSNMPError)):
+        elif isinstance(self.exception, (MKAgentError, MKIPAddressLookupError, MKSNMPError)):
             status = self.configurator.host_config.exit_code_spec().get("connection", 2)
 
-        elif isinstance(self._exception, MKTimeout):
+        elif isinstance(self.exception, MKTimeout):
             status = self.configurator.host_config.exit_code_spec().get("timeout", 2)
 
         else:
@@ -522,10 +426,6 @@ class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         status = cast(int, status)
 
         return status, exc_msg + check_api_utils.state_markers[status], []
-
-    def exception(self) -> Optional[Exception]:
-        """Provides exceptions happened during last self.run() call or None"""
-        return self._exception
 
     @classmethod
     def use_outdated_persisted_sections(cls) -> None:

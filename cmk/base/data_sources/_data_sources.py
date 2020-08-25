@@ -243,7 +243,7 @@ def _make_host_sections(
     Communication errors are not raised through by this functions. All agent related errors are
     caught by the source.run() method and saved in it's _exception attribute. The caller should
     use source.get_summary_result() to get the state, output and perfdata of the agent excecution
-    or source.exception() to get the exception object.
+    or source.exception to get the exception object.
     """
     console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
     # Special agents can produce data for the same check_plugin_name on the same host, in this case
@@ -256,9 +256,11 @@ def _make_host_sections(
                 HostKey(hostname, ipaddress, source.configurator.source_type),
                 source.default_host_sections,
             )
-            host_sections.update(
-                # TODO: Select agent / snmp sources before passing
-                source.run(selected_raw_sections=selected_raw_sections))
+            # TODO: Select agent / snmp sources before passing
+            source.configurator.selected_raw_sections = selected_raw_sections
+            with source.configurator.make_fetcher() as fetcher:
+                raw_data = fetcher.fetch()
+            host_sections.update(source.check(raw_data))
 
         # Store piggyback information received from all sources of this host. This
         # also implies a removal of piggyback files received during previous calls.

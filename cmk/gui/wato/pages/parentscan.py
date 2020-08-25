@@ -6,7 +6,7 @@
 """Mode for automatic scan of parents (similar to cmk --scan-parents)"""
 
 import collections
-from typing import NamedTuple, List
+from typing import NamedTuple, List, Optional, Type
 
 import cmk.utils.store as store
 
@@ -18,6 +18,7 @@ from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
+from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.plugins.wato import (
     mode_registry,
     WatoMode,
@@ -258,8 +259,9 @@ class ModeParentScan(WatoMode):
     def title(self):
         return _("Parent scan")
 
-    def buttons(self):
-        html.context_button(_("Folder"), watolib.Folder.current().url(), "back")
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeFolder
 
     def _from_vars(self):
         self._start = bool(html.request.var("_start"))

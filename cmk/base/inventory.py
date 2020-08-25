@@ -202,7 +202,7 @@ def _all_sources_fail(
         return False
 
     exceptions_by_source = {
-        source.configurator.id: source.exception() for source in data_sources.make_sources(
+        source.configurator.id: source.exception for source in data_sources.make_sources(
             host_config,
             ipaddress,
             mode=data_sources.Mode.INVENTORY,
@@ -328,7 +328,13 @@ def _do_inv_for_realhost(
                 # TODO(ml): This modifies the SNMP fetcher config dynamically.
                 #           Can the fetcher handle that on its own?
                 configurator.prefetched_sections = host_sections.sections
-                host_sections.update(source.run(selected_raw_sections=None))
+                raw_data = source.configurator.default_raw_data
+                try:
+                    with source.configurator.make_fetcher() as fetcher:
+                        raw_data = fetcher.fetch()
+                except Exception as exc:
+                    source.exception = exc
+                host_sections.update(source.check(raw_data))
 
     if multi_host_sections is None:
         multi_host_sections = data_sources.make_host_sections(

@@ -6,14 +6,17 @@
 
 
 def agent_3par_arguments(params, hostname, ipaddress):
-    args = []
-
-    args += ["-u", params["user"]]
-    args += [passwordstore_get_cmdline("-p%s", params["password"])]
-    args += ["--verify-certs=%s" % ("yes" if params.get("verify_cert", False) else "no")]
+    args = [
+        "--user",
+        params["user"],
+        "--password",
+        passwordstore_get_cmdline("%s", params["password"]),
+    ]
+    if not params.get("verify_cert", False):
+        args.append("--no-cert-check")
 
     if "values" in params:
-        args += ["-v", ",".join(params["values"])]
+        args += ["--values", ",".join(params["values"])]
 
     args.append(ipaddress)
 

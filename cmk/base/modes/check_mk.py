@@ -391,24 +391,35 @@ def mode_dump_agent(hostname: HostName) -> None:
         output = []
         # Show errors of problematic data sources
         has_errors = False
-        for source in data_sources.make_sources(
+        for configurator in data_sources.make_configurators(
                 host_config,
                 ipaddress,
                 mode=data_sources.Mode.CHECKING,
         ):
-            source.configurator.file_cache.max_age = config.check_max_cachefile_age
-            if isinstance(source, data_sources.agent.AgentDataSource):
-                # TODO(ml): Call fetcher directly.
-                output.append(source.run_raw())
+            configurator.file_cache.max_age = config.check_max_cachefile_age
+            if not isinstance(configurator, data_sources.agent.AgentConfigurator):
+                continue
 
-            source_state, source_output, _source_perfdata = source.get_summary_result()
+            checker = configurator.make_checker()
+
+            raw_data = configurator.default_raw_data
+            try:
+                with configurator.make_fetcher() as fetcher:
+                    raw_data = fetcher.fetch()
+            except Exception as exc:
+                checker.exception = exc
+            else:
+                checker.check(raw_data)
+
+            source_state, source_output, _source_perfdata = checker.get_summary_result()
             if source_state != 0:
                 console.error(
                     "ERROR [%s]: %s\n",
-                    source.id,
+                    configurator.id,
                     ensure_str(source_output),
                 )
                 has_errors = True
+            output.append(raw_data)
 
         out.output(ensure_str(b"".join(output), errors="surrogateescape"))
         if has_errors:

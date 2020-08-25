@@ -6,7 +6,7 @@
 
 import time
 from pathlib import Path
-from typing import Any, cast, Dict, Final, Iterable, List, Optional, Sequence, Set
+from typing import Any, Dict, Final, Iterable, List, Optional, Sequence, Set
 
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
 
@@ -20,14 +20,13 @@ from cmk.snmplib.type_defs import (
     SNMPTree,
 )
 
-from cmk.fetchers import factory, FetcherType, SNMPFetcher
+from cmk.fetchers import factory, FetcherType
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.config import SelectedRawSections
-from cmk.base.exceptions import MKAgentError
 
 from ._abstract import (
     ABCConfigurator,
@@ -108,6 +107,7 @@ class SNMPConfigurator(ABCConfigurator):
             source_type=source_type,
             fetcher_type=FetcherType.SNMP,
             description=SNMPConfigurator._make_description(hostname, ipaddress, title=title),
+            default_raw_data={},
             id_=id_,
             cpu_tracking_id=cpu_tracking_id,
             cache_dir=cache_dir,
@@ -133,7 +133,6 @@ class SNMPConfigurator(ABCConfigurator):
         # Attributes below are wrong
         self.use_snmpwalk_cache = True
         self.ignore_check_interval = False
-        self.selected_raw_sections: Optional[SelectedRawSections] = None
         self.prefetched_sections: Sequence[SectionName] = ()
         self.section_store: SectionStore[SNMPPersistedSections] = SectionStore(
             self.persisted_sections_file_path,
@@ -335,23 +334,9 @@ class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSecti
         super().__init__(
             configurator,
             summarizer=SNMPSummarizer(),
-            default_raw_data={},
             default_host_sections=SNMPHostSections(),
         )
 
     @property
     def _parser(self) -> ABCParser:
         return SNMPParser(self.hostname, self._logger)
-
-    def _execute(
-        self,
-        *,
-        selected_raw_sections: Optional[SelectedRawSections],
-    ) -> SNMPRawData:
-        # This is wrong
-        configurator = cast(SNMPConfigurator, self.configurator)
-        configurator.selected_raw_sections = selected_raw_sections  # checking only
-        # End of wrong
-        with SNMPFetcher.from_json(self.configurator.configure_fetcher()) as fetcher:
-            return fetcher.fetch()
-        raise MKAgentError("Failed to read data")

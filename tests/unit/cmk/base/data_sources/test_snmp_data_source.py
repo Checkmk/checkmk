@@ -81,7 +81,7 @@ def test_attribute_defaults(source, hostname, ipaddress, monkeypatch):
     assert configurator.do_snmp_scan is False
 
     # From the base class
-    assert source.exception() is None
+    assert source.exception is None
 
 
 def test_source_requires_ipaddress(hostname, mode, monkeypatch):
@@ -170,7 +170,5 @@ class TestSNMPSummaryResult:
 
     @pytest.mark.usefixtures("scenario")
     def test_with_exception(self, source):
-        source._exception = Exception()
-        assert source.exception()
-
+        source.exception = Exception()
         assert source.get_summary_result() == (3, "(?)", [])

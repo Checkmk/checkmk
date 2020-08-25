@@ -6,7 +6,7 @@
 """Modes for managing timeperiod definitions for the core"""
 
 import time
-from typing import Any, Dict, List, Optional as _Optional, Tuple as _Tuple
+from typing import Any, Dict, List, Optional as _Optional, Tuple as _Tuple, Type
 
 import cmk.utils.version as cmk_version
 import cmk.utils.defines as defines
@@ -38,11 +38,19 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     ListOfTimeRanges,
 )
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+    make_simple_form_page_menu,
+)
 
 from cmk.gui.plugins.wato import (
     WatoMode,
     wato_confirm,
-    global_buttons,
     mode_registry,
     make_action_link,
 )
@@ -70,14 +78,42 @@ class ModeTimeperiods(WatoMode):
         self._timeperiods = watolib.timeperiods.load_timeperiods()
 
     def title(self):
-        return _("Timeperiods")
+        return _("Time periods")
 
-    def buttons(self):
-        global_buttons()
-        html.context_button(_("New Timeperiod"),
-                            watolib.folder_preserving_link([("mode", "edit_timeperiod")]), "new")
-        html.context_button(_("Import iCalendar"),
-                            watolib.folder_preserving_link([("mode", "import_ical")]), "ical")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="timeperiods",
+                    title=_("Time periods"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Add time period"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Add time period"),
+                                    icon_name="new",
+                                    item=make_simple_link(
+                                        watolib.folder_preserving_link([("mode", "edit_timeperiod")
+                                                                       ])),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                                PageMenuEntry(
+                                    title=_("Import iCalendar"),
+                                    icon_name="ical",
+                                    item=make_simple_link(
+                                        watolib.folder_preserving_link([("mode", "import_ical")])),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
 
     def action(self):
         delname = html.request.var("_delete")
@@ -304,12 +340,18 @@ class ModeTimeperiodImportICal(WatoMode):
     def permissions(cls):
         return ["timeperiods"]
 
-    def title(self):
-        return _("Import iCalendar File to create a Timeperiod")
+    @classmethod
+    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+        return ModeTimeperiods
 
-    def buttons(self):
-        html.context_button(_("All Timeperiods"),
-                            watolib.folder_preserving_link([("mode", "timeperiods")]), "back")
+    def title(self):
+        return _("Import iCalendar File to create a time period")
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(breadcrumb,
+                                          form_name="import_ical",
+                                          button_name="upload",
+                                          save_title=_("Import"))
 
     def _vs_ical(self):
         return Dictionary(
@@ -556,7 +598,6 @@ class ModeTimeperiodImportICal(WatoMode):
         html.begin_form("import_ical", method="POST")
         self._vs_ical().render_input("ical", {})
         forms.end()
-        html.button("upload", _("Import"))
         html.hidden_fields()
         html.end_form()
 
@@ -570,6 +611,10 @@ class ModeEditTimeperiod(WatoMode):
     @classmethod
     def permissions(cls):
         return ["timeperiods"]
+
+    @classmethod
+    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+        return ModeTimeperiods
 
     def _from_vars(self):
         self._timeperiods = watolib.timeperiods.load_timeperiods()
@@ -600,12 +645,11 @@ class ModeEditTimeperiod(WatoMode):
 
     def title(self):
         if self._new:
-            return _("Create new time period")
+            return _("Add time period")
         return _("Edit time period")
 
-    def buttons(self):
-        html.context_button(_("All Timeperiods"),
-                            watolib.folder_preserving_link([("mode", "timeperiods")]), "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(breadcrumb, form_name="timeperiod", button_name="save")
 
     def _valuespec(self):
         if self._new:
@@ -624,7 +668,7 @@ class ModeEditTimeperiod(WatoMode):
             name_element = FixedValue(self._name,)
 
         return Dictionary(
-            title=_("Timeperiod"),
+            title=_("Time period"),
             elements=[
                 ("name", name_element),
                 ("alias",
@@ -775,7 +819,6 @@ class ModeEditTimeperiod(WatoMode):
         html.begin_form("timeperiod", method="POST")
         self._valuespec().render_input("timeperiod", self._to_valuespec(self._timeperiod))
         forms.end()
-        html.button("save", _("Save"))
         html.hidden_fields()
         html.end_form()
 

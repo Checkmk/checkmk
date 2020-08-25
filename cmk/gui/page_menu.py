@@ -100,6 +100,13 @@ class PageMenuPopup(ABCPageMenuItem):
 
 
 @dataclass
+class PageMenuSidePopup(PageMenuPopup):
+    """A link opening a pre-rendered popup on the right of the page"""
+    content: str
+    css_classes: CSSSpec = None
+
+
+@dataclass
 class PageMenuCheckbox(ABCPageMenuItem):
     """A binary item that can be toggled in the menu directly"""
     is_checked: bool
@@ -358,7 +365,8 @@ def make_simple_form_page_menu(breadcrumb: Breadcrumb,
                                save_title: Optional[str] = None,
                                save_icon: str = "save",
                                save_is_enabled: bool = True,
-                               add_abort_link: bool = True) -> PageMenu:
+                               add_abort_link: bool = True,
+                               abort_url: Optional[str] = None) -> PageMenu:
     """Factory for creating a simple menu for object edit dialogs that just link back"""
     entries = []
 
@@ -367,7 +375,7 @@ def make_simple_form_page_menu(breadcrumb: Breadcrumb,
             _make_form_save_link(form_name, button_name, save_title, save_icon, save_is_enabled))
 
     if add_abort_link:
-        entries.append(_make_form_abort_link(breadcrumb))
+        entries.append(_make_form_abort_link(breadcrumb, abort_url))
 
     return PageMenu(
         dropdowns=[
@@ -401,15 +409,17 @@ def _make_form_save_link(form_name: str,
     )
 
 
-def _make_form_abort_link(breadcrumb: Breadcrumb) -> PageMenuEntry:
-    if not breadcrumb or len(breadcrumb) < 2 or not breadcrumb[-2].url:
-        raise ValueError("Can not create back link for this page")
+def _make_form_abort_link(breadcrumb: Breadcrumb, abort_url: Optional[str]) -> PageMenuEntry:
+    if not abort_url:
+        if not breadcrumb or len(breadcrumb) < 2 or not breadcrumb[-2].url:
+            raise ValueError("Can not create back link for this page")
+        abort_url = breadcrumb[-2].url
+    assert abort_url is not None
 
-    parent_item = breadcrumb[-2]
     return PageMenuEntry(
         title=_("Abort"),
         icon_name="abort",
-        item=make_simple_link(parent_item.url),
+        item=make_simple_link(abort_url),
         is_shortcut=True,
         is_suggested=True,
     )
@@ -669,8 +679,12 @@ class PageMenuPopupsRenderer:
         if entry.name is None:
             raise ValueError("Missing \"name\" attribute on entry \"%s\"" % entry.title)
 
-        html.open_div(id_="popup_%s" % entry.name,
-                      class_=["page_menu_popup"] + html.normalize_css_spec(entry.item.css_classes))
+        classes = ["page_menu_popup"] + html.normalize_css_spec(entry.item.css_classes)
+        if isinstance(entry.item, PageMenuSidePopup):
+            classes.append("side_popup")
+
+        popup_id = "popup_%s" % entry.name
+        html.open_div(id_=popup_id, class_=classes)
 
         html.open_div(class_="head")
         html.h3(entry.title)
@@ -680,8 +694,17 @@ class PageMenuPopupsRenderer:
                onclick="cmk.page_menu.close_popup(this)")
         html.close_div()
 
+        if (isinstance(entry.item, PageMenuSidePopup) and entry.item.content and
+                "side_popup_content" not in entry.item.content):
+            raise RuntimeError(
+                "Add a div container with the class \"side_popup_content\" to the popup content")
+
         html.open_div(class_="content")
         html.write(HTML(entry.item.content))
         html.close_div()
 
         html.close_div()
+
+        if isinstance(entry.item, PageMenuSidePopup):
+            html.final_javascript("cmk.page_menu.side_popup_add_simplebar_scrollbar(%s);" %
+                                  json.dumps(popup_id))

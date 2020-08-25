@@ -44,7 +44,7 @@ from cmk.gui.page_menu import (
     PageMenuDropdown,
     PageMenuTopic,
     PageMenuEntry,
-    PageMenuPopup,
+    PageMenuSidePopup,
     make_simple_link,
 )
 
@@ -138,14 +138,15 @@ def _handle_availability_option_reset() -> None:
         html.request.del_var("avoptions")
 
 
-def _show_availability_options(what: AVObjectType, avoptions: AVOptions,
+def _show_availability_options(option_type: str, what: AVObjectType, avoptions: AVOptions,
                                valuespecs: AVOptionValueSpecs) -> None:
     html.begin_form("avoptions")
     html.hidden_field("avoptions", "set")
 
     _show_availability_options_controls()
 
-    html.open_div(class_="side_popup_content")
+    container_id = "av_options_%s" % option_type
+    html.open_div(id_=container_id, class_="side_popup_content")
     if html.has_user_errors():
         html.show_user_errors()
 
@@ -342,21 +343,19 @@ def _page_menu_availability(breadcrumb: Breadcrumb, view, what: AVObjectType, av
                             PageMenuEntry(
                                 title=_("Change display options"),
                                 icon_name="painteroptions",
-                                item=PageMenuPopup(
+                                item=PageMenuSidePopup(
                                     _render_avoptions_form(
-                                        what, avoptions, availability.get_av_display_options(what)),
-                                    css_classes=["side_popup"],
-                                ),
+                                        "display", what, avoptions,
+                                        availability.get_av_display_options(what)),),
                                 name="avoptions_display",
                             ),
                             PageMenuEntry(
                                 title=_("Change computation options"),
                                 icon_name="av_computation",
-                                item=PageMenuPopup(
+                                item=PageMenuSidePopup(
                                     _render_avoptions_form(
-                                        what, avoptions, availability.get_av_computation_options()),
-                                    css_classes=["side_popup"],
-                                ),
+                                        "computation", what, avoptions,
+                                        availability.get_av_computation_options()),),
                                 name="avoptions_computation",
                             )
                         ],
@@ -406,10 +405,10 @@ def _page_menu_availability(breadcrumb: Breadcrumb, view, what: AVObjectType, av
     return menu
 
 
-def _render_avoptions_form(what: AVObjectType, avoptions: AVOptions,
+def _render_avoptions_form(option_type: str, what: AVObjectType, avoptions: AVOptions,
                            valuespecs: AVOptionValueSpecs) -> str:
     with html.plugged():
-        _show_availability_options(what, avoptions, valuespecs)
+        _show_availability_options(option_type, what, avoptions, valuespecs)
         return html.drain()
 
 

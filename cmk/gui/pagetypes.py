@@ -939,7 +939,7 @@ class Overridable(Base):
                     entries=[
                         PageMenuEntry(
                             title=cls.phrase("new"),
-                            icon_name="new_%s" % cls.type_name(),
+                            icon_name="new",
                             item=make_simple_link(cls.create_url()),
                             is_shortcut=True,
                             is_suggested=True,

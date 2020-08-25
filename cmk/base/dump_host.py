@@ -82,14 +82,13 @@ def dump_host(hostname: HostName) -> None:
     out.output(tty.yellow + "Contact groups:         " + tty.normal +
                ", ".join(host_config.contactgroups) + "\n")
 
-    # TODO(ml): Make agenttypes from list comprehension.
-    agenttypes = []
-    for configurator in data_sources.make_configurators(
+    agenttypes = [
+        configurator.description for configurator in data_sources.make_configurators(
             host_config,
             ipaddress,
             mode=data_sources.Mode.NONE,
-    ):
-        agenttypes.append(configurator.description)
+        )
+    ]
 
     if host_config.is_ping_host:
         agenttypes.append('PING only')

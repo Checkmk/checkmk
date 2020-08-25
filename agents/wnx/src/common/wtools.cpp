@@ -2541,6 +2541,28 @@ bool RemoveCmaUser(const std::wstring& user_name) noexcept {
     return primary_dc.userDel(user_name) != uc::Status::error;
 }
 
+bool ProtectFolderFromUserWrite(const std::filesystem::path& folder) {
+    // CONTEXT: to prevent malicious file creation or modification  in folder
+    // "programdata/checkmk/agent/*" we must remove inherited write rights for
+    // Users.
+
+    constexpr std::wstring_view command_templates[] = {
+        L"icacls \"{}\" /inheritance:d /T",   // disable inheritance
+        L"icacls \"{}\" /remove:g Users /T",  // remove all user rights
+        L"icacls \"{}\" /grant:r Users:(OI)(CI)(RX) /T"};  // user can read/exec
+
+    for (auto const t : command_templates) {
+        auto cmd = fmt::format(t.data(), folder.wstring());
+        if (!cma::tools::RunCommandAndWait(cmd)) {
+            // logging is almost useless: at this phase logfile is absent
+            XLOG::l.e("Failed command '{}'", wtools::ConvertToUTF8(cmd));
+            return false;
+        }
+    }
+
+    return true;
+}
+
 }  // namespace wtools
 
 // verified code from the legacy client

@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #pragma once
 // registry access
@@ -46,8 +47,9 @@ public:
     bool setRootEx(const std::wstring& service_name,  // look in registry
                    const std::wstring& preset_root);  // look in disk
     enum class CreateMode { with_path, direct };
+    enum class Protection { no, yes };
     void createDataFolderStructure(const std::wstring& AgentDataFolder,
-                                   CreateMode mode);
+                                   CreateMode mode, Protection protection);
 
     // for testing and reloading
     void cleanAll();
@@ -118,7 +120,8 @@ private:
     // make [recursive] folder in windows
     // returns path if folder was created successfully
     static std::filesystem::path makeDefaultDataFolder(
-        std::wstring_view AgentDataFolder, CreateMode mode);
+        std::wstring_view AgentDataFolder, CreateMode mode,
+        Protection protection);
     std::filesystem::path root_;          // where is root
     std::filesystem::path data_;          // ProgramData
     std::filesystem::path public_logs_;   //
@@ -232,9 +235,13 @@ public:
     void cleanFolders();
     void cleanConfig();
 
+    // TODO (sk): move to tests
+    /// \brief Used in tests only( to prevent the tree from changing )
     bool pushFolders(const std::filesystem::path& root,
                      const std::filesystem::path& data);
 
+    // TODO (sk): move to tests only( to prevent the tree from changing )
+    /// \brief Used in tests only to prevent context
     bool popFolders();
 
     // not so heavy operation, use free

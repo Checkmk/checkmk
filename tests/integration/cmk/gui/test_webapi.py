@@ -629,7 +629,6 @@ def test_edit_htpasswd_users(web):  # noqa: F811 # pylint: disable=redefined-out
         web.delete_htpasswd_users(list(users.keys()))
 
 
-@pytest.mark.skip("TODO(ml)")
 def test_discover_services(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     try:
         web.add_host("test-host-discovery", attributes={

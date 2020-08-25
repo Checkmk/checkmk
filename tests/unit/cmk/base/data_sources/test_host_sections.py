@@ -27,7 +27,7 @@ from cmk.base.data_sources import (
     ABCHostSections,
     _data_sources,
     make_host_sections,
-    make_sources,
+    make_checkers,
     Mode,
 )
 from cmk.base.data_sources.agent import AgentHostSections
@@ -836,7 +836,7 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
         host_config,
         address,
         mode=mode,
-        sources=make_sources(host_config, address, mode=mode),
+        sources=make_checkers(host_config, address, mode=mode),
         max_cachefile_age=host_config.max_cachefile_age,
         selected_raw_sections=None,
     )

@@ -83,7 +83,7 @@ def dump_host(hostname: HostName) -> None:
                ", ".join(host_config.contactgroups) + "\n")
 
     agenttypes = []
-    for source in data_sources.make_sources(
+    for source in data_sources.make_checkers(
             host_config,
             ipaddress,
             mode=data_sources.Mode.NONE,

@@ -1235,7 +1235,7 @@ def _get_sources_for_discovery(
     *,
     on_error: str,
 ) -> data_sources.Checkers:
-    sources = data_sources.make_sources(
+    sources = data_sources.make_checkers(
         host_config,
         ipaddress,
         mode=data_sources.Mode.DISCOVERY,

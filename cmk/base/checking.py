@@ -148,7 +148,7 @@ def do_check(
         # see which raw sections we may need
         selected_raw_sections = _get_relevant_raw_sections(services, host_config)
 
-        sources = data_sources.make_sources(
+        sources = data_sources.make_checkers(
             host_config,
             ipaddress,
             mode=data_sources.Mode.CHECKING,

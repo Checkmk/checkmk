@@ -76,7 +76,7 @@ def do_inv(hostnames: List[HostName]) -> None:
                 config_cache,
                 host_config,
                 ipaddress,
-                sources=data_sources.make_sources(
+                sources=data_sources.make_checkers(
                     host_config,
                     ipaddress,
                     mode=data_sources.Mode.INVENTORY,
@@ -125,7 +125,7 @@ def do_inv_check(
     long_infotexts: List[str] = []
     perfdata: List[Tuple] = []
 
-    sources = data_sources.make_sources(host_config, ipaddress, mode=data_sources.Mode.INVENTORY)
+    sources = data_sources.make_checkers(host_config, ipaddress, mode=data_sources.Mode.INVENTORY)
     inventory_tree, status_data_tree = _do_inv_for(
         config_cache,
         host_config,
@@ -202,7 +202,7 @@ def _all_sources_fail(
         return False
 
     exceptions_by_source = {
-        source.configurator.id: source.exception for source in data_sources.make_sources(
+        source.configurator.id: source.exception for source in data_sources.make_checkers(
             host_config,
             ipaddress,
             mode=data_sources.Mode.INVENTORY,

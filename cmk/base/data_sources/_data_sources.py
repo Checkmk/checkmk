@@ -33,7 +33,7 @@ from .programs import DSProgramConfigurator, SpecialAgentConfigurator
 from .snmp import SNMPConfigurator
 from .tcp import TCPConfigurator
 
-__all__ = ["Checkers", "make_host_sections", "make_configurators", "make_sources"]
+__all__ = ["Checkers", "make_host_sections", "make_configurators", "make_checkers"]
 
 Checkers = Iterable[ABCChecker]
 
@@ -183,7 +183,7 @@ def make_configurators(
     return _Builder(host_config, ipaddress, mode=mode).configurators
 
 
-def make_sources(
+def make_checkers(
     host_config: HostConfig,
     ipaddress: Optional[HostAddress],
     *,
@@ -286,7 +286,7 @@ def _make_piggyback_nodes(
     for hostname in host_config.nodes:
         node_config = config_cache.get_host_config(hostname)
         ipaddress = ip_lookup.lookup_ip_address(node_config)
-        sources = make_sources(
+        sources = make_checkers(
             HostConfig.make_host_config(hostname),
             ipaddress,
             mode=mode,

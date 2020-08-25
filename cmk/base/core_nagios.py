@@ -1133,7 +1133,7 @@ def _get_needed_plugin_names(
 
     # In case the host is monitored as special agent, the check plugin for the special agent needs
     # to be loaded
-    for source in data_sources.make_sources(
+    for source in data_sources.make_checkers(
             host_config,
             None,
             mode=data_sources.Mode.NONE,

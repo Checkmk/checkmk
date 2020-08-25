@@ -19,7 +19,6 @@ from cmk.base.data_sources import Mode
 from cmk.base.data_sources.programs import (
     DSProgramConfigurator,
     SpecialAgentConfigurator,
-    ProgramChecker,
 )
 
 fun_args_stdin: Tuple[  #
@@ -68,10 +67,9 @@ class TestDSProgramChecker:
         assert configurator.stdin is None
         assert configurator.description == "Program: "
 
-        source = ProgramChecker(configurator=configurator)
-        assert source.id == "agent"
-        # ProgramChecker
-        assert source._cpu_tracking_id == "ds"
+        checker = configurator.make_checker()
+        assert checker.id == "agent"
+        assert checker._cpu_tracking_id == "ds"
 
     @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
     def test_template_translation(self, ipaddress, mode, monkeypatch):
@@ -152,8 +150,6 @@ class TestSpecialAgentChecker:
             str(agent_dir / "special" / ("agent_%s" % special_agent_id)) + " " + expected_args)
         assert configurator.stdin == expected_stdin
 
-        source = ProgramChecker(configurator=configurator)
-
-        assert source.id == "special_%s" % special_agent_id
-
-        assert source._cpu_tracking_id == "ds"
+        checker = configurator.make_checker()
+        assert checker.id == "special_%s" % special_agent_id
+        assert checker._cpu_tracking_id == "ds"

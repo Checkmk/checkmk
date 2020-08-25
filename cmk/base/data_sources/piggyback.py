@@ -16,7 +16,7 @@ from cmk.fetchers import FetcherType
 import cmk.base.config as config
 
 from ._abstract import Mode
-from .agent import AgentConfigurator, AgentChecker, AgentHostSections, AgentSummarizer
+from .agent import AgentConfigurator, AgentHostSections, AgentSummarizer
 
 
 class PiggyBackConfigurator(AgentConfigurator):
@@ -48,9 +48,6 @@ class PiggyBackConfigurator(AgentConfigurator):
             "address": self.ipaddress,
             "time_settings": self.time_settings,
         }
-
-    def make_checker(self) -> "PiggyBackChecker":
-        return PiggyBackChecker(self)
 
     def make_summarizer(self) -> "PiggyBackSummarizer":
         return PiggyBackSummarizer(self)
@@ -96,7 +93,3 @@ class PiggyBackSummarizer(AgentSummarizer):
                 states.append(src.reason_status)
                 infotexts.add(src.reason)
         return max(states), ", ".join(infotexts), []
-
-
-class PiggyBackChecker(AgentChecker):
-    pass

@@ -10,7 +10,7 @@ from testlib.base import Scenario
 
 from cmk.base.data_sources import Mode
 from cmk.base.data_sources.agent import AgentHostSections
-from cmk.base.data_sources.piggyback import PiggyBackConfigurator, PiggyBackChecker
+from cmk.base.data_sources.piggyback import PiggyBackConfigurator
 
 
 @pytest.fixture(name="mode", params=(mode for mode in Mode if mode is not Mode.NONE))
@@ -32,6 +32,6 @@ def test_attribute_defaults(monkeypatch, ipaddress, mode):
     summarizer = configurator.make_summarizer()
     assert summarizer.summarize(AgentHostSections()) == (0, "", [])
 
-    source = PiggyBackChecker(configurator=configurator)
-    assert source.configurator is configurator
-    assert source.id == "piggyback"
+    checker = configurator.make_checker()
+    assert checker.configurator is configurator
+    assert checker.id == "piggyback"

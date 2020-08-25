@@ -14,7 +14,7 @@ from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.base.data_sources._abstract import Mode
 from cmk.base.data_sources.agent import AgentHostSections, AgentSummarizerDefault
-from cmk.base.data_sources.tcp import TCPConfigurator, TCPChecker
+from cmk.base.data_sources.tcp import TCPConfigurator
 
 
 @pytest.fixture(name="mode", params=Mode)
@@ -111,15 +111,13 @@ def test_attribute_defaults(mode, monkeypatch):
     }
     assert configurator.description == "TCP: %s:%s" % (ipaddress, 6556)
 
-    source = TCPChecker(configurator=configurator)
+    checker = configurator.make_checker()
 
-    assert source.hostname == hostname
-    assert source.ipaddress == ipaddress
-    assert source.id == "agent"
+    assert checker.hostname == hostname
+    assert checker.ipaddress == ipaddress
+    assert checker.id == "agent"
     assert configurator.file_cache.maybe is False
-
-    # From the base class
-    assert source.exception is None
+    assert checker.exception is None
 
 
 class TestSummaryResult:

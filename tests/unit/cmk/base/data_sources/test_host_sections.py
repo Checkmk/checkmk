@@ -32,10 +32,10 @@ from cmk.base.data_sources import (
 )
 from cmk.base.data_sources.agent import AgentHostSections
 from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
-from cmk.base.data_sources.piggyback import PiggyBackConfigurator, PiggyBackChecker
-from cmk.base.data_sources.programs import ProgramConfigurator, ProgramChecker
-from cmk.base.data_sources.snmp import SNMPConfigurator, SNMPChecker, SNMPHostSections, CachedSNMPDetector
-from cmk.base.data_sources.tcp import TCPConfigurator, TCPChecker
+from cmk.base.data_sources.piggyback import PiggyBackConfigurator
+from cmk.base.data_sources.programs import ProgramConfigurator
+from cmk.base.data_sources.snmp import SNMPConfigurator, SNMPHostSections, CachedSNMPDetector
+from cmk.base.data_sources.tcp import TCPConfigurator
 
 _TestSection = collections.namedtuple(
     "TestSection",
@@ -546,11 +546,11 @@ class TestMakeHostSectionsHosts:
             ipaddress,
             mode=mode,
             sources=[
-                SNMPChecker(configurator=SNMPConfigurator.snmp(
+                SNMPConfigurator.snmp(
                     hostname,
                     ipaddress,
                     mode=mode,
-                ),),
+                ).make_checker(),
             ],
             max_cachefile_age=0,
             selected_raw_sections=None,
@@ -569,23 +569,22 @@ class TestMakeHostSectionsHosts:
     @pytest.mark.parametrize(
         "source",
         [
-            lambda hostname, ipaddress, *, mode: PiggyBackChecker(configurator=
-                                                                  PiggyBackConfigurator(
-                                                                      hostname,
-                                                                      ipaddress,
-                                                                      mode=mode,
-                                                                  ),),
-            lambda hostname, ipaddress, *, mode: ProgramChecker(configurator=ProgramConfigurator.ds(
+            lambda hostname, ipaddress, *, mode: PiggyBackConfigurator(
+                hostname,
+                ipaddress,
+                mode=mode,
+            ).make_checker(),
+            lambda hostname, ipaddress, *, mode: ProgramConfigurator.ds(
                 hostname,
                 ipaddress,
                 mode=mode,
                 template="",
-            ),),
-            lambda hostname, ipaddress, *, mode: TCPChecker(configurator=TCPConfigurator(
+            ).make_checker(),
+            lambda hostname, ipaddress, *, mode: TCPConfigurator(
                 hostname,
                 ipaddress,
                 mode=mode,
-            ),),
+            ).make_checker(),
         ],
     )
     def test_one_nonsnmp_source(self, hostname, ipaddress, mode, config_cache, host_config, source):
@@ -621,17 +620,17 @@ class TestMakeHostSectionsHosts:
         host_config,
     ):
         sources = [
-            ProgramChecker(configurator=ProgramConfigurator.ds(
+            ProgramConfigurator.ds(
                 hostname,
                 ipaddress,
                 mode=mode,
                 template="",
-            ),),
-            TCPChecker(configurator=TCPConfigurator(
+            ).make_checker(),
+            TCPConfigurator(
                 hostname,
                 ipaddress,
                 mode=mode,
-            ),),
+            ).make_checker(),
         ]
 
         mhs = make_host_sections(
@@ -658,14 +657,11 @@ class TestMakeHostSectionsHosts:
 
     def test_multiple_sources_from_different_hosts(self, hostname, ipaddress, mode, config_cache, host_config):
         sources = [
-            ProgramChecker(
-                configurator=ProgramConfigurator.ds(hostname + "0", ipaddress,
+            ProgramConfigurator.ds(hostname + "0", ipaddress,
                                                     mode=mode,
-                                                   template="",),),
-            TCPChecker(configurator=TCPConfigurator(hostname + "1", ipaddress, mode=mode,),),
-            TCPChecker(
-                configurator=TCPConfigurator(hostname + "2", ipaddress, mode=mode),
-            ),
+                                                   template="",).make_checker(),
+            TCPConfigurator(hostname + "1", ipaddress, mode=mode,).make_checker(),
+            TCPConfigurator(hostname + "2", ipaddress, mode=mode,).make_checker(),
         ]
 
         mhs = make_host_sections(

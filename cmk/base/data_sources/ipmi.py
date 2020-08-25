@@ -21,7 +21,7 @@ from cmk.base.config import HostConfig, IPMICredentials
 from cmk.base.exceptions import MKAgentError
 
 from ._abstract import Mode
-from .agent import AgentConfigurator, AgentChecker, AgentHostSections, AgentSummarizer
+from .agent import AgentConfigurator, AgentHostSections, AgentSummarizer
 
 
 class IPMIConfigurator(AgentConfigurator):
@@ -65,9 +65,6 @@ class IPMIConfigurator(AgentConfigurator):
             "password": self.credentials["password"],
         }
 
-    def make_checker(self) -> "IPMIManagementBoardChecker":
-        return IPMIManagementBoardChecker(self)
-
     def make_summarizer(self) -> "IPMISummarizer":
         return IPMISummarizer()
 
@@ -102,7 +99,3 @@ class IPMISummarizer(AgentSummarizer):
                 return line[2]
 
         return "unknown"
-
-
-class IPMIManagementBoardChecker(AgentChecker):
-    pass

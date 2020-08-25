@@ -19,7 +19,7 @@ import cmk.base.core_config as core_config
 from cmk.base.config import SpecialAgentConfiguration
 
 from ._abstract import Mode
-from .agent import AgentConfigurator, AgentChecker, AgentSummarizerDefault
+from .agent import AgentConfigurator, AgentSummarizerDefault
 
 
 class ProgramConfigurator(AgentConfigurator):
@@ -95,9 +95,6 @@ class ProgramConfigurator(AgentConfigurator):
             "stdin": self.stdin,
             "is_cmc": config.is_cmc(),
         }
-
-    def make_checker(self) -> "ProgramChecker":
-        return ProgramChecker(self)
 
     def make_summarizer(self) -> AgentSummarizerDefault:
         return AgentSummarizerDefault(self)
@@ -258,7 +255,3 @@ class SpecialAgentConfigurator(ProgramConfigurator):
         info_func = config.special_agent_info[special_agent_id]
         agent_configuration = info_func(params, hostname, ipaddress)
         return core_config.active_check_arguments(hostname, None, agent_configuration)
-
-
-class ProgramChecker(AgentChecker):
-    pass

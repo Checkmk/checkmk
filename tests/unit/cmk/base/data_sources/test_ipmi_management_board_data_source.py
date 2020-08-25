@@ -16,7 +16,6 @@ from cmk.base.data_sources import Mode
 from cmk.base.data_sources.agent import AgentHostSections
 from cmk.base.data_sources.ipmi import (
     IPMIConfigurator,
-    IPMIManagementBoardChecker,
     IPMISummarizer,
 )
 
@@ -43,12 +42,12 @@ def test_attribute_defaults(mode, monkeypatch):
     summarizer = configurator.make_summarizer()
     assert summarizer.summarize(AgentHostSections()) == (0, "Version: unknown", [])
 
-    source = IPMIManagementBoardChecker(configurator=configurator)
-    assert source.hostname == hostname
+    checker = configurator.make_checker()
+    assert checker.hostname == hostname
     # Address comes from management board.
-    assert source.ipaddress is None
-    assert source.id == "mgmt_ipmi"
-    assert source._cpu_tracking_id == source.id
+    assert checker.ipaddress is None
+    assert checker.id == "mgmt_ipmi"
+    assert checker._cpu_tracking_id == checker.id
 
 
 def test_summarizer():
@@ -73,8 +72,8 @@ def test_ipmi_ipaddress_from_mgmt_board(mode, monkeypatch):
     configurator = IPMIConfigurator(hostname, ipaddress, mode=mode)
     assert configurator.host_config.management_address == ipaddress
 
-    source = IPMIManagementBoardChecker(configurator=configurator)
-    assert source.ipaddress == ipaddress
+    checker = configurator.make_checker()
+    assert checker.ipaddress == ipaddress
 
 
 def test_description_with_ipaddress(monkeypatch):

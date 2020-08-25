@@ -15,7 +15,7 @@ import cmk.base.ip_lookup as ip_lookup
 from cmk.base.config import HostConfig
 
 from ._abstract import Mode
-from .agent import AgentConfigurator, AgentChecker, AgentSummarizerDefault
+from .agent import AgentConfigurator, AgentSummarizerDefault
 
 
 class TCPConfigurator(AgentConfigurator):
@@ -55,9 +55,6 @@ class TCPConfigurator(AgentConfigurator):
             "encryption_settings": self.host_config.agent_encryption,
         }
 
-    def make_checker(self) -> "TCPChecker":
-        return TCPChecker(self)
-
     def make_summarizer(self) -> AgentSummarizerDefault:
         return AgentSummarizerDefault(self)
 
@@ -67,7 +64,3 @@ class TCPConfigurator(AgentConfigurator):
             ipaddress,
             HostConfig.make_host_config(hostname).agent_port,
         )
-
-
-class TCPChecker(AgentChecker):
-    pass

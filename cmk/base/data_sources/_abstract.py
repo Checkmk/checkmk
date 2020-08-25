@@ -306,6 +306,11 @@ class ABCConfigurator(Generic[BoundedAbstractRawData, BoundedAbstractHostSection
         raise NotImplementedError
 
     @abc.abstractmethod
+    def make_parser(self) -> "ABCParser[BoundedAbstractRawData, BoundedAbstractHostSections]":
+        """Create a parser with this configuration."""
+        raise NotImplementedError
+
+    @abc.abstractmethod
     def make_summarizer(self) -> "ABCSummarizer[BoundedAbstractHostSections]":
         """Create a summarizer with this configuration."""
         raise NotImplementedError
@@ -369,7 +374,8 @@ class ABCChecker(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     @cpu_tracking.track
     def check(self, raw_data: BoundedAbstractRawData) -> BoundedAbstractHostSections:
         try:
-            self._host_sections = self._parser.parse(raw_data)
+            self._host_sections = self.configurator.make_parser().parse(raw_data)
+            assert self._host_sections
 
             # Add information from previous persisted infos
             persisted_sections = self._determine_persisted_sections(self._host_sections)
@@ -396,11 +402,6 @@ class ABCChecker(Generic[BoundedAbstractRawData, BoundedAbstractSections,
             persisted_sections.update(host_sections.persisted_sections)
             self._section_store.store(persisted_sections)
         return persisted_sections
-
-    @property
-    @abc.abstractmethod
-    def _parser(self) -> ABCParser[BoundedAbstractRawData, BoundedAbstractHostSections]:
-        raise NotImplementedError
 
     def get_summary_result(self) -> ServiceCheckResult:
         """Returns a three element tuple of state, output and perfdata (list) that summarizes

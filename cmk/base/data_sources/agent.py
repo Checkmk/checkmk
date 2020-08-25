@@ -100,6 +100,9 @@ class AgentConfigurator(ABCConfigurator[AgentRawData, AgentHostSections]):
         #       Then we can remove this special case
         self.main_data_source: Final[bool] = main_data_source
 
+    def make_parser(self) -> "AgentParser":
+        return AgentParser(self.hostname, self._logger)
+
 
 class AgentSummarizer(ABCSummarizer[AgentHostSections]):
     pass
@@ -466,7 +469,3 @@ class AgentChecker(ABCChecker[AgentRawData, AgentSections, AgentPersistedSection
         configurator: ABCConfigurator,
     ) -> None:
         super().__init__(configurator, default_host_sections=AgentHostSections())
-
-    @property
-    def _parser(self) -> ABCParser:
-        return AgentParser(self.hostname, self._logger)

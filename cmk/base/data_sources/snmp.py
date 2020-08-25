@@ -188,6 +188,9 @@ class SNMPConfigurator(ABCConfigurator[SNMPRawData, SNMPHostSections]):
     def make_checker(self) -> "SNMPChecker":
         return SNMPChecker(self)
 
+    def make_parser(self) -> "SNMPParser":
+        return SNMPParser(self.hostname, self._logger)
+
     def make_summarizer(self) -> "SNMPSummarizer":
         return SNMPSummarizer()
 
@@ -357,7 +360,3 @@ class SNMPSummarizer(ABCSummarizer[SNMPHostSections]):
 class SNMPChecker(ABCChecker[SNMPRawData, SNMPSections, SNMPPersistedSections, SNMPHostSections]):
     def __init__(self, configurator: SNMPConfigurator) -> None:
         super().__init__(configurator, default_host_sections=SNMPHostSections())
-
-    @property
-    def _parser(self) -> ABCParser:
-        return SNMPParser(self.hostname, self._logger)

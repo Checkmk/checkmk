@@ -131,11 +131,10 @@ class TestSummaryResult:
     def test_defaults(self, ipaddress, mode, monkeypatch):
         hostname = "testhost"
         Scenario().add_host(hostname).apply(monkeypatch)
-        source = TCPChecker(configurator=TCPConfigurator(
+        summarizer = TCPConfigurator(
             hostname,
             ipaddress,
             mode=mode,
-        ))
+        ).make_summarizer()
 
-        summarizer = source.summarizer
         assert summarizer.summarize(AgentHostSections()) == (0, "Version: unknown, OS: unknown", [])

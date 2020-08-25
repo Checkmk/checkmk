@@ -59,7 +59,7 @@ class AgentHostSections(ABCHostSections[AgentRawData, AgentSections, AgentPersis
     pass
 
 
-class AgentConfigurator(ABCConfigurator[AgentRawData]):
+class AgentConfigurator(ABCConfigurator[AgentRawData, AgentHostSections]):
     """Configure agent checkers and fetchers.
 
     Args:
@@ -464,14 +464,8 @@ class AgentChecker(ABCChecker[AgentRawData, AgentSections, AgentPersistedSection
     def __init__(
         self,
         configurator: ABCConfigurator,
-        *,
-        summarizer: AgentSummarizer,
     ) -> None:
-        super().__init__(
-            configurator,
-            summarizer=summarizer,
-            default_host_sections=AgentHostSections(),
-        )
+        super().__init__(configurator, default_host_sections=AgentHostSections())
 
     @property
     def _parser(self) -> ABCParser:

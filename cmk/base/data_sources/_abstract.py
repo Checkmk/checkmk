@@ -217,7 +217,8 @@ class FileCacheConfigurator:
         }
 
 
-class ABCConfigurator(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
+class ABCConfigurator(Generic[BoundedAbstractRawData, BoundedAbstractHostSections],
+                      metaclass=abc.ABCMeta):
     """Hold the configuration to fetchers and checkers.
 
     At best, this should only hold static data, that is, every
@@ -304,6 +305,11 @@ class ABCConfigurator(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
         """Create a checker with this configuration."""
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def make_summarizer(self) -> "ABCSummarizer[BoundedAbstractHostSections]":
+        """Create a summarizer with this configuration."""
+        raise NotImplementedError
+
 
 class ABCSummarizer(Generic[BoundedAbstractHostSections], metaclass=abc.ABCMeta):
     @abc.abstractmethod
@@ -322,12 +328,10 @@ class ABCChecker(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         self,
         configurator: ABCConfigurator,
         *,
-        summarizer: ABCSummarizer,
         default_host_sections: BoundedAbstractHostSections,
     ) -> None:
         super().__init__()
         self.configurator = configurator
-        self.summarizer = summarizer
         self.default_host_sections: Final[BoundedAbstractHostSections] = default_host_sections
         self._logger = self.configurator._logger
         self._section_store: SectionStore[BoundedAbstractPersistedSections] = SectionStore(
@@ -408,7 +412,7 @@ class ABCChecker(Generic[BoundedAbstractRawData, BoundedAbstractSections,
 
         if not self.exception:
             assert self._host_sections is not None
-            return self.summarizer.summarize(self._host_sections)
+            return self.configurator.make_summarizer().summarize(self._host_sections)
 
         exc_msg = "%s" % self.exception
 

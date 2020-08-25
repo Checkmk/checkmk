@@ -58,6 +58,9 @@ class TCPConfigurator(AgentConfigurator):
     def make_checker(self) -> "TCPChecker":
         return TCPChecker(self)
 
+    def make_summarizer(self) -> AgentSummarizerDefault:
+        return AgentSummarizerDefault(self)
+
     @staticmethod
     def _make_description(hostname: HostName, ipaddress: Optional[HostAddress]) -> str:
         return "TCP: %s:%d" % (
@@ -67,12 +70,6 @@ class TCPConfigurator(AgentConfigurator):
 
 
 class TCPChecker(AgentChecker):
-    def __init__(self, configurator: TCPConfigurator) -> None:
-        super().__init__(
-            configurator,
-            summarizer=AgentSummarizerDefault(configurator),
-        )
-
     @staticmethod
     def use_only_cache() -> None:
         TCPConfigurator._use_only_cache = True

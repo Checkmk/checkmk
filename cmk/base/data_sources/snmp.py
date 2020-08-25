@@ -76,7 +76,7 @@ class CachedSNMPDetector:
         return self._cached_result
 
 
-class SNMPConfigurator(ABCConfigurator):
+class SNMPConfigurator(ABCConfigurator[SNMPRawData, SNMPHostSections]):
     def __init__(
         self,
         hostname: HostName,
@@ -187,6 +187,9 @@ class SNMPConfigurator(ABCConfigurator):
 
     def make_checker(self) -> "SNMPChecker":
         return SNMPChecker(self)
+
+    def make_summarizer(self) -> "SNMPSummarizer":
+        return SNMPSummarizer()
 
     def _make_snmp_scan_sections(self) -> Iterable[SNMPScanSection]:
         """Create list of all SNMP scan specifications.
@@ -353,11 +356,7 @@ class SNMPSummarizer(ABCSummarizer[SNMPHostSections]):
 
 class SNMPChecker(ABCChecker[SNMPRawData, SNMPSections, SNMPPersistedSections, SNMPHostSections]):
     def __init__(self, configurator: SNMPConfigurator) -> None:
-        super().__init__(
-            configurator,
-            summarizer=SNMPSummarizer(),
-            default_host_sections=SNMPHostSections(),
-        )
+        super().__init__(configurator, default_host_sections=SNMPHostSections())
 
     @property
     def _parser(self) -> ABCParser:

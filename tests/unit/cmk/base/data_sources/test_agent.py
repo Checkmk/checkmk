@@ -179,6 +179,9 @@ class StubConfigurator(AgentConfigurator):
     def make_checker(self) -> "StubAgent":
         return StubAgent(self)
 
+    def make_summarizer(self) -> "StubSummarizer":
+        return StubSummarizer()
+
 
 class StubSummarizer(AgentSummarizer):
     def summarize(self, host_sections):
@@ -186,9 +189,6 @@ class StubSummarizer(AgentSummarizer):
 
 
 class StubAgent(AgentChecker):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, summarizer=StubSummarizer(), **kwargs)
-
     def _execute(self, *args, **kwargs):
         return self.default_host_sections
 

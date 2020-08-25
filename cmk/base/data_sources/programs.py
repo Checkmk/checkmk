@@ -99,6 +99,9 @@ class ProgramConfigurator(AgentConfigurator):
     def make_checker(self) -> "ProgramChecker":
         return ProgramChecker(self)
 
+    def make_summarizer(self) -> AgentSummarizerDefault:
+        return AgentSummarizerDefault(self)
+
     @staticmethod
     def _make_description(cmdline, stdin):
         response = ["Program: %s" % cmdline]
@@ -258,9 +261,4 @@ class SpecialAgentConfigurator(ProgramConfigurator):
 
 
 class ProgramChecker(AgentChecker):
-    """Abstract base class for all data source classes that execute external programs"""
-    def __init__(self, configurator: ProgramConfigurator) -> None:
-        super().__init__(
-            configurator,
-            summarizer=AgentSummarizerDefault(configurator),
-        )
+    pass

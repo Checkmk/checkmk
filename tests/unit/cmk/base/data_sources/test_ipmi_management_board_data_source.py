@@ -40,15 +40,15 @@ def test_attribute_defaults(mode, monkeypatch):
     assert configurator.description == "Management board - IPMI"
     assert configurator.source_type is SourceType.MANAGEMENT
 
+    summarizer = configurator.make_summarizer()
+    assert summarizer.summarize(AgentHostSections()) == (0, "Version: unknown", [])
+
     source = IPMIManagementBoardChecker(configurator=configurator)
     assert source.hostname == hostname
     # Address comes from management board.
     assert source.ipaddress is None
     assert source.id == "mgmt_ipmi"
     assert source._cpu_tracking_id == source.id
-
-    summarizer = source.summarizer
-    assert summarizer.summarize(AgentHostSections()) == (0, "Version: unknown", [])
 
 
 def test_summarizer():

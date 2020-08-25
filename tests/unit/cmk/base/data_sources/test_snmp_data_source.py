@@ -155,8 +155,8 @@ class TestSNMPSummaryResult:
         return ts
 
     @pytest.fixture
-    def source(self, hostname, mode):
-        return SNMPChecker(configurator=SNMPConfigurator(
+    def configurator(self, hostname, mode):
+        return SNMPConfigurator(
             hostname,
             "1.2.3.4",
             mode=mode,
@@ -164,17 +164,18 @@ class TestSNMPSummaryResult:
             id_="snmp_id",
             cpu_tracking_id="snmp_cpu_id",
             title="snmp title",
-        ))
+        )
 
     @pytest.mark.usefixtures("scenario")
-    def test_defaults(self, source):
-        summarizer = source.summarizer
+    def test_defaults(self, configurator):
+        summarizer = configurator.make_summarizer()
         assert summarizer.summarize(AgentHostSections()) == (0, "Success", [])
 
     @pytest.mark.usefixtures("scenario")
-    def test_with_exception(self, source):
-        source.exception = Exception()
-        assert source.get_summary_result() == (3, "(?)", [])
+    def test_with_exception(self, configurator):
+        checker = configurator.make_checker()
+        checker.exception = Exception()
+        assert checker.get_summary_result() == (3, "(?)", [])
 
 
 @pytest.fixture(name="discovery_rulesets")

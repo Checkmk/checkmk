@@ -52,6 +52,9 @@ class PiggyBackConfigurator(AgentConfigurator):
     def make_checker(self) -> "PiggyBackChecker":
         return PiggyBackChecker(self)
 
+    def make_summarizer(self) -> "PiggyBackSummarizer":
+        return PiggyBackSummarizer(self)
+
     @staticmethod
     def _make_description(hostname: HostName):
         return "Process piggyback data from %s" % (Path(tmp_dir) / "piggyback" / hostname)
@@ -96,5 +99,4 @@ class PiggyBackSummarizer(AgentSummarizer):
 
 
 class PiggyBackChecker(AgentChecker):
-    def __init__(self, configurator: PiggyBackConfigurator) -> None:
-        super().__init__(configurator, summarizer=PiggyBackSummarizer(configurator))
+    pass

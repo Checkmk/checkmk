@@ -47,7 +47,7 @@ inventory:
 
  {Grouping:} In some situations you do not want to monitor a single
  interface but a group of interfaces that together form a pool.
- The {if} check supports such pools by defining groups. The data of all members is
+ This check supports such pools by defining groups. The data of all members is
  accumulated and put together in a single grouped interface service.
 
 cluster:

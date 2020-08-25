@@ -568,7 +568,9 @@ class SuggestedEntryRenderer:
 
     def _show_link(self, entry: PageMenuEntry, item: ABCPageMenuItem, url: Optional[str],
                    onclick: Optional[str]) -> None:
-        html.open_a(href=url, onclick=onclick)
+        html.open_a(href=url,
+                    onclick=onclick,
+                    id_=("menu_suggestion_%s" % entry.name if entry.name else None))
         html.icon(title=None, icon=entry.icon_name or "trans")
         html.write_text(entry.shortcut_title or entry.title)
         html.close_a()

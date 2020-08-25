@@ -386,13 +386,16 @@ export function toggle_dashboard_edit() {
     g_editing = !g_editing;
 
     // Toggle the page menu elements
+    let toggle_suggestion = document.getElementById("menu_suggestion_toggle_edit");
     let toggle_shortcut = document.getElementById("menu_shortcut_toggle_edit");
     let toggle_entry = document.getElementById("menu_entry_toggle_edit");
     if (g_editing) {
+        utils.add_class(toggle_suggestion, "edit");
         utils.add_class(toggle_shortcut, "edit");
         utils.add_class(toggle_entry, "edit");
         page_menu.enable_dropdown("add_dashlets");
     } else {
+        utils.remove_class(toggle_suggestion, "edit");
         utils.remove_class(toggle_shortcut, "edit");
         utils.remove_class(toggle_entry, "edit");
         page_menu.disable_dropdown("add_dashlets");

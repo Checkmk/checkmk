@@ -190,7 +190,7 @@ class StubSummarizer(AgentSummarizer):
 
 class StubAgent(AgentChecker):
     def _execute(self, *args, **kwargs):
-        return self.default_host_sections
+        return self.configurator.default_host_sections
 
 
 class TestAgentSummaryResult:
@@ -223,7 +223,7 @@ class TestAgentSummaryResult:
 
     @pytest.mark.usefixtures("scenario")
     def test_defaults(self, source, mode):
-        source._host_sections = source.default_host_sections
+        source._host_sections = source.configurator.default_host_sections
         assert source.get_summary_result() == (0, "", [])
 
     @pytest.mark.usefixtures("scenario")

@@ -90,6 +90,7 @@ class AgentConfigurator(ABCConfigurator[AgentRawData, AgentHostSections]):
             fetcher_type=fetcher_type,
             description=description,
             default_raw_data=AgentRawData(),
+            default_host_sections=AgentHostSections(),
             id_=id_,
             cpu_tracking_id=cpu_tracking_id,
             cache_dir=Path(cmk.utils.paths.tcp_cache_dir) if main_data_source else None,
@@ -450,22 +451,4 @@ class AgentParser(ABCParser[AgentRawData, AgentHostSections]):
 class AgentChecker(ABCChecker[AgentRawData, AgentSections, AgentPersistedSections,
                               AgentHostSections],
                    metaclass=abc.ABCMeta):
-    """Base for agent-based checkers.
-
-    Args:
-        main_data_source: The main agent has other cache directories for
-            compatibility with older Check MK.
-
-    """
-
-    # NOTE: This class is obviously still abstract, but pylint fails to see
-    # this, even in the presence of the meta class assignment below, see
-    # https://github.com/PyCQA/pylint/issues/179.
-
-    # pylint: disable=abstract-method
-
-    def __init__(
-        self,
-        configurator: ABCConfigurator,
-    ) -> None:
-        super().__init__(configurator, default_host_sections=AgentHostSections())
+    pass

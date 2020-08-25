@@ -237,6 +237,7 @@ class ABCConfigurator(Generic[BoundedAbstractRawData, BoundedAbstractHostSection
         fetcher_type: FetcherType,
         description: str,
         default_raw_data: BoundedAbstractRawData,
+        default_host_sections: BoundedAbstractHostSections,
         id_: str,
         cpu_tracking_id: str,
         cache_dir: Optional[Path] = None,
@@ -249,6 +250,7 @@ class ABCConfigurator(Generic[BoundedAbstractRawData, BoundedAbstractHostSection
         self.fetcher_type: Final[FetcherType] = fetcher_type
         self.description: Final[str] = description
         self.default_raw_data: Final = default_raw_data
+        self.default_host_sections: Final[BoundedAbstractHostSections] = default_host_sections
         self.id: Final[str] = id_
         self.cpu_tracking_id: Final[str] = cpu_tracking_id
         if not cache_dir:
@@ -332,12 +334,9 @@ class ABCChecker(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     def __init__(
         self,
         configurator: ABCConfigurator,
-        *,
-        default_host_sections: BoundedAbstractHostSections,
     ) -> None:
         super().__init__()
         self.configurator = configurator
-        self.default_host_sections: Final[BoundedAbstractHostSections] = default_host_sections
         self._logger = self.configurator._logger
         self._section_store: SectionStore[BoundedAbstractPersistedSections] = SectionStore(
             self.configurator.persisted_sections_file_path,
@@ -386,9 +385,10 @@ class ABCChecker(Generic[BoundedAbstractRawData, BoundedAbstractSections,
             if cmk.utils.debug.enabled():
                 raise
             self.exception = exc
-            self._host_sections = self.default_host_sections
+            self._host_sections = self.configurator.default_host_sections
         else:
             self.exception = None
+        assert self._host_sections
         return self._host_sections
 
     def _determine_persisted_sections(

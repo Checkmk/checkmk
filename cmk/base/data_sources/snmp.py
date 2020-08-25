@@ -99,6 +99,7 @@ class SNMPConfigurator(ABCConfigurator[SNMPRawData, SNMPHostSections]):
             fetcher_type=FetcherType.SNMP,
             description=SNMPConfigurator._make_description(hostname, ipaddress, title=title),
             default_raw_data={},
+            default_host_sections=SNMPHostSections(),
             id_=id_,
             cpu_tracking_id=cpu_tracking_id,
             cache_dir=cache_dir,
@@ -358,5 +359,4 @@ class SNMPSummarizer(ABCSummarizer[SNMPHostSections]):
 
 
 class SNMPChecker(ABCChecker[SNMPRawData, SNMPSections, SNMPPersistedSections, SNMPHostSections]):
-    def __init__(self, configurator: SNMPConfigurator) -> None:
-        super().__init__(configurator, default_host_sections=SNMPHostSections())
+    pass

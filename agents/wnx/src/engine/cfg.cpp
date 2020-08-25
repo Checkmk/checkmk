@@ -627,11 +627,12 @@ bool Folders::setRootEx(
 }  // namespace cma::cfg::details
 
 void Folders::createDataFolderStructure(const std::wstring& proposed_folder,
-                                        CreateMode mode) {
+                                        CreateMode mode,
+                                        Protection protection) {
     try {
         std::filesystem::path folder = proposed_folder;
-        data_ =
-            makeDefaultDataFolder(folder.lexically_normal().wstring(), mode);
+        data_ = makeDefaultDataFolder(folder.lexically_normal().wstring(), mode,
+                                      protection);
     } catch (const std::exception& e) {
         XLOG::l.bp("Cannot create Default Data Folder , exception : {}",
                    e.what());
@@ -684,7 +685,7 @@ static int CreateTree(const std::filesystem::path& base_path) noexcept {
 // 1. ProgramData/CorpName/AgentName
 //
 std::filesystem::path Folders::makeDefaultDataFolder(
-    std::wstring_view AgentDataFolder, CreateMode mode) {
+    std::wstring_view AgentDataFolder, CreateMode mode, Protection protection) {
     using namespace cma::tools;
     namespace fs = std::filesystem;
     auto draw_folder = [mode](std::wstring_view DataFolder) -> auto {
@@ -697,9 +698,15 @@ std::filesystem::path Folders::makeDefaultDataFolder(
     };
 
     if (AgentDataFolder.empty()) {
+        /// automatic data path, used ProgramData folder
         auto app_data_folder = win::GetSomeSystemFolder(FOLDERID_ProgramData);
-        // Program Data, normal operation
+
         auto app_data = draw_folder(app_data_folder);
+        if (protection == Protection::yes &&
+            !wtools::ProtectFolderFromUserWrite(app_data)) {
+            XLOG::l.e("Protection failed!");
+        }
+
         auto ret = CreateTree(app_data);
         if (ret == 0) return app_data;
         XLOG::l.bp("Failed to access ProgramData Folder {}", ret);
@@ -715,7 +722,7 @@ std::filesystem::path Folders::makeDefaultDataFolder(
         return {};
     }
 
-    // testing path
+    // path with a custom folder
     auto app_data = draw_folder(AgentDataFolder);
     auto ret = CreateTree(app_data);
     if (ret == 0) return app_data;
@@ -1157,8 +1164,10 @@ void ConfigInfo::initFolders(
     const std::wstring& AgentDataFolder)   // look in dis
 {
     cleanFolders();
-    folders_.createDataFolderStructure(AgentDataFolder,
-                                       Folders::CreateMode::with_path);
+    folders_.createDataFolderStructure(
+        AgentDataFolder, Folders::CreateMode::with_path,
+        ServiceValidName.empty() ? Folders::Protection::no
+                                 : Folders::Protection::yes);
 
     // This is not very good idea, but we want
     // to start logging as early as possible
@@ -1219,7 +1228,8 @@ bool ConfigInfo::pushFolders(const std::filesystem::path& root,
     }
     folders_stack_.push(folders_);
     folders_.setRoot({}, root.wstring());
-    folders_.createDataFolderStructure(data, Folders::CreateMode::direct);
+    folders_.createDataFolderStructure(data, Folders::CreateMode::direct,
+                                       Folders::Protection::no);
 
     return true;
 }

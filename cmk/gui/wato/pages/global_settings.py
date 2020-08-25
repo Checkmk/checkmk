@@ -486,51 +486,6 @@ class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
         return None  # All sites
 
 
-@mode_registry.register
-class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
-    @classmethod
-    def name(cls):
-        return "edit_site_configvar"
-
-    @classmethod
-    def permissions(cls):
-        return ["global"]
-
-    def _from_vars(self):
-        super()._from_vars()
-        self._site_id = html.request.var("site")
-        if self._site_id:
-            self._configured_sites = watolib.SiteManagementFactory().factory().load_sites()
-            try:
-                site = self._configured_sites[self._site_id]
-            except KeyError:
-                raise MKUserError("site", _("Invalid site"))
-
-        self._current_settings = site.setdefault("globals", {})
-        self._global_settings = watolib.load_configuration_settings()
-
-    def title(self):
-        return _("Site-specific global configuration for %s") % self._site_id
-
-    def buttons(self):
-        html.context_button(
-            _("Abort"),
-            watolib.folder_preserving_link([("mode", "edit_site_globals"),
-                                            ("site", self._site_id)]), "abort")
-
-    def _affected_sites(self):
-        return [self._site_id]
-
-    def _save(self):
-        watolib.SiteManagementFactory().factory().save_sites(self._configured_sites, activate=False)
-        if self._site_id == config.omd_site():
-            watolib.save_site_global_settings(self._current_settings)
-
-    def _show_global_setting(self):
-        forms.section(_("Global setting"))
-        html.write_html(HTML(self._valuespec.value_to_text(self._global_settings[self._varname])))
-
-
 def is_a_checkbox(vs):
     """Checks if a valuespec is a Checkbox"""
     if isinstance(vs, Checkbox):

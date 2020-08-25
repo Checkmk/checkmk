@@ -177,7 +177,6 @@ from cmk.gui.wato.pages.folders import (
 from cmk.gui.wato.pages.global_settings import (
     ModeEditGlobals,
     ModeEditGlobalSetting,
-    ModeEditSiteGlobalSetting,
 )
 from cmk.gui.wato.pages.groups import (
     ModeGroups,

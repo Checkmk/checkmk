@@ -45,12 +45,12 @@ from cmk.gui.page_menu import (
 )
 
 
-class GlobalSettingsMode(WatoMode):
+class ABCGlobalSettingsMode(WatoMode):
     def __init__(self):
         self._search = None
         self._show_only_modified = False
 
-        super(GlobalSettingsMode, self).__init__()
+        super().__init__()
 
         self._default_values = ABCConfigDomain.get_all_default_globals()
         self._global_settings = {}
@@ -191,7 +191,7 @@ class GlobalSettingsMode(WatoMode):
         html.close_div()
 
 
-class EditGlobalSettingMode(WatoMode):
+class ABCEditGlobalSettingMode(WatoMode):
     def _from_vars(self):
         self._varname = html.request.get_ascii_input_mandatory("varname")
         try:
@@ -335,7 +335,7 @@ class EditGlobalSettingMode(WatoMode):
 
 
 @mode_registry.register
-class ModeEditGlobals(GlobalSettingsMode):
+class ModeEditGlobals(ABCGlobalSettingsMode):
     @classmethod
     def name(cls):
         return "globalvars"
@@ -345,8 +345,7 @@ class ModeEditGlobals(GlobalSettingsMode):
         return ["global"]
 
     def __init__(self):
-        super(ModeEditGlobals, self).__init__()
-
+        super().__init__()
         self._current_settings = watolib.load_configuration_settings()
 
     def title(self):
@@ -467,7 +466,7 @@ class ModeEditGlobals(GlobalSettingsMode):
 
 
 @mode_registry.register
-class ModeEditGlobalSetting(EditGlobalSettingMode):
+class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
     @classmethod
     def name(cls):
         return "edit_configvar"
@@ -488,7 +487,7 @@ class ModeEditGlobalSetting(EditGlobalSettingMode):
 
 
 @mode_registry.register
-class ModeEditSiteGlobalSetting(EditGlobalSettingMode):
+class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
     @classmethod
     def name(cls):
         return "edit_site_configvar"
@@ -498,8 +497,7 @@ class ModeEditSiteGlobalSetting(EditGlobalSettingMode):
         return ["global"]
 
     def _from_vars(self):
-        super(ModeEditSiteGlobalSetting, self)._from_vars()
-
+        super()._from_vars()
         self._site_id = html.request.var("site")
         if self._site_id:
             self._configured_sites = watolib.SiteManagementFactory().factory().load_sites()

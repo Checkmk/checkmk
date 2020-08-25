@@ -69,7 +69,7 @@ from cmk.gui.page_menu import (
 
 from cmk.gui.watolib.sites import is_livestatus_encrypted
 from cmk.gui.watolib.activate_changes import clear_site_replication_status
-from cmk.gui.wato.pages.global_settings import GlobalSettingsMode, is_a_checkbox
+from cmk.gui.wato.pages.global_settings import ABCGlobalSettingsMode, is_a_checkbox
 
 
 def _site_globals_editable(site_id, site):
@@ -107,7 +107,7 @@ class ModeEditSite(WatoMode):
         return ModeDistributedMonitoring
 
     def __init__(self):
-        super(ModeEditSite, self).__init__()
+        super().__init__()
         self._site_mgmt = watolib.SiteManagementFactory().factory()
 
         self._site_id = html.request.get_ascii_input("site")
@@ -452,7 +452,7 @@ class ModeDistributedMonitoring(WatoMode):
         return ["sites"]
 
     def __init__(self):
-        super(ModeDistributedMonitoring, self).__init__()
+        super().__init__()
         self._site_mgmt = watolib.SiteManagementFactory().factory()
 
     def title(self):
@@ -833,7 +833,7 @@ ReplicationStatus = NamedTuple("ReplicationStatus", [
 class ReplicationStatusFetcher:
     """Helper class to retrieve the replication status of all relevant sites"""
     def __init__(self):
-        super(ReplicationStatusFetcher, self).__init__()
+        super().__init__()
         self._logger = logger.getChild("replication-status")
 
     def fetch(self, sites: List[_Tuple[str, Dict]]) -> Dict[str, PingResult]:
@@ -910,7 +910,7 @@ class ReplicationStatusFetcher:
 
 
 @mode_registry.register
-class ModeEditSiteGlobals(GlobalSettingsMode):
+class ModeEditSiteGlobals(ABCGlobalSettingsMode):
     @classmethod
     def name(cls):
         return "edit_site_globals"
@@ -924,7 +924,7 @@ class ModeEditSiteGlobals(GlobalSettingsMode):
         return ModeEditSite
 
     def __init__(self):
-        super(ModeEditSiteGlobals, self).__init__()
+        super().__init__()
         self._site_id = html.request.get_ascii_input_mandatory("site")
         self._site_mgmt = watolib.SiteManagementFactory().factory()
         self._configured_sites = self._site_mgmt.load_sites()
@@ -1067,7 +1067,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         return ModeEditSite
 
     def __init__(self):
-        super(ModeSiteLivestatusEncryption, self).__init__()
+        super().__init__()
         self._site_id = html.request.get_ascii_input_mandatory("site")
         self._site_mgmt = watolib.SiteManagementFactory().factory()
         self._configured_sites = self._site_mgmt.load_sites()

@@ -85,8 +85,8 @@ from cmk.gui.permissions import (
     permission_registry,
 )
 from cmk.gui.wato.pages.global_settings import (
-    GlobalSettingsMode,
-    EditGlobalSettingMode,
+    ABCGlobalSettingsMode,
+    ABCEditGlobalSettingMode,
 )
 
 from cmk.gui.plugins.wato.utils import (
@@ -1044,7 +1044,7 @@ class ABCEventConsoleMode(WatoMode, metaclass=abc.ABCMeta):
     # pylint: disable=abstract-method
     def __init__(self):
         self._rule_packs = load_mkeventd_rules()
-        super(ABCEventConsoleMode, self).__init__()
+        super().__init__()
 
     def _verify_ec_enabled(self):
         if not config.mkeventd_enabled:
@@ -2190,7 +2190,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
 
 
 @mode_registry.register
-class ModeEventConsoleSettings(ABCEventConsoleMode, GlobalSettingsMode):
+class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
     @classmethod
     def name(cls):
         return "mkeventd_config"
@@ -2200,7 +2200,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, GlobalSettingsMode):
         return ["mkeventd.config"]
 
     def __init__(self):
-        super(ModeEventConsoleSettings, self).__init__()
+        super().__init__()
 
         self._default_values = ConfigDomainEventConsole().default_globals()
         self._current_settings = watolib.load_configuration_settings()
@@ -2306,7 +2306,7 @@ class ConfigVariableGroupEventConsoleSNMP(ConfigVariableGroupEventConsole):
 
 
 @mode_registry.register
-class ModeEventConsoleEditGlobalSetting(EditGlobalSettingMode):
+class ModeEventConsoleEditGlobalSetting(ABCEditGlobalSettingMode):
     @classmethod
     def name(cls):
         return "mkeventd_edit_configvar"
@@ -2320,7 +2320,7 @@ class ModeEventConsoleEditGlobalSetting(EditGlobalSettingMode):
         return ModeEventConsoleSettings
 
     def __init__(self):
-        super(ModeEventConsoleEditGlobalSetting, self).__init__()
+        super().__init__()
         self._need_restart = None
 
     def title(self):

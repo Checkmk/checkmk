@@ -175,8 +175,6 @@ from cmk.gui.wato.pages.folders import (
     ModeAjaxSetFoldertree,
 )
 from cmk.gui.wato.pages.global_settings import (
-    GlobalSettingsMode,
-    EditGlobalSettingMode,
     ModeEditGlobals,
     ModeEditGlobalSetting,
     ModeEditSiteGlobalSetting,

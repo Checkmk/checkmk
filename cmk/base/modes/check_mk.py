@@ -124,7 +124,7 @@ modes.register_general_option(
 
 
 def option_no_tcp() -> None:
-    data_sources.tcp.TCPChecker.use_only_cache()
+    data_sources.tcp.TCPConfigurator.use_only_cache = True
 
 
 # TODO: Check whether or not this is used only for -I as written in the help.

@@ -19,7 +19,7 @@ from .agent import AgentConfigurator, AgentChecker, AgentSummarizerDefault
 
 
 class TCPConfigurator(AgentConfigurator):
-    _use_only_cache = False
+    use_only_cache = False
 
     def __init__(
         self,
@@ -70,6 +70,4 @@ class TCPConfigurator(AgentConfigurator):
 
 
 class TCPChecker(AgentChecker):
-    @staticmethod
-    def use_only_cache() -> None:
-        TCPConfigurator._use_only_cache = True
+    pass

@@ -199,7 +199,7 @@ class AutomationTryDiscovery(Automation):
             args = args[1:]
             use_caches = True
             data_sources.FileCacheConfigurator.use_outdated = True
-            data_sources.tcp.TCPChecker.use_only_cache()
+            data_sources.tcp.TCPConfigurator.use_only_cache = True
 
         elif args[0] == '@scan':
             args = args[1:]

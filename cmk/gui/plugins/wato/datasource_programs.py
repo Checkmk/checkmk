@@ -2534,8 +2534,17 @@ def _valuespec_special_agents_elasticsearch():
                      "Use this option to query a port which is different from standard port 9200."),
                  default_value=9200,
              )),
-            (
-                "infos",
+            ("no-cert-check",
+             Alternative(title=_("SSL certificate verification"),
+                 elements=[
+                     FixedValue(False, title=_("Verify the certificate"), totext=""),
+                     FixedValue(True,
+                         title=_("Ignore certificate errors (unsecure)"),
+                             totext=""),
+                 ],
+                 default_value=False
+            )),
+            ("infos",
                 ListChoice(
                     title=_("Informations to query"),
                     help=_("Defines what information to query. "

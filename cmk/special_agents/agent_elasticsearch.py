@@ -37,8 +37,9 @@ def main(argv=None):
                 url = url_base + sections[section]
 
                 auth = (args.user, args.password) if args.user and args.password else None
+                certcheck = not args.no_cert_check
                 try:
-                    response = requests.get(url, auth=auth)
+                    response = requests.get(url, auth=auth, verify=certcheck)
                 except requests.exceptions.RequestException as e:
                     sys.stderr.write("Error: %s\n" % e)
                     if args.debug:
@@ -87,7 +88,7 @@ def parse_arguments(argv):
     parser.add_argument("--debug",
                         action="store_true",
                         help="Debug mode: let Python exceptions come through")
-
+    parser.add_argument('--no-cert-check', action='store_true', help='Disable certificate verification')
     parser.add_argument(
         "hosts",
         metavar="HOSTNAME",

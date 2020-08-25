@@ -24,6 +24,8 @@ def agent_elasticsearch_arguments(params, hostname, ipaddress):
         args += ["-s", passwordstore_get_cmdline("%s", params["password"])]
     if "port" in params:
         args += ["-p", params["port"]]
+    if params.get('no-cert-check', False):
+        args += ["--no-cert-check"]
 
     args += params["hosts"]
 

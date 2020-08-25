@@ -156,7 +156,7 @@ class AutochecksManager:
                     (entry, hostname, path))
 
             try:
-                plugin_name = CheckPluginName(entry["check_plugin_name"])
+                plugin_name = CheckPluginName(maincheckify(entry["check_plugin_name"]))
                 assert item is None or isinstance(item, str)
             except Exception:
                 raise MKGeneralException(

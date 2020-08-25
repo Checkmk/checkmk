@@ -214,7 +214,7 @@ SECTION_OMD_INFO = {
     }
 }
 
-MERGED_SECTION = {
+MERGED_SECTION_ENTERPRISE = {
     'check_mk': {
         'num_sites': '3',
         'num_versions': '5'
@@ -319,15 +319,117 @@ MERGED_SECTION = {
     },
 }
 
+MERGED_SECTION_RAWEDITION = {
+    'check_mk': {
+        'num_sites': '3',
+        'num_versions': '5'
+    },
+    'sites': {
+        'cisco': {
+            'inventory_columns': {
+                'autostart': False,
+                'used_version': '1.6.0p13.cee'
+            },
+            'status_columns': {
+                'apache': 'stopped',
+                'crontab': 'stopped',
+                'mkeventd': 'stopped',
+                'nagios': 'not existent',
+                'npcd': 'not existent',
+                'rrdcached': 'stopped',
+                'stunnel': 'not existent',
+                'xinetd': 'not existent'
+            }
+        },
+        'heute': {
+            'inventory_columns': {
+                'autostart': False,
+                'used_version': '2020.08.20.cee'
+            },
+            'status_columns': {
+                'apache': 'running',
+                'check_helper_usage': '0.00%',
+                'check_mk_helper_usage': '0.17%',
+                'crontab': 'running',
+                'livestatus_usage': '0.00%',
+                'mkeventd': 'running',
+                'nagios': 'not existent',
+                'npcd': 'not existent',
+                'num_hosts': '1',
+                'num_services': '48',
+                'rrdcached': 'running',
+                'stunnel': 'not existent',
+                'xinetd': 'not existent'
+            }
+        },
+        'stable': {
+            'inventory_columns': {
+                'autostart': False,
+                'used_version': '1.6.0-2020.08.18.cee'
+            },
+            'status_columns': {
+                'apache': 'running',
+                'check_helper_usage': '0.00%',
+                'check_mk_helper_usage': '0.38%',
+                'crontab': 'running',
+                'livestatus_usage': '0.00%',
+                'mkeventd': 'running',
+                'nagios': 'not existent',
+                'npcd': 'not existent',
+                'num_hosts': '2',
+                'num_services': '103',
+                'rrdcached': 'running',
+                'stunnel': 'not existent',
+                'xinetd': 'not existent'
+            }
+        }
+    },
+    'versions': {
+        '1.6.0-2020.08.18.cee': {
+            'demo': False,
+            'edition': 'cee',
+            'num_sites': 2,
+            'number': '1.6.0-2020.08.18'
+        },
+        '1.6.0p12.cee': {
+            'demo': False,
+            'edition': 'cee',
+            'num_sites': 0,
+            'number': '1.6.0p12'
+        },
+        '1.6.0p13.cee': {
+            'demo': False,
+            'edition': 'cee',
+            'num_sites': 2,
+            'number': '1.6.0p13'
+        },
+        '2020.08.13.cee': {
+            'demo': False,
+            'edition': 'cee',
+            'num_sites': 0,
+            'number': '2020.08.13'
+        },
+        '2020.08.20.cee': {
+            'demo': False,
+            'edition': 'cee',
+            'num_sites': 2,
+            'number': '2020.08.20'
+        }
+    },
+}
 
-def test_merge_sections():
-    assert MERGED_SECTION == inv_checkmk.merge_sections(SECTION_LIVESTATUS_STATUS,
-                                                        SECTION_OMD_STATUS, SECTION_OMD_INFO)
+
+@pytest.mark.parametrize("is_raw_edition, merged_sections", [(False, MERGED_SECTION_ENTERPRISE),
+                                                             (True, MERGED_SECTION_RAWEDITION)])
+def test_merge_sections(monkeypatch, is_raw_edition, merged_sections):
+    monkeypatch.setattr(inv_checkmk.cmk_version, "is_raw_edition", lambda: is_raw_edition)
+    assert merged_sections == inv_checkmk.merge_sections(SECTION_LIVESTATUS_STATUS,
+                                                         SECTION_OMD_STATUS, SECTION_OMD_INFO)
 
 
 def test_inventory_checkmk():
 
-    yielded_inventory = list(inv_checkmk.generate_inventory(MERGED_SECTION))
+    yielded_inventory = list(inv_checkmk.generate_inventory(MERGED_SECTION_ENTERPRISE))
     assert yielded_inventory == [
         TableRow(path=['software', 'applications', 'check_mk', 'sites'],
                  key_columns={'site': 'cisco'},

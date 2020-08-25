@@ -1,15 +1,15 @@
 Title: Windows agent service sets correct access rights in ProgramData directory
-Class: fix
+Class: security
 Compatible: compat
 Component: checks
 Date: 1598371568
 Edition: cre
 Knowledge: doc
-Level: 1
+Level: 2
 Version: 1.7.0i1
 
 Previously, a standard user can write in ProgramData/checkmk/agent directory, 
 thereby getting a possibility to  modify sensitive information.
 
-With this ix the above mentioned vulnerability is eliminated: a standard user 
+With this fix the above mentioned vulnerability is eliminated: a standard user 
 has a right to read and execute.

@@ -269,6 +269,8 @@ class ABCConfigurator(Generic[BoundedAbstractRawData, BoundedAbstractHostSection
         self.host_config: Final[HostConfig] = HostConfig.make_host_config(hostname)
         self._logger: Final[logging.Logger] = logging.getLogger("cmk.base.data_source.%s" % id_)
 
+        self.exit_code_spec = self.host_config.exit_code_spec(id_)
+
     def __repr__(self) -> str:
         return "%s(%r, %r, mode=%r, description=%r, id=%r)" % (
             type(self).__name__,
@@ -418,16 +420,16 @@ class ABCChecker(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         exc_msg = "%s" % self.exception
 
         if isinstance(self.exception, MKEmptyAgentData):
-            status = self.configurator.host_config.exit_code_spec().get("empty_output", 2)
+            status = self.configurator.exit_code_spec.get("empty_output", 2)
 
         elif isinstance(self.exception, (MKAgentError, MKIPAddressLookupError, MKSNMPError)):
-            status = self.configurator.host_config.exit_code_spec().get("connection", 2)
+            status = self.configurator.exit_code_spec.get("connection", 2)
 
         elif isinstance(self.exception, MKTimeout):
-            status = self.configurator.host_config.exit_code_spec().get("timeout", 2)
+            status = self.configurator.exit_code_spec.get("timeout", 2)
 
         else:
-            status = self.configurator.host_config.exit_code_spec().get("exception", 3)
+            status = self.configurator.exit_code_spec.get("exception", 3)
         status = cast(int, status)
 
         return status, exc_msg + check_api_utils.state_markers[status], []

@@ -197,13 +197,13 @@ class AgentSummarizerDefault(AgentSummarizer):
                     expected += ' release %s' % spec['release']
             else:
                 expected = "%s" % (expected_version,)
-            status = cast(int, self._host_config.exit_code_spec().get("wrong_version", 1))
+            status = cast(int, self.configurator.exit_code_spec.get("wrong_version", 1))
             return (status, "unexpected agent version %s (should be %s)%s" %
                     (agent_version, expected, state_markers[status]), [])
 
         if config.agent_min_version and cast(int, agent_version) < config.agent_min_version:
             # TODO: This branch seems to be wrong. Or: In which case is agent_version numeric?
-            status = cast(int, self._host_config.exit_code_spec().get("wrong_version", 1))
+            status = cast(int, self.configurator.exit_code_spec.get("wrong_version", 1))
             return (status, "old plugin version %s (should be at least %s)%s" %
                     (agent_version, config.agent_min_version, state_markers[status]), [])
 
@@ -235,7 +235,7 @@ class AgentSummarizerDefault(AgentSummarizer):
         if missing:
             infotexts.append("missing: %s" % " ".join(sorted(missing)))
 
-        mismatch_state = self._host_config.exit_code_spec().get("restricted_address_mismatch", 1)
+        mismatch_state = self.configurator.exit_code_spec.get("restricted_address_mismatch", 1)
         assert isinstance(mismatch_state, int)
         return (mismatch_state, "Unexpected allowed IP ranges (%s)%s" %
                 (", ".join(infotexts), state_markers[mismatch_state]), [])

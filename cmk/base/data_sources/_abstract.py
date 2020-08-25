@@ -40,7 +40,7 @@ from cmk.base.exceptions import MKAgentError, MKEmptyAgentData, MKIPAddressLooku
 
 from ._cache import SectionStore
 
-__all__ = ["ABCHostSections", "ABCConfigurator", "ABCDataSource", "FileCacheConfigurator", "Mode"]
+__all__ = ["ABCHostSections", "ABCConfigurator", "ABCChecker", "FileCacheConfigurator", "Mode"]
 
 
 class Mode(enum.Enum):
@@ -167,7 +167,7 @@ class FileCacheConfigurator:
     """Hold the configuration to FileCache."""
 
     # TODO: Clean these options up! We need to change all call sites to use
-    #       a single DataSources() object during processing first. Then we
+    #       a single Checkers() object during processing first. Then we
     #       can change these class attributes to object attributes.
     #
     # Set by the user via command line to prevent using cached information at all.
@@ -300,7 +300,7 @@ class ABCConfigurator(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
         return self.fetcher_type.value.from_json(self.configure_fetcher())
 
     @abc.abstractmethod
-    def make_checker(self) -> "ABCDataSource":
+    def make_checker(self) -> "ABCChecker":
         """Create a checker with this configuration."""
         raise NotImplementedError
 
@@ -311,9 +311,9 @@ class ABCSummarizer(Generic[BoundedAbstractHostSections], metaclass=abc.ABCMeta)
         raise NotImplementedError
 
 
-class ABCDataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
-                            BoundedAbstractPersistedSections, BoundedAbstractHostSections],
-                    metaclass=abc.ABCMeta):
+class ABCChecker(Generic[BoundedAbstractRawData, BoundedAbstractSections,
+                         BoundedAbstractPersistedSections, BoundedAbstractHostSections],
+                 metaclass=abc.ABCMeta):
     """Base checker class."""
 
     _use_outdated_persisted_sections = False

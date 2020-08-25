@@ -124,7 +124,7 @@ modes.register_general_option(
 
 
 def option_no_tcp() -> None:
-    data_sources.tcp.TCPDataSource.use_only_cache()
+    data_sources.tcp.TCPChecker.use_only_cache()
 
 
 # TODO: Check whether or not this is used only for -I as written in the help.
@@ -1311,7 +1311,7 @@ def mode_inventory(options: Dict, args: List[str]) -> None:
         console.verbose("Doing HW/SW inventory on all hosts\n")
 
     if "force" in options:
-        data_sources.agent.AgentDataSource.use_outdated_persisted_sections()
+        data_sources.agent.AgentChecker.use_outdated_persisted_sections()
 
     inventory.do_inv(hostnames)
 

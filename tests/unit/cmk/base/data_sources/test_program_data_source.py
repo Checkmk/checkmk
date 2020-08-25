@@ -19,7 +19,7 @@ from cmk.base.data_sources import Mode
 from cmk.base.data_sources.programs import (
     DSProgramConfigurator,
     SpecialAgentConfigurator,
-    ProgramDataSource,
+    ProgramChecker,
 )
 
 fun_args_stdin: Tuple[  #
@@ -48,7 +48,7 @@ def mode_fixture(request):
     return request.param
 
 
-class TestDSProgramDataSource:
+class TestDSProgramChecker:
     @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
     def test_attribute_defaults(self, ipaddress, mode, monkeypatch):
         template = ""
@@ -68,9 +68,9 @@ class TestDSProgramDataSource:
         assert configurator.stdin is None
         assert configurator.description == "Program: "
 
-        source = ProgramDataSource(configurator=configurator)
+        source = ProgramChecker(configurator=configurator)
         assert source.id == "agent"
-        # ProgramDataSource
+        # ProgramChecker
         assert source._cpu_tracking_id == "ds"
 
     @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
@@ -91,7 +91,7 @@ class TestDSProgramDataSource:
         )
 
 
-class TestSpecialAgentDataSource:
+class TestSpecialAgentChecker:
     @pytest.fixture(autouse=True)
     def agent_dir(self, monkeypatch):
         dir_ = Path("/tmp")
@@ -152,7 +152,7 @@ class TestSpecialAgentDataSource:
             str(agent_dir / "special" / ("agent_%s" % special_agent_id)) + " " + expected_args)
         assert configurator.stdin == expected_stdin
 
-        source = ProgramDataSource(configurator=configurator)
+        source = ProgramChecker(configurator=configurator)
 
         assert source.id == "special_%s" % special_agent_id
 

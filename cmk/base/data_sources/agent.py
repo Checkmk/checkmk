@@ -44,14 +44,14 @@ from cmk.base.ip_lookup import normalize_ip_addresses
 
 from ._abstract import (
     ABCConfigurator,
-    ABCDataSource,
+    ABCChecker,
     ABCHostSections,
     ABCParser,
     ABCSummarizer,
     Mode,
 )
 
-__all__ = ["AgentConfigurator", "AgentHostSections", "AgentDataSource"]
+__all__ = ["AgentConfigurator", "AgentHostSections", "AgentChecker"]
 
 
 class AgentHostSections(ABCHostSections[AgentRawData, AgentSections, AgentPersistedSections,
@@ -444,9 +444,9 @@ class AgentParser(ABCParser[AgentRawData, AgentHostSections]):
         )
 
 
-class AgentDataSource(ABCDataSource[AgentRawData, AgentSections, AgentPersistedSections,
-                                    AgentHostSections],
-                      metaclass=abc.ABCMeta):
+class AgentChecker(ABCChecker[AgentRawData, AgentSections, AgentPersistedSections,
+                              AgentHostSections],
+                   metaclass=abc.ABCMeta):
     """Base for agent-based checkers.
 
     Args:

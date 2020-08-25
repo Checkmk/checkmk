@@ -22,7 +22,7 @@ import cmk.base.config as config
 from cmk.base.data_sources import Mode
 from cmk.base.data_sources.agent import (
     AgentConfigurator,
-    AgentDataSource,
+    AgentChecker,
     AgentParser,
     AgentSummarizer,
 )
@@ -185,7 +185,7 @@ class StubSummarizer(AgentSummarizer):
         return 0, "", []
 
 
-class StubAgent(AgentDataSource):
+class StubAgent(AgentChecker):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, summarizer=StubSummarizer(), **kwargs)
 

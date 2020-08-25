@@ -23,7 +23,7 @@ import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.data_sources import (
-    ABCDataSource,
+    ABCChecker,
     ABCHostSections,
     _data_sources,
     make_host_sections,
@@ -32,10 +32,10 @@ from cmk.base.data_sources import (
 )
 from cmk.base.data_sources.agent import AgentHostSections
 from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
-from cmk.base.data_sources.piggyback import PiggyBackConfigurator, PiggyBackDataSource
-from cmk.base.data_sources.programs import ProgramConfigurator, ProgramDataSource
-from cmk.base.data_sources.snmp import SNMPConfigurator, SNMPDataSource, SNMPHostSections, CachedSNMPDetector
-from cmk.base.data_sources.tcp import TCPConfigurator, TCPDataSource
+from cmk.base.data_sources.piggyback import PiggyBackConfigurator, PiggyBackChecker
+from cmk.base.data_sources.programs import ProgramConfigurator, ProgramChecker
+from cmk.base.data_sources.snmp import SNMPConfigurator, SNMPChecker, SNMPHostSections, CachedSNMPDetector
+from cmk.base.data_sources.tcp import TCPConfigurator, TCPChecker
 
 _TestSection = collections.namedtuple(
     "TestSection",
@@ -486,7 +486,7 @@ class TestMakeHostSectionsHosts:
         monkeypatch.setattr(ABCFetcher, "fetch", lambda self: None)
         monkeypatch.setattr(CachedSNMPDetector, "__call__", lambda *args, **kwargs: frozenset())
         monkeypatch.setattr(
-            ABCDataSource,
+            ABCChecker,
             "check",
             lambda self, raw_data: DummyHostSection(
                 sections={SectionName("section_name_%s" % self.hostname): [["section_content"]]},
@@ -546,7 +546,7 @@ class TestMakeHostSectionsHosts:
             ipaddress,
             mode=mode,
             sources=[
-                SNMPDataSource(configurator=SNMPConfigurator.snmp(
+                SNMPChecker(configurator=SNMPConfigurator.snmp(
                     hostname,
                     ipaddress,
                     mode=mode,
@@ -569,20 +569,19 @@ class TestMakeHostSectionsHosts:
     @pytest.mark.parametrize(
         "source",
         [
-            lambda hostname, ipaddress, *, mode: PiggyBackDataSource(configurator=
-                                                                     PiggyBackConfigurator(
-                                                                         hostname,
-                                                                         ipaddress,
-                                                                         mode=mode,
-                                                                     ),),
-            lambda hostname, ipaddress, *, mode: ProgramDataSource(configurator=ProgramConfigurator.
-                                                                   ds(
-                                                                       hostname,
-                                                                       ipaddress,
-                                                                       mode=mode,
-                                                                       template="",
-                                                                   ),),
-            lambda hostname, ipaddress, *, mode: TCPDataSource(configurator=TCPConfigurator(
+            lambda hostname, ipaddress, *, mode: PiggyBackChecker(configurator=
+                                                                  PiggyBackConfigurator(
+                                                                      hostname,
+                                                                      ipaddress,
+                                                                      mode=mode,
+                                                                  ),),
+            lambda hostname, ipaddress, *, mode: ProgramChecker(configurator=ProgramConfigurator.ds(
+                hostname,
+                ipaddress,
+                mode=mode,
+                template="",
+            ),),
+            lambda hostname, ipaddress, *, mode: TCPChecker(configurator=TCPConfigurator(
                 hostname,
                 ipaddress,
                 mode=mode,
@@ -622,13 +621,13 @@ class TestMakeHostSectionsHosts:
         host_config,
     ):
         sources = [
-            ProgramDataSource(configurator=ProgramConfigurator.ds(
+            ProgramChecker(configurator=ProgramConfigurator.ds(
                 hostname,
                 ipaddress,
                 mode=mode,
                 template="",
             ),),
-            TCPDataSource(configurator=TCPConfigurator(
+            TCPChecker(configurator=TCPConfigurator(
                 hostname,
                 ipaddress,
                 mode=mode,
@@ -659,12 +658,12 @@ class TestMakeHostSectionsHosts:
 
     def test_multiple_sources_from_different_hosts(self, hostname, ipaddress, mode, config_cache, host_config):
         sources = [
-            ProgramDataSource(
+            ProgramChecker(
                 configurator=ProgramConfigurator.ds(hostname + "0", ipaddress,
                                                     mode=mode,
                                                    template="",),),
-            TCPDataSource(configurator=TCPConfigurator(hostname + "1", ipaddress, mode=mode,),),
-            TCPDataSource(
+            TCPChecker(configurator=TCPConfigurator(hostname + "1", ipaddress, mode=mode,),),
+            TCPChecker(
                 configurator=TCPConfigurator(hostname + "2", ipaddress, mode=mode),
             ),
         ]
@@ -707,7 +706,7 @@ class TestMakeHostSectionsClusters:
                 pass
 
         monkeypatch.setattr(
-            ABCDataSource,
+            ABCChecker,
             "check",
             lambda self, *args, **kwargs: DummyHostSection(
                 sections={SectionName("section_name_%s" % self.hostname): [["section_content"]]},
@@ -814,7 +813,7 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
         make_piggybacked_sections,
     )
     monkeypatch.setattr(
-        ABCDataSource,
+        ABCChecker,
         "check",
         check,
     )

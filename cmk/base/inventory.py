@@ -220,7 +220,7 @@ def do_inventory_actions_during_checking_for(
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
     *,
-    sources: data_sources.DataSources,
+    sources: data_sources.Checkers,
     multi_host_sections: MultiHostSections,
 ) -> None:
     hostname = host_config.hostname
@@ -252,7 +252,7 @@ def _do_inv_for(
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
     *,
-    sources: data_sources.DataSources,
+    sources: data_sources.Checkers,
     multi_host_sections: Optional[MultiHostSections],
 ) -> Tuple[StructuredDataTree, StructuredDataTree]:
     hostname = host_config.hostname
@@ -297,7 +297,7 @@ def _do_inv_for_cluster(host_config: config.HostConfig, inventory_tree: Structur
 def _do_inv_for_realhost(
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
-    sources: data_sources.DataSources,
+    sources: data_sources.Checkers,
     multi_host_sections: Optional[MultiHostSections],
     hostname: HostName,
     ipaddress: Optional[HostAddress],
@@ -305,7 +305,7 @@ def _do_inv_for_realhost(
     status_data_tree: StructuredDataTree,
 ) -> None:
     for source in sources:
-        if isinstance(source, data_sources.snmp.SNMPDataSource):
+        if isinstance(source, data_sources.snmp.SNMPChecker):
             # TODO(ml): This modifies the SNMP fetcher config dynamically.
             configurator = cast(data_sources.snmp.SNMPConfigurator, source.configurator)
             configurator.on_snmp_scan_error = "raise"  # default

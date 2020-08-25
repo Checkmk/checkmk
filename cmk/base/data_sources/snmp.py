@@ -30,7 +30,7 @@ from cmk.base.config import SelectedRawSections
 
 from ._abstract import (
     ABCConfigurator,
-    ABCDataSource,
+    ABCChecker,
     ABCHostSections,
     ABCParser,
     ABCSummarizer,
@@ -176,7 +176,7 @@ class SNMPConfigurator(ABCConfigurator):
                 str(name): [tree.to_json() for tree in trees]
                 for name, trees in self._make_oid_infos(
                     persisted_sections=self.section_store.load(
-                        SNMPDataSource._use_outdated_persisted_sections),
+                        SNMPChecker._use_outdated_persisted_sections),
                     selected_raw_sections=self.selected_raw_sections,
                     prefetched_sections=self.prefetched_sections,
                 ).items()
@@ -185,8 +185,8 @@ class SNMPConfigurator(ABCConfigurator):
             "snmp_config": self.snmp_config._asdict(),
         }
 
-    def make_checker(self) -> "SNMPDataSource":
-        return SNMPDataSource(self)
+    def make_checker(self) -> "SNMPChecker":
+        return SNMPChecker(self)
 
     def _make_snmp_scan_sections(self) -> Iterable[SNMPScanSection]:
         """Create list of all SNMP scan specifications.
@@ -351,8 +351,7 @@ class SNMPSummarizer(ABCSummarizer[SNMPHostSections]):
         return 0, "Success", []
 
 
-class SNMPDataSource(ABCDataSource[SNMPRawData, SNMPSections, SNMPPersistedSections,
-                                   SNMPHostSections]):
+class SNMPChecker(ABCChecker[SNMPRawData, SNMPSections, SNMPPersistedSections, SNMPHostSections]):
     def __init__(self, configurator: SNMPConfigurator) -> None:
         super().__init__(
             configurator,

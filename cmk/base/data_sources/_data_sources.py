@@ -24,7 +24,7 @@ import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.config import HostConfig, SelectedRawSections
 
-from ._abstract import ABCConfigurator, ABCDataSource, Mode
+from ._abstract import ABCConfigurator, ABCChecker, Mode
 from .agent import AgentHostSections
 from .host_sections import HostKey, MultiHostSections
 from .ipmi import IPMIConfigurator
@@ -33,9 +33,9 @@ from .programs import DSProgramConfigurator, SpecialAgentConfigurator
 from .snmp import SNMPConfigurator
 from .tcp import TCPConfigurator
 
-__all__ = ["DataSources", "make_host_sections", "make_configurators", "make_sources"]
+__all__ = ["Checkers", "make_host_sections", "make_configurators", "make_sources"]
 
-DataSources = Iterable[ABCDataSource]
+Checkers = Iterable[ABCChecker]
 
 
 class _Builder:
@@ -188,7 +188,7 @@ def make_sources(
     ipaddress: Optional[HostAddress],
     *,
     mode: Mode,
-) -> DataSources:
+) -> Checkers:
     """Iterable of checkers available for `host_config`."""
     return list(c.make_checker() for c in make_configurators(host_config, ipaddress, mode=mode))
 
@@ -198,7 +198,7 @@ def make_host_sections(
     host_config: HostConfig,
     ipaddress: Optional[HostAddress],
     mode: Mode,
-    sources: DataSources,
+    sources: Checkers,
     *,
     max_cachefile_age: int,
     selected_raw_sections: Optional[SelectedRawSections],
@@ -229,7 +229,7 @@ def _make_piggybacked_sections(host_config) -> SelectedRawSections:
 
 
 def _make_host_sections(
-    nodes: Iterable[Tuple[HostName, Optional[HostAddress], DataSources]],
+    nodes: Iterable[Tuple[HostName, Optional[HostAddress], Checkers]],
     *,
     max_cachefile_age: int,
     selected_raw_sections: Optional[SelectedRawSections],
@@ -278,7 +278,7 @@ def _make_host_sections(
 
 def _make_piggyback_nodes(
         mode: Mode, config_cache: config.ConfigCache,
-        host_config: HostConfig) -> Iterable[Tuple[HostName, Optional[HostAddress], DataSources]]:
+        host_config: HostConfig) -> Iterable[Tuple[HostName, Optional[HostAddress], Checkers]]:
     """Abstract clusters/nodes/hosts"""
     assert host_config.nodes is not None
 

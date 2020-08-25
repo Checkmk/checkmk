@@ -1234,14 +1234,14 @@ def _get_sources_for_discovery(
     ipaddress: Optional[HostAddress],
     *,
     on_error: str,
-) -> data_sources.DataSources:
+) -> data_sources.Checkers:
     sources = data_sources.make_sources(
         host_config,
         ipaddress,
         mode=data_sources.Mode.DISCOVERY,
     )
     for source in sources:
-        if isinstance(source, data_sources.snmp.SNMPDataSource):
+        if isinstance(source, data_sources.snmp.SNMPChecker):
             configurator = cast(data_sources.snmp.SNMPConfigurator, source.configurator)
             configurator.on_snmp_scan_error = on_error
             configurator.use_snmpwalk_cache = False

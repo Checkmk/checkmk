@@ -21,7 +21,7 @@ from cmk.base.config import HostConfig, IPMICredentials
 from cmk.base.exceptions import MKAgentError
 
 from ._abstract import Mode
-from .agent import AgentConfigurator, AgentDataSource, AgentHostSections, AgentSummarizer
+from .agent import AgentConfigurator, AgentChecker, AgentHostSections, AgentSummarizer
 
 
 class IPMIConfigurator(AgentConfigurator):
@@ -65,8 +65,8 @@ class IPMIConfigurator(AgentConfigurator):
             "password": self.credentials["password"],
         }
 
-    def make_checker(self) -> "IPMIManagementBoardDataSource":
-        return IPMIManagementBoardDataSource(self)
+    def make_checker(self) -> "IPMIManagementBoardChecker":
+        return IPMIManagementBoardChecker(self)
 
     @staticmethod
     def _make_description(ipaddress: Optional[HostAddress], credentials: IPMICredentials):
@@ -102,6 +102,6 @@ class IPMISummarizer(AgentSummarizer):
 
 
 # NOTE: This class is *not* abstract, even if pylint is too dumb to see that!
-class IPMIManagementBoardDataSource(AgentDataSource):
+class IPMIManagementBoardChecker(AgentChecker):
     def __init__(self, configurator: IPMIConfigurator) -> None:
         super().__init__(configurator, summarizer=IPMISummarizer())

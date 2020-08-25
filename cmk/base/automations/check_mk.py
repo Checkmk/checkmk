@@ -199,7 +199,7 @@ class AutomationTryDiscovery(Automation):
             args = args[1:]
             use_caches = True
             data_sources.FileCacheConfigurator.use_outdated = True
-            data_sources.tcp.TCPDataSource.use_only_cache()
+            data_sources.tcp.TCPChecker.use_only_cache()
 
         elif args[0] == '@scan':
             args = args[1:]
@@ -1240,9 +1240,9 @@ class AutomationDiagHost(Automation):
                     raw_data = fetcher.fetch()
                 # We really receive a byte string here. The agent sections
                 # may have different encodings and are normally decoded one
-                # by one (AgentDataSource._parse_host_section).  For the
+                # by one (AgentChecker._parse_host_section).  For the
                 # moment we use UTF-8 with fallback to latin-1 by default,
-                # similar to the AgentDataSource, but we do not
+                # similar to the AgentChecker, but we do not
                 # respect the ecoding options of sections.
                 # If this is a problem, we would have to apply parse and
                 # decode logic and unparse the decoded output again.

@@ -19,7 +19,7 @@ import cmk.base.core_config as core_config
 from cmk.base.config import SpecialAgentConfiguration
 
 from ._abstract import Mode
-from .agent import AgentConfigurator, AgentDataSource, AgentSummarizerDefault
+from .agent import AgentConfigurator, AgentChecker, AgentSummarizerDefault
 
 
 class ProgramConfigurator(AgentConfigurator):
@@ -96,8 +96,8 @@ class ProgramConfigurator(AgentConfigurator):
             "is_cmc": config.is_cmc(),
         }
 
-    def make_checker(self) -> "ProgramDataSource":
-        return ProgramDataSource(self)
+    def make_checker(self) -> "ProgramChecker":
+        return ProgramChecker(self)
 
     @staticmethod
     def _make_description(cmdline, stdin):
@@ -257,7 +257,7 @@ class SpecialAgentConfigurator(ProgramConfigurator):
         return core_config.active_check_arguments(hostname, None, agent_configuration)
 
 
-class ProgramDataSource(AgentDataSource):
+class ProgramChecker(AgentChecker):
     """Abstract base class for all data source classes that execute external programs"""
     def __init__(self, configurator: ProgramConfigurator) -> None:
         super().__init__(

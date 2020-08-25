@@ -20,7 +20,7 @@ import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.data_sources import Mode
 from cmk.base.data_sources.agent import AgentHostSections
-from cmk.base.data_sources.snmp import SNMPConfigurator, SNMPDataSource
+from cmk.base.data_sources.snmp import SNMPConfigurator, SNMPChecker
 from cmk.base.exceptions import MKIPAddressLookupError
 
 
@@ -51,7 +51,7 @@ def configurator_source(scenario, hostname, ipaddress, mode):
 
 @pytest.fixture(name="source")
 def source_fixture(scenario, configurator):
-    return SNMPDataSource(configurator)
+    return SNMPChecker(configurator)
 
 
 def test_snmp_ipaddress_from_mgmt_board_unresolvable(hostname, monkeypatch):
@@ -156,7 +156,7 @@ class TestSNMPSummaryResult:
 
     @pytest.fixture
     def source(self, hostname, mode):
-        return SNMPDataSource(configurator=SNMPConfigurator(
+        return SNMPChecker(configurator=SNMPConfigurator(
             hostname,
             "1.2.3.4",
             mode=mode,

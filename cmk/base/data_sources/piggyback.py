@@ -16,7 +16,7 @@ from cmk.fetchers import FetcherType
 import cmk.base.config as config
 
 from ._abstract import Mode
-from .agent import AgentConfigurator, AgentDataSource, AgentHostSections, AgentSummarizer
+from .agent import AgentConfigurator, AgentChecker, AgentHostSections, AgentSummarizer
 
 
 class PiggyBackConfigurator(AgentConfigurator):
@@ -49,8 +49,8 @@ class PiggyBackConfigurator(AgentConfigurator):
             "time_settings": self.time_settings,
         }
 
-    def make_checker(self) -> "PiggyBackDataSource":
-        return PiggyBackDataSource(self)
+    def make_checker(self) -> "PiggyBackChecker":
+        return PiggyBackChecker(self)
 
     @staticmethod
     def _make_description(hostname: HostName):
@@ -95,6 +95,6 @@ class PiggyBackSummarizer(AgentSummarizer):
         return max(states), ", ".join(infotexts), []
 
 
-class PiggyBackDataSource(AgentDataSource):
+class PiggyBackChecker(AgentChecker):
     def __init__(self, configurator: PiggyBackConfigurator) -> None:
         super().__init__(configurator, summarizer=PiggyBackSummarizer(configurator))

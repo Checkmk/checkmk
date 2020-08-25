@@ -16,7 +16,7 @@ from cmk.base.data_sources import Mode
 from cmk.base.data_sources.agent import AgentHostSections
 from cmk.base.data_sources.ipmi import (
     IPMIConfigurator,
-    IPMIManagementBoardDataSource,
+    IPMIManagementBoardChecker,
     IPMISummarizer,
 )
 
@@ -40,7 +40,7 @@ def test_attribute_defaults(mode, monkeypatch):
     assert configurator.description == "Management board - IPMI"
     assert configurator.source_type is SourceType.MANAGEMENT
 
-    source = IPMIManagementBoardDataSource(configurator=configurator)
+    source = IPMIManagementBoardChecker(configurator=configurator)
     assert source.hostname == hostname
     # Address comes from management board.
     assert source.ipaddress is None
@@ -73,7 +73,7 @@ def test_ipmi_ipaddress_from_mgmt_board(mode, monkeypatch):
     configurator = IPMIConfigurator(hostname, ipaddress, mode=mode)
     assert configurator.host_config.management_address == ipaddress
 
-    source = IPMIManagementBoardDataSource(configurator=configurator)
+    source = IPMIManagementBoardChecker(configurator=configurator)
     assert source.ipaddress == ipaddress
 
 

@@ -145,14 +145,14 @@ body.main .popup_menu #side_header > span {
 }
 
 #side_fold {
-  width: 15px;
-  height: 15px;
-  margin: 0 auto;
+  width: 20px;
+  height: 20px;
+  margin: 0 auto 10px;
   cursor: pointer;
 
   background: no-repeat center / 36% url("images/side_fold.png") $navigation-bg-color;
   border: 1px solid $img-color;
-  border-radius: 9px;
+  border-radius: 15px;
 
   &.folded {
     transform: rotate(180deg);

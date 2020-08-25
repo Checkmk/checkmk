@@ -310,47 +310,49 @@ div#top_heading {
       width: 100%;
       padding: 6px 3px 3px 0;
 
+      @keyframes easyhoverbg {
+        from { background-color: 1px solid $button-bg-color-secondary; }
+        to { background-color: 1px solid $button-bg-color-secondary-hover; }
+      }
+
       div.suggestion {
         display: flex;
         align-items: center;
         justify-content: center;
         float: left;
-        height: 34px;
-        padding: 0 11px;
         margin: 2px 5px;
-        font-size: 12px;
-        font-weight: bold;
-        color: $white;
-        cursor: pointer;
-        background-color: $button-bg-color-secondary;
-        border-radius: 4px;
 
         &:nth-child(1) {
           margin-left: 0;
         }
 
         a {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          height: 34px;
+          padding: 0 11px;
+
+          font-size: 12px;
+          font-weight: bold;
+          color: $white;
           text-decoration: none;
+          background-color: $button-bg-color-secondary;
+          border-radius: 4px;
 
           img {
             margin-right: 6px;
           }
-        }
-      }
 
-      @keyframes easyhoverbg {
-        from { background-color: 1px solid $button-bg-color-secondary; }
-        to { background-color: 1px solid $button-bg-color-secondary-hover; }
-      }
+          &:hover {
+            cursor: pointer;
+            background-color: $button-bg-color-secondary-hover;
 
-      div.suggestion:hover {
-        animation-duration: 0.5s;
-        animation-name: easyhoverbg;
-        animation-fill-mode: forwards;
-
-        div.title, div.explanation {
-          animation-duration: 0.5s;
-          animation-fill-mode: forwards;
+            animation-duration: 0.5s;
+            animation-name: easyhoverbg;
+            animation-fill-mode: forwards;
+          }
         }
       }
     }

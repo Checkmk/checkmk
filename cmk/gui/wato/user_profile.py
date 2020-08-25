@@ -192,7 +192,7 @@ class ABCUserProfilePage(Page):
     def _page_menu(self, breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(breadcrumb,
                                           form_name="profile",
-                                          button_name="save",
+                                          button_name="_save",
                                           add_abort_link=False)
         menu.dropdowns.insert(1, page_menu_dropdown_user_related(html.myfile))
         return menu

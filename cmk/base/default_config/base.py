@@ -16,6 +16,7 @@ _NEGATE = '@negate'  # negation in boolean lists
 
 monitoring_core = "nagios"  # other option: "cmc"
 mkeventd_enabled = False  # Set by OMD hook
+pnp4nagios_enabled = True  # Set by OMD hook
 # TODO: Is this one deprecated for a long time?
 agent_port = 6556
 agent_ports: _List = []

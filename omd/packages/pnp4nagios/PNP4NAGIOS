@@ -30,6 +30,7 @@ case "$1" in
            if [ -s $OMD_ROOT/etc/mod-gearman/perfdata.conf ]; then
                sed -i -e 's/^perfdata=.*$/perfdata=no/' $OMD_ROOT/etc/mod-gearman/perfdata.conf
            fi
+           pnp4nagios_enabled="True"
        elif [ "$2" == "gearman" ]
        then
            if [ -e $OMD_ROOT/etc/nagios/nagios.d ] ; then
@@ -39,19 +40,29 @@ case "$1" in
            if [ -s $OMD_ROOT/etc/mod-gearman/perfdata.conf ]; then
                sed -i -e 's/^perfdata=.*$/perfdata=yes/' $OMD_ROOT/etc/mod-gearman/perfdata.conf
            fi
+           pnp4nagios_enabled="True"
        elif [ "$2" == "npcd" ]
        then
            if [ -e $OMD_ROOT/etc/nagios/nagios.d ] ; then
                ln -sfn ../../pnp4nagios/nagios_npcd.cfg $OMD_ROOT/etc/nagios/nagios.d/pnp4nagios.cfg
            fi
            ln -sfn ../../pnp4nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/pnp4nagios.conf
+           pnp4nagios_enabled="True"
        else
            rm -f $OMD_ROOT/etc/nagios/nagios.d/pnp4nagios.cfg
            rm -f $OMD_ROOT/etc/apache/conf.d/pnp4nagios.conf
            if [ -s $OMD_ROOT/etc/mod-gearman/perfdata.conf ]; then
                sed -i -e 's/^perfdata=.*$/perfdata=no/' $OMD_ROOT/etc/mod-gearman/perfdata.conf
            fi
+           pnp4nagios_enabled="False"
        fi
+       cat <<EOF > $OMD_ROOT/etc/check_mk/conf.d/pnp4nagios.mk
+# Set by OMD hook PNP4NAGIOS, do not change here!
+pnp4nagios_enabled = $pnp4nagios_enabled
+EOF
+       # Try to update the core config to make the Microcore/Livestatus know whether or not the
+       # pnp4nagios is enabled. Totally ignore configuration validation errors here. Be silent.
+       cmk -U >/dev/null 2>&1 || true
     ;;
     depends)
         [ "$CONFIG_CORE" != cmc -a "$CONFIG_CORE" != none ]

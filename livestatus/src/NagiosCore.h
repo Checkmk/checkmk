@@ -117,6 +117,7 @@ public:
     MetricLocation metricLocation(const std::string &host_name,
                                   const std::string &service_description,
                                   const Metric::Name &var) const override;
+    bool pnp4nagiosEnabled() const override;
 
     // specific for NagiosCore
     bool answerRequest(InputBuffer &input, OutputBuffer &output);

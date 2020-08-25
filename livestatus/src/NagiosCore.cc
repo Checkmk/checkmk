@@ -256,6 +256,10 @@ MetricLocation NagiosCore::metricLocation(
         "1"};
 }
 
+bool NagiosCore::pnp4nagiosEnabled() const {
+    return true;  // TODO(sp) ???
+}
+
 bool NagiosCore::answerRequest(InputBuffer &input, OutputBuffer &output) {
     return _store.answerRequest(input, output);
 }

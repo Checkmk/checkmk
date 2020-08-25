@@ -14,7 +14,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Type
 import cmk.utils.plugin_registry
 
 import cmk.gui.config as config
-from cmk.gui.globals import html, g
+from cmk.gui.globals import html
 from cmk.gui.i18n import _, _u
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.valuespec import (
@@ -386,11 +386,7 @@ class HostAttributeRegistry(cmk.utils.plugin_registry.Registry[Type[ABCHostAttri
 
     def get_sorted_host_attributes(self) -> List[ABCHostAttribute]:
         """Return host attribute objects in the order they should be displayed (in edit dialogs)"""
-        cache_id = "sorted_host_attributes"
-        if cache_id not in g:
-            g[cache_id] = sorted(self.attributes(),
-                                             key=lambda a: (a.sort_index(), a.topic()))
-        return g[cache_id]
+        return sorted(self.attributes(), key=lambda a: (a.sort_index(), a.topic()))
 
     def get_choices(self):
         return [(a.name(), a.title()) for a in self.get_sorted_host_attributes()]

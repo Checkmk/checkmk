@@ -2936,7 +2936,9 @@ class HostConfig:
         specs = self._config_cache.host_extra_conf(self.hostname, check_mk_exit_status)
         for entry in specs[::-1]:
             spec.update(entry)
-        return self._merge_with_data_source_exit_code_spec(spec, data_source_id)
+
+        merged_spec = self._merge_with_data_source_exit_code_spec(spec, data_source_id)
+        return self._merge_with_optional_exit_code_parameters(spec, merged_spec)
 
     def _merge_with_data_source_exit_code_spec(self, spec: Dict,
                                                data_source_id: Optional[str]) -> ExitSpec:
@@ -2953,6 +2955,16 @@ class HostConfig:
 
         # Old configuration format
         return spec
+
+    def _merge_with_optional_exit_code_parameters(self, spec: Dict,
+                                                  merged_spec: ExitSpec) -> ExitSpec:
+        # Additional optional parameters which are not part of individual
+        # or overall parameters
+        for key in ('restricted_address_mismatch',):
+            value = spec.get(key)
+            if value is not None:
+                merged_spec[key] = value
+        return merged_spec
 
     @property
     def do_status_data_inventory(self) -> bool:

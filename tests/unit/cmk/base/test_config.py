@@ -9,8 +9,10 @@ from pathlib import Path
 import pytest  # type: ignore[import]
 from six import ensure_str
 
-from testlib import CheckManager
-from testlib.base import Scenario
+# No stub file
+from testlib import CheckManager  # type: ignore[import]
+# No stub file
+from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 import cmk.utils.version as cmk_version
@@ -1080,6 +1082,58 @@ def test_host_config_exit_code_spec_individual(monkeypatch, hostname, result):
     ])
     config_cache = ts.apply(monkeypatch)
     assert config_cache.get_host_config(hostname).exit_code_spec(data_source_id="snmp") == result
+
+
+@pytest.mark.parametrize("ruleset", [
+    {
+        "empty_output": 2,
+        'restricted_address_mismatch': 2,
+    },
+    {
+        "overall": {
+            "empty_output": 2,
+        },
+        'restricted_address_mismatch': 2,
+    },
+    {
+        "individual": {
+            "snmp": {
+                "empty_output": 2,
+            }
+        },
+        'restricted_address_mismatch': 2,
+    },
+    {
+        "overall": {
+            "empty_output": 1000,
+        },
+        "individual": {
+            "snmp": {
+                "empty_output": 2,
+            }
+        },
+        'restricted_address_mismatch': 2,
+    },
+])
+def test_host_config_exit_code_spec(monkeypatch, ruleset):
+    hostname = "hostname"
+    ts = Scenario().add_host(hostname)
+    ts.set_ruleset("check_mk_exit_status", [
+        (ruleset, [], ["hostname"], {}),
+    ])
+    config_cache = ts.apply(monkeypatch)
+    host_config = config_cache.get_host_config(hostname)
+
+    exit_code_spec = host_config.exit_code_spec()
+    assert 'restricted_address_mismatch' in exit_code_spec
+    assert exit_code_spec['restricted_address_mismatch'] == 2
+
+    result = {
+        "empty_output": 2,
+        'restricted_address_mismatch': 2,
+    }
+    snmp_exit_code_spec = host_config.exit_code_spec(data_source_id="snmp")
+    assert snmp_exit_code_spec == result
 
 
 @pytest.mark.parametrize("hostname,version,result", [

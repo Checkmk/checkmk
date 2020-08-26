@@ -67,11 +67,6 @@ from cmk.gui.plugins.wato import (
 
 
 class ABCTagMode(WatoMode, metaclass=abc.ABCMeta):
-    # NOTE: This class is obviously still abstract, but pylint fails to see
-    # this, even in the presence of the meta class assignment below, see
-    # https://github.com/PyCQA/pylint/issues/179.
-
-    # pylint: disable=abstract-method
     def __init__(self):
         super(ABCTagMode, self).__init__()
         self._tag_config_file = TagConfigFile()
@@ -837,11 +832,6 @@ class ABCOperation(metaclass=abc.ABCMeta):
 
 
 class ABCTagGroupOperation(ABCOperation, metaclass=abc.ABCMeta):
-    # NOTE: This class is obviously still abstract, but pylint fails to see
-    # this, even in the presence of the meta class assignment below, see
-    # https://github.com/PyCQA/pylint/issues/179.
-
-    # pylint: disable=abstract-method
     def __init__(self, tag_group_id: str) -> None:
         super(ABCTagGroupOperation, self).__init__()
         self.tag_group_id = tag_group_id

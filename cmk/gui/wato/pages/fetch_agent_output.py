@@ -179,11 +179,6 @@ class PageFetchAgentOutput(AgentOutputPage):
 
 
 class ABCAutomationFetchAgentOutput(AutomationCommand, metaclass=abc.ABCMeta):
-    # NOTE: This class is obviously still abstract, but pylint fails to see
-    # this, even in the presence of the meta class assignment below, see
-    # https://github.com/PyCQA/pylint/issues/179.
-
-    # pylint: disable=abstract-method
     def get_request(self) -> FetchAgentOutputRequest:
         config.user.need_permission("wato.download_agent_output")
 

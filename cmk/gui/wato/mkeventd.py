@@ -1037,11 +1037,6 @@ class SampleConfigGeneratorECSampleRulepack(SampleConfigGenerator):
 
 
 class ABCEventConsoleMode(WatoMode, metaclass=abc.ABCMeta):
-    # NOTE: This class is obviously still abstract, but pylint fails to see
-    # this, even in the presence of the meta class assignment below, see
-    # https://github.com/PyCQA/pylint/issues/179.
-
-    # pylint: disable=abstract-method
     def __init__(self):
         self._rule_packs = load_mkeventd_rules()
         super().__init__()

@@ -1133,9 +1133,13 @@ def _get_needed_plugin_names(
 
     # In case the host is monitored as special agent, the check plugin for the special agent needs
     # to be loaded
+    try:
+        ipaddress = ip_lookup.lookup_ip_address(host_config)
+    except Exception:
+        ipaddress = None
     for configurator in data_sources.make_configurators(
             host_config,
-            None,
+            ipaddress,
             mode=data_sources.Mode.NONE,
     ):
         if isinstance(configurator, data_sources.programs.SpecialAgentConfigurator):

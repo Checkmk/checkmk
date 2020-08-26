@@ -37,8 +37,8 @@ item:
 inventory:
  One service is created for each interface that fulfills configurable conditions
  (rule "Network Interface and Switch Port Discovery").
- By default, these are interfaces which are currently found {up} and are of types {6}
- (ethernetCsmacd), {32} (frameRelay) or {117} (gigabitEthernet).
+ By default, these are interfaces which are currently found {up} and are of type 6, 32,
+ 62, 117, 127, 128, 129, 180, 181, 182, 205 or 229.
 
  {Grouping:} In some situations, you do not want to monitor a single
  interface but a group of interfaces that together form a pool.

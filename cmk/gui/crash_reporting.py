@@ -12,7 +12,7 @@ import pprint
 import tarfile
 import time
 import traceback
-from typing import Dict, Mapping, Optional, Type
+from typing import Dict, Mapping, Optional, Type, Iterator
 
 from six import ensure_str
 
@@ -31,6 +31,7 @@ import cmk.gui.userdb as userdb
 from cmk.gui.log import logger
 from cmk.gui.plugins.views.crash_reporting import CrashReportsRowTable
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.valuespec import (
     EmailAddress,
     TextUnicode,
@@ -38,10 +39,23 @@ from cmk.gui.valuespec import (
 )
 import cmk.gui.config as config
 import cmk.gui.forms as forms
-from cmk.gui.breadcrumb import make_simple_page_breadcrumb, Breadcrumb
 from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.breadcrumb import (
+    make_topic_breadcrumb,
+    make_current_page_breadcrumb_item,
+    Breadcrumb,
+    BreadcrumbItem,
+)
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+)
 
 CrashReportStore = cmk.utils.crash_reporting.CrashReportStore
+CrashInfo = Dict
 
 
 def handle_exception_as_gui_crash_report(details: Optional[Dict] = None,
@@ -153,11 +167,12 @@ class ABCCrashReportPage(cmk.gui.pages.Page, metaclass=abc.ABCMeta):
 @cmk.gui.pages.page_registry.register_page("crash")
 class PageCrash(ABCCrashReportPage):
     def page(self):
-        title = _("Crash report: %s") % self._crash_id
-        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
-        html.header(title, breadcrumb)
         row = self._get_crash_row()
         crash_info = self._get_crash_info(row)
+
+        title = _("Crash report: %s") % self._crash_id
+        breadcrumb = self._breadcrumb(title)
+        html.header(title, breadcrumb, self._page_menu(breadcrumb, crash_info))
 
         # Do not reveal crash context information to unauthenticated users or not permitted
         # users to prevent disclosure of internal information
@@ -170,8 +185,6 @@ class PageCrash(ABCCrashReportPage):
                   "or in <tt>var/log/web.log</tt>."))
             html.footer()
             return
-
-        self._show_context_buttons(crash_info)
 
         if html.request.has_var("_report") and html.check_transaction():
             details = self._handle_report_form(crash_info)
@@ -192,18 +205,61 @@ class PageCrash(ABCCrashReportPage):
 
         html.footer()
 
-    def _show_context_buttons(self, crash_info):
-        html.begin_context_buttons()
+    def _breadcrumb(self, title: str) -> Breadcrumb:
+        breadcrumb = make_topic_breadcrumb(mega_menu_registry.menu_monitoring(),
+                                           PagetypeTopics.get_topic("analyze"))
 
-        html.context_button(_("All crashes"), "view.py?view_name=crash_reports", "crash")
+        # Add the parent element: List of all crashes
+        breadcrumb.append(
+            BreadcrumbItem(
+                title=_("Crash reports"),
+                url=html.makeuri_contextless([("view_name", "crash_reports")], filename="view.py"),
+            ))
 
-        self._crash_type_renderer(crash_info["crash_type"]).context_buttons(
-            crash_info, self._site_id)
+        breadcrumb.append(make_current_page_breadcrumb_item(title))
 
-        download_url = html.makeuri([], filename="download_crash_report.py")
-        html.context_button(_("Download"), download_url, "download")
+        return breadcrumb
 
-        html.end_context_buttons()
+    def _page_menu(self, breadcrumb: Breadcrumb, crash_info: CrashInfo) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="crash_reports",
+                    title=_("Crash reports"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("This crash report"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Download"),
+                                    icon_name="download",
+                                    item=make_simple_link(
+                                        html.makeuri([], filename="download_crash_report.py")),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Monitoring"),
+                            entries=list(self._page_menu_entries_related_monitoring(crash_info)),
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
+
+    def _page_menu_entries_related_monitoring(self,
+                                              crash_info: CrashInfo) -> Iterator[PageMenuEntry]:
+        renderer = self._crash_type_renderer(crash_info["crash_type"])
+        yield from renderer.page_menu_entries_related_monitoring(crash_info, self._site_id)
 
     def _handle_report_form(self, crash_info):
         details = {}
@@ -375,7 +431,8 @@ class ABCReportRenderer(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def context_buttons(self, crash_info, site_id):
+    def page_menu_entries_related_monitoring(self, crash_info: CrashInfo,
+                                             site_id: config.SiteId) -> Iterator[PageMenuEntry]:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -397,8 +454,11 @@ class ReportRendererGeneric(ABCReportRenderer):
     def type(cls):
         return "generic"
 
-    def context_buttons(self, crash_info, site_id):
+    def page_menu_entries_related_monitoring(self, crash_info: CrashInfo,
+                                             site_id: config.SiteId) -> Iterator[PageMenuEntry]:
+        # We don't want to produce anything here
         return
+        yield  # pylint: disable=unreachable
 
     def show_details(self, crash_info, row):
         if not crash_info["details"]:
@@ -417,7 +477,8 @@ class ReportRendererCheck(ABCReportRenderer):
     def type(cls):
         return "check"
 
-    def context_buttons(self, crash_info, site_id):
+    def page_menu_entries_related_monitoring(self, crash_info: CrashInfo,
+                                             site_id: config.SiteId) -> Iterator[PageMenuEntry]:
         host = crash_info["details"]["host"]
         service = crash_info["details"]["description"]
 
@@ -429,7 +490,11 @@ class ReportRendererCheck(ABCReportRenderer):
             ],
             filename="view.py",
         )
-        html.context_button(_("Host status"), host_url, "status")
+        yield PageMenuEntry(
+            title=_("Host status"),
+            icon_name="status",
+            item=make_simple_link(host_url),
+        )
 
         service_url = html.makeuri(
             [("view_name", "service"), ("host", host), ("service", service), (
@@ -438,7 +503,11 @@ class ReportRendererCheck(ABCReportRenderer):
             )],
             filename="view.py",
         )
-        html.context_button(_("Service status"), service_url, "status")
+        yield PageMenuEntry(
+            title=_("Service status"),
+            icon_name="status",
+            item=make_simple_link(service_url),
+        )
 
     def show_details(self, crash_info, row):
         self._show_crashed_check_details(crash_info)
@@ -481,8 +550,11 @@ class ReportRendererGUI(ABCReportRenderer):
     def type(cls):
         return "gui"
 
-    def context_buttons(self, crash_info, site_id):
+    def page_menu_entries_related_monitoring(self, crash_info: CrashInfo,
+                                             site_id: config.SiteId) -> Iterator[PageMenuEntry]:
+        # We don't want to produce anything here
         return
+        yield  # pylint: disable=unreachable
 
     def show_details(self, crash_info, row):
         details = crash_info["details"]

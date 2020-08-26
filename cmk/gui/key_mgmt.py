@@ -4,18 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 import pprint
 import time
 from typing import Any, Dict
 from pathlib import Path
-
-# This is needed for at least CentOS 5.5
-# TODO: Drop this until all supported platforms have newer versions available.
-# It it not 100% sure if we need this before the OpenSSL import, but we play
-# safe here and tell pylint about that.
-# pylint: disable=wrong-import-position
-os.environ["CRYPTOGRAPHY_ALLOW_OPENSSL_098"] = "1"
 from OpenSSL import crypto  # type: ignore[import]
 
 import cmk.utils.render

@@ -629,15 +629,8 @@ def test_edit_htpasswd_users(web):  # noqa: F811 # pylint: disable=redefined-out
         web.delete_htpasswd_users(list(users.keys()))
 
 
-def test_discover_services(web):  # noqa: F811 # pylint: disable=redefined-outer-name
-    try:
-        web.add_host("test-host-discovery", attributes={
-            "ipaddress": "127.0.0.1",
-        })
-
-        web.discover_services("test-host-discovery")
-    finally:
-        web.delete_host("test-host-discovery")
+def test_discover_services(web, local_test_hosts):  # noqa: F811 # pylint: disable=redefined-outer-name
+    web.discover_services("test-host")
 
 
 def test_bulk_discovery_start_with_empty_hosts(web):  # noqa: F811 # pylint: disable=redefined-outer-name

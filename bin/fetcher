@@ -13,6 +13,7 @@ from typing import NoReturn
 from cmk.utils.exceptions import MKTerminate
 from cmk.utils.fetcher_crash_reporting import create_fetcher_crash_dump
 from cmk.utils.type_defs import HostName
+import cmk.utils.log as log
 
 import cmk.base.utils  # pylint: disable=cmk-module-layer-violation
 import cmk.fetchers.controller as controller  # pylint: disable=cmk-module-layer-violation
@@ -62,16 +63,34 @@ def _read_line() -> str:
     return ''
 
 
+class FetcherFormatter(logging.Formatter):
+    def format(self, record):
+        msg = logging.Formatter.format(self, record)
+
+        result = controller.make_failure_answer(
+            msg,
+            severity=controller.status_to_microcore_severity(record.levelno),
+        )
+        return result
+
+
+def setup_fetcher_logger():
+    handler = logging.StreamHandler(stream=sys.stdout)
+    handler.terminator = ''  # to disable '\n' in microcore log
+    ff = FetcherFormatter()  # log must be formatted according to protocol
+    log.modify_logging_handler(handler=handler, formatter=ff)
+
+
 def main() -> int:
+    setup_fetcher_logger()
+
     cmk.base.utils.register_sigint_handler()  # as in cmk: do_keepalive
     serial = ""
     host_name: HostName = ""
     try:
         args = parse_arguments()
         if args.debug:
-            sys.stdout.write(
-                "Debug mode is enabled")  # reserved for the future testing(out of Core)
-
+            log.logger.info("Debug mode is enabled")  # reserved for the future testing(out of Core)
         while True:
             command = _read_line()
             if command == "*":

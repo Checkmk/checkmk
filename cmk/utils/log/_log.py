@@ -66,7 +66,7 @@ def open_log(log_file_path: Union[str, Path]) -> IOLog:
 
 def setup_logging_handler(stream: IOLog, formatter: Optional[logging.Formatter] = None) -> None:
     """This method enables all log messages to be written to the given
-    stream file object. The messages are formated in Check_MK standard
+    stream file object. The messages are formatted in Check_MK standard
     logging format.
     """
     if formatter is None:
@@ -74,6 +74,20 @@ def setup_logging_handler(stream: IOLog, formatter: Optional[logging.Formatter] 
 
     handler = logging.StreamHandler(stream=stream)
     handler.setFormatter(formatter)
+
+    del logger.handlers[:]  # Remove all previously existing handlers
+    logger.addHandler(handler)
+
+
+def modify_logging_handler(
+    handler: logging.StreamHandler,
+    formatter: Optional[logging.Formatter],
+) -> None:
+    """Changes logging behavior. Normally used by fetcher to prevent
+    non-formatted output to stdout"""
+
+    if formatter is not None:
+        handler.setFormatter(formatter)
 
     del logger.handlers[:]  # Remove all previously existing handlers
     logger.addHandler(handler)

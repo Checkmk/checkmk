@@ -15,7 +15,7 @@ from cmk.fetchers.controller import (
     make_waiting_answer,
     build_json_file_path,
     build_json_global_config_file_path,
-    _status_to_microcore_severity,
+    status_to_microcore_severity,
 )
 
 from cmk.utils.paths import core_fetcher_config_dir
@@ -31,7 +31,7 @@ from cmk.utils.paths import core_fetcher_config_dir
     (5, "warning"),
 ])
 def test_status_to_severity(status, severity):
-    assert severity == _status_to_microcore_severity(status)
+    assert severity == status_to_microcore_severity(status)
 
 
 class TestControllerApi:

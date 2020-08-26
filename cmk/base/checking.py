@@ -138,15 +138,33 @@ def do_check(
 
         item_state.load(hostname)
 
-        services = _get_filtered_services(
+        # When monitoring Checkmk clusters, the cluster nodes are responsible for fetching all
+        # information from the monitored host and cache the result for the cluster checks to be
+        # performed on the cached information.
+        #
+        # This means that in case of SNMP nodes, they need to take the clustered services of the
+        # node into account, fetch the needed sections and cache them for the cluster host.
+        #
+        # But later, when checking the node services, the node has to only deal with the unclustered
+        # services.
+        belongs_to_cluster = len(config_cache.clusters_of(hostname)) > 0
+
+        services_to_fetch = _get_services_to_fetch(
             host_name=hostname,
-            belongs_to_cluster=len(config_cache.clusters_of(hostname)) > 0,
+            belongs_to_cluster=belongs_to_cluster,
             config_cache=config_cache,
             only_check_plugins=only_check_plugin_names,
         )
 
+        services_to_check = _filter_clustered_services(
+            config_cache=config_cache,
+            host_name=hostname,
+            belongs_to_cluster=belongs_to_cluster,
+            services=services_to_fetch,
+        )
+
         # see which raw sections we may need
-        selected_raw_sections = _get_relevant_raw_sections(services, host_config)
+        selected_raw_sections = _get_relevant_raw_sections(services_to_fetch, host_config)
 
         sources = data_sources.make_checkers(
             host_config,
@@ -167,7 +185,7 @@ def do_check(
             host_config,
             ipaddress,
             multi_host_sections=mhs,
-            services=services,
+            services=services_to_check,
             only_check_plugins=only_check_plugin_names,
         )
         inventory.do_inventory_actions_during_checking_for(
@@ -318,28 +336,41 @@ def _do_all_checks_on_host(
     return num_success, sorted(plugins_missing_data)
 
 
-def _get_filtered_services(
+def _get_services_to_fetch(
     host_name: HostName,
     belongs_to_cluster: bool,
     config_cache: config.ConfigCache,
     only_check_plugins: Optional[Set[CheckPluginName]] = None,
 ) -> List[Service]:
+    """Gather list of services to fetch the sections for
 
+    Please note that explicitly includes the services that are assigned to cluster nodes.  In SNMP
+    clusters the nodes have to fetch the information for the checking phase of the clustered
+    services.
+    """
     services = check_table.get_sorted_service_list(
         host_name,
         remove_duplicates=True,
         filter_mode="include_clustered" if belongs_to_cluster else None,
     )
 
-    # When check types are specified via command line, enforce them. Otherwise use the
-    # list of checks defined by the check table.
-    if only_check_plugins is None:
-        only_check_plugins = {service.check_plugin_name for service in services}
+    # When check types are specified via command line, enforce them. Otherwise accept all check
+    # plugin names.
+    return [
+        service for service in services
+        if (only_check_plugins is None or service.check_plugin_name in only_check_plugins) and
+        not service_outside_check_period(config_cache, host_name, service.description)
+    ]
 
+
+def _filter_clustered_services(config_cache: config.ConfigCache, host_name: HostName,
+                               belongs_to_cluster: bool, services: List[Service]) -> List[Service]:
+    """If the host belongs to a cluster, exclude the services that are not assigned to this host"""
     def _is_not_of_host(service):
         return host_name != config_cache.host_of_clustered_service(host_name, service.description)
 
     # Filter out check types which are not used on the node
+    only_check_plugins = {service.check_plugin_name for service in services}
     if belongs_to_cluster:
         removed_plugins = {
             plugin for plugin in only_check_plugins if all(
@@ -349,10 +380,8 @@ def _get_filtered_services(
         only_check_plugins -= removed_plugins
 
     return [
-        service for service in services
-        if (service.check_plugin_name in only_check_plugins and
-            not (belongs_to_cluster and _is_not_of_host(service)) and
-            not service_outside_check_period(config_cache, host_name, service.description))
+        service for service in services if (service.check_plugin_name in only_check_plugins and
+                                            not (belongs_to_cluster and _is_not_of_host(service)))
     ]
 
 

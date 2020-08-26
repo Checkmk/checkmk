@@ -53,6 +53,7 @@ class TCPConfigurator(AgentConfigurator):
             "address": (self.ipaddress, self.port or self.host_config.agent_port),
             "timeout": self.timeout or self.host_config.tcp_connect_timeout,
             "encryption_settings": self.host_config.agent_encryption,
+            "use_only_cache": self.use_only_cache,
         }
 
     def make_summarizer(self) -> AgentSummarizerDefault:

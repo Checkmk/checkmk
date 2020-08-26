@@ -108,6 +108,7 @@ def test_attribute_defaults(mode, monkeypatch):
             "use_realtime": "enforce",
             "use_regular": "disable",
         },
+        "use_only_cache": False,
     }
     assert configurator.description == "TCP: %s:%s" % (ipaddress, 6556)
 

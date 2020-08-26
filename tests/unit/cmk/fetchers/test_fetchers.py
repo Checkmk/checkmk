@@ -244,6 +244,7 @@ class TestTCPFetcher:
                 "encryption_settings": {
                     "encryption": "settings"
                 },
+                "use_only_cache": False,
             }))
 
     def test_deserialization(self, fetcher):
@@ -257,14 +258,14 @@ class TestTCPFetcher:
     def test_decrypt_plaintext_is_noop(self, fc_agent):
         settings = {"use_regular": "allow"}
         output = b"<<<section:sep(0)>>>\nbody\n"
-        fetcher = TCPFetcher(fc_agent, socket.AF_INET, ("", 0), 0.0, settings)
+        fetcher = TCPFetcher(fc_agent, socket.AF_INET, ("", 0), 0.0, settings, False)
 
         assert fetcher._decrypt(output) == output
 
     def test_decrypt_plaintext_with_enforce_raises_MKFetcherError(self, fc_agent):
         settings = {"use_regular": "enforce"}
         output = b"<<<section:sep(0)>>>\nbody\n"
-        fetcher = TCPFetcher(fc_agent, socket.AF_INET, ("", 0), 0.0, settings)
+        fetcher = TCPFetcher(fc_agent, socket.AF_INET, ("", 0), 0.0, settings, False)
 
         with pytest.raises(MKFetcherError):
             fetcher._decrypt(output)
@@ -272,7 +273,7 @@ class TestTCPFetcher:
     def test_decrypt_payload_with_wrong_protocol_raises_MKFetcherError(self, fc_agent):
         settings = {"use_regular": "enforce"}
         output = b"the first two bytes are not a number"
-        fetcher = TCPFetcher(fc_agent, socket.AF_INET, ("", 0), 0.0, settings)
+        fetcher = TCPFetcher(fc_agent, socket.AF_INET, ("", 0), 0.0, settings, False)
 
         with pytest.raises(MKFetcherError):
             fetcher._decrypt(output)

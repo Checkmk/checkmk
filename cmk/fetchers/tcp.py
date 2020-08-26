@@ -27,6 +27,7 @@ class TCPFetcher(AgentFetcher):
         address: Tuple[HostAddress, int],
         timeout: float,
         encryption_settings: Dict[str, str],
+        use_only_cache: bool,
     ) -> None:
         super().__init__(file_cache, logging.getLogger("cmk.fetchers.tcp"))
         self._family = socket.AddressFamily(family)
@@ -34,6 +35,7 @@ class TCPFetcher(AgentFetcher):
         self._address = tuple(address) if isinstance(address, list) else address
         self._timeout = timeout
         self._encryption_settings = encryption_settings
+        self._use_only_cache = use_only_cache
         self._socket: Optional[socket.socket] = None
 
     @classmethod
@@ -66,6 +68,9 @@ class TCPFetcher(AgentFetcher):
         self._socket = None
 
     def _fetch_from_io(self) -> AgentRawData:
+        if self._use_only_cache:
+            raise MKFetcherError("Got no data: No usable cache file present at %s" %
+                                 self.file_cache.path)
         if self._socket is None:
             raise MKFetcherError("Not connected")
 

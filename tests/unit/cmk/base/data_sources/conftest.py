@@ -11,6 +11,7 @@ import pytest  # type: ignore[import]
 from cmk.base.data_sources import ABCChecker, FileCacheConfigurator
 from cmk.base.data_sources.agent import AgentChecker
 from cmk.base.data_sources.snmp import SNMPChecker
+from cmk.base.data_sources.tcp import TCPConfigurator
 
 
 @pytest.fixture(autouse=True)
@@ -32,3 +33,4 @@ def reset_mutable_global_state():
     reset(FileCacheConfigurator, "maybe", False)
     reset(FileCacheConfigurator, "use_outdated", False)
     reset(ABCChecker, "_use_outdated_persisted_sections", False)
+    reset(TCPConfigurator, "use_only_cache", False)

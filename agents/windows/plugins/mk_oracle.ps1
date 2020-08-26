@@ -188,39 +188,18 @@ whenever sqlerror exit failure;
 # use this workaround to avoid the message that the "<" symbol is reserved for future use
 $LESS_THAN = '<'
 
-Function get_dbversion_software {
-     # Get the database version
-     # variable res contains the banner including the version number
-     $res = (sqlplus -v)
-     # Example: SQL*Plus: Release 12.1.0.2.0 Production
-     $res = [string]$res
-     $verarr = $res.split(' ')
-     $version = $verarr[3]
-     # remove all '.' from string
-     $version = ($version -replace '\D+', '')
-
-     $version
-}
-
 
 Function get_dbversion_database ($ORACLE_HOME) {
-     # Get the database version
-     # variable res contains the banner including the version number
-     $SQLPLUS = $ORACLE_HOME + '\bin\sqlplus.exe -v'
-     $result = (iex $ORACLE_HOME'\bin\sqlplus.exe -v')
-     # Example: SQL*Plus: Release 12.1.0.2.0 Production
-     $res = [string]$result
-     $verarr = $res.split(' ')
-     #$verpos=$verarr.indexof('Release')
-     $version = $verarr
-     $verpos = 2
-     if ($verpos -gt 0) {
-          $version = $verarr[$verpos + 1]
-          # remove all '.' from string
-          $version = ($version -replace '\D+', '')
-     }
+     # The output of this command contains -- among others -- the version
+     $version_str = (Invoke-Expression $ORACLE_HOME'\bin\sqlplus.exe -v')
+     debug_echo "xx $version_str xx"
 
-     $version
+
+     # The output string can have arbitrary content. We rely on the assumption that the first
+     # three elements have always the same syntax, e.g.: SQL*Plus: Release 12.1.0.2.0
+     # so we take the third element separated by a whitespace as the version number and remove
+     # all dots resulting in: 121020
+     (([string]$version_str).split(' '))[3] -replace '\D+', ''
 }
 
 
@@ -2144,10 +2123,6 @@ $Host.UI.RawUI.BufferSize = New-Object Management.Automation.Host.Size (512, 150
 $NO_SID = "NO_SID"
 
 
-$DBVERSION = get_dbversion_software
-debug_echo "value of DBVERSION software= xxx${DBVERSION}xx"
-
-
 if ( $SYNC_SECTIONS.count -gt 0) {
      foreach ($section in $SYNC_SECTIONS) {
           echo "<<<oracle_${section}>>>"
@@ -2188,10 +2163,6 @@ if ($the_count -gt 0) {
 
           # reset errors found for this instance to zero
           $ERROR_FOUND = 0
-
-          $SQLPLUS = $ORACLE_HOME + '\bin\sqlplus.exe -v'
-          $res = ($SQLPLUS)
-          debug_echo "xx $res xx"
 
           $DBVERSION = get_dbversion_database($ORACLE_HOME)
           debug_echo "value of inst_name= ${inst_name}"

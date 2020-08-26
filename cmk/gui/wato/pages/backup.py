@@ -5,6 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Pages for managing backup and restore of WATO"""
 
+from typing import Optional, Type
+
 import cmk.utils.paths
 
 import cmk.gui.config as config
@@ -190,6 +192,10 @@ class ModeBackupKeyManagement(SiteBackupKeypairStore, backup.PageBackupKeyManage
     def permissions(cls):
         return ["backups"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeBackup
+
     def jobs(self):
         return SiteBackupJobs()
 
@@ -204,6 +210,10 @@ class ModeBackupEditKey(SiteBackupKeypairStore, backup.PageBackupEditKey, WatoMo
     def permissions(cls):
         return ["backups"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeBackupKeyManagement
+
 
 @mode_registry.register
 class ModeBackupUploadKey(SiteBackupKeypairStore, backup.PageBackupUploadKey, WatoMode):
@@ -214,6 +224,10 @@ class ModeBackupUploadKey(SiteBackupKeypairStore, backup.PageBackupUploadKey, Wa
     @classmethod
     def permissions(cls):
         return ["backups"]
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeBackupKeyManagement
 
     def _upload_key(self, key_file, value):
         watolib.log_audit(None, "upload-backup-key", _("Uploaded backup key '%s'") % value["alias"])
@@ -229,6 +243,10 @@ class ModeBackupDownloadKey(SiteBackupKeypairStore, backup.PageBackupDownloadKey
     @classmethod
     def permissions(cls):
         return ["backups"]
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeBackupKeyManagement
 
     def _file_name(self, key_id, key):
         return "Check_MK-%s-%s-backup_key-%s.pem" % (backup.hostname(), config.omd_site(), key_id)

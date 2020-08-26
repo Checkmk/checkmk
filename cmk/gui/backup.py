@@ -1407,9 +1407,6 @@ class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
         show_key_download_warning(self.keys)
         super(PageBackupKeyManagement, self).page()
 
-    def _back_button(self):
-        html.context_button(_("Back"), html.makeuri_contextless([("mode", "backup")]), "back")
-
     def _key_in_use(self, key_id, key):
         for job in self.jobs().objects.values():
             job_key_id = job.key_ident()

@@ -34,6 +34,15 @@ from cmk.gui.valuespec import (
     TextUnicode,
 )
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+    make_simple_form_page_menu,
+)
 
 
 class KeypairStore:
@@ -92,19 +101,45 @@ class PageKeyManagement:
     def save(self, keys):
         raise NotImplementedError()
 
-    def buttons(self):
-        self._back_button()
-        if self._may_edit_config():
-            html.context_button(_("Create Key"),
-                                html.makeuri_contextless([("mode", self.edit_mode)]), "new")
-            html.context_button(_("Upload Key"),
-                                html.makeuri_contextless([("mode", self.upload_mode)]), "new")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        if not self._may_edit_config():
+            return PageMenu(dropdowns=[], breadcrumb=breadcrumb)
+
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="keys",
+                    title=_("Keys"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Add key"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Add key"),
+                                    icon_name="new",
+                                    item=make_simple_link(
+                                        html.makeuri_contextless([("mode", self.edit_mode)])),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                                PageMenuEntry(
+                                    title=_("Upload key"),
+                                    icon_name="upload",
+                                    item=make_simple_link(
+                                        html.makeuri_contextless([("mode", self.upload_mode)])),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
 
     def _may_edit_config(self):
         return True
-
-    def _back_button(self):
-        raise NotImplementedError()
 
     def action(self):
         if self._may_edit_config() and html.request.has_var("_delete"):
@@ -176,8 +211,13 @@ class PageEditKey:
     def save(self, keys):
         raise NotImplementedError()
 
-    def buttons(self):
-        html.context_button(_("Back"), html.makeuri_contextless([("mode", self.back_mode)]), "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(
+            breadcrumb,
+            form_name="key",
+            button_name="create",
+            save_title=_("Create"),
+        )
 
     def action(self):
         if html.check_transaction():
@@ -220,7 +260,6 @@ class PageEditKey:
         html.begin_form("key", method="POST")
         html.prevent_password_auto_completion()
         self._vs_key().render_input("key", {})
-        html.button("create", _("Create"))
         self._vs_key().set_focus("key")
         html.hidden_fields()
         html.end_form()
@@ -260,8 +299,13 @@ class PageUploadKey:
     def save(self, keys):
         raise NotImplementedError()
 
-    def buttons(self):
-        html.context_button(_("Back"), html.makeuri_contextless([("mode", self.back_mode)]), "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(
+            breadcrumb,
+            form_name="key",
+            button_name="upload",
+            save_title=_("Upload"),
+        )
 
     def action(self):
         if html.check_transaction():
@@ -337,7 +381,6 @@ class PageUploadKey:
         html.begin_form("key", method="POST")
         html.prevent_password_auto_completion()
         self._vs_key().render_input("key", {})
-        html.button("upload", _("Upload"))
         self._vs_key().set_focus("key")
         html.hidden_fields()
         html.end_form()
@@ -382,8 +425,13 @@ class PageDownloadKey:
     def save(self, keys):
         raise NotImplementedError()
 
-    def buttons(self):
-        html.context_button(_("Back"), html.makeuri_contextless([("mode", self.back_mode)]), "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(
+            breadcrumb,
+            form_name="key",
+            button_name="download",
+            save_title=_("Download"),
+        )
 
     def action(self):
         if html.check_transaction():
@@ -428,7 +476,6 @@ class PageDownloadKey:
         html.begin_form("key", method="POST")
         html.prevent_password_auto_completion()
         self._vs_key().render_input("key", {})
-        html.button("upload", _("Download"))
         self._vs_key().set_focus("key")
         html.hidden_fields()
         html.end_form()

@@ -13,7 +13,7 @@ from typing import Any, Dict, Final, Generic, Optional, Type, TypeVar, Union
 import cmk.utils
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKException, MKGeneralException
-from cmk.utils.log import VERBOSE
+from cmk.utils.log import VERBOSE, logger as cmk_logger
 
 from .type_defs import TRawData
 
@@ -43,7 +43,7 @@ class ABCFileCache(Generic[TRawData], metaclass=abc.ABCMeta):
         self.disabled = disabled
         self.use_outdated = use_outdated
         self.simulation = simulation
-        self._logger: Final = logging.getLogger("")  # TODO(ml): configure the logger
+        self._logger: Final = cmk_logger
 
     @classmethod
     def from_json(cls: Type[TFileCache], serialized: Dict[str, Any]) -> TFileCache:

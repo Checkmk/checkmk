@@ -42,7 +42,7 @@ def compute_detect_spec_if64adm(
 
 section_plugin = create_snmp_section_plugin(
     name="if64adm",
-    parse_function=if64.parse_if64,
+    parse_function=if64.parse_if64_if6adm,
     trees=[
         SNMPTree(
             base=if64.BASE_OID,

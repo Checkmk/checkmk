@@ -13,9 +13,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     # failing. These are used in various tests, to predict the
     # expected console output. In an ideal world, this list will (!)
     # be empty. If that is the case, please remove it entirely.
-    ('section', 'if_brocade'),
-    ('section', 'if_fortigate'),
-    ('section', 'if_lancom'),
     ('section', 'juniper_trpz_aps'),
     ('section', 'juniper_trpz_aps_sessions'),
     ('section', 'logwatch'),
@@ -30,7 +27,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('check', 'docker_container_status'),
     ('check', 'docker_container_status_health'),
     ('check', 'docker_container_status_uptime'),
-    ('check', 'if_fortigate'),
     ('check', 'ipmi'),
     ('check', 'juniper_trpz_aps'),
     ('check', 'juniper_trpz_aps_sessions'),

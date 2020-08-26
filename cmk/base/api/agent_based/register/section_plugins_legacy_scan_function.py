@@ -281,7 +281,6 @@ def _ast_convert_call(call_ast: ast.Call) -> SNMPDetectSpec:
             return _explicit_conversions(call_ast.func.id)
 
         if call_ast.func.id in (
-                'if64_disabled',
                 'scan_f5_bigip_cluster_status_pre_11_2',
                 'scan_f5_bigip_cluster_status_11_2_upwards',
                 'scan_cisco_mem_asa64',

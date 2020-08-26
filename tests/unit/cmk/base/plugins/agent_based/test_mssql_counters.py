@@ -48,6 +48,11 @@ from cmk.base.plugins.agent_based.mssql_counters_sqlstats import (
     _check_base as check_sqlstats_base,
     _cluster_check_base as cluster_check_sqlstats_base,
 )
+from cmk.base.plugins.agent_based.mssql_counters_transactions import (
+    discovery_mssql_counters_transactions,
+    _check_base as check_transactions_base,
+    _cluster_check_base as cluster_check_transactions_base,
+)
 
 big_string_table = [
     ['None', 'utc_time', 'None', '19.08.2020 14:25:04'],
@@ -67,6 +72,9 @@ big_string_table = [
     ['MSSQL_VEEAMSQL2012:Locks', 'lock_timeouts/sec', 'OibTrackTbl', '0'],
     ['MSSQL_VEEAMSQL2012:Databases', 'data_file(s)_size_(kb)', 'tempdb', '164928'],
     ['MSSQL_VEEAMSQL2012:Databases', 'log_file(s)_size_(kb)', 'tempdb', '13624'],
+    ['MSSQL_VEEAMSQL2012:Databases', 'transactions/sec', 'tempdb', '24410428'],
+    ['MSSQL_VEEAMSQL2012:Databases', 'tracked_transactions/sec', 'tempdb', '0'],
+    ['MSSQL_VEEAMSQL2012:Databases', 'write_transactions/sec', 'tempdb', '10381607'],
     ['MSSQL_VEEAMSQL2012:Database_Replica', 'redo_bytes_remaining', '_Total', '0'],
     ['MSSQL_VEEAMSQL2012:Database_Replica', 'redo_blocked/sec', '_Total', '0'],
     ['MSSQL_VEEAMSQL2012:Availability_Replica', 'flow_control/sec', '_Total', '0'],
@@ -137,6 +145,7 @@ big_string_table = [
     ['MSSQL_VEEAMSQL2012:Locks', 'lock_timeouts_(timeout_>_0)/sec', '_Total', '0'],
 ]
 
+
 big_parsed_data = {
     ('None', 'None'): {
         'utc_time': 1597839904.0
@@ -166,7 +175,10 @@ big_parsed_data = {
     },
     ('MSSQL_VEEAMSQL2012', 'tempdb'): {
         'data_file(s)_size_(kb)': 164928,
-        'log_file(s)_size_(kb)': 13624
+        'log_file(s)_size_(kb)': 13624,
+        'transactions/sec': 24410428,
+        'tracked_transactions/sec': 0,
+        'write_transactions/sec': 10381607,
     },
     ('MSSQL_VEEAMSQL2012:Database_Replica', '_Total'): {
         'redo_bytes_remaining': 0,
@@ -356,6 +368,9 @@ def test_cluster_check_mssql_counters_cache_hits(item, section, expected_results
     (big_parsed_data, [
         Service(item='MSSQL_VEEAMSQL2012 tempdb data_file(s)_size_(kb)'),
         Service(item='MSSQL_VEEAMSQL2012 tempdb log_file(s)_size_(kb)'),
+        Service(item='MSSQL_VEEAMSQL2012 tempdb transactions/sec'),
+        Service(item='MSSQL_VEEAMSQL2012 tempdb tracked_transactions/sec'),
+        Service(item='MSSQL_VEEAMSQL2012 tempdb write_transactions/sec'),
     ]),
 ])
 def test_discovery_mssql_counters_file_sizes(section, expected_services):
@@ -637,6 +652,73 @@ def test_cluster_check_mssql_counters_sqlstats(item, params, section, expected_r
     t0 = 1597839904
     for i in range(2):
         for result in cluster_check_sqlstats_base(vs, t0 + i, item, params, section):
+            results.append(result)
+    print(",\n".join(str(r) for r in results))
+    assert results == expected_results
+
+
+@pytest.mark.parametrize("section,expected_services", [
+    (big_parsed_data, [
+        Service(item='MSSQL_VEEAMSQL2012 tempdb data_file(s)_size_(kb)'),
+        Service(item='MSSQL_VEEAMSQL2012 tempdb log_file(s)_size_(kb)'),
+        Service(item='MSSQL_VEEAMSQL2012 tempdb transactions/sec'),
+        Service(item='MSSQL_VEEAMSQL2012 tempdb tracked_transactions/sec'),
+        Service(item='MSSQL_VEEAMSQL2012 tempdb write_transactions/sec'),
+    ]),
+])
+def test_discovery_mssql_counters_transactions(section, expected_services):
+    results = list(discovery_mssql_counters_transactions(section))
+    print(",\n".join(str(r) for r in results))
+    assert results == expected_services
+
+
+@pytest.mark.parametrize("item,params,section,expected_results", [
+    ("MSSQL_VEEAMSQL2012 tempdb transactions/sec", {}, big_parsed_data, [
+        IgnoreResults(value="Cannot calculate rates yet"),
+        IgnoreResults(value="Cannot calculate rates yet"),
+        IgnoreResults(value="Cannot calculate rates yet"),
+        Result(state=state.OK, summary='Transactions: 0.0/s', details='Transactions: 0.0/s'),
+        Metric('transactions_per_second', 0.0),
+        Result(state=state.OK, summary='Write Transactions: 0.0/s'),
+        Metric('write_transactions_per_second', 0.0),
+        Result(state=state.OK, summary='Tracked Transactions: 0.0/s'),
+        Metric('tracked_transactions_per_second', 0.0),
+    ]),
+])
+def test_check_mssql_counters_transactions(item, params, section, expected_results):
+    # re-run cluster_check_locks_per_batch_base() once in order to get rates
+    vs: ValueStore = {}
+    results = []
+    t0 = 1597839904
+    for i in range(2):
+        for result in check_transactions_base(vs, t0 + i, item, params, section):
+            results.append(result)
+    print(",\n".join(str(r) for r in results))
+    assert results == expected_results
+
+
+@pytest.mark.parametrize("item,params,section,expected_results", [
+    ("MSSQL_VEEAMSQL2012 tempdb transactions/sec", {}, {
+        "node1": big_parsed_data
+    }, [
+        IgnoreResults(value="Cannot calculate rates yet"),
+        IgnoreResults(value="Cannot calculate rates yet"),
+        IgnoreResults(value="Cannot calculate rates yet"),
+        Result(state=state.OK, summary='[node1] Transactions: 0.0/s'),
+        Metric('transactions_per_second', 0.0),
+        Result(state=state.OK, summary='[node1] Write Transactions: 0.0/s'),
+        Metric('write_transactions_per_second', 0.0),
+        Result(state=state.OK, summary='[node1] Tracked Transactions: 0.0/s'),
+        Metric('tracked_transactions_per_second', 0.0),
+    ]),
+])
+def test_cluster_check_mssql_counters_transactions(item, params, section, expected_results):
+    # re-run cluster_check_locks_per_batch_base() once in order to get rates
+    vs: ValueStore = {}
+    results = []
+    t0 = 1597839904
+    for i in range(2):
+        for result in cluster_check_transactions_base(vs, t0 + i, item, params, section):
             results.append(result)
     print(",\n".join(str(r) for r in results))
     assert results == expected_results

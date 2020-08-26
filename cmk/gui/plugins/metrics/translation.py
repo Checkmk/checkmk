@@ -2028,6 +2028,17 @@ check_metrics["check_mk-mssql_counters_pageactivity"] = {
         "name": "page_lookups_per_second"
     },
 }
+check_metrics["check_mk-mssql_counters_transactions"] = {
+    "transactions/sec": {
+        "name": "transactions_per_second"
+    },
+    "write_transactions/sec": {
+        "name": "write_transactions_per_second"
+    },
+    "tracked_transactions/sec": {
+        "name": "tracked_transactions_per_second"
+    },
+}
 cisco_mem_translation = {
     "mem_used": {
         "name": "mem_used_percent",

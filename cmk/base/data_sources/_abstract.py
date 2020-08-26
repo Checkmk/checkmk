@@ -23,15 +23,15 @@ from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheck
 
 from cmk.fetchers import ABCFetcher
 from cmk.fetchers.controller import FetcherType
-from cmk.fetchers.type_defs import BoundedAbstractRawData
+from cmk.fetchers.type_defs import TRawData
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.cpu_tracking as cpu_tracking
 from cmk.base.check_utils import (
-    BoundedAbstractPersistedSections,
-    BoundedAbstractSectionContent,
-    BoundedAbstractSections,
+    TPersistedSections,
+    TSectionContent,
+    TSections,
     PiggybackRawData,
     SectionCacheInfo,
 )
@@ -51,8 +51,7 @@ class Mode(enum.Enum):
     RTC = enum.auto()
 
 
-class ABCHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSections,
-                              BoundedAbstractPersistedSections, BoundedAbstractSectionContent],
+class ABCHostSections(Generic[TRawData, TSections, TPersistedSections, TSectionContent],
                       metaclass=abc.ABCMeta):
     """A wrapper class for the host information read by the data sources
 
@@ -67,10 +66,10 @@ class ABCHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     """
     def __init__(
         self,
-        sections: Optional[BoundedAbstractSections] = None,
+        sections: Optional[TSections] = None,
         cache_info: Optional[SectionCacheInfo] = None,
         piggybacked_raw_data: Optional[PiggybackRawData] = None,
-        persisted_sections: Optional[BoundedAbstractPersistedSections] = None,
+        persisted_sections: Optional[TPersistedSections] = None,
     ) -> None:
         super().__init__()
         self.sections = sections if sections else {}
@@ -108,7 +107,7 @@ class ABCHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSections,
 
     def add_persisted_sections(
         self,
-        persisted_sections: BoundedAbstractPersistedSections,
+        persisted_sections: TPersistedSections,
         *,
         logger: logging.Logger,
     ) -> None:
@@ -130,7 +129,7 @@ class ABCHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     def _extend_section(
         self,
         section_name: SectionName,
-        section_content: BoundedAbstractSectionContent,
+        section_content: TSectionContent,
     ) -> None:
         self.sections.setdefault(section_name, []).extend(section_content)
 
@@ -139,18 +138,17 @@ class ABCHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         section_name: SectionName,
         persisted_from: int,
         persisted_until: int,
-        section: BoundedAbstractSectionContent,
+        section: TSectionContent,
     ) -> None:
         self.cache_info[section_name] = (persisted_from, persisted_until - persisted_from)
         # TODO: Find out why mypy complains about this
         self.sections[section_name] = section  # type: ignore[assignment]
 
 
-BoundedAbstractHostSections = TypeVar("BoundedAbstractHostSections", bound=ABCHostSections)
+THostSections = TypeVar("THostSections", bound=ABCHostSections)
 
 
-class ABCParser(Generic[BoundedAbstractRawData, BoundedAbstractHostSections],
-                metaclass=abc.ABCMeta):
+class ABCParser(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
     """Parse raw data into host sections."""
     def __init__(self, hostname: HostName, logger: logging.Logger) -> None:
         super().__init__()
@@ -159,7 +157,7 @@ class ABCParser(Generic[BoundedAbstractRawData, BoundedAbstractHostSections],
         self._logger = logger
 
     @abc.abstractmethod
-    def parse(self, raw_data: BoundedAbstractRawData) -> BoundedAbstractHostSections:
+    def parse(self, raw_data: TRawData) -> THostSections:
         raise NotImplementedError
 
 
@@ -217,8 +215,7 @@ class FileCacheConfigurator:
         }
 
 
-class ABCConfigurator(Generic[BoundedAbstractRawData, BoundedAbstractHostSections],
-                      metaclass=abc.ABCMeta):
+class ABCConfigurator(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
     """Hold the configuration to fetchers and checkers.
 
     At best, this should only hold static data, that is, every
@@ -236,8 +233,8 @@ class ABCConfigurator(Generic[BoundedAbstractRawData, BoundedAbstractHostSection
         source_type: SourceType,
         fetcher_type: FetcherType,
         description: str,
-        default_raw_data: BoundedAbstractRawData,
-        default_host_sections: BoundedAbstractHostSections,
+        default_raw_data: TRawData,
+        default_host_sections: THostSections,
         id_: str,
         cpu_tracking_id: str,
         cache_dir: Optional[Path] = None,
@@ -250,7 +247,7 @@ class ABCConfigurator(Generic[BoundedAbstractRawData, BoundedAbstractHostSection
         self.fetcher_type: Final[FetcherType] = fetcher_type
         self.description: Final[str] = description
         self.default_raw_data: Final = default_raw_data
-        self.default_host_sections: Final[BoundedAbstractHostSections] = default_host_sections
+        self.default_host_sections: Final[THostSections] = default_host_sections
         self.id: Final[str] = id_
         self.cpu_tracking_id: Final[str] = cpu_tracking_id
         if not cache_dir:
@@ -310,24 +307,23 @@ class ABCConfigurator(Generic[BoundedAbstractRawData, BoundedAbstractHostSection
         raise NotImplementedError
 
     @abc.abstractmethod
-    def make_parser(self) -> "ABCParser[BoundedAbstractRawData, BoundedAbstractHostSections]":
+    def make_parser(self) -> "ABCParser[TRawData, THostSections]":
         """Create a parser with this configuration."""
         raise NotImplementedError
 
     @abc.abstractmethod
-    def make_summarizer(self) -> "ABCSummarizer[BoundedAbstractHostSections]":
+    def make_summarizer(self) -> "ABCSummarizer[THostSections]":
         """Create a summarizer with this configuration."""
         raise NotImplementedError
 
 
-class ABCSummarizer(Generic[BoundedAbstractHostSections], metaclass=abc.ABCMeta):
+class ABCSummarizer(Generic[THostSections], metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def summarize(self, host_sections: BoundedAbstractHostSections) -> ServiceCheckResult:
+    def summarize(self, host_sections: THostSections) -> ServiceCheckResult:
         raise NotImplementedError
 
 
-class ABCChecker(Generic[BoundedAbstractRawData, BoundedAbstractSections,
-                         BoundedAbstractPersistedSections, BoundedAbstractHostSections],
+class ABCChecker(Generic[TRawData, TSections, TPersistedSections, THostSections],
                  metaclass=abc.ABCMeta):
     """Base checker class."""
 
@@ -340,14 +336,14 @@ class ABCChecker(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         super().__init__()
         self.configurator = configurator
         self._logger = self.configurator._logger
-        self._section_store: SectionStore[BoundedAbstractPersistedSections] = SectionStore(
+        self._section_store: SectionStore[TPersistedSections] = SectionStore(
             self.configurator.persisted_sections_file_path,
             self._logger,
         )
 
         # Runtime data (managed by self.run()) - Meant for self.get_summary_result()
         self.exception: Optional[Exception] = None
-        self._host_sections: Optional[BoundedAbstractHostSections] = None
+        self._host_sections: Optional[THostSections] = None
 
     def __repr__(self):
         return "%s(%r)" % (type(self).__name__, self.configurator)
@@ -361,7 +357,7 @@ class ABCChecker(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         return self.configurator.cpu_tracking_id
 
     @cpu_tracking.track
-    def check(self, raw_data: BoundedAbstractRawData) -> BoundedAbstractHostSections:
+    def check(self, raw_data: TRawData) -> THostSections:
         try:
             self._host_sections = self.configurator.make_parser().parse(raw_data)
             assert self._host_sections
@@ -383,9 +379,9 @@ class ABCChecker(Generic[BoundedAbstractRawData, BoundedAbstractSections,
 
     def _determine_persisted_sections(
         self,
-        host_sections: BoundedAbstractHostSections,
-    ) -> BoundedAbstractPersistedSections:
-        # TODO(ml): This function should take a BoundedAbstractPersistedSections
+        host_sections: THostSections,
+    ) -> TPersistedSections:
+        # TODO(ml): This function should take a TPersistedSections
         #           instead of the host_section but mypy does not allow it.
         persisted_sections = self._section_store.load(self._use_outdated_persisted_sections)
         if persisted_sections != host_sections.persisted_sections:

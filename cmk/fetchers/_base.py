@@ -15,7 +15,7 @@ import cmk.utils.store as store
 from cmk.utils.exceptions import MKException, MKGeneralException
 from cmk.utils.log import VERBOSE
 
-from .type_defs import BoundedAbstractRawData
+from .type_defs import TRawData
 
 __all__ = ["ABCFetcher", "MKFetcherError"]
 
@@ -27,7 +27,7 @@ class MKFetcherError(MKException):
 TFileCache = TypeVar("TFileCache", bound="ABCFileCache")
 
 
-class ABCFileCache(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
+class ABCFileCache(Generic[TRawData], metaclass=abc.ABCMeta):
     def __init__(
         self,
         *,
@@ -51,21 +51,21 @@ class ABCFileCache(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
 
     @staticmethod
     @abc.abstractmethod
-    def _from_cache_file(raw_data: bytes) -> BoundedAbstractRawData:
+    def _from_cache_file(raw_data: bytes) -> TRawData:
         raise NotImplementedError()
 
     @staticmethod
     @abc.abstractmethod
-    def _to_cache_file(raw_data: BoundedAbstractRawData) -> bytes:
+    def _to_cache_file(raw_data: TRawData) -> bytes:
         raise NotImplementedError()
 
-    def read(self) -> Optional[BoundedAbstractRawData]:
+    def read(self) -> Optional[TRawData]:
         raw_data = self._read()
         if raw_data is None and self.simulation:
             raise MKFetcherError("Got no data (Simulation mode enabled and no cachefile present)")
         return raw_data
 
-    def _read(self) -> Optional[BoundedAbstractRawData]:
+    def _read(self) -> Optional[TRawData]:
         if not self.path.exists():
             self._logger.debug("Not using cache (Does not exist)")
             return None
@@ -91,7 +91,7 @@ class ABCFileCache(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
         self._logger.log(VERBOSE, "Using data from cache file %s", self.path)
         return self._from_cache_file(result)
 
-    def write(self, raw_data: BoundedAbstractRawData) -> None:
+    def write(self, raw_data: TRawData) -> None:
         if self.disabled:
             self._logger.debug("Not writing data to cache file (Cache usage disabled)")
             return
@@ -111,11 +111,11 @@ class ABCFileCache(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
 TFetcher = TypeVar("TFetcher", bound="ABCFetcher")
 
 
-class ABCFetcher(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
+class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
     """Interface to the data fetchers."""
     def __init__(self, file_cache: ABCFileCache, logger: logging.Logger) -> None:
         super().__init__()
-        self.file_cache: ABCFileCache[BoundedAbstractRawData] = file_cache
+        self.file_cache: ABCFileCache[TRawData] = file_cache
         self._logger = logger
 
     @classmethod
@@ -132,7 +132,7 @@ class ABCFetcher(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
                  traceback: Optional[TracebackType]) -> Optional[bool]:
         """Destroy the data source."""
 
-    def fetch(self) -> BoundedAbstractRawData:
+    def fetch(self) -> TRawData:
         """Return the data from the source."""
         # TODO(ml): Handle `selected_raw_sections` in SNMP.
         # TODO(ml): EAFP would significantly simplify the code.
@@ -147,8 +147,8 @@ class ABCFetcher(Generic[BoundedAbstractRawData], metaclass=abc.ABCMeta):
         return raw_data
 
     @abc.abstractmethod
-    def _fetch_from_io(self) -> BoundedAbstractRawData:
+    def _fetch_from_io(self) -> TRawData:
         """Override this method to contact the source and return the raw data."""
 
-    def _fetch_from_cache(self) -> Optional[BoundedAbstractRawData]:
+    def _fetch_from_cache(self) -> Optional[TRawData]:
         return self.file_cache.read()

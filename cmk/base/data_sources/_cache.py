@@ -13,16 +13,16 @@ from typing import Generic, Union
 import cmk.utils.store as store
 from cmk.utils.type_defs import SectionName
 
-from cmk.base.check_utils import BoundedAbstractPersistedSections
+from cmk.base.check_utils import TPersistedSections
 
 
-class SectionStore(Generic[BoundedAbstractPersistedSections]):
+class SectionStore(Generic[TPersistedSections]):
     def __init__(self, path: Union[str, Path], logger: logging.Logger) -> None:
         super(SectionStore, self).__init__()
         self.path = Path(path)
         self._logger = logger
 
-    def store(self, sections: BoundedAbstractPersistedSections) -> None:
+    def store(self, sections: TPersistedSections) -> None:
         if not sections:
             return
 
@@ -33,9 +33,9 @@ class SectionStore(Generic[BoundedAbstractPersistedSections]):
     # TODO: This is not race condition free when modifying the data. Either remove
     # the possible write here and simply ignore the outdated sections or lock when
     # reading and unlock after writing
-    def load(self, keep_outdated: bool) -> BoundedAbstractPersistedSections:
+    def load(self, keep_outdated: bool) -> TPersistedSections:
         raw_sections_data = store.load_object_from_file(self.path, default={})
-        sections: BoundedAbstractPersistedSections = {  # type: ignore[assignment]
+        sections: TPersistedSections = {  # type: ignore[assignment]
             SectionName(k): v for k, v in raw_sections_data.items()
         }
         if not keep_outdated:
@@ -47,8 +47,7 @@ class SectionStore(Generic[BoundedAbstractPersistedSections]):
 
         return sections
 
-    def _filter(self,
-                sections: BoundedAbstractPersistedSections) -> BoundedAbstractPersistedSections:
+    def _filter(self, sections: TPersistedSections) -> TPersistedSections:
         now = time.time()
         for section_name, entry in list(sections.items()):
             if len(entry) == 2:

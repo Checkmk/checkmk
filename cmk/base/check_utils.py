@@ -30,11 +30,9 @@ AbstractSectionContent = Union[AgentSectionContent, SNMPSectionContent]
 AbstractSections = Union[AgentSections, SNMPSections]
 AbstractPersistedSections = Union[AgentPersistedSections, SNMPPersistedSections]
 
-BoundedAbstractSectionContent = TypeVar("BoundedAbstractSectionContent",
-                                        bound=AbstractSectionContent)
-BoundedAbstractSections = TypeVar("BoundedAbstractSections", bound=AbstractSections)
-BoundedAbstractPersistedSections = TypeVar("BoundedAbstractPersistedSections",
-                                           bound=AbstractPersistedSections)
+TSectionContent = TypeVar("TSectionContent", bound=AbstractSectionContent)
+TSections = TypeVar("TSections", bound=AbstractSections)
+TPersistedSections = TypeVar("TPersistedSections", bound=AbstractPersistedSections)
 
 ServiceID = Tuple[CheckPluginName, Item]
 CheckTable = Dict[ServiceID, 'Service']

@@ -11,9 +11,9 @@ from cmk.utils.type_defs import AgentRawData
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-__all__ = ["BoundedAbstractRawData"]
+__all__ = ["TRawData"]
 
 # TODO(ml): This type does not really belong here but there currently
 #           is not better place.
 AbstractRawData = Union[AgentRawData, SNMPRawData]
-BoundedAbstractRawData = TypeVar("BoundedAbstractRawData", bound=AbstractRawData)
+TRawData = TypeVar("TRawData", bound=AbstractRawData)

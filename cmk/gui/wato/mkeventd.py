@@ -1542,13 +1542,17 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
     def permissions(cls):
         return ["mkeventd.edit"]
 
+    @classmethod
+    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+        return ModeEventConsoleRulePacks
+
     def _from_vars(self):
         self._rule_pack_id = html.request.var("rule_pack")
         self._rule_pack_nr, self._rule_pack = self._rule_pack_with_id(self._rule_pack_id)
         self._rules = self._rule_pack["rules"]
 
     def title(self):
-        return _("Rule Package %s") % self._rule_pack["title"]
+        return _("Rule package %s") % self._rule_pack["title"]
 
     def buttons(self):
         self._rules_button()
@@ -1835,6 +1839,10 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
     def permissions(cls):
         return ["mkeventd.edit"]
 
+    @classmethod
+    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+        return ModeEventConsoleRulePacks
+
     def _from_vars(self):
         self._edit_nr = html.request.get_integer_input_mandatory("edit",
                                                                  -1)  # missing -> new rule pack
@@ -1855,7 +1863,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
 
     def title(self):
         if self._new:
-            return _("Create new rule pack")
+            return _("Add rule pack")
         return _("Edit rule pack %s") % self._rule_packs[self._edit_nr]["id"]
 
     def buttons(self):
@@ -1936,6 +1944,10 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
     def permissions(cls):
         return ["mkeventd.edit"]
 
+    @classmethod
+    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+        return ModeEventConsoleRules
+
     def _from_vars(self):
         if html.request.has_var("rule_pack"):
             self._rule_pack_nr, self._rule_pack = self._rule_pack_with_id(
@@ -1979,7 +1991,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
 
     def title(self):
         if self._new:
-            return _("Create new rule")
+            return _("Add rule")
         return _("Edit rule %s") % self._rules[self._edit_nr]["id"]
 
     def buttons(self):
@@ -2103,6 +2115,10 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
     def permissions(cls):
         return []
 
+    @classmethod
+    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+        return ModeEventConsoleRulePacks
+
     def title(self):
         return _("Local server status")
 
@@ -2194,6 +2210,10 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
     def permissions(cls):
         return ["mkeventd.config"]
 
+    @classmethod
+    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+        return ModeEventConsoleRulePacks
+
     def __init__(self):
         super().__init__()
 
@@ -2210,7 +2230,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
     def title(self):
         if self._search:
             return html.render_text(_("Event Console configuration matching '%s'") % self._search)
-        return _('Event Console Configuration')
+        return _('Event Console configuration')
 
     def buttons(self):
         self._rules_button()
@@ -2319,7 +2339,7 @@ class ModeEventConsoleEditGlobalSetting(ABCEditGlobalSettingMode):
         self._need_restart = None
 
     def title(self):
-        return _("Event Console Configuration")
+        return _("Event Console configuration")
 
     def _affected_sites(self):
         return _get_event_console_sync_sites()
@@ -2340,8 +2360,12 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
     def permissions(cls):
         return ["mkeventd.config"]
 
+    @classmethod
+    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+        return ModeEventConsoleRulePacks
+
     def title(self):
-        return _('SNMP MIBs for Trap Translation')
+        return _('SNMP MIBs for trap translation')
 
     def buttons(self):
         self._rules_button()

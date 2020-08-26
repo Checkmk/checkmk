@@ -70,8 +70,6 @@ def test_snmp_ipaddress_from_mgmt_board_unresolvable(hostname, monkeypatch):
 
 
 def test_attribute_defaults(source, hostname, ipaddress, monkeypatch):
-    assert source.hostname == hostname
-    assert source.ipaddress == ipaddress
     assert source.id == "snmp"
     assert source._cpu_tracking_id == "snmp"
 
@@ -94,8 +92,9 @@ def test_source_requires_ipaddress(hostname, mode, monkeypatch):
 
 
 def test_description_with_ipaddress(source, monkeypatch):
+    configurator = source.configurator
     default = "SNMP (Community: 'public', Bulk walk: no, Port: 161, Inline: no)"
-    assert source.description == default
+    assert configurator.description == default
 
 
 class TestSNMPConfigurator_SNMP:

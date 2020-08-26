@@ -353,20 +353,8 @@ class ABCChecker(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         return "%s(%r)" % (type(self).__name__, self.configurator)
 
     @property
-    def hostname(self) -> HostName:
-        return self.configurator.hostname
-
-    @property
-    def ipaddress(self) -> Optional[HostAddress]:
-        return self.configurator.ipaddress
-
-    @property
     def id(self) -> str:
         return self.configurator.id
-
-    @property
-    def description(self) -> str:
-        return self.configurator.description
 
     @property
     def _cpu_tracking_id(self) -> str:

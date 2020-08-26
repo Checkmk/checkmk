@@ -489,7 +489,10 @@ class TestMakeHostSectionsHosts:
             ABCChecker,
             "check",
             lambda self, raw_data: DummyHostSection(
-                sections={SectionName("section_name_%s" % self.hostname): [["section_content"]]},
+                sections={
+                    SectionName("section_name_%s" % self.configurator.hostname):
+                        [["section_content"]]
+                },
                 cache_info={},
                 piggybacked_raw_data={},
                 persisted_sections="",
@@ -682,10 +685,10 @@ class TestMakeHostSectionsHosts:
         assert isinstance(section, AgentHostSections)
 
         assert len(section.sections) == len(sources)
-        for source in sources:
+        for configurator in (s.configurator for s in sources):
             # yapf: disable
             assert (
-                section.sections[SectionName("section_name_%s" % source.hostname)]
+                section.sections[SectionName("section_name_%s" % configurator.hostname)]
                 == [["section_content"]])
 
 
@@ -705,7 +708,7 @@ class TestMakeHostSectionsClusters:
             ABCChecker,
             "check",
             lambda self, *args, **kwargs: DummyHostSection(
-                sections={SectionName("section_name_%s" % self.hostname): [["section_content"]]},
+                sections={SectionName("section_name_%s" % self.configurator.hostname): [["section_content"]]},
                 cache_info={},
                 piggybacked_raw_data={},
                 persisted_sections="",

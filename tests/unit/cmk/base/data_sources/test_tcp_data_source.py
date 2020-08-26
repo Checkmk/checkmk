@@ -113,8 +113,6 @@ def test_attribute_defaults(mode, monkeypatch):
 
     checker = configurator.make_checker()
 
-    assert checker.hostname == hostname
-    assert checker.ipaddress == ipaddress
     assert checker.id == "agent"
     assert configurator.file_cache.maybe is False
     assert checker.exception is None

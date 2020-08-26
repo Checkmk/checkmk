@@ -43,9 +43,6 @@ def test_attribute_defaults(mode, monkeypatch):
     assert summarizer.summarize(AgentHostSections()) == (0, "Version: unknown", [])
 
     checker = configurator.make_checker()
-    assert checker.hostname == hostname
-    # Address comes from management board.
-    assert checker.ipaddress is None
     assert checker.id == "mgmt_ipmi"
     assert checker._cpu_tracking_id == checker.id
 
@@ -71,9 +68,6 @@ def test_ipmi_ipaddress_from_mgmt_board(mode, monkeypatch):
 
     configurator = IPMIConfigurator(hostname, ipaddress, mode=mode)
     assert configurator.host_config.management_address == ipaddress
-
-    checker = configurator.make_checker()
-    assert checker.ipaddress == ipaddress
 
 
 def test_description_with_ipaddress(monkeypatch):

@@ -40,7 +40,14 @@ from cmk.base.exceptions import MKAgentError, MKEmptyAgentData, MKIPAddressLooku
 
 from ._cache import SectionStore
 
-__all__ = ["ABCHostSections", "ABCConfigurator", "ABCChecker", "FileCacheConfigurator", "Mode"]
+__all__ = [
+    "ABCHostSections",
+    "ABCConfigurator",
+    "ABCChecker",
+    "FileCacheConfigurator",
+    "Mode",
+    "set_cache_opts",
+]
 
 
 class Mode(enum.Enum):
@@ -161,6 +168,14 @@ class ABCParser(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         raise NotImplementedError
 
 
+def set_cache_opts(use_caches: bool) -> None:
+    # TODO check these settings vs.
+    # cmk/base/automations/check_mk.py:_set_cache_opts_of_data_sources
+    if use_caches:
+        FileCacheConfigurator.maybe = True
+        FileCacheConfigurator.use_outdated = True
+
+
 class FileCacheConfigurator:
     """Hold the configuration to FileCache."""
 
@@ -177,6 +192,9 @@ class FileCacheConfigurator:
     agent_disabled: bool = False
     # Set by the code in different situations where we recommend, but not enforce,
     # to use the cache. The user can always use "--cache" to override this.
+    # It's used to 'transport' caching opt between modules, eg:
+    # - modes: FileCacheConfigurator.maybe = use_caches
+    # - discovery: use_caches = FileCacheConfigurator.maybe
     maybe = False
     # Is set by the "--cache" command line. This makes the caching logic use
     # cache files that are even older than the max_cachefile_age of the host/mode.

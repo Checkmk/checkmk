@@ -87,6 +87,8 @@ class DiscoveryAutomation(Automation):
 
 
 def _set_cache_opts_of_data_sources(use_caches: bool) -> None:
+    # TODO check these settings vs.
+    # cmk/base/data_sources/_abstract.py:set_cache_opts
     if use_caches:
         data_sources.FileCacheConfigurator.use_outdated = True
         # TODO why does this only apply to TCP data sources and not

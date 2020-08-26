@@ -97,8 +97,7 @@ _verbosity = 0
 
 
 def option_cache() -> None:
-    data_sources.FileCacheConfigurator.maybe = True
-    data_sources.FileCacheConfigurator.use_outdated = True
+    data_sources.set_cache_opts(use_caches=True)
 
 
 modes.register_general_option(

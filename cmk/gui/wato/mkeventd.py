@@ -11,7 +11,7 @@ import re
 import io
 import time
 import zipfile
-from typing import Callable, Dict, List, Optional as _Optional, TypeVar, Union, Type
+from typing import Callable, Dict, List, Optional as _Optional, TypeVar, Union, Type, Iterator
 from pathlib import Path
 
 from pysmi.compiler import MibCompiler  # type: ignore[import]
@@ -83,6 +83,16 @@ from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.permissions import (
     Permission,
     permission_registry,
+)
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    PageMenuSearch,
+    make_simple_link,
+    make_display_options_dropdown,
 )
 from cmk.gui.wato.pages.global_settings import (
     ABCGlobalSettingsMode,
@@ -2126,10 +2136,22 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
     def title(self):
         return _("Local server status")
 
-    def buttons(self):
-        self._rules_button()
-        self._config_buttons()
-        self._mibs_button()
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Setup"),
+                            entries=list(_page_menu_entries_related_ec(self.name())),
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
 
     def action(self):
         if not config.user.may("mkeventd.switchmode"):
@@ -2236,11 +2258,41 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
             return html.render_text(_("Event Console configuration matching '%s'") % self._search)
         return _('Event Console configuration')
 
-    def buttons(self):
-        self._rules_button()
-        self._changes_button()
-        html.context_button(_("Server Status"),
-                            html.makeuri_contextless([("mode", "mkeventd_status")]), "status")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Setup"),
+                            entries=list(_page_menu_entries_related_ec(self.name())),
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
+
+        self._extend_display_dropdown(menu)
+        return menu
+
+    def _extend_display_dropdown(self, menu: PageMenu) -> None:
+        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+        display_dropdown.topics.insert(
+            0,
+            PageMenuTopic(
+                title=_("Filter settings"),
+                entries=list(self._page_menu_entries_filter()),
+            ))
+
+    def _page_menu_entries_filter(self) -> Iterator[PageMenuEntry]:
+        yield PageMenuEntry(
+            title="",
+            icon_name="trans",
+            item=PageMenuSearch(),
+        )
 
     # TODO: Consolidate with ModeEditGlobals.action()
     def action(self):
@@ -2673,6 +2725,44 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
             mib['name'] = matches.group(1)
 
         return mib
+
+
+def _page_menu_entries_related_ec(mode_name: str) -> Iterator[PageMenuEntry]:
+    if mode_name != "mkeventd_rule_packs":
+        yield PageMenuEntry(
+            title=_("Rule packs"),
+            icon_name="mkeventd",
+            item=make_simple_link(html.makeuri_contextless([("mode", "mkeventd_rule_packs")])),
+        )
+
+    if config.user.may("mkeventd.config") and config.user.may("wato.rulesets"):
+        yield PageMenuEntry(
+            title=_("Rules"),
+            icon_name="rulesets",
+            item=make_simple_link(
+                html.makeuri_contextless([("mode", "rulesets"), ("group", "eventconsole")])),
+        )
+
+    if mode_name != "mkeventd_status":
+        yield PageMenuEntry(
+            title=_("Status"),
+            icon_name="status",
+            item=make_simple_link(html.makeuri_contextless([("mode", "mkeventd_status")])),
+        )
+
+    if mode_name != "mkeventd_config" and config.user.may("mkeventd.config"):
+        yield PageMenuEntry(
+            title=_("Settings"),
+            icon_name="configuration",
+            item=make_simple_link(html.makeuri_contextless([("mode", "mkeventd_config")])),
+        )
+
+    if mode_name != "mkeventd_mibs":
+        yield PageMenuEntry(
+            title=_("SNMP MIBs"),
+            icon_name="snmpmib",
+            item=make_simple_link(html.makeuri_contextless([("mode", "mkeventd_mibs")])),
+        )
 
 
 #.

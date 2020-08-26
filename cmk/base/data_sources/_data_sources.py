@@ -33,7 +33,7 @@ from .programs import DSProgramConfigurator, SpecialAgentConfigurator
 from .snmp import SNMPConfigurator
 from .tcp import TCPConfigurator
 
-__all__ = ["Checkers", "make_host_sections", "make_configurators", "make_checkers"]
+__all__ = ["Checkers", "make_host_sections", "make_configurators", "make_checkers", "make_nodes"]
 
 Checkers = Iterable[ABCChecker]
 
@@ -194,28 +194,16 @@ def make_checkers(
     return list(c.make_checker() for c in make_configurators(host_config, ipaddress, mode=mode))
 
 
-def make_host_sections(
+def make_nodes(
     config_cache: config.ConfigCache,
     host_config: HostConfig,
     ipaddress: Optional[HostAddress],
     mode: Mode,
     sources: Checkers,
-    *,
-    max_cachefile_age: int,
-    selected_raw_sections: Optional[SelectedRawSections],
-) -> MultiHostSections:
+) -> Iterable[Tuple[HostName, Optional[HostAddress], Checkers]]:
     if host_config.nodes is None:
-        return _make_host_sections(
-            [(host_config.hostname, ipaddress, sources)],
-            max_cachefile_age=max_cachefile_age,
-            selected_raw_sections=selected_raw_sections,
-        )
-
-    return _make_host_sections(
-        _make_piggyback_nodes(mode, config_cache, host_config),
-        max_cachefile_age=max_cachefile_age,
-        selected_raw_sections=_make_piggybacked_sections(host_config),
-    )
+        return [(host_config.hostname, ipaddress, sources)]
+    return _make_piggyback_nodes(mode, config_cache, host_config)
 
 
 def _make_piggybacked_sections(host_config) -> SelectedRawSections:
@@ -229,11 +217,12 @@ def _make_piggybacked_sections(host_config) -> SelectedRawSections:
     return agent_based_register.get_relevant_raw_sections(check_plugin_names=check_plugin_names)
 
 
-def _make_host_sections(
+def make_host_sections(
     nodes: Iterable[Tuple[HostName, Optional[HostAddress], Checkers]],
     *,
     max_cachefile_age: int,
     selected_raw_sections: Optional[SelectedRawSections],
+    host_config: HostConfig,
 ) -> MultiHostSections:
     """Gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
 
@@ -252,6 +241,10 @@ def _make_host_sections(
     multi_host_sections = MultiHostSections()
     for hostname, ipaddress, sources in nodes:
         for source in sources:
+            if host_config.nodes is None:
+                source.configurator.selected_raw_sections = selected_raw_sections
+            else:
+                source.configurator.selected_raw_sections = _make_piggybacked_sections(host_config)
             source.configurator.file_cache.max_age = max_cachefile_age
             host_sections = multi_host_sections.setdefault(
                 HostKey(hostname, ipaddress, source.configurator.source_type),

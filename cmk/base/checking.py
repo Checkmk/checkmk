@@ -172,13 +172,16 @@ def do_check(
             mode=data_sources.Mode.CHECKING,
         )
         mhs = data_sources.make_host_sections(
-            config_cache,
-            host_config,
-            ipaddress,
-            data_sources.Mode.CHECKING,
-            sources=sources,
+            data_sources.make_nodes(
+                config_cache,
+                host_config,
+                ipaddress,
+                data_sources.Mode.CHECKING,
+                sources,
+            ),
             selected_raw_sections=selected_raw_sections,
             max_cachefile_age=host_config.max_cachefile_age,
+            host_config=host_config,
         )
         num_success, plugins_missing_data = _do_all_checks_on_host(
             config_cache,

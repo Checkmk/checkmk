@@ -28,6 +28,7 @@ from cmk.base.data_sources import (
     _data_sources,
     make_host_sections,
     make_checkers,
+    make_nodes,
     Mode,
 )
 from cmk.base.data_sources.agent import AgentHostSections
@@ -502,13 +503,16 @@ class TestMakeHostSectionsHosts:
 
     def test_no_sources(self, hostname, ipaddress, mode, config_cache, host_config):
         mhs = make_host_sections(
-            config_cache,
-            host_config,
-            ipaddress,
-            mode=mode,
-            sources=[],
+            make_nodes(
+                config_cache,
+                host_config,
+                ipaddress,
+                mode=mode,
+                sources=[],
+            ),
             max_cachefile_age=0,
             selected_raw_sections=None,
+            host_config=host_config,
         )
         # The length is not zero because the function always sets,
         # at least, a piggy back section.
@@ -528,19 +532,22 @@ class TestMakeHostSectionsHosts:
 
     def test_one_snmp_source(self, hostname, ipaddress, mode, config_cache, host_config):
         mhs = make_host_sections(
-            config_cache,
-            host_config,
-            ipaddress,
-            mode=mode,
-            sources=[
-                SNMPConfigurator.snmp(
-                    hostname,
-                    ipaddress,
-                    mode=mode,
-                ).make_checker(),
-            ],
+            make_nodes(
+                config_cache,
+                host_config,
+                ipaddress,
+                mode=mode,
+                sources=[
+                    SNMPConfigurator.snmp(
+                        hostname,
+                        ipaddress,
+                        mode=mode,
+                    ).make_checker(),
+                ],
+            ),
             max_cachefile_age=0,
             selected_raw_sections=None,
+            host_config=host_config,
         )
         assert len(mhs) == 1
 
@@ -579,13 +586,16 @@ class TestMakeHostSectionsHosts:
         assert source.configurator.source_type is SourceType.HOST
 
         mhs = make_host_sections(
-            config_cache,
-            host_config,
-            ipaddress,
-            mode=mode,
-            sources=[source],
+            make_nodes(
+                config_cache,
+                host_config,
+                ipaddress,
+                mode=mode,
+                sources=[source],
+            ),
             max_cachefile_age=0,
             selected_raw_sections=None,
+            host_config=host_config,
         )
         assert len(mhs) == 1
 
@@ -621,13 +631,16 @@ class TestMakeHostSectionsHosts:
         ]
 
         mhs = make_host_sections(
-            config_cache,
-            host_config,
-            ipaddress,
-            mode=mode,
-            sources=sources,
+            make_nodes(
+                config_cache,
+                host_config,
+                ipaddress,
+                mode=mode,
+                sources=sources,
+            ),
             max_cachefile_age=0,
             selected_raw_sections=None,
+            host_config=host_config,
         )
         assert len(mhs) == 1
 
@@ -652,13 +665,16 @@ class TestMakeHostSectionsHosts:
         ]
 
         mhs = make_host_sections(
-            config_cache,
-            host_config,
-            ipaddress,
-            mode=mode,
-            sources=sources,
+            make_nodes(
+                config_cache,
+                host_config,
+                ipaddress,
+                mode=mode,
+                sources=sources,
+            ),
             max_cachefile_age=0,
             selected_raw_sections=None,
+            host_config=host_config,
         )
         assert len(mhs) == 1
 
@@ -735,13 +751,16 @@ class TestMakeHostSectionsClusters:
 
     def test_no_sources(self, cluster, nodes, config_cache, host_config, mode):
         mhs = make_host_sections(
-            config_cache,
-            host_config,
-            None,
-            mode=mode,
-            sources=[],
+            make_nodes(
+                config_cache,
+                host_config,
+                None,
+                mode=mode,
+                sources=[],
+            ),
             max_cachefile_age=0,
             selected_raw_sections=None,
+            host_config=host_config,
         )
         assert len(mhs) == len(nodes)
 
@@ -815,13 +834,16 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
     host_config.nodes = list(hosts.keys())
 
     mhs = make_host_sections(
-        config_cache,
-        host_config,
-        address,
-        mode=mode,
-        sources=make_checkers(host_config, address, mode=mode),
+        make_nodes(
+            config_cache,
+            host_config,
+            address,
+            mode=mode,
+            sources=make_checkers(host_config, address, mode=mode),
+        ),
         max_cachefile_age=host_config.max_cachefile_age,
         selected_raw_sections=None,
+        host_config=host_config,
     )
     assert len(mhs) == len(hosts) == 3
     cmk.utils.piggyback._store_status_file_of.assert_not_called()  # type: ignore[attr-defined]

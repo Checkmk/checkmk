@@ -13,7 +13,6 @@ from types import FrameType
 from typing import (
     Any,
     Callable,
-    cast,
     Counter,
     Dict,
     Generator,
@@ -320,18 +319,23 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
                 selected_raw_sections = agent_based_register.get_relevant_raw_sections(
                     check_plugin_names=check_plugin_names)
 
+            sources = data_sources.make_checkers(host_config,
+                                                 ipaddress,
+                                                 mode=data_sources.Mode.DISCOVERY)
+            for source in sources:
+                _configure_sources(source.configurator, on_error=on_error)
+
             multi_host_sections = data_sources.make_host_sections(
-                config_cache,
-                host_config,
-                ipaddress,
-                data_sources.Mode.DISCOVERY,
-                _get_sources_for_discovery(
+                data_sources.make_nodes(
+                    config_cache,
                     host_config,
                     ipaddress,
-                    on_error=on_error,
+                    data_sources.Mode.DISCOVERY,
+                    sources,
                 ),
                 selected_raw_sections=selected_raw_sections,
                 max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
+                host_config=host_config,
             )
 
             _do_discovery_for(hostname, ipaddress, multi_host_sections, check_plugin_names,
@@ -513,18 +517,23 @@ def discover_on_host(
         else:
             ipaddress = ip_lookup.lookup_ip_address(host_config)
 
+        sources = data_sources.make_checkers(host_config,
+                                             ipaddress,
+                                             mode=data_sources.Mode.DISCOVERY)
+        for source in sources:
+            _configure_sources(source.configurator, on_error=on_error)
+
         multi_host_sections = data_sources.make_host_sections(
-            config_cache,
-            host_config,
-            ipaddress,
-            data_sources.Mode.DISCOVERY,
-            _get_sources_for_discovery(
+            data_sources.make_nodes(
+                config_cache,
                 host_config,
                 ipaddress,
-                on_error=on_error,
+                data_sources.Mode.DISCOVERY,
+                sources,
             ),
             max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
             selected_raw_sections=None,
+            host_config=host_config,
         )
 
         # Compute current state of new and existing checks
@@ -677,22 +686,26 @@ def check_discovery(
     if ipaddress is None and not host_config.is_cluster:
         ipaddress = ip_lookup.lookup_ip_address(host_config)
 
-    sources = _get_sources_for_discovery(
-        host_config,
-        ipaddress,
-        on_error="raise",
-        disable_snmp_caches=params['inventory_check_do_scan'],
-    )
+    sources = data_sources.make_checkers(host_config, ipaddress, mode=data_sources.Mode.DISCOVERY)
+    for source in sources:
+        _configure_sources(
+            source.configurator,
+            on_error="raise",
+            disable_snmp_caches=params['inventory_check_do_scan'],
+        )
 
     use_caches = data_sources.FileCacheConfigurator.maybe
     multi_host_sections = data_sources.make_host_sections(
-        config_cache,
-        host_config,
-        ipaddress,
-        data_sources.Mode.DISCOVERY,
-        sources,
+        data_sources.make_nodes(
+            config_cache,
+            host_config,
+            ipaddress,
+            data_sources.Mode.DISCOVERY,
+            sources,
+        ),
         max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
         selected_raw_sections=None,
+        host_config=host_config,
     )
 
     services, discovered_host_labels = _get_host_services(
@@ -1244,27 +1257,17 @@ def _discover_services(
         raise MKGeneralException("Interrupted by Ctrl-C.")
 
 
-def _get_sources_for_discovery(
-    host_config: config.HostConfig,
-    ipaddress: Optional[HostAddress],
+def _configure_sources(
+    configurator: data_sources.ABCConfigurator,
     *,
     on_error: str,
     disable_snmp_caches: bool = False,
-) -> data_sources.Checkers:
-    sources = data_sources.make_checkers(
-        host_config,
-        ipaddress,
-        mode=data_sources.Mode.DISCOVERY,
-    )
-    for source in sources:
-        if isinstance(source, data_sources.snmp.SNMPChecker):
-            configurator = cast(data_sources.snmp.SNMPConfigurator, source.configurator)
-            configurator.on_snmp_scan_error = on_error
-            configurator.use_snmpwalk_cache = False
-            configurator.ignore_check_interval = True
-            configurator.file_cache.snmp_disabled = disable_snmp_caches
-
-    return sources
+):
+    if isinstance(configurator, data_sources.snmp.SNMPConfigurator):
+        configurator.on_snmp_scan_error = on_error
+        configurator.use_snmpwalk_cache = False
+        configurator.ignore_check_interval = True
+        configurator.file_cache.snmp_disabled = disable_snmp_caches
 
 
 def _execute_discovery(
@@ -1557,18 +1560,21 @@ def get_check_preview(host_name: HostName, use_caches: bool,
 
     ip_address = None if host_config.is_cluster else ip_lookup.lookup_ip_address(host_config)
 
+    sources = data_sources.make_checkers(host_config, ip_address, mode=data_sources.Mode.DISCOVERY)
+    for source in sources:
+        _configure_sources(source.configurator, on_error=on_error)
+
     multi_host_sections = data_sources.make_host_sections(
-        config_cache,
-        host_config,
-        ip_address,
-        data_sources.Mode.DISCOVERY,
-        _get_sources_for_discovery(
+        data_sources.make_nodes(
+            config_cache,
             host_config,
             ip_address,
-            on_error=on_error,
+            data_sources.Mode.DISCOVERY,
+            sources,
         ),
         max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
         selected_raw_sections=None,
+        host_config=host_config,
     )
 
     grouped_services, discovered_host_labels = _get_host_services(

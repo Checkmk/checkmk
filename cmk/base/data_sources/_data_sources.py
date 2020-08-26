@@ -103,6 +103,7 @@ class _Builder:
     def _initialize_snmp_based(self,) -> None:
         if not self._host_config.is_snmp_host:
             return
+        assert self._ipaddress is not None
         self._add(SNMPConfigurator.snmp(
             self._hostname,
             self._ipaddress,

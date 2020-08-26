@@ -85,12 +85,6 @@ def test_attribute_defaults(source, hostname, ipaddress, monkeypatch):
     assert source.exception is None
 
 
-def test_source_requires_ipaddress(hostname, mode, monkeypatch):
-    Scenario().add_host(hostname).apply(monkeypatch)
-    with pytest.raises(TypeError):
-        SNMPConfigurator.snmp(hostname, None, mode=mode)
-
-
 def test_description_with_ipaddress(source, monkeypatch):
     configurator = source.configurator
     default = "SNMP (Community: 'public', Bulk walk: no, Port: 161, Inline: no)"

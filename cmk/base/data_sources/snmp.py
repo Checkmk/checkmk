@@ -134,12 +134,11 @@ class SNMPConfigurator(ABCConfigurator[SNMPRawData, SNMPHostSections]):
     def snmp(
         cls,
         hostname: HostName,
-        ipaddress: Optional[HostAddress],
+        ipaddress: HostAddress,
         *,
         mode: Mode,
     ) -> "SNMPConfigurator":
-        if ipaddress is None:
-            raise TypeError(ipaddress)
+        assert ipaddress is not None
         return cls(
             hostname,
             ipaddress,

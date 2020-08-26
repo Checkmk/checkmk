@@ -374,11 +374,6 @@ def test_parse_sections_superseded(monkeypatch):
             ('heute', NODE_1),
         ], {
             "heute": "heute"
-        }, None, NODE_1),
-        ("heute", None, [
-            ('heute', NODE_1),
-        ], {
-            "heute": "heute"
         }, "FooBar", NODE_1),
         # Clusters: host_of_clustered_service returns cluster name. That means that
         # the service is assigned to the cluster
@@ -388,23 +383,9 @@ def test_parse_sections_superseded(monkeypatch):
         ], {
             "node1": "cluster",
             "node2": "cluster"
-        }, None, NODE_1 + NODE_2),
-        ("cluster", ["node1", "node2"], [
-            ('node1', NODE_1),
-            ('node2', NODE_2),
-        ], {
-            "node1": "cluster",
-            "node2": "cluster"
         }, "FooBar", NODE_1 + NODE_2),
         # host_of_clustered_service returns either the cluster or node name.
         # That means that the service is assigned to the cluster resp. not to the cluster
-        ("cluster", ["node1", "node2"], [
-            ('node1', NODE_1),
-            ('node2', NODE_2),
-        ], {
-            "node1": "node1",
-            "node2": "cluster"
-        }, None, NODE_1 + NODE_2),
         ("cluster", ["node1", "node2"], [
             ('node1', NODE_1),
             ('node2', NODE_2),

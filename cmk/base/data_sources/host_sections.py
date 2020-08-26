@@ -259,7 +259,7 @@ class MultiHostSections(collections.abc.MutableMapping):
         management_board_info: str,
         check_plugin_name: CheckPluginNameStr,
         for_discovery: bool,
-        service_description: Optional[ServiceName] = None,
+        service_description: ServiceName,
         *,
         check_info: Dict[str, Dict[str, Any]],
     ) -> FinalSectionContent:
@@ -322,7 +322,7 @@ class MultiHostSections(collections.abc.MutableMapping):
     def _get_nodes_of_clustered_service(
         self,
         hostname: HostName,
-        service_description: Optional[ServiceName],
+        service_description: ServiceName,
     ) -> Optional[List[HostName]]:
         """Returns the node names if a service is clustered, otherwise 'None' in order to
         decide whether we collect section content of the host or the nodes.
@@ -336,9 +336,6 @@ class MultiHostSections(collections.abc.MutableMapping):
 
         We also use the result for the section cache.
         """
-        if not service_description:
-            return None
-
         host_config = self._config_cache.get_host_config(hostname)
         nodes = host_config.nodes
 

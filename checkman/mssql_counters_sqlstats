@@ -5,9 +5,14 @@ license: GPL
 distribution: check_mk
 description:
  This checks monitors various rates from the SQL statistics object.
+ Upper levels for each element can be configured in Wato.
 
 item:
  The MSSQL object, instance and counter names separated by spaces.
 
 inventory:
  One service is created for each counter.
+
+cluster:
+ On a cluster the check just cumulates all results for each cluster node.
+ The overall result state then reflects the worst state of all nodes.

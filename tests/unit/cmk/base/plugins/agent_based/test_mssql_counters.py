@@ -43,6 +43,11 @@ from cmk.base.plugins.agent_based.mssql_counters_pageactivity import (
     _check_base as check_pageactivity_base,
     _cluster_check_base as cluster_check_pageactivity_base,
 )
+from cmk.base.plugins.agent_based.mssql_counters_sqlstats import (
+    discovery_mssql_counters_sqlstats,
+    _check_base as check_sqlstats_base,
+    _cluster_check_base as cluster_check_sqlstats_base,
+)
 
 big_string_table = [
     ['None', 'utc_time', 'None', '19.08.2020 14:25:04'],
@@ -579,6 +584,59 @@ def test_cluster_check_mssql_counters_pageactivity(item, params, section, expect
     t0 = 1597839904
     for i in range(2):
         for result in cluster_check_pageactivity_base(vs, t0 + i, item, params, section):
+            results.append(result)
+    print(",\n".join(str(r) for r in results))
+    assert results == expected_results
+
+
+@pytest.mark.parametrize("section,expected_services", [
+    (big_parsed_data, [
+        Service(item='MSSQL_VEEAMSQL2012:SQL_Statistics None batch_requests/sec'),
+        Service(item='MSSQL_VEEAMSQL2012:SQL_Statistics None sql_compilations/sec'),
+        Service(item='MSSQL_VEEAMSQL2012:SQL_Statistics None sql_re-compilations/sec'),
+    ]),
+])
+def test_discovery_mssql_counters_sqlstats(section, expected_services):
+    results = list(discovery_mssql_counters_sqlstats(section))
+    print(",\n".join(str(r) for r in results))
+    assert results == expected_services
+
+
+@pytest.mark.parametrize("item,params,section,expected_results", [
+    ("MSSQL_VEEAMSQL2012:SQL_Statistics None sql_compilations/sec", {}, big_parsed_data, [
+        IgnoreResults(value="Cannot calculate rates yet"),
+        Result(state=state.OK, summary='0.0/s'),
+        Metric('sql_compilations_per_second', 0.0),
+    ]),
+])
+def test_check_mssql_counters_sqlstats(item, params, section, expected_results):
+    # re-run cluster_check_locks_per_batch_base() once in order to get rates
+    vs: ValueStore = {}
+    results = []
+    t0 = 1597839904
+    for i in range(2):
+        for result in check_sqlstats_base(vs, t0 + i, item, params, section):
+            results.append(result)
+    print(",\n".join(str(r) for r in results))
+    assert results == expected_results
+
+
+@pytest.mark.parametrize("item,params,section,expected_results", [
+    ("MSSQL_VEEAMSQL2012:SQL_Statistics None sql_compilations/sec", {}, {
+        "node1": big_parsed_data
+    }, [
+        IgnoreResults(value="Cannot calculate rates yet"),
+        Result(state=state.OK, summary='[node1] 0.0/s'),
+        Metric('sql_compilations_per_second', 0.0),
+    ]),
+])
+def test_cluster_check_mssql_counters_sqlstats(item, params, section, expected_results):
+    # re-run cluster_check_locks_per_batch_base() once in order to get rates
+    vs: ValueStore = {}
+    results = []
+    t0 = 1597839904
+    for i in range(2):
+        for result in cluster_check_sqlstats_base(vs, t0 + i, item, params, section):
             results.append(result)
     print(",\n".join(str(r) for r in results))
     assert results == expected_results

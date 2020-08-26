@@ -170,7 +170,7 @@ def test_automation_discovery_not_existing_host(test_cfg, site):
 
 
 def test_automation_discovery_with_cache_option(test_cfg, site):
-    data = _execute_automation(site, "inventory", args=["@cache", "new", "modes-test-host"])
+    data = _execute_automation(site, "inventory", args=["new", "modes-test-host"])
 
     assert isinstance(data, tuple)
     assert len(data) == 2

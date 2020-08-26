@@ -9,6 +9,10 @@ import re
 import functools
 
 
+###################################################################################################
+#  NOTE: This class has already been migrated to cmk.base.plugins.agent_based.utils.legacy_docker #
+#                                                                                                 #
+###################################################################################################
 class DeprecatedDict(dict):
     pass
 

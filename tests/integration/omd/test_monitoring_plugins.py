@@ -48,7 +48,6 @@ import pytest  # type: ignore[import]
     "check_mkevents",
     "check_mrtg",
     "check_mrtgtraf",
-    "check_multi",
     "check_mysql",
     "check_mysql_health",
     "check_mysql_query",

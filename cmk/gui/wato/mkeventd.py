@@ -92,6 +92,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuSearch,
     make_simple_link,
+    make_simple_form_page_menu,
     make_display_options_dropdown,
 )
 from cmk.gui.wato.pages.global_settings import (
@@ -1556,6 +1557,10 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
     def parent_mode(cls) -> _Optional[Type[WatoMode]]:
         return ModeEventConsoleRulePacks
 
+    def _breadcrumb_url(self) -> str:
+        return html.makeuri_contextless([("mode", self.name()), ("rule_pack", self._rule_pack_id)],
+                                        filename="wato.py")
+
     def _from_vars(self):
         self._rule_pack_id = html.request.var("rule_pack")
         self._rule_pack_nr, self._rule_pack = self._rule_pack_with_id(self._rule_pack_id)
@@ -1568,18 +1573,75 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
     def title(self):
         return _("Rule package %s") % self._rule_pack["title"]
 
-    def buttons(self):
-        self._rules_button()
-        self._changes_button()
-        if config.user.may("mkeventd.edit"):
-            html.context_button(
-                _("New Rule"),
-                html.makeuri_contextless([("mode", "mkeventd_edit_rule"),
-                                          ("rule_pack", self._rule_pack_id)]), "new")
-            html.context_button(
-                _("Properties"),
-                html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack"),
-                                          ("edit", self._rule_pack_nr)]), "edit")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="rules",
+                    title=_("Rules"),
+                    topics=list(self._page_menu_topics_rules()),
+                ),
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Setup"),
+                            entries=list(_page_menu_entries_related_ec(self.name())),
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
+
+        self._extend_display_dropdown(menu)
+        return menu
+
+    def _page_menu_topics_rules(self) -> Iterator[PageMenuTopic]:
+        if not config.user.may("mkeventd.edit"):
+            return
+
+        yield PageMenuTopic(
+            title=_("Add rule"),
+            entries=[
+                PageMenuEntry(
+                    title=_("Add rule"),
+                    icon_name="new",
+                    item=make_simple_link(
+                        html.makeuri_contextless([("mode", "mkeventd_edit_rule"),
+                                                  ("rule_pack", self._rule_pack_id)])),
+                ),
+            ],
+        )
+
+        yield PageMenuTopic(
+            title=_("Rule pack"),
+            entries=[
+                PageMenuEntry(
+                    title=_("Edit properties"),
+                    icon_name="edit",
+                    item=make_simple_link(
+                        html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack"),
+                                                  ("edit", self._rule_pack_nr)])),
+                ),
+            ],
+        )
+
+    def _extend_display_dropdown(self, menu: PageMenu) -> None:
+        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+        display_dropdown.topics.insert(
+            0,
+            PageMenuTopic(
+                title=_("Filter rules"),
+                entries=[
+                    PageMenuEntry(
+                        title="",
+                        icon_name="trans",
+                        item=PageMenuSearch(),
+                    ),
+                ],
+            ))
 
     def action(self):
         id_to_mkp = self._get_rule_pack_to_mkp_map()
@@ -1666,7 +1728,6 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
     def page(self):
         self._verify_ec_enabled()
         search_expression = self._search_expression()
-        search_form("%s: " % _("Search in rules"), "mkeventd_rules")
         if search_expression:
             found_rules = self._filter_mkeventd_rules(search_expression, self._rule_pack)
         else:
@@ -1992,11 +2053,9 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         self._new = self._edit_nr < 0
 
         if self._new:
-            if self._clone_nr >= 0 and not html.request.var("_clear"):
-                self._rule = {}
+            self._rule = {}
+            if self._clone_nr >= 0:
                 self._rule.update(self._rules[self._clone_nr])
-            else:
-                self._rule = {}
         else:
             try:
                 self._rule = self._rules[self._edit_nr]
@@ -2008,11 +2067,21 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
             return _("Add rule")
         return _("Edit rule %s") % self._rules[self._edit_nr]["id"]
 
-    def buttons(self):
-        self._rules_button()
-        self._changes_button()
-        if self._clone_nr >= 0:
-            html.context_button(_("Clear Rule"), html.makeuri([("_clear", "1")]), "clear")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = make_simple_form_page_menu(breadcrumb, form_name="rule", button_name="save")
+        menu.dropdowns.insert(
+            1,
+            PageMenuDropdown(
+                name="related",
+                title=_("Related"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Setup"),
+                        entries=list(_page_menu_entries_related_ec(self.name())),
+                    ),
+                ],
+            ))
+        return menu
 
     def action(self):
         if not html.check_transaction():
@@ -2111,7 +2180,6 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         vs = self._valuespec()
         vs.render_input("rule", self._rule)
         vs.set_focus("rule")
-        html.button("save", _("Save"))
         html.hidden_fields()
         html.end_form()
 

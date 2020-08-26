@@ -38,6 +38,11 @@ from cmk.base.plugins.agent_based.mssql_counters_locks import (
     _check_base as check_locks_base,
     _cluster_check_base as cluster_check_locks_base,
 )
+from cmk.base.plugins.agent_based.mssql_counters_pageactivity import (
+    discovery_mssql_counters_pageactivity,
+    _check_base as check_pageactivity_base,
+    _cluster_check_base as cluster_check_pageactivity_base,
+)
 
 big_string_table = [
     ['None', 'utc_time', 'None', '19.08.2020 14:25:04'],
@@ -45,6 +50,10 @@ big_string_table = [
     ['MSSQL_VEEAMSQL2012:Memory_Broker_Clerks', 'simulation_benefit', 'Buffer_Pool', '0'],
     ['MSSQL_VEEAMSQL2012:Buffer_Manager', 'buffer_cache_hit_ratio', 'None', '3090'],
     ['MSSQL_VEEAMSQL2012:Buffer_Manager', 'buffer_cache_hit_ratio_base', 'None', '3090'],
+    ['MSSQL_VEEAMSQL2012:Buffer_Manager', 'page_lookups/sec', 'None', '6649047653'],
+    ['MSSQL_VEEAMSQL2012:Buffer_Manager', 'readahead_pages/sec', 'None', '1424319'],
+    ['MSSQL_VEEAMSQL2012:Buffer_Manager', 'readahead_pages/sec', 'None', '3220650'],
+    ['MSSQL_VEEAMSQL2012:Buffer_Manager', 'page_writes/sec', 'None', '3066377'],
     ['MSSQL_VEEAMSQL2012:Buffer_Node', 'database_pages', '000', '180475'],
     ['MSSQL_VEEAMSQL2012:Buffer_Node', 'remote_node_page_lookups/sec', '000', '0'],
     ['MSSQL_VEEAMSQL2012:General_Statistics', 'active_temp_tables', 'None', '229'],
@@ -133,7 +142,10 @@ big_parsed_data = {
     },
     ('MSSQL_VEEAMSQL2012:Buffer_Manager', 'None'): {
         'buffer_cache_hit_ratio': 3090,
-        'buffer_cache_hit_ratio_base': 3090
+        'buffer_cache_hit_ratio_base': 3090,
+        'page_lookups/sec': 6649047653,
+        'readahead_pages/sec': 1424319,
+        'page_writes/sec': 3066377,
     },
     ('MSSQL_VEEAMSQL2012:Buffer_Node', '000'): {
         'database_pages': 180475,
@@ -506,6 +518,67 @@ def test_cluster_check_mssql_locks(item, params, section, expected_results):
     t0 = 1597839904
     for i in range(2):
         for result in cluster_check_locks_base(vs, t0 + i, item, params, section):
+            results.append(result)
+    print(",\n".join(str(r) for r in results))
+    assert results == expected_results
+
+
+@pytest.mark.parametrize("section,expected_services", [
+    (big_parsed_data, [
+        Service(item='MSSQL_VEEAMSQL2012:Buffer_Manager None buffer_cache_hit_ratio'),
+        Service(item='MSSQL_VEEAMSQL2012:Buffer_Manager None buffer_cache_hit_ratio_base'),
+        Service(item='MSSQL_VEEAMSQL2012:Buffer_Manager None page_lookups/sec'),
+        Service(item='MSSQL_VEEAMSQL2012:Buffer_Manager None readahead_pages/sec'),
+        Service(item='MSSQL_VEEAMSQL2012:Buffer_Manager None page_writes/sec'),
+    ]),
+])
+def test_discovery_mssql_counters_pageactivity(section, expected_services):
+    results = list(discovery_mssql_counters_pageactivity(section))
+    print(",\n".join(str(r) for r in results))
+    assert results == expected_services
+
+
+@pytest.mark.parametrize("item,params,section,expected_results", [
+    ("MSSQL_VEEAMSQL2012:Buffer_Manager None", {}, big_parsed_data, [
+        IgnoreResults(value="Cannot calculate rates yet"),
+        IgnoreResults(value="Cannot calculate rates yet"),
+        Result(state=state.OK, summary='Writes: 0.0/s'),
+        Metric('page_writes_per_second', 0.0),
+        Result(state=state.OK, summary='Lookups: 0.0/s'),
+        Metric('page_lookups_per_second', 0.0),
+    ]),
+])
+def test_check_mssql_counters_pageactivity(item, params, section, expected_results):
+    # re-run cluster_check_locks_per_batch_base() once in order to get rates
+    vs: ValueStore = {}
+    results = []
+    t0 = 1597839904
+    for i in range(2):
+        for result in check_pageactivity_base(vs, t0 + i, item, params, section):
+            results.append(result)
+    print(",\n".join(str(r) for r in results))
+    assert results == expected_results
+
+
+@pytest.mark.parametrize("item,params,section,expected_results", [
+    ("MSSQL_VEEAMSQL2012:Buffer_Manager None", {}, {
+        "node1": big_parsed_data
+    }, [
+        IgnoreResults(value="Cannot calculate rates yet"),
+        IgnoreResults(value="Cannot calculate rates yet"),
+        Result(state=state.OK, summary='[node1] Writes: 0.0/s'),
+        Metric('page_writes_per_second', 0.0),
+        Result(state=state.OK, summary='[node1] Lookups: 0.0/s'),
+        Metric('page_lookups_per_second', 0.0),
+    ]),
+])
+def test_cluster_check_mssql_counters_pageactivity(item, params, section, expected_results):
+    # re-run cluster_check_locks_per_batch_base() once in order to get rates
+    vs: ValueStore = {}
+    results = []
+    t0 = 1597839904
+    for i in range(2):
+        for result in cluster_check_pageactivity_base(vs, t0 + i, item, params, section):
             results.append(result)
     print(",\n".join(str(r) for r in results))
     assert results == expected_results

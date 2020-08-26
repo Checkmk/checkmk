@@ -2017,6 +2017,17 @@ check_metrics["check_mk-mssql_counters_locks"] = {
         "name": "lock_waits_per_second"
     },
 }
+check_metrics["check_mk-mssql_counters_pageactivity"] = {
+    "page_reads/sec": {
+        "name": "page_reads_per_second"
+    },
+    "page_writes/sec": {
+        "name": "page_writes_per_second"
+    },
+    "page_lookups/sec": {
+        "name": "page_lookups_per_second"
+    },
+}
 cisco_mem_translation = {
     "mem_used": {
         "name": "mem_used_percent",

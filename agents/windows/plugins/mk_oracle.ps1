@@ -211,13 +211,12 @@ $LESS_THAN = '<'
 Function get_dbversion_software {
      # Get the database version
      # variable res contains the banner including the version number
-     $res = (sqlplus -v)
-     # we not replace all non-numeric characters with NULL, resulting in e.g. 121010 as the version
-     $res = ($res -replace '\D+', '')
-     $res = [string]$res
-     $res = $res.trim()
-     $res = [int]$res
-     $res
+     $version_str = (sqlplus -v)
+     # The output string can have arbitrary content. We rely on the assumption that the first
+     # three elements have always the same syntax, e.g.: SQL*Plus: Release 12.1.0.2.0
+     # so we take the third element separated by a whitespace as the version number and remove
+     # all dots resulting in: 121020
+     (([string]$version_str).split(' '))[3] -replace '\D+', ''
 }
 
 

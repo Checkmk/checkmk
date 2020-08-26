@@ -1,0 +1,18 @@
+Title: mk_oracle.ps1: Fixed failed connects for 18c and newer
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0p17
+Date: 1598436514
+Class: fix
+
+Oracle tends to have arbitrary output syntax for the command <tt>sqlplus
+-v</tt>. This prevented the connection to databases that have 18c or newer,
+because since then there are two version infos in the output string. This
+will be covered with this fix. We rely on the assumption, that the first
+three strings (separated by whitespace) have always the same syntax. E.g.:
+SQL*Plus: Release 12.1.0.2.0.  This gives us the possibility to extract the
+version from each database regardless of it's sqlplus-version.
+
+If you have problem with your 18c-databases, please update your mk_oracle.ps1.

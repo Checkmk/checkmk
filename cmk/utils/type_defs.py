@@ -12,13 +12,17 @@ import sys
 from typing import (
     Any,
     Dict,
+    Final,
+    Generic,
     List,
     Literal,
     NewType,
+    NoReturn,
     Optional,
     Set,
     Tuple,
     TypedDict,
+    TypeVar,
     Union,
 )
 
@@ -244,6 +248,151 @@ class SourceType(enum.Enum):
     """Classification of management sources vs regular hosts"""
     HOST = "HOST"
     MANAGEMENT = "MANAGEMENT"
+
+
+T_co = TypeVar("T_co", covariant=True)
+E_co = TypeVar("E_co", covariant=True)
+
+
+class Result(Generic[T_co, E_co], abc.ABC):
+    """An error container inspired by Rust.
+
+    See Also:
+        https://doc.rust-lang.org/std/result/enum.Result.html
+
+    """
+    @staticmethod
+    def Err(err: E_co):  # type: ignore[misc]
+        # mypy complains about the variance of the argument but
+        # both static methods only forward it to the respective
+        # `__init__()`, which is safe.
+        #
+        # See Also:
+        #   - https://github.com/python/mypy/pull/2888
+        #   - https://github.com/python/mypy/issues/7049
+        return _Err(err)
+
+    @staticmethod
+    def OK(ok: T_co):  # type: ignore[misc]
+        # mypy: See comments to Err().
+        return _OK(ok)
+
+    @abc.abstractmethod
+    def __eq__(self, other: Any) -> bool:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def __hash__(self) -> int:
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def ok(self) -> Optional[T_co]:
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def err(self) -> Optional[E_co]:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def is_ok(self) -> bool:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def is_err(self) -> bool:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def unwrap_ok(self) -> T_co:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def unwrap_err(self) -> E_co:
+        raise NotImplementedError
+
+    def unwrap(self):
+        return self.unwrap_ok()
+
+
+class _OK(Result[T_co, E_co]):
+    __slots__ = ["_ok"]
+
+    def __init__(self, ok: T_co):
+        self._ok: Final[T_co] = ok
+
+    def __repr__(self):
+        return "Result.OK(%r)" % self.ok
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Result):
+            return NotImplemented
+        if not isinstance(other, _OK):
+            return False
+        return self.ok == other.ok
+
+    def __hash__(self) -> int:
+        return hash(self.ok)
+
+    @property
+    def ok(self) -> T_co:
+        return self._ok
+
+    @property
+    def err(self) -> None:
+        return None
+
+    def is_ok(self) -> bool:
+        return True
+
+    def is_err(self) -> bool:
+        return False
+
+    def unwrap_ok(self) -> T_co:
+        return self.ok
+
+    def unwrap_err(self) -> NoReturn:
+        raise ValueError(str(self.ok))
+
+
+class _Err(Result[T_co, E_co]):
+    __slots__ = ["_err"]
+
+    def __init__(self, err: E_co):
+        self._err: Final[E_co] = err
+
+    def __repr__(self):
+        return "Result.Err(%r)" % self.err
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Result):
+            return NotImplemented
+        if not isinstance(other, _Err):
+            return False
+        return self.err == other.err
+
+    def __hash__(self) -> int:
+        return hash(self.err)
+
+    @property
+    def ok(self) -> None:
+        return None
+
+    @property
+    def err(self) -> E_co:
+        return self._err
+
+    def is_ok(self) -> bool:
+        return False
+
+    def is_err(self) -> bool:
+        return True
+
+    def unwrap_ok(self) -> NoReturn:
+        raise ValueError(str(self._err))
+
+    def unwrap_err(self) -> E_co:
+        return self.err
 
 
 class OIDSpec:

@@ -62,6 +62,10 @@ class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
     def permissions(cls):
         return ["backups"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeBackup
+
     def title(self):
         return _("Site backup targets")
 
@@ -87,6 +91,10 @@ class ModeEditBackupTarget(backup.PageEditBackupTarget, WatoMode):
     def permissions(cls):
         return ["backups"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeBackupTargets
+
     def targets(self):
         return SiteBackupTargets()
 
@@ -100,6 +108,10 @@ class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
     @classmethod
     def permissions(cls):
         return ["backups"]
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeBackup
 
     def jobs(self):
         return SiteBackupJobs()
@@ -151,6 +163,10 @@ class ModeBackupJobState(backup.PageBackupJobState, WatoMode):
     @classmethod
     def name(cls):
         return "backup_job_state"
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeBackup
 
     @classmethod
     def permissions(cls):
@@ -261,6 +277,10 @@ class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
     @classmethod
     def permissions(cls):
         return ["backups"]
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeBackup
 
     def title(self):
         if not self._target:

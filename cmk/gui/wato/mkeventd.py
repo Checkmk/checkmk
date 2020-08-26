@@ -2575,145 +2575,8 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                     return ""
                 else:
                     return
-        elif html.request.uploaded_file("_upload_mib"):
-            uploaded_mib = html.request.uploaded_file("_upload_mib")
-            filename, mimetype, content = uploaded_mib
-            if filename:
-                try:
-                    msg = self._upload_mib(filename, mimetype, content)
-                    return None, msg
-                except Exception as e:
-                    if config.debug:
-                        raise
-                    raise MKUserError("_upload_mib", "%s" % e)
-
         elif html.request.var("_bulk_delete_custom_mibs"):
             return self._bulk_delete_custom_mibs_after_confirm()
-
-    def _upload_mib(self, filename, mimetype, content):
-        self._validate_mib_file_name(filename)
-
-        if self._is_zipfile(io.BytesIO(content)):
-            msg = self._process_uploaded_zip_file(filename, content)
-        else:
-            if mimetype == "application/tar" or filename.lower().endswith(
-                    ".gz") or filename.lower().endswith(".tgz"):
-                raise Exception(_("Sorry, uploading TAR/GZ files is not yet implemented."))
-
-            msg = self._process_uploaded_mib_file(filename, content)
-
-        return msg
-
-    # Used zipfile.is_zipfile(io.BytesIO(content)) before, but this only
-    # possible with python 2.7. zipfile is only supporting checking of files by
-    # their path.
-    def _is_zipfile(self, fo):
-        try:
-            zipfile.ZipFile(fo)
-            return True
-        except zipfile.BadZipfile:
-            return False
-
-    def _process_uploaded_zip_file(self, filename, content):
-        zip_obj = zipfile.ZipFile(io.BytesIO(content))
-        messages = []
-        for entry in zip_obj.infolist():
-            success, fail = 0, 0
-            try:
-                mib_file_name = entry.filename
-                if mib_file_name[-1] == "/":
-                    continue  # silently skip directories
-
-                self._validate_mib_file_name(mib_file_name)
-
-                mib_obj = zip_obj.open(mib_file_name)
-                messages.append(self._process_uploaded_mib_file(mib_file_name, mib_obj.read()))
-                success += 1
-            except Exception as e:
-                messages.append(_("Skipped %s: %s") % (html.render_text(mib_file_name), e))
-                fail += 1
-
-        return "<br>\n".join(messages) + \
-               "<br><br>\nProcessed %d MIB files, skipped %d MIB files" % (success, fail)
-
-    def _process_uploaded_mib_file(self, filename, content):
-        if '.' in filename:
-            mibname = filename.split('.')[0]
-        else:
-            mibname = filename
-
-        msg = self._validate_and_compile_mib(mibname.upper(), content)
-        with (cmk.gui.mkeventd.mib_upload_dir() / filename).open("wb") as f:
-            f.write(content)
-        self._add_change("uploaded-mib", _("MIB %s: %s") % (filename, msg))
-        return msg
-
-    def _validate_mib_file_name(self, filename):
-        if filename.startswith(".") or "/" in filename:
-            raise Exception(_("Invalid filename"))
-
-    def _validate_and_compile_mib(self, mibname, content):
-        defaultMibPackages = PySnmpCodeGen.defaultMibPackages
-        baseMibs = PySnmpCodeGen.baseMibs
-
-        compiled_mibs_dir = _compiled_mibs_dir()
-        store.mkdir(compiled_mibs_dir)
-
-        # This object manages the compilation of the uploaded SNMP mib
-        # but also resolving dependencies and compiling dependents
-        compiler = MibCompiler(SmiV1CompatParser(), PySnmpCodeGen(),
-                               PyFileWriter(compiled_mibs_dir))
-
-        # FIXME: This is a temporary local fix that should be removed once
-        # handling of file contents uses a uniformly encoded representation
-        try:
-            content = content.decode("utf-8")
-        except UnicodeDecodeError:
-            content = content.decode("latin-1")
-
-        # Provides the just uploaded MIB module
-        compiler.addSources(CallbackReader(lambda m, c: m == mibname and c or '', content))
-
-        # Directories containing ASN1 MIB files which may be used for
-        # dependency resolution
-        compiler.addSources(
-            *[FileReader(str(path)) for path, _title in cmk.gui.mkeventd.mib_dirs()])
-
-        # check for already compiled MIBs
-        compiler.addSearchers(PyFileSearcher(compiled_mibs_dir))
-
-        # and also check PySNMP shipped compiled MIBs
-        compiler.addSearchers(*[PyPackageSearcher(x) for x in defaultMibPackages])
-
-        # never recompile MIBs with MACROs
-        compiler.addSearchers(StubSearcher(*baseMibs))
-
-        try:
-            if not content.strip():
-                raise Exception(_("The file is empty"))
-
-            results = compiler.compile(mibname, ignoreErrors=True, genTexts=True)
-
-            errors = []
-            for name, state_obj in sorted(results.items()):
-                if mibname == name and state_obj == 'failed':
-                    raise Exception(_('Failed to compile your module: %s') % state_obj.error)
-
-                if state_obj == 'missing':
-                    errors.append(_('%s - Dependency missing') % name)
-                elif state_obj == 'failed':
-                    errors.append(_('%s - Failed to compile (%s)') % (name, state_obj.error))
-
-            msg = _("MIB file %s uploaded.") % mibname
-            if errors:
-                msg += '<br>' + _('But there were errors:') + '<br>'
-                msg += '<br>\n'.join(errors)
-            return msg
-
-        except PySmiError as e:
-            if config.debug:
-                raise e
-            raise Exception(_('Failed to process your MIB file (%s): %s') % (mibname, e))
 
     def _bulk_delete_custom_mibs_after_confirm(self):
         custom_mibs = self._load_snmp_mibs(cmk.gui.mkeventd.mib_upload_dir())
@@ -2755,27 +2618,6 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
 
     def page(self):
         self._verify_ec_enabled()
-        html.h3(_("Upload MIB file"))
-        html.write_text(
-            _("Use this form to upload MIB files for translating incoming SNMP traps. "
-              "You can upload single MIB files with the extension <tt>.mib</tt> or "
-              "<tt>.txt</tt>, but you can also upload multiple MIB files at once by "
-              "packing them into a <tt>.zip</tt> file. Only files in the root directory "
-              "of the zip file will be processed.<br><br>"))
-
-        html.begin_form("upload_form", method="POST")
-        forms.header(_("Upload MIB file"))
-
-        forms.section(_("Select file"))
-        html.upload_file("_upload_mib")
-        forms.end()
-
-        html.button("upload_button", _("Upload MIB(s)"), "submit")
-        html.hidden_fields()
-        html.end_form()
-
-        cmk.gui.mkeventd.mib_upload_dir().mkdir(parents=True, exist_ok=True)
-
         for path, title in cmk.gui.mkeventd.mib_dirs():
             self._show_mib_table(path, title)
 
@@ -2857,6 +2699,204 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
             mib['name'] = matches.group(1)
 
         return mib
+
+
+@mode_registry.register
+class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
+    @classmethod
+    def name(cls):
+        return "mkeventd_upload_mibs"
+
+    @classmethod
+    def permissions(cls):
+        return ["mkeventd.config"]
+
+    @classmethod
+    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+        return ModeEventConsoleMIBs
+
+    def title(self):
+        return _('Upload SNMP MIBs')
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = make_simple_form_page_menu(breadcrumb,
+                                          form_name="upload_form",
+                                          button_name="upload_button",
+                                          save_title=_("Upload"))
+        menu.dropdowns.insert(
+            1,
+            PageMenuDropdown(
+                name="related",
+                title=_("Related"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Setup"),
+                        entries=list(_page_menu_entries_related_ec(self.name())),
+                    ),
+                ],
+            ))
+        return menu
+
+    def action(self):
+        if not html.request.uploaded_file("_upload_mib"):
+            return
+
+        uploaded_mib = html.request.uploaded_file("_upload_mib")
+        filename, mimetype, content = uploaded_mib
+        if filename:
+            try:
+                msg = self._upload_mib(filename, mimetype, content)
+                return None, msg
+            except Exception as e:
+                if config.debug:
+                    raise
+                raise MKUserError("_upload_mib", "%s" % e)
+
+    def _upload_mib(self, filename, mimetype, content):
+        self._validate_mib_file_name(filename)
+
+        if self._is_zipfile(io.BytesIO(content)):
+            msg = self._process_uploaded_zip_file(filename, content)
+        else:
+            if mimetype == "application/tar" or filename.lower().endswith(
+                    ".gz") or filename.lower().endswith(".tgz"):
+                raise Exception(_("Sorry, uploading TAR/GZ files is not yet implemented."))
+
+            msg = self._process_uploaded_mib_file(filename, content)
+
+        return msg
+
+    # Used zipfile.is_zipfile(io.BytesIO(content)) before, but this only
+    # possible with python 2.7. zipfile is only supporting checking of files by
+    # their path.
+    def _is_zipfile(self, fo):
+        try:
+            zipfile.ZipFile(fo)
+            return True
+        except zipfile.BadZipfile:
+            return False
+
+    def _process_uploaded_zip_file(self, filename, content):
+        zip_obj = zipfile.ZipFile(io.BytesIO(content))
+        messages = []
+        for entry in zip_obj.infolist():
+            success, fail = 0, 0
+            try:
+                mib_file_name = entry.filename
+                if mib_file_name[-1] == "/":
+                    continue  # silently skip directories
+
+                self._validate_mib_file_name(mib_file_name)
+
+                mib_obj = zip_obj.open(mib_file_name)
+                messages.append(self._process_uploaded_mib_file(mib_file_name, mib_obj.read()))
+                success += 1
+            except Exception as e:
+                messages.append(_("Skipped %s: %s") % (html.render_text(mib_file_name), e))
+                fail += 1
+
+        return "<br>\n".join(messages) + \
+               "<br><br>\nProcessed %d MIB files, skipped %d MIB files" % (success, fail)
+
+    def _process_uploaded_mib_file(self, filename, content):
+        if '.' in filename:
+            mibname = filename.split('.')[0]
+        else:
+            mibname = filename
+
+        msg = self._validate_and_compile_mib(mibname.upper(), content)
+        cmk.gui.mkeventd.mib_upload_dir().mkdir(parents=True, exist_ok=True)
+        with (cmk.gui.mkeventd.mib_upload_dir() / filename).open("wb") as f:
+            f.write(content)
+        self._add_change("uploaded-mib", _("MIB %s: %s") % (filename, msg))
+        return msg
+
+    def _validate_mib_file_name(self, filename):
+        if filename.startswith(".") or "/" in filename:
+            raise Exception(_("Invalid filename"))
+
+    def _validate_and_compile_mib(self, mibname, content):
+        defaultMibPackages = PySnmpCodeGen.defaultMibPackages
+        baseMibs = PySnmpCodeGen.baseMibs
+
+        compiled_mibs_dir = _compiled_mibs_dir()
+        store.mkdir(compiled_mibs_dir)
+
+        # This object manages the compilation of the uploaded SNMP mib
+        # but also resolving dependencies and compiling dependents
+        compiler = MibCompiler(SmiV1CompatParser(), PySnmpCodeGen(),
+                               PyFileWriter(compiled_mibs_dir))
+
+        # FIXME: This is a temporary local fix that should be removed once
+        # handling of file contents uses a uniformly encoded representation
+        try:
+            content = content.decode("utf-8")
+        except UnicodeDecodeError:
+            content = content.decode("latin-1")
+
+        # Provides the just uploaded MIB module
+        compiler.addSources(CallbackReader(lambda m, c: m == mibname and c or '', content))
+
+        # Directories containing ASN1 MIB files which may be used for
+        # dependency resolution
+        compiler.addSources(
+            *[FileReader(str(path)) for path, _title in cmk.gui.mkeventd.mib_dirs()])
+
+        # check for already compiled MIBs
+        compiler.addSearchers(PyFileSearcher(compiled_mibs_dir))
+
+        # and also check PySNMP shipped compiled MIBs
+        compiler.addSearchers(*[PyPackageSearcher(x) for x in defaultMibPackages])
+
+        # never recompile MIBs with MACROs
+        compiler.addSearchers(StubSearcher(*baseMibs))
+
+        try:
+            if not content.strip():
+                raise Exception(_("The file is empty"))
+
+            results = compiler.compile(mibname, ignoreErrors=True, genTexts=True)
+
+            errors = []
+            for name, state_obj in sorted(results.items()):
+                if mibname == name and state_obj == 'failed':
+                    raise Exception(_('Failed to compile your module: %s') % state_obj.error)
+
+                if state_obj == 'missing':
+                    errors.append(_('%s - Dependency missing') % name)
+                elif state_obj == 'failed':
+                    errors.append(_('%s - Failed to compile (%s)') % (name, state_obj.error))
+
+            msg = _("MIB file %s uploaded.") % mibname
+            if errors:
+                msg += '<br>' + _('But there were errors:') + '<br>'
+                msg += '<br>\n'.join(errors)
+            return msg
+
+        except PySmiError as e:
+            if config.debug:
+                raise e
+            raise Exception(_('Failed to process your MIB file (%s): %s') % (mibname, e))
+
+    def page(self):
+        self._verify_ec_enabled()
+        html.h3(_("Upload MIB file"))
+        html.write_text(
+            _("Use this form to upload MIB files for translating incoming SNMP traps. "
+              "You can upload single MIB files with the extension <tt>.mib</tt> or "
+              "<tt>.txt</tt>, but you can also upload multiple MIB files at once by "
+              "packing them into a <tt>.zip</tt> file. Only files in the root directory "
+              "of the zip file will be processed.<br><br>"))
+
+        html.begin_form("upload_form", method="POST")
+        forms.header(_("Upload MIB file"))
+
+        forms.section(_("Select file"))
+        html.upload_file("_upload_mib")
+        forms.end()
+
+        html.hidden_fields()
+        html.end_form()
 
 
 def _page_menu_entries_related_ec(mode_name: str) -> Iterator[PageMenuEntry]:

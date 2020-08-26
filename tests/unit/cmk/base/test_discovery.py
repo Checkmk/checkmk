@@ -801,6 +801,7 @@ def test__find_candidates():
         preliminary_candidates,
         parsed_sections_of_interest,
     ) == {
+        CheckPluginName('docker_container_status_uptime'),
         CheckPluginName("kernel"),
         CheckPluginName('kernel_performance'),
         CheckPluginName('kernel_util'),
@@ -812,6 +813,7 @@ def test__find_candidates():
         preliminary_candidates,
         parsed_sections_of_interest,
     ) == {
+        CheckPluginName('mgmt_docker_container_status_uptime'),
         CheckPluginName("mgmt_liebert_fans"),
         CheckPluginName("mgmt_uptime"),
         CheckPluginName("mgmt_snmp_info"),  # not mgmt_mgmt_...
@@ -821,11 +823,13 @@ def test__find_candidates():
         mhs,
         selected_check_plugins=None,
     ) == {
+        CheckPluginName('docker_container_status_uptime'),
         CheckPluginName("kernel"),
         CheckPluginName('kernel_performance'),
         CheckPluginName('kernel_util'),
-        CheckPluginName("uptime"),
+        CheckPluginName('mgmt_docker_container_status_uptime'),
         CheckPluginName("mgmt_liebert_fans"),
         CheckPluginName("mgmt_uptime"),
         CheckPluginName("mgmt_snmp_info"),  # not mgmt_mgmt_...
+        CheckPluginName("uptime"),
     }

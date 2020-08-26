@@ -641,13 +641,6 @@ class Overridable(Base):
         return None  # where redirect after a create should go
 
     @classmethod
-    def context_button_list(cls):
-        html.context_button(cls.phrase("title_plural"), cls.list_url(), cls.type_name())
-
-    def context_button_edit(self):
-        html.context_button(_("Edit"), self.edit_url(), "edit")
-
-    @classmethod
     def page_menu_entry_list(cls) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(
             title=cls.phrase("title_plural"),

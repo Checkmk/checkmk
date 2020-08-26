@@ -41,6 +41,7 @@ RUN zypper ref -s \
     git \
     glib2-devel \
     groff \
+    intltool \
     krb5-devel \
     libXpm-devel \
     libbz2-devel \
@@ -49,7 +50,6 @@ RUN zypper ref -s \
     libexpat-devel \
     libffi-devel \
     libgnutls-devel \
-    libgsf-devel \
     libjpeg62-devel \
     libltdl7 \
     libmysqlclient-devel \

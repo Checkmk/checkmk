@@ -30,10 +30,9 @@ description:
  levels, then those levels are applied to the averaged values.
 
 item:
- There are three allowed ways to specify a port: {1}: the last component of
- the SNMP OID number (as string), the {ifDescr} of the port or the {ifAlias} of
- the port. If you use the alias, you have to make sure that it is unique by
- configuring useful aliases in the switch. Checkmk does not check for uniqueness.
+ There are three allowed ways to specify a port: the index of the port, which simply
+ enumerates the ports starting from 1, the description of the port or the alias of the
+ port. For this check, the description and the alias are the same.
 
 inventory:
  One service is created for each port that fulfills configurable conditions (rule

@@ -3,60 +3,181 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""
-def check_mssql_counters_locks(item, params, parsed):
-    node_data = extract_item_data(item, parsed)
+from typing import Mapping
+import time
 
-    if node_data is None:
-        # Assume general connection problem to the database, which is reported
-        # by the "X Instance" service and skip this check.
-        raise MKCounterWrapped("Failed to connect to database")
+from .agent_based_api.v0 import (
+    IgnoreResults,
+    register,
+    check_levels,
+    get_value_store,
+)
 
-    for node_name, counters in node_data.items():
-        now = counters.get('utc_time')
-        if now is None:
-            now = time.time()
+from .agent_based_api.v0.type_defs import (
+    Parameters,
+    CheckGenerator,
+    DiscoveryGenerator,
+    ValueStore,
+)
 
-        node_info = ""
-        if node_name:
-            node_info = "[%s] " % node_name
-
-        for counter_key, title in [
-            ('lock_requests/sec', 'Requests'),
-            ('lock_timeouts/sec', 'Timeouts'),
-            ('number_of_deadlocks/sec', 'Deadlocks'),
-            ('lock_waits/sec', 'Waits'),
-        ]:
-            value = counters.get(counter_key)
-            if value is None:
-                continue
-
-            rate = get_rate("mssql_counters.locks.%s.%s.%s" % (node_name, item, counter_key), now,
-                            value)
-            infotext = "%s%s: %.1f/s" % (node_info, title, rate)
-            node_info = ""
-
-            state = 0
-            warn, crit = params.get(counter_key, (None, None))
-            if crit is not None and rate >= crit:
-                state = 2
-            elif warn is not None and rate >= warn:
-                state = 1
-            if state:
-                infotext += " (warn/crit at %.1f/%.1f per second)" % (warn, crit)
-
-            yield state, infotext, [(counter_key, rate, warn, crit)]
+from .utils.mssql_counters import (
+    Section,
+    discovery_mssql_counters_generic,
+    get_rate_or_none,
+    get_item,
+)
 
 
-check_info['mssql_counters.locks'] = {
-    'inventory_function': lambda parsed: inventory_mssql_counters_generic(parsed, [
-        'number_of_deadlocks/sec', 'lock_requests/sec', 'lock_timeouts/sec', 'lock_waits/sec'
-    ],
-                                                                          dflt={}),
-    'check_function': check_mssql_counters_locks,
-    'service_description': "MSSQL %s Locks",
-    'has_perfdata': True,
-    'group': 'mssql_counters_locks',
-    'node_info': True,
-}
-"""
+def discovery_mssql_counters_locks(section: Section) -> DiscoveryGenerator:
+    """
+    >>> for result in discovery_mssql_counters_locks({
+    ...     ('MSSQL_VEEAMSQL2012:Locks', '_Total'): {'lock_requests/sec': 3900449701, 'lock_timeouts/sec': 86978, 'number_of_deadlocks/sec': 19, 'lock_waits/sec': 938, 'lock_wait_time_(ms)': 354413},
+    ... }):
+    ...   print(result)
+    Service(item='MSSQL_VEEAMSQL2012:Locks _Total lock_requests/sec', parameters={}, labels=[])
+    Service(item='MSSQL_VEEAMSQL2012:Locks _Total lock_timeouts/sec', parameters={}, labels=[])
+    Service(item='MSSQL_VEEAMSQL2012:Locks _Total number_of_deadlocks/sec', parameters={}, labels=[])
+    Service(item='MSSQL_VEEAMSQL2012:Locks _Total lock_waits/sec', parameters={}, labels=[])
+    Service(item='MSSQL_VEEAMSQL2012:Locks _Total lock_wait_time_(ms)', parameters={}, labels=[])
+    """
+    yield from discovery_mssql_counters_generic(
+        section,
+        {'number_of_deadlocks/sec', 'lock_requests/sec', 'lock_timeouts/sec', 'lock_waits/sec'},
+        dflt={},
+    )
+
+
+def _check_common(
+    value_store: ValueStore,
+    time_point: float,
+    node_info: str,
+    item: str,
+    params: Parameters,
+    section: Section,
+) -> CheckGenerator:
+    counters, _counter = get_item(item, section)
+    now = counters.get("utc_time", time_point)
+
+    for counter_key, title in (
+        ('lock_requests/sec', 'Requests'),
+        ('lock_timeouts/sec', 'Timeouts'),
+        ('number_of_deadlocks/sec', 'Deadlocks'),
+        ('lock_waits/sec', 'Waits'),
+    ):
+        if not counter_key in counters:
+            continue
+
+        rate = get_rate_or_none(
+            value_store,
+            "mssql_counters.locks.%s.%s.%s" % (node_info, item, counter_key),
+            now,
+            counters[counter_key],
+        )
+
+        if rate is None:
+            yield IgnoreResults(value="Cannot calculate rates yet")
+            continue
+
+        yield from check_levels(
+            rate,
+            levels_upper=params.get(counter_key),
+            render_func=lambda v, i=node_info, t=title: "%s%s: %.1f/s" % (i, t, v),
+            metric_name=counter_key.replace("/sec", "_per_second"),
+        )
+
+
+def _check_base(
+    value_store: ValueStore,
+    time_point: float,
+    item: str,
+    params: Parameters,
+    section: Section,
+) -> CheckGenerator:
+    """
+    >>> from contextlib import suppress
+    >>> vs = {}
+    >>> for i in range(2):
+    ...     for result in _check_base(vs, 1597839904 + i, "MSSQL_VEEAMSQL2012:Locks _Total lock_requests/sec", {}, {
+    ...         ('MSSQL_VEEAMSQL2012:Locks', '_Total'): {'lock_requests/sec': 3900449701 + i, 'lock_timeouts/sec': 86978 + i, 'number_of_deadlocks/sec': 19 + i, 'lock_waits/sec': 938 + i, 'lock_wait_time_(ms)': 354413},
+    ...     }):
+    ...       print(result)
+    Cannot calculate rates yet
+    Cannot calculate rates yet
+    Cannot calculate rates yet
+    Cannot calculate rates yet
+    Result(state=<state.OK: 0>, summary='Requests: 1.0/s', details='Requests: 1.0/s')
+    Metric('lock_requests_per_second', 1.0, levels=(None, None), boundaries=(None, None))
+    Result(state=<state.OK: 0>, summary='Timeouts: 1.0/s', details='Timeouts: 1.0/s')
+    Metric('lock_timeouts_per_second', 1.0, levels=(None, None), boundaries=(None, None))
+    Result(state=<state.OK: 0>, summary='Deadlocks: 1.0/s', details='Deadlocks: 1.0/s')
+    Metric('number_of_deadlocks_per_second', 1.0, levels=(None, None), boundaries=(None, None))
+    Result(state=<state.OK: 0>, summary='Waits: 1.0/s', details='Waits: 1.0/s')
+    Metric('lock_waits_per_second', 1.0, levels=(None, None), boundaries=(None, None))
+    """
+    yield from _check_common(value_store, time_point, "", item, params, section)
+
+
+def check_mssql_counters_locks(
+    item: str,
+    params: Parameters,
+    section: Section,
+) -> CheckGenerator:
+    yield from _check_base(get_value_store(), time.time(), item, params, section)
+
+
+def _cluster_check_base(
+    value_store: ValueStore,
+    time_point: float,
+    item: str,
+    params: Parameters,
+    section: Mapping[str, Section],
+) -> CheckGenerator:
+    """
+    >>> vs = {}
+    >>> for i in range(2):
+    ...   for result in _cluster_check_base(vs, 1597839904 + i, "MSSQL_VEEAMSQL2012:Locks _Total lock_requests/sec", {}, {"node1": {
+    ...       ('MSSQL_VEEAMSQL2012:Locks', '_Total'): {'lock_requests/sec': 3900449701 + i, 'lock_timeouts/sec': 86978 + i, 'number_of_deadlocks/sec': 19 + i, 'lock_waits/sec': 938 + i, 'lock_wait_time_(ms)': 354413},
+    ...   }}):
+    ...     print(result)
+    Cannot calculate rates yet
+    Cannot calculate rates yet
+    Cannot calculate rates yet
+    Cannot calculate rates yet
+    Result(state=<state.OK: 0>, summary='[node1] Requests: 1.0/s', details='[node1] Requests: 1.0/s')
+    Metric('lock_requests_per_second', 1.0, levels=(None, None), boundaries=(None, None))
+    Result(state=<state.OK: 0>, summary='[node1] Timeouts: 1.0/s', details='[node1] Timeouts: 1.0/s')
+    Metric('lock_timeouts_per_second', 1.0, levels=(None, None), boundaries=(None, None))
+    Result(state=<state.OK: 0>, summary='[node1] Deadlocks: 1.0/s', details='[node1] Deadlocks: 1.0/s')
+    Metric('number_of_deadlocks_per_second', 1.0, levels=(None, None), boundaries=(None, None))
+    Result(state=<state.OK: 0>, summary='[node1] Waits: 1.0/s', details='[node1] Waits: 1.0/s')
+    Metric('lock_waits_per_second', 1.0, levels=(None, None), boundaries=(None, None))
+    """
+    for node_name, node_section in section.items():
+        yield from _check_common(
+            value_store,
+            time_point,
+            "[%s] " % node_name,
+            item,
+            params,
+            node_section,
+        )
+
+
+def cluster_check_mssql_counters_locks(
+    item: str,
+    params: Parameters,
+    section: Mapping[str, Section],
+) -> CheckGenerator:
+    yield from _cluster_check_base(get_value_store(), time.time(), item, params, section)
+
+
+register.check_plugin(
+    name="mssql_counters_locks",
+    sections=['mssql_counters'],
+    service_name="MSSQL %s Locks",
+    discovery_function=discovery_mssql_counters_locks,
+    check_default_parameters={},
+    check_ruleset_name="mssql_counters_locks",
+    check_function=check_mssql_counters_locks,
+    cluster_check_function=cluster_check_mssql_counters_locks,
+)

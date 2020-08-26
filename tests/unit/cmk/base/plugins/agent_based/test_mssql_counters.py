@@ -33,6 +33,11 @@ from cmk.base.plugins.agent_based.mssql_counters_locks_per_batch import (
     _check_base as check_locks_per_batch_base,
     _cluster_check_base as cluster_check_locks_per_batch_base,
 )
+from cmk.base.plugins.agent_based.mssql_counters_locks import (
+    discovery_mssql_counters_locks,
+    _check_base as check_locks_base,
+    _cluster_check_base as cluster_check_locks_base,
+)
 
 big_string_table = [
     ['None', 'utc_time', 'None', '19.08.2020 14:25:04'],
@@ -423,6 +428,84 @@ def test_cluster_check_mssql_locks_per_batch(item, params, section, expected_res
     results = []
     for _ in range(2):
         for result in cluster_check_locks_per_batch_base(vs, item, params, section):
+            results.append(result)
+    print(",\n".join(str(r) for r in results))
+    assert results == expected_results
+
+
+@pytest.mark.parametrize("section,expected_services", [
+    (big_parsed_data, [
+        Service(item='MSSQL_VEEAMSQL2012:Locks OibTrackTbl lock_requests/sec'),
+        Service(item='MSSQL_VEEAMSQL2012:Locks OibTrackTbl lock_timeouts/sec'),
+        Service(item='MSSQL_VEEAMSQL2012:Locks _Total lock_requests/sec'),
+        Service(item='MSSQL_VEEAMSQL2012:Locks _Total lock_timeouts/sec'),
+        Service(item='MSSQL_VEEAMSQL2012:Locks _Total number_of_deadlocks/sec'),
+        Service(item='MSSQL_VEEAMSQL2012:Locks _Total lock_waits/sec'),
+        Service(item='MSSQL_VEEAMSQL2012:Locks _Total lock_wait_time_(ms)'),
+        Service(item='MSSQL_VEEAMSQL2012:Locks _Total average_wait_time_(ms)'),
+        Service(item='MSSQL_VEEAMSQL2012:Locks _Total average_wait_time_base'),
+        Service(item='MSSQL_VEEAMSQL2012:Locks _Total lock_timeouts_(timeout_>_0)/sec')
+    ]),
+])
+def test_discovery_mssql_counters_locks(section, expected_services):
+    results = list(discovery_mssql_counters_locks(section))
+    print(",\n".join(str(r) for r in results))
+    assert results == expected_services
+
+
+@pytest.mark.parametrize("item,params,section,expected_results", [
+    ("MSSQL_VEEAMSQL2012:Locks _Total lock_requests/sec", {}, big_parsed_data, [
+        IgnoreResults(value="Cannot calculate rates yet"),
+        IgnoreResults(value="Cannot calculate rates yet"),
+        IgnoreResults(value="Cannot calculate rates yet"),
+        IgnoreResults(value="Cannot calculate rates yet"),
+        Result(state=state.OK, summary='Requests: 0.0/s'),
+        Metric('lock_requests_per_second', 0.0),
+        Result(state=state.OK, summary='Timeouts: 0.0/s'),
+        Metric('lock_timeouts_per_second', 0.0),
+        Result(state=state.OK, summary='Deadlocks: 0.0/s'),
+        Metric('number_of_deadlocks_per_second', 0.0),
+        Result(state=state.OK, summary='Waits: 0.0/s'),
+        Metric('lock_waits_per_second', 0.0)
+    ]),
+])
+def test_check_mssql_locks(item, params, section, expected_results):
+    # re-run cluster_check_locks_per_batch_base() once in order to get rates
+    vs: ValueStore = {}
+    results = []
+    t0 = 1597839904
+    for i in range(2):
+        for result in check_locks_base(vs, t0 + i, item, params, section):
+            results.append(result)
+    print(",\n".join(str(r) for r in results))
+    assert results == expected_results
+
+
+@pytest.mark.parametrize("item,params,section,expected_results", [
+    ("MSSQL_VEEAMSQL2012:Locks _Total lock_requests/sec", {}, {
+        "node1": big_parsed_data
+    }, [
+        IgnoreResults(value="Cannot calculate rates yet"),
+        IgnoreResults(value="Cannot calculate rates yet"),
+        IgnoreResults(value="Cannot calculate rates yet"),
+        IgnoreResults(value="Cannot calculate rates yet"),
+        Result(state=state.OK, summary='[node1] Requests: 0.0/s'),
+        Metric('lock_requests_per_second', 0.0),
+        Result(state=state.OK, summary='[node1] Timeouts: 0.0/s'),
+        Metric('lock_timeouts_per_second', 0.0),
+        Result(state=state.OK, summary='[node1] Deadlocks: 0.0/s'),
+        Metric('number_of_deadlocks_per_second', 0.0),
+        Result(state=state.OK, summary='[node1] Waits: 0.0/s'),
+        Metric('lock_waits_per_second', 0.0)
+    ]),
+])
+def test_cluster_check_mssql_locks(item, params, section, expected_results):
+    # re-run cluster_check_locks_per_batch_base() once in order to get rates
+    vs: ValueStore = {}
+    results = []
+    t0 = 1597839904
+    for i in range(2):
+        for result in cluster_check_locks_base(vs, t0 + i, item, params, section):
             results.append(result)
     print(",\n".join(str(r) for r in results))
     assert results == expected_results

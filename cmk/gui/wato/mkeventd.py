@@ -114,7 +114,6 @@ from cmk.gui.plugins.wato.utils import (
     ConfigDomainEventConsole,
     get_search_expression,
     add_change,
-    changelog_button,
     make_action_link,
     rulespec_group_registry,
     RulespecGroup,
@@ -1104,33 +1103,6 @@ class ABCEventConsoleMode(WatoMode, metaclass=abc.ABCMeta):
                    domains=[ConfigDomainEventConsole],
                    sites=_get_event_console_sync_sites())
 
-    def _changes_button(self):
-        changelog_button()
-
-    def _rules_button(self):
-        html.context_button(_("Rule Packs"),
-                            html.makeuri_contextless([("mode", "mkeventd_rule_packs")]), "back")
-
-    def _config_buttons(self):
-        if config.user.may("mkeventd.config") and config.user.may("wato.rulesets"):
-            html.context_button(
-                _("Rulesets"),
-                html.makeuri_contextless([("mode", "rulesets"), ("group", "eventconsole")]),
-                "rulesets")
-
-        if config.user.may("mkeventd.config"):
-            html.context_button(_("Settings"),
-                                html.makeuri_contextless([("mode", "mkeventd_config")]),
-                                "configuration")
-
-    def _status_button(self):
-        html.context_button(_("Server Status"),
-                            html.makeuri_contextless([("mode", "mkeventd_status")]), "status")
-
-    def _mibs_button(self):
-        html.context_button(_("SNMP MIBs"), html.makeuri_contextless([("mode", "mkeventd_mibs")]),
-                            "snmpmib")
-
     def _get_rule_pack_to_mkp_map(self):
         return {} if cmk_version.is_raw_edition() else cmk.utils.packaging.rule_pack_id_to_mkp()
 
@@ -2005,15 +1977,21 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
             return _("Add rule pack")
         return _("Edit rule pack %s") % self._rule_packs[self._edit_nr]["id"]
 
-    def buttons(self):
-        self._rules_button()
-        self._changes_button()
-        if not self._new:
-            rule_pack_id = self._rule_packs[self._edit_nr]["id"]
-            html.context_button(
-                _("Edit Rules"),
-                html.makeuri([("mode", "mkeventd_rules"), ("rule_pack", rule_pack_id)]),
-                "mkeventd_rules")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = make_simple_form_page_menu(breadcrumb, form_name="rule_pack", button_name="save")
+        menu.dropdowns.insert(
+            1,
+            PageMenuDropdown(
+                name="related",
+                title=_("Related"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Setup"),
+                        entries=list(_page_menu_entries_related_ec(self.name())),
+                    ),
+                ],
+            ))
+        return menu
 
     def action(self):
         if not html.check_transaction():
@@ -2062,7 +2040,6 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         vs = self._valuespec()
         vs.render_input("rule_pack", self._rule_pack)
         vs.set_focus("rule_pack")
-        html.button("save", _("Save"))
         html.hidden_fields()
         html.end_form()
 
@@ -2555,11 +2532,40 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
     def title(self):
         return _('SNMP MIBs for trap translation')
 
-    def buttons(self):
-        self._rules_button()
-        self._changes_button()
-        self._status_button()
-        self._config_buttons()
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="mibs",
+                    title=_("MIBs"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Add MIBs"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Add one or multiple MIBs"),
+                                    icon_name="upload",
+                                    item=make_simple_link(
+                                        html.makeuri_contextless([("mode", "mkeventd_upload_mibs")
+                                                                 ])),
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Setup"),
+                            entries=list(_page_menu_entries_related_ec(self.name())),
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
 
     def action(self):
         if html.request.has_var("_delete"):

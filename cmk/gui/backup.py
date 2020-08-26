@@ -21,7 +21,7 @@ import signal
 import socket
 import subprocess
 import time
-from typing import Any, List, Optional, Tuple, Type
+from typing import Any, List, Optional, Tuple
 
 import cmk.utils.render as render
 import cmk.utils.store as store

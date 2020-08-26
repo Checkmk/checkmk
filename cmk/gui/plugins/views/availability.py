@@ -46,6 +46,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuSidePopup,
     make_simple_link,
+    make_simple_form_page_menu,
 )
 
 from cmk.gui.exceptions import MKUserError
@@ -1094,17 +1095,11 @@ def edit_annotation(breadcrumb: Breadcrumb) -> bool:
 
     html.body_start(title)
 
-    html.top_heading(title, _edit_annotation_breadcrumb(breadcrumb, title))
-
-    html.begin_context_buttons()
-    html.context_button(_("Abort"), html.makeuri([("anno_host", "")]), "abort")
-    html.end_context_buttons()
+    breadcrumb = _edit_annotation_breadcrumb(breadcrumb, title)
+    html.top_heading(title, breadcrumb, _edit_annotation_page_menu(breadcrumb))
 
     html.begin_form("editanno", method="GET")
     _vs_annotation().render_input_as_form("_editanno", value)
-
-    html.button("save", _("Save"))
-
     html.hidden_fields()
     html.end_form()
 
@@ -1119,6 +1114,10 @@ def _edit_annotation_breadcrumb(breadcrumb: Breadcrumb, title: str) -> Breadcrum
         url=html.makeuri([]),
     ))
     return breadcrumb
+
+
+def _edit_annotation_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
+    return make_simple_form_page_menu(breadcrumb, form_name="editanno", button_name="save")
 
 
 def _validate_reclassify_of_states(value, varprefix):

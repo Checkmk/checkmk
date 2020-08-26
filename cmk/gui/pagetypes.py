@@ -1032,7 +1032,7 @@ class Overridable(Base):
 
                     # View
                     if isinstance(instance, PageRenderer):
-                        html.icon_button(instance.page_url(), _("View"), "new_" + cls.type_name())
+                        html.icon_button(instance.page_url(), _("View"), cls.type_name())
 
                     # Clone / Customize
                     html.icon_button(instance.clone_url(), _("Create a customized copy of this"),

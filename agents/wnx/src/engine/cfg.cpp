@@ -840,7 +840,9 @@ std::filesystem::path Folders::makeDefaultDataFolder(
 
         auto app_data = draw_folder(app_data_folder);
         if (protection == Protection::yes &&
-            !wtools::ProtectFolderFromUserWrite(app_data)) {
+            !wtools::ProtectFolderFromUserWrite(
+                (fs::path(app_data_folder) / cma::cfg::kAppDataCompanyName)
+                    .wstring())) {
             XLOG::l.e("Protection failed!");
         }
 

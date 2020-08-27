@@ -59,15 +59,6 @@ def page_show():
     except livestatus.MKLivestatusNotFoundError:
         pass  # host_name log dir does not exist
 
-    # Acknowledging logs is supported on
-    # a) all logs on all hosts
-    # b) all logs on one host_name
-    # c) one log on one host_name
-    if html.request.has_var('_ack') and not html.request.var("_do_actions") == _("No"):
-        sites.live().set_auth_domain('action')
-        do_log_ack(site, host_name, file_name)
-        return
-
     if not host_name:
         show_log_list()
         return
@@ -78,15 +69,15 @@ def page_show():
         show_host_log_list(site, host_name)
 
 
-def button_all_logfiles():
-    html.context_button(_("All Logfiles"), html.makeuri([('site', ''), ('host', ''), ('file', '')]))
-
-
 # Shows a list of all problematic logfiles grouped by host
 def show_log_list():
     title = _("All problematic logfiles")
     breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
     html.header(title, breadcrumb, _log_list_page_menu(breadcrumb))
+
+    if html.request.has_var('_ack') and not html.request.var("_do_actions") == _("No"):
+        do_log_ack(site=None, host_name=None, file_name=None)
+        return
 
     for site, host_name, logs in all_logs():
         if not logs:
@@ -161,6 +152,10 @@ def show_host_log_list(site, host_name):
     title = _("Logfiles of host %s") % host_name
     breadcrumb = _host_log_list_breadcrumb(host_name, title)
     html.header(title, breadcrumb, _host_log_list_page_menu(breadcrumb, site, host_name))
+
+    if html.request.has_var('_ack') and not html.request.var("_do_actions") == _("No"):
+        do_log_ack(site, host_name, file_name=None)
+        return
 
     html.open_table(class_=["data"])
     list_logs(site, host_name, logfiles_of_host(site, host_name))
@@ -271,6 +266,10 @@ def show_file(site, host_name, file_name):
     title = _("Logfiles of Host %s: %s") % (host_name, file_name)
     breadcrumb = _show_file_breadcrumb(host_name, title)
     html.header(title, breadcrumb, _show_file_page_menu(breadcrumb, site, host_name, int_filename))
+
+    if html.request.has_var('_ack') and not html.request.var("_do_actions") == _("No"):
+        do_log_ack(site, host_name, file_name)
+        return
 
     try:
         log_chunks = parse_file(site,
@@ -451,6 +450,8 @@ def _page_menu_entry_acknowledge(site: Optional[config.SiteId] = None,
 
 
 def do_log_ack(site, host_name, file_name):
+    sites.live().set_auth_domain('action')
+
     logs_to_ack = []
     if not host_name and not file_name:  # all logs on all hosts
         for this_site, this_host, logs in all_logs():
@@ -476,23 +477,6 @@ def do_log_ack(site, host_name, file_name):
             if file_name in logs:
                 logs_to_ack.append((this_site, this_host, file_name, file_display))
         ack_msg = _('log file %s on all hosts') % file_name
-
-    title = _("Acknowledge %s") % html.render_text(ack_msg)
-
-    if host_name:
-        breadcrumb = make_host_breadcrumb(host_name)
-    else:
-        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
-
-    html.header(title, breadcrumb)
-
-    html.begin_context_buttons()
-    button_all_logfiles()
-    if host_name:
-        html.context_button(_("All Logfiles of Host"), html.makeuri([('file', '')]))
-    if host_name and file_name:
-        html.context_button(_("Back to Logfile"), html.makeuri([]))
-    html.end_context_buttons()
 
     ack = html.request.var('_ack')
     if not html.confirm(

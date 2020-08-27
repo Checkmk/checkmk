@@ -179,23 +179,29 @@ def _handle_api_error(e):
     raise e
 
 
-def _create_cmk_image(client: 'docker.DockerClient', base_image_name: str, docker_tag: str,
+def _create_cmk_image(client: docker.DockerClient, base_image_name: str, docker_tag: str,
                       version: CMKVersion) -> str:
     base_image_name_with_tag = "%s:%s" % (base_image_name, docker_tag)
+    logger.info("Preparing base image [%s]", base_image_name_with_tag)
+    base_image = _get_or_load_image(client, base_image_name_with_tag)
 
     # This installs the requested Checkmk Edition+Version into the new image, for this reason we add
     # these parts to the target image name. The tag is equal to the origin image.
     image_name = "%s-%s-%s" % (base_image_name, version.edition_short, version.version)
     image_name_with_tag = "%s:%s" % (image_name, docker_tag)
 
-    logger.info("Preparing [%s]", image_name_with_tag)
-    # First try to get the image from the local or remote registry
+    logger.info("Preparing image [%s]", image_name_with_tag)
+    # First try to get the pre-built image from the local or remote registry
     image = _get_or_load_image(client, image_name_with_tag)
     if image:
-        return image_name_with_tag  # already found, nothing to do.
+        # We found something locally or remote and ensured it's available locally.
+        #
+        # Only use it when it's based on the latest available base image. Otherwise
+        # skip it. The following code will re-build one based on the current base image
+        if _is_based_on_current_base_image(client, image, base_image):
+            return image_name_with_tag  # already found, nothing to do.
 
-    logger.info("  Create from [%s]", base_image_name_with_tag)
-    base_image = _get_or_load_image(client, base_image_name_with_tag)
+    logger.info("Build image from [%s]", base_image_name_with_tag)
     if base_image is None:
         raise Exception(
             "Image [%s] is not available locally and the registry \"%s\" is not reachable. It is "
@@ -264,6 +270,23 @@ def _create_cmk_image(client: 'docker.DockerClient', base_image_name: str, docke
             _handle_api_error(e)
 
     return image_name_with_tag
+
+
+def _is_based_on_current_base_image(client: docker.DockerClient, image: Image,
+                                    base_image: Optional[Image]) -> bool:
+    logger.info("  Check whether or not image is based on the current base image")
+    if base_image is None:
+        logger.info("  Base image not available, assuming it's up-to-date")
+        return False
+
+    image_base_hash = image.labels.get("org.tribe29.base_image_hash")
+    if base_image.short_id != image_base_hash:
+        logger.info("  Is based on an outdated base image (%s), current is (%s)", image_base_hash,
+                    base_image.short_id)
+        return False
+
+    logger.info("  Is based on current base image (%s)", base_image.short_id)
+    return True
 
 
 def _image_build_volumes():

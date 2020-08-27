@@ -1602,10 +1602,6 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         self._rule_pack_nr, self._rule_pack = self._rule_pack_with_id(self._rule_pack_id)
         self._rules = self._rule_pack["rules"]
 
-    def _breadcrumb_url(self) -> str:
-        return html.makeuri_contextless([("mode", self.name()), ("rule_pack", self._rule_pack_id)],
-                                        filename="wato.py")
-
     def title(self):
         return _("Rule package %s") % self._rule_pack["title"]
 

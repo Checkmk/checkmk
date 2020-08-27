@@ -197,6 +197,10 @@ def send_event(event):
 
 def get_local_ec_status():
     response = livestatus.LocalConnection().query("GET eventconsolestatus")
+    if len(response) != 2:
+        raise MKGeneralException(
+            _("Failed to get status information from Event Console. "
+              "Please have a look at <tt>var/log/mkeventd.log</tt> for further information."))
     return dict(zip(response[0], response[1]))
 
 

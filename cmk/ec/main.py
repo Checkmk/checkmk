@@ -1842,7 +1842,7 @@ class EventServer(ECServerThread):
 
     def _get_rule_event_limit(self, rule_id):
         """Prefer the rule individual limit for by_rule limit (in case there is some)"""
-        rule_limit = self._rule_by_id[rule_id].get("event_limit")
+        rule_limit = self._rule_by_id.get(rule_id, {}).get("event_limit")
         if rule_limit:
             return rule_limit["limit"], rule_limit["action"]
 

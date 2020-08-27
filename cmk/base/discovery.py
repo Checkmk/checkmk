@@ -338,8 +338,14 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
                 host_config=host_config,
             )
 
-            _do_discovery_for(hostname, ipaddress, multi_host_sections, check_plugin_names,
-                              arg_only_new, on_error)
+            _do_discovery_for(
+                hostname,
+                ipaddress,
+                multi_host_sections,
+                check_plugin_names,
+                arg_only_new,
+                on_error,
+            )
 
         except Exception as e:
             if cmk.utils.debug.enabled():
@@ -716,7 +722,10 @@ def check_discovery(
     )
 
     status, infotexts, long_infotexts, perfdata, need_rediscovery = _check_service_lists(
-        hostname, services, params)
+        hostname,
+        services,
+        params,
+    )
 
     _new_host_labels, host_labels_per_plugin = _perform_host_label_discovery(
         hostname,

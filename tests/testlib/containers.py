@@ -18,6 +18,7 @@ import requests
 
 import dockerpty  # type: ignore[import]
 import docker  # type: ignore[import]
+from docker.models.images import Image  # type: ignore[import]
 
 import testlib
 from testlib.version import CMKVersion
@@ -119,27 +120,22 @@ def _docker_client():
     return docker.from_env(timeout=1200)
 
 
-def _get_or_load_image(client: 'docker.DockerClient',
-                       image_name_with_tag: str) -> Optional['docker.Image']:
+def _get_or_load_image(client: docker.DockerClient, image_name_with_tag: str) -> Optional[Image]:
     try:
         image = client.images.get(image_name_with_tag)
         logger.info("  Available locally (%s)", image.short_id)
 
         # Verify that this is in sync with remote version
-        try:
-            registry_data = client.images.get_registry_data(image_name_with_tag)
-            reg_image = registry_data.pull()
-            if reg_image.short_id == image.short_id:
-                logger.info("  Is in sync with registry")
-                return image
+        registry_data = _get_registry_data(client, image_name_with_tag)
+        if not registry_data:
+            logger.info("  Registry state is unknown, using local image")
+            return image
 
-            logger.info("  Not in sync with registry (%s), try to pull", registry_data.short_id)
-        except docker.errors.NotFound:
-            logger.info("  Not available from registry")
+        if registry_data.short_id == image.short_id:
+            logger.info("  Is in sync with registry, using local image")
             return image
-        except docker.errors.APIError as e:
-            _handle_api_error(e)
-            return image
+
+        logger.info("  Not in sync with registry (%s), try to pull", registry_data.short_id)
 
     except docker.errors.ImageNotFound:
         logger.info("  Not available locally, try to pull "
@@ -155,6 +151,18 @@ def _get_or_load_image(client: 'docker.DockerClient',
         _handle_api_error(e)
 
     return None
+
+
+def _get_registry_data(client: docker.DockerClient, image_name_with_tag: str) -> Optional[Image]:
+    try:
+        registry_data = client.images.get_registry_data(image_name_with_tag)
+        return registry_data.pull()
+    except docker.errors.NotFound:
+        logger.info("  Not available from registry")
+        return None
+    except docker.errors.APIError as e:
+        _handle_api_error(e)
+        return None
 
 
 def _handle_api_error(e):

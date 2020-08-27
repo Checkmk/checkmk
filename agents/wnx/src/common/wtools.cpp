@@ -2345,12 +2345,12 @@ bool PatchFileLineEnding(const std::filesystem::path& fname) noexcept {
 bool ProtectFolderFromUserWrite(const std::filesystem::path& folder) {
     // CONTEXT: to prevent malicious file creation or modification  in folder
     // "programdata/checkmk/agent/*" we must remove inherited write rights for
-    // Users.
+    // SID S-1-5-32-545(Users).
 
     constexpr std::wstring_view command_templates[] = {
-        L"icacls \"{}\" /inheritance:d /T",   // disable inheritance
-        L"icacls \"{}\" /remove:g Users /T",  // remove all user rights
-        L"icacls \"{}\" /grant:r Users:(OI)(CI)(RX) /T"};  // user can read/exec
+        L"icacls \"{}\" /inheritance:d /T /c",           // disable inheritance
+        L"icacls \"{}\" /remove:g *S-1-5-32-545 /T /c",  // remove all rights
+        L"icacls \"{}\" /grant:r *S-1-5-32-545:(OI)(CI)(RX) /T /c"};  // read/exec
 
     for (auto const t : command_templates) {
         auto cmd = fmt::format(t.data(), folder.wstring());

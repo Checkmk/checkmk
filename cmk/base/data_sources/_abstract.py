@@ -343,7 +343,7 @@ class ABCChecker(Generic[TRawData, TSections, TPersistedSections, THostSections]
 
         # Runtime data (managed by self.run()) - Meant for self.get_summary_result()
         self.exception: Optional[Exception] = None
-        self._host_sections: Optional[THostSections] = None
+        self.host_sections: Optional[THostSections] = None
 
     def __repr__(self):
         return "%s(%r)" % (type(self).__name__, self.configurator)
@@ -359,23 +359,23 @@ class ABCChecker(Generic[TRawData, TSections, TPersistedSections, THostSections]
     @cpu_tracking.track
     def check(self, raw_data: TRawData) -> THostSections:
         try:
-            self._host_sections = self.configurator.make_parser().parse(raw_data)
-            assert self._host_sections
+            self.host_sections = self.configurator.make_parser().parse(raw_data)
+            assert self.host_sections
 
             # Add information from previous persisted infos
-            persisted_sections = self._determine_persisted_sections(self._host_sections)
-            self._host_sections.add_persisted_sections(persisted_sections, logger=self._logger)
+            persisted_sections = self._determine_persisted_sections(self.host_sections)
+            self.host_sections.add_persisted_sections(persisted_sections, logger=self._logger)
 
         except Exception as exc:
             self._logger.log(VERBOSE, "ERROR: %s", exc)
             if cmk.utils.debug.enabled():
                 raise
             self.exception = exc
-            self._host_sections = self.configurator.default_host_sections
+            self.host_sections = self.configurator.default_host_sections
         else:
             self.exception = None
-        assert self._host_sections
-        return self._host_sections
+        assert self.host_sections
+        return self.host_sections
 
     def _determine_persisted_sections(
         self,
@@ -398,8 +398,8 @@ class ABCChecker(Generic[TRawData, TSections, TPersistedSections, THostSections]
         assert self.configurator.mode is not Mode.NONE
 
         if not self.exception:
-            assert self._host_sections is not None
-            return self.configurator.make_summarizer().summarize(self._host_sections)
+            assert self.host_sections is not None
+            return self.configurator.make_summarizer().summarize(self.host_sections)
 
         exc_msg = "%s" % self.exception
 

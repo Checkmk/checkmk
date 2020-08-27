@@ -26,7 +26,7 @@ from cmk.base.data_sources import (
     ABCChecker,
     ABCHostSections,
     _data_sources,
-    make_host_sections,
+    update_host_sections,
     make_checkers,
     make_nodes,
     Mode,
@@ -502,7 +502,9 @@ class TestMakeHostSectionsHosts:
         return ts.apply(monkeypatch)
 
     def test_no_sources(self, hostname, ipaddress, mode, config_cache, host_config):
-        mhs = make_host_sections(
+        mhs = MultiHostSections()
+        update_host_sections(
+            mhs,
             make_nodes(
                 config_cache,
                 host_config,
@@ -531,7 +533,9 @@ class TestMakeHostSectionsHosts:
         assert not section.persisted_sections
 
     def test_one_snmp_source(self, hostname, ipaddress, mode, config_cache, host_config):
-        mhs = make_host_sections(
+        mhs = MultiHostSections()
+        update_host_sections(
+            mhs,
             make_nodes(
                 config_cache,
                 host_config,
@@ -585,7 +589,9 @@ class TestMakeHostSectionsHosts:
         source = source(hostname, ipaddress, mode=mode)
         assert source.configurator.source_type is SourceType.HOST
 
-        mhs = make_host_sections(
+        mhs = MultiHostSections()
+        update_host_sections(
+            mhs,
             make_nodes(
                 config_cache,
                 host_config,
@@ -630,7 +636,9 @@ class TestMakeHostSectionsHosts:
             ).make_checker(),
         ]
 
-        mhs = make_host_sections(
+        mhs = MultiHostSections()
+        update_host_sections(
+            mhs,
             make_nodes(
                 config_cache,
                 host_config,
@@ -664,7 +672,9 @@ class TestMakeHostSectionsHosts:
             TCPConfigurator(hostname + "2", ipaddress, mode=mode,).make_checker(),
         ]
 
-        mhs = make_host_sections(
+        mhs = MultiHostSections()
+        update_host_sections(
+            mhs,
             make_nodes(
                 config_cache,
                 host_config,
@@ -750,7 +760,9 @@ class TestMakeHostSectionsClusters:
         assert host_config.nodes
 
     def test_no_sources(self, cluster, nodes, config_cache, host_config, mode):
-        mhs = make_host_sections(
+        mhs = MultiHostSections()
+        update_host_sections(
+            mhs,
             make_nodes(
                 config_cache,
                 host_config,
@@ -833,7 +845,9 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
     # Create a cluster
     host_config.nodes = list(hosts.keys())
 
-    mhs = make_host_sections(
+    mhs = MultiHostSections()
+    update_host_sections(
+        mhs,
         make_nodes(
             config_cache,
             host_config,

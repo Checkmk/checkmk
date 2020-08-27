@@ -171,7 +171,9 @@ def do_check(
             ipaddress,
             mode=data_sources.Mode.CHECKING,
         )
-        mhs = data_sources.make_host_sections(
+        mhs = MultiHostSections()
+        result = data_sources.update_host_sections(
+            mhs,
             data_sources.make_nodes(
                 config_cache,
                 host_config,
@@ -202,11 +204,15 @@ def do_check(
         if _submit_to_core:
             item_state.save(hostname)
 
-        for source in sources:
-            source_state, source_output, source_perfdata = source.get_summary_result()
+        for configurator, host_sections in result:
+            # TODO(ml): This implements the hidden protocol explicitly.  This step
+            #           is necessary before we get rid of it.
+            checker = configurator.make_checker()
+            checker.host_sections = host_sections
+            source_state, source_output, source_perfdata = checker.get_summary_result()
             if source_output != "":
                 status = max(status, source_state)
-                infotexts.append("[%s] %s" % (source.id, source_output))
+                infotexts.append("[%s] %s" % (configurator.id, source_output))
                 perfdata.extend([_convert_perf_data(p) for p in source_perfdata])
 
         if plugins_missing_data:

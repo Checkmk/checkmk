@@ -336,7 +336,9 @@ def _do_inv_for_realhost(
                 host_sections.update(source.check(raw_data))
 
     if multi_host_sections is None:
-        multi_host_sections = data_sources.make_host_sections(
+        multi_host_sections = MultiHostSections()
+        data_sources.update_host_sections(
+            multi_host_sections,
             data_sources.make_nodes(
                 config_cache,
                 host_config,

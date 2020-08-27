@@ -325,7 +325,9 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
             for source in sources:
                 _configure_sources(source.configurator, on_error=on_error)
 
-            multi_host_sections = data_sources.make_host_sections(
+            multi_host_sections = MultiHostSections()
+            data_sources.update_host_sections(
+                multi_host_sections,
                 data_sources.make_nodes(
                     config_cache,
                     host_config,
@@ -529,7 +531,9 @@ def discover_on_host(
         for source in sources:
             _configure_sources(source.configurator, on_error=on_error)
 
-        multi_host_sections = data_sources.make_host_sections(
+        multi_host_sections = MultiHostSections()
+        data_sources.update_host_sections(
+            multi_host_sections,
             data_sources.make_nodes(
                 config_cache,
                 host_config,
@@ -701,7 +705,9 @@ def check_discovery(
         )
 
     use_caches = data_sources.FileCacheConfigurator.maybe
-    multi_host_sections = data_sources.make_host_sections(
+    multi_host_sections = MultiHostSections()
+    result = data_sources.update_host_sections(
+        multi_host_sections,
         data_sources.make_nodes(
             config_cache,
             host_config,
@@ -752,12 +758,17 @@ def check_discovery(
         infotexts.append(u"rediscovery scheduled")
 
     # Add data source information to check results
-    for source in sources:
-        source_state, source_output, _source_perfdata = source.get_summary_result()
-        # Do not output informational (state = 0) things. These information are shown by the "Check_MK" service
+    for configurator, host_sections in result:
+        # TODO(ml): Same as with the exceptions, we must rely on the
+        #           hidden protocol directly before it can be safely removed.
+        checker = configurator.make_checker()
+        checker.host_sections = host_sections
+        source_state, source_output, _source_perfdata = checker.get_summary_result()
+        # Do not output informational (state = 0) things.  These information
+        # are shown by the "Check_MK" service
         if source_state != 0:
             status = max(status, source_state)
-            infotexts.append(u"[%s] %s" % (source.id, source_output))
+            infotexts.append(u"[%s] %s" % (configurator.id, source_output))
 
     return status, infotexts, long_infotexts, perfdata
 
@@ -1573,7 +1584,9 @@ def get_check_preview(host_name: HostName, use_caches: bool,
     for source in sources:
         _configure_sources(source.configurator, on_error=on_error)
 
-    multi_host_sections = data_sources.make_host_sections(
+    multi_host_sections = MultiHostSections()
+    data_sources.update_host_sections(
+        multi_host_sections,
         data_sources.make_nodes(
             config_cache,
             host_config,

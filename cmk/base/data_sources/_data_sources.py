@@ -9,7 +9,7 @@
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
 import itertools
-from typing import Dict, Iterable, Optional, Sequence, Tuple
+from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -24,7 +24,7 @@ import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.config import HostConfig, SelectedRawSections
 
-from ._abstract import ABCConfigurator, ABCChecker, Mode
+from ._abstract import ABCConfigurator, ABCChecker, Mode, ABCHostSections
 from .agent import AgentHostSections
 from .host_sections import HostKey, MultiHostSections
 from .ipmi import IPMIConfigurator
@@ -33,7 +33,7 @@ from .programs import DSProgramConfigurator, SpecialAgentConfigurator
 from .snmp import SNMPConfigurator
 from .tcp import TCPConfigurator
 
-__all__ = ["Checkers", "make_host_sections", "make_configurators", "make_checkers", "make_nodes"]
+__all__ = ["Checkers", "update_host_sections", "make_configurators", "make_checkers", "make_nodes"]
 
 Checkers = Iterable[ABCChecker]
 
@@ -217,18 +217,15 @@ def _make_piggybacked_sections(host_config) -> SelectedRawSections:
     return agent_based_register.get_relevant_raw_sections(check_plugin_names=check_plugin_names)
 
 
-def make_host_sections(
+def update_host_sections(
+    multi_host_sections: MultiHostSections,
     nodes: Iterable[Tuple[HostName, Optional[HostAddress], Checkers]],
     *,
     max_cachefile_age: int,
     selected_raw_sections: Optional[SelectedRawSections],
     host_config: HostConfig,
-) -> MultiHostSections:
+) -> Sequence[Tuple[ABCConfigurator, ABCHostSections]]:
     """Gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
-
-    Returns a dictionary object of already parsed HostSections() constructs for each related host.
-    For single hosts it's just a single entry in the dictionary. For cluster hosts it contains one
-    HostSections() entry for each related node.
 
     Communication errors are not raised through by this functions. All agent related errors are
     caught by the source.run() method and saved in it's _exception attribute. The caller should
@@ -238,7 +235,7 @@ def make_host_sections(
     console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
     # Special agents can produce data for the same check_plugin_name on the same host, in this case
     # the section lines need to be extended
-    multi_host_sections = MultiHostSections()
+    result: List[Tuple[ABCConfigurator, ABCHostSections]] = []
     for hostname, ipaddress, sources in nodes:
         for source in sources:
             if host_config.nodes is None:
@@ -250,11 +247,12 @@ def make_host_sections(
                 HostKey(hostname, ipaddress, source.configurator.source_type),
                 source.configurator.default_host_sections,
             )
-            # TODO: Select agent / snmp sources before passing
             source.configurator.selected_raw_sections = selected_raw_sections
             with source.configurator.make_fetcher() as fetcher:
                 raw_data = fetcher.fetch()
-            host_sections.update(source.check(raw_data))
+            host_section = source.check(raw_data)
+            result.append((source.configurator, host_section))
+            host_sections.update(host_section)
 
         # Store piggyback information received from all sources of this host. This
         # also implies a removal of piggyback files received during previous calls.
@@ -267,7 +265,7 @@ def make_host_sections(
             host_sections.piggybacked_raw_data,
         )
 
-    return multi_host_sections
+    return result
 
 
 def _make_piggyback_nodes(

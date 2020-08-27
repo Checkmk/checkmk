@@ -131,21 +131,17 @@ from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function impo
             False,
         ),
     ])
-def test_evaluate_snmp_detection(monkeypatch, config_snmp_scan_functions, name, oids_data,
-                                 expected_result):
+def test_evaluate_snmp_detection(config_snmp_scan_functions, name, oids_data, expected_result):
     def oid_function(oid, _default=None, _name=None):
         return oids_data.get(oid)
-
-    monkeypatch.setattr(snmp_modes, "get_single_oid", lambda oid, *a, **kw: oids_data.get(oid))
 
     scan_function = config_snmp_scan_functions[name]
     assert bool(scan_function(oid_function)) is expected_result
 
     converted_detect_spec = create_detect_spec(name, scan_function, [])
-    actual_result = snmp_scan._evaluate_snmp_detection(
-        converted_detect_spec,
-        name,
-        backend=None,  # type: ignore  # monkeypatched
+    actual_result = snmp_scan.evaluate_snmp_detection(
+        detect_spec=converted_detect_spec,
+        oid_value_getter=oids_data.get,
     )
     assert actual_result is expected_result
 

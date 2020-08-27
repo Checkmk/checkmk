@@ -4,8 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import functools
 import re
-from typing import Iterable, NamedTuple, Set
+from typing import Callable, Iterable, NamedTuple, Optional, Set
 
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError
@@ -23,34 +24,27 @@ SNMPScanSection = NamedTuple("SNMPScanSection", [
 ])
 
 
-def _evaluate_snmp_detection(
-    detect_spec: SNMPDetectSpec,
-    s_name: SectionName,
+def evaluate_snmp_detection(
     *,
-    backend: ABCSNMPBackend,
+    detect_spec: SNMPDetectSpec,
+    oid_value_getter: Callable[[str], Optional[str]],
 ) -> bool:
     """Evaluate a SNMP detection specification
 
     Return True if and and only if at least all conditions in one "line" are True
     """
     return any(
-        all(_evaluate_snmp_detection_atom(atom, s_name, backend=backend)
+        all(_evaluate_snmp_detection_atom(atom, oid_value_getter)
             for atom in alternative)
         for alternative in detect_spec)
 
 
 def _evaluate_snmp_detection_atom(
     atom: SNMPDetectAtom,
-    s_name: SectionName,
-    *,
-    backend: ABCSNMPBackend,
+    oid_value_getter: Callable[[str], Optional[str]],
 ) -> bool:
     oid, pattern, flag = atom
-    value = snmp_modes.get_single_oid(
-        oid,
-        s_name,
-        backend=backend,
-    )
+    value = oid_value_getter(oid)
     if value is None:
         # check for "not_exists"
         return pattern == ".*" and not flag
@@ -149,11 +143,15 @@ def _snmp_scan_find_sections(
 ) -> Set[SectionName]:
     found_sections: Set[SectionName] = set()
     for name, specs in sections:
+        oid_value_getter = functools.partial(
+            snmp_modes.get_single_oid,
+            section_name=name,
+            backend=backend,
+        )
         try:
-            if _evaluate_snmp_detection(
-                    specs,
-                    name,
-                    backend=backend,
+            if evaluate_snmp_detection(
+                    detect_spec=specs,
+                    oid_value_getter=oid_value_getter,
             ):
                 found_sections.add(name)
         except MKGeneralException:

@@ -326,6 +326,11 @@ div#top_heading {
           margin-left: 0;
         }
 
+        &.disabled {
+          pointer-events: none;
+          filter: grayscale(100%) brightness(55%);
+        }
+
         a {
           display: flex;
           align-items: center;

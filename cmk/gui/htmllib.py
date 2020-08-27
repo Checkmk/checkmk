@@ -979,7 +979,6 @@ class html(ABCHTMLGenerator):
 
         # rendering state
         self._header_sent = False
-        self._context_buttons_open = False
 
         # style options
         self._body_classes = ['main']
@@ -2537,73 +2536,6 @@ class html(ABCHTMLGenerator):
 
     def foldable_container_id(self, treename: str, id_: str) -> str:
         return "tree.%s.%s" % (treename, id_)
-
-    #
-    # Context Buttons
-    #
-
-    def begin_context_buttons(self) -> None:
-        if not self._context_buttons_open:
-            self.open_div(class_="contextlinks")
-            self._context_buttons_open = True
-
-    def end_context_buttons(self) -> None:
-        if self._context_buttons_open:
-            self.div("", class_="end")
-            self.close_div()
-        self._context_buttons_open = False
-
-    def context_button(self,
-                       title: str,
-                       url: str,
-                       icon: Optional[str] = None,
-                       hot: bool = False,
-                       id_: Optional[str] = None,
-                       hover_title: Optional[str] = None,
-                       class_: CSSSpec = None) -> None:
-        self._context_button(title,
-                             url,
-                             icon=icon,
-                             hot=hot,
-                             id_=id_,
-                             hover_title=hover_title,
-                             class_=class_)
-
-    def _context_button(self,
-                        title: str,
-                        url: str,
-                        icon: Optional[str] = None,
-                        hot: bool = False,
-                        id_: Optional[str] = None,
-                        hover_title: Optional[str] = None,
-                        class_: CSSSpec = None) -> None:
-        title = escaping.escape_attribute(title)
-        display = "block"
-
-        if not self._context_buttons_open:
-            self.begin_context_buttons()
-
-        css_classes: List[Optional[str]] = ["contextlink"]
-        if hot:
-            css_classes.append("hot")
-        if class_:
-            if isinstance(class_, list):
-                css_classes.extend(class_)
-            else:
-                css_classes.append(class_)
-
-        self.open_div(class_=css_classes, id_=id_, style="display:%s;" % display)
-
-        self.open_a(href=url, title=hover_title)
-
-        if icon:
-            self.icon('', icon, cssclass="inline", middle=False)
-
-        self.span(title)
-
-        self.close_a()
-
-        self.close_div()
 
     #
     # Floating Options

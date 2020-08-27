@@ -43,9 +43,6 @@ from cmk.gui.plugins.wato.utils.base_modes import (  # noqa: F401 # pylint: disa
 from cmk.gui.plugins.wato.utils.simple_modes import (  # noqa: F401 # pylint: disable=unused-import
     SimpleEditMode, SimpleListMode, SimpleModeType,
 )
-from cmk.gui.plugins.wato.utils.context_buttons import (  # noqa: F401 # pylint: disable=unused-import
-    changelog_button, global_buttons,
-)
 from cmk.gui.plugins.wato.utils.html_elements import (  # noqa: F401 # pylint: disable=unused-import
     search_form, wato_confirm,
 )

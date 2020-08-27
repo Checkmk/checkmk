@@ -10,24 +10,6 @@ from cmk.gui.globals import html
 from cmk.gui.page_menu import PageMenuEntry, make_simple_link
 
 
-def global_buttons():
-    changelog_button()
-
-
-def changelog_button():
-    pending_info = watolib.get_pending_changes_info()
-    if pending_info:
-        hot = True
-        icon = "wato_changes"
-        buttontext = pending_info
-    else:
-        hot = False
-        icon = "wato_nochanges"
-        buttontext = _("No changes")
-    html.context_button(buttontext, watolib.folder_preserving_link([("mode", "changelog")]), icon,
-                        hot)
-
-
 def make_host_status_link(host_name: str, view_name: str) -> PageMenuEntry:
     return PageMenuEntry(
         title=_("Monitoring status"),

@@ -164,7 +164,7 @@ class SimpleListMode(SimpleWatoModeBase):
                             title=self._mode_type.name_singular().title(),
                             entries=[
                                 PageMenuEntry(
-                                    title=self._new_context_button_label(),
+                                    title=self._new_button_label(),
                                     icon_name="new",
                                     item=make_simple_link(
                                         html.makeuri_contextless([
@@ -179,7 +179,7 @@ class SimpleListMode(SimpleWatoModeBase):
             breadcrumb=breadcrumb,
         )
 
-    def _new_context_button_label(self) -> str:
+    def _new_button_label(self) -> str:
         return _("Add %s") % self._mode_type.name_singular()
 
     def action(self):

@@ -344,11 +344,6 @@ from cmk.gui.plugins.wato.utils.html_elements import (
     search_form,
 )
 
-from cmk.gui.plugins.wato.utils.context_buttons import (
-    global_buttons,
-    changelog_button,
-)
-
 from cmk.gui.plugins.wato.utils.main_menu import (
     MainMenu,
     MenuItem,

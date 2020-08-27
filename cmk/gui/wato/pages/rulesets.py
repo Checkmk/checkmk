@@ -525,13 +525,6 @@ def _page_menu_entry_predefined_conditions() -> PageMenuEntry:
     )
 
 
-def predefined_conditions_button():
-    html.context_button(_("Predef. conditions"),
-                        watolib.folder_preserving_link([
-                            ("mode", "predefined_conditions"),
-                        ]), "condition")
-
-
 def _page_menu_entry_search_rules(search_options: SearchOptions, mode: str,
                                   page_type: PageType) -> PageMenuEntry:
     is_searching = bool(search_options)

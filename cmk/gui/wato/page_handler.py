@@ -179,13 +179,6 @@ def _wato_page_handler(current_mode: str, mode_permissions: List[PermissionName]
                    show_body_start=display_options.enabled(display_options.H),
                    show_top_heading=display_options.enabled(display_options.T))
 
-    # As long as we migrate the buttons to the page menu keep the buttons as fallback
-    if display_options.enabled(display_options.B):
-        # Show contexts buttons
-        html.begin_context_buttons()
-        mode.buttons()
-        html.end_context_buttons()
-
     if not html.is_transaction() or (cmk.gui.watolib.read_only.is_enabled() and
                                      cmk.gui.watolib.read_only.may_override()):
         _show_read_only_warning()

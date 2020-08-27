@@ -38,7 +38,12 @@ from cmk.gui.log import logger
 from cmk.gui.globals import html
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.breadcrumb import make_topic_breadcrumb, Breadcrumb, BreadcrumbItem
+from cmk.gui.breadcrumb import (
+    make_topic_breadcrumb,
+    Breadcrumb,
+    BreadcrumbItem,
+    make_current_page_breadcrumb_item,
+)
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
@@ -46,6 +51,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuSidePopup,
     make_simple_link,
+    make_simple_form_page_menu,
     make_javascript_link,
     make_display_options_dropdown,
 )
@@ -1219,19 +1225,16 @@ def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Calla
         sorted=True,
     )
 
-    html.header(title, breadcrumb=visuals.visual_page_breadcrumb("dashboards", title, "edit"))
-    html.begin_context_buttons()
-    back_url = html.get_url_input(
-        "back", "dashboard.py?edit=1&name=%s" % html.urlencode(html.request.var('name')))
-    html.context_button(_("Back"), back_url, "back")
-    html.end_context_buttons()
+    dashboard = get_permitted_dashboards()[name]
+
+    breadcrumb = _dashlet_editor_breadcrumb(name, dashboard, title)
+    html.header(title, breadcrumb=breadcrumb, page_menu=_choose_view_page_menu(breadcrumb))
 
     if html.request.var('save') and html.check_transaction():
         try:
             view_name = vs_view.from_html_vars('view')
             vs_view.validate_value(view_name, 'view')
 
-            dashboard = get_permitted_dashboards()[name]
             dashlet_id = len(dashboard['dashlets'])
             dashlet_spec = create_dashlet_spec_func(dashlet_id, view_name)
             add_dashlet(dashlet_spec, dashboard)
@@ -1241,7 +1244,7 @@ def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Calla
                     [
                         ("name", name),
                         ("id", str(dashlet_id)),
-                        ("back", back_url),
+                        ("back", html.get_url_input('back')),
                     ],
                     filename="edit_dashlet.py",
                 ))
@@ -1255,11 +1258,16 @@ def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Calla
     html.help(vs_view.help())
     forms.end()
 
-    html.button('save', _('Continue'), 'submit')
-
     html.hidden_fields()
     html.end_form()
     html.footer()
+
+
+def _choose_view_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
+    return make_simple_form_page_menu(breadcrumb,
+                                      form_name="choose_view",
+                                      button_name="save",
+                                      save_title=_("Continue"))
 
 
 @cmk.gui.pages.register("edit_dashlet")
@@ -1327,14 +1335,8 @@ def page_edit_dashlet() -> None:
         dashlet_type = dashlet_registry[ty]
         single_infos = cast(List[str], dashlet_spec['single_infos'])
 
-    html.header(title, breadcrumb=visuals.visual_page_breadcrumb("dashboards", title, mode))
-
-    html.begin_context_buttons()
-    back_url = html.get_url_input('back')
-    next_url = html.get_url_input('next', back_url)
-    html.context_button(_('Back'), back_url, 'back')
-    html.context_button(_('All Dashboards'), 'edit_dashboards.py', 'dashboard')
-    html.end_context_buttons()
+    breadcrumb = _dashlet_editor_breadcrumb(board, dashboard, title)
+    html.header(title, breadcrumb=breadcrumb, page_menu=_dashlet_editor_page_menu(breadcrumb))
 
     vs_general = Dictionary(
         title=_('General Settings'),
@@ -1436,6 +1438,7 @@ def page_edit_dashlet() -> None:
 
             save_all_dashboards()
 
+            next_url = html.get_url_input('next', html.get_url_input('back'))
             html.immediate_browser_redirect(1, next_url)
             if mode == 'edit':
                 html.show_message(_('The dashlet has been saved.'))
@@ -1465,6 +1468,24 @@ def page_edit_dashlet() -> None:
     html.end_form()
 
     html.footer()
+
+
+def _dashlet_editor_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
+    return make_simple_form_page_menu(breadcrumb, form_name="dashlet", button_name="save")
+
+
+def _dashlet_editor_breadcrumb(name: str, board: DashboardConfig, title: str) -> Breadcrumb:
+    breadcrumb = make_topic_breadcrumb(mega_menu_registry.menu_monitoring(),
+                                       PagetypeTopics.get_topic(board["topic"]))
+    breadcrumb.append(
+        BreadcrumbItem(
+            visuals.visual_title('dashboard', board),
+            html.get_url_input('back'),
+        ))
+
+    breadcrumb.append(make_current_page_breadcrumb_item(title))
+
+    return breadcrumb
 
 
 @cmk.gui.pages.register("clone_dashlet")

@@ -621,6 +621,9 @@ def render_graph_container_html(graph_recipe, graph_data_range, graph_render_opt
         json.dumps(graph_render_options),
     ))
 
+    if "cmk.graphs.register_delayed_graph_listener" not in html.final_javascript_code:
+        html.final_javascript("cmk.graphs.register_delayed_graph_listener()")
+
     return output
 
 

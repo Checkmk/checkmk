@@ -7,6 +7,8 @@ import SimpleBar from "simplebar";
 import * as ajax from "ajax";
 import * as selection from "selection";
 
+let g_content_scrollbar = null;
+
 export const browser = {
     agent: navigator.userAgent.toLowerCase(),
     is_opera: function() { return this.agent.indexOf("opera") != -1; },
@@ -569,4 +571,10 @@ export function add_simplebar_scrollbar(scrollable_id) {
 
 export function add_simplebar_scrollbar_to_object(obj) {
     return new SimpleBar(obj);
+}
+
+export function content_scrollbar(scrollable_id) {
+    if (g_content_scrollbar === null)
+        g_content_scrollbar = add_simplebar_scrollbar(scrollable_id);
+    return g_content_scrollbar;
 }

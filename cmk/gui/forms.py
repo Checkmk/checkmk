@@ -41,9 +41,7 @@ def edit_dictionaries(dictionaries: 'Sequence[Tuple[str, Union[Transform, Dictio
                       focus: Optional[str] = None,
                       hover_help: bool = True,
                       validate: Optional[Callable[[Any], None]] = None,
-                      buttontext: Optional[str] = None,
                       title: Optional[str] = None,
-                      buttons: Optional[List[Tuple[str, str, str]]] = None,
                       method: str = "GET",
                       preview: bool = False,
                       varprefix: str = "",
@@ -93,13 +91,6 @@ def edit_dictionaries(dictionaries: 'Sequence[Tuple[str, Union[Transform, Dictio
         vs_dict.render_input_as_form(dict_varprefix, subvalue)
 
     end()
-    if buttons:
-        for name, button_title, _icon in buttons:
-            html.button(name, button_title)
-    else:
-        if buttontext is None:
-            buttontext = _("Save")
-        html.button("save", buttontext)
     # Should be ignored be hidden_fields, but I do not dare to change it there
     html.request.del_var("filled_in")
     html.hidden_fields()

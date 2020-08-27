@@ -31,10 +31,11 @@
 # QS1|ORACLE_OCM|MGMT_CONFIG_JOB|DISABLED|0|40|FALSE|08-APR-15 01.01.01.200000 AM +01:00|-|
 # QS1|DBADMIN|DATENEXPORT-FUR|COMPLETED|0|3|FALSE|22-AUG-14 01.11.00.000000 AM EUROPE/BERLIN|-|
 
-factory_settings["oracle_jobs_defaults"] = {
-    "disabled": True,
-    "missinglog": 1,
-    "missingjob": 3,
+factory_settings['oracle_jobs_defaults'] = {
+    'disabled': False,
+    'status_disabled_jobs': 0,
+    'status_missing_jobs': 2,
+    'missinglog': 1,
 }
 
 
@@ -132,7 +133,7 @@ def check_oracle_jobs(item, params, info):
         raise MKCounterWrapped("Login not possible for check %s" % item)
 
     if not service_found:
-        missingjob = params.get('missingjob')
+        missingjob = params.get('status_missing_jobs')
         state = max(state, missingjob)
         return (state, 'Job is missing')
 

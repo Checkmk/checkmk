@@ -33,10 +33,11 @@ from cmk.utils.packaging import (
     unpackaged_files_in_dir,
     get_config_parts,
     get_initial_package_info,
+    format_package_file_name,
+    PACKAGE_EXTENSION,
 )
 
 logger = logging.getLogger("cmk.base.packaging")
-_pac_ext = ".mkp"
 
 PackageName = str
 
@@ -131,7 +132,7 @@ def show_package_info(name: PackageName) -> None:
 
 def show_package(name: PackageName, show_info: bool = False) -> None:
     try:
-        if name.endswith(_pac_ext):
+        if name.endswith(PACKAGE_EXTENSION):
             tar = tarfile.open(name, "r:gz")
             info = tar.extractfile("info")
             if info is None:
@@ -250,7 +251,7 @@ def package_pack(args: List[str]) -> None:
     package = read_package_info(pacname)
     if not package:
         raise PackageException("Package %s not existing or corrupt." % pacname)
-    tarfilename = "%s-%s%s" % (pacname, package["version"], _pac_ext)
+    tarfilename = format_package_file_name(name=pacname, version=package["version"])
 
     logger.log(VERBOSE, "Packing %s into %s...", pacname, tarfilename)
     with Path(tarfilename).open("wb") as f:

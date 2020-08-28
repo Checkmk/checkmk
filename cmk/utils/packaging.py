@@ -14,7 +14,7 @@ import pprint
 import subprocess
 import tarfile
 import time
-from typing import cast, Any, BinaryIO, Dict, Iterable, List, NamedTuple, Optional
+from typing import cast, Any, BinaryIO, Dict, Iterable, List, NamedTuple, Optional, Final
 
 from six import ensure_binary, ensure_str
 
@@ -97,6 +97,8 @@ package_ignored_files = {
     "lib": ["nagios/plugins/README.txt"],
 }
 
+PACKAGE_EXTENSION: Final[str] = ".mkp"
+
 
 def package_dir() -> Path:
     return Path(cmk.utils.paths.omd_root, "var", "check_mk", "packages")
@@ -131,6 +133,20 @@ def get_package_parts() -> List[PackagePart]:
         PackagePart("alert_handlers", _("Alert handlers"),
                     str(cmk.utils.paths.local_share_dir / "alert_handlers")),
     ]
+
+
+def format_package_file_name(*, name: str, version: str) -> str:
+    """
+    >>> f = format_package_file_name
+
+    >>> f(name="aaa", version="1.0")
+    'aaa-1.0.mkp'
+
+    >>> f(name="a-a-a", version="99.99")
+    'a-a-a-99.99.mkp'
+
+    """
+    return f"{name}-{version}{PACKAGE_EXTENSION}"
 
 
 def release_package(pacname: PackageName) -> None:

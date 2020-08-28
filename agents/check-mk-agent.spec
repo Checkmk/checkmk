@@ -38,8 +38,8 @@ mkdir -p $R/etc/xinetd.d
 install -m 644 cfg_examples/xinetd.conf $R/etc/xinetd.d/check_mk
 # Systemd
 mkdir -p $R/etc/systemd/system
-install -m 644 cfg_examples/systemd/check_mk\@.service $R/etc/systemd/system
-install -m 644 cfg_examples/systemd/check_mk.socket $R/etc/systemd/system
+install -m 644 cfg_examples/systemd/check_mk\@.service $R/usr/lib/systemd/system
+install -m 644 cfg_examples/systemd/check_mk.socket $R/usr/lib/systemd/system
 mkdir -p $R/etc/check_mk
 mkdir -p $R/usr/bin
 install -m 755 check_mk_agent.linux $R/usr/bin/check_mk_agent
@@ -57,8 +57,8 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %config(noreplace) /etc/xinetd.d/check_mk
-%config(noreplace) /etc/systemd/system/check_mk@.service
-%config(noreplace) /etc/systemd/system/check_mk.socket
+/usr/lib/systemd/system/check_mk@.service
+/usr/lib/systemd/system/check_mk.socket
 /etc/check_mk
 /usr/bin/*
 /usr/lib/check_mk_agent

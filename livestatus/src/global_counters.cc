@@ -6,12 +6,14 @@
 #include "global_counters.h"
 
 #include <ctime>
+#include <mutex>
 #include <vector>
 
 namespace {
 constexpr int num_counters = 10;
 
 struct CounterInfo {
+    std::mutex mutex;
     double value;
     double last_value;
     double rate;
@@ -30,13 +32,31 @@ constexpr double rating_weight = 0.25;
 double lerp(double a, double b, double t) { return (1 - t) * a + t * b; }
 }  // namespace
 
-void counterReset(Counter which) { counter(which) = {0.0, 0.0, 0.0}; }
+void counterReset(Counter which) {
+    auto &c = counter(which);
+    std::lock_guard<std::mutex> lg(c.mutex);
+    c.value = 0.0;
+    c.last_value = 0.0;
+    c.rate = 0.0;
+}
 
-void counterIncrement(Counter which) { counter(which).value++; }
+void counterIncrement(Counter which) {
+    auto &c = counter(which);
+    std::lock_guard<std::mutex> lg(c.mutex);
+    c.value++;
+}
 
-double counterValue(Counter which) { return counter(which).value; }
+double counterValue(Counter which) {
+    auto &c = counter(which);
+    std::lock_guard<std::mutex> lg(c.mutex);
+    return c.value;
+}
 
-double counterRate(Counter which) { return counter(which).rate; }
+double counterRate(Counter which) {
+    auto &c = counter(which);
+    std::lock_guard<std::mutex> lg(c.mutex);
+    return c.rate;
+}
 
 void do_statistics() {
     time_t now = time(nullptr);
@@ -50,6 +70,7 @@ void do_statistics() {
     }
     last_statistics_update = now;
     for (auto &c : counters) {
+        std::lock_guard<std::mutex> lg(c.mutex);
         double old_rate = c.rate;
         double new_rate = (c.value - c.last_value) / delta_time;
         c.rate = lerp(old_rate, new_rate, old_rate == 0 ? 1 : rating_weight);

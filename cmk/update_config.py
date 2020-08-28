@@ -35,7 +35,7 @@ from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.paths
 import cmk.utils
 from cmk.utils.type_defs import CheckPluginName, UserId
-from cmk.utils.packaging import disable_outdated_packages
+import cmk.utils.packaging as packaging
 
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.visuals as visuals
@@ -372,7 +372,7 @@ class UpdateConfig:
         the version with the new Checkmk version. In case it is outdated, move the
         package to the disabled packages.
         """
-        disable_outdated_packages()
+        packaging.disable_outdated()
 
 
 def _id_from_title(title):

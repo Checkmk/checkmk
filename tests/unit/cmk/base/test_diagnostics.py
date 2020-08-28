@@ -151,7 +151,7 @@ def test_diagnostics_element_local_files_content(tmp_path, _collectors):
             "checks": [name],
         }
 
-        packaging.create_package(package_info)
+        packaging.create(package_info)
 
     packaging.package_dir().mkdir(parents=True, exist_ok=True)
     name = "test-package"

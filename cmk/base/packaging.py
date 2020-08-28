@@ -18,25 +18,18 @@ import cmk.utils.paths
 import cmk.utils.tty as tty
 import cmk.utils.werks
 import cmk.utils.debug
+import cmk.utils.packaging as packaging
 from cmk.utils.packaging import (
     PackageException,
     package_dir,
-    all_package_names,
     read_package_info,
     write_package_info,
     parse_package_info,
-    remove_package,
-    install_package_by_path,
-    release_package,
     get_package_parts,
-    create_mkp_file,
     unpackaged_files_in_dir,
     get_config_parts,
     get_initial_package_info,
-    format_package_file_name,
     PACKAGE_EXTENSION,
-    enable_package,
-    disable_package,
 )
 
 logger = logging.getLogger("cmk.base.packaging")
@@ -109,7 +102,7 @@ def package_list(args: List[str]) -> None:
     else:
         if logger.isEnabledFor(VERBOSE):
             table = []
-            for pacname in all_package_names():
+            for pacname in packaging.installed_names():
                 package = read_package_info(pacname)
                 if package is None:
                     table.append([pacname, "package info is missing or broken", "0"])
@@ -117,7 +110,7 @@ def package_list(args: List[str]) -> None:
                     table.append([pacname, package["title"], str(package["num_files"])])
             tty.print_table(["Name", "Title", "Files"], [tty.bold, "", ""], table)
         else:
-            for pacname in all_package_names():
+            for pacname in packaging.installed_names():
                 sys.stdout.write("%s\n" % pacname)
 
 
@@ -236,7 +229,7 @@ def package_release(args: List[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P release NAME")
     pacname = args[0]
-    release_package(pacname)
+    packaging.release(pacname)
 
 
 def package_pack(args: List[str]) -> None:
@@ -257,11 +250,11 @@ def package_pack(args: List[str]) -> None:
     package = read_package_info(pacname)
     if not package:
         raise PackageException("Package %s not existing or corrupt." % pacname)
-    tarfilename = format_package_file_name(name=pacname, version=package["version"])
+    tarfilename = packaging.format_file_name(name=pacname, version=package["version"])
 
     logger.log(VERBOSE, "Packing %s into %s...", pacname, tarfilename)
     with Path(tarfilename).open("wb") as f:
-        create_mkp_file(package, cast(BinaryIO, f))
+        packaging.write_file(package, cast(BinaryIO, f))
     logger.log(VERBOSE, "Successfully created %s", tarfilename)
 
 
@@ -274,7 +267,7 @@ def package_remove(args: List[str]) -> None:
         raise PackageException("No such package %s." % pacname)
 
     logger.log(VERBOSE, "Removing package %s...", pacname)
-    remove_package(package)
+    packaging.remove(package)
     logger.log(VERBOSE, "Successfully removed package %s.", pacname)
 
 
@@ -285,7 +278,7 @@ def package_install(args: List[str]) -> None:
     if not path.exists():
         raise PackageException("No such file %s." % path)
 
-    install_package_by_path(path)
+    packaging.install_by_path(path)
 
 
 def package_disable(args: List[str]) -> None:
@@ -296,10 +289,10 @@ def package_disable(args: List[str]) -> None:
     if not package:
         raise PackageException("No such package %s." % package_name)
 
-    disable_package(package_name, package)
+    packaging.disable(package_name, package)
 
 
 def package_enable(args: List[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P enable PACK.mkp")
-    enable_package(args[0])
+    packaging.enable(args[0])

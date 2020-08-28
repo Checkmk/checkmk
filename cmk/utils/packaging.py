@@ -136,9 +136,9 @@ def get_package_parts() -> List[PackagePart]:
     ]
 
 
-def format_package_file_name(*, name: str, version: str) -> str:
+def format_file_name(*, name: str, version: str) -> str:
     """
-    >>> f = format_package_file_name
+    >>> f = format_file_name
 
     >>> f(name="aaa", version="1.0")
     'aaa-1.0.mkp'
@@ -150,7 +150,7 @@ def format_package_file_name(*, name: str, version: str) -> str:
     return f"{name}-{version}{PACKAGE_EXTENSION}"
 
 
-def release_package(pacname: PackageName) -> None:
+def release(pacname: PackageName) -> None:
     if not pacname or not _package_exists(pacname):
         raise PackageException("Package %s not installed or corrupt." % pacname)
 
@@ -169,7 +169,7 @@ def release_package(pacname: PackageName) -> None:
     _remove_package_info(pacname)
 
 
-def create_mkp_file(package: PackageInfo, file_object: Optional[BinaryIO] = None) -> None:
+def write_file(package: PackageInfo, file_object: Optional[BinaryIO] = None) -> None:
     package["version.packaged"] = cmk_version.__version__
     tar = tarfile.open(fileobj=file_object, mode="w:gz")
 
@@ -223,7 +223,7 @@ def get_initial_package_info(pacname: str) -> PackageInfo:
     }
 
 
-def remove_package(package: PackageInfo) -> None:
+def remove(package: PackageInfo) -> None:
     for part in get_package_parts() + get_config_parts():
         filenames = package["files"].get(part.ident, [])
         if len(filenames) > 0:
@@ -244,7 +244,7 @@ def remove_package(package: PackageInfo) -> None:
     (package_dir() / package["name"]).unlink()
 
 
-def disable_package(package_name: PackageName, package_info: PackageInfo) -> None:
+def disable(package_name: PackageName, package_info: PackageInfo) -> None:
     """Moves a package to the "disabled packages" path
 
     It packs the installed files together, places the package in the
@@ -255,26 +255,25 @@ def disable_package(package_name: PackageName, package_info: PackageInfo) -> Non
     base_dir = cmk.utils.paths.disabled_packages_dir
     base_dir.mkdir(parents=True, exist_ok=True)
 
-    file_path = base_dir / format_package_file_name(name=package_name,
-                                                    version=package_info["version"])
+    file_path = base_dir / format_file_name(name=package_name, version=package_info["version"])
 
     logger.log(VERBOSE, "[%s] Packing to %s...", package_name, file_path)
     with Path(file_path).open("wb") as f:
-        create_mkp_file(package_info, f)
+        write_file(package_info, f)
 
     logger.log(VERBOSE, "[%s] Removing packed files...", package_name)
-    remove_package(package_info)
+    remove(package_info)
 
     logger.log(VERBOSE, "[%s] Successfully disabled", package_name)
 
 
-def enable_package(file_name: str) -> None:
+def enable(file_name: str) -> None:
     """Installs a previously disabled package
 
     Installs the package from the disabled packages path and then removes
     that package file.
 
-    Unlinke `disable_package` you have to provide the package file name
+    Unlinke `disable` you have to provide the package file name
     (e.g. abc-1.2.3.mkp) of the
     package. This is required because there may be multiple versions of the
     same package name disabled at the same time.
@@ -287,7 +286,7 @@ def enable_package(file_name: str) -> None:
         raise PackageException("Package '%s' does not exist." % file_path)
 
     logger.log(VERBOSE, "[%s] Installing package", file_name)
-    install_package_by_path(file_path)
+    install_by_path(file_path)
 
     logger.log(VERBOSE, "[%s] Removing package", file_name)
     file_path.unlink()
@@ -295,7 +294,7 @@ def enable_package(file_name: str) -> None:
     logger.log(VERBOSE, "[%s] Successfully enabled", file_name)
 
 
-def create_package(pkg_info: PackageInfo) -> None:
+def create(pkg_info: PackageInfo) -> None:
     pacname = pkg_info["name"]
     if _package_exists(pacname):
         raise PackageException("Packet already exists.")
@@ -304,7 +303,7 @@ def create_package(pkg_info: PackageInfo) -> None:
     write_package_info(pkg_info)
 
 
-def edit_package(pacname: PackageName, new_package_info: PackageInfo) -> None:
+def edit(pacname: PackageName, new_package_info: PackageInfo) -> None:
     if not _package_exists(pacname):
         raise PackageException("No such package")
 
@@ -323,15 +322,15 @@ def edit_package(pacname: PackageName, new_package_info: PackageInfo) -> None:
 def install_optional_package(package_file_name: Path) -> PackageInfo:
     if package_file_name not in [Path(p.name) for p in _get_optional_package_paths()]:
         raise PackageException("Optional package %s does not exist" % package_file_name)
-    return install_package_by_path(cmk.utils.paths.optional_packages_dir / package_file_name)
+    return install_by_path(cmk.utils.paths.optional_packages_dir / package_file_name)
 
 
-def install_package_by_path(package_path: Path) -> PackageInfo:
+def install_by_path(package_path: Path) -> PackageInfo:
     with package_path.open("rb") as f:
-        return install_package(file_object=cast(BinaryIO, f))
+        return install(file_object=cast(BinaryIO, f))
 
 
-def install_package(file_object: BinaryIO) -> PackageInfo:
+def install(file_object: BinaryIO) -> PackageInfo:
     package = _get_package_info_from_package(file_object)
     file_object.seek(0)
 
@@ -472,7 +471,7 @@ def _get_package_info_from_package(file_object: BinaryIO) -> PackageInfo:
 def _validate_package_files(pacname: PackageName, files: PackageFiles) -> None:
     """Packaged files must either be unpackaged or already belong to that package"""
     packages: Packages = {}
-    for package_name in all_package_names():
+    for package_name in installed_names():
         package_info = read_package_info(package_name)
         if package_info is not None:
             packages[package_name] = package_info
@@ -549,7 +548,7 @@ def _normalize_daily_version(version: str) -> str:
 
 def get_all_package_infos() -> Packages:
     packages = {}
-    for package_name in all_package_names():
+    for package_name in installed_names():
         packages[package_name] = read_package_info(package_name)
 
     return {
@@ -670,14 +669,14 @@ def unpackaged_files_in_dir(part: PartName, directory: str) -> List[str]:
 
 def _packaged_files_in_dir(part: PartName) -> List[str]:
     result: List[str] = []
-    for pacname in all_package_names():
+    for pacname in installed_names():
         package = read_package_info(pacname)
         if package:
             result += package["files"].get(part, [])
     return result
 
 
-def all_package_names() -> List[PackageName]:
+def installed_names() -> List[PackageName]:
     return sorted([p.name for p in package_dir().iterdir()])
 
 
@@ -721,32 +720,31 @@ def rule_pack_id_to_mkp() -> Dict[str, Any]:
     return {os.path.splitext(file_)[0]: mkp_of(file_) for file_ in exported_rule_packs}
 
 
-def disable_outdated_packages() -> None:
+def disable_outdated() -> None:
     """Check installed packages and disables the outdated ones
 
     Packages that contain a valid version number in the "version.usable_until" field can be disabled
     using this function. Others are not disabled.
     """
-    for package_name in all_package_names():
+    for package_name in installed_names():
         logger.log(VERBOSE, "[%s]: Is it outdated?", package_name)
         package_info = read_package_info(package_name)
         if package_info is None:
             logger.log(VERBOSE, "[%s]: Failed to read package info, skipping", package_name)
             continue
 
-        if not _is_package_outdated(package_name, package_info, cmk_version.__version__):
+        if not _is_outdated(package_name, package_info, cmk_version.__version__):
             logger.log(VERBOSE, "[%s]: Not disabling", package_name)
             continue
 
         logger.log(VERBOSE, "[%s]: Disable outdated package", package_name)
-        disable_package(package_name, package_info)
+        disable(package_name, package_info)
 
 
-def _is_package_outdated(package_name: PackageName, package_info: PackageInfo,
-                         version: str) -> bool:
+def _is_outdated(package_name: PackageName, package_info: PackageInfo, version: str) -> bool:
     """Whether or not the given package is considered outated for the given Checkmk version
 
-    >>> i = _is_package_outdated
+    >>> i = _is_outdated
 
     >>> i('a', {'version.usable_until': None}, '1.7.0i1')
     False

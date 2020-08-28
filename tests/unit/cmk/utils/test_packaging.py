@@ -51,11 +51,11 @@ def fixture_mkp_bytes():
 
     # Build MKP in memory
     mkp = BytesIO()
-    packaging.create_mkp_file(package_info, mkp)
+    packaging.write_file(package_info, mkp)
     mkp.seek(0)
 
     # Remove files from local hierarchy
-    packaging.remove_package(package_info)
+    packaging.remove(package_info)
     assert packaging._package_exists("aaa") is False
 
     return mkp
@@ -151,7 +151,7 @@ def _create_simple_test_package(pacname):
         "checks": [pacname],
     }
 
-    packaging.create_package(package_info)
+    packaging.create(package_info)
     return packaging.read_package_info("aaa")
 
 
@@ -161,13 +161,13 @@ def _create_test_file(name):
         f.write(u"lala\n")
 
 
-def test_create_package():
-    assert packaging.all_package_names() == []
+def test_create():
+    assert packaging.installed_names() == []
     _create_simple_test_package("aaa")
-    assert packaging.all_package_names() == ["aaa"]
+    assert packaging.installed_names() == ["aaa"]
 
 
-def test_create_package_twice():
+def test_create_twice():
     _create_simple_test_package("aaa")
 
     with pytest.raises(packaging.PackageException):
@@ -183,58 +183,48 @@ def test_read_package_info_not_existing():
     assert packaging.read_package_info("aaa") is None
 
 
-def test_edit_package_not_existing():
+def test_edit_not_existing():
     new_package_info = packaging.get_initial_package_info("aaa")
     new_package_info["version"] = "2.0"
 
     with pytest.raises(packaging.PackageException):
-        packaging.edit_package("aaa", new_package_info)
+        packaging.edit("aaa", new_package_info)
 
 
-def test_edit_package():
+def test_edit():
     new_package_info = packaging.get_initial_package_info("aaa")
     new_package_info["version"] = "2.0"
 
     package_info = _create_simple_test_package("aaa")
     assert package_info["version"] == "1.0"
 
-    packaging.edit_package("aaa", new_package_info)
+    packaging.edit("aaa", new_package_info)
 
     assert _read_package_info("aaa")["version"] == "2.0"
 
 
-def test_edit_package_rename():
+def test_edit_rename():
     new_package_info = packaging.get_initial_package_info("bbb")
 
     _create_simple_test_package("aaa")
 
-    packaging.edit_package("aaa", new_package_info)
+    packaging.edit("aaa", new_package_info)
 
     assert _read_package_info("bbb")["name"] == "bbb"
     assert packaging.read_package_info("aaa") is None
 
 
-def test_edit_package_rename_conflict():
+def test_edit_rename_conflict():
     new_package_info = packaging.get_initial_package_info("bbb")
     _create_simple_test_package("aaa")
     _create_simple_test_package("bbb")
 
     with pytest.raises(packaging.PackageException):
-        packaging.edit_package("aaa", new_package_info)
+        packaging.edit("aaa", new_package_info)
 
 
-def test_install_package(mkp_bytes):
-    packaging.install_package(mkp_bytes)
-
-    assert packaging._package_exists("aaa") is True
-    package_info = _read_package_info("aaa")
-    assert package_info["version"] == "1.0"
-    assert package_info["files"]["checks"] == ["aaa"]
-    assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
-
-
-def test_install_package_by_path(mkp_file):
-    packaging.install_package_by_path(mkp_file)
+def test_install(mkp_bytes):
+    packaging.install(mkp_bytes)
 
     assert packaging._package_exists("aaa") is True
     package_info = _read_package_info("aaa")
@@ -243,27 +233,37 @@ def test_install_package_by_path(mkp_file):
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
 
-def test_release_package_not_existing():
+def test_install_by_path(mkp_file):
+    packaging.install_by_path(mkp_file)
+
+    assert packaging._package_exists("aaa") is True
+    package_info = _read_package_info("aaa")
+    assert package_info["version"] == "1.0"
+    assert package_info["files"]["checks"] == ["aaa"]
+    assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
+
+
+def test_release_not_existing():
     with pytest.raises(packaging.PackageException):
-        packaging.release_package("abc")
+        packaging.release("abc")
 
 
-def test_release_package():
+def test_release():
     _create_simple_test_package("aaa")
     assert packaging._package_exists("aaa") is True
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
-    packaging.release_package("aaa")
+    packaging.release("aaa")
 
     assert packaging._package_exists("aaa") is False
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
 
-def test_create_mkp_file():
+def test_write_file():
     package_info = _create_simple_test_package("aaa")
 
     mkp = BytesIO()
-    packaging.create_mkp_file(package_info, mkp)
+    packaging.write_file(package_info, mkp)
     mkp.seek(0)
 
     tar = tarfile.open(fileobj=mkp, mode="r:gz")
@@ -280,9 +280,9 @@ def test_create_mkp_file():
     assert info2["name"] == "aaa"
 
 
-def test_remove_package():
+def test_remove():
     package_info = _create_simple_test_package("aaa")
-    packaging.remove_package(package_info)
+    packaging.remove(package_info)
     assert packaging._package_exists("aaa") is False
 
 
@@ -357,7 +357,7 @@ def test_get_optional_package_infos(monkeypatch, tmp_path):
     # Write MKP file
     mkp_path = mkp_dir.joinpath("optional.mkp")
     with mkp_path.open("wb") as mkp:
-        packaging.create_mkp_file(package_info, mkp)
+        packaging.write_file(package_info, mkp)
 
     assert packaging.get_optional_package_infos() == {"optional.mkp": package_info}
 
@@ -376,15 +376,14 @@ def test_disable_package(mkp_file):
 
 
 def _install_and_disable_package(mkp_file):
-    packaging.install_package_by_path(mkp_file)
+    packaging.install_by_path(mkp_file)
     assert packaging._package_exists("aaa") is True
 
     package_info = packaging.read_package_info("aaa")
     assert package_info is not None
-    package_file_name = packaging.format_package_file_name(name="aaa",
-                                                           version=package_info["version"])
+    package_file_name = packaging.format_file_name(name="aaa", version=package_info["version"])
 
-    packaging.disable_package("aaa", package_info)
+    packaging.disable("aaa", package_info)
     assert packaging._package_exists("aaa") is False
     assert cmk.utils.paths.disabled_packages_dir.joinpath(package_file_name).exists()
     assert not cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
@@ -394,7 +393,7 @@ def _install_and_disable_package(mkp_file):
 def test_enable_disabled_package(mkp_file):
     package_file_name = _install_and_disable_package(mkp_file)
 
-    packaging.enable_package(package_file_name)
+    packaging.enable(package_file_name)
     assert packaging._package_exists("aaa") is True
     assert not cmk.utils.paths.disabled_packages_dir.joinpath(package_file_name).exists()
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()

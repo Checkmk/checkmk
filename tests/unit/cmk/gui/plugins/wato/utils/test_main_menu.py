@@ -70,6 +70,7 @@ def test_registered_modules():
             'agents',
             'alert_handlers',
             'mkps',
+            'license_usage',
             'dcd_connections',
         ]
 

@@ -44,6 +44,7 @@ def expected_items() -> Dict[str, List[str]]:
     maintenance_items = ['backup']
 
     if not cmk_version.is_raw_edition():
+        maintenance_items.append('license_usage')
         maintenance_items.append('mkps')
 
     maintenance_items += [

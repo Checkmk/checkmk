@@ -100,8 +100,8 @@ class TestOKResult:
     def test_is_err_is_false(self, result):
         assert result.is_err() is False
 
-    def test_unwrap_ok_produces_ok_value(self, result, value):
-        assert result.unwrap_ok() == value
+    def test_unwrap_produces_ok_value(self, result, value):
+        assert result.unwrap() == value
 
     def test_unwrap_err_raises_valueerror(self, result, value):
         with pytest.raises(ValueError) as excinfo:
@@ -150,9 +150,9 @@ class TestErrResult:
     def test_is_err_is_true(self, result):
         assert result.is_err() is True
 
-    def test_unwrap_ok_raises_valueerror(self, result, value):
+    def test_unwrap_raises_valueerror(self, result, value):
         with pytest.raises(ValueError) as excinfo:
-            result.unwrap_ok()
+            result.unwrap()
 
         assert str(excinfo.value) == str(value)
 

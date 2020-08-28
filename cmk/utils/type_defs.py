@@ -304,15 +304,12 @@ class Result(Generic[T_co, E_co], abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def unwrap_ok(self) -> T_co:
+    def unwrap(self) -> T_co:
         raise NotImplementedError
 
     @abc.abstractmethod
     def unwrap_err(self) -> E_co:
         raise NotImplementedError
-
-    def unwrap(self):
-        return self.unwrap_ok()
 
 
 class _OK(Result[T_co, E_co]):
@@ -348,7 +345,7 @@ class _OK(Result[T_co, E_co]):
     def is_err(self) -> bool:
         return False
 
-    def unwrap_ok(self) -> T_co:
+    def unwrap(self) -> T_co:
         return self.ok
 
     def unwrap_err(self) -> NoReturn:
@@ -388,7 +385,7 @@ class _Err(Result[T_co, E_co]):
     def is_err(self) -> bool:
         return True
 
-    def unwrap_ok(self) -> NoReturn:
+    def unwrap(self) -> NoReturn:
         raise ValueError(str(self._err))
 
     def unwrap_err(self) -> E_co:

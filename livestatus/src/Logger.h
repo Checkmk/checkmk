@@ -90,17 +90,15 @@ public:
     virtual ~Handler() { setFormatter(std::unique_ptr<Formatter>()); }
     virtual void publish(const LogRecord &record) = 0;
 
-    [[nodiscard]] Formatter *getFormatter() const { return _formatter; }
+    [[nodiscard]] std::shared_ptr<Formatter> getFormatter() const {
+        return std::atomic_load(&_formatter);
+    }
     void setFormatter(std::unique_ptr<Formatter> formatter) {
-        delete _formatter;
-        _formatter = formatter.release();
+        std::atomic_store(&_formatter, std::shared_ptr(std::move(formatter)));
     }
 
-protected:
-    Handler() : _formatter(new SimpleFormatter()) {}
-
 private:
-    std::atomic<Formatter *> _formatter;
+    std::shared_ptr<Formatter> _formatter{std::make_shared<SimpleFormatter>()};
 };
 
 class SharedStreamHandler : public Handler {

@@ -80,16 +80,6 @@ class Service(ABCDiscoveryGenerated):
     def labels(self):
         return self._labels
 
-    def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("cannot compare %s to %s" %
-                            (self.__class__.__name__, other.__class__.__name__))
-        return all((
-            self.item == other.item,
-            self.parameters == other.parameters,
-            self.labels == other.labels,
-        ))
-
     def __repr__(self):
         return "%s(item=%r, parameters=%r, labels=%r)" % (self.__class__.__name__, self.item,
                                                           self.parameters, self._labels)
@@ -244,17 +234,6 @@ class Metric(ABCCheckGenerated):
         # () -> Tuple[Optional[EvalableFloat], Optional[EvalableFloat]]
         return self._boundaries
 
-    def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("cannot compare %s to %s" %
-                            (self.__class__.__name__, other.__class__.__name__))
-        return all((
-            self.name == other.name,
-            self.value == other.value,
-            self.levels == other.levels,
-            self.boundaries == other.boundaries,
-        ))
-
     def __repr__(self):
         return "%s(%r, %r, levels=%r, boundaries=%r)" % (self.__class__.__name__, self.name,
                                                          self.value, self.levels, self.boundaries)
@@ -331,6 +310,3 @@ class IgnoreResults(ABCCheckGenerated):
 
     def __str__(self) -> str:
         return self._value if isinstance(self._value, str) else repr(self._value)
-
-    def __eq__(self, other) -> bool:
-        return self._value == other._value

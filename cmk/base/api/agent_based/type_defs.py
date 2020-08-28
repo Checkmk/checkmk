@@ -8,6 +8,7 @@
 Some of these are exposed in the API, some are not.
 """
 from collections.abc import Mapping
+from abc import ABC
 from typing import (
     Any,
     Callable,
@@ -35,15 +36,24 @@ from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPRuleDependentDetectSpec, S
 from cmk.base.discovered_labels import HostLabel
 
 
-class ABCCheckGenerated:
+class ABCComparable(ABC):
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            raise TypeError("cannot compare %s to %s" %
+                            (self.__class__.__name__, other.__class__.__name__))
+
+        return self.__dict__ == other.__dict__
+
+
+class ABCCheckGenerated(ABCComparable):
     """Abstract class for everything a check function may yield"""
 
 
-class ABCDiscoveryGenerated:
+class ABCDiscoveryGenerated(ABCComparable):
     """Abstract class for everything a discovery function may yield"""
 
 
-class ABCInventoryGenerated:
+class ABCInventoryGenerated(ABCComparable):
     """Abstract class for everything an inventory function may yield"""
 
 

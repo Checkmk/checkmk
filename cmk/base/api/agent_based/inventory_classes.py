@@ -5,14 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Classes used by the API for check plugins
 """
-import abc
 import string
 from typing import Any, Dict, List, Optional, Type
 
 from cmk.base.api.agent_based.type_defs import ABCInventoryGenerated
 
 
-class ABCPathedObject(abc.ABC, ABCInventoryGenerated):
+class ABCPathedObject(ABCInventoryGenerated):
 
     VALID_CHARACTERS = set(string.ascii_letters + string.digits + "_-")
 
@@ -99,16 +98,6 @@ class Attributes(ABCPathedObject):
     def status_attributes(self):
         return self._status_attributes
 
-    def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("cannot compare %s to %s" %
-                            (self.__class__.__name__, other.__class__.__name__))
-        return all((
-            self.path == other.path,
-            self.inventory_attributes == other.inventory_attributes,
-            self.status_attributes == other.status_attributes,
-        ))
-
     def __repr__(self):
         return f"{self.__class__.__name__}(path={self.path}, inventory_attributes={self.inventory_attributes}, status_attributes={self.status_attributes})"
 
@@ -182,16 +171,6 @@ class TableRow(ABCPathedObject, ABCInventoryGenerated):
     @property
     def status_columns(self) -> Dict[str, Any]:
         return self._status_columns
-
-    def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("cannot compare %s to %s" %
-                            (self.__class__.__name__, other.__class__.__name__))
-        return all((
-            self.path == other.path,
-            self.inventory_columns == other.inventory_columns,
-            self.status_columns == other.status_columns,
-        ))
 
     def __repr__(self):
         return f"{self.__class__.__name__}(path={self.path}, key_columns={self.key_columns}, inventory_columns={self.inventory_columns}, status_columns={self.status_columns})"

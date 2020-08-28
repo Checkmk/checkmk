@@ -94,6 +94,10 @@ def test_service_features():
     assert service.labels == []
     assert repr(service) == "Service(item=None, parameters={}, labels=[])"
 
+    assert service != Service(item="foo")
+    with pytest.raises(TypeError):
+        assert service == "a string"
+
 
 def test_state():
     assert int(state.OK) == 0
@@ -203,6 +207,7 @@ def test_result_invalid(state_, summary, notice, details):
 def test_result(state_, summary, notice, details, expected_triple):
     result = Result(state=state_, summary=summary, notice=notice, details=details)
     assert (result.state, result.summary, result.details) == expected_triple
+    assert result != Result(state=state.OK, summary="a total different summary")
 
 
 def test_ignore_results():
@@ -210,3 +215,7 @@ def test_ignore_results():
     result2 = IgnoreResults("Login to DB failed")
     assert repr(result1) == "IgnoreResults('currently no results')"
     assert str(result2) == "Login to DB failed"
+    assert result1 != result2
+    assert result2 == IgnoreResults("Login to DB failed")
+    with pytest.raises(TypeError):
+        assert result1 == "a string"

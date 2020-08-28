@@ -65,6 +65,10 @@ def is_demo() -> bool:
     return parts[-1] == "demo"
 
 
+def is_cma() -> bool:
+    return os.path.exists("/etc/cma/cma.conf")
+
+
 #   .--general infos-------------------------------------------------------.
 #   |                                      _   _        __                 |
 #   |       __ _  ___ _ __   ___ _ __ __ _| | (_)_ __  / _| ___  ___       |

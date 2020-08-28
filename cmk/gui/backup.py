@@ -24,6 +24,7 @@ import subprocess
 import time
 from typing import Any, List, Optional, Tuple, Iterator
 
+import cmk.utils.version as cmk_version
 import cmk.utils.render as render
 import cmk.utils.store as store
 from cmk.utils.schedule import next_scheduled_time
@@ -101,10 +102,6 @@ def site_config_path(site_id=None):
 
 def hostname():
     return socket.gethostname()
-
-
-def is_cma():
-    return os.path.exists("/etc/cma/cma.conf")
 
 
 def is_canonical(directory):
@@ -1274,7 +1271,7 @@ class SystemBackupTargetsReadOnly(Targets):
 
     # Only show the list on CMA devices
     def show_list(self, title=None, editable=True):
-        if is_cma():
+        if cmk_version.is_cma():
             super(SystemBackupTargetsReadOnly, self).show_list(title, editable)
 
 
@@ -1369,7 +1366,7 @@ class BackupTargetLocal(ABCBackupTargetType):
         if not is_canonical(value):
             raise MKUserError(varprefix, _("You have to provide a canonical path."))
 
-        if is_cma() and not value.startswith("/mnt/"):
+        if cmk_version.is_cma() and not value.startswith("/mnt/"):
             raise MKUserError(
                 varprefix,
                 _("You can only use mountpoints below the <tt>/mnt</tt> "
@@ -1388,7 +1385,7 @@ class BackupTargetLocal(ABCBackupTargetType):
                 pass
             os.unlink(test_file_path)
         except IOError:
-            if is_cma():
+            if cmk_version.is_cma():
                 raise MKUserError(
                     varprefix,
                     _("Failed to write to the configured directory. The target directory needs "

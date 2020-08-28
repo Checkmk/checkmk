@@ -499,22 +499,14 @@ def _verify_check_mk_version(package: PackageInfo) -> None:
     """Checks whether or not the minimum required Check_MK version is older than the
     current Check_MK version. Raises an exception if not. When the Check_MK version
     can not be parsed or is a daily build, the check is simply passing without error."""
-    min_version = package["version.min_required"]
-    version = str(cmk_version.__version__)
 
-    if cmk.utils.misc.is_daily_build_version(min_version):
-        min_branch = cmk.utils.misc.branch_of_daily_build(min_version)
-        if min_branch == "master":
-            return  # can not check exact version
-        # use the branch name (e.g. 1.2.8 as min version)
-        min_version = min_branch
+    min_version = _normalize_daily_version(package["version.min_required"])
+    if min_version == "master":
+        return  # can not check exact version
 
-    if cmk.utils.misc.is_daily_build_version(version):
-        branch = cmk.utils.misc.branch_of_daily_build(version)
-        if branch == "master":
-            return  # can not check exact version
-        # use the branch name (e.g. 1.2.8 as min version)
-        version = branch
+    version = _normalize_daily_version(str(cmk_version.__version__))
+    if version == "master":
+        return  # can not check exact version
 
     compatible = True
     try:
@@ -529,6 +521,30 @@ def _verify_check_mk_version(package: PackageInfo) -> None:
     if not compatible:
         raise PackageException("The package requires Check_MK version %s, "
                                "but you have %s installed." % (min_version, version))
+
+
+def _normalize_daily_version(version: str) -> str:
+    """Convert daily build versions to their branch name
+
+    >>> n = _normalize_daily_version
+    >>> n("2019.10.10")
+    'master'
+
+    >>> n("2019.10.10")
+    'master'
+
+    >>> n("1.2.4p1")
+    '1.2.4p1'
+
+    >>> n("1.5.0-2010.02.01")
+    '1.5.0'
+
+    >>> n("2.5.0-2010.02.01")
+    '2.5.0'
+    """
+    if cmk.utils.misc.is_daily_build_version(version):
+        return cmk.utils.misc.branch_of_daily_build(version)
+    return version
 
 
 def get_all_package_infos() -> Packages:

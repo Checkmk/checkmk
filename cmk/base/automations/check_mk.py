@@ -1530,7 +1530,8 @@ class AutomationGetAgentOutput(Automation):
 
                     # Optionally show errors of problematic data sources
                     checker = configurator.make_checker()
-                    checker.check(raw_data)
+                    host_sections = checker.check(raw_data)
+                    checker.host_sections = host_sections
                     source_state, source_output, _source_perfdata = checker.get_summary_result()
                     if source_state != 0:
                         success = False

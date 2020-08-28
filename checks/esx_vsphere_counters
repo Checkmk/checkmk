@@ -112,19 +112,6 @@ check_info['esx_vsphere_counters.diskio'] = {
 # datastore.totalWriteLatency|4c4ece34-3d60f64f-1584-0022194fe902|0#2#7|millisecond
 
 
-def parse_esx_vsphere_counters(info):
-    parsed = {}
-    # The data reported by the ESX system is split into multiple real time samples with
-    # a fixed duration of 20 seconds. A check interval of one minute reports 3 samples
-    # The esx_vsphere_counters checks need to figure out by themselves how to handle this data
-    for counter, instance, multivalues, unit in info:
-        values = multivalues.split("#")
-        parsed.setdefault(counter, {})
-        parsed[counter].setdefault(instance, [])
-        parsed[counter][instance].append((values, unit))
-    return parsed
-
-
 def esx_vsphere_get_average(values):
     if not values:
         return 0
@@ -181,7 +168,6 @@ def check_esx_vsphere_counters_datastoreio(item, params, parsed):
 
 
 check_info['esx_vsphere_counters'] = {
-    'parse_function': parse_esx_vsphere_counters,
     'inventory_function': inventory_esx_vsphere_counters_datastoreio,
     'check_function': check_esx_vsphere_counters_datastoreio,
     'service_description': 'Datastore IO %s',

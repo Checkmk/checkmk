@@ -7,18 +7,19 @@
 # yapf: disable
 # type: ignore
 
+from cmk.base.plugins.agent_based.esx_vsphere_counters import parse_esx_vsphere_counters
 
 
 checkname = 'esx_vsphere_counters'
 
 
-info = [
+parsed = parse_esx_vsphere_counters([
     ['disk.read', '', '11#12#13', 'kiloBytesPerSecond'],
     ['disk.numberRead', '', '110#140#150', 'number'],
     ['disk.write', '', '51#49#53', 'kiloBytesPerSecond'],
     ['disk.numberWrite', '', '11#102#5', 'kiloBytesPerSecond'],
-    ['disk.deviceLatency', '', '700#900#23', 'millisecond']
-]
+    ['disk.deviceLatency', '', '700#900#23', 'millisecond'],
+])
 
 
 discovery = {

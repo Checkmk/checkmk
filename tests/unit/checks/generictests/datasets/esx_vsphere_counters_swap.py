@@ -6,13 +6,16 @@
 
 # yapf: disable
 # type: ignore
+
+from cmk.base.plugins.agent_based.esx_vsphere_counters import parse_esx_vsphere_counters
+
 checkname = 'esx_vsphere_counters'
 
-info = [
+parsed = parse_esx_vsphere_counters([
     ['mem.swapin', '', '0', 'kiloBytes'],
     ['mem.swapout', '', '', 'kiloBytes'],
-    ['mem.swapused', '', '0', 'kiloBytes']
-]
+    ['mem.swapused', '', '0', 'kiloBytes'],
+])
 
 discovery = {
     'cpu': [],

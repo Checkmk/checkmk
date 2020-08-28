@@ -369,3 +369,32 @@ def test_parse_package_info_pre_160():
 def test_parse_package_info():
     info_str = repr(packaging.get_initial_package_info("pkgname"))
     assert packaging.parse_package_info(info_str)["name"] == "pkgname"
+
+
+def test_disable_package(mkp_file):
+    _install_and_disable_package(mkp_file)
+
+
+def _install_and_disable_package(mkp_file):
+    packaging.install_package_by_path(mkp_file)
+    assert packaging._package_exists("aaa") is True
+
+    package_info = packaging.read_package_info("aaa")
+    assert package_info is not None
+    package_file_name = packaging.format_package_file_name(name="aaa",
+                                                           version=package_info["version"])
+
+    packaging.disable_package("aaa", package_info)
+    assert packaging._package_exists("aaa") is False
+    assert cmk.utils.paths.disabled_packages_dir.joinpath(package_file_name).exists()
+    assert not cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
+    return package_file_name
+
+
+def test_enable_disabled_package(mkp_file):
+    package_file_name = _install_and_disable_package(mkp_file)
+
+    packaging.enable_package(package_file_name)
+    assert packaging._package_exists("aaa") is True
+    assert not cmk.utils.paths.disabled_packages_dir.joinpath(package_file_name).exists()
+    assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()

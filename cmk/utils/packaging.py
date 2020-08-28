@@ -243,6 +243,57 @@ def remove_package(package: PackageInfo) -> None:
     (package_dir() / package["name"]).unlink()
 
 
+def disable_package(package_name: PackageName, package_info: PackageInfo) -> None:
+    """Moves a package to the "disabled packages" path
+
+    It packs the installed files together, places the package in the
+    disabled packages path and then removes the files from the site
+    """
+    logger.log(VERBOSE, "[%s]: Disable outdated package", package_name)
+
+    base_dir = cmk.utils.paths.disabled_packages_dir
+    base_dir.mkdir(parents=True, exist_ok=True)
+
+    file_path = base_dir / format_package_file_name(name=package_name,
+                                                    version=package_info["version"])
+
+    logger.log(VERBOSE, "[%s] Packing to %s...", package_name, file_path)
+    with Path(file_path).open("wb") as f:
+        create_mkp_file(package_info, f)
+
+    logger.log(VERBOSE, "[%s] Removing packed files...", package_name)
+    remove_package(package_info)
+
+    logger.log(VERBOSE, "[%s] Successfully disabled", package_name)
+
+
+def enable_package(file_name: str) -> None:
+    """Installs a previously disabled package
+
+    Installs the package from the disabled packages path and then removes
+    that package file.
+
+    Unlinke `disable_package` you have to provide the package file name
+    (e.g. abc-1.2.3.mkp) of the
+    package. This is required because there may be multiple versions of the
+    same package name disabled at the same time.
+    """
+
+    base_dir = cmk.utils.paths.disabled_packages_dir
+    file_path = base_dir / file_name
+
+    if not file_path.exists():
+        raise PackageException("Package '%s' does not exist." % file_path)
+
+    logger.log(VERBOSE, "[%s] Installing package", file_name)
+    install_package_by_path(file_path)
+
+    logger.log(VERBOSE, "[%s] Removing package", file_name)
+    file_path.unlink()
+
+    logger.log(VERBOSE, "[%s] Successfully enabled", file_name)
+
+
 def create_package(pkg_info: PackageInfo) -> None:
     pacname = pkg_info["name"]
     if _package_exists(pacname):
@@ -594,7 +645,7 @@ def _packaged_files_in_dir(part: PartName) -> List[str]:
     return result
 
 
-def all_package_names() -> List[str]:
+def all_package_names() -> List[PackageName]:
     return sorted([p.name for p in package_dir().iterdir()])
 
 

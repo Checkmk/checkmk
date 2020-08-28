@@ -35,6 +35,8 @@ from cmk.utils.packaging import (
     get_initial_package_info,
     format_package_file_name,
     PACKAGE_EXTENSION,
+    enable_package,
+    disable_package,
 )
 
 logger = logging.getLogger("cmk.base.packaging")
@@ -57,6 +59,8 @@ Available commands are:
    show PACK.mkp    ...  Show information about uninstalled package file
    install PACK.mkp ...  Install or update package from file PACK.mkp
    remove NAME      ...  Uninstall package NAME
+   disable NAME     ...  Disable package NAME
+   enable NAME      ...  Enable previously disabled package NAME
 
    -v  enables verbose output
 
@@ -80,6 +84,8 @@ def do_packaging(args: List[str]) -> None:
         "pack": package_pack,
         "remove": package_remove,
         "install": package_install,
+        "disable": package_disable,
+        "enable": package_enable,
     }
     f = commands.get(command)
     if f:
@@ -274,9 +280,26 @@ def package_remove(args: List[str]) -> None:
 
 def package_install(args: List[str]) -> None:
     if len(args) != 1:
-        raise PackageException("Usage: check_mk -P install NAME")
+        raise PackageException("Usage: check_mk -P install PACK.mkp")
     path = Path(args[0])
     if not path.exists():
         raise PackageException("No such file %s." % path)
 
     install_package_by_path(path)
+
+
+def package_disable(args: List[str]) -> None:
+    if len(args) != 1:
+        raise PackageException("Usage: check_mk -P disable NAME")
+    package_name = args[0]
+    package = read_package_info(package_name)
+    if not package:
+        raise PackageException("No such package %s." % package_name)
+
+    disable_package(package_name, package)
+
+
+def package_enable(args: List[str]) -> None:
+    if len(args) != 1:
+        raise PackageException("Usage: check_mk -P enable PACK.mkp")
+    enable_package(args[0])

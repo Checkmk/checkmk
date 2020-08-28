@@ -175,6 +175,9 @@ $(PYTHON3_MODULES_INTERMEDIATE_INSTALL): $(PYTHON3_MODULES_BUILD)
 # These files break the integration tests on the CI server. Don't know exactly
 # why this happens only there, but should be a working fix.
 	$(RM) -r $(PYTHON3_MODULES_INSTALL_DIR)/share/snmpsim/data
+# AV false positive: A file in test/ is recognized as corrupt by AV proxies.
+# solution: don't package test/
+	$(RM) -r $(PYTHON3_MODULES_INSTALL_DIR)/test/
 # Fix python interpreter for kept scripts
 	$(SED) -i '1s|^#!.*/python3$$|#!/usr/bin/env python3|' $(addprefix $(PYTHON3_MODULES_INSTALL_DIR)/bin/,chardetect fakebmc jirashell pbr pyghmicons pyghmiutil pyjwt pyrsa-decrypt pyrsa-encrypt pyrsa-keygen pyrsa-priv2pub pyrsa-sign pyrsa-verify virshbmc snmpsimd.py)
 # Ensure all native modules have the correct rpath set

@@ -278,20 +278,25 @@ def enable(file_name: str) -> None:
     package. This is required because there may be multiple versions of the
     same package name disabled at the same time.
     """
-
-    base_dir = cmk.utils.paths.disabled_packages_dir
-    file_path = base_dir / file_name
-
+    file_path = cmk.utils.paths.disabled_packages_dir / file_name
     if not file_path.exists():
         raise PackageException("Package '%s' does not exist." % file_path)
 
     logger.log(VERBOSE, "[%s] Installing package", file_name)
     install_by_path(file_path)
 
-    logger.log(VERBOSE, "[%s] Removing package", file_name)
-    file_path.unlink()
+    remove_disabled(file_name)
 
     logger.log(VERBOSE, "[%s] Successfully enabled", file_name)
+
+
+def remove_disabled(file_name: str) -> None:
+    logger.log(VERBOSE, "[%s] Removing package", file_name)
+    (cmk.utils.paths.disabled_packages_dir / file_name).unlink()
+
+
+def is_disabled(file_name: str) -> bool:
+    return (cmk.utils.paths.disabled_packages_dir / file_name).exists()
 
 
 def create(pkg_info: PackageInfo) -> None:
@@ -556,6 +561,7 @@ def get_all_package_infos() -> Packages:
         "unpackaged": unpackaged_files(),
         "parts": package_part_info(),
         "optional_packages": get_optional_package_infos(),
+        "disabled_packages": get_disabled_package_infos(),
     }
 
 

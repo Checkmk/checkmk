@@ -392,6 +392,14 @@ def test_disable_package(mkp_file):
     _install_and_disable_package(mkp_file)
 
 
+def test_is_disabled(mkp_file):
+    package_file_name = _install_and_disable_package(mkp_file)
+    assert packaging.is_disabled(package_file_name)
+
+    packaging.enable(package_file_name)
+    assert not packaging.is_disabled(package_file_name)
+
+
 def _install_and_disable_package(mkp_file):
     packaging.install_by_path(mkp_file)
     assert packaging._package_exists("aaa") is True
@@ -414,3 +422,11 @@ def test_enable_disabled_package(mkp_file):
     assert packaging._package_exists("aaa") is True
     assert not cmk.utils.paths.disabled_packages_dir.joinpath(package_file_name).exists()
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
+
+
+def test_remove_disabled_package(mkp_file):
+    package_file_name = _install_and_disable_package(mkp_file)
+
+    packaging.remove_disabled(package_file_name)
+    assert packaging._package_exists("aaa") is False
+    assert not cmk.utils.paths.disabled_packages_dir.joinpath(package_file_name).exists()

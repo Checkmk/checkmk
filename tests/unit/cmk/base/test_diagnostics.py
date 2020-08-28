@@ -168,6 +168,7 @@ def test_diagnostics_element_local_files_content(tmp_path, _collectors):
         "unpackaged",
         "parts",
         "optional_packages",
+        "disabled_packages",
     ]
     content = json.loads(filepath.open().read())
 

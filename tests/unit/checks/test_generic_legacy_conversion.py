@@ -1700,7 +1700,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'emc_isilon_temp.cpu',
         'emc_vplex_cpu',
         'emc_vplex_director_stats',
-        'emc_vplex_if',
         'emc_vplex_volumes',
         'emcvnx_agent',
         'emcvnx_disks',

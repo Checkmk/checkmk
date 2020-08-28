@@ -136,7 +136,10 @@ class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
         """Return the data from the source."""
         # TODO(ml): Handle `selected_raw_sections` in SNMP.
         # TODO(ml): EAFP would significantly simplify the code.
-        raw_data = self._fetch_from_cache()
+
+        # TODO (ml): fix cache reading, disabled by sk.
+        #
+        raw_data = None  # self._fetch_from_cache()
         if raw_data:
             self._logger.log(VERBOSE, "Use cached data")
             return raw_data

@@ -20,9 +20,72 @@ import cmk.utils.log
 from . import FetcherType
 
 #
-# At the moment Protocol and API are opened to critic.
-# Base structure and API are fixed
+# Protocols
 #
+
+
+class FetcherHeader:
+    """Header is fixed size(16+8+8 = 32 bytes) bytes in format
+
+      header: <NAME>:<STATUS>:<SIZE>:
+      NAME   - fetcher name, for example TCP
+      STATUS - error code. ) or 50 or ...
+      SIZE   - 8 bytes string 0..9
+
+    Example:
+        "TCP        :0       :12345678:"
+
+    used to transmit results of the fetcher to checker
+    """
+    fmt = "{:<15}:{:<7}:{:<7}:"
+    length = 32
+
+    def __init__(
+        self,
+        name: str,
+        *,
+        status: int,
+        payload_length: int,
+    ) -> None:
+        self.name = name
+        self.status = status
+        self.payload_length = payload_length
+
+    def __repr__(self) -> str:
+        return "%s(%r, %r, %r)" % (
+            type(self).__name__,
+            self.name,
+            self.status,
+            self.payload_length,
+        )
+
+    def __str__(self) -> str:
+        return FetcherHeader.fmt.format(self.name[:15], self.status, self.payload_length)
+
+    def __eq__(self, other: Any) -> bool:
+        return str(self) == str(other)
+
+    def __hash__(self) -> int:
+        return hash(str(self))
+
+    def __len__(self) -> int:
+        return FetcherHeader.length
+
+    @classmethod
+    def from_network(cls, data: str) -> 'FetcherHeader':
+        try:
+            # to simplify parsing we are using ':' as a splitter
+            name, status, payload_length = data[:FetcherHeader.length].split(":")[:3]
+            return cls(
+                name,
+                status=int(status, base=10),
+                payload_length=int(payload_length, base=10),
+            )
+        except ValueError as exc:
+            raise ValueError(data) from exc
+
+    def clone(self) -> 'FetcherHeader':
+        return FetcherHeader(self.name, status=self.status, payload_length=self.payload_length)
 
 
 class Header:

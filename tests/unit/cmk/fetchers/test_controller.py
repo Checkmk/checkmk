@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest  # type: ignore[import]
 
 from cmk.fetchers.controller import (
+    FetcherHeader,
     Header,
     make_failure_answer,
     make_success_answer,
@@ -119,3 +120,51 @@ class TestHeader:
         assert Header.State.SUCCESS == "SUCCESS"
         assert Header.State.WAITING == "WAITING"
         assert Header.default_protocol_name() == "fetch"
+
+
+class TestFetcherHeader:
+    def test_from_network(self):
+        f_header = FetcherHeader("TCP", status=1, payload_length=42)
+        assert FetcherHeader.from_network(str(f_header) + 42 * "*") == f_header
+
+    def test_clone(self):
+        f_header = FetcherHeader("TCP", status=1, payload_length=42)
+        other = f_header.clone()
+        assert other is not f_header
+        assert other == f_header
+
+    def test_eq(self):
+        f_header = FetcherHeader("TCP", status=1, payload_length=42)
+        assert f_header == str(f_header)
+        assert str(f_header) == f_header
+
+    def test_neq(self):
+        f_header = FetcherHeader("TCP", status=1, payload_length=42)
+
+        other_name = f_header.clone()
+        other_name.name = "toto"
+        assert f_header != other_name
+
+        other_status = f_header.clone()
+        other_status.status = 99
+        assert f_header != other_status
+
+        other_len = f_header.clone()
+        other_len.payload_length = 69
+        assert f_header != other_len
+
+    def test_repr(self):
+        f_header = FetcherHeader("name", status=0, payload_length=42)
+        assert isinstance(repr(f_header), str)
+
+    def test_hash(self):
+        f_header = FetcherHeader("name", status=0, payload_length=42)
+        assert hash(f_header) == hash(str(f_header))
+
+    def test_len(self):
+        f_header = FetcherHeader("name", status=0, payload_length=42)
+        assert len(f_header) == len(str(f_header))
+
+    def test_critical_constants(self):
+        """ ATTENTION: Changing of those constants may require changing of C++ code"""
+        assert FetcherHeader.length == 32

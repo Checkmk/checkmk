@@ -575,6 +575,23 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
         check_table_created = int(time.time())
         result = check_mk_automation(request.host.site_id(), "try-inventory",
                                      ["@noscan", request.host.name()])
+
+        if not job_status['is_active'] and job_status['state'] == JobStatusStates.EXCEPTION:
+            # There might be an exception when calling above 'check_mk_automation'. For example
+            # this may happen if a hostname is not resolvable. Then if the error is fixed, ie.
+            # configuring an IP address of this host, and the discovery is started again, we put
+            # the cached/last job exception into the current job progress update instead of displaying
+            # the error in a CRIT message box again.
+            job_status['state'] = JobStatusStates.FINISHED
+            job_status['loginfo'] = {
+                'JobProgressUpdate': ['%s:' % _('Last progress update')] +
+                                     job_status['loginfo']['JobProgressUpdate'] +
+                                     ["%s:" % _('Last exception')] +
+                                     job_status['loginfo']['JobException'],
+                'JobException': [],
+                'JobResult': job_status['loginfo']['JobResult'],
+            }
+
         return DiscoveryResult(
             job_status=job_status,
             check_table_created=check_table_created,

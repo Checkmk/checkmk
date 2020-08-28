@@ -145,7 +145,7 @@ def show_package(name: PackageName, show_info: bool = False) -> None:
 
             package = this_package
             if show_info:
-                sys.stdout.write("Package file:                  %s%s\n" % (package_dir(), name))
+                sys.stdout.write("Package file:                  %s\n" % (package_dir() / name))
     except PackageException:
         raise
     except Exception as e:

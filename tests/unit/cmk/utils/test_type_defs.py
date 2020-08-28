@@ -106,8 +106,13 @@ class TestOKResult:
     def test_unwrap_err_raises_valueerror(self, result, value):
         with pytest.raises(ValueError) as excinfo:
             result.unwrap_err()
-
         assert str(excinfo.value) == str(value)
+
+    def test_unwrap_or_produces_ok_value(self, result, value):
+        assert result.unwrap_or(42) == value
+
+    def test_unwrap_or_else_produces_ok_value(self, result, value):
+        assert result.unwrap_or_else(lambda e: 42) == value
 
 
 class TestErrResult:
@@ -153,8 +158,13 @@ class TestErrResult:
     def test_unwrap_raises_valueerror(self, result, value):
         with pytest.raises(ValueError) as excinfo:
             result.unwrap()
-
         assert str(excinfo.value) == str(value)
 
     def test_unwrap_err_produces_err_value(self, result, value):
         assert result.unwrap_err() == value
+
+    def test_unwrap_or_produces_default_value(self, result):
+        assert result.unwrap_or(42) == 42
+
+    def test_unwrap_or_else_calls_default(self, result, value):
+        assert result.unwrap_or_else(len) == len(value)

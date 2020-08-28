@@ -11,6 +11,7 @@ import string
 import sys
 from typing import (
     Any,
+    Callable,
     Dict,
     Final,
     Generic,
@@ -311,6 +312,15 @@ class Result(Generic[T_co, E_co], abc.ABC):
     def unwrap_err(self) -> E_co:
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def unwrap_or(self, default: T_co) -> T_co:  # type: ignore[misc]
+        # mypy: See comments to Err().
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def unwrap_or_else(self, op: Callable[[E_co], T_co]) -> T_co:
+        raise NotImplementedError
+
 
 class _OK(Result[T_co, E_co]):
     __slots__ = ["_ok"]
@@ -351,6 +361,13 @@ class _OK(Result[T_co, E_co]):
     def unwrap_err(self) -> NoReturn:
         raise ValueError(str(self.ok))
 
+    def unwrap_or(self, default: T_co) -> T_co:  # type: ignore[misc]
+        # mypy: See comments to Err().
+        return self.ok
+
+    def unwrap_or_else(self, op: Callable[[E_co], T_co]) -> T_co:
+        return self.ok
+
 
 class _Err(Result[T_co, E_co]):
     __slots__ = ["_err"]
@@ -390,6 +407,13 @@ class _Err(Result[T_co, E_co]):
 
     def unwrap_err(self) -> E_co:
         return self.err
+
+    def unwrap_or(self, default: T_co) -> T_co:  # type: ignore[misc]
+        # mypy: See comments to Err().
+        return default
+
+    def unwrap_or_else(self, op: Callable[[E_co], T_co]) -> T_co:
+        return op(self.err)
 
 
 class OIDSpec:

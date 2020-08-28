@@ -43,6 +43,33 @@ def clean_dirs():
         shutil.rmtree(part.path)
 
 
+@pytest.fixture(name="mkp_bytes")
+def fixture_mkp_bytes():
+    # Create package information
+    _create_simple_test_package("aaa")
+    package_info = _read_package_info("aaa")
+
+    # Build MKP in memory
+    mkp = BytesIO()
+    packaging.create_mkp_file(package_info, mkp)
+    mkp.seek(0)
+
+    # Remove files from local hierarchy
+    packaging.remove_package(package_info)
+    assert packaging._package_exists("aaa") is False
+
+    return mkp
+
+
+@pytest.fixture(name="mkp_file")
+def fixture_mkp_file(tmp_path, mkp_bytes):
+    mkp_path = tmp_path.joinpath("aaa.mkp")
+    with mkp_path.open("wb") as mkp:
+        mkp.write(mkp_bytes.getvalue())
+
+    return mkp_path
+
+
 def test_package_parts():
     assert sorted(packaging.get_package_parts()) == sorted([
         packaging.PackagePart("agent_based", _("Agent based plugins (Checks, Inventory)"),
@@ -196,24 +223,9 @@ def test_edit_package_rename_conflict():
         packaging.edit_package("aaa", new_package_info)
 
 
-def test_install_package():
-    # Create
-    _create_simple_test_package("aaa")
-    package_info = _read_package_info("aaa")
+def test_install_package(mkp_bytes):
+    packaging.install_package(mkp_bytes)
 
-    # Build MKP in memory
-    mkp = BytesIO()
-    packaging.create_mkp_file(package_info, mkp)
-    mkp.seek(0)
-
-    # Remove files from local hierarchy
-    packaging.remove_package(package_info)
-    assert packaging._package_exists("aaa") is False
-
-    # And now install the package from memory
-    packaging.install_package(mkp)
-
-    # Check result
     assert packaging._package_exists("aaa") is True
     package_info = _read_package_info("aaa")
     assert package_info["version"] == "1.0"
@@ -221,24 +233,9 @@ def test_install_package():
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
 
-def test_install_package_by_path(tmp_path):
-    # Create
-    _create_simple_test_package("aaa")
-    package_info = _read_package_info("aaa")
+def test_install_package_by_path(mkp_file):
+    packaging.install_package_by_path(mkp_file)
 
-    # Write MKP file
-    mkp_path = tmp_path.joinpath("aaa.mkp")
-    with mkp_path.open("wb") as mkp:
-        packaging.create_mkp_file(package_info, mkp)
-
-    # Remove files from local hierarchy
-    packaging.remove_package(package_info)
-    assert packaging._package_exists("aaa") is False
-
-    # And now install the package from memory
-    packaging.install_package_by_path(mkp_path)
-
-    # Check result
     assert packaging._package_exists("aaa") is True
     package_info = _read_package_info("aaa")
     assert package_info["version"] == "1.0"

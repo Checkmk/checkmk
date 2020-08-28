@@ -26,6 +26,7 @@ import cmk.utils.tty as tty
 import cmk.utils.werks
 import cmk.utils.debug
 import cmk.utils.misc
+from cmk.utils.werks import parse_check_mk_version
 from cmk.utils.exceptions import MKException
 
 # It's OK to import centralized config load logic
@@ -510,8 +511,7 @@ def _verify_check_mk_version(package: PackageInfo) -> None:
 
     compatible = True
     try:
-        compatible = cmk.utils.werks.parse_check_mk_version(min_version) \
-                        <= cmk.utils.werks.parse_check_mk_version(version)
+        compatible = parse_check_mk_version(min_version) <= parse_check_mk_version(version)
     except Exception:
         # Be compatible: When a version can not be parsed, then skip this check
         if cmk.utils.debug.enabled():
@@ -574,6 +574,22 @@ def _get_optional_package_paths() -> List[Path]:
     if not cmk.utils.paths.optional_packages_dir.exists():
         return []
     return list(cmk.utils.paths.optional_packages_dir.iterdir())
+
+
+def get_disabled_package_infos() -> Dict[str, PackageInfo]:
+    optional = {}
+    for pkg_path in _get_disabled_package_paths():
+        with pkg_path.open("rb") as pkg:
+            package_info = _get_package_info_from_package(cast(BinaryIO, pkg))
+            optional[ensure_str(pkg_path.name)] = package_info
+
+    return optional
+
+
+def _get_disabled_package_paths() -> List[Path]:
+    if not cmk.utils.paths.disabled_packages_dir.exists():
+        return []
+    return list(cmk.utils.paths.disabled_packages_dir.iterdir())
 
 
 def unpackaged_files() -> Dict[PackageName, List[str]]:
@@ -703,3 +719,100 @@ def rule_pack_id_to_mkp() -> Dict[str, Any]:
     exported_rule_packs = package_info['parts']['ec_rule_packs']['files']
 
     return {os.path.splitext(file_)[0]: mkp_of(file_) for file_ in exported_rule_packs}
+
+
+def disable_outdated_packages() -> None:
+    """Check installed packages and disables the outdated ones
+
+    Packages that contain a valid version number in the "version.usable_until" field can be disabled
+    using this function. Others are not disabled.
+    """
+    for package_name in all_package_names():
+        logger.log(VERBOSE, "[%s]: Is it outdated?", package_name)
+        package_info = read_package_info(package_name)
+        if package_info is None:
+            logger.log(VERBOSE, "[%s]: Failed to read package info, skipping", package_name)
+            continue
+
+        if not _is_package_outdated(package_name, package_info, cmk_version.__version__):
+            logger.log(VERBOSE, "[%s]: Not disabling", package_name)
+            continue
+
+        logger.log(VERBOSE, "[%s]: Disable outdated package", package_name)
+        disable_package(package_name, package_info)
+
+
+def _is_package_outdated(package_name: PackageName, package_info: PackageInfo,
+                         version: str) -> bool:
+    """Whether or not the given package is considered outated for the given Checkmk version
+
+    >>> i = _is_package_outdated
+
+    >>> i('a', {'version.usable_until': None}, '1.7.0i1')
+    False
+
+    >>> i('a', {'version.usable_until': '1.6.0'}, '1.7.0i1')
+    True
+
+    >>> i('a', {'version.usable_until': '1.7.0'}, '1.7.0i1')
+    False
+
+    >>> i('a', {'version.usable_until': '1.7.0i1'}, '1.7.0i1')
+    True
+
+    >>> i('a', {'version.usable_until': '1.7.0i1'}, '1.7.0i2')
+    True
+
+    >>> i('a', {'version.usable_until': '1.7.0'}, '1.7.0')
+    True
+
+    >>> i('a', {'version.usable_until': '2010.02.01'}, '1.7.0')
+    False
+
+    >>> i('a', {'version.usable_until': '1.7.0'}, '2010.02.01')
+    False
+
+    >>> i('a', {'version.usable_until': '1.6.0'}, '1.6.0-2010.02.01')
+    True
+
+    >>> i('a', {'version.usable_until': '1.6.0-2010.02.01'}, '1.6.0')
+    True
+
+    >>> i('a', {'version.usable_until': ''}, '1.6.0')
+    False
+
+    >>> i('a', {'version.usable_until': '1.6.0'}, '')
+    False
+    """
+    until_version = package_info["version.usable_until"]
+
+    if until_version is None:
+        logger.log(VERBOSE, "[%s]: \"Until version\" is not set", package_name)
+        return False
+
+    # Normalize daily versions to branch version
+    version = _normalize_daily_version(version)
+    if version == "master":
+        logger.log(VERBOSE, "[%s]: This is a daily build of master branch, can not decide",
+                   package_name)
+        return False
+
+    until_version = _normalize_daily_version(until_version)
+    if until_version == "master":
+        logger.log(VERBOSE, "[%s]: Until daily build of master branch, can not decide",
+                   package_name)
+        return False
+
+    try:
+        is_outdated = parse_check_mk_version(version) >= parse_check_mk_version(until_version)
+    except Exception:
+        logger.log(VERBOSE,
+                   "[%s]: Could not compare until version %r with current version %r",
+                   package_name,
+                   until_version,
+                   version,
+                   exc_info=True)
+        return False
+
+    logger.log(VERBOSE, "[%s]: %s > %s = %s", package_name, version, until_version, is_outdated)
+    return is_outdated

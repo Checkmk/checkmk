@@ -35,6 +35,8 @@ from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.paths
 import cmk.utils
 from cmk.utils.type_defs import CheckPluginName, UserId
+from cmk.utils.packaging import disable_outdated_packages
+
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.visuals as visuals
 from cmk.gui.plugins.views.utils import get_all_views
@@ -116,6 +118,7 @@ class UpdateConfig:
             (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
             (self._update_fs_used_name, "Migrating fs_used name"),
             (self._migrate_pagetype_topics_to_ids, "Migrate pagetype topics"),
+            (self._disable_outdated_mkps, "Disable outdated MKPs"),
         ]
 
     # FS_USED UPDATE DELETE THIS FOR CMK 1.8, THIS ONLY migrates 1.6->1.7
@@ -360,6 +363,16 @@ class UpdateConfig:
 
         spec["topic"] = name
         return True, True
+
+    def _disable_outdated_mkps(self) -> None:
+        """Disable MKP packages that are declared to be outdated with the new version
+
+        Since 1.6 there is the option version.usable_until available in MKP packages.
+        Iterate over all installed packages, check that field and once it is set, compare
+        the version with the new Checkmk version. In case it is outdated, move the
+        package to the disabled packages.
+        """
+        disable_outdated_packages()
 
 
 def _id_from_title(title):

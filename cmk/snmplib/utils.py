@@ -5,13 +5,43 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-from typing import List, Tuple
+import re
+from typing import Callable, List, Optional, Tuple
 
 from six import iterbytes
 
-from .type_defs import OID, OIDFunction, SNMPScanFunction
+from cmk.utils.regex import regex
+from .type_defs import OID, OIDFunction, SNMPDetectAtom, SNMPDetectSpec, SNMPScanFunction
 
 SNMPRowInfoForStoredWalk = List[Tuple[OID, str]]
+
+
+def evaluate_snmp_detection(
+    *,
+    detect_spec: SNMPDetectSpec,
+    oid_value_getter: Callable[[str], Optional[str]],
+) -> bool:
+    """Evaluate a SNMP detection specification
+
+    Return True if and and only if at least all conditions in one "line" are True
+    """
+    return any(
+        all(_evaluate_snmp_detection_atom(atom, oid_value_getter)
+            for atom in alternative)
+        for alternative in detect_spec)
+
+
+def _evaluate_snmp_detection_atom(
+    atom: SNMPDetectAtom,
+    oid_value_getter: Callable[[str], Optional[str]],
+) -> bool:
+    oid, pattern, flag = atom
+    value = oid_value_getter(oid)
+    if value is None:
+        # check for "not_exists"
+        return pattern == ".*" and not flag
+    # ignore case!
+    return bool(regex(pattern, re.IGNORECASE | re.DOTALL).fullmatch(value)) is flag
 
 
 def binstring_to_int(binstring: bytes) -> int:

@@ -5,51 +5,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-import re
-from typing import Callable, Iterable, NamedTuple, Optional, Set
+from typing import Iterable, NamedTuple, Set
 
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError
 from cmk.utils.log import console
-from cmk.utils.regex import regex
 from cmk.utils.type_defs import SectionName
 
 import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_modes as snmp_modes
-from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPDetectAtom, SNMPDetectSpec
+from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPDetectSpec
+from cmk.snmplib.utils import evaluate_snmp_detection
 
 SNMPScanSection = NamedTuple("SNMPScanSection", [
     ("name", SectionName),
     ("specs", SNMPDetectSpec),
 ])
-
-
-def evaluate_snmp_detection(
-    *,
-    detect_spec: SNMPDetectSpec,
-    oid_value_getter: Callable[[str], Optional[str]],
-) -> bool:
-    """Evaluate a SNMP detection specification
-
-    Return True if and and only if at least all conditions in one "line" are True
-    """
-    return any(
-        all(_evaluate_snmp_detection_atom(atom, oid_value_getter)
-            for atom in alternative)
-        for alternative in detect_spec)
-
-
-def _evaluate_snmp_detection_atom(
-    atom: SNMPDetectAtom,
-    oid_value_getter: Callable[[str], Optional[str]],
-) -> bool:
-    oid, pattern, flag = atom
-    value = oid_value_getter(oid)
-    if value is None:
-        # check for "not_exists"
-        return pattern == ".*" and not flag
-    # ignore case!
-    return bool(regex(pattern, re.IGNORECASE | re.DOTALL).fullmatch(value)) is flag
 
 
 # gather auto_discovered check_plugin_names for this host

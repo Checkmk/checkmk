@@ -20,6 +20,7 @@ import cmk.snmplib.snmp_modes as snmp_modes
 import cmk.snmplib.snmp_scan as snmp_scan
 from cmk.snmplib.snmp_scan import SNMPScanSection
 from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPHostConfig
+from cmk.snmplib.utils import evaluate_snmp_detection
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function import (
@@ -139,7 +140,7 @@ def test_evaluate_snmp_detection(config_snmp_scan_functions, name, oids_data, ex
     assert bool(scan_function(oid_function)) is expected_result
 
     converted_detect_spec = create_detect_spec(name, scan_function, [])
-    actual_result = snmp_scan.evaluate_snmp_detection(
+    actual_result = evaluate_snmp_detection(
         detect_spec=converted_detect_spec,
         oid_value_getter=oids_data.get,
     )

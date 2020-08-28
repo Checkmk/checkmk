@@ -642,6 +642,7 @@ def _check_ungrouped_ifs(
     params: type_defs.Parameters,
     section: Section,
     timestamp: float,
+    input_is_rate: bool,
 ) -> type_defs.CheckGenerator:
     """
     Check one or more ungrouped interfaces. In a non-cluster setup, only one interface will match
@@ -663,6 +664,7 @@ def _check_ungrouped_ifs(
                         params,
                         interface,
                         timestamp=timestamp,
+                        input_is_rate=input_is_rate,
                     ))
             except IgnoreResultsError as excpt:
                 ignore_res_error = excpt
@@ -691,6 +693,7 @@ def _check_grouped_ifs(
     section: Section,
     group_name: str,
     timestamp: float,
+    input_is_rate: bool,
 ) -> type_defs.CheckGenerator:
     """
     Grouped interfaces are combined into a single interface, which is then passed to
@@ -754,34 +757,37 @@ def _check_grouped_ifs(
             member_info['admin_status_name'] = statename(interface.admin_status)
         groups_node.append(member_info)
 
-        # Only these values are packed into counters
-        # We might need to enlarge this table
-        # However, more values leads to more MKCounterWrapped...
-        for name, counter in [
-            ("in", interface.in_octets),
-            ("inucast", interface.in_ucast),
-            ("inmcast", interface.in_mcast),
-            ("inbcast", interface.in_bcast),
-            ("indisc", interface.in_discards),
-            ("inerr", interface.in_errors),
-            ("out", interface.out_octets),
-            ("outucast", interface.out_ucast),
-            ("outmcast", interface.out_mcast),
-            ("outbcast", interface.out_bcast),
-            ("outdisc", interface.out_discards),
-            ("outerr", interface.out_errors),
-        ]:
-            try:
-                get_rate(
-                    value_store,
-                    _get_value_store_key(name, str(interface.node), str(idx)),
-                    timestamp,
-                    saveint(counter),
-                    raise_overflow=True,
-                )
-            except IgnoreResultsError:
-                yield IgnoreResults(value='Initializing counters')
-                # continue, other counters might wrap as well
+        if not input_is_rate:
+            # Only these values are packed into counters
+            # We might need to enlarge this table
+            # However, more values leads to more MKCounterWrapped...
+            for name, counter in [
+                ("in", interface.in_octets),
+                ("inucast", interface.in_ucast),
+                ("inmcast", interface.in_mcast),
+                ("inbcast", interface.in_bcast),
+                ("indisc", interface.in_discards),
+                ("inerr", interface.in_errors),
+                ("out", interface.out_octets),
+                ("outucast", interface.out_ucast),
+                ("outmcast", interface.out_mcast),
+                ("outbcast", interface.out_bcast),
+                ("outdisc", interface.out_discards),
+                ("outerr", interface.out_errors),
+            ]:
+                try:
+                    # We make sure that every group member has valid rates before adding up the
+                    # counters
+                    get_rate(
+                        value_store,
+                        _get_value_store_key(name, str(interface.node), str(idx)),
+                        timestamp,
+                        saveint(counter),
+                        raise_overflow=True,
+                    )
+                except IgnoreResultsError:
+                    yield IgnoreResults(value='Initializing counters')
+                    # continue, other counters might wrap as well
 
         # Add interface info to group info
         if is_up:
@@ -829,6 +835,7 @@ def _check_grouped_ifs(
         group_members=group_members,
         group_name=group_name,
         timestamp=timestamp,
+        input_is_rate=input_is_rate,
         # the discovered speed corresponds to only one of the nodes, so it cannot be used for
         # interface groups on clusters; same for state
         use_discovered_state_and_speed=section[0].node is None,
@@ -841,6 +848,7 @@ def check_multiple_interfaces(
     section: Section,
     group_name: str = "Interface group",
     timestamp: Optional[float] = None,
+    input_is_rate: bool = False,
 ) -> type_defs.CheckGenerator:
 
     if timestamp is None:
@@ -853,6 +861,7 @@ def check_multiple_interfaces(
             section,
             group_name,
             timestamp,
+            input_is_rate,
         )
     else:
         yield from _check_ungrouped_ifs(
@@ -860,6 +869,7 @@ def check_multiple_interfaces(
             params,
             section,
             timestamp,
+            input_is_rate,
         )
 
 

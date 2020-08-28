@@ -879,6 +879,18 @@ def test_check_single_interface_group(value_store, item, params, result):
 
 
 @pytest.mark.parametrize('item, params, result', ITEM_PARAMS_RESULTS)
+def test_check_single_interface_input_is_rate(value_store, item, params, result):
+    # check that this does not raise an IgnoreResultsError, since no rates are computed
+    list(
+        interfaces.check_single_interface(
+            item,
+            params,
+            _create_interfaces(0)[int(item) - 1],
+            input_is_rate=True,
+        ))
+
+
+@pytest.mark.parametrize('item, params, result', ITEM_PARAMS_RESULTS)
 def test_check_single_interface_group_admin_status(value_store, item, params, result):
     group_members: interfaces.GroupMembers = {
         None: [

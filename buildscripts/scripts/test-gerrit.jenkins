@@ -6,6 +6,9 @@ properties([
 def NODE = ''
 withFolderProperties{
     NODE = env.BUILD_NODE
+    // There is no way to determine the Docker Tag by branch or build in Gerrit jobs
+    // Therefor the Folder Tag is selected directly
+    TEST_CONTAINER = DOCKER_REGISTRY + '/ubuntu-20.04:' + env.DOCKER_TAG_FOLDER
 }
 
 def PYTHON_VERSIONS = [ "2.6", "2.7", "3.3", "3.4", "3.5", "3.6", "3.7", "3.8" ]
@@ -16,13 +19,18 @@ node (NODE) {
 
     try {
         stage("Auschecken: Checkmk") {
-             print("Git Status before checkout")
-             sh("git status || exit 0")
-             print("Git log before checkout")
-             sh("git log --oneline -n10 || exit 0")
-             checkout(scm)
-             sh "rm -rf ${RESULTS}; mkdir ${RESULTS}"
-             gerrit_stages = load 'buildscripts/scripts/lib/gerrit_stages.groovy'
+            print("Git Status before checkout")
+            sh("git status || exit 0")
+            print("Git log before checkout")
+            sh("git log --oneline -n10 || exit 0")
+            checkout(scm)
+            sh "rm -rf ${RESULTS}; mkdir ${RESULTS}"
+            gerrit_stages = load 'buildscripts/scripts/lib/gerrit_stages.groovy'
+
+            str_mod = load 'buildscripts/scripts/lib/str_mod.groovy'
+            withFolderProperties{
+                TEST_CONTAINER = str_mod.strip_protocol_from_url(DOCKER_REGISTRY) + '/ubuntu-20.04:' + env.DOCKER_TAG_FOLDER
+            }
          }
 
         // Creates a \n separated list of changed files
@@ -139,54 +147,54 @@ node (NODE) {
          gerrit_stages.run(
             NAME: 'Cppcheck Livestatus',
             CONDITION: CHANGED_CORE_FILES != "",
-            DIR: 'livestatus/src',
-            ENV_VARS: ["CPPCHECK_NEB_RESULT=${RESULTS}/cppcheck-neb.xml"],
-            COMMAND: "${WORKSPACE}/scripts/run-cxx-linter cppcheck-xml ${GERRIT_PATCHSET_REVISION}",
+            DIR: 'tests',
+            ENV_VARS: ["RESULTS=${RESULTS}", "TEST_CONTAINER=${TEST_CONTAINER}"],
+            COMMAND: "make test-cppcheck-livestatus-docker",
             TEXT_ON_SKIP: 'No core files changed. Skipping.'
          )
 
          gerrit_stages.run(
             NAME: 'Cppcheck core',
             CONDITION: CHANGED_CORE_FILES != "",
-            DIR: 'enterprise/core/src',
-            ENV_VARS: ["CPPCHECK_CMC_RESULT=${RESULTS}/cppcheck-cmc.xml"],
-            COMMAND: "${WORKSPACE}/scripts/run-cxx-linter cppcheck-xml ${GERRIT_PATCHSET_REVISION}",
+            DIR: 'tests',
+            ENV_VARS: ["RESULTS=${RESULTS}", "TEST_CONTAINER=${TEST_CONTAINER}"],
+            COMMAND: "make test-cppcheck-core-docker",
             TEXT_ON_SKIP: 'No core files changed. Skipping.'
          )
 
          gerrit_stages.run(
             NAME: 'Clang Tidy Livestatus',
             CONDITION: CHANGED_CORE_FILES != "",
-            DIR: 'livestatus/src',
-            ENV_VARS: [],
-            COMMAND: "${WORKSPACE}/scripts/run-cxx-linter tidy ${GERRIT_PATCHSET_REVISION} &> ${RESULTS}/livestatus-tidy.txt",
+            DIR: 'tests',
+            ENV_VARS: ["GERRIT_PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}", "RESULTS=${RESULTS}", "TEST_CONTAINER=${TEST_CONTAINER}"],
+            COMMAND: "make test-tidy-livestatus-docker",
             TEXT_ON_SKIP: 'No core files changed. Skipping.'
          )
 
          gerrit_stages.run(
             NAME: 'Clang Tidy core',
             CONDITION: CHANGED_CORE_FILES != "",
-            DIR: 'enterprise/core/src',
-            ENV_VARS: [],
-            COMMAND: "${WORKSPACE}/scripts/run-cxx-linter tidy ${GERRIT_PATCHSET_REVISION} &> ${RESULTS}/core-tidy.txt",
+            DIR: 'tests',
+            ENV_VARS: ["GERRIT_PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}", "RESULTS=${RESULTS}", "TEST_CONTAINER=${TEST_CONTAINER}"],
+            COMMAND: "make test-tidy-core-docker",
             TEXT_ON_SKIP: 'No core files changed. Skipping.'
          )
 
          gerrit_stages.run(
             NAME: 'IWYU Livestatus',
             CONDITION: CHANGED_CORE_FILES != "",
-            DIR: 'livestatus/src',
-            ENV_VARS: [],
-            COMMAND: "${WORKSPACE}/scripts/run-cxx-linter iwyu ${GERRIT_PATCHSET_REVISION} &> ${RESULTS}/livestatus-iwyu.txt",
+            DIR: 'tests',
+            ENV_VARS: ["GERRIT_PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}", "RESULTS=${RESULTS}", "TEST_CONTAINER=${TEST_CONTAINER}"],
+            COMMAND: "make test-iwyu-livestatus-docker",
             TEXT_ON_SKIP: 'No core files changed. Skipping.'
          )
 
          gerrit_stages.run(
             NAME: 'IWYU core',
             CONDITION: CHANGED_CORE_FILES != "",
-            DIR: 'enterprise/core/src',
-            ENV_VARS: [],
-            COMMAND: "${WORKSPACE}/scripts/run-cxx-linter iwyu ${GERRIT_PATCHSET_REVISION} &> ${RESULTS}/core-iwyu.txt",
+            DIR: 'tests',
+            ENV_VARS: ["GERRIT_PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}", "RESULTS=${RESULTS}", "TEST_CONTAINER=${TEST_CONTAINER}"],
+            COMMAND: "make test-iwyu-core-docker",
             TEXT_ON_SKIP: 'No core files changed. Skipping.'
          )
 
@@ -194,7 +202,7 @@ node (NODE) {
             NAME: 'Unit Test Livestatus',
             CONDITION: CHANGED_CORE_FILES != "",
             DIR: 'livestatus/src/test',
-            ENV_VARS: [],
+            ENV_VARS: ["RESULTS=${RESULTS}", "TEST_CONTAINER=${TEST_CONTAINER}"],
             COMMAND: "./.f12 &> ${RESULTS}/livestatus-neb-cmc.txt",
             TEXT_ON_SKIP: 'No core files changed. Skipping.'
          )
@@ -203,7 +211,7 @@ node (NODE) {
             NAME: 'Unit Test core',
             CONDITION: CHANGED_CORE_FILES != "",
             DIR: 'enterprise/core/src/test',
-            ENV_VARS: [],
+            ENV_VARS: ["RESULTS=${RESULTS}", "TEST_CONTAINER=${TEST_CONTAINER}"],
             COMMAND: "./.f12 &> ${RESULTS}/core-neb-cmc.txt",
             TEXT_ON_SKIP: 'No core files changed. Skipping.'
          )

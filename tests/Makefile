@@ -26,13 +26,26 @@ SHELL_FILES := \
 
 PYTHON_VERSIONS := 2.6 2.7 3.3 3.4 3.5 3.6 3.7 3.8
 
+ # Optionally forward the job result to a result file when executed via CI
+REDIRECT =
+ifdef RESULTS
+REDIRECT = &>
+CPPCHECK = cppcheck-xml
+else
+REDIRECT = \#
+CPPCHECK = cppcheck
+endif
+
 .PHONY: clean format-shell help prepare-node-modules \
 	$(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-composition test-composition-docker test-composition-docker-debug \
 	test-docker test-format-python test-format-shell test-gui-crawl test-gui-crawl-docker \
 	test-integration test-integration-docker test-integration-docker-debug test-mypy \
 	test-mypy-raw test-packaging test-pipenv-deps test-pylint test-shellcheck test-unit \
-	test-unit-coverage-html test-unit-sh
+	test-unit-coverage-html test-unit-sh test-cppcheck-livestatus test-cppcheck-core \
+	test-tidy-livestatus test-tidy-core test-iwyu-livestatus test-iwyu-core \
+	test-unit-livestatus test-unit-core %-livestatus-docker %-core-docker
+
 clean:
 	$(RM) -r .mypy_cache $(AGENT_PLUGIN_UNIT_TEST_FILES_PY26)
 
@@ -62,6 +75,16 @@ help:
 	@echo "test-unit                           - Run unit tests"
 	@echo "test-unit-coverage-html             - Create HTML coverage report for unit tests"
 	@echo "test-unit-sh		           - Run shell unit tests"
+	@echo "test-cppcheck-livestatus            - Run cppcheck for livestatus"
+	@echo "test-cppcheck-core                  - Run cppcheck for the core"
+	@echo "test-tidy-livestatus                - Run clang tidy for livestatus"
+	@echo "test-tidy-core                      - Run clang tidy for livestatus"
+	@echo "test-iwyu-livestatus                - Run the iwyu tool for livestatus"
+	@echo "test-iwyu-core                      - Run the iwyu tool for the core"
+	@echo "test-unit-livestatus                - Run unit tests for livestatus"
+	@echo "test-unit-core                      - Run unit tests for core"
+	@echo "*-livestatus-docker                 - Run any of the livestatus tests in docker"
+	@echo "*-core-docker                       - Run any of the core tests in docker"
 
 bandit.ini:
 	( echo -n -e "[bandit]\ntargets: "; \
@@ -207,3 +230,33 @@ test-unit-coverage-html:
 
 test-unit-sh:
 	./sh_test_runner.sh
+
+%-livestatus-docker:
+	../scripts/run-in-docker.sh make RESULTS=$(RESULTS) GERRIT_PATCHSET_REVISION=$(GERRIT_PATCHSET_REVISION) $*-livestatus
+
+%-core-docker:
+	../scripts/run-in-docker.sh make RESULTS=$(RESULTS) GERRIT_PATCHSET_REVISION=$(GERRIT_PATCHSET_REVISION) $*-core
+
+test-cppcheck-livestatus:
+	cd ../livestatus/src && make CPPCHECK_NEB_RESULT=$(RESULTS)/cppcheck-neb.xml $(CPPCHECK)
+
+test-cppcheck-core:
+	cd ../enterprise/core/src && make CPPCHECK_CMC_RESULT=$(RESULTS)/cppcheck-cmc.xml $(CPPCHECK)
+
+test-tidy-livestatus:
+	cd ../livestatus/src && ../../scripts/run-cxx-linter tidy $(GERRIT_PATCHSET_REVISION) $(REDIRECT) $(RESULTS)/livestatus-tidy.txt
+
+test-tidy-core:
+	cd ../enterprise/core/src && ../../../scripts/run-cxx-linter tidy $(GERRIT_PATCHSET_REVISION) $(REDIRECT) $(RESULTS)/core-tidy.txt
+
+test-iwyu-livestatus:
+	cd ../livestatus/src && ../../scripts/run-cxx-linter iwyu $(GERRIT_PATCHSET_REVISION) $(REDIRECT) $(RESULTS)/livestatus-iwyu.txt
+
+test-iwyu-core:
+	cd ../enterprise/core/src && ../../../scripts/run-cxx-linter iwyu $(GERRIT_PATCHSET_REVISION) $(REDIRECT) $(RESULTS)/core-iwyu.txt
+
+test-unit-livestatus:
+	cd ../livestatus/src && ./.f12 $(REDIRECT) $(RESULTS)/livestatus-neb-cmc.txt
+
+test-unit-core:
+	cd ../enterprise/core/src && ./.f12 $(REDIRECT) $(RESULTS)/core-neb-cmc.txt

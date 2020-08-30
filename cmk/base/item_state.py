@@ -28,6 +28,7 @@ import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKException, MKGeneralException
 from cmk.utils.type_defs import HostName
+from cmk.utils.log import logger
 
 # Constants for counters
 SKIP = None
@@ -50,6 +51,7 @@ class MKCounterWrapped(MKException):
 
 class CachedItemStates:
     def __init__(self) -> None:
+        self._logger = logger
         super(CachedItemStates, self).__init__()
         self.reset()
 
@@ -67,6 +69,7 @@ class CachedItemStates:
         self._removed_item_state_keys = removed_item_state_keys
 
     def load(self, hostname: HostName) -> None:
+        self._logger.debug("Loading item states")
         filename = cmk.utils.paths.counters_dir + "/" + hostname
         try:
             # TODO: refactoring. put these two values into a named tuple
@@ -89,6 +92,7 @@ class CachedItemStates:
         Afterwards only the actual modifications (update/remove) are applied to the updated cached
         data before it is written back to disk.
         """
+        self._logger.debug("Saving item states")
         filename = cmk.utils.paths.counters_dir + "/" + hostname
         if not self._removed_item_state_keys and not self._updated_item_states:
             return

@@ -58,6 +58,8 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
+from cmk.fetchers.type_defs import FetcherResult
+
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
 import cmk.base.check_api_utils as check_api_utils
@@ -670,6 +672,7 @@ def _get_post_discovery_services(
 def check_discovery(
     hostname: HostName,
     ipaddress: Optional[HostAddress],
+    fetcher_results: Optional[List[FetcherResult]] = None,
 ) -> Tuple[int, List[str], List[str], List[Tuple]]:
 
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:
@@ -718,6 +721,7 @@ def check_discovery(
         max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
         selected_raw_sections=None,
         host_config=host_config,
+        fetcher_results=fetcher_results,
     )
 
     services, discovered_host_labels = _get_host_services(

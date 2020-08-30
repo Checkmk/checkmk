@@ -18,6 +18,8 @@ import cmk.utils.tty as tty
 from cmk.utils.log import console
 from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
+from cmk.fetchers.type_defs import FetcherResult
+
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_table as check_table
 import cmk.base.config as config
@@ -224,6 +226,7 @@ def update_host_sections(
     max_cachefile_age: int,
     selected_raw_sections: Optional[SelectedRawSections],
     host_config: HostConfig,
+    fetcher_results: Optional[List[FetcherResult]] = None,
 ) -> Sequence[Tuple[ABCConfigurator, ABCHostSections]]:
     """Gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
 
@@ -232,24 +235,46 @@ def update_host_sections(
     use source.get_summary_result() to get the state, output and perfdata of the agent excecution
     or source.exception to get the exception object.
     """
-    console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
+    if fetcher_results is None:
+        console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
+    else:
+        console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Parse fetcher results".upper())
+
     # Special agents can produce data for the same check_plugin_name on the same host, in this case
     # the section lines need to be extended
     result: List[Tuple[ABCConfigurator, ABCHostSections]] = []
     for hostname, ipaddress, sources in nodes:
-        for source in sources:
+        for source_index, source in enumerate(sources):
             if host_config.nodes is None:
                 source.configurator.selected_raw_sections = selected_raw_sections
             else:
                 source.configurator.selected_raw_sections = _make_piggybacked_sections(host_config)
+
             source.configurator.file_cache.max_age = max_cachefile_age
+
             host_sections = multi_host_sections.setdefault(
                 HostKey(hostname, ipaddress, source.configurator.source_type),
                 source.configurator.default_host_sections,
             )
-            source.configurator.selected_raw_sections = selected_raw_sections
-            with source.configurator.make_fetcher() as fetcher:
-                raw_data = fetcher.fetch()
+
+            if fetcher_results is None:
+                # We don't have raw_data yet (from the previously executed fetcher), execute the
+                # fetcher here.
+                with source.configurator.make_fetcher() as fetcher:
+                    raw_data = fetcher.fetch()
+            else:
+                # The Microcore has handed over results from the previously executed fetcher.
+                # Extract the raw_data for the source we currently
+                fetcher_result = fetcher_results[source_index]
+                # TODO (ml): Can we somehow verify that this is correct?
+                #if fetcher_result["fetcher_type"] != source.id:
+                #    raise LookupError("Checker and fetcher missmatch")
+
+                # TODO: Handle fetcher_result["status"]
+                assert fetcher_result["status"] == 0
+
+                raw_data = fetcher_result["payload"]
+
             host_section = source.check(raw_data)
             result.append((source.configurator, host_section))
             host_sections.update(host_section)

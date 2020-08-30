@@ -18,6 +18,7 @@ from cmk.utils.type_defs import HostName
 import cmk.utils.log
 
 from . import FetcherType
+from .type_defs import FetcherResult
 
 #
 # Protocols
@@ -210,7 +211,7 @@ def load_global_config(serial: int) -> None:
         cmk.utils.log.logger.setLevel(result["log_level"])
 
 
-def _run_fetcher(entry: Dict[str, Any], timeout: int) -> Dict[str, Any]:
+def _run_fetcher(entry: Dict[str, Any], timeout: int) -> FetcherResult:
     """ timeout to be used by concrete fetcher implementation
     Examples of correct dictionaries to return:
     {  "fetcher_type": "snmp", "status": 0,   "payload": ""whatever}

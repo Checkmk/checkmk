@@ -52,6 +52,8 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
+from cmk.fetchers.type_defs import FetcherResult
+
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.check_table as check_table
@@ -115,10 +117,11 @@ CHECK_NOT_IMPLEMENTED: ServiceCheckResult = (3, 'Check plugin not implemented', 
 def do_check(
     hostname: HostName,
     ipaddress: Optional[HostAddress],
-    only_check_plugin_names: Optional[Set[CheckPluginName]] = None
+    only_check_plugin_names: Optional[Set[CheckPluginName]] = None,
+    fetcher_results: Optional[List[FetcherResult]] = None
 ) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[str]]:
     cpu_tracking.start("busy")
-    console.verbose("Check_MK version %s\n", cmk_version.__version__)
+    console.verbose("Checkmk version %s\n", cmk_version.__version__)
 
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
@@ -172,6 +175,7 @@ def do_check(
             mode=data_sources.Mode.CHECKING,
         )
         mhs = MultiHostSections()
+
         result = data_sources.update_host_sections(
             mhs,
             data_sources.make_nodes(
@@ -184,7 +188,9 @@ def do_check(
             selected_raw_sections=selected_raw_sections,
             max_cachefile_age=host_config.max_cachefile_age,
             host_config=host_config,
+            fetcher_results=fetcher_results,
         )
+
         num_success, plugins_missing_data = _do_all_checks_on_host(
             config_cache,
             host_config,

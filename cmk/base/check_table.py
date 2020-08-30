@@ -32,7 +32,6 @@ class HostCheckTable:
 
     def get(
         self,
-        remove_duplicates: bool,
         use_cache: bool,
         skip_autochecks: bool,
         filter_mode: Optional[str],
@@ -56,14 +55,9 @@ class HostCheckTable:
         table_cache_id = hostname, filter_mode
 
         if not skip_autochecks and use_cache and table_cache_id in check_table_cache:
-            # TODO: The whole is_dual_host handling needs to be cleaned up. The duplicate checking
-            #       needs to be done in all cases since a host can now have a lot of different data
-            #       sources.
-            if remove_duplicates and self._host_config.is_dual_host:
-                return remove_duplicate_checks(check_table_cache[table_cache_id])
             return check_table_cache[table_cache_id]
 
-        check_table: CheckTable = {}
+        check_table = {}
 
         # Now process all entries that are specific to the host
         # in search (single host) or that might match the host.
@@ -90,9 +84,6 @@ class HostCheckTable:
 
         if not skip_autochecks and use_cache:
             check_table_cache[table_cache_id] = check_table
-
-        if remove_duplicates:
-            return remove_duplicate_checks(check_table)
 
         return check_table
 
@@ -206,8 +197,9 @@ def get_check_table(
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
 
-    table = HostCheckTable(config_cache, host_config)
-    return table.get(remove_duplicates, use_cache, skip_autochecks, filter_mode, skip_ignored)
+    table = HostCheckTable(config_cache, host_config).get(use_cache, skip_autochecks, filter_mode,
+                                                          skip_ignored)
+    return remove_duplicate_checks(table) if remove_duplicates else table
 
 
 def remove_duplicate_checks(check_table: CheckTable,) -> CheckTable:

@@ -174,7 +174,7 @@ class BackupTask:
                 ("started_time", r"^INFO: Backup started at (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})"),
                 ("finish_vm", r"^INFO: Finished Backup of VM (\d+) \((\d{2}:\d{2}:\d{2})\).*"),
                 ("error_vm", r"^ERROR: Backup of VM (\d+) failed - (.*)$"),
-                ("create_archive", r"^INFO: creating archive '(.*)'"),
+                ("create_archive", r"^INFO: creating(?: vzdump)? archive '(.*)'"),
                 ("bytes_written", r"^INFO: Total bytes written: (\d+) \(.*, (.*)\/s\)"),
                 ("transferred", r"^INFO: transferred (\d+) MB in (\d+) seconds \(.*\)"),
                 ("archive_size", r"^INFO: archive file size: (.*)"),

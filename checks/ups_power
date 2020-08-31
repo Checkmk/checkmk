@@ -7,27 +7,23 @@
 ups_power_default_levels = (20, 1)  # warning / critical
 
 
-def inventory_ups_power(info):
-    if len(info) > 0:
-        return [(x[0], "ups_power_default_levels") for x in info if int(x[1]) > 0]
-
-
 def check_ups_power(item, params, info):
     warn, crit = params
-    for line in info:
-        if line[0] == item:
-            power = saveint(line[1])
+    for idx, _raw_voltage, raw_power in info:
+        if idx == item:
+            power = saveint(raw_power)
             # Some "RPS SpA" systems are not RFC conform in this value.
             # The values can get negative but should never be.
             if power < 0:
                 power *= -1
+
             perfdata = [("power", power, warn, crit, 0)]
             infotext = "power: %dW (warn/crit at %dW/%dW)" % \
                 (power, warn, crit)
 
             if power <= crit:
                 return (2, infotext, perfdata)
-            elif power <= warn:
+            if power <= warn:
                 return (1, infotext, perfdata)
             return (0, infotext, perfdata)
 
@@ -35,12 +31,12 @@ def check_ups_power(item, params, info):
 
 
 check_info['ups_power'] = {
-    "inventory_function": inventory_ups_power,
+    "inventory_function": lambda i: discovery_ups_generic(i, "ups_power_default_levels"),
     "check_function": check_ups_power,
     "service_description": "Power phase %s",
     "has_perfdata": True,
     "group": "epower",
-    "snmp_info": (".1.3.6.1.2.1.33.1.4.4.1", [0, 4]),
+    "snmp_info": (".1.3.6.1.2.1.33.1.4.4.1", [0, 2, 4]),
     "snmp_scan_function": ups_generic_scan_function,
     "includes": ["ups_generic.include"],
 }

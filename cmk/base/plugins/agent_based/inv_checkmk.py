@@ -46,7 +46,11 @@ def merge_sections(section_livestatus_status: Dict[str, Any], section_omd_status
     for site, status in section_livestatus_status.items():
         if status is None:
             continue
-        helper_usage_cmk = float(status['helper_usage_cmk']) * 100
+
+        # Quick workaround for enabled checker/fetcher mode. Will soon be replaced once the
+        # livestatus status table has been updated.
+        helper_usage_cmk = float(status['helper_usage_cmk'] or "0") * 100
+
         helper_usage_generic = float(status['helper_usage_generic']) * 100
         livestatus_usage = float(status['livestatus_usage']) * 100
 

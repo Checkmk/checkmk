@@ -1935,6 +1935,11 @@ class LabelCondition(Transform):
         for operator, label in valuespec_value:
             if label:
                 label_id, label_value = list(label.items())[0]
+                if label_id in label_conditions:
+                    raise MKUserError(
+                        None,
+                        _("A label key can be used only once per object. "
+                          "The Label key \"%s\" is used twice.") % label_id)
                 label_conditions[label_id] = self._single_label_from_valuespec(
                     operator, label_value)
         return label_conditions

@@ -8,7 +8,6 @@
 
 #include "config.h"  // IWYU pragma: keep
 
-#include <atomic>
 #include <condition_variable>
 #include <mutex>
 #include <optional>
@@ -47,7 +46,7 @@ private:
     std::optional<size_type> limit_;
     mutable std::mutex mutex_;
     std::condition_variable cv_;
-    std::atomic_bool joinable_ = false;
+    bool joinable_{false};
 };
 
 template <typename S>
@@ -149,6 +148,7 @@ void Queue<S>::join() {
 
 template <typename S>
 bool Queue<S>::joinable() const {
+    std::lock_guard<std::mutex> lock(mutex_);
     return joinable_;
 }
 

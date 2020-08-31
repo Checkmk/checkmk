@@ -42,6 +42,11 @@ class ProgramFetcher(AgentFetcher):
         )
 
     def __enter__(self) -> 'ProgramFetcher':
+        self._logger.debug("Calling: %s", self._cmdline)
+        if self._stdin:
+            self._logger.debug("STDIN (first 30 bytes): %s... (total %d bytes)", self._stdin[:30],
+                               len(self._stdin))
+
         if self._is_cmc:
             # Warning:
             # The preexec_fn parameter is not safe to use in the presence of threads in your

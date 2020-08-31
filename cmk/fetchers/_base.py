@@ -138,10 +138,10 @@ class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
         # TODO(ml): EAFP would significantly simplify the code.
         raw_data = self._fetch_from_cache()
         if raw_data:
-            self._logger.log(VERBOSE, "Use cached data")
+            self._logger.log(VERBOSE, "[%s] Use cached data", self.__class__.__name__)
             return raw_data
 
-        self._logger.log(VERBOSE, "Execute data source")
+        self._logger.log(VERBOSE, "[%s] Execute data source", self.__class__.__name__)
         raw_data = self._fetch_from_io()
         self.file_cache.write(raw_data)
         return raw_data

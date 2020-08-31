@@ -10,7 +10,7 @@
 
 #node_visualization {
   position: absolute;
-  top: 70px;
+  top: 100px;
   right: 10px;
   bottom: 10px;
   left: 10px;
@@ -71,6 +71,11 @@ div.node_vis {
     height: 29px;
     padding: 5px;
     padding-left: 3px;
+
+    img {
+      width: 28px;
+      height: 28px;
+    }
 
     &.down {
       background-color: $node-vis-toggle-down-bg-color; // light grey

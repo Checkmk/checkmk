@@ -198,7 +198,11 @@ class AggregationOutputRenderer:
             output.extend(aggregation_result.output)
 
         if not output:
-            sys.stderr.write("Agent error(s): %s" % "\n".join(connection_info["generic_errors"]))
+            if connection_info["generic_errors"]:
+                sys.stderr.write("Agent error(s): %s\n" %
+                                 "\n".join(connection_info["generic_errors"]))
+            else:
+                sys.stderr.write("Got no information. Did you configure a BI aggregation?\n")
             sys.exit(1)
 
         sys.stdout.write("<<<bi_aggregation_connection:sep(0)>>>\n")

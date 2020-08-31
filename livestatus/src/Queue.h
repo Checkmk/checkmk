@@ -45,7 +45,8 @@ private:
     Storage q_;
     std::optional<size_type> limit_;
     mutable std::mutex mutex_;
-    std::condition_variable cv_;
+    std::condition_variable not_full_;
+    std::condition_variable not_empty_;
     bool joinable_{false};
 };
 
@@ -77,7 +78,7 @@ bool Queue<S>::try_push(const_reference elem) {
         }
         q_.push_back(elem);
     }
-    cv_.notify_one();
+    not_empty_.notify_one();
     return true;
 }
 
@@ -90,7 +91,7 @@ bool Queue<S>::try_push(value_type&& elem) {
         }
         q_.push_back(std::move(elem));
     }
-    cv_.notify_one();
+    not_empty_.notify_one();
     return true;
 }
 
@@ -98,13 +99,13 @@ template <typename S>
 bool Queue<S>::push(const_reference elem) {
     {
         std::unique_lock<std::mutex> lock(mutex_);
-        cv_.wait(lock, [&] { return limit_ != q_.size() || joinable_; });
+        not_full_.wait(lock, [&] { return limit_ != q_.size() || joinable_; });
         if (joinable_) {
             return false;
         }
         q_.push_back(elem);
     }
-    cv_.notify_one();
+    not_empty_.notify_one();
     return true;
 }
 
@@ -112,13 +113,13 @@ template <typename S>
 bool Queue<S>::push(value_type&& elem) {
     {
         std::unique_lock<std::mutex> lock(mutex_);
-        cv_.wait(lock, [&] { return limit_ != q_.size() || joinable_; });
+        not_full_.wait(lock, [&] { return limit_ != q_.size() || joinable_; });
         if (joinable_) {
             return false;
         }
         q_.push_back(std::move(elem));
     }
-    cv_.notify_one();
+    not_empty_.notify_one();
     return true;
 }
 
@@ -130,18 +131,20 @@ std::optional<typename Queue<S>::value_type> Queue<S>::try_pop() {
     }
     value_type elem = q_.front();
     q_.pop_front();
+    not_full_.notify_one();
     return elem;
 };
 
 template <typename S>
 std::optional<typename Queue<S>::value_type> Queue<S>::pop() {
     std::unique_lock<std::mutex> lock(mutex_);
-    cv_.wait(lock, [&] { return !q_.empty() || joinable_; });
+    not_empty_.wait(lock, [&] { return !q_.empty() || joinable_; });
     if (joinable_) {
         return std::nullopt;
     }
     value_type elem = q_.front();
     q_.pop_front();
+    not_full_.notify_one();
     return elem;
 };
 
@@ -151,7 +154,8 @@ void Queue<S>::join() {
         std::lock_guard<std::mutex> lock(mutex_);
         joinable_ = true;
     }
-    cv_.notify_all();
+    not_full_.notify_all();
+    not_empty_.notify_all();
 }
 
 template <typename S>

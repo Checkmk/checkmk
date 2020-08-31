@@ -213,9 +213,15 @@ void *main_thread(void *data) {
         if (cc > g_max_fd_ever) {
             g_max_fd_ever = cc;
         }
-        if (!fl_client_queue->try_push(cc)) {
-            generic_error ge("cannot enqueue client socket");
-            Warning(logger) << ge;
+        switch (fl_client_queue->try_push(cc)) {
+            case queue_status::overflow:
+            case queue_status::abort: {
+                generic_error ge("cannot enqueue client socket");
+                Warning(logger) << ge;
+                break;
+            }
+            case queue_status::ok:
+                break;
         }
         g_num_queued_connections++;
         counterIncrement(Counter::connections);

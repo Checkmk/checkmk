@@ -12,26 +12,13 @@ from typing import Any, Dict, List, Optional, Tuple, Type
 from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo, PiggybackTimeSettings
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
 
-from .agent import AgentFetcher, AgentFileCache
-
-
-class PiggybackFileCache(AgentFileCache):
-    """Piggy back does not cache raw data.
-
-    This class is a stub.
-
-    """
-    def read(self) -> None:
-        return None
-
-    def write(self, raw_data: AgentRawData) -> None:
-        pass
+from .agent import AgentFileCache, AgentFetcher, NoCache
 
 
 class PiggybackFetcher(AgentFetcher):
     def __init__(
         self,
-        file_cache: PiggybackFileCache,
+        file_cache: AgentFileCache,
         hostname: HostName,
         address: Optional[HostAddress],
         time_settings: List[Tuple[Optional[str], str, int]],
@@ -45,7 +32,7 @@ class PiggybackFetcher(AgentFetcher):
     @classmethod
     def from_json(cls, serialized: Dict[str, Any]) -> "PiggybackFetcher":
         return cls(
-            PiggybackFileCache.from_json(serialized.pop("file_cache")),
+            NoCache.from_json(serialized.pop("file_cache")),
             **serialized,
         )
 

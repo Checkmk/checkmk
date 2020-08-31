@@ -19,7 +19,7 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import AgentRawData, HostAddress
 
 from . import MKFetcherError
-from .agent import AgentFetcher, AgentFileCache
+from .agent import AgentFetcher, AgentFileCache, DefaultAgentFileCache
 
 
 class IPMIFetcher(AgentFetcher):
@@ -39,7 +39,7 @@ class IPMIFetcher(AgentFetcher):
     @classmethod
     def from_json(cls, serialized: Dict[str, Any]) -> "IPMIFetcher":
         return cls(
-            AgentFileCache.from_json(serialized.pop("file_cache")),
+            DefaultAgentFileCache.from_json(serialized.pop("file_cache")),
             **serialized,
         )
 

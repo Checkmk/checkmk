@@ -16,7 +16,7 @@ import cmk.utils.debug
 from cmk.utils.type_defs import AgentRawData, HostAddress
 
 from . import MKFetcherError
-from .agent import AgentFetcher, AgentFileCache
+from .agent import AgentFetcher, AgentFileCache, DefaultAgentFileCache
 
 
 class TCPFetcher(AgentFetcher):
@@ -42,7 +42,7 @@ class TCPFetcher(AgentFetcher):
     def from_json(cls, serialized: Dict[str, Any]) -> "TCPFetcher":
         address = serialized.pop("address")
         return cls(
-            AgentFileCache.from_json(serialized.pop("file_cache")),
+            DefaultAgentFileCache.from_json(serialized.pop("file_cache")),
             address=address,
             **serialized,
         )

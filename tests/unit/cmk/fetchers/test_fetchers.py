@@ -17,6 +17,7 @@ from cmk.utils.type_defs import SectionName
 from cmk.snmplib.type_defs import SNMPHostConfig, SNMPRawData, SNMPTable, SNMPTree
 
 from cmk.fetchers import AgentFileCache, FetcherType, MKFetcherError
+from cmk.fetchers.agent import DefaultAgentFileCache
 from cmk.fetchers.ipmi import IpmiException, IPMIFetcher
 from cmk.fetchers.piggyback import PiggybackFetcher
 from cmk.fetchers.program import ProgramFetcher
@@ -41,7 +42,7 @@ def fc_conf_fixture():
 
 @pytest.fixture(name="fc_agent")
 def fc_agent_fixture(fc_conf):
-    return AgentFileCache.from_json(fc_conf.configure())
+    return DefaultAgentFileCache.from_json(fc_conf.configure())
 
 
 @pytest.fixture(name="fc_snmp")

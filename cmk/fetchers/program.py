@@ -17,7 +17,7 @@ from cmk.utils.exceptions import MKTimeout
 from cmk.utils.type_defs import AgentRawData
 
 from . import MKFetcherError
-from .agent import AgentFetcher, AgentFileCache
+from .agent import AgentFetcher, AgentFileCache, DefaultAgentFileCache
 
 
 class ProgramFetcher(AgentFetcher):
@@ -37,7 +37,7 @@ class ProgramFetcher(AgentFetcher):
     @classmethod
     def from_json(cls, serialized: Dict[str, Any]) -> "ProgramFetcher":
         return cls(
-            AgentFileCache.from_json(serialized.pop("file_cache")),
+            DefaultAgentFileCache.from_json(serialized.pop("file_cache")),
             **serialized,
         )
 

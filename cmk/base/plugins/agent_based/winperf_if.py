@@ -4,6 +4,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
+from typing import (
+    Dict,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
+from .agent_based_api.v0 import (
+    register,
+    Result,
+    state,
+    type_defs,
+)
+from .utils import interfaces
+
 # Example output from agent
 # <<<winperf_if>>>
 # 1366721523.71 510
@@ -56,25 +75,34 @@
 # WINDOWS,RAS Async Adapter,FALSE
 # WINDOWS,Intel(R) PRO/1000 MT-Desktopadapter #2,TRUE
 
-#   .--helper--------------------------------------------------------------.
-#   |                    _          _                                      |
-#   |                   | |__   ___| |_ __   ___ _ __                      |
-#   |                   | '_ \ / _ \ | '_ \ / _ \ '__|                     |
-#   |                   | | | |  __/ | |_) |  __/ |                        |
-#   |                   |_| |_|\___|_| .__/ \___|_|                        |
-#   |                                |_|                                   |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-factory_settings['if_default_levels'] = IF_CHECK_DEFAULT_PARAMETERS
+Line = Sequence[str]
+Lines = Iterator[Line]
+NICNames = Sequence[str]
+ParsedSubSectionLine = Mapping[str, str]
+RawSubSection = List[ParsedSubSectionLine]
+SubSection = Dict[str, ParsedSubSectionLine]
+AgentTimestamp = Optional[float]
+AgentSection = Dict[str, Line]
+Section = Tuple[AgentTimestamp, interfaces.Section, SubSection]
 
 
-def winperf_if_canonize_nic_name(name):
+@dataclasses.dataclass
+class NICAttr:
+    index: int
+    counters: Dict[str, Union[str, int]]
+
+
+NICAttrs = Dict[str, NICAttr]
+
+
+def winperf_if_canonize_nic_name(name: str) -> str:
     return name.replace("_", " ").replace("  ", " ").rstrip()
 
 
-def winperf_if_normalize_nic_name(name, nic_names):
+def winperf_if_normalize_nic_name(
+    name: str,
+    nic_names: NICNames,
+) -> str:
     # Intel[R] PRO 1000 MT-Desktopadapter__3   (perf counter)
     # Intel(R) PRO/1000 MT-Desktopadapter 3    (wmic name)
     # Intel(R) PRO/1000 MT-Desktopadapter #3   (wmic InterfaceDescription)
@@ -89,18 +117,11 @@ def winperf_if_normalize_nic_name(name, nic_names):
     return mod_nic_name
 
 
-def _parse_winperf_if_generic_sub_section(lines, terminating_key, headers):
-    section = []
-    for line in lines:
-        if line[0] == terminating_key:
-            break
-
-        line = [x.strip() for x in line]
-        section.append(dict(zip(headers, line)))
-    return section
-
-
-def _parse_winperf_if_sub_section(lines, terminating_key, headers):
+def _parse_winperf_if_sub_section(
+    lines: Lines,
+    terminating_key: str,
+    headers: Line,
+) -> RawSubSection:
     section = []
     for line in lines:
         if line[0] == terminating_key:
@@ -113,7 +134,10 @@ def _parse_winperf_if_sub_section(lines, terminating_key, headers):
     return section
 
 
-def _parse_winperf_if_dhcp_section_line(line, headers):
+def _parse_winperf_if_dhcp_section_line(
+    line: Line,
+    headers: Line,
+) -> ParsedSubSectionLine:
     # wmic is bugged on some windows versions such that we can't use proper csv output, only
     # visual tables. Those aren't properly split up by the check_mk parser.
     # Try to fix that mess
@@ -123,18 +147,25 @@ def _parse_winperf_if_dhcp_section_line(line, headers):
 
     # assumption 2: only the leftmost field contains spaces
     lm_field = " ".join(line[:(num_fields - 1) * -1])
-    line = [lm_field] + line[(len(line) - num_fields + 1):]
+    line = [lm_field] + list(line[(len(line) - num_fields + 1):])
     return dict(zip(headers, [x.rstrip() for x in line]))
 
 
-def _parse_winperf_if_teaming_section_line(line, headers):
+def _parse_winperf_if_teaming_section_line(
+    line: Line,
+    headers: Line,
+) -> ParsedSubSectionLine:
     return dict(zip(headers, [x.rstrip() for x in line]))
 
 
-def _parse_winperf_if_agent_section_timestamp_and_instance_names(line, lines):
+def _parse_winperf_if_agent_section_timestamp_and_instance_names(
+    line: Line,
+    lines: Lines,
+) -> Tuple[AgentTimestamp, NICNames]:
     # The lines containing timestamp and nic names are consecutive:
     # [u'1418225545.73', u'510']
     # [u'8', u'instances:', 'NAME', ...]
+    agent_timestamp = None
     try:
         # There may be other lines with same length but different
         # format. Thus we have to check if the current one is the
@@ -144,27 +175,29 @@ def _parse_winperf_if_agent_section_timestamp_and_instance_names(line, lines):
         agent_timestamp = float(line[0])
         int(line[1])
     except ValueError:
-        agent_timestamp = None
+        pass
 
     try:
         line = next(lines)
     except StopIteration:
-        instances = []
+        instances: NICNames = []
     else:
         instances = line[2:]
     return agent_timestamp, instances
 
 
-def _parse_winperf_if_section(info):
+def _parse_winperf_if_section(
+    string_table: type_defs.AgentStringTable
+) -> Tuple[AgentTimestamp, NICNames, AgentSection, RawSubSection, RawSubSection, RawSubSection]:
     agent_timestamp = None
-    raw_nic_names = []
-    agent_section = {}
-    plugin_section = []
+    raw_nic_names: NICNames = []
+    agent_section: AgentSection = {}
+    plugin_section: RawSubSection = []
     dhcp_section = []
     teaming_section = []
 
     plugin_section_header = None
-    lines = iter(info)
+    lines = iter(string_table)
     for line in lines:
         if line[0] == "[dhcp_start]":
             dhcp_section_headers = next(lines)
@@ -178,8 +211,7 @@ def _parse_winperf_if_section(info):
                 _parse_winperf_if_sub_section(lines, '[teaming_end]', teaming_section_headers))
             continue
 
-        if set([u'Node', u'MACAddress', u'Name', u'NetConnectionID',
-                u'NetConnectionStatus']).issubset(line):
+        if {'Node', 'MACAddress', 'Name', 'NetConnectionID', 'NetConnectionStatus'}.issubset(line):
             plugin_section_header = line
             continue
 
@@ -201,23 +233,30 @@ def _parse_winperf_if_section(info):
     return agent_timestamp, raw_nic_names, agent_section, plugin_section, dhcp_section, teaming_section
 
 
-def _prepare_winperf_if_dhcp_section(nic_names, dhcp_section):
-    dhcp_info = {}
+def _prepare_winperf_if_dhcp_section(
+    nic_names: NICNames,
+    dhcp_section: RawSubSection,
+) -> SubSection:
+    dhcp_info: SubSection = {}
     for row in dhcp_section:
         nic_name = winperf_if_normalize_nic_name(row["Description"], nic_names)
         dhcp_info.setdefault(nic_name, row)
     return dhcp_info
 
 
-def _prepare_winperf_if_teaming_section(teaming_section):
+def _prepare_winperf_if_teaming_section(teaming_section: RawSubSection) -> SubSection:
     return {
         guid: {k: v.strip() for k, v in dict_entry.items()} for dict_entry in teaming_section
         for guid in dict_entry.get('GUID', '').split(';')
     }
 
 
-def _prepare_winperf_if_plugin_section(nic_names, plugin_section, teaming_info):
-    plugin_info = {}
+def _prepare_winperf_if_plugin_section(
+    nic_names: NICNames,
+    plugin_section: RawSubSection,
+    teaming_info: SubSection,
+) -> SubSection:
+    plugin_info: SubSection = {}
     for row in plugin_section:
         # we need to ignore data on interfaces in the optional
         # wmic section which are marked as non-existing, since
@@ -262,90 +301,92 @@ def _prepare_winperf_if_plugin_section(nic_names, plugin_section, teaming_info):
     return plugin_info
 
 
-def _get_if_table(nic_attrs, plugin_info, teaming_info):
+# Windows NetConnectionStatus Table to ifOperStatus Table
+# 1 up
+# 2 down
+# 3 testing
+# 4 unknown
+# 5 dormant
+# 6 notPresent
+# 7 lowerLayerDown
+_CONNECTION_STATES = {
+    '0': ('2', 'Disconnected'),
+    '1': ('2', 'Connecting'),
+    '2': ('1', 'Connected'),
+    '3': ('2', 'Disconnecting'),
+    '4': ('2', 'Hardware not present'),
+    '5': ('2', 'Hardware disabled'),
+    '6': ('2', 'Hardware malfunction'),
+    '7': ('7', 'Media disconnected'),
+    '8': ('2', 'Authenticating'),
+    '9': ('2', 'Authentication succeeded'),
+    '10': ('2', 'Authentication failed'),
+    '11': ('2', 'Invalid address'),
+    '12': ('2', 'Credentials required'),
+}
+
+
+def _get_if_table(
+    nic_attrs: NICAttrs,
+    plugin_info: SubSection,
+    teaming_info: SubSection,
+) -> interfaces.Section:
     # Now convert the dicts into the format that is needed by if.include
     if_table = []
-    for nic_name, nic_attr in sorted(nic_attrs.items(), reverse=True):
+    for nic_name, nic_attr in nic_attrs.items():
         nic = nic_attr.counters
         nic.setdefault('index', nic_attr.index)
         nic.update(plugin_info.get(nic_name, {}))
 
-        bandwidth = saveint(nic.get('Speed'))
+        bandwidth = interfaces.saveint(nic.get('Speed'))
         # Some interfaces report several exabyte as bandwidth when down..
         if bandwidth > 1024**5:
             # Greater than petabyte
             bandwidth = 0
 
-        mac_txt = nic.get('MACAddress')
-        if mac_txt:
-            mac = "".join(chr(int(x, 16)) for x in mac_txt.split(':'))
-        else:
-            mac = ''
-
-        index_info = str(nic['index'])
         # Automatically group teamed interfaces
-        if nic.get("GUID") in teaming_info:
-            index_info = (teaming_info[nic.get("GUID")]["TeamName"], index_info)
+        guid = nic.get("GUID")
+        group = teaming_info.get(guid, {}).get("TeamName") if isinstance(guid, str) else None
 
         # if we have no status, but link information, we assume IF is connected
         connection_status = nic.get('NetConnectionStatus')
         if not connection_status:
             connection_status = '2'
 
-        # Windows NetConnectionStatus Table to ifOperStatus Table
-        # 1 up
-        # 2 down
-        # 3 testing
-        # 4 unknown
-        # 5 dormant
-        # 6 notPresent
-        # 7 lowerLayerDown
-        connection_states = {
-            '0': ('2', 'Disconnected'),
-            '1': ('2', 'Connecting'),
-            '2': ('1', 'Connected'),
-            '3': ('2', 'Disconnecting'),
-            '4': ('2', 'Hardware not present'),
-            '5': ('2', 'Hardware disabled'),
-            '6': ('2', 'Hardware malfunction'),
-            '7': ('7', 'Media disconnected'),
-            '8': ('2', 'Authenticating'),
-            '9': ('2', 'Authentication succeeded'),
-            '10': ('2', 'Authentication failed'),
-            '11': ('2', 'Invalid address'),
-            '12': ('2', 'Credentials required'),
-        }
+        oper_status, oper_status_name = _CONNECTION_STATES[str(connection_status)]
 
-        if_table.append((
-            index_info,
-            nic_name,
-            "loopback" in nic_name.lower() and '24' or '6',
-            bandwidth or nic['10'],  # Bandwidth
-            connection_states[connection_status],  # ifOperStatus
-            nic['-246'],  # ifInOctets,
-            nic['14'],  # inucast
-            0,  # inmcast
-            nic['16'],  # non-unicast empfangen
-            nic['18'],  # ifInDiscards
-            nic['20'],  # ifInErrors
-            nic['-4'],  # ifOutOctets (Bytes gesendet)
-            nic['26'],  # outucast
-            0,
-            nic['28'],  # outnonucast
-            nic['30'],  # ifOutDiscards
-            nic['32'],  # ifOutErrors
-            nic['34'],  # ifOutQLen
-            nic.get('NetConnectionID', nic_name),
-            mac,
-        ))
+        if_table.append(
+            interfaces.Interface(
+                index=str(nic['index']),
+                descr=nic_name,
+                alias=str(nic.get('NetConnectionID', nic_name)),
+                type="loopback" in nic_name.lower() and '24' or '6',
+                speed=bandwidth or interfaces.saveint(nic['10']),
+                oper_status=oper_status,
+                in_octets=interfaces.saveint(nic['-246']),
+                in_ucast=interfaces.saveint(nic['14']),
+                in_bcast=interfaces.saveint(nic['16']),
+                in_discards=interfaces.saveint(nic['18']),
+                in_errors=interfaces.saveint(nic['20']),
+                out_octets=interfaces.saveint(nic['-4']),
+                out_ucast=interfaces.saveint(nic['26']),
+                out_bcast=interfaces.saveint(nic['28']),
+                out_discards=interfaces.saveint(nic['30']),
+                out_errors=interfaces.saveint(nic['32']),
+                out_qlen=interfaces.saveint(nic['34']),
+                phys_address=interfaces.mac_address_from_hexstring(str(nic.get('MACAddress', ''))),
+                oper_status_name=oper_status_name,
+                group=group,
+            ))
+
     return if_table
 
 
-NICAttr = collections.namedtuple('NICAttr', 'index counters')
-
-
-def _parse_winperf_if_nic_attrs(raw_nic_names, agent_section):
-    nic_attrs = {}
+def _parse_winperf_if_nic_attrs(
+    raw_nic_names: NICNames,
+    agent_section: AgentSection,
+) -> NICAttrs:
+    nic_attrs: NICAttrs = {}
     for idx, raw_nic_name in enumerate(raw_nic_names):
         nic_name = winperf_if_canonize_nic_name(raw_nic_name)
         nic_attrs.setdefault(
@@ -354,12 +395,9 @@ def _parse_winperf_if_nic_attrs(raw_nic_names, agent_section):
     return nic_attrs
 
 
-#.
-
-
-def parse_winperf_if(info):
-    agent_timestamp, raw_nic_names, agent_section, plugin_section,\
-        dhcp_section, teaming_section = _parse_winperf_if_section(info)
+def parse_winperf_if(string_table: type_defs.AgentStringTable) -> Section:
+    (agent_timestamp, raw_nic_names, agent_section, plugin_section, dhcp_section,
+     teaming_section) = _parse_winperf_if_section(string_table)
 
     # Based on the raw nic names we structure the interface table
     nic_attrs = _parse_winperf_if_nic_attrs(raw_nic_names, agent_section)
@@ -373,24 +411,48 @@ def parse_winperf_if(info):
     return agent_timestamp, if_table, dhcp_info
 
 
-def inventory_winperf_if(parsed):
-    _agent_timestamp, if_table, _dhcp_info = parsed
-    return inventory_if_common(if_table)
+register.agent_section(
+    name='winperf_if',
+    parse_function=parse_winperf_if,
+)
 
 
-def check_winperf_if(item, params, parsed):
-    agent_timestamp, if_table, dhcp_info = parsed
-    yield check_if_common(item, params, if_table, group_name="Teaming", timestamp=agent_timestamp)
+def discover_winperf_if(
+    params: Sequence[type_defs.Parameters],
+    section: Section,
+) -> type_defs.DiscoveryGenerator:
+    yield from interfaces.discover_interfaces(
+        params,
+        section[1],
+    )
+
+
+def check_winperf_if(
+    item: str,
+    params: type_defs.Parameters,
+    section: Section,
+) -> type_defs.CheckGenerator:
+    agent_timestamp, if_table, dhcp_info = section
+    yield from interfaces.check_multiple_interfaces(
+        item,
+        params,
+        if_table,
+        group_name="Teaming",
+        timestamp=agent_timestamp,
+    )
 
     dhcp_result = check_if_dhcp(item, dhcp_info)
     if dhcp_result:
         yield dhcp_result
 
 
-def check_if_dhcp(item, dhcp_info):
+def check_if_dhcp(
+    item: str,
+    dhcp_info: SubSection,
+) -> Optional[Result]:
     for nic_name, attrs in dhcp_info.items():
         try:
-            match = attrs.get('index') == int(item)
+            match = int(attrs['index']) == int(item)
         except (KeyError, ValueError):
             match = nic_name == item
 
@@ -399,17 +461,25 @@ def check_if_dhcp(item, dhcp_info):
 
         dhcp_enabled = attrs["DHCPEnabled"]
         if dhcp_enabled == "TRUE":
-            return 1, "DHCP: enabled"
-        return 0, "DHCP: %s" % dhcp_enabled
+            return Result(
+                state=state.WARN,
+                summary="DHCP: enabled",
+            )
+        return Result(
+            state=state.OK,
+            summary="DHCP: %s" % dhcp_enabled,
+        )
+    return None
 
 
-check_info["winperf_if"] = {
-    'parse_function': parse_winperf_if,
-    'inventory_function': inventory_winperf_if,
-    'check_function': check_winperf_if,
-    'service_description': 'Interface %s',
-    'has_perfdata': True,
-    'includes': ['if.include'],
-    'group': 'if',
-    'default_levels_variable': 'if_default_levels'
-}
+register.check_plugin(
+    name="winperf_if",
+    service_name="Interface %s",
+    discovery_ruleset_name="inventory_if_rules",
+    discovery_ruleset_type="all",
+    discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
+    discovery_function=discover_winperf_if,
+    check_ruleset_name="if",
+    check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
+    check_function=check_winperf_if,
+)

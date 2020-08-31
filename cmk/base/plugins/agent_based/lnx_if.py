@@ -219,7 +219,7 @@ def parse_lnx_if(string_table: type_defs.AgentStringTable) -> Section:
         if ":" in raw_phys_address:
             # We saw interface entries of tunnels for the address
             # is an integer, eg. '1910236'; especially on OpenBSD.
-            ifPhysAddress = "".join([chr(int(x, 16)) for x in raw_phys_address.split(":")])
+            ifPhysAddress = interfaces.mac_address_from_hexstring(raw_phys_address)
         else:
             ifPhysAddress = ''
 

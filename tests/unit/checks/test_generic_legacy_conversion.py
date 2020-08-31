@@ -2941,7 +2941,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'windows_updates',
         'winperf.cpuusage',
         'winperf.diskstat',
-        'winperf_if',
         'winperf_mem',
         'winperf_msx_queues',
         'winperf_processor.util',

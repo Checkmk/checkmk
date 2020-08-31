@@ -215,9 +215,7 @@ def convert_esx_counters_if(section: Section) -> interfaces.Section:
             type='6',  # Ethernet
             speed=iface_rates.get("bandwidth", 0),
             oper_status=str(iface_rates.get("state", 1)),
-            phys_address="".join(
-                chr(int(x, 16))
-                for x in mac_addresses[name].split(':')) if name in mac_addresses else "",
+            phys_address=interfaces.mac_address_from_hexstring(mac_addresses.get(name, "")),
             **{  # type: ignore[arg-type]
                 if_field: iface_rates.get(ctr_name, 0) * _get_ctr_multiplier(ctr_name)
                 for ctr_name, if_field in _CTR_TO_IF_FIELDS.items()

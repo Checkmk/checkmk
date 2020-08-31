@@ -147,6 +147,18 @@ def saveint(i: Any) -> int:
         return 0
 
 
+def mac_address_from_hexstring(hexstr: str) -> str:
+    r"""
+    >>> mac_address_from_hexstring('2e:27:06:b8:41:04')
+    ".'\x06¸A\x04"
+    >>> mac_address_from_hexstring('')
+    ''
+    """
+    if hexstr:
+        return "".join(chr(int(x, 16)) for x in hexstr.split(':'))
+    return ""
+
+
 # Remove 0 bytes from strings. They lead to problems e.g. here:
 # On windows hosts the labels of network interfaces in oid
 # iso.3.6.1.2.1.2.2.1.2.1 are given as hex strings with tailing

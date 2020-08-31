@@ -70,7 +70,7 @@ def parse_aix_if(string_table: type_defs.AgentStringTable) -> interfaces.Section
             iface.out_mcast = interfaces.saveint(line[2])
             iface.in_mcast = interfaces.saveint(line[5])
         elif " ".join(line[0:2]) == "Hardware Address:":
-            iface.phys_address = "".join([chr(int(x, 16)) for x in line[2].split(":")])
+            iface.phys_address = interfaces.mac_address_from_hexstring(line[2])
         elif " ".join(line[0:3]) == "Adapter Data Rate:":
             # speed is in Mb/s
             iface.speed = int(line[3]) * 1000000

@@ -70,46 +70,54 @@ std::optional<typename Queue<S>::size_type> Queue<S>::limit() const {
 
 template <typename S>
 bool Queue<S>::try_push(const_reference elem) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (limit_ == q_.size()) {
-        q_.pop_front();
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (limit_ == q_.size()) {
+            q_.pop_front();
+        }
+        q_.push_back(elem);
     }
-    q_.push_back(elem);
     cv_.notify_one();
     return true;
 }
 
 template <typename S>
 bool Queue<S>::try_push(value_type&& elem) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (limit_ == q_.size()) {
-        q_.pop_front();
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (limit_ == q_.size()) {
+            q_.pop_front();
+        }
+        q_.push_back(std::move(elem));
     }
-    q_.push_back(std::move(elem));
     cv_.notify_one();
     return true;
 }
 
 template <typename S>
 bool Queue<S>::push(const_reference elem) {
-    std::unique_lock<std::mutex> lock(mutex_);
-    cv_.wait(lock, [&] { return limit_ != q_.size() || joinable_; });
-    if (joinable_) {
-        return false;
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        cv_.wait(lock, [&] { return limit_ != q_.size() || joinable_; });
+        if (joinable_) {
+            return false;
+        }
+        q_.push_back(elem);
     }
-    q_.push_back(elem);
     cv_.notify_one();
     return true;
 }
 
 template <typename S>
 bool Queue<S>::push(value_type&& elem) {
-    std::unique_lock<std::mutex> lock(mutex_);
-    cv_.wait(lock, [&] { return limit_ != q_.size() || joinable_; });
-    if (joinable_) {
-        return false;
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        cv_.wait(lock, [&] { return limit_ != q_.size() || joinable_; });
+        if (joinable_) {
+            return false;
+        }
+        q_.push_back(std::move(elem));
     }
-    q_.push_back(std::move(elem));
     cv_.notify_one();
     return true;
 }

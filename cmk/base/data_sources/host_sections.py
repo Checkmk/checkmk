@@ -4,9 +4,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import collections.abc
 import sys
-from typing import Any, Callable, NamedTuple, cast, Dict, List, Optional, Set, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Dict,
+    ItemsView,
+    Iterator,
+    KeysView,
+    List,
+    MutableMapping,
+    NamedTuple,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+    ValuesView,
+)
 
 import cmk.utils.debug
 from cmk.utils.check_utils import section_name_of
@@ -26,15 +41,9 @@ import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.item_state as item_state
 from cmk.base.api.agent_based.type_defs import SectionPlugin
-from cmk.base.check_api_utils import (
-    HOST_PRECEDENCE as LEGACY_HOST_PRECEDENCE,
-    MGMT_ONLY as LEGACY_MGMT_ONLY,
-)
-from cmk.base.check_utils import (
-    AbstractSectionContent,
-    FinalSectionContent,
-    ParsedSectionContent,
-)
+from cmk.base.check_api_utils import HOST_PRECEDENCE as LEGACY_HOST_PRECEDENCE
+from cmk.base.check_api_utils import MGMT_ONLY as LEGACY_MGMT_ONLY
+from cmk.base.check_utils import AbstractSectionContent, FinalSectionContent, ParsedSectionContent
 from cmk.base.exceptions import MKParseFunctionError
 
 from ._abstract import ABCHostSections
@@ -46,7 +55,7 @@ HostKey = NamedTuple("HostKey", [
 ])
 
 
-class MultiHostSections(collections.abc.MutableMapping):
+class MultiHostSections(MutableMapping[HostKey, ABCHostSections]):
     """Container object for wrapping the host sections of a host being processed
     or multiple hosts when a cluster is processed. Also holds the functionality for
     merging these information together for a check"""
@@ -67,10 +76,10 @@ class MultiHostSections(collections.abc.MutableMapping):
     def __len__(self) -> int:
         return len(self._data)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[HostKey]:
         return self._data.__iter__()
 
-    def __getitem__(self, key: HostKey):
+    def __getitem__(self, key: HostKey) -> ABCHostSections:
         return self._data.__getitem__(key)
 
     def __setitem__(self, key: HostKey, value: ABCHostSections) -> None:
@@ -79,16 +88,16 @@ class MultiHostSections(collections.abc.MutableMapping):
     def __delitem__(self, key: HostKey) -> None:
         self._data.__delitem__(key)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "%s(data=%r)" % (type(self).__name__, self._data)
 
-    def keys(self):
+    def keys(self) -> KeysView[HostKey]:
         return self._data.keys()  # pylint: disable=dict-keys-not-iterating
 
-    def values(self):
+    def values(self) -> ValuesView[ABCHostSections]:
         return self._data.values()  # pylint: disable=dict-values-not-iterating
 
-    def items(self):
+    def items(self) -> ItemsView[HostKey, ABCHostSections]:
         return self._data.items()  # pylint: disable=dict-items-not-iterating
 
     def get_section_kwargs(

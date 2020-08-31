@@ -148,12 +148,17 @@ def check_livestatus_status(item: str, params: Parameters, section_livestatus_st
 
         for factor, human_func, key, title in [
             (1, lambda x: "%.3fs" % x, "average_latency_generic", "Average check latency"),
-            (1, lambda x: "%.3fs" % x, "average_latency_cmk", "Average Check_MK latency"),
+            (1, lambda x: "%.3fs" % x, "average_latency_cmk", "Average Checkmk latency"),
             (100, render.percent, "helper_usage_generic", "Check helper usage"),
-            (100, render.percent, "helper_usage_cmk", "Check_MK helper usage"),
+            (100, render.percent, "helper_usage_cmk", "Checkmk helper usage"),
             (100, render.percent, "livestatus_usage", "Livestatus usage"),
             (1, lambda x: "%.1f/s" % x, "livestatus_overflows_rate", "Livestatus overflow rate"),
         ]:
+            if key == "helper_usage_cmk" and status[key] == "":
+                # Quick workaround for enabled checker/fetcher mode. Will soon be replaced once
+                # the livestatus status table has been updated.
+                continue
+
             value = factor * float(status[key])
             yield from check_levels(value=value,
                                     metric_name=key,
@@ -174,7 +179,9 @@ def check_livestatus_status(item: str, params: Parameters, section_livestatus_st
         label="Services",
     )
     # Output some general information
-    yield Result(state=state.OK, summary="Core version: %s" % status["program_version"])
+    yield Result(state=state.OK,
+                 summary="Core version: %s" %
+                 status["program_version"].replace("Check_MK", "Checkmk"))
     yield Result(state=state.OK, summary="Livestatus version: %s" % status["livestatus_version"])
 
     # cert_valid_until should only be empty in one case that we know of so far:

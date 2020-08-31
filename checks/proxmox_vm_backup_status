@@ -17,7 +17,11 @@ factory_settings["proxmox_vm_backup_status"] = {
 def check_proxmox_vm_backup_status(item, params, parsed):
     """If conditions provided calculate and compare age of last backup agains provided
     levels and define result status accordingly"""
+    age_levels_upper = params.get("age_levels_upper")
     last_backup = parsed.get("last_backup")
+    if last_backup is None:
+        yield (2, "No backup found") if age_levels_upper else (0, "No backup found and none needed")
+        return
     if "error" in last_backup:
         yield 2, "Last backup failed with message '%s'" % last_backup["error"]
         return
@@ -27,11 +31,7 @@ def check_proxmox_vm_backup_status(item, params, parsed):
     # is located close to us
     backup_age = ((datetime.datetime.now() - started_time).total_seconds()  #
                   if started_time is not None else None)
-    age_levels_upper = params.get("age_levels_upper")
     transfer_size = last_backup.get("transfer_size", last_backup.get("archive_size", 0))
-    if last_backup is None:
-        yield (2, "No backup found") if age_levels_upper else (0, "No backup found and none needed")
-        return
     yield check_levels(
         backup_age,
         "age",

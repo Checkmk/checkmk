@@ -38,7 +38,6 @@ class TestModeDumpAgent:
         ts.apply(monkeypatch)
         return ts
 
-    @pytest.mark.skip("Skipped in workaround. Must be re-enabled after caching works as intended")
     @pytest.mark.usefixtures("scenario")
     @pytest.mark.usefixtures("patch_io")
     def test_success(self, hostname, raw_data, capsys):

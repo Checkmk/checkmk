@@ -37,7 +37,6 @@ class TestAutomationDiagHost:
     def patch_io(self, raw_data, monkeypatch):
         monkeypatch.setattr(ABCFileCache, "read", lambda *args, **kwargs: raw_data)
 
-    @pytest.mark.skip("Skipped in workaround. Must be re-enabled after caching works as intended")
     @pytest.mark.usefixtures("scenario")
     @pytest.mark.usefixtures("patch_io")
     def test_execute(self, hostname, ipaddress, raw_data):

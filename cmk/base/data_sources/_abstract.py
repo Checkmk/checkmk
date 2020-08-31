@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import enum
 import logging
 import sys
 from pathlib import Path
@@ -23,7 +22,7 @@ from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheck
 
 from cmk.fetchers import ABCFetcher
 from cmk.fetchers.controller import FetcherType
-from cmk.fetchers.type_defs import TRawData
+from cmk.fetchers.type_defs import TRawData, Mode
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
@@ -48,14 +47,6 @@ __all__ = [
     "Mode",
     "set_cache_opts",
 ]
-
-
-class Mode(enum.Enum):
-    NONE = enum.auto()
-    CHECKING = enum.auto()
-    DISCOVERY = enum.auto()
-    INVENTORY = enum.auto()
-    RTC = enum.auto()
 
 
 class ABCHostSections(Generic[TRawData, TSections, TPersistedSections, TSectionContent],

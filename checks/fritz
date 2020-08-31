@@ -4,17 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-factory_settings['if_default_levels'] = IF_CHECK_DEFAULT_PARAMETERS
-
-
-def parse_fritz(info):
-    return {l[0]: ' '.join(l[1:]) for l in info if len(l) > 1}
-
-
-check_info["fritz"] = {
-    'parse_function': parse_fritz,
-}
-
 
 #
 # Internet connection
@@ -87,58 +76,6 @@ check_info['fritz.config'] = {
     "inventory_function": inventory_fritz_config,
     "check_function": check_fritz_config,
     "service_description": "Configuration",
-}
-
-
-#
-# WAN Interface Check
-#
-def fritz_wan_if_to_if64(parsed):
-    link_stat = parsed.get('NewLinkStatus')
-    if not link_stat:
-        oper_status = None
-    elif link_stat == 'Up':
-        oper_status = '1'
-    else:
-        oper_status = '2'
-
-    return [
-        # ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus,
-        # ifInOctets,  inucast,  inmcast,  inbcast,  ifInDiscards,  ifInErrors,
-        # ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors,
-        # ifOutQLen, ifAlias, ifPhysAddress
-        ('0', 'WAN', '6', parsed.get('NewLayer1DownstreamMaxBitRate'), oper_status,
-         parsed.get('NewTotalBytesReceived'), '0', '0', '0', '0', '0',
-         parsed.get('NewTotalBytesSent'), '0', '0', '0', '0', '0', '0', 'WAN', '')
-    ]
-
-
-def inventory_fritz_wan_if(parsed):
-    return inventory_if_common(fritz_wan_if_to_if64(parsed))
-
-
-def check_fritz_wan_if(item, params, parsed):
-    if not parsed:
-        return 3, 'Interface info is missing'
-
-    if_common_params = {
-        'assumed_speed_in': int(parsed['NewLayer1DownstreamMaxBitRate']),
-        'assumed_speed_out': int(parsed['NewLayer1UpstreamMaxBitRate']),
-        'unit': 'bit',
-    }
-    if_common_params.update(params)
-
-    return check_if_common(item, if_common_params, fritz_wan_if_to_if64(parsed))
-
-
-check_info["fritz.wan_if"] = {
-    'check_function': check_fritz_wan_if,
-    'inventory_function': inventory_fritz_wan_if,
-    'service_description': 'Interface %s',
-    'has_perfdata': True,
-    'group': 'if',
-    'default_levels_variable': 'if_default_levels',
-    'includes': ['if.include'],
 }
 
 

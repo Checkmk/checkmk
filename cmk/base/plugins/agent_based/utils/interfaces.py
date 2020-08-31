@@ -12,6 +12,7 @@ from dataclasses import (
 import time
 from typing import (
     Any,
+    Callable,
     Dict,
     Iterable,
     List,
@@ -1235,9 +1236,8 @@ def check_single_interface(
         'outqlen',
         interface.out_qlen,
     )
-
     if unit == 'Bit':
-        bandwidth_renderer = lambda v: render.nicspeed(v * 8)
+        bandwidth_renderer: Callable[[float], str] = render.nicspeed
     else:
         bandwidth_renderer = render.iobandwidth
 

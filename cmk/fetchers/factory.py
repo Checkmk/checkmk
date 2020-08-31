@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Optional
+import logging
 
 from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPHostConfig
 
@@ -29,14 +30,17 @@ def get_force_stored_walks() -> bool:
     return _force_stored_walks
 
 
-def backend(snmp_config: SNMPHostConfig, *, use_cache: Optional[bool] = None) -> ABCSNMPBackend:
+def backend(snmp_config: SNMPHostConfig,
+            logger: logging.Logger,
+            *,
+            use_cache: Optional[bool] = None) -> ABCSNMPBackend:
     if use_cache is None:
         use_cache = get_force_stored_walks()
 
     if use_cache or snmp_config.is_usewalk_host:
-        return StoredWalkSNMPBackend(snmp_config)
+        return StoredWalkSNMPBackend(snmp_config, logger)
 
     if snmp_config.is_inline_snmp_host:
-        return inline.InlineSNMPBackend(snmp_config)
+        return inline.InlineSNMPBackend(snmp_config, logger)
 
-    return ClassicSNMPBackend(snmp_config)
+    return ClassicSNMPBackend(snmp_config, logger)

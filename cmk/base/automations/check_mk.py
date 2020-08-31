@@ -1376,7 +1376,7 @@ class AutomationDiagHost(Automation):
         data = snmp_table.get_snmp_table_cached(
             None,
             SNMPTree(base='.1.3.6.1.2.1.1', oids=['1.0', '4.0', '5.0', '6.0']),
-            backend=factory.backend(snmp_config),
+            backend=factory.backend(snmp_config, log.logger),
         )
 
         if data:
@@ -1541,7 +1541,7 @@ class AutomationGetAgentOutput(Automation):
                 if not ipaddress:
                     raise MKGeneralException("Failed to gather IP address of %s" % hostname)
                 snmp_config = config.HostConfig.make_snmp_config(hostname, ipaddress)
-                backend = factory.backend(snmp_config, use_cache=False)
+                backend = factory.backend(snmp_config, log.logger, use_cache=False)
 
                 lines = []
                 for walk_oid in snmp_modes.oids_to_walk():

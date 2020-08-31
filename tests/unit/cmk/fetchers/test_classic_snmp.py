@@ -8,6 +8,7 @@ import collections
 
 import pytest  # type: ignore[import]
 
+from cmk.utils.log import logger
 from cmk.utils.exceptions import MKGeneralException
 
 from cmk.snmplib.type_defs import SNMPHostConfig
@@ -38,7 +39,7 @@ def test_snmp_port_spec(port, expected):
         is_inline_snmp_host=False,
         record_stats=False,
     )
-    assert ClassicSNMPBackend(snmp_config)._snmp_port_spec() == expected
+    assert ClassicSNMPBackend(snmp_config, logger)._snmp_port_spec() == expected
 
 
 @pytest.mark.parametrize("is_ipv6,expected", [
@@ -63,7 +64,7 @@ def test_snmp_proto_spec(monkeypatch, is_ipv6, expected):
         is_inline_snmp_host=False,
         record_stats=False,
     )
-    assert ClassicSNMPBackend(snmp_config)._snmp_proto_spec() == expected
+    assert ClassicSNMPBackend(snmp_config, logger)._snmp_proto_spec() == expected
 
 
 SNMPSettings = collections.namedtuple("SNMPSettings", [
@@ -205,7 +206,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
     ]),
 ])
 def test_snmp_walk_command(monkeypatch, settings, expected):
-    backend = ClassicSNMPBackend(settings.snmp_config)
+    backend = ClassicSNMPBackend(settings.snmp_config, logger)
     assert backend._snmp_walk_command(settings.context_name) == expected
 
 

@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+import logging
 from pathlib import Path
 from typing import Any, Dict, Final, Iterable, List, Optional, Sequence, Set
 
@@ -46,8 +47,9 @@ class SNMPHostSections(ABCHostSections[SNMPRawData, SNMPSections, SNMPPersistedS
 
 class CachedSNMPDetector:
     """Object to run/cache SNMP detection"""
-    def __init__(self) -> None:
+    def __init__(self, logger: logging.Logger) -> None:
         super(CachedSNMPDetector, self).__init__()
+        self._logger = logger
         # Optional set: None: we never tried, empty: we tried, but found nothing
         self._cached_result: Optional[Set[SectionName]] = None
 
@@ -71,7 +73,7 @@ class CachedSNMPDetector:
                     snmp_config.hostname,
                     config.snmp_without_sys_descr,
                 ),
-                backend=factory.backend(snmp_config),
+                backend=factory.backend(snmp_config, logger=self._logger),
             )
         return self._cached_result
 
@@ -120,7 +122,7 @@ class SNMPConfigurator(ABCConfigurator[SNMPRawData, SNMPHostSections]):
             self.host_config.snmp_config(self.ipaddress)
             if self.source_type is SourceType.HOST else self.host_config.management_snmp_config)
         self.on_snmp_scan_error = on_error
-        self.detector: Final = CachedSNMPDetector()
+        self.detector: Final = CachedSNMPDetector(self._logger)
         # Attributes below are wrong
         self.use_snmpwalk_cache = True
         self.ignore_check_interval = False

@@ -72,7 +72,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
             # and fetches a separate snmp table.
             get_snmp = partial(snmp_table.get_snmp_table_cached
                                if self._use_snmpwalk_cache else snmp_table.get_snmp_table,
-                               backend=factory.backend(self._snmp_config))
+                               backend=factory.backend(self._snmp_config, self._logger))
             # branch: List[SNMPTree]
             fetched_section_data: List[SNMPTable] = []
             for entry in oid_info:

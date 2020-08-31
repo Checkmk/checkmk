@@ -9,6 +9,7 @@ import collections
 import dataclasses
 import inspect
 import string
+import logging
 from typing import (
     Any,
     AnyStr,
@@ -187,8 +188,9 @@ class SNMPHostConfig(
 
 
 class ABCSNMPBackend(metaclass=abc.ABCMeta):
-    def __init__(self, snmp_config: SNMPHostConfig) -> None:
+    def __init__(self, snmp_config: SNMPHostConfig, logger: logging.Logger) -> None:
         super(ABCSNMPBackend, self).__init__()
+        self._logger = logger
         self.config = snmp_config
 
     @property

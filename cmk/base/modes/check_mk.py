@@ -867,7 +867,7 @@ def mode_snmpwalk(options: Dict, hostnames: List[str]) -> None:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 
         snmp_config = config.HostConfig.make_snmp_config(hostname, ipaddress)
-        snmp_modes.do_snmpwalk(options, backend=snmp_factory.backend(snmp_config))
+        snmp_modes.do_snmpwalk(options, backend=snmp_factory.backend(snmp_config, log.logger))
 
 
 modes.register(
@@ -936,7 +936,7 @@ def mode_snmpget(args: List[str]) -> None:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 
         snmp_config = config.HostConfig.make_snmp_config(hostname, ipaddress)
-        snmp_modes.do_snmpget(oid, backend=snmp_factory.backend(snmp_config))
+        snmp_modes.do_snmpget(oid, backend=snmp_factory.backend(snmp_config, log.logger))
 
 
 modes.register(

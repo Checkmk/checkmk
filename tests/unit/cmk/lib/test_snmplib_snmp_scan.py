@@ -13,10 +13,10 @@ import pytest  # type: ignore[import]
 # No stub file
 from testlib.base import Scenario  # type: ignore[import]
 
+from cmk.utils.log import logger
 from cmk.utils.type_defs import SectionName
 
 import cmk.snmplib.snmp_cache as snmp_cache
-import cmk.snmplib.snmp_modes as snmp_modes
 import cmk.snmplib.snmp_scan as snmp_scan
 from cmk.snmplib.snmp_scan import SNMPScanSection
 from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPHostConfig
@@ -179,7 +179,7 @@ class SNMPTestBackend(ABCSNMPBackend):
 @pytest.fixture
 def backend():
     try:
-        yield SNMPTestBackend(SNMPConfig)
+        yield SNMPTestBackend(SNMPConfig, logger)
     finally:
         cachefile = Path("tmp/check_mk/snmp_scan_cache/%s.%s" %
                          (SNMPConfig.hostname, SNMPConfig.ipaddress))

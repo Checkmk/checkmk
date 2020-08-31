@@ -8,6 +8,7 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
 
+from cmk.utils.log import logger
 from cmk.utils.type_defs import SectionName
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.type_defs import ABCSNMPBackend, OID_END, OIDBytes, OIDEnd, SNMPHostConfig, SNMPTree
@@ -89,7 +90,7 @@ def test_value_encoding(column):
 ])
 def test_get_snmp_table(monkeypatch, snmp_info, expected_values):
     def get_all_snmp_tables(info):
-        backend = SNMPTestBackend(SNMPConfig)
+        backend = SNMPTestBackend(SNMPConfig, logger)
         if not isinstance(info, list):
             return snmp_table.get_snmp_table(SectionName("unit_test"), info, backend=backend)
         return [

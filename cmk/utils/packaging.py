@@ -787,8 +787,28 @@ def _is_outdated(package_name: PackageName, package_info: PackageInfo, version: 
 
     >>> i('a', {'version.usable_until': '1.6.0'}, '')
     False
+
+    # Checkmk 1.6 shipped the first feature pack MKPs which sadly had no
+    # "version.usable_until" attribute set. To be able to disable them automatically
+    # we use a hard coded list of package names below. All of these packages start
+    # with the version number "1.". To ensure the known and possible future packages
+    # are removed, we consider the known packages to be outdated.
+
+    >>> i('azure_ad', {'version': '1.0', 'version.usable_until': ''}, '1.7.0i1')
+    True
+
+    >>> i('prometheus', {'version': '1.3', 'version.usable_until': ''}, '1.7.0i1')
+    True
+
+    >>> i('prometheus', {'version': '2.0', 'version.usable_until': ''}, '1.7.0i1')
+    False
     """
     until_version = package_info["version.usable_until"]
+
+    if _is_16_feature_pack_package(package_name, package_info):
+        logger.log(VERBOSE, "[%s]: This is a 1.6 feature pack package: It is outdated. ",
+                   package_name)
+        return True
 
     if until_version is None:
         logger.log(VERBOSE, "[%s]: \"Until version\" is not set", package_name)
@@ -820,3 +840,27 @@ def _is_outdated(package_name: PackageName, package_info: PackageInfo, version: 
 
     logger.log(VERBOSE, "[%s]: %s > %s = %s", package_name, version, until_version, is_outdated)
     return is_outdated
+
+
+def _is_16_feature_pack_package(package_name: PackageName, package_info: PackageInfo) -> bool:
+    if package_name not in {
+            "agent_rabbitmq",
+            "azure_ad",
+            "cisco_asa_sessions",
+            "cisco_webex_teams_notifications",
+            "couchbase",
+            "fortigate_sslvpn",
+            "graylog_special_agent",
+            "huawei_switches",
+            "jenkins_special_agent",
+            "jira_special_agent",
+            "k8s_extensions",
+            "mongodb",
+            "prometheus",
+            "pulse_secure",
+            "redis",
+            "tplink_checks",
+    }:
+        return False
+
+    return package_info.get("version", "").startswith("1.")

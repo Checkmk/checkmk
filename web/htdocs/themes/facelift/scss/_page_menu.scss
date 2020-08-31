@@ -124,8 +124,7 @@ div#top_heading {
       color: $font-color;
     }
 
-    // TODO: Check whether this selector works at all
-    :after {
+    > :after {
       text-decoration: none;
       content: " > ";
     }

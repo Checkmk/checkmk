@@ -10,6 +10,7 @@ In the future all inventory code should be moved to this module."""
 
 import os
 from typing import cast, Dict, List, Optional, Sequence, Tuple
+from contextlib import suppress
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -245,10 +246,11 @@ def do_inventory_actions_during_checking_for(
 
 
 def _cleanup_status_data(hostname: HostName) -> None:
+    """Remove empty status data files"""
     filepath = "%s/%s" % (cmk.utils.paths.status_data_dir, hostname)
-    if os.path.exists(filepath):  # Remove empty status data files.
+    with suppress(OSError):
         os.remove(filepath)
-    if os.path.exists(filepath + ".gz"):
+    with suppress(OSError):
         os.remove(filepath + ".gz")
 
 

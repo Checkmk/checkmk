@@ -141,7 +141,7 @@ def backend_fixture(request, snmp_data_dir):
     assert snmp_data_dir.exists()
     assert (snmp_data_dir / "cmk-walk").exists()
 
-    yield backend(config)
+    yield backend(config, logger)
 
     # Restore global variable.
     cmk.utils.paths.snmpwalks_dir = snmpwalks_dir

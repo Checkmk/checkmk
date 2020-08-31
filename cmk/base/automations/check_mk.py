@@ -858,7 +858,7 @@ class AutomationRestart(Automation):
                 configuration_warnings = core_config.create_core_config(core)
 
                 try:
-                    from cmk.base.cee.agent_bakery import bake_on_restart  # pylint: disable=import-outside-toplevel
+                    from cmk.base.cee.bakery.agent_bakery import bake_on_restart  # pylint: disable=import-outside-toplevel
                     bake_on_restart()
                 except ImportError:
                     pass

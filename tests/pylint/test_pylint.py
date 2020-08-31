@@ -179,8 +179,8 @@ def _compile_bakery_plugins(pylint_test_dir):
 
         pylint_cmk.add_file(
             f,
-            os.path.realpath(
-                os.path.join(repo_path(), "enterprise/cmk/base/cee/agent_bakery_plugins.py")))
+            os.path.realpath(os.path.join(repo_path(),
+                                          "enterprise/cmk/base/cee/bakery/plugins.py")))
 
         # Also add bakery plugins
         for path in pylint_cmk.check_files(os.path.join(repo_path(), "enterprise/agents/bakery")):

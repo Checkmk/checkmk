@@ -4,38 +4,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.utils import netapp_api
+
 
 # Transforms all lines into a dictionary.
 # The first key is the dictionary key, unless modified by the custom_keys
 def netapp_api_parse_lines(info, custom_keys=None, as_dict_list=False, item_func=None):
-    if custom_keys is None:
-        custom_keys = []
-
-    instances = {}
-    for line in info:
-        instance = {}
-        name = line[0].split(" ", 1)[1]
-        for element in line:
-            tokens = element.split(" ", 1)
-            instance[tokens[0]] = tokens[1]
-
-        if custom_keys:
-            custom_name = []
-            for key in custom_keys:
-                if key in instance:
-                    custom_name.append(instance[key])
-            name = ".".join(custom_name)
-
-        if item_func:
-            name = item_func(name, instance)
-
-        if as_dict_list:
-            instances.setdefault(name, [])
-            instances[name].append(instance)
-        else:
-            instances[name] = instance
-
-    return instances
+    if as_dict_list:
+        return netapp_api.parse_netapp_api_multiple_instances(
+            info,
+            custom_keys=custom_keys,
+            item_func=item_func,
+        )
+    return netapp_api.parse_netapp_api_single_instance(
+        info,
+        custom_keys=custom_keys,
+        item_func=item_func,
+    )
 
 
 def _discover_single_items(discovery_rules):

@@ -216,7 +216,7 @@ void *main_thread(void *data) {
         switch (
             fl_client_queue->push(cc, queue_overflow_strategy::pop_oldest)) {
             case queue_status::overflow:
-            case queue_status::abort: {
+            case queue_status::joinable: {
                 generic_error ge("cannot enqueue client socket");
                 Warning(logger) << ge;
                 break;

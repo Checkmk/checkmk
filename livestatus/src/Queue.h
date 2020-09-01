@@ -13,7 +13,7 @@
 #include <optional>
 #include <utility>
 
-enum class queue_status { ok, overflow, abort };
+enum class queue_status { ok, overflow, joinable };
 enum class queue_overflow_strategy { wait, pop_oldest, dont_push };
 
 template <typename Storage>
@@ -82,16 +82,22 @@ queue_status Queue<S>::push(const_reference elem,
             not_full_.wait(lock,
                            [&] { return limit_ != q_.size() || joinable_; });
             if (joinable_) {
-                return queue_status::abort;
+                return queue_status::joinable;
             }
             break;
         case queue_overflow_strategy::pop_oldest:
+            if (joinable_) {
+                return queue_status::joinable;
+            }
             if (limit_ == q_.size()) {
                 q_.pop_front();
                 status = queue_status::overflow;
             }
             break;
         case queue_overflow_strategy::dont_push:
+            if (joinable_) {
+                return queue_status::joinable;
+            }
             if (limit_ == q_.size()) {
                 return queue_status::overflow;
             }
@@ -112,16 +118,22 @@ queue_status Queue<S>::push(value_type&& elem,
             not_full_.wait(lock,
                            [&] { return limit_ != q_.size() || joinable_; });
             if (joinable_) {
-                return queue_status::abort;
+                return queue_status::joinable;
             }
             break;
         case queue_overflow_strategy::pop_oldest:
+            if (joinable_) {
+                return queue_status::joinable;
+            }
             if (limit_ == q_.size()) {
                 q_.pop_front();
                 status = queue_status::overflow;
             }
             break;
         case queue_overflow_strategy::dont_push:
+            if (joinable_) {
+                return queue_status::joinable;
+            }
             if (limit_ == q_.size()) {
                 return queue_status::overflow;
             }

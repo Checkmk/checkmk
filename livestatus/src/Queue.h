@@ -14,6 +14,7 @@
 #include <utility>
 
 enum class queue_status { ok, overflow, abort };
+enum class queue_overflow_strategy { wait, pop_oldest, dont_push };
 
 template <typename Storage>
 class Queue {
@@ -34,10 +35,10 @@ public:
     ~Queue();
     [[nodiscard]] size_type approx_size() const;
     [[nodiscard]] std::optional<size_type> limit() const;
-    [[nodiscard]] queue_status try_push(const_reference elem);
-    [[nodiscard]] queue_status try_push(value_type&& elem);
-    [[nodiscard]] queue_status push(const_reference elem);
-    [[nodiscard]] queue_status push(value_type&& elem);
+    [[nodiscard]] queue_status push(const_reference elem,
+                                    queue_overflow_strategy strategy);
+    [[nodiscard]] queue_status push(value_type&& elem,
+                                    queue_overflow_strategy strategy);
     std::optional<value_type> try_pop();
     std::optional<value_type> pop();
     void join();
@@ -72,61 +73,63 @@ std::optional<typename Queue<S>::size_type> Queue<S>::limit() const {
 }
 
 template <typename S>
-queue_status Queue<S>::try_push(const_reference elem) {
+queue_status Queue<S>::push(const_reference elem,
+                            queue_overflow_strategy strategy) {
     auto status{queue_status::ok};
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (limit_ == q_.size()) {
-            q_.pop_front();
-            status = queue_status::overflow;
-        }
-        q_.push_back(elem);
+    std::unique_lock<std::mutex> lock(mutex_);
+    switch (strategy) {
+        case queue_overflow_strategy::wait:
+            not_full_.wait(lock,
+                           [&] { return limit_ != q_.size() || joinable_; });
+            if (joinable_) {
+                return queue_status::abort;
+            }
+            break;
+        case queue_overflow_strategy::pop_oldest:
+            if (limit_ == q_.size()) {
+                q_.pop_front();
+                status = queue_status::overflow;
+            }
+            break;
+        case queue_overflow_strategy::dont_push:
+            if (limit_ == q_.size()) {
+                return queue_status::overflow;
+            }
+            break;
     }
+    q_.push_back(elem);
     not_empty_.notify_one();
     return status;
 }
 
 template <typename S>
-queue_status Queue<S>::try_push(value_type&& elem) {
+queue_status Queue<S>::push(value_type&& elem,
+                            queue_overflow_strategy strategy) {
     auto status{queue_status::ok};
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (limit_ == q_.size()) {
-            q_.pop_front();
-            status = queue_status::overflow;
-        }
-        q_.push_back(std::move(elem));
+    std::unique_lock<std::mutex> lock(mutex_);
+    switch (strategy) {
+        case queue_overflow_strategy::wait:
+            not_full_.wait(lock,
+                           [&] { return limit_ != q_.size() || joinable_; });
+            if (joinable_) {
+                return queue_status::abort;
+            }
+            break;
+        case queue_overflow_strategy::pop_oldest:
+            if (limit_ == q_.size()) {
+                q_.pop_front();
+                status = queue_status::overflow;
+            }
+            break;
+        case queue_overflow_strategy::dont_push:
+            if (limit_ == q_.size()) {
+                return queue_status::overflow;
+            }
+            break;
     }
+    q_.push_back(std::move(elem));
     not_empty_.notify_one();
     return status;
-}
-
-template <typename S>
-queue_status Queue<S>::push(const_reference elem) {
-    {
-        std::unique_lock<std::mutex> lock(mutex_);
-        not_full_.wait(lock, [&] { return limit_ != q_.size() || joinable_; });
-        if (joinable_) {
-            return queue_status::abort;
-        }
-        q_.push_back(elem);
-    }
-    not_empty_.notify_one();
-    return queue_status::ok;
-}
-
-template <typename S>
-queue_status Queue<S>::push(value_type&& elem) {
-    {
-        std::unique_lock<std::mutex> lock(mutex_);
-        not_full_.wait(lock, [&] { return limit_ != q_.size() || joinable_; });
-        if (joinable_) {
-            return queue_status::abort;
-        }
-        q_.push_back(std::move(elem));
-    }
-    not_empty_.notify_one();
-    return queue_status::ok;
 }
 
 template <typename S>

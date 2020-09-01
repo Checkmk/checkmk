@@ -213,7 +213,8 @@ void *main_thread(void *data) {
         if (cc > g_max_fd_ever) {
             g_max_fd_ever = cc;
         }
-        switch (fl_client_queue->try_push(cc)) {
+        switch (
+            fl_client_queue->push(cc, queue_overflow_strategy::pop_oldest)) {
             case queue_status::overflow:
             case queue_status::abort: {
                 generic_error ge("cannot enqueue client socket");

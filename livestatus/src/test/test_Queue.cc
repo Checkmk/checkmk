@@ -23,9 +23,12 @@ TEST_F(UnboundedQueueFixture, LimitIsNotSet) {
 TEST_F(UnboundedQueueFixture, PushAndPop) {
     EXPECT_EQ(0UL, queue.approx_size());
 
-    EXPECT_EQ(queue_status::ok, queue.try_push(1));
-    EXPECT_EQ(queue_status::ok, queue.try_push(2));
-    EXPECT_EQ(queue_status::ok, queue.try_push(42));
+    EXPECT_EQ(queue_status::ok,
+              queue.push(1, queue_overflow_strategy::pop_oldest));
+    EXPECT_EQ(queue_status::ok,
+              queue.push(2, queue_overflow_strategy::pop_oldest));
+    EXPECT_EQ(queue_status::ok,
+              queue.push(42, queue_overflow_strategy::pop_oldest));
     EXPECT_EQ(3UL, queue.approx_size());
 
     EXPECT_EQ(1, queue.try_pop());
@@ -38,9 +41,9 @@ TEST_F(UnboundedQueueFixture, PushWaitAndPopWait) {
     EXPECT_EQ(0UL, queue.approx_size());
 
     // This is non blocking as long as we stay within [0-limit] elements.
-    EXPECT_EQ(queue_status::ok, queue.push(1));
-    EXPECT_EQ(queue_status::ok, queue.push(2));
-    EXPECT_EQ(queue_status::ok, queue.push(42));
+    EXPECT_EQ(queue_status::ok, queue.push(1, queue_overflow_strategy::wait));
+    EXPECT_EQ(queue_status::ok, queue.push(2, queue_overflow_strategy::wait));
+    EXPECT_EQ(queue_status::ok, queue.push(42, queue_overflow_strategy::wait));
     EXPECT_EQ(3UL, queue.approx_size());
 
     EXPECT_EQ(1, queue.pop());
@@ -70,20 +73,30 @@ TEST_F(BoundedQueueFixture, LimitIsSet) {
 TEST_F(BoundedQueueFixture, FullDiscardsOldest) {
     EXPECT_EQ(0UL, queue.approx_size());
 
-    EXPECT_EQ(queue_status::ok, queue.try_push(1));
-    EXPECT_EQ(queue_status::ok, queue.try_push(2));
-    EXPECT_EQ(queue_status::ok, queue.try_push(3));
-    EXPECT_EQ(queue_status::ok, queue.try_push(4));
-    EXPECT_EQ(queue_status::ok, queue.try_push(5));
+    EXPECT_EQ(queue_status::ok,
+              queue.push(1, queue_overflow_strategy::pop_oldest));
+    EXPECT_EQ(queue_status::ok,
+              queue.push(2, queue_overflow_strategy::pop_oldest));
+    EXPECT_EQ(queue_status::ok,
+              queue.push(3, queue_overflow_strategy::pop_oldest));
+    EXPECT_EQ(queue_status::ok,
+              queue.push(4, queue_overflow_strategy::pop_oldest));
+    EXPECT_EQ(queue_status::ok,
+              queue.push(5, queue_overflow_strategy::pop_oldest));
     EXPECT_EQ(5UL, queue.approx_size());
 
     // Now the queue should be full.
 
-    EXPECT_EQ(queue_status::overflow, queue.try_push(6));
-    EXPECT_EQ(queue_status::overflow, queue.try_push(7));
-    EXPECT_EQ(queue_status::overflow, queue.try_push(8));
-    EXPECT_EQ(queue_status::overflow, queue.try_push(9));
-    EXPECT_EQ(queue_status::overflow, queue.try_push(0));
+    EXPECT_EQ(queue_status::overflow,
+              queue.push(6, queue_overflow_strategy::pop_oldest));
+    EXPECT_EQ(queue_status::overflow,
+              queue.push(7, queue_overflow_strategy::pop_oldest));
+    EXPECT_EQ(queue_status::overflow,
+              queue.push(8, queue_overflow_strategy::pop_oldest));
+    EXPECT_EQ(queue_status::overflow,
+              queue.push(9, queue_overflow_strategy::pop_oldest));
+    EXPECT_EQ(queue_status::overflow,
+              queue.push(0, queue_overflow_strategy::pop_oldest));
     EXPECT_EQ(5UL, queue.approx_size());
 
     // The first five elements should be gone.

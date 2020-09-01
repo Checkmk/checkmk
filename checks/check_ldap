@@ -19,7 +19,7 @@ def check_ldap_arguments(params):
 
     if "response_time" in settings:
         warn, crit = settings["response_time"]
-        args += ["-w", "%f" % warn / 1000.0, "-c", "%f" % crit / 1000.0]
+        args += ["-w", "%f" % (warn / 1000.0), "-c", "%f" % (crit / 1000.0)]
 
     if "timeout" in settings:
         args += ["-t", settings["timeout"]]

@@ -63,6 +63,10 @@ class FetcherHeader:
     def __str__(self) -> str:
         return FetcherHeader.fmt.format(self.type.name[:15], self.status, self.payload_length)
 
+    def __bytes__(self) -> bytes:  # pylint: disable=E0308
+        # E0308: false positive, see https://github.com/PyCQA/pylint/issues/3599
+        return str(self).encode("ascii")
+
     def __eq__(self, other: Any) -> bool:
         return str(self) == str(other)
 
@@ -73,12 +77,12 @@ class FetcherHeader:
         return FetcherHeader.length
 
     @classmethod
-    def from_network(cls, data: str) -> 'FetcherHeader':
+    def from_network(cls, data: bytes) -> 'FetcherHeader':
         try:
             # to simplify parsing we are using ':' as a splitter
-            type_, status, payload_length = data[:FetcherHeader.length].split(":")[:3]
+            type_, status, payload_length = data[:FetcherHeader.length].split(b":")[:3]
             return cls(
-                FetcherType[type_.strip()],
+                FetcherType[type_.decode("ascii").strip()],
                 status=int(status, base=10),
                 payload_length=int(payload_length, base=10),
             )
@@ -109,8 +113,13 @@ class Header:
     fmt = "{:<5}:{:<7}:{:<8}:{:<8}:"
     length = 32
 
-    def __init__(self, name: str, state: Union['Header.State', str], severity: str,
-                 payload_length: int) -> None:
+    def __init__(
+        self,
+        name: str,
+        state: Union['Header.State', str],
+        severity: str,
+        payload_length: int,
+    ) -> None:
         self.name = name
         self.state = Header.State(state) if isinstance(state, str) else state
         self.severity = severity
@@ -126,8 +135,16 @@ class Header:
         )
 
     def __str__(self) -> str:
-        return Header.fmt.format(self.name[:5], self.state[:7], self.severity[:8],
-                                 self.payload_length)
+        return Header.fmt.format(
+            self.name[:5],
+            self.state[:7],
+            self.severity[:8],
+            self.payload_length,
+        )
+
+    def __bytes__(self) -> bytes:  # pylint: disable=E0308
+        # E0308: false positive, see https://github.com/PyCQA/pylint/issues/3599
+        return str(self).encode("ascii")
 
     def __eq__(self, other: Any) -> bool:
         return str(self) == str(other)
@@ -139,11 +156,16 @@ class Header:
         return Header.length
 
     @classmethod
-    def from_network(cls, data: str) -> 'Header':
+    def from_network(cls, data: bytes) -> 'Header':
         try:
             # to simplify parsing we are using ':' as a splitter
-            name, state, hint, payload_length = data[:Header.length].split(":")[:4]
-            return cls(name, state, hint, int(payload_length, base=10))
+            name, state, severity, payload_length = data[:Header.length].split(b":")[:4]
+            return cls(
+                name.decode("ascii"),
+                state.decode("ascii"),
+                severity.decode("ascii"),
+                int(payload_length, base=10),
+            )
         except ValueError as exc:
             raise ValueError(data) from exc
 
@@ -155,24 +177,24 @@ class Header:
         return "fetch"
 
 
-def make_success_answer(data: str) -> str:
-    return str(
+def make_success_answer(data: bytes) -> bytes:
+    return bytes(
         Header(name=Header.default_protocol_name(),
                state=Header.State.SUCCESS,
                severity=" ",
                payload_length=len(data))) + data
 
 
-def make_failure_answer(data: str, *, severity: str) -> str:
-    return str(
+def make_failure_answer(data: bytes, *, severity: str) -> bytes:
+    return bytes(
         Header(name=Header.default_protocol_name(),
                state=Header.State.FAILURE,
                severity=severity,
                payload_length=len(data))) + data
 
 
-def make_waiting_answer() -> str:
-    return str(
+def make_waiting_answer() -> bytes:
+    return bytes(
         Header(name=Header.default_protocol_name(),
                state=Header.State.WAITING,
                severity=" ",
@@ -186,9 +208,9 @@ def run_fetchers(serial: str, host_name: HostName, timeout: int) -> None:
 
     if not json_file.exists():
         # this happens during development(or filesystem is broken)
-        text = f"fetcher file for host '{host_name}' and {serial} is absent"
-        write_data(make_success_answer(text))
-        write_data(make_failure_answer(text, severity="warning"))
+        data = f"fetcher file for host '{host_name}' and {serial} is absent".encode("utf8")
+        write_data(make_success_answer(data))
+        write_data(make_failure_answer(data, severity="warning"))
         write_data(make_waiting_answer())
         return
 
@@ -200,9 +222,9 @@ def load_global_config(serial: int) -> None:
     global_json_file = build_json_global_config_file_path(serial=str(serial))
     if not global_json_file.exists():
         # this happens during development(or filesystem is broken)
-        text = f"fetcher global config {serial} is absent"
-        write_data(make_success_answer(text))
-        write_data(make_failure_answer(text, severity="warning"))
+        data = f"fetcher global config {serial} is absent".encode("utf8")
+        write_data(make_success_answer(data))
+        write_data(make_failure_answer(data, severity="warning"))
         write_data(make_waiting_answer())
         return
 
@@ -249,6 +271,7 @@ def _run_fetcher(entry: Dict[str, Any], timeout: int) -> FetcherResult:
 
 
 def status_to_microcore_severity(status: int) -> str:
+    # TODO(ml): That could/should be an enum called Severity.
     try:
         return {
             50: "critical",
@@ -286,7 +309,7 @@ def _run_fetchers_from_file(file_name: Path, timeout: int) -> None:
     # functionality of the Microcore.
 
     resulting_blob = [_run_fetcher(entry, timeout) for entry in fetchers]
-    write_data(make_success_answer(json.dumps(resulting_blob)))
+    write_data(make_success_answer(json.dumps(resulting_blob).encode("utf8")))
 
     for entry in resulting_blob:
         status = entry["status"]
@@ -318,9 +341,8 @@ def build_json_global_config_file_path(serial: str) -> Path:
 # We are writing to non-blocking socket, because simple sys.stdout.write requires flushing
 # and flushing is not always appropriate. fd is fixed by design: stdout is always 1 and microcore
 # receives data from stdout
-def write_data(data: str) -> None:
-    output = data.encode("utf-8")
-    while output:
-        bytes_written = os.write(1, output)
-        output = output[bytes_written:]
+def write_data(data: bytes) -> None:
+    while data:
+        bytes_written = os.write(1, data)
+        data = data[bytes_written:]
         # TODO (ml): We need improve performance - 100% CPU load if Microcore is busy

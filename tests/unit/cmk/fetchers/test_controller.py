@@ -11,7 +11,6 @@ import pytest  # type: ignore[import]
 from cmk.fetchers import FetcherType
 from cmk.fetchers.controller import (
     FetcherHeader,
-    FetcherType,
     Header,
     make_failure_answer,
     make_success_answer,
@@ -39,14 +38,14 @@ def test_status_to_severity(status, severity):
 
 class TestControllerApi:
     def test_controller_success(self):
-        assert make_success_answer(data="payload") == "fetch:SUCCESS:        :7       :payload"
+        assert make_success_answer(data=b"payload") == b"fetch:SUCCESS:        :7       :payload"
 
     def test_controller_failure(self):
         assert make_failure_answer(
-            data="payload", severity="crit12345678") == "fetch:FAILURE:crit1234:7       :payload"
+            data=b"payload", severity="crit12345678") == b"fetch:FAILURE:crit1234:7       :payload"
 
     def test_controller_waiting(self):
-        assert make_waiting_answer() == "fetch:WAITING:        :0       :"
+        assert make_waiting_answer() == b"fetch:WAITING:        :0       :"
 
     def test_build_json_file_path(self):
         assert build_json_file_path(
@@ -71,7 +70,7 @@ class TestHeader:
 
     def test_from_network(self):
         header = Header("fetch", "SUCCESS", "crit", 42)
-        assert Header.from_network(str(header) + 42 * "*") == header
+        assert Header.from_network(bytes(header) + b"*" * 42) == header
 
     def test_clone(self):
         header = Header("name", Header.State.SUCCESS, "crit", 42)
@@ -132,7 +131,7 @@ class TestFetcherHeader:
 
     def test_from_network(self):
         f_header = FetcherHeader(FetcherType.TCP, status=1, payload_length=42)
-        assert FetcherHeader.from_network(str(f_header) + 42 * "*") == f_header
+        assert FetcherHeader.from_network(bytes(f_header) + b"*" * 42) == f_header
 
     def test_clone(self):
         f_header = FetcherHeader(FetcherType.TCP, status=1, payload_length=42)

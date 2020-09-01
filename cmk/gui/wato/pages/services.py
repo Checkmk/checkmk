@@ -607,7 +607,7 @@ class DiscoveryPageRenderer:
         self._show_actions(table, discovery_result, check)
 
         table.cell(_("State"), statename, css=stateclass)
-        table.cell(_("Service"), escaping.escape_attribute(descr))
+        table.cell(_("Service"), escaping.escape_attribute(descr), css="service")
         table.cell(_("Status detail"))
         self._show_status_detail(table_source, check_type, item, descr, output)
 

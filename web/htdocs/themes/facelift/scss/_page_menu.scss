@@ -661,6 +661,13 @@ div#service_container {
         border-top: none;
         border-bottom: none;
       }
+
+      &.service {
+        width: 250px;
+        max-width: 250px;
+        min-width: 250px;
+        white-space: nowrap;
+      }
     }
 
     tr.groupheader {
@@ -686,27 +693,6 @@ div#service_container {
       position: relative;
       top: -1px;
       margin-left: 5px;
-    }
-  }
-
-  tr.data td {
-    &:nth-child(1) {
-      width: 96px;
-      max-width: 96px;
-      min-width: 96px;
-    }
-
-    &:nth-child(2) {
-      width: 40px;
-      max-width: 40px;
-      min-width: 40px;
-    }
-
-    &:nth-child(3) {
-      width: 250px;
-      max-width: 250px;
-      min-width: 250px;
-      white-space: nowrap;
     }
   }
 }

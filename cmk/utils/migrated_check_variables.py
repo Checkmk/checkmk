@@ -28,3 +28,6 @@ memused_default_levels = (150.0, 200.0)
 
 # ps
 ps_default_levels = {"levels": (1, 1, 99999, 99999)}
+
+# hp_proliant_power: see werk 10857
+hp_prolaint_power_default_levels = None  # yes, P R O L A I N T

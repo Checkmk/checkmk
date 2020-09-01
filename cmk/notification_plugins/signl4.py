@@ -6,10 +6,10 @@
 #          SIGNL4 <info@signl4.com>
 # Reliable team alerting using SIGNL4.
 
-import requests
-import json
-import os
 import sys
+import json
+import requests
+
 
 from cmk.notification_plugins import utils
 

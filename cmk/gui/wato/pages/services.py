@@ -35,11 +35,13 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
     PageMenuEntry,
     PageMenuRenderer,
+    PageMenuCheckbox,
     enable_page_menu_entry,
     disable_page_menu_entry,
     make_display_options_dropdown,
     make_simple_link,
     make_javascript_link,
+    make_javascript_action,
 )
 
 from cmk.gui.watolib import (
@@ -1185,17 +1187,14 @@ def _extend_help_dropdown(menu: PageMenu) -> None:
 
 def _page_menu_entry_show_parameters(host: watolib.CREHost,
                                      options: DiscoveryOptions) -> PageMenuEntry:
-    if options.show_parameters:
-        params_options = options._replace(show_parameters=False)
-        params_title = _("Hide check parameters")
-    else:
-        params_options = options._replace(show_parameters=True)
-        params_title = _("Show check parameters")
-
     return PageMenuEntry(
-        title=params_title,
-        icon_name="check_parameters",
-        item=make_javascript_link(_start_js_call(host, params_options)),
+        title=_("Show check parameters"),
+        icon_name="trans",
+        item=PageMenuCheckbox(
+            is_checked=options.show_parameters,
+            check_url=_checkbox_js_url(host, options._replace(show_parameters=True)),
+            uncheck_url=_checkbox_js_url(host, options._replace(show_parameters=False)),
+        ),
         is_advanced=True,
         name="show_parameters",
         css_classes=["toggle"],
@@ -1204,35 +1203,33 @@ def _page_menu_entry_show_parameters(host: watolib.CREHost,
 
 def _page_menu_entry_show_checkboxes(host: watolib.CREHost,
                                      options: DiscoveryOptions) -> PageMenuEntry:
-    if not options.show_checkboxes:
-        checkbox_options = options._replace(show_checkboxes=True)
-        checkbox_title = _('Show checkboxes')
-    else:
-        checkbox_options = options._replace(show_checkboxes=False)
-        checkbox_title = _('Hide checkboxes')
-
     return PageMenuEntry(
-        title=checkbox_title,
-        icon_name="checkbox",
-        item=make_javascript_link(_start_js_call(host, checkbox_options)),
+        title=_("Show checkboxes"),
+        icon_name="trans",
+        item=PageMenuCheckbox(
+            is_checked=options.show_checkboxes,
+            check_url=_checkbox_js_url(host, options._replace(show_checkboxes=True)),
+            uncheck_url=_checkbox_js_url(host, options._replace(show_checkboxes=False)),
+        ),
         name="show_checkboxes",
         css_classes=["toggle"],
     )
 
 
+def _checkbox_js_url(host: watolib.CREHost, options: DiscoveryOptions) -> str:
+    return "javascript:%s" % make_javascript_action(_start_js_call(host, options))
+
+
 def _page_menu_entry_show_discovered_labels(host: watolib.CREHost,
                                             options: DiscoveryOptions) -> PageMenuEntry:
-    if options.show_discovered_labels:
-        params_options = options._replace(show_discovered_labels=False)
-        params_title = _("Hide discovered labels")
-    else:
-        params_options = options._replace(show_discovered_labels=True)
-        params_title = _("Show discovered labels")
-
     return PageMenuEntry(
-        title=params_title,
-        icon_name="checkbox",
-        item=make_javascript_link(_start_js_call(host, params_options)),
+        title=_("Show discovered labels"),
+        icon_name="trans",
+        item=PageMenuCheckbox(
+            is_checked=options.show_discovered_labels,
+            check_url=_checkbox_js_url(host, options._replace(show_discovered_labels=True)),
+            uncheck_url=_checkbox_js_url(host, options._replace(show_discovered_labels=False)),
+        ),
         is_advanced=True,
         name="show_discovered_labels",
         css_classes=["toggle"],
@@ -1241,17 +1238,14 @@ def _page_menu_entry_show_discovered_labels(host: watolib.CREHost,
 
 def _page_menu_entry_show_plugin_names(host: watolib.CREHost,
                                        options: DiscoveryOptions) -> PageMenuEntry:
-    if options.show_plugin_names:
-        params_options = options._replace(show_plugin_names=False)
-        params_title = _("Hide plugin names")
-    else:
-        params_options = options._replace(show_plugin_names=True)
-        params_title = _("Show plugin names")
-
     return PageMenuEntry(
-        title=params_title,
-        icon_name="checkbox",
-        item=make_javascript_link(_start_js_call(host, params_options)),
+        title=_("Show plugin names"),
+        icon_name="trans",
+        item=PageMenuCheckbox(
+            is_checked=options.show_plugin_names,
+            check_url=_checkbox_js_url(host, options._replace(show_plugin_names=True)),
+            uncheck_url=_checkbox_js_url(host, options._replace(show_plugin_names=False)),
+        ),
         is_advanced=True,
         name="show_plugin_names",
         css_classes=["toggle"],

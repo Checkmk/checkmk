@@ -154,7 +154,6 @@ def test_scan_function_translation(config_snmp_scan_functions):
 
 
 @pytest.mark.parametrize("check_name, func_name", [
-    ("if64_tplink", "has_ifHCInOctets"),
     ("fsc_subsystems", "_is_fsc_or_windows"),
     ("ucd_processes", "_is_ucd"),
     ("printer_pages", "scan_ricoh_printer"),
@@ -2115,7 +2114,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'icom_repeater.pll_volt',
         'icom_repeater.temp',
         'icom_repeater',
-        'if64_tplink',
         'ifoperstatus',
         'infoblox_dhcp_stats',
         'infoblox_dns_stats',

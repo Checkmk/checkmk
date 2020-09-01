@@ -530,11 +530,13 @@ class ReportRendererCheck(ABCReportRenderer):
         _crash_row(_("Is Cluster Host"), format_bool(details.get("is_cluster")), odd=True)
         _crash_row(_("Check Type"), details["check_type"], odd=False)
         _crash_row(_("Manual Check"), format_bool(details.get("manual_check")), odd=True, pre=True)
-        _crash_row(_("Uses SNMP"), format_bool(details.get("uses_snmp")), odd=False, pre=True)
         _crash_row(_("Inline-SNMP"), format_bool(details.get("inline_snmp")), odd=True, pre=True)
-        _crash_row(_("Check Item"), details["item"], odd=False)
+        _crash_row(_("Check Item"), details.get("item", "This check has no item."), odd=False)
         _crash_row(_("Description"), details["description"], odd=True)
-        _crash_row(_("Parameters"), format_params(details["params"]), odd=False, pre=True)
+        if "params" in details:
+            _crash_row(_("Parameters"), format_params(details["params"]), odd=False, pre=True)
+        else:
+            _crash_row(_("Parameters"), "This Check has no parameters", odd=False)
 
         html.close_table()
 

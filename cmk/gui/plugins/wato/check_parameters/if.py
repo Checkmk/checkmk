@@ -557,7 +557,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersNetworking,
         help_func=_help_if_disable_if64_hosts,
         name="if_disable_if64_hosts",
-        title=lambda: _("Hosts forced to use <tt>if</tt> instead of <tt>if64</tt>"),
+        title=lambda: _("Hosts forced to use 'if' instead of 'if64'"),
     ))
 
 rulespec_registry.register(

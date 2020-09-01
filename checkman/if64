@@ -30,7 +30,7 @@ description:
 
  Note that there are some devices with broken firmware which report that
  they support 64-bit counters even though they do not. In such cases, you
- can use the rule "Hosts forced to use if instead of if64" to enforce the
+ can use the rule "Hosts forced to use 'if' instead of 'if64'" to enforce the
  usage of the 32-bit interface check.
 
 item:

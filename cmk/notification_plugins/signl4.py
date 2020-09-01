@@ -39,7 +39,7 @@ def get_text(context):
     contact_pager = context['CONTACTPAGER'].replace(' ', '')
     description = notification_type + ' on ' + host_name
     service_problem_id = ''
-    
+
     host_problem_id = context['HOSTPROBLEMID']
     date_time = context['SHORTDATETIME']
 

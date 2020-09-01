@@ -46,11 +46,11 @@ inventory:
  accumulated and put together in a single grouped interface service.
 
 cluster:
-  In the case where single (ungrouped) interfaces are clustered, the corresponding
-  services report only the results from the node with the highest outgoing traffic,
-  since this node is likely the active node.
-  In the case where interface groups are clustered, the grouping is applied across
-  all nodes, potentially combining interfaces from different nodes. Note that the
-  rules defining the interface groups must be configured to apply to the nodes, not
-  to the cluster host (the latter has no effect). In case the grouping configurations
-  vary across the nodes, the last node wins.
+ In the case where single (ungrouped) interfaces are clustered, the corresponding
+ services report only the results from the node with the highest outgoing traffic,
+ since this node is likely the active node.
+ In the case where interface groups are clustered, the grouping is applied across
+ all nodes, potentially combining interfaces from different nodes. Note that the
+ rules defining the interface groups must be configured to apply to the nodes, not
+ to the cluster host (the latter has no effect). In case the grouping configurations
+ vary across the nodes, the last node wins.

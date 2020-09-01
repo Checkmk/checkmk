@@ -222,7 +222,7 @@ def _run_fetcher(entry: Dict[str, Any], timeout: int) -> FetcherResult:
         fetcher_type = entry["fetcher_type"]
         fetcher_params = entry["fetcher_params"]
 
-        with FetcherType[fetcher_type].value.from_json(fetcher_params) as fetcher:
+        with FetcherType[fetcher_type].from_json(fetcher_params) as fetcher:
             fetcher_data = fetcher.fetch()
 
         # If data returns bytes -> decode. This is current state of development.

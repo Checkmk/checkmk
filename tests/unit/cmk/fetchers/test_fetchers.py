@@ -278,3 +278,12 @@ class TestTCPFetcher:
 
         with pytest.raises(MKFetcherError):
             fetcher._decrypt(output)
+
+
+class TestFetcherType:
+    def test_factory(self):
+        assert FetcherType.IPMI.make() is IPMIFetcher
+        assert FetcherType.PIGGYBACK.make() is PiggybackFetcher
+        assert FetcherType.PROGRAM.make() is ProgramFetcher
+        assert FetcherType.SNMP.make() is SNMPFetcher
+        assert FetcherType.TCP.make() is TCPFetcher

@@ -8,4 +8,3 @@ from cmk.notification_plugins import signl4
 
 if __name__ == "__main__":
     sys.exit(signl4.main())
-

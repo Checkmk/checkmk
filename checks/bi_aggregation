@@ -24,7 +24,10 @@ def check_bi_aggregation(item, _no_params, parsed):
         return
 
     aggr_state = bi_data["aggr_state"]
-    yield aggr_state["state_computed_by_agent"], ""
+
+    overall_state = aggr_state["state_computed_by_agent"]
+    yield overall_state, "Aggregation state: %s" % ['Ok', 'Warning', 'Critical', 'Unknown'
+                                                   ][overall_state]
 
     yield 0, "In downtime: %s" % ("yes" if aggr_state.get("in_downtime") else "no")
     yield 0, "Acknowledged: %s" % ("yes" if aggr_state.get("acknowledged") else "no")

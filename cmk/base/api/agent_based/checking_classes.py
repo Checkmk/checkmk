@@ -331,3 +331,6 @@ class IgnoreResults(ABCCheckGenerated):
 
     def __str__(self) -> str:
         return self._value if isinstance(self._value, str) else repr(self._value)
+
+    def __eq__(self, other) -> bool:
+        return self._value == other._value

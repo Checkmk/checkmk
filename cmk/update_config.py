@@ -286,7 +286,7 @@ class UpdateConfig:
             reporting.load_reports()
             topic_created_for.update(
                 self._migrate_visuals_topics(topics,
-                                             visual_type="dashboards",
+                                             visual_type="reports",
                                              all_visuals=reporting.reports))
 
         return topic_created_for

@@ -595,8 +595,8 @@ class ModeFolder(WatoMode):
         if html.request.var("_hosts_reset_sorting") or html.request.var("_hosts_sort"):
             return
 
-        selected_host_names = get_hostnames_from_checkboxes(deflt=True)
-        if len(selected_host_names) == 0:
+        selected_host_names = get_hostnames_from_checkboxes()
+        if not selected_host_names:
             raise MKUserError(None,
                               _("Please select some hosts before doing bulk operations on hosts."))
 
@@ -853,6 +853,7 @@ class ModeFolder(WatoMode):
                 self._show_host_row(rendered_hosts, table, hostname, search_text, colspan,
                                     host_errors, contact_group_names)
 
+        html.hidden_field("selection_id", weblib.selection_id())
         html.hidden_fields()
         html.end_form()
 

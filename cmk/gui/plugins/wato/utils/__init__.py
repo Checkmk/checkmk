@@ -2190,18 +2190,15 @@ def get_hostnames_from_checkboxes(filterfunc: _Optional[Callable] = None,
                                   deflt: bool = False) -> List[str]:
     """Create list of all host names that are select with checkboxes in the current file.
     This is needed for bulk operations."""
-    show_checkboxes = html.request.var("show_checkboxes", "1" if deflt else "") == "1"
-    if show_checkboxes:
-        selected = config.user.get_rowselection(weblib.selection_id(),
-                                                'wato-folder-/' + watolib.Folder.current().path())
+    selected = config.user.get_rowselection(weblib.selection_id(),
+                                            'wato-folder-/' + watolib.Folder.current().path())
     search_text = html.request.var("search")
 
     selected_host_names = []
     for host_name, host in sorted(watolib.Folder.current().hosts().items()):
-        if (not search_text or (search_text.lower() in host_name.lower())) \
-            and (not show_checkboxes or ('_c_' + host_name) in selected):
-            if filterfunc is None or \
-               filterfunc(host):
+        if ((not search_text or (search_text.lower() in host_name.lower())) and
+            ('_c_' + host_name) in selected):
+            if filterfunc is None or filterfunc(host):
                 selected_host_names.append(host_name)
     return selected_host_names
 

@@ -9,7 +9,7 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
 make
-sudo install -m 755 check_mk fetcher livedump mkeventd mkeventd_open514 mkevent mkbackup mkbench cmk-update-config $ROOT/bin/
+sudo install -m 755 check_mk livedump mkeventd mkeventd_open514 mkevent mkbackup mkbench cmk-update-config $ROOT/bin/
 sudo ln -sf check_mk $ROOT/bin/cmk
 sudo chown root.omd $ROOT/bin/mkeventd_open514
 sudo chmod 750 $ROOT/bin/mkeventd_open514

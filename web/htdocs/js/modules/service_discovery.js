@@ -115,6 +115,11 @@ function update(handler_data, response) {
     g_service_discovery_result = response.discovery_result;
     handler_data.post_data = get_post_data(handler_data.host_name, handler_data.folder_path, response.discovery_options, handler_data.transid);
 
+    // Update the page menu
+    var page_menu_bar = document.getElementById("page_menu_bar");
+    page_menu_bar.outerHTML = response.page_menu;
+    utils.execute_javascript_by_object(page_menu_bar);
+
     // Update the content table
     var container = document.getElementById("service_container");
     container.style.display = "block";

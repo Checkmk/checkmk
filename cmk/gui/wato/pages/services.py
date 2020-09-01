@@ -28,12 +28,13 @@ from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError, MKGeneralException
-from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.breadcrumb import Breadcrumb, make_main_menu_breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
     PageMenuTopic,
     PageMenuEntry,
+    PageMenuRenderer,
     enable_page_menu_entry,
     disable_page_menu_entry,
     make_display_options_dropdown,
@@ -246,10 +247,30 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             "job_state": discovery_result.job_status["state"],
             "message": self._get_status_message(discovery_result, performed_action),
             "body": page_code,
+            "page_menu": self._get_page_menu(),
             "pending_changes_info": get_pending_changes_info(),
             "discovery_options": self._options._asdict(),
             "discovery_result": repr(tuple(discovery_result)),
         }
+
+    def _get_page_menu(self) -> str:
+        """Render the page menu contents to reflect contect changes
+
+        The page menu needs to be updated, just like the body of the page. We previously tried an
+        incremental approach (render the page menu once and update it's elements later during each
+        refresh), but it was a lot more complex to realize and resulted in inconsistencies. This is
+        the simpler solution and less error prone.
+        """
+        page_menu = service_page_menu(self._get_discovery_breadcrumb(), self._host, self._options)
+        with html.plugged():
+            PageMenuRenderer().show(page_menu)
+            return html.drain()
+
+    def _get_discovery_breadcrumb(self) -> Breadcrumb:
+        with html.stashed_vars():
+            html.request.set_var("host", self._host.name())
+            mode = ModeDiscovery()
+            return make_main_menu_breadcrumb(mode.main_menu()) + mode.breadcrumb()
 
     def _get_status_message(self, discovery_result: DiscoveryResult,
                             performed_action: str) -> Optional[str]:

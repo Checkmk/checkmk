@@ -263,10 +263,10 @@ def load_global_config(serial: int) -> None:
 def _run_fetcher(entry: Dict[str, Any], timeout: int) -> FetcherMessage:
     """Fetch and serialize the raw data."""
     try:
-        fetcher_type = entry["fetcher_type"]
+        fetcher_type = FetcherType[entry["fetcher_type"]]
         fetcher_params = entry["fetcher_params"]
 
-        with FetcherType[fetcher_type].from_json(fetcher_params) as fetcher:
+        with fetcher_type.from_json(fetcher_params) as fetcher:
             fetcher_data = fetcher.fetch()
 
         payload: bytes

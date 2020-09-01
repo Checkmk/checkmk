@@ -11,7 +11,7 @@ import enum
 import json
 import os
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Any, Dict, Final, Union
 
 from cmk.utils.paths import core_fetcher_config_dir
 from cmk.utils.type_defs import HostName
@@ -28,8 +28,8 @@ from .type_defs import FetcherResult
 class FetcherHeader:
     """Header is fixed size(16+8+8 = 32 bytes) bytes in format
 
-      header: <NAME>:<STATUS>:<SIZE>:
-      NAME   - fetcher name, for example TCP
+      header: <TYPE>:<STATUS>:<SIZE>:
+      TYPE   - fetcher type, see FetcherType
       STATUS - error code. ) or 50 or ...
       SIZE   - 8 bytes string 0..9
 
@@ -43,25 +43,25 @@ class FetcherHeader:
 
     def __init__(
         self,
-        name: str,
+        type_: FetcherType,
         *,
         status: int,
         payload_length: int,
     ) -> None:
-        self.name = name
-        self.status = status
-        self.payload_length = payload_length
+        self.type: Final[FetcherType] = type_
+        self.status: Final[int] = status
+        self.payload_length: Final[int] = payload_length
 
     def __repr__(self) -> str:
         return "%s(%r, %r, %r)" % (
             type(self).__name__,
-            self.name,
+            self.type,
             self.status,
             self.payload_length,
         )
 
     def __str__(self) -> str:
-        return FetcherHeader.fmt.format(self.name[:15], self.status, self.payload_length)
+        return FetcherHeader.fmt.format(self.type.name[:15], self.status, self.payload_length)
 
     def __eq__(self, other: Any) -> bool:
         return str(self) == str(other)
@@ -76,9 +76,9 @@ class FetcherHeader:
     def from_network(cls, data: str) -> 'FetcherHeader':
         try:
             # to simplify parsing we are using ':' as a splitter
-            name, status, payload_length = data[:FetcherHeader.length].split(":")[:3]
+            type_, status, payload_length = data[:FetcherHeader.length].split(":")[:3]
             return cls(
-                name,
+                FetcherType[type_.strip()],
                 status=int(status, base=10),
                 payload_length=int(payload_length, base=10),
             )
@@ -86,7 +86,7 @@ class FetcherHeader:
             raise ValueError(data) from exc
 
     def clone(self) -> 'FetcherHeader':
-        return FetcherHeader(self.name, status=self.status, payload_length=self.payload_length)
+        return FetcherHeader(self.type, status=self.status, payload_length=self.payload_length)
 
 
 class Header:

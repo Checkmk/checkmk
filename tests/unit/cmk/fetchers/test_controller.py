@@ -8,8 +8,10 @@ from pathlib import Path
 
 import pytest  # type: ignore[import]
 
+from cmk.fetchers import FetcherType
 from cmk.fetchers.controller import (
     FetcherHeader,
+    FetcherType,
     Header,
     make_failure_answer,
     make_success_answer,
@@ -123,46 +125,71 @@ class TestHeader:
 
 
 class TestFetcherHeader:
+    def test_str(self):
+        f_header = FetcherHeader(FetcherType.TCP, status=1, payload_length=42)
+        assert len(str(f_header)) == FetcherHeader.length
+        assert str(f_header) == "TCP            :1      :42     :"
+
     def test_from_network(self):
-        f_header = FetcherHeader("TCP", status=1, payload_length=42)
+        f_header = FetcherHeader(FetcherType.TCP, status=1, payload_length=42)
         assert FetcherHeader.from_network(str(f_header) + 42 * "*") == f_header
 
     def test_clone(self):
-        f_header = FetcherHeader("TCP", status=1, payload_length=42)
+        f_header = FetcherHeader(FetcherType.TCP, status=1, payload_length=42)
         other = f_header.clone()
         assert other is not f_header
         assert other == f_header
 
     def test_eq(self):
-        f_header = FetcherHeader("TCP", status=1, payload_length=42)
+        f_header = FetcherHeader(FetcherType.TCP, status=1, payload_length=42)
         assert f_header == str(f_header)
         assert str(f_header) == f_header
 
     def test_neq(self):
-        f_header = FetcherHeader("TCP", status=1, payload_length=42)
+        type_ = FetcherType.TCP
+        status = 1
+        payload_length = 42
 
-        other_name = f_header.clone()
-        other_name.name = "toto"
-        assert f_header != other_name
+        assert (FetcherHeader(
+            type_,
+            status=status,
+            payload_length=payload_length,
+        ) != FetcherHeader(
+            FetcherType.SNMP,  # other type
+            status=status,
+            payload_length=payload_length,
+        ))
 
-        other_status = f_header.clone()
-        other_status.status = 99
-        assert f_header != other_status
+        assert (FetcherHeader(
+            type_,
+            status=status,
+            payload_length=payload_length,
+        ) != FetcherHeader(
+            type_,
+            status=69,  # other status
+            payload_length=payload_length,
+        ))
 
-        other_len = f_header.clone()
-        other_len.payload_length = 69
-        assert f_header != other_len
+        assert (FetcherHeader(
+            type_,
+            status=status,
+            payload_length=payload_length,
+        ) != FetcherHeader(
+            type_,
+            status=status,
+            payload_length=69,  # other length
+        ))
 
     def test_repr(self):
-        f_header = FetcherHeader("name", status=0, payload_length=42)
+        f_header = FetcherHeader(FetcherType.TCP, status=0, payload_length=42)
         assert isinstance(repr(f_header), str)
 
     def test_hash(self):
-        f_header = FetcherHeader("name", status=0, payload_length=42)
+        f_header = FetcherHeader(FetcherType.TCP, status=0, payload_length=42)
         assert hash(f_header) == hash(str(f_header))
 
     def test_len(self):
-        f_header = FetcherHeader("name", status=0, payload_length=42)
+        f_header = FetcherHeader(FetcherType.TCP, status=0, payload_length=42)
         assert len(f_header) == len(str(f_header))
 
     def test_critical_constants(self):

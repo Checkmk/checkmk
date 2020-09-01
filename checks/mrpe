@@ -4,6 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import typing
+
+LegacyMetricTuple = typing.Tuple[str, float, typing.Optional[float], typing.Optional[float],
+                                 typing.Optional[float], typing.Optional[float]]
+
 
 def parse_mrpe(info):
     PluginData = collections.namedtuple("PluginData", ("name", "state", "info"))
@@ -44,21 +49,45 @@ def parse_mrpe(info):
     return parsed
 
 
-def parse_nagios_perfstring(perfinfo):
+def _opt_float(string: str) -> typing.Optional[float]:
+    try:
+        return float(string)
+    except ValueError:
+        return None
+
+
+def _strip_unit_float(string: str) -> float:
+    """
+        >>> _strip_unit_float("12.3 MB")
+        12.3
+    """
+    for i in range(len(string), 0, -1):
+        try:
+            return float(string[:i])
+        except ValueError:
+            pass
+    # retrigger first ValueError:
+    return float(string)
+
+
+def parse_nagios_perfstring(perfinfo: str) -> typing.Optional[LegacyMetricTuple]:
     if '=' not in perfinfo:
         return None
-    varname, valuetxt = perfinfo.split("=", 1)
+    name, valuetxt = perfinfo.split("=", 1)
     values = valuetxt.split(";")
     # perfdata must not contain values with colons. So we split
     # these values and use the upper levels only.
-    values = [v.split(':')[-1] for v in values]
-    try:
-        return tuple([varname] + [int(v) for v in values])
-    except ValueError:
-        try:
-            return tuple([varname] + [float(v) for v in values])
-        except ValueError:
-            return tuple([varname] + values)
+    values = [v.split(':')[-1] for v in values][:5]
+    value, warn, crit, min_, max_ = values + [""] * (5 - len(values))
+
+    return (
+        name,
+        _strip_unit_float(value),
+        _opt_float(warn),
+        _opt_float(crit),
+        _opt_float(min_),
+        _opt_float(max_),
+    )
 
 
 @get_parsed_item_data
@@ -88,7 +117,7 @@ def check_mrpe(_no_item, _no_params, data):
                 perfdata += parts[1].strip().split()
                 now_comes_perfdata = True
 
-    perf_parsed = []
+    perf_parsed: typing.List[LegacyMetricTuple] = []
     for perfvalue in perfdata:
         new_perf = parse_nagios_perfstring(perfvalue)
         if new_perf:

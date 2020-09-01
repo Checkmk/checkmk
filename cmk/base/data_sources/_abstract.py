@@ -22,7 +22,9 @@ from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheck
 
 from cmk.fetchers import ABCFetcher
 from cmk.fetchers.controller import FetcherType
-from cmk.fetchers.type_defs import TRawData, Mode
+from cmk.fetchers.type_defs import Mode
+
+from cmk.snmplib.type_defs import TRawData
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config

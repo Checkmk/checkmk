@@ -15,7 +15,7 @@ import cmk.utils.store as store
 from cmk.utils.exceptions import MKException, MKGeneralException
 from cmk.utils.log import VERBOSE, logger as cmk_logger
 
-from .type_defs import TRawData
+from cmk.snmplib.type_defs import TRawData
 
 __all__ = ["ABCFetcher", "MKFetcherError"]
 

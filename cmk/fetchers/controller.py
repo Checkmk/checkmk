@@ -10,7 +10,6 @@
 import enum
 import json
 import os
-import base64
 from pathlib import Path
 from typing import Any, Dict, Union
 
@@ -215,8 +214,8 @@ def load_global_config(serial: int) -> None:
 def _run_fetcher(entry: Dict[str, Any], timeout: int) -> FetcherResult:
     """ timeout to be used by concrete fetcher implementation
     Examples of correct dictionaries to return:
-    {  "fetcher_type": "SNMP", "status": 0,   "payload": ""whatever}
-    {  "fetcher_type": "TCP",  "status": 50,  "payload": "exception text"}
+    {  "fetcher_type": "snmp", "status": 0,   "payload": ""whatever}
+    {  "fetcher_type": "tcp",  "status": 50,  "payload": "exception text"}
     """
 
     try:
@@ -224,14 +223,14 @@ def _run_fetcher(entry: Dict[str, Any], timeout: int) -> FetcherResult:
         fetcher_params = entry["fetcher_params"]
 
         with FetcherType[fetcher_type].value.from_json(fetcher_params) as fetcher:
-            payload = fetcher.fetch()
+            fetcher_data = fetcher.fetch()
 
-        if fetcher_type != "SNMP":
-            # Since we currently transport the data using JSON, we have to encode the binary data.
-            payload = base64.b64encode(payload).decode("ascii")
+        # If data returns bytes -> decode. This is current state of development.
+        # SNMP returns not a str, but raw structure. We must serialize this structure and send it.
+        if isinstance(fetcher_data, bytes):
+            payload = fetcher_data.decode("utf-8")
         else:
-            # Keys of SNMP payload is of type SectionName which can not be encoded using JSON.
-            payload = {"%s" % k: v for k, v in payload.items()}
+            payload = json.dumps(fetcher_data)
 
         return {
             "fetcher_type": fetcher_type,

@@ -408,12 +408,19 @@ class NotificationParameterSIGNL4(NotificationParameter):
             title=_("Create notification with the following parameters"),
             optional_keys = [],
             elements = [
-                ("password", Password(
-                    title = _("Team Secret"),
-                    help = _("The team secret of your SIGNL4 team. That is the last part of your webhook URL: https://connect.signl4.com/webhook/<team_secret>"),
-                    size = 64,
-                    allow_empty = False,
-                )),
+                ("password", CascadingDropdown(
+                    title=_("Team Secret"),
+                    help= _("The team secret of your SIGNL4 team. That is the last part of your webhook URL: https://connect.signl4.com/webhook/<team_secret>"),
+                    choices=[("password", _("Team Secret"), Password(
+                        size=64,
+                        allow_empty=False)),
+                        ("store", _("Team secret from password store"),
+                        DropdownChoice(
+                        sorted=True,
+                        choices=passwordstore_choices
+                    ))],
+                 )),
+                ("url_prefix", _get_url_prefix_specs(local_site_url)),
             ],
         )
 

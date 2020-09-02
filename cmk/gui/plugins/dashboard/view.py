@@ -47,7 +47,7 @@ class ABCViewDashlet(IFrameDashlet):
 
         view = views.View(self._dashlet_spec["name"], view_spec, self.context)
         view.row_limit = views.get_limit()
-        view.only_sites = views.get_only_sites()
+        view.only_sites = visuals.get_only_sites_from_context(self.context)
         view.user_sorters = views.get_user_sorters()
 
         view_renderer = views.GUIViewRenderer(view, show_buttons=False)

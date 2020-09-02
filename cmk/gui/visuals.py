@@ -1309,14 +1309,38 @@ def get_filter_headers(table, infos, context):
                 html.request.set_var(filter_name, filter_vars)
 
         filter_headers = "".join(collect_filter_headers(infos, table))
-    return filter_headers, get_only_sites()
+    return filter_headers, get_only_sites_from_context(context)
 
 
-def get_only_sites() -> Optional[List[SiteId]]:
-    """Is the view limited to specific sites by request?"""
-    site_arg = html.request.var("site")
-    if site_arg:
-        return [SiteId(site_arg)]
+def get_only_sites_from_context(context: dict) -> Optional[List[SiteId]]:
+    """Gather possible existing "only sites" information from context
+
+      We need to deal with
+
+      a) all possible site filters (site and siteopt).
+      b) with single and multiple contexts
+
+      Single contexts are structured like this:
+
+      {"site": "sitename"}
+
+      Multiple contexts are structured like this:
+
+      {"site": {"site": "sitename"}}
+
+      The difference is no fault or "old" data structure. We can have both kind of structures.
+      These are the data structure the visuals work with.
+      """
+
+    for var in [("site"), ("siteopt")]:
+        if var in context:
+            if isinstance(context[var], dict):
+                site_name = context[var].get("site")
+                if site_name:
+                    return [SiteId(site_name)]
+                return None
+            return [SiteId(context[var])]
+
     return None
 
 

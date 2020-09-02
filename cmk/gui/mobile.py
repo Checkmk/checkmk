@@ -229,7 +229,7 @@ def page_index() -> None:
 
             view = views.View(view_name, view_spec, context)
             view.row_limit = views.get_limit()
-            view.only_sites = views.get_only_sites()
+            view.only_sites = visuals.get_only_sites_from_context(context)
             view.user_sorters = views.get_user_sorters()
             view.want_checkboxes = views.get_want_checkboxes()
 
@@ -287,7 +287,7 @@ def page_view() -> None:
 
     view = views.View(view_name, view_spec, context)
     view.row_limit = views.get_limit()
-    view.only_sites = views.get_only_sites()
+    view.only_sites = visuals.get_only_sites_from_context(context)
     view.user_sorters = views.get_user_sorters()
     view.want_checkboxes = views.get_want_checkboxes()
 

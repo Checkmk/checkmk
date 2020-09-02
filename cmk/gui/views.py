@@ -28,7 +28,6 @@ import cmk.gui.weblib as weblib
 import cmk.gui.forms as forms
 import cmk.gui.inventory as inventory
 import cmk.gui.visuals as visuals
-from cmk.gui.visuals import get_only_sites
 import cmk.gui.sites as sites
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.i18n
@@ -1599,7 +1598,8 @@ def page_view():
 
     view = View(view_name, view_spec, context)
     view.row_limit = get_limit()
-    view.only_sites = get_only_sites()
+    view.only_sites = visuals.get_only_sites_from_context(context)
+
     view.user_sorters = get_user_sorters()
     view.want_checkboxes = get_want_checkboxes()
 

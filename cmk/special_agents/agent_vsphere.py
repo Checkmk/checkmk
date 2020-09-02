@@ -1619,7 +1619,7 @@ def get_sections_aggregated_snapshots(vms, hostsystems, time_reference):
         section_lines += [
             '<<<<%s>>>>' % piggytarget, '<<<esx_vsphere_vm>>>',
             'time_reference %d' % time_reference,
-            'snapshot.rootSnapshotList %s' % '|'.join(sn_list), '<<<<>>>>'
+            'snapshot.rootSnapshotList.summary %s' % '|'.join(sn_list), '<<<<>>>>'
         ]
     return section_lines
 

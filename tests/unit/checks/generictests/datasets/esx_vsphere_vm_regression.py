@@ -87,7 +87,9 @@ discovery = {'cpu': [(None, None)],
              'mounted_devices': [(None, None)],
              'name': [(None, None)],
              'running_on': [(None, None)],
-             'snapshots': [(None, {})]}
+             'snapshots': [(None, {})],
+             'snapshots_summary': [(None, {})],
+             }
 
 
 checks = {'cpu': [(None,

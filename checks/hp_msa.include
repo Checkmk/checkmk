@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.base.plugins.agent_based.utils.hp_msa as hp_msa
+
 #TODO
 # Use 'status-numeric' instead of 'status' field regardless of language.
 # See for state mapping: https://support.hpe.com/hpsc/doc/public/display?docId=emr_na-a00017709en_us
@@ -19,26 +21,7 @@ hp_msa_state_map = {
     "Unknown": (3, "unknown"),
 }
 
-
-def _parse_hp_msa_objects(info):
-    objects = []
-    for line in info:
-        if line[2] == "durable-id":  # marks start of new object
-            objects.append({"item_type": line[0]})
-        if not objects:
-            continue  # should never happen
-        objects[-1][line[2]] = " ".join(line[3:])
-
-    return objects
-
-
-def _get_hp_msa_object_item(data):
-    item = data.get("location", data["durable-id"]).replace("- ", "")
-    return item.rsplit("_", 1)[-1].strip()
-
-
-def parse_hp_msa(info):
-    return {_get_hp_msa_object_item(data): data for data in _parse_hp_msa_objects(info)}
+parse_hp_msa = hp_msa.parse_hp_msa
 
 
 def inventory_hp_msa_health(parsed):

@@ -1989,7 +1989,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'hp_msa_disk.io',
         'hp_msa_disk.temp',
         'hp_msa_fan',
-        'hp_msa_if',
         'hp_msa_psu',
         'hp_msa_psu.sensor',
         'hp_msa_psu.temp',

@@ -4,6 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from .agent_based_api.v0 import (
+    register,
+    type_defs,
+)
+from .utils import (
+    hp_msa,
+    if64,
+    interfaces,
+)
+
 # <<<hp_msa_if>>>
 # port 3 durable-id hostport_A1
 # port 3 controller A
@@ -100,12 +110,23 @@
 # host-port-statistics 2 stop-sample-time 2015-08-21 11:52:00
 # host-port-statistics 2 stop-sample-time-numeric 1440157920
 
-factory_settings['if_default_levels'] = IF_CHECK_DEFAULT_PARAMETERS
 
-
-def parse_hp_msa_if(info):
+def parse_hp_msa_if(string_table: type_defs.AgentStringTable) -> interfaces.Section:
+    """
+    >>> from pprint import pprint
+    >>> pprint(parse_hp_msa_if([
+    ... ['port', '3', 'durable-id', 'hostport_A1'],
+    ... ['port', '3', 'port', 'A1'],
+    ... ['port', '3', 'status', 'Up'],
+    ... ['port', '3', 'actual-speed', '8Gb'],
+    ... ['host-port-statistics', '1', 'data-read-numeric', '453669561808896'],
+    ... ['host-port-statistics', '1', 'data-written-numeric', '372010525295104'],
+    ... ['host-port-statistics', '1', 'queue-depth', '0'],
+    ... ]))
+    [Interface(index='1', descr='A1', alias='', type='6', speed=8000000000, oper_status='1', in_octets=453669561808896, in_ucast=0, in_mcast=0, in_bcast=0, in_discards=0, in_errors=0, out_octets=372010525295104, out_ucast=0, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='', oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None)]
+    """
     parsed = []
-    for idx, (_key, values) in enumerate(sorted(parse_hp_msa(info).items())):
+    for idx, (_key, values) in enumerate(sorted(hp_msa.parse_hp_msa(string_table).items())):
         try:
             speed = int(values['actual-speed'].replace('Gb', '')) * 10**9
         except ValueError:
@@ -116,49 +137,36 @@ def parse_hp_msa_if(info):
         else:
             status = '2'
 
-        nic = ['0'] * 20
-        nic[0] = str(idx + 1)  # Index
-        nic[1] = values['port']  # Description
-        nic[2] = "6"  # Fake ethernet                   # Type
-        nic[3] = speed  # Speed
-        nic[4] = status  # Status
-        # IN
-        nic[5] = int(values['data-read-numeric'])  # inoctets
-        nic[6] = 0  # inucast
-        nic[7] = 0  # inmcast
-        nic[8] = 0  # ibcast
-        nic[9] = 0  # indiscards
-        nic[10] = 0  # inerrors
-        # OUT
-        nic[11] = int(values['data-written-numeric'])  # outoctets
-        nic[12] = 0  # outucast
-        nic[13] = 0  # outmcast
-        nic[14] = 0  # outbcast
-        nic[15] = 0  # outdiscards
-        nic[16] = 0  # outspeed
-        nic[17] = int(values['queue-depth'])  # outqlen
-        nic[18] = ""  # Alias
-        nic[19] = ""  # MAC
-
-        parsed.append(nic)
+        parsed.append(
+            interfaces.Interface(
+                index=str(idx + 1),
+                descr=values['port'],
+                alias="",
+                type="6",
+                speed=speed,
+                oper_status=status,
+                in_octets=int(values['data-read-numeric']),
+                out_octets=int(values['data-written-numeric']),
+                out_qlen=int(values['queue-depth']),
+            ))
 
     return parsed
 
 
-def inventory_hp_msa_if(parsed):
-    return inventory_if_common(parsed)
+register.agent_section(
+    name='hp_msa_if',
+    parse_function=parse_hp_msa_if,
+)
 
-
-def check_hp_msa_if(item, params, parsed):
-    yield check_if_common(item, params, parsed)
-
-
-check_info['hp_msa_if'] = {
-    'parse_function': parse_hp_msa_if,
-    'inventory_function': inventory_hp_msa_if,
-    'check_function': check_hp_msa_if,
-    'service_description': 'Interface %s',
-    'has_perfdata': True,
-    'default_levels_variable': 'if_default_levels',
-    'includes': ["hp_msa.include", "if.include"],
-}
+register.check_plugin(
+    name="hp_msa_if",
+    service_name="Interface %s",
+    discovery_ruleset_name="inventory_if_rules",
+    discovery_ruleset_type="all",
+    discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
+    discovery_function=interfaces.discover_interfaces,
+    check_ruleset_name="if",
+    check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
+    check_function=if64.check_if64,
+    cluster_check_function=interfaces.cluster_check,
+)

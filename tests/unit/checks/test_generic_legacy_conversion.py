@@ -2892,7 +2892,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'viprinet_temp',
         'vms_cpu',
         'vms_diskstat.df',
-        'vms_if',
         'vms_queuejobs',
         'vms_system.ios',
         'vms_system.procs',

@@ -156,8 +156,8 @@ def make_waiting_answer() -> bytes:
                payload_length=0))
 
 
-# NOTE: This function is not stub, but simplified
 def run_fetchers(serial: str, host_name: HostName, timeout: int) -> None:
+    """Entry point from bin/fetcher"""
     # check that file is present, because lack of the file is not an error at the moment
     json_file = build_json_file_path(serial=serial, host_name=host_name)
 

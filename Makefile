@@ -158,7 +158,7 @@ endif
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
 
 # This tar file is only used by "omd/packages/check_mk/Makefile"
-$(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MINI) $(THEME_RESOURCES) ChangeLog agents/windows/plugins/mk_logwatch.exe agents/windows/plugins/mk_jolokia.exe
+$(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MINI) $(THEME_RESOURCES) ChangeLog
 	@echo "Making $(DISTNAME)"
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)
@@ -236,12 +236,6 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 	@echo "=============================================================================="
 	@echo "   FINISHED. "
 	@echo "=============================================================================="
-
-agents/windows/plugins/%.exe:
-	@echo "ERROR: The build artifact $@ is missing. Needs to be created by CI system first."
-	@echo "In case you want to proceed without these files, you may simply execute \"touch $@\""
-	@echo "to create a package without that file."
-	exit 1
 
 omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe:
 	$(MAKE) -C omd openhardwaremonitor-dist

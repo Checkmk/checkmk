@@ -23,5 +23,3 @@ inventory:
  This might be dedicated to tablespaces but also MSSQL server internal parts
  like the "Buffer Manager".
 
-cluster:
- On a cluster the check just cumulates all results for each cluster node.

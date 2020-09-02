@@ -53,7 +53,12 @@ inventory_if_rules = []
 # IF YOU CANNOT FIND THE MIGRATED COUNTERPART OF A FUNCTION, PLEASE TALK TO JOERG BEFORE DOING
 # ANYTHING ELSE.
 # ==================================================================================================
+
+# This HostRulespec is deprecated as of v1.7. However, for compatibility reasons, we must not delete
+# this variable, but it can be moved to cmk/utils/migrated_check_variables.py once no check uses
+# the discovery functionality of this include any more.
 if_groups = []
+
 # Obsolete variable, but needed as contained in autochecks of
 # older checks. We need to keep this up for a few years...
 if_default_error_levels = IF_CHECK_DEFAULT_PARAMETERS["errors"]

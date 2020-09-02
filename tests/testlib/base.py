@@ -17,7 +17,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('section', 'juniper_trpz_aps_sessions'),
     ('section', 'oracle_rman'),
     ('section', 'oracle_tablespaces'),
-    ('section', 'printer_pages'),
     ('section', 'site_object_status'),
     ('section', 'site_object_counts'),
     ('section', 'tsm_stagingpools'),

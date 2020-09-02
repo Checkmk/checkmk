@@ -2019,7 +2019,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'hp_webmgmt_status',
         'hpux_cpu',
         'hpux_fchba',
-        'hpux_if',
         'hpux_lunstats',
         'hpux_lvm',
         'hpux_multipath',

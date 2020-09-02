@@ -1957,7 +1957,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'hitachi_hnas_cpu',
         'hitachi_hnas_drives',
         'hitachi_hnas_fan',
-        'hitachi_hnas_fc_if',
         'hitachi_hnas_fpga',
         'hitachi_hnas_pnode',
         'hitachi_hnas_psu',

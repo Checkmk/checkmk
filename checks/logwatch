@@ -15,8 +15,8 @@ import pathlib
 import cmk.utils.debug
 import cmk.utils.paths
 
-NodeData = typing.TypedDict(
-    "NodeData",
+ItemData = typing.TypedDict(
+    "ItemData",
     {
         'attr': str,
         'lines': typing.List[str],
@@ -24,16 +24,16 @@ NodeData = typing.TypedDict(
     total=True,
 )
 
-ItemData = typing.Dict[typing.Optional[str], NodeData]
-
-SectionLogwatch = typing.TypedDict(
-    "SectionLogwatch",
+NodeData = typing.TypedDict(
+    "NodeData",
     {
         'errors': typing.List[str],
         'logfiles': typing.Dict[str, ItemData],
     },
     total=True,
 )
+
+SectionLogwatch = typing.Dict[typing.Optional[str], NodeData]
 
 # Configuration variables in main.mk needed during the actual check
 logwatch_dir = cmk.utils.paths.var_dir + '/logwatch'
@@ -96,35 +96,28 @@ def _extract_item_attribute(line: str) -> typing.Optional[typing.Tuple[str, str]
 
 def parse_logwatch(info) -> SectionLogwatch:
 
-    parsed: SectionLogwatch = {'errors': [], 'logfiles': {}}
-    item_data = {}  # should never be used
+    parsed: SectionLogwatch = {}
+    item_data: typing.Optional[ItemData] = None
 
     for line in info:
         node = line[0]
         line = " ".join(line[1:])
 
+        node_data = parsed.setdefault(node, {"errors": [], "logfiles": {}})
+
         error_msg = _extract_error_message(node, line)
         if error_msg is not None:
-            parsed['errors'].append(error_msg)
+            node_data['errors'].append(error_msg)
             continue
 
         item_attribute = _extract_item_attribute(line)
         if item_attribute is not None:
             item, attribute = item_attribute
-            if item not in parsed['logfiles']:
-                parsed['logfiles'][item] = {
-                    node: {
-                        'attr': attribute,
-                        'lines': []
-                    },
-                }
-            item_data = parsed['logfiles'][item]
+            item_data = node_data['logfiles'].setdefault(item, {'attr': attribute, 'lines': []})
             continue
 
-        if node not in item_data:
-            item_data[node] = {'attr': attribute, 'lines': []}
-
-        item_data[node]['lines'].append(line)
+        if item_data is not None:
+            item_data['lines'].append(line)
 
     return parsed
 
@@ -162,10 +155,12 @@ def logwatch_ec_forwarding_enabled(params, item):
     return False
 
 
-def _logwatch_discoverable_items(parsed: SectionLogwatch):
+def _logwatch_discoverable_items(parsed: SectionLogwatch) -> typing.List[str]:
     '''only consider files which are 'ok' on at least one node'''
-    return sorted(item for item, item_data in parsed['logfiles'].items()
-                  if any(node_data['attr'] == 'ok' for node_data in item_data.values()))
+    return sorted({
+        item for node_data in parsed.values() for item, item_data in node_data['logfiles'].items()
+        if item_data['attr'] == 'ok'
+    })
 
 
 # Splits the number of existing logfiles into
@@ -298,13 +293,18 @@ def inventory_logwatch_groups(parsed: SectionLogwatch):
 #   '----------------------------------------------------------------------'
 
 
+def _errors(parsed: SectionLogwatch) -> typing.Generator[typing.Tuple[int, str], None, None]:
+    for node_data in parsed.values():
+        for error_msg in node_data['errors']:
+            yield 3, error_msg
+
+
 # In case of a precompiled check, params contains the precompiled
 # logwatch patterns for the logfile we deal with. If using check_mk
 # without precompiled checks, the params must be None an will be
 # ignored.
 def check_logwatch(item, params, parsed: SectionLogwatch):
-    for error_msg in parsed['errors']:
-        yield 3, error_msg
+    yield from _errors(parsed)
 
     if not isinstance(params, dict) or "reclassify_patterns" not in params:
         yield 3, "Patterns not found. Please rediscover the services of this host."
@@ -314,12 +314,11 @@ def check_logwatch(item, params, parsed: SectionLogwatch):
     last_run = get_item_state("logwatch_last_run_%s" % item, 0)
     set_item_state("logwatch_last_run_%s" % item, now)
 
-    item_data = parsed['logfiles'].get(item, {})
-
     loglines = []
-    for node, node_data in item_data.items():
+    for node, node_data in parsed.items():
+        item_data: ItemData = node_data["logfiles"].get(item, {"attr": "missing", "lines": []})
         if _logwatch_is_cache_new(last_run, node):
-            loglines.extend(node_data['lines'])
+            loglines.extend(item_data['lines'])
 
     found = item in _logwatch_discoverable_items(parsed)
     yield check_logwatch_generic(item, params, loglines, found)
@@ -414,8 +413,7 @@ def _logwatch_match_group_patterns(logfile_name, inclusion, exclusion):
 
 
 def check_logwatch_groups(item, params, parsed: SectionLogwatch):
-    for error_msg in parsed['errors']:
-        yield 3, error_msg
+    yield from _errors(parsed)
 
     if not isinstance(params, dict) or "reclassify_patterns" not in params:
         yield 3, "Patterns not found. Please rediscover the services of this host."
@@ -424,12 +422,12 @@ def check_logwatch_groups(item, params, parsed: SectionLogwatch):
     group_patterns = set(params['group_patterns'])
 
     loglines = []
-    for logfile_name, item_data in parsed['logfiles'].items():
-        for inclusion, exclusion in group_patterns:
-            if _logwatch_match_group_patterns(logfile_name, inclusion, exclusion):
-                # node info ignored (only used in regular logwatch check)
-                for node_data in item_data.values():
-                    loglines.extend(node_data['lines'])
+    for node_name, node_data in parsed.items():
+        # node info ignored (only used in regular logwatch check)
+        for logfile_name, item_data in node_data['logfiles'].items():
+            for inclusion, exclusion in group_patterns:
+                if _logwatch_match_group_patterns(logfile_name, inclusion, exclusion):
+                    loglines.extend(item_data['lines'])
                 break
 
     yield check_logwatch_generic(item, params, loglines, True)
@@ -719,7 +717,7 @@ def _logwatch_inventory_mode_rules():
     return mode, merged_rules
 
 
-def inventory_logwatch_ec(parsed, use_mode):
+def inventory_logwatch_ec(parsed: SectionLogwatch, use_mode):
     discoverable_items = _logwatch_discoverable_items(parsed)
     forwarded_logs, _not_forwarded_logs = _logwatch_select_forwarded(discoverable_items)
     if not forwarded_logs:
@@ -742,10 +740,10 @@ def inventory_logwatch_ec(parsed, use_mode):
         yield log, single_log_params.copy()
 
 
-def _logwatch_filter_accumulated_lines(item_data):
+def _logwatch_filter_accumulated_lines(parsed: SectionLogwatch, item: str):
     # node info ignored (only used in regular logwatch check)
-    for node_data in item_data.values():
-        for line in node_data['lines']:
+    for node_data in parsed.values():
+        for line in node_data['logfiles'][item]['lines']:
             # skip context lines and ignore lines
             # skip context lines, ignore lines and empty lines
             if line[0] not in ['.', 'I'] and len(line) > 1:
@@ -753,18 +751,19 @@ def _logwatch_filter_accumulated_lines(item_data):
 
 
 def check_logwatch_ec(item, params, parsed: SectionLogwatch):
-    for error_msg in parsed['errors']:
-        yield 3, error_msg
+    yield from _errors(parsed)
 
     if item:
         # If this check has an item (logwatch.ec_single), only forward the information from this log
-        if item not in parsed['logfiles'] or not logwatch_ec_forwarding_enabled(params, item):
+        if (not any(item in node_data['logfiles'] for node_data in parsed.values()) or
+                not logwatch_ec_forwarding_enabled(params, item)):
             return
         used_logfiles = [item]
     else:
         # Filter logfiles if some should be excluded
         used_logfiles = [
-            name for name in parsed['logfiles'] if logwatch_ec_forwarding_enabled(params, name)
+            name for node_data in parsed.values() for name in node_data['logfiles']
+            if logwatch_ec_forwarding_enabled(params, name)
         ]
 
     # Check if the number of expected files matches the actual one
@@ -808,7 +807,7 @@ def check_logwatch_ec(item, params, parsed: SectionLogwatch):
             logfile_reclassify_settings["reclassify_patterns"].extend(x for x in settings)
 
     for logfile in used_logfiles:
-        lines = _logwatch_filter_accumulated_lines(parsed['logfiles'][logfile])
+        lines = _logwatch_filter_accumulated_lines(parsed, logfile)
 
         logfile_reclassify_settings["reclassify_patterns"] = []
         logfile_reclassify_settings["reclassify_states"] = {}

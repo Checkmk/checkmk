@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import typing
+
 import errno
 import os
 import collections
@@ -12,6 +14,26 @@ import pathlib
 
 import cmk.utils.debug
 import cmk.utils.paths
+
+NodeData = typing.TypedDict(
+    "NodeData",
+    {
+        'attr': str,
+        'lines': typing.List[str],
+    },
+    total=True,
+)
+
+ItemData = typing.Dict[typing.Optional[str], NodeData]
+
+SectionLogwatch = typing.TypedDict(
+    "SectionLogwatch",
+    {
+        'errors': typing.List[str],
+        'logfiles': typing.Dict[str, ItemData],
+    },
+    total=True,
+)
 
 # Configuration variables in main.mk needed during the actual check
 logwatch_dir = cmk.utils.paths.var_dir + '/logwatch'
@@ -41,48 +63,54 @@ logwatch_spool_dir = cmk.utils.paths.var_dir + '/logwatch_spool'
 #   '----------------------------------------------------------------------'
 
 
-def _extract_error_message(node, line):
+def _extract_error_message(
+    node: typing.Optional[str],
+    line: str,
+) -> typing.Optional[str]:
     '''Check line for error message
-    Return (False, None) if no error message is found,
-    (True, error_message) otherwise
+    Return None if no error message is found, error_message otherwise
     '''
     if not line.startswith("CANNOT READ CONFIG FILE: "):
-        return False, None
+        return None
+
     error_msg = line[25:]
     if node is None:
-        return True, "Error in agent configuration: %s" % error_msg
-    return True, "Error in agent configuration on node %s: %s" % (node, error_msg)
+        return "Error in agent configuration: %s" % error_msg
+    return "Error in agent configuration on node %s: %s" % (node, error_msg)
 
 
-def _extract_item_attribute(line):
+def _extract_item_attribute(line: str) -> typing.Optional[typing.Tuple[str, str]]:
     '''Check line for next item subsection
     Return (None, None) if no item subsection is found,
     (item, attribute) otherwise
     '''
     if line[:3] != "[[[" or line[-3:] != "]]]":
-        return None, None
+        return None
     logfile_name = line[3:-3]
     if logfile_name.endswith(':missing') or logfile_name.endswith(':cannotopen'):
-        return logfile_name.rsplit(':', 1)
-    return logfile_name, 'ok'
+        logfile_name, attribute = logfile_name.rsplit(':', 1)
+    else:
+        attribute = 'ok'
+    return logfile_name, attribute
 
 
-def parse_logwatch(info):
+def parse_logwatch(info) -> SectionLogwatch:
 
-    parsed = {'errors': [], 'logfiles': {}}
+    parsed: SectionLogwatch = {'errors': [], 'logfiles': {}}
     item_data = {}  # should never be used
 
     for line in info:
         node = line[0]
         line = " ".join(line[1:])
 
-        is_error, error_msg = _extract_error_message(node, line)
-        if is_error:
+        error_msg = _extract_error_message(node, line)
+        if error_msg is not None:
             parsed['errors'].append(error_msg)
             continue
 
-        item, attribute = _extract_item_attribute(line)
-        if item is not None:
+        item_attribute = _extract_item_attribute(line)
+        if item_attribute is not None:
+            item, attribute = item_attribute
             if item not in parsed['logfiles']:
                 parsed['logfiles'][item] = {
                     node: {
@@ -134,7 +162,7 @@ def logwatch_ec_forwarding_enabled(params, item):
     return False
 
 
-def _logwatch_discoverable_items(parsed):
+def _logwatch_discoverable_items(parsed: SectionLogwatch):
     '''only consider files which are 'ok' on at least one node'''
     return sorted(item for item, item_data in parsed['logfiles'].items()
                   if any(node_data['attr'] == 'ok' for node_data in item_data.values()))
@@ -227,7 +255,7 @@ def logwatch_reclassify(counts, patterns, text, old_level):
     return new_level
 
 
-def inventory_logwatch_single(parsed):
+def inventory_logwatch_single(parsed: SectionLogwatch):
     discoverable_items = _logwatch_discoverable_items(parsed)
     _forwarded_logs, not_forwarded_logs = _logwatch_select_forwarded(discoverable_items)
     inventory_groups = host_extra_conf(host_name(), logwatch_groups)
@@ -239,7 +267,7 @@ def inventory_logwatch_single(parsed):
             yield logfile, logwatch_precompile(logfile)  # file was in no group
 
 
-def inventory_logwatch_groups(parsed):
+def inventory_logwatch_groups(parsed: SectionLogwatch):
     discoverable_items = _logwatch_discoverable_items(parsed)
     _forwarded_logs, not_forwarded_logs = _logwatch_select_forwarded(discoverable_items)
     inventory_groups = host_extra_conf(host_name(), logwatch_groups)
@@ -274,7 +302,7 @@ def inventory_logwatch_groups(parsed):
 # logwatch patterns for the logfile we deal with. If using check_mk
 # without precompiled checks, the params must be None an will be
 # ignored.
-def check_logwatch(item, params, parsed):
+def check_logwatch(item, params, parsed: SectionLogwatch):
     for error_msg in parsed['errors']:
         yield 3, error_msg
 
@@ -385,7 +413,7 @@ def _logwatch_match_group_patterns(logfile_name, inclusion, exclusion):
     return not excl_match
 
 
-def check_logwatch_groups(item, params, parsed):
+def check_logwatch_groups(item, params, parsed: SectionLogwatch):
     for error_msg in parsed['errors']:
         yield 3, error_msg
 
@@ -724,7 +752,7 @@ def _logwatch_filter_accumulated_lines(item_data):
                 yield line
 
 
-def check_logwatch_ec(item, params, parsed):
+def check_logwatch_ec(item, params, parsed: SectionLogwatch):
     for error_msg in parsed['errors']:
         yield 3, error_msg
 

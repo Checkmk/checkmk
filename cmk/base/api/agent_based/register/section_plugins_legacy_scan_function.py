@@ -329,8 +329,6 @@ def _ast_convert_dispatcher(arg: ast.AST) -> SNMPDetectSpec:
 
 def create_detect_spec(name: str, snmp_scan_function: Callable,
                        fallback_files: List[str]) -> SNMPDetectSpec:
-    if name in ("if", "if64"):
-        raise NotImplementedError(name)
     if snmp_scan_function.__name__ in MIGRATED_SCAN_FUNCTIONS:
         try:
             _ = snmp_scan_function(lambda x, default=None: "")

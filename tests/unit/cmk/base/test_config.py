@@ -24,6 +24,7 @@ from cmk.base.caching import config_cache as _config_cache
 import cmk.base.config as config
 from cmk.base.check_utils import Service
 from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
+from cmk.snmplib.type_defs import OIDBytes, OIDCached
 
 
 def test_duplicate_hosts(monkeypatch):
@@ -1964,11 +1965,11 @@ cmc_host_rrd_config = [
 """ % (condition, value))
 
 
-@pytest.mark.parametrize("pack_string", [
-    "_test_var = OIDBytes('6')\n\n",
-    "_test_var = OIDCached('6')\n\n",
-])
-def test_packed_config(pack_string):
+# These types are currently imported into the cmk.base.config namespace, just to be able to load
+# objects of this type from the configuration
+def test_packed_config_able_to_load_snmp_types():
     packed_config = config.PackedConfig()
-    packed_config._write(pack_string)
+    packed_config._write("test_var1 = OIDBytes('6')\n\ntest_var2 = OIDCached('6')\n\n")
     packed_config.load()
+    assert config.test_var1 == OIDBytes('6')  # type: ignore[attr-defined]
+    assert config.test_var2 == OIDCached('6')  # type: ignore[attr-defined]

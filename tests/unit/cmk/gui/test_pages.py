@@ -184,7 +184,7 @@ def test_registered_pages():
             'sla_details',
             'ntop_interface_details',
             'ajax_ntop_interface_quickstats',
-            'ajax_ntop_interface_details',
+            'ajax_ntop_host_details',
             'ajax_ntop_host_stats',
             'ajax_ntop_host_traffic',
             'ajax_ntop_host_ports',

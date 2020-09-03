@@ -2533,6 +2533,20 @@ class HostConfig:
 
         return None
 
+    def disabled_snmp_sections(self) -> Set[SectionName]:
+        """Return a set of disabled snmp sections
+        """
+        rules = self._config_cache.host_extra_conf(self.hostname, snmp_exclude_sections)
+        merged_section_settings: Dict[str, bool] = {}
+        for rule in rules[-1::-1]:
+            merged_section_settings.update(dict(rule.get("sections", [])))
+
+        return {
+            SectionName(name)
+            for name, is_disabled in merged_section_settings.items()
+            if is_disabled
+        }
+
     @property
     def agent_port(self) -> int:
         ports = self._config_cache.host_extra_conf(self.hostname, agent_ports)

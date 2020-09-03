@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import collections
 import re
 import logging
 from typing import Dict, List, Tuple as _Tuple, Any
@@ -5015,7 +5016,7 @@ rulespec_registry.register(
 def get_snmp_section_names():
     sections = get_section_information()
     section_choices = {(s['name'], s['name']) for s in sections.values() if s['type'] == 'snmp'}
-    return [(None, _('All SNMP sections'))] + sorted(section_choices)
+    return sorted(section_choices)
 
 
 def _valuespec_snmp_fetch_interval():
@@ -5034,7 +5035,7 @@ def _valuespec_snmp_fetch_interval():
                            "SNMP fetch intervals for SNMP based sections. "
                            "The reason for this is that the check plugins themselves are not "
                            "aware wether or not they are processing SNMP based data."),
-                    choices=get_snmp_section_names,
+                    choices=lambda: [(None, _('All SNMP sections'))] + get_snmp_section_names(),
                 ),
                 # Transform check types to section names
                 forth=lambda e: e.split(".")[0] if e is not None else None,
@@ -5053,6 +5054,56 @@ rulespec_registry.register(
         group=RulespecGroupAgentSNMP,
         name="snmp_check_interval",  # legacy name, kept for compatibility
         valuespec=_valuespec_snmp_fetch_interval,
+    ))
+
+
+def _valuespec_snmp_config_agent_sections():
+    return Dictionary(
+        title=_("Exclude SNMP sections"),
+        elements=[
+            (
+                "sections",
+                ListOf(
+                    Tuple(elements=[
+                        DropdownChoice(
+                            title=_("SNMP section name"),
+                            choices=get_snmp_section_names,
+                        ),
+                        DropdownChoice(choices=[(True, _("Disable")), (False, _("Enable"))]),
+                    ],),),
+            ),
+        ],
+        help=_("This option allows to omit individual sections from beeing fetched at all. "
+               "Disabled sections will not be fetched. As a result, associated Checkmk "
+               "services may be entirely missing.") + " " +
+        _("However, some check plugins "
+          "can get their data from one section of a prioritized list of different sections, "
+          "in which case you may want to disable individual sections, instead of the check "
+          "plugin itself."),
+        validate=_validate_snmp_config_agent_sections,
+        optional_keys=[],
+    )
+
+
+def _validate_snmp_config_agent_sections(value, varprefix):
+    section_settings = value.get('sections', [])
+    if not section_settings:
+        return
+
+    most_common = collections.Counter(s for s, _v in section_settings).most_common()
+    if most_common[0][1] > 1:  # count of the very most common one
+        offenders = ', '.join(name for name, count in most_common if count > 1)
+        raise MKUserError(
+            varprefix,
+            "%s %s" % (_("Section(s) specified more than once:"), offenders),
+        )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupAgentSNMP,
+        name="snmp_exclude_sections",
+        valuespec=_valuespec_snmp_config_agent_sections,
     ))
 
 

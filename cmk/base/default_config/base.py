@@ -230,6 +230,7 @@ check_mk_exit_status: _List = []
 check_mk_agent_target_versions: _List = []
 check_periods: _List = []
 snmp_check_interval: _List = []
+snmp_exclude_sections: _List = []
 # Rulesets for inventory export hooks
 inv_exports: _Dict = {}
 # Rulesets for parameters of notification scripts

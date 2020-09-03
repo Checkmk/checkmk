@@ -245,6 +245,9 @@ class SNMPConfigurator(ABCConfigurator[SNMPRawData, SNMPHostSections]):
             )
         else:
             section_names = {s.name for s in selected_raw_sections.values()}
+
+        section_names -= self.host_config.disabled_snmp_sections()
+
         for section_name in SNMPConfigurator._sort_section_names(section_names):
             plugin = agent_based_register.get_section_plugin(section_name)
             if not isinstance(plugin, SNMPSectionPlugin):

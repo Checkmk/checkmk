@@ -4,13 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import typing
+import typing  # no from import allowed in check plugin :-(. fix upon migration
 
-import errno
-import os
 import collections
+import errno
 import io
+import os
 import pathlib
+import re
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -34,6 +35,8 @@ NodeData = typing.TypedDict(
 )
 
 SectionLogwatch = typing.Dict[typing.Optional[str], NodeData]
+
+Parameters = typing.Dict[str, typing.Any]
 
 # Configuration variables in main.mk needed during the actual check
 logwatch_dir = cmk.utils.paths.var_dir + '/logwatch'
@@ -81,7 +84,7 @@ def _extract_error_message(
 
 def _extract_item_attribute(line: str) -> typing.Optional[typing.Tuple[str, str]]:
     '''Check line for next item subsection
-    Return (None, None) if no item subsection is found,
+    Return None if no item subsection is found,
     (item, attribute) otherwise
     '''
     if line[:3] != "[[[" or line[-3:] != "]]]":
@@ -122,37 +125,23 @@ def parse_logwatch(info) -> SectionLogwatch:
     return parsed
 
 
-_CACHE_IS_CACHE_NEW = {}
-
-
-def _logwatch_cachefile_path(node):
-    return "%s/%s" % (cmk.utils.paths.tcp_cache_dir, node)
-
-
-def _logwatch_is_cache_new(last_run, node):
+def _logwatch_is_cache_new(last_run: float, node: typing.Optional[str]) -> bool:
     if node is None:
         return True
 
-    if node in _CACHE_IS_CACHE_NEW:
-        return _CACHE_IS_CACHE_NEW[node]
-
-    path = _logwatch_cachefile_path(node)
+    path = "%s/%s" % (cmk.utils.paths.tcp_cache_dir, node)
     if not os.path.exists(path):
         raise MKGeneralException("cache not found: %s" % path)
 
-    return _CACHE_IS_CACHE_NEW.setdefault(node, os.stat(path).st_mtime > last_run)
+    return os.stat(path).st_mtime > last_run
 
 
-def logwatch_ec_forwarding_enabled(params, item):
+def logwatch_ec_forwarding_enabled(params: Parameters, item: str) -> bool:
     if 'restrict_logfiles' not in params:
         return True  # matches all logs on this host
-    else:
-        # only logs which match the specified patterns
-        for pattern in params['restrict_logfiles']:
-            if re.match(pattern, item):
-                return True
 
-    return False
+    # only logs which match the specified patterns
+    return any(re.match(pattern, item) for pattern in params['restrict_logfiles'])
 
 
 def _logwatch_discoverable_items(parsed: SectionLogwatch) -> typing.List[str]:
@@ -166,7 +155,8 @@ def _logwatch_discoverable_items(parsed: SectionLogwatch) -> typing.List[str]:
 # Splits the number of existing logfiles into
 # forwarded (to ec) and not forwarded. Returns a
 # pair of forwarded and not forwarded logs.
-def _logwatch_select_forwarded(discoverable_items):
+def _logwatch_select_forwarded(
+    discoverable_items: typing.List[str],) -> typing.Tuple[typing.List[str], typing.List[str]]:
     forward_settings = host_extra_conf(host_name(), get_checkgroup_parameters('logwatch_ec', []))
     # Is forwarding enabled in general?
     if not (forward_settings and forward_settings[0]):

@@ -15,7 +15,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     # be empty. If that is the case, please remove it entirely.
     ('section', 'juniper_trpz_aps'),
     ('section', 'juniper_trpz_aps_sessions'),
-    ('section', 'logwatch'),
     ('section', 'oracle_rman'),
     ('section', 'oracle_tablespaces'),
     ('section', 'printer_pages'),

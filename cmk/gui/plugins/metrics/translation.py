@@ -2003,6 +2003,42 @@ check_metrics["check_mk-mssql_counters_file_sizes"] = {
         "name": "log_files_total"
     },
 }
+check_metrics["check_mk-mssql_counters_locks"] = {
+    "lock_requests/sec": {
+        "name": "lock_requests_per_second"
+    },
+    "lock_timeouts/sec": {
+        "name": "lock_timeouts_per_second"
+    },
+    "number_of_deadlocks/sec": {
+        "name": "number_of_deadlocks_per_second"
+    },
+    "lock_waits/sec": {
+        "name": "lock_waits_per_second"
+    },
+}
+check_metrics["check_mk-mssql_counters_pageactivity"] = {
+    "page_reads/sec": {
+        "name": "page_reads_per_second"
+    },
+    "page_writes/sec": {
+        "name": "page_writes_per_second"
+    },
+    "page_lookups/sec": {
+        "name": "page_lookups_per_second"
+    },
+}
+check_metrics["check_mk-mssql_counters_transactions"] = {
+    "transactions/sec": {
+        "name": "transactions_per_second"
+    },
+    "write_transactions/sec": {
+        "name": "write_transactions_per_second"
+    },
+    "tracked_transactions/sec": {
+        "name": "tracked_transactions_per_second"
+    },
+}
 cisco_mem_translation = {
     "mem_used": {
         "name": "mem_used_percent",

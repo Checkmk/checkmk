@@ -24,8 +24,8 @@ def value_store_fixture(monkeypatch):
 
 
 def _create_interfaces(bandwidth_change, **kwargs):
-    return [
-        interfaces.Interface(*data, **kwargs) for data in [
+    ifaces = [
+        interfaces.Interface(*data) for data in [
             [
                 '1', 'lo', 'lo', '24', 0, '1', 266045395, 97385, 0, 0, 0, 0, 266045395, 97385, 0, 0,
                 0, 0, 0, '\x00\x00\x00\x00\x00\x00'
@@ -53,6 +53,10 @@ def _create_interfaces(bandwidth_change, **kwargs):
             ],
         ]
     ]
+    for iface in ifaces:
+        for k, v in kwargs.items():
+            setattr(iface, k, v)
+    return ifaces
 
 
 def _add_node_name_to_results(results, node_name):
@@ -266,28 +270,23 @@ def test_discovery_legacy_parameters_3():
 
 
 def test_discovery_duplicate_index():
-    ifaces = _create_interfaces(0)
-    for iface in ifaces:
-        iface.index = '1'
-    assert list(interfaces.discover_interfaces(
-        [DEFAULT_DISCOVERY_PARAMS],
-        ifaces,
-    )) == [
-        Service(
-            item='1',
-            parameters={
-                'discovered_oper_status': ['1'],
-                'discovered_speed': 10000000,
-            },
-            labels=[],
-        ),
-    ]
+    assert list(
+        interfaces.discover_interfaces(
+            [DEFAULT_DISCOVERY_PARAMS],
+            _create_interfaces(0, index='1'),
+        )) == [
+            Service(
+                item='1',
+                parameters={
+                    'discovered_oper_status': ['1'],
+                    'discovered_speed': 10000000,
+                },
+                labels=[],
+            ),
+        ]
 
 
 def test_discovery_duplicate_descr():
-    ifaces = _create_interfaces(0)
-    for iface in ifaces:
-        iface.descr = 'description'
     assert list(
         interfaces.discover_interfaces(
             [
@@ -302,7 +301,7 @@ def test_discovery_duplicate_descr():
                     ),
                 })
             ],
-            ifaces,
+            _create_interfaces(0, descr='description'),
         )) == [
             Service(
                 item='description 5',
@@ -324,9 +323,6 @@ def test_discovery_duplicate_descr():
 
 
 def test_discovery_duplicate_alias():
-    ifaces = _create_interfaces(0)
-    for iface in ifaces:
-        iface.alias = 'alias'
     assert list(
         interfaces.discover_interfaces(
             [
@@ -346,7 +342,7 @@ def test_discovery_duplicate_alias():
                     ),
                 })
             ],
-            ifaces,
+            _create_interfaces(0, alias='alias'),
         )) == [
             Service(
                 item='alias 5',
@@ -719,6 +715,19 @@ def test_check_single_interface(value_store, item, params, result):
         )) == result
 
 
+def test_check_single_interface_same_index_descr_alias(value_store):
+    item = '07'
+    assert next(
+        interfaces.check_single_interface(
+            item,
+            type_defs.Parameters({}),
+            _create_interfaces(0, index=item, descr=item, alias=item)[0],
+        )) == Result(
+            state=state.OK,
+            summary='Operational state: up',
+        )
+
+
 @pytest.mark.parametrize('item, params, result', ITEM_PARAMS_RESULTS)
 def test_check_single_interface_admin_status(value_store, item, params, result):
     params = type_defs.Parameters({
@@ -1018,25 +1027,21 @@ def test_check_multiple_interfaces(value_store, item, params, result):
 def test_check_multiple_interfaces_duplicate_descr(value_store, item, params, result):
     description = 'description'
     item = '%s %s' % (description, item)
-    ifaces = _create_interfaces(0)
-    for iface in ifaces:
-        iface.descr = description
     with pytest.raises(IgnoreResultsError):
-        list(interfaces.check_multiple_interfaces(
+        list(
+            interfaces.check_multiple_interfaces(
+                item,
+                params,
+                _create_interfaces(0, descr=description),
+                timestamp=0,
+            ))
+    assert list(
+        interfaces.check_multiple_interfaces(
             item,
             params,
-            ifaces,
-            timestamp=0,
-        ))
-    ifaces = _create_interfaces(4000000)
-    for iface in ifaces:
-        iface.descr = description
-    assert list(interfaces.check_multiple_interfaces(
-        item,
-        params,
-        ifaces,
-        timestamp=5,
-    )) == result
+            _create_interfaces(4000000, descr=description),
+            timestamp=5,
+        )) == result
 
 
 @pytest.mark.parametrize('item, params, result', ITEM_PARAMS_RESULTS)
@@ -1044,19 +1049,15 @@ def test_check_multiple_interfaces_duplicate_alias(value_store, item, params, re
     alias = 'alias'
     index = item
     item = '%s %s' % (alias, index)
-    ifaces = _create_interfaces(0)
-    for iface in ifaces:
-        iface.alias = alias
     with pytest.raises(IgnoreResultsError):
-        list(interfaces.check_multiple_interfaces(
-            item,
-            params,
-            ifaces,
-            timestamp=0,
-        ))
-    ifaces = _create_interfaces(4000000)
-    for iface in ifaces:
-        iface.alias = alias
+        list(
+            interfaces.check_multiple_interfaces(
+                item,
+                params,
+                _create_interfaces(0, alias=alias),
+                timestamp=0,
+            ))
+    ifaces = _create_interfaces(4000000, alias=alias)
     assert list(interfaces.check_multiple_interfaces(
         item,
         params,

@@ -1050,9 +1050,9 @@ def check_single_interface(
         else:
             # Display port number or alias in summary_interface if that is not part
             # of the service description anyway
-            if item.lstrip("0") == interface.index \
-                and (item == interface.alias or interface.alias == '') \
-                and (item == interface.descr or interface.descr == ''):  # description trivial
+            if ((item == interface.index or item.lstrip("0") == interface.index) and
+                (item == interface.alias or interface.alias == '') and
+                (item == interface.descr or interface.descr == '')):  # description trivial
                 info_interface = ""
             elif item == "%s %s" % (interface.alias,
                                     interface.index) and interface.descr != '':  # non-unique Alias
@@ -1073,10 +1073,11 @@ def check_single_interface(
             else:
                 info_interface = "On %s" % interface.node
 
-    yield Result(
-        state=state.OK,
-        summary=info_interface,
-    )
+    if info_interface:
+        yield Result(
+            state=state.OK,
+            summary=info_interface,
+        )
 
     info_oper_status, info_admin_status = _render_status_info_main_interface(
         interface.oper_status_name,

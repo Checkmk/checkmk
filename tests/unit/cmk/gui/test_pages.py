@@ -190,7 +190,6 @@ def test_registered_pages():
             'ajax_ntop_host_ports',
             'ajax_ntop_host_ports_painter',
             'ajax_ntop_host_protocol_breakdown',
-            'ajax_ntop_iface_ports_list',
             'ajax_ntop_host_top_peers_protocols',
             'ajax_ntop_host_top_peers_protocols_painter',
             'ajax_ntop_host_top_peers_protocols_bar',

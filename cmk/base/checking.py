@@ -920,8 +920,24 @@ def _convert_perf_value(x: UncleanPerfValue) -> str:
 # TODO: Put the core specific things to dedicated files
 
 
-def _submit_check_result(host: HostName, servicedesc: ServiceDetails, result: ServiceCheckResult,
-                         cache_info: Optional[Tuple[int, int]]) -> None:
+def _extract_check_command(infotext: str) -> Optional[str]:
+    """
+    Check may append the name of the check command to the
+    details of service output.
+    It might be needed by the graphing tool in order to choose the correct
+    template or apply the correct metric name translations.
+    Currently this is used only by mrpe.
+    """
+    marker = "Check command used in metric system: "
+    return infotext.split(marker, 1)[1].split('\n')[0] if marker in infotext else None
+
+
+def _submit_check_result(
+    host: HostName,
+    servicedesc: ServiceDetails,
+    result: ServiceCheckResult,
+    cache_info: Optional[Tuple[int, int]],
+) -> None:
     state, infotext, perfdata = result
 
     if not (infotext.startswith("OK -") or infotext.startswith("WARN -") or
@@ -937,28 +953,14 @@ def _submit_check_result(host: HostName, servicedesc: ServiceDetails, result: Se
         # ...crash dumps, and hard-coded outputs are regular strings
         infotext = infotext.replace("|", u"\u2758".encode("utf8"))
 
-    # performance data - if any - is stored in the third part of the result
-    perftexts = []
-    perftext = ""
-
-    if perfdata:
-        # Check may append the name of the check command to the
-        # list of perfdata. It is of type string. And it might be
-        # needed by the graphing tool in order to choose the correct
-        # template. Currently this is used only by mrpe.
-        if len(perfdata) > 0 and isinstance(perfdata[-1], str):
-            check_command = perfdata[-1]
-            del perfdata[-1]
-        else:
-            check_command = None
-
-        for p in perfdata:
-            perftexts.append(_convert_perf_data(p))
-
-        if perftexts != []:
-            if check_command and config.perfdata_format == "pnp":
-                perftexts.append("[%s]" % check_command)
-            perftext = "|" + (" ".join(perftexts))
+    perftexts = [_convert_perf_data(p) for p in perfdata]
+    if perftexts:
+        check_command = _extract_check_command(infotext)
+        if check_command and config.perfdata_format == "pnp":
+            perftexts.append("[%s]" % check_command)
+        perftext = "|" + (" ".join(perftexts))
+    else:
+        perftext = ""
 
     if _submit_to_core:
         _do_submit_to_core(host, servicedesc, state, infotext + perftext, cache_info)

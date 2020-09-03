@@ -123,10 +123,11 @@ def check_mrpe(_no_item, _no_params, data):
         if new_perf:
             perf_parsed.append(new_perf)
 
+    yield dataset.state, "\n".join(output), perf_parsed
+
     # name of check command needed for PNP to choose the correct template
     if dataset.name:
-        perf_parsed.append(dataset.name)
-    return dataset.state, "\n".join(output), perf_parsed
+        yield 0, "\nCheck command used in metric system: %s" % dataset.name
 
 
 check_info["mrpe"] = {

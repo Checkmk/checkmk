@@ -11,13 +11,18 @@ from .agent_based_api.v0 import (
 )
 from .utils import if64, interfaces
 
+# Use ifName under the guise of ifAlias in order to make technical interface names available.
+# ifAlias or ifDescr may only contain user defined names. DO NOT roll back to ifAlias again
+# (werk 4539 -> werk 6638 -> werk 11267)
+END_OIDS = if64.END_OIDS[:18] + ["31.1.1.1.1"] + if64.END_OIDS[19:]
+
 register.snmp_section(
     name="if_fortigate",
     parse_function=if64.parse_if64_if6adm,
     trees=[
         SNMPTree(
             base=if64.BASE_OID,
-            oids=if64.END_OIDS,
+            oids=END_OIDS,
         ),
     ],
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356"),

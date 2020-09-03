@@ -95,39 +95,46 @@ discovery_monitor_state = True
 
 
 @dataclass
-class PreInterface:
-    index: Union[str, Tuple[str, str]]
+class Interface:
+    index: str
     descr: str
-    type: str
-    speed: Union[str, float]
-    oper_status: Union[str, Tuple[str, str]]
-    in_octets: float
-    in_ucast: float
-    in_mcast: float
-    in_bcast: float
-    in_discards: float
-    in_errors: float
-    out_octets: float
-    out_ucast: float
-    out_mcast: float
-    out_bcast: float
-    out_discards: float
-    out_errors: float
-    out_qlen: float
     alias: str
-    phys_address: Union[Iterable[int], str]
-    oper_status_name: Optional[str] = None
+    type: str
+    speed: float = 0
+    oper_status: str = ''
+    in_octets: float = 0
+    in_ucast: float = 0
+    in_mcast: float = 0
+    in_bcast: float = 0
+    in_discards: float = 0
+    in_errors: float = 0
+    out_octets: float = 0
+    out_ucast: float = 0
+    out_mcast: float = 0
+    out_bcast: float = 0
+    out_discards: float = 0
+    out_errors: float = 0
+    out_qlen: float = 0
+    phys_address: Union[Iterable[int], str] = ''
+    oper_status_name: str = ''
     speed_as_text: str = ''
     group: Optional[str] = None
     node: Optional[str] = None
     admin_status: Optional[str] = None
 
+    def __post_init__(self) -> None:
+        self.finalize()
 
-class Interface(PreInterface):
-    index: str
-    speed: float
-    oper_status: str
-    oper_status_name: str
+    def finalize(self):
+        if not self.oper_status_name:
+            self.oper_status_name = statename(self.oper_status)
+
+        # Fix bug in TP Link switches
+        if self.speed > 9 * 1000 * 1000 * 1000 * 1000:
+            self.speed /= 10000
+
+        self.descr = cleanup_if_strings(self.descr)
+        self.alias = cleanup_if_strings(self.alias)
 
 
 Section = Sequence[Interface]
@@ -138,32 +145,6 @@ def saveint(i: Any) -> int:
         return int(i)
     except (TypeError, ValueError):
         return 0
-
-
-def finalize_interface(pre_interface: PreInterface) -> Interface:
-    # Windows NICs sends pairs of ifOperStatus and its Windows-Name instead
-    # of just the ifOperStatus
-    if isinstance(pre_interface.oper_status, tuple):
-        pre_interface.oper_status, pre_interface.oper_status_name = pre_interface.oper_status
-    else:
-        pre_interface.oper_status_name = statename(pre_interface.oper_status)
-
-    if isinstance(pre_interface.index, tuple):
-        pre_interface.group, pre_interface.index = pre_interface.index
-
-    # Some devices (e.g. NetApp ONTAP) can report "auto" as speed
-    if pre_interface.speed == "auto":
-        pre_interface.speed_as_text = pre_interface.speed  # type: ignore[assignment]
-
-    # Fix bug in TP Link switches
-    pre_interface.speed = saveint(pre_interface.speed)
-    if pre_interface.speed > 9 * 1000 * 1000 * 1000 * 1000:
-        pre_interface.speed /= 10000
-
-    pre_interface.descr = cleanup_if_strings(pre_interface.descr)
-    pre_interface.alias = cleanup_if_strings(pre_interface.alias)
-
-    return Interface(**asdict(pre_interface))
 
 
 # Remove 0 bytes from strings. They lead to problems e.g. here:
@@ -741,24 +722,8 @@ def _check_grouped_ifs(
     cumulated_interface = Interface(
         index=item,
         descr=item,
-        type="",
-        speed=0,
-        oper_status="",
-        in_octets=0,
-        in_ucast=0,
-        in_mcast=0,
-        in_bcast=0,
-        in_discards=0,
-        in_errors=0,
-        out_octets=0,
-        out_ucast=0,
-        out_mcast=0,
-        out_bcast=0,
-        out_discards=0,
-        out_errors=0,
-        out_qlen=0,
         alias="",
-        phys_address="",
+        type="",
     )
 
     num_up = 0
@@ -832,6 +797,7 @@ def _check_grouped_ifs(
         cumulated_interface.oper_status = "8"  # degraded
     else:
         cumulated_interface.oper_status = "2"  # down
+    cumulated_interface.oper_status_name = statename(cumulated_interface.oper_status)
 
     alias_info = []
     if len(nodes) > 1:
@@ -848,7 +814,7 @@ def _check_grouped_ifs(
     yield from check_single_interface(
         item,
         params,
-        finalize_interface(cumulated_interface),
+        cumulated_interface,
         group_members=group_members,
         group_name=group_name,
         timestamp=timestamp,

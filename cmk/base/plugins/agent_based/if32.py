@@ -25,32 +25,31 @@ def parse_if(string_table: type_defs.SNMPStringByteTable) -> interfaces.Section:
     >>> pprint(parse_if([[
     ... ['1', '1', '6', '100000000', '1', '539345078', '3530301', '494413', '0', '15', '231288017',
     ...  '3477770', '38668315', '0', '0', '0', [0, 38, 241, 198, 3, 255]]]]))
-    [Interface(index='1', descr='1', type='6', speed=100000000, oper_status='1', in_octets=539345078, in_ucast=3530301, in_mcast=494413, in_bcast=0, in_discards=0, in_errors=15, out_octets=231288017, out_ucast=3477770, out_mcast=0, out_bcast=38668315, out_discards=0, out_errors=0, out_qlen=0, alias='1', phys_address=[0, 38, 241, 198, 3, 255], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None)]
+    [Interface(index='1', descr='1', alias='1', type='6', speed=100000000, oper_status='1', in_octets=539345078, in_ucast=3530301, in_mcast=494413, in_bcast=0, in_discards=0, in_errors=15, out_octets=231288017, out_ucast=3477770, out_mcast=0, out_bcast=38668315, out_discards=0, out_errors=0, out_qlen=0, phys_address=[0, 38, 241, 198, 3, 255], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None)]
     """
     return [
-        interfaces.finalize_interface(
-            interfaces.PreInterface(
-                index=str(line[0]),
-                descr=str(line[1]),
-                type=str(line[2]),
-                speed=interfaces.saveint(line[3]),
-                oper_status=str(line[4]),
-                in_octets=interfaces.saveint(line[5]),
-                in_ucast=interfaces.saveint(line[6]),
-                in_mcast=interfaces.saveint(line[7]),
-                in_bcast=0,
-                in_discards=interfaces.saveint(line[8]),
-                in_errors=interfaces.saveint(line[9]),
-                out_octets=interfaces.saveint(line[10]),
-                out_ucast=interfaces.saveint(line[11]),
-                out_mcast=0,
-                out_bcast=interfaces.saveint(line[12]),
-                out_discards=interfaces.saveint(line[13]),
-                out_errors=interfaces.saveint(line[14]),
-                out_qlen=interfaces.saveint(line[15]),
-                alias=str(line[1]),
-                phys_address=line[16],
-            )) for line in string_table[0] if interfaces.saveint(line[0]) > 0
+        interfaces.Interface(
+            index=str(line[0]),
+            descr=str(line[1]),
+            type=str(line[2]),
+            speed=interfaces.saveint(line[3]),
+            oper_status=str(line[4]),
+            in_octets=interfaces.saveint(line[5]),
+            in_ucast=interfaces.saveint(line[6]),
+            in_mcast=interfaces.saveint(line[7]),
+            in_bcast=0,
+            in_discards=interfaces.saveint(line[8]),
+            in_errors=interfaces.saveint(line[9]),
+            out_octets=interfaces.saveint(line[10]),
+            out_ucast=interfaces.saveint(line[11]),
+            out_mcast=0,
+            out_bcast=interfaces.saveint(line[12]),
+            out_discards=interfaces.saveint(line[13]),
+            out_errors=interfaces.saveint(line[14]),
+            out_qlen=interfaces.saveint(line[15]),
+            alias=str(line[1]),
+            phys_address=line[16],
+        ) for line in string_table[0] if interfaces.saveint(line[0]) > 0
     ]
 
 

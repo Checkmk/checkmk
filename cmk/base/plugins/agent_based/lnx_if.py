@@ -164,18 +164,18 @@ def parse_lnx_if(string_table: type_defs.AgentStringTable) -> Section:
         # Compute speed
         speed_text = attr.get("Speed")
         if speed_text is None:
-            ifSpeed = ''
+            ifSpeed = 0
         else:
             if speed_text == '65535Mb/s':  # unknown
-                ifSpeed = ''
+                ifSpeed = 0
             elif speed_text.endswith("Kb/s"):
-                ifSpeed = str(int(float(speed_text[:-4])) * 1000)
+                ifSpeed = int(float(speed_text[:-4])) * 1000
             elif speed_text.endswith("Mb/s"):
-                ifSpeed = str(int(float(speed_text[:-4])) * 1000000)
+                ifSpeed = int(float(speed_text[:-4])) * 1000000
             elif speed_text.endswith("Gb/s"):
-                ifSpeed = str(int(float(speed_text[:-4])) * 1000000000)
+                ifSpeed = int(float(speed_text[:-4])) * 1000000000
             else:
-                ifSpeed = ''
+                ifSpeed = 0
 
         # Performance counters
         ifInOctets = counters[0]
@@ -223,29 +223,29 @@ def parse_lnx_if(string_table: type_defs.AgentStringTable) -> Section:
         else:
             ifPhysAddress = ''
 
-        interface = interfaces.PreInterface(
-            index=str(ifIndex),
-            descr=str(ifDescr),
-            type=str(ifType),
-            speed=ifSpeed,
-            oper_status=str(ifOperStatus),
-            in_octets=ifInOctets,
-            in_ucast=inucast,
-            in_mcast=inmcast,
-            in_bcast=inbcast,
-            in_discards=ifInDiscards,
-            in_errors=ifInErrors,
-            out_octets=ifOutOctets,
-            out_ucast=outucast,
-            out_mcast=outmcast,
-            out_bcast=outbcast,
-            out_discards=ifOutDiscards,
-            out_errors=ifOutErrors,
-            out_qlen=ifOutQLen,
-            alias=ifAlias,
-            phys_address=ifPhysAddress,
-        )
-        if_table.append(interfaces.finalize_interface(interface))
+        if_table.append(
+            interfaces.Interface(
+                index=str(ifIndex),
+                descr=str(ifDescr),
+                type=str(ifType),
+                speed=ifSpeed,
+                oper_status=str(ifOperStatus),
+                in_octets=ifInOctets,
+                in_ucast=inucast,
+                in_mcast=inmcast,
+                in_bcast=inbcast,
+                in_discards=ifInDiscards,
+                in_errors=ifInErrors,
+                out_octets=ifOutOctets,
+                out_ucast=outucast,
+                out_mcast=outmcast,
+                out_bcast=outbcast,
+                out_discards=ifOutDiscards,
+                out_errors=ifOutErrors,
+                out_qlen=ifOutQLen,
+                alias=ifAlias,
+                phys_address=ifPhysAddress,
+            ))
 
     return if_table, ip_stats
 

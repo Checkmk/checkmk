@@ -38,8 +38,8 @@ def value_store_fixture(monkeypatch):
             [u'wlp3s0', u'130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0'],
         ],
         [
-            '1', 'wlp3s0', '6', '', '2', 130923553, 217262, 16078, 0, 0, 0, 23586281, 142684, 0, 0,
-            0, 0, 0, 'wlp3s0', '\xaa\xaa\xaa\xaa\xaa\xaa'
+            '1', 'wlp3s0', 'wlp3s0', '6', 0, '2', 130923553, 217262, 16078, 0, 0, 0, 23586281,
+            142684, 0, 0, 0, 0, 0, '\xaa\xaa\xaa\xaa\xaa\xaa'
         ],
     ),
     (
@@ -55,19 +55,17 @@ def value_store_fixture(monkeypatch):
             [u'wlp3s0', u'130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0'],
         ],
         [
-            '1', 'wlp3s0', '6', '', '1', 130923553, 217262, 16078, 0, 0, 0, 23586281, 142684, 0, 0,
-            0, 0, 0, 'wlp3s0', '\xbb\xbb\xbb\xbb\xbb\xbb'
+            '1', 'wlp3s0', 'wlp3s0', '6', 0, '1', 130923553, 217262, 16078, 0, 0, 0, 23586281,
+            142684, 0, 0, 0, 0, 0, '\xbb\xbb\xbb\xbb\xbb\xbb'
         ],
     )
 ])
 def test_parse_lnx_if(string_table, result):
-    assert lnx_if.parse_lnx_if(string_table)[0][0] == interfaces.finalize_interface(
-        interfaces.PreInterface(*result))
+    assert lnx_if.parse_lnx_if(string_table)[0][0] == interfaces.Interface(*result)
 
 
-INTERFACE = interfaces.finalize_interface(
-    interfaces.PreInterface('1', 'wlp3s0', '6', '', '1', 130923553, 217262, 16078, 0, 0, 0,
-                            23586281, 142684, 0, 0, 0, 0, 0, 'wlp3s0', '\xaa\xaa\xaa\xaa\xaa\xaa'))
+INTERFACE = interfaces.Interface('1', 'wlp3s0', 'wlp3s0', '6', 0, '1', 130923553, 217262, 16078, 0,
+                                 0, 0, 23586281, 142684, 0, 0, 0, 0, 0, '\xaa\xaa\xaa\xaa\xaa\xaa')
 
 PARAMS = type_defs.Parameters({
     'errors': (0.01, 0.1),

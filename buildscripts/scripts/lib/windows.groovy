@@ -18,7 +18,7 @@ def build(Map args) {
                 ARTIFACTS = 'python-3.8.zip'
             } else if (args.TARGET == "agent") {
                 bat 'cd agents\\wnx && call build_release.cmd'
-                ARTIFACTS = "check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,mk_logwatch.exe,mk_jolokia.exe"
+                ARTIFACTS = "check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml"
             } else if (args.TARGET == "test_integration") {
                 bat 'cd agents\\wnx && call call_integration_tests.cmd'
             } else {

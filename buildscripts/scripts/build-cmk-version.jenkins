@@ -364,9 +364,9 @@ def create_source_package(DAILY_DATA, CMK_VERS) {
             if(EDITION != 'raw') {
                 sh "touch ${DAILY_DATA}/agents/cmk-update-agent ${DAILY_DATA}/agents/cmk-update-agent-32"
             }
-            sh "touch check_mk_agent-64.exe check_mk_agent.exe check_mk_agent.msi check_mk.user.yml mk_logwatch.exe mk_jolokia.exe python-3.8.zip"
+            sh "touch check_mk_agent-64.exe check_mk_agent.exe check_mk_agent.msi check_mk.user.yml python-3.8.zip"
         }
-        sh "mv check_mk_agent-64.exe check_mk_agent.exe check_mk_agent.msi check_mk.user.yml mk_logwatch.exe mk_jolokia.exe python-3.8.zip ${DAILY_DATA}/agents/"
+        sh "mv check_mk_agent-64.exe check_mk_agent.exe check_mk_agent.msi check_mk.user.yml python-3.8.zip ${DAILY_DATA}/agents/"
 
         dir("${DAILY_DATA}/git") {
             if(EDITION != 'raw') {
@@ -374,7 +374,6 @@ def create_source_package(DAILY_DATA, CMK_VERS) {
                 sh "cp ${DAILY_DATA}/agents/cmk-update-agent-32 enterprise/agents/plugins/"
             }
             sh "cp ${DAILY_DATA}/agents/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,python-3.8.zip} agents/windows"
-            sh "cp ${DAILY_DATA}/agents/{mk_logwatch.exe,mk_jolokia.exe} agents/windows/plugins"
             sh 'make dist || cat /root/.npm/_logs/*-debug.log'
         }
     }

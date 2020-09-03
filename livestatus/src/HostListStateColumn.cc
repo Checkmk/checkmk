@@ -23,9 +23,11 @@ int32_t HostListStateColumn::getValue(Row row, const contact *auth_user) const {
     if (const auto *p = columnData<std::unordered_set<Host *>>(row)) {
         for (auto *hst : *p) {
             if (auth_user == nullptr || hst->hasContact(auth_user)) {
-                update(auth_user,
-                       static_cast<HostState>(hst->state()->_current_state),
-                       hst->state()->_has_been_checked, &hst->_services,
+                const auto *state = hst->state();
+                update(auth_user, static_cast<HostState>(state->_current_state),
+                       state->_has_been_checked, &hst->_services,
+                       state->_acknowledged ||
+                           state->_scheduled_downtime_depth > 0,
                        result);
             }
         }
@@ -37,7 +39,10 @@ int32_t HostListStateColumn::getValue(Row row, const contact *auth_user) const {
             if (auth_user == nullptr ||
                 is_authorized_for(_mc, auth_user, hst, nullptr)) {
                 update(auth_user, static_cast<HostState>(hst->current_state),
-                       hst->has_been_checked != 0, hst->services, result);
+                       hst->has_been_checked != 0, hst->services,
+                       hst->problem_has_been_acknowledged != 0 ||
+                           hst->scheduled_downtime_depth > 0,
+                       result);
             }
         }
     }
@@ -48,13 +53,24 @@ int32_t HostListStateColumn::getValue(Row row, const contact *auth_user) const {
 void HostListStateColumn::update(const contact *auth_user,
                                  HostState current_state, bool has_been_checked,
                                  ServiceListStateColumn::service_list services,
-                                 int32_t &result) const {
+                                 bool handled, int32_t &result) const {
     switch (_logictype) {
         case Type::num_hst:
             result++;
             break;
         case Type::num_hst_pending:
             if (!has_been_checked) {
+                result++;
+            }
+            break;
+        case Type::num_hst_handled_problems:
+            if (has_been_checked && current_state != HostState::up && handled) {
+                result++;
+            }
+            break;
+        case Type::num_hst_unhandled_problems:
+            if (has_been_checked && current_state != HostState::up &&
+                !handled) {
                 result++;
             }
             break;

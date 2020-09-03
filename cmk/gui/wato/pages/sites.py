@@ -436,7 +436,7 @@ class ModeEditSite(WatoMode):
                      'When enabled, this site is marked for synchronisation every time a Web GUI '
                      'related option is changed in the master site.'),
              )),
-            ("user_sync", self._site_mgmt.user_sync_valuespec()),
+            ("user_sync", self._site_mgmt.user_sync_valuespec(self._site_id)),
             ("replicate_ec",
              Checkbox(
                  title=_("Replicate Event Console config"),

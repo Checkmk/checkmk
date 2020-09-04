@@ -384,7 +384,7 @@ def test_get_section_content(hostname, host_entries, cluster_node_keys, expected
         "section_plugin_name",
         False,
         cluster_node_keys=cluster_node_keys,
-        check_info={},  # only for parse_function lookup, not needed in this test
+        check_legacy_info={},  # only for parse_function lookup, not needed in this test
     )
     assert expected_result == section_content
 
@@ -394,7 +394,7 @@ def test_get_section_content(hostname, host_entries, cluster_node_keys, expected
         "section_plugin_name",
         False,
         cluster_node_keys=cluster_node_keys,
-        check_info={},  # only for parse_function lookup, not needed in this test
+        check_legacy_info={},  # only for parse_function lookup, not needed in this test
     )
     assert expected_result == section_content
 
@@ -405,7 +405,7 @@ def test_get_section_content(hostname, host_entries, cluster_node_keys, expected
         False,
         cluster_node_keys=None if cluster_node_keys is None else
         [HostKey(hn, ip, SourceType.MANAGEMENT) for (hn, ip, _st) in cluster_node_keys],
-        check_info={},  # only for parse_function lookup, not needed in this test
+        check_legacy_info={},  # only for parse_function lookup, not needed in this test
     )
     assert section_content is None
 

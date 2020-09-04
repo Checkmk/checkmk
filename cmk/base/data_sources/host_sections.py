@@ -252,7 +252,7 @@ class MultiHostSections(MutableMapping[HostKey, ABCHostSections]):
         for_discovery: bool,
         *,
         cluster_node_keys: Optional[List[HostKey]] = None,
-        check_info: Dict[str, Dict[str, Any]],
+        check_legacy_info: Dict[str, Dict[str, Any]],
     ) -> FinalSectionContent:
         """Prepares the section_content construct for a Check_MK check on ANY host
 
@@ -290,7 +290,7 @@ class MultiHostSections(MutableMapping[HostKey, ABCHostSections]):
             SectionName(section_name),
             for_discovery,
             cluster_node_keys=cluster_node_keys,
-            check_info=check_info,
+            check_legacy_info=check_legacy_info,
         )
 
         # If we found nothing, see if we must check the management board:
@@ -302,7 +302,7 @@ class MultiHostSections(MutableMapping[HostKey, ABCHostSections]):
                 SectionName(section_name),
                 for_discovery,
                 cluster_node_keys=cluster_node_keys,
-                check_info=check_info,
+                check_legacy_info=check_legacy_info,
             )
 
         self._section_content_cache[cache_key] = section_content
@@ -318,7 +318,7 @@ class MultiHostSections(MutableMapping[HostKey, ABCHostSections]):
         for_discovery: bool,
         *,
         cluster_node_keys: Optional[List[HostKey]] = None,
-        check_info: Dict[str, Dict[str, Any]]
+        check_legacy_info: Dict[str, Dict[str, Any]]
     ) -> Union[None, ParsedSectionContent, List[ParsedSectionContent]]:
         # Now get the section_content from the required hosts and merge them together to
         # a single section_content. For each host optionally add the node info.
@@ -343,7 +343,7 @@ class MultiHostSections(MutableMapping[HostKey, ABCHostSections]):
         return self._update_with_parse_function(
             section_content,
             section_name,
-            check_info,
+            check_legacy_info,
         )
 
     # DEPRECATED
@@ -373,7 +373,7 @@ class MultiHostSections(MutableMapping[HostKey, ABCHostSections]):
     def _update_with_parse_function(
         section_content: AbstractSectionContent,
         section_name: SectionName,
-        check_info: Dict[str, Dict[str, Any]],
+        check_legacy_info: Dict[str, Dict[str, Any]],
     ) -> ParsedSectionContent:
         """Transform the section_content using the defined parse functions.
 
@@ -391,7 +391,7 @@ class MultiHostSections(MutableMapping[HostKey, ABCHostSections]):
         # API (or migrated manually)
         if not agent_based_register.is_registered_section_plugin(section_name):
             # use legacy parse function for unmigrated sections
-            parse_function = check_info.get(str(section_name), {}).get("parse_function")
+            parse_function = check_legacy_info.get(str(section_name), {}).get("parse_function")
         else:
             section_plugin = agent_based_register.get_section_plugin(section_name)
             parse_function = cast(Callable[[AbstractSectionContent], ParsedSectionContent],

@@ -76,40 +76,12 @@ def _logwatch_is_cache_new(last_run: float, node: typing.Optional[str]) -> bool:
     return os.stat(path).st_mtime > last_run
 
 
-def logwatch_ec_forwarding_enabled(params: Parameters, item: str) -> bool:
-    if 'restrict_logfiles' not in params:
-        return True  # matches all logs on this host
-
-    # only logs which match the specified patterns
-    return any(re.match(pattern, item) for pattern in params['restrict_logfiles'])
-
-
 def _logwatch_discoverable_items(parsed: SectionLogwatch) -> typing.List[str]:
     '''only consider files which are 'ok' on at least one node'''
     return sorted({
         item for node_data in parsed.values() for item, item_data in node_data['logfiles'].items()
         if item_data['attr'] == 'ok'
     })
-
-
-# Splits the number of existing logfiles into
-# forwarded (to ec) and not forwarded. Returns a
-# pair of forwarded and not forwarded logs.
-def _logwatch_select_forwarded(
-    discoverable_items: typing.List[str],) -> typing.Tuple[typing.List[str], typing.List[str]]:
-    forward_settings = host_extra_conf(host_name(), get_checkgroup_parameters('logwatch_ec', []))
-    # Is forwarding enabled in general?
-    if not (forward_settings and forward_settings[0]):
-        return [], discoverable_items
-
-    forwarded_logs, not_forwarded_logs = [], []
-    for item in discoverable_items:
-        if logwatch_ec_forwarding_enabled(forward_settings[0], item):
-            forwarded_logs.append(item)
-        else:
-            not_forwarded_logs.append(item)
-
-    return forwarded_logs, not_forwarded_logs
 
 
 # New rule-stule logwatch_rules in WATO friendly consistent rule notation:
@@ -151,7 +123,12 @@ def logwatch_precompile(item: str) -> Dict[str, Any]:
 
 def inventory_logwatch_single(parsed: SectionLogwatch):
     discoverable_items = _logwatch_discoverable_items(parsed)
-    _forwarded_logs, not_forwarded_logs = _logwatch_select_forwarded(discoverable_items)
+    forward_settings = host_extra_conf(host_name(), get_checkgroup_parameters('logwatch_ec', []))
+    not_forwarded_logs = logwatch.select_forwarded(
+        discoverable_items,
+        forward_settings,
+        invert=True,
+    )
     inventory_groups = host_extra_conf(host_name(), logwatch_groups)
 
     for logfile in not_forwarded_logs:
@@ -163,7 +140,12 @@ def inventory_logwatch_single(parsed: SectionLogwatch):
 
 def inventory_logwatch_groups(parsed: SectionLogwatch):
     discoverable_items = _logwatch_discoverable_items(parsed)
-    _forwarded_logs, not_forwarded_logs = _logwatch_select_forwarded(discoverable_items)
+    forward_settings = host_extra_conf(host_name(), get_checkgroup_parameters('logwatch_ec', []))
+    not_forwarded_logs = logwatch.select_forwarded(
+        discoverable_items,
+        forward_settings,
+        invert=True,
+    )
     inventory_groups = host_extra_conf(host_name(), logwatch_groups)
     inventory = {}
 
@@ -618,7 +600,8 @@ def _logwatch_inventory_mode_rules():
 
 def inventory_logwatch_ec(parsed: SectionLogwatch, use_mode):
     discoverable_items = _logwatch_discoverable_items(parsed)
-    forwarded_logs, _not_forwarded_logs = _logwatch_select_forwarded(discoverable_items)
+    forward_settings = host_extra_conf(host_name(), get_checkgroup_parameters('logwatch_ec', []))
+    forwarded_logs = logwatch.select_forwarded(discoverable_items, forward_settings)
     if not forwarded_logs:
         return
 
@@ -627,7 +610,7 @@ def inventory_logwatch_ec(parsed: SectionLogwatch, use_mode):
         return
 
     if mode == "groups":
-        yield None, {"expected_logfiles": forwarded_logs}
+        yield None, {"expected_logfiles": sorted(forwarded_logs)}
         return
 
     single_log_params = {}
@@ -655,14 +638,14 @@ def check_logwatch_ec(item, params, parsed: SectionLogwatch):
     if item:
         # If this check has an item (logwatch.ec_single), only forward the information from this log
         if (not any(item in node_data['logfiles'] for node_data in parsed.values()) or
-                not logwatch_ec_forwarding_enabled(params, item)):
+                not logwatch.ec_forwarding_enabled(params, item)):
             return
         used_logfiles = [item]
     else:
         # Filter logfiles if some should be excluded
         used_logfiles = [
             name for node_data in parsed.values() for name in node_data['logfiles']
-            if logwatch_ec_forwarding_enabled(params, name)
+            if logwatch.ec_forwarding_enabled(params, name)
         ]
 
     # Check if the number of expected files matches the actual one

@@ -14,10 +14,11 @@
 #                                                                                       #
 #########################################################################################
 
-from typing import Any, Counter, Dict, List, TypedDict
+from typing import Any, Counter, Dict, List, Sequence, Set, TypedDict
 
 import re
 
+from ..agent_based_api.v0.type_defs import Parameters
 from ..agent_based_api.v0 import regex
 
 ItemData = TypedDict(
@@ -37,6 +38,29 @@ SectionLogwatch = TypedDict(
     },
     total=True,
 )
+
+
+def ec_forwarding_enabled(params: Parameters, item: str) -> bool:
+    if 'restrict_logfiles' not in params:
+        return True  # matches all logs on this host
+
+    # only logs which match the specified patterns
+    return any(re.match(pattern, item) for pattern in params['restrict_logfiles'])
+
+
+def select_forwarded(
+    items: Sequence[str],
+    forward_settings: List[Parameters],
+    *,
+    invert: bool = False,
+) -> Set[str]:
+    # Is forwarding enabled in general?
+    if not (forward_settings and forward_settings[0]):
+        return set(items) if invert else set()
+
+    return {
+        item for item in items if ec_forwarding_enabled(forward_settings[0], item) is not invert
+    }
 
 
 def reclassify(

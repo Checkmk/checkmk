@@ -82,11 +82,11 @@ class _Builder:
                 ignore_special_agents=True,
                 main_data_source=True,
             ))
-            for elem in self._get_special_agent():
+            for elem in self._get_special_agents():
                 self._add(elem)
 
         elif self._host_config.is_all_special_agents_host:
-            for elem in self._get_special_agent():
+            for elem in self._get_special_agents():
                 self._add(elem)
 
         elif self._host_config.is_tcp_host:
@@ -143,7 +143,7 @@ class _Builder:
         main_data_source: bool,
     ) -> ABCConfigurator:
         if not ignore_special_agents:
-            special_agents = self._get_special_agent()
+            special_agents = self._get_special_agents()
             if special_agents:
                 return special_agents[0]
 
@@ -164,7 +164,7 @@ class _Builder:
             main_data_source=main_data_source,
         )
 
-    def _get_special_agent(self) -> Sequence[ABCConfigurator]:
+    def _get_special_agents(self) -> Sequence[ABCConfigurator]:
         return [
             SpecialAgentConfigurator(
                 self._hostname,

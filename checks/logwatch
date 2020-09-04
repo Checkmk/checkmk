@@ -150,14 +150,6 @@ def logwatch_precompile(item: str) -> Dict[str, Any]:
 
 
 def logwatch_reclassify(counts, patterns, text, old_level):
-    new_level = old_level
-
-    # Reclassify state to another state
-    change_state_paramkey = ("%s_to" % old_level).lower()
-    if change_state_paramkey in patterns.get("reclassify_states", {}) and\
-        patterns["reclassify_states"][change_state_paramkey] != old_level:
-        new_level = patterns["reclassify_states"][change_state_paramkey]
-
     # Reclassify state if a given regex pattern matches
     # A match overrules the previous state->state reclassification
     for level, pattern, _ in patterns.get("reclassify_patterns", []):
@@ -177,7 +169,9 @@ def logwatch_reclassify(counts, patterns, text, old_level):
                 return 'I'
             return level
 
-    return new_level
+    # Reclassify state to another state
+    change_state_paramkey = ("%s_to" % old_level).lower()
+    return patterns.get("reclassify_states", {}).get(change_state_paramkey, old_level)
 
 
 def inventory_logwatch_single(parsed: SectionLogwatch):

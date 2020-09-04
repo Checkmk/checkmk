@@ -21,13 +21,11 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
-    TypeVar,
     Union,
 )
 
 from six import ensure_str
 
-from cmk.utils.type_defs import AgentRawData as _AgentRawData
 from cmk.utils.type_defs import CheckPluginNameStr as _CheckPluginName
 from cmk.utils.type_defs import HostAddress as _HostAddress
 from cmk.utils.type_defs import HostName as _HostName
@@ -84,11 +82,6 @@ SNMPCredentials = Union[SNMPCommunity, Tuple[str, ...]]
 SNMPTiming = Dict
 
 SNMPDetectAtom = Tuple[str, str, bool]  # (oid, regex_pattern, expected_match)
-
-# TODO(ml): This type does not really belong here but there currently
-#           is not better place.
-AbstractRawData = Union[_AgentRawData, SNMPRawData]
-TRawData = TypeVar("TRawData", bound=AbstractRawData)
 
 
 # make this a class in order to hide the List implementation from the sphinx doc!

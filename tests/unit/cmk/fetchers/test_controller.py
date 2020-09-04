@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest  # type: ignore[import]
 
-from cmk.fetchers import FetcherType
 from cmk.fetchers.controller import (
+    FetcherHeader,
     Header,
     make_failure_answer,
     make_success_answer,
@@ -37,16 +37,14 @@ def test_status_to_severity(status, severity):
 
 class TestControllerApi:
     def test_controller_success(self):
-        assert make_success_answer(
-            data=b"payload") == b"fetch:SUCCESS :               :7       :payload"
+        assert make_success_answer(data="payload") == "fetch:SUCCESS:        :7       :payload"
 
     def test_controller_failure(self):
         assert make_failure_answer(
-            data=b"payload",
-            severity="0123456789ABCDEF") == b"fetch:FAILURE :0123456789ABCDE:7       :payload"
+            data="payload", severity="crit12345678") == "fetch:FAILURE:crit1234:7       :payload"
 
     def test_controller_waiting(self):
-        assert make_waiting_answer() == b"fetch:WAITING :               :0       :"
+        assert make_waiting_answer() == "fetch:WAITING:        :0       :"
 
     def test_build_json_file_path(self):
         assert build_json_file_path(
@@ -61,81 +59,112 @@ class TestControllerApi:
 class TestHeader:
     @pytest.mark.parametrize("state", [Header.State.SUCCESS, "SUCCESS"])
     def test_success_header(self, state):
-        header = Header(name="name", state=state, hint="crit", payload_length=41)
-        assert str(header) == "name :SUCCESS :crit           :41      :"
+        header = Header("name", state, "crit", 41)
+        assert str(header) == "name :SUCCESS:crit    :41      :"
 
     @pytest.mark.parametrize("state", [Header.State.FAILURE, "FAILURE"])
     def test_failure_header(self, state):
-        header = Header(name="fetch", state=state, hint="crit", payload_length=42)
-        assert str(header) == "fetch:FAILURE :crit           :42      :"
+        header = Header("fetch", state, "crit", 42)
+        assert str(header) == "fetch:FAILURE:crit    :42      :"
 
     def test_from_network(self):
-        header = Header(name="fetch", state="SUCCESS", hint="crit", payload_length=42)
-        assert Header.from_network(bytes(header) + b"*" * 42) == header
+        header = Header("fetch", "SUCCESS", "crit", 42)
+        assert Header.from_network(str(header) + 42 * "*") == header
+
+    def test_clone(self):
+        header = Header("name", Header.State.SUCCESS, "crit", 42)
+        other = header.clone()
+        assert other is not header
+        assert other == header
 
     def test_eq(self):
-        header = Header(
-            name="name",
-            state=Header.State.SUCCESS,
-            hint="crit",
-            payload_length=42,
-        )
+        header = Header("name", Header.State.SUCCESS, "crit", 42)
         assert header == str(header)
         assert str(header) == header
 
     def test_neq(self):
-        name = "name"
-        state = "state"
-        hint = "hint"
-        payload_length = 42
+        header = Header("name", Header.State.SUCCESS, "crit", 42)
 
-        header = Header(name=name, state=state, hint=hint, payload_length=payload_length)
+        other_name = header.clone()
+        other_name.name = "toto"
+        assert header != other_name
 
-        assert name != "other"
-        assert header != Header(
-            name="other",
-            state=state,
-            hint=hint,
-            payload_length=payload_length,
-        )
+        other_state = header.clone()
+        other_state.state = Header.State.FAILURE
+        assert header != other_state
 
-        assert state != "other"
-        assert header != Header(
-            name=name,
-            state="other",
-            hint=hint,
-            payload_length=payload_length,
-        )
+        other_crit = header.clone()
+        other_crit.severity = "tnih"
+        assert header != other_crit
 
-        assert hint != "other"
-        assert header != Header(
-            name=name,
-            state=state,
-            hint="other",
-            payload_length=payload_length,
-        )
-
-        assert payload_length != 69
-        assert header != Header(
-            name=name,
-            state=state,
-            hint=hint,
-            payload_length=69,
-        )
+        other_len = header.clone()
+        other_len.payload_length = 69
+        assert header != other_len
 
     def test_repr(self):
-        header = Header(name="name", state="SUCCESS", hint="crit", payload_length=42)
+        header = Header("name", "SUCCESS", "crit", 42)
         assert isinstance(repr(header), str)
 
     def test_hash(self):
-        header = Header(name="name", state="SUCCESS", hint="crit", payload_length=42)
+        header = Header("name", "SUCCESS", "crit", 42)
         assert hash(header) == hash(str(header))
 
     def test_len(self):
-        header = Header(name="name", state="SUCCESS", hint="crit", payload_length=42)
+        header = Header("name", "SUCCESS", "crit", 42)
         assert len(header) == len(str(header))
 
     def test_critical_constants(self):
         """ ATTENTION: Changing of those constants may require changing of C++ code"""
-        assert Header.length == 40
+        assert Header.length == 32
+        assert Header.State.FAILURE == "FAILURE"
+        assert Header.State.SUCCESS == "SUCCESS"
+        assert Header.State.WAITING == "WAITING"
         assert Header.default_protocol_name() == "fetch"
+
+
+class TestFetcherHeader:
+    def test_from_network(self):
+        f_header = FetcherHeader("TCP", status=1, payload_length=42)
+        assert FetcherHeader.from_network(str(f_header) + 42 * "*") == f_header
+
+    def test_clone(self):
+        f_header = FetcherHeader("TCP", status=1, payload_length=42)
+        other = f_header.clone()
+        assert other is not f_header
+        assert other == f_header
+
+    def test_eq(self):
+        f_header = FetcherHeader("TCP", status=1, payload_length=42)
+        assert f_header == str(f_header)
+        assert str(f_header) == f_header
+
+    def test_neq(self):
+        f_header = FetcherHeader("TCP", status=1, payload_length=42)
+
+        other_name = f_header.clone()
+        other_name.name = "toto"
+        assert f_header != other_name
+
+        other_status = f_header.clone()
+        other_status.status = 99
+        assert f_header != other_status
+
+        other_len = f_header.clone()
+        other_len.payload_length = 69
+        assert f_header != other_len
+
+    def test_repr(self):
+        f_header = FetcherHeader("name", status=0, payload_length=42)
+        assert isinstance(repr(f_header), str)
+
+    def test_hash(self):
+        f_header = FetcherHeader("name", status=0, payload_length=42)
+        assert hash(f_header) == hash(str(f_header))
+
+    def test_len(self):
+        f_header = FetcherHeader("name", status=0, payload_length=42)
+        assert len(f_header) == len(str(f_header))
+
+    def test_critical_constants(self):
+        """ ATTENTION: Changing of those constants may require changing of C++ code"""
+        assert FetcherHeader.length == 32

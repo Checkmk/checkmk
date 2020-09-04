@@ -10,43 +10,96 @@
 import enum
 import json
 import os
+import base64
 from pathlib import Path
-from typing import Any, Dict, Final, NamedTuple
+from typing import Any, Dict, Union
 
 from cmk.utils.paths import core_fetcher_config_dir
-from cmk.utils.type_defs import HostName, SectionName
+from cmk.utils.type_defs import HostName
 import cmk.utils.log
 
-from cmk.snmplib.type_defs import AbstractRawData
-
 from . import FetcherType
-from .type_defs import Mode
-
-__all__ = [
-    "FetcherMessage",
-    "Header",
-    "make_success_answer",
-    "make_failure_answer",
-    "make_waiting_answer",
-]
+from .type_defs import FetcherResult
 
 #
 # Protocols
 #
 
 
-class Header:
-    """Header is fixed size 40 bytes string in format
+class FetcherHeader:
+    """Header is fixed size(16+8+8 = 32 bytes) bytes in format
 
-      header: <NAME>:<STATUS>:<HINT>:<SIZE>:
-
-      NAME    -  5 bytes protocol id, "fetch" at the start
-      STATUS  -  8 bytes
-      HINT    - 15 bytes string. Arbitrary data, usually some error info
-      SIZE    -  8 bytes string 0..9
+      header: <NAME>:<STATUS>:<SIZE>:
+      NAME   - fetcher name, for example TCP
+      STATUS - error code. ) or 50 or ...
+      SIZE   - 8 bytes string 0..9
 
     Example:
-        "fetch:SUCCESS:                :12345678:"
+        "TCP        :0       :12345678:"
+
+    used to transmit results of the fetcher to checker
+    """
+    fmt = "{:<15}:{:<7}:{:<7}:"
+    length = 32
+
+    def __init__(
+        self,
+        name: str,
+        *,
+        status: int,
+        payload_length: int,
+    ) -> None:
+        self.name = name
+        self.status = status
+        self.payload_length = payload_length
+
+    def __repr__(self) -> str:
+        return "%s(%r, %r, %r)" % (
+            type(self).__name__,
+            self.name,
+            self.status,
+            self.payload_length,
+        )
+
+    def __str__(self) -> str:
+        return FetcherHeader.fmt.format(self.name[:15], self.status, self.payload_length)
+
+    def __eq__(self, other: Any) -> bool:
+        return str(self) == str(other)
+
+    def __hash__(self) -> int:
+        return hash(str(self))
+
+    def __len__(self) -> int:
+        return FetcherHeader.length
+
+    @classmethod
+    def from_network(cls, data: str) -> 'FetcherHeader':
+        try:
+            # to simplify parsing we are using ':' as a splitter
+            name, status, payload_length = data[:FetcherHeader.length].split(":")[:3]
+            return cls(
+                name,
+                status=int(status, base=10),
+                payload_length=int(payload_length, base=10),
+            )
+        except ValueError as exc:
+            raise ValueError(data) from exc
+
+    def clone(self) -> 'FetcherHeader':
+        return FetcherHeader(self.name, status=self.status, payload_length=self.payload_length)
+
+
+class Header:
+    """Header is fixed size(6+8+9+9 = 32 bytes) string in format
+
+      header: <ID>:<'SUCCESS'|'FAILURE'>:<HINT>:<SIZE>:
+      ID   - 5 bytes protocol id, "base0" at the start
+      HINT - 8 bytes string. Arbitrary data, usually some error info
+      SIZE - 8 bytes string 0..9
+
+    Example:
+        "base0:SUCCESS:        :12345678:"
 
     """
     class State(str, enum.Enum):
@@ -54,42 +107,28 @@ class Header:
         FAILURE = "FAILURE"
         WAITING = "WAITING"
 
-    fmt = "{:<5}:{:<8}:{:<15}:{:<8}:"
-    length = 40
+    fmt = "{:<5}:{:<7}:{:<8}:{:<8}:"
+    length = 32
 
-    def __init__(
-        self,
-        *,
-        name: str,
-        state: str,
-        hint: str,
-        payload_length: int,
-    ) -> None:
-        self.name: Final[str] = name
-        self.state: Final[str] = state
-        self.hint: Final[str] = hint
-        self.payload_length: Final[int] = payload_length
+    def __init__(self, name: str, state: Union['Header.State', str], severity: str,
+                 payload_length: int) -> None:
+        self.name = name
+        self.state = Header.State(state) if isinstance(state, str) else state
+        self.severity = severity
+        self.payload_length = payload_length
 
     def __repr__(self) -> str:
         return "%s(%r, %r, %r, %r)" % (
             type(self).__name__,
             self.name,
             self.state,
-            self.hint,
+            self.severity,
             self.payload_length,
         )
 
     def __str__(self) -> str:
-        return Header.fmt.format(
-            self.name[:5],
-            self.state[:8],
-            self.hint[:15],
-            self.payload_length,
-        )
-
-    def __bytes__(self) -> bytes:  # pylint: disable=E0308
-        # E0308: false positive, see https://github.com/PyCQA/pylint/issues/3599
-        return str(self).encode("ascii")
+        return Header.fmt.format(self.name[:5], self.state[:7], self.severity[:8],
+                                 self.payload_length)
 
     def __eq__(self, other: Any) -> bool:
         return str(self) == str(other)
@@ -101,86 +140,70 @@ class Header:
         return Header.length
 
     @classmethod
-    def from_network(cls, data: bytes) -> 'Header':
+    def from_network(cls, data: str) -> 'Header':
         try:
             # to simplify parsing we are using ':' as a splitter
-            name, state, hint, payload_length = data[:Header.length].split(b":")[:4]
-            return cls(
-                name=name.decode("ascii"),
-                state=state.decode("ascii"),
-                hint=hint.decode("ascii"),
-                payload_length=int(payload_length, base=10),
-            )
+            name, state, hint, payload_length = data[:Header.length].split(":")[:4]
+            return cls(name, state, hint, int(payload_length, base=10))
         except ValueError as exc:
             raise ValueError(data) from exc
 
-    def dump(self, payload: bytes) -> bytes:
-        return bytes(self) + payload
+    def clone(self) -> 'Header':
+        return Header(self.name, self.state, self.severity, self.payload_length)
 
     @staticmethod
     def default_protocol_name() -> str:
         return "fetch"
 
 
-# TODO(ml): Is this type really necessary?
-class FetcherMessage(NamedTuple("FetcherMessage", [
-    ("header", Header),
-    ("payload", bytes),
-])):
-    def raw_data(self) -> AbstractRawData:
-        if self.header.hint == "SNMP":
-            return {SectionName(k): v for k, v in json.loads(self.payload)}
-        return self.payload
-
-
-def make_success_answer(data: bytes) -> bytes:
-    return bytes(
+def make_success_answer(data: str) -> str:
+    return str(
         Header(name=Header.default_protocol_name(),
                state=Header.State.SUCCESS,
-               hint=" ",
+               severity=" ",
                payload_length=len(data))) + data
 
 
-def make_failure_answer(data: bytes, *, severity: str) -> bytes:
-    return bytes(
+def make_failure_answer(data: str, *, severity: str) -> str:
+    return str(
         Header(name=Header.default_protocol_name(),
                state=Header.State.FAILURE,
-               hint=severity,
+               severity=severity,
                payload_length=len(data))) + data
 
 
-def make_waiting_answer() -> bytes:
-    return bytes(
+def make_waiting_answer() -> str:
+    return str(
         Header(name=Header.default_protocol_name(),
                state=Header.State.WAITING,
-               hint=" ",
+               severity=" ",
                payload_length=0))
 
 
-def run_fetchers(serial: str, host_name: HostName, mode: Mode, timeout: int) -> None:
+def run_fetchers(serial: str, host_name: HostName, timeout: int) -> None:
     """Entry point from bin/fetcher"""
     # check that file is present, because lack of the file is not an error at the moment
     json_file = build_json_file_path(serial=serial, host_name=host_name)
 
     if not json_file.exists():
         # this happens during development(or filesystem is broken)
-        data = f"fetcher file for host '{host_name}' and {serial} is absent".encode("utf8")
-        write_data(make_success_answer(data))
-        write_data(make_failure_answer(data, severity="warning"))
+        text = f"fetcher file for host '{host_name}' and {serial} is absent"
+        write_data(make_success_answer(text))
+        write_data(make_failure_answer(text, severity="warning"))
         write_data(make_waiting_answer())
         return
 
     # Usually OMD_SITE/var/check_mk/core/fetcher-config/[config-serial]/[host].json
-    _run_fetchers_from_file(file_name=json_file, mode=mode, timeout=timeout)
+    _run_fetchers_from_file(file_name=json_file, timeout=timeout)
 
 
 def load_global_config(serial: int) -> None:
     global_json_file = build_json_global_config_file_path(serial=str(serial))
     if not global_json_file.exists():
         # this happens during development(or filesystem is broken)
-        data = f"fetcher global config {serial} is absent".encode("utf8")
-        write_data(make_success_answer(data))
-        write_data(make_failure_answer(data, severity="warning"))
+        text = f"fetcher global config {serial} is absent"
+        write_data(make_success_answer(text))
+        write_data(make_failure_answer(text, severity="warning"))
         write_data(make_waiting_answer())
         return
 
@@ -189,49 +212,44 @@ def load_global_config(serial: int) -> None:
         cmk.utils.log.logger.setLevel(result["log_level"])
 
 
-def _run_fetcher(entry: Dict[str, Any], timeout: int) -> FetcherMessage:
-    """Fetch and serialize the raw data."""
+def _run_fetcher(entry: Dict[str, Any], timeout: int) -> FetcherResult:
+    """ timeout to be used by concrete fetcher implementation
+    Examples of correct dictionaries to return:
+    {  "fetcher_type": "SNMP", "status": 0,   "payload": ""whatever}
+    {  "fetcher_type": "TCP",  "status": 50,  "payload": "exception text"}
+    """
+
     try:
-        fetcher_type = FetcherType[entry["fetcher_type"]]
+        fetcher_type = entry["fetcher_type"]
         fetcher_params = entry["fetcher_params"]
 
-        with fetcher_type.from_json(fetcher_params) as fetcher:
-            fetcher_data = fetcher.fetch()
+        with FetcherType[fetcher_type].value.from_json(fetcher_params) as fetcher:
+            payload = fetcher.fetch()
 
-        payload: bytes
-        if fetcher_type is FetcherType.SNMP:
-            payload = json.dumps({str(k): v for k, v in fetcher_data.items()}).encode("utf-8")
+        if fetcher_type != "SNMP":
+            # Since we currently transport the data using JSON, we have to encode the binary data.
+            payload = base64.b64encode(payload).decode("ascii")
         else:
-            assert isinstance(fetcher_data, bytes)
-            payload = fetcher_data
+            # Keys of SNMP payload is of type SectionName which can not be encoded using JSON.
+            payload = {"%s" % k: v for k, v in payload.items()}
 
-        return FetcherMessage(
-            Header(
-                name="fetch",
-                state=Header.State.SUCCESS,
-                hint=fetcher_type.name,
-                payload_length=len(payload),
-            ),
-            payload,
-        )
+        return {
+            "fetcher_type": fetcher_type,
+            "status": 0,
+            "payload": payload,
+        }
 
-    except Exception as exc:
+    except Exception as e:
         # NOTE. The exception is too broad by design:
         # we need specs for Exception coming from fetchers(and how to process)
-        payload = repr(exc).encode("utf-8")
-        return FetcherMessage(
-            Header(
-                name="fetch",
-                state=Header.State.FAILURE,
-                hint=fetcher_type.name,
-                payload_length=len(payload),
-            ),
-            payload,
-        )
+        return {
+            "fetcher_type": fetcher_type,
+            "status": 50,  # CRITICAL, see _level.py
+            "payload": repr(e),
+        }
 
 
 def status_to_microcore_severity(status: int) -> str:
-    # TODO(ml): That could/should be an enum called Severity.
     try:
         return {
             50: "critical",
@@ -245,7 +263,7 @@ def status_to_microcore_severity(status: int) -> str:
         return "warning"
 
 
-def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
+def _run_fetchers_from_file(file_name: Path, timeout: int) -> None:
     """ Writes to the stdio next data:
     Count Type            Content                     Action
     ----- -----           -------                     ------
@@ -268,17 +286,18 @@ def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
     # Multiprocessing: CPU and memory(at least in terms of kernel) hungry. Also duplicates
     # functionality of the Microcore.
 
-    # TODO: Handle Mode.DISCOVERY/Mode.CHECKING cache differences: In Mode.CHECKING the cache must
-    # not be used.
+    resulting_blob = [_run_fetcher(entry, timeout) for entry in fetchers]
+    write_data(make_success_answer(json.dumps(resulting_blob)))
 
-    for header, payload in (_run_fetcher(entry, timeout) for entry in fetchers):
-        write_data(header.dump(payload))
-        if header.state != Header.State.SUCCESS:
-            # Let Microcore log errors.
-            write_data(make_failure_answer(
-                data=header.dump(payload),
-                severity="critical",
-            ))
+    for entry in resulting_blob:
+        status = entry["status"]
+        if status == 0:
+            continue
+
+        # Errors generated by fetchers will be logged by Microcore
+        write_data(
+            make_failure_answer(data=entry["fetcher_type"] + ": " + entry["payload"],
+                                severity=status_to_microcore_severity(status)))
 
     write_data(make_waiting_answer())
 
@@ -300,8 +319,9 @@ def build_json_global_config_file_path(serial: str) -> Path:
 # We are writing to non-blocking socket, because simple sys.stdout.write requires flushing
 # and flushing is not always appropriate. fd is fixed by design: stdout is always 1 and microcore
 # receives data from stdout
-def write_data(data: bytes) -> None:
-    while data:
-        bytes_written = os.write(1, data)
-        data = data[bytes_written:]
+def write_data(data: str) -> None:
+    output = data.encode("utf-8")
+    while output:
+        bytes_written = os.write(1, output)
+        output = output[bytes_written:]
         # TODO (ml): We need improve performance - 100% CPU load if Microcore is busy

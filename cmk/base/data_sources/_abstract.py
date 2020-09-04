@@ -22,9 +22,7 @@ from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheck
 
 from cmk.fetchers import ABCFetcher
 from cmk.fetchers.controller import FetcherType
-from cmk.fetchers.type_defs import Mode
-
-from cmk.snmplib.type_defs import TRawData
+from cmk.fetchers.type_defs import TRawData, Mode
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
@@ -310,7 +308,7 @@ class ABCConfigurator(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
 
     def make_fetcher(self) -> ABCFetcher:
         """Create a fetcher with this configuration."""
-        return self.fetcher_type.from_json(self.configure_fetcher())
+        return self.fetcher_type.value.from_json(self.configure_fetcher())
 
     @abc.abstractmethod
     def make_checker(self) -> "ABCChecker":

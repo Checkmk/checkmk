@@ -52,7 +52,7 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
-from cmk.fetchers.controller import FetcherMessage
+from cmk.fetchers.type_defs import FetcherResult
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api_utils as check_api_utils
@@ -118,7 +118,7 @@ def do_check(
     hostname: HostName,
     ipaddress: Optional[HostAddress],
     only_check_plugin_names: Optional[Set[CheckPluginName]] = None,
-    fetcher_messages: Optional[List[FetcherMessage]] = None
+    fetcher_results: Optional[List[FetcherResult]] = None
 ) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[str]]:
     cpu_tracking.start("busy")
     console.verbose("Checkmk version %s\n", cmk_version.__version__)
@@ -188,7 +188,7 @@ def do_check(
             selected_raw_sections=selected_raw_sections,
             max_cachefile_age=host_config.max_cachefile_age,
             host_config=host_config,
-            fetcher_messages=fetcher_messages,
+            fetcher_results=fetcher_results,
         )
 
         num_success, plugins_missing_data = _do_all_checks_on_host(

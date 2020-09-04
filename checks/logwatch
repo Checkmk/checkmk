@@ -77,14 +77,6 @@ def _logwatch_is_cache_new(last_run: float, node: typing.Optional[str]) -> bool:
     return os.stat(path).st_mtime > last_run
 
 
-def _logwatch_discoverable_items(parsed: SectionLogwatch) -> typing.List[str]:
-    '''only consider files which are 'ok' on at least one node'''
-    return sorted({
-        item for node_data in parsed.values() for item, item_data in node_data['logfiles'].items()
-        if item_data['attr'] == 'ok'
-    })
-
-
 # New rule-stule logwatch_rules in WATO friendly consistent rule notation:
 #
 # logwatch_rules = [
@@ -103,7 +95,7 @@ def _logwatch_discoverable_items(parsed: SectionLogwatch) -> typing.List[str]:
 
 
 def inventory_logwatch_single(parsed: SectionLogwatch):
-    discoverable_items = _logwatch_discoverable_items(parsed)
+    discoverable_items = logwatch.discoverable_items(*parsed.values())
     forward_settings = host_extra_conf(host_name(), get_checkgroup_parameters('logwatch_ec', []))
     not_forwarded_logs = logwatch.select_forwarded(
         discoverable_items,
@@ -120,7 +112,7 @@ def inventory_logwatch_single(parsed: SectionLogwatch):
 
 
 def inventory_logwatch_groups(parsed: SectionLogwatch):
-    discoverable_items = _logwatch_discoverable_items(parsed)
+    discoverable_items = logwatch.discoverable_items(*parsed.values())
     forward_settings = host_extra_conf(host_name(), get_checkgroup_parameters('logwatch_ec', []))
     not_forwarded_logs = logwatch.select_forwarded(
         discoverable_items,
@@ -169,9 +161,8 @@ def check_logwatch(item, params, parsed: SectionLogwatch):
 
     params = logwatch_plugin.compile_params(params or [])
 
-    now = time.time()
-    last_run = get_item_state("logwatch_last_run_%s" % item, 0)
-    set_item_state("logwatch_last_run_%s" % item, now)
+    last_run = get_item_state("last_run", 0)
+    set_item_state("last_run", time.time())
 
     loglines = []
     for node, node_data in parsed.items():
@@ -179,7 +170,7 @@ def check_logwatch(item, params, parsed: SectionLogwatch):
         if _logwatch_is_cache_new(last_run, node):
             loglines.extend(item_data['lines'])
 
-    found = item in _logwatch_discoverable_items(parsed)
+    found = item in logwatch.discoverable_items(*parsed.values())
     yield check_logwatch_generic(item, params, loglines, found)
 
 
@@ -575,7 +566,7 @@ def _logwatch_inventory_mode_rules():
 
 
 def inventory_logwatch_ec(parsed: SectionLogwatch, use_mode):
-    discoverable_items = _logwatch_discoverable_items(parsed)
+    discoverable_items = logwatch.discoverable_items(*parsed.values())
     forward_settings = host_extra_conf(host_name(), get_checkgroup_parameters('logwatch_ec', []))
     forwarded_logs = logwatch.select_forwarded(discoverable_items, forward_settings)
     if not forwarded_logs:

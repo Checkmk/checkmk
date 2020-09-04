@@ -40,6 +40,14 @@ SectionLogwatch = TypedDict(
 )
 
 
+def discoverable_items(*sections: SectionLogwatch) -> List[str]:
+    """only consider files which are 'ok' on at least one node"""
+    return sorted({
+        item for node_data in sections for item, item_data in node_data['logfiles'].items()
+        if item_data['attr'] == 'ok'
+    })
+
+
 def ec_forwarding_enabled(params: Parameters, item: str) -> bool:
     if 'restrict_logfiles' not in params:
         return True  # matches all logs on this host

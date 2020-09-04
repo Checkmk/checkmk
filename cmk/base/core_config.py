@@ -26,6 +26,7 @@ from cmk.utils.type_defs import (
     ServiceName,
 )
 
+import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.obsolete_output as out
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
@@ -263,12 +264,19 @@ def create_core_config(core: MonitoringCore) -> ConfigurationWarnings:
     return get_configuration_warnings()
 
 
-# Verify that the user has no deprecated check groups configured.
 def _verify_non_deprecated_checkgroups() -> None:
-    groups = config.checks_by_checkgroup()
+    """Verify that the user has no deprecated check groups configured.
+    """
+    # 'check_plugin.check_ruleset_name' is of type RuleSetName, which is an ABCName (good),
+    # but config.checkgroup_parameters contains strings (todo)
+    check_ruleset_names_with_plugin = {
+        str(plugin.check_ruleset_name)
+        for plugin in agent_based_register.iter_all_check_plugins()
+        if plugin.check_ruleset_name
+    }
 
     for checkgroup in config.checkgroup_parameters:
-        if checkgroup not in groups:
+        if checkgroup not in check_ruleset_names_with_plugin:
             warning(
                 "Found configured rules of deprecated check group \"%s\". These rules are not used "
                 "by any check. Maybe this check group has been renamed during an update, "

@@ -353,7 +353,7 @@ def _compute_item(
     return item
 
 
-def _check_regex_match_conditions(
+def check_regex_match_conditions(
     name: str,
     what: Optional[Iterable[str]],
 ) -> bool:
@@ -380,9 +380,9 @@ def _check_single_matching_conditions(
     portstates = matching_conditions.get('portstates')
     admin_states = matching_conditions.get('admin_states')
 
-    return (_check_regex_match_conditions(interface.index, match_index) and
-            _check_regex_match_conditions(interface.alias, match_alias) and
-            _check_regex_match_conditions(interface.descr, match_desc) and
+    return (check_regex_match_conditions(interface.index, match_index) and
+            check_regex_match_conditions(interface.alias, match_alias) and
+            check_regex_match_conditions(interface.descr, match_desc) and
             (porttypes is None or interface.type in porttypes) and
             (portstates is None or interface.oper_status in portstates) and
             (admin_states is None or interface.admin_status is None or
@@ -423,7 +423,7 @@ class DiscoveredParams(TypedDict, total=False):
     aggregate: GroupConfiguration
 
 
-def _transform_discovery_rules(params: type_defs.Parameters) -> DiscoveryParams:
+def transform_discovery_rules(params: type_defs.Parameters) -> DiscoveryParams:
     # See cmk.gui.plugins.wato.check_parameters.if._transform_discovery_if_rules for more
     # information
 
@@ -510,7 +510,7 @@ def discover_interfaces(
     if len(section) == 0:
         return
 
-    rulesets = [_transform_discovery_rules(par) for par in params]
+    rulesets = [transform_discovery_rules(par) for par in params]
 
     pre_inventory = []
     seen_indices: Set[str] = set()

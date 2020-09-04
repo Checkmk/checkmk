@@ -20,6 +20,7 @@ import cmk.utils.paths
 # for now, import migrated stuff. I know this is stupid, this file will vanish!
 import cmk.base.plugins.agent_based.utils.logwatch as logwatch
 import cmk.base.plugins.agent_based.logwatch_section as logwatch_section
+import cmk.base.plugins.agent_based.logwatch as logwatch_plugin
 
 ItemData = logwatch.ItemData
 
@@ -101,26 +102,6 @@ def _logwatch_discoverable_items(parsed: SectionLogwatch) -> typing.List[str]:
 #
 
 
-# Extracts patterns that are relevant for the current host and item.
-# Constructs simple list of pairs: [ ('W', 'crash.exe'), ('C', 'sshd.*test') ]
-def logwatch_precompile(item: str) -> Dict[str, Any]:
-    # Initialize the patterns list with the logwatch_rules
-    params = {"reclassify_patterns": []}
-
-    # This is the new (-> WATO controlled) variable
-    rules = service_extra_conf(host_name(), item, logwatch_rules)
-
-    for rule in rules:
-        if isinstance(rule, dict):
-            params["reclassify_patterns"].extend(rule["reclassify_patterns"])
-            if "reclassify_states" in rule:
-                params["reclassify_states"] = rule["reclassify_states"]
-        else:
-            params["reclassify_patterns"].extend(rule)
-
-    return params
-
-
 def inventory_logwatch_single(parsed: SectionLogwatch):
     discoverable_items = _logwatch_discoverable_items(parsed)
     forward_settings = host_extra_conf(host_name(), get_checkgroup_parameters('logwatch_ec', []))
@@ -135,7 +116,7 @@ def inventory_logwatch_single(parsed: SectionLogwatch):
         if not any(
                 logwatch_groups_of_logfile(group_patterns, logfile)
                 for group_patterns in inventory_groups):
-            yield logfile, logwatch_precompile(logfile)  # file was in no group
+            yield logfile, {}  # file was in no group
 
 
 def inventory_logwatch_groups(parsed: SectionLogwatch):
@@ -157,7 +138,6 @@ def inventory_logwatch_groups(parsed: SectionLogwatch):
 
     for group_name, patterns in inventory.items():
         params = {"group_patterns": sorted(patterns)}
-        params.update(logwatch_precompile(group_name))
         yield group_name, params
 
 
@@ -187,9 +167,7 @@ def _errors(parsed: SectionLogwatch) -> typing.Generator[typing.Tuple[int, str],
 def check_logwatch(item, params, parsed: SectionLogwatch):
     yield from _errors(parsed)
 
-    if not isinstance(params, dict) or "reclassify_patterns" not in params:
-        yield 3, "Patterns not found. Please rediscover the services of this host."
-        return
+    params = logwatch_plugin.compile_params(params or [])
 
     now = time.time()
     last_run = get_item_state("logwatch_last_run_%s" % item, 0)
@@ -211,7 +189,7 @@ check_info['logwatch'] = {
     'check_function': check_logwatch,
     'service_description': "Log %s",
     'node_info': True,
-    'group': 'logwatch',
+    'group': 'logwatch_rules',
 }
 
 #.
@@ -296,9 +274,7 @@ def _logwatch_match_group_patterns(logfile_name, inclusion, exclusion):
 def check_logwatch_groups(item, params, parsed: SectionLogwatch):
     yield from _errors(parsed)
 
-    if not isinstance(params, dict) or "reclassify_patterns" not in params:
-        yield 3, "Patterns not found. Please rediscover the services of this host."
-        return
+    params = logwatch_plugin.compile_params(params or [])
 
     group_patterns = set(params['group_patterns'])
 
@@ -319,7 +295,7 @@ check_info['logwatch.groups'] = {
     'inventory_function': inventory_logwatch_groups,
     'service_description': "Log %s",
     'node_info': True,
-    'group': 'logwatch',
+    'group': 'logwatch_rules',
     'includes': ['eval_regex.include']
 }
 

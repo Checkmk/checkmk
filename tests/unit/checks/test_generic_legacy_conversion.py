@@ -776,7 +776,6 @@ def test_all_check_variables_present(_load_all_checks, config_check_variables):
         'logwatch_groups',
         'logwatch_max_filesize',
         'logwatch_patterns',
-        'logwatch_rules',
         'logwatch_service_output',
         'logwatch_spool_dir',
         'lparstat_default_levels',

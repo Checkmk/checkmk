@@ -20,7 +20,7 @@ INFO1 = [
     ['NODE2', '[[[log1:missing]]]'],
 ]
 
-_DEFAULT_PARAMS: Dict[str, List] = {'reclassify_patterns': []}
+_DEFAULT_PARAMS: Dict[str, List] = {}
 
 
 @pytest.mark.parametrize('info, fwd_rule, inventory_groups, expected_result', [
@@ -61,7 +61,6 @@ def test_logwatch_inventory_single(check_manager, info, fwd_rule, inventory_grou
                         ('my_%s_group', ('~(log).*', '~.*5'))]], [
                             ('my_log_group', {
                                 'group_patterns': [('~log.*', '~.*5'), ('~log[^5]', '~.*1')],
-                                'reclassify_patterns': [],
                             }),
                         ]),
         (INFO1, [{}], [[('my_group', ('~.*sing', '~.*1'))]], []),  # don't match :missing!

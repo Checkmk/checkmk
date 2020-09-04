@@ -31,6 +31,8 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
+from cmk.fetchers.type_defs import Mode
+
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
@@ -339,7 +341,7 @@ def _do_inv_for_realhost(
                 raw_data = source.configurator.default_raw_data
                 try:
                     with source.configurator.make_fetcher() as fetcher:
-                        raw_data = fetcher.fetch()
+                        raw_data = fetcher.fetch(Mode.INVENTORY)
                 except Exception as exc:
                     source.exception = exc
                 hs = source.check(raw_data)

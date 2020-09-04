@@ -261,7 +261,7 @@ def update_host_sections(
                 # We don't have raw_data yet (from the previously executed fetcher), execute the
                 # fetcher here.
                 with source.configurator.make_fetcher() as fetcher:
-                    raw_data = fetcher.fetch()
+                    raw_data = fetcher.fetch(source.configurator.mode)
             else:
                 # The Microcore has handed over results from the previously executed fetcher.
                 # Extract the raw_data for the source we currently

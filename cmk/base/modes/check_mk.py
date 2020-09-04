@@ -390,10 +390,11 @@ def mode_dump_agent(hostname: HostName) -> None:
         output = []
         # Show errors of problematic data sources
         has_errors = False
+        mode = data_sources.Mode.CHECKING
         for configurator in data_sources.make_configurators(
                 host_config,
                 ipaddress,
-                mode=data_sources.Mode.CHECKING,
+                mode=mode,
         ):
             configurator.file_cache.max_age = config.check_max_cachefile_age
             if not isinstance(configurator, data_sources.agent.AgentConfigurator):
@@ -404,7 +405,7 @@ def mode_dump_agent(hostname: HostName) -> None:
             raw_data = configurator.default_raw_data
             try:
                 with configurator.make_fetcher() as fetcher:
-                    raw_data = fetcher.fetch()
+                    raw_data = fetcher.fetch(configurator.mode)
             except Exception as exc:
                 checker.exception = exc
             else:

@@ -8,7 +8,7 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
 
-from cmk.fetchers._base import ABCFileCache
+from cmk.fetchers.tcp import TCPFetcher
 
 import cmk.base.modes.check_mk as check_mk
 from cmk.base.data_sources import FileCacheConfigurator
@@ -28,8 +28,8 @@ class TestModeDumpAgent:
         return b"<<<check_mk>>>\nraw data"
 
     @pytest.fixture
-    def patch_io(self, raw_data, monkeypatch):
-        monkeypatch.setattr(ABCFileCache, "read", lambda *args, **kwargs: raw_data)
+    def patch_fetch(self, raw_data, monkeypatch):
+        monkeypatch.setattr(TCPFetcher, "fetch", lambda self, mode: raw_data)
 
     @pytest.fixture
     def scenario(self, hostname, ipaddress, monkeypatch):
@@ -39,7 +39,7 @@ class TestModeDumpAgent:
         return ts
 
     @pytest.mark.usefixtures("scenario")
-    @pytest.mark.usefixtures("patch_io")
+    @pytest.mark.usefixtures("patch_fetch")
     def test_success(self, hostname, raw_data, capsys):
         assert FileCacheConfigurator.disabled is False
 

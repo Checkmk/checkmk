@@ -212,7 +212,7 @@ def load_global_config(serial: int) -> None:
         cmk.utils.log.logger.setLevel(result["log_level"])
 
 
-def _run_fetcher(entry: Dict[str, Any], timeout: int) -> FetcherResult:
+def _run_fetcher(entry: Dict[str, Any], mode: Mode, timeout: int) -> FetcherResult:
     """ timeout to be used by concrete fetcher implementation
     Examples of correct dictionaries to return:
     {  "fetcher_type": "SNMP", "status": 0,   "payload": ""whatever}
@@ -224,7 +224,7 @@ def _run_fetcher(entry: Dict[str, Any], timeout: int) -> FetcherResult:
         fetcher_params = entry["fetcher_params"]
 
         with FetcherType[fetcher_type].value.from_json(fetcher_params) as fetcher:
-            payload = fetcher.fetch()
+            payload = fetcher.fetch(mode)
 
         if fetcher_type != "SNMP":
             # Since we currently transport the data using JSON, we have to encode the binary data.
@@ -286,10 +286,7 @@ def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
     # Multiprocessing: CPU and memory(at least in terms of kernel) hungry. Also duplicates
     # functionality of the Microcore.
 
-    # TODO: Handle Mode.DISCOVERY/Mode.CHECKING cache differences: In Mode.CHECKING the cache must
-    # not be used.
-
-    resulting_blob = [_run_fetcher(entry, timeout) for entry in fetchers]
+    resulting_blob = [_run_fetcher(entry, mode, timeout) for entry in fetchers]
     write_data(make_success_answer(json.dumps(resulting_blob)))
 
     for entry in resulting_blob:

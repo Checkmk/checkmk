@@ -8,11 +8,12 @@ import json
 import socket
 from collections import namedtuple
 from pathlib import Path
+from typing import Optional
 
 import pytest  # type: ignore[import]
 
 import cmk.utils.store as store
-from cmk.utils.type_defs import SectionName
+from cmk.utils.type_defs import SectionName, AgentRawData
 
 from cmk.snmplib.type_defs import SNMPHostConfig, SNMPRawData, SNMPTable, SNMPTree
 
@@ -23,6 +24,7 @@ from cmk.fetchers.piggyback import PiggybackFetcher
 from cmk.fetchers.program import ProgramFetcher
 from cmk.fetchers.snmp import SNMPFetcher, SNMPFileCache
 from cmk.fetchers.tcp import TCPFetcher
+from cmk.fetchers.type_defs import Mode
 
 from cmk.base.data_sources import FileCacheConfigurator
 
@@ -233,6 +235,19 @@ class TestSNMPFetcher:
         assert isinstance(fetcher.file_cache, SNMPFileCache)
 
 
+class StubFileCache(DefaultAgentFileCache):
+    """Holds the data to be cached in-memory for testing"""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cache: Optional[AgentRawData] = None
+
+    def write(self, raw_data: AgentRawData) -> None:
+        self.cache = raw_data
+
+    def read(self) -> Optional[AgentRawData]:
+        return self.cache
+
+
 class TestTCPFetcher:
     @pytest.fixture(name="fetcher")
     def fetcher_fixture(self, fc_conf):
@@ -247,6 +262,20 @@ class TestTCPFetcher:
                 },
                 "use_only_cache": False,
             }))
+
+    @pytest.fixture(name="cache_fetcher")
+    def cache_fetcher_fixture(self, monkeypatch, fc_conf):
+        fetcher = TCPFetcher(StubFileCache.from_json(fc_conf.configure()), socket.AF_INET, ("", 0),
+                             0.0, {}, False)
+
+        # Populate the cache
+        assert isinstance(fetcher.file_cache, StubFileCache)
+        fetcher.file_cache.cache = b"cached_section"
+
+        # Fixate the response we get from IO
+        monkeypatch.setattr(fetcher, "_fetch_from_io", lambda: b"fetched_section")
+
+        return fetcher
 
     def test_deserialization(self, fetcher):
         # TODO (ml): Probably we have to check here everything
@@ -278,3 +307,21 @@ class TestTCPFetcher:
 
         with pytest.raises(MKFetcherError):
             fetcher._decrypt(output)
+
+    # We are in fact testing a generic feature of the ABCFetcher and use the TCPFetcher for this
+    def test_fetch_not_reading_cache_in_checking_mode(self, cache_fetcher):
+        assert cache_fetcher.file_cache.cache == b"cached_section"
+        assert cache_fetcher.fetch(Mode.CHECKING) == b"fetched_section"
+        assert cache_fetcher.file_cache.cache == b"fetched_section"
+
+    # We are in fact testing a generic feature of the ABCFetcher and use the TCPFetcher for this
+    def test_fetch_reading_cache_in_discovery_mode(self, cache_fetcher):
+        assert cache_fetcher.file_cache.cache == b"cached_section"
+        assert cache_fetcher.fetch(Mode.DISCOVERY) == b"cached_section"
+        assert cache_fetcher.file_cache.cache == b"cached_section"
+
+    # We are in fact testing a generic feature of the ABCFetcher and use the TCPFetcher for this
+    def test_fetch_reading_cache_in_inventory_mode(self, cache_fetcher):
+        assert cache_fetcher.file_cache.cache == b"cached_section"
+        assert cache_fetcher.fetch(Mode.INVENTORY) == b"cached_section"
+        assert cache_fetcher.file_cache.cache == b"cached_section"

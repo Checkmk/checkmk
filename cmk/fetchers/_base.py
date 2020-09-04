@@ -15,7 +15,7 @@ import cmk.utils.store as store
 from cmk.utils.exceptions import MKException, MKGeneralException
 from cmk.utils.log import VERBOSE, logger as cmk_logger
 
-from .type_defs import TRawData
+from .type_defs import TRawData, Mode
 
 __all__ = ["ABCFetcher", "MKFetcherError"]
 
@@ -132,14 +132,15 @@ class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
                  traceback: Optional[TracebackType]) -> Optional[bool]:
         """Destroy the data source."""
 
-    def fetch(self) -> TRawData:
-        """Return the data from the source."""
+    def fetch(self, mode: Mode) -> TRawData:
+        """Return the data from the source, either cached or from IO."""
         # TODO(ml): Handle `selected_raw_sections` in SNMP.
         # TODO(ml): EAFP would significantly simplify the code.
-        raw_data = self._fetch_from_cache()
-        if raw_data:
-            self._logger.log(VERBOSE, "[%s] Use cached data", self.__class__.__name__)
-            return raw_data
+        if mode is not Mode.CHECKING or self.file_cache.simulation:
+            raw_data = self._fetch_from_cache()
+            if raw_data:
+                self._logger.log(VERBOSE, "[%s] Use cached data", self.__class__.__name__)
+                return raw_data
 
         self._logger.log(VERBOSE, "[%s] Execute data source", self.__class__.__name__)
         raw_data = self._fetch_from_io()

@@ -437,7 +437,7 @@ class TestMakeHostSectionsHosts:
             def _extend_section(self, section_name, section_content):
                 pass
 
-        monkeypatch.setattr(ABCFetcher, "fetch", lambda self: None)
+        monkeypatch.setattr(ABCFetcher, "fetch", lambda self, mode: None)
         monkeypatch.setattr(CachedSNMPDetector, "__call__", lambda *args, **kwargs: frozenset())
         monkeypatch.setattr(
             ABCChecker,

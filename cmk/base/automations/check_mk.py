@@ -1245,7 +1245,7 @@ class AutomationDiagHost(Automation):
 
             try:
                 with configurator.make_fetcher() as fetcher:
-                    raw_data = fetcher.fetch()
+                    raw_data = fetcher.fetch(configurator.mode)
                 # We really receive a byte string here. The agent sections
                 # may have different encodings and are normally decoded one
                 # by one (AgentChecker._parse_host_section).  For the
@@ -1526,7 +1526,7 @@ class AutomationGetAgentOutput(Automation):
                         continue
 
                     with configurator.make_fetcher() as fetcher:
-                        raw_data = fetcher.fetch()
+                        raw_data = fetcher.fetch(configurator.mode)
 
                     # Optionally show errors of problematic data sources
                     checker = configurator.make_checker()

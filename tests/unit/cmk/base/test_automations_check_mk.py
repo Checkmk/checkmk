@@ -8,7 +8,7 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
 
-from cmk.fetchers._base import ABCFileCache
+from cmk.fetchers.tcp import TCPFetcher
 
 import cmk.base.automations.check_mk as check_mk
 
@@ -34,11 +34,11 @@ class TestAutomationDiagHost:
         return ts
 
     @pytest.fixture
-    def patch_io(self, raw_data, monkeypatch):
-        monkeypatch.setattr(ABCFileCache, "read", lambda *args, **kwargs: raw_data)
+    def patch_fetch(self, raw_data, monkeypatch):
+        monkeypatch.setattr(TCPFetcher, "fetch", lambda self, mode: raw_data)
 
     @pytest.mark.usefixtures("scenario")
-    @pytest.mark.usefixtures("patch_io")
+    @pytest.mark.usefixtures("patch_fetch")
     def test_execute(self, hostname, ipaddress, raw_data):
         args = [hostname, "agent", ipaddress, "", "6557", "10", "5", "5", ""]
         assert check_mk.AutomationDiagHost().execute(args) == (0, raw_data)

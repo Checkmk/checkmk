@@ -702,7 +702,18 @@ def _check_grouped_ifs(
 
     for interface in section:
         if_member_item = _compute_item(
-            params["aggregate"]["member_appearance"],
+            params["aggregate"].get(
+                "member_appearance",
+                # This happens when someones upgrades from v1.6 to v1.7, where the structure of the
+                # discovered parameters changed. Interface groups defined by the user will stop
+                # working, users have to do a re-discovery in that case, as we wrote in werk #11361.
+                # However, we can still support groups defined already in the agent output, since
+                # these work purley by the group name.
+                params["aggregate"].get(
+                    "item_type",
+                    DISCOVERY_DEFAULT_PARAMETERS['discovery_single'][1]['item_appearance'],
+                ),
+            ),
             interface,
             section,
             item[0] == '0',

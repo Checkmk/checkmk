@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.base.plugins.agent_based.utils.ucs_bladecenter as ucs_bladecenter
+
 # <<ucs_bladecenter_fans:sep(9)>>>
 # equipmentNetworkElementFanStats Dn sys/switch-A/fan-module-1-1/fan-1/stats      SpeedAvg 8542
 # equipmentFanModuleStats Dn sys/chassis-2/fan-module-1-1/stats   AmbientTemp 29.000000
@@ -12,7 +14,7 @@
 
 
 def parse_ucs_bladecenter_fans(info):
-    data = ucs_bladecenter_convert_info(info)
+    data = ucs_bladecenter.generic_parse(info)
     fans = {}
 
     def get_item_name(key):
@@ -76,7 +78,6 @@ check_info["ucs_bladecenter_fans"] = {
     'inventory_function': inventory_ucs_bladecenter_fans,
     'check_function': check_ucs_bladecenter_fans,
     'service_description': 'Fans %s',
-    'includes': ['ucs_bladecenter.include'],
 }
 
 #.
@@ -120,6 +121,6 @@ check_info["ucs_bladecenter_fans.temp"] = {
     'service_description': 'Temperature %s',
     'group': 'temperature',
     'has_perfdata': True,
-    'includes': ['ucs_bladecenter.include', 'temperature.include'],
+    'includes': ['temperature.include'],
     'default_levels_variable': 'ucs_bladecenter_fans_temp_default_levels'
 }

@@ -23,5 +23,4 @@ check_info["ucs_bladecenter_topsystem"] = {
     'inventory_function': inventory_ucs_bladecenter_topsystem,
     'check_function': check_ucs_bladecenter_topsystem,
     'service_description': 'UCS TopSystem Info',
-    'includes': ['ucs_bladecenter.include'],
 }

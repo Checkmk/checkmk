@@ -188,6 +188,7 @@ class HostCheckTable:
 
 def get_check_table(
     hostname: str,
+    *,
     remove_duplicates: bool = False,
     use_cache: bool = True,
     skip_autochecks: bool = False,
@@ -231,14 +232,14 @@ def get_needed_check_names(
 
 def get_sorted_service_list(
     hostname: HostName,
-    remove_duplicates: bool = False,
+    *,
     filter_mode: Optional[str] = None,
     skip_ignored: bool = True,
 ) -> List[Service]:
 
     sorted_services_unresolved = sorted(
         get_check_table(hostname,
-                        remove_duplicates=remove_duplicates,
+                        remove_duplicates=True,
                         filter_mode=filter_mode,
                         skip_ignored=skip_ignored).values(),
         key=lambda service: service.description,

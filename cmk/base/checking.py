@@ -365,7 +365,6 @@ def _get_services_to_fetch(
     """
     services = check_table.get_sorted_service_list(
         host_name,
-        remove_duplicates=True,
         filter_mode="include_clustered" if belongs_to_cluster else None,
     )
 

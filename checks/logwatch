@@ -8,6 +8,7 @@ import typing  # no from import allowed in check plugin :-(. fix upon migration
 
 import collections
 import errno
+import getpass
 import io
 import itertools
 import os
@@ -301,19 +302,6 @@ def truncate_by_line(file_path, offset):
         handle.truncate()
 
 
-def logwatch_username():
-    import getpass
-    return getpass.getuser()
-
-
-def _makedirs_exist_ok(directory):
-    try:
-        os.makedirs(directory)
-    except OSError as exc:
-        if exc.errno != errno.EEXIST:
-            raise
-
-
 class LogwatchBlock(object):
 
     CHAR_TO_STATE = {"O": 0, "W": 1, "u": 1, "C": 2}
@@ -416,7 +404,7 @@ def check_logwatch_generic(item, patterns, loglines, found):
         logmsg_file_handle = logmsg_file_path.open(mode, encoding='utf-8')
     except IOError as exc:
         raise MKGeneralException("User %s cannot open file for writing: %s" %
-                                 (logwatch_username(), exc))
+                                 (getpass.getuser(), exc))
 
     # TODO: repr() of a dict may change.
     pattern_hash = hashlib.sha256(repr(patterns).encode()).hexdigest()
@@ -552,7 +540,6 @@ def logwatch_to_prio(level):
 
 def _logwatch_inventory_mode_rules():
     forward_settings = host_extra_conf(host_name(), get_checkgroup_parameters('logwatch_ec', []))
-
     merged_rules = {}
     for rule in forward_settings[-1::-1]:
         if isinstance(rule, dict):
@@ -770,7 +757,7 @@ def logwatch_forward_spool_directory(method, item, messages):
     spool_path = method[6:]
     file_name = '.%s_%s%d' % (host_name(), item and item.replace('/', '\\') + '_' or
                               '', time.time())
-    _makedirs_exist_ok(spool_path)
+    os.makedirs(spool_path, exist_ok=True)
 
     io.open('%s/%s' % (spool_path, file_name), 'w',
             encoding="utf-8").write(('\n'.join(messages)).encode("utf-8") + '\n')
@@ -850,7 +837,7 @@ def logwatch_forward_send_tcp(method, message_chunks, result):
 def logwatch_spool_messages(message_chunks, result):
     path = logwatch_spool_path()
 
-    _makedirs_exist_ok(path)
+    os.makedirs(path, exist_ok=True)
 
     # Now write updated/new and delete emtpy spool files
     for time_spooled, num_already_spooled, message_chunk in message_chunks:

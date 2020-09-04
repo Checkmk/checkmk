@@ -308,7 +308,7 @@ For Each instance_id In instances.Keys: Do ' Continue trick
     Dim connProv, errMsg
     errMsg = ""
 
-    For Each connProv in Array("msoledbsql", "sqloledb")
+    For Each connProv in Array("msoledbsql", "sqloledb", "sqlncli11")
 
         CONN.Provider = connProv
 

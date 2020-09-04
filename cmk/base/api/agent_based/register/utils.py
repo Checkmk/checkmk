@@ -13,7 +13,11 @@ from pathlib import Path
 from cmk.utils.type_defs import CheckPluginName, InventoryPluginName, ParsedSectionName, SectionName
 from cmk.utils.paths import agent_based_plugins_dir
 
-from cmk.base.api.agent_based.type_defs import SectionPlugin
+from cmk.base.api.agent_based.type_defs import CheckPlugin, SectionPlugin
+
+ITEM_VARIABLE = "%s"
+
+DUMMY_RULESET_NAME = "non_existent_auto_migration_dummy_rule"
 
 
 def get_validated_plugin_module_name() -> Optional[str]:
@@ -114,3 +118,39 @@ def validate_default_parameters(
 
     if ruleset_name is None and params_type != 'check':
         raise TypeError("missing ruleset name for default %s parameters" % (params_type))
+
+
+def validate_check_ruleset_item_consistency(
+    check_plugin: CheckPlugin,
+    registered_check_plugins: Dict[CheckPluginName, CheckPlugin],
+) -> None:
+    """Validate check plugins sharing a check_ruleset_name have either all or none an item.
+
+    Mixed checkgroups lead to strange exceptions when processing the check parameters.
+    So it is much better to catch these errors in a central place with a clear error message.
+    """
+    if (check_plugin.check_ruleset_name is None or
+            str(check_plugin.check_ruleset_name) == DUMMY_RULESET_NAME):
+        return
+
+    present_check_plugins = [
+        p for p in registered_check_plugins.values()
+        if p.check_ruleset_name and p.check_ruleset_name == check_plugin.check_ruleset_name
+    ]
+    if not present_check_plugins:
+        return
+
+    # Trying to detect whether or not the check has an item. But this mechanism is not
+    # 100% reliable since Check_MK appends an item to the service_description when "%s"
+    # is not in the checks service_description template.
+    # Maybe we need to define a new rule which enforces the developer to use the %s in
+    # the service_description. At least for grouped checks.
+    item_present = ITEM_VARIABLE in check_plugin.service_name
+    item_expected = ITEM_VARIABLE in present_check_plugins[0].service_name
+
+    if item_present is not item_expected:
+        present_plugins = ", ".join(str(p.name) for p in present_check_plugins)
+        raise ValueError(
+            f"Check ruleset {check_plugin.check_ruleset_name} has checks with and without item! "
+            "At least one of the checks in this group needs to be changed "
+            f"(offending plugin: {check_plugin.name}, present_plugins: {present_plugins}).")

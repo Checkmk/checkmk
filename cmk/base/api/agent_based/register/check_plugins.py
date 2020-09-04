@@ -25,11 +25,10 @@ from cmk.base.api.agent_based.checking_classes import (
 )
 from cmk.base.api.agent_based.register.utils import (
     create_subscribed_sections,
+    ITEM_VARIABLE,
     validate_function_arguments,
     validate_default_parameters,
 )
-
-ITEM_VARIABLE = "%s"
 
 MANAGEMENT_DESCR_PREFIX = "Management Interface: "
 

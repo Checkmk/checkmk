@@ -25,7 +25,10 @@ from cmk.base.api.agent_based.type_defs import (
 )
 from cmk.base.api.agent_based.register.check_plugins import management_plugin_factory
 from cmk.base.api.agent_based.register.section_plugins import trivial_section_factory
-from cmk.base.api.agent_based.register.utils import rank_sections_by_supersedes
+from cmk.base.api.agent_based.register.utils import (
+    rank_sections_by_supersedes,
+    validate_check_ruleset_item_consistency,
+)
 
 registered_agent_sections: Dict[SectionName, AgentSectionPlugin] = {}
 registered_snmp_sections: Dict[SectionName, SNMPSectionPlugin] = {}
@@ -36,6 +39,7 @@ stored_discovery_rulesets: Dict[RuleSetName, List[Dict[str, Any]]] = {}
 
 
 def add_check_plugin(check_plugin: CheckPlugin) -> None:
+    validate_check_ruleset_item_consistency(check_plugin, registered_check_plugins)
     registered_check_plugins[check_plugin.name] = check_plugin
 
 

@@ -20,12 +20,11 @@ from cmk.base.api.agent_based.checking_classes import (
     Service,
 )
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
+from cmk.base.api.agent_based.register.utils import DUMMY_RULESET_NAME
 from cmk.base.api.agent_based.type_defs import CheckPlugin, Parameters
 from cmk.base.check_api_utils import Service as LegacyService
 from cmk.base.check_utils import get_default_parameters
 from cmk.base.discovered_labels import HostLabel, DiscoveredHostLabels
-
-DUMMY_RULESET_NAME = "non_existent_auto_migration_dummy_rule"
 
 # There are so many check_info keys, make sure we didn't miss one.
 CONSIDERED_KEYS = {

@@ -77,7 +77,7 @@ from cmk.utils.type_defs import (
     Labels,
     LabelSources,
     Ruleset,
-    RulesetName,
+    RulesetName,  # alias for str
     SectionName,
     ServicegroupName,
     ServiceName,
@@ -1560,7 +1560,6 @@ def load_checks(get_check_api_context: GetCheckApiContext, filelist: List[str]) 
     convert_check_info()
     _extract_agent_and_snmp_sections()
     _extract_check_plugins()
-    verify_checkgroup_members()
     initialize_check_type_caches()
 
 
@@ -2018,43 +2017,6 @@ def _extract_check_plugins() -> None:
             #    raise MKGeneralException(exc)
             #console.warning(AUTO_MIGRATION_ERR_MSG % ("check plugin", check_plugin_name))
             pass
-
-
-# This function validates the checks which are members of checkgroups to have either
-# all or none an item. Mixed checkgroups lead to strange exceptions when processing
-# the check parameters. So it is much better to catch these errors in a central place
-# with a clear error message.
-def verify_checkgroup_members() -> None:
-    groups = checks_by_checkgroup()
-
-    for group_name, check_entries in groups.items():
-        with_item, without_item = [], []
-        for check_plugin_name, check_info_entry in check_entries:
-            # Trying to detect whether or not the check has an item. But this mechanism is not
-            # 100% reliable since Check_MK appends an item to the service_description when "%s"
-            # is not in the checks service_description template.
-            # Maybe we need to define a new rule which enforces the developer to use the %s in
-            # the service_description. At least for grouped checks.
-            if "%s" in check_info_entry["service_description"]:
-                with_item.append(check_plugin_name)
-            else:
-                without_item.append(check_plugin_name)
-
-        if with_item and without_item:
-            raise MKGeneralException(
-                "Checkgroup %s has checks with and without item! At least one of "
-                "the checks in this group needs to be changed (With item: %s, "
-                "Without item: %s)" % (group_name, ", ".join(with_item), ", ".join(without_item)))
-
-
-def checks_by_checkgroup() -> Dict[RulesetName, List[Tuple[CheckPluginNameStr, CheckInfo]]]:
-    groups: Dict[RulesetName, List[Tuple[CheckPluginNameStr, CheckInfo]]] = {}
-    for check_plugin_name, check in check_info.items():
-        group_name = check["group"]
-        if group_name:
-            groups.setdefault(group_name, [])
-            groups[group_name].append((check_plugin_name, check))
-    return groups
 
 
 # These caches both only hold the base names of the checks

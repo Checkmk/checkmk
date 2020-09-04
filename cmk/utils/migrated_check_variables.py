@@ -29,6 +29,16 @@ memused_default_levels = (150.0, 200.0)
 # hp_proliant_power: see werk 10857
 hp_prolaint_power_default_levels = None  # yes, P R O L A I N T
 
+# if.include
+# This HostRulespec is deprecated as of v1.7. However, for compatibility reasons, we must not delete
+# this variable.
+if_groups = []  # type: ignore[var-annotated]
+# Obsolete variables, but needed as contained in autochecks of older checks. We need to keep this up
+# for a few years/decades...
+if_default_error_levels = (0.01, 0.1)
+if_default_traffic_levels = None, None
+if_default_average = None
+
 # ps
 ps_default_levels = {"levels": (1, 1, 99999, 99999)}
 

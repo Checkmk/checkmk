@@ -54,9 +54,6 @@ def _explicit_conversions(function_name: str) -> SNMPDetectSpec:
     if function_name in MIGRATED_SCAN_FUNCTIONS:
         return MIGRATED_SCAN_FUNCTIONS[function_name]
 
-    if function_name == 'has_ifHCInOctets':
-        return exists('.1.3.6.1.2.1.31.1.1.1.6.*')
-
     if function_name == '_is_fsc_or_windows':
         return any_of(
             startswith('.1.3.6.1.2.1.1.2.0', '.1.3.6.1.4.1.231'),
@@ -268,7 +265,6 @@ def _ast_convert_call(call_ast: ast.Call) -> SNMPDetectSpec:
             assert _is_oid_function(call_ast.args[0])
             return exists(_ast_convert_to_str(call_ast.args[0]))
         if call_ast.func.id in (
-                'has_ifHCInOctets',
                 'is_fsc',
                 '_is_ucd',
                 '_is_fsc_or_windows',

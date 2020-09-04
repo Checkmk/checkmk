@@ -91,9 +91,6 @@ CHECK_DEFAULT_PARAMETERS = {
     "errors": (0.01, 0.1),
 }
 
-discovery_monitor_speed = True
-discovery_monitor_state = True
-
 
 @dataclass
 class Interface:
@@ -416,13 +413,6 @@ def _check_group_matching_conditions(
         ) for exclusion_condition in group_configuration['exclusion_conditions'])
 
 
-class DiscoveredParams(TypedDict, total=False):
-    discovered_oper_status: Iterable[str]
-    discovered_admin_status: Iterable[str]
-    discovered_speed: float
-    aggregate: GroupConfiguration
-
-
 def transform_discovery_rules(params: type_defs.Parameters) -> DiscoveryParams:
     # See cmk.gui.plugins.wato.check_parameters.if._transform_discovery_if_rules for more
     # information
@@ -562,11 +552,10 @@ def discover_interfaces(
 
         # discover single interface
         if discover_single_interface and interface.index not in seen_indices:
-            discovered_params_single: DiscoveredParams = {}
-            if discovery_monitor_state:
-                discovered_params_single["discovered_oper_status"] = [interface.oper_status]
-            if discovery_monitor_speed:
-                discovered_params_single["discovered_speed"] = interface.speed
+            discovered_params_single = {
+                "discovered_oper_status": [interface.oper_status],
+                "discovered_speed": interface.speed,
+            }
             if interface.admin_status is not None:
                 discovered_params_single['discovered_admin_status'] = [interface.admin_status]
 
@@ -613,14 +602,11 @@ def discover_interfaces(
 
         # only discover non-empty groups
         if groups_has_members:
-            discovered_params_group: DiscoveredParams = {
+            discovered_params_group = {
                 "aggregate": group_configuration,
+                "discovered_oper_status": [group_oper_status],
+                "discovered_speed": group_speed,
             }
-
-            if discovery_monitor_state:
-                discovered_params_group["discovered_oper_status"] = [group_oper_status]
-            if discovery_monitor_speed:
-                discovered_params_group["discovered_speed"] = group_speed
 
             # Note: the group interface index is always set to 1
             pre_inventory.append((group_name, discovered_params_group, 1, False))

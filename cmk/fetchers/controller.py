@@ -19,7 +19,7 @@ from cmk.utils.type_defs import HostName
 import cmk.utils.log
 
 from . import FetcherType
-from .type_defs import FetcherResult
+from .type_defs import FetcherResult, Mode
 
 #
 # Protocols
@@ -180,7 +180,7 @@ def make_waiting_answer() -> str:
                payload_length=0))
 
 
-def run_fetchers(serial: str, host_name: HostName, timeout: int) -> None:
+def run_fetchers(serial: str, host_name: HostName, mode: Mode, timeout: int) -> None:
     """Entry point from bin/fetcher"""
     # check that file is present, because lack of the file is not an error at the moment
     json_file = build_json_file_path(serial=serial, host_name=host_name)
@@ -194,7 +194,7 @@ def run_fetchers(serial: str, host_name: HostName, timeout: int) -> None:
         return
 
     # Usually OMD_SITE/var/check_mk/core/fetcher-config/[config-serial]/[host].json
-    _run_fetchers_from_file(file_name=json_file, timeout=timeout)
+    _run_fetchers_from_file(file_name=json_file, mode=mode, timeout=timeout)
 
 
 def load_global_config(serial: int) -> None:
@@ -263,7 +263,7 @@ def status_to_microcore_severity(status: int) -> str:
         return "warning"
 
 
-def _run_fetchers_from_file(file_name: Path, timeout: int) -> None:
+def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
     """ Writes to the stdio next data:
     Count Type            Content                     Action
     ----- -----           -------                     ------
@@ -285,6 +285,9 @@ def _run_fetchers_from_file(file_name: Path, timeout: int) -> None:
     # Threading: some fetcher may be not thread safe(snmp, for example). May be dangerous.
     # Multiprocessing: CPU and memory(at least in terms of kernel) hungry. Also duplicates
     # functionality of the Microcore.
+
+    # TODO: Handle Mode.DISCOVERY/Mode.CHECKING cache differences: In Mode.CHECKING the cache must
+    # not be used.
 
     resulting_blob = [_run_fetcher(entry, timeout) for entry in fetchers]
     write_data(make_success_answer(json.dumps(resulting_blob)))

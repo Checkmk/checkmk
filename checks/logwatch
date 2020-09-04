@@ -149,31 +149,6 @@ def logwatch_precompile(item: str) -> Dict[str, Any]:
     return params
 
 
-def logwatch_reclassify(counts, patterns, text, old_level):
-    # Reclassify state if a given regex pattern matches
-    # A match overrules the previous state->state reclassification
-    for level, pattern, _ in patterns.get("reclassify_patterns", []):
-        reg = regex(pattern, re.UNICODE)
-        if reg.search(text):
-            # If the level is not fixed like 'C' or 'W' but a pair like (10, 20),
-            # then we count how many times this pattern has already matched and
-            # assign the levels according to the number of matches of this pattern.
-            if isinstance(level, tuple):
-                warn, crit = level
-                newcount = counts.setdefault(id(pattern), 0) + 1
-                counts[id(pattern)] = newcount
-                if newcount >= crit:
-                    return 'C'
-                elif newcount >= warn:
-                    return 'W'
-                return 'I'
-            return level
-
-    # Reclassify state to another state
-    change_state_paramkey = ("%s_to" % old_level).lower()
-    return patterns.get("reclassify_states", {}).get(change_state_paramkey, old_level)
-
-
 def inventory_logwatch_single(parsed: SectionLogwatch):
     discoverable_items = _logwatch_discoverable_items(parsed)
     _forwarded_logs, not_forwarded_logs = _logwatch_select_forwarded(discoverable_items)
@@ -400,8 +375,8 @@ class LogwatchBlock(object):
         self.worst = -1
         self.lines = []
         self.last_worst_line = ''
-        self.counts = {}  # counting matches of a certain pattern
-        self.states_counter = collections.Counter()  # counting lines with a certain state
+        self.counts: typing.Counter[int] = typing.Counter()  # matches of a certain pattern
+        self.states_counter = collections.Counter()  # lines with a certain state
         self._patterns = patterns or {}
 
     def finalize(self):
@@ -417,7 +392,7 @@ class LogwatchBlock(object):
             level, text = line.strip(), ""
 
         if not skip_reclassification:
-            level = logwatch_reclassify(self.counts, self._patterns, text, level)
+            level = logwatch.reclassify(self.counts, self._patterns, text, level)
 
         state = LogwatchBlock.CHAR_TO_STATE.get(level, -1)
         self.worst = max(state, self.worst)
@@ -745,9 +720,8 @@ def check_logwatch_ec(item, params, parsed: SectionLogwatch):
         for line in lines:
             rclfd_level = None
             if logfile_reclassify_settings:
-                counts = {}  # unused...
                 old_level, _text = line.split(" ", 1)
-                level = logwatch_reclassify(counts, logfile_reclassify_settings, line[2:],
+                level = logwatch.reclassify(typing.Counter(), logfile_reclassify_settings, line[2:],
                                             old_level)
                 if level != old_level:
                     rclfd_total += 1

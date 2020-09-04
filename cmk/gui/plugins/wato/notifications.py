@@ -14,6 +14,7 @@ from cmk.gui.globals import html
 
 from cmk.gui.valuespec import (
     Age,
+    Alternative,
     CascadingDropdown,
     DEF_VALUE,
     Dictionary,
@@ -21,6 +22,7 @@ from cmk.gui.valuespec import (
     EmailAddress,
     FixedValue,
     HTTPUrl,
+    Integer,
     IPv4Address,
     ListChoice,
     ListOfStrings,
@@ -694,21 +696,82 @@ $LONGSERVICEOUTPUT$
                             "acknowledgement of the affected host or service problem."),
                      elements=[
                          ("start",
-                          DropdownChoice(
-                              title=_("State of incident if acknowledgement is set"),
-                              help=_("Here you can define the state of the incident in case of an "
-                                     "acknowledgement of the host or service problem."),
-                              choices=[
-                                  ("none", _("Don't change state")),
-                                  ("new", _("New")),
-                                  ("progress", _("In Progress")),
-                                  ("hold", _("On Hold")),
-                                  ("resolved", _("Resolved")),
-                                  ("closed", _("Closed")),
-                                  ("canceled", _("Canceled")),
-                              ],
-                              default_value="none",
-                          )),
+                          Transform(
+                              Alternative(
+                                  title=_("State of incident if acknowledgement is set"),
+                                  help=_(
+                                      "Here you can define the state of the incident in case of an "
+                                      "acknowledgement of the host or service problem."),
+                                  elements=[
+                                      DropdownChoice(
+                                          title=
+                                          _("State of incident if acknowledgement is set (predefined)"
+                                           ),
+                                          help=_(
+                                              "Please note that the mapping to the numeric "
+                                              "ServiceNow state may be changed at your system "
+                                              "and can differ from our definitions. In this case "
+                                              "use the option below."),
+                                          choices=[
+                                              ("none", _("Don't change state")),
+                                              ("new", _("New")),
+                                              ("progress", _("In Progress")),
+                                              ("hold", _("On Hold")),
+                                              ("resolved", _("Resolved")),
+                                              ("closed", _("Closed")),
+                                              ("canceled", _("Canceled")),
+                                          ],
+                                          default_value="none",
+                                      ),
+                                      Integer(
+                                          title=
+                                          _("State of incident if acknowledgement is set (as integer)"
+                                           ),
+                                          minvalue=0,
+                                      ),
+                                  ]))),
+                     ])),
+                ("recovery_state",
+                 Dictionary(
+                     title=_("Settings for incident state in case of recovery"),
+                     help=_("Here you can define the state of the incident in case of a recovery "
+                            "of the affected host or service problem."),
+                     elements=[
+                         (
+                             "start",
+                             Transform(
+                                 Alternative(
+                                     title=_("State of incident if recovery is set"),
+                                     elements=[
+                                         DropdownChoice(
+                                             title=_(
+                                                 "State of incident if recovery is set (predefined)"
+                                             ),
+                                             help=_(
+                                                 "Please note that the mapping to the numeric "
+                                                 "ServiceNow state may be changed at your system "
+                                                 "and can differ from our definitions. In this case "
+                                                 "use the option below."),
+                                             choices=[
+                                                 ("none", _("Don't change state")),
+                                                 ("new", _("New")),
+                                                 ("progress", _("In Progress")),
+                                                 ("hold", _("On Hold")),
+                                                 ("resolved", _("Resolved")),
+                                                 ("closed", _("Closed")),
+                                                 ("canceled", _("Canceled")),
+                                             ],
+                                             default_value="none",
+                                         ),
+                                         Integer(
+                                             title=_(
+                                                 "State of incident if recovery is set (as integer)"
+                                             ),
+                                             minvalue=0,
+                                         ),
+                                     ],
+                                 )),
+                         ),
                      ],
                  )),
                 ("dt_state",
@@ -718,37 +781,68 @@ $LONGSERVICEOUTPUT$
                             "downtime of the affected host or service."),
                      elements=[
                          ("start",
-                          DropdownChoice(
-                              title=_("State of incident if downtime is set"),
-                              help=_("Here you can define the state of the incident in case of an "
-                                     "acknowledgement of the host or service problem."),
-                              choices=[
-                                  ("none", _("Don't change state")),
-                                  ("new", _("New")),
-                                  ("progress", _("In Progress")),
-                                  ("hold", _("On Hold")),
-                                  ("resolved", _("Resolved")),
-                                  ("closed", _("Closed")),
-                                  ("canceled", _("Canceled")),
-                              ],
-                              default_value="none",
-                          )),
+                          Transform(
+                              Alternative(
+                                  title=_("State of incident if downtime is set"),
+                                  elements=[
+                                      DropdownChoice(
+                                          title=_(
+                                              "State of incident if downtime is set (predefined)"),
+                                          help=_(
+                                              "Please note that the mapping to the numeric "
+                                              "ServiceNow state may be changed at your system "
+                                              "and can differ from our definitions. In this case "
+                                              "use the option below."),
+                                          choices=[
+                                              ("none", _("Don't change state")),
+                                              ("new", _("New")),
+                                              ("progress", _("In Progress")),
+                                              ("hold", _("On Hold")),
+                                              ("resolved", _("Resolved")),
+                                              ("closed", _("Closed")),
+                                              ("canceled", _("Canceled")),
+                                          ],
+                                          default_value="none",
+                                      ),
+                                      Integer(
+                                          title=_(
+                                              "State of incident if downtime is set (as integer)"),
+                                          minvalue=0,
+                                      ),
+                                  ]))),
                          ("end",
-                          DropdownChoice(
-                              title=_("State of incident if downtime expires"),
-                              help=_("Here you can define the state of the incident in case of an "
-                                     "ending acknowledgement of the host or service problem."),
-                              choices=[
-                                  ("none", _("Don't change state")),
-                                  ("new", _("New")),
-                                  ("progress", _("In Progress")),
-                                  ("hold", _("On Hold")),
-                                  ("resolved", _("Resolved")),
-                                  ("closed", _("Closed")),
-                                  ("canceled", _("Canceled")),
-                              ],
-                              default_value="none",
-                          )),
+                          Transform(
+                              Alternative(
+                                  title=_("State of incident if downtime expires"),
+                                  help=_(
+                                      "Here you can define the state of the incident in case of an "
+                                      "ending acknowledgement of the host or service problem."),
+                                  elements=[
+                                      DropdownChoice(
+                                          title=_(
+                                              "State of incident if downtime expires (predefined)"),
+                                          help=_(
+                                              "Please note that the mapping to the numeric "
+                                              "ServiceNow state may be changed at your system "
+                                              "and can differ from our definitions. In this case "
+                                              "use the option below."),
+                                          choices=[
+                                              ("none", _("Don't change state")),
+                                              ("new", _("New")),
+                                              ("progress", _("In Progress")),
+                                              ("hold", _("On Hold")),
+                                              ("resolved", _("Resolved")),
+                                              ("closed", _("Closed")),
+                                              ("canceled", _("Canceled")),
+                                          ],
+                                          default_value="none",
+                                      ),
+                                      Integer(
+                                          title=_(
+                                              "State of incident if downtime expires (as integer)"),
+                                          minvalue=0,
+                                      ),
+                                  ]))),
                      ],
                  )),
                 ("timeout",

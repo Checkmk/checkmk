@@ -131,6 +131,8 @@ def fake_version_and_paths():
                         Path(tmp_dir).joinpath("var/check_mk/diagnostics"))
     monkeypatch.setattr("cmk.utils.paths.site_config_dir",
                         Path(cmk.utils.paths.var_dir, "site_configs"))
+    monkeypatch.setattr("cmk.utils.paths.disabled_packages_dir",
+                        Path(cmk.utils.paths.var_dir, "disabled_packages"))
 
 
 def import_module(pathname):

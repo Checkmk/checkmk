@@ -538,8 +538,7 @@ def logwatch_to_prio(level):
     return 4
 
 
-def _logwatch_inventory_mode_rules():
-    forward_settings = host_extra_conf(host_name(), get_checkgroup_parameters('logwatch_ec', []))
+def _logwatch_inventory_mode_rules(forward_settings):
     merged_rules = {}
     for rule in forward_settings[-1::-1]:
         if isinstance(rule, dict):
@@ -553,13 +552,14 @@ def _logwatch_inventory_mode_rules():
 
 
 def inventory_logwatch_ec(parsed: SectionLogwatch, use_mode):
+    params = host_extra_conf(host_name(), get_checkgroup_parameters('logwatch_ec', []))
+
     discoverable_items = logwatch.discoverable_items(*parsed.values())
-    forward_settings = host_extra_conf(host_name(), get_checkgroup_parameters('logwatch_ec', []))
-    forwarded_logs = logwatch.select_forwarded(discoverable_items, forward_settings)
+    forwarded_logs = logwatch.select_forwarded(discoverable_items, params)
     if not forwarded_logs:
         return
 
-    mode, merged_rules = _logwatch_inventory_mode_rules()
+    mode, merged_rules = _logwatch_inventory_mode_rules(params)
     if mode != use_mode:
         return
 

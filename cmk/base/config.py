@@ -33,6 +33,7 @@ from typing import (
     Set,
     Tuple,
     Union,
+    Final,
 )
 
 from six import ensure_str
@@ -698,21 +699,22 @@ class PackedConfig:
 class PackedConfigStore:
     """Caring about persistence of the packed configuration"""
     def __init__(self) -> None:
-        # TODO: Refactor to self.source_path and self.compiled_path in the next step
-        self._path = os.path.join(cmk.utils.paths.var_dir, "base", "precompiled_check_config.mk")
+        self._base_dir: Final[Path] = Path(cmk.utils.paths.var_dir, "base")
+        self._compiled_path: Final[Path] = self._base_dir / "precompiled_check_config.mk"
+        self._source_path: Final[Path] = self._base_dir / "precompiled_check_config.mk.orig"
 
     def write(self, helper_config: str) -> None:
-        store.makedirs(os.path.dirname(self._path))
-        store.save_file(self._path + ".orig", helper_config + "\n")
+        self._base_dir.mkdir(parents=True, exist_ok=True)
+        store.save_file(self._source_path, helper_config + "\n")
 
         code = compile(helper_config, '<string>', 'exec')
-        with open(self._path + ".compiled", "wb") as compiled_file:
+        tmp_path = self._compiled_path.parent / (self._compiled_path.name + ".compiled")
+        with tmp_path.open("wb") as compiled_file:
             marshal.dump(code, compiled_file)
-
-        os.rename(self._path + ".compiled", self._path)
+        tmp_path.rename(self._compiled_path)
 
     def read(self) -> Dict[str, Any]:
-        with open(self._path, "rb") as f:
+        with self._compiled_path.open("rb") as f:
             namespace: Dict[str, Any] = {}
             exec(marshal.load(f), globals(), namespace)
             return namespace

@@ -252,7 +252,7 @@ def load(with_conf_d: bool = True,
     _verify_no_deprecated_variables_used()
 
 
-def load_packed_config() -> None:
+def load_packed_config(serial: Optional[int]) -> None:
     """Load the configuration for the CMK helpers of CMC
 
     These files are written by PackedConfig().
@@ -263,7 +263,7 @@ def load_packed_config() -> None:
     The validations which are performed during load() also don't need to be performed.
     """
     _initialize_config()
-    globals().update(PackedConfigStore().read())
+    globals().update(PackedConfigStore(serial).read())
     _perform_post_config_loading_actions()
 
 
@@ -557,9 +557,9 @@ def all_nonfunction_vars() -> Set[str]:
     }
 
 
-def save_packed_config(config_cache: "ConfigCache") -> None:
+def save_packed_config(serial: Optional[int], config_cache: "ConfigCache") -> None:
     """Create and store a precompiled configuration for Checkmk helper processes"""
-    PackedConfigStore().write(PackedConfigGenerator(config_cache).generate())
+    PackedConfigStore(serial).write(PackedConfigGenerator(config_cache).generate())
 
 
 class PackedConfigGenerator:
@@ -694,8 +694,10 @@ class PackedConfigGenerator:
 
 class PackedConfigStore:
     """Caring about persistence of the packed configuration"""
-    def __init__(self) -> None:
-        self._base_dir: Final[Path] = Path(cmk.utils.paths.var_dir, "base")
+    def __init__(self, serial: Optional[int]) -> None:
+        serial_dir = "latest" if serial is None else str(serial)
+
+        self._base_dir: Final[Path] = Path(cmk.utils.paths.var_dir, "base", serial_dir)
         self._compiled_path: Final[Path] = self._base_dir / "precompiled_check_config.mk"
         self._source_path: Final[Path] = self._base_dir / "precompiled_check_config.mk.orig"
 

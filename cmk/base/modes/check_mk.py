@@ -54,6 +54,7 @@ import cmk.base.obsolete_output as out
 import cmk.base.packaging
 import cmk.base.parent_scan
 import cmk.base.profiling as profiling
+from cmk.base.core_config import current_core_config_serial
 from cmk.base.api.agent_based.register.check_plugins import CheckPlugin
 from cmk.base.core_factory import create_core
 from cmk.base.modes import keepalive_option, Mode, modes, Option
@@ -1129,7 +1130,7 @@ modes.register(
 
 
 def mode_compile() -> None:
-    cmk.base.core_nagios.precompile_hostchecks()
+    cmk.base.core_nagios.precompile_hostchecks(current_core_config_serial())
 
 
 modes.register(

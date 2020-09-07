@@ -2045,25 +2045,34 @@ cmc_host_rrd_config = [
 """ % (condition, value))
 
 
-def test_save_packed_config(monkeypatch):
+@pytest.fixture(name="serial")
+def fixture_serial():
+    return 13
+
+
+def test_save_packed_config(monkeypatch, serial):
     ts = Scenario()
     ts.add_host("bla1")
     config_cache = ts.apply(monkeypatch)
 
-    assert not Path(cmk.utils.paths.var_dir, "base", "precompiled_check_config.mk").exists()
-    assert not Path(cmk.utils.paths.var_dir, "base", "precompiled_check_config.mk.orig").exists()
+    assert not Path(cmk.utils.paths.var_dir, "base", str(serial),
+                    "precompiled_check_config.mk").exists()
+    assert not Path(cmk.utils.paths.var_dir, "base", str(serial),
+                    "precompiled_check_config.mk.orig").exists()
 
-    config.save_packed_config(config_cache)
+    config.save_packed_config(serial, config_cache)
 
-    assert Path(cmk.utils.paths.var_dir, "base", "precompiled_check_config.mk").exists()
-    assert Path(cmk.utils.paths.var_dir, "base", "precompiled_check_config.mk.orig").exists()
+    assert Path(cmk.utils.paths.var_dir, "base", str(serial),
+                "precompiled_check_config.mk").exists()
+    assert Path(cmk.utils.paths.var_dir, "base", str(serial),
+                "precompiled_check_config.mk.orig").exists()
 
 
-def test_load_packed_config():
-    config.PackedConfigStore().write("abc = 1")
+def test_load_packed_config(serial):
+    config.PackedConfigStore(serial).write("abc = 1")
 
     assert "abc" not in config.__dict__
-    config.load_packed_config()
+    config.load_packed_config(serial)
     # Mypy does not understand that we add some new member for testing
     assert config.abc == 1  # type: ignore[attr-defined]
     del config.__dict__["abc"]
@@ -2071,32 +2080,46 @@ def test_load_packed_config():
 
 # These types are currently imported into the cmk.base.config namespace, just to be able to load
 # objects of this type from the configuration
-def test_packed_config_able_to_load_snmp_types():
-    config.PackedConfigStore().write("test_var1 = OIDBytes('6')\n\ntest_var2 = OIDCached('6')\n\n")
+def test_packed_config_able_to_load_snmp_types(serial):
+    config.PackedConfigStore(serial).write(
+        "test_var1 = OIDBytes('6')\n\ntest_var2 = OIDCached('6')\n\n")
 
-    config.load_packed_config()
+    config.load_packed_config(serial)
     assert config.test_var1 == OIDBytes('6')  # type: ignore[attr-defined]
     assert config.test_var2 == OIDCached('6')  # type: ignore[attr-defined]
 
 
 class TestPackedConfigStore:
     @pytest.fixture()
-    def store(self):
-        return config.PackedConfigStore()
+    def store(self, serial):
+        return config.PackedConfigStore(serial)
+
+    def test_latest_serial_path(self):
+        store = config.PackedConfigStore(serial=None)
+        assert store._compiled_path == Path(cmk.utils.paths.var_dir, "base", "latest",
+                                            "precompiled_check_config.mk")
+
+    def test_given_serial_path(self):
+        store = config.PackedConfigStore(serial=42)
+        assert store._compiled_path == Path(cmk.utils.paths.var_dir, "base", "42",
+                                            "precompiled_check_config.mk")
 
     def test_read_not_existing_file(self, store):
         with pytest.raises(FileNotFoundError):
             store.read()
 
-    def test_write(self, store):
-        assert not Path(cmk.utils.paths.var_dir, "base", "precompiled_check_config.mk").exists()
-        assert not Path(cmk.utils.paths.var_dir, "base",
+    def test_write(self, store, serial):
+        assert not Path(cmk.utils.paths.var_dir, "base", str(serial),
+                        "precompiled_check_config.mk").exists()
+        assert not Path(cmk.utils.paths.var_dir, "base", str(serial),
                         "precompiled_check_config.mk.orig").exists()
 
         store.write("abc = 1\n")
 
-        assert Path(cmk.utils.paths.var_dir, "base", "precompiled_check_config.mk").exists()
-        assert Path(cmk.utils.paths.var_dir, "base", "precompiled_check_config.mk.orig").exists()
+        assert Path(cmk.utils.paths.var_dir, "base", str(serial),
+                    "precompiled_check_config.mk").exists()
+        assert Path(cmk.utils.paths.var_dir, "base", str(serial),
+                    "precompiled_check_config.mk.orig").exists()
         assert store.read() == {
             "abc": 1,
         }

@@ -45,6 +45,11 @@ CoreCommandName = str
 CoreCommand = str
 
 
+def current_core_config_serial() -> int:
+    # TODO: Needs to be changed (increased?) on every invokation
+    return 13
+
+
 class MonitoringCore(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def create_config(self) -> None:

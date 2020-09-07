@@ -87,7 +87,7 @@ class NagiosCore(core_config.MonitoringCore):
 
     def precompile(self) -> None:
         out.output("Precompiling host checks...")
-        precompile_hostchecks()
+        precompile_hostchecks(core_config.current_core_config_serial())
         out.output(tty.ok + "\n")
 
 
@@ -917,11 +917,11 @@ def _find_check_plugins(checktype: CheckPluginNameStr) -> List[str]:
     return paths
 
 
-def precompile_hostchecks() -> None:
+def precompile_hostchecks(serial: int) -> None:
     console.verbose("Creating precompiled host check config...\n")
     config_cache = config.get_config_cache()
 
-    config.save_packed_config(config_cache)
+    config.save_packed_config(serial, config_cache)
 
     if not os.path.exists(cmk.utils.paths.precompiled_hostchecks_dir):
         os.makedirs(cmk.utils.paths.precompiled_hostchecks_dir)
@@ -1041,7 +1041,7 @@ if '-d' in sys.argv:
     for check_plugin_name in sorted(needed_legacy_check_plugin_names):
         console.verbose(" %s%s%s", tty.green, check_plugin_name, tty.normal, stream=sys.stderr)
 
-    output.write("config.load_packed_config()\n")
+    output.write("config.load_packed_config(serial=None)\n")
 
     # IP addresses
     needed_ipaddresses, needed_ipv6addresses, = {}, {}

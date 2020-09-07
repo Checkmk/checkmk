@@ -13,6 +13,7 @@
 #include <memory>
 #include <optional>
 #include <ostream>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -22,7 +23,6 @@
 #include "Column.h"
 #include "CommentColumn.h"
 #include "ContactGroupsColumn.h"
-#include "CustomTimeperiodColumn.h"
 #include "CustomVarsDictColumn.h"
 #include "CustomVarsExplicitColumn.h"
 #include "CustomVarsNamesColumn.h"
@@ -427,12 +427,16 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         [](const service &r) {
             return g_timeperiods_cache->inTimeperiod(r.check_period_ptr);
         }));
-    table->addColumn(std::make_unique<CustomTimeperiodColumn>(
+    table->addColumn(std::make_unique<BoolLambdaColumn<service, true>>(
         prefix + "in_service_period",
         "Whether this service is currently in its service period (0/1)",
-        Column::Offsets{indirect_offset,
-                        DANGEROUS_OFFSETOF(service, custom_variables)},
-        table->core(), "SERVICE_PERIOD"));
+        offsets, [mc](const service &r) {
+            auto attrs = mc->customAttributes(r.custom_variables,
+                                              AttributeKind::custom_variables);
+            auto it = attrs.find("SERVICE_PERIOD");
+            return it == attrs.end() ||
+                   g_timeperiods_cache->inTimeperiod(it->second);
+        }));
     table->addColumn(std::make_unique<BoolLambdaColumn<service, true>>(
         prefix + "in_notification_period",
         "Whether the service is currently in its notification period (0/1)",

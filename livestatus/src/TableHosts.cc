@@ -13,6 +13,8 @@
 #include <memory>
 #include <optional>
 #include <ostream>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "AttributeListAsIntColumn.h"
@@ -21,7 +23,6 @@
 #include "Column.h"
 #include "CommentColumn.h"
 #include "ContactGroupsColumn.h"
-#include "CustomTimeperiodColumn.h"
 #include "CustomVarsDictColumn.h"
 #include "CustomVarsExplicitColumn.h"
 #include "CustomVarsNamesColumn.h"
@@ -466,12 +467,16 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         [](const host &r) {
             return g_timeperiods_cache->inTimeperiod(r.check_period_ptr);
         }));
-    table->addColumn(std::make_unique<CustomTimeperiodColumn>(
+    table->addColumn(std::make_unique<BoolLambdaColumn<host, true>>(
         prefix + "in_service_period",
-        "Whether this host is currently in its service period (0/1)",
-        Column::Offsets{indirect_offset, extra_offset,
-                        DANGEROUS_OFFSETOF(host, custom_variables)},
-        table->core(), "SERVICE_PERIOD"));
+        "Whether this host is currently in its service period (0/1)", offsets,
+        [mc](const host &r) {
+            auto attrs = mc->customAttributes(r.custom_variables,
+                                              AttributeKind::custom_variables);
+            auto it = attrs.find("SERVICE_PERIOD");
+            return it == attrs.end() ||
+                   g_timeperiods_cache->inTimeperiod(it->second);
+        }));
 
     table->addColumn(std::make_unique<HostContactsColumn>(
         prefix + "contacts",

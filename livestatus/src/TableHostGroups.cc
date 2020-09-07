@@ -32,7 +32,7 @@ std::string TableHostGroups::namePrefix() const { return "hostgroup_"; }
 void TableHostGroups::addColumns(Table *table, const std::string &prefix,
                                  int indirect_offset) {
     Column::Offsets offsets{indirect_offset, 0};
-    Column::Offsets offsets_members{indirect_offset, -1, -1,
+    Column::Offsets offsets_members{indirect_offset,
                                     DANGEROUS_OFFSETOF(hostgroup, members)};
     table->addColumn(std::make_unique<StringLambdaColumn<hostgroup>>(
         prefix + "name", "Name of the hostgroup", offsets,

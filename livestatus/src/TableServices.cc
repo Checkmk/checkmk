@@ -423,7 +423,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "in_check_period",
         "Whether the service is currently in its check period (0/1)",
         Column::Offsets{indirect_offset,
-                        DANGEROUS_OFFSETOF(service, check_period_ptr), -1, 0}));
+                        DANGEROUS_OFFSETOF(service, check_period_ptr), 0}));
     table->addColumn(std::make_unique<CustomTimeperiodColumn>(
         prefix + "in_service_period",
         "Whether this service is currently in its service period (0/1)",
@@ -435,7 +435,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         "Whether the service is currently in its notification period (0/1)",
         Column::Offsets{indirect_offset,
                         DANGEROUS_OFFSETOF(service, notification_period_ptr),
-                        -1, 0}));
+                        0}));
 
     table->addColumn(std::make_unique<ServiceContactsColumn>(
         prefix + "contacts",

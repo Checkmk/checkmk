@@ -1085,16 +1085,13 @@ def show_filter(f: Filter) -> None:
 def get_filter(name: str) -> Filter:
     """Returns the filter object identified by the given name
     Raises a KeyError in case a not existing filter is requested."""
-    # FIXME: register instances in filter_registry (CMK-5137)
-    return filter_registry[name]()  # type: ignore[call-arg]
+    return filter_registry[name]
 
 
 def filters_allowed_for_info(info: str) -> Dict[str, Filter]:
     """Returns a map of filter names and filter objects that are registered for the given info"""
     allowed = {}
-    for fname, filter_class in filter_registry.items():
-        # FIXME: register instances in filter_registry (CMK-5137)
-        filt = filter_class()  # type: ignore[call-arg]
+    for fname, filt in filter_registry.items():
         if filt.info is None or info == filt.info:
             allowed[fname] = filt
     return allowed
@@ -1254,10 +1251,7 @@ def get_context_from_uri_vars(only_infos: Optional[List[InfoName]] = None,
     single_info_keys = set(get_single_info_keys(single_infos))
 
     context: VisualContext = {}
-    for filter_name, filter_class in filter_registry.items():
-        # FIXME: register instances in filter_registry (CMK-5137)
-        filter_object = filter_class()  # type: ignore[call-arg]
-
+    for filter_name, filter_object in filter_registry.items():
         if only_infos is not None and filter_object.info not in only_infos:
             continue  # Skip filters related to not relevant infos
 
@@ -1346,9 +1340,7 @@ def get_only_sites_from_context(context: dict) -> Optional[List[SiteId]]:
 
 def collect_filter_headers(info_keys, table):
     # Collect all available filters for these infos
-    for filter_class in filter_registry.values():
-        # FIXME: register instances in filter_registry (CMK-5137)
-        filter_obj = filter_class()  # type: ignore[call-arg]
+    for filter_obj in filter_registry.values():
         if filter_obj.info in info_keys and filter_obj.available():
             yield filter_obj.filter(table)
 
@@ -1525,8 +1517,7 @@ class VisualFilterListWithAddPopup(VisualFilterList):
             for choice in group.choices:
                 filter_name = choice[0]
 
-                # FIXME: register instances in filter_registry (CMK-5137)
-                filter_obj = filter_registry[filter_name]()  # type: ignore[call-arg]
+                filter_obj = filter_registry[filter_name]
                 html.open_li(class_="advanced" if filter_obj.is_advanced else "basic")
 
                 html.a(choice[1].title() or filter_name,
@@ -1564,8 +1555,7 @@ class PageAjaxVisualFilterListGetChoice(ABCPageListOfMultipleGetChoice):
 class VisualFilter(ValueSpec):
     def __init__(self, name, **kwargs):
         self._name = name
-        # FIXME: register instances in filter_registry (CMK-5137)
-        self._filter = filter_registry[name]()  # type: ignore[call-arg]
+        self._filter = filter_registry[name]
 
         ValueSpec.__init__(self, **kwargs)
 

@@ -195,35 +195,27 @@ def _declare_inv_column(invpath, datatype, title, short=None):
         filter_info = _inv_filter_info().get(datatype, {})
 
         # Declare filter. Sync this with _declare_invtable_column()
-        if datatype in ["str", "bool"]:
-            parent_class = FilterInvText if datatype == "str" else FilterInvBool
-            filter_class = type(
-                "FilterInv%s" % name.title(), (parent_class,), {
-                    "_ident": name,
-                    "_title": title,
-                    "_inv_path": invpath,
-                    "_invpath": property(lambda s: s._inv_path),
-                    "sort_index": property(lambda s: 800),
-                    "ident": property(lambda s: s._ident),
-                    "title": property(lambda s: s._title),
-                })
+        if datatype == "str":
+            filter_registry.register(FilterInvText(
+                ident=name,
+                title=title,
+                inv_path=invpath,
+            ))
+        elif datatype == "bool":
+            filter_registry.register(FilterInvBool(
+                ident=name,
+                title=title,
+                inv_path=invpath,
+            ))
         else:
-            filter_class = type(
-                "FilterInv%s" % name.title(), (FilterInvFloat,), {
-                    "_ident": name,
-                    "_title": title,
-                    "_inv_path": invpath,
-                    "_unit_val": filter_info.get("unit"),
-                    "_scale_val": filter_info.get("scale", 1.0),
-                    "_unit": property(lambda s: s._unit_val),
-                    "_scale": property(lambda s: s._scale_val),
-                    "_invpath": property(lambda s: s._inv_path),
-                    "sort_index": property(lambda s: 800),
-                    "ident": property(lambda s: s._ident),
-                    "title": property(lambda s: s._title),
-                })
-
-        filter_registry.register(filter_class)
+            filter_registry.register(
+                FilterInvFloat(
+                    ident=name,
+                    title=title,
+                    inv_path=invpath,
+                    unit=filter_info.get("unit"),
+                    scale=filter_info.get("scale", 1.0),
+                ))
 
 
 def _cmp_inventory_node(a: Dict[str, StructuredDataTree], b: Dict[str, StructuredDataTree],
@@ -759,23 +751,19 @@ def _declare_invtable_column(infoname, invpath, topic, name, column):
     title = _inv_titleinfo(sub_invpath, None)[1]
 
     # Sync this with _declare_inv_column()
-    parent_class = hint.get("filter")
-    if not parent_class:
+    filter_class = hint.get("filter")
+    if not filter_class:
         if paint_name == "str":
-            parent_class = FilterInvtableText
+            filter_class = FilterInvtableText
         else:
-            parent_class = FilterInvtableIDRange
+            filter_class = FilterInvtableIDRange
 
-    filter_class = type(
-        "FilterInv%s" % name.title(), (parent_class,), {
-            "_inv_info": infoname,
-            "_ident": infoname + "_" + name,
-            "_title": topic + ": " + title,
-            "_invinfo": property(lambda s: s._inv_info),
-            "sort_index": property(lambda s: 800),
-            "ident": property(lambda s: s._ident),
-            "title": property(lambda s: s._title),
-        })
+    filter_registry.register(
+        filter_class(
+            inv_info=infoname,
+            ident=infoname + "_" + name,
+            title=topic + ": " + title,
+        ))
 
     register_painter(
         column, {
@@ -792,8 +780,6 @@ def _declare_invtable_column(infoname, invpath, topic, name, column):
             "columns": [column],
             "cmp": lambda self, a, b: sortfunc(a.get(column), b.get(column)),
         })
-
-    filter_registry.register(filter_class)
 
 
 class RowTableInventory(ABCRowTable):

@@ -19,22 +19,15 @@ from cmk.gui.plugins.visuals import (
 )
 
 
-@filter_registry.register
+@filter_registry.register_instance
 class FilterWatoFolder(Filter):
-    @property
-    def ident(self):
-        return "wato_folder"
-
-    @property
-    def title(self):
-        return _("WATO Folder")
-
-    @property
-    def sort_index(self):
-        return 10
-
     def __init__(self):
-        Filter.__init__(self, "host", ["wato_folder"], [])
+        super().__init__(ident="wato_folder",
+                         title=_("WATO Folder"),
+                         sort_index=10,
+                         info="host",
+                         htmlvars=["wato_folder"],
+                         link_columns=[])
         self.last_wato_data_update = None
 
     def available(self):

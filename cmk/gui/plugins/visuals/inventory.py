@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import abc
 import re
 import time
 from typing import List, Optional, Tuple, Callable
@@ -32,13 +31,14 @@ from cmk.gui.type_defs import (
     Rows,)
 
 
-class FilterInvtableText(Filter, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
-    def _invinfo(self) -> str:
-        raise NotImplementedError()
-
-    def __init__(self) -> None:
-        super(FilterInvtableText, self).__init__(self._invinfo, [self.ident], [])
+class FilterInvtableText(Filter):
+    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
+        super().__init__(ident=ident,
+                         title=title,
+                         sort_index=800,
+                         info=inv_info,
+                         htmlvars=[ident],
+                         link_columns=[])
 
     def display(self) -> None:
         htmlvar = self.htmlvars[0]
@@ -72,17 +72,16 @@ class FilterInvtableText(Filter, metaclass=abc.ABCMeta):
         return newrows
 
 
-class FilterInvtableTimestampAsAge(Filter, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
-    def _invinfo(self) -> str:
-        raise NotImplementedError()
-
-    def __init__(self) -> None:
-        self._from_varprefix = self.ident + "_from"
-        self._to_varprefix = self.ident + "_to"
-        super(FilterInvtableTimestampAsAge,
-              self).__init__(self._invinfo,
-                             [self._from_varprefix + "_days", self._to_varprefix + "_days"], [])
+class FilterInvtableTimestampAsAge(Filter):
+    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
+        self._from_varprefix = ident + "_from"
+        self._to_varprefix = ident + "_to"
+        super().__init__(ident=ident,
+                         title=title,
+                         sort_index=800,
+                         info=inv_info,
+                         htmlvars=[self._from_varprefix + "_days", self._to_varprefix + "_days"],
+                         link_columns=[])
 
     def display(self) -> None:
         html.open_table()
@@ -133,15 +132,15 @@ class FilterInvtableTimestampAsAge(Filter, metaclass=abc.ABCMeta):
         return self.filter_table_with_conversion(rows, lambda timestamp: now - timestamp)
 
 
-# Filter for choosing a range in which a certain integer lies
-class FilterInvtableIDRange(Filter, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
-    def _invinfo(self) -> str:
-        raise NotImplementedError()
-
-    def __init__(self) -> None:
-        super(FilterInvtableIDRange, self).__init__(self._invinfo,
-                                                    [self.ident + "_from", self.ident + "_to"], [])
+class FilterInvtableIDRange(Filter):
+    """Filter for choosing a range in which a certain integer lies"""
+    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
+        super().__init__(ident=ident,
+                         title=title,
+                         sort_index=800,
+                         info=inv_info,
+                         htmlvars=[ident + "_from", ident + "_to"],
+                         link_columns=[])
 
     def display(self) -> None:
         html.write_text(_("from:") + " ")
@@ -169,14 +168,14 @@ class FilterInvtableIDRange(Filter, metaclass=abc.ABCMeta):
         return newrows
 
 
-class FilterInvtableOperStatus(Filter, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
-    def _invinfo(self) -> str:
-        raise NotImplementedError()
-
-    def __init__(self) -> None:
-        varnames = [self.ident + "_" + str(x) for x in defines.interface_oper_states()]
-        super(FilterInvtableOperStatus, self).__init__(self._invinfo, varnames, [])
+class FilterInvtableOperStatus(Filter):
+    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
+        super().__init__(ident=ident,
+                         title=title,
+                         sort_index=800,
+                         info=inv_info,
+                         htmlvars=[ident + "_" + str(x) for x in defines.interface_oper_states()],
+                         link_columns=[])
 
     def display(self) -> None:
         html.begin_checkbox_group()
@@ -212,13 +211,14 @@ class FilterInvtableOperStatus(Filter, metaclass=abc.ABCMeta):
         return new_rows
 
 
-class FilterInvtableAdminStatus(Filter, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
-    def _invinfo(self) -> str:
-        raise NotImplementedError()
-
-    def __init__(self) -> None:
-        super(FilterInvtableAdminStatus, self).__init__(self._invinfo, [self.ident], [])
+class FilterInvtableAdminStatus(Filter):
+    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
+        super().__init__(ident=ident,
+                         title=title,
+                         sort_index=800,
+                         info=inv_info,
+                         htmlvars=[ident],
+                         link_columns=[])
 
     def display(self) -> None:
         html.begin_radio_group(horizontal=True)
@@ -239,13 +239,14 @@ class FilterInvtableAdminStatus(Filter, metaclass=abc.ABCMeta):
         return new_rows
 
 
-class FilterInvtableAvailable(Filter, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
-    def _invinfo(self) -> str:
-        raise NotImplementedError()
-
-    def __init__(self) -> None:
-        super(FilterInvtableAvailable, self).__init__(self._invinfo, [self.ident], [])
+class FilterInvtableAvailable(Filter):
+    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
+        super().__init__(ident=ident,
+                         title=title,
+                         sort_index=800,
+                         info=inv_info,
+                         htmlvars=[ident],
+                         link_columns=[])
 
     def display(self) -> None:
         html.begin_radio_group(horizontal=True)
@@ -268,13 +269,14 @@ class FilterInvtableAvailable(Filter, metaclass=abc.ABCMeta):
         return new_rows
 
 
-class FilterInvtableInterfaceType(Filter, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
-    def _invinfo(self) -> str:
-        raise NotImplementedError()
-
-    def __init__(self) -> None:
-        super(FilterInvtableInterfaceType, self).__init__(self._invinfo, [self.ident], [])
+class FilterInvtableInterfaceType(Filter):
+    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
+        super().__init__(ident=ident,
+                         title=title,
+                         sort_index=800,
+                         info=inv_info,
+                         htmlvars=[ident],
+                         link_columns=[])
 
     def double_height(self) -> bool:
         return True
@@ -316,14 +318,14 @@ class FilterInvtableInterfaceType(Filter, metaclass=abc.ABCMeta):
         return new_rows
 
 
-class FilterInvtableVersion(Filter, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
-    def _invinfo(self) -> str:
-        raise NotImplementedError()
-
-    def __init__(self) -> None:
-        super(FilterInvtableVersion, self).__init__(self._invinfo,
-                                                    [self.ident + "_from", self.ident + "_to"], [])
+class FilterInvtableVersion(Filter):
+    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
+        super().__init__(ident=ident,
+                         title=title,
+                         sort_index=800,
+                         info=inv_info,
+                         htmlvars=[ident + "_from", ident + "_to"],
+                         link_columns=[])
 
     def display(self) -> None:
         html.write_text(_("Min.&nbsp;Version:"))
@@ -350,13 +352,15 @@ class FilterInvtableVersion(Filter, metaclass=abc.ABCMeta):
         return new_rows
 
 
-class FilterInvText(Filter, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
-    def _invpath(self):
-        raise NotImplementedError()
-
-    def __init__(self) -> None:
-        super(FilterInvText, self).__init__("host", [self.ident], [])
+class FilterInvText(Filter):
+    def __init__(self, *, ident: str, title: str, inv_path: str) -> None:
+        super().__init__(ident=ident,
+                         title=title,
+                         sort_index=800,
+                         info="host",
+                         htmlvars=[ident],
+                         link_columns=[])
+        self._invpath = inv_path
 
     @property
     def filtertext(self):
@@ -396,21 +400,18 @@ class FilterInvText(Filter, metaclass=abc.ABCMeta):
         return newrows
 
 
-class FilterInvFloat(Filter, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
-    def _invpath(self):
-        raise NotImplementedError()
-
-    @abc.abstractproperty
-    def _unit(self):
-        raise NotImplementedError()
-
-    @abc.abstractproperty
-    def _scale(self):
-        raise NotImplementedError()
-
-    def __init__(self) -> None:
-        super(FilterInvFloat, self).__init__("host", [self.ident + "_from", self.ident + "_to"], [])
+class FilterInvFloat(Filter):
+    def __init__(self, *, ident: str, title: str, inv_path: str, unit: Optional[str],
+                 scale: Optional[float]) -> None:
+        super().__init__(ident=ident,
+                         title=title,
+                         sort_index=800,
+                         info="host",
+                         htmlvars=[ident + "_from", ident + "_to"],
+                         link_columns=[])
+        self._invpath = inv_path
+        self._unit = unit
+        self._scale = scale if scale is not None else 1.0
 
     def display(self) -> None:
         html.write_text(_("From: "))
@@ -457,13 +458,10 @@ class FilterInvFloat(Filter, metaclass=abc.ABCMeta):
         return newrows
 
 
-class FilterInvBool(FilterTristate, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
-    def _invpath(self):
-        raise NotImplementedError()
-
-    def __init__(self) -> None:
-        super(FilterInvBool, self).__init__("host", self.ident)
+class FilterInvBool(FilterTristate):
+    def __init__(self, *, ident: str, title: str, inv_path: str) -> None:
+        super().__init__(ident=ident, title=title, sort_index=800, info="host", column=ident)
+        self._invpath = inv_path
 
     def need_inventory(self) -> bool:
         return self.tristate_value() != -1
@@ -485,22 +483,14 @@ class FilterInvBool(FilterTristate, metaclass=abc.ABCMeta):
         return newrows
 
 
-@filter_registry.register
+@filter_registry.register_instance
 class FilterHasInv(FilterTristate):
-    @property
-    def ident(self) -> str:
-        return "has_inv"
-
-    @property
-    def title(self) -> str:
-        return _("Has Inventory Data")
-
-    @property
-    def sort_index(self) -> int:
-        return 801
-
     def __init__(self) -> None:
-        FilterTristate.__init__(self, "host", "host_inventory")
+        super().__init__(ident="has_inv",
+                         title=_("Has Inventory Data"),
+                         sort_index=801,
+                         info="host",
+                         column="host_inventory")
 
     def need_inventory(self) -> bool:
         return self.tristate_value() != -1
@@ -518,28 +508,21 @@ class FilterHasInv(FilterTristate):
         return [row for row in rows if not row["host_inventory"]]
 
 
-@filter_registry.register
+@filter_registry.register_instance
 class FilterInvHasSoftwarePackage(Filter):
-    @property
-    def ident(self) -> str:
-        return "invswpac"
-
-    @property
-    def title(self) -> str:
-        return _("Host has software package")
-
-    @property
-    def sort_index(self) -> int:
-        return 801
-
     def __init__(self) -> None:
         self._varprefix = "invswpac_host_"
-        Filter.__init__(self, "host", [
-            self._varprefix + "name",
-            self._varprefix + "version_from",
-            self._varprefix + "version_to",
-            self._varprefix + "negate",
-        ], [])
+        super().__init__(ident="invswpac",
+                         title=_("Host has software package"),
+                         sort_index=801,
+                         info="host",
+                         htmlvars=[
+                             self._varprefix + "name",
+                             self._varprefix + "version_from",
+                             self._varprefix + "version_to",
+                             self._varprefix + "negate",
+                         ],
+                         link_columns=[])
 
     def double_height(self) -> bool:
         return True

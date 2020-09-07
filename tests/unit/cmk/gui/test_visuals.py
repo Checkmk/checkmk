@@ -3484,9 +3484,7 @@ def test_registered_filters(load_plugins):
     names = cmk.gui.plugins.visuals.utils.filter_registry.keys()
     assert sorted(expected_filters.keys()) == sorted(names)
 
-    for filter_class in cmk.gui.plugins.visuals.utils.filter_registry.values():
-        # FIXME: register instances in filter_registry (CMK-5137)
-        filt = filter_class()  # type: ignore[call-arg]
+    for filt in cmk.gui.plugins.visuals.utils.filter_registry.values():
         spec = expected_filters[filt.ident]
 
         assert filt.title == spec["title"]

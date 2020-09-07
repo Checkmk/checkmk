@@ -919,12 +919,12 @@ def _find_check_plugins(checktype: CheckPluginNameStr) -> List[str]:
 
 def precompile_hostchecks() -> None:
     console.verbose("Creating precompiled host check config...\n")
-    config.PackedConfig().save()
+    config_cache = config.get_config_cache()
+
+    config.save_packed_config(config_cache)
 
     if not os.path.exists(cmk.utils.paths.precompiled_hostchecks_dir):
         os.makedirs(cmk.utils.paths.precompiled_hostchecks_dir)
-
-    config_cache = config.get_config_cache()
 
     console.verbose("Precompiling host checks...\n")
     for host in config_cache.all_active_hosts():

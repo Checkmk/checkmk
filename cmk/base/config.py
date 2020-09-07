@@ -557,6 +557,11 @@ def all_nonfunction_vars() -> Set[str]:
     }
 
 
+def save_packed_config(config_cache: "ConfigCache") -> None:
+    """Create and store a precompiled configuration for Checkmk helper processes"""
+    PackedConfig(config_cache).save()
+
+
 class PackedConfig:
     """The precompiled host checks and the CMC Check_MK helpers use a
     "precompiled" part of the Check_MK configuration during runtime.
@@ -585,8 +590,8 @@ class PackedConfig:
         "extra_nagios_conf",
     ]
 
-    def __init__(self) -> None:
-        super(PackedConfig, self).__init__()
+    def __init__(self, config_cache: "ConfigCache") -> None:
+        self._config_cache = config_cache
         self._store = PackedConfigStore()
 
     def save(self) -> None:
@@ -597,11 +602,9 @@ class PackedConfig:
                          "# encoding: utf-8\n"
                          "# Created by Check_MK. Dump of the currently active configuration\n\n")
 
-        config_cache = get_config_cache()
-
         # These functions purpose is to filter out hosts which are monitored on different sites
-        active_hosts = config_cache.all_active_hosts()
-        active_clusters = config_cache.all_active_clusters()
+        active_hosts = self._config_cache.all_active_hosts()
+        active_clusters = self._config_cache.all_active_clusters()
 
         def filter_all_hosts(all_hosts_orig: AllHosts) -> List[HostName]:
             all_hosts_red = []

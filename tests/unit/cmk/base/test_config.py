@@ -2045,6 +2045,20 @@ cmc_host_rrd_config = [
 """ % (condition, value))
 
 
+def test_save_packed_config(monkeypatch):
+    ts = Scenario()
+    ts.add_host("bla1")
+    config_cache = ts.apply(monkeypatch)
+
+    assert not Path(cmk.utils.paths.var_dir, "base", "precompiled_check_config.mk").exists()
+    assert not Path(cmk.utils.paths.var_dir, "base", "precompiled_check_config.mk.orig").exists()
+
+    config.save_packed_config(config_cache)
+
+    assert Path(cmk.utils.paths.var_dir, "base", "precompiled_check_config.mk").exists()
+    assert Path(cmk.utils.paths.var_dir, "base", "precompiled_check_config.mk.orig").exists()
+
+
 def test_load_packed_config():
     config.PackedConfigStore().write("abc = 1")
 

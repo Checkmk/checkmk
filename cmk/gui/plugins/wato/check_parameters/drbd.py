@@ -24,70 +24,77 @@ from cmk.gui.plugins.wato import (
 
 
 def _parameter_valuespec_drbd():
-    return Dictionary(elements=[
-        ("roles",
-         Alternative(
-             title=_("Roles"),
-             elements=[
-                 FixedValue(None, totext="", title=_("Do not monitor")),
-                 ListOf(Tuple(orientation="horizontal",
-                              elements=[
-                                  DropdownChoice(
-                                      title=_("DRBD shows up as"),
-                                      default_value="running",
-                                      choices=[("primary_secondary", _("Primary / Secondary")),
-                                               ("primary_primary", _("Primary / Primary")),
-                                               ("secondary_primary", _("Secondary / Primary")),
-                                               ("secondary_secondary", _("Secondary / Secondary"))],
-                                  ),
-                                  MonitoringState(title=_("Resulting state"),),
-                              ],
-                              default_value=("ignore", 0)),
-                        title=_("Set roles"),
-                        add_label=_("Add role rule"))
-             ],
-         )),
-        (
-            "diskstates",
-            Alternative(
-                title=_("Diskstates"),
-                elements=[
-                    FixedValue(None, totext="", title=_("Do not monitor")),
-                    ListOf(Tuple(
-                        elements=[
-                            DropdownChoice(
-                                title=_("Diskstate"),
-                                choices=[
-                                    ("primary_Diskless", _("Primary - Diskless")),
-                                    ("primary_Attaching", _("Primary - Attaching")),
-                                    ("primary_Failed", _("Primary - Failed")),
-                                    ("primary_Negotiating", _("Primary - Negotiating")),
-                                    ("primary_Inconsistent", _("Primary - Inconsistent")),
-                                    ("primary_Outdated", _("Primary - Outdated")),
-                                    ("primary_DUnknown", _("Primary - DUnknown")),
-                                    ("primary_Consistent", _("Primary - Consistent")),
-                                    ("primary_UpToDate", _("Primary - UpToDate")),
-                                    ("secondary_Diskless", _("Secondary - Diskless")),
-                                    ("secondary_Attaching", _("Secondary - Attaching")),
-                                    ("secondary_Failed", _("Secondary - Failed")),
-                                    ("secondary_Negotiating", _("Secondary - Negotiating")),
-                                    ("secondary_Inconsistent", _("Secondary - Inconsistent")),
-                                    ("secondary_Outdated", _("Secondary - Outdated")),
-                                    ("secondary_DUnknown", _("Secondary - DUnknown")),
-                                    ("secondary_Consistent", _("Secondary - Consistent")),
-                                    ("secondary_UpToDate", _("Secondary - UpToDate")),
-                                ],
-                            ),
-                            MonitoringState(title=_("Resulting state"))
-                        ],
-                        orientation="horizontal",
-                    ),
-                           title=_("Set diskstates"),
-                           add_label=_("Add diskstate rule"))
-                ],
-            ),
-        )
-    ],)
+    return Dictionary(
+        ignored_keys=[
+            'roles_inventory',
+            'diskstates_inventory',
+        ],
+        elements=[
+            ("roles",
+             Alternative(
+                 title=_("Roles"),
+                 elements=[
+                     FixedValue(None, totext="", title=_("Do not monitor")),
+                     ListOf(Tuple(orientation="horizontal",
+                                  elements=[
+                                      DropdownChoice(
+                                          title=_("DRBD shows up as"),
+                                          default_value="running",
+                                          choices=[("primary_secondary", _("Primary / Secondary")),
+                                                   ("primary_primary", _("Primary / Primary")),
+                                                   ("secondary_primary", _("Secondary / Primary")),
+                                                   ("secondary_secondary",
+                                                    _("Secondary / Secondary"))],
+                                      ),
+                                      MonitoringState(title=_("Resulting state"),),
+                                  ],
+                                  default_value=("ignore", 0)),
+                            title=_("Set roles"),
+                            add_label=_("Add role rule"))
+                 ],
+             )),
+            (
+                "diskstates",
+                Alternative(
+                    title=_("Diskstates"),
+                    elements=[
+                        FixedValue(None, totext="", title=_("Do not monitor")),
+                        ListOf(Tuple(
+                            elements=[
+                                DropdownChoice(
+                                    title=_("Diskstate"),
+                                    choices=[
+                                        ("primary_Diskless", _("Primary - Diskless")),
+                                        ("primary_Attaching", _("Primary - Attaching")),
+                                        ("primary_Failed", _("Primary - Failed")),
+                                        ("primary_Negotiating", _("Primary - Negotiating")),
+                                        ("primary_Inconsistent", _("Primary - Inconsistent")),
+                                        ("primary_Outdated", _("Primary - Outdated")),
+                                        ("primary_DUnknown", _("Primary - DUnknown")),
+                                        ("primary_Consistent", _("Primary - Consistent")),
+                                        ("primary_UpToDate", _("Primary - UpToDate")),
+                                        ("secondary_Diskless", _("Secondary - Diskless")),
+                                        ("secondary_Attaching", _("Secondary - Attaching")),
+                                        ("secondary_Failed", _("Secondary - Failed")),
+                                        ("secondary_Negotiating", _("Secondary - Negotiating")),
+                                        ("secondary_Inconsistent", _("Secondary - Inconsistent")),
+                                        ("secondary_Outdated", _("Secondary - Outdated")),
+                                        ("secondary_DUnknown", _("Secondary - DUnknown")),
+                                        ("secondary_Consistent", _("Secondary - Consistent")),
+                                        ("secondary_UpToDate", _("Secondary - UpToDate")),
+                                    ],
+                                ),
+                                MonitoringState(title=_("Resulting state"))
+                            ],
+                            orientation="horizontal",
+                        ),
+                               title=_("Set diskstates"),
+                               add_label=_("Add diskstate rule"))
+                    ],
+                ),
+            )
+        ],
+    )
 
 
 rulespec_registry.register(

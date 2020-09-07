@@ -71,7 +71,7 @@ def test_generates_correct_sections(file, hostname, tags, fetchers, monkeypatch)
     monkeypatch.setattr(
         CachedSNMPDetector,
         "__call__",
-        lambda *args, **kwargs: {},
+        lambda *args, **kwargs: set(),
     )
     fetcher_configuration.dump(hostname, "1.2.3.4", file)
     file.seek(0)

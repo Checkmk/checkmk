@@ -385,15 +385,22 @@ function resize_mega_menu_popup(menu_popup) {
         return;
     }
 
-    const extended_topics = Array.prototype.slice.call(topics).filter(e => utils.has_class(e, "extended"));
-    if (extended_topics.length === 0) {
-        const topic = topics[topics.length - 1];
+    const extended_topic = Array.prototype.slice.call(topics).find(e => utils.has_class(e, "extended"));
+    if (!extended_topic) {
+        const visible_topics = Array.prototype.slice.call(topics).filter(e => utils.is_visible(e));
+        if (visible_topics.length === 0) {
+            return;
+        }
+        const topic = visible_topics[visible_topics.length - 1];
         const menu_width = Math.min(maximum_popup_width(), topic.offsetLeft + topic.offsetWidth);
         menu_popup.style.width = menu_width + "px";
     } else {
-        const topic = extended_topics[0];
-        const items = topic.getElementsByTagName("ul")[0];
-        const last_item = items.lastChild.previousSibling;
+        const items = extended_topic.getElementsByTagName("ul")[0];
+        const visible_items = Array.prototype.slice.call(items.children).filter(e => utils.is_visible(e));
+        if (visible_items.length === 0) {
+            return;
+        }
+        const last_item = visible_items[visible_items.length - 1];
         /* account for the padding of 20px on both sides  */
         const items_width = Math.min(maximum_popup_width(), last_item.offsetLeft + last_item.offsetWidth - 20);
         items.style.width = items_width + "px";

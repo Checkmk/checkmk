@@ -81,6 +81,12 @@ export function is_window_active()
     return !has_class(document.body, "hidden");
 }
 
+// Predicate analogous to that used in JQuery to check whether an element is visible:
+// https://github.com/jquery/jquery/blob/master/src/css/hiddenVisibleSelectors.js
+export function is_visible(elem) {
+    return !!(elem.offsetWidth || elem.offsetHeight || elem.getClientRects().length);
+}
+
 export function has_class(o, cn) {
     if (typeof(o.className) === "undefined")
         return false;

@@ -1,0 +1,13 @@
+Title: drdb: fixed invalid check parameters at discovery stage
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p18
+Date: 1599488358
+
+When initiating the discovery for the DRDB check, the parameter
+'diskstates_inventory' is reported as an unidentified key. This has been fixed.

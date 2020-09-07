@@ -878,7 +878,7 @@ def page_add_snapin() -> None:
         raise MKGeneralException(_("You are not allowed to change the sidebar."))
 
     title = _("Available snapins")
-    breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_configure(), title)
+    breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_customize(), title)
     html.header(title, breadcrumb, _add_snapins_page_menu(breadcrumb))
 
     used_snapins = _used_snapins()

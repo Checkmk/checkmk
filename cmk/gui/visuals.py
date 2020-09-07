@@ -1649,7 +1649,7 @@ def unpack_context_after_editing(packed_context: Dict) -> VisualContext:
 
 
 def visual_page_breadcrumb(what: str, title: str, page_name: str) -> Breadcrumb:
-    breadcrumb = make_main_menu_breadcrumb(mega_menu_registry.menu_configure())
+    breadcrumb = make_main_menu_breadcrumb(mega_menu_registry.menu_customize())
 
     list_title = visual_type_registry[what]().plural_title
     breadcrumb.append(BreadcrumbItem(title=list_title.title(), url="edit_%s.py" % what))

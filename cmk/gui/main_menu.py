@@ -31,13 +31,14 @@ class MegaMenuRegistry(Registry[MegaMenu]):
         >>> from cmk.gui.i18n import _l
         >>> from cmk.gui.type_defs import MegaMenu
         >>> from cmk.gui.main_menu import mega_menu_registry
-        >>> MyMenuEntry = mega_menu_registry.register(MegaMenu(
+        >>> mega_menu_registry.register(MegaMenu(
         ...     name="monitoring",
         ...     title=_l("Monitor"),
         ...     icon_name="main_monitoring",
         ...     sort_index=5,
         ...     topics=lambda: [],
         ... ))
+        MegaMenu(...)
         >>> assert mega_menu_registry["monitoring"].sort_index == 5
 
     """
@@ -47,8 +48,8 @@ class MegaMenuRegistry(Registry[MegaMenu]):
     def menu_monitoring(self) -> MegaMenu:
         return self["monitoring"]
 
-    def menu_configure(self) -> MegaMenu:
-        return self["configure"]
+    def menu_customize(self) -> MegaMenu:
+        return self["customize"]
 
     def menu_setup(self) -> MegaMenu:
         return self["setup"]

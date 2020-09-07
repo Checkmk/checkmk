@@ -900,7 +900,7 @@ class Overridable(Base):
 
     @classmethod
     def breadcrumb(cls, title: str, page_name: str) -> Breadcrumb:
-        breadcrumb = make_main_menu_breadcrumb(mega_menu_registry.menu_configure())
+        breadcrumb = make_main_menu_breadcrumb(mega_menu_registry.menu_customize())
 
         breadcrumb.append(BreadcrumbItem(title=cls.phrase("title_plural"), url=cls.list_url()))
 
@@ -1786,7 +1786,7 @@ declare(PagetypeTopics)
 #.
 
 
-def _configure_menu_topics() -> List[TopicMenuTopic]:
+def _customize_menu_topics() -> List[TopicMenuTopic]:
     general_items = []
 
     monitoring_items = [
@@ -1859,9 +1859,9 @@ def _configure_menu_topics() -> List[TopicMenuTopic]:
 
 mega_menu_registry.register(
     MegaMenu(
-        name="configure",
-        title=_l("Configure"),
-        icon_name="main_configure",
+        name="customize",
+        title=_l("Customize"),
+        icon_name="main_customize",
         sort_index=10,
-        topics=_configure_menu_topics,
+        topics=_customize_menu_topics,
     ))

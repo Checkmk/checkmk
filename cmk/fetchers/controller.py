@@ -10,7 +10,6 @@
 import enum
 import json
 import os
-import base64
 from pathlib import Path
 from typing import Any, Dict, Union
 
@@ -19,7 +18,7 @@ from cmk.utils.type_defs import HostName
 import cmk.utils.log
 
 from . import FetcherType
-from .type_defs import FetcherResult, Mode
+from .type_defs import Mode
 
 #
 # Protocols
@@ -73,15 +72,19 @@ class FetcherHeader:
     def __len__(self) -> int:
         return FetcherHeader.length
 
+    # E0308: false positive, see https://github.com/PyCQA/pylint/issues/3599
+    def __bytes__(self) -> bytes:  # pylint: disable=E0308
+        return str(self).encode("ascii")
+
     @classmethod
-    def from_network(cls, data: str) -> 'FetcherHeader':
+    def from_network(cls, data: bytes) -> 'FetcherHeader':
         try:
             # to simplify parsing we are using ':' as a splitter
-            name, status, payload_length = data[:FetcherHeader.length].split(":")[:3]
+            name, status, payload_length = data[:FetcherHeader.length].split(b":")[:3]
             return cls(
-                name,
-                status=int(status, base=10),
-                payload_length=int(payload_length, base=10),
+                name.decode("ascii"),
+                status=int(status.decode("ascii"), base=10),
+                payload_length=int(payload_length.decode("ascii"), base=10),
             )
         except ValueError as exc:
             raise ValueError(data) from exc
@@ -157,11 +160,22 @@ class Header:
 
 
 def make_success_answer(data: str) -> str:
+    """Internal function: used now to report strange errors related to infrastructure
+    To be removed in the future"""
     return str(
         Header(name=Header.default_protocol_name(),
                state=Header.State.SUCCESS,
                severity=" ",
                payload_length=len(data))) + data
+
+
+def make_payload_answer(data: bytes) -> bytes:
+    """Provides valid binary payload to be send from fetcher to checker"""
+    return str(
+        Header(name=Header.default_protocol_name(),
+               state=Header.State.SUCCESS,
+               severity=" ",
+               payload_length=len(data))).encode("ascii") + data
 
 
 def make_failure_answer(data: str, *, severity: str) -> str:
@@ -212,41 +226,37 @@ def load_global_config(serial: int) -> None:
         cmk.utils.log.logger.setLevel(result["log_level"])
 
 
-def _run_fetcher(entry: Dict[str, Any], mode: Mode, timeout: int) -> FetcherResult:
-    """ timeout to be used by concrete fetcher implementation
-    Examples of correct dictionaries to return:
-    {  "fetcher_type": "SNMP", "status": 0,   "payload": ""whatever}
-    {  "fetcher_type": "TCP",  "status": 50,  "payload": "exception text"}
-    """
+def _run_fetcher(entry: Dict[str, Any], mode: Mode, timeout: int) -> bytes:
+    """ timeout to be used by concrete fetcher implementation"""
 
+    fetcher_type = entry["fetcher_type"]
     try:
-        fetcher_type = entry["fetcher_type"]
         fetcher_params = entry["fetcher_params"]
 
         with FetcherType[fetcher_type].value.from_json(fetcher_params) as fetcher:
-            payload = fetcher.fetch(mode)
+            fetcher_data = fetcher.fetch(mode)
 
-        if fetcher_type != "SNMP":
-            # Since we currently transport the data using JSON, we have to encode the binary data.
-            payload = base64.b64encode(payload).decode("ascii")
-        else:
+        # TODO (sk): Change encoding approach:
+        # Below is weak code, which breaks isolation. It has been left just to keep things running.
+        # In fact, to correctly encode data we must estimate not the fetcher name but the data type.
+        # We do not know anything about relation between fetcher and data, but we certainly know
+        # how to encode different data types.
+        if fetcher_type == "SNMP":
             # Keys of SNMP payload is of type SectionName which can not be encoded using JSON.
-            payload = {"%s" % k: v for k, v in payload.items()}
+            snmp_fetcher_data = {"%s" % k: v for k, v in fetcher_data.items()}
+            payload = json.dumps(snmp_fetcher_data).encode("utf-8")
+        else:
+            payload = fetcher_data
 
-        return {
-            "fetcher_type": fetcher_type,
-            "status": 0,
-            "payload": payload,
-        }
+        fh = FetcherHeader(fetcher_type, status=0, payload_length=len(payload))
+        return bytes(fh) + payload
 
     except Exception as e:
         # NOTE. The exception is too broad by design:
         # we need specs for Exception coming from fetchers(and how to process)
-        return {
-            "fetcher_type": fetcher_type,
-            "status": 50,  # CRITICAL, see _level.py
-            "payload": repr(e),
-        }
+        payload = str(e).encode("utf-8")
+        fh = FetcherHeader(fetcher_type, status=50, payload_length=len(payload))
+        return bytes(fh) + payload
 
 
 def status_to_microcore_severity(status: int) -> str:
@@ -287,16 +297,18 @@ def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
     # functionality of the Microcore.
 
     resulting_blob = [_run_fetcher(entry, mode, timeout) for entry in fetchers]
-    write_data(make_success_answer(json.dumps(resulting_blob)))
+
+    write_bytes(make_payload_answer(b''.join(resulting_blob)))
 
     for entry in resulting_blob:
-        status = entry["status"]
+        fh = FetcherHeader.from_network(entry)
+        status = fh.status
         if status == 0:
             continue
 
         # Errors generated by fetchers will be logged by Microcore
         write_data(
-            make_failure_answer(data=entry["fetcher_type"] + ": " + entry["payload"],
+            make_failure_answer(data=fh.name + ": " + entry[FetcherHeader.length:].decode("utf-8"),
                                 severity=status_to_microcore_severity(status)))
 
     write_data(make_waiting_answer())
@@ -321,7 +333,11 @@ def build_json_global_config_file_path(serial: str) -> Path:
 # receives data from stdout
 def write_data(data: str) -> None:
     output = data.encode("utf-8")
-    while output:
-        bytes_written = os.write(1, output)
-        output = output[bytes_written:]
+    write_bytes(output)
+
+
+def write_bytes(data: bytes) -> None:
+    while data:
+        bytes_written = os.write(1, data)
+        data = data[bytes_written:]
         # TODO (ml): We need improve performance - 100% CPU load if Microcore is busy

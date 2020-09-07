@@ -125,7 +125,7 @@ class TestHeader:
 class TestFetcherHeader:
     def test_from_network(self):
         f_header = FetcherHeader("TCP", status=1, payload_length=42)
-        assert FetcherHeader.from_network(str(f_header) + 42 * "*") == f_header
+        assert FetcherHeader.from_network(bytes(f_header) + 42 * b"*") == f_header
 
     def test_clone(self):
         f_header = FetcherHeader("TCP", status=1, payload_length=42)
@@ -163,6 +163,7 @@ class TestFetcherHeader:
 
     def test_len(self):
         f_header = FetcherHeader("name", status=0, payload_length=42)
+        assert len(f_header) == len(bytes(f_header))
         assert len(f_header) == len(str(f_header))
 
     def test_critical_constants(self):

@@ -6,6 +6,7 @@
 
 # pylint: disable=redefined-outer-name
 
+import contextlib
 import os
 import shutil
 import subprocess
@@ -103,11 +104,13 @@ def _get_files_to_check(pylint_test_dir):
     return files
 
 
-def _compile_check_and_inventory_plugins(pylint_test_dir):
-    with open(pylint_test_dir + "/cmk_checks.py", "w") as f:
+@contextlib.contextmanager
+def stand_alone_template(file_name):
+
+    with open(file_name, "w") as file_handle:
 
         # Fake data structures where checks register (See cmk/base/checks.py)
-        f.write("""
+        file_handle.write("""
 # -*- encoding: utf-8 -*-
 check_info                         = {}
 check_includes                     = {}
@@ -157,19 +160,28 @@ def inv_tree(path, default_value=None):
 
         # add the modules
         # These pylint warnings are incompatible with our "concatenation technology".
-        f.write("# pylint: disable=%s\n" % ','.join(disable_pylint))
+        file_handle.write("# pylint: disable=%s\n" % ','.join(disable_pylint))
 
-        pylint_cmk.add_file(f, repo_path() + "/cmk/base/check_api.py")
-        pylint_cmk.add_file(f, repo_path() + "/cmk/base/inventory_plugins.py")
+        pylint_cmk.add_file(file_handle, repo_path() + "/cmk/base/check_api.py")
+        pylint_cmk.add_file(file_handle, repo_path() + "/cmk/base/inventory_plugins.py")
 
-        # Now add the checks
-        for path in sorted(pylint_cmk.check_files(repo_path() + "/checks"),
-                           key=lambda check: (not check.endswith(".include"), check)):
-            pylint_cmk.add_file(f, path)
+        yield file_handle
 
-        # Now add the inventory plugins
-        for path in pylint_cmk.check_files(repo_path() + "/inventory"):
-            pylint_cmk.add_file(f, path)
+
+def _compile_check_and_inventory_plugins(pylint_test_dir):
+
+    includes = set()
+    plugins = set(pylint_cmk.check_files(repo_path() + "/inventory"))
+    for f_name in pylint_cmk.check_files(repo_path() + "/checks"):
+        if f_name.endswith(".include"):
+            includes.add(f_name)
+        else:
+            plugins.add(f_name)
+
+    with stand_alone_template(pylint_test_dir + "/cmk_checks.py") as file_handle:
+
+        for path in sorted(includes) + sorted(plugins):
+            pylint_cmk.add_file(file_handle, path)
 
 
 def _compile_bakery_plugins(pylint_test_dir):

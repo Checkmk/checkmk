@@ -1906,6 +1906,7 @@ class LabelCondition(Transform):
                     ],
                     show_titles=False,
                 ),
+                validate=self._validate_unique_keys,
                 add_label=_("Add label condition"),
                 del_label=_("Remove label condition"),
                 style=ListOf.Style.FLOATING,
@@ -1916,6 +1917,17 @@ class LabelCondition(Transform):
             title=title,
             help=help_txt,
         )
+
+    def _validate_unique_keys(self, value, varprefix):
+        label_keys = []
+        for labels in value:
+            for label_id, _label_value in labels[1].items():
+                label_keys.append(label_id)
+                if label_id in label_keys:
+                    raise MKUserError(
+                        varprefix,
+                        _("A label key can be used only once per object. "
+                          "The Label key \"%s\" is used twice.") % label_id)
 
     def _to_valuespec(self, label_conditions):
         valuespec_value = []
@@ -1935,11 +1947,6 @@ class LabelCondition(Transform):
         for operator, label in valuespec_value:
             if label:
                 label_id, label_value = list(label.items())[0]
-                if label_id in label_conditions:
-                    raise MKUserError(
-                        None,
-                        _("A label key can be used only once per object. "
-                          "The Label key \"%s\" is used twice.") % label_id)
                 label_conditions[label_id] = self._single_label_from_valuespec(
                     operator, label_value)
         return label_conditions

@@ -126,7 +126,7 @@ def inventory_printer_supply(parsed):
     # Also fix trailing zero bytes (seen on HP Jetdirect 143)
     return [
         (description.rstrip('\0'), {})
-        for description, _unit_info, max_capacity, level, _class, _color_id, color in parsed
+        for description, _unit_info, max_capacity, level, _class, _color_id, _color in parsed
         # ignore useless devices
         if not (max_capacity == '-2' and level == '-2') and level and len(max_capacity) > 0
     ]
@@ -142,7 +142,7 @@ def check_printer_supply(item, params, parsed):
                 "upturn_toner": params[2],
             }
 
-    for description, unit_info, max_capacity, level, class_, color_id, color in parsed:
+    for description, unit_info, max_capacity, level, class_, _color_id, color in parsed:
         if description.rstrip('\0') == item:
             max_capacity = int(max_capacity)
             level = saveint(level)

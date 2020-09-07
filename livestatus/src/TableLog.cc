@@ -42,19 +42,17 @@ namespace {
 
 class LogRow {
 public:
+    // cppcheck confuses "command" and "Command" below! o_O
+    // cppcheck-suppress uninitMemberVar
     LogRow(LogEntry *entry_, host *hst_, service *svc_, const contact *ctc_,
-           Command command_)
-        : entry{entry_}
-        , hst{hst_}
-        , svc{svc_}
-        , ctc{ctc_}
-        , command{std::move(command_)} {};
+           const Command *command_)
+        : entry{entry_}, hst{hst_}, svc{svc_}, ctc{ctc_}, command{command_} {};
 
     LogEntry *entry;
     host *hst;
     service *svc;
     const contact *ctc;
-    Command command;
+    const Command *command;
 };
 
 }  // namespace
@@ -208,6 +206,7 @@ bool TableLog::answerQueryReverse(const logfile_entries_t *entries,
             return false;  // time limit exceeded
         }
         auto *entry = it->second.get();
+        Command command = core()->find_command(entry->_command_name);
         // TODO(sp): Remove ugly casts.
         LogRow lr{
             entry,
@@ -216,7 +215,7 @@ bool TableLog::answerQueryReverse(const logfile_entries_t *entries,
                 entry->_host_name, entry->_service_description)),
             reinterpret_cast<const contact *>(
                 core()->find_contact(entry->_contact_name)),
-            core()->find_command(entry->_command_name)};
+            &command};
         const LogRow *r = &lr;
         if (!query->processDataset(Row{r})) {
             return false;

@@ -15,7 +15,7 @@
 #include "StringLambdaColumn.h"
 
 TableCommands::TableCommands(MonitoringCore *mc) : Table(mc) {
-    addColumns(this, "", 0);
+    addColumns(this, "", -1);
 }
 
 std::string TableCommands::name() const { return "commands"; }
@@ -24,8 +24,8 @@ std::string TableCommands::namePrefix() const { return "command_"; }
 
 // static
 void TableCommands::addColumns(Table *table, const std::string &prefix,
-                               int offset) {
-    Column::Offsets offsets{offset};
+                               int indirect_offset) {
+    Column::Offsets offsets{indirect_offset, 0};
     table->addColumn(std::make_unique<StringLambdaColumn<Command>>(
         prefix + "name", "The name of the command", offsets,
         [](const Command &cmd) { return cmd._name; }));

@@ -198,7 +198,6 @@ liblivestatus_a_SOURCES = \
         TableTimeperiods.cc \
         TimeColumn.cc \
         TimeFilter.cc \
-        TimeperiodColumn.cc \
         TimeperiodsCache.cc \
         Triggers.cc \
         auth.cc \

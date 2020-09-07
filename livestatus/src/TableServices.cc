@@ -18,6 +18,7 @@
 
 #include "AttributeListAsIntColumn.h"
 #include "AttributeListColumn.h"
+#include "BoolLambdaColumn.h"
 #include "Column.h"
 #include "CommentColumn.h"
 #include "ContactGroupsColumn.h"
@@ -47,11 +48,12 @@
 #include "StringUtils.h"
 #include "TableHosts.h"
 #include "TimeLambdaColumn.h"
-#include "TimeperiodColumn.h"
+#include "TimeperiodsCache.h"
 #include "auth.h"
 #include "nagios.h"
 
 extern service *service_list;
+extern TimeperiodsCache *g_timeperiods_cache;
 
 TableServices::TableServices(MonitoringCore *mc) : Table(mc) {
     addColumns(this, "", -1, true);
@@ -419,23 +421,24 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "percent_state_change", "Percent state change", offsets,
         [](const service &r) { return r.percent_state_change; }));
 
-    table->addColumn(std::make_unique<TimeperiodColumn>(
+    table->addColumn(std::make_unique<BoolLambdaColumn<service, true>>(
         prefix + "in_check_period",
-        "Whether the service is currently in its check period (0/1)",
-        Column::Offsets{indirect_offset,
-                        DANGEROUS_OFFSETOF(service, check_period_ptr), 0}));
+        "Whether the service is currently in its check period (0/1)", offsets,
+        [](const service &r) {
+            return g_timeperiods_cache->inTimeperiod(r.check_period_ptr);
+        }));
     table->addColumn(std::make_unique<CustomTimeperiodColumn>(
         prefix + "in_service_period",
         "Whether this service is currently in its service period (0/1)",
         Column::Offsets{indirect_offset,
                         DANGEROUS_OFFSETOF(service, custom_variables)},
         table->core(), "SERVICE_PERIOD"));
-    table->addColumn(std::make_unique<TimeperiodColumn>(
+    table->addColumn(std::make_unique<BoolLambdaColumn<service, true>>(
         prefix + "in_notification_period",
         "Whether the service is currently in its notification period (0/1)",
-        Column::Offsets{indirect_offset,
-                        DANGEROUS_OFFSETOF(service, notification_period_ptr),
-                        0}));
+        offsets, [](const service &r) {
+            return g_timeperiods_cache->inTimeperiod(r.notification_period_ptr);
+        }));
 
     table->addColumn(std::make_unique<ServiceContactsColumn>(
         prefix + "contacts",

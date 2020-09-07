@@ -17,6 +17,7 @@
 
 #include "AttributeListAsIntColumn.h"
 #include "AttributeListColumn.h"
+#include "BoolLambdaColumn.h"
 #include "Column.h"
 #include "CommentColumn.h"
 #include "ContactGroupsColumn.h"
@@ -50,12 +51,13 @@
 #include "StringLambdaColumn.h"
 #include "StringPerfdataColumn.h"
 #include "TimeLambdaColumn.h"
-#include "TimeperiodColumn.h"
+#include "TimeperiodsCache.h"
 #include "auth.h"
 #include "nagios.h"
 #include "pnp4nagios.h"
 
 extern host *host_list;
+extern TimeperiodsCache *g_timeperiods_cache;
 
 TableHosts::TableHosts(MonitoringCore *mc) : Table(mc) {
     addColumns(this, "", -1, -1);
@@ -452,16 +454,18 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "percent_state_change", "Percent state change", offsets,
         [](const host &r) { return r.percent_state_change; }));
 
-    table->addColumn(std::make_unique<TimeperiodColumn>(
+    table->addColumn(std::make_unique<BoolLambdaColumn<host, true>>(
         prefix + "in_notification_period",
         "Whether this host is currently in its notification period (0/1)",
-        Column::Offsets{indirect_offset, extra_offset,
-                        DANGEROUS_OFFSETOF(host, notification_period_ptr), 0}));
-    table->addColumn(std::make_unique<TimeperiodColumn>(
+        offsets, [](const host &r) {
+            return g_timeperiods_cache->inTimeperiod(r.notification_period_ptr);
+        }));
+    table->addColumn(std::make_unique<BoolLambdaColumn<host, true>>(
         prefix + "in_check_period",
-        "Whether this host is currently in its check period (0/1)",
-        Column::Offsets{indirect_offset, extra_offset,
-                        DANGEROUS_OFFSETOF(host, check_period_ptr), 0}));
+        "Whether this host is currently in its check period (0/1)", offsets,
+        [](const host &r) {
+            return g_timeperiods_cache->inTimeperiod(r.check_period_ptr);
+        }));
     table->addColumn(std::make_unique<CustomTimeperiodColumn>(
         prefix + "in_service_period",
         "Whether this host is currently in its service period (0/1)",

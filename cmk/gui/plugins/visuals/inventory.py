@@ -105,9 +105,6 @@ class FilterInvtableTimestampAsAge(Filter):
     def _valuespec(self) -> ValueSpec:
         return Age(display=["days"])
 
-    def double_height(self) -> bool:
-        return True
-
     def filter_table_with_conversion(self, rows: Rows, conv: Callable[[float], float]) -> Rows:
         from_value = self._valuespec().from_html_vars(self._from_varprefix)
         to_value = self._valuespec().from_html_vars(self._to_varprefix)
@@ -189,9 +186,6 @@ class FilterInvtableOperStatus(Filter):
             if state in (4, 7):
                 html.br()
         html.end_checkbox_group()
-
-    def double_height(self) -> bool:
-        return True
 
     def filter_table(self, rows: Rows) -> Rows:
         # We consider the filter active if not all checkboxes
@@ -277,9 +271,6 @@ class FilterInvtableInterfaceType(Filter):
                          info=inv_info,
                          htmlvars=[ident],
                          link_columns=[])
-
-    def double_height(self) -> bool:
-        return True
 
     def valuespec(self) -> ValueSpec:
         sorted_choices = [
@@ -523,9 +514,6 @@ class FilterInvHasSoftwarePackage(Filter):
                              self._varprefix + "negate",
                          ],
                          link_columns=[])
-
-    def double_height(self) -> bool:
-        return True
 
     @property
     def filtername(self):

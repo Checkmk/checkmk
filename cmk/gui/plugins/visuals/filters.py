@@ -267,9 +267,6 @@ class FilterIPAddress(Filter):
         html.radiobutton(self.htmlvars[1], "no", False, _("Exact match"))
         html.end_radio_group()
 
-    def double_height(self):
-        return True
-
     def filter(self, infoname):
         address_val = html.request.var(self.htmlvars[0])
         if not address_val:
@@ -420,9 +417,6 @@ class FilterMultigroup(Filter):
                          description=description)
         self.what = what
 
-    def double_height(self):
-        return True
-
     def valuespec(self):
         return DualListChoice(choices=self._get_choices(),
                               rows=3 if self.negateable else 4,
@@ -505,9 +499,6 @@ class FilterGroupCombo(Filter):
                          link_columns=[what + "group_name"],
                          description=description)
         self.what = what
-
-    def double_height(self):
-        return True
 
     def display(self) -> None:
         choices: Choices = list(sites.all_groups(self.what.split("_")[-1]))
@@ -1524,9 +1515,6 @@ class FilterLogClass(Filter):
             link_columns=[],
         )
 
-    def double_height(self):
-        return True
-
     def display(self) -> None:
         html.hidden_field("logclass_filled", "1", add_var=True)
         html.open_table(cellspacing="0", cellpadding="0")
@@ -1671,9 +1659,6 @@ class FilterLogState(Filter):
             link_columns=[],
         )
 
-    def double_height(self):
-        return True
-
     def _filter_used(self):
         return any([html.request.has_var(v) for v in self.htmlvars])
 
@@ -1725,9 +1710,6 @@ class FilterLogNotificationPhase(FilterTristate):
                          sort_index=271,
                          info="log",
                          column="log_command_name")
-
-    def double_height(self):
-        return True
 
     def display(self) -> None:
         current = html.request.var(self.varname)
@@ -1899,9 +1881,6 @@ class TagFilter(Filter):
             livestatus.lqencode(livestatus.quote_dict(tag)),
         )
 
-    def double_height(self):
-        return True
-
 
 filter_registry.register(TagFilter(
     ident="host_tags",
@@ -1964,9 +1943,6 @@ class FilterHostAuxTags(Filter):
                                                livestatus.lqencode(livestatus.quote_dict(tag)),
                                                livestatus.lqencode(livestatus.quote_dict(tag)))
 
-    def double_height(self):
-        return True
-
 
 class LabelFilter(Filter):
     def __init__(self, *, ident: str, title: str, object_type: str) -> None:
@@ -1985,9 +1961,6 @@ class LabelFilter(Filter):
     @property
     def _column(self):
         return "%s_labels" % self._object_type
-
-    def double_height(self):
-        return True
 
     def _current_value(self):
         return self._valuespec().from_html_vars(self._var_prefix)
@@ -2165,9 +2138,6 @@ class FilterECServiceLevelRange(Filter):
 
         return filterline + lq_logic("Filter: %s_custom_variable_values >=" % self.info,
                                      filterline_values, "Or")
-
-    def double_height(self):
-        return True
 
 
 filter_registry.register(
@@ -2521,9 +2491,6 @@ class FilterAggrService(Filter):
              ),
         )
 
-    def double_height(self):
-        return True
-
     def display(self) -> None:
         html.write(_("Host") + ": ")
         html.text_input(self.htmlvars[1])
@@ -2567,9 +2534,6 @@ class BIStatusFilter(Filter):
 
     def filter(self, infoname):
         return ""
-
-    def double_height(self):
-        return self.column == "aggr_assumed_state"
 
     def _filter_used(self):
         return html.request.has_var(self.prefix + "_filled")
@@ -2820,9 +2784,6 @@ class EventFilterState(Filter):
                          htmlvars=varnames,
                          link_columns=[ident])
         self._choices = choices
-
-    def double_height(self):
-        return len(self._choices) >= 5
 
     def display(self) -> None:
         html.begin_checkbox_group()

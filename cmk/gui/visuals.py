@@ -1064,7 +1064,7 @@ def page_edit_visual(what,
 
 
 def show_filter(f: Filter) -> None:
-    html.open_div(class_=["floatfilter", "double" if f.double_height() else "single", f.ident])
+    html.open_div(class_=["floatfilter", f.ident])
     html.div(f.title, class_="legend")
     html.open_div(class_="content")
     try:

@@ -252,10 +252,6 @@ class Filter(metaclass=abc.ABCMeta):
         user in single site setups."""
         return True
 
-    def double_height(self) -> bool:
-        """More complex filters need more height in the HTML layout"""
-        return False
-
     @abc.abstractmethod
     def display(self) -> None:
         raise NotImplementedError()
@@ -370,9 +366,6 @@ class FilterTime(Filter):
                          info=info,
                          htmlvars=varnames,
                          link_columns=[column] if column is not None else [])
-
-    def double_height(self):
-        return True
 
     def display(self):
         choices: Choices = [(str(sec), title + " " + _("ago")) for sec, title in self.ranges]

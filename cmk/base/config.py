@@ -262,7 +262,9 @@ def load_packed_config() -> None:
 
     The validations which are performed during load() also don't need to be performed.
     """
-    PackedConfig().load()
+    _initialize_config()
+    globals().update(PackedConfigStore().read())
+    _perform_post_config_loading_actions()
 
 
 def _initialize_config() -> None:
@@ -689,11 +691,6 @@ class PackedConfig:
             return True
         except SyntaxError:
             return False
-
-    def load(self) -> None:
-        _initialize_config()
-        globals().update(self._store.read())
-        _perform_post_config_loading_actions()
 
 
 class PackedConfigStore:

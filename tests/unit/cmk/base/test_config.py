@@ -2045,12 +2045,22 @@ cmc_host_rrd_config = [
 """ % (condition, value))
 
 
+def test_load_packed_config():
+    config.PackedConfigStore().write("abc = 1")
+
+    assert "abc" not in config.__dict__
+    config.load_packed_config()
+    # Mypy does not understand that we add some new member for testing
+    assert config.abc == 1  # type: ignore[attr-defined]
+    del config.__dict__["abc"]
+
+
 # These types are currently imported into the cmk.base.config namespace, just to be able to load
 # objects of this type from the configuration
 def test_packed_config_able_to_load_snmp_types():
-    packed_config = config.PackedConfig()
-    packed_config._store.write("test_var1 = OIDBytes('6')\n\ntest_var2 = OIDCached('6')\n\n")
-    packed_config.load()
+    config.PackedConfigStore().write("test_var1 = OIDBytes('6')\n\ntest_var2 = OIDCached('6')\n\n")
+
+    config.load_packed_config()
     assert config.test_var1 == OIDBytes('6')  # type: ignore[attr-defined]
     assert config.test_var2 == OIDCached('6')  # type: ignore[attr-defined]
 

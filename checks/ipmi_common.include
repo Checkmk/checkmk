@@ -13,22 +13,14 @@
 # ==================================================================================================
 # ==================================================================================================
 
+import cmk.base.plugins.agent_based.utils.ipmi as ipmi
+
 #TODO Cleanup the whole status text mapping in
 # ipmi_common.include, ipmi_sensors.include, ipmi
 
 
 def ipmi_ignore_entry(name, status_txt, rules):
-    if status_txt is None:
-        return True
-    ignored_sensors = rules.get("ignored_sensors", [])
-    ignored_sensorstates = rules.get("ignored_sensorstates", [])
-    for cmp_status in ignored_sensorstates:
-        if status_txt.startswith(cmp_status):
-            return True
-    for e in ignored_sensors:
-        if name.startswith(e):
-            return True
-    return False
+    return True if status_txt is None else ipmi.ignore_sensor(name, status_txt, rules)
 
 
 def check_ipmi_common(item, params, parsed, what, status_txt_mapping):

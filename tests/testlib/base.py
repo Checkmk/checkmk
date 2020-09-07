@@ -20,7 +20,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('section', 'site_object_status'),
     ('section', 'site_object_counts'),
     ('section', 'tsm_stagingpools'),
-    ('check', 'ipmi'),
     ('check', 'k8s_stats_fs'),
     ('check', 'k8s_stats_network'),
     ('check', 'ps_perf'),

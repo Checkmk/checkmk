@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.base.plugins.agent_based.utils.ipmi as ipmi
+
 #   .--output--------------------------------------------------------------.
 #   |                               _               _                      |
 #   |                    ___  _   _| |_ _ __  _   _| |_                    |
@@ -159,17 +161,17 @@ inventory_ipmi_rules = []
 
 def inventory_freeipmi(parsed):
     rules = host_extra_conf(host_name(), inventory_ipmi_rules)
-    if rules == []:
-        rules = [('single', {})]
+    if rules:
+        mode, ignore_params = ipmi.transform_discovery_ruleset(rules[0])
+    else:
+        mode, ignore_params = 'single', {}
 
-    if isinstance(rules[0], tuple):
-        single_rules = rules[0][1].copy()
-        for sensorname, data in parsed.items():
-            if not ipmi_ignore_entry(sensorname, data["status_txt"], single_rules):
-                yield sensorname, {}
-
-    elif rules[0] == "summarize":
+    if mode == "summarize":
         yield "Summary FreeIPMI", {}
+    else:
+        for sensorname, data in parsed.items():
+            if not ipmi_ignore_entry(sensorname, data["status_txt"], ignore_params):
+                yield sensorname, {}
 
 
 def freeipmi_status_txt_mapping(status_txt):

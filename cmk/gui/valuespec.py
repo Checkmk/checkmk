@@ -2497,6 +2497,15 @@ class DropdownChoice(ValueSpec):
                       ordered=self._sorted,
                       read_only=self._read_only)
 
+    def validate_datatype(self, value: Any, varprefix: str) -> None:
+        for choice in self.choices():
+            if isinstance(value, type(choice[0])):
+                return
+        raise MKUserError(
+            varprefix,
+            _("The value %r has type %s, but does not match any of the available choice types.") %
+            (value, _type_name(value)))
+
     def _get_invalid_choice_title(self, value: DropdownChoiceValue) -> str:
         if "%s" in self._invalid_choice_title or "%r" in self._invalid_choice_title:
             return self._invalid_choice_title % (value,)

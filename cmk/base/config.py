@@ -559,10 +559,10 @@ def all_nonfunction_vars() -> Set[str]:
 
 def save_packed_config(config_cache: "ConfigCache") -> None:
     """Create and store a precompiled configuration for Checkmk helper processes"""
-    PackedConfig(config_cache).save()
+    PackedConfigStore().write(PackedConfigGenerator(config_cache).generate())
 
 
-class PackedConfig:
+class PackedConfigGenerator:
     """The precompiled host checks and the CMC Check_MK helpers use a
     "precompiled" part of the Check_MK configuration during runtime.
 
@@ -592,12 +592,8 @@ class PackedConfig:
 
     def __init__(self, config_cache: "ConfigCache") -> None:
         self._config_cache = config_cache
-        self._store = PackedConfigStore()
 
-    def save(self) -> None:
-        self._store.write(self._pack())
-
-    def _pack(self) -> str:
+    def generate(self) -> str:
         helper_config = ("#!/usr/bin/env python\n"
                          "# encoding: utf-8\n"
                          "# Created by Check_MK. Dump of the currently active configuration\n\n")

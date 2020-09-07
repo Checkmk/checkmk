@@ -128,8 +128,6 @@
           border-right: 1px solid $headline-color;
           box-sizing: border-box;
 
-          &:last-child { flex-grow: 1000; }
-
           h2 {
             padding-bottom: 4px;
             margin: 0;
@@ -214,6 +212,10 @@
           }
 
           &.extendable li.show_all_items { display: list-item; }
+        }
+
+        div.sentinel {
+          flex-grow: 1000;
         }
       }
 

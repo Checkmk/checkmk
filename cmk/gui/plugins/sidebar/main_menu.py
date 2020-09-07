@@ -119,6 +119,7 @@ class MegaMenuRenderer:
         html.open_div(class_="content inner")
         for topic in topics:
             self._show_topic(topic, menu.name)
+        html.div(None, class_="sentinel")
         html.close_div()
         html.close_div()
         html.javascript(hide_entries_js)

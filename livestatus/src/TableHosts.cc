@@ -147,8 +147,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<OffsetStringHostMacroColumn>(
         prefix + "notes_url_expanded",
         "Same es notes_url, but with the most important macros expanded",
-        Column::Offsets{indirect_offset, extra_offset, -1}, table->core(),
-        DANGEROUS_OFFSETOF(host, notes_url)));
+        offsets, table->core(), DANGEROUS_OFFSETOF(host, notes_url)));
     table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "action_url",
         "An optional URL to custom actions or information about this host",

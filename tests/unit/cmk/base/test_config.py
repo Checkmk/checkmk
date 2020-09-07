@@ -2116,10 +2116,17 @@ class TestPackedConfigStore:
 
         store.write("abc = 1\n")
 
-        assert Path(cmk.utils.paths.var_dir, "base", str(serial),
-                    "precompiled_check_config.mk").exists()
+        packed_file_path = Path(cmk.utils.paths.var_dir, "base", str(serial),
+                                "precompiled_check_config.mk")
+        assert packed_file_path.exists()
         assert Path(cmk.utils.paths.var_dir, "base", str(serial),
                     "precompiled_check_config.mk.orig").exists()
+
+        latest_file_path = Path(cmk.utils.paths.var_dir, "base", "latest",
+                                "precompiled_check_config.mk")
+        assert latest_file_path.parent.is_symlink()
+        assert latest_file_path.resolve() == packed_file_path
+
         assert store.read() == {
             "abc": 1,
         }

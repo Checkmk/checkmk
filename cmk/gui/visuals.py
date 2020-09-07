@@ -80,7 +80,7 @@ from cmk.gui.plugins.visuals.utils import (
 
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.plugins.visuals.utils import (  # noqa: F401 # pylint: disable=unused-import
-    Filter, FilterTime, FilterTristate, FilterUnicodeFilter,
+    Filter, FilterTime, FilterTristate,
 )
 from cmk.gui.permissions import permission_registry
 

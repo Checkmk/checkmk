@@ -34,7 +34,6 @@ if cmk_version.is_managed_edition():
 from cmk.gui.plugins.visuals import (
     filter_registry,
     Filter,
-    FilterUnicodeFilter,
     FilterTristate,
     FilterTime,
 )
@@ -114,20 +113,6 @@ class FilterText(Filter):
             return self._current_value()
 
 
-# TODO: Cleanup this subclass - not needed anymore since py3
-class FilterUnicode(FilterText):
-    def _current_value(self):
-        htmlvar = self.htmlvars[0]
-        return html.request.get_unicode_input(htmlvar, "")
-
-
-# TODO: Cleanup this subclass - not needed anymore since py3
-class FilterUnicodeRegExp(FilterUnicode):
-    def validate_value(self, value):
-        htmlvar = self.htmlvars[0]
-        cmk.gui.utils.validate_regex(value[htmlvar], htmlvar)
-
-
 class FilterRegExp(FilterText):
     def validate_value(self, value):
         htmlvar = self.htmlvars[0]
@@ -161,7 +146,7 @@ filter_registry.register(
     ))
 
 filter_registry.register(
-    FilterUnicode(
+    FilterText(
         ident="hostalias",
         title=_l("Hostalias"),
         sort_index=102,
@@ -174,7 +159,7 @@ filter_registry.register(
     ))
 
 filter_registry.register(
-    FilterUnicodeRegExp(
+    FilterRegExp(
         ident="serviceregex",
         title=_l("Service"),
         sort_index=200,
@@ -187,7 +172,7 @@ filter_registry.register(
     ))
 
 filter_registry.register(
-    FilterUnicode(
+    FilterText(
         ident="service",
         title=_l("Service (exact match)"),
         sort_index=201,
@@ -199,7 +184,7 @@ filter_registry.register(
     ))
 
 filter_registry.register(
-    FilterUnicodeRegExp(
+    FilterRegExp(
         ident="service_display_name",
         title=_l("Service alternative display name"),
         sort_index=202,
@@ -211,7 +196,7 @@ filter_registry.register(
     ))
 
 filter_registry.register(
-    FilterUnicode(
+    FilterText(
         ident="output",
         title=_l("Status detail"),
         sort_index=202,
@@ -224,7 +209,7 @@ filter_registry.register(
 
 
 @filter_registry.register_instance
-class FilterHostnameOrAlias(FilterUnicode):
+class FilterHostnameOrAlias(FilterText):
     def __init__(self):
         super().__init__(
             ident="hostnameoralias",
@@ -1583,7 +1568,7 @@ class FilterLogClass(Filter):
 
 
 filter_registry.register(
-    FilterUnicode(
+    FilterText(
         ident="log_plugin_output",
         title=_l("Log: plugin output"),
         sort_index=202,
@@ -2318,7 +2303,7 @@ class FilterDiscoveryState(Filter):
 
 
 @filter_registry.register_instance
-class FilterAggrGroup(FilterUnicodeFilter):
+class FilterAggrGroup(Filter):
     def __init__(self):
         self.column = "aggr_group"
         super().__init__(ident="aggr_group",
@@ -2351,7 +2336,7 @@ class FilterAggrGroup(FilterUnicodeFilter):
 
 
 @filter_registry.register_instance
-class FilterAggrGroupTree(FilterUnicodeFilter):
+class FilterAggrGroupTree(Filter):
     def __init__(self):
         self.column = "aggr_group_tree"
         super().__init__(ident="aggr_group_tree",
@@ -2412,7 +2397,7 @@ class FilterAggrGroupTree(FilterUnicodeFilter):
 
 
 # how is either "regex" or "exact"
-class BITextFilter(FilterUnicodeFilter):
+class BITextFilter(Filter):
     def __init__(self,
                  *,
                  ident: str,

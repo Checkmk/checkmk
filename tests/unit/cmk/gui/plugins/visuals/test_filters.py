@@ -276,7 +276,7 @@ filter_tests = [
             "Filter: host_tags != 'address_family' 'no-ip4'\n"
         ),
     ),
-    # Testing base class FilterUnicode
+    # Testing base class FilterText
     FilterTest(
         ident="hostalias",
         request_vars=[('hostalias', "häääa")],
@@ -544,7 +544,7 @@ filter_table_tests = [
             {"aggr_assumed_state": {"state": 1}},
         ],
     ),
-    # Testing base class FilterUnicodeFilter
+    # Testing base class Filter
     FilterTableTest(
         ident="aggr_group",
         request_vars=[('aggr_group', 'blä')],

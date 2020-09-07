@@ -304,15 +304,6 @@ class Filter(metaclass=abc.ABCMeta):
                 html.request.set_var(varname, var_value)
 
 
-# TODO: Cleanup this subclass - not needed anymore since py3
-class FilterUnicodeFilter(Filter):
-    def value(self):
-        val = {}
-        for varname in self.htmlvars:
-            val[varname] = html.request.get_unicode_input(varname, '')
-        return val
-
-
 class FilterTristate(Filter):
     def __init__(self,
                  *,

@@ -88,6 +88,8 @@
       top: unset;
       height: 150px;
       margin-top: -150px;
+
+      div.content.inner { height: inherit; }
     }
 
     div.popup_menu {

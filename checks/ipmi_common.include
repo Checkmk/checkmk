@@ -4,6 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ==================================================================================================
+# ==================================================================================================
+# THE VARIABLES AND FUNCTIONS DEFINED HERE ARE IN THE PROCESS OF OR HAVE ALREADY BEEN MIGRATED TO
+# THE NEW CHECK API. PLEASE DO NOT MODIFY THIS FILE ANYMORE. INSTEAD, MODIFY THE MIGRATED CODE
+# RESIDING IN
+# cmk/base/plugins/agent_based/utils/ipmi.py
+# ==================================================================================================
+# ==================================================================================================
+
 #TODO Cleanup the whole status text mapping in
 # ipmi_common.include, ipmi_sensors.include, ipmi
 

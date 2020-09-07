@@ -2049,7 +2049,30 @@ cmc_host_rrd_config = [
 # objects of this type from the configuration
 def test_packed_config_able_to_load_snmp_types():
     packed_config = config.PackedConfig()
-    packed_config._write("test_var1 = OIDBytes('6')\n\ntest_var2 = OIDCached('6')\n\n")
+    packed_config._store.write("test_var1 = OIDBytes('6')\n\ntest_var2 = OIDCached('6')\n\n")
     packed_config.load()
     assert config.test_var1 == OIDBytes('6')  # type: ignore[attr-defined]
     assert config.test_var2 == OIDCached('6')  # type: ignore[attr-defined]
+
+
+class TestPackedConfigStore:
+    @pytest.fixture()
+    def store(self):
+        return config.PackedConfigStore()
+
+    def test_read_not_existing_file(self, store):
+        with pytest.raises(FileNotFoundError):
+            store.read()
+
+    def test_write(self, store):
+        assert not Path(cmk.utils.paths.var_dir, "base", "precompiled_check_config.mk").exists()
+        assert not Path(cmk.utils.paths.var_dir, "base",
+                        "precompiled_check_config.mk.orig").exists()
+
+        store.write("abc = 1\n")
+
+        assert Path(cmk.utils.paths.var_dir, "base", "precompiled_check_config.mk").exists()
+        assert Path(cmk.utils.paths.var_dir, "base", "precompiled_check_config.mk.orig").exists()
+        assert store.read() == {
+            "abc": 1,
+        }

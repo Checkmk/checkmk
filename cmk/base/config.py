@@ -584,10 +584,10 @@ class PackedConfig:
 
     def __init__(self) -> None:
         super(PackedConfig, self).__init__()
-        self._path = os.path.join(cmk.utils.paths.var_dir, "base", "precompiled_check_config.mk")
+        self._store = PackedConfigStore()
 
     def save(self) -> None:
-        self._write(self._pack())
+        self._store.write(self._pack())
 
     def _pack(self) -> str:
         helper_config = ("#!/usr/bin/env python\n"
@@ -689,9 +689,20 @@ class PackedConfig:
         except SyntaxError:
             return False
 
-    def _write(self, helper_config: str) -> None:
-        store.makedirs(os.path.dirname(self._path))
+    def load(self) -> None:
+        _initialize_config()
+        globals().update(self._store.read())
+        _perform_post_config_loading_actions()
 
+
+class PackedConfigStore:
+    """Caring about persistence of the packed configuration"""
+    def __init__(self) -> None:
+        # TODO: Refactor to self.source_path and self.compiled_path in the next step
+        self._path = os.path.join(cmk.utils.paths.var_dir, "base", "precompiled_check_config.mk")
+
+    def write(self, helper_config: str) -> None:
+        store.makedirs(os.path.dirname(self._path))
         store.save_file(self._path + ".orig", helper_config + "\n")
 
         code = compile(helper_config, '<string>', 'exec')
@@ -700,11 +711,11 @@ class PackedConfig:
 
         os.rename(self._path + ".compiled", self._path)
 
-    def load(self) -> None:
-        _initialize_config()
+    def read(self) -> Dict[str, Any]:
         with open(self._path, "rb") as f:
-            exec(marshal.load(f), globals())
-        _perform_post_config_loading_actions()
+            namespace: Dict[str, Any] = {}
+            exec(marshal.load(f), globals(), namespace)
+            return namespace
 
 
 @contextlib.contextmanager

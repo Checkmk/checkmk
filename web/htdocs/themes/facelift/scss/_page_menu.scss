@@ -188,7 +188,7 @@ div#top_heading {
 
       div.popup_trigger {
         height: 100%;
-        min-width: 78px;
+        padding: 0 (0.5 * $spacing);
 
         > a {
           text-align: center;

@@ -33,7 +33,7 @@ import cmk.gui.i18n
 import cmk.gui.utils
 import cmk.gui.view_utils
 import cmk.gui.escaping as escaping
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.globals import g, html
 from cmk.gui.htmllib import HTML, HTMLContent
 from cmk.gui.log import logger
@@ -73,31 +73,17 @@ class PermissionSectionBI(PermissionSection):
         return _("BI - Checkmk Business Intelligence")
 
 
-@permission_registry.register
-class BISeeAllPermission(Permission):
-    @property
-    def section(self):
-        return PermissionSectionBI
-
-    @property
-    def permission_name(self):
-        return "see_all"
-
-    @property
-    def title(self):
-        return _("See all hosts and services")
-
-    @property
-    def description(self):
-        return _("With this permission set, the BI aggregation rules are applied to all "
-                 "hosts and services - not only those the user is a contact for. If you "
-                 "remove this permissions then the user will see incomplete aggregation "
-                 "trees with status based only on those items.")
-
-    @property
-    def defaults(self):
-        return ["admin", "guest"]
-
+permission_registry.register(
+    Permission(
+        section=PermissionSectionBI,
+        name="see_all",
+        title=_l("See all hosts and services"),
+        description=_l("With this permission set, the BI aggregation rules are applied to all "
+                       "hosts and services - not only those the user is a contact for. If you "
+                       "remove this permissions then the user will see incomplete aggregation "
+                       "trees with status based only on those items."),
+        defaults=["admin", "guest"],
+    ))
 
 #      ____                _              _
 #     / ___|___  _ __  ___| |_ __ _ _ __ | |_ ___

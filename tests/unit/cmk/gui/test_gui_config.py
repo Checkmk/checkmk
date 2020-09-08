@@ -7,6 +7,7 @@
 # pylint: disable=redefined-outer-name
 
 import json
+from flask_babel.speaklater import LazyString  # type: ignore[import]
 
 import pytest  # type: ignore[import]
 
@@ -19,6 +20,7 @@ from cmk.gui.globals import html
 from cmk.gui.permissions import (
     permission_section_registry,
     permission_registry,
+    Permission,
 )
 from cmk.gui.plugins.wato import may_edit_ruleset
 
@@ -614,10 +616,9 @@ def test_registered_permissions():
 
     assert sorted(expected_permissions) == sorted(permission_registry.keys())
 
-    for perm_class in permission_registry.values():
-        perm = perm_class()
-        assert isinstance(perm.description, str)
-        assert isinstance(perm.title, str)
+    for perm in permission_registry.values():
+        assert isinstance(perm.description, (str, LazyString))
+        assert isinstance(perm.title, (str, LazyString))
         assert isinstance(perm.defaults, list)
 
 
@@ -646,7 +647,7 @@ def test_declare_permission(monkeypatch):
     config.declare_permission("bla.blub", u"bla perm", u"descrrrrr", ["admin"])
     assert "bla.blub" in permissions.permission_registry
 
-    permission = permissions.permission_registry["bla.blub"]()
+    permission = permissions.permission_registry["bla.blub"]
     assert permission.section == permissions.permission_section_registry["bla"]
     assert permission.name == "bla.blub"
     assert permission.title == u"bla perm"
@@ -676,18 +677,15 @@ def test_permission_sorting(do_sort, result):
         def do_sort(self):
             return do_sort
 
-    section_name = "sec1"
     for permission_name in ["Z", "z", "A", "b", "a", "1", "g"]:
-        cls = type(
-            "TestPermission%s%s" % (section_name.title(), permission_name.title()),
-            (permissions.Permission,), {
-                "section": Sec1,
-                "permission_name": permission_name,
-                "title": permission_name.title(),
-                "description": "bla",
-                "defaults": ["admin"],
-            })
-        perms.register(cls)
+        perms.register(
+            Permission(
+                section=Sec1,
+                name=permission_name,
+                title=permission_name.title(),
+                description="bla",
+                defaults=["admin"],
+            ))
 
     sorted_perms = [p.name for p in perms.get_sorted_permissions(Sec1())]
     assert sorted_perms == result

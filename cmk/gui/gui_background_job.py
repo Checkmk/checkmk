@@ -16,7 +16,7 @@ import cmk.gui.sites as sites
 import cmk.gui.config as config
 import cmk.gui.log as log
 import cmk.gui.background_job as background_job
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.globals import g, html
 from cmk.gui.htmllib import HTML
 from cmk.gui.breadcrumb import Breadcrumb
@@ -39,145 +39,65 @@ class PermissionSectionBackgroundJobs(PermissionSection):
         return _("Background jobs")
 
 
-@permission_registry.register
-class PermissionBackgroundJobsManageJobs(Permission):
-    @property
-    def section(self):
-        return PermissionSectionBackgroundJobs
+permission_registry.register(
+    Permission(
+        section=PermissionSectionBackgroundJobs,
+        name="manage_jobs",
+        title=_l("Manage background jobs"),
+        description=_l("Allows you to see the job overview page."),
+        defaults=["admin"],
+    ))
 
-    @property
-    def permission_name(self):
-        return "manage_jobs"
+permission_registry.register(
+    Permission(
+        section=PermissionSectionBackgroundJobs,
+        name="stop_jobs",
+        title=_l("Stop background jobs"),
+        description=_l(
+            "Configures the permission to stop background jobs. Note: some jobs cannot be stopped."
+        ),
+        defaults=["user", "admin"],
+    ))
 
-    @property
-    def title(self):
-        return _("Manage background jobs")
-
-    @property
-    def description(self):
-        return _("Allows you to see the job overview page.")
-
-    @property
-    def defaults(self):
-        return ["admin"]
-
-
-@permission_registry.register
-class PermissionBackgroundJobsStopJobs(Permission):
-    @property
-    def section(self):
-        return PermissionSectionBackgroundJobs
-
-    @property
-    def permission_name(self):
-        return "stop_jobs"
-
-    @property
-    def title(self):
-        return _("Stop background jobs")
-
-    @property
-    def description(self):
-        return _(
-            "Configures the permission to stop background jobs. Note: some jobs cannot be stopped.")
-
-    @property
-    def defaults(self):
-        return ["user", "admin"]
-
-
-@permission_registry.register
-class PermissionBackgroundJobsDeleteJobs(Permission):
-    @property
-    def section(self):
-        return PermissionSectionBackgroundJobs
-
-    @property
-    def permission_name(self):
-        return "delete_jobs"
-
-    @property
-    def title(self):
-        return _("Delete background jobs")
-
-    @property
-    def description(self):
-        return _(
+permission_registry.register(
+    Permission(
+        section=PermissionSectionBackgroundJobs,
+        name="delete_jobs",
+        title=_l("Delete background jobs"),
+        description=_l(
             "Configures the permission to delete background jobs. Note: some jobs cannot be deleted."
-        )
+        ),
+        defaults=["user", "admin"],
+    ))
 
-    @property
-    def defaults(self):
-        return ["user", "admin"]
+permission_registry.register(
+    Permission(
+        section=PermissionSectionBackgroundJobs,
+        name="see_foreign_jobs",
+        title=_l("See foreign background jobs"),
+        description=_l("Allows you to see jobs of other users."),
+        defaults=["admin"],
+    ))
 
+permission_registry.register(
+    Permission(
+        section=PermissionSectionBackgroundJobs,
+        name="stop_foreign_jobs",
+        title=_l("Stop foreign background jobs"),
+        description=_l(
+            "Allows you to stop jobs of other users. Note: some jobs cannot be stopped."),
+        defaults=["admin"],
+    ))
 
-@permission_registry.register
-class PermissionBackgroundJobsSeeForeignJobs(Permission):
-    @property
-    def section(self):
-        return PermissionSectionBackgroundJobs
-
-    @property
-    def permission_name(self):
-        return "see_foreign_jobs"
-
-    @property
-    def title(self):
-        return _("See foreign background jobs")
-
-    @property
-    def description(self):
-        return _("Allows you to see jobs of other users.")
-
-    @property
-    def defaults(self):
-        return ["admin"]
-
-
-@permission_registry.register
-class PermissionBackgroundJobsStopForeignJobs(Permission):
-    @property
-    def section(self):
-        return PermissionSectionBackgroundJobs
-
-    @property
-    def permission_name(self):
-        return "stop_foreign_jobs"
-
-    @property
-    def title(self):
-        return _("Stop foreign background jobs")
-
-    @property
-    def description(self):
-        return _("Allows you to stop jobs of other users. Note: some jobs cannot be stopped.")
-
-    @property
-    def defaults(self):
-        return ["admin"]
-
-
-@permission_registry.register
-class PermissionBackgroundJobsDeleteForeignJobs(Permission):
-    @property
-    def section(self):
-        return PermissionSectionBackgroundJobs
-
-    @property
-    def permission_name(self):
-        return "delete_foreign_jobs"
-
-    @property
-    def title(self):
-        return _("Delete foreign background jobs")
-
-    @property
-    def description(self):
-        return _("Allows you to delete jobs of other users. Note: some jobs cannot be deleted")
-
-    @property
-    def defaults(self):
-        return ["admin"]
+permission_registry.register(
+    Permission(
+        section=PermissionSectionBackgroundJobs,
+        name="delete_foreign_jobs",
+        title=_l("Delete foreign background jobs"),
+        description=_l(
+            "Allows you to delete jobs of other users. Note: some jobs cannot be deleted"),
+        defaults=["admin"],
+    ))
 
 
 class GUIBackgroundProcess(background_job.BackgroundProcess):

@@ -293,7 +293,7 @@ def test_registered_commands():
         cmd_spec = expected[cmd.ident]
         assert cmd.title == cmd_spec["title"]
         assert cmd.tables == cmd_spec["tables"], cmd.ident
-        assert cmd.permission().name == cmd_spec["permission"]
+        assert cmd.permission.name == cmd_spec["permission"]
 
 
 def test_legacy_register_command(monkeypatch):

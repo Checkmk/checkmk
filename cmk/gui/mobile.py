@@ -431,7 +431,7 @@ def _show_command_form(datasource: ABCDataSource, rows: Rows) -> None:
     html.open_div(**{"data-role": "collapsible-set"})
     for command_class in command_registry.values():
         command = command_class()
-        if what in command.tables and config.user.may(command.permission().name):
+        if what in command.tables and config.user.may(command.permission.name):
             html.open_div(class_=["command_group"], **{"data-role": "collapsible"})
             html.h3(command.title)
             html.open_p()

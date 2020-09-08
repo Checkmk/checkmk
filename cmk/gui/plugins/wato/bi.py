@@ -52,7 +52,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
 )
 
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.watolib.groups import load_contact_group_information
@@ -2530,53 +2530,25 @@ bi_aggregation_functions["count_ok"] = {
 #   |  Integrate all that stuff into WATO                                  |
 #   '----------------------------------------------------------------------'
 
+permission_registry.register(
+    Permission(
+        section=PermissionSectionWATO,
+        name="bi_rules",
+        title=_l("Business Intelligence Rules and Aggregations"),
+        description=_l("Use the WATO BI module, create, modify and delete BI rules and "
+                       "aggregations in packs that you are a contact of."),
+        defaults=["admin", "user"],
+    ))
 
-@permission_registry.register
-class BIRulesPermission(Permission):
-    @property
-    def section(self):
-        return PermissionSectionWATO
-
-    @property
-    def permission_name(self):
-        return "bi_rules"
-
-    @property
-    def title(self):
-        return _("Business Intelligence Rules and Aggregations")
-
-    @property
-    def description(self):
-        return _("Use the WATO BI module, create, modify and delete BI rules and "
-                 "aggregations in packs that you are a contact of.")
-
-    @property
-    def defaults(self):
-        return ["admin", "user"]
-
-
-@permission_registry.register
-class BIAdminPermission(Permission):
-    @property
-    def section(self):
-        return PermissionSectionWATO
-
-    @property
-    def permission_name(self):
-        return "bi_admin"
-
-    @property
-    def title(self):
-        return _("Business Intelligence Administration")
-
-    @property
-    def description(self):
-        return _("Edit all rules and aggregations for Business Intelligence, "
-                 "create, modify and delete rule packs.")
-
-    @property
-    def defaults(self):
-        return ["admin"]
+permission_registry.register(
+    Permission(
+        section=PermissionSectionWATO,
+        name="bi_admin",
+        title=_l("Business Intelligence Administration"),
+        description=_l("Edit all rules and aggregations for Business Intelligence, "
+                       "create, modify and delete rule packs."),
+        defaults=["admin"],
+    ))
 
 
 @main_module_registry.register

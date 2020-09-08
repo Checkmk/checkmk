@@ -76,7 +76,7 @@ from cmk.gui.valuespec import (
     LogLevelChoice,
     rule_option_elements,
 )
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML, Choices
 from cmk.gui.exceptions import MKUserError, MKGeneralException
@@ -2966,102 +2966,47 @@ def _page_menu_entry_snmp_mibs():
 #   | Declaration of Event Console specific permissions for Multisite      |
 #   '----------------------------------------------------------------------'
 
+permission_registry.register(
+    Permission(
+        section=cmk.gui.mkeventd.PermissionSectionEventConsole,
+        name="config",
+        title=_l("Configuration of Event Console"),
+        description=_l("This permission allows to configure the global settings "
+                       "of the event console."),
+        defaults=["admin"],
+    ))
 
-@permission_registry.register
-class PermissionECConfig(Permission):
-    @property
-    def section(self):
-        return cmk.gui.mkeventd.PermissionSectionEventConsole
+permission_registry.register(
+    Permission(
+        section=cmk.gui.mkeventd.PermissionSectionEventConsole,
+        name="edit",
+        title=_l("Configuration of event rules"),
+        description=_l("This permission allows the creation, modification and "
+                       "deletion of event correlation rules."),
+        defaults=["admin"],
+    ))
 
-    @property
-    def permission_name(self):
-        return "config"
+permission_registry.register(
+    Permission(
+        section=cmk.gui.mkeventd.PermissionSectionEventConsole,
+        name="activate",
+        title=_l("Activate changes for event console"),
+        description=_l("Activation of changes for the event console (rule modification, "
+                       "global settings) is done separately from the monitoring configuration "
+                       "and needs this permission."),
+        defaults=["admin"],
+    ))
 
-    @property
-    def title(self):
-        return _("Configuration of Event Console")
-
-    @property
-    def description(self):
-        return _("This permission allows to configure the global settings " "of the event console.")
-
-    @property
-    def defaults(self):
-        return ["admin"]
-
-
-@permission_registry.register
-class PermissionECEdit(Permission):
-    @property
-    def section(self):
-        return cmk.gui.mkeventd.PermissionSectionEventConsole
-
-    @property
-    def permission_name(self):
-        return "edit"
-
-    @property
-    def title(self):
-        return _("Configuration of event rules")
-
-    @property
-    def description(self):
-        return _("This permission allows the creation, modification and "
-                 "deletion of event correlation rules.")
-
-    @property
-    def defaults(self):
-        return ["admin"]
-
-
-@permission_registry.register
-class PermissionECActivate(Permission):
-    @property
-    def section(self):
-        return cmk.gui.mkeventd.PermissionSectionEventConsole
-
-    @property
-    def permission_name(self):
-        return "activate"
-
-    @property
-    def title(self):
-        return _("Activate changes for event console")
-
-    @property
-    def description(self):
-        return _("Activation of changes for the event console (rule modification, "
-                 "global settings) is done separately from the monitoring configuration "
-                 "and needs this permission.")
-
-    @property
-    def defaults(self):
-        return ["admin"]
-
-
-@permission_registry.register
-class PermissionECSwitchMode(Permission):
-    @property
-    def section(self):
-        return cmk.gui.mkeventd.PermissionSectionEventConsole
-
-    @property
-    def permission_name(self):
-        return "switchmode"
-
-    @property
-    def title(self):
-        return _("Switch slave replication mode")
-
-    @property
-    def description(self):
-        return _("This permission is only useful if the Event Console is "
-                 "setup as a replication slave. It allows a manual switch "
-                 "between sync and takeover mode.")
-
-    @property
-    def defaults(self):
-        return ["admin"]
+permission_registry.register(
+    Permission(
+        section=cmk.gui.mkeventd.PermissionSectionEventConsole,
+        name="switchmode",
+        title=_l("Switch slave replication mode"),
+        description=_l("This permission is only useful if the Event Console is "
+                       "setup as a replication slave. It allows a manual switch "
+                       "between sync and takeover mode."),
+        defaults=["admin"],
+    ))
 
 
 @main_module_registry.register

@@ -18,7 +18,7 @@ import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.i18n
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.default_permissions import PermissionSectionGeneral
@@ -107,28 +107,15 @@ def _notify_methods() -> Dict[str, Dict[str, Any]]:
     }
 
 
-@permission_registry.register
-class NotifyUsersPermission(Permission):
-    @property
-    def section(self):
-        return PermissionSectionGeneral
-
-    @property
-    def permission_name(self):
-        return "notify"
-
-    @property
-    def title(self):
-        return _("Notify Users")
-
-    @property
-    def description(self):
-        return _("This permissions allows users to send notifications to the users of "
-                 "the monitoring system using the web interface.")
-
-    @property
-    def defaults(self):
-        return ["admin"]
+permission_registry.register(
+    Permission(
+        section=PermissionSectionGeneral,
+        name="notify",
+        title=_l("Notify Users"),
+        description=_l("This permissions allows users to send notifications to the users of "
+                       "the monitoring system using the web interface."),
+        defaults=["admin"],
+    ))
 
 
 @cmk.gui.pages.register("notify")

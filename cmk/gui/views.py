@@ -2640,7 +2640,7 @@ def _should_show_command_form(datasource: ABCDataSource,
     what = datasource.infos[0]
     for command_class in command_registry.values():
         command = command_class()
-        if what in command.tables and config.user.may(command.permission().name):
+        if what in command.tables and config.user.may(command.permission.name):
             return True
 
     return False
@@ -2651,7 +2651,7 @@ def _get_command_groups(info_name: InfoName) -> Dict[Type[CommandGroup], List[Co
 
     for command_class in command_registry.values():
         command = command_class()
-        if info_name in command.tables and config.user.may(command.permission().name):
+        if info_name in command.tables and config.user.may(command.permission.name):
             # Some special commands can be shown on special views using this option.  It is
             # currently only used by custom commands, not shipped with Checkmk.
             if command.only_view and html.request.var('view_name') != command.only_view:
@@ -2690,7 +2690,7 @@ def core_command(what, row, row_nr, total_rows):
     # confirmation dialog.
     for cmd_class in command_registry.values():
         cmd = cmd_class()
-        if config.user.may(cmd.permission().name):
+        if config.user.may(cmd.permission.name):
             result = cmd.action(cmdtag, spec, row, row_nr, total_rows)
             if result:
                 executor = cmd.executor

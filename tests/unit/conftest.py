@@ -16,11 +16,16 @@ import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 
+# The openapi import below pulls a huge part of our GUI code indirectly into the process.  We need
+# to have the default permissions loaded before that to fix some implicit dependencies.
+# TODO: Extract the livestatus mock to some other place to reduce the dependencies here.
+import cmk.gui.default_permissions
+from cmk.gui.plugins.openapi.livestatus_helpers.testing import MockLiveStatusConnection
+
 # No stub file
 from testlib import is_managed_repo, is_enterprise_repo  # type: ignore[import]
 # No stub file
 from testlib.debug_utils import cmk_debug_enabled  # type: ignore[import]
-from cmk.gui.plugins.openapi.livestatus_helpers.testing import MockLiveStatusConnection
 
 logger = logging.getLogger(__name__)
 

@@ -327,7 +327,7 @@ class ModeEditRole(RoleManagement, WatoMode):
         permissions = self._role["permissions"]
         for var_name, value in html.request.itervars(prefix="perm_"):
             try:
-                perm = permission_registry[var_name[5:]]()
+                perm = permission_registry[var_name[5:]]
             except KeyError:
                 continue
 

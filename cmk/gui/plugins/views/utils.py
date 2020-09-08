@@ -465,7 +465,7 @@ class Command(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def permission(self) -> Type[Permission]:
+    def permission(self) -> Permission:
         raise NotImplementedError()
 
     @abc.abstractproperty

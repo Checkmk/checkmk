@@ -25,7 +25,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.watolib.read_only
 import cmk.gui.i18n
 from cmk.gui.watolib.activate_changes import update_config_generation
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.globals import html
 from cmk.gui.exceptions import (
     MKUserError,
@@ -65,30 +65,16 @@ def load_plugins(force):
     loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
-@permission_registry.register
-class PermissionWATOAllowedAPI(Permission):
-    @property
-    def section(self):
-        return PermissionSectionWATO
-
-    @property
-    def permission_name(self):
-        return "api_allowed"
-
-    @property
-    def title(self):
-        return _("Access to Web-API")
-
-    @property
-    def description(self):
-        return _("This permissions specifies if the role "
-                 "is able to use Web-API functions. It is only available "
-                 "for automation users.")
-
-    @property
-    def defaults(self):
-        return config.builtin_role_ids
-
+permission_registry.register(
+    Permission(
+        section=PermissionSectionWATO,
+        name="api_allowed",
+        title=_l("Access to Web-API"),
+        description=_l("This permissions specifies if the role "
+                       "is able to use Web-API functions. It is only available "
+                       "for automation users."),
+        defaults=config.builtin_role_ids,
+    ))
 
 Formatter = Callable[[Dict[str, Any]], str]
 

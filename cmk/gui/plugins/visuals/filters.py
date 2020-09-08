@@ -798,10 +798,10 @@ class FilterHostgroupProblems(Filter):
                 headers.append("Filter: num_hosts_%s > 0\n" % host_var)
 
         if html.get_checkbox("hostgroups_show_unhandled_host"):
-            return "Filter: num_hosts_unhandled_problems > 0\n"
+            headers.append("Filter: num_hosts_unhandled_problems > 0\n")
 
         if html.get_checkbox("hostgroups_show_unhandled_svc"):
-            return "Filter: num_services_unhandled_problems > 0\n"
+            headers.append("Filter: num_services_unhandled_problems > 0\n")
 
         len_headers = len(headers)
         if len_headers > 0:

@@ -137,6 +137,10 @@ disable=
     # broken, see e.g. https://github.com/PyCQA/pylint/issues/2296 and
     # https://github.com/PyCQA/pylint/issues/3162.
     no-member,
+    #---------------------------------------------------------------------------
+    # This one got introduced with pylint 2.6.0
+    # TODO: Evaluate
+    reraise-missing-from,
 
 enable=
     #---------------------------------------------------------------------------

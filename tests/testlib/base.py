@@ -25,8 +25,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('check', 'k8s_stats_fs'),
     ('check', 'k8s_stats_network'),
     ('check', 'logwatch'),
-    ('check', 'logwatch_ec'),
-    ('check', 'logwatch_ec_single'),
     ('check', 'logwatch_groups'),
     ('check', 'netapp_api_vf_stats'),
     ('check', 'netapp_api_vf_stats_traffic'),

@@ -109,8 +109,8 @@ from cmk.utils.type_defs import EvalableFloat as as_float  # noqa: F401 # pylint
 from cmk.utils.type_defs import (
     HostName,
     MetricName,
-    SectionName as _SectionName,
     Ruleset as _Ruleset,
+    SectionName as _SectionName,
     ServiceCheckResult,
     ServiceDetails,
     ServiceName,

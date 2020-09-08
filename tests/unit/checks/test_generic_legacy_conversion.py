@@ -2260,8 +2260,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'logins',
         'logwatch',
         'logwatch.groups',
-        'logwatch.ec',
-        'logwatch.ec_single',
         'lparstat_aix',
         'lparstat_aix.cpu_util',
         'lsi.array',

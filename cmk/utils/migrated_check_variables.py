@@ -26,8 +26,16 @@ ntp_default_levels = (10, 200.0, 500.0)  # stratum, ms sys_time_offset_offset
 # hr_mem (amongst others)
 memused_default_levels = (150.0, 200.0)
 
+# hp_proliant_power: see werk 10857
+hp_prolaint_power_default_levels = None  # yes, P R O L A I N T
+
 # ps
 ps_default_levels = {"levels": (1, 1, 99999, 99999)}
 
-# hp_proliant_power: see werk 10857
-hp_prolaint_power_default_levels = None  # yes, P R O L A I N T
+# services
+services_default_levels = {
+    "states": [("running", None, 0)],
+    "else": 2,
+    "additional_servicenames": [],
+}
+services_summary_default_levels = {"ignored": [], "state_if_stopped": 0}

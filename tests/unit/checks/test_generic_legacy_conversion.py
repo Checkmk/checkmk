@@ -972,6 +972,8 @@ def test_all_check_variables_present(_load_all_checks, config_check_variables):
         'sensor_type_names',
         'sensor_type_names_external',
         'sensor_type_names_sems_external',
+        'services_default_levels',
+        'services_summary_default_levels',
         'severity_to_states',
         'shards_info',
         'siemens_plc_temp_default_levels',

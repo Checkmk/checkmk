@@ -775,7 +775,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                     scan_rrd(mc->pnpPath() / r.name,
                              dummy_service_description(), mc->loggerRRD());
                 std::transform(std::begin(names), std::end(names),
-                               std::begin(metrics),
+                               std::back_inserter(metrics),
                                [](auto &&m) { return m.string(); });
             }
             return metrics;

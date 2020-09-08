@@ -229,7 +229,6 @@ def SNMPCredentials(  # pylint: disable=redefined-builtin
         help=help,
         default_value=default_value,
         match=match,
-        style="dropdown",
         elements=elements,
     )
 
@@ -991,7 +990,6 @@ def Levels(**kwargs):
     return Alternative(
         title=title,
         help=help_txt,
-        style="dropdown",
         elements=[
             FixedValue(
                 None,

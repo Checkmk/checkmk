@@ -474,7 +474,6 @@ def vs_mkeventd_rule(customer=None):
              help=_("Use this option to override the "
                     "<a href=\"wato.py?mode=mkeventd_edit_configvar&site=&varname=event_limit\">"
                     "global rule event limit</a>"),
-             style="dropdown",
              elements=[
                  FixedValue(
                      None,
@@ -4181,7 +4180,6 @@ def _valuespec_active_checks_mkevents():
             ("remote",
              Alternative(
                  title=_("Access to the Event Console"),
-                 style="dropdown",
                  elements=[
                      FixedValue(
                          None,

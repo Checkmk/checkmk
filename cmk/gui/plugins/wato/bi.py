@@ -636,7 +636,6 @@ class ModeBI(WatoMode, BIManagement):
     def _host_valuespec(self, title):
         return Alternative(
             title=title,
-            style="dropdown",
             elements=[
                 FixedValue(
                     None,
@@ -819,7 +818,6 @@ class ModeBI(WatoMode, BIManagement):
                 ("groups",
                  Transform(
                      ListOf(Alternative(
-                         style="dropdown",
                          orientation="horizontal",
                          elements=[
                              TextUnicode(title=_("Group name")),
@@ -2490,7 +2488,6 @@ bi_aggregation_functions["best"] = {
 def vs_count_ok_count(title: str, defval: int, defvalperc: int) -> Alternative:
     return Alternative(
         title=title,
-        style="dropdown",
         match=lambda x: str(x).endswith("%") and 1 or 0,
         elements=[
             Integer(

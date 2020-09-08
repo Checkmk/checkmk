@@ -152,7 +152,6 @@ class ModeEditPassword(SimpleEditMode):
                  title=_("Editable by"),
                  help=_("Each password is owned by a group of users which are able to edit, "
                         "delete and use existing passwords."),
-                 style="dropdown",
                  elements=admin_element + [
                      DropdownChoice(
                          title=_("Members of the contact group:"),

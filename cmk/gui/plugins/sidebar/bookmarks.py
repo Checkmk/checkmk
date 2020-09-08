@@ -138,7 +138,6 @@ class BookmarkList(pagetypes.Overridable):
                 ),
             ],
             title=_("Topic") + "<sup>*</sup>",
-            style="dropdown",
             orientation="horizontal",
         )
 

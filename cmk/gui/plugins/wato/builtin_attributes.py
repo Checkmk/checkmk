@@ -717,7 +717,6 @@ class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
 
 class IPMICredentials(Alternative):
     def __init__(self, **kwargs):
-        kwargs["style"] = "dropdown"
         kwargs["elements"] = [
             FixedValue(
                 None,

@@ -92,7 +92,6 @@ class ModeManageReadOnly(WatoMode):
                           elements=[
                               ("enabled",
                                Alternative(title=_("Enabled"),
-                                           style="dropdown",
                                            elements=[
                                                FixedValue(
                                                    False,

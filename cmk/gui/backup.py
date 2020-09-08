@@ -699,7 +699,6 @@ class PageEditBackupJob:
     def vs_backup_schedule(self):
         return Alternative(
             title=_("Schedule"),
-            style="dropdown",
             elements=[
                 FixedValue(
                     None,
@@ -774,7 +773,6 @@ class PageEditBackupJob:
                                     "created by the backup are encrypted using the specified key "
                                     "during backup. You will need the private key and the "
                                     "passphrase to decrypt the backup."),
-                             style="dropdown",
                              elements=[
                                  FixedValue(
                                      None,

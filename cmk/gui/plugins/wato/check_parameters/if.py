@@ -507,7 +507,6 @@ def _valuespec_if_groups():
           'of its members. You can configure if interfaces which are identified as group interfaces '
           'should not show up as single service. You can restrict grouped interfaces by iftype and the '
           'item name of the single interface.'),
-        style="dropdown",
         elements=[
             ListOf(
                 title=_("Groups on single host"),

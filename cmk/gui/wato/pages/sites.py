@@ -337,7 +337,6 @@ class ModeEditSite(WatoMode):
             ("status_host",
              Alternative(
                  title=_("Status host"),
-                 style="dropdown",
                  elements=[
                      FixedValue(None, title=_("No status host"), totext=""),
                      Tuple(

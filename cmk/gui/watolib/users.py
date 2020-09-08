@@ -187,7 +187,6 @@ def get_vs_user_idle_timeout():
                 default_value=3600,
             ),
         ],
-        style="dropdown",
         orientation="horizontal",
     )
 

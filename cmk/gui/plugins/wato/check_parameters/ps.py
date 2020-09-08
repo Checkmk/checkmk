@@ -319,7 +319,6 @@ def process_discovery_descr_option():
 def process_match_options():
     return Alternative(
         title=_("Process Matching"),
-        style="dropdown",
         elements=[
             TextAscii(
                 title=_("Exact name of the process without argments"),
@@ -362,7 +361,6 @@ def user_match_options(extra_elements=None):
 
     return Alternative(
         title=_("Name of operating system user"),
-        style="dropdown",
         elements=[
             TextAscii(title=_("Exact name of the operating system user"), label=_("User:"),
                       size=50),
@@ -400,7 +398,6 @@ def cgroup_match_options():
         title=_("Operating system control group information"),
         elements=[
             Alternative(
-                style="dropdown",
                 elements=[
                     TextAscii(title=_("Exact content of the operating system control group info"),
                               label=_("Control group:"),
@@ -614,7 +611,6 @@ def match_hr_alternative(x):
 def hr_process_match_name_option():
     return Alternative(
         title=_("Process Name Matching"),
-        style="dropdown",
         elements=[
             TextAscii(
                 title=_("Exact name of the textual description"),
@@ -649,7 +645,6 @@ def hr_process_match_name_option():
 def hr_process_match_path_option():
     return Alternative(
         title=_("Process Path Matching"),
-        style="dropdown",
         elements=[
             TextAscii(
                 title=_("Exact name of the process path"),

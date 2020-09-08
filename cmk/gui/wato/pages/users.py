@@ -1061,7 +1061,6 @@ class ModeEditUser(WatoMode):
             title=_("Authorized sites"),
             help=_("The sites the user is authorized to see in the GUI."),
             default_value=None,
-            style="dropdown",
             elements=[
                 FixedValue(
                     None,

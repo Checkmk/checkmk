@@ -72,7 +72,6 @@ def get_free_used_dynamic_valuespec(what, name, default_value=(80.0, 90.0)):
 
     return Alternative(
         title=_("Levels for %s %s") % (name, title),
-        style="dropdown",
         show_alternative_title=True,
         default_value=default_value,
         elements=vs_subgroup + [

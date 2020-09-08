@@ -28,7 +28,6 @@ from cmk.gui.plugins.wato import (
 
 def _vs_mssql_backup_age(title):
     return Alternative(title=_("%s" % title),
-                       style="dropdown",
                        elements=[
                            Tuple(title=_("Set levels"),
                                  elements=[

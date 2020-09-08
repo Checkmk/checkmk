@@ -373,7 +373,6 @@ class CEESiteManagement(SiteManagement):
     def livestatus_proxy_valuespec(cls):
         return Alternative(
             title=_("Use Livestatus Proxy Daemon"),
-            style="dropdown",
             elements=[
                 FixedValue(
                     None,
@@ -389,7 +388,6 @@ class CEESiteManagement(SiteManagement):
                             ("params",
                              Alternative(
                                  title=_("Parameters"),
-                                 style="dropdown",
                                  elements=[
                                      FixedValue(
                                          None,

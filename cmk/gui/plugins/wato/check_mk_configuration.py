@@ -1455,7 +1455,6 @@ class ConfigVariableUserDowntimeTimeranges(ConfigVariable):
                                        default_value="next_day",
                                    )
                                ],
-                               style="dropdown",
                                default_value=24 * 60 * 60,
                            ))],
                 optional_keys=[],
@@ -3704,7 +3703,6 @@ def _periodic_discovery_add_severity_new_host_label(val):
 def _valuespec_periodic_discovery():
     return Alternative(
         title=_("Periodic service discovery"),
-        style="dropdown",
         default_value={
             "check_interval": 2 * 60,
             "severity_unmonitored": 1,

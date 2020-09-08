@@ -47,7 +47,6 @@ def _valuespec_inventory_solaris_services_rules():
             ('outcome',
              Alternative(
                  title=_("Service name"),
-                 style="dropdown",
                  elements=[
                      FixedValue("full_descr", title=_("Full Description"), totext=""),
                      FixedValue("descr_without_prefix",

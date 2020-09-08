@@ -107,7 +107,6 @@ class StartURLUserAttribute(UserAttribute):
         return Transform(
             Alternative(
                 title=_("Start URL to display in main frame"),
-                style="dropdown",
                 orientation="horizontal",
                 elements=[
                     FixedValue(
@@ -148,7 +147,6 @@ class UIThemeUserAttribute(UserAttribute):
     def valuespec(self):
         return Alternative(
             title=_("User interface theme"),
-            style="dropdown",
             orientation="horizontal",
             elements=[
                 FixedValue(

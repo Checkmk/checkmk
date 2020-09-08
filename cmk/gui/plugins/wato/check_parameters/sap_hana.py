@@ -31,7 +31,6 @@ def _parameter_valuespec_sap_hana_backup():
     return Dictionary(elements=[
         ('backup_age',
          Alternative(title=_("Upper levels for the backup age"),
-                     style="dropdown",
                      elements=[
                          Tuple(title=_("Set levels"),
                                elements=[
@@ -66,7 +65,6 @@ def _parameter_valuespec_sap_hana_license():
     return Dictionary(elements=[
         ('license_size',
          Alternative(title=_("Upper levels for the license size"),
-                     style="dropdown",
                      elements=[
                          Tuple(title=_("Set levels"),
                                elements=[
@@ -81,7 +79,6 @@ def _parameter_valuespec_sap_hana_license():
                      ])),
         ('license_usage_perc',
          Alternative(title=_("Upper levels for the license usage"),
-                     style="dropdown",
                      elements=[
                          Tuple(title=_("Set levels"),
                                elements=[

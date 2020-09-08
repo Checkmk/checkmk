@@ -23,7 +23,6 @@ from cmk.gui.plugins.wato import (
 def _vs_license():
     return Alternative(
         title=_("Levels for Number of Licenses"),
-        style="dropdown",
         default_value=None,
         elements=[
             Tuple(title=_("Absolute levels for unused licenses"),

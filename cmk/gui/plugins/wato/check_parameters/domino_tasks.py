@@ -139,7 +139,6 @@ def _parameter_valuespec_domino_tasks():
                 "process",
                 Alternative(
                     title=_("Name of the task"),
-                    style="dropdown",
                     elements=[
                         TextAscii(
                             title=_("Exact name of the task"),

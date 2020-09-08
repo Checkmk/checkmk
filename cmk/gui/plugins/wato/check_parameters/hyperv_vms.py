@@ -34,7 +34,6 @@ def _item_spec_hyperv_vms():
 def _parameter_valuespec_hyperv_vms():
     return Alternative(
         title=_("Translation of VM state to monitoring state"),
-        style="dropdown",
         elements=[
             Dictionary(
                 title=_("Direct mapping of VM state to monitoring state"),

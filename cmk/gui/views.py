@@ -1367,7 +1367,6 @@ def view_editor_column_spec(ident, title, ds_name):
                     elements=column_elements(join_painters, "join_painter"),
                 ),
             ],
-            style='dropdown',
             match=lambda x: 1 * (x is not None and x[1] is not None),
         )
 

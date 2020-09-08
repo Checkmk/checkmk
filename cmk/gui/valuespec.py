@@ -4247,7 +4247,7 @@ class Alternative(ValueSpec):
         self,
         elements: List[ValueSpec],
         match: _Optional[Callable[[Any], int]] = None,
-        style: str = "radio",
+        style: str = "",  # Unused argument left here to remain compatible with user extensions.
         show_alternative_title: bool = False,
         on_change: _Optional[str] = None,
         orientation: str = "vertical",
@@ -4263,10 +4263,9 @@ class Alternative(ValueSpec):
                                           validate=validate)
         self._elements = elements
         self._match = match  # custom match function, returns index in elements
-        self._style = style  # alternative: "dropdown"
         self._show_alternative_title = show_alternative_title
-        self._on_change = on_change  # currently only working for style="dropdown"
-        self._orientation = orientation  # or horizontal: for style="dropdown"
+        self._on_change = on_change
+        self._orientation = orientation  # or horizontal
 
     # Return the alternative (i.e. valuespec)
     # that matches the datatype of a given value. We assume
@@ -4287,13 +4286,6 @@ class Alternative(ValueSpec):
         return None, value
 
     def render_input(self, varprefix, value):
-        if self._style == "radio":
-            self.render_input_radio(varprefix, value)
-        else:
-            self.render_input_dropdown(varprefix, value)
-
-    # TODO: The None cases below look very fishy...
-    def render_input_dropdown(self, varprefix, value):
         mvs, value = self.matching_alternative(value)
         options: List[_Tuple[_Optional[str], str]] = []
         sel_option = html.request.var(varprefix + "_use")
@@ -4337,32 +4329,6 @@ class Alternative(ValueSpec):
             html.close_td()
             html.close_tr()
             html.close_table()
-
-    def render_input_radio(self, varprefix, value):
-        mvs, value = self.matching_alternative(value)
-        for nr, vs in enumerate(self._elements):
-            if html.request.has_var(varprefix + "_use"):
-                checked = html.request.var(varprefix + "_use") == str(nr)
-            else:
-                checked = vs == mvs
-
-            html.help(vs.help())
-            title = vs.title()
-            if not title and nr:
-                html.nbsp()
-                html.nbsp()
-
-            html.radiobutton(varprefix + "_use", str(nr), checked,
-                             None if title is None else ensure_str(title))
-            if title:
-                html.open_ul()
-            if vs == mvs:
-                val = value
-            else:
-                val = vs.default_value()
-            vs.render_input(varprefix + "_%d" % nr, val)
-            if title:
-                html.close_ul()
 
     def set_focus(self, varprefix):
         # TODO: Set focus to currently active option
@@ -5314,7 +5280,6 @@ class UploadOrPasteTextFile(Alternative):
         else:
             kwargs["match"] = lambda *args: 1
 
-        kwargs.setdefault("style", "dropdown")
         super(UploadOrPasteTextFile, self).__init__(**kwargs)
 
     def from_html_vars(self, varprefix):
@@ -5364,7 +5329,6 @@ class ABCTextOrRegExp(Alternative, metaclass=abc.ABCMeta):
             ],
             # Use RegExp field when value is prefixed with "~"
             "match": lambda v: 1 if v and v[0] == "~" else 0,
-            "style": "dropdown",
             "orientation": "horizontal",
         })
 
@@ -5828,7 +5792,6 @@ class Color(ValueSpec):
 def GraphColor(title, default_value):
     return Alternative(
         title=title,
-        style="dropdown",
         elements=[
             FixedValue(
                 "default",

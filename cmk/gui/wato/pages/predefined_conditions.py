@@ -198,7 +198,6 @@ class ModeEditPredefinedCondition(SimpleEditMode):
                  help=_(
                      "Each predefined condition is owned by a group of users which are able to edit, "
                      "delete and use existing predefined conditions."),
-                 style="dropdown",
                  elements=admin_element + [
                      DropdownChoice(
                          title=_("Members of the contact group:"),

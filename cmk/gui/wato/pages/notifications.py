@@ -160,7 +160,6 @@ class ABCNotificationsMode(ABCEventsMode):
                         "These notifications will be processed by the rule based notification "
                         "system of Check_MK. This matching option helps you distinguishing "
                         "and also gives you access to special event fields."),
-                 style="dropdown",
                  elements=[
                      FixedValue(False, title=_("Do not match Event Console alerts"), totext=""),
                      Dictionary(
@@ -1318,15 +1317,12 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                     orientation="horizontal",
                 )
 
-            vs_alternative = Alternative(
-                style="dropdown",
-                elements=[
-                    vs,
-                    FixedValue(None,
-                               totext=_("previous notifications of this type are cancelled"),
-                               title=_("Cancel previous notifications")),
-                ],
-            )
+            vs_alternative = Alternative(elements=[
+                vs,
+                FixedValue(None,
+                           totext=_("previous notifications of this type are cancelled"),
+                           title=_("Cancel previous notifications")),
+            ],)
 
             choices.append((script_name, title, vs_alternative))
         return choices

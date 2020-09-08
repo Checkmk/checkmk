@@ -14,12 +14,12 @@
 #                                                                                       #
 #########################################################################################
 
-from typing import Any, Counter, Dict, List, Sequence, Set, TypedDict
+from typing import Any, Counter, Dict, Iterable, List, Optional, Sequence, Set, TypedDict
 
 import re
 
 from ..agent_based_api.v0.type_defs import Parameters
-from ..agent_based_api.v0 import regex
+from ..agent_based_api.v0 import regex, Result, state
 
 ItemData = TypedDict(
     "ItemData",
@@ -98,3 +98,22 @@ def reclassify(
     # Reclassify state to another state
     change_state_paramkey = ("%s_to" % old_level).lower()
     return patterns.get("reclassify_states", {}).get(change_state_paramkey, old_level)
+
+
+def errors(cluster_section: Dict[Optional[str], SectionLogwatch]) -> Iterable[Result]:
+    """
+        >>> cluster_section = {
+        ...     None: {"errors": ["error w/o node info"]},
+        ...     "node": {"errors": ["some error"]},
+        ... }
+        >>> for r in errors(cluster_section):
+        ...     print((r.state, r.summary))
+        (<state.UNKNOWN: 3>, 'error w/o node info')
+        (<state.UNKNOWN: 3>, '[node] some error')
+    """
+    for node, node_data in cluster_section.items():
+        for error_msg in node_data['errors']:
+            yield Result(
+                state=state.UNKNOWN,
+                summary=error_msg if node is None else "[%s] %s" % (node, error_msg),
+            )

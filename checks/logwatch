@@ -147,18 +147,13 @@ def inventory_logwatch_groups(parsed: SectionLogwatch):
 #   '----------------------------------------------------------------------'
 
 
-def _errors(parsed: SectionLogwatch) -> typing.Generator[typing.Tuple[int, str], None, None]:
-    for node, node_data in parsed.items():
-        for error_msg in node_data['errors']:
-            yield 3, error_msg if node is None else "[%s] %s" % (node, error_msg)
-
-
 # In case of a precompiled check, params contains the precompiled
 # logwatch patterns for the logfile we deal with. If using check_mk
 # without precompiled checks, the params must be None an will be
 # ignored.
 def check_logwatch(item, params, parsed: SectionLogwatch):
-    yield from _errors(parsed)
+    for result in logwatch.errors(parsed):
+        yield int(result.state), result.summary
 
     params = logwatch_plugin.compile_params(params or [])
 
@@ -264,7 +259,8 @@ def _logwatch_match_group_patterns(logfile_name, inclusion, exclusion):
 
 
 def check_logwatch_groups(item, params, parsed: SectionLogwatch):
-    yield from _errors(parsed)
+    for result in logwatch.errors(parsed):
+        yield int(result.state), result.summary
 
     params = logwatch_plugin.compile_params(params or [])
 
@@ -587,7 +583,8 @@ def _logwatch_filter_accumulated_lines(parsed: SectionLogwatch, item: str):
 
 
 def check_logwatch_ec(item, params, parsed: SectionLogwatch):
-    yield from _errors(parsed)
+    for result in logwatch.errors(parsed):
+        yield int(result.state), result.summary
 
     if item:
         # If this check has an item (logwatch.ec_single), only forward the information from this log

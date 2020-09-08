@@ -140,7 +140,7 @@ disable=
     #---------------------------------------------------------------------------
     # This one got introduced with pylint 2.6.0
     # TODO: Evaluate
-    reraise-missing-from,
+    raise-missing-from,
 
 enable=
     #---------------------------------------------------------------------------

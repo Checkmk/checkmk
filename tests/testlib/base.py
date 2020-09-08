@@ -19,8 +19,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     # be empty. If that is the case, please remove it entirely.
     ('section', 'site_object_counts'),
     ('section', 'tsm_stagingpools'),
-    ('check', 'k8s_stats_fs'),
-    ('check', 'k8s_stats_network'),
     ('check', 'site_object_counts'),
     ('check', 'tsm_stagingpools'),
 ]

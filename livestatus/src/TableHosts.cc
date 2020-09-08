@@ -471,7 +471,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "in_service_period",
         "Whether this host is currently in its service period (0/1)", offsets,
         [mc](const host &r) {
-            auto attrs = mc->customAttributes(r.custom_variables,
+            auto attrs = mc->customAttributes(&r.custom_variables,
                                               AttributeKind::custom_variables);
             auto it = attrs.find("SERVICE_PERIOD");
             return it == attrs.end() ||

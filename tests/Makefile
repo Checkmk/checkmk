@@ -42,8 +42,8 @@ endif
 	test-docker test-format-python test-format-shell test-gui-crawl test-gui-crawl-docker \
 	test-integration test-integration-docker test-integration-docker-debug test-mypy \
 	test-mypy-raw test-packaging test-pipenv-deps test-pylint test-shellcheck test-unit \
-	test-unit-coverage-html test-unit-sh test-cppcheck-livestatus test-cppcheck-core \
-	test-tidy-livestatus test-tidy-core test-iwyu-livestatus test-iwyu-core \
+	test-unit-coverage-html test-unit-sh test-cppcheck-livestatus test-cppcheck-core test-cppcheck-docker \
+	test-tidy-livestatus test-tidy-core test-tidy-docker test-iwyu-livestatus test-iwyu-core test-iwyu-docker \
 	test-unit-livestatus test-unit-core %-livestatus-docker %-core-docker
 
 clean:
@@ -77,10 +77,13 @@ help:
 	@echo "test-unit-sh		           - Run shell unit tests"
 	@echo "test-cppcheck-livestatus            - Run cppcheck for livestatus"
 	@echo "test-cppcheck-core                  - Run cppcheck for the core"
+	@echo "test-cppcheck-docker                - Run both cppcheck in docker"
 	@echo "test-tidy-livestatus                - Run clang tidy for livestatus"
-	@echo "test-tidy-core                      - Run clang tidy for livestatus"
+	@echo "test-tidy-core                      - Run clang tidy for core"
+	@echo "test-tidy-docker                    - Run clang tidy for core and livestatus in docker"
 	@echo "test-iwyu-livestatus                - Run the iwyu tool for livestatus"
 	@echo "test-iwyu-core                      - Run the iwyu tool for the core"
+	@echo "test-iwyu-docker                    - Run the iwyu tool for both in docker"
 	@echo "test-unit-livestatus                - Run unit tests for livestatus"
 	@echo "test-unit-core                      - Run unit tests for core"
 	@echo "*-livestatus-docker                 - Run any of the livestatus tests in docker"
@@ -243,17 +246,26 @@ test-cppcheck-livestatus:
 test-cppcheck-core:
 	cd ../enterprise/core/src && make CPPCHECK_CMC_RESULT=$(RESULTS)/cppcheck-cmc.xml $(CPPCHECK)
 
+test-cppcheck-docker:
+	../scripts/run-in-docker.sh make -C .. cppcheck-xml
+
 test-tidy-livestatus:
 	cd ../livestatus/src && ../../scripts/run-cxx-linter tidy $(GERRIT_PATCHSET_REVISION) $(REDIRECT) $(RESULTS)/livestatus-tidy.txt
 
 test-tidy-core:
 	cd ../enterprise/core/src && ../../../scripts/run-cxx-linter tidy $(GERRIT_PATCHSET_REVISION) $(REDIRECT) $(RESULTS)/core-tidy.txt
 
+test-tidy-docker:
+	../scripts/run-in-docker.sh make -C .. tidy
+
 test-iwyu-livestatus:
 	cd ../livestatus/src && ../../scripts/run-cxx-linter iwyu $(GERRIT_PATCHSET_REVISION) $(REDIRECT) $(RESULTS)/livestatus-iwyu.txt
 
 test-iwyu-core:
 	cd ../enterprise/core/src && ../../../scripts/run-cxx-linter iwyu $(GERRIT_PATCHSET_REVISION) $(REDIRECT) $(RESULTS)/core-iwyu.txt
+
+test-iwyu-docker:
+	../scripts/run-in-docker.sh make -C .. iwyu
 
 test-unit-livestatus:
 	cd ../livestatus/src && ./.f12 $(REDIRECT) $(RESULTS)/livestatus-neb-cmc.txt

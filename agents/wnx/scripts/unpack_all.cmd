@@ -40,7 +40,7 @@ rmdir /q/s %out_root%\tmp
 :skip_asio_move
 rem with internal folder in the tar.gz
 set nm=fmt
-set vv=-master-6.1.0
+set vv=-master-7.0.3
 set src_dir_name=%omd_path%\%nm%
 if not exist %src_dir_name% powershell Write-Host "%src_dir_name% is not found" -ForegroundColor Red && goto end
 set src_file_name=%nm%%vv%

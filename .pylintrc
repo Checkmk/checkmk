@@ -141,6 +141,12 @@ disable=
     # This one got introduced with pylint 2.6.0
     # TODO: Evaluate
     raise-missing-from,
+    #---------------------------------------------------------------------------
+    # Many occurences of this one, to be fixed
+    super-with-arguments,
+    #---------------------------------------------------------------------------
+    # To be evaluated
+    wrong-import-order,
 
 enable=
     #---------------------------------------------------------------------------

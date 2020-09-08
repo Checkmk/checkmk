@@ -54,8 +54,11 @@ def test_find_debugs_false(line):
 @pytest.mark.parametrize(
     'path',
     [
-        p for base_path in [cmk_path(), cmc_path(), cme_path()]
-        for dir_path in check_paths for p in ["%s/%s" % (base_path, dir_path)] if os.path.exists(p)
+        p  #
+        for base_path in [cmk_path(), cmc_path(), cme_path()]  #
+        for dir_path in check_paths  #
+        for p in ["%s/%s" % (base_path, dir_path)]
+        if os.path.exists(p)
     ],
 )
 def test_find_debug_code(path):

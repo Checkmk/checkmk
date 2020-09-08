@@ -97,10 +97,11 @@ def check_redis_info(item, params, item_data):
 
     host_data = item_data.get("host")
     if host_data is not None:
-        yield 0, "IP: %s" % host_data
+        addr = "Socket" if item_data.get("port") == "unix-socket" else "IP"
+        yield 0, "%s: %s" % (addr, host_data)
 
     port_data = item_data.get("port")
-    if port_data is not None:
+    if port_data is not None and port_data != "unix-socket":
         yield 0, "Port: %s" % port_data
 
 

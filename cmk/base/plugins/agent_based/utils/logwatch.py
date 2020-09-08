@@ -30,8 +30,8 @@ ItemData = TypedDict(
     total=True,
 )
 
-SectionLogwatch = TypedDict(
-    "SectionLogwatch",
+Section = TypedDict(
+    "Section",
     {
         'errors': List[str],
         'logfiles': Dict[str, ItemData],
@@ -40,7 +40,7 @@ SectionLogwatch = TypedDict(
 )
 
 
-def discoverable_items(*sections: SectionLogwatch) -> List[str]:
+def discoverable_items(*sections: Section) -> List[str]:
     """only consider files which are 'ok' on at least one node"""
     return sorted({
         item for node_data in sections for item, item_data in node_data['logfiles'].items()
@@ -100,7 +100,7 @@ def reclassify(
     return patterns.get("reclassify_states", {}).get(change_state_paramkey, old_level)
 
 
-def errors(cluster_section: Dict[Optional[str], SectionLogwatch]) -> Iterable[Result]:
+def errors(cluster_section: Dict[Optional[str], Section]) -> Iterable[Result]:
     """
         >>> cluster_section = {
         ...     None: {"errors": ["error w/o node info"]},

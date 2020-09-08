@@ -25,7 +25,7 @@ import cmk.base.plugins.agent_based.logwatch as logwatch_plugin
 
 ItemData = logwatch.ItemData
 
-NodeData = logwatch.SectionLogwatch
+NodeData = logwatch.Section
 
 SectionLogwatch = typing.Dict[typing.Optional[str], NodeData]
 

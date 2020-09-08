@@ -16,7 +16,7 @@
 
 from typing import Optional, Tuple
 from .agent_based_api.v0.type_defs import AgentStringTable
-from .utils.logwatch import ItemData, SectionLogwatch
+from .utils.logwatch import ItemData, Section
 
 from .agent_based_api.v0 import register
 
@@ -45,9 +45,9 @@ def _extract_item_attribute(line: str) -> Optional[Tuple[str, str]]:
     return logfile_name, attribute
 
 
-def parse_logwatch(string_table: AgentStringTable) -> SectionLogwatch:
+def parse_logwatch(string_table: AgentStringTable) -> Section:
 
-    section: SectionLogwatch = {"errors": [], "logfiles": {}}
+    section: Section = {"errors": [], "logfiles": {}}
     item_data: Optional[ItemData] = None
 
     for raw_line in string_table:

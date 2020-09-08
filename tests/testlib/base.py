@@ -40,7 +40,7 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
 class Scenario:
     """Helper class to modify the Check_MK base configuration for unit tests"""
     def __init__(self, site_id="unit"):
-        super(Scenario, self).__init__()
+        super().__init__()
 
         tag_config = cmk.utils.tags.sample_tag_config()
         self.tags = cmk.utils.tags.get_effective_tag_config(tag_config)

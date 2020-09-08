@@ -110,6 +110,7 @@ from cmk.utils.type_defs import (
     HostName,
     MetricName,
     SectionName as _SectionName,
+    Ruleset as _Ruleset,
     ServiceCheckResult,
     ServiceDetails,
     ServiceName,
@@ -251,7 +252,7 @@ get_number_with_precision = render.fmt_number_with_precision
 quote_shell_string = _cmk_utils.quote_shell_string
 
 
-def get_checkgroup_parameters(group: str, deflt: Optional[str] = None) -> Optional[str]:
+def get_checkgroup_parameters(group: str, deflt: _Ruleset) -> _Ruleset:
     return _config.checkgroup_parameters.get(group, deflt)
 
 

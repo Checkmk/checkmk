@@ -52,8 +52,8 @@ from .agent_based_api.v0.type_defs import (
 WINDOWS_SERVICES_DISCOVERY_DEFAULT_PARAMETERS: Dict[str, Any] = {}
 
 WINDOWS_SERVICES_CHECK_DEFAULT_PARAMETERS = {
-    "states": [("running", None, state.OK)],
-    "else": state.CRIT,
+    "states": [("running", None, 0)],
+    "else": 2,
     "additional_servicenames": [],
 }
 
@@ -151,17 +151,18 @@ def check_windows_services(item: str, params: Parameters,
         if item in (service_name, service_description) or service_name in params.get(
                 "additional_servicenames", []):
 
-            for t_state, t_start_type, mon_state in params.get("states",
-                                                               [("running", None, state.OK)]):
+            for t_state, t_start_type, mon_state in params.get("states", [("running", None, 0)]):
                 if (t_state is None or t_state == service_state) \
                  and (t_start_type is None or t_start_type == service_start_type):
                     this_state = mon_state
                     break
-                this_state = params.get("else", state.CRIT)
+                this_state = params.get("else", 2)
 
-            yield Result(state=state(this_state),
-                         summary="%s: %s (start type is %s)" %
-                         (service_description, service_state, service_start_type))
+            yield Result(
+                state=state(this_state),
+                summary="%s: %s (start type is %s)" %
+                (service_description, service_state, service_start_type),
+            )
 
 
 def cluster_check_windows_services(
@@ -172,24 +173,21 @@ def cluster_check_windows_services(
     # states
     found = []
     for node, services in section.items():
-        found.append((node, list(check_windows_services(item, params, services))))
+        results = list(check_windows_services(item, params, services))
+        if results:
+            found.append((node, results[0]))
+
+    if not found:
+        yield Result(state=state(params.get("else", 2)), summary="service not found")
+        return
 
     # We take the best found state (neccessary for clusters)
-    best_state, best_running_on, best_result = None, None, None
-    for node, res in found:
-        if len(res) > 0:
-            this_state = res[0].state
-            if best_state is None or int(this_state) < int(best_state):
-                best_state = this_state
-                best_result = res[0]
-                best_running_on = node
+    best_state = state.best(*(result.state for _node, result in found))
+    best_running_on, best_result = [(n, r) for n, r in found if r.state == best_state][-1]
 
-    if best_result:
-        yield best_result
-        if best_running_on and best_state != state.CRIT:
-            yield Result(state=state(best_state), summary="Running on: %s" % best_running_on)
-    else:
-        yield Result(state=state(params.get("else", state.CRIT)), summary="service not found")
+    yield best_result
+    if best_running_on and best_state != state.CRIT:
+        yield Result(state=best_state, summary="Running on: %s" % best_running_on)
 
 
 register.check_plugin(

@@ -73,6 +73,9 @@ def pytest_configure(config):
     """Register the type marker to pytest"""
     config.addinivalue_line(
         "markers", "type(TYPE): Mark TYPE of test. Available: %s" % ", ".join(test_types.keys()))
+    config.addinivalue_line("markers", "password(name): a password")
+    config.addinivalue_line("markers", "username(name): a username")
+    config.addinivalue_line("markers", "url(name): an url")
 
 
 def pytest_collection_modifyitems(items):

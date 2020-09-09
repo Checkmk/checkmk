@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
 import re
 from pathlib import Path
 
@@ -14,7 +15,6 @@ import testlib  # type: ignore[import]
 import cmk.utils.paths
 import cmk.base.config as config
 import cmk.base.check_utils
-import cmk.base.check_api as check_api
 
 
 def _search_deprecated_api_feature(check_file_path, deprecated_pattern):
@@ -48,8 +48,8 @@ def _search_deprecated_api_feature(check_file_path, deprecated_pattern):
     r"\btags_of_host\b",
 ])
 def test_deprecated_api_features(deprecated_pattern):
-    check_files = Path(cmk.utils.paths.checks_dir).glob("*")
-    check_files = (p for p in check_files if p.suffix not in (".swp",))
+    check_files = (pathname for pathname in Path(cmk.utils.paths.checks_dir).glob("*")
+                   if os.path.isfile(pathname) and pathname.suffix not in (".swp",))
     with_deprecated_feature = [
         finding  #
         for check_file_path in check_files  #

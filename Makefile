@@ -432,7 +432,7 @@ setup:
 	    ksh \
 	    p7zip-full \
 	    zlib1g-dev
-	sudo -H pip install -U pipenv wheel
+	sudo -H pip3 install -U pipenv wheel
 	$(MAKE) -C web setup
 	$(MAKE) -C omd setup
 	$(MAKE) -C omd openhardwaremonitor-setup

@@ -200,6 +200,605 @@ components:
       - message
       - title
       type: object
+    BIAction:
+      discriminator:
+        mapping:
+          call_a_rule: '#/components/schemas/BICallARuleAction'
+          state_of_host: '#/components/schemas/BIStateOfHostAction'
+          state_of_remaining_services: '#/components/schemas/BIStateOfRemainingServicesAction'
+          state_of_service: '#/components/schemas/BIStateOfServiceAction'
+        propertyName: type
+      oneOf:
+      - $ref: '#/components/schemas/BICallARuleAction'
+      - $ref: '#/components/schemas/BIStateOfHostAction'
+      - $ref: '#/components/schemas/BIStateOfServiceAction'
+      - $ref: '#/components/schemas/BIStateOfRemainingServicesAction'
+      properties: {}
+      type: object
+    BIAggregationComputationOptions:
+      properties:
+        disabled:
+          example: false
+          type: boolean
+        escalate_downtimes_as_warn:
+          example: false
+          type: boolean
+        use_hard_states:
+          example: false
+          type: boolean
+      required:
+      - disabled
+      - escalate_downtimes_as_warn
+      - use_hard_states
+      type: object
+    BIAggregationEndpoint:
+      properties:
+        aggregation_visualization:
+          allOf:
+          - $ref: '#/components/schemas/BIAggregationVisualization'
+          example:
+            ignore_rule_styles: false
+            layout_id: builtin_default
+            line_style: round
+        computation_options:
+          allOf:
+          - $ref: '#/components/schemas/BIAggregationComputationOptions'
+          example:
+            disabled: false
+            escalate_downtimes_as_warn: false
+            use_hard_states: false
+        customer:
+          example: customer1
+          type: string
+        groups:
+          allOf:
+          - $ref: '#/components/schemas/BIAggregationGroups'
+          example:
+            names:
+            - groupA
+            - groupB
+            paths:
+            - - path
+              - group
+              - a
+            - - path
+              - group
+              - b
+        id:
+          example: aggr1
+          type: string
+        node:
+          allOf:
+          - $ref: '#/components/schemas/BINodeGenerator'
+          example:
+            action:
+              host_regex: ''
+              type: state_of_host
+            search:
+              type: empty
+        pack_id:
+          example: pack1
+          type: string
+      required:
+      - aggregation_visualization
+      - computation_options
+      - customer
+      - groups
+      - id
+      - node
+      - pack_id
+      type: object
+    BIAggregationFunction:
+      discriminator:
+        mapping:
+          best: '#/components/schemas/BIAggregationFunctionBest'
+          count_ok: '#/components/schemas/BIAggregationFunctionCountOK'
+          worst: '#/components/schemas/BIAggregationFunctionWorst'
+        propertyName: type
+      oneOf:
+      - $ref: '#/components/schemas/BIAggregationFunctionBest'
+      - $ref: '#/components/schemas/BIAggregationFunctionWorst'
+      - $ref: '#/components/schemas/BIAggregationFunctionCountOK'
+      properties: {}
+      type: object
+    BIAggregationFunctionBest:
+      properties:
+        count:
+          format: int32
+          type: integer
+        restrict_state:
+          enum:
+          - 0
+          - 1
+          - 2
+          format: int32
+          type: integer
+        type:
+          default: best
+          type: string
+      required:
+      - count
+      - restrict_state
+      - type
+      type: object
+    BIAggregationFunctionCountOK:
+      properties:
+        levels_ok:
+          $ref: '#/components/schemas/BIAggregationFunctionCountSettings'
+        levels_warn:
+          $ref: '#/components/schemas/BIAggregationFunctionCountSettings'
+        type:
+          default: count_ok
+          type: string
+      required:
+      - levels_ok
+      - levels_warn
+      - type
+      type: object
+    BIAggregationFunctionCountSettings:
+      properties:
+        type:
+          enum:
+          - count
+          - percentage
+          type: string
+        value:
+          format: int32
+          type: integer
+      required:
+      - type
+      - value
+      type: object
+    BIAggregationFunctionWorst:
+      properties:
+        count:
+          example: 2
+          format: int32
+          type: integer
+        restrict_state:
+          enum:
+          - 0
+          - 1
+          - 2
+          format: int32
+          type: integer
+        type:
+          default: worst
+          type: string
+      required:
+      - count
+      - restrict_state
+      - type
+      type: object
+    BIAggregationGroups:
+      properties:
+        names:
+          example:
+          - group1
+          - group2
+          items:
+            type: string
+          type: array
+        paths:
+          example:
+          - - path
+            - of
+            - group1
+          items:
+            items:
+              type: string
+            type: array
+          type: array
+      type: object
+    BIAggregationVisualization:
+      properties:
+        ignore_rule_styles:
+          example: false
+          type: boolean
+        layout_id:
+          example: radial_layout2
+          type: string
+        line_style:
+          example: round
+          type: string
+      required:
+      - ignore_rule_styles
+      - layout_id
+      - line_style
+      type: object
+    BIAllHostsChoice:
+      properties:
+        type:
+          default: all_hosts
+          type: string
+      required:
+      - type
+      type: object
+    BICallARuleAction:
+      properties:
+        params:
+          allOf:
+          - $ref: '#/components/schemas/BIParams'
+          example:
+            arguments: []
+        rule_id:
+          example: test_rule_1
+          type: string
+        type:
+          default: call_a_rule
+          type: string
+      required:
+      - params
+      - rule_id
+      - type
+      type: object
+    BIEmptySearch:
+      properties:
+        type:
+          default: empty
+          type: string
+      required:
+      - type
+      type: object
+    BIFixedArgumentsSearch:
+      properties:
+        arguments:
+          items:
+            $ref: '#/components/schemas/BIFixedArgumentsSearchToken'
+          type: array
+        type:
+          default: fixed_arguments
+          type: string
+      required:
+      - arguments
+      - type
+      type: object
+    BIFixedArgumentsSearchToken:
+      properties:
+        key:
+          type: string
+        values:
+          items:
+            type: string
+          type: array
+      required:
+      - key
+      - values
+      type: object
+    BIHostAliasRegexChoice:
+      properties:
+        pattern:
+          example: testali.*
+          type: string
+        type:
+          default: host_alias_regex
+          type: string
+      required:
+      - pattern
+      - type
+      type: object
+    BIHostChoice:
+      discriminator:
+        mapping:
+          all_hosts: '#/components/schemas/BIAllHostsChoice'
+          host_alias_regex: '#/components/schemas/BIHostAliasRegexChoice'
+          host_name_regex: '#/components/schemas/BIHostNameRegexChoice'
+        propertyName: type
+      oneOf:
+      - $ref: '#/components/schemas/BIAllHostsChoice'
+      - $ref: '#/components/schemas/BIHostNameRegexChoice'
+      - $ref: '#/components/schemas/BIHostAliasRegexChoice'
+      properties: {}
+      type: object
+    BIHostNameRegexChoice:
+      properties:
+        pattern:
+          example: testhostn.*
+          type: string
+        type:
+          default: host_name_regex
+          type: string
+      required:
+      - pattern
+      - type
+      type: object
+    BIHostSearch:
+      properties:
+        conditions:
+          $ref: '#/components/schemas/HostConditions'
+        refer_to:
+          enum:
+          - host
+          - child
+          - parent
+          type: string
+        type:
+          default: host_search
+          type: string
+      required:
+      - conditions
+      - refer_to
+      - type
+      type: object
+    BINodeGenerator:
+      properties:
+        action:
+          allOf:
+          - $ref: '#/components/schemas/BIAction'
+          example:
+            host_regex: testhost
+            type: state_of_host
+        search:
+          allOf:
+          - $ref: '#/components/schemas/BISearch'
+          example:
+            type: empty
+      required:
+      - action
+      - search
+      type: object
+    BINodeVisBlockStyle:
+      properties:
+        config:
+          default: &id001 {}
+          type: string
+        type:
+          default: block
+          type: string
+      required:
+      - config
+      - type
+      type: object
+    BINodeVisForceStyle:
+      properties:
+        config:
+          default: {}
+          type: string
+        type:
+          default: force
+          type: string
+      required:
+      - config
+      - type
+      type: object
+    BINodeVisHierarchyStyle:
+      properties:
+        layer_height:
+          example: 85
+          format: int32
+          type: integer
+        node_size:
+          example: 40
+          format: int32
+          type: integer
+        rotation:
+          example: 180
+          format: int32
+          type: integer
+        type:
+          default: hierarchy
+          type: string
+      required:
+      - layer_height
+      - node_size
+      - rotation
+      - type
+      type: object
+    BINodeVisLayoutStyle:
+      discriminator:
+        mapping:
+          block: '#/components/schemas/BINodeVisBlockStyle'
+          force: '#/components/schemas/BINodeVisForceStyle'
+          hierarchy: '#/components/schemas/BINodeVisHierarchyStyle'
+          none: '#/components/schemas/BINodeVisNoneStyle'
+          radial: '#/components/schemas/BINodeVisRadialStyle'
+        propertyName: type
+      oneOf:
+      - $ref: '#/components/schemas/BINodeVisNoneStyle'
+      - $ref: '#/components/schemas/BINodeVisBlockStyle'
+      - $ref: '#/components/schemas/BINodeVisHierarchyStyle'
+      - $ref: '#/components/schemas/BINodeVisRadialStyle'
+      - $ref: '#/components/schemas/BINodeVisForceStyle'
+      properties: {}
+      type: object
+    BINodeVisNoneStyle:
+      properties:
+        config:
+          default: {}
+          type: string
+        type:
+          default: none
+          type: string
+      required:
+      - config
+      - type
+      type: object
+    BINodeVisRadialStyle:
+      properties:
+        degree:
+          format: int32
+          type: integer
+        radius:
+          format: int32
+          type: integer
+        rotation:
+          format: int32
+          type: integer
+        type:
+          default: radial
+          type: string
+      required:
+      - degree
+      - radius
+      - rotation
+      - type
+      type: object
+    BIParams:
+      properties:
+        arguments:
+          example:
+          - testhostParams
+          items:
+            type: string
+          type: array
+      required:
+      - arguments
+      type: object
+    BIRuleComputationOptions:
+      properties:
+        disabled:
+          example: false
+          type: boolean
+      required:
+      - disabled
+      type: object
+    BIRuleEndpoint:
+      properties:
+        aggregation_function:
+          allOf:
+          - $ref: '#/components/schemas/BIAggregationFunction'
+          example:
+            count: 1
+            restrict_state: 2
+            type: best
+        computation_options:
+          allOf:
+          - $ref: '#/components/schemas/BIRuleComputationOptions'
+          example:
+            disabled: false
+        id:
+          example: rule1
+          type: string
+        node_visualization:
+          allOf:
+          - $ref: '#/components/schemas/BINodeVisLayoutStyle'
+          example:
+            config: *id001
+            type: block
+        nodes:
+          example: []
+          items:
+            $ref: '#/components/schemas/BINodeGenerator'
+          type: array
+        pack_id:
+          example: pack1
+          type: string
+        params:
+          allOf:
+          - $ref: '#/components/schemas/BIParams'
+          example:
+          - arguments:
+            - foo
+            - bar
+        properties:
+          allOf:
+          - $ref: '#/components/schemas/BIRuleProperties'
+          example:
+            comment: ''
+            docu_url: ''
+            icon: ''
+            state_messages: {}
+            title: ''
+      required:
+      - aggregation_function
+      - computation_options
+      - id
+      - node_visualization
+      - nodes
+      - pack_id
+      - params
+      - properties
+      type: object
+    BIRuleProperties:
+      properties:
+        comment:
+          example: Rule comment
+          type: string
+        docu_url:
+          example: Rule documentation
+          type: string
+        icon:
+          example: icon1.png
+          type: string
+        state_messages:
+          example: {}
+          type: object
+        title:
+          example: Rule title
+          type: string
+      required:
+      - comment
+      - docu_url
+      - icon
+      - state_messages
+      - title
+      type: object
+    BISearch:
+      discriminator:
+        mapping:
+          empty: '#/components/schemas/BIEmptySearch'
+          fixed_arguments: '#/components/schemas/BIFixedArgumentsSearch'
+          host_search: '#/components/schemas/BIHostSearch'
+          service_search: '#/components/schemas/BIServiceSearch'
+        propertyName: type
+      oneOf:
+      - $ref: '#/components/schemas/BIEmptySearch'
+      - $ref: '#/components/schemas/BIHostSearch'
+      - $ref: '#/components/schemas/BIServiceSearch'
+      - $ref: '#/components/schemas/BIFixedArgumentsSearch'
+      properties: {}
+      type: object
+    BIServiceSearch:
+      properties:
+        conditions:
+          $ref: '#/components/schemas/ServiceConditions'
+        type:
+          default: service_search
+          type: string
+      required:
+      - conditions
+      - type
+      type: object
+    BIStateOfHostAction:
+      properties:
+        host_regex:
+          example: testhost
+          type: string
+        type:
+          default: state_of_host
+          type: string
+      required:
+      - host_regex
+      - type
+      type: object
+    BIStateOfRemainingServicesAction:
+      properties:
+        host_regex:
+          example: testhost
+          type: string
+        type:
+          default: state_of_remaining_services
+          type: string
+      required:
+      - host_regex
+      - type
+      type: object
+    BIStateOfServiceAction:
+      properties:
+        host_regex:
+          example: testhost
+          type: string
+        service_regex:
+          example: testservice
+          type: string
+        type:
+          default: state_of_service
+          type: string
+      required:
+      - host_regex
+      - service_regex
+      - type
+      type: object
     BulkAcknowledgeHostProblem:
       properties:
         sticky:
@@ -725,7 +1324,7 @@ components:
       properties:
         downtime_type:
           description: The type of downtime to create.
-          enum: &id001
+          enum: &id002
           - host
           - service
           - hostgroup
@@ -750,7 +1349,7 @@ components:
             \    * fixed\n    * hour\n    * day\n    * week\n    * second_week\n \
             \   * fourth_week\n    * weekday_start\n    * weekday_end\n    * day_of_month\n\
             \nThis only works when using CMC. Defaults to 'fixed'."
-          enum: &id002
+          enum: &id003
           - fixed
           - hour
           - day
@@ -801,7 +1400,7 @@ components:
       properties:
         downtime_type:
           description: The type of downtime to create.
-          enum: *id001
+          enum: *id002
           example: host
           type: string
         start_time:
@@ -822,7 +1421,7 @@ components:
             \    * fixed\n    * hour\n    * day\n    * week\n    * second_week\n \
             \   * fourth_week\n    * weekday_start\n    * weekday_end\n    * day_of_month\n\
             \nThis only works when using CMC. Defaults to 'fixed'."
-          enum: *id002
+          enum: *id003
           example: hour
           type: string
         duration:
@@ -864,7 +1463,7 @@ components:
       properties:
         downtime_type:
           description: The type of downtime to create.
-          enum: *id001
+          enum: *id002
           example: host
           type: string
         start_time:
@@ -885,7 +1484,7 @@ components:
             \    * fixed\n    * hour\n    * day\n    * week\n    * second_week\n \
             \   * fourth_week\n    * weekday_start\n    * weekday_end\n    * day_of_month\n\
             \nThis only works when using CMC. Defaults to 'fixed'."
-          enum: *id002
+          enum: *id003
           example: hour
           type: string
         duration:
@@ -930,7 +1529,7 @@ components:
       properties:
         downtime_type:
           description: The type of downtime to create.
-          enum: *id001
+          enum: *id002
           example: host
           type: string
         start_time:
@@ -951,7 +1550,7 @@ components:
             \    * fixed\n    * hour\n    * day\n    * week\n    * second_week\n \
             \   * fourth_week\n    * weekday_start\n    * weekday_end\n    * day_of_month\n\
             \nThis only works when using CMC. Defaults to 'fixed'."
-          enum: *id002
+          enum: *id003
           example: hour
           type: string
         duration:
@@ -1126,6 +1725,29 @@ components:
       required:
       - domainType
       - links
+      type: object
+    HostConditions:
+      properties:
+        host_choice:
+          allOf:
+          - $ref: '#/components/schemas/BIHostChoice'
+          example: &id004
+            type: all_hosts
+        host_folder:
+          example: servers/groupA
+          type: string
+        host_labels:
+          example: &id005
+            db: mssql
+          type: object
+        host_tags:
+          example: &id006 {}
+          type: object
+      required:
+      - host_choice
+      - host_folder
+      - host_labels
+      - host_tags
       type: object
     HostGroup:
       properties:
@@ -1476,6 +2098,36 @@ components:
       required:
       - id
       - links
+      type: object
+    ServiceConditions:
+      properties:
+        host_choice:
+          allOf:
+          - $ref: '#/components/schemas/BIHostChoice'
+          example: *id004
+        host_folder:
+          example: servers/groupA
+          type: string
+        host_labels:
+          example: *id005
+          type: object
+        host_tags:
+          example: *id006
+          type: object
+        service_labels:
+          example:
+            db: mssql
+          type: object
+        service_regex:
+          example: Filesystem.*
+          type: string
+      required:
+      - host_choice
+      - host_folder
+      - host_labels
+      - host_tags
+      - service_labels
+      - service_regex
       type: object
     ServiceGroup:
       properties:
@@ -2499,6 +3151,457 @@ paths:
           \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/domain-types/activation_run/collections/running\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    --json"
+  /objects/bi_rule/{rule_id}:
+    get:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.bi.get_bi_rule
+      parameters:
+      - allowEmptyValue: false
+        example: rule1
+        in: path
+        name: rule_id
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BIRuleEndpoint'
+          description: ''
+          headers: {}
+      summary: Get BI Rule
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.bi
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/objects/bi_rule/rule1\"\
+          ,\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/objects/bi_rule/rule1\",\n    method=\"GET\",\n    headers={\n\
+          \        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\",\n       \
+          \ \"Accept\": \"application/json\",\n    },\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\\n    \"$API_URL/objects/bi_rule/rule1\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/objects/bi_rule/rule1\" \\\
+          \n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept: application/json\"\
+          \ \\\n    --json"
+    put:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.bi.put_bi_rule
+      parameters:
+      - allowEmptyValue: false
+        example: rule1
+        in: path
+        name: rule_id
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BIRuleEndpoint'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BIRuleEndpoint'
+          description: ''
+          headers: {}
+      summary: Save BI Rule
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.bi
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/bi_rule/rule1\"\
+          ,\n    json={\n        'nodes': [],\n        'properties': {\n         \
+          \   'title': '',\n            'state_messages': {},\n            'docu_url':\
+          \ '',\n            'comment': '',\n            'icon': ''\n        },\n\
+          \        'pack_id': 'pack1',\n        'node_visualization': {\n        \
+          \    'config': {},\n            'type': 'block'\n        },\n        'aggregation_function':\
+          \ {\n            'restrict_state': 2,\n            'count': 1,\n       \
+          \     'type': 'best'\n        },\n        'computation_options': {\n   \
+          \         'disabled': False\n        },\n        'id': 'rule1',\n      \
+          \  'params': [{\n            'arguments': ['foo', 'bar']\n        }]\n \
+          \   },\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/objects/bi_rule/rule1\",\n    method=\"PUT\",\n    headers={\n\
+          \        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\",\n       \
+          \ \"Accept\": \"application/json\",\n    },\n    data=json.dumps({\n   \
+          \     'nodes': [],\n        'properties': {\n            'title': '',\n\
+          \            'state_messages': {},\n            'docu_url': '',\n      \
+          \      'comment': '',\n            'icon': ''\n        },\n        'pack_id':\
+          \ 'pack1',\n        'node_visualization': {\n            'config': {},\n\
+          \            'type': 'block'\n        },\n        'aggregation_function':\
+          \ {\n            'restrict_state': 2,\n            'count': 1,\n       \
+          \     'type': 'best'\n        },\n        'computation_options': {\n   \
+          \         'disabled': False\n        },\n        'id': 'rule1',\n      \
+          \  'params': [{\n            'arguments': ['foo', 'bar']\n        }]\n \
+          \   }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\ \\\n    --data '{\n          \"aggregation_function\": {\n        \
+          \    \"count\": 1,\n            \"restrict_state\": 2,\n            \"type\"\
+          : \"best\"\n          },\n          \"computation_options\": {\n       \
+          \     \"disabled\": false\n          },\n          \"id\": \"rule1\",\n\
+          \          \"node_visualization\": {\n            \"config\": {},\n    \
+          \        \"type\": \"block\"\n          },\n          \"nodes\": [],\n \
+          \         \"pack_id\": \"pack1\",\n          \"params\": [\n           \
+          \ {\n              \"arguments\": [\n                \"foo\",\n        \
+          \        \"bar\"\n              ]\n            }\n          ],\n       \
+          \   \"properties\": {\n            \"comment\": \"\",\n            \"docu_url\"\
+          : \"\",\n            \"icon\": \"\",\n            \"state_messages\": {},\n\
+          \            \"title\": \"\"\n          }\n        }' \\\n    \"$API_URL/objects/bi_rule/rule1\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/bi_rule/rule1\" \\\
+          \n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept: application/json\"\
+          \ \\\n    aggregation_function='{\"restrict_state\": 2, \"count\": 1, \"\
+          type\": \"best\"}' \\\n    computation_options='{\"disabled\": false}' \\\
+          \n    id='rule1' \\\n    node_visualization='{\"config\": {}, \"type\":\
+          \ \"block\"}' \\\n    nodes='[]' \\\n    pack_id='pack1' \\\n    params='[{\"\
+          arguments\": [\"foo\", \"bar\"]}]' \\\n    properties='{\"title\": \"\"\
+          , \"state_messages\": {}, \"docu_url\": \"\", \"comment\": \"\", \"icon\"\
+          : \"\"}' \\\n    --json"
+  /objects/bi_aggregation/{aggregation_id}:
+    get:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.bi.get_bi_aggregation
+      parameters:
+      - allowEmptyValue: false
+        example: aggregation1
+        in: path
+        name: aggregation_id
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BIAggregationEndpoint'
+          description: ''
+          headers: {}
+      summary: Get BI Aggregation
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.bi
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/objects/bi_aggregation/aggregation1\"\
+          ,\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/objects/bi_aggregation/aggregation1\",\n    method=\"\
+          GET\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
+          ,\n        \"Accept\": \"application/json\",\n    },\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\\n    \"$API_URL/objects/bi_aggregation/aggregation1\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/objects/bi_aggregation/aggregation1\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    --json"
+    put:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.bi.put_bi_aggregation
+      parameters:
+      - allowEmptyValue: false
+        example: aggregation1
+        in: path
+        name: aggregation_id
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BIAggregationEndpoint'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BIAggregationEndpoint'
+          description: ''
+          headers: {}
+      summary: Save BI Aggregation
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.bi
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/bi_aggregation/aggregation1\"\
+          ,\n    json={\n        'pack_id': 'pack1',\n        'groups': {\n      \
+          \      'names': ['groupA', 'groupB'],\n            'paths': [['path', 'group',\
+          \ 'a'],\n                      ['path', 'group', 'b']]\n        },\n   \
+          \     'aggregation_visualization': {\n            'ignore_rule_styles':\
+          \ False,\n            'layout_id': 'builtin_default',\n            'line_style':\
+          \ 'round'\n        },\n        'node': {\n            'search': {\n    \
+          \            'type': 'empty'\n            },\n            'action': {\n\
+          \                'host_regex': '',\n                'type': 'state_of_host'\n\
+          \            }\n        },\n        'computation_options': {\n         \
+          \   'disabled': False,\n            'use_hard_states': False,\n        \
+          \    'escalate_downtimes_as_warn': False\n        },\n        'id': 'aggr1',\n\
+          \        'customer': 'customer1'\n    },\n)\nresp.raise_for_status()\ndata\
+          \ = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/objects/bi_aggregation/aggregation1\",\n    method=\"\
+          PUT\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
+          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({\n\
+          \        'pack_id': 'pack1',\n        'groups': {\n            'names':\
+          \ ['groupA', 'groupB'],\n            'paths': [['path', 'group', 'a'],\n\
+          \                      ['path', 'group', 'b']]\n        },\n        'aggregation_visualization':\
+          \ {\n            'ignore_rule_styles': False,\n            'layout_id':\
+          \ 'builtin_default',\n            'line_style': 'round'\n        },\n  \
+          \      'node': {\n            'search': {\n                'type': 'empty'\n\
+          \            },\n            'action': {\n                'host_regex':\
+          \ '',\n                'type': 'state_of_host'\n            }\n        },\n\
+          \        'computation_options': {\n            'disabled': False,\n    \
+          \        'use_hard_states': False,\n            'escalate_downtimes_as_warn':\
+          \ False\n        },\n        'id': 'aggr1',\n        'customer': 'customer1'\n\
+          \    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\ \\\n    --data '{\n          \"aggregation_visualization\": {\n   \
+          \         \"ignore_rule_styles\": false,\n            \"layout_id\": \"\
+          builtin_default\",\n            \"line_style\": \"round\"\n          },\n\
+          \          \"computation_options\": {\n            \"disabled\": false,\n\
+          \            \"escalate_downtimes_as_warn\": false,\n            \"use_hard_states\"\
+          : false\n          },\n          \"customer\": \"customer1\",\n        \
+          \  \"groups\": {\n            \"names\": [\n              \"groupA\",\n\
+          \              \"groupB\"\n            ],\n            \"paths\": [\n  \
+          \            [\n                \"path\",\n                \"group\",\n\
+          \                \"a\"\n              ],\n              [\n            \
+          \    \"path\",\n                \"group\",\n                \"b\"\n    \
+          \          ]\n            ]\n          },\n          \"id\": \"aggr1\",\n\
+          \          \"node\": {\n            \"action\": {\n              \"host_regex\"\
+          : \"\",\n              \"type\": \"state_of_host\"\n            },\n   \
+          \         \"search\": {\n              \"type\": \"empty\"\n           \
+          \ }\n          },\n          \"pack_id\": \"pack1\"\n        }' \\\n   \
+          \ \"$API_URL/objects/bi_aggregation/aggregation1\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/bi_aggregation/aggregation1\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    aggregation_visualization='{\"ignore_rule_styles\"\
+          : false, \"layout_id\": \"builtin_default\", \"line_style\": \"round\"}'\
+          \ \\\n    computation_options='{\"disabled\": false, \"use_hard_states\"\
+          : false, \"escalate_downtimes_as_warn\": false}' \\\n    customer='customer1'\
+          \ \\\n    groups='{\"names\": [\"groupA\", \"groupB\"], \"paths\": [[\"\
+          path\", \"group\", \"a\"], [\"path\", \"group\", \"b\"]]}' \\\n    id='aggr1'\
+          \ \\\n    node='{\"search\": {\"type\": \"empty\"}, \"action\": {\"host_regex\"\
+          : \"\", \"type\": \"state_of_host\"}}' \\\n    pack_id='pack1' \\\n    --json"
+  /domain-types/bi_pack/collections/all:
+    get:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.bi.get_bi_packs
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainObjectCollection'
+          description: ''
+          headers: {}
+      summary: Show all BI Packs
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.bi
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/domain-types/bi_pack/collections/all\"\
+          ,\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/bi_pack/collections/all\",\n    method=\"\
+          GET\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
+          ,\n        \"Accept\": \"application/json\",\n    },\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\\n    \"$API_URL/domain-types/bi_pack/collections/all\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/domain-types/bi_pack/collections/all\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    --json"
+  /objects/bi_pack/{pack_id}:
+    get:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.bi.get_bi_pack
+      parameters:
+      - allowEmptyValue: false
+        example: pack1
+        in: path
+        name: pack_id
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainObjectCollection'
+          description: ''
+          headers: {}
+      summary: Get BI Pack
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.bi
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/objects/bi_pack/pack1\"\
+          ,\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/objects/bi_pack/pack1\",\n    method=\"GET\",\n    headers={\n\
+          \        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\",\n       \
+          \ \"Accept\": \"application/json\",\n    },\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\\n    \"$API_URL/objects/bi_pack/pack1\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/objects/bi_pack/pack1\" \\\
+          \n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept: application/json\"\
+          \ \\\n    --json"
   /domain-types/contact_group_config/collections/all:
     get:
       description: ''
@@ -7733,6 +8836,14 @@ tags:
   name: BulkAcknowledgeServiceProblem
 - name: cmk.gui.plugins.openapi.endpoints.activate_changes
   x-displayName: Activate changes
+- name: cmk.gui.plugins.openapi.endpoints.bi
+  x-displayName: Business intelligence
+- description: <SchemaDefinition schemaRef="#/components/schemas/BIRuleEndpoint" showReadOnly={true}
+    showWriteOnly={true} />
+  name: BIRuleEndpoint
+- description: <SchemaDefinition schemaRef="#/components/schemas/BIAggregationEndpoint"
+    showReadOnly={true} showWriteOnly={true} />
+  name: BIAggregationEndpoint
 - name: cmk.gui.plugins.openapi.endpoints.contact_group_config
   x-displayName: Contact-groups
 - description: <SchemaDefinition schemaRef="#/components/schemas/InputContactGroup"
@@ -7888,6 +8999,7 @@ x-tagGroups:
   tags:
   - cmk.gui.plugins.openapi.endpoints.acknowledgement
   - cmk.gui.plugins.openapi.endpoints.activate_changes
+  - cmk.gui.plugins.openapi.endpoints.bi
   - cmk.gui.plugins.openapi.endpoints.contact_group_config
   - cmk.gui.plugins.openapi.endpoints.downtime
   - cmk.gui.plugins.openapi.endpoints.folder_config
@@ -7909,6 +9021,8 @@ x-tagGroups:
   - BulkAcknowledgeHostProblem
   - AcknowledgeServiceProblem
   - BulkAcknowledgeServiceProblem
+  - BIRuleEndpoint
+  - BIAggregationEndpoint
   - InputContactGroup
   - BulkInputContactGroup
   - BulkDeleteContactGroup

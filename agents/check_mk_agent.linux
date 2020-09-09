@@ -137,6 +137,28 @@ section_checkmk() {
 # CHECK SECTIONS
 #
 
+section_labels() {
+    LABELS=""
+    if [ -n "$IS_DOCKERIZED" ] || [ -n "$IS_LXC_CONTAINER" ]; then
+        DEVICE_TYPE="container"
+    elif grep "hypervisor" /proc/cpuinfo >/dev/null 2>&1; then
+        DEVICE_TYPE="vm"
+    fi
+
+    if [ -n "$DEVICE_TYPE" ]; then
+        LABELS+="\n{\"cmk/device_type\":\"$DEVICE_TYPE\"}"
+    fi
+
+    if inpath omd; then
+        LABELS+="\n{\"cmk/check_mk_server\":\"yes\"}"
+    fi
+
+    if [ -n "$LABELS" ]; then
+        echo '<<<labels:sep(0)>>>'
+        echo -e "$LABELS"
+    fi
+}
+
 section_mem() {
     if [ -z "$IS_DOCKERIZED" ]; then
         echo '<<<mem>>>'
@@ -642,9 +664,6 @@ section_mailqueue() {
 
 section_omd() {
     if inpath omd; then
-        echo '<<<labels:sep(0)>>>'
-        echo '{"cmk/check_mk_server": "yes"}'
-
         run_cached -s omd_status 60 "omd status --bare || true"
         echo '<<<mknotifyd:sep(0)>>>'
         date +%s
@@ -1285,6 +1304,7 @@ get_file_mtime() {
 }
 
 section_checkmk
+[ -z "$MK_SKIP_LABELS" ] && section_labels
 
 # If we are called via xinetd, try to find only_from configuration
 if [ -n "$REMOTE_HOST" ]; then

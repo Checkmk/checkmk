@@ -32,3 +32,29 @@ register.agent_section(
     parse_function=parse_labels,
     host_label_function=host_label_function_labels,
 )
+
+
+def parse_checkmk_labels(string_table):
+    """
+    Example:
+
+        <<<check_mk>>>
+        Version: 1.7.0
+        BuildDate: Sep 15 2020
+        AgentOS: windows
+        Hostname: MSEDGEWIN10
+        Architecture: 64bit
+
+    """
+    labels = {}
+    for line in string_table:
+        if "AgentOS:" in line:
+            labels.update({"cmk/os_family": line[1]})
+    return labels
+
+
+register.agent_section(
+    name="check_mk",
+    parse_function=parse_checkmk_labels,
+    host_label_function=host_label_function_labels,
+)

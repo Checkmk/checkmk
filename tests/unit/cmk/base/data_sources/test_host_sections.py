@@ -16,7 +16,13 @@ from testlib.base import Scenario  # type: ignore[import]
 import cmk.utils.piggyback
 from cmk.utils.type_defs import ParsedSectionName, SectionName, SourceType
 
-from cmk.fetchers import ABCFetcher
+from cmk.fetchers import (
+    IPMIFetcher,
+    PiggybackFetcher,
+    ProgramFetcher,
+    SNMPFetcher,
+    TCPFetcher,
+)
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api_utils as check_api_utils
@@ -437,7 +443,14 @@ class TestMakeHostSectionsHosts:
             def _extend_section(self, section_name, section_content):
                 pass
 
-        monkeypatch.setattr(ABCFetcher, "fetch", lambda self, mode: None)
+        for fetcher in (IPMIFetcher, PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher):
+            monkeypatch.setattr(fetcher, "__enter__", lambda self: self)
+            monkeypatch.setattr(
+                fetcher,
+                "fetch",
+                lambda self, mode, fetcher=fetcher: {} if fetcher is SNMPFetcher else b"",
+            )
+
         monkeypatch.setattr(CachedSNMPDetector, "__call__", lambda *args, **kwargs: frozenset())
         monkeypatch.setattr(
             ABCChecker,
@@ -682,6 +695,10 @@ class TestMakeHostSectionsClusters:
         class DummyHostSection(ABCHostSections):
             def _extend_section(self, section_name, section_content):
                 pass
+
+        for fetcher in (IPMIFetcher, PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher):
+            monkeypatch.setattr(fetcher, "__enter__", lambda self: self)
+            monkeypatch.setattr(fetcher, "fetch", lambda self, mode, fetcher=fetcher: {} if fetcher is SNMPFetcher else b"",)
 
         monkeypatch.setattr(
             ABCChecker,

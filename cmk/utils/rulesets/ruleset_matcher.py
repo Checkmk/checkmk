@@ -16,7 +16,7 @@ from cmk.utils.rulesets.tuple_rulesets import (
 )
 from cmk.utils.regex import regex
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import HostName, ServiceName, TagGroups, TagList, Ruleset, RuleValue
+from cmk.utils.type_defs import HostName, ServiceName, TagGroups, TagList, Ruleset, RuleValue, Union
 
 if TYPE_CHECKING:
     from cmk.utils.labels import LabelManager
@@ -200,7 +200,7 @@ class RulesetMatcher:
             return False
 
         if service_labels_condition \
-           and not _matches_labels(match_object.service_labels, service_labels_condition):
+           and not matches_labels(match_object.service_labels, service_labels_condition):
             return False
 
         return True
@@ -241,7 +241,7 @@ class RulesetMatcher:
             if tags and not self.ruleset_optimizer.matches_host_tags([], tags):
                 continue
 
-            if labels and not _matches_labels({}, labels):
+            if labels and not matches_labels({}, labels):
                 continue
 
             if not self.ruleset_optimizer.matches_host_name(hostlist, ""):
@@ -487,7 +487,7 @@ class RulesetOptimizer:
 
                 if labels:
                     host_labels = self._labels.labels_of_host(self._ruleset_matcher, hostname)
-                    if not _matches_labels(host_labels, labels):
+                    if not matches_labels(host_labels, labels):
                         continue
 
                 if not self.matches_host_name(hostlist, hostname):
@@ -520,34 +520,8 @@ class RulesetOptimizer:
 
     def matches_host_tags(self, hosttags, required_tags):
         for tag_spec in required_tags.values():
-            if self._matches_tag_spec(tag_spec, hosttags) is False:
+            if matches_tag_spec(tag_spec, hosttags) is False:
                 return False
-
-        return True
-
-    def _matches_tag_spec(self, tag_spec, hosttags):
-        is_not = False
-        if isinstance(tag_spec, dict):
-            if "$ne" in tag_spec:
-                is_not = True
-                tag_spec = tag_spec["$ne"]
-
-            elif "$or" in tag_spec:
-                return any(
-                    self._matches_tag_spec(sub_tag_spec, hosttags)
-                    for sub_tag_spec in tag_spec["$or"])
-
-            elif "$nor" in tag_spec:
-                return not any(
-                    self._matches_tag_spec(sub_tag_spec, hosttags)
-                    for sub_tag_spec in tag_spec["$nor"])
-
-            else:
-                raise NotImplementedError()
-
-        matches = tag_spec in hosttags
-        if matches == is_not:
-            return False
 
         return True
 
@@ -690,7 +664,31 @@ def _tags_or_labels_cache_id(tag_or_label_spec):
     return tag_or_label_spec
 
 
-def _matches_labels(object_labels, required_labels):
+def matches_tag_spec(tag_spec: Union[dict, str], hosttags: TagList) -> bool:
+    is_not = False
+    if isinstance(tag_spec, dict):
+        if "$ne" in tag_spec:
+            is_not = True
+            tag_spec = tag_spec["$ne"]
+
+        elif "$or" in tag_spec:
+            return any(matches_tag_spec(sub_tag_spec, hosttags) for sub_tag_spec in tag_spec["$or"])
+
+        elif "$nor" in tag_spec:
+            return not any(
+                matches_tag_spec(sub_tag_spec, hosttags) for sub_tag_spec in tag_spec["$nor"])
+
+        else:
+            raise NotImplementedError()
+
+    matches = tag_spec in hosttags
+    if matches == is_not:
+        return False
+
+    return True
+
+
+def matches_labels(object_labels, required_labels) -> bool:
     for label_group_id, label_spec in required_labels.items():
         is_not = isinstance(label_spec, dict)
         if is_not:

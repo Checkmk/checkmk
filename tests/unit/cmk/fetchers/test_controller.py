@@ -37,14 +37,14 @@ def test_status_to_severity(status, severity):
 
 class TestControllerApi:
     def test_controller_success(self):
-        assert make_success_answer(data="payload") == "fetch:SUCCESS:        :7       :payload"
+        assert make_success_answer(data="payload") == b"fetch:SUCCESS:        :7       :payload"
 
     def test_controller_failure(self):
         assert make_failure_answer(
-            data="payload", severity="crit12345678") == "fetch:FAILURE:crit1234:7       :payload"
+            data="payload", severity="crit12345678") == b"fetch:FAILURE:crit1234:7       :payload"
 
     def test_controller_waiting(self):
-        assert make_waiting_answer() == "fetch:WAITING:        :0       :"
+        assert make_waiting_answer() == b"fetch:WAITING:        :0       :"
 
     def test_build_json_file_path(self):
         assert build_json_file_path(
@@ -69,7 +69,7 @@ class TestHeader:
 
     def test_from_network(self):
         header = Header("fetch", "SUCCESS", "crit", 42)
-        assert Header.from_network(str(header) + 42 * "*") == header
+        assert Header.from_network(bytes(header) + 42 * b"*") == header
 
     def test_clone(self):
         header = Header("name", Header.State.SUCCESS, "crit", 42)

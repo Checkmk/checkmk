@@ -276,10 +276,10 @@ class Result(ABCCheckGenerated,
             raise TypeError("at least 'summary', 'notice' or 'details' is required")
 
         if summary and '\n' in summary:
-            raise ValueError("'\n' not allowed in 'summary'")
+            raise ValueError("'\\n' not allowed in 'summary'")
 
         if notice and '\n' in notice:
-            raise ValueError("'\n' not allowed in 'notice'")
+            raise ValueError("'\\n' not allowed in 'notice'")
 
         if not details:
             details = summary or notice

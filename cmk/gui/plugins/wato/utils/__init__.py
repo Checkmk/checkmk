@@ -710,11 +710,11 @@ class RulespecGroupDiscoveryCheckParameters(RulespecGroup):
 
     @property
     def title(self):
-        return _("Parameters for discovered services")
+        return _("Service discovery rules")
 
     @property
     def help(self):
-        return _("Parameters for checks found by the Check_MK service discovery")
+        return _("Rules that change the behaviour of the Check_MK service discovery")
 
 
 @rulespec_group_registry.register

@@ -87,7 +87,7 @@ from cmk.gui.plugins.wato import (
 
 from cmk.gui.plugins.views.icons import icon_and_action_registry
 from cmk.gui.plugins.wato.omd_configuration import ConfigVariableGroupSiteManagement
-from cmk.gui.plugins.wato.utils import get_section_information
+from cmk.gui.plugins.wato.utils import get_section_information, RulespecGroupDiscoveryCheckParameters
 from cmk.gui.watolib.bulk_discovery import vs_bulk_discovery
 from cmk.gui.watolib.groups import load_contact_group_information
 
@@ -3615,7 +3615,7 @@ rulespec_registry.register(
 class RulespecGroupMonitoringConfigurationInventoryAndCMK(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupMonitoringConfiguration
+        return RulespecGroupDiscoveryCheckParameters
 
     @property
     def sub_group_name(self):

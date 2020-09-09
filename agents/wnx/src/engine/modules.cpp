@@ -231,6 +231,8 @@ ModuleCommander::GetSystemExtensions() {
         // dir is optional
         auto dir = cma::cfg::GetVal(node, vars::kModulesDir,
                                     std::string{defaults::kModulesDir});
+        if (dir.empty()) dir = std::string{defaults::kModulesDir};
+
         dir_ = fmt::format(dir, name());
 
     } catch (const std::exception &e) {

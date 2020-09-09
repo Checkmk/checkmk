@@ -272,6 +272,7 @@ def _do_inv_for(
     status_data_tree = StructuredDataTree()
 
     node = inventory_tree.get_dict("software.applications.check_mk.cluster.")
+    results: Sequence[Tuple[ABCConfigurator, ABCHostSections]] = []
     if host_config.is_cluster:
         node["is_cluster"] = True
         _do_inv_for_cluster(host_config, inventory_tree)

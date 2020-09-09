@@ -1213,6 +1213,7 @@ div.help {
   background-image: none;
   border-radius: 5px;
   box-shadow: none;
+  text-transform: none; /* Neccessary due to help in H3 */
 
   &:before {
     display: inline-block;

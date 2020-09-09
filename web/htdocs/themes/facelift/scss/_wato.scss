@@ -28,8 +28,8 @@
 }
 
 .wato table.data {
-  border: $wato-data-table-border;
-  box-shadow: $wato-data-table-box-shadow;
+  border-style: none;
+  box-shadow: none;
 
   &.job_table {
     border: none;
@@ -37,12 +37,12 @@
   }
 
   &:not(.job_table) th {
-    background: $wato-data-th-bg-color;
+    background: transparent;
     border-radius: 0;
 
     &.header_state {
-      color: $font-color !important;
-      background: $wato-data-th-bg-color !important;
+      color: rgb(119, 119, 119) !important;
+      background: transparent !important;
     }
   }
 
@@ -232,12 +232,46 @@ div#service_container {
   }
 
   table.data {
+    tr.data > td {
+      height: auto;
+      padding: 3px 7px;
+
+      &:not(.gap):not(.fillup):not(.bulksearch):not(.bulkactions) {
+        border-top: none;
+        border-bottom: none;
+      }
+
+      &.service {
+        width: 250px;
+        max-width: 250px;
+        min-width: 250px;
+        white-space: nowrap;
+      }
+    }
+
     tr.groupheader {
-      background-color: $service-container-groupheader-bg-color;
+      background-color: transparent;
+    }
+
+    th {
+      color: #777;
     }
 
     td h3 {
-      margin-top: $td-h3-margin-top;
+      margin-top: 13px;
+    }
+  }
+
+  h3 {
+    margin-top: 13px;
+    font-size: 13px;
+    color: #aaa;
+    text-transform: uppercase;
+
+    img {
+      position: relative;
+      top: -1px;
+      margin-left: 5px;
     }
   }
 }
@@ -1511,10 +1545,12 @@ table.data.analyze_config td.buttons {
 }
 
 .wato h3 {
-  font-size: $theme-font-table-header;
+  font-size: 14px;
   font-weight: $font-weight-default;
   letter-spacing: $letter-spacing-table;
-  color: $font-color;
+  color: $wato-h3-font-color;
+  margin-bottom: 12px;
+  text-transform: uppercase;
 }
 
 .wato table.data.job_table {

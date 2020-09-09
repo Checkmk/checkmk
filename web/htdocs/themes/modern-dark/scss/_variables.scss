@@ -442,8 +442,6 @@ $table-headerleft-border-bottom:	    1px solid $bg-color-default;
 $agent-config-inner-title-bg-color:	    $bg-color-default;
 $agent-config-td-color:			    $font-color;
 
-$service-container-groupheader-bg-color:    $grey-6;
-
 $pnp4nagios-img-filter:			    invert(84%);
 
 $matches-search-bg-color:		    darken($success, 5%);
@@ -455,8 +453,6 @@ $help-link-color:			    $grey-7;
 $minority-font-color:			    $grey-7;
 
 $button-spacer-color:			    rgb(90, 90, 90);
-
-$td-h3-margin-top:			    4px;
 
 $timeline-hilite-border:		    2px solid rgb(220, 220, 220) !important;
 $timetable-hilite-filter:		    null;
@@ -519,3 +515,4 @@ $popup-border:                              4px solid rgb(66, 210, 136);
 $popup-inner-border:                        1px solid $headline-color;
 $filter-add-button-hover-brightness:        brightness(100);
 $floatfilter-legend-border:                 1px solid rgba($white, .2);
+$wato-h3-font-color:                        rgb(170, 170, 170);

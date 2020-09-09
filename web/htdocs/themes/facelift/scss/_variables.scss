@@ -440,8 +440,6 @@ $table-headerleft-border-bottom:	    none;
 $agent-config-inner-title-bg-color:	    $grey-1;
 $agent-config-td-color:			    rgb(42, 42, 42);
 
-$service-container-groupheader-bg-color:    null;
-
 $pnp4nagios-img-filter:			    null;
 
 $matches-search-bg-color:		    $color-nuance-2;
@@ -453,8 +451,6 @@ $help-link-color:			    $font-color;
 $minority-font-color:			    null;
 
 $button-spacer-color:			    rgb(180, 180, 180);
-
-$td-h3-margin-top:			    null;
 
 $timeline-hilite-border:		    null;
 $timetable-hilite-filter:		    brightness(90%);
@@ -518,3 +514,4 @@ $popup-border:                              4px solid rgb(19, 211, 137);
 $popup-inner-border:                        1px solid $navbar-color;
 $filter-add-button-hover-brightness:        brightness(0);
 $floatfilter-legend-border:                 1px solid rgba($black, .2);
+$wato-h3-font-color:                        $font-color;

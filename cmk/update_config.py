@@ -146,6 +146,8 @@ class UpdateConfig:
         cmk.base.config.load()
         cmk.base.config.load_all_checks(cmk.base.check_api.get_check_api_context)
         check_variables = cmk.base.config.get_check_variables()
+
+        failed_hosts: List[str] = []
         for autocheck_file in Path(cmk.utils.paths.autochecks_dir).glob("*.mk"):
             hostname = autocheck_file.stem
             try:
@@ -155,12 +157,22 @@ class UpdateConfig:
                     check_variables,
                 )
             except MKGeneralException as exc:
-                raise MKGeneralException(
-                    "%s\nIf you encounter this error during the update process "
-                    "you need to replace the the variable by its actual value, e.g. "
-                    "replace `my_custom_levels` by `{'levels': (23, 42)}`." % exc)
+                msg = ("%s\nIf you encounter this error during the update process "
+                       "you need to replace the the variable by its actual value, e.g. "
+                       "replace `my_custom_levels` by `{'levels': (23, 42)}`." % exc)
+                if self._arguments.debug:
+                    raise MKGeneralException(msg)
+                self._logger.error(msg)
+                failed_hosts.append(hostname)
+                continue
+
             autochecks = [self._map_removed_check_plugin_names(s) for s in autochecks]
             cmk.base.autochecks.save_autochecks_file(hostname, autochecks)
+
+        if failed_hosts:
+            msg = "Failed to rewrite autochecks file for hosts: %s" % ", ".join(failed_hosts)
+            self._logger.error(msg)
+            raise MKGeneralException(msg)
 
     def _map_removed_check_plugin_names(self, service: Service) -> Service:
         """Change names of removed plugins to the new ones"""

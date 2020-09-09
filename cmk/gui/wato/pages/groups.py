@@ -541,4 +541,4 @@ class ModeEditContactgroup(ABCModeEditGroup):
         for f in os.listdir(nagvis_maps_path):
             if f[0] != '.' and f.endswith('.cfg'):
                 maps.append((f[:-4], f[:-4]))
-        return maps
+        return sorted(maps)

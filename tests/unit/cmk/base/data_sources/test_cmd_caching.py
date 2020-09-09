@@ -51,6 +51,14 @@ def load_plugins():
     InventoryPluginManager().load()
 
 
+@pytest.fixture(scope="module", autouse=True)
+def enable_debug_mode():
+    # `debug.disabled()` hides exceptions and makes it
+    # *impossible* to debug anything.
+    with cmk_debug_enabled():
+        yield
+
+
 @pytest.fixture(name="scenario")
 def scenario_fixture(monkeypatch):
     test_hosts = ["ds-test-host1", "ds-test-host2", "ds-test-node1", "ds-test-node2"]
@@ -225,10 +233,7 @@ def test_mode_inventory_caching(hosts, cache, force, monkeypatch, mocker):
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("patch_data_source")
 def test_mode_inventory_as_check():
-    with cmk_debug_enabled():
-        exit_code = cmk.base.modes.check_mk.mode_inventory_as_check({}, "ds-test-host1")
-
-    assert exit_code == 0
+    assert cmk.base.modes.check_mk.mode_inventory_as_check({}, "ds-test-host1") == 0
     assert ABCChecker.check.call_count == 2  # type: ignore[attr-defined]
 
 
@@ -243,8 +248,7 @@ def test_mode_discover_marked_hosts(mocker):
 @pytest.mark.usefixtures("scenario")
 def test_mode_check_discovery_default(mocker):
     _patch_data_source(mocker, max_age=0)
-    with cmk_debug_enabled():
-        assert cmk.base.modes.check_mk.mode_check_discovery("ds-test-host1") == 1
+    assert cmk.base.modes.check_mk.mode_check_discovery("ds-test-host1") == 1
     assert ABCChecker.check.call_count == 2  # type: ignore[attr-defined]
 
 
@@ -258,8 +262,7 @@ def test_mode_check_discovery_cached(mocker):
     )
 
     cmk.base.modes.check_mk.option_cache()
-    with cmk_debug_enabled():
-        assert cmk.base.modes.check_mk.mode_check_discovery("ds-test-host1") == 1
+    assert cmk.base.modes.check_mk.mode_check_discovery("ds-test-host1") == 1
     assert ABCChecker.check.call_count == 2  # type: ignore[attr-defined]
 
 

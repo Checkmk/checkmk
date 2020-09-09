@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import Callable, Dict, Iterable, List, Literal, Optional, Set, Tuple, Union
 
 import inspect
 
@@ -76,7 +76,8 @@ def create_subscribed_sections(
 
 
 def validate_function_arguments(
-    func_type: str,
+    *,
+    type_label: Literal["check", "cluster_check", "discovery", "host_label", "inventory"],
     function: Callable,
     has_item: bool,
     has_params: bool,
@@ -85,21 +86,41 @@ def validate_function_arguments(
     """Validate the functions signature and type"""
 
     if not inspect.isgeneratorfunction(function):
-        raise TypeError("%s function must be a generator function" % (func_type,))
+        raise TypeError(f"{type_label}_function must be a generator function")
 
     expected_params = []
     if has_item:
         expected_params.append('item')
-    if has_params:
+    if has_params:  # TODO (mo): if default_params is not None:
         expected_params.append('params')
     if len(sections) == 1:
         expected_params.append('section')
     else:
         expected_params.extend('section_%s' % s for s in sections)
 
-    if expected_params != list(inspect.signature(function).parameters):
-        raise TypeError("%s function: expected function arguments: %s" %
-                        (func_type, ', '.join(expected_params)))
+    present_params = list(inspect.signature(function).parameters)
+
+    if expected_params == present_params:
+        return
+
+    # We know we must raise. Dispatch for a better error message:
+
+    if set(expected_params) == set(present_params):  # not len()!
+        exp_str = ', '.join(expected_params)
+        raise TypeError(f"{type_label}_function: wrong order of arguments. Expected: {exp_str}")
+
+    symm_diff = set(expected_params).symmetric_difference(present_params)
+
+    if "item" in symm_diff:
+        missing_or_unexpected = "missing" if has_item else "unexpected"
+        raise TypeError(f"{type_label}_function: {missing_or_unexpected} 'item' argument")
+
+    if "params" in symm_diff:
+        raise TypeError(f"{type_label}_function: 'params' argument expected if "
+                        "and only if default parameters are not None")
+
+    exp_str = ', '.join(expected_params)
+    raise TypeError(f"{type_label}_function: expected arguments: {exp_str}")
 
 
 def validate_default_parameters(

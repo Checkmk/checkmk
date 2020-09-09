@@ -175,11 +175,11 @@ def create_check_plugin(
     )
     _validate_discovery_ruleset_type(discovery_ruleset_type,)
     validate_function_arguments(
-        "discovery",
-        discovery_function,
-        False,  # no item
-        discovery_ruleset_name is not None,
-        subscribed_sections,
+        type_label="discovery",
+        function=discovery_function,
+        has_item=False,
+        has_params=discovery_ruleset_name is not None,
+        sections=subscribed_sections,
     )
     disco_func = _filter_discovery(discovery_function, requires_item, validate_item)
     disco_params = discovery_default_parameters or {}
@@ -196,22 +196,22 @@ def create_check_plugin(
         check_default_parameters,
     )
     validate_function_arguments(
-        "check",
-        check_function,
-        requires_item,
-        check_default_parameters is not None,
-        subscribed_sections,
+        type_label="check",
+        function=check_function,
+        has_item=requires_item,
+        has_params=check_default_parameters is not None,
+        sections=subscribed_sections,
     )
 
     if cluster_check_function is None:
         cluster_check_function = unfit_for_clustering_wrapper(check_function)
     else:
         validate_function_arguments(
-            "cluster check",
-            cluster_check_function,
-            requires_item,
-            check_ruleset_name is not None,
-            subscribed_sections,
+            type_label="cluster_check",
+            function=cluster_check_function,
+            has_item=requires_item,
+            has_params=check_ruleset_name is not None,
+            sections=subscribed_sections,
         )
         cluster_check_function = _filter_check(cluster_check_function)
 

@@ -119,11 +119,11 @@ def _create_host_label_function(
         return _noop_host_label_function
 
     validate_function_arguments(
-        "host_label",
-        host_label_function,
+        type_label="host_label",
+        function=host_label_function,
         has_item=False,
-        sections=[ParsedSectionName("__always_just_one_section__")],
         has_params=has_params,
+        sections=[ParsedSectionName("__always_just_one_section__")],
     )
 
     @functools.wraps(host_label_function)

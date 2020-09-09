@@ -124,11 +124,23 @@ def test_create_sections(sections, plugin_name, expected):
 ])
 def test_validate_function_args(function, has_item, has_params, sections, raises):
     if raises is None:
-        check_plugins.validate_function_arguments("", function, has_item, has_params, sections)
+        check_plugins.validate_function_arguments(
+            type_label="check",
+            function=function,
+            has_item=has_item,
+            has_params=has_params,
+            sections=sections,
+        )
         return
 
     with pytest.raises(raises):
-        check_plugins.validate_function_arguments("", function, has_item, has_params, sections)
+        check_plugins.validate_function_arguments(
+            type_label="check",
+            function=function,
+            has_item=has_item,
+            has_params=has_params,
+            sections=sections,
+        )
 
 
 @pytest.mark.parametrize("key", list(MINIMAL_CREATION_KWARGS.keys()))

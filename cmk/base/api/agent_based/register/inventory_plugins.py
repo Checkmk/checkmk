@@ -56,7 +56,7 @@ def create_inventory_plugin(
     subscribed_sections = create_subscribed_sections(sections, plugin_name)
 
     validate_function_arguments(
-        func_type="inventory",
+        type_label="inventory",
         function=inventory_function,
         has_item=False,
         has_params=inventory_default_parameters is not None,

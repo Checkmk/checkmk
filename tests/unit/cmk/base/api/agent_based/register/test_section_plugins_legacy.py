@@ -102,8 +102,8 @@ def test_create_host_label_function(disco_func, labels_expected):
 
     assert host_label_function is not None
     section_plugins.validate_function_arguments(
-        "host_label",
-        host_label_function,
+        type_label="host_label",
+        function=host_label_function,
         has_item=False,
         has_params=False,
         sections=[ParsedSectionName("__only_one_seciton__")],

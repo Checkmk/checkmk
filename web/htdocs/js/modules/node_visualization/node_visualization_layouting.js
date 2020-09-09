@@ -235,7 +235,7 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
         var current_positioning = {
                 weight: 0,
                 free: true,
-                style_type: "force"
+                type: "force"
         }
 
         for (var force_id in node.data.node_positioning) {
@@ -1245,8 +1245,8 @@ class LayoutApplier{
                 if (layout_settings.config) {
                     if (!layout_settings.config.ignore_rule_styles)
                         node_chunk.nodes.forEach(node=>{
-                            if (node.data.rule_layout_style != undefined && node.data.rule_layout_style.style_type != "none") {
-                                let style_name = node.data.rule_layout_style.style_type;
+                            if (node.data.rule_layout_style != undefined && node.data.rule_layout_style.type != "none") {
+                                let style_name = node.data.rule_layout_style.type;
                                 let style_options = node.data.rule_layout_style.style_config;
                                 let new_style = this.layout_style_factory.instantiate_style_name(style_name, node);
                                 new_style.style_config.options = style_options;

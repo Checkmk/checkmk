@@ -8,6 +8,7 @@ import * as popup_menu from "popup_menu";
 import * as ajax from "ajax";
 import * as forms from "forms";
 import * as colorpicker from "colorpicker";
+import * as d3 from "d3";
 
 //#   +--------------------------------------------------------------------+
 //#   | Functions needed by HTML code from ValueSpec (valuespec.py)        |
@@ -112,7 +113,7 @@ function list_of_strings_extend(input, split_on_paste, split_separators) {
 }
 
 
-function list_of_strings_add_new_field(input) {
+export function list_of_strings_add_new_field(input) {
     /* The input field has a unique name like "extra_emails_2" for the field with
        the index 2. We need to convert this into "extra_emails_3". */
 
@@ -140,6 +141,7 @@ function list_of_strings_add_new_field(input) {
     container.appendChild(new_div);
 
     // In case there was some TextAsciiAutocomplete popup menu cloned, remove it!
+    d3.select(new_div).select("input.text").attr("placeholder", null);
     var popup_menus = new_div.getElementsByClassName("vs_autocomplete");
     for (var i = 0; i < popup_menus.length; i++) {
         popup_menus[i].parentNode.removeChild(popup_menus[i]);

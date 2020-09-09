@@ -355,7 +355,7 @@ export class AbstractLayoutStyle {
 
     get_default_node_force(node) {
         return this._layout_manager.get_node_positioning(node)[this.id()] = {weight: this.positioning_weight(),
-                                                                             style_type: this.type()}
+                                                                             type: this.type()}
     }
 
     // Computes offsets use for node translate
@@ -1421,7 +1421,7 @@ export class LayoutStyleExampleGenerator {
     }
 
     _update_viewport_visibility() {
-        if (this._style_settings.style_type == "none") {
+        if (this._style_settings.type == "none") {
             this._viewport_selection.style("display", "none")
             this._example_selection.style("display", "none")
         }
@@ -1432,14 +1432,14 @@ export class LayoutStyleExampleGenerator {
     }
 
     create_example(style_settings) {
-        this._style_settings = style_settings
-        this._render_style_choice(this._style_choice_selection)
-        this._update_viewport_visibility()
-        this._create_example_hierarchy(this._example_options)
+        this._style_settings = style_settings;
+        this._render_style_choice(this._style_choice_selection);
+        this._update_viewport_visibility();
+        this._create_example_hierarchy(this._example_options);
 
-        let style_config = {options: this._style_settings.style_config}
+        let style_config = {options: this._style_settings.style_config};
         let style_class = null
-        switch (this._style_settings.style_type) {
+        switch (this._style_settings.type) {
             case "none": {
                 return
             }
@@ -1479,12 +1479,12 @@ export class LayoutStyleExampleGenerator {
 
         style_choice_selection.selectAll("select").data([null]).enter()
                .append("select")
-                .attr("name", this._varprefix + "style_type")
+                .attr("name", this._varprefix + "type")
                 .on("change", ()=>this._changed_style())
                 .selectAll("option").data(style_choices).enter()
               .append("option")
                 .property("value", d=>d[0])
-                .property("selected", d=>d[0] == this._style_settings.style_type)
+                .property("selected", d=>d[0] == this._style_settings.type)
                 .text(d=>d[1])
     }
 
@@ -1492,7 +1492,7 @@ export class LayoutStyleExampleGenerator {
         let new_style_id = d3.select(d3.event.target).property("value")
         this._options_selection.selectAll("*").remove()
         this._viewport_selection.selectAll(".block_style_overlay").remove()
-        this.create_example({style_type: new_style_id, style_config: {}})
+        this.create_example({type: new_style_id, style_config: {}})
     }
 
     _render_example_settings(div_selection) {
@@ -1505,7 +1505,7 @@ export class LayoutStyleExampleGenerator {
 
         let options = []
         options.push(this._example_options.total_nodes)
-        if (this._style_settings.style_type != LayoutStyleBlock.prototype.type())
+        if (this._style_settings.type != LayoutStyleBlock.prototype.type())
             options.push(this._example_options.depth)
 
         let rows = table.selectAll("tr").data(options)
@@ -1630,7 +1630,7 @@ export class LayoutStyleExampleGenerator {
         let hierarchy_raw = {name: "Root node"}
         let cancel_delta = 1 / example_settings.depth.value
         // Maximum depth of block style is 1
-        if (this._style_settings.style_type == LayoutStyleBlock.prototype.type())
+        if (this._style_settings.type == LayoutStyleBlock.prototype.type())
             cancel_delta = 1
 
         _add_hierarchy_children(hierarchy_raw, cancel_delta, 1)

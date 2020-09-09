@@ -684,8 +684,8 @@ class NodeLink {
         let target = this.link_data.target
         let force_type = node_visualization_layout_styles.LayoutStyleForce.prototype.type()
 
-        let is_force = source.data.current_positioning.style_type == force_type ||
-                       target.data.current_positioning.style_type == force_type
+        let is_force = source.data.current_positioning.type == force_type ||
+                       target.data.current_positioning.type == force_type
         if (source.data.transition_info.use_transition ||
             target.data.transition_info.use_transition || is_force)
             this.selection.interrupt()

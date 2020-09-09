@@ -462,7 +462,7 @@ export class AbstractGUINode {
     update_position(enforce_transition=false) {
         this.node.data.target_coords = this.viewport.scale_to_zoom({x: this.node.x, y: this.node.y})
 
-        if (this.node.data.transition_info.use_transition || this.node.data.current_positioning.style_type == "force")
+        if (this.node.data.transition_info.use_transition || this.node.data.current_positioning.type == "force")
             this.selection.interrupt()
 
         if (this.selection.attr("in_transit") > 0) {
@@ -473,7 +473,7 @@ export class AbstractGUINode {
 
         this.update_quickinfo_position()
         this.render_text()
-        this.node.data.transition_info.last_style_type = this.node.data.current_positioning.style_type
+        this.node.data.transition_info.type = this.node.data.current_positioning.type
     }
 
     update_quickinfo_position() {

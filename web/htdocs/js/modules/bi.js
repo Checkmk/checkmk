@@ -4,6 +4,8 @@
 
 import * as utils from "utils";
 import * as ajax from "ajax";
+import * as d3 from "d3";
+import * as valuespecs from "valuespecs";
 
 export function toggle_subtree(oImg, lazy)
 {
@@ -129,4 +131,247 @@ export function toggle_assumption(link, site, host, service)
     url += "&state=" + current;
     img.src = path_parts.join("/") + "/icon_assume_" + current + ".png";
     ajax.get_url(url);
+}
+
+export function update_argument_hints() {
+    d3.selectAll("select[onchange='cmk.bi.update_argument_hints();']").each((d, idx, nodes)=>{
+        let node = d3.select(nodes[idx]);
+        let rule_arguments = window.bi_rule_argument_lookup[node.property("value")];
+        let rule_body = node.select(function() {return this.closest("tbody");});
+        let required_inputs = rule_arguments.length;
+
+        // Create nodes
+        nodes = rule_body.selectAll("div.listofstrings").selectAll("input.text").nodes();
+        while (required_inputs >= nodes.length) {
+            valuespecs.list_of_strings_add_new_field(nodes[nodes.length-1]);
+            nodes = rule_body.selectAll("div.listofstrings").selectAll("input.text").nodes();
+        }
+
+        // Update placeholder
+        let input_nodes = rule_body.selectAll("div.listofstrings").selectAll("input.text");
+        input_nodes.attr("placeholder", "");
+        input_nodes.each((d, idx, nodes)=>{
+            if (idx >= rule_arguments.length)
+                return;
+            let argument_input = d3.select(nodes[idx]);
+            argument_input.attr("placeholder", rule_arguments[idx]);
+        });
+    });
+}
+
+
+export class BIPreview {
+    constructor(root_node, varprefix) {
+        this._root_node = d3.select(root_node);
+        this._preview_active = false;
+        this._varprefix = varprefix;
+        this._last_body = "";
+        this._update_interval = 500;
+        this._update_active = false;
+        this._create_search_preview([]);
+        setInterval(()=>this._check_update(), this._update_interval);
+    }
+
+    _check_update() {}
+
+    _get_update_url() {
+        return encodeURI("ajax_bi_node_preview.py");
+    }
+
+    _update_previews() {
+        this._update_active = false;
+        this._check_update();
+    }
+
+    _trigger_update_if_required(params) {
+        let body = this._dict_to_url(params);
+        if (this._last_body == body) {
+            return;
+        }
+
+        if (this._update_active)
+            return;
+
+        d3.json(this._get_update_url(),
+            {
+                credentials: "include",
+                method: "POST",
+                body: body,
+                headers: {
+                    "Content-type": "application/x-www-form-urlencoded"
+                }
+            }
+        ).then(json_data=>this._update_previews(json_data));
+        this._update_active = true;
+        this._last_body = body;
+    }
+
+    _update_preview(data_rows, title, selection) {
+        let div_preview = selection.selectAll("div.preview").data([null]).join(
+            enter=>enter.append("div").classed("preview", true));
+
+        div_preview.selectAll("h3").data([null]).join(enter=>enter.append("h3")
+            .classed("search_preview", true))
+            .text(title);
+
+        let table = div_preview.selectAll("table").data([null]).join(
+            enter=>enter.append("table")
+                .style("overflow", "auto")
+                .style("display", "block")
+                .style("max-height", "400px")
+        );
+        let thead = table.selectAll("thead").data([null]).join("thead");
+        let tbody = table.selectAll("tbody").data([null]).join("tbody");
+
+        let headers = Object.keys(data_rows[0]);
+        let header_row = thead.selectAll("tr").data([headers]).join("tr");
+        header_row.selectAll("th").data(d=>d).join(
+            enter=>enter.append("th")
+                .classed("search_preview", true)
+                .style("text-align", "left"))
+            .text(d=>d);
+
+        let body_rows = tbody.selectAll("tr").data(data_rows).join("tr");
+        body_rows.selectAll("td").data(d=>{
+            let cells = [];
+            headers.forEach(header=>{
+                cells.push(d[header]);
+            });
+            return cells;
+        })
+            .join(enter=>enter.append("td")
+                .style("padding", "5px")
+                .style("text-align", "left"))
+            .text(d=>d);
+    }
+
+    _determine_params() {
+        let inputs = this._root_node.selectAll("input,select");
+        let params = {"varprefix": this._varprefix};
+        inputs.each((d, idx, nodes)=>{
+            let input = nodes[idx];
+            params[input.name] = input.value;
+        });
+        return params;
+    }
+
+    _dict_to_url(dict) {
+        let str = [];
+        for(var p in dict){
+            str.push(encodeURIComponent(p) + "=" + encodeURIComponent(dict[p]));
+        }
+        return str.join("&");
+    }
+}
+
+export class BIRulePreview extends BIPreview {
+    _check_update() {
+        BIPreview.prototype._check_update.call(this);
+        let display = this._preview_active ? null : "none";
+        d3.selectAll("span.title").style("display", display);
+        d3.selectAll("span.arguments").style("display", display);
+
+        if (!this._preview_active) {
+            setTimeout(()=>this._check_update(), this._update_interval);
+            return;
+        }
+
+        let params = this._determine_params();
+        params.example_arguments = JSON.stringify(this._get_example_arguments());
+        this._trigger_update_if_required(params);
+    }
+
+    _get_update_url() {
+        return encodeURI("ajax_bi_rule_preview.py");
+    }
+
+    _get_example_arguments() {
+        let example_arguments = [];
+        this._root_node.select("span.arguments").selectAll("input").each((d, idx, nodes)=>{
+            example_arguments.push(nodes[idx].value);
+        });
+        return example_arguments;
+    }
+
+    _update_previews(json_data) {
+        this._update_simulated_parameters(json_data.result.params);
+        let nodes = d3.selectAll("#rule_p_nodes_container > tr").data(json_data.result.data);
+        nodes.selectAll("td.search_preview").data(d=>[d])
+            .join(enter=>enter.append("td")
+                .classed("search_preview", true)
+                .style("width", "700px")
+                .style("vertical-align", "top"))
+
+            .each((rows, idx, nodes)=>{
+                this._update_preview(rows, json_data.result.title, d3.select(nodes[idx]));
+            });
+        BIPreview.prototype._update_previews.call(this, json_data);
+    }
+
+    _update_simulated_parameters(params) {
+        let example_arguments = this._root_node.select("form > table:nth-child(2n) tbody tr td");
+        example_arguments.style("text-align", "right");
+        example_arguments.select("span.title").selectAll("label").data([null]).join("label").text("Example arguments for this rule");
+        example_arguments.select("span.arguments").selectAll("input").data(params)
+            .join("input")
+            .attr("placeholder", d=>d);
+    }
+
+    _create_search_preview() {
+        let example_arguments = this._root_node.select("form > table:nth-child(2n) tbody tr td");
+        example_arguments.style("text-align", "right");
+        example_arguments.selectAll("span").data(["title", "arguments", "button"]).join("span").attr("class", d=>d);
+        example_arguments.select("span.button").selectAll("input.toggle_search_preview").data([null]).join(
+            enter=>enter.append("input")
+                .classed("toggle_search_preview", true)
+                .attr("type", "button")
+                .attr("value", "Toggle Search Preview")
+                .on("click", (d, idx, nodes)=>{
+                    this._preview_active = !this._preview_active;
+                    d3.select(nodes[idx]).classed("active", this._preview_active);
+                    d3.selectAll("div.preview").style("display", this._preview_active ? "block" : "none");
+                    this._check_update();
+                })
+        );
+    }
+}
+
+export class BIAggregationPreview extends BIPreview {
+    _check_update() {
+        BIPreview.prototype._check_update.call(this);
+        if (!this._preview_active) {
+            return;
+        }
+
+        let params = this._determine_params();
+        this._trigger_update_if_required(params);
+    }
+
+    _get_update_url() {
+        return encodeURI("ajax_bi_aggregation_preview.py");
+    }
+
+    _update_previews(json_data) {
+        this._update_preview(json_data.result.data[0], json_data.result.title, this._preview_box);
+        BIPreview.prototype._update_previews.call(this, json_data);
+    }
+
+    _create_search_preview() {
+        let node_search_td = this._root_node.select("#aggr_p_node_d_search");
+        this._preview_box = d3.select(node_search_td.node().parentNode.parentNode).selectAll("td.search_preview").data([null]).join("td");
+        this._preview_box.style("text-align", "right").style("vertical-align", "top");
+        this._preview_box.selectAll("span").data(["button"]).join("span").attr("class", d=>d);
+        this._preview_box.select("span.button").selectAll("input.toggle_search_preview").data([null]).join(
+            enter=>enter.append("input")
+                .classed("toggle_search_preview", true)
+                .attr("type", "button")
+                .attr("value", "Toggle Search Preview")
+                .on("click", (d, idx, nodes)=>{
+                    this._preview_active = !this._preview_active;
+                    d3.select(nodes[idx]).classed("active", this._preview_active);
+                    d3.selectAll("div.preview").style("display", this._preview_active ? "block" : "none");
+                    this._check_update();
+                })
+        );
+    }
 }

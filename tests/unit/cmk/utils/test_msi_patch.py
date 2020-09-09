@@ -69,7 +69,8 @@ def _get_test_file(fname):
     # we want to check that files are present
     # This check is mostly required to keep the test with BUILD in sync: scm checkout valid dirs,
     # directory tree, etc.
-    root_path = Path("../agents/wnx/test_files/msibuild/msi")
+    root_path = Path(__file__).parent.joinpath(
+        "../../../../agents/wnx/test_files/msibuild/msi").resolve()
     assert root_path.exists(), "test dir is absent, work dir is '{}'".format(os.getcwd())
     src = root_path / fname
     assert src.exists(), "test file '{}' is absent, work dir is '{}'".format(src, os.getcwd())

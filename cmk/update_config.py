@@ -106,6 +106,8 @@ class UpdateConfig:
                     step_func()
                 except Exception:
                     self._logger.log(VERBOSE, " + \"%s\" failed" % title, exc_info=True)
+                    if self._arguments.debug:
+                        raise
 
         self._logger.log(VERBOSE, "Done")
 

@@ -11,7 +11,9 @@
 #include <chrono>
 #include <cstddef>
 #include <functional>
+#include <initializer_list>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -38,7 +40,20 @@ using AggregationFactory = std::function<std::unique_ptr<Aggregation>()>;
 
 class Column {
 public:
-    using Offsets = std::vector<int>;
+    class Offsets {
+    public:
+        // NOTE: google-explicit-constructor forbids an 'explicit' here.
+        // cppcheck-suppress noExplicitConstructor
+        Offsets(std::initializer_list<int> offsets);
+        [[nodiscard]] Offsets addIndirectOffset(int offset) const;
+        [[nodiscard]] Offsets addFinalOffset(int offset) const;
+        const void *shiftPointer(const void *data) const;
+
+    private:
+        std::vector<int> indirect_offsets_;
+        std::optional<int> final_offset_;
+    };
+
     Column(std::string name, std::string description, Offsets);
     virtual ~Column() = default;
 

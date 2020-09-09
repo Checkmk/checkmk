@@ -5,6 +5,7 @@
 
 #include "Column.h"
 
+#include <cassert>
 #include <iterator>
 #include <utility>
 
@@ -17,17 +18,47 @@ Column::Column(std::string name, std::string description, Offsets offsets)
     , _offsets(std::move(offsets)) {}
 
 const void *Column::shiftPointer(Row row) const {
-    const void *data = row.rawData<void>();
-    const auto last = std::prev(std::cend(_offsets));
-    for (auto iter = std::begin(_offsets); iter != std::end(_offsets); iter++) {
-        if (data == nullptr) {
-            break;
+    return _offsets.shiftPointer(row.rawData<void>());
+}
+
+Column::Offsets::Offsets(std::initializer_list<int> offsets) {
+    for (const int *it = begin(offsets); it != end(offsets); ++it) {
+        if (it == std::prev(end(offsets))) {
+            final_offset_ = *it;
+        } else if (*it >= 0) {
+            indirect_offsets_.push_back(*it);
         }
-        if (*iter < 0) {
-            continue;
-        }
-        data = iter == last ? offset_cast<const void>(data, *iter)
-                            : *offset_cast<const void *>(data, *iter);
     }
-    return data;
+}
+
+Column::Offsets Column::Offsets::addIndirectOffset(int offset) const {
+    assert(!final_offset_);
+    Offsets result{*this};
+    if (offset >= 0) {
+        result.indirect_offsets_.push_back(offset);
+    }
+    return result;
+}
+
+Column::Offsets Column::Offsets::addFinalOffset(int offset) const {
+    assert(!final_offset_);
+    Offsets result{*this};
+    if (offset >= 0) {
+        result.final_offset_ = offset;
+    }
+    return result;
+}
+
+const void *Column::Offsets::shiftPointer(const void *data) const {
+    for (auto i : indirect_offsets_) {
+        // TODO(sp) Figure out what is actually going on regarding nullptr...
+        if (data == nullptr) {
+            return nullptr;
+        }
+        data = *offset_cast<const void *>(data, i);
+    }
+    if (data == nullptr) {
+        return nullptr;
+    }
+    return offset_cast<const void>(data, final_offset_.value_or(0));
 }

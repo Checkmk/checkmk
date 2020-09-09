@@ -3,7 +3,20 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Tuple, Type, TypedDict, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterator,
+    List,
+    Literal,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypedDict,
+    Union,
+)
 
 from marshmallow import Schema  # type: ignore[import]
 
@@ -482,6 +495,7 @@ def fill_out_path_template(
 EndpointEntry = TypedDict(
     "EndpointEntry",
     {
+        'endpoint': Any,
         'href': str,
         'method': HTTPMethod,
         'rel': EndpointName,
@@ -501,27 +515,46 @@ class EndpointRegistry:
 
     Examples:
 
+        >>> class EndpointWithParams:
+        ...      method = 'get'
+        ...      path = '/foo/d41d8cd98f/{hostname}'
+        ...      func = lambda: None
+        ...      name = '.../update'
+        ...
+
         >>> reg = EndpointRegistry()
-        >>> reg.add_endpoint("foo", ".../update", "get", "/foo/d41d8cd98f/{hostname}",
+        >>> reg.add_endpoint(EndpointWithParams,
         ...                  [{'name': "hostname", 'in': 'path'}])
 
-        >>> reg.lookup("foo", ".../update", {'hostname': 'example.com'})
-        {'href': '/foo/d41d8cd98f/example.com', 'method': 'get', 'rel': '.../update', \
-'parameters': [{'name': 'hostname', 'in': 'path'}]}
+        >>> endpoint = reg.lookup(__name__, ".../update", {'hostname': 'example.com'})
+        >>> assert endpoint['href'] == '/foo/d41d8cd98f/example.com'
+        >>> assert endpoint['method'] == 'get'
+        >>> assert endpoint['rel'] == '.../update'
+        >>> assert endpoint['parameters'] == [{'name': 'hostname', 'in': 'path'}]
+        >>> assert endpoint['endpoint'] == EndpointWithParams, endpoint['endpoint']
 
-        >>> reg.lookup("foo", ".../update", {})
+        >>> reg.lookup(__name__, ".../update", {})  # doctest: +ELLIPSIS
         Traceback (most recent call last):
         ...
-        ValueError: Endpoint ('foo', '.../update') with parameters () not found. \
-The following parameter combinations are possible: [('hostname',)]
+        ValueError: ...
+
+        >>> class EndpointWithoutParams:
+        ...      method = 'get'
+        ...      path = '/foo'
+        ...      func = lambda: None
+        ...      name = '.../update'
 
         >>> reg = EndpointRegistry()
-        >>> reg.add_endpoint("foo", ".../update", "get", "/foo",
+        >>> reg.add_endpoint(EndpointWithoutParams,
         ...     [{'name': 'hostname', 'in': 'query', 'required': True}])
 
     """
     def __init__(self):
         self._endpoints: Dict[EndpointKey, Dict[ParameterKey, EndpointEntry]] = {}
+        self._endpoint_list: List[EndpointEntry] = []
+
+    def __iter__(self) -> Iterator[Any]:
+        return iter(self._endpoint_list)
 
     def lookup(
         self,
@@ -547,43 +580,37 @@ The following parameter combinations are possible: [('hostname',)]
         # parameters to be available to be supplied, else we never get the "endpoint_key".
         endpoint_key = (module_name, rel)
         parameter_key: ParameterKey = tuple(sorted(parameter_values.keys()))
-        endpoint_entry = self._endpoints[(module_name, rel)]
+        try:
+            endpoint_entry = self._endpoints[endpoint_key]
+        except KeyError:
+            raise KeyError(f"Key {endpoint_key!r} not in {self._endpoints!r}")
         if parameter_key not in endpoint_entry:
             raise ValueError(f"Endpoint {endpoint_key} with parameters {parameter_key} not found. "
                              f"The following parameter combinations are possible: "
                              f"{list(endpoint_entry.keys())}")
 
-        endpoint = endpoint_entry[parameter_key]
-        return {
-            'href': _make_url(endpoint['href'], endpoint['parameters'], parameter_values),
-            'method': endpoint['method'],
-            'rel': rel,
-            'parameters': endpoint['parameters'],
-        }
+        endpoint = endpoint_entry[parameter_key].copy()
+        endpoint['href'] = _make_url(endpoint['href'], endpoint['parameters'], parameter_values)
+        return endpoint
 
     def add_endpoint(
         self,
-        module_name: str,
-        rel: EndpointName,
-        method: HTTPMethod,
-        path: str,
+        endpoint,  # not typed due to cyclical imports. need to refactor modules first.
         parameters: Sequence[PrimitiveParameter],
     ) -> None:
         """Adds an endpoint to the registry
 
         Args:
-            module_name:
-                The module in which the endpoint has been defined.
-            rel:
-                The rel of the endpoint.
-            method:
-                The HTTP method of the endpoint.
-            path:
-                The Path template the endpoint uses.
+            endpoint:
+                The function or
             parameters:
                 The parameters as a list of dicts or strings.
 
         """
+        self._endpoint_list.append(endpoint)
+        func = endpoint.func
+        module_name = func.__module__
+
         def _param_key(_path, _parameters):
             # We key on _all_ required parameters, regardless their type.
             _param_names = set()
@@ -594,17 +621,18 @@ The following parameter combinations are possible: [('hostname',)]
                 _param_names.add(_param_name)
             return tuple(sorted(_param_names))
 
-        endpoint_key = (module_name, rel)
-        parameter_key = _param_key(path, parameters)
+        endpoint_key = (module_name, endpoint.name)
+        parameter_key = _param_key(endpoint.path, parameters)
         endpoint_entry = self._endpoints.setdefault(endpoint_key, {})
         if parameter_key in endpoint_entry:
             raise RuntimeError("The endpoint %r has already been set to %r" %
                                (endpoint_key, endpoint_entry[parameter_key]))
 
         endpoint_entry[parameter_key] = {
-            'href': path,
-            'method': method,
-            'rel': rel,
+            'endpoint': endpoint,
+            'href': endpoint.path,  # legacy
+            'method': endpoint.method,  # legacy
+            'rel': endpoint.name,  # legacy
             'parameters': parameters,
         }
 

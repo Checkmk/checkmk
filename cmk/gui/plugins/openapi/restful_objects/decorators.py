@@ -12,6 +12,7 @@ Response validation will be done in `endpoint_schema` itself. Response validatio
 connexion is disabled.
 
 """
+import dataclasses
 import functools
 from types import FunctionType
 from typing import Any, Dict, List, Optional, Sequence, Set, Union
@@ -65,19 +66,8 @@ def _reduce_to_primitives(
     return [p.to_dict() if isinstance(p, ParamDict) else p for p in (parameters or [])]
 
 
-def endpoint_schema(path: str,
-                    name: EndpointName,
-                    method: HTTPMethod = 'get',
-                    parameters: Optional[Sequence[AnyParameterAndReference]] = None,
-                    content_type: str = 'application/json',
-                    output_empty: bool = False,
-                    response_schema: ResponseSchema = None,
-                    request_schema: RequestSchema = None,
-                    request_body_required: bool = True,
-                    error_schema: Schema = ApiError,
-                    etag: Optional[ETagBehaviour] = None,
-                    will_do_redirects: bool = False,
-                    **options: dict):
+@dataclasses.dataclass
+class Endpoint:
     """Mark the function as a REST-API endpoint.
 
     Notes:
@@ -137,70 +127,79 @@ def endpoint_schema(path: str,
         **options:
             Various keys which will be directly applied to the OpenAPI operation object.
 
-    Returns:
-        A wrapped function or the function unmodified. This depends on the need for validation.
-        When no validation is needed, no wrapper is applied.
-
     """
-    # NOTE:
-    #
-    # The implementation of this decorator may seem a bit daunting at first, but it is actually
-    # quite straight-forward.
-    #
-    # Everything outside the `_add_api_spec` function is not dependent on the endpoint specifics
-    # though it may depend on other parameters. (e.g. schemas etc)
-    #
-    # Everything inside of it needs the decorated function for filling out the spec.
-    #
+    path: str
+    name: EndpointName
+    method: HTTPMethod = 'get'
+    parameters: Optional[Sequence[AnyParameterAndReference]] = None
+    content_type: str = 'application/json'
+    output_empty: bool = False
+    response_schema: ResponseSchema = None
+    request_schema: RequestSchema = None
+    request_body_required: bool = True
+    error_schema: Schema = ApiError
+    etag: Optional[ETagBehaviour] = None
+    will_do_redirects: bool = False
+    options: Dict[str, str] = dataclasses.field(default_factory=dict)
+    func: Optional[FunctionType] = None
+    operation_id: Optional[str] = None
 
-    if etag is not None and etag not in ('input', 'output', 'both'):
-        raise ValueError("etag must be one of 'input', 'output', 'both'.")
+    def __call__(self, func):
+        """This is the real decorator.
+        Returns:
+        A wrapped function. The wrapper does input and output validation.
+        """
+        wrapped = wrap_with_validation(func, self.request_schema, self.response_schema)
 
-    primitive_parameters = _reduce_to_primitives(parameters)
-    del parameters
-
-    _verify_parameters(path, primitive_parameters)
-
-    def _add_api_spec(func):
-        module_obj = import_string(func.__module__)
-        module_name = module_obj.__name__
-        operation_id = func.__module__ + "." + func.__name__
+        self.func = func
+        self.operation_id = func.__module__ + "." + func.__name__
 
         ENDPOINT_REGISTRY.add_endpoint(
-            module_name,
-            name,
-            method,
-            path,
-            find_all_parameters(primitive_parameters),
+            self,
+            find_all_parameters(_reduce_to_primitives(self.parameters)),
         )
 
-        if not output_empty and response_schema is None:
-            raise ValueError(f"{operation_id}: 'response_schema' required when "
-                             f"output will be sent!")
+        if not self.output_empty and self.response_schema is None:
+            raise ValueError(
+                f"{self.operation_id}: 'response_schema' required when output will be sent!")
 
-        if output_empty and response_schema:
-            raise ValueError(f"{operation_id}: On empty output 'output_schema' may not be used.")
+        if self.output_empty and self.response_schema:
+            raise ValueError(
+                f"{self.operation_id}: On empty output 'output_schema' may not be used.")
+
+        return wrapped
+
+    def to_operation_dict(self) -> OperationSpecType:
+        """Generate the openapi spec part of this endpoint.
+
+        The result needs to be added to the `apispec` instance manually.
+        """
+        assert self.func is not None, "This object must be used in a decorator environment."
+        assert self.operation_id is not None, "This object must be used in a decorator environment."
+
+        module_obj = import_string(self.func.__module__)
+        module_name = module_obj.__name__
 
         headers: Dict[str, PrimitiveParameter] = {}
-        if etag in ('output', 'both'):
+        if self.etag in ('output', 'both'):
             headers.update(ETAG_HEADER_PARAM.header_dict())
 
         responses: ResponseType = {}
 
         # We don't(!) support any endpoint without an output schema.
         # Just define one!
-        if response_schema is not None:
+        if self.response_schema is not None:
             responses['200'] = {
                 'content': {
-                    content_type: {
-                        'schema': response_schema
+                    self.content_type: {
+                        'schema': self.response_schema
                     },
                 },
-                'description': apispec.utils.dedent(response_schema.__doc__ or ''),
+                'description': apispec.utils.dedent(self.response_schema.__doc__ or ''),
                 'headers': headers,
             }
 
-        if will_do_redirects:
+        if self.will_do_redirects:
             responses['302'] = {
                 'description':
                     ('Either the resource has moved or has not yet completed. Please see this '
@@ -208,7 +207,7 @@ def endpoint_schema(path: str,
             }
 
         # Actually, iff you don't want to give out anything, then we don't need a schema.
-        if output_empty:
+        if self.output_empty:
             responses['204'] = {
                 'description': 'Operation done successfully. No further output.',
                 'headers': headers,
@@ -226,7 +225,7 @@ def endpoint_schema(path: str,
         _add_tag(tag_obj, tag_group='Endpoints')
 
         operation_spec: OperationSpecType = {
-            'operationId': operation_id,
+            'operationId': self.operation_id,
             'tags': [module_name],
             'description': '',
             'responses': {
@@ -234,59 +233,57 @@ def endpoint_schema(path: str,
                     'description': 'Any unsuccessful or unexpected result.',
                     'content': {
                         'application/problem+json': {
-                            'schema': error_schema,
+                            'schema': self.error_schema,
                         }
                     }
                 }
             },
-            'parameters': primitive_parameters,
+            'parameters': _reduce_to_primitives(self.parameters),
         }
 
-        if etag in ('input', 'both'):
+        if self.etag in ('input', 'both'):
             operation_spec['parameters'].append(ETAG_IF_MATCH_HEADER.to_dict())
 
         operation_spec['responses'].update(responses)
 
-        if request_schema is not None:
-            tag = _tag_from_schema(request_schema)
+        if self.request_schema is not None:
+            tag = _tag_from_schema(self.request_schema)
             _add_tag(tag, tag_group='Request Schemas')
 
             operation_spec['requestBody'] = {
-                'required': request_body_required,
+                'required': self.request_body_required,
                 'content': {
                     'application/json': {
-                        'schema': request_schema,
+                        'schema': self.request_schema,
                     }
                 }
             }
 
-        operation_spec['x-codeSamples'] = code_samples(path, method, request_schema, operation_spec)
+        operation_spec['x-codeSamples'] = code_samples(
+            self.path,
+            self.method,
+            self.request_schema,
+            operation_spec,
+        )
 
         # If we don't have any parameters we remove the empty list, so the spec will not have it.
         if not operation_spec['parameters']:
             del operation_spec['parameters']
 
-        docstring_name = _docstring_name(func.__doc__)
+        docstring_name = _docstring_name(self.func.__doc__)
         if docstring_name:
             operation_spec['summary'] = docstring_name
-        docstring_desc = _docstring_description(func.__doc__)
+        docstring_desc = _docstring_description(self.func.__doc__)
         if docstring_desc:
             operation_spec['description'] = docstring_desc
 
-        apispec.utils.deepupdate(operation_spec, options)
+        apispec.utils.deepupdate(operation_spec, self.options)
 
-        if func not in _SEEN_ENDPOINTS:
-            # NOTE:
-            # Only add the endpoint to the spec if not already done. We don't want
-            # to add it multiple times. While this shouldn't be happening, doctest
-            # sometimes complains that it would be happening. Not sure why. Anyways,
-            # it's not a big deal as long as the SPEC is written correctly.
-            SPEC.path(path=path, operations={method.lower(): operation_spec})
-            _SEEN_ENDPOINTS.add(func)
+        return operation_spec
 
-        return wrap_with_validation(func, request_schema, response_schema)
 
-    return _add_api_spec
+# Compat
+endpoint_schema = Endpoint
 
 
 def _verify_parameters(

@@ -17,7 +17,10 @@ from cmk.fetchers.controller import (
     build_json_file_path,
     build_json_global_config_file_path,
     status_to_microcore_severity,
+    run_fetcher,
 )
+
+from cmk.fetchers.type_defs import Mode
 
 from cmk.utils.paths import core_fetcher_config_dir
 
@@ -54,6 +57,20 @@ class TestControllerApi:
     def test_build_json_global_config_file_path(self):
         assert build_json_global_config_file_path(
             serial="_serial_") == Path(core_fetcher_config_dir) / "_serial_" / "global_config.json"
+
+    def test_run_fetcher_with_failure(self):
+        assert run_fetcher(
+            {
+                "fetcher_type": "SNMP",
+                "trash": 1
+            },
+            Mode.CHECKING,
+            13,
+        ) == b"SNMP           :50     :26     :KeyError('fetcher_params')"
+
+    def test_run_fetcher_with_exception(self):
+        with pytest.raises(RuntimeError):
+            run_fetcher({"trash": 1}, Mode.CHECKING, 13)
 
 
 class TestHeader:

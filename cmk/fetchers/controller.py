@@ -235,10 +235,16 @@ def load_global_config(serial: int) -> None:
         cmk.utils.log.logger.setLevel(result["log_level"])
 
 
-def _run_fetcher(entry: Dict[str, Any], mode: Mode, timeout: int) -> bytes:
-    """ timeout to be used by concrete fetcher implementation"""
+def run_fetcher(entry: Dict[str, Any], mode: Mode, timeout: int) -> bytes:
+    """ timeout to be used by concrete fetcher implementation.
+    This is important entrypoint to obtain data from fetcher objects.
+    """
 
-    fetcher_type = entry["fetcher_type"]
+    try:
+        fetcher_type = entry["fetcher_type"]
+    except LookupError as exc:
+        raise RuntimeError from exc  # proposition from ml/sk to avoid stupid exception
+
     try:
         fetcher_params = entry["fetcher_params"]
 
@@ -305,7 +311,7 @@ def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
     # Multiprocessing: CPU and memory(at least in terms of kernel) hungry. Also duplicates
     # functionality of the Microcore.
 
-    resulting_blob = [_run_fetcher(entry, mode, timeout) for entry in fetchers]
+    resulting_blob = [run_fetcher(entry, mode, timeout) for entry in fetchers]
 
     write_bytes(make_payload_answer(b''.join(resulting_blob)))
 

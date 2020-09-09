@@ -26,6 +26,7 @@ set -e -o pipefail
 REDIS_INSTANCES=()
 IS_DETECTED=false
 REDIS_CLI_CMD=${REDIS_CLI_CMD:-redis-cli} # To be overloaded by tests
+WAITMAX_CMD=${WAITMAX_CMD:-waitmax}       # To be overloaded by tests
 
 load_config() {
     # source optional configuration file
@@ -99,6 +100,6 @@ for INSTANCE in ${REDIS_INSTANCES[*]}; do
     echo "[[[$INSTANCE|${!HOST}|${!PORT}]]]"
 
     # execute command
-    waitmax 3 $REDIS_CLI_CMD $REDIS_ARGS
+    $WAITMAX_CMD 3 $REDIS_CLI_CMD $REDIS_ARGS
     echo
 done

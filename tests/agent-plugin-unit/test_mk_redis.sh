@@ -8,6 +8,7 @@ MK_REDIS_PLUGIN_PATH="$UNIT_SH_PLUGINS_DIR/mk_redis"
 oneTimeSetUp() {
     MK_CONFDIR=${SHUNIT_TMPDIR}
     REDIS_CLI_CMD=echo
+    WAITMAX_CMD=echo
     cat <<EOF >"${MK_CONFDIR}/mk_redis.cfg"
 
 REDIS_INSTANCES=(LOCAL IPHOST)

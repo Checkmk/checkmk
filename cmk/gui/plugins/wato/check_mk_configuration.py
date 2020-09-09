@@ -87,7 +87,11 @@ from cmk.gui.plugins.wato import (
 
 from cmk.gui.plugins.views.icons import icon_and_action_registry
 from cmk.gui.plugins.wato.omd_configuration import ConfigVariableGroupSiteManagement
-from cmk.gui.plugins.wato.utils import get_section_information, RulespecGroupDiscoveryCheckParameters
+from cmk.gui.plugins.wato.utils import (
+    get_section_information,
+    RulespecGroupMonitoringConfiguration,
+    RulespecGroupDiscoveryCheckParameters,
+)
 from cmk.gui.watolib.bulk_discovery import vs_bulk_discovery
 from cmk.gui.watolib.groups import load_contact_group_information
 
@@ -1238,22 +1242,6 @@ class ConfigVariableCustomServiceAttributes(ConfigVariable):
                 raise MKUserError(varprefix,
                                   _("Found multiple entries using the title '%s'") % entry["title"])
             seen_titles.append(entry["title"])
-
-
-@rulespec_group_registry.register
-class RulespecGroupMonitoringConfiguration(RulespecGroup):
-    @property
-    def name(self):
-        return "monconf"
-
-    @property
-    def title(self):
-        return _("Service monitoring rules")
-
-    @property
-    def help(self):
-        return _(
-            "Intervals for checking, retries, clustering, configuration for discovery and similar")
 
 
 @rulespec_group_registry.register

@@ -703,6 +703,21 @@ def register_check_parameters(subgroup,
 
 
 @rulespec_group_registry.register
+class RulespecGroupMonitoringConfiguration(RulespecGroup):
+    @property
+    def name(self):
+        return "monconf"
+
+    @property
+    def title(self):
+        return _("Service monitoring rules")
+
+    @property
+    def help(self):
+        return _("Configuration of discovered services")
+
+
+@rulespec_group_registry.register
 class RulespecGroupDiscoveryCheckParameters(RulespecGroup):
     @property
     def name(self):
@@ -721,7 +736,7 @@ class RulespecGroupDiscoveryCheckParameters(RulespecGroup):
 class RulespecGroupCheckParametersNetworking(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupDiscoveryCheckParameters
+        return RulespecGroupMonitoringConfiguration
 
     @property
     def sub_group_name(self):
@@ -736,7 +751,7 @@ class RulespecGroupCheckParametersNetworking(RulespecSubGroup):
 class RulespecGroupCheckParametersStorage(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupDiscoveryCheckParameters
+        return RulespecGroupMonitoringConfiguration
 
     @property
     def sub_group_name(self):
@@ -751,7 +766,7 @@ class RulespecGroupCheckParametersStorage(RulespecSubGroup):
 class RulespecGroupCheckParametersOperatingSystem(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupDiscoveryCheckParameters
+        return RulespecGroupMonitoringConfiguration
 
     @property
     def sub_group_name(self):
@@ -766,7 +781,7 @@ class RulespecGroupCheckParametersOperatingSystem(RulespecSubGroup):
 class RulespecGroupCheckParametersPrinters(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupDiscoveryCheckParameters
+        return RulespecGroupMonitoringConfiguration
 
     @property
     def sub_group_name(self):
@@ -781,7 +796,7 @@ class RulespecGroupCheckParametersPrinters(RulespecSubGroup):
 class RulespecGroupCheckParametersEnvironment(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupDiscoveryCheckParameters
+        return RulespecGroupMonitoringConfiguration
 
     @property
     def sub_group_name(self):
@@ -796,7 +811,7 @@ class RulespecGroupCheckParametersEnvironment(RulespecSubGroup):
 class RulespecGroupCheckParametersApplications(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupDiscoveryCheckParameters
+        return RulespecGroupMonitoringConfiguration
 
     @property
     def sub_group_name(self):
@@ -811,7 +826,7 @@ class RulespecGroupCheckParametersApplications(RulespecSubGroup):
 class RulespecGroupCheckParametersVirtualization(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupDiscoveryCheckParameters
+        return RulespecGroupMonitoringConfiguration
 
     @property
     def sub_group_name(self):
@@ -826,7 +841,7 @@ class RulespecGroupCheckParametersVirtualization(RulespecSubGroup):
 class RulespecGroupCheckParametersHardware(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupDiscoveryCheckParameters
+        return RulespecGroupMonitoringConfiguration
 
     @property
     def sub_group_name(self):

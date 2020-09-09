@@ -340,7 +340,7 @@ def assertDiscoveryResultsEqual(check, actual, expected):
     assert isinstance(expected, DiscoveryResult), \
            "%r is not a DiscoveryResult instance" % expected
     assert len(actual.entries) == len(expected.entries), \
-           "DiscoveryResults entries are not of equal length: %s != %s" % (actual, expected)
+           "DiscoveryResults entries are not of equal length: %r != %r" % (actual, expected)
 
     for enta, ente in zip(actual.entries, expected.entries):
         item_a, default_params_a = enta
@@ -565,7 +565,7 @@ class Immutables:
             try:
                 assertEqual(self.refs[k], self.copies[k], repr(k) + descr)
             except AssertionError as exc:
-                raise ImmutablesChangedError(exc)
+                raise ImmutablesChangedError(exc) from exc
 
 
 def assertEqual(first, second, descr=''):

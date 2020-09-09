@@ -17,6 +17,8 @@ def test_registered_pages():
         'add_bookmark',
         'ajax_average_scatterplot_data',
         'ajax_alerts_bar_chart_dashlet',
+        'ajax_bi_rule_preview',
+        'ajax_bi_aggregation_preview',
         'ajax_notifications_bar_chart_dashlet',
         'ajax_cascading_render_painer_parameters',
         'ajax_activation_state',

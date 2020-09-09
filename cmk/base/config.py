@@ -2047,8 +2047,13 @@ def get_discovery_parameters(
     host_name: HostName,
     check_plugin: CheckPlugin,
 ) -> Union[None, Parameters, List[Parameters]]:
-    if check_plugin.discovery_ruleset_name is None:
+    if check_plugin.discovery_default_parameters is None:
+        # This means the function will not acctept any params.
         return None
+    if check_plugin.discovery_ruleset_name is None:
+        # This means we have default params, but no rule set.
+        # Not very sensical for discovery functions, but not forbidden by the API either.
+        return Parameters(check_plugin.discovery_default_parameters)
 
     config_cache = get_config_cache()
     rules = agent_based_register.get_discovery_ruleset(check_plugin.discovery_ruleset_name)
@@ -2091,7 +2096,9 @@ def compute_check_parameters(
     if plugin is None:  # handle vanished check plugin
         return None
 
-    params = _update_with_default_check_parameters(plugin.check_default_parameters, params)
+    if plugin.check_default_parameters is not None:
+        params = _update_with_default_check_parameters(plugin.check_default_parameters, params)
+
     if not for_static_checks:
         params = _update_with_configured_check_parameters(host, plugin, item, params)
 

@@ -178,11 +178,10 @@ def create_check_plugin(
         type_label="discovery",
         function=discovery_function,
         has_item=False,
-        has_params=discovery_ruleset_name is not None,
+        default_params=discovery_default_parameters,
         sections=subscribed_sections,
     )
     disco_func = _filter_discovery(discovery_function, requires_item, validate_item)
-    disco_params = discovery_default_parameters or {}
     disco_ruleset_name = RuleSetName(discovery_ruleset_name) if discovery_ruleset_name else None
 
     # validate check arguments
@@ -199,7 +198,7 @@ def create_check_plugin(
         type_label="check",
         function=check_function,
         has_item=requires_item,
-        has_params=check_default_parameters is not None,
+        default_params=check_default_parameters,
         sections=subscribed_sections,
     )
 
@@ -210,7 +209,7 @@ def create_check_plugin(
             type_label="cluster_check",
             function=cluster_check_function,
             has_item=requires_item,
-            has_params=check_ruleset_name is not None,
+            default_params=check_default_parameters,
             sections=subscribed_sections,
         )
         cluster_check_function = _filter_check(cluster_check_function)
@@ -220,11 +219,11 @@ def create_check_plugin(
         sections=subscribed_sections,
         service_name=service_name,
         discovery_function=disco_func,
-        discovery_default_parameters=disco_params,
+        discovery_default_parameters=discovery_default_parameters,
         discovery_ruleset_name=disco_ruleset_name,
         discovery_ruleset_type=discovery_ruleset_type,
         check_function=_filter_check(check_function),
-        check_default_parameters=check_default_parameters or {},
+        check_default_parameters=check_default_parameters,
         check_ruleset_name=RuleSetName(check_ruleset_name) if check_ruleset_name else None,
         cluster_check_function=cluster_check_function,
         module=module,

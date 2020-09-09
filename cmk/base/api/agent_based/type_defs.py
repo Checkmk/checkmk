@@ -106,11 +106,11 @@ CheckPlugin = NamedTuple(
         ("sections", List[ParsedSectionName]),
         ("service_name", str),
         ("discovery_function", DiscoveryFunction),
-        ("discovery_default_parameters", Dict[str, Any]),
+        ("discovery_default_parameters", Optional[Dict[str, Any]]),
         ("discovery_ruleset_name", Optional[RuleSetName]),
         ("discovery_ruleset_type", DiscoveryRuleSetType),
         ("check_function", CheckFunction),
-        ("check_default_parameters", Dict[str, Any]),
+        ("check_default_parameters", Optional[Dict[str, Any]]),
         ("check_ruleset_name", Optional[RuleSetName]),
         ("cluster_check_function", CheckFunction),
         ("module", Optional[str]),  # not available for auto migrated plugins.

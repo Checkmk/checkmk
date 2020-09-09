@@ -524,7 +524,8 @@ def get_aggregated_result(
 
         if service.item is not None:
             kwargs["item"] = service.item
-        if plugin.check_ruleset_name:
+
+        if plugin.check_default_parameters is not None:
             kwargs["params"] = params_function()
 
         with value_store.context(plugin.name, service.item):

@@ -80,7 +80,7 @@ def validate_function_arguments(
     type_label: Literal["check", "cluster_check", "discovery", "host_label", "inventory"],
     function: Callable,
     has_item: bool,
-    has_params: bool,
+    default_params: Optional[Dict],
     sections: List[ParsedSectionName],
 ) -> None:
     """Validate the functions signature and type"""
@@ -91,7 +91,7 @@ def validate_function_arguments(
     expected_params = []
     if has_item:
         expected_params.append('item')
-    if has_params:  # TODO (mo): if default_params is not None:
+    if default_params is not None:
         expected_params.append('params')
     if len(sections) == 1:
         expected_params.append('section')

@@ -105,7 +105,7 @@ def test_create_host_label_function(disco_func, labels_expected):
         type_label="host_label",
         function=host_label_function,
         has_item=False,
-        has_params=False,
+        default_params=None,
         sections=[ParsedSectionName("__only_one_seciton__")],
     )
 

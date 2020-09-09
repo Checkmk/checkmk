@@ -59,7 +59,7 @@ def create_inventory_plugin(
         type_label="inventory",
         function=inventory_function,
         has_item=False,
-        has_params=inventory_default_parameters is not None,
+        default_params=inventory_default_parameters,
         sections=subscribed_sections,
     )
 

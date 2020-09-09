@@ -1626,7 +1626,8 @@ def get_check_preview(host_name: HostName, use_caches: bool,
                     continue  # Skip not existing check silently
 
                 ruleset_name = str(plugin.check_ruleset_name) if plugin.check_ruleset_name else None
-                wrapped_params = Parameters(wrap_parameters(params))
+                wrapped_params = (None if plugin.check_default_parameters is None else Parameters(
+                    wrap_parameters(params)))
 
                 _submit, _data_rx, (exitcode, output, perfdata) = checking.get_aggregated_result(
                     multi_host_sections,

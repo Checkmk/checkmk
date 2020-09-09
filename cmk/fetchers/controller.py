@@ -254,7 +254,7 @@ def _run_fetcher(entry: Dict[str, Any], mode: Mode, timeout: int) -> bytes:
     except Exception as e:
         # NOTE. The exception is too broad by design:
         # we need specs for Exception coming from fetchers(and how to process)
-        payload = str(e).encode("utf-8")
+        payload = repr(e).encode("utf-8")
         fh = FetcherHeader(fetcher_type, status=50, payload_length=len(payload))
         return bytes(fh) + payload
 

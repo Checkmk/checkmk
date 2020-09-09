@@ -16,9 +16,10 @@ from cmk.gui.plugins.openapi.restful_objects import (
 from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     ParamDict,)
 
+from cmk.utils.bi.bi_lib import ReqString
 from cmk.utils.bi.bi_packs import bi_packs
-from cmk.utils.bi.bi_rule import BIRule
-from cmk.utils.bi.bi_aggregation import BIAggregation
+from cmk.utils.bi.bi_rule import BIRule, BIRuleSchema
+from cmk.utils.bi.bi_aggregation import BIAggregation, BIAggregationSchema
 
 BI_RULE_ID = ParamDict.create("rule_id", "query")
 BI_AGGR_ID = ParamDict.create("aggregation_id", "query")
@@ -34,12 +35,16 @@ BI_PACK_ID = ParamDict.create("pack_id", "query")
 #   +----------------------------------------------------------------------+
 
 
+class BIRuleEndpointSchema(BIRuleSchema):
+    pack_id = ReqString(default="", example="pack1")
+
+
 @endpoint_schema(constructors.object_href("bi_rule", "{rule_id}"),
                  'cmk/get_bi_rule',
                  method='get',
                  parameters=[BI_RULE_ID(location="path", example="rule1")],
                  request_body_required=False,
-                 response_schema=BIRule.schema())
+                 response_schema=BIRuleEndpointSchema)
 def get_bi_rule(params):
     """Get BI Rule"""
     bi_packs.load_config()
@@ -48,7 +53,9 @@ def get_bi_rule(params):
         _bailout_with_message("Unknown bi_rule: %s" % params["rule_id"])
     assert bi_rule is not None
 
-    return constructors.serve_json(BIRule.schema()().dump(bi_rule).data)
+    data = {"pack_id": bi_rule.pack_id}
+    data.update(BIRuleSchema().dump(bi_rule).data)
+    return constructors.serve_json(data)
 
 
 @endpoint_schema(constructors.object_href("bi_rule", "{rule_id}"),
@@ -56,8 +63,8 @@ def get_bi_rule(params):
                  method='put',
                  parameters=[BI_RULE_ID(location="path", example="rule1")],
                  request_body_required=True,
-                 request_schema=BIRule.schema(),
-                 response_schema=BIRule.schema())
+                 request_schema=BIRuleEndpointSchema,
+                 response_schema=BIRuleEndpointSchema)
 def put_bi_rule(params):
     """Save BI Rule"""
     bi_packs.load_config()
@@ -89,12 +96,16 @@ def _bailout_with_message(message):
 #   +----------------------------------------------------------------------+
 
 
+class BIAggregationEndpointSchema(BIAggregationSchema):
+    pack_id = ReqString(default="", example="pack1")
+
+
 @endpoint_schema(constructors.object_href("bi_aggregation", "{aggregation_id}"),
                  'cmk/get_bi_aggregation',
                  method='get',
                  parameters=[BI_AGGR_ID(location="path", example="aggregation1")],
                  request_body_required=False,
-                 response_schema=BIAggregation.schema())
+                 response_schema=BIAggregationEndpointSchema)
 def get_bi_aggregation(params):
     """Get BI Aggregation"""
     bi_packs.load_config()
@@ -103,7 +114,9 @@ def get_bi_aggregation(params):
         _bailout_with_message("Unknown bi_aggregation: %s" % params["aggregation_id"])
     assert bi_aggregation is not None
 
-    return constructors.serve_json(BIAggregation.schema()().dump(bi_aggregation).data)
+    data = {"pack_id": bi_aggregation.pack_id}
+    data.update(BIAggregationSchema().dump(bi_aggregation).data)
+    return constructors.serve_json(data)
 
 
 @endpoint_schema(constructors.object_href("bi_aggregation", "{aggregation_id}"),
@@ -111,8 +124,8 @@ def get_bi_aggregation(params):
                  method='put',
                  parameters=[BI_AGGR_ID(location="path", example="aggregation1")],
                  request_body_required=True,
-                 request_schema=BIAggregation.schema(),
-                 response_schema=BIAggregation.schema())
+                 request_schema=BIAggregationEndpointSchema,
+                 response_schema=BIAggregationEndpointSchema)
 def put_bi_aggregation(params):
     """Save BI Aggregation"""
     bi_packs.load_config()
@@ -121,6 +134,7 @@ def put_bi_aggregation(params):
     target_pack = bi_packs.get_pack(params["body"]["pack_id"])
     if target_pack is None:
         _bailout_with_message("Unknown bi_pack: %s" % params["body"]["pack_id"])
+
     assert target_pack is not None
     target_pack.add_aggregation(bi_aggregation)
     bi_packs.save_config()
@@ -186,7 +200,7 @@ def get_bi_pack(params):
     for (name, entities) in [("aggregation", bi_pack.get_aggregations()),
                              ("rule", bi_pack.get_rules())]:
         elements = entities.values()  # type: ignore[attr-defined]
-        domain_members[name] = constructors.object_collection(
+        domain_members["%ss" % name] = constructors.object_collection(
             name=name,
             domain_type="bi_" + name,  # type: ignore[arg-type]
             entries=[

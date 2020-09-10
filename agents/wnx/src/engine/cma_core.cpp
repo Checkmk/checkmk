@@ -21,6 +21,31 @@
 #include "windows_service_api.h"
 
 namespace cma {
+
+namespace security {
+void ProtectFiles(const std::filesystem::path& root) {
+    using namespace cma::cfg;
+
+    for (const auto& p :
+         {root / kAppDataAppName / files::kUserYmlFile,
+          root / kAppDataAppName / dirs::kBakery / files::kBakeryYmlFile}) {
+        if (!wtools::ProtectPathFromUserAccess(p)) {
+            XLOG::l.e("Protection of the '{}' failed!", p.u8string());
+        }
+    }
+}
+
+void ProtectAll(const std::filesystem::path& root) {
+    if (!wtools::ProtectFolderFromUserWrite(root)) {
+        XLOG::l.crit("Protection of the folder '{}' failed!", root.u8string());
+        return;
+    }
+
+    ProtectFiles(root);
+}
+
+}  // namespace security
+
 namespace ntfs {
 bool G_SimulateBadRemove = false;
 

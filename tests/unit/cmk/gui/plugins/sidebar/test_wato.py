@@ -84,9 +84,9 @@ def expected_items() -> Dict[str, List[str]]:
         'agents': agents_items,
         'events': events_items,
         'general': [
+            'rule_search',
             'globalvars',
             'read_only',
-            'rule_search',
             'predefined_conditions',
             'timeperiods',
             'passwords',

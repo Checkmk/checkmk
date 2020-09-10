@@ -180,7 +180,7 @@ class MainModuleRuleSearch(MainModule):
 
     @property
     def title(self):
-        return _("Search rules")
+        return _("Rule search")
 
     @property
     def icon(self):
@@ -196,7 +196,7 @@ class MainModuleRuleSearch(MainModule):
 
     @property
     def sort_index(self):
-        return 28
+        return 5
 
     @property
     def is_advanced(self):

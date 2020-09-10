@@ -2025,8 +2025,11 @@ class ModeNewRule(EditRuleMode):
             self._folder = watolib.Folder.current()
 
         else:
-            # Submitting the create dialog
-            self._folder = watolib.Folder.folder(self._get_folder_path_from_vars())
+            try:
+                self._folder = watolib.Folder.folder(self._get_folder_path_from_vars())
+            except MKUserError:
+                # Folder can not be gathered from form if an error occurs
+                self._folder = watolib.Folder.folder(html.request.var("rule_folder"))
 
     def _get_folder_path_from_vars(self):
         return self._get_rule_conditions_from_vars().host_folder

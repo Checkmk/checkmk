@@ -33,7 +33,7 @@
 # CISCO-REMOTE-ACCESS-MONITOR-MIB::crasWebvpnPeakConcurrentSessions.0 = Gauge32: 0 Sessions
 
 from typing import Dict
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     any_of,
     contains,
     register,

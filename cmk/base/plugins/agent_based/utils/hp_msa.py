@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Dict
-from ..agent_based_api.v0 import type_defs
+from ..agent_based_api.v1 import type_defs
 
 # TODO
 # Use 'status-numeric' instead of 'status' field regardless of language.

@@ -20,7 +20,7 @@ False
 True
 """
 
-from ..agent_based_api.v0 import (
+from ..agent_based_api.v1 import (
     all_of,
     contains,
     matches,

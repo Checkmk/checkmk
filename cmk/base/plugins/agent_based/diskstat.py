@@ -76,7 +76,7 @@ from typing import (
     Sequence,
     Tuple,
 )
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     get_rate,
     get_value_store,
     IgnoreResultsError,

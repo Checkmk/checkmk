@@ -26,7 +26,7 @@
 
 import time
 from typing import Mapping, Optional
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     get_value_store,
     get_rate,
     IgnoreResultsError,

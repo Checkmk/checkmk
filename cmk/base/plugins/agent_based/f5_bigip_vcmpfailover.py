@@ -7,12 +7,12 @@
 """
 from typing import Optional
 
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     SNMPTree,
     register,
     all_of,
 )
-from .agent_based_api.v0.type_defs import SNMPStringTable
+from .agent_based_api.v1.type_defs import SNMPStringTable
 
 from .utils.f5_bigip import (
     F5_BIGIP,

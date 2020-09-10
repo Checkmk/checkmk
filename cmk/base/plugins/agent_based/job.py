@@ -15,7 +15,7 @@ from typing import (
     Tuple,
     Union,
 )
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     Metric,
     register,
     render,
@@ -24,7 +24,7 @@ from .agent_based_api.v0 import (
     state,
     type_defs,
 )
-from .agent_based_api.v0.clusterize import aggregate_node_details
+from .agent_based_api.v1.clusterize import aggregate_node_details
 
 # <<<job>>>
 # ==> asd ASD <==

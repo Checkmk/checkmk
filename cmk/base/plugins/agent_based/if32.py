@@ -7,7 +7,7 @@
 # pylint: disable=wrong-import-order
 
 from typing import Sequence
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     always_detect,
     never_detect,
     not_exists,

@@ -10,7 +10,7 @@ from typing import (
     List,
     Mapping,
 )
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     register,
     Service,
     Result,
@@ -20,7 +20,7 @@ from .agent_based_api.v0 import (
     render,
 )
 
-from .agent_based_api.v0.type_defs import (
+from .agent_based_api.v1.type_defs import (
     DiscoveryGenerator,
     AgentStringTable,
     CheckGenerator,

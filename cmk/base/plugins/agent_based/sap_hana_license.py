@@ -9,7 +9,7 @@ from collections import namedtuple
 from typing import Mapping
 
 from .utils import sap_hana
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     render,
     check_levels,
     register,
@@ -18,7 +18,7 @@ from .agent_based_api.v0 import (
     state,
 )
 
-from .agent_based_api.v0.type_defs import (
+from .agent_based_api.v1.type_defs import (
     AgentStringTable,
     DiscoveryGenerator,
     CheckGenerator,

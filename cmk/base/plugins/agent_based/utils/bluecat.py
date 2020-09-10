@@ -6,14 +6,14 @@
 
 from collections import namedtuple
 from typing import Mapping
-from ..agent_based_api.v0 import (
+from ..agent_based_api.v1 import (
     equals,
     Metric,
     Result,
     state,
     type_defs,
 )
-from ..agent_based_api.v0.clusterize import aggregate_node_details
+from ..agent_based_api.v1.clusterize import aggregate_node_details
 
 Section = Mapping[str, int]
 ClusterSection = Mapping[str, Section]

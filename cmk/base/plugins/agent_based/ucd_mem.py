@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import operator
 
-from .agent_based_api.v0 import register, SNMPTree
+from .agent_based_api.v1 import register, SNMPTree
 from .utils import ucd_hr_detection
 
 # .1.3.6.1.4.1.2021.4.2.0 swap      --> UCD-SNMP-MIB::memErrorName.0

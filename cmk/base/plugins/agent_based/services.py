@@ -12,14 +12,14 @@ from typing import (
     Generator,
 )
 from cmk.utils.regex import regex
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     Service,
     Result,
     register,
     state,
 )
 
-from .agent_based_api.v0.type_defs import (
+from .agent_based_api.v1.type_defs import (
     AgentStringTable,
     CheckGenerator,
     DiscoveryGenerator,

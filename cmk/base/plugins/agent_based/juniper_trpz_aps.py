@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Mapping, Tuple
 
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     SNMPTree,
     Service,
     Metric,
@@ -15,7 +15,7 @@ from .agent_based_api.v0 import (
     any_of,
     startswith,
 )
-from .agent_based_api.v0.type_defs import SNMPStringTable, DiscoveryGenerator, CheckGenerator
+from .agent_based_api.v1.type_defs import SNMPStringTable, DiscoveryGenerator, CheckGenerator
 
 Section = Tuple[int, int]
 

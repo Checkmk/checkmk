@@ -9,7 +9,7 @@ from typing import (
     Sequence,
     Union,
 )
-from ..agent_based_api.v0 import (
+from ..agent_based_api.v1 import (
     exists,
     OIDBytes,
     type_defs,

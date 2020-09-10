@@ -32,7 +32,7 @@
 # VLANs; the VLAN is not included if its bit has a
 # value of '0'."
 
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     contains,
     OIDEnd,
     parse_to_string_table,

@@ -6,13 +6,13 @@
 
 from typing import Dict
 
-from .agent_based_api.v0.type_defs import (
+from .agent_based_api.v1.type_defs import (
     AgentStringTable,
     CheckGenerator,
     DiscoveryGenerator,
     Parameters,
 )
-from .agent_based_api.v0 import IgnoreResults, register, Result, Service, state
+from .agent_based_api.v1 import IgnoreResults, register, Result, Service, state
 
 SectionDatabases = Dict[str, Dict[str, str]]
 

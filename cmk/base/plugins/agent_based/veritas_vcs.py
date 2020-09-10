@@ -14,14 +14,14 @@ from typing import (
     MutableMapping,
     Optional,
 )
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     register,
     Result,
     Service,
     state,
     type_defs,
 )
-from .agent_based_api.v0.clusterize import aggregate_node_details
+from .agent_based_api.v1.clusterize import aggregate_node_details
 
 # <<<veritas_vcs>>>
 # ClusState        RUNNING

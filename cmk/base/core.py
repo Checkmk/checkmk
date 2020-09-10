@@ -53,11 +53,11 @@ class CoreAction(enum.Enum):
 
 
 def do_reload(core: MonitoringCore) -> None:
-    do_restart(core, only_reload=True)
+    do_restart(core, action=CoreAction.RELOAD)
 
 
 # TODO: Cleanup duplicate code with automation_restart()
-def do_restart(core: MonitoringCore, only_reload: bool = False) -> None:
+def do_restart(core: MonitoringCore, action: CoreAction = CoreAction.RESTART) -> None:
     try:
         if try_get_activation_lock():
             raise MKBailOut("Other restart currently in progress. Aborting.")
@@ -71,7 +71,7 @@ def do_restart(core: MonitoringCore, only_reload: bool = False) -> None:
                 raise MKGeneralException("Error creating configuration: %s" % e)
 
         core.precompile()
-        do_core_action(CoreAction.RELOAD if only_reload else CoreAction.RESTART)
+        do_core_action(action)
 
     except Exception as e:
         if cmk.utils.debug.enabled():

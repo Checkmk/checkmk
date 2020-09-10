@@ -26,7 +26,7 @@ struct servicebygroup {
 }  // namespace
 
 TableServicesByGroup::TableServicesByGroup(MonitoringCore *mc) : Table(mc) {
-    Column::Offsets offsets{};
+    ColumnOffsets offsets{};
     TableServices::addColumns(this, "", offsets, true);
     TableServiceGroups::addColumns(this, "servicegroup_",
                                    offsets.addIndirectOffset(DANGEROUS_OFFSETOF(

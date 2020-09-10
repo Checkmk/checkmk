@@ -12,9 +12,9 @@
 #include <string>
 #include <vector>
 
-#include "Column.h"
 #include "ListColumn.h"
 #include "contact_fwd.h"
+class ColumnOffsets;
 struct DowntimeData;
 class MonitoringCore;
 class Row;
@@ -25,7 +25,7 @@ public:
     enum class info { none, medium, full };
 
     DowntimeColumn(const std::string &name, const std::string &description,
-                   const Column::Offsets &offsets, MonitoringCore *mc,
+                   const ColumnOffsets &offsets, MonitoringCore *mc,
                    bool is_service, info with_info)
         : ListColumn(name, description, offsets)
         , _mc(mc)

@@ -17,8 +17,8 @@ class Row;
 template <class T, bool Default = false>
 class BoolLambdaColumn : public IntColumn {
 public:
-    BoolLambdaColumn(std::string name, std::string description, Offsets offsets,
-                     std::function<bool(const T&)> f)
+    BoolLambdaColumn(std::string name, std::string description,
+                     ColumnOffsets offsets, std::function<bool(const T&)> f)
         : IntColumn(std::move(name), std::move(description), std::move(offsets))
         , get_value_{std::move(f)} {}
     ~BoolLambdaColumn() override = default;

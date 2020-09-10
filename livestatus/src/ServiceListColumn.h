@@ -14,8 +14,8 @@
 #include <utility>
 #include <vector>
 
-#include "Column.h"
 #include "ListColumn.h"
+class ColumnOffsets;
 class MonitoringCore;
 class Row;
 class RowRenderer;
@@ -30,7 +30,7 @@ enum class ServiceState;
 class ServiceListColumn : public ListColumn {
 public:
     ServiceListColumn(const std::string &name, const std::string &description,
-                      const Column::Offsets &offsets, MonitoringCore *mc,
+                      const ColumnOffsets &offsets, MonitoringCore *mc,
                       int info_depth)
         : ListColumn(name, description, offsets)
         , _mc(mc)

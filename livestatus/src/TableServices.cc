@@ -56,7 +56,7 @@ extern service *service_list;
 extern TimeperiodsCache *g_timeperiods_cache;
 
 TableServices::TableServices(MonitoringCore *mc) : Table(mc) {
-    addColumns(this, "", Column::Offsets{}, true);
+    addColumns(this, "", ColumnOffsets{}, true);
 }
 
 std::string TableServices::name() const { return "services"; }
@@ -65,7 +65,7 @@ std::string TableServices::namePrefix() const { return "service_"; }
 
 // static
 void TableServices::addColumns(Table *table, const std::string &prefix,
-                               const Column::Offsets &offsets, bool add_hosts) {
+                               const ColumnOffsets &offsets, bool add_hosts) {
     auto offsets_custom_variables{
         offsets.addFinalOffset(DANGEROUS_OFFSETOF(service, custom_variables))};
     auto *mc = table->core();

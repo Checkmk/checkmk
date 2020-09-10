@@ -446,7 +446,7 @@ void Query::parseColumnsLine(char *line) {
                 << "replacing non-existing column '" << column_name
                 << "' with null column, reason: " << e.what();
             column = std::make_shared<NullColumn>(
-                column_name, "non-existing column", Column::Offsets{});
+                column_name, "non-existing column", ColumnOffsets{});
         }
         _columns.push_back(column);
         _all_columns.insert(column);

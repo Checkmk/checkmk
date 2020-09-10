@@ -14,7 +14,7 @@
 #include "StringLambdaColumn.h"
 
 TableColumns::TableColumns(MonitoringCore *mc) : Table(mc) {
-    Column::Offsets offsets{};
+    ColumnOffsets offsets{};
     addColumn(std::make_unique<StringLambdaColumn<Column>>(
         "table", "The name of the table", offsets, [this](const Column &col) {
             return this->getValue(col, Type::table);

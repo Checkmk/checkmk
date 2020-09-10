@@ -61,7 +61,7 @@ struct OffsetStringHostMacroColumnTest : public ::testing::Test {
     NagiosCore core{NagiosPaths{}, NagiosLimits{}, NagiosAuthorization{},
                     Encoding::utf8};
     OffsetStringHostMacroColumn oshmc{"funny_column_name", "Cool description!",
-                                      Column::Offsets{}, &core,
+                                      ColumnOffsets{}, &core,
                                       offsetof(host, notes)};
 };  // namespace
 
@@ -80,9 +80,8 @@ struct OffsetStringServiceMacroColumnTest
                              {{"STATLER", "Boo!"},
                               {"WALDORF", "Terrible!"},
                               {"_LABEL_LO", "Labello"}}};
-    OffsetStringServiceMacroColumn ossmc{"navn", "Beskrivelse",
-                                         Column::Offsets{}, &core,
-                                         offsetof(service, notes)};
+    OffsetStringServiceMacroColumn ossmc{"navn", "Beskrivelse", ColumnOffsets{},
+                                         &core, offsetof(service, notes)};
 };
 }  // namespace
 

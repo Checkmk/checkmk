@@ -20,7 +20,8 @@ class Row;
 template <class T>
 class ListLambdaColumn : public ListColumn {
 public:
-    ListLambdaColumn(std::string name, std::string description, Offsets offsets,
+    ListLambdaColumn(std::string name, std::string description,
+                     ColumnOffsets offsets,
                      std::function<std::vector<std::string>(const T&)> f)
         : ListColumn(std::move(name), std::move(description),
                      std::move(offsets))

@@ -13,16 +13,16 @@
 #include <string>
 #include <vector>
 
-#include "Column.h"
 #include "ListColumn.h"
 #include "contact_fwd.h"
+class ColumnOffsets;
 class MonitoringCore;
 class Row;
 
 class LogwatchListColumn : public ListColumn {
 public:
     LogwatchListColumn(const std::string &name, const std::string &description,
-                       const Column::Offsets &offsets, MonitoringCore *mc)
+                       const ColumnOffsets &offsets, MonitoringCore *mc)
         : ListColumn(name, description, offsets), _mc(mc) {}
 
     std::vector<std::string> getValue(

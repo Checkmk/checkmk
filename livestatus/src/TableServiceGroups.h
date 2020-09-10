@@ -10,10 +10,10 @@
 
 #include <string>
 
-#include "Column.h"
 #include "Row.h"
 #include "Table.h"
 #include "contact_fwd.h"
+class ColumnOffsets;
 class MonitoringCore;
 class Query;
 
@@ -28,7 +28,7 @@ public:
     bool isAuthorized(Row row, const contact * /*ctc*/) const override;
 
     static void addColumns(Table *table, const std::string &prefix,
-                           const Column::Offsets &offsets);
+                           const ColumnOffsets &offsets);
 };
 
 #endif  // TableServiceGroups_h

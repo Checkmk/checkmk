@@ -11,7 +11,7 @@
 
 TableEventConsoleRules::TableEventConsoleRules(MonitoringCore *mc)
     : TableEventConsole(mc) {
-    Column::Offsets offsets{};
+    ColumnOffsets offsets{};
     addColumn(std::make_unique<StringEventConsoleColumn>(
         "rule_id", "The ID of the rule", offsets));
 

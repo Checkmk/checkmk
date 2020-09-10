@@ -76,7 +76,7 @@ std::string getCustomVariable(const MonitoringCore *mc,
 
 TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
     : Table(mc), _log_cache(log_cache) {
-    Column::Offsets offsets{};
+    ColumnOffsets offsets{};
     addColumn(std::make_unique<TimeLambdaColumn<HostServiceState>>(
         "time", "Time of the log event (seconds since 1/1/1970)", offsets,
         [](const HostServiceState &r) {

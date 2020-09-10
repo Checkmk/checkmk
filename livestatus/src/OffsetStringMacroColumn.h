@@ -12,9 +12,9 @@
 #include <optional>
 #include <string>
 
-#include "Column.h"
 #include "StringColumn.h"
 #include "nagios.h"
+class ColumnOffsets;
 class MonitoringCore;
 class Row;
 
@@ -61,7 +61,7 @@ public:
     // TODO(ml): 5 offsets!
     OffsetStringMacroColumn(const std::string &name,
                             const std::string &description,
-                            const Column::Offsets &offsets,
+                            const ColumnOffsets &offsets,
                             const MonitoringCore *mc, int offset)
         : StringColumn(name, description, offsets)
         , _mc(mc)

@@ -61,7 +61,7 @@ extern host *host_list;
 extern TimeperiodsCache *g_timeperiods_cache;
 
 TableHosts::TableHosts(MonitoringCore *mc) : Table(mc) {
-    addColumns(this, "", Column::Offsets{});
+    addColumns(this, "", ColumnOffsets{});
 }
 
 std::string TableHosts::name() const { return "hosts"; }
@@ -70,10 +70,10 @@ std::string TableHosts::namePrefix() const { return "host_"; }
 
 // static
 void TableHosts::addColumns(Table *table, const std::string &prefix,
-                            const Column::Offsets &offsets) {
-    Column::Offsets offsets_custom_variables{
+                            const ColumnOffsets &offsets) {
+    ColumnOffsets offsets_custom_variables{
         offsets.addFinalOffset(DANGEROUS_OFFSETOF(host, custom_variables))};
-    Column::Offsets offsets_services{
+    ColumnOffsets offsets_services{
         offsets.addFinalOffset(DANGEROUS_OFFSETOF(host, services))};
     auto *mc = table->core();
     table->addColumn(std::make_unique<StringLambdaColumn<host>>(

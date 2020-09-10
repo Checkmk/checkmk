@@ -29,7 +29,7 @@
 // TODO(sp): the dynamic data in this table must be locked with a mutex
 
 TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
-    Column::Offsets offsets{};
+    ColumnOffsets offsets{};
     addColumn(std::make_unique<StringLambdaColumn<Comment>>(
         "author", "The contact that entered the comment", offsets,
         [](const Comment &r) { return r._author_name; }));

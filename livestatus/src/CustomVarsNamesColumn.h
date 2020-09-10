@@ -12,10 +12,10 @@
 #include <string>
 #include <vector>
 
-#include "Column.h"
 #include "ListColumn.h"
 #include "contact_fwd.h"
 enum class AttributeKind;
+class ColumnOffsets;
 class MonitoringCore;
 class Row;
 
@@ -23,7 +23,7 @@ class CustomVarsNamesColumn : public ListColumn {
 public:
     CustomVarsNamesColumn(const std::string &name,
                           const std::string &description,
-                          const Column::Offsets &offsets,
+                          const ColumnOffsets &offsets,
                           const MonitoringCore *mc, AttributeKind kind)
         : ListColumn(name, description, offsets), _mc(mc), _kind(kind) {}
 

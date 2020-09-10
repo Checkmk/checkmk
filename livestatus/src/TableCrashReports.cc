@@ -19,7 +19,7 @@
 #include "StringLambdaColumn.h"
 
 TableCrashReports::TableCrashReports(MonitoringCore *mc) : Table(mc) {
-    Column::Offsets offsets{};
+    ColumnOffsets offsets{};
     addColumn(std::make_unique<StringLambdaColumn<CrashReport>>(
         "id", "The ID of a crash report", offsets,
         [](const CrashReport &r) { return r._id; }));

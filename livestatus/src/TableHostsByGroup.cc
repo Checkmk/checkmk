@@ -27,7 +27,7 @@ struct hostbygroup {
 }  // namespace
 
 TableHostsByGroup::TableHostsByGroup(MonitoringCore *mc) : Table(mc) {
-    Column::Offsets offsets{};
+    ColumnOffsets offsets{};
     TableHosts::addColumns(this, "", offsets);
     TableHostGroups::addColumns(
         this, "hostgroup_",

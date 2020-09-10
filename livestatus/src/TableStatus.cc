@@ -56,7 +56,7 @@ extern int external_command_buffer_slots;
 #endif  // NAGIOS4
 
 TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
-    Column::Offsets offsets{};
+    ColumnOffsets offsets{};
     addCounterColumns("neb_callbacks", "NEB callbacks", offsets,
                       Counter::neb_callbacks);
     addCounterColumns("requests", "requests to Livestatus", offsets,
@@ -295,7 +295,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
 
 void TableStatus::addCounterColumns(const std::string &name,
                                     const std::string &description,
-                                    const Column::Offsets &offsets,
+                                    const ColumnOffsets &offsets,
                                     Counter which) {
     addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
         name, "The number of " + description + " since program start", offsets,

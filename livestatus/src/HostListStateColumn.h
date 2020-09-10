@@ -57,7 +57,8 @@ public:
     };
 
     HostListStateColumn(const std::string &name, const std::string &description,
-                        Offsets offsets, MonitoringCore *mc, Type logictype)
+                        ColumnOffsets offsets, MonitoringCore *mc,
+                        Type logictype)
         : IntColumn(name, description, std::move(offsets))
         , _mc(mc)
         , _logictype(logictype) {}

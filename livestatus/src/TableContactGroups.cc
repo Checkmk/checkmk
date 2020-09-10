@@ -16,7 +16,7 @@
 #include "nagios.h"
 
 TableContactGroups::TableContactGroups(MonitoringCore *mc) : Table(mc) {
-    Column::Offsets offsets{};
+    ColumnOffsets offsets{};
     addColumn(std::make_unique<StringLambdaColumn<contactgroup>>(
         "name", "The name of the contactgroup", offsets,
         [](const contactgroup &r) {

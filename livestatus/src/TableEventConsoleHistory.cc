@@ -13,7 +13,7 @@
 
 TableEventConsoleHistory::TableEventConsoleHistory(MonitoringCore *mc)
     : TableEventConsole(mc) {
-    Column::Offsets offsets{};
+    ColumnOffsets offsets{};
     addColumn(std::make_unique<IntEventConsoleColumn>(
         "history_line", "The line number of the event in the history file",
         offsets));

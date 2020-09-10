@@ -15,7 +15,7 @@
 template <class T>
 HostFileColumn<T>::HostFileColumn(
     const std::string& name, const std::string& description,
-    const Column::Offsets& offsets,
+    const ColumnOffsets& offsets,
     std::function<std::filesystem::path()> basepath,
     std::function<std::filesystem::path(const T&)> filepath)
     : BlobColumn(name, description, offsets)

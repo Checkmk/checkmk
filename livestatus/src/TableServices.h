@@ -10,10 +10,10 @@
 
 #include <string>
 
-#include "Column.h"
 #include "Row.h"
 #include "Table.h"
 #include "contact_fwd.h"
+class ColumnOffsets;
 class MonitoringCore;
 class Query;
 
@@ -21,7 +21,7 @@ class TableServices : public Table {
 public:
     explicit TableServices(MonitoringCore *mc);
     static void addColumns(Table *table, const std::string &prefix,
-                           const Column::Offsets &offsets, bool add_hosts);
+                           const ColumnOffsets &offsets, bool add_hosts);
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;

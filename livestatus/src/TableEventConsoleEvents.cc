@@ -19,7 +19,7 @@ TableEventConsoleEvents::TableEventConsoleEvents(MonitoringCore *mc)
 
 // static
 void TableEventConsoleEvents::addColumns(Table *table) {
-    Column::Offsets offsets{};
+    ColumnOffsets offsets{};
     table->addColumn(std::make_unique<IntEventConsoleColumn>(
         "event_id", "The unique ID for this event", offsets));
     table->addColumn(std::make_unique<IntEventConsoleColumn>(

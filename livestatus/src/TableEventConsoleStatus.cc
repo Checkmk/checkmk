@@ -11,7 +11,7 @@
 
 TableEventConsoleStatus::TableEventConsoleStatus(MonitoringCore *mc)
     : TableEventConsole(mc) {
-    Column::Offsets offsets{};
+    ColumnOffsets offsets{};
     addColumn(std::make_unique<IntEventConsoleColumn>(
         "status_config_load_time",
         "The time when the Event Console config was loaded", offsets));

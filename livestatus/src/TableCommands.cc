@@ -8,13 +8,14 @@
 #include <memory>
 #include <vector>
 
+#include "Column.h"
 #include "MonitoringCore.h"
 #include "Query.h"
 #include "Row.h"
 #include "StringLambdaColumn.h"
 
 TableCommands::TableCommands(MonitoringCore *mc) : Table(mc) {
-    addColumns(this, "", Column::Offsets{});
+    addColumns(this, "", ColumnOffsets{});
 }
 
 std::string TableCommands::name() const { return "commands"; }
@@ -23,7 +24,7 @@ std::string TableCommands::namePrefix() const { return "command_"; }
 
 // static
 void TableCommands::addColumns(Table *table, const std::string &prefix,
-                               const Column::Offsets &offsets) {
+                               const ColumnOffsets &offsets) {
     table->addColumn(std::make_unique<StringLambdaColumn<Command>>(
         prefix + "name", "The name of the command", offsets,
         [](const Command &cmd) { return cmd._name; }));

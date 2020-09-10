@@ -36,7 +36,7 @@ struct CustomVarsDictFilterTest : public ::testing::Test {
     bool accepts(AttributeKind kind, const std::string& value) {
         CustomVarsDictColumn cvdc{
             "name", "description",
-            Column::Offsets{}.addFinalOffset(offsetof(host, custom_variables)),
+            ColumnOffsets{}.addFinalOffset(offsetof(host, custom_variables)),
             &core, kind};
         CustomVarsDictFilter filter{Filter::Kind::row, cvdc,
                                     RelationalOperator::equal, value};

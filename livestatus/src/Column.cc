@@ -9,7 +9,7 @@
 
 #include "Logger.h"
 
-Column::Column(std::string name, std::string description, Offsets offsets)
+Column::Column(std::string name, std::string description, ColumnOffsets offsets)
     : _logger(Logger::getLogger("cmk.livestatus"))
     , _name(std::move(name))
     , _description(std::move(description))
@@ -19,8 +19,8 @@ const void *Column::shiftPointer(Row row) const {
     return _offsets.shiftPointer(row.rawData<void>());
 }
 
-Column::Offsets Column::Offsets::addIndirectOffset(int offset) const {
-    Offsets result{*this};
+ColumnOffsets ColumnOffsets::addIndirectOffset(int offset) const {
+    ColumnOffsets result{*this};
     result.shifters_.emplace_back([offset](const void *p) {
         // TODO(sp) Figure out what is actually going on regarding nullptr...
         return p == nullptr ? nullptr : *offset_cast<const void *>(p, offset);
@@ -28,8 +28,8 @@ Column::Offsets Column::Offsets::addIndirectOffset(int offset) const {
     return result;
 }
 
-Column::Offsets Column::Offsets::addFinalOffset(int offset) const {
-    Offsets result{*this};
+ColumnOffsets ColumnOffsets::addFinalOffset(int offset) const {
+    ColumnOffsets result{*this};
     result.shifters_.emplace_back([offset](const void *p) {
         // TODO(sp) Figure out what is actually going on regarding nullptr...
         return p == nullptr ? nullptr : offset_cast<const void>(p, offset);
@@ -37,8 +37,8 @@ Column::Offsets Column::Offsets::addFinalOffset(int offset) const {
     return result;
 }
 
-const void *Column::Offsets::shiftPointer(const void *data) const {
-    for (const auto &s: shifters_) {
+const void *ColumnOffsets::shiftPointer(const void *data) const {
+    for (const auto &s : shifters_) {
         data = s(data);
     }
     return data;

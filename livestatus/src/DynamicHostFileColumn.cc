@@ -15,7 +15,7 @@
 template <class T>
 DynamicHostFileColumn<T>::DynamicHostFileColumn(
     const std::string &name, const std::string &description,
-    const Column::Offsets &offsets,
+    const ColumnOffsets &offsets,
     std::function<std::filesystem::path()> basepath,
     std::function<std::filesystem::path(const T &, const std::string &)>
         filepath)

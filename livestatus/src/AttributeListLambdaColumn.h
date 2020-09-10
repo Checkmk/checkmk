@@ -25,7 +25,7 @@ template <class T, int32_t Default = 0>
 class AttributeBitmaskLambdaColumn : public AttributeListAsIntColumn {
 public:
     AttributeBitmaskLambdaColumn(std::string name, std::string description,
-                                 Offsets offsets,
+                                 ColumnOffsets offsets,
                                  std::function<int(const T&)> f)
         : AttributeListAsIntColumn(std::move(name), std::move(description),
                                    std::move(offsets))
@@ -50,7 +50,7 @@ template <class T>
 class AttributeListColumn2 : public ListColumn {
 public:
     AttributeListColumn2(std::string name, std::string description,
-                         Offsets offsets,
+                         ColumnOffsets offsets,
                          const AttributeBitmaskLambdaColumn<T>& bitmask_col)
         : ListColumn(std::move(name), std::move(description),
                      std::move(offsets))

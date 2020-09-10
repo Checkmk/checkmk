@@ -11,9 +11,9 @@
 #include <cstdint>
 #include <string>
 
-#include "Column.h"
 #include "IntColumn.h"
 #include "contact_fwd.h"
+class ColumnOffsets;
 class MonitoringCore;
 class Row;
 
@@ -23,7 +23,7 @@ public:
 
     HostSpecialIntColumn(const std::string &name,
                          const std::string &description,
-                         const Column::Offsets &offsets, MonitoringCore *mc,
+                         const ColumnOffsets &offsets, MonitoringCore *mc,
                          Type hsic_type)
         : IntColumn(name, description, offsets), _mc(mc), _type(hsic_type) {}
 

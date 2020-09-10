@@ -36,20 +36,20 @@ enum class ColumnType { int_, double_, string, list, time, dict, blob, null };
 
 using AggregationFactory = std::function<std::unique_ptr<Aggregation>()>;
 
+class ColumnOffsets {
+public:
+    [[nodiscard]] ColumnOffsets addIndirectOffset(int offset) const;
+    [[nodiscard]] ColumnOffsets addFinalOffset(int offset) const;
+    const void *shiftPointer(const void *data) const;
+
+private:
+    using shifter = std::function<const void *(const void *)>;
+    std::vector<shifter> shifters_;
+};
+
 class Column {
 public:
-    class Offsets {
-    public:
-        [[nodiscard]] Offsets addIndirectOffset(int offset) const;
-        [[nodiscard]] Offsets addFinalOffset(int offset) const;
-        const void *shiftPointer(const void *data) const;
-
-    private:
-        using shifter = std::function<const void*(const void*)>;
-        std::vector<shifter> shifters_;
-    };
-
-    Column(std::string name, std::string description, Offsets);
+    Column(std::string name, std::string description, ColumnOffsets offsets);
     virtual ~Column() = default;
 
     [[nodiscard]] std::string name() const { return _name; }
@@ -78,7 +78,7 @@ private:
     Logger *const _logger;
     std::string _name;
     std::string _description;
-    Offsets _offsets;
+    ColumnOffsets _offsets;
 
     [[nodiscard]] const void *shiftPointer(Row row) const;
 };

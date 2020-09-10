@@ -32,7 +32,7 @@
 #include "strutil.h"
 
 RRDColumn::RRDColumn(const std::string &name, const std::string &description,
-                     const Column::Offsets &offsets, MonitoringCore *mc,
+                     const ColumnOffsets &offsets, MonitoringCore *mc,
                      RRDColumnArgs args)
     : ListColumn(name, description, offsets), _mc(mc), _args(std::move(args)) {}
 

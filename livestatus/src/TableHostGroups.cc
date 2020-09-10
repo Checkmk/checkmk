@@ -21,7 +21,7 @@
 extern hostgroup *hostgroup_list;
 
 TableHostGroups::TableHostGroups(MonitoringCore *mc) : Table(mc) {
-    addColumns(this, "", Column::Offsets{});
+    addColumns(this, "", ColumnOffsets{});
 }
 
 std::string TableHostGroups::name() const { return "hostgroups"; }
@@ -30,8 +30,8 @@ std::string TableHostGroups::namePrefix() const { return "hostgroup_"; }
 
 // static
 void TableHostGroups::addColumns(Table *table, const std::string &prefix,
-                                 const Column::Offsets &offsets) {
-    Column::Offsets offsets_members{
+                                 const ColumnOffsets &offsets) {
+    ColumnOffsets offsets_members{
         offsets.addFinalOffset(DANGEROUS_OFFSETOF(hostgroup, members))};
     table->addColumn(std::make_unique<StringLambdaColumn<hostgroup>>(
         prefix + "name", "Name of the hostgroup", offsets,

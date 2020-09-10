@@ -59,7 +59,7 @@ public:
 
 TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     : Table(mc), _log_cache(log_cache) {
-    Column::Offsets offsets{};
+    ColumnOffsets offsets{};
     auto offsets_entry{
         offsets.addIndirectOffset(DANGEROUS_OFFSETOF(LogRow, entry))};
     addColumn(std::make_unique<TimeLambdaColumn<LogEntry>>(

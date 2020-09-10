@@ -36,7 +36,7 @@ template <class T>
 class AttributesLambdaColumn : public CustomVarsDictColumn {
 public:
     AttributesLambdaColumn(std::string name, std::string description,
-                           const Offsets& offsets,
+                           const ColumnOffsets& offsets,
                            std::function<Attributes(const T&)> f)
         : CustomVarsDictColumn(
               std::move(name), std::move(description), offsets,

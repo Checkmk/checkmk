@@ -21,8 +21,7 @@ class DynamicHostFileColumn : public DynamicColumn {
 public:
     DynamicHostFileColumn(
         const std::string &name, const std::string &description,
-        const Column::Offsets &,
-        std::function<std::filesystem::path()> basepath,
+        const ColumnOffsets &, std::function<std::filesystem::path()> basepath,
         std::function<std::filesystem::path(const T &, const std::string &args)>
             filepath);
     std::unique_ptr<Column> createColumn(const std::string &name,

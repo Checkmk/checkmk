@@ -56,7 +56,7 @@ protected:
     struct StringEventConsoleColumn : public StringColumn {
         StringEventConsoleColumn(const std::string &name,
                                  const std::string &description,
-                                 const Column::Offsets &offsets)
+                                 const ColumnOffsets &offsets)
             : StringColumn(name, description, offsets) {}
 
         [[nodiscard]] std::string getValue(Row row) const override {
@@ -67,7 +67,7 @@ protected:
     struct IntEventConsoleColumn : public IntColumn {
         IntEventConsoleColumn(const std::string &name,
                               const std::string &description,
-                              const Column::Offsets &offsets)
+                              const ColumnOffsets &offsets)
             : IntColumn(name, description, offsets) {}
 
         int32_t getValue(Row row,
@@ -79,7 +79,7 @@ protected:
     struct DoubleEventConsoleColumn : public DoubleColumn {
         DoubleEventConsoleColumn(const std::string &name,
                                  const std::string &description,
-                                 const Column::Offsets &offsets)
+                                 const ColumnOffsets &offsets)
             : DoubleColumn(name, description, offsets) {}
 
         [[nodiscard]] double getValue(Row row) const override {
@@ -90,7 +90,7 @@ protected:
     struct TimeEventConsoleColumn : public TimeColumn {
         TimeEventConsoleColumn(const std::string &name,
                                const std::string &description,
-                               const Column::Offsets &offsets)
+                               const ColumnOffsets &offsets)
             : TimeColumn(name, description, offsets) {}
 
     private:
@@ -105,7 +105,7 @@ protected:
     struct ListEventConsoleColumn : public ListColumn {
         ListEventConsoleColumn(const std::string &name,
                                const std::string &description,
-                               const Column::Offsets &offsets)
+                               const ColumnOffsets &offsets)
             : ListColumn(name, description, offsets) {}
 
         std::vector<std::string> getValue(

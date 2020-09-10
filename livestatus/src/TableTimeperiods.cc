@@ -17,7 +17,7 @@
 #include "nagios.h"
 
 TableTimeperiods::TableTimeperiods(MonitoringCore* mc) : Table(mc) {
-    Column::Offsets offsets{};
+    ColumnOffsets offsets{};
     addColumn(std::make_unique<StringLambdaColumn<timeperiod>>(
         "name", "The name of the timeperiod", offsets,
         [](const timeperiod& tp) { return tp.name; }));

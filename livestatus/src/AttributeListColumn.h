@@ -14,17 +14,17 @@
 #include <vector>
 
 #include "AttributeListAsIntColumn.h"
-#include "Column.h"
 #include "Filter.h"
 #include "ListColumn.h"
 #include "contact_fwd.h"
 #include "opids.h"
+class ColumnOffsets;
 class Row;
 
 class AttributeListColumn : public ListColumn {
 public:
     AttributeListColumn(const std::string &name, const std::string &description,
-                        const Column::Offsets &offsets)
+                        const ColumnOffsets &offsets)
         : ListColumn(name, description, offsets)
         , _int_view_column(name, description, offsets) {}
 

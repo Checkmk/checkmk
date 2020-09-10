@@ -26,7 +26,7 @@ struct servicebyhostgroup {
 
 TableServicesByHostGroup::TableServicesByHostGroup(MonitoringCore *mc)
     : Table(mc) {
-    Column::Offsets offsets{};
+    ColumnOffsets offsets{};
     TableServices::addColumns(this, "", offsets, true);
     TableHostGroups::addColumns(this, "hostgroup_",
                                 offsets.addIndirectOffset(DANGEROUS_OFFSETOF(

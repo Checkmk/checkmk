@@ -22,7 +22,7 @@ template <class T>
 class HostFileColumn : public BlobColumn {
 public:
     HostFileColumn(const std::string& name, const std::string& description,
-                   const Column::Offsets&,
+                   const ColumnOffsets&,
                    std::function<std::filesystem::path()> basepath,
                    std::function<std::filesystem::path(const T&)> filepath);
 

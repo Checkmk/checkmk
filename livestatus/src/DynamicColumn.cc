@@ -11,7 +11,7 @@
 #include "Logger.h"
 
 DynamicColumn::DynamicColumn(std::string name, std::string description,
-                             Column::Offsets offsets)
+                             ColumnOffsets offsets)
     : _logger(Logger::getLogger("cmk.livestatus"))
     , _name(std::move(name))
     , _description(std::move(description))

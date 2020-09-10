@@ -2364,6 +2364,26 @@ bool ProtectFolderFromUserWrite(const std::filesystem::path& folder) {
     return true;
 }
 
+bool ProtectPathFromUserAccess(const std::filesystem::path& entry) {
+    // CONTEXT: some files must be protected from the user fully
+
+    constexpr std::wstring_view command_templates[] = {
+        L"icacls \"{}\" /inheritance:d /c",          // disable inheritance
+        L"icacls \"{}\" /remove:g *S-1-5-32-545 /c"  // remove all user rights
+    };
+
+    for (auto const t : command_templates) {
+        auto cmd = fmt::format(t.data(), entry.wstring());
+        if (!cma::tools::RunCommandAndWait(cmd)) {
+            // logging is almost useless: at this phase logfile is absent
+            XLOG::l.e("Failed command '{}'", wtools::ConvertToUTF8(cmd));
+            return false;
+        }
+    }
+
+    return true;
+}
+
 }  // namespace wtools
 
 // verified code from the legacy client

@@ -510,6 +510,23 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop() {
     return Signal::quit;
 }
 
+namespace {
+void ReProtectFiles() {
+    // Some secret files may be installed during start/update/upgrade.
+    // We must protect them.
+    try {
+        auto app_data_folder =
+            cma::tools::win::GetSomeSystemFolder(FOLDERID_ProgramData);
+        cma::security::ProtectFiles(std::filesystem::path(app_data_folder) /
+                                    cma::cfg::kAppDataCompanyName);
+    } catch (const std::exception& e) {
+        // no crashes allowed
+        XLOG::l.crit("Unexpected exception '{}' during re-protect files call",
+                     e.what());
+    }
+}
+}  // namespace
+
 // <HOSTING THREAD>
 // ex_port may be nullptr(command line test, for example)
 // makes a mail slot + starts IO on TCP
@@ -517,9 +534,12 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
     using namespace std::chrono;
     // Periodically checks if the service is stopping.
     // mail slot name selector "service" or "not service"
-    auto mailslot_name = cma::IsService() ? cma::cfg::kServiceMailSlot
-                                          : cma::cfg::kTestingMailSlot;
+    using namespace cma::cfg;
+    auto mailslot_name = cma::IsService() ? kServiceMailSlot : kTestingMailSlot;
 
+    if (cma::IsService()) {
+        ReProtectFiles();
+    }
 #if 0
     // ARtificial memory allocator in thread
     std::vector<std::string> z;

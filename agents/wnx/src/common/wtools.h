@@ -1017,12 +1017,18 @@ std::string ReadWholeFile(const std::filesystem::path& fname) noexcept;
 bool PatchFileLineEnding(const std::filesystem::path& fname) noexcept;
 
 
-/// \brief Set correct access rights in %ProgramData%/checkmk
+/// \brief Set correct access rights for the folder
 ///
 ///  Normally called once on the start of the service.
-///  Removes Users write access from the programdata folder
+///  Removes Users write access from the specified folder(usually it is
+///  %ProgramData%/checkmk)
 bool ProtectFolderFromUserWrite(const std::filesystem::path& folder);
 
+/// \brief Remove user access to the path
+///
+///  Normally called once on the start of the service.
+///  Removes Users Access to the specified path
+bool ProtectPathFromUserAccess(const std::filesystem::path& entry);
 }  // namespace wtools
 
 #endif  // wtools_h__

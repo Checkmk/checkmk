@@ -812,80 +812,77 @@ class AutomationRestart(Automation):
 
     # TODO: Cleanup duplicate code with cmk.base.core.do_restart()
     def execute(self, args: List[str]) -> core_config.ConfigurationWarnings:
-        # make sure, Nagios does not inherit any open
-        # filedescriptors. This really happens, e.g. if
-        # check_mk is called by WATO via Apache. Nagios inherits
-        # the open file where Apache is listening for incoming
-        # HTTP connections. Really.
-        if config.monitoring_core == "nagios":
-            objects_file = cmk.utils.paths.nagios_objects_file
-            cmk.utils.daemon.closefrom(3)
-        else:
-            objects_file = cmk.utils.paths.var_dir + "/core/config"
-
-        # Deactivate stdout by introducing fake file without filedescriptor
-        old_stdout = sys.stdout
-        sys.stdout = open(os.devnull, "w")
-
-        try:
-            backup_path = None
-            if cmk.base.core.try_get_activation_lock():
-                raise MKAutomationError("Cannot activate changes. "
-                                        "Another activation process is currently in progresss")
-
-            if os.path.exists(objects_file):
-                backup_path = objects_file + ".save"
-                os.rename(objects_file, backup_path)
+        with redirect_stdout(open(os.devnull, "w")):
+            # make sure, Nagios does not inherit any open
+            # filedescriptors. This really happens, e.g. if
+            # check_mk is called by WATO via Apache. Nagios inherits
+            # the open file where Apache is listening for incoming
+            # HTTP connections. Really.
+            if config.monitoring_core == "nagios":
+                objects_file = cmk.utils.paths.nagios_objects_file
+                cmk.utils.daemon.closefrom(3)
             else:
-                backup_path = None
+                objects_file = cmk.utils.paths.var_dir + "/core/config"
 
-            core = create_core()
             try:
-                configuration_warnings = core_config.create_core_config(core)
+                backup_path = None
+                if cmk.base.core.try_get_activation_lock():
+                    raise MKAutomationError("Cannot activate changes. "
+                                            "Another activation process is currently in progresss")
 
+                if os.path.exists(objects_file):
+                    backup_path = objects_file + ".save"
+                    os.rename(objects_file, backup_path)
+                else:
+                    backup_path = None
+
+                core = create_core()
                 try:
-                    from cmk.base.cee.bakery.agent_bakery import bake_on_restart  # pylint: disable=import-outside-toplevel
-                    bake_on_restart()
-                except ImportError:
-                    pass
+                    configuration_warnings = core_config.create_core_config(core)
+
+                    try:
+                        from cmk.base.cee.bakery.agent_bakery import bake_on_restart  # pylint: disable=import-outside-toplevel
+                        bake_on_restart()
+                    except ImportError:
+                        pass
+
+                except Exception as e:
+                    if backup_path:
+                        os.rename(backup_path, objects_file)
+                    if cmk.utils.debug.enabled():
+                        raise
+                    raise MKAutomationError("Error creating configuration: %s" % e)
+
+                if config.monitoring_core == "cmc" or cmk.base.nagios_utils.do_check_nagiosconfig():
+                    if backup_path:
+                        os.remove(backup_path)
+
+                    core.precompile()
+
+                    cmk.base.core.do_core_action(self._mode())
+                else:
+                    broken_config_path = "%s/check_mk_objects.cfg.broken" % cmk.utils.paths.tmp_dir
+                    open(broken_config_path,
+                         "w").write(open(cmk.utils.paths.nagios_objects_file).read())
+
+                    if backup_path:
+                        os.rename(backup_path, objects_file)
+                    else:
+                        os.remove(objects_file)
+
+                    raise MKAutomationError(
+                        "Configuration for monitoring core is invalid. Rolling back. "
+                        "The broken file has been copied to \"%s\" for analysis." %
+                        broken_config_path)
 
             except Exception as e:
-                if backup_path:
-                    os.rename(backup_path, objects_file)
+                if backup_path and os.path.exists(backup_path):
+                    os.remove(backup_path)
                 if cmk.utils.debug.enabled():
                     raise
-                raise MKAutomationError("Error creating configuration: %s" % e)
+                raise MKAutomationError(str(e))
 
-            if config.monitoring_core == "cmc" or cmk.base.nagios_utils.do_check_nagiosconfig():
-                if backup_path:
-                    os.remove(backup_path)
-
-                core.precompile()
-
-                cmk.base.core.do_core_action(self._mode())
-            else:
-                broken_config_path = "%s/check_mk_objects.cfg.broken" % cmk.utils.paths.tmp_dir
-                open(broken_config_path,
-                     "w").write(open(cmk.utils.paths.nagios_objects_file).read())
-
-                if backup_path:
-                    os.rename(backup_path, objects_file)
-                else:
-                    os.remove(objects_file)
-
-                raise MKAutomationError(
-                    "Configuration for monitoring core is invalid. Rolling back. "
-                    "The broken file has been copied to \"%s\" for analysis." % broken_config_path)
-
-        except Exception as e:
-            if backup_path and os.path.exists(backup_path):
-                os.remove(backup_path)
-            if cmk.utils.debug.enabled():
-                raise
-            raise MKAutomationError(str(e))
-
-        sys.stdout = old_stdout
-        return configuration_warnings
+            return configuration_warnings
 
     def _check_plugins_have_changed(self) -> bool:
         this_time = self._last_modification_in_dir(str(cmk.utils.paths.local_checks_dir))

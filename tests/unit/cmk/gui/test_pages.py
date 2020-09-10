@@ -200,6 +200,7 @@ def test_registered_pages():
             'ajax_ntop_engaged_alerts',
             'ajax_ntop_past_alerts',
             'ajax_ntop_flow_alerts',
+            'license_usage_download',
         ]
 
     # TODO: Depending on how we call the test (single test or whole package) we

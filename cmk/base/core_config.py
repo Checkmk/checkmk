@@ -8,7 +8,8 @@ import abc
 import numbers
 import os
 import sys
-from typing import AnyStr, Callable, Dict, List, Optional, Tuple, Union
+from typing import AnyStr, Callable, Dict, List, Optional, Tuple, Union, Iterator
+from contextlib import contextmanager
 
 import cmk.utils.version as cmk_version
 import cmk.utils.debug
@@ -38,6 +39,7 @@ from cmk.base.config import (
     ObjectAttributes,
 )
 from cmk.base.check_utils import Service, LegacyCheckParameters
+from cmk.base.nagios_utils import do_check_nagiosconfig
 
 ConfigurationWarnings = List[str]
 ObjectMacros = Dict[str, AnyStr]
@@ -256,6 +258,48 @@ def do_create_config(core: MonitoringCore, with_agents: bool) -> None:
             cmk.base.cee.bakery.agent_bakery.bake_on_restart()
         except ImportError:
             pass
+
+
+@contextmanager
+def backup_objects_file(core: MonitoringCore) -> Iterator[None]:
+    backup_path = None
+    if config.monitoring_core == "nagios":
+        objects_file = cmk.utils.paths.nagios_objects_file
+    else:
+        objects_file = cmk.utils.paths.var_dir + "/core/config"
+
+    if os.path.exists(objects_file):
+        backup_path = objects_file + ".save"
+        os.rename(objects_file, backup_path)
+    else:
+        backup_path = None
+
+    try:
+        try:
+            yield None
+        except Exception:
+            if backup_path:
+                os.rename(backup_path, objects_file)
+            raise
+
+        if config.monitoring_core == "cmc" or do_check_nagiosconfig():
+            if backup_path:
+                os.remove(backup_path)
+        else:
+            broken_config_path = "%s/check_mk_objects.cfg.broken" % cmk.utils.paths.tmp_dir
+            open(broken_config_path, "w").write(open(cmk.utils.paths.nagios_objects_file).read())
+
+            if backup_path:
+                os.rename(backup_path, objects_file)
+            else:
+                os.remove(objects_file)
+
+            raise MKGeneralException("Configuration for monitoring core is invalid. Rolling back. "
+                                     "The broken file has been copied to \"%s\" for analysis." %
+                                     broken_config_path)
+    finally:
+        if backup_path and os.path.exists(backup_path):
+            os.remove(backup_path)
 
 
 def create_core_config(core: MonitoringCore) -> ConfigurationWarnings:

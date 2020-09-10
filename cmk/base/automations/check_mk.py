@@ -820,52 +820,19 @@ class AutomationRestart(Automation):
 
                 core = create_core()
 
-                try:
-                    backup_path = None
-                    if config.monitoring_core == "nagios":
-                        objects_file = cmk.utils.paths.nagios_objects_file
-                    else:
-                        objects_file = cmk.utils.paths.var_dir + "/core/config"
-
-                    if os.path.exists(objects_file):
-                        backup_path = objects_file + ".save"
-                        os.rename(objects_file, backup_path)
-                    else:
-                        backup_path = None
-
+                with core_config.backup_objects_file(core):
                     try:
                         core_config.do_create_config(core, with_agents=True)
                     except Exception as e:
-                        if backup_path:
-                            os.rename(backup_path, objects_file)
                         if cmk.utils.debug.enabled():
                             raise
                         raise MKAutomationError("Error creating configuration: %s" % e)
 
-                    if config.monitoring_core == "cmc" or cmk.base.nagios_utils.do_check_nagiosconfig(
-                    ):
-                        if backup_path:
-                            os.remove(backup_path)
-                    else:
-                        broken_config_path = "%s/check_mk_objects.cfg.broken" % cmk.utils.paths.tmp_dir
-                        open(broken_config_path,
-                             "w").write(open(cmk.utils.paths.nagios_objects_file).read())
-
-                        if backup_path:
-                            os.rename(backup_path, objects_file)
-                        else:
-                            os.remove(objects_file)
-
-                        raise MKAutomationError(
-                            "Configuration for monitoring core is invalid. Rolling back. "
-                            "The broken file has been copied to \"%s\" for analysis." %
-                            broken_config_path)
-                finally:
-                    if backup_path and os.path.exists(backup_path):
-                        os.remove(backup_path)
-
                 core.precompile()
                 cmk.base.core.do_core_action(self._mode())
+
+            except MKGeneralException as e:
+                raise MKAutomationError(str(e))
 
             except Exception as e:
                 if cmk.utils.debug.enabled():

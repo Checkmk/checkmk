@@ -832,14 +832,7 @@ class AutomationRestart(Automation):
 
                 core = create_core()
                 try:
-                    configuration_warnings = core_config.create_core_config(core)
-
-                    try:
-                        from cmk.base.cee.bakery.agent_bakery import bake_on_restart  # pylint: disable=import-outside-toplevel
-                        bake_on_restart()
-                    except ImportError:
-                        pass
-
+                    core_config.do_create_config(core, with_agents=True)
                 except Exception as e:
                     if backup_path:
                         os.rename(backup_path, objects_file)
@@ -876,7 +869,7 @@ class AutomationRestart(Automation):
                     raise
                 raise MKAutomationError(str(e))
 
-            return configuration_warnings
+            return core_config.get_configuration_warnings()
 
     def _check_plugins_have_changed(self) -> bool:
         this_time = self._last_modification_in_dir(str(cmk.utils.paths.local_checks_dir))

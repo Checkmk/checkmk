@@ -23,18 +23,14 @@ const void *Column::shiftPointer(Row row) const {
 Column::Offsets Column::Offsets::addIndirectOffset(int offset) const {
     assert(!final_offset_);
     Offsets result{*this};
-    if (offset >= 0) {
-        result.indirect_offsets_.push_back(offset);
-    }
+    result.indirect_offsets_.push_back(offset);
     return result;
 }
 
 Column::Offsets Column::Offsets::addFinalOffset(int offset) const {
     assert(!final_offset_);
     Offsets result{*this};
-    if (offset >= 0) {
-        result.final_offset_ = offset;
-    }
+    result.final_offset_ = offset;
     return result;
 }
 

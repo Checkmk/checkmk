@@ -423,6 +423,12 @@ def test_automation_try_discovery_caching(scan, raise_errors, mocker):
 def test_automation_discovery_caching(raise_errors, scan, mocker):
     kwargs = {}
     kwargs.update(raise_errors[1])
+    # The next options come from the call to `_set_cache_opts_of_data_sources()`
+    # in `AutomationDiscovery`.
+    maybe = scan != "@scan"
+    kwargs.update(maybe=maybe)
+    kwargs.update(use_outdated=maybe)
+    kwargs.update(max_age=120 if maybe else 0)
 
     _patch_data_source(mocker, **kwargs)
 
@@ -431,13 +437,10 @@ def test_automation_discovery_caching(raise_errors, scan, mocker):
         args.append(raise_errors[0])
     if scan is not None:
         args.append(scan)
-        check_call_count = 2
-    else:
-        check_call_count = 1
 
     args += ["fixall", "ds-test-host1"]
     cmk.base.automations.check_mk.AutomationDiscovery().execute(args)
-    assert ABCChecker.check.call_count == check_call_count  # type: ignore[attr-defined]
+    assert ABCChecker.check.call_count == 2  # type: ignore[attr-defined]
 
 
 # Globale Optionen:

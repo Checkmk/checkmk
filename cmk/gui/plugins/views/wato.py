@@ -26,7 +26,7 @@ class PainterHostFilename(Painter):
         return "host_filename"
 
     def title(self, cell):
-        return _("Check_MK config filename")
+        return _("Checkmk config filename")
 
     def short_title(self, cell):
         return _("Filename")

@@ -171,7 +171,7 @@ def _vs_add_common_mail_elements(elements):
 def _get_url_prefix_specs(default_choice, default_value=DEF_VALUE):
 
     return Transform(CascadingDropdown(
-        title=_("URL prefix for links to Check_MK"),
+        title=_("URL prefix for links to Checkmk"),
         help=_("If you use <b>Automatic HTTP/s</b>, the URL prefix for host "
                "and service links within the notification is filled "
                "automatically. If you specify an URL prefix here, then "
@@ -1093,7 +1093,7 @@ class NotificationParameterPushover(NotificationParameter):
                  )),
                 ("url_prefix",
                  TextAscii(
-                     title=_("URL prefix for links to Check_MK"),
+                     title=_("URL prefix for links to Checkmk"),
                      help=_("If you specify an URL prefix here, then several parts of the "
                             "email body are armed with hyperlinks to your Check_MK GUI, so "
                             "that the recipient of the email can directly visit the host or "

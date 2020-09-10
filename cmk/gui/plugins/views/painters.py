@@ -1349,7 +1349,7 @@ class PainterCheckManpage(Painter):
         return "check_manpage"
 
     def title(self, cell):
-        return _("Check manual (for Check_MK based checks)")
+        return _("Check manual (for Checkmk based checks)")
 
     def short_title(self, cell):
         return _("Manual")

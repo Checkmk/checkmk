@@ -104,7 +104,7 @@ def _valuespec_datasource_programs():
                "via SSH.") + monitoring_macro_help() +
         _("This option can only be used with the permission \"Can add or modify executables\"."),
         label=_("Command line to execute"),
-        empty_text=_("Access Check_MK Agent via TCP"),
+        empty_text=_("Access Checkmk Agent via TCP"),
         size=80,
         attrencode=True,
     )
@@ -628,9 +628,9 @@ def _valuespec_special_agents_vsphere():
                  choices=[
                      (True, _("Queried host is a host system")),
                      ("hostsystem_agent",
-                      _("Queried host is a host system with Check_MK Agent installed")),
+                      _("Queried host is a host system with Checkmk Agent installed")),
                      (False, _("Queried host is the vCenter")),
-                     ("agent", _("Queried host is the vCenter with Check_MK Agent installed")),
+                     ("agent", _("Queried host is the vCenter with Checkmk Agent installed")),
                  ],
                  default_value=True,
              )),
@@ -1590,7 +1590,7 @@ def _valuespec_special_agents_ruckus_spot():
             )),
             ("cmk_agent",
              Dictionary(
-                 title=_("Also contact Check_MK agent"),
+                 title=_("Also contact Checkmk agent"),
                  help=_("With this setting, the special agent will also contact the "
                         "Check_MK agent on the same system at the specified port."),
                  elements=[

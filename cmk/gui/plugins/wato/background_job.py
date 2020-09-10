@@ -54,7 +54,7 @@ class MainModuleBackgroundJobs(MainModule):
 
     @property
     def description(self):
-        return _("Manage longer running tasks in the Check_MK GUI")
+        return _("Manage longer running tasks in the Checkmk GUI")
 
     @property
     def sort_index(self):

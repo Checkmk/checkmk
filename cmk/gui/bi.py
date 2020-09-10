@@ -70,7 +70,7 @@ class PermissionSectionBI(PermissionSection):
 
     @property
     def title(self):
-        return _("BI - Check_MK Business Intelligence")
+        return _("BI - Checkmk Business Intelligence")
 
 
 @permission_registry.register

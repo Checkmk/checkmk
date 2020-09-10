@@ -135,7 +135,7 @@ def page_api():
             "result": _("Authorization Error. Insufficent permissions for '%s'") % e
         }
     except MKException as e:
-        response = {"result_code": 1, "result": _("Check_MK exception: %s") % e}
+        response = {"result_code": 1, "result": _("Checkmk exception: %s") % e}
     except Exception:
         if config.debug:
             raise

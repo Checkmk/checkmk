@@ -109,7 +109,7 @@ class ConfigVariableSiteCore(ConfigVariable):
     def _monitoring_core_choices(self):
         cores = []
         if not cmk_version.is_raw_edition():
-            cores.append(("cmc", _("Check_MK Micro Core")))
+            cores.append(("cmc", _("Checkmk Micro Core")))
 
         cores += [
             ("nagios", _("Nagios 3")),

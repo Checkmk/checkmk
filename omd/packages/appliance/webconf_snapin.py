@@ -20,11 +20,11 @@ class SidebarSnapinCMAWebconf(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("Check_MK Appliance")
+        return _("Checkmk Appliance")
 
     @classmethod
     def description(cls):
-        return _("Access to the Check_MK Appliance Web Configuration")
+        return _("Access to the Checkmk Appliance Web Configuration")
 
     @classmethod
     def allowed_roles(cls):

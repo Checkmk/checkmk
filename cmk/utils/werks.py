@@ -45,7 +45,7 @@ class WerkTranslator:
             "inv": _("HW/SW inventory"),
 
             # CEE
-            "cmc": _("The Check_MK Micro Core"),
+            "cmc": _("The Checkmk Micro Core"),
             "setup": _("Setup, site management"),
             "config": _("Configuration generation"),
             "inline-snmp": _("Inline SNMP"),

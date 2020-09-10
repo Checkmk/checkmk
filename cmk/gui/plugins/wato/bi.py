@@ -2603,7 +2603,7 @@ class MainModuleBI(MainModule):
 
     @property
     def description(self):
-        return _("Configuration of Check_MK's Business Intelligence component.")
+        return _("Configuration of Checkmk's Business Intelligence component.")
 
     @property
     def sort_index(self):

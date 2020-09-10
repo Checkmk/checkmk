@@ -93,7 +93,7 @@ metric_info["livestatus_request_rate"] = {
 }
 
 metric_info["helper_usage_cmk"] = {
-    "title": _("Check_MK helper usage"),
+    "title": _("Checkmk helper usage"),
     "unit": "%",
     "color": "15/a",
 }
@@ -105,7 +105,7 @@ metric_info["helper_usage_generic"] = {
 }
 
 metric_info["average_latency_cmk"] = {
-    "title": _("Check_MK check latency"),
+    "title": _("Checkmk check latency"),
     "unit": "s",
     "color": "15/a",
 }
@@ -129,7 +129,7 @@ metric_info["livestatus_overflows_rate"] = {
 }
 
 metric_info["cmk_time_agent"] = {
-    "title": _("Time spent waiting for Check_MK agent"),
+    "title": _("Time spent waiting for Checkmk agent"),
     "unit": "s",
     "color": "36/a",
 }
@@ -188,37 +188,37 @@ metric_info["num_disabled_alerts"] = {
 def register_omd_apache_metrics():
     for ty, unit in [("requests", "1/s"), ("bytes", "bytes/s"), ("secs", "1/s")]:
         metric_info[ty + "_cmk_views"] = {
-            "title": _("Check_MK: Views"),
+            "title": _("Checkmk: Views"),
             "unit": unit,
             "color": "#ff8080",
         }
 
         metric_info[ty + "_cmk_wato"] = {
-            "title": _("Check_MK: WATO"),
+            "title": _("Checkmk: WATO"),
             "unit": unit,
             "color": "#377cab",
         }
 
         metric_info[ty + "_cmk_bi"] = {
-            "title": _("Check_MK: BI"),
+            "title": _("Checkmk: BI"),
             "unit": unit,
             "color": "#4eb0f2",
         }
 
         metric_info[ty + "_cmk_snapins"] = {
-            "title": _("Check_MK: Snapins"),
+            "title": _("Checkmk: Snapins"),
             "unit": unit,
             "color": "#ff4040",
         }
 
         metric_info[ty + "_cmk_dashboards"] = {
-            "title": _("Check_MK: Dashboards"),
+            "title": _("Checkmk: Dashboards"),
             "unit": unit,
             "color": "#4040ff",
         }
 
         metric_info[ty + "_cmk_other"] = {
-            "title": _("Check_MK: Other"),
+            "title": _("Checkmk: Other"),
             "unit": unit,
             "color": "#5bb9eb",
         }

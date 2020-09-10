@@ -47,7 +47,7 @@ def do_git_commit():
         _git_add_files()
         _git_command([
             "commit", "--untracked-files=no", "--author", author, "-m",
-            _("Initialized GIT for Check_MK")
+            _("Initialized GIT for Checkmk")
         ])
 
     if _git_has_pending_changes():

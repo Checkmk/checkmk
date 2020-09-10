@@ -130,7 +130,7 @@ class ConfigVariableUITheme(ConfigVariable):
     def valuespec(self):
         return DropdownChoice(
             title=_("User interface theme"),
-            help=_("Change the default user interface theme of your Check_MK installation"),
+            help=_("Change the default user interface theme of your Checkmk installation"),
             choices=config.theme_choices(),
         )
 
@@ -185,7 +185,7 @@ class ConfigVariableLogLevels(ConfigVariable):
                "about compiling BI aggregations. This includes statistics and "
                "details for each executed compilation.")),
             ("cmk.web.automations", _("Automation calls"),
-             _("Communication between different components of Check_MK (e.g. GUI and check engine) "
+             _("Communication between different components of Checkmk (e.g. GUI and check engine) "
                "will be logged in this log level.")),
             ("cmk.web.background-job", _("Background jobs"),
              _("Some long running tasks are executed as executed in so called background jobs. You "
@@ -819,7 +819,7 @@ class ConfigVariableSidebarShowVersionInSidebar(ConfigVariable):
 
     def valuespec(self):
         return Checkbox(
-            title=_("Show Check_MK edition & version in sidebar"),
+            title=_("Show Checkmk edition & version in sidebar"),
             label=_("Show the edition ad version"),
             help=_("Use this option to hide the Check_MK edition and version information from "
                    "the header of the sidebar."),
@@ -1000,8 +1000,8 @@ class ConfigVariableLoginScreen(ConfigVariable):
                 ("hide_version",
                  FixedValue(
                      True,
-                     title=_("Hide Check_MK version"),
-                     totext=_("Hide the Check_MK version from the login box"),
+                     title=_("Hide Checkmk version"),
+                     totext=_("Hide the Checkmk version from the login box"),
                  )),
                 ("login_message",
                  TextUnicode(
@@ -1665,7 +1665,7 @@ class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
                      label=_("Trust system wide configured CAs"),
                  )),
                 ("trusted_cas", ListOfCAs(
-                    title=_("Check_MK specific"),
+                    title=_("Checkmk specific"),
                     allow_empty=True,
                 )),
             ],
@@ -2310,7 +2310,7 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                 ("cmciii_lcp_airin", _("Rittal CMC-III LCP: Air In and Temperature")),
                 ("cmciii_lcp_airout", _("Rittal CMC-III LCP: Air Out Temperature")),
                 ("cmciii_lcp_water", _("Rittal CMC-III LCP: Water In/Out Temperature")),
-                ("cmk_inventory", _("Monitor hosts for unchecked services (Check_MK Discovery)")),
+                ("cmk_inventory", _("Monitor hosts for unchecked services (Checkmk Discovery)")),
                 ("dbd2_mem", _("Memory levels for DB2 memory usage")),
                 ("df", _("Used space in filesystems")),
                 ("df_netapp", _("NetApp Filers: Used Space in Filesystems")),
@@ -2564,7 +2564,7 @@ class ConfigVariableCheckMKPerfdataWithTimes(ConfigVariable):
 
     def valuespec(self):
         return Checkbox(
-            title=_("Check_MK with times performance data"),
+            title=_("Checkmk with times performance data"),
             label=_("Return process times within performance data"),
             help=_("Enabling this option results in additional performance data "
                    "for the Check_MK output, giving information regarding the process times. "
@@ -2996,7 +2996,7 @@ rulespec_registry.register(
 
 def _valuespec_check_periods():
     return TimeperiodSelection(
-        title=_("Check period for passive Check_MK services"),
+        title=_("Check period for passive Checkmk services"),
         help=_("If you specify a notification period for a Check_MK service then "
                "results will be processed only within this period."),
     )
@@ -3154,11 +3154,11 @@ rulespec_registry.register(
 def _host_check_commands_host_check_command_choices():
     choices: List[CascadingDropdownChoice] = [
         ("ping", _("PING (active check with ICMP echo request)")),
-        ("smart", _("Smart PING (only with Check_MK Micro Core)")),
+        ("smart", _("Smart PING (only with Checkmk Micro Core)")),
         ("tcp", _("TCP Connect"),
          Integer(label=_("to port:"), minvalue=1, maxvalue=65535, default_value=80)),
         ("ok", _("Always assume host to be up")),
-        ("agent", _("Use the status of the Check_MK Agent")),
+        ("agent", _("Use the status of the Checkmk Agent")),
         ("service", _("Use the status of the service..."),
          TextUnicode(
              size=45,
@@ -3177,7 +3177,7 @@ def _host_check_commands_host_check_command_choices():
 def _valuespec_host_check_commands():
     return CascadingDropdown(
         title=_("Host Check Command"),
-        help=_("Usually Check_MK uses a series of PING (ICMP echo request) in order to determine "
+        help=_("Usually Checkmk uses a series of PING (ICMP echo request) in order to determine "
                "whether a host is up. In some cases this is not possible, however. With this rule "
                "you can specify an alternative way of determining the host's state.") +
         _("The option to use a custom command can only be configured with the permission "
@@ -4069,7 +4069,7 @@ class RulespecGroupUserInterface(RulespecGroup):
 
     @property
     def help(self):
-        return _("Settings concerning the user interface of Check_MK")
+        return _("Settings concerning the user interface of Checkmk")
 
 
 def _valuespec_extra_host_conf_icon_image():
@@ -4211,7 +4211,7 @@ class RulespecGroupAgent(RulespecGroup):
 
     @property
     def help(self):
-        return _("Settings concerning the connection to the Check_MK and SNMP agents")
+        return _("Settings concerning the connection to the Checkmk and SNMP agents")
 
 
 @rulespec_group_registry.register
@@ -4534,7 +4534,7 @@ class RulespecGroupAgentCMKAgent(RulespecSubGroup):
 
     @property
     def title(self):
-        return _("Check_MK Agent")
+        return _("Checkmk Agent")
 
 
 def _valuespec_agent_ports():
@@ -4542,7 +4542,7 @@ def _valuespec_agent_ports():
         minvalue=1,
         maxvalue=65535,
         default_value=6556,
-        title=_("TCP port for connection to Check_MK agent"),
+        title=_("TCP port for connection to Checkmk agent"),
         help=_("This variable allows to specify the TCP port to "
                "be used to connect to the agent on a per-host-basis. "),
     )
@@ -4828,7 +4828,7 @@ def _valuespec_check_mk_exit_status():
             optional_keys=["individual", "restricted_address_mismatch"],
         ),
         forth=transform_exit_code_spec,
-        title=_("Status of the Check_MK services"),
+        title=_("Status of the Checkmk services"),
         help=_("This ruleset specifies the total status of the Check_MK services <i>Check_MK</i>, "
                "<i>Check_MK Discovery</i> and <i>Check_MK HW/SW Inventory</i> in case of various "
                "error situations. One use case is the monitoring of hosts that are not always up. "
@@ -4850,7 +4850,7 @@ rulespec_registry.register(
 def _valuespec_check_mk_agent_target_versions():
     return Transform(
         CascadingDropdown(
-            title=_("Check for correct version of Check_MK agent"),
+            title=_("Check for correct version of Checkmk agent"),
             help=_("Here you can make sure that all of your Check_MK agents are running"
                    " one specific version. Agents running "
                    " a different version return a non-OK state."),

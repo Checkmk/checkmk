@@ -122,7 +122,7 @@ class MainModuleGlobalSettings(MainModule):
 
     @property
     def description(self):
-        return _("Global settings for Check_MK, Multisite and the monitoring core.")
+        return _("Global settings for Checkmk, Multisite and the monitoring core.")
 
     @property
     def sort_index(self):
@@ -859,7 +859,7 @@ class MainModuleSites(MainModule):
 
     @property
     def description(self):
-        return _("Distributed monitoring using multiple Check_MK sites")
+        return _("Distributed monitoring using multiple Checkmk sites")
 
     @property
     def sort_index(self):

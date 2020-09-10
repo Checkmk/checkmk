@@ -84,7 +84,7 @@ def load_plugins(force):
 # Pre Check_MK 1.5 the snapins were declared with dictionaries like this:
 #
 # sidebar_snapins["about"] = {
-#     "title" : _("About Check_MK"),
+#     "title" : _("About Checkmk"),
 #     "description" : _("Version information and Links to Documentation, "
 #                       "Homepage and Download of Check_MK"),
 #     "render" : render_about,

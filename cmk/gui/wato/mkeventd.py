@@ -4084,7 +4084,7 @@ class RulespecGroupEventConsole(RulespecGroup):
 
     @property
     def help(self):
-        return _("Settings and Checks dealing with the Check_MK Event Console")
+        return _("Settings and Checks dealing with the Checkmk Event Console")
 
 
 def convert_mkevents_hostspec(value):

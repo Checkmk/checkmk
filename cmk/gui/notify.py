@@ -359,7 +359,7 @@ def notify_mail(user_id, msg):
         sender_name = user_id
 
     # Code mostly taken from notify_via_email() from notify.py module
-    subject = _('Check_MK: Notification')
+    subject = _('Checkmk: Notification')
     body = _('''Greetings %s,
 
 %s sent you a notification:

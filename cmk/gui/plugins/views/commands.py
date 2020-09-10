@@ -698,8 +698,7 @@ class CommandAcknowledge(Command):
         self._vs_expire().render_input("_ack_expire",
                                        config.view_action_defaults.get("ack_expire", 0))
         html.help(
-            _("Note: Expiration of acknowledgements only works when using the Check_MK Micro Core.")
-        )
+            _("Note: Expiration of acknowledgements only works when using the Checkmk Micro Core."))
         html.hr()
         html.write_text(_("Comment") + ": ")
         html.text_input("_ack_comment", size=48, submit="_acknowledge")

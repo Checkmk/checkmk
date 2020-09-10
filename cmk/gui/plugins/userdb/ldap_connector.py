@@ -1712,7 +1712,7 @@ class LDAPConnectionValuespec(Transform):
             ("user_id_umlauts",
              Transform(DropdownChoice(
                  title=_("Translate Umlauts in User-IDs (deprecated)"),
-                 help=_("Check_MK was not not supporting special characters (like Umlauts) in "
+                 help=_("Checkmk was not not supporting special characters (like Umlauts) in "
                         "User-IDs. To deal with LDAP users having umlauts in their User-IDs "
                         "you had the choice to replace umlauts with other characters. This option "
                         "is still available for compatibility reasons, but you are adviced to use "
@@ -2136,7 +2136,7 @@ class LDAPAttributePluginMail(LDAPBuiltinAttributePlugin):
 
     @property
     def help(self):
-        return _('Synchronizes the email of the LDAP user account into Check_MK.')
+        return _('Synchronizes the email of the LDAP user account into Checkmk.')
 
     def lock_attributes(self, params):
         return ['email']

@@ -179,10 +179,10 @@ def jqm_page_index_topic_renderer(topic: str, items: Items) -> None:
 
 
 def page_login() -> None:
-    title = _("Check_MK Mobile")
+    title = _("Checkmk Mobile")
     mobile_html_head(title)
     jqm_page_header(title, id_="login")
-    html.div(_("Welcome to Check_MK Mobile."), id_="loginhead")
+    html.div(_("Welcome to Checkmk Mobile."), id_="loginhead")
 
     html.begin_form("login", method='POST', add_transid=False)
     # Keep information about original target URL
@@ -211,7 +211,7 @@ def page_login() -> None:
 
 @cmk.gui.pages.register("mobile")
 def page_index() -> None:
-    title = _("Check_MK Mobile")
+    title = _("Checkmk Mobile")
     mobile_html_head(title)
     jqm_page_header(title,
                     right_button=("javascript:document.location.reload();", _("Reload"), "refresh"),
@@ -246,7 +246,7 @@ def page_index() -> None:
             this_title = '%s %s' % (view_spec.get("linktitle", view_spec["title"]), count)
             items.append((topic, url, this_title))
 
-    jqm_page_index(_("Check_MK Mobile"), items)
+    jqm_page_index(_("Checkmk Mobile"), items)
     # Link to non-mobile GUI
 
     html.hr()

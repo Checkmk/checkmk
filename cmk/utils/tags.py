@@ -558,7 +558,7 @@ class BuiltinTagConfig(TagConfig):
         return [
             {
                 'id': 'agent',
-                'title': _('Check_MK Agent'),
+                'title': _('Checkmk Agent'),
                 'topic': _('Data sources'),
                 'tags': [
                     {
@@ -684,7 +684,7 @@ class BuiltinTagConfig(TagConfig):
             {
                 'id': 'tcp',
                 'topic': _('Data sources'),
-                'title': _('Monitor via Check_MK Agent'),
+                'title': _('Monitor via Checkmk Agent'),
             },
             {
                 'id': 'ping',

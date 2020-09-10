@@ -195,7 +195,7 @@ class RescheduleIcon(Icon):
                 if row[what + '_check_command'].startswith('check_mk-'):
                     servicedesc = 'Check_MK'
                     icon = 'reload_cmk'
-                    txt = _('Reschedule \'Check_MK\' service')
+                    txt = _('Reschedule \'Checkmk\' service')
 
             url = 'onclick:cmk.views.reschedule_check(this, %s, %s, %s, %s);' % \
                 (json.dumps(row["site"]), json.dumps(row["host_name"]), json.dumps(servicedesc), json.dumps(wait_svc))

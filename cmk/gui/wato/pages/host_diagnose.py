@@ -330,7 +330,7 @@ class ModeDiagHost(WatoMode):
                     minvalue = 1,
                     maxvalue = 65535,
                     default_value = 6556,
-                    title = _("Check_MK Agent Port (<a href=\"%s\">Rules</a>)") %
+                    title = _("Checkmk Agent Port (<a href=\"%s\">Rules</a>)") %
                         watolib.folder_preserving_link([('mode', 'edit_ruleset'), ('varname', 'agent_ports')]),
                     help = _("This variable allows to specify the TCP port to "
                              "be used to connect to the agent on a per-host-basis.")

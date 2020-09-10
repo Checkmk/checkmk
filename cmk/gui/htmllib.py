@@ -1075,7 +1075,7 @@ class html(ABCHTMLGenerator):
     def _verify_not_using_threaded_mpm(self) -> None:
         if self.request.is_multithread:
             raise MKGeneralException(
-                _("You are trying to Check_MK together with a threaded Apache multiprocessing module (MPM). "
+                _("You are trying to Checkmk together with a threaded Apache multiprocessing module (MPM). "
                   "Check_MK is only working with the prefork module. Please change the MPM module to make "
                   "Check_MK work."))
 

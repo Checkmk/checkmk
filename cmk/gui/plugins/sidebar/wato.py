@@ -36,7 +36,7 @@ def render_wato(mini):
         html.write_text(_("WATO is disabled."))
         return False
     if not config.user.may("wato.use"):
-        html.write_text(_("You are not allowed to use Check_MK's web configuration GUI."))
+        html.write_text(_("You are not allowed to use Checkmk's web configuration GUI."))
         return False
 
     menu = get_wato_menu_items()
@@ -113,7 +113,7 @@ class SidebarSnapinWATO(SidebarSnapin):
 
     @classmethod
     def description(cls):
-        return _("Direct access to WATO - the web administration GUI of Check_MK")
+        return _("Direct access to WATO - the web administration GUI of Checkmk")
 
     @classmethod
     def allowed_roles(cls):

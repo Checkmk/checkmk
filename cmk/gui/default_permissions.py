@@ -200,11 +200,11 @@ class PermissionGeneralSeeSidebar(Permission):
 
     @property
     def title(self):
-        return _("Use Check_MK sidebar")
+        return _("Use Checkmk sidebar")
 
     @property
     def description(self):
-        return _("Without this permission the Check_MK sidebar will be invisible")
+        return _("Without this permission the Checkmk sidebar will be invisible")
 
     @property
     def defaults(self):

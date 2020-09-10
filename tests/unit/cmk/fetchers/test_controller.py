@@ -20,6 +20,7 @@ from cmk.fetchers.controller import (
     run_fetcher,
     cmc_log_level_from_python,
     CmcLogLevel,
+    write_bytes,
 )
 
 from cmk.fetchers.type_defs import Mode
@@ -74,6 +75,12 @@ class TestControllerApi:
     def test_run_fetcher_with_exception(self):
         with pytest.raises(RuntimeError):
             run_fetcher({"trash": 1}, Mode.CHECKING, 13)
+
+    def test_write_bytes(self, capfdbinary):
+        write_bytes(b"123")
+        captured = capfdbinary.readouterr()
+        assert captured.out == b"123"
+        assert captured.err == b""
 
 
 class TestHeader:

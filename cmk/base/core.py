@@ -9,14 +9,13 @@ import fcntl
 import os
 import subprocess
 import sys
-import errno
 from typing import Optional
 
 import cmk.utils.paths
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.tty as tty
-from cmk.utils.exceptions import MKGeneralException, MKTimeout
+from cmk.utils.exceptions import MKGeneralException, MKTimeout, MKBailOut
 from cmk.utils.log import console
 from cmk.utils.type_defs import TimeperiodName
 
@@ -52,68 +51,24 @@ def do_reload(core: MonitoringCore) -> None:
 # TODO: Cleanup duplicate code with automation_restart()
 def do_restart(core: MonitoringCore, only_reload: bool = False) -> None:
     try:
-        backup_path = None
-
         if try_get_activation_lock():
-            # TODO: Replace by MKBailOut()/MKTerminate()?
-            console.error("Other restart currently in progress. Aborting.\n")
-            sys.exit(1)
+            raise MKBailOut("Other restart currently in progress. Aborting.")
 
-        # Save current configuration
-        if os.path.exists(cmk.utils.paths.nagios_objects_file):
-            backup_path = cmk.utils.paths.nagios_objects_file + ".save"
-            console.verbose("Renaming %s to %s\n",
-                            cmk.utils.paths.nagios_objects_file,
-                            backup_path,
-                            stream=sys.stderr)
-            os.rename(cmk.utils.paths.nagios_objects_file, backup_path)
-        else:
-            backup_path = None
-
-        try:
-            core_config.do_create_config(core, with_agents=True)
-        except Exception as e:
-            # TODO: Replace by MKBailOut()/MKTerminate()?
-            console.error("Error creating configuration: %s\n" % e)
-            if backup_path:
-                os.rename(backup_path, cmk.utils.paths.nagios_objects_file)
-            if cmk.utils.debug.enabled():
-                raise
-            sys.exit(1)
-
-        if config.monitoring_core == "cmc" or cmk.base.nagios_utils.do_check_nagiosconfig():
-            if backup_path:
-                os.remove(backup_path)
-        else:
-            # TODO: Replace by MKBailOut()/MKTerminate()?
-            console.error("Configuration for monitoring core is invalid. Rolling back.\n")
-
-            broken_config_path = "%s/check_mk_objects.cfg.broken" % cmk.utils.paths.tmp_dir
-            open(broken_config_path, "w").write(open(cmk.utils.paths.nagios_objects_file).read())
-            console.error("The broken file has been copied to \"%s\" for analysis.\n" %
-                          broken_config_path)
-
-            if backup_path:
-                os.rename(backup_path, cmk.utils.paths.nagios_objects_file)
-            else:
-                os.remove(cmk.utils.paths.nagios_objects_file)
-            sys.exit(1)
+        with core_config.backup_objects_file(core):
+            try:
+                core_config.do_create_config(core, with_agents=True)
+            except Exception as e:
+                if cmk.utils.debug.enabled():
+                    raise
+                raise MKGeneralException("Error creating configuration: %s" % e)
 
         core.precompile()
         do_core_action(only_reload and "reload" or "restart")
 
     except Exception as e:
-        if backup_path:
-            try:
-                os.remove(backup_path)
-            except OSError as oe:
-                if oe.errno != errno.ENOENT:
-                    raise
         if cmk.utils.debug.enabled():
             raise
-        # TODO: Replace by MKBailOut()/MKTerminate()?
-        console.error("An error occurred: %s\n" % e)
-        sys.exit(1)
+        raise MKBailOut("An error occurred: %s" % e)
 
 
 def try_get_activation_lock() -> bool:

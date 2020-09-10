@@ -51,6 +51,7 @@ import cmk.base.check_utils
 import cmk.base.checking
 import cmk.base.config as config
 import cmk.base.core
+from cmk.base.core import CoreAction
 import cmk.base.core_config as core_config
 import cmk.base.data_sources as data_sources
 import cmk.base.discovery as discovery
@@ -306,7 +307,7 @@ class AutomationRenameHosts(Automation):
         # it now.
         core_was_running = self._core_is_running()
         if core_was_running:
-            cmk.base.core.do_core_action("stop", quiet=True)
+            cmk.base.core.do_core_action(CoreAction.STOP, quiet=True)
 
         try:
             for oldname, newname in renamings:
@@ -805,10 +806,10 @@ class AutomationRestart(Automation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def _mode(self) -> str:
+    def _mode(self) -> CoreAction:
         if config.monitoring_core == "cmc" and not self._check_plugins_have_changed():
-            return "reload"  # force reload for cmc
-        return "restart"
+            return CoreAction.RELOAD
+        return CoreAction.RESTART
 
     # TODO: Cleanup duplicate code with cmk.base.core.do_restart()
     def execute(self, args: List[str]) -> core_config.ConfigurationWarnings:
@@ -870,10 +871,10 @@ automations.register(AutomationRestart())
 class AutomationReload(AutomationRestart):
     cmd = "reload"
 
-    def _mode(self) -> str:
+    def _mode(self) -> CoreAction:
         if self._check_plugins_have_changed():
-            return "restart"
-        return "reload"
+            return CoreAction.RESTART
+        return CoreAction.RELOAD
 
 
 automations.register(AutomationReload())
@@ -883,8 +884,8 @@ class AutomationStart(AutomationRestart):
     """Not an externally registered automation, just supporting the "rename-hosts" automation"""
     cmd = "start"
 
-    def _mode(self) -> str:
-        return "start"
+    def _mode(self) -> CoreAction:
+        return CoreAction.START
 
 
 class AutomationGetConfiguration(Automation):

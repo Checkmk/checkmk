@@ -10,6 +10,7 @@ import os
 import subprocess
 import sys
 from typing import Optional
+import enum
 
 import cmk.utils.paths
 import cmk.utils.cleanup
@@ -44,6 +45,13 @@ _restart_lock_fd = None
 #   '----------------------------------------------------------------------'
 
 
+class CoreAction(enum.Enum):
+    START = "start"
+    RESTART = "restart"
+    RELOAD = "reload"
+    STOP = "stop"
+
+
 def do_reload(core: MonitoringCore) -> None:
     do_restart(core, only_reload=True)
 
@@ -63,7 +71,7 @@ def do_restart(core: MonitoringCore, only_reload: bool = False) -> None:
                 raise MKGeneralException("Error creating configuration: %s" % e)
 
         core.precompile()
-        do_core_action(only_reload and "reload" or "restart")
+        do_core_action(CoreAction.RELOAD if only_reload else CoreAction.RESTART)
 
     except Exception as e:
         if cmk.utils.debug.enabled():
@@ -88,16 +96,15 @@ def try_get_activation_lock() -> bool:
     return False
 
 
-# Action can be restart, reload, start or stop
-def do_core_action(action: str, quiet: bool = False) -> None:
+def do_core_action(action: CoreAction, quiet: bool = False) -> None:
     if not quiet:
-        out.output("%sing monitoring core..." % action.title())
+        out.output("%sing monitoring core..." % action.value.title())
 
     if config.monitoring_core == "nagios":
         os.putenv("CORE_NOVERIFY", "yes")
-        command = ["%s/etc/init.d/core" % cmk.utils.paths.omd_root, action]
+        command = ["%s/etc/init.d/core" % cmk.utils.paths.omd_root, action.value]
     else:
-        command = ["omd", action, "cmc"]
+        command = ["omd", action.value, "cmc"]
 
     p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
     result = p.wait()
@@ -106,7 +113,7 @@ def do_core_action(action: str, quiet: bool = False) -> None:
         output = p.stdout.read()
         if not quiet:
             out.output("ERROR: %r\n" % output)
-        raise MKGeneralException("Cannot %s the monitoring core: %r" % (action, output))
+        raise MKGeneralException("Cannot %s the monitoring core: %r" % (action.value, output))
     if not quiet:
         out.output(tty.ok + "\n")
 

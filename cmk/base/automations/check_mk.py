@@ -813,14 +813,8 @@ class AutomationRestart(Automation):
     # TODO: Cleanup duplicate code with cmk.base.core.do_restart()
     def execute(self, args: List[str]) -> core_config.ConfigurationWarnings:
         with redirect_stdout(open(os.devnull, "w")):
-            # make sure, Nagios does not inherit any open
-            # filedescriptors. This really happens, e.g. if
-            # check_mk is called by WATO via Apache. Nagios inherits
-            # the open file where Apache is listening for incoming
-            # HTTP connections. Really.
             if config.monitoring_core == "nagios":
                 objects_file = cmk.utils.paths.nagios_objects_file
-                cmk.utils.daemon.closefrom(3)
             else:
                 objects_file = cmk.utils.paths.var_dir + "/core/config"
 

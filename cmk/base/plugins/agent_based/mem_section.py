@@ -116,7 +116,7 @@
 
 """
 from typing import Dict, Optional
-from .agent_based_api.v0 import register, type_defs
+from .agent_based_api.v1 import register, type_defs
 
 
 def parse_proc_meminfo_bytes(string_table: type_defs.AgentStringTable) -> Optional[Dict[str, int]]:

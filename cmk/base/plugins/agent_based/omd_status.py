@@ -22,13 +22,13 @@ OVERALL 2
 """
 
 from typing import Mapping, Dict, Optional, Any
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     register,
     Service,
     Result,
     state,
 )
-from .agent_based_api.v0.type_defs import AgentStringTable, DiscoveryGenerator, CheckGenerator
+from .agent_based_api.v1.type_defs import AgentStringTable, DiscoveryGenerator, CheckGenerator
 
 Section = Dict[str, Dict[str, Any]]
 

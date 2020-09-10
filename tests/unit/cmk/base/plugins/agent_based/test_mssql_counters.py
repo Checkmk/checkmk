@@ -8,14 +8,14 @@
 
 import pytest  # type: ignore[import]
 
-from cmk.base.plugins.agent_based.agent_based_api.v0 import (
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     Result,
     Metric,
     IgnoreResults,
     state,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v0.type_defs import ValueStore
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import ValueStore
 
 from cmk.base.plugins.agent_based.mssql_counters_section import parse_mssql_counters
 from cmk.base.plugins.agent_based.mssql_counters_cache_hits import (

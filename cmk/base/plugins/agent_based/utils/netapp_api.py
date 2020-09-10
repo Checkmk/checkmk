@@ -12,7 +12,7 @@ from typing import (
     Optional,
     Sequence,
 )
-from ..agent_based_api.v0 import type_defs
+from ..agent_based_api.v1 import type_defs
 
 Instance = Dict[str, str]
 SectionMultipleInstances = Dict[str, List[Instance]]

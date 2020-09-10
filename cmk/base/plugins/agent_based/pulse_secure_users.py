@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Generator, Mapping, Union
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     check_levels,
     clusterize,
     Metric,

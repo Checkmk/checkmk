@@ -9,8 +9,8 @@ from typing import Dict
 import pytest  # type: ignore[import]
 
 import cmk.base.plugins.agent_based.local as local
-from cmk.base.plugins.agent_based.agent_based_api.v0 import Result, state, Metric
-from cmk.base.plugins.agent_based.agent_based_api.v0.type_defs import Parameters
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, state, Metric
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters
 
 
 @pytest.mark.parametrize(

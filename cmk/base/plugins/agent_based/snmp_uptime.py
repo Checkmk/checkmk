@@ -5,13 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
 
-from .agent_based_api.v0.type_defs import (
+from .agent_based_api.v1.type_defs import (
     CheckGenerator,
     DiscoveryGenerator,
     Parameters,
     SNMPStringTable,
 )
-from .agent_based_api.v0 import check_levels, exists, register, render, Service, SNMPTree
+from .agent_based_api.v1 import check_levels, exists, register, render, Service, SNMPTree
 
 
 def parse_snmp_uptime(string_table: SNMPStringTable) -> int:

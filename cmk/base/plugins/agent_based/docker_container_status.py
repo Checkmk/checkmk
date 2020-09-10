@@ -13,14 +13,14 @@ from typing import (
 from .utils import docker
 from .utils.legacy_docker import DeprecatedDict
 from .snmp_uptime import check_snmp_uptime
-from .agent_based_api.v0.type_defs import (
+from .agent_based_api.v1.type_defs import (
     DiscoveryGenerator,
     AgentStringTable,
     CheckGenerator,
     HostLabelGenerator,
     Parameters,
 )
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     register,
     Service,
     Result,

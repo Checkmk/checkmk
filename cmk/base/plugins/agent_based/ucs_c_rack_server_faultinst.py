@@ -13,7 +13,7 @@
 # faultInst<TAB>severity major<TAB>cause equipmentInoperable<TAB>code F0531<TAB>descr Storage Raid Battery 11 is inoperable: Check Controller battery<TAB>affectedDN sys/rack-unit-1/board/storage-SAS-SLOT-SAS/raid-battery-11
 
 from typing import Dict, List
-from .agent_based_api.v0 import register, type_defs
+from .agent_based_api.v1 import register, type_defs
 
 
 def parse_ucs_c_rack_server_faultinst(

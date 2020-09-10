@@ -7,7 +7,7 @@
 """
 from typing import Dict, Tuple, Mapping
 
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     SNMPTree,
     register,
     Service,
@@ -17,7 +17,7 @@ from .agent_based_api.v0 import (
     startswith,
     contains,
 )
-from .agent_based_api.v0.type_defs import (
+from .agent_based_api.v1.type_defs import (
     SNMPStringTable,
     CheckGenerator,
     DiscoveryGenerator,

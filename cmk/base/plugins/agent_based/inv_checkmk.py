@@ -12,8 +12,8 @@
 from typing import Dict, List, Any
 
 import cmk.utils.version as cmk_version
-from .agent_based_api.v0.type_defs import InventoryGenerator
-from .agent_based_api.v0 import Attributes, register, TableRow
+from .agent_based_api.v1.type_defs import InventoryGenerator
+from .agent_based_api.v1 import Attributes, register, TableRow
 
 
 def _service_status(status: Dict[str, List[str]], service_name: str):

@@ -7,12 +7,12 @@
 from typing import Optional, Tuple
 import time
 
-from ..agent_based_api.v0.type_defs import (
+from ..agent_based_api.v1.type_defs import (
     ValueStore,
     CheckGenerator,
     Parameters,
 )
-from ..agent_based_api.v0 import (
+from ..agent_based_api.v1 import (
     get_rate,
     get_average,
     Metric,
@@ -64,7 +64,7 @@ def size_trend(
 
     Yields:
       Result- and Metric- instances for the trend computation.
-    >>> from ..agent_based_api.v0 import GetRateError, Result, state
+    >>> from ..agent_based_api.v1 import GetRateError, Result, state
     >>> vs = {}
     >>> t0 = time.time()
     >>> for i in range(2):

@@ -11,14 +11,14 @@
 
 from typing import Dict
 
-from ..agent_based_api.v0 import (
+from ..agent_based_api.v1 import (
     Service,
     all_of,
     contains,
     exists,
     check_levels,
 )
-from ..agent_based_api.v0.type_defs import DiscoveryGenerator, CheckGenerator
+from ..agent_based_api.v1.type_defs import DiscoveryGenerator, CheckGenerator
 
 Section = Dict[str, int]
 

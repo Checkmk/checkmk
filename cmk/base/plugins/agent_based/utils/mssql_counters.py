@@ -15,8 +15,8 @@
 from typing import Dict, Tuple, Set, Optional
 from contextlib import suppress
 
-from ..agent_based_api.v0 import Service, IgnoreResultsError, get_rate, GetRateError
-from ..agent_based_api.v0.type_defs import DiscoveryGenerator, ValueStore
+from ..agent_based_api.v1 import Service, IgnoreResultsError, get_rate, GetRateError
+from ..agent_based_api.v1.type_defs import DiscoveryGenerator, ValueStore
 
 Counters = Dict[str, float]
 Section = Dict[Tuple[str, str], Counters]

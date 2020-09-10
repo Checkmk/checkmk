@@ -8,7 +8,7 @@
 
 from typing import Mapping
 
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     SNMPTree,
     register,
     Service,
@@ -16,7 +16,7 @@ from .agent_based_api.v0 import (
     state,
     all_of,
 )
-from .agent_based_api.v0.type_defs import (
+from .agent_based_api.v1.type_defs import (
     Parameters,
     SNMPStringTable,
     CheckGenerator,

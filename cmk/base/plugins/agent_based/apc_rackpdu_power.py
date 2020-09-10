@@ -31,7 +31,7 @@
 #                           3/0     => parsed = device phase + 3 phases
 
 from typing import Dict, Tuple, Union
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     all_of,
     exists,
     register,

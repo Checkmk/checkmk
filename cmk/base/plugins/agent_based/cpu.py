@@ -5,9 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Dict, List, Optional, Union
-from .agent_based_api.v0.type_defs import AgentStringTable
+from .agent_based_api.v1.type_defs import AgentStringTable
 
-from .agent_based_api.v0 import register
+from .agent_based_api.v1 import register
 
 Section = Dict[str, Union[float, List[float]]]
 

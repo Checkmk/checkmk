@@ -4,13 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
-Version 0
+Version 1
 ---------
 
 .. warning::
-    This Version of the **Check API** is only used during development
-    and should not be used for production code.
+    This Version of the **Check API** is still under development
+    and may change untils checkmk version 1.7 is released.
 
+    Do not use it (yet) for production code.
     It may change at any time without notice.
 
 """

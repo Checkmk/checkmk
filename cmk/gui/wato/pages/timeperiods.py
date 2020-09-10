@@ -822,7 +822,7 @@ class ModeEditTimeperiod(WatoMode):
         html.hidden_fields()
         html.end_form()
 
-    # The timeperiod data structure for the Check_MK config looks like follows.
+    # The timeperiod data structure for the Checkmk config looks like follows.
     # { 'alias': u'eeee',
     #   'monday': [('00:00', '22:00')],
     #   'tuesday': [('00:00', '24:00')],

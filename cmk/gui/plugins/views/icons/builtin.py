@@ -361,7 +361,7 @@ class PerfgraphIcon(Icon):
     def _pnp_icon(self, row, what):
         url = self._graph_icon_link(row, what)
 
-        # Don't show the icon with Check_MK graphing. The hover makes no sense and there is no
+        # Don't show the icon with Checkmk graphing. The hover makes no sense and there is no
         # mobile view for graphs, so the graphs on the bottom of the host/service view are enough
         # for the moment.
         if html.is_mobile():

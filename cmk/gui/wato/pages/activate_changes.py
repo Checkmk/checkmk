@@ -439,7 +439,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                                   status=status,
                                   title=_("This site is %s") % status)
 
-                # Livestatus-/Check_MK-Version
+                # Livestatus-/Checkmk-Version
                 table.cell(_("Version"),
                            site_status.get("livestatus_version", ""),
                            css="narrow nobr")

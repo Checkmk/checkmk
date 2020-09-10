@@ -61,7 +61,7 @@ class CustomLinks(SidebarSnapin):
                             icon_file = entry[2]
 
                             # Old configs used files named "link_<name>.gif". Those .gif files have
-                            # been removed from Check_MK. Replacing such images with the default icon
+                            # been removed from Checkmk. Replacing such images with the default icon
                             if icon_file.endswith(".gif"):
                                 icon_name = "link"
                             else:

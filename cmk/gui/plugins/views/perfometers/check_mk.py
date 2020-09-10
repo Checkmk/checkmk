@@ -17,7 +17,7 @@ from cmk.gui.plugins.views.perfometers import (
     perfometer_logarithmic_dual_independent,
 )
 
-# Perf-O-Meters for Check_MK's checks
+# Perf-O-Meters for Checkmk's checks
 #
 # They are called with:
 # 1. row -> a dictionary of the data row with at least the

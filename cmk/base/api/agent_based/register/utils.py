@@ -163,7 +163,7 @@ def validate_check_ruleset_item_consistency(
         return
 
     # Trying to detect whether or not the check has an item. But this mechanism is not
-    # 100% reliable since Check_MK appends an item to the service_description when "%s"
+    # 100% reliable since Checkmk appends an item to the service_description when "%s"
     # is not in the checks service_description template.
     # Maybe we need to define a new rule which enforces the developer to use the %s in
     # the service_description. At least for grouped checks.

@@ -649,7 +649,7 @@ class LDAPUserConnector(UserConnector):
         return result
 
     def _ldap_get_scope(self, scope):
-        # Had "subtree" in Check_MK for several weeks. Better be compatible to both definitions.
+        # Had "subtree" in Checkmk for several weeks. Better be compatible to both definitions.
         if scope in ['sub', 'subtree']:
             return ldap.SCOPE_SUBTREE
         if scope == 'base':
@@ -1875,7 +1875,7 @@ class LDAPConnectionValuespec(Transform):
 #   +----------------------------------------------------------------------+
 #   | The LDAP User Connector provides some kind of plugin mechanism to    |
 #   | modulize which ldap attributes are synchronized and how they are     |
-#   | synchronized into Check_MK. The standard attribute plugins           |
+#   | synchronized into Checkmk. The standard attribute plugins           |
 #   | are defnied here.                                                    |
 #   '----------------------------------------------------------------------'
 

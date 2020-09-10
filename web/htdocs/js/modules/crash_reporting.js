@@ -5,7 +5,7 @@
 import * as ajax from "ajax";
 
 //# +--------------------------------------------------------------------+
-//# | Posting crash report to official Check_MK crash reporting API      |
+//# | Posting crash report to official Checkmk crash reporting API      |
 //# '--------------------------------------------------------------------'
 
 export function submit(url, post_data)

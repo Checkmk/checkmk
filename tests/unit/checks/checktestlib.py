@@ -61,8 +61,8 @@ class PerfValue(Tuploid):
             assert c not in key, "PerfValue: key %r must not contain %r" % (key, c)
         # NOTE: The CMC as well as all other Nagios-compatible cores do accept a
         #       string value that may contain a unit, which is in turn available
-        #       for use in PNP4Nagios templates. Check_MK defines its own semantic
-        #       context for performance values using Check_MK metrics. It is therefore
+        #       for use in PNP4Nagios templates. Checkmk defines its own semantic
+        #       context for performance values using Checkmk metrics. It is therefore
         #       preferred to return a "naked" scalar.
         msg = "PerfValue: %s parameter %r must be of type int, float or None - not %r"
         assert isinstance(value, (int, float)),\

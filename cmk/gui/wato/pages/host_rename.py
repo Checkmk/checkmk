@@ -718,7 +718,7 @@ def rename_hosts(renamings, job_interface=None):
         except MKAuthException as e:
             auth_problems.append((oldname, e))
 
-    # 2. Check_MK stuff ------------------------------------------------
+    # 2. Checkmk stuff ------------------------------------------------
     job_interface.send_progress_update(
         _("Renaming host(s) in base configuration, rrd, history files, etc."))
     job_interface.send_progress_update(

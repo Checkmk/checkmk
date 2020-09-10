@@ -41,7 +41,7 @@ from .agent_based_api.v1.type_defs import (
 # Create DB_INCR_<Level> checks when parameter is True
 # Set this to False for old behavior. This is required for the service
 # discovery and can't be set as a inventory parameter.
-# This will be removed in a later version of Check_MK. Don't use it for new installations!
+# This will be removed in a later version of Checkmk. Don't use it for new installations!
 inventory_oracle_rman_incremental_details = True
 
 SectionSidOracleRman = TypedDict(

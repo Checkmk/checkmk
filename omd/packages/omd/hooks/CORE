@@ -60,7 +60,7 @@ case "$1" in
         if [ "$2" == "nagios" ]
         then
             make_link nagios $OMD_ROOT/etc/init.d/core
-            # Refresh Check_MK Configuration after changing back from CMC
+            # Refresh Checkmk Configuration after changing back from CMC
             if [ -e $OMD_ROOT/var/check_mk/core/config ] ; then
                 cmk -U >/dev/null
             fi

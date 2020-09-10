@@ -37,7 +37,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 
 def _auth(func):
     # Ensure the user is authenticated. This call is wrapping all the different
-    # authentication modes the Check_MK GUI supports and initializes the logged
+    # authentication modes the Checkmk GUI supports and initializes the logged
     # in user objects.
     @functools.wraps(func)
     def _call_auth():

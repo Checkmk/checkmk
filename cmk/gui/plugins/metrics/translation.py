@@ -35,7 +35,7 @@ check_metrics["check_mk_active-icmp"] = {
         "scale": m
     },
 }
-# This metric is not for an official Check_MK check
+# This metric is not for an official Checkmk check
 # It may be provided by an check_icmp check configured as mrpe
 check_metrics["check_icmp"] = {
     "~.*rta": {

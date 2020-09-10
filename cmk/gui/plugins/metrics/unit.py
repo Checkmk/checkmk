@@ -17,7 +17,7 @@ from cmk.gui.plugins.metrics import (
 # Und dann sämtliche Schablonen, die nur wegen Range
 # 0..100 da sind, wieder durch generic ersetzen.
 
-# Metric definitions for Check_MK's checks
+# Metric definitions for Checkmk's checks
 
 #   .--Units---------------------------------------------------------------.
 #   |                        _   _       _ _                               |

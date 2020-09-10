@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# These tests verify the behaviour of the Check_MK base methods
+# These tests verify the behaviour of the Checkmk base methods
 # that do the actual checking/discovery/inventory work. Especially
 # the default caching and handling of global options affecting the
 # caching is checked

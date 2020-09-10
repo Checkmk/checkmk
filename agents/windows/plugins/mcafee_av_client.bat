@@ -1,6 +1,6 @@
 @echo off
 rem #  -----------------------------------------------------------------------------
-rem #  Check_MK windows agent plugin to gather information about signature date
+rem #  Checkmk windows agent plugin to gather information about signature date
 rem #  of Mcafee Anti-Virus software.
 rem #  -----------------------------------------------------------------------------
 

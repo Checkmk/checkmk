@@ -2353,7 +2353,7 @@ def main_update(version_info: VersionInfo, site: SiteContext, global_opts: 'Glob
         (site.name, from_version, to_version), "Update!", "Abort"):
         bail_out("Aborted.")
 
-    # In case the user changes the installed Check_MK Edition during update let the
+    # In case the user changes the installed Checkmk Edition during update let the
     # user confirm this step.
     from_edition, to_edition = _get_edition(from_version), _get_edition(to_version)
     if from_edition != to_edition and not global_opts.force and not dialog_yesno(

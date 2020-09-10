@@ -1,0 +1,8 @@
+Title: Fix perfometer ups-capacity
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p18
+Date: 1599731900
+Class: fix

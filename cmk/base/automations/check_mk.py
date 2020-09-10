@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
-import contextlib
 import errno
 import glob
 import io
@@ -15,7 +14,8 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+from contextlib import redirect_stdout, redirect_stderr
 
 from six import ensure_binary, ensure_str
 
@@ -169,28 +169,14 @@ class AutomationDiscovery(DiscoveryAutomation):
 automations.register(AutomationDiscovery())
 
 
-# Python 3? use contextlib.redirect_stdout
-@contextlib.contextmanager
-def redirect_output(where: io.StringIO) -> Iterator[io.StringIO]:
-    """Redirects stdout/stderr to the given file like object"""
-    prev_stdout, prev_stderr = sys.stdout, sys.stderr
-    prev_stdout.flush()
-    prev_stderr.flush()
-    sys.stdout = sys.stderr = where
-    try:
-        yield where
-    finally:
-        where.flush()
-        sys.stdout, sys.stderr = prev_stdout, prev_stderr
-
-
 class AutomationTryDiscovery(Automation):
     cmd = "try-inventory"  # TODO: Rename!
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
     def execute(self, args: List[str]) -> Dict[str, Any]:
-        with redirect_output(io.StringIO()) as buf:
+        buf = io.StringIO()
+        with redirect_stdout(buf), redirect_stderr(buf):
             log.setup_console_logging()
             log.logger.setLevel(log.VERBOSE)
             check_preview_table, host_labels = self._execute_discovery(args)
@@ -1686,7 +1672,8 @@ class AutomationCreateDiagnosticsDump(Automation):
     needs_checks = False
 
     def execute(self, args: DiagnosticsCLParameters) -> Dict[str, Any]:
-        with redirect_output(io.StringIO()) as buf:
+        buf = io.StringIO()
+        with redirect_stdout(buf), redirect_stderr(buf):
             log.setup_console_logging()
             dump = DiagnosticsDump(deserialize_cl_parameters(args))
             dump.create()

@@ -24,7 +24,7 @@ from cmk.gui.plugins.wato import (
 
 def _valuespec_ewon_discovery_rules():
     return DropdownChoice(
-        title=_("eWON Discovery"),
+        title=_("eWON discovery"),
         help=_("The ewon vpn routers can rely data from a secondary device via snmp. "
                "It doesn't however allow discovery of the device type relayed this way. "
                "To allow interpretation of the data you need to pick the device manually."),

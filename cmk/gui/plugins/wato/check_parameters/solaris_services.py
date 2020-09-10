@@ -28,7 +28,7 @@ from cmk.gui.plugins.wato import (
 
 def _valuespec_inventory_solaris_services_rules():
     return Dictionary(
-        title=_("Solaris Service Discovery"),
+        title=_("Solaris service discovery"),
         elements=[
             ('descriptions', ListOfStrings(title=_("Descriptions"))),
             ('categories', ListOfStrings(title=_("Categories"))),

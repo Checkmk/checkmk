@@ -18,7 +18,7 @@ item:
 
 inventory:
  One service is created for each user defined name.
- Within the discovery rule {SNMP Process Discovery} you can specify
+ Within the discovery rule {Process discovery (only SNMP)} you can specify
  which processes are taken into account.
  You can either match on the process name {hrSWRunName}
  or the process path {hrSWRunPath}, and the process status {hrSWRunStatus}.

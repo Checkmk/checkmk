@@ -18,7 +18,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _valuespec_discovery_netapp_api_ports_ignored():
-    return Dictionary(title=_("Discovery of Netapp ports"),
+    return Dictionary(title=_("Netapp port discovery"),
                       elements=[
                           ("ignored_ports",
                            ListChoice(title=_("Ignore port types during discovery"),

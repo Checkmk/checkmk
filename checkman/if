@@ -34,7 +34,7 @@ item:
 
 inventory:
  One service is created for each interface that fulfills configurable conditions
- (rule "Network Interface and Switch Port Discovery").
+ (rule "Network interface and switch port discovery").
  By default, these are interfaces which are currently found {up} and are of type 6, 32,
  62, 117, 127, 128, 129, 180, 181, 182, 205 or 229.
 

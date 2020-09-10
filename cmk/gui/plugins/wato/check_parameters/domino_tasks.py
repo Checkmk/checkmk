@@ -26,7 +26,7 @@ from cmk.gui.plugins.wato import (
 
 def _valuespec_inv_domino_tasks_rules():
     return Dictionary(
-        title=_('Lotus Domino Task Discovery'),
+        title=_('Lotus Domino task discovery'),
         help=_("This rule controls the discovery of tasks on Lotus Domino systems. "
                "Any changes later on require a host re-discovery"),
         elements=[

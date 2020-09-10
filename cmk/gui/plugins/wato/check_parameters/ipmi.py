@@ -39,7 +39,7 @@ def transform_ipmi_inventory_rules(p):
 def _valuespec_inventory_ipmi_rules():
     return Transform(
         CascadingDropdown(
-            title=_("Discovery of IPMI sensors"),
+            title=_("IPMI sensor discovery"),
             orientation="vertical",
             choices=[
                 ("summarize", _("Summary")),

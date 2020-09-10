@@ -59,7 +59,7 @@ _brocade_fcport_phy_choices = [
 
 def _valuespec_brocade_fcport_inventory():
     return Dictionary(
-        title=_("Brocade Port Discovery"),
+        title=_("Brocade port discovery"),
         elements=[
             ("use_portname",
              Checkbox(title=_("Use port name as service name"),

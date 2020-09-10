@@ -30,7 +30,7 @@ from cmk.gui.plugins.wato.check_parameters.utils import vs_filesystem
 
 def _valuespec_inventory_df_rules():
     return Dictionary(
-        title=_("Discovery parameters for filesystem checks"),
+        title=_("Filesystem discovery"),
         elements=[
             ("include_volume_name",
              Transform(
@@ -130,7 +130,7 @@ def _valuespec_filesystem_groups():
                                    "point or the combination of volume and mount point, "
                                    "depending on the configuration in "
                                    "<a href='wato.py?mode=edit_ruleset&varname=inventory_df_rules'>"
-                                   "Discovery parameters for filesystem checks</a>.")),
+                                   "Filesystem discovery</a>.")),
                     ),
                     (
                         'patterns_exclude',
@@ -146,7 +146,7 @@ def _valuespec_filesystem_groups():
                                    "the combination of volume and mount point, depending on the "
                                    "configuration in "
                                    "<a href='wato.py?mode=edit_ruleset&varname=inventory_df_rules'>"
-                                   "Discovery parameters for filesystem checks</a>.")),
+                                   "Filesystem discovery</a>.")),
                     ),
                 ],
             ),

@@ -7,7 +7,7 @@ description:
  This check monitors the CA ports of Fujitsu storage systems
  which support the FJDARY-E150-SNMPV2.MIB like the ETERNUS DX500 S3.
 
- In the discovery rule 'Discovery of Fujtsu storage CA ports'
+ In the discovery rule 'Fujtsu storage CA port discovery'
  port indices and port modes are configurable.
  By default CA ports in mode 'CA' and 'CARA' are discovered.
 

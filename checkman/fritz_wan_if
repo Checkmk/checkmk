@@ -19,7 +19,7 @@ item:
 
 inventory:
  In general, the discovery of network interfaces can be configured using the rule
- "Network Interface and Switch Port Discovery". By default, only interfaces which are
+ "Network interface and switch port discovery". By default, only interfaces which are
  currently found {up} and are of type 6, 32, 62, 117, 127, 128, 129, 180, 181, 182, 205
  or 229 are discovered. The single WAN interface discovered by this check is always of
  type 6. However, by default, if the WAN interface is currently down or if its status

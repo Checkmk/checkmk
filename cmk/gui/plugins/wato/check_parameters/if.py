@@ -412,7 +412,7 @@ def _validate_valuespec_inventory_if_rules(value, varprefix):
 def _valuespec_inventory_if_rules():
     return Transform(
         Dictionary(
-            title=_("Network Interface and Switch Port Discovery"),
+            title=_("Network interface and switch port discovery"),
             help=_(
                 "Configure the discovery of services monitoring network interfaces and switch "
                 "ports. Note that this rule is a somewhat special case compared to most other "
@@ -567,7 +567,7 @@ rulespec_registry.register(
             "in addition to the default output also monitor the admin state "
             "<tt>ifAdminStatus</tt>. The admin state can be used both when configuring the "
             "<a href='wato.py?mode=edit_ruleset&varname=inventory_df_rules'>discovery of "
-            "interfaces (\"Network Interface and Switch Port Discovery\")</a> and the "
+            "interfaces (\"Network interface and switch port discovery\")</a> and the "
             "<a href='wato.py?mode=edit_ruleset&varname=checkgroup_parameters:if'>corresponding "
             "monitoring states (\"Network interfaces and switch ports\")</a>. Note that activating "
             "this option will lead to an increase in SNMP traffic of approximately 5%. Also note "

@@ -25,7 +25,7 @@ item:
 
 inventory:
  One service is created for each interface that fulfills configurable conditions
- (rule "Network Interface and Switch Port Discovery").
+ (rule "Network interface and switch port discovery").
  By default, all interfaces are discovered. Note that the interfaces discovered by
  this check have no port type and are always in the state "up".
 

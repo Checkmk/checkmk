@@ -24,7 +24,7 @@ from cmk.gui.plugins.wato import (
 
 def _valuespec_inventory_mssql_counters_rules():
     return Dictionary(
-        title=_("Include MSSQL Counters services"),
+        title=_("MSSQL counter discovery"),
         elements=[
             ("add_zero_based_services", Checkbox(title=_("Include service with zero base."))),
         ],

@@ -46,7 +46,7 @@ def _valuespec_winperf_msx_queues_inventory():
                 ),
             ],
         ),
-        title=_('MS Exchange Message Queues Discovery'),
+        title=_('MS Exchange message queues discovery'),
         help=
         _('Per default the offsets of all Windows performance counters are preconfigured in the check. '
           'If the format of your counters object is not compatible then you can adapt the counter '

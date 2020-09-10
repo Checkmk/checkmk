@@ -118,7 +118,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="dict",
         valuespec=_valuespec_discovery_oracle_performance,
-        title=lambda: _("Oracle Performance Discovery"),
+        title=lambda: _("Oracle performance discovery"),
     ))
 
 

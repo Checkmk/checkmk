@@ -91,7 +91,7 @@ rulespec_registry.register(
 
 
 def _valuespec_discovery_cisco_dom_rules():
-    return Dictionary(title=_("Cisco DOM Discovery"),
+    return Dictionary(title=_("Cisco DOM discovery"),
                       elements=[
                           ("admin_states",
                            ListChoice(

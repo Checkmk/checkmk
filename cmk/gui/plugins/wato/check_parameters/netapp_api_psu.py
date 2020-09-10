@@ -19,7 +19,7 @@ from cmk.gui.plugins.wato import (
 
 def _valuespec_discovery_netapp_api_psu_rules():
     return Dictionary(
-        title=_("Discovery of Netapp power supply units"),
+        title=_("Netapp power supply unit discovery"),
         elements=[
             ("mode",
              CascadingDropdown(

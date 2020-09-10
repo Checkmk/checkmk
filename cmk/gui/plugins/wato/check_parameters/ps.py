@@ -525,7 +525,7 @@ def convert_inventory_processes(old_dict):
 def _valuespec_inventory_processes_rules():
     return Transform(
         Dictionary(
-            title=_('Process Discovery'),
+            title=_('Process discovery'),
             help=_("This ruleset defines criteria for automatically creating checks for running "
                    "processes based upon what is running when the service discovery is "
                    "done. These services will be created with default parameters. They will get "
@@ -749,7 +749,7 @@ def hr_process_parameter_elements():
 
 def _valuespec_discovery_hr_processes_rules():
     return Dictionary(
-        title=_('Process Discovery (only SNMP)'),
+        title=_('Process discovery (only SNMP)'),
         help=_("This ruleset defines criteria for automatically creating checks for running "
                "SNMP processes based upon the HOST Resource MIB and what is running when the "
                "service discovery is done. You can either specify the textual description "

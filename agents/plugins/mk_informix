@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Monitor status of LUNs on HP-UX
+# Informix
 # Make ENV-VARs avail for subshells
 set -a
 
@@ -273,4 +273,3 @@ for IDSENV in $( export INFORMIXDIR=${ONINIT_PATH%/bin*}
         fi
     )
 done
-

@@ -5,19 +5,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """All core related things like direct communication with the running core"""
 
-import fcntl
 import os
 import subprocess
-import sys
-from typing import Optional
+from typing import Optional, Iterator
 import enum
+from contextlib import contextmanager
 
 import cmk.utils.paths
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.tty as tty
+import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, MKBailOut
-from cmk.utils.log import console
 from cmk.utils.type_defs import TimeperiodName
 
 import cmk.base.obsolete_output as out
@@ -29,8 +28,6 @@ from cmk.base.core_config import MonitoringCore
 
 # suppress "Cannot find module" error from mypy
 import livestatus
-
-_restart_lock_fd = None
 
 #.
 #   .--Control-------------------------------------------------------------.
@@ -58,11 +55,9 @@ def do_reload(core: MonitoringCore) -> None:
 
 def do_restart(core: MonitoringCore, action: CoreAction = CoreAction.RESTART) -> None:
     try:
-        if try_get_activation_lock():
-            raise MKBailOut("Other restart currently in progress. Aborting.")
-
-        core_config.do_create_config(core)
-        do_core_action(action)
+        with activation_lock(mode=config.restart_locking):
+            core_config.do_create_config(core)
+            do_core_action(action)
 
     except Exception as e:
         if cmk.utils.debug.enabled():
@@ -70,22 +65,33 @@ def do_restart(core: MonitoringCore, action: CoreAction = CoreAction.RESTART) ->
         raise MKBailOut("An error occurred: %s" % e)
 
 
-# TODO: Refactor to context manager
-def try_get_activation_lock() -> bool:
-    global _restart_lock_fd
-    # In some bizarr cases (as cmk -RR) we need to avoid duplicate locking!
-    if config.restart_locking and _restart_lock_fd is None:
-        lock_file = cmk.utils.paths.default_config_dir + "/main.mk"
-        _restart_lock_fd = os.open(lock_file, os.O_RDONLY)
-        # Make sure that open file is not inherited to monitoring core!
-        fcntl.fcntl(_restart_lock_fd, fcntl.F_SETFD, fcntl.FD_CLOEXEC)
-        try:
-            console.verbose("Waiting for exclusive lock on %s.\n" % lock_file, stream=sys.stderr)
-            fcntl.flock(_restart_lock_fd,
-                        fcntl.LOCK_EX | (config.restart_locking == "abort" and fcntl.LOCK_NB or 0))
-        except Exception:
-            return True
-    return False
+# TODO: The store.lock_checkmk_configuration is doing something similar. It looks like we
+# should unify these both locks. But: The lock_checkmk_configuration is currently acquired by the
+# GUI process. In case the GUI calls an automation process, we would have a dead lock of these two
+# processes. We'll have to check whether or not we can move the locking.
+@contextmanager
+def activation_lock(mode: Optional[str]) -> Iterator[None]:
+    """Try to acquire the activation lock and raise exception in case it was not possible"""
+    if mode is None:
+        # TODO: We really should purge this strange case from being configurable
+        yield None  # No locking at all
+        return
+
+    lock_file = cmk.utils.paths.default_config_dir + "/main.mk"
+
+    if mode == "abort":
+        with store.try_locked(lock_file) as result:
+            if result is False:
+                raise MKBailOut("Other restart currently in progress. Aborting.")
+            yield None
+        return
+
+    if mode == "wait":
+        with store.locked(lock_file):
+            yield None
+        return
+
+    raise ValueError(f"Invalid lock mode: {mode}")
 
 
 def do_core_action(action: CoreAction, quiet: bool = False) -> None:

@@ -71,11 +71,13 @@ TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
             return std::chrono::system_clock::from_time_t(r._expire_time);
         }));
 
-    TableHosts::addColumns(this, "host_", DANGEROUS_OFFSETOF(Comment, _host),
-                           -1);
-    TableServices::addColumns(this, "service_",
-                              DANGEROUS_OFFSETOF(Comment, _service),
-                              false /* no hosts table */);
+    TableHosts::addColumns(
+        this, "host_",
+        offsets.addIndirectOffset(DANGEROUS_OFFSETOF(Comment, _host)));
+    TableServices::addColumns(
+        this, "service_",
+        offsets.addIndirectOffset(DANGEROUS_OFFSETOF(Comment, _service)),
+        false /* no hosts table */);
 }
 
 std::string TableComments::name() const { return "comments"; }

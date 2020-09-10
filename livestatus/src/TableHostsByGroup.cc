@@ -28,7 +28,7 @@ struct hostbygroup {
 
 TableHostsByGroup::TableHostsByGroup(MonitoringCore *mc) : Table(mc) {
     Column::Offsets offsets{};
-    TableHosts::addColumns(this, "", -1, -1);
+    TableHosts::addColumns(this, "", offsets);
     TableHostGroups::addColumns(
         this, "hostgroup_",
         offsets.addIndirectOffset(DANGEROUS_OFFSETOF(hostbygroup, host_group)));

@@ -74,11 +74,13 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
         "The id of the downtime this downtime was triggered by or 0 if it was not triggered by another downtime",
         offsets, [](const Downtime &r) { return r._triggered_by; }));
 
-    TableHosts::addColumns(this, "host_", DANGEROUS_OFFSETOF(Downtime, _host),
-                           -1);
-    TableServices::addColumns(this, "service_",
-                              DANGEROUS_OFFSETOF(Downtime, _service),
-                              false /* no hosts table */);
+    TableHosts::addColumns(
+        this, "host_",
+        offsets.addIndirectOffset(DANGEROUS_OFFSETOF(Downtime, _host)));
+    TableServices::addColumns(
+        this, "service_",
+        offsets.addIndirectOffset(DANGEROUS_OFFSETOF(Downtime, _service)),
+        false /* no hosts table */);
 }
 
 std::string TableDowntimes::name() const { return "downtimes"; }

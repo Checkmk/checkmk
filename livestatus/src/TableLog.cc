@@ -130,11 +130,13 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
         offsets_entry, [](const LogEntry &r) { return r._command_name; }));
 
     // join host and service tables
-    TableHosts::addColumns(this, "current_host_",
-                           DANGEROUS_OFFSETOF(LogRow, hst), -1);
-    TableServices::addColumns(this, "current_service_",
-                              DANGEROUS_OFFSETOF(LogRow, svc),
-                              false /* no hosts table */);
+    TableHosts::addColumns(
+        this, "current_host_",
+        offsets.addIndirectOffset(DANGEROUS_OFFSETOF(LogRow, hst)));
+    TableServices::addColumns(
+        this, "current_service_",
+        offsets.addIndirectOffset(DANGEROUS_OFFSETOF(LogRow, svc)),
+        false /* no hosts table */);
     TableContacts::addColumns(
         this, "current_contact_",
         offsets.addIndirectOffset(DANGEROUS_OFFSETOF(LogRow, ctc)));

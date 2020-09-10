@@ -56,7 +56,7 @@ extern service *service_list;
 extern TimeperiodsCache *g_timeperiods_cache;
 
 TableServices::TableServices(MonitoringCore *mc) : Table(mc) {
-    addColumns(this, "", -1, true);
+    addColumns(this, "", Column::Offsets{}, true);
 }
 
 std::string TableServices::name() const { return "services"; }
@@ -65,10 +65,9 @@ std::string TableServices::namePrefix() const { return "service_"; }
 
 // static
 void TableServices::addColumns(Table *table, const std::string &prefix,
-                               int indirect_offset, bool add_hosts) {
-    Column::Offsets offsets{indirect_offset, 0};
-    Column::Offsets offsets_custom_variables{
-        indirect_offset, DANGEROUS_OFFSETOF(service, custom_variables)};
+                               const Column::Offsets &offsets, bool add_hosts) {
+    auto offsets_custom_variables{
+        offsets.addFinalOffset(DANGEROUS_OFFSETOF(service, custom_variables))};
     auto *mc = table->core();
     // Es fehlen noch: double-Spalten, unsigned long spalten, etliche weniger
     // wichtige Spalten und die Servicegruppen.
@@ -365,13 +364,13 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<AttributeListAsIntColumn>(
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified",
-        Column::Offsets{indirect_offset,
-                        DANGEROUS_OFFSETOF(service, modified_attributes)}));
+        offsets.addFinalOffset(
+            DANGEROUS_OFFSETOF(service, modified_attributes))));
     table->addColumn(std::make_unique<AttributeListColumn>(
         prefix + "modified_attributes_list",
         "A list of all modified attributes",
-        Column::Offsets{indirect_offset,
-                        DANGEROUS_OFFSETOF(service, modified_attributes)}));
+        offsets.addFinalOffset(
+            DANGEROUS_OFFSETOF(service, modified_attributes))));
     table->addColumn(std::make_unique<ServiceSpecialIntColumn>(
         prefix + "hard_state",
         "The effective hard state of the service (eliminates a problem in hard_state)",
@@ -472,8 +471,9 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         offsets, table->core(), true, true, true));
 
     if (add_hosts) {
-        TableHosts::addColumns(table, "host_",
-                               DANGEROUS_OFFSETOF(service, host_ptr), -1);
+        TableHosts::addColumns(
+            table, "host_",
+            offsets.addIndirectOffset(DANGEROUS_OFFSETOF(service, host_ptr)));
     }
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
@@ -528,14 +528,12 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<ServiceGroupsColumn>(
         prefix + "groups", "A list of all service groups the service is in",
-        Column::Offsets{indirect_offset,
-                        DANGEROUS_OFFSETOF(service, servicegroups_ptr)},
+        offsets.addFinalOffset(DANGEROUS_OFFSETOF(service, servicegroups_ptr)),
         table->core()));
     table->addColumn(std::make_unique<ContactGroupsColumn>(
         prefix + "contact_groups",
         "A list of all contact groups this service is in",
-        Column::Offsets{indirect_offset,
-                        DANGEROUS_OFFSETOF(service, contact_groups)}));
+        offsets.addFinalOffset(DANGEROUS_OFFSETOF(service, contact_groups))));
 
     table->addColumn(std::make_unique<ListLambdaColumn<service>>(
         prefix + "metrics",

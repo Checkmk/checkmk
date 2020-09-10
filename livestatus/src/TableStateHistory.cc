@@ -196,10 +196,12 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
         }));
 
     // join host and service tables
-    TableHosts::addColumns(this, "current_host_",
-                           DANGEROUS_OFFSETOF(HostServiceState, _host), -1);
+    TableHosts::addColumns(
+        this, "current_host_",
+        offsets.addIndirectOffset(DANGEROUS_OFFSETOF(HostServiceState, _host)));
     TableServices::addColumns(this, "current_service_",
-                              DANGEROUS_OFFSETOF(HostServiceState, _service),
+                              offsets.addIndirectOffset(DANGEROUS_OFFSETOF(
+                                  HostServiceState, _service)),
                               false /* no hosts table */);
 }
 

@@ -61,7 +61,7 @@ extern host *host_list;
 extern TimeperiodsCache *g_timeperiods_cache;
 
 TableHosts::TableHosts(MonitoringCore *mc) : Table(mc) {
-    addColumns(this, "", -1, -1);
+    addColumns(this, "", Column::Offsets{});
 }
 
 std::string TableHosts::name() const { return "hosts"; }
@@ -70,13 +70,11 @@ std::string TableHosts::namePrefix() const { return "host_"; }
 
 // static
 void TableHosts::addColumns(Table *table, const std::string &prefix,
-                            int indirect_offset, int extra_offset) {
-    Column::Offsets offsets{indirect_offset, extra_offset, 0};
+                            const Column::Offsets &offsets) {
     Column::Offsets offsets_custom_variables{
-        indirect_offset, extra_offset,
-        DANGEROUS_OFFSETOF(host, custom_variables)};
-    Column::Offsets offsets_services{indirect_offset, extra_offset,
-                                     DANGEROUS_OFFSETOF(host, services)};
+        offsets.addFinalOffset(DANGEROUS_OFFSETOF(host, custom_variables))};
+    Column::Offsets offsets_services{
+        offsets.addFinalOffset(DANGEROUS_OFFSETOF(host, services))};
     auto *mc = table->core();
     table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "name", "Host name", offsets,
@@ -407,13 +405,11 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<AttributeListAsIntColumn>(
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified",
-        Column::Offsets{indirect_offset, extra_offset,
-                        DANGEROUS_OFFSETOF(host, modified_attributes)}));
+        offsets.addFinalOffset(DANGEROUS_OFFSETOF(host, modified_attributes))));
     table->addColumn(std::make_unique<AttributeListColumn>(
         prefix + "modified_attributes_list",
         "A list of all modified attributes",
-        Column::Offsets{indirect_offset, extra_offset,
-                        DANGEROUS_OFFSETOF(host, modified_attributes)}));
+        offsets.addFinalOffset(DANGEROUS_OFFSETOF(host, modified_attributes))));
 
     // columns of type double
     table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
@@ -565,13 +561,11 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<HostListColumn>(
         prefix + "parents", "A list of all direct parents of the host",
-        Column::Offsets{indirect_offset, extra_offset,
-                        DANGEROUS_OFFSETOF(host, parent_hosts)},
+        offsets.addFinalOffset(DANGEROUS_OFFSETOF(host, parent_hosts)),
         table->core(), false));
     table->addColumn(std::make_unique<HostListColumn>(
         prefix + "childs", "A list of all direct children of the host",
-        Column::Offsets{indirect_offset, extra_offset,
-                        DANGEROUS_OFFSETOF(host, child_hosts)},
+        offsets.addFinalOffset(DANGEROUS_OFFSETOF(host, child_hosts)),
         table->core(), false));
     table->addDynamicColumn(std::make_unique<DynamicRRDColumn<HostRRDColumn>>(
         prefix + "rrddata",
@@ -695,14 +689,12 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<HostGroupsColumn>(
         prefix + "groups", "A list of all host groups this host is in",
-        Column::Offsets{indirect_offset, extra_offset,
-                        DANGEROUS_OFFSETOF(host, hostgroups_ptr)},
+        offsets.addFinalOffset(DANGEROUS_OFFSETOF(host, hostgroups_ptr)),
         table->core()));
     table->addColumn(std::make_unique<ContactGroupsColumn>(
         prefix + "contact_groups",
         "A list of all contact groups this host is in",
-        Column::Offsets{indirect_offset, extra_offset,
-                        DANGEROUS_OFFSETOF(host, contact_groups)}));
+        offsets.addFinalOffset(DANGEROUS_OFFSETOF(host, contact_groups))));
 
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "services", "A list of all services of the host",

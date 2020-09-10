@@ -262,17 +262,15 @@ def do_create_config(core: MonitoringCore, with_agents: bool) -> None:
 
 @contextmanager
 def backup_objects_file(core: MonitoringCore) -> Iterator[None]:
-    backup_path = None
     if config.monitoring_core == "nagios":
         objects_file = cmk.utils.paths.nagios_objects_file
     else:
         objects_file = cmk.utils.paths.var_dir + "/core/config"
 
+    backup_path = None
     if os.path.exists(objects_file):
         backup_path = objects_file + ".save"
         os.rename(objects_file, backup_path)
-    else:
-        backup_path = None
 
     try:
         try:
@@ -282,16 +280,13 @@ def backup_objects_file(core: MonitoringCore) -> Iterator[None]:
                 os.rename(backup_path, objects_file)
             raise
 
-        if config.monitoring_core == "cmc" or do_check_nagiosconfig():
-            if backup_path:
-                os.remove(backup_path)
-        else:
+        if config.monitoring_core == "nagios" and not do_check_nagiosconfig():
             broken_config_path = "%s/check_mk_objects.cfg.broken" % cmk.utils.paths.tmp_dir
-            open(broken_config_path, "w").write(open(cmk.utils.paths.nagios_objects_file).read())
+            os.rename(cmk.utils.paths.nagios_objects_file, broken_config_path)
 
             if backup_path:
                 os.rename(backup_path, objects_file)
-            else:
+            elif os.path.exists(objects_file):
                 os.remove(objects_file)
 
             raise MKGeneralException("Configuration for monitoring core is invalid. Rolling back. "

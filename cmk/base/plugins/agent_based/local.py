@@ -242,17 +242,26 @@ def check_local(item, params, section):
     if local_result is None:
         return
 
+    try:
+        summary, details = local_result.text.split("\n", 1)
+    except ValueError:
+        summary, details = local_result.text, ""
     if local_result.state != 'P':
         yield Result(
             state=_STATE_FROM_INT[local_result.state],
-            summary=local_result.text,
+            summary=summary,
+            details=details if details else None,
         )
         for perf in local_result.perfdata:
             yield Metric(perf.name, perf.value, levels=perf.levels[:2], boundaries=perf.tuple[4:6])
 
     else:
         if local_result.text:
-            yield Result(state=state.OK, summary=local_result.text)
+            yield Result(
+                state=state.OK,
+                summary=summary,
+                details=details if details else None,
+            )
         yield from local_compute_state(local_result.perfdata)
 
     if local_result.cached is not None:

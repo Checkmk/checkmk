@@ -10,6 +10,7 @@
 
 #include <string>
 
+#include "Column.h"
 #include "Table.h"
 class MonitoringCore;
 class Query;
@@ -23,7 +24,7 @@ public:
     void answerQuery(Query *query) override;
 
     static void addColumns(Table *table, const std::string &prefix,
-                           int indirect_offset);
+                           const Column::Offsets &offsets);
 };
 
 #endif  // TableCommands_h

@@ -16,7 +16,7 @@
 #include "nagios.h"
 
 TableServiceGroups::TableServiceGroups(MonitoringCore *mc) : Table(mc) {
-    addColumns(this, "", -1);
+    addColumns(this, "", Column::Offsets{});
 }
 
 std::string TableServiceGroups::name() const { return "servicegroups"; }
@@ -25,10 +25,9 @@ std::string TableServiceGroups::namePrefix() const { return "servicegroup_"; }
 
 // static
 void TableServiceGroups::addColumns(Table *table, const std::string &prefix,
-                                    int indirect_offset) {
-    Column::Offsets offsets{indirect_offset, 0};
-    Column::Offsets offsets_members{indirect_offset,
-                                    DANGEROUS_OFFSETOF(servicegroup, members)};
+                                    const Column::Offsets &offsets) {
+    auto offsets_members{
+        offsets.addFinalOffset(DANGEROUS_OFFSETOF(servicegroup, members))};
     table->addColumn(std::make_unique<StringLambdaColumn<servicegroup>>(
         prefix + "name", "The name of the service group", offsets,
         [](const servicegroup &r) {

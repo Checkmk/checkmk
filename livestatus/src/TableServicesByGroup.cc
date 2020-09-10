@@ -5,6 +5,7 @@
 
 #include "TableServicesByGroup.h"
 
+#include "Column.h"
 #include "MonitoringCore.h"
 #include "Query.h"
 #include "Row.h"
@@ -25,10 +26,11 @@ struct servicebygroup {
 }  // namespace
 
 TableServicesByGroup::TableServicesByGroup(MonitoringCore *mc) : Table(mc) {
+    Column::Offsets offsets{};
     TableServices::addColumns(this, "", -1, true);
-    TableServiceGroups::addColumns(
-        this, "servicegroup_",
-        DANGEROUS_OFFSETOF(servicebygroup, service_group));
+    TableServiceGroups::addColumns(this, "servicegroup_",
+                                   offsets.addIndirectOffset(DANGEROUS_OFFSETOF(
+                                       servicebygroup, service_group)));
 }
 
 std::string TableServicesByGroup::name() const { return "servicesbygroup"; }

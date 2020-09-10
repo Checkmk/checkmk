@@ -59,8 +59,9 @@ public:
 
 TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     : Table(mc), _log_cache(log_cache) {
+    Column::Offsets offsets{};
     auto offsets_entry{
-        Column::Offsets{}.addIndirectOffset(DANGEROUS_OFFSETOF(LogRow, entry))};
+        offsets.addIndirectOffset(DANGEROUS_OFFSETOF(LogRow, entry))};
     addColumn(std::make_unique<TimeLambdaColumn<LogEntry>>(
         "time", "Time of the log event (UNIX timestamp)", offsets_entry,
         [](const LogEntry &r) {
@@ -136,9 +137,10 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
                               false /* no hosts table */);
     TableContacts::addColumns(
         this, "current_contact_",
-        Column::Offsets{}.addIndirectOffset(DANGEROUS_OFFSETOF(LogRow, ctc)));
-    TableCommands::addColumns(this, "current_command_",
-                              DANGEROUS_OFFSETOF(LogRow, command));
+        offsets.addIndirectOffset(DANGEROUS_OFFSETOF(LogRow, ctc)));
+    TableCommands::addColumns(
+        this, "current_command_",
+        offsets.addIndirectOffset(DANGEROUS_OFFSETOF(LogRow, command)));
 }
 
 std::string TableLog::name() const { return "log"; }

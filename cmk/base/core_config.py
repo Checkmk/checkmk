@@ -246,11 +246,23 @@ def check_icmp_arguments_of(config_cache: ConfigCache,
 #   '----------------------------------------------------------------------'
 
 
-# TODO: Move to modes?
 def do_create_config(core: MonitoringCore) -> None:
-    out.output("Generating configuration for core (type %s)..." % config.monitoring_core)
-    create_core_config(core)
-    out.output(tty.ok + "\n")
+    """Creating the monitoring core configuration and additional files
+
+    Ensures that everything needed by the monitoring core and it's helper processes is up-to-date
+    and available for starting the monitoring.
+    """
+    with _backup_objects_file(core):
+        out.output("Generating configuration for core (type %s)..." % config.monitoring_core)
+        try:
+            _create_core_config(core)
+            out.output(tty.ok + "\n")
+        except Exception as e:
+            if cmk.utils.debug.enabled():
+                raise
+            raise MKGeneralException("Error creating configuration: %s" % e)
+
+    core.precompile()
 
     try:
         import cmk.base.cee.bakery.agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel
@@ -260,7 +272,7 @@ def do_create_config(core: MonitoringCore) -> None:
 
 
 @contextmanager
-def backup_objects_file(core: MonitoringCore) -> Iterator[None]:
+def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
     if config.monitoring_core == "nagios":
         objects_file = cmk.utils.paths.nagios_objects_file
     else:
@@ -296,7 +308,7 @@ def backup_objects_file(core: MonitoringCore) -> Iterator[None]:
             os.remove(backup_path)
 
 
-def create_core_config(core: MonitoringCore) -> ConfigurationWarnings:
+def _create_core_config(core: MonitoringCore) -> ConfigurationWarnings:
     initialize_warnings()
 
     _verify_non_duplicate_hosts()
@@ -335,18 +347,6 @@ def _verify_non_duplicate_hosts() -> None:
         warning("The following host names have duplicates: %s. "
                 "This might lead to invalid/incomplete monitoring for these hosts." %
                 ", ".join(duplicates))
-
-
-def do_update(core: MonitoringCore) -> None:
-    try:
-        do_create_config(core)
-        core.precompile()
-
-    except Exception as e:
-        console.error("Configuration Error: %s\n" % e)
-        if cmk.utils.debug.enabled():
-            raise
-        sys.exit(1)
 
 
 #.

@@ -1101,8 +1101,14 @@ modes.register(
 
 
 def mode_update(options: Dict) -> None:
-    from cmk.base.core_config import do_update  # pylint: disable=import-outside-toplevel
-    do_update(create_core(options))
+    from cmk.base.core_config import do_create_config  # pylint: disable=import-outside-toplevel
+    try:
+        do_create_config(create_core())
+    except Exception as e:
+        console.error("Configuration Error: %s\n" % e)
+        if cmk.utils.debug.enabled():
+            raise
+        sys.exit(1)
 
 
 modes.register(

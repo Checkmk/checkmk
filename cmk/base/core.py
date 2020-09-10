@@ -61,15 +61,7 @@ def do_restart(core: MonitoringCore, action: CoreAction = CoreAction.RESTART) ->
         if try_get_activation_lock():
             raise MKBailOut("Other restart currently in progress. Aborting.")
 
-        with core_config.backup_objects_file(core):
-            try:
-                core_config.do_create_config(core)
-            except Exception as e:
-                if cmk.utils.debug.enabled():
-                    raise
-                raise MKGeneralException("Error creating configuration: %s" % e)
-
-        core.precompile()
+        core_config.do_create_config(core)
         do_core_action(action)
 
     except Exception as e:
@@ -78,6 +70,7 @@ def do_restart(core: MonitoringCore, action: CoreAction = CoreAction.RESTART) ->
         raise MKBailOut("An error occurred: %s" % e)
 
 
+# TODO: Refactor to context manager
 def try_get_activation_lock() -> bool:
     global _restart_lock_fd
     # In some bizarr cases (as cmk -RR) we need to avoid duplicate locking!

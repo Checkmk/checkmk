@@ -1,5 +1,5 @@
 #!/bin/bash
-# Monitor status of LUNs on HP-UX
+# Informix
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -293,4 +293,3 @@ for IDSENV in $( export INFORMIXDIR=${ONINIT_PATH%/bin*}
         fi
     )
 done
-

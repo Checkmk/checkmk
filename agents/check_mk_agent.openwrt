@@ -169,7 +169,7 @@ run_cached() {
     fi
 }
 
-# Implements Real-Time Check feature of the Check_MK agent which can send
+# Implements Real-Time Check feature of the Checkmk agent which can send
 # some section data in 1 second resolution. Useful for fast notifications and
 # detailed graphing (if you configure your RRDs to this resolution).
 run_real_time_checks() {
@@ -607,7 +607,7 @@ if type nullmailer-send >/dev/null && [ -d /var/spool/nullmailer/queue ]; then
     echo "$SIZE $COUNT"
 fi
 
-# Check status of OMD sites and Check_MK Notification spooler
+# Check status of OMD sites and Checkmk Notification spooler
 if type omd >/dev/null; then
     run_cached -s omd_status 60 "omd status --bare --auto || true"
     echo '<<<mknotifyd:sep(0)>>>'

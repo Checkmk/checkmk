@@ -9,7 +9,7 @@
 # intended to be used as a datasource program.
 #
 # Why? This allows you to "import" monitoring data from another
-# Check_MK system via HTTP without having livestatus access. The
+# Checkmk system via HTTP without having livestatus access. The
 # administrator of the remote system has full control over this
 # channel and can also select a subset of hosts/services to export
 # by simply using standard contact <-> object relation for that

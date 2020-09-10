@@ -31,7 +31,7 @@
 # A *path* in WATO means a relative folder path to that directory. The
 # root folder has the empty path (""). Folders are separated by slashes.
 # Each directory contains a file ".wato" which keeps information needed
-# by WATO but not by Check_MK itself.
+# by WATO but not by Checkmk itself.
 
 # [3] Convention for variable names:
 # site_id     --> The id of a site, None for the local site in non-distributed setup

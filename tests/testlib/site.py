@@ -643,7 +643,7 @@ class Site:
         self._add_wato_test_config(web)
 
     # Add some test configuration that is not test specific. These settings are set only to have a
-    # bit more complex Check_MK config.
+    # bit more complex Checkmk config.
     def _add_wato_test_config(self, web):
         # This entry is interesting because it is a check specific setting. These
         # settings are only registered during check loading. In case one tries to

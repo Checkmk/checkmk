@@ -269,7 +269,7 @@ def check_diskstat_generic(item, params, this_time, info, mode='sectors'):
     # Sum up either all physical disks (if item is "SUMMARY") or
     # all entries matching the item in question. It is not a bug if
     # a disk appears more than once. This can for example happen in
-    # Windows clusters - even if they are no Check_MK clusters.
+    # Windows clusters - even if they are no Checkmk clusters.
 
     summed_up = [0] * 13
     matching = 0

@@ -564,7 +564,7 @@ def _run_inventory_export_hooks(host_config: config.HostConfig,
 #   |                         |___/                                        |
 #   +----------------------------------------------------------------------+
 #   | Helper API for being used in inventory plugins. Plugins have access  |
-#   | to all things defined by the regular Check_MK check API and all the  |
+#   | to all things defined by the regular Checkmk check API and all the  |
 #   | things declared here.                                                |
 #   '----------------------------------------------------------------------'
 

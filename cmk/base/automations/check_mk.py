@@ -412,7 +412,7 @@ class AutomationRenameHosts(Automation):
             return 1
         return 0
 
-    # This functions could be moved out of Check_MK.
+    # This functions could be moved out of Checkmk.
     def _omd_rename_host(self, oldname: str, newname: str) -> List[str]:
         oldregex = self._escape_name_for_regex_matching(oldname)
         actions = []

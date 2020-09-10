@@ -39,6 +39,6 @@ __all__ = ["VERBOSE"]
 # looks wrong.
 
 # We need an additional log level between INFO and DEBUG to reflect the
-# verbose() and vverbose() mechanisms of Check_MK.
+# verbose() and vverbose() mechanisms of Checkmk.
 VERBOSE = 15
 logging.addLevelName(VERBOSE, "VERBOSE")

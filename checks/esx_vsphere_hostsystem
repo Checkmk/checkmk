@@ -8,7 +8,7 @@
 # duplicate CPU services.
 # Previously, the duplicate services were handled in the agent_vsphere
 # directly. Starting with 1.5.0 this is problematic since multiple
-# datasources can be defined in Check_MK natively. Therefore we shift
+# datasources can be defined in Checkmk natively. Therefore we shift
 # the detection of the duplicate services directly to this check.
 # When it is possible to handle duplicate services for different
 # datasources correctly at the cmk.base level this code can be removed.

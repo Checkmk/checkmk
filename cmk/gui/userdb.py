@@ -518,7 +518,7 @@ def load_users(lock: bool = False) -> Users:
     if 'users' in g:
         return g.users
 
-    # First load monitoring contacts from Check_MK's world. If this is
+    # First load monitoring contacts from Checkmk's world. If this is
     # the first time, then the file will be empty, which is no problem.
     # Execfile will the simply leave contacts = {} unchanged.
     contacts = store.load_from_mk_file(filename, "contacts", {})
@@ -835,7 +835,7 @@ def write_contacts_and_users_file(profiles: Users,
             if p in multisite_keys + multisite_attributes_cache[profile.get('connector')]
         }
 
-    # Check_MK's monitoring contacts
+    # Checkmk's monitoring contacts
     store.save_to_mk_file("%s/%s" % (check_mk_config_dir, "contacts.mk"),
                           "contacts",
                           contacts,

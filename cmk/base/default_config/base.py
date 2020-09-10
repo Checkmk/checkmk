@@ -216,7 +216,7 @@ explicit_host_conf: _Dict = {}
 extra_service_conf: _Dict = {}
 extra_nagios_conf = ""
 service_descriptions: _Dict = {}
-# needed by WATO, ignored by Check_MK
+# needed by WATO, ignored by Checkmk
 host_attributes: _Dict = {}
 # special parameters for host/PING check_command
 ping_levels: _List = []

@@ -1385,7 +1385,7 @@ def _enriched_discovered_services(
 #    "vanished"      : Check had been discovered previously, but item has vanished
 #    "active"        : Check is defined via active_checks
 #    "custom"        : Check is defined via custom_checks
-#    "manual"        : Check is a manual Check_MK check without service discovery
+#    "manual"        : Check is a manual Checkmk check without service discovery
 #    "ignored"       : discovered or static, but disabled via ignored_services
 #    "clustered_new" : New service found on a node that belongs to a cluster
 #    "clustered_old" : Old service found on a node that belongs to a cluster

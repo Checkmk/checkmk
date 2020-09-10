@@ -2566,7 +2566,7 @@ class TestAgentBasedStandardHosts(TestCase):
                     "    ( 5.0, [], ALL_HOSTS, {} ),\n"
                     "] + tcp_connect_timeouts\n")
 
-            # Ensure RRDs are created with Check_MK default config
+            # Ensure RRDs are created with Checkmk default config
             f.write(
                 "cmc_host_rrd_config = [\n"
                 "      ({'rras': [\n"
@@ -2837,7 +2837,7 @@ class TestAgentBasedStandardHosts(TestCase):
               and not os.path.exists("%s/tmp/run/live" % omd_root()):
             time.sleep(1)
 
-    # To deal with the load peak while initializing the Check_MK helpers we
+    # To deal with the load peak while initializing the Checkmk helpers we
     # need to wait till all helpers are initialized. Since we have no one
     # to tell us the state of the helpers, we need to detect this somehow.
     # -> Find all helper processes and check the open file descriptors.

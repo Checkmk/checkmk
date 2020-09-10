@@ -305,7 +305,7 @@ def gateway_reachable_via_ping(ip: HostAddress, probes: int) -> bool:
 
 
 # find hostname belonging to an ip address. We must not use
-# reverse DNS but the Check_MK mechanisms, since we do not
+# reverse DNS but the Checkmk mechanisms, since we do not
 # want to find the DNS name but the name of a matching host
 # from all_hosts
 def _ip_to_hostname(config_cache: config.ConfigCache,

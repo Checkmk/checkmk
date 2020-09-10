@@ -796,7 +796,7 @@ class NowikiManPageRenderer(ManPageRenderer):
     def _print_header(self):
         self.__output.write("TI:Check manual page of %s\n" % self.name)
         # It does not make much sense to print the date of the HTML generation
-        # of the man page here. More useful would be the Check_MK version where
+        # of the man page here. More useful would be the Checkmk version where
         # the plugin first appeared. But we have no access to that - alas.
         # self.__output.write("DT:%s\n" % (time.strftime("%Y-%m-%d")))
         self.__output.write("SA:check_plugins_catalog,check_plugins_list\n")

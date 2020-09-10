@@ -11,7 +11,7 @@
 # AIMCONS1|/u01/oradata/aimcons1/temp02.dbf|TEMP|ONLINE|YES|262144|2621440|262016|32768|TEMP|8192|ONLINE|258688|TEMPORARY
 
 # Order of columns (it is a table of data files, so table spaces appear multiple times)
-# -1 Node info (added by Check_MK)
+# -1 Node info (added by Checkmk)
 # 0  database SID
 # 1  data file name
 # 2  table space name

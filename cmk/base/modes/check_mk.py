@@ -75,7 +75,7 @@ from cmk.base.modes import keepalive_option, Mode, modes, Option
 #   |      \____|\___|_| |_|\___|_|  \__,_|_|  \___/| .__/ \__|___(_)      |
 #   |                                               |_|                    |
 #   +----------------------------------------------------------------------+
-#   | The general options that are available for all Check_MK modes. Only  |
+#   | The general options that are available for all Checkmk modes. Only  |
 #   | add new general options in case they are really affecting basic      |
 #   | things and used by the most of the modes.                            |
 #   '----------------------------------------------------------------------'
@@ -1509,8 +1509,8 @@ def mode_discover(options: DiscoverOptions, args: List[str]) -> None:
     hostnames = modes.parse_hostname_list(args)
     if not hostnames:
         # In case of discovery without host restriction, use the cache file
-        # by default. Otherwise Check_MK would have to connect to ALL hosts.
-        # This will make Check_MK only contact hosts in case the cache is not
+        # by default. Otherwise Checkmk would have to connect to ALL hosts.
+        # This will make Checkmk only contact hosts in case the cache is not
         # new enough.
         checkers.FileCacheConfigurer.reset_maybe()
 

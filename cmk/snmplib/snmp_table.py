@@ -199,8 +199,8 @@ def _make_table(columns: ResultColumnsUnsanitized, snmp_config: SNMPHostConfig) 
     sanitized_columns = _sanitize_snmp_table_columns(columns)
 
     # From all SNMP data sources (stored walk, classic SNMP, inline SNMP) we
-    # get python byte strings. But for Check_MK we need unicode strings now.
-    # Convert them by using the standard Check_MK approach for incoming data
+    # get python byte strings. But for Checkmk we need unicode strings now.
+    # Convert them by using the standard Checkmk approach for incoming data
     decoded_columns = _sanitize_snmp_encoding(sanitized_columns, snmp_config)
 
     return _construct_snmp_table_of_rows(decoded_columns)

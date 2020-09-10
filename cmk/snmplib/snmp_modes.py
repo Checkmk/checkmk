@@ -35,7 +35,7 @@ SNMPWalkOptions = Dict[str, List[OID]]
 #   |    \____|\___|_| |_|\___|_|  |_|\___| |____/|_| \_|_|  |_|_|         |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | Top level functions to realize SNMP functionality for Check_MK.      |
+#   | Top level functions to realize SNMP functionality for Checkmk.      |
 #   '----------------------------------------------------------------------'
 
 

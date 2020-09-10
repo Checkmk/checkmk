@@ -7,7 +7,7 @@
 #         Florian Heigl <florian.heigl@gmail.com>
 #           (Added sections: df mount mem netctr ipmitool)
 
-# NOTE: This agent has beed adapted from the Check_MK linux agent.
+# NOTE: This agent has beed adapted from the Checkmk linux agent.
 #       The most sections are commented out at the moment because
 #       they have not been ported yet. We will try to adapt most
 #       sections to print out the same output as the linux agent so

@@ -204,9 +204,9 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
 
     @staticmethod
     def _sort_section_names(section_names: Iterable[SectionName]) -> Iterable[SectionName]:
-        # In former Check_MK versions (<=1.4.0) CPU check plugins were
+        # In former Checkmk versions (<=1.4.0) CPU check plugins were
         # checked before other check plugins like interface checks.
-        # In Check_MK versions >= 1.5.0 the order is random and
+        # In Checkmk versions >= 1.5.0 the order is random and
         # interface check plugins are executed before CPU check plugins.
         # This leads to high CPU utilization sent by device. Thus we have
         # to re-order the check plugin names.

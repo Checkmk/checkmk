@@ -346,7 +346,7 @@ def locally_deliver_raw_context(raw_context: EventContext,
         # check-mk-notify.
         # We do we not simply check the config variable enable_rulebased_notifications?
         # -> Because the core needs are restart in order to reflect this while the
-        #    notification mode of Check_MK not. There are thus situations where the
+        #    notification mode of Checkmk not. There are thus situations where the
         #    setting of the core is different from our global variable. The core must
         #    have precedence in this situation!
         if not contactname or contactname == "check-mk-notify":
@@ -358,7 +358,7 @@ def locally_deliver_raw_context(raw_context: EventContext,
             return None  # Analysis only possible when rule based notifications are enabled
 
         # Now fetch all configuration about that contact (it needs to be configure via
-        # Check_MK for that purpose). If we do not know that contact then we cannot use
+        # Checkmk for that purpose). If we do not know that contact then we cannot use
         # flexible notifications even if they are enabled.
         # TODO find a common place for type hint 'Contact'/'Contacts'
         contact = cast(Contact, config.contacts.get(contactname))

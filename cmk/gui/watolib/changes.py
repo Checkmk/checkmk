@@ -84,7 +84,7 @@ def add_change(action_name,
     log_audit(obj, action_name, text, config.user.id if add_user else '')
     cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
 
-    # On each change to the Check_MK configuration mark the agents to be rebuild
+    # On each change to the Checkmk configuration mark the agents to be rebuild
     # TODO: Really? Why?
     #if has_agent_bakery():
     #    import cmk.gui.cee.agent_bakery as agent_bakery

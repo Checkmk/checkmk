@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Check_MK agent plugin for monitoring nfsexports on Solaris. This plugin
+# Checkmk agent plugin for monitoring nfsexports on Solaris. This plugin
 # has been tested with solaris 10 in a standalone and cluster setting.
 
 clusterconfigdir="/etc/cluster/ccr/global/directory"

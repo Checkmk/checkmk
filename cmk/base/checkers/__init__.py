@@ -12,7 +12,7 @@
 #                all OID/values received from SNMP.
 # host_sections: A wrapper object for the "sections" and other information like
 #                cache info and piggyback lines that is used to process the
-#                data within Check_MK.
+#                data within Checkmk.
 
 from . import agent, fetcher_configuration, host_sections, ipmi, piggyback, programs, snmp, tcp
 from ._abstract import *

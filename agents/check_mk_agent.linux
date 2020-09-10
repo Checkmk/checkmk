@@ -1181,7 +1181,7 @@ run_cached() {
 # Make run_cached available for subshells (plugins, local checks, etc.)
 export -f run_cached
 
-# Implements Real-Time Check feature of the Check_MK agent which can send
+# Implements Real-Time Check feature of the Checkmk agent which can send
 # some section data in 1 second resolution. Useful for fast notifications and
 # detailed graphing (if you configure your RRDs to this resolution).
 run_real_time_checks() {
@@ -1415,7 +1415,7 @@ fi
 
 [ -z "$MK_SKIP_MAILQUEUE" ] && section_mailqueue
 
-## Check status of OMD sites and Check_MK Notification spooler
+## Check status of OMD sites and Checkmk Notification spooler
 [ -z "$MK_SKIP_OMD" ] && section_omd
 
 # Welcome the ZFS check on Linux
@@ -1436,7 +1436,7 @@ fi
 # on non-OMD machines.
 [ -z "$MK_SKIP_OMD_CORES" ] && section_omd_core
 
-# Collect states of configured Check_MK site backup jobs
+# Collect states of configured Checkmk site backup jobs
 section_mkbackup
 
 # Get statistics about monitored jobs. Below the job directory there

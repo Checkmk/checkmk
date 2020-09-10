@@ -61,7 +61,7 @@ factory_settings["ucs_c_rack_server_util_overall_default_levels"] = {
 
 @get_parsed_item_data
 def check_ucs_c_rack_server_util(item, params, data):
-    # None values passed to check_levels(value, ...) are handled by Check_MK internals appropriatelly.
+    # None values passed to check_levels(value, ...) are handled by Checkmk internals appropriatelly.
     yield check_levels(data['overallUtilization'],
                        'overall_util',
                        params['upper_levels'],
@@ -89,7 +89,7 @@ factory_settings["ucs_c_rack_server_util_cpu_default_levels"] = {
 
 @get_parsed_item_data
 def check_ucs_c_rack_server_util_cpu(item, params, data):
-    # None values passed to check_levels(value, ...) are handled by Check_MK internals appropriatelly.
+    # None values passed to check_levels(value, ...) are handled by Checkmk internals appropriatelly.
     return check_cpu_util(data['cpuUtilization'], params['upper_levels'])
 
 

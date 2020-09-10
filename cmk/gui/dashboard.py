@@ -406,7 +406,7 @@ class LegacyDashlet(cmk.gui.plugins.dashboard.IFrameDashlet):
         return super(LegacyDashlet, self)._get_iframe_url()
 
 
-# Pre Check_MK 1.6 the dashlets were declared with dictionaries like this:
+# Pre Checkmk 1.6 the dashlets were declared with dictionaries like this:
 #
 # dashlet_types["hoststats"] = {
 #     "title"       : _("Host Statistics"),

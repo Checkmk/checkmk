@@ -46,7 +46,7 @@ oracle_tablespaces_check_default_increment = True
 # MAE|/opt/oracle/oracle_base/product/11.2.0.4/dbs/pslife_dwh.dbf|PSLIFE_DWH|AVAILABLE||||||RECOVER|8192|OFFLINE|0|PERMANENT
 
 # Order of columns (it is a table of data files, so table spaces appear multiple times)
-# -1 Node info (added by Check_MK)
+# -1 Node info (added by Checkmk)
 # 0  database SID
 # 1  data file name
 # 2  table space name

@@ -880,7 +880,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
             # Save the effective attributes of a host to the related attribute maps.
             # These maps are saved directly in the hosts.mk to transport the effective
-            # attributes to Check_MK base.
+            # attributes to Checkmk base.
             for attribute_name, _unused_cmk_var_name, dictionary, _unused_title in attribute_mappings:
                 value = effective.get(attribute_name)
                 if value:
@@ -993,7 +993,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return
 
     # This is a dummy implementation which works without tags
-    # and implements only a special case of Check_MK's real logic.
+    # and implements only a special case of Checkmk's real logic.
     def _host_extra_conf(self, host_name, conflist):
         for value, hostlist in conflist:
             if host_name in hostlist:

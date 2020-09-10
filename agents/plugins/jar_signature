@@ -5,7 +5,7 @@
 
 # This agent uses the program "jarsigner" to read ssl certificate
 # information of jar files and outputs the information to stdout
-# for the Check_MK check.
+# for the Checkmk check.
 # We assume that all files in the jar archive are signed with the
 # same certificate. So we only deal with the last signed file here.
 

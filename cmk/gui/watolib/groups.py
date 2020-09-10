@@ -181,7 +181,7 @@ def _set_group(all_groups, group_type: GroupType, name, extra_info):
 
 
 def save_group_information(all_groups, custom_default_config_dir=None):
-    # Split groups data into Check_MK/Multisite parts
+    # Split groups data into Checkmk/Multisite parts
     check_mk_groups: Dict[str, Dict[Any, Any]] = {}
     multisite_groups: Dict[str, Dict[Any, Any]] = {}
 
@@ -203,7 +203,7 @@ def save_group_information(all_groups, custom_default_config_dir=None):
                     multisite_groups[what].setdefault(gid, {})
                     multisite_groups[what][gid][attr] = value
 
-    # Save Check_MK world related parts
+    # Save Checkmk world related parts
     store.makedirs(check_mk_config_dir)
     output = wato_fileheader()
     for what in ["host", "service", "contact"]:

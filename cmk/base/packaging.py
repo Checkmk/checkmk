@@ -236,7 +236,7 @@ def package_pack(args: List[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P pack NAME")
 
-    # Make sure, user is not in data directories of Check_MK
+    # Make sure, user is not in data directories of Checkmk
     abs_curdir = os.path.abspath(os.curdir)
     for directory in [cmk.utils.paths.var_dir
                      ] + [p.path for p in get_package_parts() + get_config_parts()]:

@@ -233,7 +233,7 @@ def continue_on_counter_wrap() -> None:
     g_suppress_on_wrap = False
 
 
-# Idea (2): Check_MK should fetch a time stamp for each info. This should also be
+# Idea (2): Checkmk should fetch a time stamp for each info. This should also be
 # available as a global variable, so that this_time would be an optional argument.
 def get_rate(user_key: str,
              this_time: float,

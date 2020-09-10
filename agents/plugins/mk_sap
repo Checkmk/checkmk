@@ -5,13 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # This agent plugin has been built to collect information from SAP R/3 systems
-# using RFC calls. It needs the python module sapnwrfc (available in Check_MK
+# using RFC calls. It needs the python module sapnwrfc (available in Checkmk
 # git at agents/sap/sapnwrfc) and the nwrfcsdk (can be downloaded from SAP
 # download portal) installed to be working. You can configure the agent plugin
 # using the configuration file /etc/check_mk/sap.cfg (a sample file can be
-# found in Check_MK git at agents/sap/sap.cfg) to tell it how to connect to
+# found in Checkmk git at agents/sap/sap.cfg) to tell it how to connect to
 # your SAP instance and which values you want to fetch from your system to be
-# forwarded to and checked by Check_MK.
+# forwarded to and checked by Checkmk.
 #
 # This current agent has been developed and tested with:
 #   python-sapnwrfc-0.19

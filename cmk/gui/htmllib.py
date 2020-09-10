@@ -1599,7 +1599,7 @@ class html(ABCHTMLGenerator):
 
     # Make the browser load specified javascript files. We have some special handling here:
     # a) files which can not be found shal not be loaded
-    # b) in OMD environments, add the Check_MK version to the version (prevents update problems)
+    # b) in OMD environments, add the Checkmk version to the version (prevents update problems)
     # c) load the minified javascript when not in debug mode
     def javascript_filename_for_browser(self, jsname: str) -> Optional[str]:
         filename_for_browser = None

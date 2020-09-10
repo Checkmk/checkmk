@@ -65,7 +65,7 @@ class NagiosCore(core_config.MonitoringCore):
         self._precompile_hostchecks(serial)
 
     def _create_core_config(self) -> None:
-        """Tries to create a new Check_MK object configuration file for the Nagios core
+        """Tries to create a new Checkmk object configuration file for the Nagios core
 
         During create_config() exceptions may be raised which are caused by configuration issues.
         Don't produce a half written object file. Simply throw away everything and keep the old file.
@@ -361,7 +361,7 @@ def _create_nagios_servicedefs(cfg: NagiosConfig, config_cache: ConfigCache, hos
         cfg.checknames_to_define.add(service.check_plugin_name)
         have_at_least_one_service = True
 
-    # Active check for check_mk
+    # Active check for Check_MK
     if have_at_least_one_service:
         service_spec = {
             "use": config.active_service_template,
@@ -894,7 +894,7 @@ def _extra_service_conf_of(cfg: NagiosConfig, config_cache: ConfigCache, hostnam
 #   | contains that code and information that is needed for executing all  |
 #   | checks of that host. Also static data that cannot change during the  |
 #   | normal monitoring process is being precomputed and hard coded. This  |
-#   | all saves substantial CPU resources as opposed to running Check_MK   |
+#   | all saves substantial CPU resources as opposed to running Checkmk   |
 #   | in adhoc mode (about 75%).                                           |
 #   '----------------------------------------------------------------------'
 
@@ -1060,7 +1060,7 @@ if os.path.islink(%(dst)r):
         output.write("import %s\n" % full_mod_name)
         console.verbose(" %s%s%s", tty.green, full_mod_name, tty.normal, stream=sys.stderr)
 
-    # Register default Check_MK signal handler
+    # Register default Checkmk signal handler
     output.write("cmk.base.utils.register_sigint_handler()\n")
 
     # initialize global variables

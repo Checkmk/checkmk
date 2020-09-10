@@ -1756,7 +1756,7 @@ class PageBackupRestore:
             except MKUserError as e:
                 html.add_user_error(e.varname, e)
 
-        # Special handling for Check_MK / CMA differences
+        # Special handling for Checkmk / CMA differences
         if is_site():
             title = _("Insert passphrase")
             breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_setup(), title)

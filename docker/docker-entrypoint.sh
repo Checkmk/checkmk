@@ -100,7 +100,7 @@ if [ ! -f "/omd/apache/$CMK_SITE_ID.conf" ]; then
 fi
 
 # In case the version symlink is dangling we are in an update situation: The
-# volume was previously attached to a container with another Check_MK version.
+# volume was previously attached to a container with another Checkmk version.
 # We now have to perform the "omd update" to be able to bring the site back
 # to life.
 if [ ! -e "/omd/sites/$CMK_SITE_ID/version" ]; then

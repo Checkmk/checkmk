@@ -7,7 +7,7 @@
 #         Florian Heigl <florian.heigl@gmail.com>
 #	  Christian Zigotzky <chzigotzky@xenosoft.de>
 
-# NOTE: This agent has been adapted from the Check_MK FreeBSD agent.
+# NOTE: This agent has been adapted from the Checkmk FreeBSD agent.
 
 # Remove locale settings to eliminate localized outputs where possible
 export LC_ALL=C

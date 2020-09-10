@@ -196,7 +196,7 @@ def check_mk_remote_automation(site_id: SiteId,
         config.site(site_id),
         "checkmk-automation",
         [
-            ("automation", command),  # The Check_MK automation command
+            ("automation", command),  # The Checkmk automation command
             ("arguments", mk_repr(args)),  # The arguments for the command
             ("indata", mk_repr(indata)),  # The input data
             ("stdin_data", mk_repr(stdin_data)),  # The input data for stdin
@@ -233,7 +233,7 @@ def sync_changes_before_remote_automation(site_id):
 # This hook is executed when one applies the pending configuration changes
 # from wato but BEFORE the nagios restart is executed.
 #
-# It can be used to create custom input files for nagios/Check_MK.
+# It can be used to create custom input files for nagios/Checkmk.
 #
 # The registered hooks are called with a dictionary as parameter which
 # holds all available with the hostnames as keys and the attributes of

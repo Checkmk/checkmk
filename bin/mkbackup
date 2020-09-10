@@ -1360,7 +1360,7 @@ g_state = None
 
 
 # The state file is in JSON format because it is 1:1 transfered
-# to the Check_MK server through the Check_MK agent.
+# to the Checkmk server through the Checkmk agent.
 def load_state():
     global g_state
     if g_state is None:
@@ -1533,7 +1533,7 @@ def do_site_restore(opts, info, site=None):
         try:
             archive_started = False
             for chunk in s.process():
-                # Hack for all handling of site backups created with Check_MK
+                # Hack for all handling of site backups created with Checkmk
                 # versions < 2016-03-16 and till 1.2.8p6:
                 # When a site was just stopped, the next "omd backup" unmounts the sites
                 # tmpfs. In this case the output "Unmounting temporary filesystem...OK" was

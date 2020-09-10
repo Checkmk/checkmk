@@ -137,7 +137,7 @@ def _extract_inventory_plugins(inf_info: Dict[InventoryPluginNameStr, InventoryI
 
 def _new_inv_context(get_check_api_context: config.GetCheckApiContext,
                      get_inventory_context: config.GetInventoryApiContext) -> Dict:
-    # Add the data structures where the inventory plugins register with Check_MK
+    # Add the data structures where the inventory plugins register with Checkmk
     context = {
         "inv_info": inv_info,
         "inv_export": inv_export,

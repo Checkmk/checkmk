@@ -521,7 +521,7 @@ def _verify_no_deprecated_variables_used() -> None:
         sys.exit(1)
 
     # Legacy checks have never been supported by CMC, were not configurable via WATO
-    # and have been removed with Check_MK 1.6
+    # and have been removed with Checkmk 1.6
     if legacy_checks:
         console.error(
             "Check_MK does not support the configuration variable \"legacy_checks\" anymore. "
@@ -529,7 +529,7 @@ def _verify_no_deprecated_variables_used() -> None:
         sys.exit(1)
 
     # "checks" declarations were never possible via WATO. They can be configured using
-    # "static_checks" using the GUI. "checks" has been removed with Check_MK 1.6.
+    # "static_checks" using the GUI. "checks" has been removed with Checkmk 1.6.
     if checks:
         console.error(
             "Check_MK does not support the configuration variable \"checks\" anymore. "
@@ -575,8 +575,8 @@ class PackedConfigGenerator:
        need the options needed for checking
     """
 
-    # These variables are part of the Check_MK configuration, but are not needed
-    # by the Check_MK keepalive mode, so exclude them from the packed config
+    # These variables are part of the Checkmk configuration, but are not needed
+    # by the Checkmk keepalive mode, so exclude them from the packed config
     _skipped_config_variable_names = [
         "define_contactgroups",
         "define_hostgroups",
@@ -597,7 +597,7 @@ class PackedConfigGenerator:
     def generate(self) -> str:
         helper_config = ("#!/usr/bin/env python\n"
                          "# encoding: utf-8\n"
-                         "# Created by Check_MK. Dump of the currently active configuration\n\n")
+                         "# Created by Checkmk. Dump of the currently active configuration\n\n")
 
         # These functions purpose is to filter out hosts which are monitored on different sites
         active_hosts = self._config_cache.all_active_hosts()
@@ -638,7 +638,7 @@ class PackedConfigGenerator:
         }
 
         #
-        # Add modified Check_MK base settings
+        # Add modified Checkmk base settings
         #
 
         variable_defaults = get_default_config()
@@ -664,7 +664,7 @@ class PackedConfigGenerator:
             helper_config += "\n%s = %r\n" % (varname, val)
 
         #
-        # Add modified check specific Check_MK base settings
+        # Add modified check specific Checkmk base settings
         #
 
         check_variable_defaults = _get_check_variable_defaults()
@@ -1557,7 +1557,7 @@ def load_checks(get_check_api_context: GetCheckApiContext, filelist: List[str]) 
             variables=new_check_vars,
             # Keep track of which variable needs to be set to which context
             context_idents=list(new_checks) + list(new_active_checks),
-            # Do not allow checks to override Check_MK builtin global variables. Silently
+            # Do not allow checks to override Checkmk builtin global variables. Silently
             # skip them here. The variables will only be locally available to the checks.
             skip_names=cmk_global_vars,
         )
@@ -1589,7 +1589,7 @@ def any_check_loaded() -> bool:
 
 # Constructs a new check context dictionary. It contains the whole check API.
 def new_check_context(get_check_api_context: GetCheckApiContext) -> CheckContext:
-    # Add the data structures where the checks register with Check_MK
+    # Add the data structures where the checks register with Checkmk
     context = {
         "check_info": check_info,
         "check_includes": check_includes,

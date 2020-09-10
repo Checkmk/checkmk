@@ -5,7 +5,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Sets/Removes downtimes via Check_MK Multisite Webservice
+# Sets/Removes downtimes via Checkmk Multisite Webservice
 # Before you can use this script, please read:
 # http://mathias-kettner.de/checkmk_multisite_automation.html
 # And create an automation user - best with the name 'automation'

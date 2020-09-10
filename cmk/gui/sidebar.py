@@ -81,12 +81,12 @@ def load_plugins(force):
     loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
-# Pre Check_MK 1.5 the snapins were declared with dictionaries like this:
+# Pre Checkmk 1.5 the snapins were declared with dictionaries like this:
 #
 # sidebar_snapins["about"] = {
 #     "title" : _("About Checkmk"),
 #     "description" : _("Version information and Links to Documentation, "
-#                       "Homepage and Download of Check_MK"),
+#                       "Homepage and Download of Checkmk"),
 #     "render" : render_about,
 #     "allowed" : [ "admin", "user", "guest" ],
 # }

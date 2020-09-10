@@ -6,7 +6,7 @@
 # Plugin for EMCs ScaleIO software. This plugins needs to be installed
 # on all MDM servers as the information is provdided only by an active
 # MDM member. Also it is recommended to configure a cluster host with
-# these members as nodes in Check_MK and apply the ScaleIO services to
+# these members as nodes in Checkmk and apply the ScaleIO services to
 # this cluster host.
 
 # This plugin needs a configuration file in your MK_CONFDIR. This should
@@ -36,7 +36,7 @@ then
     if [ $? == 1 ]; then
         # Login fails if MDM server is not master. In this case we do
         # absolutely nothing but quit this script! The data will be
-        # fetched elsewhere and we do not want to confuse Check_MK.
+        # fetched elsewhere and we do not want to confuse Checkmk.
         exit 1
     fi
 

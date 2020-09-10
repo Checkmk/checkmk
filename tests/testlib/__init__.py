@@ -271,7 +271,7 @@ def create_linux_test_host(request, web_fixture, site, hostname):
 #   |                   \____|_| |_|\___|\___|_|\_\___/                    |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | Testing of Check_MK checks                                           |
+#   | Testing of Checkmk checks                                           |
 #   '----------------------------------------------------------------------'
 
 

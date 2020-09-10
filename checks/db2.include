@@ -25,7 +25,7 @@ def parse_db2_dbs(info):
     except Exception:
         pass
 
-    # By returning a tuple, we trick Check_MK
+    # By returning a tuple, we trick Checkmk
     # Even if no information is available, an empty tuple is something
-    # Check_MK won't report any missing agent sections for this type of checks
+    # Checkmk won't report any missing agent sections for this type of checks
     return global_timestamp, dbs

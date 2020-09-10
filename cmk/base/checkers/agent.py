@@ -427,9 +427,9 @@ class AgentParser(ABCParser[AgentRawData, AgentHostSections]):
         if piggybacked_hostname == hostname or not piggybacked_hostname:
             return None  # unpiggybacked "normal" host
 
-        # Protect Check_MK against unallowed host names. Normally source scripts
+        # Protect Checkmk against unallowed host names. Normally source scripts
         # like agent plugins should care about cleaning their provided host names
-        # up, but we need to be sure here to prevent bugs in Check_MK code.
+        # up, but we need to be sure here to prevent bugs in Checkmk code.
         return regex("[^%s]" % REGEX_HOST_NAME_CHARS).sub("_", piggybacked_hostname)
 
     @staticmethod

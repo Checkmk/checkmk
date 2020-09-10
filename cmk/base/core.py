@@ -84,10 +84,6 @@ def do_restart(core: MonitoringCore, only_reload: bool = False) -> None:
         if config.monitoring_core == "cmc" or cmk.base.nagios_utils.do_check_nagiosconfig():
             if backup_path:
                 os.remove(backup_path)
-
-            core.precompile()
-
-            do_core_action(only_reload and "reload" or "restart")
         else:
             # TODO: Replace by MKBailOut()/MKTerminate()?
             console.error("Configuration for monitoring core is invalid. Rolling back.\n")
@@ -102,6 +98,9 @@ def do_restart(core: MonitoringCore, only_reload: bool = False) -> None:
             else:
                 os.remove(cmk.utils.paths.nagios_objects_file)
             sys.exit(1)
+
+        core.precompile()
+        do_core_action(only_reload and "reload" or "restart")
 
     except Exception as e:
         if backup_path:

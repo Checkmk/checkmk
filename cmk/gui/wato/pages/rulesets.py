@@ -1408,6 +1408,10 @@ class EditRuleMode(WatoMode):
             self._folder.need_permission("write")
         new_rule_folder.need_permission("write")
 
+        if html.has_user_errors():
+            # show_user_error already handled by page_handler
+            return
+
         if html.request.has_var("_export_rule"):
             return "edit_rule"
 
@@ -1491,7 +1495,10 @@ class EditRuleMode(WatoMode):
     def _get_explicit_rule_conditions(self):
         vs = self._vs_explicit_conditions()
         conditions = vs.from_html_vars("explicit_conditions")
-        vs.validate_value(conditions, "explicit_conditions")
+        try:
+            vs.validate_value(conditions, "explicit_conditions")
+        except MKUserError as user_error:
+            html.add_user_error(user_error.varname, user_error)
         return conditions
 
     def page(self):
@@ -1936,7 +1943,7 @@ class LabelCondition(Transform):
             if label:
                 label_id, label_value = list(label.items())[0]
                 if label_id in label_conditions:
-                    raise MKUserError(
+                    html.add_user_error(
                         None,
                         _("A label key can be used only once per object. "
                           "The Label key \"%s\" is used twice.") % label_id)

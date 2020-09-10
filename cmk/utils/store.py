@@ -404,6 +404,14 @@ def aquire_lock(path: Union[Path, str], blocking: bool = True) -> None:
     logger.debug("Got lock on %s", path)
 
 
+@contextmanager
+def try_locked(path: Union[Path, str]) -> Iterator[bool]:
+    try:
+        yield try_aquire_lock(path)
+    finally:
+        release_lock(path)
+
+
 def try_aquire_lock(path: Union[Path, str]) -> bool:
     try:
         aquire_lock(path, blocking=False)

@@ -22,5 +22,11 @@ docker run -t -a stdout -a stderr \
     -u "$UID:$UID" \
     -v "$REPO_DIR:$REPO_DIR" \
     -w "$PWD" \
+    -e JUNIT_XML \
+    -e PYLINT_ARGS \
+    -e PYTEST_ADDOPTS \
+    -e PYTHON_FILES \
+    -e RESULTS \
+    -e WORKDIR \
     "$TEST_CONTAINER" \
     $COMMAND

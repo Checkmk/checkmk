@@ -72,7 +72,7 @@ node (NODE) {
             CONDITION: CHANGED_PYTHON_FILES != "",
             DIR: 'tests',
             ENV_VARS: ["JUNIT_XML=--junit-xml ${RESULTS}/mypy.xml"],
-            COMMAND: 'make --quiet test-mypy',
+            COMMAND: 'make --quiet test-mypy-docker',
             TEXT_ON_SKIP: 'No Python files changed. Skipping.'
         )
 
@@ -81,7 +81,7 @@ node (NODE) {
             CONDITION: CHANGED_PYTHON_FILES != "",
             DIR: 'tests',
             ENV_VARS: ["PYTHON_FILES=${CHANGED_PYTHON_FILES}"],
-            COMMAND: "make --quiet test-format-python &> ${RESULTS}/python-yapf.txt",
+            COMMAND: "make --quiet test-format-python-docker &> ${RESULTS}/python-yapf.txt",
             TEXT_ON_SKIP: 'No Python files changed. Skipping.'
          )
 
@@ -90,7 +90,7 @@ node (NODE) {
             CONDITION: CHANGED_PYTHON_FILES != "",
             DIR: 'tests',
             ENV_VARS: ["PYTEST_ADDOPTS=--junitxml=$RESULTS/python3-unit-junit.xml"],
-            COMMAND: "make test-unit",
+            COMMAND: "make test-unit-docker",
             TEXT_ON_SKIP: 'No Python files changed. Skipping.'
         )
 
@@ -99,7 +99,7 @@ node (NODE) {
             CONDITION: CHANGED_PYLINT_RC_FILE != "" || CHANGED_PYTHON_FILES != "",
             DIR: 'tests',
             ENV_VARS: ["WORKDIR=${WORKDIR}",'PYLINT_ARGS=--output-format=cmk_parseable'],
-            COMMAND: "make test-pylint &> ${RESULTS}/pylint.txt",
+            COMMAND: "make test-pylint-docker &> ${RESULTS}/pylint.txt",
             TEXT_ON_SKIP: 'Neither .pylintrc nor Python files changed. Skipping.'
         )
 
@@ -117,7 +117,7 @@ node (NODE) {
             CONDITION: true,
             DIR: 'tests',
             ENV_VARS: [],
-            COMMAND: "bash -c \"make test-unit-sh\" &> ${RESULTS}/shell-unit.txt",
+            COMMAND: "make test-unit-sh-docker &> ${RESULTS}/shell-unit.txt",
             TEXT_ON_SKIP: ''
          )
 
@@ -148,7 +148,7 @@ node (NODE) {
             NAME: 'Cppcheck Livestatus',
             CONDITION: CHANGED_CORE_FILES != "",
             DIR: 'tests',
-            ENV_VARS: ["RESULTS=${RESULTS}", "TEST_CONTAINER=${TEST_CONTAINER}"],
+            ENV_VARS: ["RESULTS=${RESULTS}"],
             COMMAND: "make test-cppcheck-livestatus-docker",
             TEXT_ON_SKIP: 'No core files changed. Skipping.'
          )
@@ -157,7 +157,7 @@ node (NODE) {
             NAME: 'Cppcheck core',
             CONDITION: CHANGED_CORE_FILES != "",
             DIR: 'tests',
-            ENV_VARS: ["RESULTS=${RESULTS}", "TEST_CONTAINER=${TEST_CONTAINER}"],
+            ENV_VARS: ["RESULTS=${RESULTS}"],
             COMMAND: "make test-cppcheck-core-docker",
             TEXT_ON_SKIP: 'No core files changed. Skipping.'
          )
@@ -166,7 +166,7 @@ node (NODE) {
             NAME: 'Clang Tidy Livestatus',
             CONDITION: CHANGED_CORE_FILES != "",
             DIR: 'tests',
-            ENV_VARS: ["GERRIT_PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}", "RESULTS=${RESULTS}", "TEST_CONTAINER=${TEST_CONTAINER}"],
+            ENV_VARS: ["GERRIT_PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}", "RESULTS=${RESULTS}"],
             COMMAND: "make test-tidy-livestatus-docker",
             TEXT_ON_SKIP: 'No core files changed. Skipping.'
          )
@@ -175,7 +175,7 @@ node (NODE) {
             NAME: 'Clang Tidy core',
             CONDITION: CHANGED_CORE_FILES != "",
             DIR: 'tests',
-            ENV_VARS: ["GERRIT_PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}", "RESULTS=${RESULTS}", "TEST_CONTAINER=${TEST_CONTAINER}"],
+            ENV_VARS: ["GERRIT_PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}", "RESULTS=${RESULTS}"],
             COMMAND: "make test-tidy-core-docker",
             TEXT_ON_SKIP: 'No core files changed. Skipping.'
          )
@@ -184,7 +184,7 @@ node (NODE) {
             NAME: 'IWYU Livestatus',
             CONDITION: CHANGED_CORE_FILES != "",
             DIR: 'tests',
-            ENV_VARS: ["GERRIT_PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}", "RESULTS=${RESULTS}", "TEST_CONTAINER=${TEST_CONTAINER}"],
+            ENV_VARS: ["GERRIT_PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}", "RESULTS=${RESULTS}"],
             COMMAND: "make test-iwyu-livestatus-docker",
             TEXT_ON_SKIP: 'No core files changed. Skipping.'
          )
@@ -193,7 +193,7 @@ node (NODE) {
             NAME: 'IWYU core',
             CONDITION: CHANGED_CORE_FILES != "",
             DIR: 'tests',
-            ENV_VARS: ["GERRIT_PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}", "RESULTS=${RESULTS}", "TEST_CONTAINER=${TEST_CONTAINER}"],
+            ENV_VARS: ["GERRIT_PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}", "RESULTS=${RESULTS}"],
             COMMAND: "make test-iwyu-core-docker",
             TEXT_ON_SKIP: 'No core files changed. Skipping.'
          )
@@ -202,7 +202,7 @@ node (NODE) {
             NAME: 'Unit Test Livestatus',
             CONDITION: CHANGED_CORE_FILES != "",
             DIR: 'livestatus/src/test',
-            ENV_VARS: ["RESULTS=${RESULTS}", "TEST_CONTAINER=${TEST_CONTAINER}"],
+            ENV_VARS: ["RESULTS=${RESULTS}"],
             COMMAND: "./.f12 &> ${RESULTS}/livestatus-neb-cmc.txt",
             TEXT_ON_SKIP: 'No core files changed. Skipping.'
          )
@@ -211,7 +211,7 @@ node (NODE) {
             NAME: 'Unit Test core',
             CONDITION: CHANGED_CORE_FILES != "",
             DIR: 'enterprise/core/src/test',
-            ENV_VARS: ["RESULTS=${RESULTS}", "TEST_CONTAINER=${TEST_CONTAINER}"],
+            ENV_VARS: ["RESULTS=${RESULTS}"],
             COMMAND: "./.f12 &> ${RESULTS}/core-neb-cmc.txt",
             TEXT_ON_SKIP: 'No core files changed. Skipping.'
          )

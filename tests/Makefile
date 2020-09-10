@@ -39,11 +39,13 @@ endif
 .PHONY: clean format-shell help prepare-node-modules \
 	$(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-composition test-composition-docker test-composition-docker-debug \
-	test-docker test-format-python test-format-shell test-gui-crawl test-gui-crawl-docker \
-	test-integration test-integration-docker test-integration-docker-debug test-mypy \
-	test-mypy-raw test-packaging test-pipenv-deps test-pylint test-shellcheck test-unit \
-	test-unit-coverage-html test-unit-sh test-cppcheck-livestatus test-cppcheck-core test-cppcheck-docker \
-	test-tidy-livestatus test-tidy-core test-tidy-docker test-iwyu-livestatus test-iwyu-core test-iwyu-docker \
+	test-docker test-format-python test-format-python-docker test-format-shell \
+        test-gui-crawl test-gui-crawl-docker test-integration test-integration-docker \
+        test-integration-docker-debug test-mypy test-mypy-raw itest-mypy-docker \
+        test-packaging test-pipenv-deps test-pylint test-pylint-docker test-shellcheck \
+        test-unit test-unit-docker test-unit-coverage-html test-unit-sh test-unit-sh-docker \
+        test-cppcheck-livestatus test-cppcheck-core test-cppcheck-docker test-tidy-livestatus \
+        test-tidy-core test-tidy-docker test-iwyu-livestatus test-iwyu-core test-iwyu-docker \
 	test-unit-livestatus test-unit-core %-livestatus-docker %-core-docker
 
 clean:
@@ -60,6 +62,7 @@ help:
 	@echo "test-composition-docker-debug       - Run test container for manual debugging"
 	@echo "test-docker                         - Run docker tests"
 	@echo "test-format-python                  - Run formatting tests"
+	@echo "test-format-python-docker           - Run formatting tests in docker"
 	@echo "test-format-shell                   - Run the shell formatting"
 	@echo "test-gui-crawl                      - Run GUI crawl locally"
 	@echo "test-gui-crawl-docker               - Run GUI crawl in container"
@@ -68,13 +71,16 @@ help:
 	@echo "test-integration-docker-debug       - Run test container for manual debugging"
 	@echo "test-mypy                           - Run mypy"
 	@echo "test-mypy-raw                       - Run mypy with raw edition config"
+	@echo "test-mypy-docker                    - Run mypy in docker"
 	@echo "test-packaging                      - Run packaging tests"
 	@echo "test-pipenv-deps                    - Run pipenv dependency issue test"
 	@echo "test-pylint                         - Run pylint based tests"
 	@echo "test-shellcheck                     - Run shellcheck tests"
 	@echo "test-unit                           - Run unit tests"
+	@echo "test-unit-docker                    - Run unit tests in docker"
 	@echo "test-unit-coverage-html             - Create HTML coverage report for unit tests"
 	@echo "test-unit-sh		           - Run shell unit tests"
+	@echo "test-unit-sh-docker	           - Run shell unit tests in docker"
 	@echo "test-cppcheck-livestatus            - Run cppcheck for livestatus"
 	@echo "test-cppcheck-core                  - Run cppcheck for the core"
 	@echo "test-cppcheck-docker                - Run both cppcheck in docker"
@@ -161,6 +167,9 @@ test-format-python: ../.style.yapf
 	sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/' ; \
 	exit $${PIPESTATUS[0]}
 
+test-format-python-docker:
+	../scripts/run-in-docker.sh make --quiet test-format-python
+
 test-format-shell:
 	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES)
 
@@ -190,6 +199,9 @@ test-mypy:
 test-mypy-raw:
 	$(MAKE) test-mypy ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"
 
+test-mypy-docker:
+	../scripts/run-in-docker.sh make --quiet test-mypy
+
 test-packaging:
 	$(PYTEST) -T packaging packaging
 
@@ -198,6 +210,9 @@ test-pipenv-deps:
 
 test-pylint:
 	$(PYTEST) -T pylint pylint
+
+test-pylint-docker:
+	../scripts/run-in-docker.sh make --quiet test-pylint
 
 test-shellcheck:
 	@CMK_DIR="$(realpath ..)" ; \
@@ -217,6 +232,9 @@ test-unit:
 		../cmk/utils \
 		unit
 
+test-unit-docker:
+	../scripts/run-in-docker.sh make --quiet test-unit
+
 test-unit-coverage-html:
 	$(PYTEST) \
 		-T unit \
@@ -233,6 +251,9 @@ test-unit-coverage-html:
 
 test-unit-sh:
 	./sh_test_runner.sh
+
+test-unit-sh-docker:
+	../scripts/run-in-docker.sh make test-unit-sh
 
 %-livestatus-docker:
 	../scripts/run-in-docker.sh make RESULTS=$(RESULTS) GERRIT_PATCHSET_REVISION=$(GERRIT_PATCHSET_REVISION) $*-livestatus

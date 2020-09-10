@@ -59,72 +59,74 @@ public:
 
 TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     : Table(mc), _log_cache(log_cache) {
-    auto entry_offset = DANGEROUS_OFFSETOF(LogRow, entry);
-    Column::Offsets offsets{entry_offset, 0};
+    auto offsets_entry{
+        Column::Offsets{}.addIndirectOffset(DANGEROUS_OFFSETOF(LogRow, entry))};
     addColumn(std::make_unique<TimeLambdaColumn<LogEntry>>(
-        "time", "Time of the log event (UNIX timestamp)", offsets,
+        "time", "Time of the log event (UNIX timestamp)", offsets_entry,
         [](const LogEntry &r) {
             return std::chrono::system_clock::from_time_t(r._time);
         }));
     addColumn(std::make_unique<IntLambdaColumn<LogEntry>>(
-        "lineno", "The number of the line in the log file", offsets,
+        "lineno", "The number of the line in the log file", offsets_entry,
         [](const LogEntry &r) { return r._lineno; }));
     addColumn(std::make_unique<IntLambdaColumn<LogEntry>>(
         "class",
         "The class of the message as integer (0:info, 1:state, 2:program, 3:notification, 4:passive, 5:command)",
-        offsets,
+        offsets_entry,
         [](const LogEntry &r) { return static_cast<int32_t>(r._class); }));
     addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
-        "message", "The complete message line including the timestamp", offsets,
-        [](const LogEntry &r) { return r._message; }));
+        "message", "The complete message line including the timestamp",
+        offsets_entry, [](const LogEntry &r) { return r._message; }));
     addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
         "type",
         "The type of the message (text before the colon), the message itself for info messages",
-        offsets,
+        offsets_entry,
         [](const LogEntry &r) { return r._type == nullptr ? "" : r._type; }));
     addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
-        "options", "The part of the message after the ':'", offsets,
+        "options", "The part of the message after the ':'", offsets_entry,
         [](const LogEntry &r) {
             return r._options == nullptr ? "" : r._options;
         }));
     addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
-        "comment", "A comment field used in various message types", offsets,
-        [](const LogEntry &r) { return r._comment; }));
+        "comment", "A comment field used in various message types",
+        offsets_entry, [](const LogEntry &r) { return r._comment; }));
     addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
         "plugin_output",
         "The output of the check, if any is associated with the message",
-        offsets, [](const LogEntry &r) { return r._plugin_output; }));
+        offsets_entry, [](const LogEntry &r) { return r._plugin_output; }));
     addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
         "long_plugin_output",
         "The complete output of the check, if any is associated with the message",
-        offsets, [](const LogEntry &r) { return r._long_plugin_output; }));
+        offsets_entry,
+        [](const LogEntry &r) { return r._long_plugin_output; }));
     addColumn(std::make_unique<IntLambdaColumn<LogEntry>>(
-        "state", "The state of the host or service in question", offsets,
+        "state", "The state of the host or service in question", offsets_entry,
         [](const LogEntry &r) { return r._state; }));
     addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
         "state_type", "The type of the state (varies on different log classes)",
-        offsets, [](const LogEntry &r) { return r._state_type; }));
+        offsets_entry, [](const LogEntry &r) { return r._state_type; }));
     addColumn(std::make_unique<LogEntryStringColumn>(
-        "state_info", "Additional information about the state", offsets));
+        "state_info", "Additional information about the state", offsets_entry));
     addColumn(std::make_unique<IntLambdaColumn<LogEntry>>(
-        "attempt", "The number of the check attempt", offsets,
+        "attempt", "The number of the check attempt", offsets_entry,
         [](const LogEntry &r) { return r._attempt; }));
     addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
         "service_description",
         "The description of the service log entry is about (might be empty)",
-        offsets, [](const LogEntry &r) { return r._service_description; }));
+        offsets_entry,
+        [](const LogEntry &r) { return r._service_description; }));
     addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
         "host_name",
-        "The name of the host the log entry is about (might be empty)", offsets,
-        [](const LogEntry &r) { return r._host_name; }));
+        "The name of the host the log entry is about (might be empty)",
+        offsets_entry, [](const LogEntry &r) { return r._host_name; }));
     addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
         "contact_name",
         "The name of the contact the log entry is about (might be empty)",
-        offsets, [](const LogEntry &r) { return r._contact_name; }));
+        offsets_entry, [](const LogEntry &r) { return r._contact_name; }));
     addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
         "command_name",
         "The name of the command of the log entry (e.g. for notifications)",
-        offsets, [](const LogEntry &r) { return r._command_name; }));
+        offsets_entry, [](const LogEntry &r) { return r._command_name; }));
 
     // join host and service tables
     TableHosts::addColumns(this, "current_host_",
@@ -132,8 +134,9 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     TableServices::addColumns(this, "current_service_",
                               DANGEROUS_OFFSETOF(LogRow, svc),
                               false /* no hosts table */);
-    TableContacts::addColumns(this, "current_contact_",
-                              DANGEROUS_OFFSETOF(LogRow, ctc));
+    TableContacts::addColumns(
+        this, "current_contact_",
+        Column::Offsets{}.addIndirectOffset(DANGEROUS_OFFSETOF(LogRow, ctc)));
     TableCommands::addColumns(this, "current_command_",
                               DANGEROUS_OFFSETOF(LogRow, command));
 }

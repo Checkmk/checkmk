@@ -5,6 +5,7 @@
 
 #include "TableHostsByGroup.h"
 
+#include "Column.h"
 #include "MonitoringCore.h"
 #include "Query.h"
 #include "Row.h"
@@ -26,9 +27,11 @@ struct hostbygroup {
 }  // namespace
 
 TableHostsByGroup::TableHostsByGroup(MonitoringCore *mc) : Table(mc) {
+    Column::Offsets offsets{};
     TableHosts::addColumns(this, "", -1, -1);
-    TableHostGroups::addColumns(this, "hostgroup_",
-                                DANGEROUS_OFFSETOF(hostbygroup, host_group));
+    TableHostGroups::addColumns(
+        this, "hostgroup_",
+        offsets.addIndirectOffset(DANGEROUS_OFFSETOF(hostbygroup, host_group)));
 }
 
 std::string TableHostsByGroup::name() const { return "hostsbygroup"; }

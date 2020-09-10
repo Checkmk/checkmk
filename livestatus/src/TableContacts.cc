@@ -72,7 +72,7 @@ private:
 }  // namespace
 
 TableContacts::TableContacts(MonitoringCore *mc) : Table(mc) {
-    addColumns(this, "", -1);
+    addColumns(this, "", Column::Offsets{});
 }
 
 std::string TableContacts::name() const { return "contacts"; }
@@ -81,8 +81,7 @@ std::string TableContacts::namePrefix() const { return "contact_"; }
 
 // static
 void TableContacts::addColumns(Table *table, const std::string &prefix,
-                               int indirect_offset) {
-    Column::Offsets offsets{indirect_offset, 0};
+                               const Column::Offsets &offsets) {
     table->addColumn(std::make_unique<StringLambdaColumn<contact>>(
         prefix + "name", "The login name of the contact person", offsets,
         [](const contact &ct) { return ct.name == nullptr ? ""s : ct.name; }));

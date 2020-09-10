@@ -5,6 +5,7 @@
 
 #include "TableServicesByHostGroup.h"
 
+#include "Column.h"
 #include "Query.h"
 #include "Row.h"
 #include "TableHostGroups.h"
@@ -25,9 +26,11 @@ struct servicebyhostgroup {
 
 TableServicesByHostGroup::TableServicesByHostGroup(MonitoringCore *mc)
     : Table(mc) {
+    Column::Offsets offsets{};
     TableServices::addColumns(this, "", -1, true);
-    TableHostGroups::addColumns(
-        this, "hostgroup_", DANGEROUS_OFFSETOF(servicebyhostgroup, host_group));
+    TableHostGroups::addColumns(this, "hostgroup_",
+                                offsets.addIndirectOffset(DANGEROUS_OFFSETOF(
+                                    servicebyhostgroup, host_group)));
 }
 
 std::string TableServicesByHostGroup::name() const {

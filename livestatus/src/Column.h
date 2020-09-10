@@ -12,7 +12,6 @@
 #include <cstddef>
 #include <functional>
 #include <memory>
-#include <optional>
 #include <string>
 #include <vector>
 
@@ -46,8 +45,8 @@ public:
         const void *shiftPointer(const void *data) const;
 
     private:
-        std::vector<int> indirect_offsets_;
-        std::optional<int> final_offset_;
+        using shifter = std::function<const void*(const void*)>;
+        std::vector<shifter> shifters_;
     };
 
     Column(std::string name, std::string description, Offsets);

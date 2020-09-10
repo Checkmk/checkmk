@@ -5,7 +5,6 @@
 
 #include "Column.h"
 
-#include <cassert>
 #include <utility>
 
 #include "Logger.h"
@@ -21,29 +20,26 @@ const void *Column::shiftPointer(Row row) const {
 }
 
 Column::Offsets Column::Offsets::addIndirectOffset(int offset) const {
-    assert(!final_offset_);
     Offsets result{*this};
-    result.indirect_offsets_.push_back(offset);
+    result.shifters_.emplace_back([offset](const void *p) {
+        // TODO(sp) Figure out what is actually going on regarding nullptr...
+        return p == nullptr ? nullptr : *offset_cast<const void *>(p, offset);
+    });
     return result;
 }
 
 Column::Offsets Column::Offsets::addFinalOffset(int offset) const {
-    assert(!final_offset_);
     Offsets result{*this};
-    result.final_offset_ = offset;
+    result.shifters_.emplace_back([offset](const void *p) {
+        // TODO(sp) Figure out what is actually going on regarding nullptr...
+        return p == nullptr ? nullptr : offset_cast<const void>(p, offset);
+    });
     return result;
 }
 
 const void *Column::Offsets::shiftPointer(const void *data) const {
-    for (auto i : indirect_offsets_) {
-        // TODO(sp) Figure out what is actually going on regarding nullptr...
-        if (data == nullptr) {
-            return nullptr;
-        }
-        data = *offset_cast<const void *>(data, i);
+    for (const auto &s: shifters_) {
+        data = s(data);
     }
-    if (data == nullptr) {
-        return nullptr;
-    }
-    return offset_cast<const void>(data, final_offset_.value_or(0));
+    return data;
 }

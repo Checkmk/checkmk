@@ -56,7 +56,7 @@ def test_test_check_1_merged_rule(request, test_cfg, site, web):  # noqa: F811 #
         test_check_path, """
 import pprint
 
-from .agent_based_api.v1 import register, Service
+from .agent_based_api.v0 import register, Service
 
 
 def discover(params, section):
@@ -130,7 +130,7 @@ def test_test_check_1_all_rule(request, test_cfg, site, web):  # noqa: F811 # py
         test_check_path, """
 import pprint
 
-from .agent_based_api.v1 import register, Service
+from .agent_based_api.v0 import register, Service
 
 
 def discover(params, section):

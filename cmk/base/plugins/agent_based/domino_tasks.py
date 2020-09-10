@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Dict, List, Optional, Tuple
 
-from .agent_based_api.v1.type_defs import (
+from .agent_based_api.v0.type_defs import (
     CheckGenerator,
     DiscoveryGenerator,
     Parameters,
@@ -13,7 +13,7 @@ from .agent_based_api.v1.type_defs import (
 )
 
 from .utils import ps, domino
-from .agent_based_api.v1 import register, SNMPTree
+from .agent_based_api.v0 import register, SNMPTree
 
 # Example SNMP walk:
 #

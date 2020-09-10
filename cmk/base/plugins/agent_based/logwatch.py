@@ -16,7 +16,7 @@
 
 from typing import Any, Dict, List
 
-from .agent_based_api.v1.type_defs import Parameters
+from .agent_based_api.v0.type_defs import Parameters
 
 
 def compile_params(rules: List[Parameters]) -> Dict[str, Any]:

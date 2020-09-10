@@ -20,7 +20,7 @@ from typing import Dict, Generator, List, NamedTuple, Optional, Tuple, Union
 
 import six
 
-from .agent_based_api.v1 import (
+from .agent_based_api.v0 import (
     check_levels,
     Metric,
     register,
@@ -29,8 +29,8 @@ from .agent_based_api.v1 import (
     Service,
     state,
 )
-from .agent_based_api.v1.clusterize import aggregate_node_details
-from .agent_based_api.v1.type_defs import Parameters
+from .agent_based_api.v0.clusterize import aggregate_node_details
+from .agent_based_api.v0.type_defs import Parameters
 
 Perfdata = NamedTuple("Perfdata", [
     ("name", str),

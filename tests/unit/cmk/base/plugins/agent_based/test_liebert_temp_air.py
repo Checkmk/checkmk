@@ -11,7 +11,7 @@ from cmk.base.plugins.agent_based.liebert_temp_air import (
     discover_liebert_temp_air,
     check_liebert_temp_air,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+from cmk.base.plugins.agent_based.agent_based_api.v0 import (
     Result,
     state,
     Service,

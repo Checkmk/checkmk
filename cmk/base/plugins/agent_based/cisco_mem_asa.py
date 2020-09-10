@@ -33,7 +33,7 @@ from cmk.base.plugins.agent_based.utils.memory import (
     get_levels_mode_from_value,
     check_element,
 )
-from .agent_based_api.v1 import (
+from .agent_based_api.v0 import (
     SNMPTree,
     register,
     Service,
@@ -46,7 +46,7 @@ from .agent_based_api.v1 import (
     get_value_store,
     GetRateError,
 )
-from .agent_based_api.v1.type_defs import (
+from .agent_based_api.v0.type_defs import (
     SNMPStringTable,
     Parameters,
     CheckGenerator,

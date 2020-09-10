@@ -11,7 +11,7 @@ from cmk.base.plugins.agent_based.liebert_humidity_air import (
     discover_liebert_humidity_air,
     check_liebert_humidity_air,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+from cmk.base.plugins.agent_based.agent_based_api.v0 import (
     Result,
     state,
     Service,

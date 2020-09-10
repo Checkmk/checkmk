@@ -8,7 +8,7 @@ import time
 from typing import Dict
 
 import cmk.base.plugins.agent_based.utils.sap_hana as sap_hana
-from .agent_based_api.v1 import (
+from .agent_based_api.v0 import (
     render,
     check_levels,
     register,

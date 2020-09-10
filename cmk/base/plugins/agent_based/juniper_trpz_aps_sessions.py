@@ -15,7 +15,7 @@ from typing import Mapping, Dict, Tuple, List, TypedDict
 import time
 from contextlib import suppress
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+from cmk.base.plugins.agent_based.agent_based_api.v0 import (
     SNMPTree,
     OIDEnd,
     Service,
@@ -30,7 +30,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     GetRateError,
     render,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+from cmk.base.plugins.agent_based.agent_based_api.v0.type_defs import (
     SNMPStringTable,
     DiscoveryGenerator,
     CheckGenerator,

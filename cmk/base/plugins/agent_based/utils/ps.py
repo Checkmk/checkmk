@@ -10,14 +10,14 @@ import contextlib
 import re
 import time
 
-from ..agent_based_api.v1.type_defs import (
+from ..agent_based_api.v0.type_defs import (
     CheckGenerator,
     DiscoveryGenerator,
     HostLabelGenerator,
     Parameters,
     ValueStore,
 )
-from ..agent_based_api.v1 import (
+from ..agent_based_api.v0 import (
     check_levels,
     get_average,
     get_rate,

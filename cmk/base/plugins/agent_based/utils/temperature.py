@@ -13,11 +13,11 @@ from cmk.base.api.agent_based.utils import (
 )
 from cmk.base.api.agent_based.render import (
     timespan,)
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+from cmk.base.plugins.agent_based.agent_based_api.v0 import (
     Result,
     state,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+from cmk.base.plugins.agent_based.agent_based_api.v0.type_defs import (
     CheckGenerator,)
 
 StatusType = int

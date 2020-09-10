@@ -46,7 +46,7 @@ from typing import (
     Optional,
     Sequence,
 )
-from .agent_based_api.v1 import (
+from .agent_based_api.v0 import (
     get_rate,
     get_value_store,
     IgnoreResultsError,

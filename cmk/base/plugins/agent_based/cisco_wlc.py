@@ -32,7 +32,7 @@ False
 
 from typing import Dict, Mapping, Optional
 
-from .agent_based_api.v1 import (
+from .agent_based_api.v0 import (
     SNMPTree,
     register,
     Service,
@@ -40,7 +40,7 @@ from .agent_based_api.v1 import (
     state,
     matches,
 )
-from .agent_based_api.v1.type_defs import (
+from .agent_based_api.v0.type_defs import (
     Parameters,
     SNMPStringTable,
     CheckGenerator,

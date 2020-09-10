@@ -9,7 +9,7 @@ from testlib import on_time
 from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.api.agent_based import value_store
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+from cmk.base.plugins.agent_based.agent_based_api.v0 import (
     Service,
     state,
     Result,

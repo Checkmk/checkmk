@@ -8,7 +8,7 @@ from typing import MutableMapping
 
 import pytest  # type: ignore[import]
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+from cmk.base.plugins.agent_based.agent_based_api.v0 import (
     IgnoreResultsError,
     Metric,
     type_defs,

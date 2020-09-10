@@ -8,8 +8,8 @@ import pytest  # type: ignore[import]
 
 from cmk.base.discovered_labels import DiscoveredHostLabels
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters
-from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel
+from cmk.base.plugins.agent_based.agent_based_api.v0.type_defs import Parameters
+from cmk.base.plugins.agent_based.agent_based_api.v0 import HostLabel
 from cmk.base.plugins.agent_based.utils import ps
 
 pytestmark = pytest.mark.checks

@@ -6,8 +6,8 @@
 import time
 from typing import List, Optional, Union
 
-from .agent_based_api.v1.type_defs import InventoryGenerator, Parameters
-from .agent_based_api.v1 import Attributes, register, TableRow
+from .agent_based_api.v0.type_defs import InventoryGenerator, Parameters
+from .agent_based_api.v0 import Attributes, register, TableRow
 from .utils import interfaces
 
 

@@ -15,14 +15,14 @@ import fnmatch
 from cmk.base.check_api import savefloat
 from cmk.utils.render import fmt_number_with_precision
 from .size_trend import size_trend
-from ..agent_based_api.v1 import (
+from ..agent_based_api.v0 import (
     render,
     Metric,
     Result,
     state,
     check_levels,
 )
-from ..agent_based_api.v1.type_defs import (
+from ..agent_based_api.v0.type_defs import (
     Parameters,
     ValueStore,
 )

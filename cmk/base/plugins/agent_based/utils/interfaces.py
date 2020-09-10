@@ -25,7 +25,7 @@ from typing import (
     Union,
 )
 
-from ..agent_based_api.v1 import (
+from ..agent_based_api.v0 import (
     check_levels,
     check_levels_predictive,
     get_average,

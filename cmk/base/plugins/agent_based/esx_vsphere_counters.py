@@ -10,7 +10,7 @@ from typing import (
     Sequence,
     Tuple,
 )
-from .agent_based_api.v1 import (
+from .agent_based_api.v0 import (
     IgnoreResultsError,
     register,
     type_defs,

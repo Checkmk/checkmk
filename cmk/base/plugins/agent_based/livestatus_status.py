@@ -9,7 +9,7 @@ from typing import (
     Any,
 )
 from cmk.base.api.agent_based.utils import check_levels
-from .agent_based_api.v1 import (
+from .agent_based_api.v0 import (
     register,
     Service,
     Result,
@@ -20,7 +20,7 @@ from .agent_based_api.v1 import (
     render,
     check_levels,
 )
-from .agent_based_api.v1.type_defs import (
+from .agent_based_api.v0.type_defs import (
     AgentStringTable,
     CheckGenerator,
     DiscoveryGenerator,

@@ -11,7 +11,7 @@ from typing import (
     Tuple,
     TypedDict,
 )
-from .agent_based_api.v1 import (
+from .agent_based_api.v0 import (
     check_levels,
     register,
     render,

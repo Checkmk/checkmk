@@ -7,9 +7,9 @@
 import time
 from typing import Dict, List, Mapping, NamedTuple, Optional, Tuple, Union
 
-from .agent_based_api.v1.type_defs import CheckGenerator, DiscoveryGenerator
+from .agent_based_api.v0.type_defs import CheckGenerator, DiscoveryGenerator
 
-from .agent_based_api.v1 import (
+from .agent_based_api.v0 import (
     get_average,
     get_value_store,
     Metric,

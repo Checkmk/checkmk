@@ -5,9 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Dict, Literal, Optional, Tuple, Union
-from ..agent_based_api.v1.type_defs import CheckGenerator
+from ..agent_based_api.v0.type_defs import CheckGenerator
 
-from ..agent_based_api.v1 import Metric, render, Result, state
+from ..agent_based_api.v0 import Metric, render, Result, state
 
 
 def is_linux_section(section: Dict[str, int]) -> bool:

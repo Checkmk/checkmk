@@ -18,8 +18,8 @@ from typing import Any, Counter, Dict, Iterable, List, Optional, Sequence, Set, 
 
 import re
 
-from ..agent_based_api.v1.type_defs import Parameters
-from ..agent_based_api.v1 import regex, Result, state
+from ..agent_based_api.v0.type_defs import Parameters
+from ..agent_based_api.v0 import regex, Result, state
 
 ItemData = TypedDict(
     "ItemData",

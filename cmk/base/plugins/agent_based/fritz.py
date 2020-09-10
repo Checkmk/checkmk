@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Mapping, Sequence
-from .agent_based_api.v1 import register, type_defs
+from .agent_based_api.v0 import register, type_defs
 from .utils import interfaces
 
 Section = Mapping[str, str]

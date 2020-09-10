@@ -5,12 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Any, Dict, List, Optional
 
-from .agent_based_api.v1.type_defs import (
+from .agent_based_api.v0.type_defs import (
     CheckGenerator,
     DiscoveryGenerator,
     Parameters,
 )
-from .agent_based_api.v1 import get_value_store, register, Result, Service, state
+from .agent_based_api.v0 import get_value_store, register, Result, Service, state
 from .utils import cpu_util
 
 

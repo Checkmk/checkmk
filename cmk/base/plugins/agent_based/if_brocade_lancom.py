@@ -10,7 +10,7 @@ from typing import (
     Iterable,
     Sequence,
 )
-from .agent_based_api.v1 import (
+from .agent_based_api.v0 import (
     all_of,
     any_of,
     contains,

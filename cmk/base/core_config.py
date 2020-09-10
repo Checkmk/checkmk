@@ -247,17 +247,16 @@ def check_icmp_arguments_of(config_cache: ConfigCache,
 
 
 # TODO: Move to modes?
-def do_create_config(core: MonitoringCore, with_agents: bool) -> None:
+def do_create_config(core: MonitoringCore) -> None:
     out.output("Generating configuration for core (type %s)..." % config.monitoring_core)
     create_core_config(core)
     out.output(tty.ok + "\n")
 
-    if with_agents:
-        try:
-            import cmk.base.cee.bakery.agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel
-            cmk.base.cee.bakery.agent_bakery.bake_on_restart()
-        except ImportError:
-            pass
+    try:
+        import cmk.base.cee.bakery.agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel
+        cmk.base.cee.bakery.agent_bakery.bake_on_restart()
+    except ImportError:
+        pass
 
 
 @contextmanager
@@ -338,11 +337,10 @@ def _verify_non_duplicate_hosts() -> None:
                 ", ".join(duplicates))
 
 
-def do_update(core: MonitoringCore, with_precompile: bool) -> None:
+def do_update(core: MonitoringCore) -> None:
     try:
-        do_create_config(core, with_agents=with_precompile)
-        if with_precompile:
-            core.precompile()
+        do_create_config(core)
+        core.precompile()
 
     except Exception as e:
         console.error("Configuration Error: %s\n" % e)

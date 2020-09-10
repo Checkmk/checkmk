@@ -87,7 +87,7 @@ class NagiosCore(core_config.MonitoringCore):
 
     def precompile(self) -> None:
         out.output("Precompiling host checks...")
-        precompile_hostchecks(core_config.current_core_config_serial())
+        _precompile_hostchecks(core_config.current_core_config_serial())
         out.output(tty.ok + "\n")
 
 
@@ -917,7 +917,7 @@ def _find_check_plugins(checktype: CheckPluginNameStr) -> List[str]:
     return paths
 
 
-def precompile_hostchecks(serial: int) -> None:
+def _precompile_hostchecks(serial: int) -> None:
     console.verbose("Creating precompiled host check config...\n")
     config_cache = config.get_config_cache()
 

@@ -54,7 +54,6 @@ import cmk.base.obsolete_output as out
 import cmk.base.packaging
 import cmk.base.parent_scan
 import cmk.base.profiling as profiling
-from cmk.base.core_config import current_core_config_serial
 from cmk.base.api.agent_based.register.check_plugins import CheckPlugin
 from cmk.base.core_factory import create_core
 from cmk.base.modes import keepalive_option, Mode, modes, Option
@@ -1090,57 +1089,6 @@ modes.register(
         ],
     ))
 
-
-def mode_update_no_precompile(options: Dict) -> None:
-    from cmk.base.core_config import do_update  # pylint: disable=import-outside-toplevel
-    do_update(create_core(options), with_precompile=False)
-
-
-modes.register(
-    Mode(
-        long_option="update-no-precompile",
-        short_option="B",
-        handler_function=mode_update_no_precompile,
-        short_help="Create configuration for core",
-        long_help=[
-            "Updates the configuration for the monitoring core. In case of Nagios, "
-            "the file etc/nagios/conf.d/check_mk_objects.cfg is updated. In case of "
-            "the Microcore, either the file var/check_mk/core/config or the file "
-            "specified with the option --cmc-file is written.",
-        ],
-        sub_options=[
-            Option(
-                long_option="cmc-file",
-                argument=True,
-                argument_descr="X",
-                short_help="Relative filename for CMC config file",
-            ),
-        ],
-    ))
-
-#.
-#   .--compile-------------------------------------------------------------.
-#   |                                           _ _                        |
-#   |                  ___ ___  _ __ ___  _ __ (_) | ___                   |
-#   |                 / __/ _ \| '_ ` _ \| '_ \| | |/ _ \                  |
-#   |                | (_| (_) | | | | | | |_) | | |  __/                  |
-#   |                 \___\___/|_| |_| |_| .__/|_|_|\___|                  |
-#   |                                    |_|                               |
-#   '----------------------------------------------------------------------'
-
-
-def mode_compile() -> None:
-    cmk.base.core_nagios.precompile_hostchecks(current_core_config_serial())
-
-
-modes.register(
-    Mode(
-        long_option="compile",
-        short_option="C",
-        handler_function=mode_compile,
-        short_help="Precompile host checks",
-    ))
-
 #.
 #   .--update--------------------------------------------------------------.
 #   |                                   _       _                          |
@@ -1154,7 +1102,7 @@ modes.register(
 
 def mode_update(options: Dict) -> None:
     from cmk.base.core_config import do_update  # pylint: disable=import-outside-toplevel
-    do_update(create_core(options), with_precompile=True)
+    do_update(create_core(options))
 
 
 modes.register(
@@ -1162,13 +1110,13 @@ modes.register(
         long_option="update",
         short_option="U",
         handler_function=mode_update,
-        short_help="Precompile + create config for core",
+        short_help="Create core config",
         long_help=[
-            "Updates the core configuration based on the current Check_MK "
+            "Updates the core configuration based on the current Checkmk "
             "configuration. When using the Nagios core, the precompiled host "
             "checks are created and the nagios configuration is updated. "
-            "CEE only: When using the Check_MK Microcore, the core is created "
-            "and the configuration for the Check_MK check helpers is being created.",
+            "When using the CheckMK Microcore, the core configuration is created "
+            "and the configuration for the Core helper processes is being created.",
             "The agent bakery is updating the agents.",
         ],
         sub_options=[
@@ -1201,7 +1149,7 @@ modes.register(
         long_option="restart",
         short_option="R",
         handler_function=mode_restart,
-        short_help="Precompile + config + core restart",
+        short_help="Create core config + core restart",
     ))
 
 #.
@@ -1224,7 +1172,7 @@ modes.register(
         long_option="reload",
         short_option="O",
         handler_function=mode_reload,
-        short_help="Precompile + config + core reload",
+        short_help="Create core config + core reload",
     ))
 
 #.

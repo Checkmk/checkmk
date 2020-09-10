@@ -63,7 +63,7 @@ def do_restart(core: MonitoringCore, action: CoreAction = CoreAction.RESTART) ->
 
         with core_config.backup_objects_file(core):
             try:
-                core_config.do_create_config(core, with_agents=True)
+                core_config.do_create_config(core)
             except Exception as e:
                 if cmk.utils.debug.enabled():
                     raise

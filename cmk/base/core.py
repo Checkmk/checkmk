@@ -56,7 +56,6 @@ def do_reload(core: MonitoringCore) -> None:
     do_restart(core, action=CoreAction.RELOAD)
 
 
-# TODO: Cleanup duplicate code with automation_restart()
 def do_restart(core: MonitoringCore, action: CoreAction = CoreAction.RESTART) -> None:
     try:
         if try_get_activation_lock():

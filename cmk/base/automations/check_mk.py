@@ -26,7 +26,7 @@ import cmk.utils.paths
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
-from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.exceptions import MKGeneralException, MKBailOut
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.type_defs import (
     CheckPluginName,
@@ -51,7 +51,7 @@ import cmk.base.check_utils
 import cmk.base.checking
 import cmk.base.config as config
 import cmk.base.core
-from cmk.base.core import CoreAction
+from cmk.base.core import CoreAction, do_restart
 import cmk.base.core_config as core_config
 import cmk.base.data_sources as data_sources
 import cmk.base.discovery as discovery
@@ -811,28 +811,11 @@ class AutomationRestart(Automation):
             return CoreAction.RELOAD
         return CoreAction.RESTART
 
-    # TODO: Cleanup duplicate code with cmk.base.core.do_restart()
     def execute(self, args: List[str]) -> core_config.ConfigurationWarnings:
         with redirect_stdout(open(os.devnull, "w")):
             try:
-                if cmk.base.core.try_get_activation_lock():
-                    raise MKAutomationError("Cannot activate changes. "
-                                            "Another activation process is currently in progresss")
-
-                core = create_core()
-
-                with core_config.backup_objects_file(core):
-                    try:
-                        core_config.do_create_config(core, with_agents=True)
-                    except Exception as e:
-                        if cmk.utils.debug.enabled():
-                            raise
-                        raise MKAutomationError("Error creating configuration: %s" % e)
-
-                core.precompile()
-                cmk.base.core.do_core_action(self._mode())
-
-            except MKGeneralException as e:
+                do_restart(create_core(), self._mode())
+            except (MKBailOut, MKGeneralException) as e:
                 raise MKAutomationError(str(e))
 
             except Exception as e:

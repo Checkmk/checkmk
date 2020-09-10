@@ -11,7 +11,6 @@
 #include <chrono>
 #include <cstddef>
 #include <functional>
-#include <initializer_list>
 #include <memory>
 #include <optional>
 #include <string>
@@ -42,9 +41,6 @@ class Column {
 public:
     class Offsets {
     public:
-        // NOTE: google-explicit-constructor forbids an 'explicit' here.
-        // cppcheck-suppress noExplicitConstructor
-        Offsets(std::initializer_list<int> offsets);
         [[nodiscard]] Offsets addIndirectOffset(int offset) const;
         [[nodiscard]] Offsets addFinalOffset(int offset) const;
         const void *shiftPointer(const void *data) const;

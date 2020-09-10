@@ -1267,7 +1267,7 @@ def _expected_rulespec_group_choices():
         ('agents', u'Monitoring Agents'),
         ('agents/generic_options', u'&nbsp;&nbsp;\u2319 Generic Options'),
         ('checkparams', u'Service discovery rules'),
-        ('checkparams/discovery', u'&nbsp;&nbsp;\u2319 Discovery - automatic service detection'),
+        ('checkparams/discovery', u'&nbsp;&nbsp;\u2319 Discovery of individual services'),
         ('checkparams/inventory_and_check_mk_settings',
          u'&nbsp;&nbsp;\u2319 Discovery and Checkmk settings'),
         ('datasource_programs', u'Other integrations'),

@@ -864,7 +864,7 @@ class RulespecGroupCheckParametersDiscovery(RulespecSubGroup):
 
     @property
     def title(self):
-        return _("Discovery - automatic service detection")
+        return _("Discovery of individual services")
 
 
 # The following function looks like a value spec and in fact

@@ -12,7 +12,7 @@ from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPRuleDependentDetectSpec, SNMPTree
 from cmk.snmplib.snmp_scan import SNMPScanSection
-from cmk.utils.type_defs import RuleSetName, SourceType
+from cmk.utils.type_defs import Result, RuleSetName, SourceType
 
 from cmk.base.api.agent_based import register
 from cmk.base.api.agent_based.register import section_plugins
@@ -80,9 +80,6 @@ def test_attribute_defaults(source, hostname, ipaddress, monkeypatch):
     assert configurator.cpu_tracking_id == "snmp"
 
     assert configurator.on_snmp_scan_error == "raise"
-
-    # From the base class
-    assert source.exception is None
 
 
 def test_description_with_ipaddress(source, monkeypatch):
@@ -159,16 +156,19 @@ class TestSNMPSummaryResult:
             title="snmp title",
         )
 
-    @pytest.mark.usefixtures("scenario")
-    def test_defaults(self, configurator):
-        summarizer = configurator.make_summarizer()
-        assert summarizer.summarize(AgentHostSections()) == (0, "Success", [])
+    @pytest.fixture
+    def summarizer(self, configurator):
+        # TODO(ml): Actually return a summarize instance once the API
+        #           is one step further.
+        return configurator.make_checker()
 
     @pytest.mark.usefixtures("scenario")
-    def test_with_exception(self, configurator):
-        checker = configurator.make_checker()
-        checker.exception = Exception()
-        assert checker.get_summary_result() == (3, "(?)", [])
+    def test_defaults(self, summarizer):
+        assert summarizer.summarize(Result.OK(AgentHostSections())) == (0, "Success", [])
+
+    @pytest.mark.usefixtures("scenario")
+    def test_with_exception(self, summarizer):
+        assert summarizer.summarize(Result.Err(Exception())) == (3, "(?)", [])
 
 
 @pytest.fixture(name="discovery_rulesets")

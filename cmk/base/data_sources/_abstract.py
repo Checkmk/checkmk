@@ -18,7 +18,14 @@ import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKSNMPError, MKTimeout
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
+from cmk.utils.type_defs import (
+    HostAddress,
+    HostName,
+    Result,
+    SectionName,
+    ServiceCheckResult,
+    SourceType,
+)
 
 from cmk.snmplib.type_defs import TRawData
 
@@ -149,15 +156,34 @@ THostSections = TypeVar("THostSections", bound=ABCHostSections)
 
 
 class ABCParser(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
-    """Parse raw data into host sections."""
+    """Parse raw data into host sections.
+
+    Note:
+        Only private methods are allowed to handle `TRawData` and
+        `THostSections`.  Public methods must always use
+        `Result[TRawData, Exception]` and `Result[THostSections, Exception]`.
+
+    """
     def __init__(self, hostname: HostName, logger: logging.Logger) -> None:
         super().__init__()
         self.hostname: Final[HostName] = hostname
         self.host_config = config.HostConfig.make_host_config(self.hostname)
         self._logger = logger
 
+    def parse(
+        self,
+        raw_data: Result[TRawData, Exception],
+    ) -> Result[THostSections, Exception]:
+        if raw_data.is_err():
+            return Result.Err(raw_data.unwrap_err())
+        try:
+            assert raw_data.ok is not None
+            return Result.OK(self._parse(raw_data.ok))
+        except Exception as exc:
+            return Result.Err(exc)
+
     @abc.abstractmethod
-    def parse(self, raw_data: TRawData) -> THostSections:
+    def _parse(self, raw_data: TRawData) -> THostSections:
         raise NotImplementedError
 
 
@@ -329,6 +355,9 @@ class ABCConfigurator(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
 
 
 class ABCSummarizer(Generic[THostSections], metaclass=abc.ABCMeta):
+    """Class to summarize parsed data into a ServiceCheckResult.
+
+    """
     @abc.abstractmethod
     def summarize(self, host_sections: THostSections) -> ServiceCheckResult:
         raise NotImplementedError
@@ -336,8 +365,7 @@ class ABCSummarizer(Generic[THostSections], metaclass=abc.ABCMeta):
 
 class ABCChecker(Generic[TRawData, TSections, TPersistedSections, THostSections],
                  metaclass=abc.ABCMeta):
-    """Base checker class."""
-
+    """Parse raw data into host sections."""
     _use_outdated_persisted_sections = False
 
     def __init__(
@@ -352,10 +380,6 @@ class ABCChecker(Generic[TRawData, TSections, TPersistedSections, THostSections]
             self._logger,
         )
 
-        # Runtime data (managed by self.run()) - Meant for self.get_summary_result()
-        self.exception: Optional[Exception] = None
-        self.host_sections: Optional[THostSections] = None
-
     def __repr__(self):
         return "%s(%r)" % (type(self).__name__, self.configurator)
 
@@ -368,25 +392,25 @@ class ABCChecker(Generic[TRawData, TSections, TPersistedSections, THostSections]
         return self.configurator.cpu_tracking_id
 
     @cpu_tracking.track
-    def check(self, raw_data: TRawData) -> THostSections:
+    def check(self, raw_data: Result[TRawData, Exception]) -> Result[THostSections, Exception]:
         try:
-            self.host_sections = self.configurator.make_parser().parse(raw_data)
-            assert self.host_sections
+            host_sections = self.configurator.make_parser().parse(raw_data)
+            if host_sections.is_err():
+                return host_sections
 
-            # Add information from previous persisted infos
-            persisted_sections = self._determine_persisted_sections(self.host_sections)
-            self.host_sections.add_persisted_sections(persisted_sections, logger=self._logger)
-
+            assert host_sections.ok is not None
+            self._add_persisted_sections(host_sections.ok)
+            return host_sections
         except Exception as exc:
             self._logger.log(VERBOSE, "ERROR: %s", exc)
             if cmk.utils.debug.enabled():
                 raise
-            self.exception = exc
-            self.host_sections = self.configurator.default_host_sections
-        else:
-            self.exception = None
-        assert self.host_sections
-        return self.host_sections
+            return Result.Err(exc)
+
+    def _add_persisted_sections(self, host_sections: THostSections) -> None:
+        """Add information from previous persisted infos."""
+        persisted_sections = self._determine_persisted_sections(host_sections)
+        host_sections.add_persisted_sections(persisted_sections, logger=self._logger)
 
     def _determine_persisted_sections(
         self,
@@ -400,7 +424,7 @@ class ABCChecker(Generic[TRawData, TSections, TPersistedSections, THostSections]
             self._section_store.store(persisted_sections)
         return persisted_sections
 
-    def get_summary_result(self) -> ServiceCheckResult:
+    def summarize(self, result: Result[THostSections, Exception]) -> ServiceCheckResult:
         """Returns a three element tuple of state, output and perfdata (list) that summarizes
         the execution result of this data source.
 
@@ -408,19 +432,20 @@ class ABCChecker(Generic[TRawData, TSections, TPersistedSections, THostSections]
         "Check_MK HW/SW Inventory" services."""
         assert self.configurator.mode is not Mode.NONE
 
-        if not self.exception:
-            assert self.host_sections is not None
-            return self.configurator.make_summarizer().summarize(self.host_sections)
+        if result.is_ok():
+            assert result.ok is not None
+            return self.configurator.make_summarizer().summarize(result.ok)
 
-        exc_msg = "%s" % self.exception
+        assert result.err is not None
+        exc_msg = "%s" % result.err
 
-        if isinstance(self.exception, MKEmptyAgentData):
+        if isinstance(result.err, MKEmptyAgentData):
             status = self.configurator.exit_code_spec.get("empty_output", 2)
 
-        elif isinstance(self.exception, (MKAgentError, MKIPAddressLookupError, MKSNMPError)):
+        elif isinstance(result.err, (MKAgentError, MKIPAddressLookupError, MKSNMPError)):
             status = self.configurator.exit_code_spec.get("connection", 2)
 
-        elif isinstance(self.exception, MKTimeout):
+        elif isinstance(result.err, MKTimeout):
             status = self.configurator.exit_code_spec.get("timeout", 2)
 
         else:

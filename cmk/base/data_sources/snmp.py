@@ -322,7 +322,7 @@ class SNMPConfigurator(ABCConfigurator[SNMPRawData, SNMPHostSections]):
 
 class SNMPParser(ABCParser[SNMPRawData, SNMPHostSections]):
     """A parser for SNMP data."""
-    def parse(
+    def _parse(
         self,
         raw_data: SNMPRawData,
     ) -> SNMPHostSections:

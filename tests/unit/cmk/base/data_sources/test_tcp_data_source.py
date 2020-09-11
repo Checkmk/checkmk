@@ -116,7 +116,6 @@ def test_attribute_defaults(mode, monkeypatch):
 
     assert checker.id == "agent"
     assert configurator.file_cache.maybe is False
-    assert checker.exception is None
 
 
 class TestSummaryResult:

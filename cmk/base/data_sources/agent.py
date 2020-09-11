@@ -296,14 +296,11 @@ class AgentParser(ABCParser[AgentRawData, AgentHostSections]):
     #   and AgentHostSections.persisted_sections) and a few simple helper functions.
     #   Moreover, the main loop of the parser (at `for line in raw_data.split(b"\n")`)
     #   is an FSM and shoule be written as such.  (See CMK-5004)
-    def parse(
-        self,
-        raw_data: AgentRawData,
-    ) -> AgentHostSections:
-        raw_data = cast(AgentRawData, raw_data)
+    def _parse(self, raw_data: AgentRawData) -> AgentHostSections:
         if config.agent_simulator:
             raw_data = agent_simulator.process(raw_data)
 
+        assert isinstance(raw_data, AgentRawData), type(raw_data)
         return self._parse_host_section(raw_data, self.host_config.check_mk_check_interval)
 
     def _parse_host_section(

@@ -16,7 +16,7 @@ import cmk.utils.paths
 import cmk.utils.piggyback
 import cmk.utils.tty as tty
 from cmk.utils.log import console
-from cmk.utils.type_defs import HostAddress, HostName, SourceType
+from cmk.utils.type_defs import HostAddress, HostName, Result, SourceType
 
 from cmk.fetchers.controller import FetcherMessage
 
@@ -227,7 +227,7 @@ def update_host_sections(
     selected_raw_sections: Optional[SelectedRawSections],
     host_config: HostConfig,
     fetcher_messages: Optional[List[FetcherMessage]] = None,
-) -> Sequence[Tuple[ABCConfigurator, ABCHostSections]]:
+) -> Sequence[Tuple[ABCConfigurator, Result[ABCHostSections, Exception]]]:
     """Gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
 
     Communication errors are not raised through by this functions. All agent related errors are
@@ -242,7 +242,7 @@ def update_host_sections(
 
     # Special agents can produce data for the same check_plugin_name on the same host, in this case
     # the section lines need to be extended
-    result: List[Tuple[ABCConfigurator, ABCHostSections]] = []
+    result: List[Tuple[ABCConfigurator, Result[ABCHostSections, Exception]]] = []
     for hostname, ipaddress, sources in nodes:
         for source_index, source in enumerate(sources):
             if host_config.nodes is None:
@@ -275,9 +275,11 @@ def update_host_sections(
 
                 raw_data = fetcher_message.raw_data()
 
-            host_section = source.check(raw_data)
+            host_section = source.check(Result.OK(raw_data))
             result.append((source.configurator, host_section))
-            host_sections.update(host_section)
+            if host_section.is_ok():
+                assert host_section.ok is not None
+                host_sections.update(host_section.ok)
 
         # Store piggyback information received from all sources of this host. This
         # also implies a removal of piggyback files received during previous calls.

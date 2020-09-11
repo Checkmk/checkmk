@@ -763,11 +763,8 @@ def check_discovery(
 
     # Add data source information to check results
     for configurator, host_sections in result:
-        # TODO(ml): Same as with the exceptions, we must rely on the
-        #           hidden protocol directly before it can be safely removed.
         checker = configurator.make_checker()
-        checker.host_sections = host_sections
-        source_state, source_output, _source_perfdata = checker.get_summary_result()
+        source_state, source_output, _source_perfdata = checker.summarize(host_sections)
         # Do not output informational (state = 0) things.  These information
         # are shown by the "Check_MK" service
         if source_state != 0:

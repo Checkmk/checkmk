@@ -14,7 +14,7 @@ import pytest  # type: ignore[import]
 from testlib.base import Scenario  # type: ignore[import]
 
 import cmk.utils.piggyback
-from cmk.utils.type_defs import ParsedSectionName, SectionName, SourceType
+from cmk.utils.type_defs import ParsedSectionName, Result, SectionName, SourceType
 
 from cmk.fetchers import (
     IPMIFetcher,
@@ -455,15 +455,16 @@ class TestMakeHostSectionsHosts:
         monkeypatch.setattr(
             ABCChecker,
             "check",
-            lambda self, raw_data: DummyHostSection(
-                sections={
-                    SectionName("section_name_%s" % self.configurator.hostname):
-                        [["section_content"]]
-                },
-                cache_info={},
-                piggybacked_raw_data={},
-                persisted_sections="",
-            ),
+            lambda self, raw_data: Result.OK(
+                DummyHostSection(
+                    sections={
+                        SectionName("section_name_%s" % self.configurator.hostname):
+                            [["section_content"]]
+                    },
+                    cache_info={},
+                    piggybacked_raw_data={},
+                    persisted_sections="",
+                ),),
         )
 
     @pytest.fixture
@@ -703,12 +704,13 @@ class TestMakeHostSectionsClusters:
         monkeypatch.setattr(
             ABCChecker,
             "check",
-            lambda self, *args, **kwargs: DummyHostSection(
+            lambda self, *args, **kwargs: Result.OK(DummyHostSection(
                 sections={SectionName("section_name_%s" % self.configurator.hostname): [["section_content"]]},
                 cache_info={},
                 piggybacked_raw_data={},
                 persisted_sections="",
             ),
+        ),
         )
 
     @pytest.fixture
@@ -800,7 +802,7 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
         return {}
 
     def check(_, *args, **kwargs):
-        return AgentHostSections(sections={section_name: [[str(section_name)]]})
+        return Result.OK(AgentHostSections(sections={section_name: [[str(section_name)]]}))
 
     monkeypatch.setattr(
         ip_lookup,

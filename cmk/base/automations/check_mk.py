@@ -33,6 +33,7 @@ from cmk.utils.type_defs import (
     CheckPluginNameStr,
     HostAddress,
     HostName,
+    Result,
     ServiceDetails,
     ServiceState,
 )
@@ -1454,9 +1455,8 @@ class AutomationGetAgentOutput(Automation):
 
                     # Optionally show errors of problematic data sources
                     checker = configurator.make_checker()
-                    host_sections = checker.check(raw_data)
-                    checker.host_sections = host_sections
-                    source_state, source_output, _source_perfdata = checker.get_summary_result()
+                    host_sections = checker.check(Result.OK(raw_data))
+                    source_state, source_output, _source_perfdata = checker.summarize(host_sections)
                     if source_state != 0:
                         success = False
                         output += "[%s] %s\n" % (configurator.id, source_output)

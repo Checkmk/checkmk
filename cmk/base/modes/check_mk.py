@@ -29,7 +29,14 @@ from cmk.utils.diagnostics import (
 )
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.log import console
-from cmk.utils.type_defs import CheckPluginName, HostAddress, HostgroupName, HostName, TagValue
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    HostAddress,
+    HostgroupName,
+    HostName,
+    Result,
+    TagValue,
+)
 
 import cmk.snmplib.snmp_modes as snmp_modes
 
@@ -402,17 +409,14 @@ def mode_dump_agent(hostname: HostName) -> None:
 
             checker = configurator.make_checker()
 
-            raw_data = configurator.default_raw_data
             try:
                 with configurator.make_fetcher() as fetcher:
-                    raw_data = fetcher.fetch(configurator.mode)
+                    fetched = Result.OK(fetcher.fetch(configurator.mode))
             except Exception as exc:
-                checker.exception = exc
-            else:
-                host_sections = checker.check(raw_data)
-                checker.host_sections = host_sections
+                fetched = Result.Err(exc)
+            host_sections = checker.check(fetched)
 
-            source_state, source_output, _source_perfdata = checker.get_summary_result()
+            source_state, source_output, _source_perfdata = checker.summarize(host_sections)
             if source_state != 0:
                 console.error(
                     "ERROR [%s]: %s\n",
@@ -420,7 +424,8 @@ def mode_dump_agent(hostname: HostName) -> None:
                     ensure_str(source_output),
                 )
                 has_errors = True
-            output.append(raw_data)
+            if fetched.is_ok():
+                output.append(fetched.unwrap())
 
         out.output(ensure_str(b"".join(output), errors="surrogateescape"))
         if has_errors:

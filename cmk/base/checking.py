@@ -211,11 +211,8 @@ def do_check(
             item_state.save(hostname)
 
         for configurator, host_sections in result:
-            # TODO(ml): This implements the hidden protocol explicitly.  This step
-            #           is necessary before we get rid of it.
             checker = configurator.make_checker()
-            checker.host_sections = host_sections
-            source_state, source_output, source_perfdata = checker.get_summary_result()
+            source_state, source_output, source_perfdata = checker.summarize(host_sections)
             if source_output != "":
                 status = max(status, source_state)
                 infotexts.append("[%s] %s" % (configurator.id, source_output))

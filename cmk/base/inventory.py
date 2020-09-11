@@ -25,6 +25,7 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostName,
     MetricTuple,
+    Result,
     ServiceAdditionalDetails,
     ServiceDetails,
     ServiceState,
@@ -180,11 +181,8 @@ def do_inv_check(
             infotexts.append("Found %s status entries" % status_data_tree.count_entries())
 
     for configurator, host_sections in results:
-        # TODO(ml): This implements the hidden protocol explicitly.  This step
-        #           is necessary before we get rid of it.
         checker = configurator.make_checker()
-        checker.host_sections = host_sections
-        source_state, source_output, _source_perfdata = checker.get_summary_result()
+        source_state, source_output, _source_perfdata = checker.summarize(host_sections)
         if source_state != 0:
             # Do not output informational things (state == 0). Also do not use source states
             # which would overwrite "State when inventory fails" in the ruleset
@@ -208,8 +206,11 @@ def _all_sources_fail(
     if host_config.is_cluster:
         return False
 
+    # TODO(ml): This function makes no sense and is no op anyway.
+    #           We could fix it by actually searching for errors in the sources
+    #           as it seems that it is what was meant initially.
     exceptions_by_source = {
-        source.configurator.id: source.exception for source in data_sources.make_checkers(
+        source.configurator.id: None for source in data_sources.make_checkers(
             host_config,
             ipaddress,
             mode=data_sources.Mode.INVENTORY,
@@ -262,8 +263,8 @@ def _do_inv_for(
     *,
     sources: data_sources.Checkers,
     multi_host_sections: Optional[MultiHostSections],
-) -> Tuple[StructuredDataTree, StructuredDataTree, Sequence[Tuple[ABCConfigurator,
-                                                                  ABCHostSections]]]:
+) -> Tuple[StructuredDataTree, StructuredDataTree, Sequence[Tuple[ABCConfigurator, Result[
+        ABCHostSections, Exception]]]]:
     hostname = host_config.hostname
 
     initialize_inventory_tree()
@@ -271,7 +272,7 @@ def _do_inv_for(
     status_data_tree = StructuredDataTree()
 
     node = inventory_tree.get_dict("software.applications.check_mk.cluster.")
-    results: Sequence[Tuple[ABCConfigurator, ABCHostSections]] = []
+    results: Sequence[Tuple[ABCConfigurator, Result[ABCHostSections, Exception]]] = []
     if host_config.is_cluster:
         node["is_cluster"] = True
         _do_inv_for_cluster(host_config, inventory_tree)
@@ -313,8 +314,8 @@ def _do_inv_for_realhost(
     ipaddress: Optional[HostAddress],
     inventory_tree: StructuredDataTree,
     status_data_tree: StructuredDataTree,
-) -> Sequence[Tuple[ABCConfigurator, ABCHostSections]]:
-    results: List[Tuple[ABCConfigurator, ABCHostSections]] = []
+) -> Sequence[Tuple[ABCConfigurator, Result[ABCHostSections, Exception]]]:
+    results: List[Tuple[ABCConfigurator, Result[ABCHostSections, Exception]]] = []
     for source in sources:
         if isinstance(source, data_sources.snmp.SNMPChecker):
             # TODO(ml): This modifies the SNMP fetcher config dynamically.
@@ -338,13 +339,12 @@ def _do_inv_for_realhost(
                 # TODO(ml): This modifies the SNMP fetcher config dynamically.
                 #           Can the fetcher handle that on its own?
                 configurator.prefetched_sections = host_sections.sections
-                raw_data = source.configurator.default_raw_data
                 try:
                     with source.configurator.make_fetcher() as fetcher:
-                        raw_data = fetcher.fetch(Mode.INVENTORY)
+                        fetched = Result.OK(fetcher.fetch(Mode.INVENTORY))
                 except Exception as exc:
-                    source.exception = exc
-                hs = source.check(raw_data)
+                    fetched = Result.Err(exc)
+                hs = source.check(fetched)
                 results.append((source.configurator, hs))
                 host_sections.update(hs)
 

@@ -14,7 +14,7 @@ import pytest  # type: ignore[import]
 from testlib.base import Scenario
 
 from cmk.utils.exceptions import MKTimeout
-from cmk.utils.type_defs import SectionName, SourceType
+from cmk.utils.type_defs import Result, SectionName, SourceType
 
 from cmk.fetchers import FetcherType
 
@@ -59,7 +59,7 @@ class TestParser:
             b"second line",
         ))
 
-        ahs = AgentParser(hostname, logger).parse(raw_data)
+        ahs = AgentParser(hostname, logger).parse(Result.OK(raw_data)).unwrap()
 
         assert ahs.sections == {
             SectionName("a_section"): [["first", "line"], ["second", "line"]],
@@ -94,7 +94,7 @@ class TestParser:
             b"first line",
         ))
 
-        ahs = AgentParser(hostname, logger).parse(raw_data)
+        ahs = AgentParser(hostname, logger).parse(Result.OK(raw_data)).unwrap()
 
         assert ahs.sections == {}
         assert ahs.cache_info == {}
@@ -137,7 +137,7 @@ class TestParser:
             b"second line",
         ))
 
-        ahs = AgentParser(hostname, logger).parse(raw_data)
+        ahs = AgentParser(hostname, logger).parse(Result.OK(raw_data)).unwrap()
         assert ahs.sections == {SectionName("section"): [["first", "line"], ["second", "line"]]}
         assert ahs.cache_info == {SectionName("section"): (time_time, time_delta)}
         assert ahs.piggybacked_raw_data == {}
@@ -210,7 +210,7 @@ class TestAgentSummaryResult:
         return ts
 
     @pytest.fixture
-    def source(self, hostname, mode):
+    def configurator(self, hostname, mode):
         return StubConfigurator(
             hostname,
             "1.2.3.4",
@@ -219,29 +219,30 @@ class TestAgentSummaryResult:
             id_="agent_id",
             cpu_tracking_id="agent_cpu_id",
             description="agent description",
-        ).make_checker()
+        )
+
+    @pytest.fixture
+    def summarizer(self, configurator):
+        # TODO(ml): Actually return a summarize instance once the API
+        #           is one step further.
+        return configurator.make_checker()
 
     @pytest.mark.usefixtures("scenario")
-    def test_defaults(self, source, mode):
-        source.host_sections = source.configurator.default_host_sections
-        assert source.get_summary_result() == (0, "", [])
+    def test_defaults(self, summarizer, configurator):
+        assert summarizer.summarize(Result.OK(configurator.default_host_sections)) == (0, "", [])
 
     @pytest.mark.usefixtures("scenario")
-    def test_with_exception(self, source):
-        source.exception = Exception()
-        assert source.get_summary_result() == (3, "(?)", [])
+    def test_with_exception(self, summarizer):
+        assert summarizer.summarize(Result.Err(Exception())) == (3, "(?)", [])
 
     @pytest.mark.usefixtures("scenario")
-    def test_with_MKEmptyAgentData_exception(self, source):
-        source.exception = MKEmptyAgentData()
-        assert source.get_summary_result() == (2, "(!!)", [])
+    def test_with_MKEmptyAgentData_exception(self, summarizer):
+        assert summarizer.summarize(Result.Err(MKEmptyAgentData())) == (2, "(!!)", [])
 
     @pytest.mark.usefixtures("scenario")
-    def test_with_MKAgentError_exception(self, source):
-        source.exception = MKAgentError()
-        assert source.get_summary_result() == (2, "(!!)", [])
+    def test_with_MKAgentError_exception(self, summarizer):
+        assert summarizer.summarize(Result.Err(MKAgentError())) == (2, "(!!)", [])
 
     @pytest.mark.usefixtures("scenario")
-    def test_with_MKTimeout_exception(self, source):
-        source.exception = MKTimeout()
-        assert source.get_summary_result() == (2, "(!!)", [])
+    def test_with_MKTimeout_exception(self, summarizer):
+        assert summarizer.summarize(Result.Err(MKTimeout())) == (2, "(!!)", [])

@@ -121,7 +121,10 @@ def _patch_data_source(mocker, **kwargs):
             assert configurator.use_snmpwalk_cache == defaults["_use_snmpwalk_cache"]
             assert configurator.ignore_check_interval == defaults["_ignore_check_interval"]
 
-        return callback(self, *args, **kwargs)
+        result = callback(self, *args, **kwargs)
+        if result.is_err():
+            raise result.unwrap_err()
+        return result
 
     mocker.patch.object(
         ABCChecker,

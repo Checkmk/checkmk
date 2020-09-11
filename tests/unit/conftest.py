@@ -119,7 +119,7 @@ def fixup_ip_lookup(monkeypatch):
 
 @pytest.fixture(name='config_load_all_checks', scope="session", autouse=True)
 def _config_load_all_checks():
-    # this is needed in cmk/base *and* checks/ :-(
+    # Local import to have faster pytest initialization
     import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
     import cmk.base.check_api as check_api  # pylint: disable=bad-option-value,import-outside-toplevel
 
@@ -134,18 +134,21 @@ def _config_load_all_checks():
 
 @pytest.fixture(scope="session", autouse=True)
 def config_check_info(config_load_all_checks):
+    # Local import to have faster pytest initialization
     import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
     return copy.deepcopy(config.check_info)
 
 
 @pytest.fixture(scope="session", autouse=True)
 def config_active_check_info(config_load_all_checks):
+    # Local import to have faster pytest initialization
     import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
     return copy.deepcopy(config.active_check_info)
 
 
 @pytest.fixture(scope="session", autouse=True)
 def config_snmp_scan_functions(config_load_all_checks):
+    # Local import to have faster pytest initialization
     import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
     assert len(config.snmp_scan_functions) > 400  # sanity check
     return copy.deepcopy(config.snmp_scan_functions)
@@ -153,6 +156,7 @@ def config_snmp_scan_functions(config_load_all_checks):
 
 @pytest.fixture(scope="session", autouse=True)
 def config_check_variables(config_load_all_checks):
+    # Local import to have faster pytest initialization
     import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
     return copy.deepcopy(config.get_check_variables())
 
@@ -176,6 +180,8 @@ def _mock_livestatus(mocker, monkeypatch):
 
 
     """
+    # Local import to have faster pytest initialization
+    from cmk.gui.plugins.openapi.livestatus_helpers.testing import MockLiveStatusConnection  # pylint: disable=bad-option-value,import-outside-toplevel
     live = MockLiveStatusConnection()
 
     def enabled_and_disabled_sites(user):

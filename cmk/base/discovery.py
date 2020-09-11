@@ -319,7 +319,7 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
             selected_raw_sections: Optional[SelectedRawSections] = None
             if check_plugin_names is not None:
                 selected_raw_sections = agent_based_register.get_relevant_raw_sections(
-                    check_plugin_names=check_plugin_names)
+                    check_plugin_names=check_plugin_names, consider_inventory_plugins=False)
 
             sources = data_sources.make_checkers(host_config,
                                                  ipaddress,

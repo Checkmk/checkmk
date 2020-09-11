@@ -42,7 +42,6 @@ from cmk.utils.type_defs import (
     CheckPluginName,
     HostAddress,
     HostName,
-    InventoryPluginName,
     MetricTuple,
     SectionName,
     ServiceAdditionalDetails,
@@ -273,14 +272,10 @@ def _get_relevant_raw_sections(services: List[Service], host_config: config.Host
         import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
         from cmk.base.check_api import get_check_api_context  # pylint: disable=import-outside-toplevel
         inventory_plugins.load_plugins(get_check_api_context, inventory.get_inventory_context)
-        inventory_plugin_names: Iterable[InventoryPluginName] = (
-            InventoryPluginName(name.split('.')[0]) for name in inventory_plugins.inv_info)
-    else:
-        inventory_plugin_names = ()
 
     return agent_based_register.get_relevant_raw_sections(
         check_plugin_names=(s.check_plugin_name for s in services),
-        inventory_plugin_names=inventory_plugin_names,
+        consider_inventory_plugins=host_config.do_status_data_inventory,
     )
 
 

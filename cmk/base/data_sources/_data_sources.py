@@ -216,7 +216,13 @@ def _make_piggybacked_sections(host_config) -> SelectedRawSections:
                 remove_duplicates=True,
                 filter_mode="only_clustered",
             ) for node_name in host_config.nodes))
-    return agent_based_register.get_relevant_raw_sections(check_plugin_names=check_plugin_names)
+    return agent_based_register.get_relevant_raw_sections(
+        check_plugin_names=check_plugin_names,
+        # TODO: this was added when an optional argument became
+        # mandatory. So this makes the default explicit, but
+        # currently I am not sure if this is correct.
+        consider_inventory_plugins=False,
+    )
 
 
 def update_host_sections(

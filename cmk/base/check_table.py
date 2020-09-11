@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Code for computing the table of checks of hosts."""
 
-from typing import Iterable, Iterator, List, Optional, Set
+from typing import Iterable, Iterator, List, Literal, Optional, Set
 
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.exceptions import MKGeneralException
@@ -34,7 +34,7 @@ class HostCheckTable:
         self,
         use_cache: bool,
         skip_autochecks: bool,
-        filter_mode: Optional[str],
+        filter_mode: Optional[Literal["only_clustered", "include_clustered"]],
         skip_ignored: bool,
     ) -> CheckTable:
         """Returns check table for a specific host
@@ -126,7 +126,7 @@ class HostCheckTable:
     def _keep_service(
         self,
         service: Service,
-        filter_mode: Optional[str],
+        filter_mode: Optional[Literal["only_clustered", "include_clustered"]],
         skip_ignored: bool,
     ) -> bool:
         hostname = self._host_config.hostname
@@ -139,20 +139,24 @@ class HostCheckTable:
                                                    service.description):
             return False
 
-        if self._host_config.part_of_clusters:
-            host_of_service = self._config_cache.host_of_clustered_service(
-                hostname, service.description, part_of_clusters=self._host_config.part_of_clusters)
-            svc_is_mine = (hostname == host_of_service)
-        else:
-            svc_is_mine = True
+        if filter_mode == "include_clustered":
+            return True
 
-        if filter_mode is None and not svc_is_mine:
-            return False
+        if not self._host_config.part_of_clusters:
+            return filter_mode != "only_clustered"
 
-        if filter_mode == "only_clustered" and svc_is_mine:
-            return False
+        host_of_service = self._config_cache.host_of_clustered_service(
+            hostname,
+            service.description,
+            part_of_clusters=self._host_config.part_of_clusters,
+        )
+        svc_is_mine = (hostname == host_of_service)
 
-        return True
+        if filter_mode is None:
+            return svc_is_mine
+
+        # filter_mode == "only_clustered"
+        return not svc_is_mine
 
     def _get_clustered_services(
         self,
@@ -192,7 +196,7 @@ def get_check_table(
     remove_duplicates: bool = False,
     use_cache: bool = True,
     skip_autochecks: bool = False,
-    filter_mode: Optional[str] = None,
+    filter_mode: Optional[Literal["only_clustered", "include_clustered"]] = None,
     skip_ignored: bool = True,
 ) -> CheckTable:
     config_cache = config.get_config_cache()
@@ -217,7 +221,7 @@ def remove_duplicate_checks(check_table: CheckTable,) -> CheckTable:
 def get_needed_check_names(
     hostname: HostName,
     remove_duplicates: bool = False,
-    filter_mode: Optional[str] = None,
+    filter_mode: Optional[Literal["only_clustered", "include_clustered"]] = None,
     skip_ignored: bool = True,
 ) -> Set[CheckPluginName]:
     return {
@@ -233,7 +237,7 @@ def get_needed_check_names(
 def get_sorted_service_list(
     hostname: HostName,
     *,
-    filter_mode: Optional[str] = None,
+    filter_mode: Optional[Literal["only_clustered", "include_clustered"]] = None,
     skip_ignored: bool = True,
 ) -> List[Service]:
 

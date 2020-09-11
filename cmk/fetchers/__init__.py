@@ -6,6 +6,7 @@
 """Package containing the fetchers to the data sources."""
 
 import enum
+from typing import Any, Dict, Literal, Type
 
 from ._base import ABCFetcher, MKFetcherError
 from .agent import AgentFileCache
@@ -30,12 +31,27 @@ __all__ = [
 class FetcherType(enum.Enum):
     """Map short name to fetcher class.
 
-    This enum works as a fetcher factory.
+    The enum works as a fetcher factory.
 
     """
-    NONE = None
-    IPMI = IPMIFetcher
-    PIGGYBACK = PiggybackFetcher
-    PROGRAM = ProgramFetcher
-    SNMP = SNMPFetcher
-    TCP = TCPFetcher
+    NONE = enum.auto()
+    IPMI = enum.auto()
+    PIGGYBACK = enum.auto()
+    PROGRAM = enum.auto()
+    SNMP = enum.auto()
+    TCP = enum.auto()
+
+    def make(self) -> Type[ABCFetcher]:
+        """The fetcher factory."""
+        # This typing error is a false positive.  There are tests to demonstrate that.
+        return {  # type: ignore[return-value]
+            FetcherType.IPMI: IPMIFetcher,
+            FetcherType.PIGGYBACK: PiggybackFetcher,
+            FetcherType.PROGRAM: ProgramFetcher,
+            FetcherType.SNMP: SNMPFetcher,
+            FetcherType.TCP: TCPFetcher,
+        }[self]
+
+    def from_json(self, serialized: Dict[str, Any]) -> ABCFetcher:
+        """Instantiate the fetcher from serialized data."""
+        return self.make().from_json(serialized)

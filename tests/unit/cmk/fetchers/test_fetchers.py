@@ -325,3 +325,12 @@ class TestTCPFetcher:
         assert cache_fetcher.file_cache.cache == b"cached_section"
         assert cache_fetcher.fetch(Mode.INVENTORY) == b"cached_section"
         assert cache_fetcher.file_cache.cache == b"cached_section"
+
+
+class TestFetcherType:
+    def test_factory(self):
+        assert FetcherType.IPMI.make() is IPMIFetcher
+        assert FetcherType.PIGGYBACK.make() is PiggybackFetcher
+        assert FetcherType.PROGRAM.make() is ProgramFetcher
+        assert FetcherType.SNMP.make() is SNMPFetcher
+        assert FetcherType.TCP.make() is TCPFetcher

@@ -270,7 +270,7 @@ def run_fetcher(entry: Dict[str, Any], mode: Mode, timeout: int) -> bytes:
     try:
         fetcher_params = entry["fetcher_params"]
 
-        with FetcherType[fetcher_type].value.from_json(fetcher_params) as fetcher:
+        with FetcherType[fetcher_type].from_json(fetcher_params) as fetcher:
             fetcher_data = fetcher.fetch(mode)
 
         # TODO (sk): Change encoding approach:

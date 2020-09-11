@@ -308,7 +308,7 @@ class ABCConfigurator(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
 
     def make_fetcher(self) -> ABCFetcher:
         """Create a fetcher with this configuration."""
-        return self.fetcher_type.value.from_json(self.configure_fetcher())
+        return self.fetcher_type.from_json(self.configure_fetcher())
 
     @abc.abstractmethod
     def make_checker(self) -> "ABCChecker":

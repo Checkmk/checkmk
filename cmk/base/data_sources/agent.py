@@ -114,21 +114,25 @@ class AgentSummarizer(ABCSummarizer[AgentHostSections]):
 
 class AgentSummarizerDefault(AgentSummarizer):
     # TODO: refactor
-    def __init__(self, configurator: AgentConfigurator) -> None:
-        super().__init__()
+    def __init__(
+        self,
+        exit_spec: config.ExitSpec,
+        configurator: AgentConfigurator,
+    ) -> None:
+        super().__init__(exit_spec)
         self.configurator = configurator
         self._host_config = self.configurator.host_config
 
-    def summarize(
+    def _summarize(
         self,
         host_sections: AgentHostSections,
     ) -> ServiceCheckResult:
-        return self._summarize(
+        return self._summarize_impl(
             host_sections.sections.get(SectionName("check_mk")),
             self.configurator.mode is Mode.CHECKING,
         )
 
-    def _summarize(
+    def _summarize_impl(
         self,
         cmk_section: Optional[AgentSectionContent],
         for_checking: bool,
@@ -197,13 +201,13 @@ class AgentSummarizerDefault(AgentSummarizer):
                     expected += ' release %s' % spec['release']
             else:
                 expected = "%s" % (expected_version,)
-            status = cast(int, self.configurator.exit_code_spec.get("wrong_version", 1))
+            status = cast(int, self.exit_spec.get("wrong_version", 1))
             return (status, "unexpected agent version %s (should be %s)%s" %
                     (agent_version, expected, state_markers[status]), [])
 
         if config.agent_min_version and cast(int, agent_version) < config.agent_min_version:
             # TODO: This branch seems to be wrong. Or: In which case is agent_version numeric?
-            status = cast(int, self.configurator.exit_code_spec.get("wrong_version", 1))
+            status = cast(int, self.exit_spec.get("wrong_version", 1))
             return (status, "old plugin version %s (should be at least %s)%s" %
                     (agent_version, config.agent_min_version, state_markers[status]), [])
 
@@ -235,7 +239,7 @@ class AgentSummarizerDefault(AgentSummarizer):
         if missing:
             infotexts.append("missing: %s" % " ".join(sorted(missing)))
 
-        mismatch_state = self.configurator.exit_code_spec.get("restricted_address_mismatch", 1)
+        mismatch_state = self.exit_spec.get("restricted_address_mismatch", 1)
         assert isinstance(mismatch_state, int)
         return (mismatch_state, "Unexpected allowed IP ranges (%s)%s" %
                 (", ".join(infotexts), state_markers[mismatch_state]), [])

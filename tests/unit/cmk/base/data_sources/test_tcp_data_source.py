@@ -12,6 +12,8 @@ import pytest  # type: ignore[import]
 # No stub file
 from testlib.base import Scenario  # type: ignore[import]
 
+from cmk.utils.type_defs import Result
+
 from cmk.base.data_sources._abstract import Mode
 from cmk.base.data_sources.agent import AgentHostSections, AgentSummarizerDefault
 from cmk.base.data_sources.tcp import TCPConfigurator
@@ -39,7 +41,7 @@ def test_tcpdatasource_only_from(mode, monkeypatch, result, reported, rule):
     configurator = TCPConfigurator("hostname", "ipaddress", mode=mode)
     monkeypatch.setattr(config_cache, "host_extra_conf", lambda host, ruleset: ruleset)
 
-    summarizer = AgentSummarizerDefault(configurator)
+    summarizer = AgentSummarizerDefault(configurator.exit_spec, configurator)
     assert summarizer._sub_result_only_from({"onlyfrom": reported}) == result
 
 
@@ -81,7 +83,7 @@ def test_tcpdatasource_restricted_address_mismatch(mode, monkeypatch,
 
     ts.apply(monkeypatch)
     configurator = TCPConfigurator(hostname, "ipaddress", mode=mode)
-    summarizer = AgentSummarizerDefault(configurator)
+    summarizer = AgentSummarizerDefault(configurator.exit_spec, configurator)
 
     assert summarizer._sub_result_only_from({"onlyfrom": only_from}) == result
 
@@ -133,4 +135,8 @@ class TestSummaryResult:
             mode=mode,
         ).make_summarizer()
 
-        assert summarizer.summarize(AgentHostSections()) == (0, "Version: unknown, OS: unknown", [])
+        assert summarizer.summarize(Result.OK(AgentHostSections())) == (
+            0,
+            "Version: unknown, OS: unknown",
+            [],
+        )

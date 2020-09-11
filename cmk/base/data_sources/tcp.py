@@ -57,7 +57,7 @@ class TCPConfigurator(AgentConfigurator):
         }
 
     def make_summarizer(self) -> AgentSummarizerDefault:
-        return AgentSummarizerDefault(self)
+        return AgentSummarizerDefault(self.exit_spec, self)
 
     @staticmethod
     def _make_description(hostname: HostName, ipaddress: Optional[HostAddress]) -> str:

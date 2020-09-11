@@ -50,7 +50,7 @@ class PiggybackConfigurator(AgentConfigurator):
         }
 
     def make_summarizer(self) -> "PiggybackSummarizer":
-        return PiggybackSummarizer(self)
+        return PiggybackSummarizer(self.exit_spec, self)
 
     @staticmethod
     def _make_description(hostname: HostName):
@@ -58,11 +58,11 @@ class PiggybackConfigurator(AgentConfigurator):
 
 
 class PiggybackSummarizer(AgentSummarizer):
-    def __init__(self, configurator: PiggybackConfigurator):
-        super().__init__()
+    def __init__(self, exit_spec: config.ExitSpec, configurator: PiggybackConfigurator):
+        super().__init__(exit_spec)
         self.configurator = configurator
 
-    def summarize(self, host_sections: AgentHostSections) -> ServiceCheckResult:
+    def _summarize(self, host_sections: AgentHostSections) -> ServiceCheckResult:
         """Returns useful information about the data source execution
 
         Return only summary information in case there is piggyback data"""
@@ -72,7 +72,7 @@ class PiggybackSummarizer(AgentSummarizer):
             # and source status file
             return 0, '', []
 
-        summary = self._summarize()
+        summary = self._summarize_impl()
         if 'piggyback' in self.configurator.host_config.tags and not summary:
             # Tag: 'Always use and expect piggback data'
             return 1, 'Missing data', []
@@ -82,7 +82,7 @@ class PiggybackSummarizer(AgentSummarizer):
 
         return summary
 
-    def _summarize(self) -> ServiceCheckResult:
+    def _summarize_impl(self) -> ServiceCheckResult:
         states = [0]
         infotexts = set()
         for origin in (self.configurator.hostname, self.configurator.ipaddress):

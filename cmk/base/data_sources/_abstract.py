@@ -303,7 +303,7 @@ class ABCConfigurator(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         self.host_config: Final[HostConfig] = HostConfig.make_host_config(hostname)
         self._logger: Final[logging.Logger] = logging.getLogger("cmk.base.data_source.%s" % id_)
 
-        self.exit_code_spec = self.host_config.exit_code_spec(id_)
+        self.exit_spec = self.host_config.exit_code_spec(id_)
 
     def __repr__(self) -> str:
         return "%s(%r, %r, mode=%r, description=%r, id=%r)" % (
@@ -357,9 +357,42 @@ class ABCConfigurator(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
 class ABCSummarizer(Generic[THostSections], metaclass=abc.ABCMeta):
     """Class to summarize parsed data into a ServiceCheckResult.
 
+    Note:
+        Only private methods are allowed to handle `THostSections`.
+        Public methods must always use `Result[THostSections, Exception]`.
+
     """
+    def __init__(self, exit_spec: config.ExitSpec) -> None:
+        super().__init__()
+        self.exit_spec: Final[config.ExitSpec] = exit_spec
+
+    def summarize(
+        self,
+        host_sections: Result[THostSections, Exception],
+    ) -> ServiceCheckResult:
+        """Summarize the host sections."""
+        if host_sections.is_ok():
+            assert host_sections.ok is not None
+            return self._summarize(host_sections.ok)
+
+        assert host_sections.err is not None
+        exc_msg = "%s" % host_sections.err
+        status = self._extract_status(host_sections.err)
+        return status, exc_msg + check_api_utils.state_markers[status], []
+
+    def _extract_status(self, exc: Exception) -> int:
+        if isinstance(exc, MKEmptyAgentData):
+            status = self.exit_spec.get("empty_output", 2)
+        elif isinstance(exc, (MKAgentError, MKIPAddressLookupError, MKSNMPError)):
+            status = self.exit_spec.get("connection", 2)
+        elif isinstance(exc, MKTimeout):
+            status = self.exit_spec.get("timeout", 2)
+        else:
+            status = self.exit_spec.get("exception", 3)
+        return cast(int, status)
+
     @abc.abstractmethod
-    def summarize(self, host_sections: THostSections) -> ServiceCheckResult:
+    def _summarize(self, host_sections: THostSections) -> ServiceCheckResult:
         raise NotImplementedError
 
 
@@ -424,35 +457,9 @@ class ABCChecker(Generic[TRawData, TSections, TPersistedSections, THostSections]
             self._section_store.store(persisted_sections)
         return persisted_sections
 
-    def summarize(self, result: Result[THostSections, Exception]) -> ServiceCheckResult:
-        """Returns a three element tuple of state, output and perfdata (list) that summarizes
-        the execution result of this data source.
-
-        This is e.g. used for the output of the "Check_MK", "Check_MK Discovery" or
-        "Check_MK HW/SW Inventory" services."""
-        assert self.configurator.mode is not Mode.NONE
-
-        if result.is_ok():
-            assert result.ok is not None
-            return self.configurator.make_summarizer().summarize(result.ok)
-
-        assert result.err is not None
-        exc_msg = "%s" % result.err
-
-        if isinstance(result.err, MKEmptyAgentData):
-            status = self.configurator.exit_code_spec.get("empty_output", 2)
-
-        elif isinstance(result.err, (MKAgentError, MKIPAddressLookupError, MKSNMPError)):
-            status = self.configurator.exit_code_spec.get("connection", 2)
-
-        elif isinstance(result.err, MKTimeout):
-            status = self.configurator.exit_code_spec.get("timeout", 2)
-
-        else:
-            status = self.configurator.exit_code_spec.get("exception", 3)
-        status = cast(int, status)
-
-        return status, exc_msg + check_api_utils.state_markers[status], []
+    def summarize(self, host_sections: Result[THostSections, Exception]) -> ServiceCheckResult:
+        # Obsolete method required during the transition to the final API.
+        return self.configurator.make_summarizer().summarize(host_sections)
 
     @classmethod
     def use_outdated_persisted_sections(cls) -> None:

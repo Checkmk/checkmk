@@ -66,7 +66,7 @@ class IPMIConfigurator(AgentConfigurator):
         }
 
     def make_summarizer(self) -> "IPMISummarizer":
-        return IPMISummarizer()
+        return IPMISummarizer(self.exit_spec)
 
     @staticmethod
     def _make_description(ipaddress: Optional[HostAddress], credentials: IPMICredentials):
@@ -82,7 +82,7 @@ class IPMIConfigurator(AgentConfigurator):
 
 
 class IPMISummarizer(AgentSummarizer):
-    def summarize(self, host_sections: AgentHostSections) -> ServiceCheckResult:
+    def _summarize(self, host_sections: AgentHostSections) -> ServiceCheckResult:
         return 0, "Version: %s" % self._get_ipmi_version(host_sections), []
 
     @staticmethod

@@ -8,7 +8,7 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario  # type: ignore[import]
 
-from cmk.utils.type_defs import SourceType
+from cmk.utils.type_defs import Result, SourceType
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
@@ -40,7 +40,7 @@ def test_attribute_defaults(mode, monkeypatch):
     assert configurator.source_type is SourceType.MANAGEMENT
 
     summarizer = configurator.make_summarizer()
-    assert summarizer.summarize(AgentHostSections()) == (0, "Version: unknown", [])
+    assert summarizer.summarize(Result.OK(AgentHostSections())) == (0, "Version: unknown", [])
 
     checker = configurator.make_checker()
     assert checker.id == "mgmt_ipmi"

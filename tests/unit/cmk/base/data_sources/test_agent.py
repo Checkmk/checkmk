@@ -180,11 +180,11 @@ class StubConfigurator(AgentConfigurator):
         return StubAgent(self)
 
     def make_summarizer(self) -> "StubSummarizer":
-        return StubSummarizer()
+        return StubSummarizer(self.exit_spec)
 
 
 class StubSummarizer(AgentSummarizer):
-    def summarize(self, host_sections):
+    def _summarize(self, host_sections):
         return 0, "", []
 
 
@@ -223,9 +223,7 @@ class TestAgentSummaryResult:
 
     @pytest.fixture
     def summarizer(self, configurator):
-        # TODO(ml): Actually return a summarize instance once the API
-        #           is one step further.
-        return configurator.make_checker()
+        return configurator.make_summarizer()
 
     @pytest.mark.usefixtures("scenario")
     def test_defaults(self, summarizer, configurator):

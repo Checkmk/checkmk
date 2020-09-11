@@ -194,7 +194,7 @@ class SNMPConfigurator(ABCConfigurator[SNMPRawData, SNMPHostSections]):
         return SNMPParser(self.hostname, self._logger)
 
     def make_summarizer(self) -> "SNMPSummarizer":
-        return SNMPSummarizer()
+        return SNMPSummarizer(self.exit_spec)
 
     def _make_snmp_scan_sections(self) -> Iterable[SNMPScanSection]:
         """Create list of all SNMP scan specifications.
@@ -358,7 +358,7 @@ class SNMPParser(ABCParser[SNMPRawData, SNMPHostSections]):
 
 
 class SNMPSummarizer(ABCSummarizer[SNMPHostSections]):
-    def summarize(self, host_sections: SNMPHostSections) -> ServiceCheckResult:
+    def _summarize(self, host_sections: SNMPHostSections) -> ServiceCheckResult:
         return 0, "Success", []
 
 

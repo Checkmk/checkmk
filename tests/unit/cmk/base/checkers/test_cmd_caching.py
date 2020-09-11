@@ -14,9 +14,10 @@ from pathlib import Path
 
 import pytest  # type: ignore[import]
 
-from testlib.base import Scenario
-from testlib.debug_utils import cmk_debug_enabled
-from testlib.utils import get_standard_linux_agent_output
+# No stub files
+from testlib.base import Scenario  # type: ignore[import]
+from testlib.debug_utils import cmk_debug_enabled  # type: ignore[import]
+from testlib.utils import get_standard_linux_agent_output  # type: ignore[import]
 
 import cmk.utils.paths
 from cmk.utils.log import logger
@@ -30,12 +31,18 @@ import cmk.base.modes.check_mk
 from cmk.base.checkers import ABCSource
 from cmk.base.checkers.agent import AgentSource
 from cmk.base.checkers.snmp import SNMPSource
+import cmk.base.license_usage as license_usage
 
 # TODO: These tests need to be tuned, because they involve a lot of checks being loaded which takes
 # too much time.
 
 # TODO (mo): now it's worse, we need to load all checks. remove this with CMK-4295
 #            after removing this, bring back the commented line below.
+
+
+@pytest.fixture(autouse=True)
+def mock_license_usage(monkeypatch):
+    monkeypatch.setattr(license_usage, "try_history_update", lambda: None)
 
 
 @pytest.fixture(scope="module", autouse=True)

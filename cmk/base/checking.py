@@ -66,6 +66,7 @@ import cmk.base.decorator
 import cmk.base.inventory as inventory
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.item_state as item_state
+import cmk.base.license_usage as license_usage
 import cmk.base.utils
 from cmk.base.api.agent_based import checking_classes, value_store
 from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
@@ -132,6 +133,8 @@ def do_check(
     long_infotexts: List[ServiceAdditionalDetails] = []
     perfdata: List[str] = []
     try:
+        license_usage.try_history_update()
+
         # In case of keepalive we always have an ipaddress (can be 0.0.0.0 or :: when
         # address is unknown). When called as non keepalive ipaddress may be None or
         # is already an address (2nd argument)

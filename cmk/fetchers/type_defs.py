@@ -6,18 +6,9 @@
 """Package containing the fetchers to the data sources."""
 
 import enum
-from typing import TypeVar, Union, Any, Dict
+from typing import Any, Dict
 
-from cmk.utils.type_defs import AgentRawData
-
-from cmk.snmplib.type_defs import SNMPRawData
-
-__all__ = ["TRawData"]
-
-# TODO(ml): This type does not really belong here but there currently
-#           is not better place.
-AbstractRawData = Union[AgentRawData, SNMPRawData]
-TRawData = TypeVar("TRawData", bound=AbstractRawData)
+__all__ = ["FetcherResult", "Mode"]
 
 # TODO: Improve type definition
 # Examples of correct dictionaries to return:

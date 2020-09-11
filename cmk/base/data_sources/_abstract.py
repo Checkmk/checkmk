@@ -20,19 +20,21 @@ from cmk.utils.exceptions import MKSNMPError, MKTimeout
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
 
+from cmk.snmplib.type_defs import TRawData
+
 from cmk.fetchers import ABCFetcher
 from cmk.fetchers.controller import FetcherType
-from cmk.fetchers.type_defs import TRawData, Mode
+from cmk.fetchers.type_defs import Mode
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.cpu_tracking as cpu_tracking
 from cmk.base.check_utils import (
+    PiggybackRawData,
+    SectionCacheInfo,
     TPersistedSections,
     TSectionContent,
     TSections,
-    PiggybackRawData,
-    SectionCacheInfo,
 )
 from cmk.base.config import HostConfig, SelectedRawSections
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData, MKIPAddressLookupError

@@ -13,9 +13,12 @@ from typing import Any, Dict, Final, Generic, Optional, Type, TypeVar, Union
 import cmk.utils
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKException, MKGeneralException
-from cmk.utils.log import VERBOSE, logger as cmk_logger
+from cmk.utils.log import logger as cmk_logger
+from cmk.utils.log import VERBOSE
 
-from .type_defs import TRawData, Mode
+from cmk.snmplib.type_defs import TRawData
+
+from .type_defs import Mode
 
 __all__ = ["ABCFetcher", "MKFetcherError"]
 

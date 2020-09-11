@@ -8,13 +8,13 @@
 import enum
 from typing import Any, Dict
 
-__all__ = ["FetcherResult", "Mode"]
+__all__ = ["FetcherMessage", "Mode"]
 
 # TODO: Improve type definition
 # Examples of correct dictionaries to return:
 # {  "fetcher_type": "snmp", "status": 0,   "payload": ""whatever}
 # {  "fetcher_type": "tcp",  "status": 50,  "payload": "exception text"}
-FetcherResult = Dict[str, Any]
+FetcherMessage = Dict[str, Any]
 
 
 class Mode(enum.Enum):

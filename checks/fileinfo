@@ -443,7 +443,7 @@ def _fileinfo_check_function(check_definition, params, outof_range_txt):
             if not state:
                 continue
             infotext += " (warn/crit %s %s/%s)" % (comp_text, verbfunc(warn), verbfunc(crit))
-        yield state, infotext, [(key, value, warn, crit)]
+        yield 0 if outof_range_txt else state, infotext, [(key, value, warn, crit)]
 
 
 def _fileinfo_check_file(value, params, key):

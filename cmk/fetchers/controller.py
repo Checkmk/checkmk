@@ -12,7 +12,7 @@ import json
 import os
 import logging
 from pathlib import Path
-from typing import Any, Dict, Union, NamedTuple
+from typing import Any, Dict, Final, Union, NamedTuple
 
 from cmk.utils.paths import core_fetcher_config_dir
 from cmk.utils.type_defs import HostName, SectionName
@@ -71,19 +71,23 @@ class FetcherHeader:
 
     def __init__(
         self,
-        name: str,
+        type_: FetcherType,
         *,
         status: int,
         payload_length: int,
     ) -> None:
-        self.name = name
-        self.status = status
-        self.payload_length = payload_length
+        self.type: Final[FetcherType] = type_
+        self.status: Final[int] = status
+        self.payload_length: Final[int] = payload_length
+
+    @property
+    def name(self) -> str:
+        return self.type.name
 
     def __repr__(self) -> str:
         return "%s(%r, %r, %r)" % (
             type(self).__name__,
-            self.name,
+            self.type,
             self.status,
             self.payload_length,
         )
@@ -111,17 +115,14 @@ class FetcherHeader:
     def from_network(cls, data: bytes) -> 'FetcherHeader':
         try:
             # to simplify parsing we are using ':' as a splitter
-            name, status, payload_length = data[:FetcherHeader.length].split(b":")[:3]
+            type_, status, payload_length = data[:FetcherHeader.length].split(b":")[:3]
             return cls(
-                name.decode("ascii"),
+                FetcherType[type_.decode("ascii").strip()],
                 status=int(status.decode("ascii"), base=10),
                 payload_length=int(payload_length.decode("ascii"), base=10),
             )
-        except ValueError as exc:
+        except (ValueError, KeyError) as exc:
             raise ValueError(data) from exc
-
-    def clone(self) -> 'FetcherHeader':
-        return FetcherHeader(self.name, status=self.status, payload_length=self.payload_length)
 
 
 class FetcherMessage(NamedTuple):
@@ -129,7 +130,7 @@ class FetcherMessage(NamedTuple):
     payload: bytes
 
     def raw_data(self) -> AbstractRawData:
-        if self.header.name == "SNMP":
+        if self.header.type is FetcherType.SNMP:
             return {SectionName(k): v for k, v in json.loads(self.payload).items()}
         return self.payload
 
@@ -275,14 +276,14 @@ def run_fetcher(entry: Dict[str, Any], mode: Mode, timeout: int) -> bytes:
     """
 
     try:
-        fetcher_type = entry["fetcher_type"]
+        fetcher_type = FetcherType[entry["fetcher_type"]]
     except LookupError as exc:
         raise RuntimeError from exc
 
     try:
         fetcher_params = entry["fetcher_params"]
 
-        with FetcherType[fetcher_type].from_json(fetcher_params) as fetcher:
+        with fetcher_type.from_json(fetcher_params) as fetcher:
             fetcher_data = fetcher.fetch(mode)
 
         # TODO (sk): Change encoding approach:
@@ -290,7 +291,7 @@ def run_fetcher(entry: Dict[str, Any], mode: Mode, timeout: int) -> bytes:
         # In fact, to correctly encode data we must estimate not the fetcher name but the data type.
         # We do not know anything about relation between fetcher and data, but we certainly know
         # how to encode different data types.
-        if fetcher_type == "SNMP":
+        if fetcher_type is FetcherType.SNMP:
             # Keys of SNMP payload is of type SectionName which can not be encoded using JSON.
             snmp_fetcher_data = {"%s" % k: v for k, v in fetcher_data.items()}
             payload = json.dumps(snmp_fetcher_data).encode("utf-8")

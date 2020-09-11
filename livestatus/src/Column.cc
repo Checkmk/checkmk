@@ -28,7 +28,7 @@ ColumnOffsets ColumnOffsets::addIndirectOffset(int offset) const {
     return result;
 }
 
-ColumnOffsets ColumnOffsets::addFinalOffset(int offset) const {
+ColumnOffsets ColumnOffsets::addOffset(int offset) const {
     ColumnOffsets result{*this};
     result.shifters_.emplace_back([offset](const void *p) {
         // TODO(sp) Figure out what is actually going on regarding nullptr...

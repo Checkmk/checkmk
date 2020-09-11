@@ -17,17 +17,18 @@ extern hostgroup *hostgroup_list;
 
 namespace {
 struct servicebyhostgroup {
-    service svc;
-    // cppcheck is too dumb to see usage in the DANGEROUS_OFFSETOF macro
-    // cppcheck-suppress unusedStructMember
-    hostgroup *host_group;
+    const service *svc;
+    const hostgroup *host_group;
 };
 }  // namespace
 
 TableServicesByHostGroup::TableServicesByHostGroup(MonitoringCore *mc)
     : Table(mc) {
     ColumnOffsets offsets{};
-    TableServices::addColumns(this, "", offsets, true);
+    TableServices::addColumns(
+        this, "",
+        offsets.addIndirectOffset(DANGEROUS_OFFSETOF(servicebyhostgroup, svc)),
+        true);
     TableHostGroups::addColumns(this, "hostgroup_",
                                 offsets.addIndirectOffset(DANGEROUS_OFFSETOF(
                                     servicebyhostgroup, host_group)));
@@ -40,11 +41,12 @@ std::string TableServicesByHostGroup::name() const {
 std::string TableServicesByHostGroup::namePrefix() const { return "service_"; }
 
 void TableServicesByHostGroup::answerQuery(Query *query) {
-    for (hostgroup *hg = hostgroup_list; hg != nullptr; hg = hg->next) {
-        for (hostsmember *mem = hg->members; mem != nullptr; mem = mem->next) {
-            for (servicesmember *smem = mem->host_ptr->services;
+    for (const hostgroup *hg = hostgroup_list; hg != nullptr; hg = hg->next) {
+        for (const hostsmember *mem = hg->members; mem != nullptr;
+             mem = mem->next) {
+            for (const servicesmember *smem = mem->host_ptr->services;
                  smem != nullptr; smem = smem->next) {
-                servicebyhostgroup sbhg = {*smem->service_ptr, hg};
+                servicebyhostgroup sbhg{smem->service_ptr, hg};
                 if (!query->processDataset(Row(&sbhg))) {
                     return;
                 }
@@ -54,6 +56,6 @@ void TableServicesByHostGroup::answerQuery(Query *query) {
 }
 
 bool TableServicesByHostGroup::isAuthorized(Row row, const contact *ctc) const {
-    const auto *svc = &rowData<servicebyhostgroup>(row)->svc;
+    const auto *svc = rowData<servicebyhostgroup>(row)->svc;
     return is_authorized_for(core(), ctc, svc->host_ptr, svc);
 }

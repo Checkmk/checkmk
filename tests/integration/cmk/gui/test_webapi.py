@@ -789,7 +789,7 @@ def test_get_graph_api(web, graph_test_config):  # noqa: F811 # pylint: disable=
     assert len(data["curves"]) == 5
     assert data["curves"][0]["title"] == "CPU time in user space"
     assert data["curves"][1]["title"] == "CPU time in operating system"
-    assert data["curves"][2]["title"] == "Time spent waiting for Check_MK agent"
+    assert data["curves"][2]["title"] == "Time spent waiting for Checkmk agent"
     assert data["curves"][3]["title"] == "Time spent waiting for special agent"
     assert data["curves"][4]["title"] == "Total execution time"
 

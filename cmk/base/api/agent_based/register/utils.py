@@ -124,7 +124,7 @@ def validate_function_arguments(
 
 
 def validate_default_parameters(
-    params_type: str,
+    params_type: Literal["check", "discovery", "inventory"],
     ruleset_name: Optional[str],
     default_parameters: Optional[Dict],
 ) -> None:

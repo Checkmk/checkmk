@@ -2068,11 +2068,13 @@ def get_discovery_parameters(
                               check_plugin.discovery_ruleset_type)
 
 
-def compute_check_parameters(host: HostName,
-                             checktype: Union[CheckPluginNameStr, CheckPluginName],
-                             item: Item,
-                             params: LegacyCheckParameters,
-                             for_static_checks: bool = False) -> Optional[LegacyCheckParameters]:
+def compute_check_parameters(
+    host: HostName,
+    checktype: Union[CheckPluginNameStr, CheckPluginName],
+    item: Item,
+    params: LegacyCheckParameters,
+    for_static_checks: bool = False,
+) -> Optional[LegacyCheckParameters]:
     """Compute parameters for a check honoring factory settings,
     default settings of user in main.mk, check_parameters[] and
     the values code in autochecks (given as parameter params)"""
@@ -2089,15 +2091,17 @@ def compute_check_parameters(host: HostName,
     if plugin is None:  # handle vanished check plugin
         return None
 
-    params = _update_with_default_check_parameters(plugin, params)
+    params = _update_with_default_check_parameters(plugin.check_default_parameters, params)
     if not for_static_checks:
         params = _update_with_configured_check_parameters(host, plugin, item, params)
 
     return params
 
 
-def _update_with_default_check_parameters(plugin: CheckPlugin,
-                                          params: LegacyCheckParameters) -> LegacyCheckParameters:
+def _update_with_default_check_parameters(
+    check_default_parameters: Dict[str, Any],
+    params: LegacyCheckParameters,
+) -> LegacyCheckParameters:
 
     # Handle case where parameter is None but the type of the
     # default value is a dictionary. This is for example the
@@ -2114,7 +2118,7 @@ def _update_with_default_check_parameters(plugin: CheckPlugin,
         # if discovered params is not updateable, it wins
         return params
 
-    default_params = unwrap_parameters(plugin.check_default_parameters)
+    default_params = unwrap_parameters(check_default_parameters)
     if not isinstance(default_params, dict):
         # if default params are not updatetable, discovered params win
         return params

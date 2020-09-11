@@ -16,15 +16,9 @@ from ._data_sources import make_configurators
 
 __all__ = ["dump", "dumps"]
 
-# TODO (sk): class?
-
 
 def dump(hostname: HostName, ipaddress: Optional[HostAddress], file_: IO[str]) -> None:
     """Dump the configuration to `hostname` fetchers into `file_`."""
-    # TODO(ml):
-    #   - `cmk.base.inventory` configures SNMP differently.
-    #   - handle SNMP persisted_sections
-    #   - handle selected_raw_sections
     file_.write(dumps(hostname, ipaddress))
 
 

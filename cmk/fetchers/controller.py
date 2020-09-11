@@ -234,8 +234,8 @@ def run_fetchers(serial: str, host_name: HostName, mode: Mode, timeout: int) -> 
 
     if not json_file.exists():
         # this happens during development(or filesystem is broken)
-        text = f"fetcher file for host '{host_name}' and {serial} is absent"
-        write_bytes(make_logging_answer(text, log_level=CmcLogLevel.WARNING))
+        msg = f"fetcher file for host '{host_name}' and {serial} is absent"
+        write_bytes(make_logging_answer(msg, log_level=CmcLogLevel.WARNING))
         write_bytes(make_waiting_answer())
         return
 
@@ -247,14 +247,14 @@ def load_global_config(serial: int) -> None:
     global_json_file = build_json_global_config_file_path(serial=str(serial))
     if not global_json_file.exists():
         # this happens during development(or filesystem is broken)
-        text = f"fetcher global config {serial} is absent"
-        write_bytes(make_logging_answer(text, log_level=CmcLogLevel.WARNING))
+        msg = f"fetcher global config {serial} is absent"
+        write_bytes(make_logging_answer(msg, log_level=CmcLogLevel.WARNING))
         write_bytes(make_waiting_answer())
         return
 
     with global_json_file.open() as f:
-        result = json.load(f)["fetcher_config"]
-        log.logger.setLevel(result["log_level"])
+        config = json.load(f)["fetcher_config"]
+        log.logger.setLevel(config["log_level"])
 
 
 def run_fetcher(entry: Dict[str, Any], mode: Mode, timeout: int) -> bytes:
@@ -265,7 +265,7 @@ def run_fetcher(entry: Dict[str, Any], mode: Mode, timeout: int) -> bytes:
     try:
         fetcher_type = entry["fetcher_type"]
     except LookupError as exc:
-        raise RuntimeError from exc  # proposition from ml/sk to avoid stupid exception
+        raise RuntimeError from exc
 
     try:
         fetcher_params = entry["fetcher_params"]

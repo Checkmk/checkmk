@@ -69,7 +69,7 @@ class CachedSNMPDetector:
             self._cached_result = gather_available_raw_section_names(
                 sections,
                 on_error=on_error,
-                binary_host=config.get_config_cache().in_binary_hostlist(
+                missing_sys_description=config.get_config_cache().in_binary_hostlist(
                     snmp_config.hostname,
                     config.snmp_without_sys_descr,
                 ),

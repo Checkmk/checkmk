@@ -244,28 +244,22 @@ def cache_oids(backend):
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("cache_oids")
 @pytest.mark.parametrize("oid", [snmp_scan.OID_SYS_DESCR, snmp_scan.OID_SYS_OBJ])
-def test_snmp_scan_cache_description__oid_missing(oid, backend):
+def test_snmp_scan_prefetch_description_object__oid_missing(oid, backend):
     snmp_cache.set_single_oid_cache(oid, None)
 
     with pytest.raises(snmp_scan.MKSNMPError, match=r"Cannot fetch [\w ]+ OID %s" % oid):
-        snmp_scan._snmp_scan_cache_description(
-            False,
-            backend=backend,
-        )
+        snmp_scan._prefetch_description_object(backend=backend)
 
 
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("cache_oids")
-def test_snmp_scan_cache_description__success_non_binary(backend):
+def test_snmp_scan_prefetch_description_object__success(backend):
     sys_desc = snmp_cache.get_oid_from_single_oid_cache(snmp_scan.OID_SYS_DESCR)
     sys_obj = snmp_cache.get_oid_from_single_oid_cache(snmp_scan.OID_SYS_OBJ)
     assert sys_desc
     assert sys_obj
 
-    snmp_scan._snmp_scan_cache_description(
-        binary_host=False,
-        backend=backend,
-    )
+    snmp_scan._prefetch_description_object(backend=backend)
 
     # Success is no-op
     assert snmp_cache.get_oid_from_single_oid_cache(snmp_scan.OID_SYS_DESCR) == sys_desc
@@ -274,11 +268,8 @@ def test_snmp_scan_cache_description__success_non_binary(backend):
 
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("cache_oids")
-def test_snmp_scan_cache_description__success_binary(backend):
-    snmp_scan._snmp_scan_cache_description(
-        binary_host=True,
-        backend=backend,
-    )
+def test_snmp_scan_fake_description_object__success(backend):
+    snmp_scan._fake_description_object()
 
     assert snmp_cache.get_oid_from_single_oid_cache(snmp_scan.OID_SYS_DESCR) == ""
     assert snmp_cache.get_oid_from_single_oid_cache(snmp_scan.OID_SYS_OBJ) == ""
@@ -291,7 +282,7 @@ def test_snmp_scan_find_plugins__success(backend):
         SNMPScanSection(_.name, _.detect_spec)
         for _ in agent_based_register.iter_all_snmp_sections()
     ]
-    found = snmp_scan._snmp_scan_find_sections(
+    found = snmp_scan._find_sections(
         sections,
         on_error="raise",
         backend=backend,
@@ -314,7 +305,7 @@ def test_gather_available_raw_section_names_defaults(backend, mocker):
             for _ in agent_based_register.iter_all_snmp_sections()
         ],
         on_error="raise",
-        binary_host=False,
+        missing_sys_description=False,
         backend=backend,
     ) == {
         SectionName("hr_mem"),

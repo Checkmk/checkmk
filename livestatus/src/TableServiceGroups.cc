@@ -27,7 +27,7 @@ std::string TableServiceGroups::namePrefix() const { return "servicegroup_"; }
 void TableServiceGroups::addColumns(Table *table, const std::string &prefix,
                                     const ColumnOffsets &offsets) {
     auto offsets_members{
-        offsets.addOffset(DANGEROUS_OFFSETOF(servicegroup, members))};
+        offsets.add([](Row r) { return &r.rawData<servicegroup>()->members; })};
     table->addColumn(std::make_unique<StringLambdaColumn<servicegroup>>(
         prefix + "name", "The name of the service group", offsets,
         [](const servicegroup &r) {

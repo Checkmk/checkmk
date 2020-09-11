@@ -66,8 +66,8 @@ std::string TableServices::namePrefix() const { return "service_"; }
 // static
 void TableServices::addColumns(Table *table, const std::string &prefix,
                                const ColumnOffsets &offsets, bool add_hosts) {
-    auto offsets_custom_variables{
-        offsets.addOffset(DANGEROUS_OFFSETOF(service, custom_variables))};
+    auto offsets_custom_variables{offsets.add(
+        [](Row r) { return &r.rawData<service>()->custom_variables; })};
     auto *mc = table->core();
     // Es fehlen noch: double-Spalten, unsigned long spalten, etliche weniger
     // wichtige Spalten und die Servicegruppen.
@@ -364,11 +364,13 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<AttributeListAsIntColumn>(
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified",
-        offsets.addOffset(DANGEROUS_OFFSETOF(service, modified_attributes))));
+        offsets.add(
+            [](Row r) { return &r.rawData<service>()->modified_attributes; })));
     table->addColumn(std::make_unique<AttributeListColumn>(
         prefix + "modified_attributes_list",
-        "A list of all modified attributes",
-        offsets.addOffset(DANGEROUS_OFFSETOF(service, modified_attributes))));
+        "A list of all modified attributes", offsets.add([](Row r) {
+            return &r.rawData<service>()->modified_attributes;
+        })));
     table->addColumn(std::make_unique<ServiceSpecialIntColumn>(
         prefix + "hard_state",
         "The effective hard state of the service (eliminates a problem in hard_state)",
@@ -469,9 +471,9 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         offsets, table->core(), true, true, true));
 
     if (add_hosts) {
-        TableHosts::addColumns(
-            table, "host_",
-            offsets.addIndirectOffset(DANGEROUS_OFFSETOF(service, host_ptr)));
+        TableHosts::addColumns(table, "host_", offsets.add([](Row r) {
+            return r.rawData<service>()->host_ptr;
+        }));
     }
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
@@ -526,12 +528,14 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<ServiceGroupsColumn>(
         prefix + "groups", "A list of all service groups the service is in",
-        offsets.addOffset(DANGEROUS_OFFSETOF(service, servicegroups_ptr)),
+        offsets.add(
+            [](Row r) { return &r.rawData<service>()->servicegroups_ptr; }),
         table->core()));
     table->addColumn(std::make_unique<ContactGroupsColumn>(
         prefix + "contact_groups",
         "A list of all contact groups this service is in",
-        offsets.addOffset(DANGEROUS_OFFSETOF(service, contact_groups))));
+        offsets.add(
+            [](Row r) { return &r.rawData<service>()->contact_groups; })));
 
     table->addColumn(std::make_unique<ListLambdaColumn<service>>(
         prefix + "metrics",

@@ -75,9 +75,9 @@ void TableEventConsoleEvents::addColumns(Table *table) {
         "Whether or not the host (if found in core) was in downtime during event creation (0/1)",
         offsets));
 
-    TableHosts::addColumns(
-        table, "host_",
-        offsets.addIndirectOffset(DANGEROUS_OFFSETOF(ECRow, _host)));
+    TableHosts::addColumns(table, "host_", offsets.add([](Row r) {
+        return r.rawData<ECRow>()->_host;
+    }));
 }
 
 std::string TableEventConsoleEvents::name() const {

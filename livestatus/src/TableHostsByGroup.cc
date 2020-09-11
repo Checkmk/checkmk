@@ -27,12 +27,12 @@ struct hostbygroup {
 
 TableHostsByGroup::TableHostsByGroup(MonitoringCore *mc) : Table(mc) {
     ColumnOffsets offsets{};
-    TableHosts::addColumns(
-        this, "",
-        offsets.addIndirectOffset(DANGEROUS_OFFSETOF(hostbygroup, hst)));
-    TableHostGroups::addColumns(
-        this, "hostgroup_",
-        offsets.addIndirectOffset(DANGEROUS_OFFSETOF(hostbygroup, host_group)));
+    TableHosts::addColumns(this, "", offsets.add([](Row r) {
+        return r.rawData<hostbygroup>()->hst;
+    }));
+    TableHostGroups::addColumns(this, "hostgroup_", offsets.add([](Row r) {
+        return r.rawData<hostbygroup>()->host_group;
+    }));
 }
 
 std::string TableHostsByGroup::name() const { return "hostsbygroup"; }

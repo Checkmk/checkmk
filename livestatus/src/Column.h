@@ -38,12 +38,11 @@ using AggregationFactory = std::function<std::unique_ptr<Aggregation>()>;
 
 class ColumnOffsets {
 public:
-    [[nodiscard]] ColumnOffsets addIndirectOffset(int offset) const;
-    [[nodiscard]] ColumnOffsets addOffset(int offset) const;
-    const void *shiftPointer(const void *data) const;
+    using shifter = std::function<const void *(Row)>;
+    [[nodiscard]] ColumnOffsets add(const shifter &shifter) const;
+    [[nodiscard]] const void *shiftPointer(Row row) const;
 
 private:
-    using shifter = std::function<const void *(const void *)>;
     std::vector<shifter> shifters_;
 };
 

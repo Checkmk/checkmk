@@ -25,13 +25,13 @@ struct servicebyhostgroup {
 TableServicesByHostGroup::TableServicesByHostGroup(MonitoringCore *mc)
     : Table(mc) {
     ColumnOffsets offsets{};
-    TableServices::addColumns(
-        this, "",
-        offsets.addIndirectOffset(DANGEROUS_OFFSETOF(servicebyhostgroup, svc)),
-        true);
-    TableHostGroups::addColumns(this, "hostgroup_",
-                                offsets.addIndirectOffset(DANGEROUS_OFFSETOF(
-                                    servicebyhostgroup, host_group)));
+    TableServices::addColumns(this, "", offsets.add([](Row r) {
+        return r.rawData<servicebyhostgroup>()->svc;
+    }),
+                              true);
+    TableHostGroups::addColumns(this, "hostgroup_", offsets.add([](Row r) {
+        return r.rawData<servicebyhostgroup>()->host_group;
+    }));
 }
 
 std::string TableServicesByHostGroup::name() const {

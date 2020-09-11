@@ -25,13 +25,14 @@ struct servicebygroup {
 
 TableServicesByGroup::TableServicesByGroup(MonitoringCore *mc) : Table(mc) {
     ColumnOffsets offsets{};
-    TableServices::addColumns(
-        this, "",
-        offsets.addIndirectOffset(DANGEROUS_OFFSETOF(servicebygroup, svc)),
-        true);
-    TableServiceGroups::addColumns(this, "servicegroup_",
-                                   offsets.addIndirectOffset(DANGEROUS_OFFSETOF(
-                                       servicebygroup, service_group)));
+    TableServices::addColumns(this, "", offsets.add([](Row r) {
+        return r.rawData<servicebygroup>()->svc;
+    }),
+                              true);
+    TableServiceGroups::addColumns(
+        this, "servicegroup_", offsets.add([](Row r) {
+            return r.rawData<servicebygroup>()->service_group;
+        }));
 }
 
 std::string TableServicesByGroup::name() const { return "servicesbygroup"; }

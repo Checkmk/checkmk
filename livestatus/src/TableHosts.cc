@@ -71,10 +71,10 @@ std::string TableHosts::namePrefix() const { return "host_"; }
 // static
 void TableHosts::addColumns(Table *table, const std::string &prefix,
                             const ColumnOffsets &offsets) {
-    auto offsets_custom_variables{
-        offsets.addOffset(DANGEROUS_OFFSETOF(host, custom_variables))};
+    auto offsets_custom_variables{offsets.add(
+        [](Row r) { return &r.rawData<host>()->custom_variables; })};
     auto offsets_services{
-        offsets.addOffset(DANGEROUS_OFFSETOF(host, services))};
+        offsets.add([](Row r) { return &r.rawData<host>()->services; })};
     auto *mc = table->core();
     table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "name", "Host name", offsets,
@@ -405,11 +405,13 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<AttributeListAsIntColumn>(
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified",
-        offsets.addOffset(DANGEROUS_OFFSETOF(host, modified_attributes))));
+        offsets.add(
+            [](Row r) { return &r.rawData<host>()->modified_attributes; })));
     table->addColumn(std::make_unique<AttributeListColumn>(
         prefix + "modified_attributes_list",
-        "A list of all modified attributes",
-        offsets.addOffset(DANGEROUS_OFFSETOF(host, modified_attributes))));
+        "A list of all modified attributes", offsets.add([](Row r) {
+            return &r.rawData<host>()->modified_attributes;
+        })));
 
     // columns of type double
     table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
@@ -561,12 +563,12 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<HostListColumn>(
         prefix + "parents", "A list of all direct parents of the host",
-        offsets.addOffset(DANGEROUS_OFFSETOF(host, parent_hosts)),
+        offsets.add([](Row r) { return &r.rawData<host>()->parent_hosts; }),
         table->core(), false));
     table->addColumn(std::make_unique<HostListColumn>(
         prefix + "childs", "A list of all direct children of the host",
-        offsets.addOffset(DANGEROUS_OFFSETOF(host, child_hosts)), table->core(),
-        false));
+        offsets.add([](Row r) { return &r.rawData<host>()->child_hosts; }),
+        table->core(), false));
     table->addDynamicColumn(std::make_unique<DynamicRRDColumn<HostRRDColumn>>(
         prefix + "rrddata",
         "RRD metrics data of this object. This is a column with parameters: rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION",
@@ -689,12 +691,12 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<HostGroupsColumn>(
         prefix + "groups", "A list of all host groups this host is in",
-        offsets.addOffset(DANGEROUS_OFFSETOF(host, hostgroups_ptr)),
+        offsets.add([](Row r) { return &r.rawData<host>()->hostgroups_ptr; }),
         table->core()));
     table->addColumn(std::make_unique<ContactGroupsColumn>(
         prefix + "contact_groups",
         "A list of all contact groups this host is in",
-        offsets.addOffset(DANGEROUS_OFFSETOF(host, contact_groups))));
+        offsets.add([](Row r) { return &r.rawData<host>()->contact_groups; })));
 
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "services", "A list of all services of the host",

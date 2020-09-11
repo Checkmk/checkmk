@@ -61,7 +61,7 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     : Table(mc), _log_cache(log_cache) {
     ColumnOffsets offsets{};
     auto offsets_entry{
-        offsets.addIndirectOffset(DANGEROUS_OFFSETOF(LogRow, entry))};
+        offsets.add([](Row r) { return r.rawData<LogRow>()->entry; })};
     addColumn(std::make_unique<TimeLambdaColumn<LogEntry>>(
         "time", "Time of the log event (UNIX timestamp)", offsets_entry,
         [](const LogEntry &r) {
@@ -130,19 +130,19 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
         offsets_entry, [](const LogEntry &r) { return r._command_name; }));
 
     // join host and service tables
-    TableHosts::addColumns(
-        this, "current_host_",
-        offsets.addIndirectOffset(DANGEROUS_OFFSETOF(LogRow, hst)));
-    TableServices::addColumns(
-        this, "current_service_",
-        offsets.addIndirectOffset(DANGEROUS_OFFSETOF(LogRow, svc)),
-        false /* no hosts table */);
-    TableContacts::addColumns(
-        this, "current_contact_",
-        offsets.addIndirectOffset(DANGEROUS_OFFSETOF(LogRow, ctc)));
-    TableCommands::addColumns(
-        this, "current_command_",
-        offsets.addIndirectOffset(DANGEROUS_OFFSETOF(LogRow, command)));
+    TableHosts::addColumns(this, "current_host_", offsets.add([](Row r) {
+        return r.rawData<LogRow>()->hst;
+    }));
+    TableServices::addColumns(this, "current_service_", offsets.add([](Row r) {
+        return r.rawData<LogRow>()->svc;
+    }),
+                              false /* no hosts table */);
+    TableContacts::addColumns(this, "current_contact_", offsets.add([](Row r) {
+        return r.rawData<LogRow>()->ctc;
+    }));
+    TableCommands::addColumns(this, "current_command_", offsets.add([](Row r) {
+        return r.rawData<LogRow>()->command;
+    }));
 }
 
 std::string TableLog::name() const { return "log"; }

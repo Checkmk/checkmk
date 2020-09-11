@@ -16,31 +16,22 @@ Column::Column(std::string name, std::string description, ColumnOffsets offsets)
     , _offsets(std::move(offsets)) {}
 
 const void *Column::shiftPointer(Row row) const {
-    return _offsets.shiftPointer(row.rawData<void>());
+    return _offsets.shiftPointer(row);
 }
 
-ColumnOffsets ColumnOffsets::addIndirectOffset(int offset) const {
+ColumnOffsets ColumnOffsets::add(const shifter &shifter) const {
     ColumnOffsets result{*this};
-    result.shifters_.emplace_back([offset](const void *p) {
-        return *offset_cast<const void *>(p, offset);
-    });
+    result.shifters_.emplace_back(shifter);
     return result;
 }
 
-ColumnOffsets ColumnOffsets::addOffset(int offset) const {
-    ColumnOffsets result{*this};
-    result.shifters_.emplace_back(
-        [offset](const void *p) { return offset_cast<const void>(p, offset); });
-    return result;
-}
-
-const void *ColumnOffsets::shiftPointer(const void *data) const {
+const void *ColumnOffsets::shiftPointer(Row row) const {
     for (const auto &s : shifters_) {
         // TODO(sp) Figure out what is actually going on regarding nullptr...
-        if (data == nullptr) {
+        if (row.isNull()) {
             break;
         }
-        data = s(data);
+        row = Row{s(row)};
     }
-    return data;
+    return row.rawData<void>();
 }

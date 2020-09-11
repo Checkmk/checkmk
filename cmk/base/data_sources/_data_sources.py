@@ -18,7 +18,7 @@ import cmk.utils.tty as tty
 from cmk.utils.log import console
 from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
-from cmk.fetchers.type_defs import FetcherMessage
+from cmk.fetchers.controller import FetcherMessage
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_table as check_table
@@ -270,10 +270,10 @@ def update_host_sections(
                 #if fetcher_message["fetcher_type"] != source.id:
                 #    raise LookupError("Checker and fetcher missmatch")
 
-                # TODO: Handle fetcher_message["status"]
-                assert fetcher_message["status"] == 0
+                # TODO: Handle status != 0
+                assert fetcher_message.header.status == 0
 
-                raw_data = fetcher_message["payload"]
+                raw_data = fetcher_message.raw_data()
 
             host_section = source.check(raw_data)
             result.append((source.configurator, host_section))

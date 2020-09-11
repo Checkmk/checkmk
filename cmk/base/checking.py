@@ -52,7 +52,7 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
-from cmk.fetchers.type_defs import FetcherMessage
+from cmk.fetchers.controller import FetcherMessage
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api_utils as check_api_utils

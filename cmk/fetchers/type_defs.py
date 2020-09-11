@@ -6,15 +6,8 @@
 """Package containing the fetchers to the data sources."""
 
 import enum
-from typing import Any, Dict
 
-__all__ = ["FetcherMessage", "Mode"]
-
-# TODO: Improve type definition
-# Examples of correct dictionaries to return:
-# {  "fetcher_type": "snmp", "status": 0,   "payload": ""whatever}
-# {  "fetcher_type": "tcp",  "status": 50,  "payload": "exception text"}
-FetcherMessage = Dict[str, Any]
+__all__ = ["Mode"]
 
 
 class Mode(enum.Enum):

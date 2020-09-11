@@ -12,11 +12,13 @@ import json
 import os
 import logging
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Any, Dict, Union, NamedTuple
 
 from cmk.utils.paths import core_fetcher_config_dir
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import HostName, SectionName
 import cmk.utils.log as log
+
+from cmk.snmplib.type_defs import AbstractRawData
 
 from . import FetcherType
 from .type_defs import Mode
@@ -120,6 +122,16 @@ class FetcherHeader:
 
     def clone(self) -> 'FetcherHeader':
         return FetcherHeader(self.name, status=self.status, payload_length=self.payload_length)
+
+
+class FetcherMessage(NamedTuple):
+    header: FetcherHeader
+    payload: bytes
+
+    def raw_data(self) -> AbstractRawData:
+        if self.header.name == "SNMP":
+            return {SectionName(k): v for k, v in json.loads(self.payload).items()}
+        return self.payload
 
 
 class Header:

@@ -22,23 +22,24 @@ const void *Column::shiftPointer(Row row) const {
 ColumnOffsets ColumnOffsets::addIndirectOffset(int offset) const {
     ColumnOffsets result{*this};
     result.shifters_.emplace_back([offset](const void *p) {
-        // TODO(sp) Figure out what is actually going on regarding nullptr...
-        return p == nullptr ? nullptr : *offset_cast<const void *>(p, offset);
+        return *offset_cast<const void *>(p, offset);
     });
     return result;
 }
 
 ColumnOffsets ColumnOffsets::addOffset(int offset) const {
     ColumnOffsets result{*this};
-    result.shifters_.emplace_back([offset](const void *p) {
-        // TODO(sp) Figure out what is actually going on regarding nullptr...
-        return p == nullptr ? nullptr : offset_cast<const void>(p, offset);
-    });
+    result.shifters_.emplace_back(
+        [offset](const void *p) { return offset_cast<const void>(p, offset); });
     return result;
 }
 
 const void *ColumnOffsets::shiftPointer(const void *data) const {
     for (const auto &s : shifters_) {
+        // TODO(sp) Figure out what is actually going on regarding nullptr...
+        if (data == nullptr) {
+            break;
+        }
         data = s(data);
     }
     return data;

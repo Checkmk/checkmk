@@ -1081,7 +1081,7 @@ def test_get_graph_recipes(web, graph_test_config):  # noqa: F811 # pylint: disa
                         'max', 1.0
                     ],
                     u'line_type': u'stack',
-                    u'title': u'Time spent waiting for Check_MK agent',
+                    u'title': u'Time spent waiting for Checkmk agent',
                     u'unit': u's'
                 }, {
                     u'color': u'#00d1ff',

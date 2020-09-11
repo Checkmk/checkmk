@@ -9,6 +9,12 @@
 
 from cmk.base.discovered_labels import HostLabel
 
+DEPRECATION_WARNING = (1, (
+    "Deprecated plugin/agent (see long output)(!)\nYou are using legacy code, which may lead to "
+    "crashes and/or incomplete information. Please upgrade the monitored host to use the plugin "
+    "'mk_docker.py'."
+), [])
+
 checkname = 'docker_node_info'
 
 info = [
@@ -48,9 +54,19 @@ discovery = {'': [(None, {}), HostLabel(u'cmk/docker_object', u'node')],
             'containers': [(None, {})]}
 
 checks = {
-    '': [(None, {}, [(0, u'Daemon running on host voms01', [])])],
-    'containers': [(None, {}, [(0, 'Containers: 42', [('containers', 42, None, None, None, None)]),
-                               (3, 'Running: count not present in agent output', []),
-                               (3, 'Paused: count not present in agent output', []),
-                               (3, 'Stopped: count not present in agent output', [])])]
+    '': [
+        (None, {}, [
+            (0, u'Daemon running on host voms01', []),
+            DEPRECATION_WARNING,
+        ]),
+    ],
+    'containers': [
+        (None, {}, [
+            (0, 'Containers: 42', [('containers', 42, None, None, None, None)]),
+            (3, 'Running: count not present in agent output', []),
+            (3, 'Paused: count not present in agent output', []),
+            (3, 'Stopped: count not present in agent output', []),
+            DEPRECATION_WARNING,
+        ]),
+    ],
 }

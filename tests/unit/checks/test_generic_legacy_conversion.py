@@ -38,29 +38,28 @@ def known_exceptions(type_, name):
         yield
 
 
-@pytest.fixture(scope="module", name="_load_all_checks")
-def load_all_checks():
-    config.load_all_checks(check_api.get_check_api_context)
-
-
 @pytest.fixture(scope="module", name="snmp_info", autouse=True)
-def _get_snmp_info(_load_all_checks):
+@pytest.mark.usefixtures("config_load_all_checks")
+def _get_snmp_info():
     assert len(config.snmp_info) > 400  # sanity check
     return config.snmp_info.copy()
 
 
 @pytest.fixture(scope="module", name="migrated_agent_sections", autouse=True)
-def _get_migrated_agent_sections(_load_all_checks):
+@pytest.mark.usefixtures("config_load_all_checks")
+def _get_migrated_agent_sections():
     return {s.name: s for s in agent_based_register.iter_all_agent_sections()}
 
 
 @pytest.fixture(scope="module", name="migrated_snmp_sections", autouse=True)
-def _get_migrated_snmp_sections(_load_all_checks):
+@pytest.mark.usefixtures("config_load_all_checks")
+def _get_migrated_snmp_sections():
     return {s.name: s for s in agent_based_register.iter_all_snmp_sections()}
 
 
 @pytest.fixture(scope="module", name="migrated_checks", autouse=True)
-def _get_migrated_checks(_load_all_checks):
+@pytest.mark.usefixtures("config_load_all_checks")
+def _get_migrated_checks():
     return {p.name: p for p in agent_based_register.iter_all_check_plugins()}
 
 
@@ -195,7 +194,7 @@ def test_all_checks_migrated(config_check_info, migrated_checks):
     assert not failures, "failed to migrate: %r" % (failures,)
 
 
-def test_all_check_variables_present(_load_all_checks, config_check_variables):
+def test_all_check_variables_present(config_check_variables):
     expected_check_variables = {
         'AKCP_TEMP_CHECK_DEFAULT_PARAMETERS',
         'ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS',

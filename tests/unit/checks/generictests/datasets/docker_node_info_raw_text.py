@@ -9,6 +9,13 @@
 
 from cmk.base.discovered_labels import HostLabel
 
+DEPRECATION_WARNING = (1, (
+    "Deprecated plugin/agent (see long output)(!)\nYou are using legacy code, which may lead to "
+    "crashes and/or incomplete information. Please upgrade the monitored host to use the plugin "
+    "'mk_docker.py'."
+), [])
+
+
 checkname = 'docker_node_info'
 
 info = [['|Containers', ' 0'], ['| Running', ' 0'], ['| Paused', ' 0'], ['| Stopped', ' 0'],
@@ -41,9 +48,19 @@ discovery = {'': [(None, {}),
             'containers': [(None, {})]}
 
 checks = {
-    '': [(None, {}, [(0, u'Daemon running on host klappson', [])])],
-    'containers': [(None, {}, [(0, 'Containers: 0', [('containers', 0, None, None, None, None)]),
-                               (0, 'Running: 0', [('running', 0, None, None, None, None)]),
-                               (0, 'Paused: 0', [('paused', 0, None, None, None, None)]),
-                               (0, 'Stopped: 0', [('stopped', 0, None, None, None, None)])])]
+    '': [
+        (None, {}, [
+            (0, u'Daemon running on host klappson', []),
+            DEPRECATION_WARNING,
+        ]),
+    ],
+    'containers': [
+        (None, {}, [
+            (0, 'Containers: 0', [('containers', 0, None, None, None, None)]),
+            (0, 'Running: 0', [('running', 0, None, None, None, None)]),
+            (0, 'Paused: 0', [('paused', 0, None, None, None, None)]),
+            (0, 'Stopped: 0', [('stopped', 0, None, None, None, None)]),
+            DEPRECATION_WARNING,
+        ]),
+    ],
 }

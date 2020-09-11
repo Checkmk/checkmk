@@ -25,7 +25,6 @@ from cmk.utils.log import logger
 
 import cmk.base.automations
 import cmk.base.automations.check_mk
-import cmk.base.check_api as check_api
 import cmk.base.config as config
 import cmk.base.inventory_plugins
 import cmk.base.modes
@@ -41,13 +40,9 @@ from cmk.base.data_sources.snmp import SNMPConfigurator, SNMPChecker
 #            after removing this, bring back the commented line below.
 
 
-# Load some common checks to have at least some for the test execution
-# Modes that have needs_checks=True set would miss the checks
-# without this fixtures
 @pytest.fixture(scope="module", autouse=True)
+@pytest.mark.usefixtures("config_load_all_checks")
 def load_plugins():
-    #     CheckManager().load(["df", "cpu", "chrony", "lnx_if", "livestatus_status", "omd_status"])
-    config.load_all_checks(check_api.get_check_api_context)
     InventoryPluginManager().load()
 
 

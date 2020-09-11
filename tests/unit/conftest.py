@@ -117,7 +117,7 @@ def fixup_ip_lookup(monkeypatch):
     monkeypatch.setattr(socket, "getaddrinfo", _getaddrinfo)
 
 
-@pytest.fixture(name='config_load_all_checks', scope="session", autouse=True)
+@pytest.fixture(name='config_load_all_checks', scope="session")
 def _config_load_all_checks():
     # Local import to have faster pytest initialization
     import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
@@ -132,21 +132,21 @@ def _config_load_all_checks():
     assert len(config.check_info) > 1000  # sanitiy check
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def config_check_info(config_load_all_checks):
     # Local import to have faster pytest initialization
     import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
     return copy.deepcopy(config.check_info)
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def config_active_check_info(config_load_all_checks):
     # Local import to have faster pytest initialization
     import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
     return copy.deepcopy(config.active_check_info)
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def config_snmp_scan_functions(config_load_all_checks):
     # Local import to have faster pytest initialization
     import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
@@ -154,7 +154,7 @@ def config_snmp_scan_functions(config_load_all_checks):
     return copy.deepcopy(config.snmp_scan_functions)
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def config_check_variables(config_load_all_checks):
     # Local import to have faster pytest initialization
     import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel

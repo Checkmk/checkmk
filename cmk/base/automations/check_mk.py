@@ -91,11 +91,11 @@ def _set_cache_opts_of_data_sources(use_caches: bool) -> None:
     # TODO check these settings vs.
     # cmk/base/data_sources/_abstract.py:set_cache_opts
     if use_caches:
-        data_sources.FileCacheConfigurator.use_outdated = True
+        data_sources.FileCacheConfigurer.use_outdated = True
         # TODO why does this only apply to TCP data sources and not
         # to all agent data sources?
-        data_sources.tcp.TCPConfigurator.use_only_cache = True
-    data_sources.FileCacheConfigurator.maybe = use_caches
+        data_sources.tcp.TCPSource.use_only_cache = True
+    data_sources.FileCacheConfigurer.maybe = use_caches
 
 
 class AutomationDiscovery(DiscoveryAutomation):
@@ -1147,27 +1147,27 @@ class AutomationDiagHost(Automation):
         tcp_connect_timeout: Optional[float],
     ) -> Tuple[int, str]:
         state, output = 0, u""
-        for configurator in data_sources.make_configurators(
+        for source in data_sources.make_sources(
                 host_config,
                 ipaddress,
                 mode=data_sources.Mode.CHECKING,
         ):
-            configurator.file_cache.max_age = config.check_max_cachefile_age
-            if isinstance(configurator, data_sources.programs.DSProgramConfigurator) and cmd:
-                configurator = configurator.ds(
-                    configurator.hostname,
-                    configurator.ipaddress,
-                    mode=configurator.mode,
+            source.file_cache.max_age = config.check_max_cachefile_age
+            if isinstance(source, data_sources.programs.DSProgramSource) and cmd:
+                source = source.ds(
+                    source.hostname,
+                    source.ipaddress,
+                    mode=source.mode,
                     template=cmd,
                 )
-            elif isinstance(configurator, data_sources.tcp.TCPConfigurator):
-                configurator.port = agent_port
+            elif isinstance(source, data_sources.tcp.TCPSource):
+                source.port = agent_port
                 if tcp_connect_timeout is not None:
-                    configurator.timeout = tcp_connect_timeout
-            elif isinstance(configurator, data_sources.snmp.SNMPConfigurator):
+                    source.timeout = tcp_connect_timeout
+            elif isinstance(source, data_sources.snmp.SNMPSource):
                 continue
 
-            raw_data = configurator.fetch()
+            raw_data = source.fetch()
             if raw_data.is_ok():
                 assert raw_data.ok is not None
                 # We really receive a byte string here. The agent sections
@@ -1444,25 +1444,24 @@ class AutomationGetAgentOutput(Automation):
         try:
             ipaddress = ip_lookup.lookup_ip_address(host_config)
             if ty == "agent":
-                data_sources.FileCacheConfigurator.reset_maybe()
-                for configurator in data_sources.make_configurators(
+                data_sources.FileCacheConfigurer.reset_maybe()
+                for source in data_sources.make_sources(
                         host_config,
                         ipaddress,
                         mode=data_sources.Mode.CHECKING,
                 ):
-                    configurator.file_cache.max_age = config.check_max_cachefile_age
-                    if not isinstance(configurator, data_sources.agent.AgentConfigurator):
+                    source.file_cache.max_age = config.check_max_cachefile_age
+                    if not isinstance(source, data_sources.agent.AgentSource):
                         continue
 
-                    raw_data = configurator.fetch()
+                    raw_data = source.fetch()
 
-                    host_sections = configurator.parse(raw_data)
-                    source_state, source_output, _source_perfdata = configurator.summarize(
-                        host_sections)
+                    host_sections = source.parse(raw_data)
+                    source_state, source_output, _source_perfdata = source.summarize(host_sections)
                     if source_state != 0:
                         # Optionally show errors of problematic data sources
                         success = False
-                        output += "[%s] %s\n" % (configurator.id, source_output)
+                        output += "[%s] %s\n" % (source.id, source_output)
                     assert raw_data.ok is not None
                     info += raw_data.ok
             else:

@@ -43,7 +43,7 @@ from cmk.base.exceptions import MKGeneralException
 from cmk.base.ip_lookup import normalize_ip_addresses
 
 from ._abstract import (
-    ABCConfigurator,
+    ABCSource,
     ABCChecker,
     ABCHostSections,
     ABCParser,
@@ -51,7 +51,7 @@ from ._abstract import (
     Mode,
 )
 
-__all__ = ["AgentConfigurator", "AgentHostSections", "AgentChecker"]
+__all__ = ["AgentSource", "AgentHostSections", "AgentChecker"]
 
 
 class AgentHostSections(ABCHostSections[AgentRawData, AgentSections, AgentPersistedSections,
@@ -59,7 +59,7 @@ class AgentHostSections(ABCHostSections[AgentRawData, AgentSections, AgentPersis
     pass
 
 
-class AgentConfigurator(ABCConfigurator[AgentRawData, AgentHostSections]):
+class AgentSource(ABCSource[AgentRawData, AgentHostSections]):
     """Configure agent checkers and fetchers.
 
     Args:
@@ -117,11 +117,11 @@ class AgentSummarizerDefault(AgentSummarizer):
     def __init__(
         self,
         exit_spec: config.ExitSpec,
-        configurator: AgentConfigurator,
+        source: AgentSource,
     ) -> None:
         super().__init__(exit_spec)
-        self.configurator = configurator
-        self._host_config = self.configurator.host_config
+        self.source = source
+        self._host_config = self.source.host_config
 
     def _summarize(
         self,
@@ -129,7 +129,7 @@ class AgentSummarizerDefault(AgentSummarizer):
     ) -> ServiceCheckResult:
         return self._summarize_impl(
             host_sections.sections.get(SectionName("check_mk")),
-            self.configurator.mode is Mode.CHECKING,
+            self.source.mode is Mode.CHECKING,
         )
 
     def _summarize_impl(

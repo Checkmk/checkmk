@@ -21,7 +21,7 @@ from cmk.fetchers import FetcherType
 import cmk.base.config as config
 from cmk.base.data_sources import Mode
 from cmk.base.data_sources.agent import (
-    AgentConfigurator,
+    AgentSource,
     AgentChecker,
     AgentParser,
     AgentSummarizer,
@@ -164,7 +164,7 @@ class TestParser:
         assert parsed_options == section_options
 
 
-class StubConfigurator(AgentConfigurator):
+class StubSource(AgentSource):
     def __init__(self, *args, **kwargs):
         super().__init__(
             *args,
@@ -190,7 +190,7 @@ class StubSummarizer(AgentSummarizer):
 
 class StubAgent(AgentChecker):
     def _execute(self, *args, **kwargs):
-        return self.configurator.default_host_sections
+        return self.source.default_host_sections
 
 
 class TestAgentSummaryResult:
@@ -210,8 +210,8 @@ class TestAgentSummaryResult:
         return ts
 
     @pytest.fixture
-    def configurator(self, hostname, mode):
-        return StubConfigurator(
+    def source(self, hostname, mode):
+        return StubSource(
             hostname,
             "1.2.3.4",
             mode=mode,
@@ -222,21 +222,21 @@ class TestAgentSummaryResult:
         )
 
     @pytest.mark.usefixtures("scenario")
-    def test_defaults(self, configurator):
-        assert configurator.summarize(Result.OK(configurator.default_host_sections)) == (0, "", [])
+    def test_defaults(self, source):
+        assert source.summarize(Result.OK(source.default_host_sections)) == (0, "", [])
 
     @pytest.mark.usefixtures("scenario")
-    def test_with_exception(self, configurator):
-        assert configurator.summarize(Result.Err(Exception())) == (3, "(?)", [])
+    def test_with_exception(self, source):
+        assert source.summarize(Result.Err(Exception())) == (3, "(?)", [])
 
     @pytest.mark.usefixtures("scenario")
-    def test_with_MKEmptyAgentData_exception(self, configurator):
-        assert configurator.summarize(Result.Err(MKEmptyAgentData())) == (2, "(!!)", [])
+    def test_with_MKEmptyAgentData_exception(self, source):
+        assert source.summarize(Result.Err(MKEmptyAgentData())) == (2, "(!!)", [])
 
     @pytest.mark.usefixtures("scenario")
-    def test_with_MKAgentError_exception(self, configurator):
-        assert configurator.summarize(Result.Err(MKAgentError())) == (2, "(!!)", [])
+    def test_with_MKAgentError_exception(self, source):
+        assert source.summarize(Result.Err(MKAgentError())) == (2, "(!!)", [])
 
     @pytest.mark.usefixtures("scenario")
-    def test_with_MKTimeout_exception(self, configurator):
-        assert configurator.summarize(Result.Err(MKTimeout())) == (2, "(!!)", [])
+    def test_with_MKTimeout_exception(self, source):
+        assert source.summarize(Result.Err(MKTimeout())) == (2, "(!!)", [])

@@ -1143,13 +1143,13 @@ def _get_needed_plugin_names(
         ipaddress = ip_lookup.lookup_ip_address(host_config)
     except Exception:
         ipaddress = None
-    for configurator in data_sources.make_configurators(
+    for source in data_sources.make_sources(
             host_config,
             ipaddress,
             mode=data_sources.Mode.NONE,
     ):
-        if isinstance(configurator, data_sources.programs.SpecialAgentConfigurator):
-            needed_legacy_check_plugin_names.add(configurator.special_agent_plugin_file_name)
+        if isinstance(source, data_sources.programs.SpecialAgentSource):
+            needed_legacy_check_plugin_names.add(source.special_agent_plugin_file_name)
 
     # Collect the needed check plugin names using the host check table
     needed_check_plugins = get_needed_check_names(host_config.hostname,

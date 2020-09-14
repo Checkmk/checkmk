@@ -17,8 +17,8 @@ import cmk.base.config as config
 from cmk.base.config import SpecialAgentConfiguration, SpecialAgentInfoFunctionResult
 from cmk.base.data_sources import Mode
 from cmk.base.data_sources.programs import (
-    DSProgramConfigurator,
-    SpecialAgentConfigurator,
+    DSProgramSource,
+    SpecialAgentSource,
 )
 
 fun_args_stdin: Tuple[  #
@@ -54,34 +54,34 @@ class TestDSProgramChecker:
         hostname = "testhost"
         Scenario().add_host(hostname).apply(monkeypatch)
 
-        configurator = DSProgramConfigurator(
+        source = DSProgramSource(
             hostname,
             ipaddress,
             mode=mode,
             template=template,
         )
-        assert configurator.hostname == hostname
-        assert configurator.ipaddress == ipaddress
-        assert configurator.mode is mode
-        assert configurator.cmdline == ""
-        assert configurator.stdin is None
-        assert configurator.description == "Program: "
-        assert configurator.id == "agent"
-        assert configurator.cpu_tracking_id == "ds"
+        assert source.hostname == hostname
+        assert source.ipaddress == ipaddress
+        assert source.mode is mode
+        assert source.cmdline == ""
+        assert source.stdin is None
+        assert source.description == "Program: "
+        assert source.id == "agent"
+        assert source.cpu_tracking_id == "ds"
 
     @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
     def test_template_translation(self, ipaddress, mode, monkeypatch):
         template = "<NOTHING>x<IP>x<HOST>x<host>x<ip>x"
         hostname = "testhost"
         Scenario().add_host(hostname).apply(monkeypatch)
-        configurator = DSProgramConfigurator(
+        source = DSProgramSource(
             hostname,
             ipaddress,
             mode=mode,
             template=template,
         )
 
-        assert configurator.cmdline == "<NOTHING>x%sx%sx<host>x<ip>x" % (
+        assert source.cmdline == "<NOTHING>x%sx%sx<host>x<ip>x" % (
             ipaddress if ipaddress is not None else "",
             hostname,
         )
@@ -134,18 +134,18 @@ class TestSpecialAgentChecker:
 
         # end of setup
 
-        configurator = SpecialAgentConfigurator(
+        source = SpecialAgentSource(
             hostname,
             ipaddress,
             mode=mode,
             special_agent_id=special_agent_id,
             params=params,
         )
-        assert configurator.hostname == hostname
-        assert configurator.ipaddress == ipaddress
-        assert configurator.mode is mode
-        assert configurator.cmdline == (  #
+        assert source.hostname == hostname
+        assert source.ipaddress == ipaddress
+        assert source.mode is mode
+        assert source.cmdline == (  #
             str(agent_dir / "special" / ("agent_%s" % special_agent_id)) + " " + expected_args)
-        assert configurator.stdin == expected_stdin
-        assert configurator.id == "special_%s" % special_agent_id
-        assert configurator.cpu_tracking_id == "ds"
+        assert source.stdin == expected_stdin
+        assert source.id == "special_%s" % special_agent_id
+        assert source.cpu_tracking_id == "ds"

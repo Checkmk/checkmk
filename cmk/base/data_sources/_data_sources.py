@@ -26,20 +26,20 @@ import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.config import HostConfig, SelectedRawSections
 
-from ._abstract import ABCConfigurator, Mode, ABCHostSections
+from ._abstract import ABCSource, Mode, ABCHostSections
 from .agent import AgentHostSections
 from .host_sections import HostKey, MultiHostSections
-from .ipmi import IPMIConfigurator
-from .piggyback import PiggybackConfigurator
-from .programs import DSProgramConfigurator, SpecialAgentConfigurator
-from .snmp import SNMPConfigurator
-from .tcp import TCPConfigurator
+from .ipmi import IPMISource
+from .piggyback import PiggybackSource
+from .programs import DSProgramSource, SpecialAgentSource
+from .snmp import SNMPSource
+from .tcp import TCPSource
 
-__all__ = ["update_host_sections", "make_configurators", "make_nodes"]
+__all__ = ["update_host_sections", "make_sources", "make_nodes"]
 
 
 class _Builder:
-    """Build a configurator list from host config and raw sections."""
+    """Build a source list from host config and raw sections."""
     def __init__(
         self,
         host_config: HostConfig,
@@ -52,16 +52,16 @@ class _Builder:
         self._hostname = host_config.hostname
         self._ipaddress = ipaddress
         self._mode = mode
-        self._elems: Dict[str, ABCConfigurator] = {}
+        self._elems: Dict[str, ABCSource] = {}
 
         self._initialize()
 
     @property
-    def configurators(self) -> Sequence[ABCConfigurator]:
+    def sources(self) -> Sequence[ABCSource]:
         # Always execute piggyback at the end
         return sorted(
             self._elems.values(),
-            key=lambda c: (isinstance(c, PiggybackConfigurator), c.id),
+            key=lambda c: (isinstance(c, PiggybackSource), c.id),
         )
 
     def _initialize(self) -> None:
@@ -94,7 +94,7 @@ class _Builder:
             ))
 
         if "no-piggyback" not in self._host_config.tags:
-            self._add(PiggybackConfigurator(
+            self._add(PiggybackSource(
                 self._hostname,
                 self._ipaddress,
                 mode=self._mode,
@@ -104,7 +104,7 @@ class _Builder:
         if not self._host_config.is_snmp_host:
             return
         assert self._ipaddress is not None
-        self._add(SNMPConfigurator.snmp(
+        self._add(SNMPSource.snmp(
             self._hostname,
             self._ipaddress,
             mode=self._mode,
@@ -117,14 +117,13 @@ class _Builder:
 
         ip_address = ip_lookup.lookup_mgmt_board_ip_address(self._host_config)
         if protocol == "snmp":
-            self._add(
-                SNMPConfigurator.management_board(
-                    self._hostname,
-                    ip_address,
-                    mode=self._mode,
-                ))
+            self._add(SNMPSource.management_board(
+                self._hostname,
+                ip_address,
+                mode=self._mode,
+            ))
         elif protocol == "ipmi":
-            self._add(IPMIConfigurator(
+            self._add(IPMISource(
                 self._hostname,
                 ip_address,
                 mode=self._mode,
@@ -132,14 +131,14 @@ class _Builder:
         else:
             raise LookupError()
 
-    def _add(self, configurator: ABCConfigurator) -> None:
-        self._elems[configurator.id] = configurator
+    def _add(self, source: ABCSource) -> None:
+        self._elems[source.id] = source
 
     def _get_agent(
         self,
         ignore_special_agents: bool,
         main_data_source: bool,
-    ) -> ABCConfigurator:
+    ) -> ABCSource:
         if not ignore_special_agents:
             special_agents = self._get_special_agents()
             if special_agents:
@@ -147,7 +146,7 @@ class _Builder:
 
         datasource_program = self._host_config.datasource_program
         if datasource_program is not None:
-            return DSProgramConfigurator(
+            return DSProgramSource(
                 self._hostname,
                 self._ipaddress,
                 mode=self._mode,
@@ -155,16 +154,16 @@ class _Builder:
                 template=datasource_program,
             )
 
-        return TCPConfigurator(
+        return TCPSource(
             self._hostname,
             self._ipaddress,
             mode=self._mode,
             main_data_source=main_data_source,
         )
 
-    def _get_special_agents(self) -> Sequence[ABCConfigurator]:
+    def _get_special_agents(self) -> Sequence[ABCSource]:
         return [
-            SpecialAgentConfigurator(
+            SpecialAgentSource(
                 self._hostname,
                 self._ipaddress,
                 mode=self._mode,
@@ -174,14 +173,14 @@ class _Builder:
         ]
 
 
-def make_configurators(
+def make_sources(
     host_config: HostConfig,
     ipaddress: Optional[HostAddress],
     *,
     mode: Mode,
-) -> Sequence[ABCConfigurator]:
-    """Sequence of configurators available for `host_config`."""
-    return _Builder(host_config, ipaddress, mode=mode).configurators
+) -> Sequence[ABCSource]:
+    """Sequence of sources available for `host_config`."""
+    return _Builder(host_config, ipaddress, mode=mode).sources
 
 
 def make_nodes(
@@ -189,8 +188,8 @@ def make_nodes(
     host_config: HostConfig,
     ipaddress: Optional[HostAddress],
     mode: Mode,
-    sources: Sequence[ABCConfigurator],
-) -> Sequence[Tuple[HostName, Optional[HostAddress], Sequence[ABCConfigurator]]]:
+    sources: Sequence[ABCSource],
+) -> Sequence[Tuple[HostName, Optional[HostAddress], Sequence[ABCSource]]]:
     if host_config.nodes is None:
         return [(host_config.hostname, ipaddress, sources)]
     return _make_piggyback_nodes(mode, config_cache, host_config)
@@ -215,13 +214,13 @@ def _make_piggybacked_sections(host_config) -> SelectedRawSections:
 
 def update_host_sections(
     multi_host_sections: MultiHostSections,
-    nodes: Iterable[Tuple[HostName, Optional[HostAddress], Sequence[ABCConfigurator]]],
+    nodes: Iterable[Tuple[HostName, Optional[HostAddress], Sequence[ABCSource]]],
     *,
     max_cachefile_age: int,
     selected_raw_sections: Optional[SelectedRawSections],
     host_config: HostConfig,
     fetcher_messages: Optional[List[FetcherMessage]] = None,
-) -> Sequence[Tuple[ABCConfigurator, Result[ABCHostSections, Exception]]]:
+) -> Sequence[Tuple[ABCSource, Result[ABCHostSections, Exception]]]:
     """Gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
 
     Communication errors are not raised through by this functions. All agent related errors are
@@ -236,7 +235,7 @@ def update_host_sections(
 
     # Special agents can produce data for the same check_plugin_name on the same host, in this case
     # the section lines need to be extended
-    result: List[Tuple[ABCConfigurator, Result[ABCHostSections, Exception]]] = []
+    result: List[Tuple[ABCSource, Result[ABCHostSections, Exception]]] = []
     for hostname, ipaddress, sources in nodes:
         for source_index, source in enumerate(sources):
             if host_config.nodes is None:
@@ -292,7 +291,7 @@ def _make_piggyback_nodes(
     mode: Mode,
     config_cache: config.ConfigCache,
     host_config: HostConfig,
-) -> Sequence[Tuple[HostName, Optional[HostAddress], Sequence[ABCConfigurator]]]:
+) -> Sequence[Tuple[HostName, Optional[HostAddress], Sequence[ABCSource]]]:
     """Abstract clusters/nodes/hosts"""
     assert host_config.nodes is not None
 
@@ -300,7 +299,7 @@ def _make_piggyback_nodes(
     for hostname in host_config.nodes:
         node_config = config_cache.get_host_config(hostname)
         ipaddress = ip_lookup.lookup_ip_address(node_config)
-        sources = make_configurators(
+        sources = make_sources(
             HostConfig.make_host_config(hostname),
             ipaddress,
             mode=mode,

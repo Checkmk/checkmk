@@ -26,7 +26,7 @@ from cmk.fetchers.snmp import SNMPFetcher, SNMPFileCache
 from cmk.fetchers.tcp import TCPFetcher
 from cmk.fetchers.type_defs import Mode
 
-from cmk.base.data_sources import FileCacheConfigurator
+from cmk.base.data_sources import FileCacheConfigurer
 
 SensorReading = namedtuple(
     "SensorReading", "states health name imprecision units"
@@ -39,7 +39,7 @@ def json_identity(data):
 
 @pytest.fixture(name="fc_conf")
 def fc_conf_fixture():
-    return FileCacheConfigurator("/dev/null", FetcherType.NONE)
+    return FileCacheConfigurer("/dev/null", FetcherType.NONE)
 
 
 @pytest.fixture(name="fc_agent")

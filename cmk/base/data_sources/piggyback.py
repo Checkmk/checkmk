@@ -16,10 +16,10 @@ from cmk.fetchers import FetcherType
 import cmk.base.config as config
 
 from ._abstract import Mode
-from .agent import AgentConfigurator, AgentHostSections, AgentSummarizer
+from .agent import AgentSource, AgentHostSections, AgentSummarizer
 
 
-class PiggybackConfigurator(AgentConfigurator):
+class PiggybackSource(AgentSource):
     def __init__(
         self,
         hostname: HostName,
@@ -33,7 +33,7 @@ class PiggybackConfigurator(AgentConfigurator):
             mode=mode,
             source_type=SourceType.HOST,
             fetcher_type=FetcherType.PIGGYBACK,
-            description=PiggybackConfigurator._make_description(hostname),
+            description=PiggybackSource._make_description(hostname),
             id_="piggyback",
             cpu_tracking_id="agent",
             main_data_source=False,
@@ -58,22 +58,22 @@ class PiggybackConfigurator(AgentConfigurator):
 
 
 class PiggybackSummarizer(AgentSummarizer):
-    def __init__(self, exit_spec: config.ExitSpec, configurator: PiggybackConfigurator):
+    def __init__(self, exit_spec: config.ExitSpec, source: PiggybackSource):
         super().__init__(exit_spec)
-        self.configurator = configurator
+        self.source = source
 
     def _summarize(self, host_sections: AgentHostSections) -> ServiceCheckResult:
         """Returns useful information about the data source execution
 
         Return only summary information in case there is piggyback data"""
 
-        if self.configurator.mode is not Mode.CHECKING:
+        if self.source.mode is not Mode.CHECKING:
             # Check_MK Discovery: Do not display information about piggyback files
             # and source status file
             return 0, '', []
 
         summary = self._summarize_impl()
-        if 'piggyback' in self.configurator.host_config.tags and not summary:
+        if 'piggyback' in self.source.host_config.tags and not summary:
             # Tag: 'Always use and expect piggback data'
             return 1, 'Missing data', []
 
@@ -85,10 +85,10 @@ class PiggybackSummarizer(AgentSummarizer):
     def _summarize_impl(self) -> ServiceCheckResult:
         states = [0]
         infotexts = set()
-        for origin in (self.configurator.hostname, self.configurator.ipaddress):
+        for origin in (self.source.hostname, self.source.ipaddress):
             for src in get_piggyback_raw_data(
                     origin if origin else "",
-                    self.configurator.time_settings,
+                    self.source.time_settings,
             ):
                 states.append(src.reason_status)
                 infotexts.add(src.reason)

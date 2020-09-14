@@ -16,7 +16,7 @@ from cmk.utils.type_defs import Result
 
 from cmk.base.data_sources._abstract import Mode
 from cmk.base.data_sources.agent import AgentHostSections, AgentSummarizerDefault
-from cmk.base.data_sources.tcp import TCPConfigurator
+from cmk.base.data_sources.tcp import TCPSource
 
 
 @pytest.fixture(name="mode", params=Mode)
@@ -38,10 +38,10 @@ def test_tcpdatasource_only_from(mode, monkeypatch, result, reported, rule):
     ts.set_option("agent_config", {"only_from": [rule]} if rule else {})
     config_cache = ts.apply(monkeypatch)
 
-    configurator = TCPConfigurator("hostname", "ipaddress", mode=mode)
+    source = TCPSource("hostname", "ipaddress", mode=mode)
     monkeypatch.setattr(config_cache, "host_extra_conf", lambda host, ruleset: ruleset)
 
-    summarizer = AgentSummarizerDefault(configurator.exit_spec, configurator)
+    summarizer = AgentSummarizerDefault(source.exit_spec, source)
     assert summarizer._sub_result_only_from({"onlyfrom": reported}) == result
 
 
@@ -82,8 +82,8 @@ def test_tcpdatasource_restricted_address_mismatch(mode, monkeypatch,
         ])
 
     ts.apply(monkeypatch)
-    configurator = TCPConfigurator(hostname, "ipaddress", mode=mode)
-    summarizer = AgentSummarizerDefault(configurator.exit_spec, configurator)
+    source = TCPSource(hostname, "ipaddress", mode=mode)
+    summarizer = AgentSummarizerDefault(source.exit_spec, source)
 
     assert summarizer._sub_result_only_from({"onlyfrom": only_from}) == result
 
@@ -93,9 +93,9 @@ def test_attribute_defaults(mode, monkeypatch):
     hostname = "testhost"
     Scenario().add_host(hostname).apply(monkeypatch)
 
-    configurator = TCPConfigurator(hostname, ipaddress, mode=mode)
-    configurator.file_cache.path = Path("/my/path/")
-    assert configurator.configure_fetcher() == {
+    source = TCPSource(hostname, ipaddress, mode=mode)
+    source.file_cache.path = Path("/my/path/")
+    assert source.configure_fetcher() == {
         "file_cache": {
             "disabled": False,
             "max_age": None,
@@ -112,9 +112,9 @@ def test_attribute_defaults(mode, monkeypatch):
         },
         "use_only_cache": False,
     }
-    assert configurator.description == "TCP: %s:%s" % (ipaddress, 6556)
-    assert configurator.id == "agent"
-    assert configurator.file_cache.maybe is False
+    assert source.description == "TCP: %s:%s" % (ipaddress, 6556)
+    assert source.id == "agent"
+    assert source.file_cache.maybe is False
 
 
 class TestSummaryResult:
@@ -126,13 +126,13 @@ class TestSummaryResult:
     def test_defaults(self, ipaddress, mode, monkeypatch):
         hostname = "testhost"
         Scenario().add_host(hostname).apply(monkeypatch)
-        configurator = TCPConfigurator(
+        source = TCPSource(
             hostname,
             ipaddress,
             mode=mode,
         )
 
-        assert configurator.summarize(Result.OK(AgentHostSections())) == (
+        assert source.summarize(Result.OK(AgentHostSections())) == (
             0,
             "Version: unknown, OS: unknown",
             [],

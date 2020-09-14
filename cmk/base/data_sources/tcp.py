@@ -15,10 +15,10 @@ import cmk.base.ip_lookup as ip_lookup
 from cmk.base.config import HostConfig
 
 from ._abstract import Mode
-from .agent import AgentConfigurator, AgentSummarizerDefault
+from .agent import AgentSource, AgentSummarizerDefault
 
 
-class TCPConfigurator(AgentConfigurator):
+class TCPSource(AgentSource):
     use_only_cache = False
 
     def __init__(
@@ -35,7 +35,7 @@ class TCPConfigurator(AgentConfigurator):
             mode=mode,
             source_type=SourceType.HOST,
             fetcher_type=FetcherType.TCP,
-            description=TCPConfigurator._make_description(hostname, ipaddress),
+            description=TCPSource._make_description(hostname, ipaddress),
             id_="agent",
             cpu_tracking_id="agent",
             main_data_source=main_data_source,

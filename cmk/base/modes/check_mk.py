@@ -117,7 +117,7 @@ modes.register_general_option(
 
 
 def option_no_cache() -> None:
-    cmk.base.data_sources.FileCacheConfigurator.disabled = True
+    cmk.base.data_sources.FileCacheConfigurer.disabled = True
 
 
 modes.register_general_option(
@@ -129,7 +129,7 @@ modes.register_general_option(
 
 
 def option_no_tcp() -> None:
-    data_sources.tcp.TCPConfigurator.use_only_cache = True
+    data_sources.tcp.TCPSource.use_only_cache = True
 
 
 # TODO: Check whether or not this is used only for -I as written in the help.
@@ -397,22 +397,22 @@ def mode_dump_agent(hostname: HostName) -> None:
         # Show errors of problematic data sources
         has_errors = False
         mode = data_sources.Mode.CHECKING
-        for configurator in data_sources.make_configurators(
+        for source in data_sources.make_sources(
                 host_config,
                 ipaddress,
                 mode=mode,
         ):
-            configurator.file_cache.max_age = config.check_max_cachefile_age
-            if not isinstance(configurator, data_sources.agent.AgentConfigurator):
+            source.file_cache.max_age = config.check_max_cachefile_age
+            if not isinstance(source, data_sources.agent.AgentSource):
                 continue
 
-            raw_data = configurator.fetch()
-            host_sections = configurator.parse(raw_data)
-            source_state, source_output, _source_perfdata = configurator.summarize(host_sections)
+            raw_data = source.fetch()
+            host_sections = source.parse(raw_data)
+            source_state, source_output, _source_perfdata = source.summarize(host_sections)
             if source_state != 0:
                 console.error(
                     "ERROR [%s]: %s\n",
-                    configurator.id,
+                    source.id,
                     ensure_str(source_output),
                 )
                 has_errors = True
@@ -1262,7 +1262,7 @@ def mode_inventory(options: Dict, args: List[str]) -> None:
     else:
         # No hosts specified: do all hosts and force caching
         hostnames = sorted(config_cache.all_active_hosts())
-        data_sources.FileCacheConfigurator.reset_maybe()
+        data_sources.FileCacheConfigurer.reset_maybe()
         console.verbose("Doing HW/SW inventory on all hosts\n")
 
     if "force" in options:
@@ -1525,7 +1525,7 @@ def mode_discover(options: DiscoverOptions, args: List[str]) -> None:
         # by default. Otherwise Check_MK would have to connect to ALL hosts.
         # This will make Check_MK only contact hosts in case the cache is not
         # new enough.
-        data_sources.FileCacheConfigurator.reset_maybe()
+        data_sources.FileCacheConfigurer.reset_maybe()
 
     discovery.do_discovery(set(hostnames), options.get("checks"), options["discover"] == 1)
 

@@ -302,7 +302,7 @@ def _get_rediscovery_mode(params: Dict) -> str:
 def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[CheckPluginName]],
                  arg_only_new: bool) -> None:
     config_cache = config.get_config_cache()
-    use_caches = not arg_hostnames or data_sources.FileCacheConfigurator.maybe
+    use_caches = not arg_hostnames or data_sources.FileCacheConfigurer.maybe
     on_error = "raise" if cmk.utils.debug.enabled() else "warn"
 
     host_names = _preprocess_hostnames(arg_hostnames, config_cache)
@@ -321,7 +321,7 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
                 selected_raw_sections = agent_based_register.get_relevant_raw_sections(
                     check_plugin_names=check_plugin_names, consider_inventory_plugins=False)
 
-            sources = data_sources.make_configurators(
+            sources = data_sources.make_sources(
                 host_config,
                 ipaddress,
                 mode=data_sources.Mode.DISCOVERY,
@@ -529,7 +529,7 @@ def discover_on_host(
         else:
             ipaddress = ip_lookup.lookup_ip_address(host_config)
 
-        sources = data_sources.make_configurators(
+        sources = data_sources.make_sources(
             host_config,
             ipaddress,
             mode=data_sources.Mode.DISCOVERY,
@@ -681,13 +681,13 @@ def check_discovery(
 
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:
     # 1. use caches as default:
-    #    - Set FileCacheConfigurator.maybe = True (set max_cachefile_age, else 0)
-    #    - Set FileCacheConfigurator.use_outdated = True
+    #    - Set FileCacheConfigurer.maybe = True (set max_cachefile_age, else 0)
+    #    - Set FileCacheConfigurer.use_outdated = True
     # 2. Then these settings are used to read cache file or not
     # 3. If params['inventory_check_do_scan'] = True in 'Periodic service discovery'
     #    then caching is disabled, but only for SNMP data sources:
-    #    - FileCacheConfigurator.snmp_disabled = True
-    #      -> FileCacheConfigurator.disabled = True
+    #    - FileCacheConfigurer.snmp_disabled = True
+    #      -> FileCacheConfigurer.disabled = True
     #    For agent-based data sources we do not disable cache because of some special
     #    cases (eg. logwatch) in order to prevent stealing data (log lines etc.)
 
@@ -703,7 +703,7 @@ def check_discovery(
     if ipaddress is None and not host_config.is_cluster:
         ipaddress = ip_lookup.lookup_ip_address(host_config)
 
-    sources = data_sources.make_configurators(
+    sources = data_sources.make_sources(
         host_config,
         ipaddress,
         mode=data_sources.Mode.DISCOVERY,
@@ -715,7 +715,7 @@ def check_discovery(
             disable_snmp_caches=params['inventory_check_do_scan'],
         )
 
-    use_caches = data_sources.FileCacheConfigurator.maybe
+    use_caches = data_sources.FileCacheConfigurer.maybe
     multi_host_sections = MultiHostSections()
     result = data_sources.update_host_sections(
         multi_host_sections,
@@ -770,13 +770,13 @@ def check_discovery(
         infotexts.append(u"rediscovery scheduled")
 
     # Add data source information to check results
-    for configurator, host_sections in result:
-        source_state, source_output, _source_perfdata = configurator.summarize(host_sections)
+    for source, host_sections in result:
+        source_state, source_output, _source_perfdata = source.summarize(host_sections)
         # Do not output informational (state = 0) things.  These information
         # are shown by the "Check_MK" service
         if source_state != 0:
             status = max(status, source_state)
-            infotexts.append(u"[%s] %s" % (configurator.id, source_output))
+            infotexts.append(u"[%s] %s" % (source.id, source_output))
 
     return status, infotexts, long_infotexts, perfdata
 
@@ -1286,16 +1286,16 @@ def _discover_services(
 
 
 def _configure_sources(
-    configurator: data_sources.ABCConfigurator,
+    source: data_sources.ABCSource,
     *,
     on_error: str,
     disable_snmp_caches: bool = False,
 ):
-    if isinstance(configurator, data_sources.snmp.SNMPConfigurator):
-        configurator.on_snmp_scan_error = on_error
-        configurator.use_snmpwalk_cache = False
-        configurator.ignore_check_interval = True
-        configurator.file_cache.snmp_disabled = disable_snmp_caches
+    if isinstance(source, data_sources.snmp.SNMPSource):
+        source.on_snmp_scan_error = on_error
+        source.use_snmpwalk_cache = False
+        source.ignore_check_interval = True
+        source.file_cache.snmp_disabled = disable_snmp_caches
 
 
 def _execute_discovery(
@@ -1588,7 +1588,7 @@ def get_check_preview(host_name: HostName, use_caches: bool,
 
     ip_address = None if host_config.is_cluster else ip_lookup.lookup_ip_address(host_config)
 
-    sources = data_sources.make_configurators(
+    sources = data_sources.make_sources(
         host_config,
         ip_address,
         mode=data_sources.Mode.DISCOVERY,

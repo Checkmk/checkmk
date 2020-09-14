@@ -50,9 +50,9 @@ from ._cache import SectionStore
 
 __all__ = [
     "ABCHostSections",
-    "ABCConfigurator",
+    "ABCSource",
     "ABCChecker",
-    "FileCacheConfigurator",
+    "FileCacheConfigurer",
     "Mode",
     "set_cache_opts",
 ]
@@ -191,11 +191,11 @@ def set_cache_opts(use_caches: bool) -> None:
     # TODO check these settings vs.
     # cmk/base/automations/check_mk.py:_set_cache_opts_of_data_sources
     if use_caches:
-        FileCacheConfigurator.maybe = True
-        FileCacheConfigurator.use_outdated = True
+        FileCacheConfigurer.maybe = True
+        FileCacheConfigurer.use_outdated = True
 
 
-class FileCacheConfigurator:
+class FileCacheConfigurer:
     """Hold the configuration to FileCache."""
 
     # TODO: Clean these options up! We need to change all call sites to use
@@ -212,8 +212,8 @@ class FileCacheConfigurator:
     # Set by the code in different situations where we recommend, but not enforce,
     # to use the cache. The user can always use "--cache" to override this.
     # It's used to 'transport' caching opt between modules, eg:
-    # - modes: FileCacheConfigurator.maybe = use_caches
-    # - discovery: use_caches = FileCacheConfigurator.maybe
+    # - modes: FileCacheConfigurer.maybe = use_caches
+    # - discovery: use_caches = FileCacheConfigurer.maybe
     maybe = False
     # Is set by the "--cache" command line. This makes the caching logic use
     # cache files that are even older than the max_cachefile_age of the host/mode.
@@ -252,7 +252,7 @@ class FileCacheConfigurator:
         }
 
 
-class ABCConfigurator(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
+class ABCSource(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
     """Hold the configuration to fetchers and checkers.
 
     At best, this should only hold static data, that is, every
@@ -292,7 +292,7 @@ class ABCConfigurator(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         if not persisted_section_dir:
             persisted_section_dir = Path(cmk.utils.paths.var_dir) / "persisted_sections" / self.id
 
-        self.file_cache = FileCacheConfigurator(
+        self.file_cache = FileCacheConfigurer(
             cache_dir / self.hostname,
             self.fetcher_type,
             simulation=config.simulation_mode,
@@ -418,32 +418,32 @@ class ABCChecker(Generic[TRawData, TSections, TPersistedSections, THostSections]
 
     def __init__(
         self,
-        configurator: ABCConfigurator,
+        source: ABCSource,
     ) -> None:
         super().__init__()
-        self.configurator = configurator
-        self._logger = self.configurator._logger
+        self.source = source
+        self._logger = self.source._logger
         self._section_store: SectionStore[TPersistedSections] = SectionStore(
-            self.configurator.persisted_sections_file_path,
+            self.source.persisted_sections_file_path,
             self._logger,
         )
 
     def __repr__(self):
-        return "%s(%r)" % (type(self).__name__, self.configurator)
+        return "%s(%r)" % (type(self).__name__, self.source)
 
     @property
     def id(self) -> str:
-        return self.configurator.id
+        return self.source.id
 
     @property
     def _cpu_tracking_id(self) -> str:
-        return self.configurator.cpu_tracking_id
+        return self.source.cpu_tracking_id
 
     @cpu_tracking.track
     def check(self, raw_data: Result[TRawData, Exception]) -> Result[THostSections, Exception]:
         # WARNING: Do not call this function.  It is meant to disappear.
         try:
-            host_sections = self.configurator._make_parser().parse(raw_data)
+            host_sections = self.source._make_parser().parse(raw_data)
             if host_sections.is_err():
                 return host_sections
 

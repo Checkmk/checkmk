@@ -12,7 +12,7 @@ from cmk.utils.type_defs import Result
 
 from cmk.base.data_sources import Mode
 from cmk.base.data_sources.agent import AgentHostSections
-from cmk.base.data_sources.piggyback import PiggybackConfigurator
+from cmk.base.data_sources.piggyback import PiggybackSource
 
 
 @pytest.fixture(name="mode", params=(mode for mode in Mode if mode is not Mode.NONE))
@@ -25,10 +25,10 @@ def test_attribute_defaults(monkeypatch, ipaddress, mode):
     hostname = "testhost"
     Scenario().add_host(hostname).apply(monkeypatch)
 
-    configurator = PiggybackConfigurator(hostname, ipaddress, mode=mode)
-    assert configurator.hostname == hostname
-    assert configurator.ipaddress == ipaddress
-    assert configurator.mode is mode
-    assert configurator.description.startswith("Process piggyback data from")
-    assert configurator.summarize(Result.OK(AgentHostSections())) == (0, "", [])
-    assert configurator.id == "piggyback"
+    source = PiggybackSource(hostname, ipaddress, mode=mode)
+    assert source.hostname == hostname
+    assert source.ipaddress == ipaddress
+    assert source.mode is mode
+    assert source.description.startswith("Process piggyback data from")
+    assert source.summarize(Result.OK(AgentHostSections())) == (0, "", [])
+    assert source.id == "piggyback"

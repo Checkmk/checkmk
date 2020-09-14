@@ -168,7 +168,7 @@ def do_check(
         # see which raw sections we may need
         selected_raw_sections = _get_relevant_raw_sections(services_to_fetch, host_config)
 
-        sources = data_sources.make_configurators(
+        sources = data_sources.make_sources(
             host_config,
             ipaddress,
             mode=data_sources.Mode.CHECKING,
@@ -209,11 +209,11 @@ def do_check(
         if _submit_to_core:
             item_state.save(hostname)
 
-        for configurator, host_sections in result:
-            source_state, source_output, source_perfdata = configurator.summarize(host_sections)
+        for source, host_sections in result:
+            source_state, source_output, source_perfdata = source.summarize(host_sections)
             if source_output != "":
                 status = max(status, source_state)
-                infotexts.append("[%s] %s" % (configurator.id, source_output))
+                infotexts.append("[%s] %s" % (source.id, source_output))
                 perfdata.extend([_convert_perf_data(p) for p in source_perfdata])
 
         if plugins_missing_data:

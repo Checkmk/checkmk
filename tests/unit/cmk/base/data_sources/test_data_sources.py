@@ -16,12 +16,12 @@ from cmk.base import check_table, config
 from cmk.base.api.agent_based.register import section_plugins
 from cmk.base.api.agent_based.type_defs import CheckPlugin
 from cmk.base.api.agent_based.utils import parse_to_string_table
-from cmk.base.data_sources import make_configurators, Mode
+from cmk.base.data_sources import make_sources, Mode
 from cmk.base.data_sources._data_sources import _make_piggybacked_sections
-from cmk.base.data_sources.piggyback import PiggybackConfigurator
-from cmk.base.data_sources.programs import DSProgramConfigurator, SpecialAgentConfigurator
-from cmk.base.data_sources.snmp import SNMPConfigurator
-from cmk.base.data_sources.tcp import TCPConfigurator
+from cmk.base.data_sources.piggyback import PiggybackSource
+from cmk.base.data_sources.programs import DSProgramSource, SpecialAgentSource
+from cmk.base.data_sources.snmp import SNMPSource
+from cmk.base.data_sources.tcp import TCPSource
 
 
 @pytest.fixture(name="mode", params=Mode)
@@ -45,13 +45,13 @@ def make_scenario(hostname, tags):
 
 
 @pytest.mark.parametrize("hostname, tags, sources", [
-    ("agent-host", {}, [TCPConfigurator, PiggybackConfigurator]),
+    ("agent-host", {}, [TCPSource, PiggybackSource]),
     (
         "ping-host",
         {
             "agent": "no-agent"
         },
-        [PiggybackConfigurator],
+        [PiggybackSource],
     ),
     (
         "snmp-host",
@@ -59,7 +59,7 @@ def make_scenario(hostname, tags):
             "agent": "no-agent",
             "snmp_ds": "snmp-v2"
         },
-        [SNMPConfigurator, PiggybackConfigurator],
+        [SNMPSource, PiggybackSource],
     ),
     (
         "snmp-host",
@@ -67,7 +67,7 @@ def make_scenario(hostname, tags):
             "agent": "no-agent",
             "snmp_ds": "snmp-v1"
         },
-        [SNMPConfigurator, PiggybackConfigurator],
+        [SNMPSource, PiggybackSource],
     ),
     (
         "dual-host",
@@ -75,24 +75,24 @@ def make_scenario(hostname, tags):
             "agent": "cmk-agent",
             "snmp_ds": "snmp-v2"
         },
-        [TCPConfigurator, SNMPConfigurator, PiggybackConfigurator],
+        [TCPSource, SNMPSource, PiggybackSource],
     ),
     (
         "all-agents-host",
         {
             "agent": "all-agents"
         },
-        [DSProgramConfigurator, SpecialAgentConfigurator, PiggybackConfigurator],
+        [DSProgramSource, SpecialAgentSource, PiggybackSource],
     ),
     (
         "all-special-host",
         {
             "agent": "special-agents"
         },
-        [SpecialAgentConfigurator, PiggybackConfigurator],
+        [SpecialAgentSource, PiggybackSource],
     ),
 ])
-def test_host_config_creates_passing_source_configurators(
+def test_host_config_creates_passing_source_sources(
     monkeypatch,
     hostname,
     mode,
@@ -105,7 +105,7 @@ def test_host_config_creates_passing_source_configurators(
     host_config = config.HostConfig.make_host_config(hostname)
     ipaddress = "127.0.0.1"
 
-    assert [type(c) for c in make_configurators(
+    assert [type(c) for c in make_sources(
         host_config,
         ipaddress,
         mode=mode,

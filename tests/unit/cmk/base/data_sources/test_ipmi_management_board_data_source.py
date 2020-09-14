@@ -15,7 +15,7 @@ import cmk.base.ip_lookup as ip_lookup
 from cmk.base.data_sources import Mode
 from cmk.base.data_sources.agent import AgentHostSections
 from cmk.base.data_sources.ipmi import (
-    IPMIConfigurator,
+    IPMISource,
     IPMISummarizer,
 )
 
@@ -32,15 +32,15 @@ def test_attribute_defaults(mode, monkeypatch):
     host_config = config.get_config_cache().get_host_config(hostname)
     ipaddress = ip_lookup.lookup_mgmt_board_ip_address(host_config)
 
-    configurator = IPMIConfigurator(hostname, ipaddress, mode=mode)
-    assert configurator.hostname == hostname
-    assert configurator.ipaddress == ipaddress
-    assert configurator.mode is mode
-    assert configurator.description == "Management board - IPMI"
-    assert configurator.source_type is SourceType.MANAGEMENT
-    assert configurator.summarize(Result.OK(AgentHostSections())) == (0, "Version: unknown", [])
-    assert configurator.id == "mgmt_ipmi"
-    assert configurator.cpu_tracking_id == "mgmt_ipmi"
+    source = IPMISource(hostname, ipaddress, mode=mode)
+    assert source.hostname == hostname
+    assert source.ipaddress == ipaddress
+    assert source.mode is mode
+    assert source.description == "Management board - IPMI"
+    assert source.source_type is SourceType.MANAGEMENT
+    assert source.summarize(Result.OK(AgentHostSections())) == (0, "Version: unknown", [])
+    assert source.id == "mgmt_ipmi"
+    assert source.cpu_tracking_id == "mgmt_ipmi"
 
 
 def test_summarizer():
@@ -62,24 +62,24 @@ def test_ipmi_ipaddress_from_mgmt_board(mode, monkeypatch):
         },
     })
 
-    configurator = IPMIConfigurator(hostname, ipaddress, mode=mode)
-    assert configurator.host_config.management_address == ipaddress
+    source = IPMISource(hostname, ipaddress, mode=mode)
+    assert source.host_config.management_address == ipaddress
 
 
 def test_description_with_ipaddress(monkeypatch):
-    assert IPMIConfigurator._make_description(
+    assert IPMISource._make_description(
         "1.2.3.4",
         {},
     ) == "Management board - IPMI (Address: 1.2.3.4)"
 
 
 def test_description_with_credentials(monkeypatch):
-    assert IPMIConfigurator._make_description(
+    assert IPMISource._make_description(
         None, {"username": "Bobby"}) == "Management board - IPMI (User: Bobby)"
 
 
 def test_description_with_ipaddress_and_credentials(monkeypatch):
-    assert IPMIConfigurator._make_description(
+    assert IPMISource._make_description(
         "1.2.3.4",
         {"username": "Bobby"},
     ) == "Management board - IPMI (Address: 1.2.3.4, User: Bobby)"

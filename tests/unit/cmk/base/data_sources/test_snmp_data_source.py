@@ -19,7 +19,7 @@ import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.data_sources import Mode
 from cmk.base.data_sources.agent import AgentHostSections
-from cmk.base.data_sources.snmp import SNMPConfigurator
+from cmk.base.data_sources.snmp import SNMPSource
 from cmk.base.exceptions import MKIPAddressLookupError
 
 
@@ -43,9 +43,9 @@ def scenario_fixture(hostname, monkeypatch):
     Scenario().add_host(hostname).apply(monkeypatch)
 
 
-@pytest.fixture(name="configurator")
-def configurator_fixture(scenario, hostname, ipaddress, mode):
-    return SNMPConfigurator.snmp(hostname, ipaddress, mode=mode)
+@pytest.fixture(name="source")
+def source_fixture(scenario, hostname, ipaddress, mode):
+    return SNMPSource.snmp(hostname, ipaddress, mode=mode)
 
 
 def test_snmp_ipaddress_from_mgmt_board_unresolvable(hostname, monkeypatch):
@@ -63,33 +63,32 @@ def test_snmp_ipaddress_from_mgmt_board_unresolvable(hostname, monkeypatch):
     assert ip_lookup.lookup_mgmt_board_ip_address(host_config) is None
 
 
-def test_attribute_defaults(configurator, hostname, ipaddress, monkeypatch):
-    assert configurator.hostname == hostname
-    assert configurator.ipaddress == ipaddress
-    assert configurator.id == "snmp"
-    assert configurator.cpu_tracking_id == "snmp"
+def test_attribute_defaults(source, hostname, ipaddress, monkeypatch):
+    assert source.hostname == hostname
+    assert source.ipaddress == ipaddress
+    assert source.id == "snmp"
+    assert source.cpu_tracking_id == "snmp"
+    assert source.on_snmp_scan_error == "raise"
 
-    assert configurator.on_snmp_scan_error == "raise"
 
-
-def test_description_with_ipaddress(configurator, monkeypatch):
+def test_description_with_ipaddress(source, monkeypatch):
     default = "SNMP (Community: 'public', Bulk walk: no, Port: 161, Inline: no)"
-    assert configurator.description == default
+    assert source.description == default
 
 
-class TestSNMPConfigurator_SNMP:
+class TestSNMPSource_SNMP:
     def test_attribute_defaults(self, mode, monkeypatch):
         hostname = "testhost"
         ipaddress = "1.2.3.4"
 
         Scenario().add_host(hostname).apply(monkeypatch)
 
-        configurator = SNMPConfigurator.snmp(hostname, ipaddress, mode=mode)
-        assert configurator.description == (
+        source = SNMPSource.snmp(hostname, ipaddress, mode=mode)
+        assert source.description == (
             "SNMP (Community: 'public', Bulk walk: no, Port: 161, Inline: no)")
 
 
-class TestSNMPConfigurator_MGMT:
+class TestSNMPSource_MGMT:
     def test_attribute_defaults(self, mode, monkeypatch):
         hostname = "testhost"
         ipaddress = "1.2.3.4"
@@ -107,14 +106,13 @@ class TestSNMPConfigurator_MGMT:
         )
         ts.apply(monkeypatch)
 
-        configurator = SNMPConfigurator.management_board(
+        source = SNMPSource.management_board(
             hostname,
             ipaddress,
             mode=mode,
         )
-        assert configurator.description == (
-            "Management board - SNMP "
-            "(Community: 'public', Bulk walk: no, Port: 161, Inline: no)")
+        assert source.description == ("Management board - SNMP "
+                                      "(Community: 'public', Bulk walk: no, Port: 161, Inline: no)")
 
 
 class TestSNMPSummaryResult:
@@ -135,7 +133,7 @@ class TestSNMPSummaryResult:
 
     @pytest.fixture
     def source(self, hostname, mode):
-        return SNMPConfigurator(
+        return SNMPSource(
             hostname,
             "1.2.3.4",
             mode=mode,
@@ -178,16 +176,16 @@ def discovery_rulesets_fixture(monkeypatch, hostname):
     )
 
 
-class TestSNMPConfigurator_make_snmp_scan_sections:
+class TestSNMPSource_make_snmp_scan_sections:
     @staticmethod
-    def do_monkeypatch_and_make_configurator(monkeypatch, plugin, hostname, ipaddress):
+    def do_monkeypatch_and_make_source(monkeypatch, plugin, hostname, ipaddress):
         monkeypatch.setattr(
             register,
             'iter_all_snmp_sections',
             lambda: [plugin],
         )
         Scenario().add_host(hostname).apply(monkeypatch)
-        return SNMPConfigurator.snmp(hostname, ipaddress, mode=Mode.DISCOVERY)
+        return SNMPSource.snmp(hostname, ipaddress, mode=Mode.DISCOVERY)
 
     def test_rule_indipendent(
         self,
@@ -206,13 +204,13 @@ class TestSNMPConfigurator_make_snmp_scan_sections:
             ],
             detect_spec=SNMPDetectSpec([[('.1.2.3.4.5', 'Foo.*', True)]]),
         )
-        snmp_configurator = self.do_monkeypatch_and_make_configurator(
+        source = self.do_monkeypatch_and_make_source(
             monkeypatch,
             plugin,
             hostname,
             ipaddress,
         )
-        assert snmp_configurator._make_snmp_scan_sections() == [(plugin.name, plugin.detect_spec)]
+        assert source._make_snmp_scan_sections() == [(plugin.name, plugin.detect_spec)]
 
     def test_rule_dependent(
         self,
@@ -244,10 +242,10 @@ class TestSNMPConfigurator_make_snmp_scan_sections:
                 evaluator,
             ),
         )
-        snmp_configurator = self.do_monkeypatch_and_make_configurator(
+        source = self.do_monkeypatch_and_make_source(
             monkeypatch,
             plugin,
             hostname,
             ipaddress,
         )
-        assert snmp_configurator._make_snmp_scan_sections() == [(plugin.name, detect_spec_1)]
+        assert source._make_snmp_scan_sections() == [(plugin.name, detect_spec_1)]

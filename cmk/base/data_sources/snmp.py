@@ -30,7 +30,7 @@ from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.config import SelectedRawSections
 
 from ._abstract import (
-    ABCConfigurator,
+    ABCSource,
     ABCChecker,
     ABCHostSections,
     ABCParser,
@@ -78,7 +78,7 @@ class CachedSNMPDetector:
         return self._cached_result
 
 
-class SNMPConfigurator(ABCConfigurator[SNMPRawData, SNMPHostSections]):
+class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
     def __init__(
         self,
         hostname: HostName,
@@ -99,7 +99,7 @@ class SNMPConfigurator(ABCConfigurator[SNMPRawData, SNMPHostSections]):
             mode=mode,
             source_type=source_type,
             fetcher_type=FetcherType.SNMP,
-            description=SNMPConfigurator._make_description(hostname, ipaddress, title=title),
+            description=SNMPSource._make_description(hostname, ipaddress, title=title),
             default_raw_data={},
             default_host_sections=SNMPHostSections(),
             id_=id_,
@@ -139,7 +139,7 @@ class SNMPConfigurator(ABCConfigurator[SNMPRawData, SNMPHostSections]):
         ipaddress: HostAddress,
         *,
         mode: Mode,
-    ) -> "SNMPConfigurator":
+    ) -> "SNMPSource":
         assert ipaddress is not None
         return cls(
             hostname,
@@ -158,7 +158,7 @@ class SNMPConfigurator(ABCConfigurator[SNMPRawData, SNMPHostSections]):
         ipaddress: Optional[HostAddress],
         *,
         mode: Mode,
-    ) -> "SNMPConfigurator":
+    ) -> "SNMPSource":
         if ipaddress is None:
             raise TypeError(ipaddress)
         return cls(
@@ -248,7 +248,7 @@ class SNMPConfigurator(ABCConfigurator[SNMPRawData, SNMPHostSections]):
 
         section_names -= self.host_config.disabled_snmp_sections()
 
-        for section_name in SNMPConfigurator._sort_section_names(section_names):
+        for section_name in SNMPSource._sort_section_names(section_names):
             plugin = agent_based_register.get_section_plugin(section_name)
             if not isinstance(plugin, SNMPSectionPlugin):
                 self._logger.debug("%s: No such section definition", section_name)

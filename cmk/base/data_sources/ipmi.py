@@ -21,10 +21,10 @@ from cmk.base.config import HostConfig, IPMICredentials
 from cmk.base.exceptions import MKAgentError
 
 from ._abstract import Mode
-from .agent import AgentConfigurator, AgentHostSections, AgentSummarizer
+from .agent import AgentSource, AgentHostSections, AgentSummarizer
 
 
-class IPMIConfigurator(AgentConfigurator):
+class IPMISource(AgentSource):
     def __init__(
         self,
         hostname: HostName,
@@ -38,7 +38,7 @@ class IPMIConfigurator(AgentConfigurator):
             mode=mode,
             source_type=SourceType.MANAGEMENT,
             fetcher_type=FetcherType.IPMI,
-            description=IPMIConfigurator._make_description(
+            description=IPMISource._make_description(
                 ipaddress,
                 cast(IPMICredentials,
                      HostConfig.make_host_config(hostname).management_credentials),

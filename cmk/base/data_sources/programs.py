@@ -19,10 +19,10 @@ import cmk.base.core_config as core_config
 from cmk.base.config import SpecialAgentConfiguration
 
 from ._abstract import Mode
-from .agent import AgentConfigurator, AgentSummarizerDefault
+from .agent import AgentSource, AgentSummarizerDefault
 
 
-class ProgramConfigurator(AgentConfigurator):
+class ProgramSource(AgentSource):
     def __init__(
         self,
         hostname: HostName,
@@ -41,7 +41,7 @@ class ProgramConfigurator(AgentConfigurator):
             mode=mode,
             source_type=SourceType.HOST,
             fetcher_type=FetcherType.PROGRAM,
-            description=ProgramConfigurator._make_description(
+            description=ProgramSource._make_description(
                 cmdline,
                 stdin,
             ),
@@ -61,8 +61,8 @@ class ProgramConfigurator(AgentConfigurator):
         main_data_source: bool = False,
         special_agent_id: str,
         params: Dict,
-    ) -> "SpecialAgentConfigurator":
-        return SpecialAgentConfigurator(
+    ) -> "SpecialAgentSource":
+        return SpecialAgentSource(
             hostname,
             ipaddress,
             mode=mode,
@@ -79,8 +79,8 @@ class ProgramConfigurator(AgentConfigurator):
         mode: Mode,
         main_data_source: bool = False,
         template: str,
-    ) -> "DSProgramConfigurator":
-        return DSProgramConfigurator(
+    ) -> "DSProgramSource":
+        return DSProgramSource(
             hostname,
             ipaddress,
             mode=mode,
@@ -107,7 +107,7 @@ class ProgramConfigurator(AgentConfigurator):
         return "\n".join(response)
 
 
-class DSProgramConfigurator(ProgramConfigurator):
+class DSProgramSource(ProgramSource):
     def __init__(
         self,
         hostname: HostName,
@@ -124,7 +124,7 @@ class DSProgramConfigurator(ProgramConfigurator):
             id_="agent",
             cpu_tracking_id="ds",
             main_data_source=main_data_source,
-            cmdline=DSProgramConfigurator._translate(
+            cmdline=DSProgramSource._translate(
                 template,
                 hostname,
                 ipaddress,
@@ -139,8 +139,8 @@ class DSProgramConfigurator(ProgramConfigurator):
         ipaddress: Optional[HostAddress],
     ) -> str:
         host_config = config.HostConfig.make_host_config(hostname)
-        return DSProgramConfigurator._translate_host_macros(
-            DSProgramConfigurator._translate_legacy_macros(cmd, hostname, ipaddress),
+        return DSProgramSource._translate_host_macros(
+            DSProgramSource._translate_legacy_macros(cmd, hostname, ipaddress),
             host_config,
         )
 
@@ -174,7 +174,7 @@ class DSProgramConfigurator(ProgramConfigurator):
         return ensure_str(core_config.replace_macros(cmd, macros))
 
 
-class SpecialAgentConfigurator(ProgramConfigurator):
+class SpecialAgentSource(ProgramSource):
     def __init__(
         self,
         hostname: HostName,
@@ -192,13 +192,13 @@ class SpecialAgentConfigurator(ProgramConfigurator):
             id_="special_%s" % special_agent_id,
             cpu_tracking_id="ds",
             main_data_source=main_data_source,
-            cmdline=SpecialAgentConfigurator._make_cmdline(
+            cmdline=SpecialAgentSource._make_cmdline(
                 hostname,
                 ipaddress,
                 special_agent_id,
                 params,
             ),
-            stdin=SpecialAgentConfigurator._make_stdin(
+            stdin=SpecialAgentSource._make_stdin(
                 hostname,
                 ipaddress,
                 special_agent_id,
@@ -215,8 +215,8 @@ class SpecialAgentConfigurator(ProgramConfigurator):
         special_agent_id: str,
         params: Dict,
     ) -> str:
-        path = SpecialAgentConfigurator._make_source_path(special_agent_id)
-        args = SpecialAgentConfigurator._make_source_args(
+        path = SpecialAgentSource._make_source_path(special_agent_id)
+        args = SpecialAgentSource._make_source_args(
             hostname,
             ipaddress,
             special_agent_id,

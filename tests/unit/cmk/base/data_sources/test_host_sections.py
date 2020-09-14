@@ -33,16 +33,16 @@ from cmk.base.data_sources import (
     ABCHostSections,
     _data_sources,
     update_host_sections,
-    make_configurators,
+    make_sources,
     make_nodes,
     Mode,
 )
 from cmk.base.data_sources.agent import AgentHostSections
 from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
-from cmk.base.data_sources.piggyback import PiggybackConfigurator
-from cmk.base.data_sources.programs import ProgramConfigurator
-from cmk.base.data_sources.snmp import SNMPConfigurator, SNMPHostSections, CachedSNMPDetector
-from cmk.base.data_sources.tcp import TCPConfigurator
+from cmk.base.data_sources.piggyback import PiggybackSource
+from cmk.base.data_sources.programs import ProgramSource
+from cmk.base.data_sources.snmp import SNMPSource, SNMPHostSections, CachedSNMPDetector
+from cmk.base.data_sources.tcp import TCPSource
 
 _TestSection = collections.namedtuple(
     "TestSection",
@@ -457,10 +457,8 @@ class TestMakeHostSectionsHosts:
             "check",
             lambda self, raw_data: Result.OK(
                 DummyHostSection(
-                    sections={
-                        SectionName("section_name_%s" % self.configurator.hostname):
-                            [["section_content"]]
-                    },
+                    sections=
+                    {SectionName("section_name_%s" % self.source.hostname): [["section_content"]]},
                     cache_info={},
                     piggybacked_raw_data={},
                     persisted_sections="",
@@ -525,7 +523,7 @@ class TestMakeHostSectionsHosts:
                 ipaddress,
                 mode=mode,
                 sources=[
-                    SNMPConfigurator.snmp(
+                    SNMPSource.snmp(
                         hostname,
                         ipaddress,
                         mode=mode,
@@ -550,18 +548,18 @@ class TestMakeHostSectionsHosts:
     @pytest.mark.parametrize(
         "source",
         [
-            lambda hostname, ipaddress, *, mode: PiggybackConfigurator(
+            lambda hostname, ipaddress, *, mode: PiggybackSource(
                 hostname,
                 ipaddress,
                 mode=mode,
             ),
-            lambda hostname, ipaddress, *, mode: ProgramConfigurator.ds(
+            lambda hostname, ipaddress, *, mode: ProgramSource.ds(
                 hostname,
                 ipaddress,
                 mode=mode,
                 template="",
             ),
-            lambda hostname, ipaddress, *, mode: TCPConfigurator(
+            lambda hostname, ipaddress, *, mode: TCPSource(
                 hostname,
                 ipaddress,
                 mode=mode,
@@ -606,13 +604,13 @@ class TestMakeHostSectionsHosts:
         host_config,
     ):
         sources = [
-            ProgramConfigurator.ds(
+            ProgramSource.ds(
                 hostname,
                 ipaddress,
                 mode=mode,
                 template="",
             ),
-            TCPConfigurator(
+            TCPSource(
                 hostname,
                 ipaddress,
                 mode=mode,
@@ -648,11 +646,11 @@ class TestMakeHostSectionsHosts:
 
     def test_multiple_sources_from_different_hosts(self, hostname, ipaddress, mode, config_cache, host_config):
         sources = [
-            ProgramConfigurator.ds(hostname + "0", ipaddress,
+            ProgramSource.ds(hostname + "0", ipaddress,
                                                     mode=mode,
                                                    template="",),
-            TCPConfigurator(hostname + "1", ipaddress, mode=mode,),
-            TCPConfigurator(hostname + "2", ipaddress, mode=mode,),
+            TCPSource(hostname + "1", ipaddress, mode=mode,),
+            TCPSource(hostname + "2", ipaddress, mode=mode,),
         ]
 
         mhs = MultiHostSections()
@@ -705,7 +703,7 @@ class TestMakeHostSectionsClusters:
             ABCChecker,
             "check",
             lambda self, *args, **kwargs: Result.OK(DummyHostSection(
-                sections={SectionName("section_name_%s" % self.configurator.hostname): [["section_content"]]},
+                sections={SectionName("section_name_%s" % self.source.hostname): [["section_content"]]},
                 cache_info={},
                 piggybacked_raw_data={},
                 persisted_sections="",
@@ -841,7 +839,7 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
             host_config,
             address,
             mode=mode,
-            sources=make_configurators(host_config, address, mode=mode),
+            sources=make_sources(host_config, address, mode=mode),
         ),
         max_cachefile_age=host_config.max_cachefile_age,
         selected_raw_sections=None,

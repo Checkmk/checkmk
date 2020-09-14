@@ -11,7 +11,6 @@
 
 from functools import partial
 from pathlib import Path
-from typing import cast
 
 import pytest  # type: ignore[import]
 
@@ -30,8 +29,8 @@ import cmk.base.inventory_plugins
 import cmk.base.modes
 import cmk.base.modes.check_mk
 from cmk.base.data_sources import ABCChecker
-from cmk.base.data_sources.agent import AgentChecker
-from cmk.base.data_sources.snmp import SNMPConfigurator, SNMPChecker
+from cmk.base.data_sources.agent import AgentChecker, AgentSource
+from cmk.base.data_sources.snmp import SNMPSource
 
 # TODO: These tests need to be tuned, because they involve a lot of checks being loaded which takes
 # too much time.
@@ -106,20 +105,19 @@ def _patch_data_source(mocker, **kwargs):
     defaults.update(kwargs)
 
     def check(self, *args, callback, **kwargs):
-        assert self.configurator.file_cache.maybe == defaults["maybe"]
-        assert self.configurator.file_cache.disabled == defaults["disabled"]
-        assert self.configurator.file_cache.max_age == defaults["max_age"]
-        assert self.configurator.file_cache.use_outdated == defaults["use_outdated"]
+        assert self.source.file_cache.maybe == defaults["maybe"]
+        assert self.source.file_cache.disabled == defaults["disabled"]
+        assert self.source.file_cache.max_age == defaults["max_age"]
+        assert self.source.file_cache.use_outdated == defaults["use_outdated"]
 
-        if isinstance(self, AgentChecker):
-            assert (self._use_outdated_persisted_sections ==
+        if isinstance(self.source, AgentSource):
+            assert (AgentChecker._use_outdated_persisted_sections ==
                     defaults["_use_outdated_persisted_sections"])
 
-        elif isinstance(self, SNMPChecker):
-            configurator = cast(SNMPConfigurator, self.configurator)
-            assert configurator.on_snmp_scan_error == defaults["on_error"]
-            assert configurator.use_snmpwalk_cache == defaults["_use_snmpwalk_cache"]
-            assert configurator.ignore_check_interval == defaults["_ignore_check_interval"]
+        elif isinstance(self.source, SNMPSource):
+            assert self.source.on_snmp_scan_error == defaults["on_error"]
+            assert self.source.use_snmpwalk_cache == defaults["_use_snmpwalk_cache"]
+            assert self.source.ignore_check_interval == defaults["_ignore_check_interval"]
 
         result = callback(self, *args, **kwargs)
         if result.is_err():

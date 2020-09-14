@@ -8,13 +8,15 @@
 
 import abc
 import json
-from typing import Type
+from typing import Type, Dict, Any
 
 from cmk.gui.plugins.dashboard import Dashlet
 from cmk.gui.globals import html
 
+FigureResponse = Dict[str, Any]
 
-def create_figures_response(data, context=None):
+
+def create_figures_response(data, context=None) -> FigureResponse:
     """ Any data for a figure is always wrapped into a dictionary
         This makes future extensions (meta_data, etc.) easier, preventing
         intermingling of dictionary keys """

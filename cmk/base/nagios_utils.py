@@ -14,6 +14,7 @@ from cmk.utils.log import console
 
 
 def do_check_nagiosconfig() -> bool:
+    """Execute nagios config verification to ensure the created check_mk_objects.cfg is valid"""
     command = [cmk.utils.paths.nagios_binary, "-vp", cmk.utils.paths.nagios_config_file]
     console.verbose("Running '%s'\n" % subprocess.list2cmdline(command))
     out.output("Validating Nagios configuration...")

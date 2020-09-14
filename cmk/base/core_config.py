@@ -293,7 +293,8 @@ def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
                 os.rename(backup_path, objects_file)
             raise
 
-        if config.monitoring_core == "nagios" and not do_check_nagiosconfig():
+        if (config.monitoring_core == "nagios" and
+                Path(cmk.utils.paths.nagios_config_file).exists() and not do_check_nagiosconfig()):
             broken_config_path = Path(cmk.utils.paths.tmp_dir) / "check_mk_objects.cfg.broken"
             shutil.move(cmk.utils.paths.nagios_objects_file, broken_config_path)
 

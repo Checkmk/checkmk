@@ -55,9 +55,7 @@ def test_registered_pages():
         'ajax_fetch_topology',
         'ajax_get_all_bi_template_layouts',
         'automation_login',
-        'bi',
         'bi_map',
-        'bi_debug',
         'bi_render_tree',
         'bi_save_treestate',
         'bi_set_assumption',
@@ -209,10 +207,17 @@ def test_registered_pages():
 
     # TODO: Depending on how we call the test (single test or whole package) we
     # see this page or we don't...
-    actual = sorted(p  #
-                    for p in cmk.gui.pages.page_registry.keys()
-                    if p != "switch_customer")
-    assert actual == sorted(expected_pages)
+    actual_set = set(p  #
+                     for p in cmk.gui.pages.page_registry.keys()
+                     if p != "switch_customer")
+
+    expected_set = set(expected_pages)
+    differences = actual_set.symmetric_difference(expected_set)
+    if differences:
+        sys.stdout.write("Registered pages differ\n")
+        sys.stdout.write("Expected but missing: %s\n" % ", ".join(expected_set - actual_set))
+        sys.stdout.write("Unknown new pages: %s\n" % ", ".join(actual_set - expected_set))
+    assert len(differences) == 0
 
 
 def test_pages_register(monkeypatch, capsys):

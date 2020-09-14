@@ -221,20 +221,21 @@ class AjaxFetchAggregationData(AjaxPage):
         aggregation_layouts = BILayoutManagement.get_all_bi_aggregation_layouts()
 
         for row in state_data["rows"]:
-            aggr_name = row["tree"]["aggr_name"]
+            row = row["tree"]
+            aggr_name = row["aggr_name"]
             if filter_names and aggr_name not in filter_names:
                 continue
             visual_mapper = NodeVisualizationBIDataMapper()
-            aggr_treestate = row["tree"]["aggr_treestate"]
+            aggr_treestate = row["aggr_treestate"]
             hierarchy = visual_mapper.consume(aggr_treestate)
 
             data: Dict[str, Any] = {}
             data["hierarchy"] = hierarchy
-            data["aggr_type"] = row["tree"]["aggr_tree"]["aggr_type"]
-            data["groups"] = row["groups"]
+            data["aggr_type"] = row["aggr_tree"]["aggr_type"]
+            data["groups"] = row["aggr_group"]
             data["data_timestamp"] = int(time.time())
 
-            aggr_settings = row["tree"]["aggr_tree"]["node_visualization"]
+            aggr_settings = row["aggr_tree"]["node_visualization"]
             layout: Dict[str, Any] = {"config": {}}
             if forced_layout_id:
                 layout["enforced_id"] = aggr_name
@@ -258,7 +259,7 @@ class AjaxFetchAggregationData(AjaxPage):
                 layout["config"]["line_config"] = self._get_line_style_config(aggr_settings)
 
             data["layout"] = layout
-            aggregation_info["aggregations"][row["tree"]["aggr_name"]] = data
+            aggregation_info["aggregations"][row["aggr_name"]] = data
 
         html.set_output_format("json")
         return aggregation_info

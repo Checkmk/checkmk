@@ -242,7 +242,6 @@ from cmk.gui.wato.pages.timeperiods import (
 from cmk.gui.wato.pages.users import ModeUsers, ModeEditUser
 
 import cmk.gui.plugins.wato
-import cmk.gui.plugins.wato.bi
 
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.wato  # pylint: disable=no-name-in-module

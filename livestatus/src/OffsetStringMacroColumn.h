@@ -11,10 +11,11 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 
+#include "Column.h"
 #include "StringColumn.h"
 #include "nagios.h"
-class ColumnOffsets;
 class MonitoringCore;
 class Row;
 
@@ -62,10 +63,11 @@ public:
     OffsetStringMacroColumn(const std::string &name,
                             const std::string &description,
                             const ColumnOffsets &offsets,
-                            const MonitoringCore *mc, int offset)
+                            const MonitoringCore *mc,
+                            ColumnOffsets offsets_string)
         : StringColumn(name, description, offsets)
         , _mc(mc)
-        , _string_offset(offset) {}
+        , _offsets_string(std::move(offsets_string)) {}
 
     [[nodiscard]] std::string getValue(Row row) const override;
 
@@ -76,7 +78,7 @@ protected:
     const MonitoringCore *const _mc;
 
 private:
-    const int _string_offset;
+    ColumnOffsets _offsets_string;
 };
 
 #endif  // OffsetStringMacroColumn_h

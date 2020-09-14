@@ -92,8 +92,9 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
         prefix + "check_command_expanded",
         "Nagios command used for active checks with the macros expanded",
-        offsets, table->core(),
-        DANGEROUS_OFFSETOF(service, service_check_command)));
+        offsets, table->core(), offsets.add([](Row r) {
+            return r.rawData<service>()->service_check_command;
+        })));
 #else
     table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "check_command", "Nagios command used for active checks",
@@ -103,7 +104,9 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
         prefix + "check_command_expanded",
         "Nagios command used for active checks with the macros expanded",
-        offsets, table->core(), DANGEROUS_OFFSETOF(service, check_command)));
+        offsets, table->core(), offsets.add([](Row r) {
+            return r.rawData<service>()->check_command;
+        })));
 #endif
     table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "event_handler", "Nagios command used as event handler",
@@ -149,7 +152,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
         prefix + "notes_expanded",
         "The notes with (the most important) macros expanded", offsets,
-        table->core(), DANGEROUS_OFFSETOF(service, notes)));
+        table->core(),
+        offsets.add([](Row r) { return r.rawData<service>()->notes; })));
     table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "notes_url",
         "An optional URL for additional notes about the service", offsets,
@@ -159,7 +163,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
         prefix + "notes_url_expanded",
         "The notes_url with (the most important) macros expanded", offsets,
-        table->core(), DANGEROUS_OFFSETOF(service, notes_url)));
+        table->core(),
+        offsets.add([](Row r) { return r.rawData<service>()->notes_url; })));
     table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "action_url",
         "An optional URL for actions or custom information about the service",
@@ -169,7 +174,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
         prefix + "action_url_expanded",
         "The action_url with (the most important) macros expanded", offsets,
-        table->core(), DANGEROUS_OFFSETOF(service, action_url)));
+        table->core(),
+        offsets.add([](Row r) { return r.rawData<service>()->action_url; })));
     table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "icon_image",
         "The name of an image to be used as icon in the web interface", offsets,
@@ -179,7 +185,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
         prefix + "icon_image_expanded",
         "The icon_image with (the most important) macros expanded", offsets,
-        table->core(), DANGEROUS_OFFSETOF(service, icon_image)));
+        table->core(),
+        offsets.add([](Row r) { return r.rawData<service>()->icon_image; })));
     table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "icon_image_alt",
         "An alternative text for the icon_image for browsers not displaying icons",

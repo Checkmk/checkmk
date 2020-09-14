@@ -4,7 +4,6 @@
 // source code package.
 
 #include <algorithm>
-#include <cstddef>
 #include <cstdlib>
 #include <iterator>
 #include <string>
@@ -60,9 +59,10 @@ struct OffsetStringHostMacroColumnTest : public ::testing::Test {
                         {"_TAG_GUT", "Guten Tag!"}}};
     NagiosCore core{NagiosPaths{}, NagiosLimits{}, NagiosAuthorization{},
                     Encoding::utf8};
-    OffsetStringHostMacroColumn oshmc{"funny_column_name", "Cool description!",
-                                      ColumnOffsets{}, &core,
-                                      offsetof(host, notes)};
+    ColumnOffsets offsets{};
+    OffsetStringHostMacroColumn oshmc{
+        "funny_column_name", "Cool description!", offsets, &core,
+        offsets.add([](Row r) { return r.rawData<host>()->notes; })};
 };  // namespace
 
 // Second test fixture: A single host with a single service
@@ -80,8 +80,9 @@ struct OffsetStringServiceMacroColumnTest
                              {{"STATLER", "Boo!"},
                               {"WALDORF", "Terrible!"},
                               {"_LABEL_LO", "Labello"}}};
-    OffsetStringServiceMacroColumn ossmc{"navn", "Beskrivelse", ColumnOffsets{},
-                                         &core, offsetof(service, notes)};
+    OffsetStringServiceMacroColumn ossmc{
+        "navn", "Beskrivelse", offsets, &core,
+        offsets.add([](Row r) { return r.rawData<service>()->notes; })};
 };
 }  // namespace
 

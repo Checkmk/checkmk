@@ -101,7 +101,8 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<OffsetStringHostMacroColumn>(
         prefix + "check_command_expanded",
         "Nagios command for active host check of this host with the macros expanded",
-        offsets, table->core(), DANGEROUS_OFFSETOF(host, check_command)));
+        offsets, table->core(),
+        offsets.add([](Row r) { return r.rawData<host>()->check_command; })));
 #else
     table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "check_command",
@@ -112,7 +113,9 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<OffsetStringHostMacroColumn>(
         prefix + "check_command_expanded",
         "Nagios command for active host check of this host with the macros expanded",
-        offsets, table->core(), DANGEROUS_OFFSETOF(host, host_check_command)));
+        offsets, table->core(), offsets.add([](Row r) {
+            return r.rawData<host>()->host_check_command;
+        })));
 #endif
     table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "event_handler", "Nagios command used as event handler",
@@ -141,7 +144,8 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<OffsetStringHostMacroColumn>(
         prefix + "notes_expanded",
         "The same as notes, but with the most important macros expanded",
-        offsets, table->core(), DANGEROUS_OFFSETOF(host, notes)));
+        offsets, table->core(),
+        offsets.add([](Row r) { return r.rawData<host>()->notes; })));
     table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "notes_url",
         "An optional URL with further information about the host", offsets,
@@ -151,7 +155,8 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<OffsetStringHostMacroColumn>(
         prefix + "notes_url_expanded",
         "Same es notes_url, but with the most important macros expanded",
-        offsets, table->core(), DANGEROUS_OFFSETOF(host, notes_url)));
+        offsets, table->core(),
+        offsets.add([](Row r) { return r.rawData<host>()->notes_url; })));
     table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "action_url",
         "An optional URL to custom actions or information about this host",
@@ -161,7 +166,8 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<OffsetStringHostMacroColumn>(
         prefix + "action_url_expanded",
         "The same as action_url, but with the most important macros expanded",
-        offsets, table->core(), DANGEROUS_OFFSETOF(host, action_url)));
+        offsets, table->core(),
+        offsets.add([](Row r) { return r.rawData<host>()->action_url; })));
     table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "plugin_output", "Output of the last host check", offsets,
         [](const host &r) {
@@ -182,7 +188,8 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<OffsetStringHostMacroColumn>(
         prefix + "icon_image_expanded",
         "The same as icon_image, but with the most important macros expanded",
-        offsets, table->core(), DANGEROUS_OFFSETOF(host, icon_image)));
+        offsets, table->core(),
+        offsets.add([](Row r) { return r.rawData<host>()->icon_image; })));
     table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "icon_image_alt", "Alternative text for the icon_image",
         offsets, [](const host &r) {

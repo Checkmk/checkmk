@@ -24,7 +24,6 @@ from cmk.gui.valuespec import (
     Dictionary,
     TextAscii,
     TextUnicode,
-    HTTPUrl,
     DropdownChoice,
     Tuple,
     ListOf,
@@ -600,47 +599,6 @@ class ConfigVariableEscapePluginOutput(ConfigVariable):
               "service output\". The rulesets have the additional advantage that the "
               "configured value is accessible in the notification context."),
             label=_("Prevent loading HTML from plugin output or log messages"),
-        )
-
-
-@config_variable_registry.register
-class ConfigVariableCrashReportURL(ConfigVariable):
-    def group(self):
-        return ConfigVariableGroupUserInterface
-
-    def domain(self):
-        return ConfigDomainGUI
-
-    def ident(self):
-        return "crash_report_url"
-
-    def valuespec(self):
-        return HTTPUrl(
-            title=_("Crash report HTTP URL"),
-            help=_("By default crash reports will be sent to our crash reporting server."),
-            show_as_link=False,
-        )
-
-
-@config_variable_registry.register
-class ConfigVariableCrashReportTarget(ConfigVariable):
-    def group(self):
-        return ConfigVariableGroupUserInterface
-
-    def domain(self):
-        return ConfigDomainGUI
-
-    def ident(self):
-        return "crash_report_target"
-
-    def valuespec(self):
-        return TextAscii(
-            title=_("Crash report fallback mail address"),
-            help=_("By default crash reports will be sent to our crash reporting server. In case "
-                   "this fails for some reason, the crash reports can be sent by mail to the "
-                   "address configured here."),
-            size=80,
-            attrencode=True,
         )
 
 

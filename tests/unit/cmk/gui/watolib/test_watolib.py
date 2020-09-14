@@ -289,6 +289,7 @@ def test_registered_configvar_groups():
         u'Site Management',
         u'User Interface',
         u'User Management',
+        'Support',
     ]
 
     if not cmk_version.is_raw_edition():

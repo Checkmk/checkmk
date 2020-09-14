@@ -5,15 +5,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from contextlib import suppress
 
 # No stub file
 from testlib import CheckManager  # type: ignore[import]
 # No stub file
 from testlib.base import Scenario  # type: ignore[import]
 
+import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import CheckPluginName
+
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 from cmk.base.check_utils import Service
@@ -120,3 +123,71 @@ def test_get_tag_attributes(tag_groups, result):
     for k, v in attributes.items():
         assert isinstance(k, str)
         assert isinstance(v, str)
+
+
+class TestHelperConfig:
+    @pytest.fixture
+    def serial(self):
+        return 13
+
+    @pytest.fixture
+    def store(self, serial):
+        return core_config.HelperConfig(serial)
+
+    def test_given_serial_path(self):
+        store = core_config.HelperConfig(serial=42)
+        assert store.serial_path == cmk.utils.paths.core_helper_config_dir / "42"
+
+    def test_create_success(self, store, serial):
+        assert not store.serial_path.exists()
+        assert not store.latest_path.exists()
+
+        with store.create():
+            assert store.serial_path.exists()
+            assert not store.latest_path.exists()
+
+        assert store.serial_path.exists()
+        assert store.latest_path.exists()
+
+    def test_create_success_replace_latest_link(self, store, serial):
+        prev_serial = 1
+        prev_dir = cmk.utils.paths.core_helper_config_dir / str(prev_serial)
+        prev_dir.mkdir(parents=True, exist_ok=True)
+        store.latest_path.symlink_to(str(prev_serial))
+        assert store.latest_path.exists()
+
+        with store.create():
+            assert store.serial_path.exists()
+
+        assert store.serial_path.exists()
+        assert store.latest_path.resolve().name == str(serial)
+
+    def test_create_no_latest_link_creation_on_failure(self, store, serial):
+        assert not store.serial_path.exists()
+        assert not store.latest_path.exists()
+
+        with suppress(RuntimeError):
+            with store.create():
+                assert store.serial_path.exists()
+                raise RuntimeError("boom")
+
+        assert store.serial_path.exists()
+        assert not store.latest_path.exists()
+
+    def test_create_no_latest_link_replace_on_failure(self, store, serial):
+        assert not store.serial_path.exists()
+        assert not store.latest_path.exists()
+
+        prev_serial = 13
+        prev_dir = cmk.utils.paths.core_helper_config_dir / str(prev_serial)
+        prev_dir.mkdir(parents=True, exist_ok=True)
+        store.latest_path.symlink_to("13")
+        assert store.latest_path.exists()
+
+        with suppress(RuntimeError):
+            with store.create():
+                assert store.serial_path.exists()
+                raise RuntimeError("boom")
+
+        assert store.serial_path.exists()
+        assert store.latest_path.resolve().name == str(prev_serial)

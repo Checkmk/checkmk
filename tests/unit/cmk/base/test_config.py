@@ -2055,16 +2055,16 @@ def test_save_packed_config(monkeypatch, serial):
     ts.add_host("bla1")
     config_cache = ts.apply(monkeypatch)
 
-    assert not Path(cmk.utils.paths.var_dir, "base", str(serial),
+    assert not Path(cmk.utils.paths.core_helper_config_dir, str(serial),
                     "precompiled_check_config.mk").exists()
-    assert not Path(cmk.utils.paths.var_dir, "base", str(serial),
+    assert not Path(cmk.utils.paths.core_helper_config_dir, str(serial),
                     "precompiled_check_config.mk.orig").exists()
 
     config.save_packed_config(serial, config_cache)
 
-    assert Path(cmk.utils.paths.var_dir, "base", str(serial),
+    assert Path(cmk.utils.paths.core_helper_config_dir, str(serial),
                 "precompiled_check_config.mk").exists()
-    assert Path(cmk.utils.paths.var_dir, "base", str(serial),
+    assert Path(cmk.utils.paths.core_helper_config_dir, str(serial),
                 "precompiled_check_config.mk.orig").exists()
 
 
@@ -2096,12 +2096,12 @@ class TestPackedConfigStore:
 
     def test_latest_serial_path(self):
         store = config.PackedConfigStore(serial=None)
-        assert store._compiled_path == Path(cmk.utils.paths.var_dir, "base", "latest",
+        assert store._compiled_path == Path(cmk.utils.paths.core_helper_config_dir, "latest",
                                             "precompiled_check_config.mk")
 
     def test_given_serial_path(self):
         store = config.PackedConfigStore(serial=42)
-        assert store._compiled_path == Path(cmk.utils.paths.var_dir, "base", "42",
+        assert store._compiled_path == Path(cmk.utils.paths.core_helper_config_dir, "42",
                                             "precompiled_check_config.mk")
 
     def test_read_not_existing_file(self, store):
@@ -2109,23 +2109,18 @@ class TestPackedConfigStore:
             store.read()
 
     def test_write(self, store, serial):
-        assert not Path(cmk.utils.paths.var_dir, "base", str(serial),
+        assert not Path(cmk.utils.paths.core_helper_config_dir, str(serial),
                         "precompiled_check_config.mk").exists()
-        assert not Path(cmk.utils.paths.var_dir, "base", str(serial),
+        assert not Path(cmk.utils.paths.core_helper_config_dir, str(serial),
                         "precompiled_check_config.mk.orig").exists()
 
         store.write("abc = 1\n")
 
-        packed_file_path = Path(cmk.utils.paths.var_dir, "base", str(serial),
+        packed_file_path = Path(cmk.utils.paths.core_helper_config_dir, str(serial),
                                 "precompiled_check_config.mk")
         assert packed_file_path.exists()
-        assert Path(cmk.utils.paths.var_dir, "base", str(serial),
+        assert Path(cmk.utils.paths.core_helper_config_dir, str(serial),
                     "precompiled_check_config.mk.orig").exists()
-
-        latest_file_path = Path(cmk.utils.paths.var_dir, "base", "latest",
-                                "precompiled_check_config.mk")
-        assert latest_file_path.parent.is_symlink()
-        assert latest_file_path.resolve() == packed_file_path
 
         assert store.read() == {
             "abc": 1,

@@ -15,7 +15,6 @@ import os
 import py_compile
 import struct
 import sys
-from contextlib import suppress
 from collections import OrderedDict
 from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
 from pathlib import Path
@@ -697,19 +696,12 @@ class PackedConfigStore:
     def __init__(self, serial: Optional[int]) -> None:
         serial_dir = "latest" if serial is None else str(serial)
 
-        base_path: Final[Path] = Path(cmk.utils.paths.var_dir, "base")
-
-        self._serial_path: Final[Path] = base_path / serial_dir
-        self._latest_path: Final[Path] = base_path / "latest"
-        self._compiled_path: Final[Path] = self._serial_path / "precompiled_check_config.mk"
-        self._source_path: Final[Path] = self._serial_path / "precompiled_check_config.mk.orig"
+        base_path: Final[Path] = cmk.utils.paths.core_helper_config_dir / serial_dir
+        self._compiled_path: Final[Path] = base_path / "precompiled_check_config.mk"
+        self._source_path: Final[Path] = base_path / "precompiled_check_config.mk.orig"
 
     def write(self, helper_config: str) -> None:
-        self._write_packed_config(helper_config)
-        self._create_latest_link()
-
-    def _write_packed_config(self, helper_config: str) -> None:
-        self._serial_path.mkdir(parents=True, exist_ok=True)
+        self._source_path.parent.mkdir(parents=True, exist_ok=True)
         store.save_file(self._source_path, helper_config + "\n")
 
         code = compile(helper_config, '<string>', 'exec')
@@ -717,11 +709,6 @@ class PackedConfigStore:
         with tmp_path.open("wb") as compiled_file:
             marshal.dump(code, compiled_file)
         tmp_path.rename(self._compiled_path)
-
-    def _create_latest_link(self) -> None:
-        with suppress(FileNotFoundError):
-            self._latest_path.unlink()
-        self._latest_path.symlink_to(self._serial_path.name)
 
     def read(self) -> Dict[str, Any]:
         with self._compiled_path.open("rb") as f:

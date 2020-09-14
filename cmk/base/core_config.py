@@ -9,8 +9,8 @@ import numbers
 import os
 import sys
 import shutil
-from typing import AnyStr, Callable, Dict, List, Optional, Tuple, Union, Iterator
-from contextlib import contextmanager
+from typing import AnyStr, Callable, Dict, List, Optional, Tuple, Union, Iterator, Final
+from contextlib import contextmanager, suppress
 from pathlib import Path
 
 import cmk.utils.version as cmk_version
@@ -47,6 +47,31 @@ ConfigurationWarnings = List[str]
 ObjectMacros = Dict[str, AnyStr]
 CoreCommandName = str
 CoreCommand = str
+
+
+class HelperConfig:
+    """Managing the helper core config generations below var/check_mk/core/helper-config/[serial]
+
+    The context manager ensures that the directory for the config serial is created and the "latest"
+    link is only created in case the context is left without exception.
+    """
+    def __init__(self, serial: int) -> None:
+        base_path: Final[Path] = cmk.utils.paths.core_helper_config_dir
+
+        self.serial: Final[int] = serial
+        self.serial_path: Final[Path] = base_path / str(serial)
+        self.latest_path: Final[Path] = base_path / "latest"
+
+    @contextmanager
+    def create(self) -> Iterator["HelperConfig"]:
+        self.serial_path.mkdir(parents=True, exist_ok=True)
+        yield self
+        self._create_latest_link()
+
+    def _create_latest_link(self) -> None:
+        with suppress(FileNotFoundError):
+            self.latest_path.unlink()
+        self.latest_path.symlink_to(self.serial_path.name)
 
 
 def current_core_config_serial() -> int:
@@ -316,7 +341,12 @@ def _create_core_config(core: MonitoringCore) -> ConfigurationWarnings:
 
     _verify_non_duplicate_hosts()
     _verify_non_deprecated_checkgroups()
-    core.create_config()
+
+    with HelperConfig(current_core_config_serial()).create():
+        # TODO: Hand over the serial and base path here to remove access to global information
+        # from MonitoringCore classes
+        core.create_config()
+
     cmk.utils.password_store.save(config.stored_passwords)
 
     return get_configuration_warnings()

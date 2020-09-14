@@ -20,7 +20,8 @@ class Row;
 class ServiceMacroExpander : public MacroExpander {
 public:
     ServiceMacroExpander(const service *svc, const MonitoringCore *mc);
-    std::optional<std::string> expand(const std::string &str) override;
+    [[nodiscard]] std::optional<std::string> expand(
+        const std::string &str) const override;
 
 private:
     const service *_svc;

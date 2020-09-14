@@ -22,7 +22,8 @@ class Row;
 class MacroExpander {
 public:
     virtual ~MacroExpander() = default;
-    virtual std::optional<std::string> expand(const std::string &str) = 0;
+    [[nodiscard]] virtual std::optional<std::string> expand(
+        const std::string &str) const = 0;
     static std::optional<std::string> from_ptr(const char *str);
 };
 
@@ -32,7 +33,8 @@ public:
     CompoundMacroExpander(std::unique_ptr<MacroExpander> first,
                           std::unique_ptr<MacroExpander> second);
 
-    std::optional<std::string> expand(const std::string &str) override;
+    [[nodiscard]] std::optional<std::string> expand(
+        const std::string &str) const override;
 
 private:
     std::unique_ptr<MacroExpander> _first;
@@ -41,7 +43,8 @@ private:
 
 class UserMacroExpander : public MacroExpander {
 public:
-    std::optional<std::string> expand(const std::string &str) override;
+    [[nodiscard]] std::optional<std::string> expand(
+        const std::string &str) const override;
 };
 
 class CustomVariableExpander : public MacroExpander {
@@ -49,7 +52,8 @@ public:
     CustomVariableExpander(std::string prefix, const customvariablesmember *cvm,
                            const MonitoringCore *mc);
 
-    std::optional<std::string> expand(const std::string &str) override;
+    [[nodiscard]] std::optional<std::string> expand(
+        const std::string &str) const override;
 
 private:
     std::string _prefix;

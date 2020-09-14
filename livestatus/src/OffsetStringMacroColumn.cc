@@ -25,14 +25,15 @@ CompoundMacroExpander::CompoundMacroExpander(
     : _first(std::move(first)), _second(std::move(second)) {}
 
 std::optional<std::string> CompoundMacroExpander::expand(
-    const std::string &str) {
+    const std::string &str) const {
     if (auto e = _first->expand(str)) {
         return e;
     }
     return _second->expand(str);
 }
 
-std::optional<std::string> UserMacroExpander::expand(const std::string &str) {
+std::optional<std::string> UserMacroExpander::expand(
+    const std::string &str) const {
     if (mk::starts_with(str, "USER")) {
         int n = atoi(str.substr(4).c_str());
         if (1 <= n && n <= MAX_USER_MACROS) {
@@ -50,7 +51,7 @@ CustomVariableExpander::CustomVariableExpander(std::string prefix,
     : _prefix(std::move(prefix)), _mc(mc), _cvm(cvm) {}
 
 std::optional<std::string> CustomVariableExpander::expand(
-    const std::string &str) {
+    const std::string &str) const {
     if (!mk::starts_with(str, _prefix)) {
         return {};
     }

@@ -11,7 +11,8 @@
 HostMacroExpander::HostMacroExpander(const host *hst, const MonitoringCore *mc)
     : _hst(hst), _cve("_HOST", hst->custom_variables, mc) {}
 
-std::optional<std::string> HostMacroExpander::expand(const std::string &str) {
+std::optional<std::string> HostMacroExpander::expand(
+    const std::string &str) const {
     if (str == "HOSTNAME") {
         return from_ptr(_hst->name);
     }

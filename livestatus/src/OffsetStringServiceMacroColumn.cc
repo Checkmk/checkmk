@@ -16,7 +16,7 @@ ServiceMacroExpander::ServiceMacroExpander(const service *svc,
     : _svc(svc), _cve("_SERVICE", svc->custom_variables, mc) {}
 
 std::optional<std::string> ServiceMacroExpander::expand(
-    const std::string &str) {
+    const std::string &str) const {
     if (str == "SERVICEDESC") {
         return from_ptr(_svc->description);
     }

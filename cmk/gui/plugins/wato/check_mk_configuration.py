@@ -628,9 +628,12 @@ class ConfigVariableEscapePluginOutput(ConfigVariable):
                    "code received from external sources, like plugin output or log messages. "
                    "If you are really sure what you are doing and need to have HTML codes, like "
                    "links rendered, disable this option. Be aware, you might open the way "
-                   "for several injection attacks.") +
-            _("This setting can either be set globally or individually for selected hosts "
-              "or services using the host or service rulesets."),
+                   "for several injection attacks. ") +
+            _("Instead of disabling this option globally it is highly recommended to "
+              "disable the escaping selectively for individual hosts and services with "
+              "the rulesets \"Escape HTML codes in host output\" and \"Escape HTML codes in "
+              "service output\". The rulesets have the additional advantage that the "
+              "configured value is accessible in the notification context."),
             label=_("Prevent loading HTML from plugin output or log messages"),
         )
 
@@ -4013,11 +4016,11 @@ def _valuespec_extra_host_conf__ESCAPE_PLUGIN_OUTPUT():
         title=_("Escape HTML codes in host output"),
         help=_("By default, for security reasons, the GUI does not interpret any HTML "
                "code received from external sources, like plugin output or log messages. "
-               "If you are really sure what you are doing and need to have HTML codes, like "
+               "If you are really sure what you are doing and need to have HTML code, like "
                "links rendered, disable this option. Be aware, you might open the way "
                "for several injection attacks.") +
-        _("This setting can either be set globally or individually for selected hosts "
-          "or services using the host or service rulesets."),
+        _("The configured value for a host is accessible in notifications as well via the "
+          "variable <tt>HOST_ESCAPE_PLUGIN_OUTPUT</tt> of the notification context."),
         choices=[
             ("1", _("Escape HTML codes")),
             ("0", _("Don't escape HTML codes (insecure)")),
@@ -4039,11 +4042,11 @@ def _valuespec_extra_service_conf__ESCAPE_PLUGIN_OUTPUT():
         title=_("Escape HTML codes in service output"),
         help=_("By default, for security reasons, the GUI does not interpret any HTML "
                "code received from external sources, like plugin output or log messages. "
-               "If you are really sure what you are doing and need to have HTML codes, like "
+               "If you are really sure what you are doing and need to have HTML code, like "
                "links rendered, disable this option. Be aware, you might open the way "
-               "for several injection attacks.") +
-        _("This setting can either be set globally or individually for selected hosts "
-          "or services using the host or service rulesets."),
+               "for several injection attacks. ") +
+        _("The configured value for a service is accessible in notifications as well via the "
+          "variable <tt>SERVICE_ESCAPE_PLUGIN_OUTPUT</tt> of the notification context."),
         choices=[
             ("1", _("Escape HTML codes")),
             ("0", _("Don't escape HTML codes (insecure)")),

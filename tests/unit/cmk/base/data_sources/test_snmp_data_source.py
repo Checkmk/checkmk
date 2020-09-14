@@ -11,7 +11,6 @@ import pytest  # type: ignore[import]
 from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPRuleDependentDetectSpec, SNMPTree
-from cmk.snmplib.snmp_scan import SNMPScanSection
 from cmk.utils.type_defs import Result, RuleSetName, SourceType
 
 from cmk.base.api.agent_based import register
@@ -229,12 +228,7 @@ class TestSNMPConfigurator_make_snmp_scan_sections:
             hostname,
             ipaddress,
         )
-        assert snmp_configurator._make_snmp_scan_sections() == [
-            SNMPScanSection(
-                plugin.name,
-                plugin.detect_spec,
-            )
-        ]
+        assert snmp_configurator._make_snmp_scan_sections() == [(plugin.name, plugin.detect_spec)]
 
     def test_rule_dependent(
         self,
@@ -272,9 +266,4 @@ class TestSNMPConfigurator_make_snmp_scan_sections:
             hostname,
             ipaddress,
         )
-        assert snmp_configurator._make_snmp_scan_sections() == [
-            SNMPScanSection(
-                plugin.name,
-                detect_spec_1,
-            )
-        ]
+        assert snmp_configurator._make_snmp_scan_sections() == [(plugin.name, detect_spec_1)]

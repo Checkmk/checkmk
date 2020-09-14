@@ -225,7 +225,7 @@ class SNMPConfigurator(ABCConfigurator[SNMPRawData, SNMPHostSections]):
                 detect_spec = snmp_section_plugin.rule_dependent_detect_spec.evaluator(
                     *rules_for_host)
 
-            snmp_scan_sections.append(SNMPScanSection(snmp_section_plugin.name, detect_spec))
+            snmp_scan_sections.append((snmp_section_plugin.name, detect_spec))
 
         return snmp_scan_sections
 

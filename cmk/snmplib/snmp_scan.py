@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-from typing import Iterable, NamedTuple, Set
+from typing import Iterable, Tuple, Set
 
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError
@@ -17,10 +17,7 @@ import cmk.snmplib.snmp_modes as snmp_modes
 from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPDetectSpec
 from cmk.snmplib.utils import evaluate_snmp_detection
 
-SNMPScanSection = NamedTuple("SNMPScanSection", [
-    ("name", SectionName),
-    ("specs", SNMPDetectSpec),
-])
+SNMPScanSection = Tuple[SectionName, SNMPDetectSpec]
 
 
 # gather auto_discovered check_plugin_names for this host

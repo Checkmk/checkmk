@@ -18,7 +18,6 @@ from cmk.utils.type_defs import SectionName
 
 import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_scan as snmp_scan
-from cmk.snmplib.snmp_scan import SNMPScanSection
 from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPHostConfig
 from cmk.snmplib.utils import evaluate_snmp_detection
 
@@ -278,10 +277,7 @@ def test_snmp_scan_fake_description_object__success(backend):
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("cache_oids")
 def test_snmp_scan_find_plugins__success(backend):
-    sections = [
-        SNMPScanSection(_.name, _.detect_spec)
-        for _ in agent_based_register.iter_all_snmp_sections()
-    ]
+    sections = [(s.name, s.detect_spec) for s in agent_based_register.iter_all_snmp_sections()]
     found = snmp_scan._find_sections(
         sections,
         on_error="raise",
@@ -300,10 +296,7 @@ def test_gather_available_raw_section_names_defaults(backend, mocker):
     assert snmp_cache.get_oid_from_single_oid_cache(snmp_scan.OID_SYS_OBJ)
 
     assert snmp_scan.gather_available_raw_section_names(
-        [
-            SNMPScanSection(_.name, _.detect_spec)
-            for _ in agent_based_register.iter_all_snmp_sections()
-        ],
+        [(s.name, s.detect_spec) for s in agent_based_register.iter_all_snmp_sections()],
         on_error="raise",
         missing_sys_description=False,
         backend=backend,

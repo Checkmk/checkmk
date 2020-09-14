@@ -3770,7 +3770,7 @@ def test_get_context_uri_vars(register_builtin_html, visual, expected_vars):
     # Single host context -> not set
     (["host"], ["host"], [], {}),
     # Single host context -> empty set
-    (["host"], ["host"], [("host", "")], {"host": ""}),
+    (["host"], ["host"], [("host", "")], {}),
     # Single host context with non-ascii char
     (["host"], ["host"], [("host", "äbc")], {"host": u"äbc"}),
     # Single host context, multiple services

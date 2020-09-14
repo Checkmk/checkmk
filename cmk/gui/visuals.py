@@ -1262,11 +1262,15 @@ def get_context_from_uri_vars(only_infos: Optional[List[InfoName]] = None,
             if not html.request.has_var(varname):
                 continue  # Variable to set in environment
 
+            filter_value = html.request.get_str_input_mandatory(varname)
+            if not filter_value:
+                continue
+
             if varname in single_info_keys:
-                context[filter_name] = html.request.get_unicode_input_mandatory(varname)
+                context[filter_name] = filter_value
                 break
 
-            this_filter_vars[varname] = html.request.get_str_input_mandatory(varname)
+            this_filter_vars[varname] = filter_value
 
         if this_filter_vars:
             context[filter_name] = this_filter_vars

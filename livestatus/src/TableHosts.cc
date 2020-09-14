@@ -273,15 +273,12 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                 r.next_host_notification);
         }));
 #else
-    table->addColumn(std::make_unique <
-                     TimeLambdaColumn<host>(
-                         prefix + "last_notification",
-                         "Time of the last notification (Unix timestamp)",
-                         offsets,
-                         [](const host &r) {
-                             return std::chrono::system_clock::from_time_t(
-                                 r.last_notification);
-                         }));
+    table->addColumn(std::make_unique<TimeLambdaColumn<host>>(
+        prefix + "last_notification",
+        "Time of the last notification (Unix timestamp)", offsets,
+        [](const host &r) {
+            return std::chrono::system_clock::from_time_t(r.last_notification);
+        }));
     table->addColumn(std::make_unique<TimeLambdaColumn<host>>(
         prefix + "next_notification",
         "Time of the next notification (Unix timestamp)", offsets,

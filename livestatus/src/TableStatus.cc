@@ -195,14 +195,14 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "The maximum number of slots used in the external command buffer",
         external_command_buffer.high));
 #else
-    addColumn(std::make_unique<IntLambdaColumn::Constant>(
+    addColumn(std::make_unique<IntLambdaColumn<TableStatus>::Constant>(
         "external_command_buffer_slots",
         "The size of the buffer for the external commands (placeholder)", 0));
-    addColumn(std::make_unique<IntLambdaColumn::Constant>(
+    addColumn(std::make_unique<IntLambdaColumn<TableStatus>::Constant>(
         "external_command_buffer_usage",
         "The number of slots in use of the external command buffer (placeholder)",
         0));
-    addColumn(std::make_unique<IntLambdaColumn::Constant>(
+    addColumn(std::make_unique<IntLambdaColumn<TableStatus>::Constant>(
         "external_command_buffer_max",
         "The maximum number of slots used in the external command buffer (placeholder)",
         0));

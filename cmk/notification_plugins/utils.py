@@ -112,6 +112,11 @@ def html_escape_context(context):
         'PARAMETER_REPLY_TO',
         'PARAMETER_REPLY_TO_DISPLAY_NAME',
     }
+    if context.get("SERVICE_ESCAPE_PLUGIN_OUTPUT") == "0":
+        unescaped_variables |= {"SERVICEOUTPUT", "LONGSERVICEOUTPUT"}
+    if context.get("HOST_ESCAPE_PLUGIN_OUTPUT") == "0":
+        unescaped_variables |= {"HOSTOUTPUT", "LONGHOSTOUTPUT"}
+
     for variable, value in context.items():
         if variable not in unescaped_variables:
             context[variable] = html_escape(value)

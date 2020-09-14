@@ -8,8 +8,10 @@ import abc
 import numbers
 import os
 import sys
+import shutil
 from typing import AnyStr, Callable, Dict, List, Optional, Tuple, Union, Iterator
 from contextlib import contextmanager
+from pathlib import Path
 
 import cmk.utils.version as cmk_version
 import cmk.utils.debug
@@ -292,8 +294,8 @@ def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
             raise
 
         if config.monitoring_core == "nagios" and not do_check_nagiosconfig():
-            broken_config_path = "%s/check_mk_objects.cfg.broken" % cmk.utils.paths.tmp_dir
-            os.rename(cmk.utils.paths.nagios_objects_file, broken_config_path)
+            broken_config_path = Path(cmk.utils.paths.tmp_dir) / "check_mk_objects.cfg.broken"
+            shutil.move(cmk.utils.paths.nagios_objects_file, broken_config_path)
 
             if backup_path:
                 os.rename(backup_path, objects_file)

@@ -32,6 +32,9 @@ def compute_graph_curves(metrics, rrd_data):
     for metric_definition in metrics:
         expression = metric_definition["expression"]
         time_series = evaluate_time_series_expression(expression, rrd_data)
+        if not time_series:
+            continue
+
         if len(time_series) == 1 and isinstance(time_series[0], tuple):
             time_series = time_series[0][3]
 

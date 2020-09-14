@@ -6,7 +6,6 @@
 
 import functools
 import http.client as http_client
-import os
 import traceback
 
 import livestatus
@@ -113,16 +112,6 @@ def _plain_error():
     """Webservice functions may decide to get a normal result code
     but a text with an error message in case of an error"""
     return html.request.has_var("_plain_error") or html.myfile == "webapi"
-
-
-def _profiling_enabled():
-    if config.profile is False:
-        return False  # Not enabled
-
-    if config.profile == "enable_by_var" and not html.request.has_var("_profile"):
-        return False  # Not enabled by HTTP variable
-
-    return True
 
 
 def _fail_silently():
@@ -243,24 +232,8 @@ def _render_exception(e, title=""):
     return html.response
 
 
-def profiling_middleware(func):
-    """Wrap an WSGI app in a profiling context manager"""
-    def profiler(environ, start_response):
-        with cmk.utils.profile.Profile(
-                enabled=_profiling_enabled(),
-                profile_file=os.path.join(cmk.utils.paths.var_dir, "multisite.profile"),
-        ):
-            return func(environ, start_response)
-
-    return profiler
-
-
 class CheckmkApp:
     """The Check_MK GUI WSGI entry point"""
-    def __init__(self):
-        # TODO: Just inline profiling_middleware, getting rid of this useless meta-Kung-Fu.
-        self.wsgi_app = profiling_middleware(self._wsgi_app)
-
     def __call__(self, environ, start_response):
         req = http.Request(environ)
         with AppContext(self), RequestContext(req=req, html_obj=htmllib.html(req)):
@@ -268,7 +241,7 @@ class CheckmkApp:
             html.init_modes()
             return self.wsgi_app(environ, start_response)
 
-    def _wsgi_app(self, environ, start_response):
+    def wsgi_app(self, environ, start_response):
         """Is called by the WSGI server to serve the current page"""
         with cmk.utils.store.cleanup_locks():
             return _process_request(environ, start_response)
@@ -276,7 +249,6 @@ class CheckmkApp:
 
 def _process_request(environ, start_response):  # pylint: disable=too-many-branches
     try:
-        config.initialize()
         html.init_modes()
 
         # Make sure all plugins are available as early as possible. At least

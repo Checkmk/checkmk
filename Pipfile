@@ -66,7 +66,7 @@ chardet = "==3.0.4"  # needed by requests
 urllib3 = "==1.25.8"  # needed by requests
 pyOpenSSL = "==19.1.0"  # needed by requests with extras = ["security"]
 pyghmi = "==1.5.13" # needed by base for IPMI
-requests = { version = "==2.22.0", extras = ["security"] }  # needed by DCD, connexion
+requests = {version = "==2.22.0",extras = ["security"]}  # needed by DCD, connexion
 pykerberos = "==1.2.1" # needed by check_bi_aggr
 requests-kerberos = "==0.12.0" # needed by check_bi_aggr
 MarkupSafe = "==1.1.1" # needed by Jinja2
@@ -88,7 +88,7 @@ Flask-Babel = "==1.0.0" # needed by GUI for i18n support (lazy gettext)
 inflection = "==0.3.1" # needed by connexion
 openapi-spec-validator = "==0.2.8" # needed by connexion
 swagger_ui_bundle = "==0.0.6" # direct dependency
-connexion = { version = "==2.4.0", extras = ["swagger-ui"] }  # direct dependency
+connexion = {version = "==2.4.0",extras = ["swagger-ui"]}  # direct dependency
 psutil = "==5.6.7" # needed for omdlib
 passlib = "==1.7.2" # needed for omdlib
 defusedxml = "==0.6.0" # needed by jira
@@ -131,6 +131,8 @@ python-active-directory = "==1.0.5"
 rrdtool = "==0.1.15"  # Actually we ship the binding which comes with rrdtool itself...
 docstring-parser = "==0.7.2"  # direct dependency
 yapf = "==0.30.0"  # formatter for REST-API documentation code examples
+repoze-profile = "==2.3"  # used for GUI/API profiling
+pyprof2calltree = "==1.4.5"  # used for GUI/API profiling
 
 [requires]
 python_version = "3.8"

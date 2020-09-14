@@ -13,7 +13,7 @@ from six import ensure_str
 
 from cmk.utils.type_defs import UserId
 
-from cmk.gui.config import clear_user_login, set_user_by_id, load_config
+from cmk.gui.config import clear_user_login, set_user_by_id
 from cmk.gui.exceptions import MKException, MKAuthException, MKUserError
 from cmk.gui.login import verify_automation_secret, set_auth_type
 
@@ -58,7 +58,6 @@ def verify_user(user_id, token_info):
     if user_id and token_info and user_id == token_info.get('sub'):
         set_user_by_id(user_id)
         set_auth_type("automation")
-        load_config()
         yield
         clear_user_login()
     else:

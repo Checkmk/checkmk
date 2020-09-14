@@ -5,12 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from pathlib import Path
 
 import pytest  # type: ignore[import]
 
 import cmk.utils.log as log
-from cmk.utils.paths import core_fetcher_config_dir
+from cmk.utils.paths import core_helper_config_dir
 
 from cmk.fetchers import FetcherType
 from cmk.fetchers.controller import (
@@ -54,13 +53,14 @@ class TestControllerApi:
         assert make_waiting_answer() == b"fetch:WAITING:        :0       :"
 
     def test_build_json_file_path(self):
-        assert build_json_file_path(
-            serial="_serial_",
-            host_name="buzz") == Path(core_fetcher_config_dir) / "_serial_" / "buzz.json"
+        assert build_json_file_path(serial="_serial_",
+                                    host_name="buzz") == (core_helper_config_dir / "_serial_" /
+                                                          "fetchers" / "hosts" / "buzz.json")
 
     def test_build_json_global_config_file_path(self):
         assert build_json_global_config_file_path(
-            serial="_serial_") == Path(core_fetcher_config_dir) / "_serial_" / "global_config.json"
+            serial="_serial_"
+        ) == core_helper_config_dir / "_serial_" / "fetchers" / "global_config.json"
 
     def test_run_fetcher_with_failure(self):
         assert run_fetcher(

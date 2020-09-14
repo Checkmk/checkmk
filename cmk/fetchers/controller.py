@@ -14,7 +14,7 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, Final, Union, NamedTuple
 
-from cmk.utils.paths import core_fetcher_config_dir
+from cmk.utils.paths import core_helper_config_dir
 from cmk.utils.type_defs import HostName, SectionName
 import cmk.utils.log as log
 
@@ -356,11 +356,11 @@ def read_json_file(serial: str, host_name: HostName) -> str:
 
 
 def build_json_file_path(serial: str, host_name: HostName) -> Path:
-    return Path("{}/{}/{}.json".format(core_fetcher_config_dir, serial, host_name))
+    return Path(core_helper_config_dir, str(serial), "fetchers", "hosts", f"{host_name}.json")
 
 
 def build_json_global_config_file_path(serial: str) -> Path:
-    return Path("{}/{}/global_config.json".format(core_fetcher_config_dir, serial))
+    return Path(core_helper_config_dir, str(serial), "fetchers", "global_config.json")
 
 
 # Idea is based on the cmk method:

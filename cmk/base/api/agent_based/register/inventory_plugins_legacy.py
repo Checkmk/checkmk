@@ -104,7 +104,8 @@ def _generate_attributes(
     local_inventory_tree: MockStructuredDataTree,
 ) -> Generator[Attributes, None, None]:
 
-    for path in set(local_status_data_tree.attributes) | set(local_inventory_tree.attributes):
+    for path in sorted(
+            set(local_status_data_tree.attributes) | set(local_inventory_tree.attributes)):
         status_attributes = {
             str(k): str(v) for k, v in local_status_data_tree.attributes.get(path, {}).items()
         }
@@ -125,7 +126,7 @@ def _generate_table_rows(
     local_inventory_tree: MockStructuredDataTree,
 ) -> Generator[TableRow, None, None]:
 
-    for path in set(local_status_data_tree.tables) | set(local_inventory_tree.tables):
+    for path in sorted(set(local_status_data_tree.tables) | set(local_inventory_tree.tables)):
         inv_table = local_inventory_tree.tables.get(path, [])
         status_table = local_status_data_tree.tables.get(path, [])
 

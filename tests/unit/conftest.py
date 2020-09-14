@@ -132,6 +132,21 @@ def _config_load_all_checks():
     assert len(config.check_info) > 1000  # sanitiy check
 
 
+@pytest.fixture(name='config_load_all_inventory_plugins', scope="session")
+@pytest.mark.usesfixture('config_load_all_checks')
+def _config_load_all_inventory_plugins():
+    # Local import to have faster pytest initialization
+    import cmk.base.inventory as inventory  # pylint: disable=bad-option-value,import-outside-toplevel
+    import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=bad-option-value,import-outside-toplevel
+    import cmk.base.check_api as check_api  # pylint: disable=bad-option-value,import-outside-toplevel
+
+    with cmk_debug_enabled():  # fail if a plugin can't be loaded
+        inventory_plugins.load_plugins(check_api.get_check_api_context,
+                                       inventory.get_inventory_context)
+
+    assert len(inventory_plugins.inv_info) > 90  # sanitiy check, may decrease as we migrate
+
+
 @pytest.fixture(scope="session")
 def config_check_info(config_load_all_checks):
     # Local import to have faster pytest initialization

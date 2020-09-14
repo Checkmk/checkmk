@@ -9,7 +9,7 @@ while the inventory is performed for one host.
 In the future all inventory code should be moved to this module."""
 
 import os
-from typing import cast, Dict, List, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 from contextlib import suppress
 
 import cmk.utils.cleanup
@@ -81,7 +81,7 @@ def do_inv(hostnames: List[HostName]) -> None:
                 config_cache,
                 host_config,
                 ipaddress,
-                sources=data_sources.make_checkers(
+                sources=data_sources.make_configurators(
                     host_config,
                     ipaddress,
                     mode=data_sources.Mode.INVENTORY,
@@ -129,7 +129,11 @@ def do_inv_check(
     infotexts: List[str] = []
     long_infotexts: List[str] = []
 
-    sources = data_sources.make_checkers(host_config, ipaddress, mode=data_sources.Mode.INVENTORY)
+    sources = data_sources.make_configurators(
+        host_config,
+        ipaddress,
+        mode=data_sources.Mode.INVENTORY,
+    )
     inventory_tree, status_data_tree, results = _do_inv_for(
         config_cache,
         host_config,
@@ -181,8 +185,7 @@ def do_inv_check(
             infotexts.append("Found %s status entries" % status_data_tree.count_entries())
 
     for configurator, host_sections in results:
-        checker = configurator.make_checker()
-        source_state, source_output, _source_perfdata = checker.summarize(host_sections)
+        source_state, source_output, _source_perfdata = configurator.summarize(host_sections)
         if source_state != 0:
             # Do not output informational things (state == 0). Also do not use source states
             # which would overwrite "State when inventory fails" in the ruleset
@@ -210,7 +213,7 @@ def _all_sources_fail(
     #           We could fix it by actually searching for errors in the sources
     #           as it seems that it is what was meant initially.
     exceptions_by_source = {
-        source.configurator.id: None for source in data_sources.make_checkers(
+        source.id: None for source in data_sources.make_configurators(
             host_config,
             ipaddress,
             mode=data_sources.Mode.INVENTORY,
@@ -228,7 +231,7 @@ def do_inventory_actions_during_checking_for(
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
     *,
-    sources: data_sources.Checkers,
+    sources: Sequence[ABCConfigurator],
     multi_host_sections: MultiHostSections,
 ) -> None:
     hostname = host_config.hostname
@@ -261,7 +264,7 @@ def _do_inv_for(
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
     *,
-    sources: data_sources.Checkers,
+    sources: Sequence[ABCConfigurator],
     multi_host_sections: Optional[MultiHostSections],
 ) -> Tuple[StructuredDataTree, StructuredDataTree, Sequence[Tuple[ABCConfigurator, Result[
         ABCHostSections, Exception]]]]:
@@ -308,7 +311,7 @@ def _do_inv_for_cluster(host_config: config.HostConfig, inventory_tree: Structur
 def _do_inv_for_realhost(
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
-    sources: data_sources.Checkers,
+    sources: Sequence[ABCConfigurator],
     multi_host_sections: Optional[MultiHostSections],
     hostname: HostName,
     ipaddress: Optional[HostAddress],
@@ -317,13 +320,12 @@ def _do_inv_for_realhost(
 ) -> Sequence[Tuple[ABCConfigurator, Result[ABCHostSections, Exception]]]:
     results: List[Tuple[ABCConfigurator, Result[ABCHostSections, Exception]]] = []
     for source in sources:
-        if isinstance(source, data_sources.snmp.SNMPChecker):
+        if isinstance(source, data_sources.snmp.SNMPConfigurator):
             # TODO(ml): This modifies the SNMP fetcher config dynamically.
-            configurator = cast(data_sources.snmp.SNMPConfigurator, source.configurator)
-            configurator.on_snmp_scan_error = "raise"  # default
+            source.on_snmp_scan_error = "raise"  # default
             data_sources.FileCacheConfigurator.snmp_disabled = True
-            configurator.use_snmpwalk_cache = False
-            configurator.ignore_check_interval = True
+            source.use_snmpwalk_cache = False
+            source.ignore_check_interval = True
             if multi_host_sections is not None:
                 # Status data inventory already provides filled multi_host_sections object.
                 # SNMP data source: If 'do_status_data_inv' is enabled there may be
@@ -333,20 +335,18 @@ def _do_inv_for_realhost(
                     #    hostname == source.hostname
                     #    ipaddress == source.ipaddress
                     # ?
-                    HostKey(hostname, ipaddress, source.configurator.source_type),
+                    HostKey(hostname, ipaddress, source.source_type),
                     SNMPHostSections(),
                 )
                 # TODO(ml): This modifies the SNMP fetcher config dynamically.
                 #           Can the fetcher handle that on its own?
-                configurator.prefetched_sections = host_sections.sections
-                try:
-                    with source.configurator.make_fetcher() as fetcher:
-                        fetched = Result.OK(fetcher.fetch(Mode.INVENTORY))
-                except Exception as exc:
-                    fetched = Result.Err(exc)
-                hs = source.check(fetched)
-                results.append((source.configurator, hs))
-                host_sections.update(hs)
+                source.prefetched_sections = host_sections.sections
+                assert source.mode is Mode.INVENTORY
+                host_section = source.parse(source.fetch())
+                results.append((source, host_section))
+                if host_section.is_ok():
+                    assert host_section.ok is not None
+                    host_sections.update(host_section.ok)
 
     if multi_host_sections is None:
         multi_host_sections = MultiHostSections()

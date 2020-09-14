@@ -38,13 +38,9 @@ def test_attribute_defaults(mode, monkeypatch):
     assert configurator.mode is mode
     assert configurator.description == "Management board - IPMI"
     assert configurator.source_type is SourceType.MANAGEMENT
-
-    summarizer = configurator.make_summarizer()
-    assert summarizer.summarize(Result.OK(AgentHostSections())) == (0, "Version: unknown", [])
-
-    checker = configurator.make_checker()
-    assert checker.id == "mgmt_ipmi"
-    assert checker._cpu_tracking_id == checker.id
+    assert configurator.summarize(Result.OK(AgentHostSections())) == (0, "Version: unknown", [])
+    assert configurator.id == "mgmt_ipmi"
+    assert configurator.cpu_tracking_id == "mgmt_ipmi"
 
 
 def test_summarizer():

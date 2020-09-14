@@ -34,7 +34,6 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostgroupName,
     HostName,
-    Result,
     TagValue,
 )
 
@@ -407,16 +406,9 @@ def mode_dump_agent(hostname: HostName) -> None:
             if not isinstance(configurator, data_sources.agent.AgentConfigurator):
                 continue
 
-            checker = configurator.make_checker()
-
-            try:
-                with configurator.make_fetcher() as fetcher:
-                    fetched = Result.OK(fetcher.fetch(configurator.mode))
-            except Exception as exc:
-                fetched = Result.Err(exc)
-            host_sections = checker.check(fetched)
-
-            source_state, source_output, _source_perfdata = checker.summarize(host_sections)
+            raw_data = configurator.fetch()
+            host_sections = configurator.parse(raw_data)
+            source_state, source_output, _source_perfdata = configurator.summarize(host_sections)
             if source_state != 0:
                 console.error(
                     "ERROR [%s]: %s\n",
@@ -424,8 +416,9 @@ def mode_dump_agent(hostname: HostName) -> None:
                     ensure_str(source_output),
                 )
                 has_errors = True
-            if fetched.is_ok():
-                output.append(fetched.unwrap())
+            if raw_data.is_ok():
+                assert raw_data.ok is not None
+                output.append(raw_data.ok)
 
         out.output(ensure_str(b"".join(output), errors="surrogateescape"))
         if has_errors:

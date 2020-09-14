@@ -168,7 +168,7 @@ def do_check(
         # see which raw sections we may need
         selected_raw_sections = _get_relevant_raw_sections(services_to_fetch, host_config)
 
-        sources = data_sources.make_checkers(
+        sources = data_sources.make_configurators(
             host_config,
             ipaddress,
             mode=data_sources.Mode.CHECKING,
@@ -210,8 +210,7 @@ def do_check(
             item_state.save(hostname)
 
         for configurator, host_sections in result:
-            checker = configurator.make_checker()
-            source_state, source_output, source_perfdata = checker.summarize(host_sections)
+            source_state, source_output, source_perfdata = configurator.summarize(host_sections)
             if source_output != "":
                 status = max(status, source_state)
                 infotexts.append("[%s] %s" % (configurator.id, source_output))

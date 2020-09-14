@@ -56,7 +56,7 @@ class TCPConfigurator(AgentConfigurator):
             "use_only_cache": self.use_only_cache,
         }
 
-    def make_summarizer(self) -> AgentSummarizerDefault:
+    def _make_summarizer(self) -> AgentSummarizerDefault:
         return AgentSummarizerDefault(self.exit_spec, self)
 
     @staticmethod

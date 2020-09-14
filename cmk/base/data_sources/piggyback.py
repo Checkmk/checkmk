@@ -49,7 +49,7 @@ class PiggybackConfigurator(AgentConfigurator):
             "time_settings": self.time_settings,
         }
 
-    def make_summarizer(self) -> "PiggybackSummarizer":
+    def _make_summarizer(self) -> "PiggybackSummarizer":
         return PiggybackSummarizer(self.exit_spec, self)
 
     @staticmethod

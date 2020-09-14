@@ -33,7 +33,6 @@ from cmk.utils.type_defs import (
     CheckPluginNameStr,
     HostAddress,
     HostName,
-    Result,
     ServiceDetails,
     ServiceState,
 )
@@ -1168,9 +1167,9 @@ class AutomationDiagHost(Automation):
             elif isinstance(configurator, data_sources.snmp.SNMPConfigurator):
                 continue
 
-            try:
-                with configurator.make_fetcher() as fetcher:
-                    raw_data = fetcher.fetch(configurator.mode)
+            raw_data = configurator.fetch()
+            if raw_data.is_ok():
+                assert raw_data.ok is not None
                 # We really receive a byte string here. The agent sections
                 # may have different encodings and are normally decoded one
                 # by one (AgentChecker._parse_host_section).  For the
@@ -1179,10 +1178,15 @@ class AutomationDiagHost(Automation):
                 # respect the ecoding options of sections.
                 # If this is a problem, we would have to apply parse and
                 # decode logic and unparse the decoded output again.
-                output += ensure_str_with_fallback(raw_data, encoding="utf-8", fallback="latin-1")
-            except Exception as exc:
+                output += ensure_str_with_fallback(
+                    raw_data.ok,
+                    encoding="utf-8",
+                    fallback="latin-1",
+                )
+            else:
+                assert raw_data.err is not None
                 state = 1
-                output += str(exc)
+                output += str(raw_data.err)
 
         return state, output
 
@@ -1450,17 +1454,17 @@ class AutomationGetAgentOutput(Automation):
                     if not isinstance(configurator, data_sources.agent.AgentConfigurator):
                         continue
 
-                    with configurator.make_fetcher() as fetcher:
-                        raw_data = fetcher.fetch(configurator.mode)
+                    raw_data = configurator.fetch()
 
-                    # Optionally show errors of problematic data sources
-                    checker = configurator.make_checker()
-                    host_sections = checker.check(Result.OK(raw_data))
-                    source_state, source_output, _source_perfdata = checker.summarize(host_sections)
+                    host_sections = configurator.parse(raw_data)
+                    source_state, source_output, _source_perfdata = configurator.summarize(
+                        host_sections)
                     if source_state != 0:
+                        # Optionally show errors of problematic data sources
                         success = False
                         output += "[%s] %s\n" % (configurator.id, source_output)
-                    info += raw_data
+                    assert raw_data.ok is not None
+                    info += raw_data.ok
             else:
                 if not ipaddress:
                     raise MKGeneralException("Failed to gather IP address of %s" % hostname)

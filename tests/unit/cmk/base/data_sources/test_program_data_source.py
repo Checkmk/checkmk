@@ -66,10 +66,8 @@ class TestDSProgramChecker:
         assert configurator.cmdline == ""
         assert configurator.stdin is None
         assert configurator.description == "Program: "
-
-        checker = configurator.make_checker()
-        assert checker.id == "agent"
-        assert checker._cpu_tracking_id == "ds"
+        assert configurator.id == "agent"
+        assert configurator.cpu_tracking_id == "ds"
 
     @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
     def test_template_translation(self, ipaddress, mode, monkeypatch):
@@ -149,7 +147,5 @@ class TestSpecialAgentChecker:
         assert configurator.cmdline == (  #
             str(agent_dir / "special" / ("agent_%s" % special_agent_id)) + " " + expected_args)
         assert configurator.stdin == expected_stdin
-
-        checker = configurator.make_checker()
-        assert checker.id == "special_%s" % special_agent_id
-        assert checker._cpu_tracking_id == "ds"
+        assert configurator.id == "special_%s" % special_agent_id
+        assert configurator.cpu_tracking_id == "ds"

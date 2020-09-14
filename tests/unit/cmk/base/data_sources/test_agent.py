@@ -176,10 +176,10 @@ class StubConfigurator(AgentConfigurator):
     def configure_fetcher(self):
         return {}
 
-    def make_checker(self) -> "StubAgent":
+    def _make_checker(self) -> "StubAgent":
         return StubAgent(self)
 
-    def make_summarizer(self) -> "StubSummarizer":
+    def _make_summarizer(self) -> "StubSummarizer":
         return StubSummarizer(self.exit_spec)
 
 
@@ -221,26 +221,22 @@ class TestAgentSummaryResult:
             description="agent description",
         )
 
-    @pytest.fixture
-    def summarizer(self, configurator):
-        return configurator.make_summarizer()
+    @pytest.mark.usefixtures("scenario")
+    def test_defaults(self, configurator):
+        assert configurator.summarize(Result.OK(configurator.default_host_sections)) == (0, "", [])
 
     @pytest.mark.usefixtures("scenario")
-    def test_defaults(self, summarizer, configurator):
-        assert summarizer.summarize(Result.OK(configurator.default_host_sections)) == (0, "", [])
+    def test_with_exception(self, configurator):
+        assert configurator.summarize(Result.Err(Exception())) == (3, "(?)", [])
 
     @pytest.mark.usefixtures("scenario")
-    def test_with_exception(self, summarizer):
-        assert summarizer.summarize(Result.Err(Exception())) == (3, "(?)", [])
+    def test_with_MKEmptyAgentData_exception(self, configurator):
+        assert configurator.summarize(Result.Err(MKEmptyAgentData())) == (2, "(!!)", [])
 
     @pytest.mark.usefixtures("scenario")
-    def test_with_MKEmptyAgentData_exception(self, summarizer):
-        assert summarizer.summarize(Result.Err(MKEmptyAgentData())) == (2, "(!!)", [])
+    def test_with_MKAgentError_exception(self, configurator):
+        assert configurator.summarize(Result.Err(MKAgentError())) == (2, "(!!)", [])
 
     @pytest.mark.usefixtures("scenario")
-    def test_with_MKAgentError_exception(self, summarizer):
-        assert summarizer.summarize(Result.Err(MKAgentError())) == (2, "(!!)", [])
-
-    @pytest.mark.usefixtures("scenario")
-    def test_with_MKTimeout_exception(self, summarizer):
-        assert summarizer.summarize(Result.Err(MKTimeout())) == (2, "(!!)", [])
+    def test_with_MKTimeout_exception(self, configurator):
+        assert configurator.summarize(Result.Err(MKTimeout())) == (2, "(!!)", [])

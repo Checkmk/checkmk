@@ -65,7 +65,7 @@ class IPMIConfigurator(AgentConfigurator):
             "password": self.credentials["password"],
         }
 
-    def make_summarizer(self) -> "IPMISummarizer":
+    def _make_summarizer(self) -> "IPMISummarizer":
         return IPMISummarizer(self.exit_spec)
 
     @staticmethod

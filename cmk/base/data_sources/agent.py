@@ -101,10 +101,10 @@ class AgentConfigurator(ABCConfigurator[AgentRawData, AgentHostSections]):
         #       Then we can remove this special case
         self.main_data_source: Final[bool] = main_data_source
 
-    def make_checker(self) -> "AgentChecker":
+    def _make_checker(self) -> "AgentChecker":
         return AgentChecker(self)
 
-    def make_parser(self) -> "AgentParser":
+    def _make_parser(self) -> "AgentParser":
         return AgentParser(self.hostname, self._logger)
 
 

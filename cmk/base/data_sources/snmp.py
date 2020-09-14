@@ -187,13 +187,13 @@ class SNMPConfigurator(ABCConfigurator[SNMPRawData, SNMPHostSections]):
             "snmp_config": self.snmp_config._asdict(),
         }
 
-    def make_checker(self) -> "SNMPChecker":
+    def _make_checker(self) -> "SNMPChecker":
         return SNMPChecker(self)
 
-    def make_parser(self) -> "SNMPParser":
+    def _make_parser(self) -> "SNMPParser":
         return SNMPParser(self.hostname, self._logger)
 
-    def make_summarizer(self) -> "SNMPSummarizer":
+    def _make_summarizer(self) -> "SNMPSummarizer":
         return SNMPSummarizer(self.exit_spec)
 
     def _make_snmp_scan_sections(self) -> Iterable[SNMPScanSection]:

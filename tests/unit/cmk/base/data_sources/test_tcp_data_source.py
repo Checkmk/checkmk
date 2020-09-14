@@ -113,10 +113,7 @@ def test_attribute_defaults(mode, monkeypatch):
         "use_only_cache": False,
     }
     assert configurator.description == "TCP: %s:%s" % (ipaddress, 6556)
-
-    checker = configurator.make_checker()
-
-    assert checker.id == "agent"
+    assert configurator.id == "agent"
     assert configurator.file_cache.maybe is False
 
 
@@ -129,13 +126,13 @@ class TestSummaryResult:
     def test_defaults(self, ipaddress, mode, monkeypatch):
         hostname = "testhost"
         Scenario().add_host(hostname).apply(monkeypatch)
-        summarizer = TCPConfigurator(
+        configurator = TCPConfigurator(
             hostname,
             ipaddress,
             mode=mode,
-        ).make_summarizer()
+        )
 
-        assert summarizer.summarize(Result.OK(AgentHostSections())) == (
+        assert configurator.summarize(Result.OK(AgentHostSections())) == (
             0,
             "Version: unknown, OS: unknown",
             [],

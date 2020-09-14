@@ -321,11 +321,13 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
                 selected_raw_sections = agent_based_register.get_relevant_raw_sections(
                     check_plugin_names=check_plugin_names, consider_inventory_plugins=False)
 
-            sources = data_sources.make_checkers(host_config,
-                                                 ipaddress,
-                                                 mode=data_sources.Mode.DISCOVERY)
+            sources = data_sources.make_configurators(
+                host_config,
+                ipaddress,
+                mode=data_sources.Mode.DISCOVERY,
+            )
             for source in sources:
-                _configure_sources(source.configurator, on_error=on_error)
+                _configure_sources(source, on_error=on_error)
 
             multi_host_sections = MultiHostSections()
             data_sources.update_host_sections(
@@ -527,11 +529,13 @@ def discover_on_host(
         else:
             ipaddress = ip_lookup.lookup_ip_address(host_config)
 
-        sources = data_sources.make_checkers(host_config,
-                                             ipaddress,
-                                             mode=data_sources.Mode.DISCOVERY)
+        sources = data_sources.make_configurators(
+            host_config,
+            ipaddress,
+            mode=data_sources.Mode.DISCOVERY,
+        )
         for source in sources:
-            _configure_sources(source.configurator, on_error=on_error)
+            _configure_sources(source, on_error=on_error)
 
         multi_host_sections = MultiHostSections()
         data_sources.update_host_sections(
@@ -699,10 +703,14 @@ def check_discovery(
     if ipaddress is None and not host_config.is_cluster:
         ipaddress = ip_lookup.lookup_ip_address(host_config)
 
-    sources = data_sources.make_checkers(host_config, ipaddress, mode=data_sources.Mode.DISCOVERY)
+    sources = data_sources.make_configurators(
+        host_config,
+        ipaddress,
+        mode=data_sources.Mode.DISCOVERY,
+    )
     for source in sources:
         _configure_sources(
-            source.configurator,
+            source,
             on_error="raise",
             disable_snmp_caches=params['inventory_check_do_scan'],
         )
@@ -763,8 +771,7 @@ def check_discovery(
 
     # Add data source information to check results
     for configurator, host_sections in result:
-        checker = configurator.make_checker()
-        source_state, source_output, _source_perfdata = checker.summarize(host_sections)
+        source_state, source_output, _source_perfdata = configurator.summarize(host_sections)
         # Do not output informational (state = 0) things.  These information
         # are shown by the "Check_MK" service
         if source_state != 0:
@@ -1581,9 +1588,13 @@ def get_check_preview(host_name: HostName, use_caches: bool,
 
     ip_address = None if host_config.is_cluster else ip_lookup.lookup_ip_address(host_config)
 
-    sources = data_sources.make_checkers(host_config, ip_address, mode=data_sources.Mode.DISCOVERY)
+    sources = data_sources.make_configurators(
+        host_config,
+        ip_address,
+        mode=data_sources.Mode.DISCOVERY,
+    )
     for source in sources:
-        _configure_sources(source.configurator, on_error=on_error)
+        _configure_sources(source, on_error=on_error)
 
     multi_host_sections = MultiHostSections()
     data_sources.update_host_sections(

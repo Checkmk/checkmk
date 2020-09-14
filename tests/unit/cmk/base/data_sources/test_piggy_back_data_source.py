@@ -30,10 +30,5 @@ def test_attribute_defaults(monkeypatch, ipaddress, mode):
     assert configurator.ipaddress == ipaddress
     assert configurator.mode is mode
     assert configurator.description.startswith("Process piggyback data from")
-
-    summarizer = configurator.make_summarizer()
-    assert summarizer.summarize(Result.OK(AgentHostSections())) == (0, "", [])
-
-    checker = configurator.make_checker()
-    assert checker.configurator is configurator
-    assert checker.id == "piggyback"
+    assert configurator.summarize(Result.OK(AgentHostSections())) == (0, "", [])
+    assert configurator.id == "piggyback"

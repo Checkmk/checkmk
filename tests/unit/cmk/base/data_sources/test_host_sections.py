@@ -33,7 +33,7 @@ from cmk.base.data_sources import (
     ABCHostSections,
     _data_sources,
     update_host_sections,
-    make_checkers,
+    make_configurators,
     make_nodes,
     Mode,
 )
@@ -529,7 +529,7 @@ class TestMakeHostSectionsHosts:
                         hostname,
                         ipaddress,
                         mode=mode,
-                    ).make_checker(),
+                    ),
                 ],
             ),
             max_cachefile_age=0,
@@ -554,23 +554,23 @@ class TestMakeHostSectionsHosts:
                 hostname,
                 ipaddress,
                 mode=mode,
-            ).make_checker(),
+            ),
             lambda hostname, ipaddress, *, mode: ProgramConfigurator.ds(
                 hostname,
                 ipaddress,
                 mode=mode,
                 template="",
-            ).make_checker(),
+            ),
             lambda hostname, ipaddress, *, mode: TCPConfigurator(
                 hostname,
                 ipaddress,
                 mode=mode,
-            ).make_checker(),
+            ),
         ],
     )
     def test_one_nonsnmp_source(self, hostname, ipaddress, mode, config_cache, host_config, source):
         source = source(hostname, ipaddress, mode=mode)
-        assert source.configurator.source_type is SourceType.HOST
+        assert source.source_type is SourceType.HOST
 
         mhs = MultiHostSections()
         update_host_sections(
@@ -588,7 +588,7 @@ class TestMakeHostSectionsHosts:
         )
         assert len(mhs) == 1
 
-        key = HostKey(hostname, ipaddress, source.configurator.source_type)
+        key = HostKey(hostname, ipaddress, source.source_type)
         assert key in mhs
 
         section = mhs[key]
@@ -611,12 +611,12 @@ class TestMakeHostSectionsHosts:
                 ipaddress,
                 mode=mode,
                 template="",
-            ).make_checker(),
+            ),
             TCPConfigurator(
                 hostname,
                 ipaddress,
                 mode=mode,
-            ).make_checker(),
+            ),
         ]
 
         mhs = MultiHostSections()
@@ -650,9 +650,9 @@ class TestMakeHostSectionsHosts:
         sources = [
             ProgramConfigurator.ds(hostname + "0", ipaddress,
                                                     mode=mode,
-                                                   template="",).make_checker(),
-            TCPConfigurator(hostname + "1", ipaddress, mode=mode,).make_checker(),
-            TCPConfigurator(hostname + "2", ipaddress, mode=mode,).make_checker(),
+                                                   template="",),
+            TCPConfigurator(hostname + "1", ipaddress, mode=mode,),
+            TCPConfigurator(hostname + "2", ipaddress, mode=mode,),
         ]
 
         mhs = MultiHostSections()
@@ -678,10 +678,10 @@ class TestMakeHostSectionsHosts:
         assert isinstance(section, AgentHostSections)
 
         assert len(section.sections) == len(sources)
-        for configurator in (s.configurator for s in sources):
+        for source in sources:
             # yapf: disable
             assert (
-                section.sections[SectionName("section_name_%s" % configurator.hostname)]
+                section.sections[SectionName("section_name_%s" % source.hostname)]
                 == [["section_content"]])
 
 
@@ -841,7 +841,7 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
             host_config,
             address,
             mode=mode,
-            sources=make_checkers(host_config, address, mode=mode),
+            sources=make_configurators(host_config, address, mode=mode),
         ),
         max_cachefile_age=host_config.max_cachefile_age,
         selected_raw_sections=None,

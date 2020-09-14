@@ -315,14 +315,20 @@ class ABCConfigurator(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
             self.id,
         )
 
-    def _setup_logger(self) -> None:
-        """Add the source log prefix to the class logger"""
-        self._logger.propagate = False
-        handler = logging.StreamHandler(stream=sys.stdout)
-        fmt = " %s[%s%s%s]%s %%(message)s" % (tty.bold, tty.normal, self.id, tty.bold, tty.normal)
-        handler.setFormatter(logging.Formatter(fmt))
-        del self._logger.handlers[:]  # Remove all previously existing handlers
-        self._logger.addHandler(handler)
+    def fetch(self) -> Result[TRawData, Exception]:
+        try:
+            with self._make_fetcher() as fetcher:
+                return Result.OK(fetcher.fetch(self.mode))
+        except Exception as exc:
+            return Result.Err(exc)
+
+    def parse(self, raw_data: Result[TRawData, Exception]) -> Result[THostSections, Exception]:
+        # That should obviously call `make_parser().parse(...)` but we still have
+        # cruft in `Checker.check()` that we cannot yet easily get rid of.
+        return self._make_checker().check(raw_data)
+
+    def summarize(self, host_sections: Result[THostSections, Exception]) -> ServiceCheckResult:
+        return self._make_summarizer().summarize(host_sections)
 
     @abc.abstractmethod
     def configure_fetcher(self) -> Dict[str, Any]:
@@ -334,24 +340,33 @@ class ABCConfigurator(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         """
         raise NotImplementedError
 
-    def make_fetcher(self) -> ABCFetcher:
+    def _make_fetcher(self) -> ABCFetcher:
         """Create a fetcher with this configuration."""
         return self.fetcher_type.from_json(self.configure_fetcher())
 
     @abc.abstractmethod
-    def make_checker(self) -> "ABCChecker":
+    def _make_checker(self) -> "ABCChecker":
         """Create a checker with this configuration."""
         raise NotImplementedError
 
     @abc.abstractmethod
-    def make_parser(self) -> "ABCParser[TRawData, THostSections]":
+    def _make_parser(self) -> "ABCParser[TRawData, THostSections]":
         """Create a parser with this configuration."""
         raise NotImplementedError
 
     @abc.abstractmethod
-    def make_summarizer(self) -> "ABCSummarizer[THostSections]":
+    def _make_summarizer(self) -> "ABCSummarizer[THostSections]":
         """Create a summarizer with this configuration."""
         raise NotImplementedError
+
+    def _setup_logger(self) -> None:
+        """Add the source log prefix to the class logger"""
+        self._logger.propagate = False
+        handler = logging.StreamHandler(stream=sys.stdout)
+        fmt = " %s[%s%s%s]%s %%(message)s" % (tty.bold, tty.normal, self.id, tty.bold, tty.normal)
+        handler.setFormatter(logging.Formatter(fmt))
+        del self._logger.handlers[:]  # Remove all previously existing handlers
+        self._logger.addHandler(handler)
 
 
 class ABCSummarizer(Generic[THostSections], metaclass=abc.ABCMeta):
@@ -426,8 +441,9 @@ class ABCChecker(Generic[TRawData, TSections, TPersistedSections, THostSections]
 
     @cpu_tracking.track
     def check(self, raw_data: Result[TRawData, Exception]) -> Result[THostSections, Exception]:
+        # WARNING: Do not call this function.  It is meant to disappear.
         try:
-            host_sections = self.configurator.make_parser().parse(raw_data)
+            host_sections = self.configurator._make_parser().parse(raw_data)
             if host_sections.is_err():
                 return host_sections
 
@@ -456,10 +472,6 @@ class ABCChecker(Generic[TRawData, TSections, TPersistedSections, THostSections]
             persisted_sections.update(host_sections.persisted_sections)
             self._section_store.store(persisted_sections)
         return persisted_sections
-
-    def summarize(self, host_sections: Result[THostSections, Exception]) -> ServiceCheckResult:
-        # Obsolete method required during the transition to the final API.
-        return self.configurator.make_summarizer().summarize(host_sections)
 
     @classmethod
     def use_outdated_persisted_sections(cls) -> None:

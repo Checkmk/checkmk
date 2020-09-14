@@ -26,7 +26,7 @@ import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.config import HostConfig, SelectedRawSections
 
-from ._abstract import ABCConfigurator, ABCChecker, Mode, ABCHostSections
+from ._abstract import ABCConfigurator, Mode, ABCHostSections
 from .agent import AgentHostSections
 from .host_sections import HostKey, MultiHostSections
 from .ipmi import IPMIConfigurator
@@ -35,9 +35,7 @@ from .programs import DSProgramConfigurator, SpecialAgentConfigurator
 from .snmp import SNMPConfigurator
 from .tcp import TCPConfigurator
 
-__all__ = ["Checkers", "update_host_sections", "make_configurators", "make_checkers", "make_nodes"]
-
-Checkers = Iterable[ABCChecker]
+__all__ = ["update_host_sections", "make_configurators", "make_nodes"]
 
 
 class _Builder:
@@ -59,7 +57,7 @@ class _Builder:
         self._initialize()
 
     @property
-    def configurators(self) -> Iterable[ABCConfigurator]:
+    def configurators(self) -> Sequence[ABCConfigurator]:
         # Always execute piggyback at the end
         return sorted(
             self._elems.values(),
@@ -181,19 +179,9 @@ def make_configurators(
     ipaddress: Optional[HostAddress],
     *,
     mode: Mode,
-) -> Iterable[ABCConfigurator]:
-    """Iterable of configurators available for `host_config`."""
+) -> Sequence[ABCConfigurator]:
+    """Sequence of configurators available for `host_config`."""
     return _Builder(host_config, ipaddress, mode=mode).configurators
-
-
-def make_checkers(
-    host_config: HostConfig,
-    ipaddress: Optional[HostAddress],
-    *,
-    mode: Mode,
-) -> Checkers:
-    """Iterable of checkers available for `host_config`."""
-    return list(c.make_checker() for c in make_configurators(host_config, ipaddress, mode=mode))
 
 
 def make_nodes(
@@ -201,8 +189,8 @@ def make_nodes(
     host_config: HostConfig,
     ipaddress: Optional[HostAddress],
     mode: Mode,
-    sources: Checkers,
-) -> Iterable[Tuple[HostName, Optional[HostAddress], Checkers]]:
+    sources: Sequence[ABCConfigurator],
+) -> Sequence[Tuple[HostName, Optional[HostAddress], Sequence[ABCConfigurator]]]:
     if host_config.nodes is None:
         return [(host_config.hostname, ipaddress, sources)]
     return _make_piggyback_nodes(mode, config_cache, host_config)
@@ -227,7 +215,7 @@ def _make_piggybacked_sections(host_config) -> SelectedRawSections:
 
 def update_host_sections(
     multi_host_sections: MultiHostSections,
-    nodes: Iterable[Tuple[HostName, Optional[HostAddress], Checkers]],
+    nodes: Iterable[Tuple[HostName, Optional[HostAddress], Sequence[ABCConfigurator]]],
     *,
     max_cachefile_age: int,
     selected_raw_sections: Optional[SelectedRawSections],
@@ -252,22 +240,21 @@ def update_host_sections(
     for hostname, ipaddress, sources in nodes:
         for source_index, source in enumerate(sources):
             if host_config.nodes is None:
-                source.configurator.selected_raw_sections = selected_raw_sections
+                source.selected_raw_sections = selected_raw_sections
             else:
-                source.configurator.selected_raw_sections = _make_piggybacked_sections(host_config)
+                source.selected_raw_sections = _make_piggybacked_sections(host_config)
 
-            source.configurator.file_cache.max_age = max_cachefile_age
+            source.file_cache.max_age = max_cachefile_age
 
             host_sections = multi_host_sections.setdefault(
-                HostKey(hostname, ipaddress, source.configurator.source_type),
-                source.configurator.default_host_sections,
+                HostKey(hostname, ipaddress, source.source_type),
+                source.default_host_sections,
             )
 
             if fetcher_messages is None:
                 # We don't have raw_data yet (from the previously executed fetcher), execute the
                 # fetcher here.
-                with source.configurator.make_fetcher() as fetcher:
-                    raw_data = fetcher.fetch(source.configurator.mode)
+                raw_data = source.fetch()
             else:
                 # The Microcore has handed over results from the previously executed fetcher.
                 # Extract the raw_data for the source we currently
@@ -279,10 +266,10 @@ def update_host_sections(
                 # TODO: Handle status != 0
                 assert fetcher_message.header.status == 0
 
-                raw_data = fetcher_message.raw_data()
+                raw_data = Result.OK(fetcher_message.raw_data())
 
-            host_section = source.check(Result.OK(raw_data))
-            result.append((source.configurator, host_section))
+            host_section = source.parse(raw_data)
+            result.append((source, host_section))
             if host_section.is_ok():
                 assert host_section.ok is not None
                 host_sections.update(host_section.ok)
@@ -302,8 +289,10 @@ def update_host_sections(
 
 
 def _make_piggyback_nodes(
-        mode: Mode, config_cache: config.ConfigCache,
-        host_config: HostConfig) -> Iterable[Tuple[HostName, Optional[HostAddress], Checkers]]:
+    mode: Mode,
+    config_cache: config.ConfigCache,
+    host_config: HostConfig,
+) -> Sequence[Tuple[HostName, Optional[HostAddress], Sequence[ABCConfigurator]]]:
     """Abstract clusters/nodes/hosts"""
     assert host_config.nodes is not None
 
@@ -311,7 +300,7 @@ def _make_piggyback_nodes(
     for hostname in host_config.nodes:
         node_config = config_cache.get_host_config(hostname)
         ipaddress = ip_lookup.lookup_ip_address(node_config)
-        sources = make_checkers(
+        sources = make_configurators(
             HostConfig.make_host_config(hostname),
             ipaddress,
             mode=mode,

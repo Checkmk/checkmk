@@ -96,7 +96,7 @@ class ProgramConfigurator(AgentConfigurator):
             "is_cmc": config.is_cmc(),
         }
 
-    def make_summarizer(self) -> AgentSummarizerDefault:
+    def _make_summarizer(self) -> AgentSummarizerDefault:
         return AgentSummarizerDefault(self.exit_spec, self)
 
     @staticmethod

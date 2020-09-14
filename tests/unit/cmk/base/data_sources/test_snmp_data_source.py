@@ -44,13 +44,8 @@ def scenario_fixture(hostname, monkeypatch):
 
 
 @pytest.fixture(name="configurator")
-def configurator_source(scenario, hostname, ipaddress, mode):
+def configurator_fixture(scenario, hostname, ipaddress, mode):
     return SNMPConfigurator.snmp(hostname, ipaddress, mode=mode)
-
-
-@pytest.fixture(name="source")
-def source_fixture(scenario, configurator):
-    return configurator.make_checker()
 
 
 def test_snmp_ipaddress_from_mgmt_board_unresolvable(hostname, monkeypatch):
@@ -68,11 +63,7 @@ def test_snmp_ipaddress_from_mgmt_board_unresolvable(hostname, monkeypatch):
     assert ip_lookup.lookup_mgmt_board_ip_address(host_config) is None
 
 
-def test_attribute_defaults(source, hostname, ipaddress, monkeypatch):
-    assert source.id == "snmp"
-    assert source._cpu_tracking_id == "snmp"
-
-    configurator = source.configurator
+def test_attribute_defaults(configurator, hostname, ipaddress, monkeypatch):
     assert configurator.hostname == hostname
     assert configurator.ipaddress == ipaddress
     assert configurator.id == "snmp"
@@ -81,8 +72,7 @@ def test_attribute_defaults(source, hostname, ipaddress, monkeypatch):
     assert configurator.on_snmp_scan_error == "raise"
 
 
-def test_description_with_ipaddress(source, monkeypatch):
-    configurator = source.configurator
+def test_description_with_ipaddress(configurator, monkeypatch):
     default = "SNMP (Community: 'public', Bulk walk: no, Port: 161, Inline: no)"
     assert configurator.description == default
 
@@ -144,7 +134,7 @@ class TestSNMPSummaryResult:
         return ts
 
     @pytest.fixture
-    def configurator(self, hostname, mode):
+    def source(self, hostname, mode):
         return SNMPConfigurator(
             hostname,
             "1.2.3.4",
@@ -155,17 +145,13 @@ class TestSNMPSummaryResult:
             title="snmp title",
         )
 
-    @pytest.fixture
-    def summarizer(self, configurator):
-        return configurator.make_summarizer()
+    @pytest.mark.usefixtures("scenario")
+    def test_defaults(self, source):
+        assert source.summarize(Result.OK(AgentHostSections())) == (0, "Success", [])
 
     @pytest.mark.usefixtures("scenario")
-    def test_defaults(self, summarizer):
-        assert summarizer.summarize(Result.OK(AgentHostSections())) == (0, "Success", [])
-
-    @pytest.mark.usefixtures("scenario")
-    def test_with_exception(self, summarizer):
-        assert summarizer.summarize(Result.Err(Exception())) == (3, "(?)", [])
+    def test_with_exception(self, source):
+        assert source.summarize(Result.Err(Exception())) == (3, "(?)", [])
 
 
 @pytest.fixture(name="discovery_rulesets")

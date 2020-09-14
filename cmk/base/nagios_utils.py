@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import subprocess
+import sys
 
 import cmk.base.obsolete_output as out
 import cmk.utils.paths
@@ -20,16 +21,16 @@ def do_check_nagiosconfig() -> bool:
     p = subprocess.Popen(
         command,
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
         close_fds=True,
         encoding="utf-8",
     )
-    stdout, stderr = p.communicate()
+    stdout = p.communicate()[0]
     exit_status = p.returncode
     if not exit_status:
         out.output(tty.ok + "\n")
         return True
 
     out.output("ERROR:\n")
-    out.output(stdout, stderr)
+    out.output(stdout, stream=sys.stderr)
     return False

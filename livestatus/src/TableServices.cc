@@ -34,9 +34,9 @@
 #include "IntLambdaColumn.h"
 #include "ListLambdaColumn.h"
 #include "Logger.h"
+#include "MacroExpander.h"
 #include "Metric.h"
 #include "MonitoringCore.h"
-#include "OffsetStringServiceMacroColumn.h"
 #include "Query.h"
 #include "ServiceContactsColumn.h"
 #include "ServiceGroupsColumn.h"
@@ -89,24 +89,26 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
             return r.service_check_command == nullptr ? ""
                                                       : r.service_check_command;
         }));
-    table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "check_command_expanded",
         "Nagios command used for active checks with the macros expanded",
-        offsets, table->core(), offsets.add([](Row r) {
-            return r.rawData<service>()->service_check_command;
-        })));
+        offsets, [mc](const service &r) {
+            return ServiceMacroExpander::make(r, mc)->expandMacros(
+                r.service_check_command);
+        }));
 #else
     table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "check_command", "Nagios command used for active checks",
         offsets, [](const service &r) {
             return r.check_command == nullptr ? "" : r.check_command;
         }));
-    table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "check_command_expanded",
         "Nagios command used for active checks with the macros expanded",
-        offsets, table->core(), offsets.add([](Row r) {
-            return r.rawData<service>()->check_command;
-        })));
+        offsets, [mc](const service &r) {
+            return ServiceMacroExpander::make(r, mc)->expandMacros(
+                r.check_command);
+        }));
 #endif
     table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "event_handler", "Nagios command used as event handler",
@@ -149,44 +151,50 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "notes", "Optional notes about the service", offsets,
         [](const service &r) { return r.notes == nullptr ? "" : r.notes; }));
-    table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "notes_expanded",
         "The notes with (the most important) macros expanded", offsets,
-        table->core(),
-        offsets.add([](Row r) { return r.rawData<service>()->notes; })));
+        [mc](const service &r) {
+            return ServiceMacroExpander::make(r, mc)->expandMacros(r.notes);
+        }));
     table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "notes_url",
         "An optional URL for additional notes about the service", offsets,
         [](const service &r) {
             return r.notes_url == nullptr ? "" : r.notes_url;
         }));
-    table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "notes_url_expanded",
         "The notes_url with (the most important) macros expanded", offsets,
-        table->core(),
-        offsets.add([](Row r) { return r.rawData<service>()->notes_url; })));
+        [mc](const service &r) {
+            return ServiceMacroExpander::make(r, mc)->expandMacros(r.notes_url);
+        }));
     table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "action_url",
         "An optional URL for actions or custom information about the service",
         offsets, [](const service &r) {
             return r.action_url == nullptr ? "" : r.action_url;
         }));
-    table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "action_url_expanded",
         "The action_url with (the most important) macros expanded", offsets,
-        table->core(),
-        offsets.add([](Row r) { return r.rawData<service>()->action_url; })));
+        [mc](const service &r) {
+            return ServiceMacroExpander::make(r, mc)->expandMacros(
+                r.action_url);
+        }));
     table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "icon_image",
         "The name of an image to be used as icon in the web interface", offsets,
         [](const service &r) {
             return r.icon_image == nullptr ? "" : r.icon_image;
         }));
-    table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "icon_image_expanded",
         "The icon_image with (the most important) macros expanded", offsets,
-        table->core(),
-        offsets.add([](Row r) { return r.rawData<service>()->icon_image; })));
+        [mc](const service &r) {
+            return ServiceMacroExpander::make(r, mc)->expandMacros(
+                r.icon_image);
+        }));
     table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "icon_image_alt",
         "An alternative text for the icon_image for browsers not displaying icons",

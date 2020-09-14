@@ -5,15 +5,17 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <functional>
 #include <iterator>
+#include <memory>
 #include <string>
 
 #include "Column.h"
+#include "MacroExpander.h"
 #include "NagiosCore.h"
-#include "OffsetStringHostMacroColumn.h"
-#include "OffsetStringServiceMacroColumn.h"
 #include "Row.h"
 #include "Store.h"
+#include "StringLambdaColumn.h"
 #include "data_encoding.h"
 #include "gtest/gtest.h"
 #include "nagios.h"
@@ -42,7 +44,7 @@ extern char *macro_user[MAX_USER_MACROS];
 
 namespace {
 // First test fixture: A single host
-struct OffsetStringHostMacroColumnTest : public ::testing::Test {
+struct HostMacroExpanderTest : public ::testing::Test {
     void SetUp() override {
         std::fill(std::begin(macro_user), std::end(macro_user), nullptr);
         macro_user[10] = cc("I drink and I know things");
@@ -60,14 +62,16 @@ struct OffsetStringHostMacroColumnTest : public ::testing::Test {
     NagiosCore core{NagiosPaths{}, NagiosLimits{}, NagiosAuthorization{},
                     Encoding::utf8};
     ColumnOffsets offsets{};
-    OffsetStringHostMacroColumn oshmc{
-        "funny_column_name", "Cool description!", offsets, &core,
-        offsets.add([](Row r) { return r.rawData<host>()->notes; })};
-};  // namespace
+    StringLambdaColumn<host> oshmc{"funny_column_name", "Cool description!",
+                                   offsets, [this](const host &r) {
+                                       return HostMacroExpander::make(
+                                                  r, &this->core)
+                                           ->expandMacros(r.notes);
+                                   }};
+};
 
 // Second test fixture: A single host with a single service
-struct OffsetStringServiceMacroColumnTest
-    : public OffsetStringHostMacroColumnTest {
+struct ServiceMacroExpanderTest : public HostMacroExpanderTest {
     void set_service_notes(const char *notes) {
         test_service.notes = cc(notes);
     }
@@ -80,20 +84,22 @@ struct OffsetStringServiceMacroColumnTest
                              {{"STATLER", "Boo!"},
                               {"WALDORF", "Terrible!"},
                               {"_LABEL_LO", "Labello"}}};
-    OffsetStringServiceMacroColumn ossmc{
-        "navn", "Beskrivelse", offsets, &core,
-        offsets.add([](Row r) { return r.rawData<service>()->notes; })};
+    StringLambdaColumn<service> ossmc{
+        "navn", "Beskrivelse", offsets, [this](const service &r) {
+            return ServiceMacroExpander::make(r, &this->core)
+                ->expandMacros(r.notes);
+        }};
 };
 }  // namespace
 
-TEST_F(OffsetStringHostMacroColumnTest, misc) {
+TEST_F(HostMacroExpanderTest, misc) {
     EXPECT_EQ("funny_column_name", oshmc.name());
     EXPECT_EQ("Cool description!", oshmc.description());
     EXPECT_EQ(ColumnType::string, oshmc.type());
     EXPECT_EQ(&test_host, oshmc.columnData<void>(Row{&test_host}));
 }
 
-TEST_F(OffsetStringHostMacroColumnTest, ExpandHostBuiltin) {
+TEST_F(HostMacroExpanderTest, ExpandHostBuiltin) {
     set_host_notes("checking $HOSTNAME$...");
     EXPECT_EQ("checking sesame_street...", expanded_host_notes());
 
@@ -119,7 +125,7 @@ TEST_F(OffsetStringHostMacroColumnTest, ExpandHostBuiltin) {
     EXPECT_EQ("checking the host check command...", expanded_host_notes());
 }
 
-TEST_F(OffsetStringHostMacroColumnTest, ExpandHostCustom) {
+TEST_F(HostMacroExpanderTest, ExpandHostCustom) {
     set_host_notes("Hi, I'm $_HOSTERNIE$!");
     EXPECT_EQ("Hi, I'm Bert!", expanded_host_notes());
 
@@ -127,7 +133,7 @@ TEST_F(OffsetStringHostMacroColumnTest, ExpandHostCustom) {
     EXPECT_EQ("Hi, I'm $_HOSTKERMIT$!", expanded_host_notes());
 }
 
-TEST_F(OffsetStringHostMacroColumnTest, ExpandServiceBuiltin) {
+TEST_F(HostMacroExpanderTest, ExpandServiceBuiltin) {
     set_host_notes("checking $SERVICEDESC$...");
     EXPECT_EQ("checking $SERVICEDESC$...", expanded_host_notes());
 
@@ -147,7 +153,7 @@ TEST_F(OffsetStringHostMacroColumnTest, ExpandServiceBuiltin) {
     EXPECT_EQ("checking $SERVICECHECKCOMMAND$...", expanded_host_notes());
 }
 
-TEST_F(OffsetStringHostMacroColumnTest, ExpandServiceCustom) {
+TEST_F(HostMacroExpanderTest, ExpandServiceCustom) {
     set_host_notes("checking $_SERVICESTATLER$...");
     EXPECT_EQ("checking $_SERVICESTATLER$...", expanded_host_notes());
 
@@ -155,7 +161,7 @@ TEST_F(OffsetStringHostMacroColumnTest, ExpandServiceCustom) {
     EXPECT_EQ("checking $_SERVICEFOZZIE$...", expanded_host_notes());
 }
 
-TEST_F(OffsetStringHostMacroColumnTest, ExpandUser) {
+TEST_F(HostMacroExpanderTest, ExpandUser) {
     set_host_notes("checking $USER11$...");
     EXPECT_EQ("checking I drink and I know things...", expanded_host_notes());
 
@@ -166,7 +172,7 @@ TEST_F(OffsetStringHostMacroColumnTest, ExpandUser) {
     EXPECT_EQ("checking $NONSENSE$...", expanded_host_notes());
 }
 
-TEST_F(OffsetStringHostMacroColumnTest, BorderCases) {
+TEST_F(HostMacroExpanderTest, BorderCases) {
     test_host.name = nullptr;
     set_host_notes("checking $HOSTNAME$...");
     EXPECT_EQ("checking $HOSTNAME$...", expanded_host_notes());
@@ -205,14 +211,14 @@ TEST_F(OffsetStringHostMacroColumnTest, BorderCases) {
     EXPECT_EQ("checking $GUT$...", expanded_host_notes());
 }
 
-TEST_F(OffsetStringServiceMacroColumnTest, misc) {
+TEST_F(ServiceMacroExpanderTest, misc) {
     EXPECT_EQ("navn", ossmc.name());
     EXPECT_EQ("Beskrivelse", ossmc.description());
     EXPECT_EQ(ColumnType::string, ossmc.type());
     EXPECT_EQ(&test_service, ossmc.columnData<void>(Row{&test_service}));
 }
 
-TEST_F(OffsetStringServiceMacroColumnTest, ExpandHostBuiltin) {
+TEST_F(ServiceMacroExpanderTest, ExpandHostBuiltin) {
     set_service_notes("checking $HOSTNAME$...");
     EXPECT_EQ("checking sesame_street...", expanded_service_notes());
 
@@ -238,7 +244,7 @@ TEST_F(OffsetStringServiceMacroColumnTest, ExpandHostBuiltin) {
     EXPECT_EQ("checking the host check command...", expanded_service_notes());
 }
 
-TEST_F(OffsetStringServiceMacroColumnTest, ExpandHostCustom) {
+TEST_F(ServiceMacroExpanderTest, ExpandHostCustom) {
     set_service_notes("Hi, I'm $_HOSTERNIE$!");
     EXPECT_EQ("Hi, I'm Bert!", expanded_service_notes());
 
@@ -246,7 +252,7 @@ TEST_F(OffsetStringServiceMacroColumnTest, ExpandHostCustom) {
     EXPECT_EQ("Hi, I'm $_HOSTKERMIT$!", expanded_service_notes());
 }
 
-TEST_F(OffsetStringServiceMacroColumnTest, ExpandServiceBuiltin) {
+TEST_F(ServiceMacroExpanderTest, ExpandServiceBuiltin) {
     set_service_notes("checking $SERVICEDESC$...");
     EXPECT_EQ("checking muppet_show...", expanded_service_notes());
 
@@ -266,7 +272,7 @@ TEST_F(OffsetStringServiceMacroColumnTest, ExpandServiceBuiltin) {
     EXPECT_EQ("checking check_fozzie_bear...", expanded_service_notes());
 }
 
-TEST_F(OffsetStringServiceMacroColumnTest, ExpandServiceCustom) {
+TEST_F(ServiceMacroExpanderTest, ExpandServiceCustom) {
     set_service_notes("checking $_SERVICESTATLER$...");
     EXPECT_EQ("checking Boo!...", expanded_service_notes());
 
@@ -274,7 +280,7 @@ TEST_F(OffsetStringServiceMacroColumnTest, ExpandServiceCustom) {
     EXPECT_EQ("checking $_SERVICEFOZZIE$...", expanded_service_notes());
 }
 
-TEST_F(OffsetStringServiceMacroColumnTest, ExpandUser) {
+TEST_F(ServiceMacroExpanderTest, ExpandUser) {
     set_service_notes("checking $USER11$...");
     EXPECT_EQ("checking I drink and I know things...",
               expanded_service_notes());
@@ -286,7 +292,7 @@ TEST_F(OffsetStringServiceMacroColumnTest, ExpandUser) {
     EXPECT_EQ("checking $NONSENSE$...", expanded_service_notes());
 }
 
-TEST_F(OffsetStringServiceMacroColumnTest, BorderCases) {
+TEST_F(ServiceMacroExpanderTest, BorderCases) {
     test_service.description = nullptr;
     set_service_notes("checking $SERVICEDESC$...");
     EXPECT_EQ("checking $SERVICEDESC$...", expanded_service_notes());

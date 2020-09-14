@@ -57,8 +57,8 @@ test_neb_SOURCES = \
     test/test_CustomVarsDictFilter.cc \
     test/test_FileSystemHelper.cc \
     test/test_LogEntry.cc \
+    test/test_MacroExpander.cc \
     test/test_Metric.cc \
-    test/test_OffsetStringMacroColumn.cc \
     test/test_Queue.cc \
     test/test_RegExp.cc \
     test/test_StringUtil.cc \
@@ -140,12 +140,10 @@ liblivestatus_a_SOURCES = \
         Logfile.cc \
         Logger.cc \
         LogwatchListColumn.cc \
+        MacroExpander.cc \
         Metric.cc \
         NagiosCore.cc \
         NullColumn.cc \
-        OffsetStringHostMacroColumn.cc \
-        OffsetStringMacroColumn.cc \
-        OffsetStringServiceMacroColumn.cc \
         OringFilter.cc \
         OutputBuffer.cc \
         PerfdataAggregator.cc \

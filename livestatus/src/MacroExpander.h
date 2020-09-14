@@ -3,21 +3,17 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef OffsetStringMacroColumn_h
-#define OffsetStringMacroColumn_h
+#ifndef MacroExpander_h
+#define MacroExpander_h
 
 #include "config.h"  // IWYU pragma: keep
 
 #include <memory>
 #include <optional>
 #include <string>
-#include <utility>
 
-#include "Column.h"
-#include "StringColumn.h"
 #include "nagios.h"
 class MonitoringCore;
-class Row;
 
 class MacroExpander {
 public:
@@ -62,27 +58,33 @@ private:
     const customvariablesmember *_cvm;
 };
 
-class OffsetStringMacroColumn : public StringColumn {
+class HostMacroExpander : public MacroExpander {
 public:
-    OffsetStringMacroColumn(const std::string &name,
-                            const std::string &description,
-                            const ColumnOffsets &offsets,
-                            const MonitoringCore *mc,
-                            ColumnOffsets offsets_string)
-        : StringColumn(name, description, offsets)
-        , _mc(mc)
-        , _offsets_string(std::move(offsets_string)) {}
+    HostMacroExpander(const host *hst, const MonitoringCore *mc);
 
-    [[nodiscard]] std::string getValue(Row row) const override;
+    static std::unique_ptr<MacroExpander> make(const host &hst,
+                                               MonitoringCore *mc);
 
-    [[nodiscard]] virtual std::unique_ptr<MacroExpander> getMacroExpander(
-        Row row) const = 0;
-
-protected:
-    const MonitoringCore *const _mc;
+    [[nodiscard]] std::optional<std::string> expand(
+        const std::string &str) const override;
 
 private:
-    ColumnOffsets _offsets_string;
+    const host *_hst;
+    CustomVariableExpander _cve;
 };
 
-#endif  // OffsetStringMacroColumn_h
+class ServiceMacroExpander : public MacroExpander {
+public:
+    ServiceMacroExpander(const service *svc, const MonitoringCore *mc);
+
+    static std::unique_ptr<MacroExpander> make(const service &svc,
+                                               MonitoringCore *mc);
+
+    [[nodiscard]] std::optional<std::string> expand(
+        const std::string &str) const override;
+
+private:
+    const service *_svc;
+    CustomVariableExpander _cve;
+};
+#endif  // MacroExpander_h

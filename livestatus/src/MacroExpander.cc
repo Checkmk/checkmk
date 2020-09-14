@@ -3,16 +3,14 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "OffsetStringMacroColumn.h"
+#include "MacroExpander.h"
 
 #include <cstdlib>
 #include <type_traits>
 #include <utility>
 
-#include "Column.h"
 #include "MonitoringCore.h"
 #include "RegExp.h"
-#include "Row.h"
 #include "StringUtils.h"
 
 // static
@@ -93,7 +91,87 @@ std::optional<std::string> CustomVariableExpander::expand(
     return {};
 }
 
-std::string OffsetStringMacroColumn::getValue(Row row) const {
-    return getMacroExpander(row)->expandMacros(
-        static_cast<const char *>(_offsets_string.shiftPointer(row)));
+HostMacroExpander::HostMacroExpander(const host *hst, const MonitoringCore *mc)
+    : _hst(hst), _cve("_HOST", hst->custom_variables, mc) {}
+
+// static
+std::unique_ptr<MacroExpander> HostMacroExpander::make(const host &hst,
+                                                       MonitoringCore *mc) {
+    return std::make_unique<CompoundMacroExpander>(
+        std::make_unique<HostMacroExpander>(&hst, mc),
+        std::make_unique<UserMacroExpander>());
+}
+
+std::optional<std::string> HostMacroExpander::expand(
+    const std::string &str) const {
+    if (str == "HOSTNAME") {
+        return from_ptr(_hst->name);
+    }
+    if (str == "HOSTDISPLAYNAME") {
+        return from_ptr(_hst->display_name);
+    }
+    if (str == "HOSTALIAS") {
+        return from_ptr(_hst->alias);
+    }
+    if (str == "HOSTADDRESS") {
+        return from_ptr(_hst->address);
+    }
+    if (str == "HOSTOUTPUT") {
+        return from_ptr(_hst->plugin_output);
+    }
+    if (str == "LONGHOSTOUTPUT") {
+        return from_ptr(_hst->long_plugin_output);
+    }
+    if (str == "HOSTPERFDATA") {
+        return from_ptr(_hst->perf_data);
+    }
+    if (str == "HOSTCHECKCOMMAND") {
+#ifndef NAGIOS4
+        return from_ptr(_hst->host_check_command);
+#else
+        return from_ptr(_hst->check_command);
+#endif  // NAGIOS4
+    }
+    return _cve.expand(str);
+}
+
+ServiceMacroExpander::ServiceMacroExpander(const service *svc,
+                                           const MonitoringCore *mc)
+    : _svc(svc), _cve("_SERVICE", svc->custom_variables, mc) {}
+
+// static
+std::unique_ptr<MacroExpander> ServiceMacroExpander::make(const service &svc,
+                                                          MonitoringCore *mc) {
+    return std::make_unique<CompoundMacroExpander>(
+        std::make_unique<HostMacroExpander>(svc.host_ptr, mc),
+        std::make_unique<CompoundMacroExpander>(
+            std::make_unique<ServiceMacroExpander>(&svc, mc),
+            std::make_unique<UserMacroExpander>()));
+}
+
+std::optional<std::string> ServiceMacroExpander::expand(
+    const std::string &str) const {
+    if (str == "SERVICEDESC") {
+        return from_ptr(_svc->description);
+    }
+    if (str == "SERVICEDISPLAYNAME") {
+        return from_ptr(_svc->display_name);
+    }
+    if (str == "SERVICEOUTPUT") {
+        return from_ptr(_svc->plugin_output);
+    }
+    if (str == "LONGSERVICEOUTPUT") {
+        return from_ptr(_svc->long_plugin_output);
+    }
+    if (str == "SERVICEPERFDATA") {
+        return from_ptr(_svc->perf_data);
+    }
+    if (str == "SERVICECHECKCOMMAND") {
+#ifndef NAGIOS4
+        return from_ptr(_svc->service_check_command);
+#else
+        return from_ptr(_svc->check_command);
+#endif  // NAGIOS4
+    }
+    return _cve.expand(str);
 }

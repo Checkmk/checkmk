@@ -55,6 +55,7 @@ def inv_oracle_instance(info, inventory_tree, status_data_tree):
         raw_db_creation_time = None
         raw_up_seconds = None
         logmode = None
+        pname = ""
 
         if len(line) == 6:
             sid, version, openmode, logins, _unused, _unused2 = line
@@ -70,7 +71,7 @@ def inv_oracle_instance(info, inventory_tree, status_data_tree):
         elif len(line) == 22:
             sid, version, openmode, logins, _archiver, raw_up_seconds, _dbid, \
                 logmode, _database_role, _force_logging, _name, raw_db_creation_time, _pluggable, \
-                _con_id, _pname, _pdbid, _popenmode, _prestricted, _ptotal_size, _precovery_status, \
+                _con_id, pname, _pdbid, _popenmode, _prestricted, _ptotal_size, _precovery_status, \
                 _pup_seconds, _pblock_size = line
 
         else:
@@ -83,6 +84,7 @@ def inv_oracle_instance(info, inventory_tree, status_data_tree):
 
         inv_node.append({
             "sid": sid,
+            "pname": pname,
             "version": version,
             "openmode": openmode,
             "logmode": logmode,
@@ -92,6 +94,7 @@ def inv_oracle_instance(info, inventory_tree, status_data_tree):
 
         status_node.append({
             "sid": sid,
+            "pname": pname,
             "db_uptime": up_seconds,
         })
 

@@ -84,10 +84,6 @@ class MonitoringCore(metaclass=abc.ABCMeta):
     def create_config(self) -> None:
         pass
 
-    @abc.abstractmethod
-    def precompile(self) -> None:
-        pass
-
 
 _ignore_ip_lookup_failures = False
 _failed_ip_lookups: List[HostName] = []
@@ -279,17 +275,14 @@ def do_create_config(core: MonitoringCore) -> None:
     Ensures that everything needed by the monitoring core and it's helper processes is up-to-date
     and available for starting the monitoring.
     """
-    with _backup_objects_file(core):
-        out.output("Generating configuration for core (type %s)..." % config.monitoring_core)
-        try:
-            _create_core_config(core)
-            out.output(tty.ok + "\n")
-        except Exception as e:
-            if cmk.utils.debug.enabled():
-                raise
-            raise MKGeneralException("Error creating configuration: %s" % e)
-
-    core.precompile()
+    out.output("Generating configuration for core (type %s)..." % config.monitoring_core)
+    try:
+        _create_core_config(core)
+        out.output(tty.ok + "\n")
+    except Exception as e:
+        if cmk.utils.debug.enabled():
+            raise
+        raise MKGeneralException("Error creating configuration: %s" % e)
 
     try:
         import cmk.base.cee.bakery.agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel
@@ -342,7 +335,7 @@ def _create_core_config(core: MonitoringCore) -> ConfigurationWarnings:
     _verify_non_duplicate_hosts()
     _verify_non_deprecated_checkgroups()
 
-    with HelperConfig(current_core_config_serial()).create():
+    with HelperConfig(current_core_config_serial()).create(), _backup_objects_file(core):
         # TODO: Hand over the serial and base path here to remove access to global information
         # from MonitoringCore classes
         core.create_config()

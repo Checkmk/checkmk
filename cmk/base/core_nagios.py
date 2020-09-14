@@ -55,6 +55,10 @@ AbstractServiceID = Union[ActiveServiceID, CustomServiceID, ServiceID]
 
 class NagiosCore(core_config.MonitoringCore):
     def create_config(self) -> None:
+        self._create_core_config()
+        self._precompile_hostchecks()
+
+    def _create_core_config(self) -> None:
         """Tries to create a new Check_MK object configuration file for the Nagios core
 
         During create_config() exceptions may be raised which are caused by configuration issues.
@@ -85,7 +89,7 @@ class NagiosCore(core_config.MonitoringCore):
                     pass
             raise
 
-    def precompile(self) -> None:
+    def _precompile_hostchecks(self) -> None:
         out.output("Precompiling host checks...")
         _precompile_hostchecks(core_config.current_core_config_serial())
         out.output(tty.ok + "\n")

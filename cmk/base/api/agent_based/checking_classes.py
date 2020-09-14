@@ -225,13 +225,11 @@ class Metric(ABCCheckGenerated):
         return self._value
 
     @property
-    def levels(self):
-        # () -> Tuple[Optional[EvalableFloat], Optional[EvalableFloat]]
+    def levels(self) -> Tuple[Optional[EvalableFloat], Optional[EvalableFloat]]:
         return self._levels
 
     @property
-    def boundaries(self):
-        # () -> Tuple[Optional[EvalableFloat], Optional[EvalableFloat]]
+    def boundaries(self) -> Tuple[Optional[EvalableFloat], Optional[EvalableFloat]]:
         return self._boundaries
 
     def __repr__(self):

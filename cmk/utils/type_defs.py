@@ -40,7 +40,6 @@ RulesetName = str
 RuleValue = Any  # TODO: Improve this type
 RuleSpec = Dict[str, Any]  # TODO: Improve this type
 Ruleset = List[RuleSpec]  # TODO: Improve this type
-MetricName = str
 CheckPluginNameStr = str
 ActiveCheckPluginName = str
 Item = Optional[str]
@@ -65,9 +64,12 @@ ServiceState = int
 HostState = int
 ServiceDetails = str
 ServiceAdditionalDetails = str
-# TODO: Specify this  (see cmk/base/checking.py::_convert_perf_data)
-Metric = List
-ServiceCheckResult = Tuple[ServiceState, ServiceDetails, List[Metric]]
+
+MetricName = str
+MetricTuple = Tuple[MetricName, float, Optional[float], Optional[float], Optional[float],
+                    Optional[float],]
+
+ServiceCheckResult = Tuple[ServiceState, ServiceDetails, List[MetricTuple]]
 
 UserId = NewType("UserId", str)
 EventRule = Dict[str, Any]  # TODO Improve this

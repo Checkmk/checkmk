@@ -19,7 +19,7 @@ from cmk.utils.type_defs import (
     AgentRawData,
     HostAddress,
     HostName,
-    Metric,
+    MetricTuple,
     SectionName,
     ServiceCheckResult,
     ServiceDetails,
@@ -138,7 +138,7 @@ class AgentSummarizerDefault(AgentSummarizer):
 
         status: ServiceState = 0
         output: List[ServiceDetails] = []
-        perfdata: List[Metric] = []
+        perfdata: List[MetricTuple] = []
         if not self._host_config.is_cluster and agent_version is not None:
             output.append("Version: %s" % agent_version)
 

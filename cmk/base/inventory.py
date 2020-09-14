@@ -24,7 +24,7 @@ from cmk.utils.structured_data import StructuredDataTree
 from cmk.utils.type_defs import (
     HostAddress,
     HostName,
-    Metric,
+    MetricTuple,
     ServiceAdditionalDetails,
     ServiceDetails,
     ServiceState,
@@ -111,7 +111,7 @@ def _show_inventory_results_on_console(inventory_tree: StructuredDataTree,
                                                  "Check_MK HW/SW Inventory")
 def do_inv_check(
     hostname: HostName, options: Dict[str, int]
-) -> Tuple[ServiceState, List[ServiceDetails], List[ServiceAdditionalDetails], Metric]:
+) -> Tuple[ServiceState, List[ServiceDetails], List[ServiceAdditionalDetails], List[MetricTuple]]:
     _inv_hw_changes = options.get("hw-changes", 0)
     _inv_sw_changes = options.get("sw-changes", 0)
     _inv_sw_missing = options.get("sw-missing", 0)
@@ -127,7 +127,6 @@ def do_inv_check(
     status = 0
     infotexts: List[str] = []
     long_infotexts: List[str] = []
-    perfdata: List[Tuple] = []
 
     sources = data_sources.make_checkers(host_config, ipaddress, mode=data_sources.Mode.INVENTORY)
     inventory_tree, status_data_tree, results = _do_inv_for(
@@ -194,7 +193,7 @@ def do_inv_check(
             status = max(_inv_fail_status, status)
             infotexts.append("[%s] %s" % (configurator.id, source_output))
 
-    return status, infotexts, long_infotexts, perfdata
+    return status, infotexts, long_infotexts, []
 
 
 def _all_sources_fail(

@@ -22,6 +22,7 @@ from typing import (
     Iterable,
     List,
     Optional,
+    Sequence,
     Set,
     Tuple,
     Union,
@@ -42,7 +43,7 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostName,
     InventoryPluginName,
-    Metric,
+    MetricTuple,
     SectionName,
     ServiceAdditionalDetails,
     ServiceCheckResult,
@@ -91,8 +92,7 @@ _checkresult_file_path = None
 _submit_to_core = True
 _show_perfdata = False
 
-ServiceCheckResultWithOptionalDetails = Tuple[ServiceState, ServiceDetails, List[Metric]]
-UncleanPerfValue = Union[None, str, float]
+ServiceCheckResultWithOptionalDetails = Tuple[ServiceState, ServiceDetails, List[MetricTuple]]
 
 #.
 #   .--Checking------------------------------------------------------------.
@@ -788,13 +788,13 @@ def _aggregate_results(subresults: CheckGenerator) -> ServiceCheckResult:
 
 
 def _consume_and_dispatch_result_types(
-    subresults: CheckGenerator,) -> Tuple[List[Metric], List[checking_classes.Result]]:
+    subresults: CheckGenerator,) -> Tuple[List[MetricTuple], List[checking_classes.Result]]:
     """Consume *all* check results, and *then* raise, if we encountered
     an IgnoreResults instance.
     """
     ignore_results: List[checking_classes.IgnoreResults] = []
     results: List[checking_classes.Result] = []
-    perfdata: List[Metric] = []
+    perfdata: List[MetricTuple] = []
 
     for subr in subresults:
         if isinstance(subr, checking_classes.IgnoreResults):
@@ -834,7 +834,7 @@ def _sanitize_yield_check_result(result: Iterable[Any]) -> ServiceCheckResult:
     # Several sub results issued with multiple yields. Make that worst sub check
     # decide the total state, join the texts and performance data. Subresults with
     # an infotext of None are used for adding performance data.
-    perfdata: List[Metric] = []
+    perfdata: List[MetricTuple] = []
     infotexts: List[ServiceDetails] = []
     status: ServiceState = 0
 
@@ -865,6 +865,9 @@ def _sanitize_tuple_check_result(
 
     infotext = _sanitize_check_result_infotext(infotext, allow_missing_infotext)
 
+    # NOTE: the typing is just wishful thinking. However, this part of the
+    # code is only used for the legacy cluster case, so we do not introduce
+    # new validation here.
     return state, infotext, perfdata
 
 
@@ -888,21 +891,17 @@ def _sanitize_check_result_infotext(infotext: Optional[AnyStr],
     return infotext
 
 
-def _convert_perf_data(p: List[UncleanPerfValue]) -> str:
+def _convert_perf_data(p: Sequence[Union[None, str, float]]) -> str:
     # replace None with "" and fill up to 6 values
-    normalized = (list(map(_convert_perf_value, p)) + ['', '', '', ''])[0:6]
-    return "%s=%s;%s;%s;%s;%s" % tuple(normalized)
+    normalized = [_convert_perf_value(v) for v in p]
+    normalized.extend('      ')
+    return "%s=%s;%s;%s;%s;%s" % tuple(normalized[:6])
 
 
-def _convert_perf_value(x: UncleanPerfValue) -> str:
-    if x is None:
-        return ""
-    if isinstance(x, str):
-        return x
+def _convert_perf_value(x: Union[None, str, float]) -> str:
     if isinstance(x, float):
         return ("%.6f" % x).rstrip("0").rstrip(".")
-
-    return str(x)
+    return str(x or "")
 
 
 #.

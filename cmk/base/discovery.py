@@ -52,7 +52,7 @@ from cmk.utils.type_defs import (
     HostName,
     HostState,
     Item,
-    Metric,
+    MetricTuple,
     ParsedSectionName,
     RulesetName,
     SourceType,
@@ -91,7 +91,7 @@ ServicesByTransition = Dict[str, List[Service]]
 
 CheckPreviewEntry = Tuple[str, CheckPluginNameStr, Optional[RulesetName], Item,
                           LegacyCheckParameters, LegacyCheckParameters, str, Optional[int], str,
-                          List[Metric], Dict[str, str]]
+                          List[MetricTuple], Dict[str, str]]
 CheckPreviewTable = List[CheckPreviewEntry]
 DiscoveryEntry = Union[check_api_utils.Service, DiscoveredHostLabels, HostLabel,
                        Tuple[Item, LegacyCheckParameters]]
@@ -1619,7 +1619,7 @@ def get_check_preview(host_name: HostName, use_caches: bool,
             if check_source in ['legacy', 'active', 'custom']:
                 exitcode = None
                 output = u"WAITING - %s check, cannot be done offline" % check_source.title()
-                perfdata: List[Metric] = []
+                perfdata: List[MetricTuple] = []
                 ruleset_name: Optional[RulesetName] = None
             else:
                 if plugin is None:

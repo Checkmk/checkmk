@@ -210,7 +210,7 @@ class TestSNMPSource_make_snmp_scan_sections:
             hostname,
             ipaddress,
         )
-        assert source._make_snmp_scan_sections() == [(plugin.name, plugin.detect_spec)]
+        assert source._make_snmp_section_detects() == [(plugin.name, plugin.detect_spec)]
 
     def test_rule_dependent(
         self,
@@ -248,4 +248,4 @@ class TestSNMPSource_make_snmp_scan_sections:
             hostname,
             ipaddress,
         )
-        assert source._make_snmp_scan_sections() == [(plugin.name, detect_spec_1)]
+        assert source._make_snmp_section_detects() == [(plugin.name, detect_spec_1)]

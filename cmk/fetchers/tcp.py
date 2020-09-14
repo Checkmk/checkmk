@@ -17,6 +17,7 @@ from cmk.utils.type_defs import AgentRawData, HostAddress
 
 from . import MKFetcherError
 from .agent import AgentFetcher, AgentFileCache, DefaultAgentFileCache
+from .type_defs import Mode
 
 
 class TCPFetcher(AgentFetcher):
@@ -67,7 +68,10 @@ class TCPFetcher(AgentFetcher):
             self._socket.close()
         self._socket = None
 
-    def _fetch_from_io(self) -> AgentRawData:
+    def _use_cached_data(self, mode: Mode) -> bool:
+        return mode is not Mode.CHECKING or self.file_cache.simulation
+
+    def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         if self._use_only_cache:
             raise MKFetcherError("Got no data: No usable cache file present at %s" %
                                  self.file_cache.path)

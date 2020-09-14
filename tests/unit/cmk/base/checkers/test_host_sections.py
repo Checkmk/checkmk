@@ -41,7 +41,7 @@ from cmk.base.checkers.agent import AgentHostSections
 from cmk.base.checkers.host_sections import HostKey, MultiHostSections
 from cmk.base.checkers.piggyback import PiggybackSource
 from cmk.base.checkers.programs import ProgramSource
-from cmk.base.checkers.snmp import SNMPSource, SNMPHostSections, CachedSNMPDetector
+from cmk.base.checkers.snmp import SNMPSource, SNMPHostSections
 from cmk.base.checkers.tcp import TCPSource
 
 _TestSection = collections.namedtuple(
@@ -451,7 +451,6 @@ class TestMakeHostSectionsHosts:
                 lambda self, mode, fetcher=fetcher: {} if fetcher is SNMPFetcher else b"",
             )
 
-        monkeypatch.setattr(CachedSNMPDetector, "__call__", lambda *args, **kwargs: frozenset())
         monkeypatch.setattr(
             ABCChecker,
             "check",

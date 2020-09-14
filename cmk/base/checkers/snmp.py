@@ -5,29 +5,25 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-import logging
 from pathlib import Path
-from typing import Any, Dict, Final, Iterable, List, Optional, Sequence, Set
+from typing import Any, Dict, Iterable, Optional, Sequence, Tuple
 
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
 
-from cmk.snmplib.snmp_scan import gather_available_raw_section_names, SNMPScanSection
 from cmk.snmplib.type_defs import (
-    SNMPHostConfig,
+    SNMPDetectSpec,
     SNMPPersistedSections,
     SNMPRawData,
     SNMPSectionContent,
     SNMPSections,
-    SNMPTree,
 )
 
-from cmk.fetchers import factory, FetcherType
+from cmk.fetchers import FetcherType
 
 import cmk.base.api.agent_based.register as agent_based_register
+import cmk.base.check_table as check_table
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
-from cmk.base.config import SelectedRawSections
 
 from ._abstract import (
     ABCSource,
@@ -37,45 +33,11 @@ from ._abstract import (
     ABCSummarizer,
     Mode,
 )
-from ._cache import SectionStore
 
 
 class SNMPHostSections(ABCHostSections[SNMPRawData, SNMPSections, SNMPPersistedSections,
                                        SNMPSectionContent]):
     pass
-
-
-class CachedSNMPDetector:
-    """Object to run/cache SNMP detection"""
-    def __init__(self, logger: logging.Logger) -> None:
-        super(CachedSNMPDetector, self).__init__()
-        self._logger = logger
-        # Optional set: None: we never tried, empty: we tried, but found nothing
-        self._cached_result: Optional[Set[SectionName]] = None
-
-    # TODO (mo): Make this (and the called) function(s) return the sections directly!
-    def __call__(
-        self,
-        snmp_config: SNMPHostConfig,
-        sections: Iterable[SNMPScanSection],
-        *,
-        on_error,
-    ) -> Set[SectionName]:
-        """Returns a list of raw sections that shall be processed by this source.
-
-        The logic is only processed once. Once processed, the answer is cached.
-        """
-        if self._cached_result is None:
-            self._cached_result = gather_available_raw_section_names(
-                sections,
-                on_error=on_error,
-                missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                    snmp_config.hostname,
-                    config.snmp_without_sys_descr,
-                ),
-                backend=factory.backend(snmp_config, logger=self._logger),
-            )
-        return self._cached_result
 
 
 class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
@@ -122,15 +84,10 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
             self.host_config.snmp_config(self.ipaddress)
             if self.source_type is SourceType.HOST else self.host_config.management_snmp_config)
         self.on_snmp_scan_error = on_error
-        self.detector: Final = CachedSNMPDetector(self._logger)
         # Attributes below are wrong
         self.use_snmpwalk_cache = True
         self.ignore_check_interval = False
         self.prefetched_sections: Sequence[SectionName] = ()
-        self.section_store: SectionStore[SNMPPersistedSections] = SectionStore(
-            self.persisted_sections_file_path,
-            self._logger,
-        )
 
     @classmethod
     def snmp(
@@ -174,15 +131,17 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
     def configure_fetcher(self) -> Dict[str, Any]:
         return {
             "file_cache": self.file_cache.configure(),
-            "oid_infos": {
-                str(name): [tree.to_json() for tree in trees]
-                for name, trees in self._make_oid_infos(
-                    persisted_sections=self.section_store.load(
-                        SNMPChecker._use_outdated_persisted_sections),
-                    selected_raw_sections=self.selected_raw_sections,
-                    prefetched_sections=self.prefetched_sections,
-                ).items()
+            "snmp_section_trees": {
+                str(s.name): [tree.to_json() for tree in s.trees
+                             ] for s in agent_based_register.iter_all_snmp_sections()
             },
+            "snmp_section_detects": [(str(n), d) for n, d in self._make_snmp_section_detects()],
+            "configured_snmp_sections": [str(s) for s in self._make_configured_snmp_sections()],
+            "on_error": self.on_snmp_scan_error,
+            "missing_sys_description": config.get_config_cache().in_binary_hostlist(
+                self.snmp_config.hostname,
+                config.snmp_without_sys_descr,
+            ),
             "use_snmpwalk_cache": self.use_snmpwalk_cache,
             "snmp_config": self.snmp_config._asdict(),
         }
@@ -196,7 +155,7 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
     def _make_summarizer(self) -> "SNMPSummarizer":
         return SNMPSummarizer(self.exit_spec)
 
-    def _make_snmp_scan_sections(self) -> Iterable[SNMPScanSection]:
+    def _make_snmp_section_detects(self) -> Iterable[Tuple[SectionName, SNMPDetectSpec]]:
         """Create list of all SNMP scan specifications.
 
         Here, we evaluate the rule_dependent_detect_spec-attribute of SNMPSectionPlugin. This
@@ -210,7 +169,12 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
         snmp_scan_sections = []
         config_cache = config.get_config_cache()
 
+        disabled_sections = self.host_config.disabled_snmp_sections()
+
         for snmp_section_plugin in agent_based_register.iter_all_snmp_sections():
+            if snmp_section_plugin.name in disabled_sections:
+                continue
+
             if snmp_section_plugin.rule_dependent_detect_spec is None:
                 detect_spec = snmp_section_plugin.detect_spec
             else:
@@ -229,42 +193,21 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
 
         return snmp_scan_sections
 
-    def _make_oid_infos(
-        self,
-        *,
-        persisted_sections: SNMPPersistedSections,
-        selected_raw_sections: Optional[SelectedRawSections],
-        prefetched_sections: Sequence[SectionName],
-    ) -> Dict[SectionName, List[SNMPTree]]:
-        oid_infos = {}  # Dict[SectionName, List[SNMPTree]]
-        if selected_raw_sections is None:
-            section_names = self.detector(
-                self.snmp_config,
-                self._make_snmp_scan_sections(),
-                on_error=self.on_snmp_scan_error,
-            )
-        else:
-            section_names = {s.name for s in selected_raw_sections.values()}
+    def _make_configured_snmp_sections(self) -> Iterable[SectionName]:
+        section_names = set(
+            agent_based_register.get_relevant_raw_sections(
+                check_plugin_names=check_table.get_needed_check_names(
+                    self.hostname,
+                    remove_duplicates=True,
+                    filter_mode="include_clustered",
+                    skip_ignored=True,
+                ),
+                consider_inventory_plugins=self.host_config.do_status_data_inventory,
+            ))
 
         section_names -= self.host_config.disabled_snmp_sections()
 
-        for section_name in SNMPSource._sort_section_names(section_names):
-            plugin = agent_based_register.get_section_plugin(section_name)
-            if not isinstance(plugin, SNMPSectionPlugin):
-                self._logger.debug("%s: No such section definition", section_name)
-                continue
-
-            if section_name in prefetched_sections:
-                continue
-
-            # This checks data is configured to be persisted (snmp_fetch_interval) and recent enough.
-            # Skip gathering new data here. The persisted data will be added later
-            if section_name in persisted_sections:
-                self._logger.debug("%s: Skip fetching data (persisted info exists)", section_name)
-                continue
-
-            oid_infos[section_name] = plugin.trees
-        return oid_infos
+        return SNMPSource._sort_section_names(section_names)
 
     @staticmethod
     def _sort_section_names(section_names: Iterable[SectionName]) -> Iterable[SectionName]:

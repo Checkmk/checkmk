@@ -8,15 +8,17 @@ import ast
 import logging
 from functools import partial
 from types import TracebackType
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Set, Tuple, Type
 
 from cmk.utils.type_defs import SectionName
 
+from cmk.snmplib.snmp_scan import gather_available_raw_section_names
 import cmk.snmplib.snmp_table as snmp_table
-from cmk.snmplib.type_defs import SNMPHostConfig, SNMPRawData, SNMPTable, SNMPTree
+from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPHostConfig, SNMPRawData, SNMPTable, SNMPTree
 
 from . import factory
 from ._base import ABCFileCache, ABCFetcher
+from .type_defs import Mode
 
 __all__ = ["SNMPFetcher", "SNMPFileCache"]
 
@@ -34,26 +36,44 @@ class SNMPFileCache(ABCFileCache[SNMPRawData]):
 class SNMPFetcher(ABCFetcher[SNMPRawData]):
     def __init__(
         self,
+        *,
         file_cache: SNMPFileCache,
-        oid_infos: Dict[SectionName, List[SNMPTree]],
+        snmp_section_trees: Dict[SectionName, List[SNMPTree]],
+        snmp_section_detects: List[Tuple[SectionName, SNMPDetectSpec]],
+        configured_snmp_sections: Set[SectionName],
+        on_error: str,
+        missing_sys_description: bool,
         use_snmpwalk_cache: bool,
         snmp_config: SNMPHostConfig,
     ) -> None:
         super().__init__(file_cache, logging.getLogger("cmk.fetchers.snmp"))
-        self._oid_infos = oid_infos
+        self._snmp_section_trees = snmp_section_trees
+        self._snmp_section_detects = snmp_section_detects
+        self._configured_snmp_sections = configured_snmp_sections
+        self._on_error = on_error
+        self._missing_sys_description = missing_sys_description
         self._use_snmpwalk_cache = use_snmpwalk_cache
         self._snmp_config = snmp_config
+        self._backend = factory.backend(self._snmp_config, self._logger)
 
     @classmethod
     def from_json(cls, serialized: Dict[str, Any]) -> 'SNMPFetcher':
         return cls(
-            SNMPFileCache.from_json(serialized.pop("file_cache")),
-            {
+            file_cache=SNMPFileCache.from_json(serialized.pop("file_cache")),
+            snmp_section_trees={
                 SectionName(name): [SNMPTree.from_json(tree) for tree in trees
-                                   ] for name, trees in serialized["oid_infos"].items()
+                                   ] for name, trees in serialized["snmp_section_trees"].items()
             },
-            serialized["use_snmpwalk_cache"],
-            SNMPHostConfig(**serialized["snmp_config"]),
+            snmp_section_detects=[
+                (SectionName(name), specs) for name, specs in serialized["snmp_section_detects"]
+            ],
+            configured_snmp_sections={
+                SectionName(name) for name in serialized["configured_snmp_sections"]
+            },
+            on_error=serialized["on_error"],
+            missing_sys_description=serialized["missing_sys_description"],
+            use_snmpwalk_cache=serialized["use_snmpwalk_cache"],
+            snmp_config=SNMPHostConfig(**serialized["snmp_config"]),
         )
 
     def __enter__(self) -> 'SNMPFetcher':
@@ -63,16 +83,40 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
                  traceback: Optional[TracebackType]) -> None:
         pass
 
-    def _fetch_from_io(self) -> SNMPRawData:
+    def _detect(self) -> Set[SectionName]:
+        return gather_available_raw_section_names(
+            sections=self._snmp_section_detects,
+            on_error=self._on_error,
+            missing_sys_description=self._missing_sys_description,
+            backend=self._backend,
+        )
+
+    def _use_cached_data(self, mode: Mode) -> bool:
+        """Decide whether to try to read data from cache
+
+        Fetching for SNMP data is special in that we have to list the sections to fetch
+        in advance, unlike for agent data, where we parse the data and see what we get.
+
+        For discovery, we must not fetch the pre-configured sections (which are the ones
+        in the cache), but all sections for which the detection spec evaluates to true,
+        which can be many more.
+        """
+        return mode not in (Mode.DISCOVERY, Mode.CHECKING) or self.file_cache.simulation
+
+    def _fetch_from_io(self, mode: Mode) -> SNMPRawData:
+        selected_sections = (self._detect()
+                             if mode is Mode.DISCOVERY else self._configured_snmp_sections)
+
         fetched_data: SNMPRawData = {}
-        for section_name, oid_info in self._oid_infos.items():
+        for section_name in selected_sections:
             self._logger.debug("%s: Fetching data", section_name)
 
-            # oid_info is now a list: Each element of that list is interpreted as one real oid_info
+            oid_info = self._snmp_section_trees[section_name]
+            # oid_info is a list: Each element of that list is interpreted as one real oid_info
             # and fetches a separate snmp table.
             get_snmp = partial(snmp_table.get_snmp_table_cached
                                if self._use_snmpwalk_cache else snmp_table.get_snmp_table,
-                               backend=factory.backend(self._snmp_config, self._logger))
+                               backend=self._backend)
             # branch: List[SNMPTree]
             fetched_section_data: List[SNMPTable] = []
             for entry in oid_info:

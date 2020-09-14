@@ -20,6 +20,7 @@ from cmk.utils.type_defs import AgentRawData, HostAddress
 
 from . import MKFetcherError
 from .agent import AgentFetcher, AgentFileCache, DefaultAgentFileCache
+from .type_defs import Mode
 
 
 class IPMIFetcher(AgentFetcher):
@@ -57,7 +58,10 @@ class IPMIFetcher(AgentFetcher):
             return False
         return True
 
-    def _fetch_from_io(self) -> AgentRawData:
+    def _use_cached_data(self, mode: Mode) -> bool:
+        return mode is not Mode.CHECKING or self.file_cache.simulation
+
+    def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         if self._command is None:
             raise MKFetcherError("Not connected")
 

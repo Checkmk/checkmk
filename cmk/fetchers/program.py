@@ -18,6 +18,7 @@ from cmk.utils.type_defs import AgentRawData
 
 from . import MKFetcherError
 from .agent import AgentFetcher, AgentFileCache, DefaultAgentFileCache
+from .type_defs import Mode
 
 
 class ProgramFetcher(AgentFetcher):
@@ -98,7 +99,10 @@ class ProgramFetcher(AgentFetcher):
         self._process.stderr.close()
         self._process = None
 
-    def _fetch_from_io(self) -> AgentRawData:
+    def _use_cached_data(self, mode: Mode) -> bool:
+        return mode is not Mode.CHECKING or self.file_cache.simulation
+
+    def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         if self._process is None:
             raise MKFetcherError("No process")
         stdout, stderr = self._process.communicate(

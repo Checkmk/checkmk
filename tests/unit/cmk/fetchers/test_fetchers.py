@@ -200,7 +200,7 @@ class TestSNMPFetcher:
         return SNMPFetcher.from_json(
             json_identity({
                 "file_cache": fc_conf.configure(),
-                "oid_infos": {
+                "snmp_section_trees": {
                     "pim": [SNMPTree(base=".1.1.1", oids=["1.2", "3.4"]).to_json()],
                     "pam": [SNMPTree(base=".1.2.3", oids=["4.5", "6.7", "8.9"]).to_json()],
                     "pum": [
@@ -208,6 +208,13 @@ class TestSNMPFetcher:
                         SNMPTree(base=".3.3.3", oids=["2.2"]).to_json(),
                     ],
                 },
+                "snmp_section_detects": [
+                    ("pim", [[("1.2.3.4", "pim device", True)]]),
+                    ("pam", [[("1.2.3.4", "pam device", True)]]),
+                ],
+                "configured_snmp_sections": [],
+                "on_error": "raise",
+                "missing_sys_description": False,
                 "use_snmpwalk_cache": False,
                 "snmp_config": SNMPHostConfig(
                     is_ipv6_primary=False,
@@ -273,7 +280,7 @@ class TestTCPFetcher:
         fetcher.file_cache.cache = b"cached_section"
 
         # Fixate the response we get from IO
-        monkeypatch.setattr(fetcher, "_fetch_from_io", lambda: b"fetched_section")
+        monkeypatch.setattr(fetcher, "_fetch_from_io", lambda mode: b"fetched_section")
 
         return fetcher
 

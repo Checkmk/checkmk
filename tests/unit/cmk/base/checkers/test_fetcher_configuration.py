@@ -13,7 +13,6 @@ from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.fetchers import FetcherType
 
-from cmk.base.checkers.snmp import CachedSNMPDetector
 from cmk.base.checkers import fetcher_configuration
 
 
@@ -68,11 +67,6 @@ def file_fixture():
 ])
 def test_generates_correct_sections(file, hostname, tags, fetchers, monkeypatch):
     make_scenario(hostname, tags).apply(monkeypatch)
-    monkeypatch.setattr(
-        CachedSNMPDetector,
-        "__call__",
-        lambda *args, **kwargs: set(),
-    )
     fetcher_configuration.dump(hostname, "1.2.3.4", file)
     file.seek(0)
     assert [FetcherType[f["fetcher_type"]] for f in json.load(file)["fetchers"]] == fetchers

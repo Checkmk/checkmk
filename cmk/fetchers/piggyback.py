@@ -13,6 +13,7 @@ from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo, Pi
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
 
 from .agent import AgentFileCache, AgentFetcher, NoCache
+from .type_defs import Mode
 
 
 class PiggybackFetcher(AgentFetcher):
@@ -45,7 +46,10 @@ class PiggybackFetcher(AgentFetcher):
                  traceback: Optional[TracebackType]) -> None:
         self._sources.clear()
 
-    def _fetch_from_io(self) -> AgentRawData:
+    def _use_cached_data(self, mode: Mode) -> bool:
+        return mode is not Mode.CHECKING or self.file_cache.simulation
+
+    def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         raw_data = b""
         raw_data += self._get_main_section()
         raw_data += self._get_source_labels_section()

@@ -135,23 +135,26 @@ class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
                  traceback: Optional[TracebackType]) -> Optional[bool]:
         """Destroy the data source."""
 
+    @abc.abstractmethod
+    def _use_cached_data(self, mode: Mode) -> bool:
+        """Decide whether to try to read data from cache"""
+
     def fetch(self, mode: Mode) -> TRawData:
         """Return the data from the source, either cached or from IO."""
-        # TODO(ml): Handle `selected_raw_sections` in SNMP.
         # TODO(ml): EAFP would significantly simplify the code.
-        if mode is not Mode.CHECKING or self.file_cache.simulation:
+        if self._use_cached_data(mode):
             raw_data = self._fetch_from_cache()
             if raw_data:
                 self._logger.log(VERBOSE, "[%s] Use cached data", self.__class__.__name__)
                 return raw_data
 
         self._logger.log(VERBOSE, "[%s] Execute data source", self.__class__.__name__)
-        raw_data = self._fetch_from_io()
+        raw_data = self._fetch_from_io(mode)
         self.file_cache.write(raw_data)
         return raw_data
 
     @abc.abstractmethod
-    def _fetch_from_io(self) -> TRawData:
+    def _fetch_from_io(self, mode: Mode) -> TRawData:
         """Override this method to contact the source and return the raw data."""
 
     def _fetch_from_cache(self) -> Optional[TRawData]:

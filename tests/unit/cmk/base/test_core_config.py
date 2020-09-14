@@ -23,12 +23,8 @@ from cmk.base.core_factory import create_core
 from cmk.base.check_utils import Service
 
 
-def test_do_create_config_nagios(core_scenario, monkeypatch):
-    # TODO: Hand over the name to create_core()
-    monkeypatch.setattr(config, "monitoring_core", "nagios")
-    core = create_core()
-
-    core_config.do_create_config(core)
+def test_do_create_config_nagios(core_scenario):
+    core_config.do_create_config(create_core("nagios"))
 
     assert Path(cmk.utils.paths.nagios_objects_file).exists()
     assert config.PackedConfigStore(LATEST_SERIAL)._compiled_path.exists()

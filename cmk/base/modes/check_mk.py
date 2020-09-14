@@ -1098,11 +1098,11 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_update(options: Dict) -> None:
+def mode_update() -> None:
     from cmk.base.core_config import do_create_config  # pylint: disable=import-outside-toplevel
     try:
         with cmk.base.core.activation_lock(mode=config.restart_locking):
-            do_create_config(create_core())
+            do_create_config(create_core(config.monitoring_core))
     except Exception as e:
         console.error("Configuration Error: %s\n" % e)
         if cmk.utils.debug.enabled():
@@ -1138,7 +1138,7 @@ modes.register(
 
 
 def mode_restart() -> None:
-    cmk.base.core.do_restart(create_core())
+    cmk.base.core.do_restart(create_core(config.monitoring_core))
 
 
 modes.register(
@@ -1161,7 +1161,7 @@ modes.register(
 
 
 def mode_reload() -> None:
-    cmk.base.core.do_reload(create_core())
+    cmk.base.core.do_reload(create_core(config.monitoring_core))
 
 
 modes.register(
@@ -1422,7 +1422,7 @@ modes.register(
 
 
 def mode_discover_marked_hosts() -> None:
-    discovery.discover_marked_hosts(create_core())
+    discovery.discover_marked_hosts(create_core(config.monitoring_core))
 
 
 modes.register(

@@ -814,7 +814,7 @@ class AutomationRestart(Automation):
     def execute(self, args: List[str]) -> core_config.ConfigurationWarnings:
         with redirect_stdout(open(os.devnull, "w")):
             try:
-                do_restart(create_core(), self._mode())
+                do_restart(create_core(config.monitoring_core), self._mode())
             except (MKBailOut, MKGeneralException) as e:
                 raise MKAutomationError(str(e))
 

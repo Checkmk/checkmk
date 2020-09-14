@@ -17,6 +17,7 @@ from six import ensure_binary, ensure_str
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
+import cmk.utils.store as store
 from cmk.utils.check_utils import maincheckify, section_name_of
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
@@ -55,6 +56,10 @@ AbstractServiceID = Union[ActiveServiceID, CustomServiceID, ServiceID]
 
 
 class NagiosCore(core_config.MonitoringCore):
+    @classmethod
+    def name(cls) -> str:
+        return "nagios"
+
     def create_config(self, serial: ConfigSerial) -> None:
         self._create_core_config()
         self._precompile_hostchecks(serial)
@@ -70,6 +75,8 @@ class NagiosCore(core_config.MonitoringCore):
         """
         tmp_path = None
         try:
+            store.makedirs(os.path.dirname(cmk.utils.paths.nagios_objects_file))
+            # TODO: Use store methods for IO
             with tempfile.NamedTemporaryFile(
                     "w",
                     dir=os.path.dirname(cmk.utils.paths.nagios_objects_file),

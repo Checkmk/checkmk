@@ -6,20 +6,32 @@
 
 import pytest  # type: ignore[import]
 from contextlib import suppress
+from pathlib import Path
 
-# No stub file
-from testlib import CheckManager  # type: ignore[import]
-# No stub file
-from testlib.base import Scenario  # type: ignore[import]
+from testlib import CheckManager
+from testlib.base import Scenario
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import CheckPluginName, ConfigSerial
+from cmk.utils.type_defs import CheckPluginName, ConfigSerial, LATEST_SERIAL
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
+import cmk.base.nagios_utils
+from cmk.base.core_factory import create_core
 from cmk.base.check_utils import Service
+
+
+def test_do_create_config_nagios(core_scenario, monkeypatch):
+    # TODO: Hand over the name to create_core()
+    monkeypatch.setattr(config, "monitoring_core", "nagios")
+    core = create_core()
+
+    core_config.do_create_config(core)
+
+    assert Path(cmk.utils.paths.nagios_objects_file).exists()
+    assert config.PackedConfigStore(LATEST_SERIAL)._compiled_path.exists()
 
 
 def test_active_check_arguments(mocker):

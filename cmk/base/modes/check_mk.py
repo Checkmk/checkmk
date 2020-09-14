@@ -1124,14 +1124,6 @@ modes.register(
             "and the configuration for the Core helper processes is being created.",
             "The agent bakery is updating the agents.",
         ],
-        sub_options=[
-            Option(
-                long_option="cmc-file",
-                argument=True,
-                argument_descr="X",
-                short_help="Relative filename for CMC config file",
-            ),
-        ],
     ))
 
 #.

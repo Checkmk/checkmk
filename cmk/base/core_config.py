@@ -80,9 +80,14 @@ def current_core_config_serial() -> ConfigSerial:
 
 
 class MonitoringCore(metaclass=abc.ABCMeta):
+    @classmethod
+    @abc.abstractmethod
+    def name(cls) -> str:
+        raise NotImplementedError
+
     @abc.abstractmethod
     def create_config(self, serial: ConfigSerial) -> None:
-        pass
+        raise NotImplementedError
 
 
 _ignore_ip_lookup_failures = False
@@ -275,7 +280,7 @@ def do_create_config(core: MonitoringCore) -> None:
     Ensures that everything needed by the monitoring core and it's helper processes is up-to-date
     and available for starting the monitoring.
     """
-    out.output("Generating configuration for core (type %s)..." % config.monitoring_core)
+    out.output("Generating configuration for core (type %s)..." % core.name())
     try:
         _create_core_config(core)
         out.output(tty.ok + "\n")
@@ -284,7 +289,12 @@ def do_create_config(core: MonitoringCore) -> None:
             raise
         raise MKGeneralException("Error creating configuration: %s" % e)
 
+    _bake_on_restart()
+
+
+def _bake_on_restart():
     try:
+        # Local import is needed, because this is not available in all environments
         import cmk.base.cee.bakery.agent_bakery as agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel
         agent_bakery.bake_on_restart()
     except ImportError:

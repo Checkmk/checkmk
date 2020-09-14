@@ -136,6 +136,8 @@ def fake_version_and_paths():
                         Path(cmk.utils.paths.var_dir, "site_configs"))
     monkeypatch.setattr("cmk.utils.paths.disabled_packages_dir",
                         Path(cmk.utils.paths.var_dir, "disabled_packages"))
+    monkeypatch.setattr("cmk.utils.paths.nagios_objects_file",
+                        os.path.join(tmp_dir, "etc/nagios/conf.d/check_mk_objects.cfg"))
 
 
 def import_module(pathname):

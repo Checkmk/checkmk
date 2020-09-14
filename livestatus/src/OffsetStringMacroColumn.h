@@ -24,6 +24,7 @@ public:
     virtual ~MacroExpander() = default;
     [[nodiscard]] virtual std::optional<std::string> expand(
         const std::string &str) const = 0;
+    std::string expandMacros(const char *str) const;
     static std::optional<std::string> from_ptr(const char *str);
 };
 
@@ -63,7 +64,6 @@ private:
 
 class OffsetStringMacroColumn : public StringColumn {
 public:
-    // TODO(ml): 5 offsets!
     OffsetStringMacroColumn(const std::string &name,
                             const std::string &description,
                             const ColumnOffsets &offsets,

@@ -20,6 +20,32 @@ std::optional<std::string> MacroExpander::from_ptr(const char *str) {
     return str == nullptr ? std::nullopt : std::make_optional(str);
 }
 
+std::string MacroExpander::expandMacros(const char *str) const {
+    std::string raw{str == nullptr ? "" : str};
+    std::string result;
+    size_t pos = 0;
+    while (pos < raw.size()) {
+        auto start = raw.find('$', pos);
+        if (start == std::string::npos) {
+            result += raw.substr(pos);
+            break;
+        }
+        auto end = raw.find('$', start + 1);
+        if (end == std::string::npos) {
+            result += raw.substr(pos);
+            break;
+        }
+        auto macroname = raw.substr(start + 1, end - (start + 1));
+        if (auto replacement = expand(macroname)) {
+            result += raw.substr(pos, start - pos) + *replacement;
+        } else {
+            result += raw.substr(pos, end + 1 - pos);
+        }
+        pos = end + 1;
+    }
+    return result;
+}
+
 CompoundMacroExpander::CompoundMacroExpander(
     std::unique_ptr<MacroExpander> first, std::unique_ptr<MacroExpander> second)
     : _first(std::move(first)), _second(std::move(second)) {}
@@ -67,38 +93,7 @@ std::optional<std::string> CustomVariableExpander::expand(
     return {};
 }
 
-namespace {
-std::string expandMacros(const std::string &raw,
-                         std::unique_ptr<MacroExpander> expander) {
-    std::string result;
-    size_t pos = 0;
-    while (pos < raw.size()) {
-        auto start = raw.find('$', pos);
-        if (start == std::string::npos) {
-            result += raw.substr(pos);
-            break;
-        }
-        auto end = raw.find('$', start + 1);
-        if (end == std::string::npos) {
-            result += raw.substr(pos);
-            break;
-        }
-        auto macroname = raw.substr(start + 1, end - (start + 1));
-        if (auto replacement = expander->expand(macroname)) {
-            result += raw.substr(pos, start - pos) + *replacement;
-        } else {
-            result += raw.substr(pos, end + 1 - pos);
-        }
-        pos = end + 1;
-    }
-    return result;
-}
-}  // namespace
-
 std::string OffsetStringMacroColumn::getValue(Row row) const {
-    if (const auto *s =
-            static_cast<const char *>(_offsets_string.shiftPointer(row))) {
-        return expandMacros(s, getMacroExpander(row));
-    }
-    return "";
+    return getMacroExpander(row)->expandMacros(
+        static_cast<const char *>(_offsets_string.shiftPointer(row)));
 }

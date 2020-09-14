@@ -87,6 +87,7 @@ from cmk.utils.type_defs import (
     TagValue,
     TimeperiodName,
     OptionalConfigSerial,
+    LATEST_SERIAL,
 )
 
 from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-import; these are required in the modules' namespace to load the configuration!
@@ -720,6 +721,14 @@ def make_helper_config_path(serial: OptionalConfigSerial) -> Path:
     return cmk.utils.paths.core_helper_config_dir / serial
 
 
+def make_core_autochecks_dir(serial: OptionalConfigSerial) -> Path:
+    return make_helper_config_path(serial) / "autochecks"
+
+
+def make_core_discovered_host_labels_dir(serial: OptionalConfigSerial) -> Path:
+    return make_helper_config_path(serial) / "discovered_host_labels"
+
+
 @contextlib.contextmanager
 def set_use_core_config(use_core_config: bool) -> Iterator[None]:
     """The keepalive helpers should always use the core configuration that
@@ -736,8 +745,9 @@ def set_use_core_config(use_core_config: bool) -> Iterator[None]:
     _orig_discovered_host_labels_dir = cmk.utils.paths.discovered_host_labels_dir
     try:
         if use_core_config:
-            cmk.utils.paths.autochecks_dir = cmk.utils.paths.core_autochecks_dir
-            cmk.utils.paths.discovered_host_labels_dir = cmk.utils.paths.core_discovered_host_labels_dir
+            cmk.utils.paths.autochecks_dir = str(make_core_autochecks_dir(LATEST_SERIAL))
+            cmk.utils.paths.discovered_host_labels_dir = make_core_discovered_host_labels_dir(
+                LATEST_SERIAL)
         else:
             cmk.utils.paths.autochecks_dir = cmk.utils.paths.base_autochecks_dir
             cmk.utils.paths.discovered_host_labels_dir = cmk.utils.paths.base_discovered_host_labels_dir

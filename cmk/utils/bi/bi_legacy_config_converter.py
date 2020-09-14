@@ -143,7 +143,11 @@ class BIRuleSchemaConverter:
 
         if node[0] == "foreach_host":
             node_config = node[1]
-            conditions = {"host_tags": node_config[1]}
+            conditions = {
+                "host_tags": node_config[1],
+                "host_folder": "",
+                "host_labels": {},
+            }
             if node_config[2] is None:
                 conditions["host_choice"] = {"type": "all_hosts"}
             elif isinstance(node_config[2], str):
@@ -165,7 +169,11 @@ class BIRuleSchemaConverter:
 
         if node[0] == "foreach_service":
             node_config = node[1]
-            conditions = {"host_tags": node_config[0]}
+            conditions = {
+                "host_tags": node_config[0],
+                "host_folder": "",
+                "host_labels": {},
+            }
             if node_config[1] is None:
                 conditions["host_choice"] = {"type": "all_hosts"}
             elif isinstance(node_config[1], str):
@@ -196,7 +204,10 @@ class BIAggregationSchemaConverter:
             "escalate_downtimes_as_warn": old_schema.get("downtime_aggr_warn", False),
             "use_hard_states": old_schema.get("hard_states", False)
         }
-        new_schema["aggregation_visualization"] = old_schema.get("node_visualization")
+        node_vis = old_schema.get("node_visualization")
+        if node_vis is None or node_vis == {}:
+            node_vis = self.default_node_visualiziation
+        new_schema["aggregation_visualization"] = node_vis
         new_schema["customer"] = old_schema.get("customer", "")
 
         rule_converter = BIRuleSchemaConverter()
@@ -204,6 +215,10 @@ class BIAggregationSchemaConverter:
         new_schema["groups"] = self.convert_old_groups(old_schema["groups"])
 
         return new_schema
+
+    @property
+    def default_node_visualiziation(self):
+        return {"ignore_rule_styles": False, "layout_id": "builtin_default", "line_style": "round"}
 
     def convert_old_groups(self, old_groups):
         new_groups: Dict[str, List] = {"names": [], "paths": []}
@@ -243,6 +258,11 @@ class BIManagement:
     # | Loading and saving                                                 |
     # '--------------------------------------------------------------------'
 
+    def _get_config_string(self):
+        filename = Path(cmk.utils.paths.default_config_dir, "multisite.d", "wato", "bi.mk")
+        with filename.open("rb") as f:
+            return f.read()
+
     def _load_config(self):
         self._bi_constants = {
             'ALL_HOSTS': 'ALL_HOSTS-f41e728b-0bce-40dc-82ea-51091d034fc3',
@@ -261,7 +281,6 @@ class BIManagement:
         self._hosttags_transformer = RulesetToDictTransformer(
             tag_to_group_map=get_tag_to_group_map(config.tags))
 
-        filename = Path(cmk.utils.paths.default_config_dir, "multisite.d", "wato", "bi.mk")
         try:
             vars_: Dict[str, Any] = {
                 "aggregation_rules": {},
@@ -271,8 +290,7 @@ class BIManagement:
             }
             vars_.update(self._bi_constants)
 
-            with filename.open("rb") as f:
-                exec(f.read(), vars_, vars_)
+            exec(self._get_config_string(), vars_, vars_)
 
             # put legacy non-pack stuff into packs
             if (vars_["aggregation_rules"] or vars_["aggregations"] or vars_["host_aggregations"]) and \

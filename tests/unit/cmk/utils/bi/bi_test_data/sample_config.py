@@ -307,11 +307,11 @@ bi_packs_config = {
                 'escalate_downtimes_as_warn': False,
                 'use_hard_states': False
             },
+            'customer': '',
             'groups': {
                 'names': ['Hosts'],
                 'paths': []
             },
-            'customer': '',
             'id': 'default_aggregation',
             'node': {
                 'action': {
@@ -324,7 +324,6 @@ bi_packs_config = {
                 'search': {
                     'conditions': {
                         'host_choice': {
-                            'pattern': '',
                             'type': 'all_hosts'
                         },
                         'host_folder': '',
@@ -337,7 +336,6 @@ bi_packs_config = {
                     'type': 'host_search'
                 }
             },
-            'pack_id': 'default'
         }],
         'contact_groups': [],
         'id': 'default',
@@ -366,7 +364,6 @@ bi_packs_config = {
                     'type': 'empty'
                 }
             }],
-            'pack_id': '',
             'params': {
                 'arguments': ['HOSTNAME']
             },
@@ -401,7 +398,6 @@ bi_packs_config = {
                     'type': 'empty'
                 }
             }],
-            'pack_id': '',
             'params': {
                 'arguments': ['HOSTNAME']
             },
@@ -455,7 +451,6 @@ bi_packs_config = {
                     'type': 'empty'
                 }
             }],
-            'pack_id': '',
             'params': {
                 'arguments': ['HOSTNAME', 'FS']
             },
@@ -545,7 +540,6 @@ bi_packs_config = {
                     'type': 'service_search'
                 }
             }],
-            'pack_id': '',
             'params': {
                 'arguments': ['HOSTNAME']
             },
@@ -599,7 +593,6 @@ bi_packs_config = {
                     'type': 'empty'
                 }
             }],
-            'pack_id': '',
             'params': {
                 'arguments': ['HOSTNAME']
             },
@@ -634,7 +627,6 @@ bi_packs_config = {
                     'type': 'empty'
                 }
             }],
-            'pack_id': '',
             'params': {
                 'arguments': ['HOSTNAME']
             },
@@ -748,7 +740,6 @@ bi_packs_config = {
                     'type': 'empty'
                 }
             }],
-            'pack_id': '',
             'params': {
                 'arguments': ['HOSTNAME']
             },
@@ -783,7 +774,6 @@ bi_packs_config = {
                     'type': 'empty'
                 }
             }],
-            'pack_id': '',
             'params': {
                 'arguments': ['HOSTNAME']
             },
@@ -818,7 +808,6 @@ bi_packs_config = {
                     'type': 'empty'
                 }
             }],
-            'pack_id': '',
             'params': {
                 'arguments': ['HOSTNAME']
             },
@@ -853,7 +842,6 @@ bi_packs_config = {
                     'type': 'empty'
                 }
             }],
-            'pack_id': '',
             'params': {
                 'arguments': ['HOSTNAME']
             },
@@ -881,14 +869,12 @@ bi_packs_config = {
             'nodes': [{
                 'action': {
                     'host_regex': '$HOSTNAME$',
-                    'show_remaining': True,
                     'type': 'state_of_remaining_services'
                 },
                 'search': {
                     'type': 'empty'
                 }
             }],
-            'pack_id': '',
             'params': {
                 'arguments': ['HOSTNAME']
             },
@@ -924,7 +910,6 @@ bi_packs_config = {
                     'type': 'empty'
                 }
             }],
-            'pack_id': '',
             'params': {
                 'arguments': ['HOSTNAME']
             },
@@ -939,3 +924,123 @@ bi_packs_config = {
         'title': 'Default Pack'
     }]
 }
+
+LEGACY_BI_PACKS_CONFIG_STRING = """
+bi_packs['default'] = {
+ 'aggregations': [],
+ 'contact_groups': [],
+ 'host_aggregations': [({'disabled': False,
+                         'downtime_aggr_warn': False,
+                         'hard_states': False,
+                         'ID': 'default_aggregation',
+                         'node_visualization': {}},
+                        [u'Hosts'],
+                        FOREACH_HOST,
+                        ['tcp'],
+                        ALL_HOSTS,
+                        'host',
+                        ['$HOSTNAME$'])],
+ 'id': 'default',
+ 'public': True,
+ 'rules': {'applications': {'aggregation': 'worst',
+                            'nodes': [('$HOSTNAME$',
+                                       'ASM|ORACLE|proc')],
+                            'params': ['HOSTNAME'],
+                            'title': 'Applications'},
+           'checkmk': {'aggregation': 'worst',
+                       'nodes': [('$HOSTNAME$',
+                                  'Check_MK|Uptime')],
+                       'params': ['HOSTNAME'],
+                       'title': 'Check_MK'},
+           'filesystem': {'aggregation': 'worst',
+                          'nodes': [('$HOSTNAME$',
+                                     'fs_$FS$$'),
+                                    ('$HOSTNAME$',
+                                     'Filesystem$FS$$'),
+                                    ('$HOSTNAME$',
+                                     'Mount options of $FS$$')],
+                          'params': ['HOSTNAME',
+                                     'FS'],
+                          'title': '$FS$'},
+           'filesystems': {'aggregation': 'worst',
+                           'nodes': [('$HOSTNAME$',
+                                      'Disk|MD'),
+                                     ('multipathing',
+                                      ['$HOSTNAME$']),
+                                     (FOREACH_SERVICE,
+                                      [],
+                                      '$HOSTNAME$',
+                                      'fs_(.*)',
+                                      'filesystem',
+                                      ['$HOSTNAME$',
+                                       '$1$']),
+                                     (FOREACH_SERVICE,
+                                      [],
+                                      '$HOSTNAME$',
+                                      'Filesystem(.*)',
+                                      'filesystem',
+                                      ['$HOSTNAME$',
+                                       '$1$'])],
+                           'params': ['HOSTNAME'],
+                           'title': 'Disk & Filesystems'},
+           'general': {'aggregation': 'worst',
+                       'nodes': [('$HOSTNAME$',
+                                  HOST_STATE),
+                                 ('$HOSTNAME$',
+                                  'Uptime'),
+                                 ('checkmk',
+                                  ['$HOSTNAME$'])],
+                       'params': ['HOSTNAME'],
+                       'title': 'General State'},
+           'hardware': {'aggregation': 'worst',
+                        'nodes': [('$HOSTNAME$',
+                                   'IPMI|RAID')],
+                        'params': ['HOSTNAME'],
+                        'title': 'Hardware'},
+           'host': {'aggregation': 'worst',
+                    'nodes': [('general',
+                               ['$HOSTNAME$']),
+                              ('performance',
+                               ['$HOSTNAME$']),
+                              ('filesystems',
+                               ['$HOSTNAME$']),
+                              ('networking',
+                               ['$HOSTNAME$']),
+                              ('applications',
+                               ['$HOSTNAME$']),
+                              ('logfiles',
+                               ['$HOSTNAME$']),
+                              ('hardware',
+                               ['$HOSTNAME$']),
+                              ('other',
+                               ['$HOSTNAME$'])],
+                    'params': ['HOSTNAME'],
+                    'title': 'Host $HOSTNAME$'},
+           'logfiles': {'aggregation': 'worst',
+                        'nodes': [('$HOSTNAME$',
+                                   'LOG')],
+                        'params': ['HOSTNAME'],
+                        'title': 'Logfiles'},
+           'multipathing': {'aggregation': 'worst',
+                            'nodes': [('$HOSTNAME$',
+                                       'Multipath')],
+                            'params': ['HOSTNAME'],
+                            'title': 'Multipathing'},
+           'networking': {'aggregation': 'worst',
+                          'nodes': [('$HOSTNAME$',
+                                     'NFS|Interface|TCP')],
+                          'params': ['HOSTNAME'],
+                          'title': 'Networking'},
+           'other': {'aggregation': 'worst',
+                     'nodes': [('$HOSTNAME$',
+                                REMAINING)],
+                     'params': ['HOSTNAME'],
+                     'title': 'Other'},
+           'performance': {'aggregation': 'worst',
+                           'nodes': [('$HOSTNAME$',
+                                      'CPU|Memory|Vmalloc|Kernel|Number of threads')],
+                           'params': ['HOSTNAME'],
+                           'title': 'Performance'}},
+ 'title': u'Default Pack'
+}
+"""

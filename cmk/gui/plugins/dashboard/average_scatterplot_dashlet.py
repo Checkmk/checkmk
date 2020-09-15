@@ -6,6 +6,7 @@
 
 import json
 from typing import Dict, Optional, Tuple, List
+import numpy as np  # type: ignore[import]
 
 from cmk.utils.render import date_and_time
 
@@ -21,7 +22,6 @@ from cmk.gui.valuespec import (
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.plugins.dashboard import dashlet_registry
 from cmk.gui.plugins.dashboard.utils import site_query
-from cmk.gui.plugins.metrics.stats import percentile
 from cmk.gui.plugins.metrics.utils import MetricName, reverse_translate_metric_name
 from cmk.gui.plugins.metrics.rrd_fetch import rrd_columns, merge_multicol
 from cmk.gui.utils.url_encoder import HTTPVariables
@@ -220,7 +220,7 @@ class AverageScatterplotDataGenerator(ABCDataGenerator):
         if isinstance(values, dict):
             values = [v for v in values.values() if v]
         if values:
-            return percentile(values, 50)
+            return np.percentile(values, 50, interpolation='midpoint')
         return None
 
 

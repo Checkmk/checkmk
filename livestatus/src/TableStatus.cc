@@ -266,6 +266,14 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "helper_usage_real_time",
         "The average usage of the real time check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
         offsets, [](const TableStatus & /*r*/) { return 0.0; }));
+    addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
+        "helper_usage_fetcher",
+        "The average usage of the fetcher helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
+        offsets, [](const TableStatus & /*r*/) { return 0.0; }));
+    addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
+        "helper_usage_checker",
+        "The average usage of the checker helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
+        offsets, [](const TableStatus & /*r*/) { return 0.0; }));
 
     addColumn(std::make_unique<BoolLambdaColumn<TableStatus>>(
         "has_event_handlers",

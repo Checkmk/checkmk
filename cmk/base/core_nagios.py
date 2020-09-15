@@ -924,12 +924,12 @@ class HostCheckStore:
         return path.with_suffix(path.suffix + ".py")
 
     def write(self, hostname: HostName, host_check: str) -> None:
-        if not os.path.exists(cmk.utils.paths.precompiled_hostchecks_dir):
-            os.makedirs(cmk.utils.paths.precompiled_hostchecks_dir)
+        compiled_filename = self.host_check_file_path(hostname)
+        source_filename = self.host_check_source_file_path(hostname)
+
+        store.makedirs(compiled_filename.parent)
 
         # TODO: Drop deletion once we respect the serial here
-        compiled_filename = str(self.host_check_file_path(hostname))
-        source_filename = str(self.host_check_source_file_path(hostname))
         for fname in [compiled_filename, source_filename]:
             try:
                 os.remove(fname)
@@ -937,29 +937,17 @@ class HostCheckStore:
                 if e.errno != errno.ENOENT:
                     raise
 
-        # TODO: Don't complain about the file handling here. Will be cleaned up in next commit.
-        output = open(source_filename + ".new", "w")
-        output.write(host_check)
-        output.close()
+        store.save_text_to_file(source_filename, host_check)
 
-        # compile python (either now or delayed), but only if the source
-        # code has not changed. The Python compilation is the most costly
-        # operation here.
-        if os.path.exists(source_filename):
-            if open(source_filename).read() == host_check:
-                console.verbose(" (%s is unchanged)\n", source_filename, stream=sys.stderr)
-                os.remove(source_filename + ".new")
-                return
-            console.verbose(" (new content)", stream=sys.stderr)
-
-        os.rename(source_filename + ".new", source_filename)
-        if not config.delay_precompile:
-            py_compile.compile(source_filename, compiled_filename, compiled_filename, True)
-            os.chmod(compiled_filename, 0o755)
+        # compile python (either now or delayed - see host_check code for delay_precompile handling)
+        if config.delay_precompile:
+            compiled_filename.symlink_to(hostname + ".py")
         else:
-            if os.path.exists(compiled_filename) or os.path.islink(compiled_filename):
-                os.remove(compiled_filename)
-            os.symlink(hostname + ".py", compiled_filename)
+            py_compile.compile(file=str(source_filename),
+                               cfile=str(compiled_filename),
+                               dfile=str(compiled_filename),
+                               doraise=True)
+            os.chmod(compiled_filename, 0o750)
 
         console.verbose(" ==> %s.\n", compiled_filename, stream=sys.stderr)
 

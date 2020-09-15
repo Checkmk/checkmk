@@ -102,7 +102,7 @@ class AgentSource(ABCSource[AgentRawData, AgentHostSections]):
         self.main_data_source: Final[bool] = main_data_source
 
     def _make_checker(self) -> "AgentChecker":
-        return AgentChecker(self)
+        return AgentChecker(self, self.persisted_sections_file_path)
 
     def _make_parser(self) -> "AgentParser":
         return AgentParser(self.hostname, self._logger)

@@ -145,7 +145,7 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
         }
 
     def _make_checker(self) -> "SNMPChecker":
-        return SNMPChecker(self)
+        return SNMPChecker(self, self.persisted_sections_file_path)
 
     def _make_parser(self) -> "SNMPParser":
         return SNMPParser(self.hostname, self._logger)

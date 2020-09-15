@@ -177,7 +177,7 @@ class StubSource(AgentSource):
         return {}
 
     def _make_checker(self) -> "StubAgent":
-        return StubAgent(self)
+        return StubAgent(self, self.persisted_sections_file_path)
 
     def _make_summarizer(self) -> "StubSummarizer":
         return StubSummarizer(self.exit_spec)

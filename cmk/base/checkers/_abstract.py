@@ -114,6 +114,43 @@ class ABCHostSections(Generic[TRawData, TSections, TPersistedSections, TSectionC
 
     def add_persisted_sections(
         self,
+        persisted_sections_file_path: Path,
+        use_outdated_persisted_sections: bool,
+        *,
+        logger: logging.Logger,
+    ):
+        """Add information from previous persisted infos."""
+        persisted_sections = self._determine_persisted_sections(
+            persisted_sections_file_path,
+            use_outdated_persisted_sections,
+            logger=logger,
+        )
+        self._add_persisted_sections(
+            persisted_sections,
+            logger=logger,
+        )
+
+    def _determine_persisted_sections(
+        self,
+        persisted_sections_file_path: Path,
+        use_outdated_persisted_sections: bool,
+        *,
+        logger: logging.Logger,
+    ) -> TPersistedSections:
+        # TODO(ml): This function should take a TPersistedSections
+        #           instead of the host_section but mypy does not allow it.
+        section_store: SectionStore[TPersistedSections] = SectionStore(
+            persisted_sections_file_path,
+            logger,
+        )
+        persisted_sections = section_store.load(use_outdated_persisted_sections)
+        if persisted_sections != self.persisted_sections:
+            persisted_sections.update(self.persisted_sections)
+            section_store.store(persisted_sections)
+        return persisted_sections
+
+    def _add_persisted_sections(
+        self,
         persisted_sections: TPersistedSections,
         *,
         logger: logging.Logger,
@@ -419,14 +456,12 @@ class ABCChecker(Generic[TRawData, TSections, TPersistedSections, THostSections]
     def __init__(
         self,
         source: ABCSource,
+        persisted_sections_file_path: Path,
     ) -> None:
         super().__init__()
         self.source = source
+        self._persisted_sections_file_path = persisted_sections_file_path
         self._logger = self.source._logger
-        self._section_store: SectionStore[TPersistedSections] = SectionStore(
-            self.source.persisted_sections_file_path,
-            self._logger,
-        )
 
     def __repr__(self):
         return "%s(%r)" % (type(self).__name__, self.source)
@@ -448,30 +483,17 @@ class ABCChecker(Generic[TRawData, TSections, TPersistedSections, THostSections]
                 return host_sections
 
             assert host_sections.ok is not None
-            self._add_persisted_sections(host_sections.ok)
+            host_sections.ok.add_persisted_sections(
+                self._persisted_sections_file_path,
+                self.use_outdated_persisted_sections,
+                logger=self._logger,
+            )
             return host_sections
         except Exception as exc:
             self._logger.log(VERBOSE, "ERROR: %s", exc)
             if cmk.utils.debug.enabled():
                 raise
             return Result.Err(exc)
-
-    def _add_persisted_sections(self, host_sections: THostSections) -> None:
-        """Add information from previous persisted infos."""
-        persisted_sections = self._determine_persisted_sections(host_sections)
-        host_sections.add_persisted_sections(persisted_sections, logger=self._logger)
-
-    def _determine_persisted_sections(
-        self,
-        host_sections: THostSections,
-    ) -> TPersistedSections:
-        # TODO(ml): This function should take a TPersistedSections
-        #           instead of the host_section but mypy does not allow it.
-        persisted_sections = self._section_store.load(self._use_outdated_persisted_sections)
-        if persisted_sections != host_sections.persisted_sections:
-            persisted_sections.update(host_sections.persisted_sections)
-            self._section_store.store(persisted_sections)
-        return persisted_sections
 
     @classmethod
     def use_outdated_persisted_sections(cls) -> None:

@@ -5,16 +5,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=redefined-outer-name
+import os
 import io
 import itertools
+import importlib
+from pathlib import Path
 
 import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
 
+import cmk.utils.paths
 import cmk.utils.version as cmk_version
 import cmk.base.core_config as core_config
 import cmk.base.core_nagios as core_nagios
+import cmk.base.config as config
 
 
 def test_format_nagios_object():
@@ -198,3 +203,59 @@ def test_create_nagios_host_spec(hostname, result, monkeypatch):
 
     host_spec = core_nagios._create_nagios_host_spec(cfg, config_cache, hostname, host_attrs)
     assert host_spec == result
+
+
+class TestHostCheckStore:
+    def test_host_check_file_path(self):
+        assert core_nagios.HostCheckStore.host_check_file_path("abc") == Path(
+            cmk.utils.paths.precompiled_hostchecks_dir, "abc")
+
+    def test_host_check_source_file_path(self):
+        assert core_nagios.HostCheckStore.host_check_source_file_path("abc") == Path(
+            cmk.utils.paths.precompiled_hostchecks_dir, "abc.py")
+
+    def test_write(self):
+        hostname = "aaa"
+        store = core_nagios.HostCheckStore()
+
+        assert config.delay_precompile is False
+
+        assert not store.host_check_source_file_path(hostname).exists()
+        assert not store.host_check_file_path(hostname).exists()
+
+        store.write(hostname, "xyz")
+
+        assert store.host_check_source_file_path(hostname).exists()
+        assert store.host_check_file_path(hostname).exists()
+
+        with store.host_check_source_file_path(hostname).open() as s:
+            assert s.read() == "xyz"
+
+        with store.host_check_file_path(hostname).open("rb") as p:
+            assert p.read().startswith(importlib.util.MAGIC_NUMBER)
+
+        assert os.access(store.host_check_file_path(hostname), os.X_OK)
+
+
+def test_dump_precompiled_hostcheck(monkeypatch):
+    ts = Scenario().add_host("localhost")
+    config_cache = ts.apply(monkeypatch)
+
+    monkeypatch.setattr(core_nagios, "_get_needed_plugin_names", lambda c: (["uptime"], [], []))
+
+    host_check = core_nagios._dump_precompiled_hostcheck(config_cache, "localhost")
+    assert host_check is not None
+    assert host_check.startswith("#!/usr/bin/env python3")
+
+
+def test_dump_precompiled_hostcheck_without_check_mk_service(monkeypatch):
+    ts = Scenario().add_host("localhost")
+    config_cache = ts.apply(monkeypatch)
+    host_check = core_nagios._dump_precompiled_hostcheck(config_cache, "localhost")
+    assert host_check is None
+
+
+def test_dump_precompiled_hostcheck_not_existing_host(monkeypatch):
+    config_cache = Scenario().apply(monkeypatch)
+    host_check = core_nagios._dump_precompiled_hostcheck(config_cache, "not-existing")
+    assert host_check is None

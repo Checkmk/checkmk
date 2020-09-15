@@ -11,6 +11,7 @@ import os
 import py_compile
 import sys
 from io import StringIO
+from pathlib import Path
 from typing import Any, Dict, IO, List, Optional, Set, Tuple, Union
 
 from six import ensure_binary, ensure_str
@@ -910,41 +911,93 @@ def _find_check_plugins(checktype: CheckPluginNameStr) -> List[str]:
     return paths
 
 
+class HostCheckStore:
+    """Caring about persistence of the precompiled host check files"""
+    @staticmethod
+    def host_check_file_path(hostname: HostName) -> Path:
+        return Path(cmk.utils.paths.precompiled_hostchecks_dir, hostname)
+
+    @staticmethod
+    def host_check_source_file_path(hostname: HostName) -> Path:
+        # TODO: Use append_suffix(".py") once we are on Python 3.10
+        path = HostCheckStore.host_check_file_path(hostname)
+        return path.with_suffix(path.suffix + ".py")
+
+    def write(self, hostname: HostName, host_check: str) -> None:
+        if not os.path.exists(cmk.utils.paths.precompiled_hostchecks_dir):
+            os.makedirs(cmk.utils.paths.precompiled_hostchecks_dir)
+
+        # TODO: Drop deletion once we respect the serial here
+        compiled_filename = str(self.host_check_file_path(hostname))
+        source_filename = str(self.host_check_source_file_path(hostname))
+        for fname in [compiled_filename, source_filename]:
+            try:
+                os.remove(fname)
+            except OSError as e:
+                if e.errno != errno.ENOENT:
+                    raise
+
+        # TODO: Don't complain about the file handling here. Will be cleaned up in next commit.
+        output = open(source_filename + ".new", "w")
+        output.write(host_check)
+        output.close()
+
+        # compile python (either now or delayed), but only if the source
+        # code has not changed. The Python compilation is the most costly
+        # operation here.
+        if os.path.exists(source_filename):
+            if open(source_filename).read() == host_check:
+                console.verbose(" (%s is unchanged)\n", source_filename, stream=sys.stderr)
+                os.remove(source_filename + ".new")
+                return
+            console.verbose(" (new content)", stream=sys.stderr)
+
+        os.rename(source_filename + ".new", source_filename)
+        if not config.delay_precompile:
+            py_compile.compile(source_filename, compiled_filename, compiled_filename, True)
+            os.chmod(compiled_filename, 0o755)
+        else:
+            if os.path.exists(compiled_filename) or os.path.islink(compiled_filename):
+                os.remove(compiled_filename)
+            os.symlink(hostname + ".py", compiled_filename)
+
+        console.verbose(" ==> %s.\n", compiled_filename, stream=sys.stderr)
+
+
 def _precompile_hostchecks(serial: ConfigSerial) -> None:
     console.verbose("Creating precompiled host check config...\n")
     config_cache = config.get_config_cache()
 
     config.save_packed_config(serial, config_cache)
 
-    if not os.path.exists(cmk.utils.paths.precompiled_hostchecks_dir):
-        os.makedirs(cmk.utils.paths.precompiled_hostchecks_dir)
-
     console.verbose("Precompiling host checks...\n")
-    for host in config_cache.all_active_hosts():
+
+    host_check_store = HostCheckStore()
+    for hostname in config_cache.all_active_hosts():
         try:
-            _precompile_hostcheck(config_cache, host)
+            console.verbose("%s%s%-16s%s:",
+                            tty.bold,
+                            tty.blue,
+                            hostname,
+                            tty.normal,
+                            stream=sys.stderr)
+            host_check = _dump_precompiled_hostcheck(config_cache, hostname)
+            if host_check is None:
+                console.verbose("(no Checkmk checks)\n")
+                continue
+
+            host_check_store.write(hostname, host_check)
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise
-            console.error("Error precompiling checks for host %s: %s\n" % (host, e))
+            console.error("Error precompiling checks for host %s: %s\n" % (hostname, e))
             sys.exit(5)
 
 
-def _precompile_hostcheck(config_cache: ConfigCache, hostname: HostName) -> None:
+def _dump_precompiled_hostcheck(config_cache: ConfigCache, hostname: HostName) -> Optional[str]:
     host_config = config_cache.get_host_config(hostname)
 
-    console.verbose("%s%s%-16s%s:", tty.bold, tty.blue, hostname, tty.normal, stream=sys.stderr)
-
     check_api_utils.set_hostname(hostname)
-
-    compiled_filename = cmk.utils.paths.precompiled_hostchecks_dir + "/" + hostname
-    source_filename = compiled_filename + ".py"
-    for fname in [compiled_filename, source_filename]:
-        try:
-            os.remove(fname)
-        except OSError as e:
-            if e.errno != errno.ENOENT:
-                raise
 
     (needed_legacy_check_plugin_names, needed_agent_based_check_plugin_names,
      needed_agent_based_inventory_plugin_names) = _get_needed_plugin_names(host_config)
@@ -954,10 +1007,9 @@ def _precompile_hostcheck(config_cache: ConfigCache, hostname: HostName) -> None
             needed_agent_based_check_plugin_names,
             needed_agent_based_inventory_plugin_names,
     )):
-        console.verbose("(no Check_MK checks)\n")
-        return
+        return None
 
-    output = open(source_filename + ".new", "w")
+    output = StringIO()
     output.write("#!/usr/bin/env python3\n")
     output.write("# encoding: utf-8\n\n")
 
@@ -996,7 +1048,8 @@ def _precompile_hostcheck(config_cache: ConfigCache, hostname: HostName) -> None
     # Self-compile: replace symlink with precompiled python-code, if
     # we are run for the first time
     if config.delay_precompile:
-        output.write("""
+        output.write(
+            """
 import os
 if os.path.islink(%(dst)r):
     import py_compile
@@ -1005,9 +1058,9 @@ if os.path.islink(%(dst)r):
     os.chmod(%(dst)r, 0755)
 
 """ % {
-            "src": source_filename,
-            "dst": compiled_filename
-        })
+                "src": HostCheckStore.host_check_source_file_path(hostname),
+                "dst": HostCheckStore.host_check_file_path(hostname),
+            })
 
     # Register default Check_MK signal handler
     output.write("cmk.base.utils.register_sigint_handler()\n")
@@ -1093,28 +1146,8 @@ if '-d' in sys.argv:
 
     output.write("\n")
     output.write("    sys.exit(3)\n")
-    output.close()
 
-    # compile python (either now or delayed), but only if the source
-    # code has not changed. The Python compilation is the most costly
-    # operation here.
-    if os.path.exists(source_filename):
-        if open(source_filename).read() == open(source_filename + ".new").read():
-            console.verbose(" (%s is unchanged)\n", source_filename, stream=sys.stderr)
-            os.remove(source_filename + ".new")
-            return
-        console.verbose(" (new content)", stream=sys.stderr)
-
-    os.rename(source_filename + ".new", source_filename)
-    if not config.delay_precompile:
-        py_compile.compile(source_filename, compiled_filename, compiled_filename, True)
-        os.chmod(compiled_filename, 0o755)
-    else:
-        if os.path.exists(compiled_filename) or os.path.islink(compiled_filename):
-            os.remove(compiled_filename)
-        os.symlink(hostname + ".py", compiled_filename)
-
-    console.verbose(" ==> %s.\n", compiled_filename, stream=sys.stderr)
+    return output.getvalue()
 
 
 def _get_needed_plugin_names(

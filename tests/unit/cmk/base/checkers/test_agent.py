@@ -8,6 +8,7 @@
 
 import logging
 import time
+from pathlib import Path
 
 import pytest  # type: ignore[import]
 
@@ -20,12 +21,7 @@ from cmk.fetchers import FetcherType
 
 import cmk.base.config as config
 from cmk.base.checkers import Mode
-from cmk.base.checkers.agent import (
-    AgentSource,
-    AgentChecker,
-    AgentParser,
-    AgentSummarizer,
-)
+from cmk.base.checkers.agent import AgentSource, AgentParser, AgentSummarizer
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 
 
@@ -59,7 +55,7 @@ class TestParser:
             b"second line",
         ))
 
-        ahs = AgentParser(hostname, logger).parse(Result.OK(raw_data)).unwrap()
+        ahs = AgentParser(hostname, Path(""), logger).parse(Result.OK(raw_data)).unwrap()
 
         assert ahs.sections == {
             SectionName("a_section"): [["first", "line"], ["second", "line"]],
@@ -94,7 +90,7 @@ class TestParser:
             b"first line",
         ))
 
-        ahs = AgentParser(hostname, logger).parse(Result.OK(raw_data)).unwrap()
+        ahs = AgentParser(hostname, Path(""), logger).parse(Result.OK(raw_data)).unwrap()
 
         assert ahs.sections == {}
         assert ahs.cache_info == {}
@@ -137,7 +133,8 @@ class TestParser:
             b"second line",
         ))
 
-        ahs = AgentParser(hostname, logger).parse(Result.OK(raw_data)).unwrap()
+        ahs = AgentParser(hostname, Path(""), logger).parse(Result.OK(raw_data)).unwrap()
+
         assert ahs.sections == {SectionName("section"): [["first", "line"], ["second", "line"]]}
         assert ahs.cache_info == {SectionName("section"): (time_time, time_delta)}
         assert ahs.piggybacked_raw_data == {}
@@ -176,8 +173,8 @@ class StubSource(AgentSource):
     def configure_fetcher(self):
         return {}
 
-    def _make_checker(self) -> "StubAgent":
-        return StubAgent(self, self.persisted_sections_file_path)
+    def _make_checker(self) -> "StubSource":
+        return StubSource(self, self.persisted_sections_file_path)
 
     def _make_summarizer(self) -> "StubSummarizer":
         return StubSummarizer(self.exit_spec)
@@ -186,11 +183,6 @@ class StubSource(AgentSource):
 class StubSummarizer(AgentSummarizer):
     def _summarize(self, host_sections):
         return 0, "", []
-
-
-class StubAgent(AgentChecker):
-    def _execute(self, *args, **kwargs):
-        return self.source.default_host_sections
 
 
 class TestAgentSummaryResult:

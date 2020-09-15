@@ -51,7 +51,6 @@ from ._cache import SectionStore
 __all__ = [
     "ABCHostSections",
     "ABCSource",
-    "ABCChecker",
     "FileCacheConfigurer",
     "Mode",
     "set_cache_opts",
@@ -201,9 +200,15 @@ class ABCParser(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         `Result[TRawData, Exception]` and `Result[THostSections, Exception]`.
 
     """
-    def __init__(self, hostname: HostName, logger: logging.Logger) -> None:
+    def __init__(
+        self,
+        hostname: HostName,
+        persisted_sections_file_path: Path,
+        logger: logging.Logger,
+    ) -> None:
         super().__init__()
         self.hostname: Final[HostName] = hostname
+        self.persisted_sections_file_path: Final[Path] = persisted_sections_file_path
         self.host_config = config.HostConfig.make_host_config(self.hostname)
         self._logger = logger
 
@@ -298,6 +303,8 @@ class ABCSource(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
     Dump the JSON configuration from `configure_fetcher()`.
 
     """
+    use_outdated_persisted_sections: bool = False
+
     def __init__(
         self,
         hostname: HostName,
@@ -359,10 +366,25 @@ class ABCSource(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         except Exception as exc:
             return Result.Err(exc)
 
+    @cpu_tracking.track
     def parse(self, raw_data: Result[TRawData, Exception]) -> Result[THostSections, Exception]:
-        # That should obviously call `make_parser().parse(...)` but we still have
-        # cruft in `Checker.check()` that we cannot yet easily get rid of.
-        return self._make_checker().check(raw_data)
+        try:
+            host_sections = self._make_parser().parse(raw_data)
+            if host_sections.is_err():
+                return host_sections
+
+            assert host_sections.ok is not None
+            host_sections.ok.add_persisted_sections(
+                self.persisted_sections_file_path,
+                self.use_outdated_persisted_sections,
+                logger=self._logger,
+            )
+            return host_sections
+        except Exception as exc:
+            self._logger.log(VERBOSE, "ERROR: %s", exc)
+            if cmk.utils.debug.enabled():
+                raise
+            return Result.Err(exc)
 
     def summarize(self, host_sections: Result[THostSections, Exception]) -> ServiceCheckResult:
         return self._make_summarizer().summarize(host_sections)
@@ -380,11 +402,6 @@ class ABCSource(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
     def _make_fetcher(self) -> ABCFetcher:
         """Create a fetcher with this configuration."""
         return self.fetcher_type.from_json(self.configure_fetcher())
-
-    @abc.abstractmethod
-    def _make_checker(self) -> "ABCChecker":
-        """Create a checker with this configuration."""
-        raise NotImplementedError
 
     @abc.abstractmethod
     def _make_parser(self) -> "ABCParser[TRawData, THostSections]":
@@ -446,55 +463,3 @@ class ABCSummarizer(Generic[THostSections], metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def _summarize(self, host_sections: THostSections) -> ServiceCheckResult:
         raise NotImplementedError
-
-
-class ABCChecker(Generic[TRawData, TSections, TPersistedSections, THostSections],
-                 metaclass=abc.ABCMeta):
-    """Parse raw data into host sections."""
-    _use_outdated_persisted_sections = False
-
-    def __init__(
-        self,
-        source: ABCSource,
-        persisted_sections_file_path: Path,
-    ) -> None:
-        super().__init__()
-        self.source = source
-        self._persisted_sections_file_path = persisted_sections_file_path
-        self._logger = self.source._logger
-
-    def __repr__(self):
-        return "%s(%r)" % (type(self).__name__, self.source)
-
-    @property
-    def id(self) -> str:
-        return self.source.id
-
-    @property
-    def _cpu_tracking_id(self) -> str:
-        return self.source.cpu_tracking_id
-
-    @cpu_tracking.track
-    def check(self, raw_data: Result[TRawData, Exception]) -> Result[THostSections, Exception]:
-        # WARNING: Do not call this function.  It is meant to disappear.
-        try:
-            host_sections = self.source._make_parser().parse(raw_data)
-            if host_sections.is_err():
-                return host_sections
-
-            assert host_sections.ok is not None
-            host_sections.ok.add_persisted_sections(
-                self._persisted_sections_file_path,
-                self.use_outdated_persisted_sections,
-                logger=self._logger,
-            )
-            return host_sections
-        except Exception as exc:
-            self._logger.log(VERBOSE, "ERROR: %s", exc)
-            if cmk.utils.debug.enabled():
-                raise
-            return Result.Err(exc)
-
-    @classmethod
-    def use_outdated_persisted_sections(cls) -> None:
-        cls._use_outdated_persisted_sections = True

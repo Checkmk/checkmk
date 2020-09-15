@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import abc
 import time
 from pathlib import Path
 from typing import cast, Dict, Final, List, Optional, Tuple
@@ -44,14 +43,13 @@ from cmk.base.ip_lookup import normalize_ip_addresses
 
 from ._abstract import (
     ABCSource,
-    ABCChecker,
     ABCHostSections,
     ABCParser,
     ABCSummarizer,
     Mode,
 )
 
-__all__ = ["AgentSource", "AgentHostSections", "AgentChecker"]
+__all__ = ["AgentSource", "AgentHostSections"]
 
 
 class AgentHostSections(ABCHostSections[AgentRawData, AgentSections, AgentPersistedSections,
@@ -101,11 +99,8 @@ class AgentSource(ABCSource[AgentRawData, AgentHostSections]):
         #       Then we can remove this special case
         self.main_data_source: Final[bool] = main_data_source
 
-    def _make_checker(self) -> "AgentChecker":
-        return AgentChecker(self, self.persisted_sections_file_path)
-
     def _make_parser(self) -> "AgentParser":
-        return AgentParser(self.hostname, self._logger)
+        return AgentParser(self.hostname, self.persisted_sections_file_path, self._logger)
 
 
 class AgentSummarizer(ABCSummarizer[AgentHostSections]):
@@ -450,9 +445,3 @@ class AgentParser(ABCParser[AgentRawData, AgentHostSections]):
             ensure_binary("%d" % cached_at),
             ensure_binary("%d" % cache_age),
         )
-
-
-class AgentChecker(ABCChecker[AgentRawData, AgentSections, AgentPersistedSections,
-                              AgentHostSections],
-                   metaclass=abc.ABCMeta):
-    pass

@@ -8,9 +8,9 @@ from contextlib import suppress
 
 import pytest  # type: ignore[import]
 
-from cmk.base.checkers import ABCChecker, FileCacheConfigurer
-from cmk.base.checkers.agent import AgentChecker
-from cmk.base.checkers.snmp import SNMPChecker
+from cmk.base.checkers import ABCSource, FileCacheConfigurer
+from cmk.base.checkers.agent import AgentSource
+from cmk.base.checkers.snmp import SNMPSource
 from cmk.base.checkers.tcp import TCPSource
 
 
@@ -26,11 +26,11 @@ def reset_mutable_global_state():
             delattr(cls, attr)
 
     yield
-    delete(AgentChecker, "_use_outdated_persisted_sections")
-    delete(SNMPChecker, "_use_outdated_persisted_sections")
+    delete(AgentSource, "use_outdated_persisted_sections")
+    delete(SNMPSource, "use_outdated_persisted_sections")
 
     reset(FileCacheConfigurer, "disabled", False)
     reset(FileCacheConfigurer, "maybe", False)
     reset(FileCacheConfigurer, "use_outdated", False)
-    reset(ABCChecker, "_use_outdated_persisted_sections", False)
+    reset(ABCSource, "use_outdated_persisted_sections", False)
     reset(TCPSource, "use_only_cache", False)

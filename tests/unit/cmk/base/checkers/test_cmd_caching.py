@@ -27,8 +27,8 @@ import cmk.base.config as config
 import cmk.base.inventory_plugins
 import cmk.base.modes
 import cmk.base.modes.check_mk
-from cmk.base.checkers import ABCChecker
-from cmk.base.checkers.agent import AgentChecker, AgentSource
+from cmk.base.checkers import ABCSource
+from cmk.base.checkers.agent import AgentSource
 from cmk.base.checkers.snmp import SNMPSource
 
 # TODO: These tests need to be tuned, because they involve a lot of checks being loaded which takes
@@ -96,27 +96,29 @@ def _patch_data_source(mocker, **kwargs):
         "use_outdated": False,
         "max_age": 0,  # check_max_cachefile_age
         "disabled": False,
-        "_use_outdated_persisted_sections": False,
+        "use_outdated_persisted_sections": False,
         "on_error": "raise",
         "_use_snmpwalk_cache": True,
         "_ignore_check_interval": True,
     }
     defaults.update(kwargs)
 
-    def check(self, *args, callback, **kwargs):
-        assert self.source.file_cache.maybe == defaults["maybe"]
-        assert self.source.file_cache.disabled == defaults["disabled"]
-        assert self.source.file_cache.max_age == defaults["max_age"]
-        assert self.source.file_cache.use_outdated == defaults["use_outdated"]
+    def parse(self, *args, callback, **kwargs):
+        assert isinstance(self, ABCSource), repr(self)
 
-        if isinstance(self.source, AgentSource):
-            assert (AgentChecker._use_outdated_persisted_sections ==
-                    defaults["_use_outdated_persisted_sections"])
+        assert self.file_cache.maybe == defaults["maybe"]
+        assert self.file_cache.disabled == defaults["disabled"]
+        assert self.file_cache.max_age == defaults["max_age"]
+        assert self.file_cache.use_outdated == defaults["use_outdated"]
 
-        elif isinstance(self.source, SNMPSource):
-            assert self.source.on_snmp_scan_error == defaults["on_error"]
-            assert self.source.use_snmpwalk_cache == defaults["_use_snmpwalk_cache"]
-            assert self.source.ignore_check_interval == defaults["_ignore_check_interval"]
+        if isinstance(self, AgentSource):
+            assert (
+                self.use_outdated_persisted_sections == defaults["use_outdated_persisted_sections"])
+
+        elif isinstance(self, SNMPSource):
+            assert self.on_snmp_scan_error == defaults["on_error"]
+            assert self.use_snmpwalk_cache == defaults["_use_snmpwalk_cache"]
+            assert self.ignore_check_interval == defaults["_ignore_check_interval"]
 
         result = callback(self, *args, **kwargs)
         if result.is_err():
@@ -124,10 +126,10 @@ def _patch_data_source(mocker, **kwargs):
         return result
 
     mocker.patch.object(
-        ABCChecker,
-        "check",
+        ABCSource,
+        "parse",
         autospec=True,
-        side_effect=partial(check, callback=ABCChecker.check),
+        side_effect=partial(parse, callback=ABCSource.parse),
     )
 
 
@@ -177,7 +179,7 @@ def patch_data_source(mocker):
     ("force"),
     [
         (True, {
-            "_use_outdated_persisted_sections": True
+            "use_outdated_persisted_sections": True
         }),
         (False, {}),
     ],
@@ -207,7 +209,7 @@ def test_mode_inventory_caching(hosts, cache, force, monkeypatch, mocker):
     if force[0]:
         options["force"] = True
 
-    assert ABCChecker.check.call_count == 0  # type: ignore[attr-defined]
+    assert ABCSource.parse.call_count == 0  # type: ignore[attr-defined]
     cmk.base.modes.check_mk.mode_inventory(options, hosts[0])
 
     # run() has to be called once for each requested host
@@ -219,14 +221,14 @@ def test_mode_inventory_caching(hosts, cache, force, monkeypatch, mocker):
 
     num_runs = (len([h for h in valid_hosts if not config_cache.get_host_config(h).is_cluster]) * 2)
 
-    assert ABCChecker.check.call_count == num_runs  # type: ignore[attr-defined]
+    assert ABCSource.parse.call_count == num_runs  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("patch_data_source")
 def test_mode_inventory_as_check():
     assert cmk.base.modes.check_mk.mode_inventory_as_check({}, "ds-test-host1") == 0
-    assert ABCChecker.check.call_count == 2  # type: ignore[attr-defined]
+    assert ABCSource.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
@@ -234,14 +236,14 @@ def test_mode_discover_marked_hosts(mocker):
     _patch_data_source(mocker, max_age=120)  # inventory_max_cachefile_age
     # TODO: First configure auto discovery to make this test really work
     cmk.base.modes.check_mk.mode_discover_marked_hosts()
-    # assert ABCChecker.check.call_count == 2  # type: ignore[attr-defined]
+    # assert ABCSource.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
 def test_mode_check_discovery_default(mocker):
     _patch_data_source(mocker, max_age=0)
     assert cmk.base.modes.check_mk.mode_check_discovery("ds-test-host1") == 1
-    assert ABCChecker.check.call_count == 2  # type: ignore[attr-defined]
+    assert ABCSource.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
@@ -255,7 +257,7 @@ def test_mode_check_discovery_cached(mocker):
 
     cmk.base.modes.check_mk.option_cache()
     assert cmk.base.modes.check_mk.mode_check_discovery("ds-test-host1") == 1
-    assert ABCChecker.check.call_count == 2  # type: ignore[attr-defined]
+    assert ABCSource.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
@@ -263,7 +265,7 @@ def test_mode_discover_all_hosts(mocker):
     _patch_data_source(mocker, maybe=True, max_age=120)
     cmk.base.modes.check_mk.mode_discover({"discover": 1}, [])
     active_real_hosts = config.get_config_cache().all_active_realhosts()
-    assert ABCChecker.check.call_count == (  # type: ignore[attr-defined]
+    assert ABCSource.parse.call_count == (  # type: ignore[attr-defined]
         len(active_real_hosts) * 2)
 
 
@@ -272,7 +274,7 @@ def test_mode_discover_explicit_hosts(mocker):
     # TODO: Is it correct that no cache is used here?
     _patch_data_source(mocker, max_age=0)
     cmk.base.modes.check_mk.mode_discover({"discover": 1}, ["ds-test-host1"])
-    assert ABCChecker.check.call_count == 2  # type: ignore[attr-defined]
+    assert ABCSource.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
@@ -285,7 +287,7 @@ def test_mode_discover_explicit_hosts_cache(mocker):
     )
     cmk.base.modes.check_mk.option_cache()
     cmk.base.modes.check_mk.mode_discover({"discover": 1}, ["ds-test-host1"])
-    assert ABCChecker.check.call_count == 2  # type: ignore[attr-defined]
+    assert ABCSource.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
@@ -293,14 +295,14 @@ def test_mode_discover_explicit_hosts_no_cache(mocker):
     _patch_data_source(mocker, disabled=True, max_age=0)
     cmk.base.modes.check_mk.option_no_cache()  # --no-cache
     cmk.base.modes.check_mk.mode_discover({"discover": 1}, ["ds-test-host1"])
-    assert ABCChecker.check.call_count == 2  # type: ignore[attr-defined]
+    assert ABCSource.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("patch_data_source")
 def test_mode_check_explicit_host():
     cmk.base.modes.check_mk.mode_check({}, ["ds-test-host1"])
-    assert ABCChecker.check.call_count == 2  # type: ignore[attr-defined]
+    assert ABCSource.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
@@ -308,7 +310,7 @@ def test_mode_check_explicit_host_cache(mocker):
     _patch_data_source(mocker, maybe=True, use_outdated=True)
     cmk.base.modes.check_mk.option_cache()
     cmk.base.modes.check_mk.mode_check({}, ["ds-test-host1"])
-    assert ABCChecker.check.call_count == 2  # type: ignore[attr-defined]
+    assert ABCSource.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
@@ -316,14 +318,14 @@ def test_mode_check_explicit_host_no_cache(mocker):
     _patch_data_source(mocker, disabled=True, max_age=0)
     cmk.base.modes.check_mk.option_no_cache()  # --no-cache
     cmk.base.modes.check_mk.mode_check({}, ["ds-test-host1"])
-    assert ABCChecker.check.call_count == 2  # type: ignore[attr-defined]
+    assert ABCSource.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("patch_data_source")
 def test_mode_dump_agent_explicit_host(capsys):
     cmk.base.modes.check_mk.mode_dump_agent("ds-test-host1")
-    assert ABCChecker.check.call_count == 2  # type: ignore[attr-defined]
+    assert ABCSource.parse.call_count == 2  # type: ignore[attr-defined]
     assert "<<<check_mk>>>" in capsys.readouterr().out
 
 
@@ -332,7 +334,7 @@ def test_mode_dump_agent_explicit_host_cache(mocker, capsys):
     _patch_data_source(mocker, maybe=True, use_outdated=True)
     cmk.base.modes.check_mk.option_cache()
     cmk.base.modes.check_mk.mode_dump_agent("ds-test-host1")
-    assert ABCChecker.check.call_count == 2  # type: ignore[attr-defined]
+    assert ABCSource.parse.call_count == 2  # type: ignore[attr-defined]
     assert "<<<check_mk>>>" in capsys.readouterr().out
 
 
@@ -341,7 +343,7 @@ def test_mode_dump_agent_explicit_host_no_cache(mocker, capsys):
     _patch_data_source(mocker, disabled=True, max_age=0)
     cmk.base.modes.check_mk.option_no_cache()  # --no-cache
     cmk.base.modes.check_mk.mode_dump_agent("ds-test-host1")
-    assert ABCChecker.check.call_count == 2  # type: ignore[attr-defined]
+    assert ABCSource.parse.call_count == 2  # type: ignore[attr-defined]
     assert "<<<check_mk>>>" in capsys.readouterr().out
 
 
@@ -392,7 +394,7 @@ def test_automation_try_discovery_caching(scan, raise_errors, mocker):
     args.append("ds-test-host1")
 
     cmk.base.automations.check_mk.AutomationTryDiscovery().execute(args)
-    assert ABCChecker.check.call_count == 2  # type: ignore[attr-defined]
+    assert ABCSource.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.parametrize(
@@ -435,7 +437,7 @@ def test_automation_discovery_caching(raise_errors, scan, mocker):
 
     args += ["fixall", "ds-test-host1"]
     cmk.base.automations.check_mk.AutomationDiscovery().execute(args)
-    assert ABCChecker.check.call_count == 2  # type: ignore[attr-defined]
+    assert ABCSource.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 # Globale Optionen:

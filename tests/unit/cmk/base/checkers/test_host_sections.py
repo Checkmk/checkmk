@@ -29,8 +29,8 @@ import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.checkers import (
-    ABCChecker,
     ABCHostSections,
+    ABCSource,
     _checkers,
     update_host_sections,
     make_sources,
@@ -452,12 +452,12 @@ class TestMakeHostSectionsHosts:
             )
 
         monkeypatch.setattr(
-            ABCChecker,
-            "check",
+            ABCSource,
+            "parse",
             lambda self, raw_data: Result.OK(
                 DummyHostSection(
                     sections=
-                    {SectionName("section_name_%s" % self.source.hostname): [["section_content"]]},
+                    {SectionName("section_name_%s" % self.hostname): [["section_content"]]},
                     cache_info={},
                     piggybacked_raw_data={},
                     persisted_sections="",
@@ -699,10 +699,10 @@ class TestMakeHostSectionsClusters:
             monkeypatch.setattr(fetcher, "fetch", lambda self, mode, fetcher=fetcher: {} if fetcher is SNMPFetcher else b"",)
 
         monkeypatch.setattr(
-            ABCChecker,
-            "check",
+            ABCSource,
+            "parse",
             lambda self, *args, **kwargs: Result.OK(DummyHostSection(
-                sections={SectionName("section_name_%s" % self.source.hostname): [["section_content"]]},
+                sections={SectionName("section_name_%s" % self.hostname): [["section_content"]]},
                 cache_info={},
                 piggybacked_raw_data={},
                 persisted_sections="",
@@ -812,8 +812,8 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
         make_piggybacked_sections,
     )
     monkeypatch.setattr(
-        ABCChecker,
-        "check",
+        ABCSource,
+        "parse",
         check,
     )
     mocker.patch.object(

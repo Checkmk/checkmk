@@ -83,7 +83,7 @@ def track(method: Callable) -> Callable:
     """Decorator to track CPU in methods."""
     @functools.wraps(method)
     def wrapper(self: Any, *args: Tuple[Any], **kwargs: Dict[str, Any]) -> None:
-        push_phase(self._cpu_tracking_id)
+        push_phase(self.cpu_tracking_id)
         try:
             return method(self, *args, **kwargs)
         finally:

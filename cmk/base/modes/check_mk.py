@@ -1255,7 +1255,7 @@ def mode_inventory(options: Dict, args: List[str]) -> None:
         console.verbose("Doing HW/SW inventory on all hosts\n")
 
     if "force" in options:
-        checkers.agent.AgentChecker.use_outdated_persisted_sections()
+        checkers.agent.AgentSource.use_outdated_persisted_sections = True
 
     inventory.do_inv(hostnames)
 

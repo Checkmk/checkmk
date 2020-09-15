@@ -26,7 +26,6 @@ import cmk.base.config as config
 
 from ._abstract import (
     ABCSource,
-    ABCChecker,
     ABCHostSections,
     ABCParser,
     ABCSummarizer,
@@ -144,11 +143,8 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
             "snmp_config": self.snmp_config._asdict(),
         }
 
-    def _make_checker(self) -> "SNMPChecker":
-        return SNMPChecker(self, self.persisted_sections_file_path)
-
     def _make_parser(self) -> "SNMPParser":
-        return SNMPParser(self.hostname, self._logger)
+        return SNMPParser(self.hostname, self.persisted_sections_file_path, self._logger)
 
     def _make_summarizer(self) -> "SNMPSummarizer":
         return SNMPSummarizer(self.exit_spec)
@@ -301,7 +297,3 @@ class SNMPParser(ABCParser[SNMPRawData, SNMPHostSections]):
 class SNMPSummarizer(ABCSummarizer[SNMPHostSections]):
     def _summarize(self, host_sections: SNMPHostSections) -> ServiceCheckResult:
         return 0, "Success", []
-
-
-class SNMPChecker(ABCChecker[SNMPRawData, SNMPSections, SNMPPersistedSections, SNMPHostSections]):
-    pass

@@ -67,9 +67,7 @@ def test_cpu_tracking_multiple_phases(monkeypatch):
 
 def test_cpu_tracking_decorator(monkeypatch):
     class K:
-        @staticmethod
-        def _cpu_tracking_id():
-            return "hello"
+        cpu_tracking_id = "hello"
 
         @cpu_tracking.track
         def tracked(self):

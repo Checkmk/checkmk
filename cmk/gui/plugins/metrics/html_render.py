@@ -757,11 +757,9 @@ def render_ajax_graph_hover(context, hover_time):
     graph_data_range = context["data_range"]
     graph_recipe = context["definition"]
 
-    start_time, end_time, step, curves = artwork.compute_graph_artwork_curves(
-        graph_recipe, graph_data_range)
+    curves = artwork.compute_graph_artwork_curves(graph_recipe, graph_data_range)
 
-    curve_values = artwork._compute_curve_values_at_timestamp(graph_recipe, curves, hover_time,
-                                                              start_time, end_time, step)
+    curve_values = artwork._compute_curve_values_at_timestamp(graph_recipe, curves, hover_time)
 
     return {
         "rendered_hover_time": cmk.utils.render.date_and_time(hover_time),

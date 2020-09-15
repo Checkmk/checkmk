@@ -26,9 +26,7 @@ def fetch_rrd_data_for_graph(graph_recipe, graph_data_range):
     needed_rrd_data = get_needed_sources(graph_recipe["metrics"])
 
     by_service = group_needed_rrd_data_by_service(needed_rrd_data)
-    # TODO: The Unions below are horrible! Fix this by making this a NewType/class.
-    rrd_data: Dict[Union[str, Tuple[Any, Any, Any, Any, Any, Any]],
-                   Union[Tuple[float, float, float], TimeSeries]] = {}
+    rrd_data: Dict[Tuple[str, str, str, str, str, str], TimeSeries] = {}
     for (site, host_name, service_description), entries in by_service.items():
         try:
             for (perfvar, cf, scale), data in \
@@ -38,15 +36,9 @@ def fetch_rrd_data_for_graph(graph_recipe, graph_data_range):
         except livestatus.MKLivestatusNotFoundError:
             pass
 
-    start_time, end_time, step = align_and_resample_rrds(rrd_data,
-                                                         graph_recipe["consolidation_function"])
-    if start_time is None:  # Empty graph
-        start_time, end_time = graph_data_range["time_range"]
-        step = 60
-    elif chop_last_empty_step(graph_data_range, step, rrd_data):
-        end_time -= step
+    align_and_resample_rrds(rrd_data, graph_recipe["consolidation_function"])
+    chop_last_empty_step(graph_data_range, rrd_data)
 
-    rrd_data['__range'] = (start_time, end_time, step)
     return rrd_data
 
 
@@ -76,8 +68,6 @@ def align_and_resample_rrds(rrd_data, cf):
                 elif step < rrddata.twindow[2]:
                     rrddata.values = rrddata.bfill_upsample((start_time, end_time, step), 0)
 
-    return start_time, end_time, step
-
 
 # The idea is to omit the empty last step of graphs which are showing the
 # last data which ends now (at the current time) where there is not yet
@@ -86,21 +76,24 @@ def align_and_resample_rrds(rrd_data, cf):
 #
 # This makes only sense for graphs which are ending "now". So disable this
 # for the other graphs.
-def chop_last_empty_step(graph_data_range, step, rrd_data):
-    # Disable graph chop for graphs which do not end within the current step
-    if abs(time.time() - graph_data_range["time_range"][1]) > step:
-        return False
+def chop_last_empty_step(graph_data_range, rrd_data):
+    if rrd_data:
+        sample_data = next(iter(rrd_data.values()))
+        step = sample_data.twindow[2]
+        # Disable graph chop for graphs which do not end within the current step
+        if abs(time.time() - graph_data_range["time_range"][1]) > step:
+            return
 
     # Chop of one step from the end of the graph if that is None
     # for all curves. This is in order to avoid a gap when querying
     # up to the current time.
     for data in rrd_data.values():
         if not data or data[-1] is not None:
-            return False
+            return
+
     for data in rrd_data.values():
         del data.values[-1]
         data.end -= step
-    return True
 
 
 def needed_elements_of_expression(expression):

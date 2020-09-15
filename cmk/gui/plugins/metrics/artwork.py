@@ -117,15 +117,19 @@ def add_default_render_options(graph_render_options, render_unthemed=False):
 def compute_graph_artwork(graph_recipe, graph_data_range, graph_render_options):
     graph_render_options = add_default_render_options(graph_render_options)
 
-    start_time, end_time, step, curves = compute_graph_artwork_curves(graph_recipe,
-                                                                      graph_data_range)
+    curves = compute_graph_artwork_curves(graph_recipe, graph_data_range)
 
     pin_time = load_graph_pin()
-    _compute_scalars(graph_recipe, curves, start_time, end_time, step, pin_time)
+    _compute_scalars(graph_recipe, curves, pin_time)
 
     layouted_curves, mirrored = layout_graph_curves(curves)  # do stacking, mirroring
 
     width, height = graph_render_options["size"]
+
+    try:
+        start_time, end_time, step = curves[0]['rrddata'].twindow
+    except IndexError:  # Empty graph
+        (start_time, end_time), step = graph_data_range["time_range"], 60
 
     return {
         # Labelling, size, layout
@@ -258,15 +262,11 @@ def compute_graph_artwork_curves(graph_recipe, graph_data_range):
     rrd_data = rrd_fetch.fetch_rrd_data_for_graph(graph_recipe, graph_data_range)
 
     curves = timeseries.compute_graph_curves(graph_recipe["metrics"], rrd_data)
-    try:
-        start_time, end_time, step = curves[0]['rrddata'].twindow
-    except (AttributeError, IndexError):
-        start_time, end_time, step = rrd_data['__range']
 
     if graph_recipe.get("omit_zero_metrics"):
         curves = [curve for curve in curves if any(curve["rrddata"])]
 
-    return start_time, end_time, step, curves
+    return curves
 
 
 # Result is a list with len(rrddata)*2 + 1 vertical values
@@ -305,7 +305,7 @@ def halfstep_interpolation(rrddata):
 #   '----------------------------------------------------------------------'
 
 
-def _compute_scalars(graph_recipe, curves, start_time, end_time, step, pin_time):
+def _compute_scalars(graph_recipe, curves, pin_time):
     unit = unit_info[graph_recipe["unit"]]
 
     for curve in curves:
@@ -316,7 +316,7 @@ def _compute_scalars(graph_recipe, curves, start_time, end_time, step, pin_time)
 
         pin = None
         if pin_time is not None:
-            pin = _get_value_at_timestamp(start_time, end_time, step, pin_time, rrddata)
+            pin = _get_value_at_timestamp(pin_time, rrddata)
 
         rrddata = timeseries.clean_time_series_point(rrddata)
         if rrddata:
@@ -336,8 +336,7 @@ def _compute_scalars(graph_recipe, curves, start_time, end_time, step, pin_time)
             curve["scalars"][key] = _render_scalar_value(value, unit)
 
 
-def _compute_curve_values_at_timestamp(graph_recipe, curves, hover_time, start_time, end_time,
-                                       step):
+def _compute_curve_values_at_timestamp(graph_recipe, curves, hover_time):
     unit = unit_info[graph_recipe["unit"]]
 
     curve_values = []
@@ -347,7 +346,7 @@ def _compute_curve_values_at_timestamp(graph_recipe, curves, hover_time, start_t
 
         rrddata = curve["rrddata"]
 
-        value = _get_value_at_timestamp(start_time, end_time, step, hover_time, rrddata)
+        value = _get_value_at_timestamp(hover_time, rrddata)
 
         curve_values.append({
             "title": curve["title"],
@@ -364,7 +363,8 @@ def _render_scalar_value(value, unit):
     return value, unit["render"](value)
 
 
-def _get_value_at_timestamp(start_time, end_time, step, pin_time, rrddata):
+def _get_value_at_timestamp(pin_time, rrddata):
+    start_time, _, step = rrddata.twindow
     nth_value = (pin_time - start_time) // step
     if 0 <= nth_value < len(rrddata):
         return rrddata[nth_value]

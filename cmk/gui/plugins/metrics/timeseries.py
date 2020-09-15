@@ -72,14 +72,14 @@ def compute_graph_curves(metrics, rrd_data):
 
 
 def evaluate_time_series_expression(expression, rrd_data):
-    # TODO: Test is wrong rrd_data['__range'] always exist. No data control filters happen elsewhere
     if rrd_data:
         sample_data = next(iter(rrd_data.values()))
         num_points = len(sample_data)
         twindow = sample_data.twindow
     else:
+        # no data, default clean graph, use for pure scalars on custom graphs
         num_points = 1
-        twindow = (0, 0, 0)  # no data
+        twindow = (0, 60, 60)
 
     if expression[0] == "operator":
         operator_id, operands = expression[1:]

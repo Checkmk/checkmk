@@ -73,6 +73,7 @@ def check_hp_psu(item, params, parsed):
         "6": (3, "Max"),
         # This value is not specified in the MIB, but has been observed in the wild.
         "8": (2, "Unplugged"),
+        "9": (2, "Aux not powered"),
     }
 
     return ps_statemap.get(parsed[item]["status"], (3, "Unknown status code sent by device"))

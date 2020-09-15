@@ -28,6 +28,7 @@ from cmk.utils.type_defs import (
     LabelSources,
     ServiceName,
     ConfigSerial,
+    LATEST_SERIAL,
 )
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -57,11 +58,9 @@ class HelperConfig:
     link is only created in case the context is left without exception.
     """
     def __init__(self, serial: ConfigSerial) -> None:
-        base_path: Final[Path] = cmk.utils.paths.core_helper_config_dir
-
         self.serial: Final[ConfigSerial] = serial
-        self.serial_path: Final[Path] = base_path / serial
-        self.latest_path: Final[Path] = base_path / "latest"
+        self.serial_path: Final[Path] = config.make_helper_config_path(serial)
+        self.latest_path: Final[Path] = config.make_helper_config_path(LATEST_SERIAL)
 
     @contextmanager
     def create(self) -> Iterator["HelperConfig"]:
@@ -82,7 +81,7 @@ def current_core_config_serial() -> ConfigSerial:
 
 class MonitoringCore(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def create_config(self) -> None:
+    def create_config(self, serial: ConfigSerial) -> None:
         pass
 
 
@@ -336,10 +335,9 @@ def _create_core_config(core: MonitoringCore) -> ConfigurationWarnings:
     _verify_non_duplicate_hosts()
     _verify_non_deprecated_checkgroups()
 
-    with HelperConfig(current_core_config_serial()).create(), _backup_objects_file(core):
-        # TODO: Hand over the serial and base path here to remove access to global information
-        # from MonitoringCore classes
-        core.create_config()
+    with HelperConfig(
+            current_core_config_serial()).create() as helper_config, _backup_objects_file(core):
+        core.create_config(helper_config.serial)
 
     cmk.utils.password_store.save(config.stored_passwords)
 

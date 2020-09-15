@@ -695,7 +695,7 @@ class PackedConfigGenerator:
 class PackedConfigStore:
     """Caring about persistence of the packed configuration"""
     def __init__(self, serial: OptionalConfigSerial) -> None:
-        base_path: Final[Path] = cmk.utils.paths.core_helper_config_dir / serial
+        base_path: Final[Path] = make_helper_config_path(serial)
         self._compiled_path: Final[Path] = base_path / "precompiled_check_config.mk"
         self._source_path: Final[Path] = base_path / "precompiled_check_config.mk.orig"
 
@@ -714,6 +714,10 @@ class PackedConfigStore:
             namespace: Dict[str, Any] = {}
             exec(marshal.load(f), globals(), namespace)
             return namespace
+
+
+def make_helper_config_path(serial: OptionalConfigSerial) -> Path:
+    return cmk.utils.paths.core_helper_config_dir / serial
 
 
 @contextlib.contextmanager

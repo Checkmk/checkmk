@@ -10,7 +10,7 @@ import errno
 import os
 import py_compile
 import sys
-import tempfile
+from io import StringIO
 from typing import Any, Dict, IO, List, Optional, Set, Tuple, Union
 
 from six import ensure_binary, ensure_str
@@ -73,29 +73,10 @@ class NagiosCore(core_config.MonitoringCore):
         The user can then start the site with the old configuration and fix the configuration issue
         while the monitoring is running.
         """
-        tmp_path = None
-        try:
-            store.makedirs(os.path.dirname(cmk.utils.paths.nagios_objects_file))
-            # TODO: Use store methods for IO
-            with tempfile.NamedTemporaryFile(
-                    "w",
-                    dir=os.path.dirname(cmk.utils.paths.nagios_objects_file),
-                    prefix=".%s.new" % os.path.basename(cmk.utils.paths.nagios_objects_file),
-                    delete=False) as tmp:
-                tmp_path = tmp.name
-                os.chmod(tmp.name, 0o660)
-                create_config(tmp, hostnames=None)
-                os.rename(tmp.name, cmk.utils.paths.nagios_objects_file)
+        config_buffer = StringIO()
+        create_config(config_buffer, hostnames=None)
 
-        except Exception:
-            # In case an exception happens cleanup the tempfile created for writing
-            try:
-                if tmp_path:
-                    os.unlink(tmp_path)
-            except IOError as e:
-                if e.errno == errno.ENOENT:  # No such file or directory
-                    pass
-            raise
+        store.save_text_to_file(cmk.utils.paths.nagios_objects_file, config_buffer.getvalue())
 
     def _precompile_hostchecks(self, serial: ConfigSerial) -> None:
         out.output("Precompiling host checks...")

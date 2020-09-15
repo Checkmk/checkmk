@@ -191,7 +191,7 @@ def _create_new_result(
         # fill up with None:
         name, value, warn, crit, min_, max_ = (
             v for v, _ in itertools.zip_longest(metric, range(6)))
-        yield Metric(name, value, levels=(warn, crit), boundaries=(min_, max_))
+        yield Metric(str(name), float(value), levels=(warn, crit), boundaries=(min_, max_))
 
     return is_details
 

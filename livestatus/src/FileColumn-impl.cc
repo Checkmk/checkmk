@@ -9,6 +9,8 @@
 #include "FileColumn.h"
 #include "nagios.h"
 class CrashReport;
+class TableStatus;
 
 template class FileColumn<CrashReport>;
 template class FileColumn<host>;
+template class FileColumn<TableStatus>;

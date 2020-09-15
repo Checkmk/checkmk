@@ -3,11 +3,12 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
+#include "DynamicFileColumn.h"
+
 #include <filesystem>
 #include <stdexcept>
 #include <utility>
 
-#include "DynamicFileColumn.h"
 #include "FileColumn.h"  // IWYU pragma: keep
 #include "FileSystemHelper.h"
 

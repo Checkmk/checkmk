@@ -16,6 +16,7 @@
 #include "BoolLambdaColumn.h"
 #include "Column.h"
 #include "DoubleLambdaColumn.h"
+#include "FileColumn.h"
 #include "IntLambdaColumn.h"
 #include "MonitoringCore.h"
 #include "Query.h"
@@ -290,6 +291,12 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "The number of queued alerts which have not yet been delivered to the alert helper",
         offsets, [](const TableStatus &ts) {
             return static_cast<int32_t>(ts.core()->numQueuedAlerts());
+        }));
+    addColumn(std::make_unique<FileColumn<TableStatus>>(
+        "license_usage_history", "Historic license usage information", offsets,
+        [mc]() { return mc->licenseUsagePath(); },
+        [](const TableStatus & /*r*/) {
+            return std::filesystem::path{"history.json"};
         }));
 }
 

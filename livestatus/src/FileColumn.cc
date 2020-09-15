@@ -3,11 +3,12 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
+#include "FileColumn.h"
+
 #include <filesystem>
 #include <sstream>
 #include <utility>
 
-#include "FileColumn.h"
 #include "Logger.h"
 #include "Row.h"
 

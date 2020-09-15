@@ -94,6 +94,7 @@ public:
     std::filesystem::path historyFilePath() const override;
     std::filesystem::path logArchivePath() const override;
     std::filesystem::path rrdcachedSocketPath() const override;
+    std::filesystem::path licenseUsagePath() const override;
 
     Encoding dataEncoding() override;
     size_t maxResponseSize() override;

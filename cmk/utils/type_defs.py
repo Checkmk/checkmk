@@ -11,10 +11,10 @@ import string
 import sys
 from typing import (
     Any,
-    Callable,
     Dict,
     Final,
     Generic,
+    Iterable,
     List,
     Literal,
     NamedTuple,
@@ -263,14 +263,26 @@ E_co = TypeVar("E_co", covariant=True)
 
 
 class Result(Generic[T_co, E_co], abc.ABC):
-    """An error container inspired by Rust.
+    """An error container.
+
+    This error container was inspired by a variety of such containers
+    from other programming languages.
 
     See Also:
-        https://doc.rust-lang.org/std/result/enum.Result.html
+
+        The list is sorted alphabetically by programming language:
+
+        - C++: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0323r4.html
+        - Haskell: https://hackage.haskell.org/package/category-extras-0.52.0/docs/Control-Monad-Either.html
+        - OCaml: https://doc.rust-lang.org/std/result/enum.Result.html
+        - Rust: https://caml.inria.fr/pub/docs/manual-ocaml/libref/Result.html
+
+        We use the OCaml API without the purely functional interface, that is,
+        without `join`, `bind`, `fold` or `map`.
 
     """
     @staticmethod
-    def Err(err: E_co):  # type: ignore[misc]
+    def Error(err: E_co):  # type: ignore[misc]
         # mypy complains about the variance of the argument but
         # both static methods only forward it to the respective
         # `__init__()`, which is safe.
@@ -278,7 +290,7 @@ class Result(Generic[T_co, E_co], abc.ABC):
         # See Also:
         #   - https://github.com/python/mypy/pull/2888
         #   - https://github.com/python/mypy/issues/7049
-        return _Err(err)
+        return _Error(err)
 
     @staticmethod
     def OK(ok: T_co):  # type: ignore[misc]
@@ -286,46 +298,53 @@ class Result(Generic[T_co, E_co], abc.ABC):
         return _OK(ok)
 
     @abc.abstractmethod
-    def __eq__(self, other: Any) -> bool:
-        raise NotImplementedError
-
-    @abc.abstractmethod
     def __hash__(self) -> int:
         raise NotImplementedError
 
-    @property
     @abc.abstractmethod
-    def ok(self) -> Optional[T_co]:
+    def __eq__(self, other: Any) -> bool:
+        raise NotImplementedError
+
+    def __ne__(self, other: Any) -> bool:
+        return not self == other
+
+    @abc.abstractmethod
+    def __lt__(self, other: Any) -> bool:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def __gt__(self, other: Any) -> bool:
+        raise NotImplementedError
+
+    def __le__(self, other: Any) -> bool:
+        return self < other or self == other
+
+    def __ge__(self, other: Any) -> bool:
+        return self > other or self == other
+
+    @abc.abstractmethod
+    def __iter__(self) -> Iterable[T_co]:
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
-    def err(self) -> Optional[E_co]:
+    def ok(self) -> T_co:
         raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def error(self) -> E_co:
+        raise NotImplementedError
+
+    def value(self, default: T_co) -> T_co:  # type: ignore[misc]
+        return default if self.is_error() else self.ok
 
     @abc.abstractmethod
     def is_ok(self) -> bool:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def is_err(self) -> bool:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def unwrap(self) -> T_co:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def unwrap_err(self) -> E_co:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def unwrap_or(self, default: T_co) -> T_co:  # type: ignore[misc]
-        # mypy: See comments to Err().
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def unwrap_or_else(self, op: Callable[[E_co], T_co]) -> T_co:
+    def is_error(self) -> bool:
         raise NotImplementedError
 
 
@@ -338,6 +357,9 @@ class _OK(Result[T_co, E_co]):
     def __repr__(self):
         return "Result.OK(%r)" % self.ok
 
+    def __hash__(self) -> int:
+        return hash(self.ok)
+
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Result):
             return NotImplemented
@@ -345,82 +367,91 @@ class _OK(Result[T_co, E_co]):
             return False
         return self.ok == other.ok
 
-    def __hash__(self) -> int:
-        return hash(self.ok)
+    def __lt__(self, other: Any) -> bool:
+        if not isinstance(other, Result):
+            return NotImplemented
+        if isinstance(other, _Error):
+            return True
+        assert isinstance(other, _OK)
+        return self.ok < other.ok
+
+    def __gt__(self, other: Any) -> bool:
+        if not isinstance(other, Result):
+            return NotImplemented
+        if isinstance(other, _Error):
+            return False
+        assert isinstance(other, _OK)
+        return self.ok > other.ok
+
+    def __iter__(self) -> Iterable[T_co]:
+        return iter((self.ok,))
 
     @property
     def ok(self) -> T_co:
         return self._ok
 
     @property
-    def err(self) -> None:
-        return None
+    def error(self) -> NoReturn:
+        raise ValueError(self)
 
     def is_ok(self) -> bool:
         return True
 
-    def is_err(self) -> bool:
+    def is_error(self) -> bool:
         return False
 
-    def unwrap(self) -> T_co:
-        return self.ok
 
-    def unwrap_err(self) -> NoReturn:
-        raise ValueError(str(self.ok))
+class _Error(Result[T_co, E_co]):
+    __slots__ = ["_error"]
 
-    def unwrap_or(self, default: T_co) -> T_co:  # type: ignore[misc]
-        # mypy: See comments to Err().
-        return self.ok
-
-    def unwrap_or_else(self, op: Callable[[E_co], T_co]) -> T_co:
-        return self.ok
-
-
-class _Err(Result[T_co, E_co]):
-    __slots__ = ["_err"]
-
-    def __init__(self, err: E_co):
-        self._err: Final[E_co] = err
+    def __init__(self, error: E_co):
+        self._error: Final[E_co] = error
 
     def __repr__(self):
-        return "Result.Err(%r)" % self.err
+        return "Result.Error(%r)" % self.error
+
+    def __hash__(self) -> int:
+        return hash(self.error)
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Result):
             return NotImplemented
-        if not isinstance(other, _Err):
+        if not isinstance(other, _Error):
             return False
-        return self.err == other.err
+        return self.error == other.error
 
-    def __hash__(self) -> int:
-        return hash(self.err)
+    def __lt__(self, other: Any) -> bool:
+        if not isinstance(other, Result):
+            return NotImplemented
+        if isinstance(other, _OK):
+            return False
+        assert isinstance(other, _Error)
+        return self._error < other._error
+
+    def __gt__(self, other: Any) -> bool:
+        if not isinstance(other, Result):
+            return NotImplemented
+        if isinstance(other, _OK):
+            return True
+        assert isinstance(other, _Error)
+        return self._error > other._error
+
+    def __iter__(self) -> Iterable[T_co]:
+        return iter(())
 
     @property
-    def ok(self) -> None:
-        return None
+    def ok(self) -> NoReturn:
+        raise ValueError(self)
 
     @property
-    def err(self) -> E_co:
-        return self._err
+    def error(self) -> E_co:
+        return self._error
 
     def is_ok(self) -> bool:
         return False
 
-    def is_err(self) -> bool:
+    def is_error(self) -> bool:
         return True
-
-    def unwrap(self) -> NoReturn:
-        raise ValueError(str(self._err))
-
-    def unwrap_err(self) -> E_co:
-        return self.err
-
-    def unwrap_or(self, default: T_co) -> T_co:  # type: ignore[misc]
-        # mypy: See comments to Err().
-        return default
-
-    def unwrap_or_else(self, op: Callable[[E_co], T_co]) -> T_co:
-        return op(self.err)
 
 
 HostKey = NamedTuple("HostKey", [

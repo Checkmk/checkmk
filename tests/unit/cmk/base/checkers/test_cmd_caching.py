@@ -121,7 +121,7 @@ def _patch_data_source(mocker, **kwargs):
             assert self.ignore_check_interval == defaults["_ignore_check_interval"]
 
         result = callback(self, *args, **kwargs)
-        if result.is_err():
+        if result.is_error():
             raise result.unwrap_err()
         return result
 

@@ -270,7 +270,6 @@ def update_host_sections(
             host_section = source.parse(raw_data)
             result.append((source, host_section))
             if host_section.is_ok():
-                assert host_section.ok is not None
                 host_sections.update(host_section.ok)
 
         # Store piggyback information received from all sources of this host. This

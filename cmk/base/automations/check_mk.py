@@ -1169,7 +1169,6 @@ class AutomationDiagHost(Automation):
 
             raw_data = source.fetch()
             if raw_data.is_ok():
-                assert raw_data.ok is not None
                 # We really receive a byte string here. The agent sections
                 # may have different encodings and are normally decoded one
                 # by one (AgentChecker._parse_host_section).  For the
@@ -1184,9 +1183,8 @@ class AutomationDiagHost(Automation):
                     fallback="latin-1",
                 )
             else:
-                assert raw_data.err is not None
                 state = 1
-                output += str(raw_data.err)
+                output += str(raw_data.error)
 
         return state, output
 

@@ -216,13 +216,12 @@ class ABCParser(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         self,
         raw_data: Result[TRawData, Exception],
     ) -> Result[THostSections, Exception]:
-        if raw_data.is_err():
-            return Result.Err(raw_data.unwrap_err())
+        if raw_data.is_error():
+            return Result.Error(raw_data.error)
         try:
-            assert raw_data.ok is not None
             return Result.OK(self._parse(raw_data.ok))
         except Exception as exc:
-            return Result.Err(exc)
+            return Result.Error(exc)
 
     @abc.abstractmethod
     def _parse(self, raw_data: TRawData) -> THostSections:
@@ -364,16 +363,15 @@ class ABCSource(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
             with self._make_fetcher() as fetcher:
                 return Result.OK(fetcher.fetch(self.mode))
         except Exception as exc:
-            return Result.Err(exc)
+            return Result.Error(exc)
 
     @cpu_tracking.track
     def parse(self, raw_data: Result[TRawData, Exception]) -> Result[THostSections, Exception]:
         try:
             host_sections = self._make_parser().parse(raw_data)
-            if host_sections.is_err():
+            if host_sections.is_error():
                 return host_sections
 
-            assert host_sections.ok is not None
             host_sections.ok.add_persisted_sections(
                 self.persisted_sections_file_path,
                 self.use_outdated_persisted_sections,
@@ -384,7 +382,7 @@ class ABCSource(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
             self._logger.log(VERBOSE, "ERROR: %s", exc)
             if cmk.utils.debug.enabled():
                 raise
-            return Result.Err(exc)
+            return Result.Error(exc)
 
     def summarize(self, host_sections: Result[THostSections, Exception]) -> ServiceCheckResult:
         return self._make_summarizer().summarize(host_sections)
@@ -441,12 +439,10 @@ class ABCSummarizer(Generic[THostSections], metaclass=abc.ABCMeta):
     ) -> ServiceCheckResult:
         """Summarize the host sections."""
         if host_sections.is_ok():
-            assert host_sections.ok is not None
             return self._summarize(host_sections.ok)
 
-        assert host_sections.err is not None
-        exc_msg = "%s" % host_sections.err
-        status = self._extract_status(host_sections.err)
+        exc_msg = "%s" % host_sections.error
+        status = self._extract_status(host_sections.error)
         return status, exc_msg + check_api_utils.state_markers[status], []
 
     def _extract_status(self, exc: Exception) -> int:

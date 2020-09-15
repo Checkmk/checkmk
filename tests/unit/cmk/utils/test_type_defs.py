@@ -60,10 +60,10 @@ def test_evalable_float():
     assert literal_eval("%r" % inf) == float('inf')
 
 
-class TestOKResult:
-    @pytest.fixture(params=[None, 0])
+class TestOkResult:
+    @pytest.fixture
     def value(self, request):
-        return request.param
+        return 0
 
     @pytest.fixture
     def result(self, value):
@@ -81,7 +81,7 @@ class TestOKResult:
         assert (result != ok) is False
         assert (ok != result) is False
 
-        err = Result.Err(value)
+        err = Result.Error(value)
         assert (result == err) is False
         assert (err == result) is False
         assert (result != err) is True
@@ -90,39 +90,54 @@ class TestOKResult:
     def test_ok_accessor(self, result, value):
         assert result.ok == value
 
-    def test_err_accessor(self, result):
-        assert not result.err
-        assert result.err is None
+    def test_error_accessor(self, result):
+        with pytest.raises(ValueError):
+            _err = result.error
 
     def test_is_ok_is_true(self, result):
         assert result.is_ok() is True
 
-    def test_is_err_is_false(self, result):
-        assert result.is_err() is False
+    def test_is_error_is_false(self, result):
+        assert result.is_error() is False
 
-    def test_unwrap_produces_ok_value(self, result, value):
-        assert result.unwrap() == value
+    def test_cmp_ok(self, result):
+        other = Result.OK(1)
+        assert result.ok < other.ok
 
-    def test_unwrap_err_raises_valueerror(self, result, value):
-        with pytest.raises(ValueError) as excinfo:
-            result.unwrap_err()
-        assert str(excinfo.value) == str(value)
+        assert result != other
 
-    def test_unwrap_or_produces_ok_value(self, result, value):
-        assert result.unwrap_or(42) == value
+        assert result < other
+        assert result <= other
+        assert result <= Result.OK(result.ok)
 
-    def test_unwrap_or_else_produces_ok_value(self, result, value):
-        assert result.unwrap_or_else(lambda e: 42) == value
+        assert other > result
+        assert other >= result
+        assert other >= Result.OK(other.ok)
+
+    def test_cmp_err(self, result, value):
+        other = Result.Error(value)
+        assert result.ok == other.error
+
+        assert result != other
+
+        assert result < other
+        assert result <= other
+
+        assert other > result
+        assert other >= result
+
+    def test_iter(self, result, value):
+        assert list(result) == [value]
 
 
-class TestErrResult:
-    @pytest.fixture(params=["error message"])
+class TestErrorResult:
+    @pytest.fixture
     def value(self, request):
-        return request.param
+        return 0
 
     @pytest.fixture
     def result(self, value):
-        return Result.Err(value)
+        return Result.Error(value)
 
     def test_eq(self, result, value):
         assert (result == value) is False
@@ -136,35 +151,50 @@ class TestErrResult:
         assert (result != ok) is True
         assert (ok != result) is True
 
-        err = Result.Err(value)
+        err = Result.Error(value)
         assert (result == err) is True
         assert (err == result) is True
         assert (result != err) is False
         assert (err != result) is False
 
     def test_ok_accessor(self, result):
-        assert not result.ok
-        assert result.ok is None
+        with pytest.raises(ValueError):
+            _ok = result.ok
 
-    def test_err_accessor(self, result, value):
-        assert result.err == value
+    def test_error_accessor(self, result, value):
+        assert result.error == value
 
     def test_is_ok_is_false(self, result):
         assert result.is_ok() is False
 
-    def test_is_err_is_true(self, result):
-        assert result.is_err() is True
+    def test_is_error_is_true(self, result):
+        assert result.is_error() is True
 
-    def test_unwrap_raises_valueerror(self, result, value):
-        with pytest.raises(ValueError) as excinfo:
-            result.unwrap()
-        assert str(excinfo.value) == str(value)
+    def test_cmp_err(self, result):
+        other = Result.Error(1)
+        assert result.error < other.error
 
-    def test_unwrap_err_produces_err_value(self, result, value):
-        assert result.unwrap_err() == value
+        assert result != other
 
-    def test_unwrap_or_produces_default_value(self, result):
-        assert result.unwrap_or(42) == 42
+        assert result < other
+        assert result <= other
+        assert result <= Result.Error(result.error)
 
-    def test_unwrap_or_else_calls_default(self, result, value):
-        assert result.unwrap_or_else(len) == len(value)
+        assert other > result
+        assert other >= result
+        assert other >= Result.Error(other.error)
+
+    def test_cmp_ok(self, result, value):
+        other = Result.OK(value)
+        assert result.error == other.ok
+
+        assert result != other
+
+        assert result > other
+        assert result >= other
+
+        assert other < result
+        assert other <= result
+
+    def test_iter(self, result):
+        assert list(result) == []

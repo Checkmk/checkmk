@@ -55,7 +55,7 @@ class TestParser:
             b"second line",
         ))
 
-        ahs = AgentParser(hostname, Path(""), logger).parse(Result.OK(raw_data)).unwrap()
+        ahs = AgentParser(hostname, Path(""), logger).parse(Result.OK(raw_data)).ok
 
         assert ahs.sections == {
             SectionName("a_section"): [["first", "line"], ["second", "line"]],
@@ -90,7 +90,7 @@ class TestParser:
             b"first line",
         ))
 
-        ahs = AgentParser(hostname, Path(""), logger).parse(Result.OK(raw_data)).unwrap()
+        ahs = AgentParser(hostname, Path(""), logger).parse(Result.OK(raw_data)).ok
 
         assert ahs.sections == {}
         assert ahs.cache_info == {}
@@ -133,7 +133,7 @@ class TestParser:
             b"second line",
         ))
 
-        ahs = AgentParser(hostname, Path(""), logger).parse(Result.OK(raw_data)).unwrap()
+        ahs = AgentParser(hostname, Path(""), logger).parse(Result.OK(raw_data)).ok
 
         assert ahs.sections == {SectionName("section"): [["first", "line"], ["second", "line"]]}
         assert ahs.cache_info == {SectionName("section"): (time_time, time_delta)}
@@ -219,16 +219,16 @@ class TestAgentSummaryResult:
 
     @pytest.mark.usefixtures("scenario")
     def test_with_exception(self, source):
-        assert source.summarize(Result.Err(Exception())) == (3, "(?)", [])
+        assert source.summarize(Result.Error(Exception())) == (3, "(?)", [])
 
     @pytest.mark.usefixtures("scenario")
     def test_with_MKEmptyAgentData_exception(self, source):
-        assert source.summarize(Result.Err(MKEmptyAgentData())) == (2, "(!!)", [])
+        assert source.summarize(Result.Error(MKEmptyAgentData())) == (2, "(!!)", [])
 
     @pytest.mark.usefixtures("scenario")
     def test_with_MKAgentError_exception(self, source):
-        assert source.summarize(Result.Err(MKAgentError())) == (2, "(!!)", [])
+        assert source.summarize(Result.Error(MKAgentError())) == (2, "(!!)", [])
 
     @pytest.mark.usefixtures("scenario")
     def test_with_MKTimeout_exception(self, source):
-        assert source.summarize(Result.Err(MKTimeout())) == (2, "(!!)", [])
+        assert source.summarize(Result.Error(MKTimeout())) == (2, "(!!)", [])

@@ -149,7 +149,7 @@ class TestSNMPSummaryResult:
 
     @pytest.mark.usefixtures("scenario")
     def test_with_exception(self, source):
-        assert source.summarize(Result.Err(Exception())) == (3, "(?)", [])
+        assert source.summarize(Result.Error(Exception())) == (3, "(?)", [])
 
 
 @pytest.fixture(name="discovery_rulesets")

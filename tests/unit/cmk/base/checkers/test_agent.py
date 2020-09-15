@@ -19,8 +19,8 @@ from cmk.utils.type_defs import Result, SectionName, SourceType
 from cmk.fetchers import FetcherType
 
 import cmk.base.config as config
-from cmk.base.data_sources import Mode
-from cmk.base.data_sources.agent import (
+from cmk.base.checkers import Mode
+from cmk.base.checkers.agent import (
     AgentSource,
     AgentChecker,
     AgentParser,

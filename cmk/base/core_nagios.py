@@ -40,7 +40,7 @@ import cmk.base.obsolete_output as out
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.core_config as core_config
-import cmk.base.data_sources as data_sources
+import cmk.base.checkers as checkers
 import cmk.base.ip_lookup as ip_lookup
 
 from cmk.base.check_utils import ServiceID
@@ -1143,12 +1143,12 @@ def _get_needed_plugin_names(
         ipaddress = ip_lookup.lookup_ip_address(host_config)
     except Exception:
         ipaddress = None
-    for source in data_sources.make_sources(
+    for source in checkers.make_sources(
             host_config,
             ipaddress,
-            mode=data_sources.Mode.NONE,
+            mode=checkers.Mode.NONE,
     ):
-        if isinstance(source, data_sources.programs.SpecialAgentSource):
+        if isinstance(source, checkers.programs.SpecialAgentSource):
             needed_legacy_check_plugin_names.add(source.special_agent_plugin_file_name)
 
     # Collect the needed check plugin names using the host check table

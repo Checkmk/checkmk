@@ -15,8 +15,8 @@ import cmk.utils.paths
 
 import cmk.base.config as config
 from cmk.base.config import SpecialAgentConfiguration, SpecialAgentInfoFunctionResult
-from cmk.base.data_sources import Mode
-from cmk.base.data_sources.programs import (
+from cmk.base.checkers import Mode
+from cmk.base.checkers.programs import (
     DSProgramSource,
     SpecialAgentSource,
 )

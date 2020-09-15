@@ -11,7 +11,7 @@ from testlib.base import Scenario
 from cmk.fetchers.tcp import TCPFetcher
 
 import cmk.base.modes.check_mk as check_mk
-from cmk.base.data_sources import FileCacheConfigurer
+from cmk.base.checkers import FileCacheConfigurer
 
 
 class TestModeDumpAgent:

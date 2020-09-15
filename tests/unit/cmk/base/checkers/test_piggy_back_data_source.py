@@ -10,9 +10,9 @@ from testlib.base import Scenario
 
 from cmk.utils.type_defs import Result
 
-from cmk.base.data_sources import Mode
-from cmk.base.data_sources.agent import AgentHostSections
-from cmk.base.data_sources.piggyback import PiggybackSource
+from cmk.base.checkers import Mode
+from cmk.base.checkers.agent import AgentHostSections
+from cmk.base.checkers.piggyback import PiggybackSource
 
 
 @pytest.fixture(name="mode", params=(mode for mode in Mode if mode is not Mode.NONE))

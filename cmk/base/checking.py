@@ -61,7 +61,7 @@ import cmk.base.config as config
 import cmk.base.core
 import cmk.base.cpu_tracking as cpu_tracking
 import cmk.base.crash_reporting
-import cmk.base.data_sources as data_sources
+import cmk.base.checkers as checkers
 import cmk.base.decorator
 import cmk.base.inventory as inventory
 import cmk.base.ip_lookup as ip_lookup
@@ -72,7 +72,7 @@ from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_paramete
 from cmk.base.api.agent_based.type_defs import CheckGenerator, CheckPlugin, Parameters
 from cmk.base.check_api_utils import MGMT_ONLY as LEGACY_MGMT_ONLY
 from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
-from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
+from cmk.base.checkers.host_sections import HostKey, MultiHostSections
 
 if not cmk_version.is_raw_edition():
     import cmk.base.cee.keepalive as keepalive  # type: ignore[import] # pylint: disable=no-name-in-module
@@ -168,20 +168,20 @@ def do_check(
         # see which raw sections we may need
         selected_raw_sections = _get_relevant_raw_sections(services_to_fetch, host_config)
 
-        sources = data_sources.make_sources(
+        sources = checkers.make_sources(
             host_config,
             ipaddress,
-            mode=data_sources.Mode.CHECKING,
+            mode=checkers.Mode.CHECKING,
         )
         mhs = MultiHostSections()
 
-        result = data_sources.update_host_sections(
+        result = checkers.update_host_sections(
             mhs,
-            data_sources.make_nodes(
+            checkers.make_nodes(
                 config_cache,
                 host_config,
                 ipaddress,
-                data_sources.Mode.CHECKING,
+                checkers.Mode.CHECKING,
                 sources,
             ),
             selected_raw_sections=selected_raw_sections,
@@ -642,7 +642,7 @@ def _legacy_determine_cache_info(multi_host_sections: MultiHostSections,
                                  section_name: SectionName) -> Optional[Tuple[int, int]]:
     """Aggregate information about the age of the data in the agent sections
 
-    This is in data_sources.g_agent_cache_info. For clusters we use the oldest
+    This is in checkers.g_agent_cache_info. For clusters we use the oldest
     of the timestamps, of course.
     """
     cached_ats: List[int] = []

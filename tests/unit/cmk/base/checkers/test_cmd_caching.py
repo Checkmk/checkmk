@@ -28,9 +28,9 @@ import cmk.base.config as config
 import cmk.base.inventory_plugins
 import cmk.base.modes
 import cmk.base.modes.check_mk
-from cmk.base.data_sources import ABCChecker
-from cmk.base.data_sources.agent import AgentChecker, AgentSource
-from cmk.base.data_sources.snmp import SNMPSource
+from cmk.base.checkers import ABCChecker
+from cmk.base.checkers.agent import AgentChecker, AgentSource
+from cmk.base.checkers.snmp import SNMPSource
 
 # TODO: These tests need to be tuned, because they involve a lot of checks being loaded which takes
 # too much time.
@@ -422,7 +422,7 @@ def test_automation_try_discovery_caching(scan, raise_errors, mocker):
 def test_automation_discovery_caching(raise_errors, scan, mocker):
     kwargs = {}
     kwargs.update(raise_errors[1])
-    # The next options come from the call to `_set_cache_opts_of_data_sources()`
+    # The next options come from the call to `_set_cache_opts_of_checkers()`
     # in `AutomationDiscovery`.
     maybe = scan != "@scan"
     kwargs.update(maybe=maybe)

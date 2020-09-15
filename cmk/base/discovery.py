@@ -69,7 +69,7 @@ import cmk.base.checking as checking
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
-import cmk.base.data_sources as data_sources
+import cmk.base.checkers as checkers
 import cmk.base.decorator
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.section as section
@@ -80,7 +80,7 @@ from cmk.base.caching import config_cache as _config_cache
 from cmk.base.check_utils import FinalSectionContent, LegacyCheckParameters, Service, ServiceID
 from cmk.base.config import SelectedRawSections
 from cmk.base.core_config import MonitoringCore
-from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
+from cmk.base.checkers.host_sections import HostKey, MultiHostSections
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 
 # Run the discovery queued by check_discovery() - if any
@@ -302,7 +302,7 @@ def _get_rediscovery_mode(params: Dict) -> str:
 def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[CheckPluginName]],
                  arg_only_new: bool) -> None:
     config_cache = config.get_config_cache()
-    use_caches = not arg_hostnames or data_sources.FileCacheConfigurer.maybe
+    use_caches = not arg_hostnames or checkers.FileCacheConfigurer.maybe
     on_error = "raise" if cmk.utils.debug.enabled() else "warn"
 
     host_names = _preprocess_hostnames(arg_hostnames, config_cache)
@@ -321,22 +321,22 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
                 selected_raw_sections = agent_based_register.get_relevant_raw_sections(
                     check_plugin_names=check_plugin_names, consider_inventory_plugins=False)
 
-            sources = data_sources.make_sources(
+            sources = checkers.make_sources(
                 host_config,
                 ipaddress,
-                mode=data_sources.Mode.DISCOVERY,
+                mode=checkers.Mode.DISCOVERY,
             )
             for source in sources:
                 _configure_sources(source, on_error=on_error)
 
             multi_host_sections = MultiHostSections()
-            data_sources.update_host_sections(
+            checkers.update_host_sections(
                 multi_host_sections,
-                data_sources.make_nodes(
+                checkers.make_nodes(
                     config_cache,
                     host_config,
                     ipaddress,
-                    data_sources.Mode.DISCOVERY,
+                    checkers.Mode.DISCOVERY,
                     sources,
                 ),
                 selected_raw_sections=selected_raw_sections,
@@ -529,22 +529,22 @@ def discover_on_host(
         else:
             ipaddress = ip_lookup.lookup_ip_address(host_config)
 
-        sources = data_sources.make_sources(
+        sources = checkers.make_sources(
             host_config,
             ipaddress,
-            mode=data_sources.Mode.DISCOVERY,
+            mode=checkers.Mode.DISCOVERY,
         )
         for source in sources:
             _configure_sources(source, on_error=on_error)
 
         multi_host_sections = MultiHostSections()
-        data_sources.update_host_sections(
+        checkers.update_host_sections(
             multi_host_sections,
-            data_sources.make_nodes(
+            checkers.make_nodes(
                 config_cache,
                 host_config,
                 ipaddress,
-                data_sources.Mode.DISCOVERY,
+                checkers.Mode.DISCOVERY,
                 sources,
             ),
             max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
@@ -703,10 +703,10 @@ def check_discovery(
     if ipaddress is None and not host_config.is_cluster:
         ipaddress = ip_lookup.lookup_ip_address(host_config)
 
-    sources = data_sources.make_sources(
+    sources = checkers.make_sources(
         host_config,
         ipaddress,
-        mode=data_sources.Mode.DISCOVERY,
+        mode=checkers.Mode.DISCOVERY,
     )
     for source in sources:
         _configure_sources(
@@ -715,15 +715,15 @@ def check_discovery(
             disable_snmp_caches=params['inventory_check_do_scan'],
         )
 
-    use_caches = data_sources.FileCacheConfigurer.maybe
+    use_caches = checkers.FileCacheConfigurer.maybe
     multi_host_sections = MultiHostSections()
-    result = data_sources.update_host_sections(
+    result = checkers.update_host_sections(
         multi_host_sections,
-        data_sources.make_nodes(
+        checkers.make_nodes(
             config_cache,
             host_config,
             ipaddress,
-            data_sources.Mode.DISCOVERY,
+            checkers.Mode.DISCOVERY,
             sources,
         ),
         max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
@@ -1091,7 +1091,7 @@ def _may_rediscover(params: config.DiscoveryCheckParameters, now_ts: float,
 
 
 def _discover_host_labels(
-    host_key: data_sources.host_sections.HostKey,
+    host_key: checkers.host_sections.HostKey,
     multi_host_sections: MultiHostSections,
     on_error: str,
 ) -> DiscoveredHostLabels:
@@ -1286,12 +1286,12 @@ def _discover_services(
 
 
 def _configure_sources(
-    source: data_sources.ABCSource,
+    source: checkers.ABCSource,
     *,
     on_error: str,
     disable_snmp_caches: bool = False,
 ):
-    if isinstance(source, data_sources.snmp.SNMPSource):
+    if isinstance(source, checkers.snmp.SNMPSource):
         source.on_snmp_scan_error = on_error
         source.use_snmpwalk_cache = False
         source.ignore_check_interval = True
@@ -1588,22 +1588,22 @@ def get_check_preview(host_name: HostName, use_caches: bool,
 
     ip_address = None if host_config.is_cluster else ip_lookup.lookup_ip_address(host_config)
 
-    sources = data_sources.make_sources(
+    sources = checkers.make_sources(
         host_config,
         ip_address,
-        mode=data_sources.Mode.DISCOVERY,
+        mode=checkers.Mode.DISCOVERY,
     )
     for source in sources:
         _configure_sources(source, on_error=on_error)
 
     multi_host_sections = MultiHostSections()
-    data_sources.update_host_sections(
+    checkers.update_host_sections(
         multi_host_sections,
-        data_sources.make_nodes(
+        checkers.make_nodes(
             config_cache,
             host_config,
             ip_address,
-            data_sources.Mode.DISCOVERY,
+            checkers.Mode.DISCOVERY,
             sources,
         ),
         max_cachefile_age=config.discovery_max_cachefile_age(use_caches),

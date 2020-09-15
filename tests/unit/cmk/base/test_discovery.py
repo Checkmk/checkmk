@@ -10,8 +10,8 @@ import pytest  # type: ignore[import]
 
 from cmk.utils.type_defs import CheckPluginName, SectionName, SourceType
 
-from cmk.base.data_sources.agent import AgentHostSections
-from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
+from cmk.base.checkers.agent import AgentHostSections
+from cmk.base.checkers.host_sections import HostKey, MultiHostSections
 from cmk.base.discovered_labels import ServiceLabel, DiscoveredServiceLabels
 
 import cmk.base.api.agent_based.register as agent_based_register

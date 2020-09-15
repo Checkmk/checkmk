@@ -53,7 +53,7 @@ import cmk.base.config as config
 import cmk.base.core
 from cmk.base.core import CoreAction, do_restart
 import cmk.base.core_config as core_config
-import cmk.base.data_sources as data_sources
+import cmk.base.checkers as checkers
 import cmk.base.discovery as discovery
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.nagios_utils
@@ -87,15 +87,15 @@ class DiscoveryAutomation(Automation):
         discovery.schedule_discovery_check(host_config.hostname)
 
 
-def _set_cache_opts_of_data_sources(use_caches: bool) -> None:
+def _set_cache_opts_of_checkers(use_caches: bool) -> None:
     # TODO check these settings vs.
-    # cmk/base/data_sources/_abstract.py:set_cache_opts
+    # cmk/base/checkers/_abstract.py:set_cache_opts
     if use_caches:
-        data_sources.FileCacheConfigurer.use_outdated = True
+        checkers.FileCacheConfigurer.use_outdated = True
         # TODO why does this only apply to TCP data sources and not
         # to all agent data sources?
-        data_sources.tcp.TCPSource.use_only_cache = True
-    data_sources.FileCacheConfigurer.maybe = use_caches
+        checkers.tcp.TCPSource.use_only_cache = True
+    checkers.FileCacheConfigurer.maybe = use_caches
 
 
 class AutomationDiscovery(DiscoveryAutomation):
@@ -126,7 +126,7 @@ class AutomationDiscovery(DiscoveryAutomation):
         else:
             use_caches = True
 
-        _set_cache_opts_of_data_sources(use_caches)
+        _set_cache_opts_of_checkers(use_caches)
 
         if len(args) < 2:
             raise MKAutomationError("Need two arguments: new|remove|fixall|refresh HOSTNAME")
@@ -199,7 +199,7 @@ class AutomationTryDiscovery(Automation):
             # Do a full service scan
             args = args[1:]
 
-        _set_cache_opts_of_data_sources(use_caches)
+        _set_cache_opts_of_checkers(use_caches)
 
         if args[0] == '@raiseerrors':
             on_error = "raise"
@@ -1147,24 +1147,24 @@ class AutomationDiagHost(Automation):
         tcp_connect_timeout: Optional[float],
     ) -> Tuple[int, str]:
         state, output = 0, u""
-        for source in data_sources.make_sources(
+        for source in checkers.make_sources(
                 host_config,
                 ipaddress,
-                mode=data_sources.Mode.CHECKING,
+                mode=checkers.Mode.CHECKING,
         ):
             source.file_cache.max_age = config.check_max_cachefile_age
-            if isinstance(source, data_sources.programs.DSProgramSource) and cmd:
+            if isinstance(source, checkers.programs.DSProgramSource) and cmd:
                 source = source.ds(
                     source.hostname,
                     source.ipaddress,
                     mode=source.mode,
                     template=cmd,
                 )
-            elif isinstance(source, data_sources.tcp.TCPSource):
+            elif isinstance(source, checkers.tcp.TCPSource):
                 source.port = agent_port
                 if tcp_connect_timeout is not None:
                     source.timeout = tcp_connect_timeout
-            elif isinstance(source, data_sources.snmp.SNMPSource):
+            elif isinstance(source, checkers.snmp.SNMPSource):
                 continue
 
             raw_data = source.fetch()
@@ -1444,14 +1444,14 @@ class AutomationGetAgentOutput(Automation):
         try:
             ipaddress = ip_lookup.lookup_ip_address(host_config)
             if ty == "agent":
-                data_sources.FileCacheConfigurer.reset_maybe()
-                for source in data_sources.make_sources(
+                checkers.FileCacheConfigurer.reset_maybe()
+                for source in checkers.make_sources(
                         host_config,
                         ipaddress,
-                        mode=data_sources.Mode.CHECKING,
+                        mode=checkers.Mode.CHECKING,
                 ):
                     source.file_cache.max_age = config.check_max_cachefile_age
-                    if not isinstance(source, data_sources.agent.AgentSource):
+                    if not isinstance(source, checkers.agent.AgentSource):
                         continue
 
                     raw_data = source.fetch()

@@ -189,7 +189,7 @@ class ABCParser(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
 
 def set_cache_opts(use_caches: bool) -> None:
     # TODO check these settings vs.
-    # cmk/base/automations/check_mk.py:_set_cache_opts_of_data_sources
+    # cmk/base/automations/check_mk.py:_set_cache_opts_of_checkers
     if use_caches:
         FileCacheConfigurer.maybe = True
         FileCacheConfigurer.use_outdated = True

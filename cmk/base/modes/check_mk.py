@@ -48,7 +48,7 @@ import cmk.base.check_utils
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.core_nagios
-import cmk.base.data_sources as data_sources
+import cmk.base.checkers as checkers
 import cmk.base.diagnostics
 import cmk.base.discovery as discovery
 import cmk.base.dump_host
@@ -103,7 +103,7 @@ _verbosity = 0
 
 
 def option_cache() -> None:
-    data_sources.set_cache_opts(use_caches=True)
+    checkers.set_cache_opts(use_caches=True)
 
 
 modes.register_general_option(
@@ -117,7 +117,7 @@ modes.register_general_option(
 
 
 def option_no_cache() -> None:
-    cmk.base.data_sources.FileCacheConfigurer.disabled = True
+    cmk.base.checkers.FileCacheConfigurer.disabled = True
 
 
 modes.register_general_option(
@@ -129,7 +129,7 @@ modes.register_general_option(
 
 
 def option_no_tcp() -> None:
-    data_sources.tcp.TCPSource.use_only_cache = True
+    checkers.tcp.TCPSource.use_only_cache = True
 
 
 # TODO: Check whether or not this is used only for -I as written in the help.
@@ -396,14 +396,14 @@ def mode_dump_agent(hostname: HostName) -> None:
         output = []
         # Show errors of problematic data sources
         has_errors = False
-        mode = data_sources.Mode.CHECKING
-        for source in data_sources.make_sources(
+        mode = checkers.Mode.CHECKING
+        for source in checkers.make_sources(
                 host_config,
                 ipaddress,
                 mode=mode,
         ):
             source.file_cache.max_age = config.check_max_cachefile_age
-            if not isinstance(source, data_sources.agent.AgentSource):
+            if not isinstance(source, checkers.agent.AgentSource):
                 continue
 
             raw_data = source.fetch()
@@ -1262,11 +1262,11 @@ def mode_inventory(options: Dict, args: List[str]) -> None:
     else:
         # No hosts specified: do all hosts and force caching
         hostnames = sorted(config_cache.all_active_hosts())
-        data_sources.FileCacheConfigurer.reset_maybe()
+        checkers.FileCacheConfigurer.reset_maybe()
         console.verbose("Doing HW/SW inventory on all hosts\n")
 
     if "force" in options:
-        data_sources.agent.AgentChecker.use_outdated_persisted_sections()
+        checkers.agent.AgentChecker.use_outdated_persisted_sections()
 
     inventory.do_inv(hostnames)
 
@@ -1525,7 +1525,7 @@ def mode_discover(options: DiscoverOptions, args: List[str]) -> None:
         # by default. Otherwise Check_MK would have to connect to ALL hosts.
         # This will make Check_MK only contact hosts in case the cache is not
         # new enough.
-        data_sources.FileCacheConfigurer.reset_maybe()
+        checkers.FileCacheConfigurer.reset_maybe()
 
     discovery.do_discovery(set(hostnames), options.get("checks"), options["discover"] == 1)
 

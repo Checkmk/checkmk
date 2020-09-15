@@ -26,7 +26,7 @@ from cmk.fetchers.snmp import SNMPFetcher, SNMPFileCache
 from cmk.fetchers.tcp import TCPFetcher
 from cmk.fetchers.type_defs import Mode
 
-from cmk.base.data_sources import FileCacheConfigurer
+from cmk.base.checkers import FileCacheConfigurer
 
 SensorReading = namedtuple(
     "SensorReading", "states health name imprecision units"

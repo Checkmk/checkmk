@@ -37,16 +37,16 @@ from cmk.fetchers.type_defs import Mode
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
-import cmk.base.data_sources as data_sources
+import cmk.base.checkers as checkers
 import cmk.base.decorator
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.section as section
 
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.api.agent_based.type_defs import InventoryGenerator
-from cmk.base.data_sources import ABCSource, ABCHostSections
-from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
-from cmk.base.data_sources.snmp import SNMPHostSections
+from cmk.base.checkers import ABCSource, ABCHostSections
+from cmk.base.checkers.host_sections import HostKey, MultiHostSections
+from cmk.base.checkers.snmp import SNMPHostSections
 from cmk.base.discovered_labels import HostLabel
 
 #.
@@ -81,10 +81,10 @@ def do_inv(hostnames: List[HostName]) -> None:
                 config_cache,
                 host_config,
                 ipaddress,
-                sources=data_sources.make_sources(
+                sources=checkers.make_sources(
                     host_config,
                     ipaddress,
-                    mode=data_sources.Mode.INVENTORY,
+                    mode=checkers.Mode.INVENTORY,
                 ),
                 multi_host_sections=None,
             )[:2]
@@ -129,10 +129,10 @@ def do_inv_check(
     infotexts: List[str] = []
     long_infotexts: List[str] = []
 
-    sources = data_sources.make_sources(
+    sources = checkers.make_sources(
         host_config,
         ipaddress,
-        mode=data_sources.Mode.INVENTORY,
+        mode=checkers.Mode.INVENTORY,
     )
     inventory_tree, status_data_tree, results = _do_inv_for(
         config_cache,
@@ -213,10 +213,10 @@ def _all_sources_fail(
     #           We could fix it by actually searching for errors in the sources
     #           as it seems that it is what was meant initially.
     exceptions_by_source = {
-        source.id: None for source in data_sources.make_sources(
+        source.id: None for source in checkers.make_sources(
             host_config,
             ipaddress,
-            mode=data_sources.Mode.INVENTORY,
+            mode=checkers.Mode.INVENTORY,
         )
     }
     if "piggyback" in exceptions_by_source and not len(exceptions_by_source) == 1\
@@ -320,10 +320,10 @@ def _do_inv_for_realhost(
 ) -> Sequence[Tuple[ABCSource, Result[ABCHostSections, Exception]]]:
     results: List[Tuple[ABCSource, Result[ABCHostSections, Exception]]] = []
     for source in sources:
-        if isinstance(source, data_sources.snmp.SNMPSource):
+        if isinstance(source, checkers.snmp.SNMPSource):
             # TODO(ml): This modifies the SNMP fetcher config dynamically.
             source.on_snmp_scan_error = "raise"  # default
-            data_sources.FileCacheConfigurer.snmp_disabled = True
+            checkers.FileCacheConfigurer.snmp_disabled = True
             source.use_snmpwalk_cache = False
             source.ignore_check_interval = True
             if multi_host_sections is not None:
@@ -350,13 +350,13 @@ def _do_inv_for_realhost(
 
     if multi_host_sections is None:
         multi_host_sections = MultiHostSections()
-        hs = data_sources.update_host_sections(
+        hs = checkers.update_host_sections(
             multi_host_sections,
-            data_sources.make_nodes(
+            checkers.make_nodes(
                 config_cache,
                 host_config,
                 ipaddress,
-                data_sources.Mode.INVENTORY,
+                checkers.Mode.INVENTORY,
                 sources,
             ),
             max_cachefile_age=host_config.max_cachefile_age,

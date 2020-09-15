@@ -14,9 +14,9 @@ from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.utils.type_defs import Result
 
-from cmk.base.data_sources._abstract import Mode
-from cmk.base.data_sources.agent import AgentHostSections, AgentSummarizerDefault
-from cmk.base.data_sources.tcp import TCPSource
+from cmk.base.checkers._abstract import Mode
+from cmk.base.checkers.agent import AgentHostSections, AgentSummarizerDefault
+from cmk.base.checkers.tcp import TCPSource
 
 
 @pytest.fixture(name="mode", params=Mode)

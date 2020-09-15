@@ -17,9 +17,9 @@ from cmk.base.api.agent_based import register
 from cmk.base.api.agent_based.register import section_plugins
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.data_sources import Mode
-from cmk.base.data_sources.agent import AgentHostSections
-from cmk.base.data_sources.snmp import SNMPSource
+from cmk.base.checkers import Mode
+from cmk.base.checkers.agent import AgentHostSections
+from cmk.base.checkers.snmp import SNMPSource
 from cmk.base.exceptions import MKIPAddressLookupError
 
 

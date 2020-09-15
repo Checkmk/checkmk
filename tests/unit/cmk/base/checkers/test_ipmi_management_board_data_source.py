@@ -12,9 +12,9 @@ from cmk.utils.type_defs import Result, SourceType
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.data_sources import Mode
-from cmk.base.data_sources.agent import AgentHostSections
-from cmk.base.data_sources.ipmi import (
+from cmk.base.checkers import Mode
+from cmk.base.checkers.agent import AgentHostSections
+from cmk.base.checkers.ipmi import (
     IPMISource,
     IPMISummarizer,
 )

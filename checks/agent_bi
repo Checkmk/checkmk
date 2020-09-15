@@ -7,8 +7,8 @@
 
 def agent_bi_arguments(params, hostname, ipaddress):
     # TODO: Cleanup this separation violation. This should be accessed through the check API
-    import cmk.base.data_sources.programs
-    return cmk.base.data_sources.programs.SpecialAgentConfiguration("", repr(params))
+    import cmk.base.checkers.programs
+    return cmk.base.checkers.programs.SpecialAgentConfiguration("", repr(params))
 
 
 special_agent_info['bi'] = agent_bi_arguments

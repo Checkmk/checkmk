@@ -12,7 +12,7 @@ from cmk.utils.type_defs import HostAddress, HostName
 import cmk.base.config as config
 
 from ._abstract import Mode
-from ._data_sources import make_sources
+from ._checkers import make_sources
 
 __all__ = ["dump", "dumps"]
 

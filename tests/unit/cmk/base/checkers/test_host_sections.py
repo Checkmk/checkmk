@@ -28,21 +28,21 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.data_sources import (
+from cmk.base.checkers import (
     ABCChecker,
     ABCHostSections,
-    _data_sources,
+    _checkers,
     update_host_sections,
     make_sources,
     make_nodes,
     Mode,
 )
-from cmk.base.data_sources.agent import AgentHostSections
-from cmk.base.data_sources.host_sections import HostKey, MultiHostSections
-from cmk.base.data_sources.piggyback import PiggybackSource
-from cmk.base.data_sources.programs import ProgramSource
-from cmk.base.data_sources.snmp import SNMPSource, SNMPHostSections, CachedSNMPDetector
-from cmk.base.data_sources.tcp import TCPSource
+from cmk.base.checkers.agent import AgentHostSections
+from cmk.base.checkers.host_sections import HostKey, MultiHostSections
+from cmk.base.checkers.piggyback import PiggybackSource
+from cmk.base.checkers.programs import ProgramSource
+from cmk.base.checkers.snmp import SNMPSource, SNMPHostSections, CachedSNMPDetector
+from cmk.base.checkers.tcp import TCPSource
 
 _TestSection = collections.namedtuple(
     "TestSection",
@@ -808,7 +808,7 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
         lookup_ip_address,
     )
     monkeypatch.setattr(
-        _data_sources,
+        _checkers,
         "_make_piggybacked_sections",
         make_piggybacked_sections,
     )

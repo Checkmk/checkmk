@@ -8,10 +8,10 @@ from contextlib import suppress
 
 import pytest  # type: ignore[import]
 
-from cmk.base.data_sources import ABCChecker, FileCacheConfigurer
-from cmk.base.data_sources.agent import AgentChecker
-from cmk.base.data_sources.snmp import SNMPChecker
-from cmk.base.data_sources.tcp import TCPSource
+from cmk.base.checkers import ABCChecker, FileCacheConfigurer
+from cmk.base.checkers.agent import AgentChecker
+from cmk.base.checkers.snmp import SNMPChecker
+from cmk.base.checkers.tcp import TCPSource
 
 
 @pytest.fixture(autouse=True)

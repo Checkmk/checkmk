@@ -13,8 +13,8 @@ from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.fetchers import FetcherType
 
-from cmk.base.data_sources.snmp import CachedSNMPDetector
-from cmk.base.data_sources import fetcher_configuration
+from cmk.base.checkers.snmp import CachedSNMPDetector
+from cmk.base.checkers import fetcher_configuration
 
 
 def make_scenario(hostname, tags):

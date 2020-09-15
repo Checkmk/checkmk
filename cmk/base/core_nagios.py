@@ -31,6 +31,7 @@ from cmk.utils.type_defs import (
     Item,
     ServicegroupName,
     ServiceName,
+    ConfigSerial,
 )
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -921,7 +922,7 @@ def _find_check_plugins(checktype: CheckPluginNameStr) -> List[str]:
     return paths
 
 
-def _precompile_hostchecks(serial: int) -> None:
+def _precompile_hostchecks(serial: ConfigSerial) -> None:
     console.verbose("Creating precompiled host check config...\n")
     config_cache = config.get_config_cache()
 
@@ -987,6 +988,7 @@ def _precompile_hostcheck(config_cache: ConfigCache, hostname: HostName) -> None
     output.write("import cmk.utils.log\n")
     output.write("import cmk.utils.debug\n")
     output.write("from cmk.utils.exceptions import MKTerminate\n")
+    output.write("from cmk.utils.type_defs import LATEST_SERIAL\n")
     output.write("\n")
     output.write("import cmk.base.utils\n")
     output.write("import cmk.base.config as config\n")
@@ -1045,7 +1047,7 @@ if '-d' in sys.argv:
     for check_plugin_name in sorted(needed_legacy_check_plugin_names):
         console.verbose(" %s%s%s", tty.green, check_plugin_name, tty.normal, stream=sys.stderr)
 
-    output.write("config.load_packed_config(serial=None)\n")
+    output.write("config.load_packed_config(serial=LATEST_SERIAL)\n")
 
     # IP addresses
     needed_ipaddresses, needed_ipv6addresses, = {}, {}

@@ -27,6 +27,7 @@ from cmk.utils.type_defs import (
     Labels,
     LabelSources,
     ServiceName,
+    ConfigSerial,
 )
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -55,11 +56,11 @@ class HelperConfig:
     The context manager ensures that the directory for the config serial is created and the "latest"
     link is only created in case the context is left without exception.
     """
-    def __init__(self, serial: int) -> None:
+    def __init__(self, serial: ConfigSerial) -> None:
         base_path: Final[Path] = cmk.utils.paths.core_helper_config_dir
 
-        self.serial: Final[int] = serial
-        self.serial_path: Final[Path] = base_path / str(serial)
+        self.serial: Final[ConfigSerial] = serial
+        self.serial_path: Final[Path] = base_path / serial
         self.latest_path: Final[Path] = base_path / "latest"
 
     @contextmanager
@@ -74,9 +75,9 @@ class HelperConfig:
         self.latest_path.symlink_to(self.serial_path.name)
 
 
-def current_core_config_serial() -> int:
+def current_core_config_serial() -> ConfigSerial:
     # TODO: Needs to be changed (increased?) on every invokation
-    return 13
+    return ConfigSerial(str(13))
 
 
 class MonitoringCore(metaclass=abc.ABCMeta):

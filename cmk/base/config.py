@@ -86,6 +86,7 @@ from cmk.utils.type_defs import (
     Tags,
     TagValue,
     TimeperiodName,
+    OptionalConfigSerial,
 )
 
 from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-import; these are required in the modules' namespace to load the configuration!
@@ -252,7 +253,7 @@ def load(with_conf_d: bool = True,
     _verify_no_deprecated_variables_used()
 
 
-def load_packed_config(serial: Optional[int]) -> None:
+def load_packed_config(serial: OptionalConfigSerial) -> None:
     """Load the configuration for the CMK helpers of CMC
 
     These files are written by PackedConfig().
@@ -556,7 +557,7 @@ def all_nonfunction_vars() -> Set[str]:
     }
 
 
-def save_packed_config(serial: Optional[int], config_cache: "ConfigCache") -> None:
+def save_packed_config(serial: OptionalConfigSerial, config_cache: "ConfigCache") -> None:
     """Create and store a precompiled configuration for Checkmk helper processes"""
     PackedConfigStore(serial).write(PackedConfigGenerator(config_cache).generate())
 
@@ -693,10 +694,8 @@ class PackedConfigGenerator:
 
 class PackedConfigStore:
     """Caring about persistence of the packed configuration"""
-    def __init__(self, serial: Optional[int]) -> None:
-        serial_dir = "latest" if serial is None else str(serial)
-
-        base_path: Final[Path] = cmk.utils.paths.core_helper_config_dir / serial_dir
+    def __init__(self, serial: OptionalConfigSerial) -> None:
+        base_path: Final[Path] = cmk.utils.paths.core_helper_config_dir / serial
         self._compiled_path: Final[Path] = base_path / "precompiled_check_config.mk"
         self._source_path: Final[Path] = base_path / "precompiled_check_config.mk.orig"
 

@@ -81,6 +81,10 @@ AgentConfig = Dict[str, Any]  # TODO Split into more sub configs
 # But we need complete typing in cmk.gui.cee.agent_bakery first before we can safely do this.
 BakeryOpSys = NewType("BakeryOpSys", str)
 
+LATEST_SERIAL: Final[Literal["latest"]] = "latest"
+ConfigSerial = NewType("ConfigSerial", str)
+OptionalConfigSerial = Union[ConfigSerial, Literal["latest"]]
+
 
 class AgentPackagePlatform(enum.Enum):
     LINUX_DEB = "linux_deb"

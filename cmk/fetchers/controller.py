@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any, Dict, Final, Union, NamedTuple
 
 from cmk.utils.paths import core_helper_config_dir
-from cmk.utils.type_defs import HostName, SectionName
+from cmk.utils.type_defs import HostName, SectionName, ConfigSerial
 import cmk.utils.log as log
 
 from cmk.snmplib.type_defs import AbstractRawData
@@ -240,7 +240,7 @@ def make_waiting_answer() -> bytes:
                payload_length=0))
 
 
-def run_fetchers(serial: str, host_name: HostName, mode: Mode, timeout: int) -> None:
+def run_fetchers(serial: ConfigSerial, host_name: HostName, mode: Mode, timeout: int) -> None:
     """Entry point from bin/fetcher"""
     # check that file is present, because lack of the file is not an error at the moment
     json_file = build_json_file_path(serial=serial, host_name=host_name)
@@ -256,8 +256,8 @@ def run_fetchers(serial: str, host_name: HostName, mode: Mode, timeout: int) -> 
     _run_fetchers_from_file(file_name=json_file, mode=mode, timeout=timeout)
 
 
-def load_global_config(serial: int) -> None:
-    global_json_file = build_json_global_config_file_path(serial=str(serial))
+def load_global_config(serial: ConfigSerial) -> None:
+    global_json_file = build_json_global_config_file_path(serial)
     if not global_json_file.exists():
         # this happens during development(or filesystem is broken)
         msg = f"fetcher global config {serial} is absent"
@@ -350,17 +350,17 @@ def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
     write_bytes(make_waiting_answer())
 
 
-def read_json_file(serial: str, host_name: HostName) -> str:
+def read_json_file(serial: ConfigSerial, host_name: HostName) -> str:
     json_file = build_json_file_path(serial=serial, host_name=host_name)
     return json_file.read_text(encoding="utf-8")
 
 
-def build_json_file_path(serial: str, host_name: HostName) -> Path:
-    return Path(core_helper_config_dir, str(serial), "fetchers", "hosts", f"{host_name}.json")
+def build_json_file_path(serial: ConfigSerial, host_name: HostName) -> Path:
+    return Path(core_helper_config_dir, serial, "fetchers", "hosts", f"{host_name}.json")
 
 
-def build_json_global_config_file_path(serial: str) -> Path:
-    return Path(core_helper_config_dir, str(serial), "fetchers", "global_config.json")
+def build_json_global_config_file_path(serial: ConfigSerial) -> Path:
+    return Path(core_helper_config_dir, serial, "fetchers", "global_config.json")
 
 
 # Idea is based on the cmk method:

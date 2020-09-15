@@ -6,21 +6,26 @@
 
 import pytest  # type: ignore[import]
 
+from cmk.utils.type_defs import InventoryPluginName
+import cmk.base.api.agent_based.register as agent_based_register
+from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 
+
+@pytest.mark.usefixtures("config_load_all_inventory_plugins")
 @pytest.mark.parametrize(
     'info, params, inventory_data',
     [
         (
             [],
             {},
-            None,
+            [],
         ),
         (
             [
                 ['abi.vsyscall32', '=', '1'],
             ],
             {},
-            None,
+            [],
         ),
         (
             [],
@@ -51,34 +56,55 @@ import pytest  # type: ignore[import]
                 'exclude_patterns': ['kernel.hotplug'],
             },
             [
-                {
-                    'parameter': 'abi.vsyscall32',
-                    'value': '1',
-                },
-                {
-                    'parameter': 'dev.cdrom.info',
-                    'value': 'CD-ROM information, Id: cdrom.c 3.20 2003/12/17',
-                },
-                {
-                    'parameter': 'dev.cdrom.info',
-                    'value': 'drive name:',
-                },
-                {
-                    'parameter': 'dev.cdrom.info',
-                    'value': 'drive speed:',
-                },
-                {
-                    'parameter': 'dev.cdrom.info',
-                    'value': 'drive # of slots:',
-                },
-                {
-                    'parameter': 'dev.hpet.max-user-freq',
-                    'value': '64',
-                },
-                {
-                    'parameter': 'kernel.hung_task_check_count',
-                    'value': '4194304',
-                },
+                TableRow(
+                    path=['software', 'kernel_config'],
+                    key_columns={
+                        'parameter': 'abi.vsyscall32',
+                        'value': '1',
+                    },
+                ),
+                TableRow(
+                    path=['software', 'kernel_config'],
+                    key_columns={
+                        'parameter': 'dev.cdrom.info',
+                        'value': 'CD-ROM information, Id: cdrom.c 3.20 2003/12/17',
+                    },
+                ),
+                TableRow(
+                    path=['software', 'kernel_config'],
+                    key_columns={
+                        'parameter': 'dev.cdrom.info',
+                        'value': 'drive name:',
+                    },
+                ),
+                TableRow(
+                    path=['software', 'kernel_config'],
+                    key_columns={
+                        'parameter': 'dev.cdrom.info',
+                        'value': 'drive speed:',
+                    },
+                ),
+                TableRow(
+                    path=['software', 'kernel_config'],
+                    key_columns={
+                        'parameter': 'dev.cdrom.info',
+                        'value': 'drive # of slots:',
+                    },
+                ),
+                TableRow(
+                    path=['software', 'kernel_config'],
+                    key_columns={
+                        'parameter': 'dev.hpet.max-user-freq',
+                        'value': '64',
+                    },
+                ),
+                TableRow(
+                    path=['software', 'kernel_config'],
+                    key_columns={
+                        'parameter': 'kernel.hung_task_check_count',
+                        'value': '4194304',
+                    },
+                ),
             ],
         ),
         (
@@ -106,12 +132,7 @@ import pytest  # type: ignore[import]
         ),
     ],
 )
-def test_inv_oracle_systemparameter(inventory_plugin_manager, info, params, inventory_data):
-    inv_plugin = inventory_plugin_manager.get_inventory_plugin('lnx_sysctl')
-    inventory_tree_data, _ = inv_plugin.run_inventory(info, params)
-
-    path = "software.kernel_config:"
-    if inventory_data is None:
-        assert path not in inventory_tree_data
-    else:
-        assert inventory_tree_data[path] == inventory_data
+def test_inv_oracle_systemparameter(info, params, inventory_data):
+    plugin = agent_based_register.get_inventory_plugin(InventoryPluginName('lnx_sysctl'))
+    assert plugin
+    assert list(plugin.inventory_function(params, info)) == inventory_data

@@ -13,7 +13,7 @@ import livestatus
 
 import cmk.utils.version as cmk_version
 from cmk.gui.plugins.metrics.utils import check_metrics
-from cmk.gui.plugins.metrics.timeseries import op_func_wrapper, time_series_operators
+import cmk.gui.plugins.metrics.timeseries as ts
 from cmk.utils.prediction import livestatus_lql, TimeSeries
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
@@ -208,7 +208,7 @@ def merge_multicol(row: Dict, rrdcols: List[ColumnName], params: Dict) -> TimeSe
     if not relevant_ts:
         return TimeSeries([0, 0, 0])
 
-    _op_title, op_func = time_series_operators()['MERGE']
-    single_value_series = [op_func_wrapper(op_func, tsp) for tsp in zip(*relevant_ts)]
+    _op_title, op_func = ts.time_series_operators()['MERGE']
+    single_value_series = [ts.op_func_wrapper(op_func, tsp) for tsp in zip(*relevant_ts)]
 
     return TimeSeries(single_value_series)

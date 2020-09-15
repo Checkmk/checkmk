@@ -982,7 +982,10 @@ def _precompile_hostchecks(serial: ConfigSerial) -> None:
             sys.exit(5)
 
 
-def _dump_precompiled_hostcheck(config_cache: ConfigCache, hostname: HostName) -> Optional[str]:
+def _dump_precompiled_hostcheck(config_cache: ConfigCache,
+                                hostname: HostName,
+                                *,
+                                verify_site_python=True) -> Optional[str]:
     host_config = config_cache.get_host_config(hostname)
 
     check_api_utils.set_hostname(hostname)
@@ -1004,9 +1007,27 @@ def _dump_precompiled_hostcheck(config_cache: ConfigCache, hostname: HostName) -
     output.write("import logging\n")
     output.write("import sys\n\n")
 
-    output.write("if not sys.executable.startswith('/omd'):\n")
-    output.write("    sys.stdout.write(\"ERROR: Only executable with sites python\\n\")\n")
-    output.write("    sys.exit(2)\n\n")
+    if verify_site_python:
+        output.write("if not sys.executable.startswith('/omd'):\n")
+        output.write("    sys.stdout.write(\"ERROR: Only executable with sites python\\n\")\n")
+        output.write("    sys.exit(2)\n\n")
+
+    # Self-compile: replace symlink with precompiled python-code, if
+    # we are run for the first time
+    if config.delay_precompile:
+        output.write(
+            """
+import os
+if os.path.islink(%(dst)r):
+    import py_compile
+    os.remove(%(dst)r)
+    py_compile.compile(%(src)r, %(dst)r, %(dst)r, True)
+    os.chmod(%(dst)r, 0o755)
+
+""" % {
+                "src": str(HostCheckStore.host_check_source_file_path(hostname)),
+                "dst": str(HostCheckStore.host_check_file_path(hostname)),
+            })
 
     # Remove precompiled directory from sys.path. Leaving it in the path
     # makes problems when host names (name of precompiled files) are equal
@@ -1032,23 +1053,6 @@ def _dump_precompiled_hostcheck(config_cache: ConfigCache, hostname: HostName) -
         full_mod_name = "cmk.base.plugins.agent_based.%s" % module
         output.write("import %s\n" % full_mod_name)
         console.verbose(" %s%s%s", tty.green, full_mod_name, tty.normal, stream=sys.stderr)
-
-    # Self-compile: replace symlink with precompiled python-code, if
-    # we are run for the first time
-    if config.delay_precompile:
-        output.write(
-            """
-import os
-if os.path.islink(%(dst)r):
-    import py_compile
-    os.remove(%(dst)r)
-    py_compile.compile(%(src)r, %(dst)r, %(dst)r, True)
-    os.chmod(%(dst)r, 0755)
-
-""" % {
-                "src": HostCheckStore.host_check_source_file_path(hostname),
-                "dst": HostCheckStore.host_check_file_path(hostname),
-            })
 
     # Register default Check_MK signal handler
     output.write("cmk.base.utils.register_sigint_handler()\n")

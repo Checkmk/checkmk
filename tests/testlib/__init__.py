@@ -140,6 +140,8 @@ def fake_version_and_paths():
                         os.path.join(tmp_dir, "etc/nagios/conf.d/check_mk_objects.cfg"))
     monkeypatch.setattr("cmk.utils.paths.precompiled_hostchecks_dir",
                         os.path.join(tmp_dir, "var/check_mk/precompiled"))
+    monkeypatch.setattr("cmk.utils.paths.discovered_host_labels_dir",
+                        Path(tmp_dir, "var/check_mk/discovered_host_labels"))
 
 
 def import_module(pathname):

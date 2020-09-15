@@ -9,6 +9,7 @@ import os
 import io
 import itertools
 import importlib
+import subprocess
 from pathlib import Path
 
 import pytest  # type: ignore[import]
@@ -241,6 +242,7 @@ def test_dump_precompiled_hostcheck(monkeypatch):
     ts = Scenario().add_host("localhost")
     config_cache = ts.apply(monkeypatch)
 
+    # Ensure a host check is created
     monkeypatch.setattr(core_nagios, "_get_needed_plugin_names", lambda c: (["uptime"], [], []))
 
     host_check = core_nagios._dump_precompiled_hostcheck(config_cache, "localhost")
@@ -259,3 +261,42 @@ def test_dump_precompiled_hostcheck_not_existing_host(monkeypatch):
     config_cache = Scenario().apply(monkeypatch)
     host_check = core_nagios._dump_precompiled_hostcheck(config_cache, "not-existing")
     assert host_check is None
+
+
+def test_compile_delayed_host_check(monkeypatch):
+    hostname = "localhost"
+    ts = Scenario().add_host(hostname)
+    ts.set_option("delay_precompile", True)
+    config_cache = ts.apply(monkeypatch)
+
+    # Ensure a host check is created
+    monkeypatch.setattr(core_nagios, "_get_needed_plugin_names", lambda c: (["uptime"], [], []))
+
+    source_file = core_nagios.HostCheckStore.host_check_source_file_path(hostname)
+    compiled_file = core_nagios.HostCheckStore.host_check_file_path(hostname)
+
+    assert config.delay_precompile is True
+    assert not source_file.exists()
+    assert not compiled_file.exists()
+
+    # Write the host check source file
+    host_check = core_nagios._dump_precompiled_hostcheck(config_cache,
+                                                         hostname,
+                                                         verify_site_python=False)
+    assert host_check is not None
+    core_nagios.HostCheckStore().write(hostname, host_check)
+
+    # The compiled file path links to the source file until it has been executed for the first
+    # time. Then the symlink is replaced with the compiled file
+    assert source_file.exists()
+    assert compiled_file.exists()
+    assert compiled_file.resolve() == source_file
+
+    # Expect the command to fail: We don't have the correct environment to execute it.
+    # But this is no problem for our test, we only want to see the result of the compilation.
+    assert subprocess.Popen(["python3", str(compiled_file)], shell=False,
+                            close_fds=True).wait() == 1
+
+    assert compiled_file.resolve() != source_file
+    with compiled_file.open("rb") as f:
+        assert f.read().startswith(importlib.util.MAGIC_NUMBER)

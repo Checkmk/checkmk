@@ -285,8 +285,8 @@ def do_create_config(core: MonitoringCore) -> None:
         raise MKGeneralException("Error creating configuration: %s" % e)
 
     try:
-        import cmk.base.cee.bakery.agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel
-        cmk.base.cee.bakery.agent_bakery.bake_on_restart()
+        import cmk.base.cee.bakery.agent_bakery as agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel
+        agent_bakery.bake_on_restart()
     except ImportError:
         pass
 

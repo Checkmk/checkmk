@@ -3,8 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef DynamicHostFileColumn_h
-#define DynamicHostFileColumn_h
+#ifndef DynamicFileColumn_h
+#define DynamicFileColumn_h
 
 #include "config.h"  // IWYU pragma: keep
 
@@ -17,9 +17,9 @@
 #include "DynamicColumn.h"
 
 template <class T>
-class DynamicHostFileColumn : public DynamicColumn {
+class DynamicFileColumn : public DynamicColumn {
 public:
-    DynamicHostFileColumn(
+    DynamicFileColumn(
         const std::string &name, const std::string &description,
         const ColumnOffsets &, std::function<std::filesystem::path()> basepath,
         std::function<std::filesystem::path(const T &, const std::string &args)>
@@ -35,4 +35,4 @@ private:
         _filepath;
 };
 
-#endif  // DynamicHostFileColumn_h
+#endif  // DynamicFileColumn_h

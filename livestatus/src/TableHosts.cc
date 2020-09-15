@@ -30,10 +30,10 @@
 #include "DoubleLambdaColumn.h"
 #include "DowntimeColumn.h"
 #include "DynamicColumn.h"
-#include "DynamicHostFileColumn.h"
+#include "DynamicFileColumn.h"
 #include "DynamicRRDColumn.h"
+#include "FileColumn.h"
 #include "HostContactsColumn.h"
-#include "HostFileColumn.h"
 #include "HostGroupsColumn.h"
 #include "HostListColumn.h"
 #include "HostRRDColumn.h"
@@ -666,19 +666,19 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         "The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present",
         offsets, table->core(), HostSpecialIntColumn::Type::mk_inventory_last));
 
-    table->addColumn(std::make_unique<HostFileColumn<host>>(
+    table->addColumn(std::make_unique<FileColumn<host>>(
         prefix + "mk_inventory",
         "The file content of the Check_MK HW/SW-Inventory", offsets,
         [mc]() { return mc->mkInventoryPath(); },
         [](const host &r) { return std::filesystem::path{r.name}; }));
-    table->addColumn(std::make_unique<HostFileColumn<host>>(
+    table->addColumn(std::make_unique<FileColumn<host>>(
         prefix + "mk_inventory_gz",
         "The gzipped file content of the Check_MK HW/SW-Inventory", offsets,
         [mc]() { return mc->mkInventoryPath(); },
         [](const host &r) {
             return std::filesystem::path{std::string{r.name} + ".gz"};
         }));
-    table->addColumn(std::make_unique<HostFileColumn<host>>(
+    table->addColumn(std::make_unique<FileColumn<host>>(
         prefix + "structured_status",
         "The file content of the structured status of the Check_MK HW/SW-Inventory",
         offsets, [mc]() { return mc->structuredStatusPath(); },
@@ -688,7 +688,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         "This list of logfiles with problems fetched via mk_logwatch", offsets,
         table->core()));
 
-    table->addDynamicColumn(std::make_unique<DynamicHostFileColumn<host>>(
+    table->addDynamicColumn(std::make_unique<DynamicFileColumn<host>>(
         prefix + "mk_logwatch_file",
         "This contents of a logfile fetched via mk_logwatch", offsets,
         [mc]() { return mc->mkLogwatchPath(); },

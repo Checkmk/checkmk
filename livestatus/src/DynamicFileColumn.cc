@@ -3,17 +3,16 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "DynamicHostFileColumn.h"
-
 #include <filesystem>
 #include <stdexcept>
 #include <utility>
 
+#include "DynamicFileColumn.h"
+#include "FileColumn.h"  // IWYU pragma: keep
 #include "FileSystemHelper.h"
-#include "HostFileColumn.h"  // IWYU pragma: keep
 
 template <class T>
-DynamicHostFileColumn<T>::DynamicHostFileColumn(
+DynamicFileColumn<T>::DynamicFileColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets,
     std::function<std::filesystem::path()> basepath,
@@ -24,13 +23,13 @@ DynamicHostFileColumn<T>::DynamicHostFileColumn(
     , _filepath{std::move(filepath)} {}
 
 template <class T>
-[[nodiscard]] std::filesystem::path DynamicHostFileColumn<T>::basepath() const {
+[[nodiscard]] std::filesystem::path DynamicFileColumn<T>::basepath() const {
     // This delays the call to mc to after it is constructed.
     return _basepath();
 }
 
 template <class T>
-std::unique_ptr<Column> DynamicHostFileColumn<T>::createColumn(
+std::unique_ptr<Column> DynamicFileColumn<T>::createColumn(
     const std::string &name, const std::string &arguments) {
     // Arguments contains a path relative to basepath and possibly escaped.
     if (arguments.empty()) {
@@ -46,7 +45,7 @@ std::unique_ptr<Column> DynamicHostFileColumn<T>::createColumn(
                                  "': '" + f.string() + "' not in '" +
                                  basepath().string() + "'");
     }
-    return std::make_unique<HostFileColumn<T>>(
+    return std::make_unique<FileColumn<T>>(
         name, _description, _offsets, _basepath,
         [this, f](const T &r) { return _filepath(r, f); });
 }

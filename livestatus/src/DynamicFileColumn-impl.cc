@@ -5,10 +5,10 @@
 
 #include <memory>
 
-#include "HostFileColumn.cc"
-#include "HostFileColumn.h"
+#include "DynamicFileColumn.cc"
+#include "DynamicFileColumn.h"
 #include "nagios.h"
 class CrashReport;
 
-template class HostFileColumn<CrashReport>;
-template class HostFileColumn<host>;
+template class DynamicFileColumn<CrashReport>;
+template class DynamicFileColumn<host>;

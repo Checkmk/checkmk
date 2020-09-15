@@ -116,13 +116,13 @@ liblivestatus_a_SOURCES = \
         DowntimesOrComments.cc \
         DynamicColumn.cc \
         DynamicEventConsoleReplicationColumn.cc \
-        DynamicHostFileColumn-impl.cc \
+        DynamicFileColumn-impl.cc \
         DynamicRRDColumn.cc \
         EventConsoleConnection.cc \
+        FileColumn-impl.cc \
         FileSystemHelper.cc \
         Filter.cc \
         HostContactsColumn.cc \
-        HostFileColumn-impl.cc \
         HostGroupsColumn.cc \
         HostListColumn.cc \
         HostListStateColumn.cc \

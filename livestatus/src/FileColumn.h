@@ -3,8 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef HostFileColumn_h
-#define HostFileColumn_h
+#ifndef FileColumn_h
+#define FileColumn_h
 
 #include "config.h"  // IWYU pragma: keep
 
@@ -19,12 +19,12 @@
 class Row;
 
 template <class T>
-class HostFileColumn : public BlobColumn {
+class FileColumn : public BlobColumn {
 public:
-    HostFileColumn(const std::string& name, const std::string& description,
-                   const ColumnOffsets&,
-                   std::function<std::filesystem::path()> basepath,
-                   std::function<std::filesystem::path(const T&)> filepath);
+    FileColumn(const std::string& name, const std::string& description,
+               const ColumnOffsets&,
+               std::function<std::filesystem::path()> basepath,
+               std::function<std::filesystem::path(const T&)> filepath);
 
     [[nodiscard]] std::unique_ptr<std::vector<char>> getValue(
         Row row) const override;
@@ -34,4 +34,4 @@ private:
     const std::function<std::filesystem::path(const T&)> _filepath;
 };
 
-#endif  // HostFileColumn_h
+#endif  // FileColumn_h

@@ -3,17 +3,16 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "HostFileColumn.h"
-
 #include <filesystem>
 #include <sstream>
 #include <utility>
 
+#include "FileColumn.h"
 #include "Logger.h"
 #include "Row.h"
 
 template <class T>
-HostFileColumn<T>::HostFileColumn(
+FileColumn<T>::FileColumn(
     const std::string& name, const std::string& description,
     const ColumnOffsets& offsets,
     std::function<std::filesystem::path()> basepath,
@@ -23,7 +22,7 @@ HostFileColumn<T>::HostFileColumn(
     , _filepath(std::move(filepath)) {}
 
 template <class T>
-std::unique_ptr<std::vector<char>> HostFileColumn<T>::getValue(Row row) const {
+std::unique_ptr<std::vector<char>> FileColumn<T>::getValue(Row row) const {
     if (!std::filesystem::exists(_basepath())) {
         // The basepath is not configured.
         return nullptr;

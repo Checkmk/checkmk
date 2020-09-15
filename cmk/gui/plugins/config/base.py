@@ -306,6 +306,10 @@ graph_timeranges: _List[_Dict[str, _Any]] = [
 # in previous versions and is set on remote sites during WATO synchronization.
 userdb_automatic_sync = "master"
 
+# Permission to login to the web gui of a site (can be changed in sites
+# configuration)
+user_login = True
+
 # Holds dicts defining user connector instances and their properties
 user_connections: _List = []
 

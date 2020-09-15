@@ -285,9 +285,13 @@ def _check_auth(request: Request) -> Optional[UserId]:
         user_id = _check_auth_automation()
 
     elif config.auth_by_http_header:
+        if not config.user_login:
+            return None
         user_id = _check_auth_http_header()
 
     if user_id is None:
+        if not config.user_login:
+            return None
         user_id = _check_auth_by_cookie()
 
     if (user_id is not None and not isinstance(user_id, str)) or user_id == u'':
@@ -410,6 +414,9 @@ class LoginPage(Page):
             return
 
         try:
+            if not config.user_login:
+                raise MKUserError(None, _('Login is not allowed on this site.'))
+
             username_var = html.request.get_unicode_input('_username', '')
             assert username_var is not None
             username = UserId(username_var.rstrip())

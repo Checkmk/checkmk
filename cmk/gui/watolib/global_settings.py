@@ -45,6 +45,8 @@ def save_global_settings(vars_, site_specific=False, custom_site_path=None):
     if "userdb_automatic_sync" in vars_:
         per_domain.setdefault(ConfigDomainGUI.ident,
                               {})["userdb_automatic_sync"] = vars_["userdb_automatic_sync"]
+    if "user_login" in vars_:
+        per_domain.setdefault(ConfigDomainGUI.ident, {})["user_login"] = vars_["user_login"]
 
     for domain in ABCConfigDomain.enabled_domains():
         domain_config = per_domain.get(domain().ident, {})

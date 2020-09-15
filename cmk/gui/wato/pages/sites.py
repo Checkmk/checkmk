@@ -406,9 +406,10 @@ class ModeEditSite(WatoMode):
              Checkbox(
                  title=_("Disable remote configuration"),
                  label=_('Disable configuration via WATO on this site'),
-                 help=_('It is a good idea to disable access to WATO completely on the slave site. '
-                        'Otherwise a user who does not now about the replication could make local '
-                        'changes that are overridden at the next configuration activation.'),
+                 help=_(
+                     'It is a good idea to disable access to WATO completely on the remote site. '
+                     'Otherwise a user who does not now about the replication could make local '
+                     'changes that are overridden at the next configuration activation.'),
              )),
             ("insecure",
              Checkbox(
@@ -423,7 +424,8 @@ class ModeEditSite(WatoMode):
                  label=_('Users are allowed to directly login into the Web GUI of this site'),
                  help=_(
                      'When enabled, this site is marked for synchronisation every time a Web GUI '
-                     'related option is changed in the master site.'),
+                     'related option is changed and users are allowed to login '
+                     'to the Web GUI of this site.'),
              )),
             ("user_sync", self._site_mgmt.user_sync_valuespec(self._site_id)),
             ("replicate_ec",
@@ -442,9 +444,9 @@ class ModeEditSite(WatoMode):
                  label=_("Replicate extensions (MKPs and files in <tt>~/local/</tt>)"),
                  help=
                  _("If you enable the replication of MKPs then during each <i>Activate Changes</i> MKPs "
-                   "that are installed on your master site and all other files below the <tt>~/local/</tt> "
-                   "directory will be also transferred to the slave site. Note: <b>all other MKPs and files "
-                   "below <tt>~/local/</tt> on the slave will be removed</b>."),
+                   "that are installed on your central site and all other files below the <tt>~/local/</tt> "
+                   "directory will be also transferred to the remote site. Note: <b>all other MKPs and files "
+                   "below <tt>~/local/</tt> on the remote site will be removed</b>."),
              )),
         ]
 
@@ -621,7 +623,7 @@ class ModeDistributedMonitoring(WatoMode):
             html.show_error(error)
 
         html.p(
-            _("For the initial login into the slave site %s "
+            _("For the initial login into the remote site %s "
               "we need once your administration login for the Multsite "
               "GUI on that site. Your credentials will only be used for "
               "the initial handshake and not be stored. If the login is "
@@ -1036,8 +1038,8 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
 
             if not self._site["replication"] and not config.site_is_local(self._site_id):
                 html.show_error(
-                    _("This site is not the master site nor a replication slave. "
-                      "You cannot configure specific settings for it."))
+                    _("This site is not the central site nor a replication "
+                      "remote site. You cannot configure specific settings for it."))
                 return
 
         self._show_configuration_variables(self._groups(show_all=True))

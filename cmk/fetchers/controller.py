@@ -104,6 +104,11 @@ class FetcherHeader:
     def __hash__(self) -> int:
         return hash(bytes(self))
 
+    def __add__(self, other: Any) -> bytes:
+        if not isinstance(other, bytes):
+            return NotImplemented
+        return bytes(self) + other
+
     def __len__(self) -> int:
         return FetcherHeader.length
 

@@ -264,3 +264,13 @@ class TestFetcherHeaderEq:
             status=header.status,
             payload_length=other,
         )
+
+    def test_add(self, header, payload_length):
+        payload = payload_length * b"\0"
+
+        message = header + payload
+        assert isinstance(message, bytes)
+        assert len(message) == len(header) + len(payload)
+        assert FetcherHeader.from_network(message) == header
+        assert FetcherHeader.from_network(message[:len(header)]) == header
+        assert message[len(header):] == payload

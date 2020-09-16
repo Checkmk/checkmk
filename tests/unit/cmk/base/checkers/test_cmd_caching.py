@@ -14,7 +14,6 @@ from pathlib import Path
 
 import pytest  # type: ignore[import]
 
-from testlib import InventoryPluginManager  # , CheckManager
 from testlib.base import Scenario
 from testlib.debug_utils import cmk_debug_enabled
 from testlib.utils import get_standard_linux_agent_output
@@ -42,7 +41,7 @@ from cmk.base.checkers.snmp import SNMPSource
 @pytest.fixture(scope="module", autouse=True)
 @pytest.mark.usefixtures("config_load_all_checks")
 def load_plugins():
-    InventoryPluginManager().load()
+    pass  # just enable auto use.
 
 
 @pytest.fixture(scope="module", autouse=True)

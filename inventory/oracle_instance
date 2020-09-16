@@ -37,6 +37,7 @@ def inv_oracle_instance(info, inventory_tree, status_data_tree):
 
         inv_node.append({
             "sid": item_data['sid'],
+            "pname": item_data['pname'],
             "version": item_data['version'],
             "openmode": item_data['openmode'],
             "logmode": item_data['log_mode'],
@@ -51,6 +52,7 @@ def inv_oracle_instance(info, inventory_tree, status_data_tree):
 
         status_node.append({
             "sid": item_data['sid'],
+            "pname": item_data['pname'],
             "db_uptime": up_seconds,
         })
 

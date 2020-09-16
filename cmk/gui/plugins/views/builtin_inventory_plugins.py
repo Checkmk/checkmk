@@ -661,6 +661,7 @@ inventory_displayhints.update({
         "title": _("Instances"),
         "keyorder": [
             "sid",
+            "pname",
             "version",
             "openmode",
             "logmode",
@@ -671,6 +672,7 @@ inventory_displayhints.update({
         "view": "invorainstance_of_host",
     },
     ".software.applications.oracle.instance:*.sid": {"title": _("SID")},
+    ".software.applications.oracle.instance:*.pname": {"title": _("Process Name")},
     ".software.applications.oracle.instance:*.version": {"title": _("Version")},
     ".software.applications.oracle.instance:*.openmode": {"title": _("Open mode")},
     ".software.applications.oracle.instance:*.logmode": {"title": _("Log mode")},

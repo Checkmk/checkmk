@@ -6,6 +6,7 @@
 
 import operator
 import functools
+from typing import List, Literal
 
 from cmk.utils.prediction import TimeSeries
 import cmk.utils.version as cmk_version
@@ -49,29 +50,24 @@ def compute_graph_curves(metrics, rrd_data):
         if not time_series:
             continue
 
-        if len(time_series) == 1 and isinstance(time_series[0], tuple):
-            time_series = time_series[0][3]
+        multi = len(time_series) > 1
+        for ts in time_series:
+            title = metric_definition["title"]
+            if ts.metadata.get('title') and multi:
+                title += " - " + ts.metadata['title']
 
-        if isinstance(time_series[0], tuple):
-            for line, color, title, ts in time_series:
-                curves.append({
-                    "line_type": line,
-                    'color': color,
-                    'title': "%s - %s" % (metric_definition["title"], title),
-                    'rrddata': ts
-                })
-        else:
             curves.append({
-                "line_type": metric_definition["line_type"],
-                "color": metric_definition["color"],
-                "title": metric_definition["title"],
-                "rrddata": time_series,
+                "line_type": ts.metadata.get('line_type')
+                             if multi else metric_definition["line_type"],
+                "color": ts.metadata.get('color') if multi else metric_definition["color"],
+                'title': title,
+                'rrddata': ts
             })
 
     return curves
 
 
-def evaluate_time_series_expression(expression, rrd_data):
+def evaluate_time_series_expression(expression, rrd_data) -> List[TimeSeries]:
     if rrd_data:
         sample_data = next(iter(rrd_data.values()))
         num_points = len(sample_data)
@@ -83,8 +79,9 @@ def evaluate_time_series_expression(expression, rrd_data):
 
     if expression[0] == "operator":
         operator_id, operands = expression[1:]
-        operands_evaluated = [evaluate_time_series_expression(a, rrd_data) for a in operands]
-        return time_series_math(operator_id, operands_evaluated)
+        operands_evaluated_l = [evaluate_time_series_expression(a, rrd_data) for a in operands]
+        operands_evaluated = [item for lists in operands_evaluated_l for item in lists]
+        return [time_series_math(operator_id, operands_evaluated)]
 
     if expression[0] == "transformation":
         (transform, conf), operands = expression[1:]
@@ -94,22 +91,27 @@ def evaluate_time_series_expression(expression, rrd_data):
     if expression[0] == "rrd":
         key = tuple(expression[1:])
         if key in rrd_data:
-            return rrd_data[key]
-        return TimeSeries([None] * num_points, twindow)
+            return [rrd_data[key]]
+        return [TimeSeries([None] * num_points, twindow)]
 
     if expression[0] == "constant":
-        return TimeSeries([expression[1]] * num_points, twindow)
+        return [TimeSeries([expression[1]] * num_points, twindow)]
 
     if expression[0] == "combined":
         metrics = resolve_combined_single_metric_spec(expression[1])
+        curves = []
+        for m in metrics:
+            for curve in evaluate_time_series_expression(m['expression'], rrd_data):
+                curve.metadata = {k: m[k] for k in m if k in ['line_type', 'color', 'title']}
+                curves.append(curve)
 
-        return [(m["line_type"], m["color"], m['title'],
-                 evaluate_time_series_expression(m['expression'], rrd_data)) for m in metrics]
+        return curves
 
     raise NotImplementedError()
 
 
-def time_series_math(operator_id, operands_evaluated) -> TimeSeries:
+def time_series_math(operator_id: Literal["+", "*", "-", "/", "MAX", "MIN", "AVERAGE", "MERGE"],
+                     operands_evaluated: List[TimeSeries]) -> TimeSeries:
     operators = time_series_operators()
     if operator_id not in operators:
         raise MKGeneralException(

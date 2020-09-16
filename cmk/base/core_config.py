@@ -143,6 +143,20 @@ def get_configuration_warnings() -> ConfigurationWarnings:
     return warnings
 
 
+def duplicate_service_warning(
+    *,
+    checktype: str,
+    description: str,
+    host_name: HostName,
+    first_occurrence: Tuple[Union[str, CheckPluginName], Optional[str]],
+    second_occurrence: Tuple[Union[str, CheckPluginName], Optional[str]],
+) -> None:
+    return warning("ERROR: Duplicate service description (%s check) '%s' for host '%s'!\n"
+                   " - 1st occurrence: check plugin / item: %s / %r\n"
+                   " - 2nd occurrence: check plugin / item: %s / %r\n" %
+                   (checktype, description, host_name, *first_occurrence, *second_occurrence))
+
+
 # TODO: Just for documentation purposes for now, add typing_extensions and use this.
 #
 # HostCheckCommand = NewType('HostCheckCommand',

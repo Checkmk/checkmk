@@ -318,6 +318,15 @@ def _create_nagios_servicedefs(cfg: NagiosConfig, config_cache: ConfigCache, hos
                 "Skipping invalid service with empty description (plugin: %s) on host %s" %
                 (service.check_plugin_name, hostname))
             continue
+
+        if service.description in used_descriptions:
+            core_config.duplicate_service_warning(
+                checktype="auto",
+                description=service.description,
+                host_name=hostname,
+                first_occurrence=used_descriptions[service.description],
+                second_occurrence=service.id())
+            continue
         used_descriptions[service.description] = service.id()
 
         # TODO: CMK-1125
@@ -402,13 +411,16 @@ def _create_nagios_servicedefs(cfg: NagiosConfig, config_cache: ConfigCache, hos
                 if cn == "active(%s)" % acttype:
                     continue
 
-                core_config.warning(
-                    "ERROR: Duplicate service description (active check) '%s' for host '%s'!\n"
-                    " - 1st occurrance: checktype = %s, item = %r\n"
-                    " - 2nd occurrance: checktype = active(%s), item = None\n" %
-                    (description, hostname, cn, it, acttype))
+                core_config.duplicate_service_warning(
+                    checktype="active",
+                    description=description,
+                    host_name=hostname,
+                    first_occurrence=(cn, it),
+                    second_occurrence=("active(%s)" % acttype, None),
+                )
                 continue
 
+            # TODO: is this right? description on the right, not item?
             used_descriptions[description] = ("active(" + acttype + ")", description)
 
             template = "check_mk_perf," if has_perfdata else ""
@@ -483,11 +495,13 @@ def _create_nagios_servicedefs(cfg: NagiosConfig, config_cache: ConfigCache, hos
                 if cn == "custom(%s)" % command_name:
                     continue
 
-                core_config.warning(
-                    "ERROR: Duplicate service description (custom check) '%s' for host '%s'!\n"
-                    " - 1st occurrance: checktype = %s, item = %r\n"
-                    " - 2nd occurrance: checktype = custom(%s), item = %r\n" %
-                    (description, hostname, cn, it, command_name, description))
+                core_config.duplicate_service_warning(
+                    checktype="custom",
+                    description=description,
+                    host_name=hostname,
+                    first_occurrence=(cn, it),
+                    second_occurrence=("custom(%s)" % command_name, description),
+                )
                 continue
 
             used_descriptions[description] = ("custom(%s)" % command_name, description)

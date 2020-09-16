@@ -302,10 +302,8 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         }));
     addColumn(std::make_unique<FileColumn<TableStatus>>(
         "license_usage_history", "Historic license usage information", offsets,
-        [mc]() { return mc->licenseUsagePath(); },
-        [](const TableStatus & /*r*/) {
-            return std::filesystem::path{"history.json"};
-        }));
+        [mc]() { return mc->licenseUsageHistoryPath(); },
+        [](const TableStatus & /*r*/) { return std::filesystem::path{}; }));
 }
 
 void TableStatus::addCounterColumns(const std::string &name,

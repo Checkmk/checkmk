@@ -843,6 +843,9 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
             } else if (left == "crash_report_path") {
                 fl_paths._crash_reports_path =
                     check_path("Path to the crash reports", right);
+            } else if (left == "license_usage_history_path") {
+                fl_paths._license_usage_history_path =
+                    check_path("Path to the license usage", right);
             } else if (left == "mk_inventory_path") {
                 fl_paths._mk_inventory =
                     check_path("Check_MK Inventory directory", right);

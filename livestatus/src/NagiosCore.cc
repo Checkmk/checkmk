@@ -174,6 +174,10 @@ std::filesystem::path NagiosCore::crashReportPath() const {
     return _paths._crash_reports_path;
 }
 
+std::filesystem::path NagiosCore::licenseUsageHistoryPath() const {
+    return _paths._license_usage_history_path;
+}
+
 std::filesystem::path NagiosCore::pnpPath() const { return _paths._pnp; }
 
 std::filesystem::path NagiosCore::historyFilePath() const {
@@ -188,10 +192,6 @@ std::filesystem::path NagiosCore::logArchivePath() const {
 
 std::filesystem::path NagiosCore::rrdcachedSocketPath() const {
     return _paths._rrdcached_socket;
-}
-
-std::filesystem::path NagiosCore::licenseUsagePath() const {
-    return crashReportPath().parent_path() / "license_usage";
 }
 
 Encoding NagiosCore::dataEncoding() { return _data_encoding; }

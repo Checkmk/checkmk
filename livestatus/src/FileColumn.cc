@@ -24,7 +24,8 @@ FileColumn<T>::FileColumn(
 
 template <class T>
 std::unique_ptr<std::vector<char>> FileColumn<T>::getValue(Row row) const {
-    if (!std::filesystem::exists(_basepath())) {
+    auto path = _basepath();
+    if (!std::filesystem::exists(path)) {
         // The basepath is not configured.
         return nullptr;
     }
@@ -32,7 +33,10 @@ std::unique_ptr<std::vector<char>> FileColumn<T>::getValue(Row row) const {
     if (data == nullptr) {
         return nullptr;
     }
-    std::filesystem::path path = _basepath() / _filepath(*data);
+    auto filepath = _filepath(*data);
+    if (!filepath.empty()) {
+        path /= filepath;
+    }
     if (!std::filesystem::is_regular_file(path)) {
         Warning(logger()) << path << " is not a regular file";
         return nullptr;

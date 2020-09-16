@@ -17,7 +17,7 @@ import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPHostConfig, SNMPRawData, SNMPTable, SNMPTree
 
 from . import factory
-from ._base import ABCFileCache, ABCFetcher
+from ._base import ABCFileCache, ABCFetcher, verify_ipaddress
 from .type_defs import Mode
 
 __all__ = ["SNMPFetcher", "SNMPFileCache"]
@@ -77,6 +77,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         )
 
     def __enter__(self) -> 'SNMPFetcher':
+        verify_ipaddress(self._snmp_config.ipaddress)
         return self
 
     def __exit__(self, exc_type: Optional[Type[BaseException]], exc_value: Optional[BaseException],

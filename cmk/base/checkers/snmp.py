@@ -23,7 +23,6 @@ from cmk.fetchers import FetcherType
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_table as check_table
 import cmk.base.config as config
-import cmk.base.ip_lookup as ip_lookup
 
 from ._abstract import (
     ABCSource,
@@ -78,7 +77,6 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
             # Looks like it could be the case for cluster hosts which
             # don't have an IP address set.
             raise TypeError(self.ipaddress)
-        ip_lookup.verify_ipaddress(self.ipaddress)
         self.snmp_config = (
             # Because of crap inheritance.
             self.host_config.snmp_config(self.ipaddress)

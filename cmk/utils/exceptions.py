@@ -42,3 +42,7 @@ class MKTimeout(MKException):
 
 class MKSNMPError(MKException):
     pass
+
+
+class MKIPAddressLookupError(MKGeneralException):
+    pass

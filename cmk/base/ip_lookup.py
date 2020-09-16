@@ -14,13 +14,13 @@ from six import ensure_str
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.exceptions import MKTerminate, MKTimeout
+from cmk.utils.exceptions import MKTerminate, MKTimeout, MKIPAddressLookupError
 from cmk.utils.log import console
 from cmk.utils.type_defs import HostAddress, HostName
 
 import cmk.base.config as config
 from cmk.base.caching import config_cache as _config_cache
-from cmk.base.exceptions import MKGeneralException, MKIPAddressLookupError
+from cmk.base.exceptions import MKGeneralException
 
 IPLookupCacheId = Tuple[HostName, int]
 NewIPLookupCache = Dict[IPLookupCacheId, str]
@@ -312,15 +312,6 @@ def _get_dns_cache_lookup_hosts(config_cache: config.ConfigCache) -> List[IPLook
             hosts.append((hostname, 6))
 
     return hosts
-
-
-def verify_ipaddress(address: Optional[HostAddress]) -> None:
-    if not address:
-        raise MKIPAddressLookupError("Host as no IP address configured.")
-
-    if address in ["0.0.0.0", "::"]:
-        raise MKIPAddressLookupError(
-            "Failed to lookup IP address and no explicit IP address configured")
 
 
 def normalize_ip_addresses(ip_addresses: Union[AnyStr, List[AnyStr]]) -> List[HostAddress]:

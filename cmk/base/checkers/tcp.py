@@ -11,7 +11,6 @@ from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
 from cmk.fetchers import FetcherType
 
-import cmk.base.ip_lookup as ip_lookup
 from cmk.base.config import HostConfig
 
 from ._abstract import Mode
@@ -44,9 +43,6 @@ class TCPSource(AgentSource):
         self.timeout: Optional[float] = None
 
     def configure_fetcher(self):
-        ip_lookup.verify_ipaddress(self.ipaddress)
-        assert self.ipaddress
-
         return {
             "file_cache": self.file_cache.configure(),
             "family": socket.AF_INET6 if self.host_config.is_ipv6_primary else socket.AF_INET,

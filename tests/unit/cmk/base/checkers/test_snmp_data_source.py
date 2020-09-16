@@ -12,6 +12,7 @@ from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPRuleDependentDetectSpec, SNMPTree
 from cmk.utils.type_defs import Result, RuleSetName, SourceType
+from cmk.utils.exceptions import MKIPAddressLookupError
 
 from cmk.base.api.agent_based import register
 from cmk.base.api.agent_based.register import section_plugins
@@ -20,7 +21,6 @@ import cmk.base.ip_lookup as ip_lookup
 from cmk.base.checkers import Mode
 from cmk.base.checkers.agent import AgentHostSections
 from cmk.base.checkers.snmp import SNMPSource
-from cmk.base.exceptions import MKIPAddressLookupError
 
 
 @pytest.fixture(name="mode", params=Mode)

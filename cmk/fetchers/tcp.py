@@ -16,6 +16,7 @@ import cmk.utils.debug
 from cmk.utils.type_defs import AgentRawData, HostAddress
 
 from . import MKFetcherError
+from ._base import verify_ipaddress
 from .agent import AgentFetcher, AgentFileCache, DefaultAgentFileCache
 from .type_defs import Mode
 
@@ -49,6 +50,7 @@ class TCPFetcher(AgentFetcher):
         )
 
     def __enter__(self) -> 'TCPFetcher':
+        verify_ipaddress(self._address[0])
         self._logger.debug("Connecting via TCP to %s:%d (%ss timeout)", self._address[0],
                            self._address[1], self._timeout)
         self._socket = socket.socket(self._family, socket.SOCK_STREAM)

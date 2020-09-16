@@ -16,7 +16,7 @@ import cmk.utils.log  # TODO: Remove this!
 import cmk.utils.misc
 import cmk.utils.paths
 import cmk.utils.tty as tty
-from cmk.utils.exceptions import MKSNMPError, MKTimeout
+from cmk.utils.exceptions import MKSNMPError, MKTimeout, MKIPAddressLookupError
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import (
     HostAddress,
@@ -44,7 +44,7 @@ from cmk.base.check_utils import (
     TSections,
 )
 from cmk.base.config import HostConfig, SelectedRawSections
-from cmk.base.exceptions import MKAgentError, MKEmptyAgentData, MKIPAddressLookupError
+from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 
 from ._cache import SectionStore
 

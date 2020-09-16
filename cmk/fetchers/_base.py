@@ -12,9 +12,10 @@ from typing import Any, Dict, Final, Generic, Optional, Type, TypeVar, Union
 
 import cmk.utils
 import cmk.utils.store as store
-from cmk.utils.exceptions import MKException, MKGeneralException
+from cmk.utils.exceptions import MKException, MKGeneralException, MKIPAddressLookupError
 from cmk.utils.log import logger as cmk_logger
 from cmk.utils.log import VERBOSE
+from cmk.utils.type_defs import HostAddress
 
 from cmk.snmplib.type_defs import TRawData
 
@@ -159,3 +160,12 @@ class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
 
     def _fetch_from_cache(self) -> Optional[TRawData]:
         return self.file_cache.read()
+
+
+def verify_ipaddress(address: Optional[HostAddress]) -> None:
+    if not address:
+        raise MKIPAddressLookupError("Host has no IP address configured.")
+
+    if address in ["0.0.0.0", "::"]:
+        raise MKIPAddressLookupError(
+            "Failed to lookup IP address and no explicit IP address configured")

@@ -467,10 +467,10 @@ class ModeRulesetGroup(ABCRulesetMode):
             )
 
         yield PageMenuEntry(
-            title=_("Search rules"),
+            title=_("Rule search"),
             icon_name="search",
-            item=make_simple_link(html.makeuri([
-                ("mode", "rulesets"),
+            item=make_simple_link(html.makeuri_contextless([
+                ("mode", "rule_search"),
             ])),
         )
 

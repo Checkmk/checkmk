@@ -200,7 +200,6 @@ def _make_piggybacked_sections(host_config) -> SelectedRawSections:
         itertools.chain.from_iterable(
             check_table.get_needed_check_names(
                 node_name,
-                remove_duplicates=True,
                 filter_mode="only_clustered",
             ) for node_name in host_config.nodes))
     return agent_based_register.get_relevant_raw_sections(

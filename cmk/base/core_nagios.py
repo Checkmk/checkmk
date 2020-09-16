@@ -307,7 +307,7 @@ def _create_nagios_servicedefs(cfg: NagiosConfig, config_cache: ConfigCache, hos
         CheckPluginName(maincheckify(k)): v for k, v in config.check_info.items()
     }
 
-    host_check_table = get_check_table(hostname, remove_duplicates=True)
+    host_check_table = get_check_table(hostname)
     have_at_least_one_service = False
     used_descriptions: Dict[ServiceName, AbstractServiceID] = {}
     for service in sorted(host_check_table.values(), key=lambda s: (s.check_plugin_name, s.item)):

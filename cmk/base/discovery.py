@@ -1284,8 +1284,7 @@ def _discover_services(
                 if on_error == "warn":
                     console.error("Discovery of '%s' failed: %s\n" % (check_plugin_name, e))
 
-        check_table_dedup = check_table.remove_duplicate_checks(service_table)
-        return list(check_table_dedup.values())
+        return list(service_table.values())
 
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")

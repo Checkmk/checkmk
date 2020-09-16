@@ -192,7 +192,6 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
             agent_based_register.get_relevant_raw_sections(
                 check_plugin_names=check_table.get_needed_check_names(
                     self.hostname,
-                    remove_duplicates=True,
                     filter_mode="include_clustered",
                     skip_ignored=True,
                 ),

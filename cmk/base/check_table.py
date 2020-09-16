@@ -20,6 +20,8 @@ from cmk.base.check_utils import CheckTable, Service
 # TODO: This is just a first cleanup step: Continue cleaning this up.
 # - Check all call sites and cleanup the different
 # - Make this a helper object of HostConfig?
+# (mo): This is not an object. It only ever gets created for the .get
+# method to be called. Its a bundle of functions.
 class HostCheckTable:
     def __init__(
         self,
@@ -193,7 +195,6 @@ class HostCheckTable:
 def get_check_table(
     hostname: str,
     *,
-    remove_duplicates: bool = False,
     use_cache: bool = True,
     skip_autochecks: bool = False,
     filter_mode: Optional[Literal["only_clustered", "include_clustered"]] = None,
@@ -202,32 +203,18 @@ def get_check_table(
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
 
-    table = HostCheckTable(config_cache, host_config).get(use_cache, skip_autochecks, filter_mode,
-                                                          skip_ignored)
-    return remove_duplicate_checks(table) if remove_duplicates else table
-
-
-def remove_duplicate_checks(check_table: CheckTable,) -> CheckTable:
-    service_keys_by_description = {
-        # This will sort by check plugin name and item, which is as good as anything else,
-        # as long as it is konsistent.
-        # If we want to change the precedence, we must falicitate that using the 'supersedes'
-        # feature of the corresponding raw sections.
-        service.description: key for key, service in sorted(check_table.items(), reverse=True)
-    }
-    return {key: check_table[key] for key in service_keys_by_description.values()}
+    return HostCheckTable(config_cache, host_config).get(use_cache, skip_autochecks, filter_mode,
+                                                         skip_ignored)
 
 
 def get_needed_check_names(
     hostname: HostName,
-    remove_duplicates: bool = False,
     filter_mode: Optional[Literal["only_clustered", "include_clustered"]] = None,
     skip_ignored: bool = True,
 ) -> Set[CheckPluginName]:
     return {
         s.check_plugin_name for s in get_check_table(
             hostname,
-            remove_duplicates=remove_duplicates,
             filter_mode=filter_mode,
             skip_ignored=skip_ignored,
         ).values()
@@ -242,10 +229,7 @@ def get_sorted_service_list(
 ) -> List[Service]:
 
     sorted_services_unresolved = sorted(
-        get_check_table(hostname,
-                        remove_duplicates=True,
-                        filter_mode=filter_mode,
-                        skip_ignored=skip_ignored).values(),
+        get_check_table(hostname, filter_mode=filter_mode, skip_ignored=skip_ignored).values(),
         key=lambda service: service.description,
     )
 

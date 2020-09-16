@@ -720,7 +720,6 @@ def _evaluate_timespecific_entry(entry: Dict[str, Any]) -> Dict[str, Any]:
 def is_manual_check(hostname: HostName, service_id: ServiceID) -> bool:
     return service_id in check_table.get_check_table(
         hostname,
-        remove_duplicates=True,
         skip_autochecks=True,
     )
 

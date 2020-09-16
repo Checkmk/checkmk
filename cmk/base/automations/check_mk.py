@@ -617,9 +617,6 @@ class AutomationAnalyseServices(Automation):
         # 3. classical checks
         # 4. active checks
 
-        # Compute effective check table, in order to remove SNMP duplicates
-        table = check_table.get_check_table(hostname, remove_duplicates=True)
-
         # 1. Manual checks
         for checkgroup_name, checktype, item, params in host_config.static_checks:
             # TODO (mo): centralize maincheckify: CMK-4295
@@ -646,12 +643,13 @@ class AutomationAnalyseServices(Automation):
         else:
             services = config_cache.get_autochecks_of(hostname)
 
+        table = check_table.get_check_table(hostname)
         # 2. Load all autochecks of the host in question and try to find
         # our service there
         for service in services:
 
             if service.id() not in table:
-                continue  # this is a removed duplicate or clustered service
+                continue  # this is a clustered service
 
             if service.description != servicedesc:
                 continue
@@ -1551,8 +1549,7 @@ class AutomationGetServiceConfigurations(Automation):
             self, host_config: config.HostConfig) -> Dict[str, List[Tuple[str, str, Any]]]:
         return {
             "checks": [(str(s.check_plugin_name), s.description, s.parameters)
-                       for s in check_table.get_check_table(host_config.hostname,
-                                                            remove_duplicates=True).values()],
+                       for s in check_table.get_check_table(host_config.hostname).values()],
             "active_checks": self._get_active_checks(host_config)
         }
 

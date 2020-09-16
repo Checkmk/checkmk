@@ -156,7 +156,6 @@ def test_make_piggybacked_sections(monkeypatch, check_plugin):
 
     def get_needed_check_names(
         hostname,
-        remove_duplicates=False,
         filter_mode=None,
         skip_ignored=True,
     ):

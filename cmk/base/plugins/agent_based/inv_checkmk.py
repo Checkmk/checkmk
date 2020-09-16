@@ -12,7 +12,7 @@
 from typing import Dict, List, Any
 
 import cmk.utils.version as cmk_version
-from .agent_based_api.v1.type_defs import InventoryGenerator
+from .agent_based_api.v1.type_defs import InventoryResult
 from .agent_based_api.v1 import Attributes, register, TableRow
 
 
@@ -134,7 +134,7 @@ def merge_sections(section_livestatus_status: Dict[str, Any], section_omd_status
     return merged_section
 
 
-def generate_inventory(merged_sections: Dict[str, Any]) -> InventoryGenerator:
+def generate_inventory(merged_sections: Dict[str, Any]) -> InventoryResult:
 
     for key, elem in merged_sections["sites"].items():
         yield TableRow(path=["software", "applications", "check_mk", "sites"],
@@ -156,7 +156,7 @@ def generate_inventory(merged_sections: Dict[str, Any]) -> InventoryGenerator:
 
 def inventory_checkmk(section_livestatus_status: Dict[str, Dict[str, str]],
                       section_omd_status: Dict[str, Dict],
-                      section_omd_info: Dict[str, Dict[str, Dict]]) -> InventoryGenerator:
+                      section_omd_info: Dict[str, Dict[str, Dict]]) -> InventoryResult:
 
     merged_sections = merge_sections(
         section_livestatus_status,

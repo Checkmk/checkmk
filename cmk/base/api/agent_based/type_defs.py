@@ -24,9 +24,6 @@ from typing import (
 )
 import pprint
 
-from cmk.base.api.agent_based.inventory_classes import InventoryResult
-InventoryGenerator = InventoryResult
-
 from cmk.utils.type_defs import (
     CheckPluginName,
     ParsedSectionName,

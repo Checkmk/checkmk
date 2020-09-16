@@ -26,8 +26,7 @@ Example:
 
 """
 
-# TODO [tbc]: Rename InventoryGenerator in all plugins to InventoryResult
-from cmk.base.api.agent_based.inventory_classes import InventoryResult as InventoryGenerator
+from cmk.base.api.agent_based.inventory_classes import InventoryResult
 from cmk.base.api.agent_based.type_defs import (
     AgentStringTable,
     CheckGenerator,
@@ -44,7 +43,7 @@ __all__ = [
     "CheckGenerator",
     "DiscoveryGenerator",
     "HostLabelGenerator",
-    "InventoryGenerator",
+    "InventoryResult",
     "Parameters",
     "SNMPStringByteTable",
     "SNMPStringTable",

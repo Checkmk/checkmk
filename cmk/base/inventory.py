@@ -42,8 +42,7 @@ import cmk.base.decorator
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.section as section
 
-from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
-from cmk.base.api.agent_based.type_defs import InventoryGenerator
+from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow, InventoryResult
 from cmk.base.checkers import ABCSource, ABCHostSections
 from cmk.base.checkers.host_sections import HostKey, MultiHostSections
 from cmk.base.checkers.snmp import SNMPHostSections
@@ -398,7 +397,7 @@ def _do_inv_for_realhost(
 
 
 def _aggregate_inventory_results(
-    inventory_generator: InventoryGenerator,
+    inventory_generator: InventoryResult,
     inventory_tree: StructuredDataTree,
     status_data_tree: StructuredDataTree,
 ) -> None:

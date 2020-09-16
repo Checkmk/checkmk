@@ -6,7 +6,7 @@
 import time
 from typing import List, Optional, Union
 
-from .agent_based_api.v1.type_defs import InventoryGenerator, Parameters
+from .agent_based_api.v1.type_defs import InventoryResult, Parameters
 from .agent_based_api.v1 import Attributes, register, TableRow
 from .utils import interfaces
 
@@ -16,7 +16,7 @@ def inventory_if(
     params: Parameters,
     section_inv_if: Optional[List],
     section_snmp_uptime: Optional[int],
-) -> InventoryGenerator:
+) -> InventoryResult:
     if section_inv_if is None or section_snmp_uptime is None:
         return
 

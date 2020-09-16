@@ -24,9 +24,11 @@ from typing import (
 )
 import pprint
 
+from cmk.base.api.agent_based.inventory_classes import InventoryResult
+InventoryGenerator = InventoryResult
+
 from cmk.utils.type_defs import (
     CheckPluginName,
-    InventoryPluginName,
     ParsedSectionName,
     RuleSetName,
     SectionName,
@@ -53,10 +55,6 @@ class ABCDiscoveryGenerated(ABCComparable):
     """Abstract class for everything a discovery function may yield"""
 
 
-class ABCInventoryGenerated(ABCComparable):
-    """Abstract class for everything an inventory function may yield"""
-
-
 class Parameters(Mapping):
     """Parameter objects are used to pass parameters to plugin functions"""
     def __init__(self, data):
@@ -80,7 +78,6 @@ class Parameters(Mapping):
 
 AgentStringTable = List[List[str]]
 AgentParseFunction = Callable[[AgentStringTable], Any]
-
 CheckGenerator = Generator[ABCCheckGenerated, None, None]
 CheckFunction = Callable[..., CheckGenerator]
 
@@ -89,16 +86,12 @@ DiscoveryRuleSetType = Literal["merged", "all"]
 DiscoveryGenerator = Generator[ABCDiscoveryGenerated, None, None]
 DiscoveryFunction = Callable[..., DiscoveryGenerator]
 
-InventoryGenerator = Generator[ABCInventoryGenerated, None, None]
-InventoryFunction = Callable[..., InventoryGenerator]
-
 HostLabelGenerator = Generator[HostLabel, None, None]
 HostLabelFunction = Callable[..., HostLabelGenerator]
 
 SNMPStringTable = List[List[List[str]]]
 SNMPStringByteTable = List[List[List[Union[str, List[int]]]]]
 SNMPParseFunction = Union[Callable[[SNMPStringTable], Any], Callable[[SNMPStringByteTable], Any],]
-
 CheckPlugin = NamedTuple(
     "CheckPlugin",
     [
@@ -148,17 +141,5 @@ SNMPSectionPlugin = NamedTuple(
 )
 
 SectionPlugin = Union[AgentSectionPlugin, SNMPSectionPlugin]
-
-InventoryPlugin = NamedTuple(
-    "InventoryPlugin",
-    [
-        ("name", InventoryPluginName),
-        ("sections", List[ParsedSectionName]),
-        ("inventory_function", InventoryFunction),
-        ("inventory_default_parameters", Dict[str, Any]),
-        ("inventory_ruleset_name", Optional[RuleSetName]),
-        ("module", Optional[str]),  # not available for auto migrated plugins.
-    ],
-)
 
 ValueStore = MutableMapping[str, Any]

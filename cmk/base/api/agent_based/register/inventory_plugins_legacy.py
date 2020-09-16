@@ -14,14 +14,13 @@ from cmk.utils.check_utils import maincheckify
 from cmk.base.api.agent_based.inventory_classes import (
     Attributes,
     TableRow,
+    InventoryFunction,
+    InventoryPlugin,
+    # TODO [tbc]: Rename InventoryGenerator
+    InventoryResult as InventoryGenerator,
 )
 from cmk.base.api.agent_based.register.inventory_plugins import create_inventory_plugin
-from cmk.base.api.agent_based.type_defs import (
-    InventoryFunction,
-    InventoryGenerator,
-    InventoryPlugin,
-    Parameters,
-)
+from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.inventory import initialize_inventory_tree  # TODO (mo): move this here.
 
 

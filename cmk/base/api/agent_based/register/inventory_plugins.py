@@ -6,14 +6,15 @@
 """Background tools required to register a check plugin
 """
 import functools
-from typing import Any, Callable, Dict, Generator, List, Optional
+from typing import Callable, Dict, Iterable, List, Optional
 
 from cmk.utils.type_defs import InventoryPluginName, RuleSetName
 
-from cmk.base.api.agent_based.type_defs import (
-    ABCInventoryGenerated,
+from cmk.base.api.agent_based.inventory_classes import (
     InventoryFunction,
     InventoryPlugin,
+    Attributes,
+    TableRow,
 )
 from cmk.base.api.agent_based.register.utils import (
     create_subscribed_sections,
@@ -22,7 +23,7 @@ from cmk.base.api.agent_based.register.utils import (
 )
 
 
-def _filter_inventory(generator: Callable[..., Generator[Any, None, None]],) -> InventoryFunction:
+def _filter_inventory(generator: Callable[..., Iterable],) -> InventoryFunction:
     """Only let Attributes and TableRow instances through
 
     This allows for better typing in base code.
@@ -30,7 +31,7 @@ def _filter_inventory(generator: Callable[..., Generator[Any, None, None]],) -> 
     @functools.wraps(generator)
     def filtered_generator(*args, **kwargs):
         for element in generator(*args, **kwargs):
-            if not isinstance(element, ABCInventoryGenerated):
+            if not isinstance(element, (Attributes, TableRow)):
                 raise TypeError("unexpected type in inventory function: %r" % type(element))
             yield element
 

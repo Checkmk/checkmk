@@ -9,7 +9,6 @@ from pathlib import Path
 
 from cmk.utils.type_defs import InventoryPluginName
 
-from cmk.base.api.agent_based.type_defs import InventoryPlugin
 from cmk.base.api.agent_based.inventory_classes import Attributes
 
 import cmk.base.api.agent_based.register as agent_based_register

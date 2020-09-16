@@ -25,12 +25,14 @@ Example:
             pass
 
 """
+
+# TODO [tbc]: Rename InventoryGenerator in all plugins to InventoryResult
+from cmk.base.api.agent_based.inventory_classes import InventoryResult as InventoryGenerator
 from cmk.base.api.agent_based.type_defs import (
     AgentStringTable,
     CheckGenerator,
     DiscoveryGenerator,
     HostLabelGenerator,
-    InventoryGenerator,
     Parameters,
     SNMPStringByteTable,
     SNMPStringTable,

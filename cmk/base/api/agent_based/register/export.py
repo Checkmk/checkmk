@@ -8,10 +8,10 @@
 from typing import Any, Callable, Dict, List, Optional
 
 from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree
+from cmk.base.api.agent_based.inventory_classes import InventoryFunction
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
     CheckFunction,
-    InventoryFunction,
     DiscoveryFunction,
     DiscoveryRuleSetType,
     HostLabelFunction,

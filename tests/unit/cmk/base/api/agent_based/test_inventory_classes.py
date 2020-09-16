@@ -65,7 +65,6 @@ def test_attributes_instanciated():
 def test_tablerow_missing_key_columns():
     with pytest.raises(TypeError):
         _ = TableRow(path=["hardware"], key_columns=None)  # type: ignore[arg-type]
-    with pytest.raises(ValueError):
         _ = TableRow(path=["hardware"], key_columns={})
 
 

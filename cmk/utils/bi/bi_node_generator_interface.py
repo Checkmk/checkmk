@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+#   .--NodeGen.------------------------------------------------------------.
+#   |              _   _           _       ____                            |
+#   |             | \ | | ___   __| | ___ / ___| ___ _ __                  |
+#   |             |  \| |/ _ \ / _` |/ _ \ |  _ / _ \ '_ \                 |
+#   |             | |\  | (_) | (_| |  __/ |_| |  __/ | | |_               |
+#   |             |_| \_|\___/ \__,_|\___|\____|\___|_| |_(_)              |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+import abc
+from typing import List, Dict, Any, Optional
+
+from cmk.utils.bi.bi_lib import (
+    bi_search_registry,
+    bi_action_registry,
+    AbstractBICompiledNode,
+    AbstractBIAction,
+    AbstractBISearch,
+    MacroMappings,
+    AbstractWithSchema,
+)
+
+
+class AbstractBINodeGenerator(AbstractWithSchema):
+    def __init__(self, node_config: Dict[str, Any]):
+        super().__init__()
+        self.search: AbstractBISearch = bi_search_registry.instantiate(node_config["search"])
+        self.action: AbstractBIAction = bi_action_registry.instantiate(node_config["action"])
+
+        # Enables the generator only to process rules with the given title
+        # Can be used to limit the compilation to a specific branch, e.g. "Aggr HostA"
+        self.restrict_rule_title: Optional[str] = None
+
+    @abc.abstractmethod
+    def compile(
+        self,
+        macros: MacroMappings,
+    ) -> List[AbstractBICompiledNode]:
+        raise NotImplementedError()

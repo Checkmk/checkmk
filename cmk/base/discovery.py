@@ -81,7 +81,7 @@ from cmk.base.check_utils import FinalSectionContent, LegacyCheckParameters, Ser
 from cmk.base.config import SelectedRawSections
 from cmk.base.core_config import MonitoringCore
 from cmk.base.checkers.host_sections import HostKey, MultiHostSections
-from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
+from cmk.base.discovered_labels import DiscoveredHostLabels, DiscoveredServiceLabels, HostLabel
 
 # Run the discovery queued by check_discovery() - if any
 _marked_host_discovery_timeout = 120
@@ -1366,7 +1366,7 @@ def _enriched_discovered_services(
             item=service.item,
             description=description,
             parameters=unwrap_parameters(service.parameters),
-            service_labels=service.labels,
+            service_labels=DiscoveredServiceLabels(*service.labels),
         )
 
 

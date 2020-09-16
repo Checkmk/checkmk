@@ -718,11 +718,12 @@ def test_subset_patterns():
     assert {s.item: s for s in test_discovered} == {s.item: s for s in discovered}  # type: ignore[attr-defined]
 
     for service, count in zip(discovered, [1, 2, 1]):
+        assert isinstance(service.item, str)
         with value_store.context(CheckPluginName("ps"), "unit-test"):
             output = list(ps_utils.check_ps_common(
                 label="Processes",
                 item=service.item,
-                params=service.parameters,
+                params=service.parameters,  # type: ignore[arg-type]
                 process_lines=[
                     (None, psi, cmd_line) for (psi, cmd_line) in section_ps[1]],
                 cpu_cores=1,

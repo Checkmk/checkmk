@@ -450,7 +450,7 @@ def test_winperf_if_group_patterns(value_store):
 
     assert [
         result for service in expected_services for result in winperf_if.check_winperf_if(
-            service.item,
+            service.item or "",  # or "" to make mypy happy
             type_defs.Parameters(service.parameters),
             section,
         ) if not isinstance(result, IgnoreResults)

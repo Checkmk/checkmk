@@ -69,18 +69,18 @@ class Service(ABCDiscoveryGenerated):
             raise TypeError("'labels' must be list of ServiceLabels, got %r" % (labels,))
 
     @property
-    def item(self):
+    def item(self) -> Optional[str]:
         return self._item
 
     @property
-    def parameters(self):
+    def parameters(self) -> Dict[str, Any]:
         return self._parameters
 
     @property
-    def labels(self):
+    def labels(self) -> List[ServiceLabel]:
         return self._labels
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "%s(item=%r, parameters=%r, labels=%r)" % (self.__class__.__name__, self.item,
                                                           self.parameters, self._labels)
 

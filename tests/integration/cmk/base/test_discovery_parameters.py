@@ -81,7 +81,7 @@ register.check_plugin(
 
     site.write_file("var/check_mk/agent_output/modes-test-host", "<<<test_check_1>>>\n1 2\n")
 
-    config.load_all_checks(check_api.get_check_api_context)
+    config.load_all_agent_based_plugins(check_api.get_check_api_context)
     config.load(with_conf_d=False)
 
     web.discover_services("modes-test-host")
@@ -155,7 +155,7 @@ register.check_plugin(
 
     site.write_file("var/check_mk/agent_output/modes-test-host", "<<<test_check_2>>>\n1 2\n")
 
-    config.load_all_checks(check_api.get_check_api_context)
+    config.load_all_agent_based_plugins(check_api.get_check_api_context)
     config.load(with_conf_d=False)
 
     web.discover_services("modes-test-host")

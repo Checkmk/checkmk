@@ -144,7 +144,7 @@ class UpdateConfig:
         # services due to an exception thrown by cmk.base.config.service_description
         # in _parse_autocheck_entry of cmk.base.autochecks.
         cmk.base.config.load()
-        cmk.base.config.load_all_checks(cmk.base.check_api.get_check_api_context)
+        cmk.base.config.load_all_agent_based_plugins(cmk.base.check_api.get_check_api_context)
         check_variables = cmk.base.config.get_check_variables()
 
         failed_hosts: List[str] = []

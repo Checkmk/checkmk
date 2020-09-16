@@ -489,7 +489,10 @@ class InventoryPluginManager:
                 "inv_tree": g_inv_tree.get_dict,
             }
 
-        inv_plugins.load_plugins(check_api.get_check_api_context, get_inventory_context)
+        inv_plugins.load_legacy_inventory_plugins(
+            check_api.get_check_api_context,
+            get_inventory_context,
+        )
         return g_inv_tree, g_status_tree
 
     def get_inventory_plugin(self, name):

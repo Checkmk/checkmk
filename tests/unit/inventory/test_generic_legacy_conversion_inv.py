@@ -21,12 +21,9 @@ import cmk.base.inventory as inventory
 pytestmark = pytest.mark.checks
 
 
+@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.fixture(scope="module", name="inv_info")
 def _get_inv_info():
-    inventory_plugins.load_plugins(
-        check_api.get_check_api_context,
-        inventory.get_inventory_context,
-    )
     assert len(inventory_plugins.inv_info) > 98  # sanity check
     return inventory_plugins.inv_info.copy()
 

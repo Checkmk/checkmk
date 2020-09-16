@@ -49,8 +49,10 @@ _include_contexts: Dict[str, Any] = {}
 _plugin_file_lookup: Dict[str, str] = {}
 
 
-def load_plugins(get_check_api_context: config.GetCheckApiContext,
-                 get_inventory_context: config.GetInventoryApiContext) -> None:
+def load_legacy_inventory_plugins(
+    get_check_api_context: config.GetCheckApiContext,
+    get_inventory_context: config.GetInventoryApiContext,
+) -> None:
     loaded_files: Set[str] = set()
     filelist = config.get_plugin_paths(str(cmk.utils.paths.local_inventory_dir),
                                        cmk.utils.paths.inventory_dir)

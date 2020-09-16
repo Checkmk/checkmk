@@ -895,7 +895,7 @@ class AutomationGetConfiguration(Automation):
         missing_variables = [v for v in variable_names if not hasattr(config, v)]
 
         if missing_variables:
-            config.load_all_checks(check_api.get_check_api_context)
+            config.load_all_agent_based_plugins(check_api.get_check_api_context)
             config.load(with_conf_d=False)
 
         result = {}

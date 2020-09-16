@@ -186,9 +186,6 @@ def patch_data_source(mocker):
 )
 @pytest.mark.usefixtures("scenario")
 def test_mode_inventory_caching(hosts, cache, force, monkeypatch, mocker):
-    # Plugins have been loaded by module level fixture, disable loading in mode_inventory() to
-    # improve speed of the test execution
-    monkeypatch.setattr(cmk.base.inventory_plugins, "load_plugins", lambda x, y: None)
 
     kwargs = {}
     kwargs.update(hosts[1])

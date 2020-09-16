@@ -128,7 +128,7 @@ def _config_load_all_checks():
     assert config.check_info == {}
 
     with cmk_debug_enabled():  # fail if a plugin can't be loaded
-        config.load_all_checks(check_api.get_check_api_context)
+        config.load_all_agent_based_plugins(check_api.get_check_api_context)
 
     assert len(config.check_info) > 1000  # sanitiy check
 
@@ -142,8 +142,10 @@ def _config_load_all_inventory_plugins():
     import cmk.base.check_api as check_api  # pylint: disable=bad-option-value,import-outside-toplevel
 
     with cmk_debug_enabled():  # fail if a plugin can't be loaded
-        inventory_plugins.load_plugins(check_api.get_check_api_context,
-                                       inventory.get_inventory_context)
+        inventory_plugins.load_legacy_inventory_plugins(
+            check_api.get_check_api_context,
+            inventory.get_inventory_context,
+        )
 
     assert len(inventory_plugins.inv_info) > 90  # sanitiy check, may decrease as we migrate
 

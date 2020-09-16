@@ -1194,10 +1194,6 @@ def _get_needed_plugin_names(
     # otherwise inventory plugins will crash upon unparsed data.
     needed_agent_based_inventory_plugin_names: Set[InventoryPluginName] = set()
     if host_config.do_status_data_inventory:
-        import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
-        from cmk.base.check_api import get_check_api_context  # pylint: disable=import-outside-toplevel
-        from cmk.base.inventory import get_inventory_context  # pylint: disable=import-outside-toplevel
-        inventory_plugins.load_plugins(get_check_api_context, get_inventory_context)
         for inventory_plugin in agent_based_register.iter_all_inventory_plugins():
             needed_agent_based_inventory_plugin_names.add(inventory_plugin.name)
             for section_name in inventory_plugin.sections:

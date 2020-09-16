@@ -1417,7 +1417,7 @@ def discovery_max_cachefile_age(use_caches: bool) -> int:
 #   '----------------------------------------------------------------------'
 
 
-def load_all_checks(get_check_api_context: GetCheckApiContext) -> None:
+def load_all_agent_based_plugins(get_check_api_context: GetCheckApiContext,) -> None:
     """Load all checks and includes"""
     global _all_checks_loaded
 
@@ -1426,8 +1426,23 @@ def load_all_checks(get_check_api_context: GetCheckApiContext) -> None:
     agent_based_register.load_all_plugins()
 
     # LEGACY CHECK PLUGINS
-    filelist = get_plugin_paths(str(cmk.utils.paths.local_checks_dir), cmk.utils.paths.checks_dir)
+    filelist = get_plugin_paths(
+        str(cmk.utils.paths.local_checks_dir),
+        cmk.utils.paths.checks_dir,
+    )
     load_checks(get_check_api_context, filelist)
+
+    # LEGACY INVENTORY PLUGINS
+    # unfortunately, inventory_plugins will import cmk.base.config,
+    # so we have to use a local import for now.
+    # We could do further refactoring to resolve this, but the time would probably
+    # be spent better migrating the legacy inventory plugins to the new API...
+    import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
+    from cmk.base.inventory import get_inventory_context  # pylint: disable=import-outside-toplevel
+    inventory_plugins.load_legacy_inventory_plugins(
+        get_check_api_context,
+        get_inventory_context,
+    )
 
     _all_checks_loaded = True
 

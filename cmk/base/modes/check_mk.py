@@ -43,7 +43,6 @@ import cmk.fetchers.factory as snmp_factory
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.backup
-import cmk.base.check_api as check_api
 import cmk.base.check_utils
 import cmk.base.config as config
 import cmk.base.core
@@ -53,7 +52,6 @@ import cmk.base.diagnostics
 import cmk.base.discovery as discovery
 import cmk.base.dump_host
 import cmk.base.inventory as inventory
-import cmk.base.inventory_plugins as inventory_plugins
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.localize
 import cmk.base.obsolete_output as out
@@ -1245,7 +1243,6 @@ modes.register(
 
 
 def mode_inventory(options: Dict, args: List[str]) -> None:
-    inventory_plugins.load_plugins(check_api.get_check_api_context, inventory.get_inventory_context)
     config_cache = config.get_config_cache()
 
     if args:
@@ -1296,8 +1293,6 @@ modes.register(
 
 
 def mode_inventory_as_check(options: Dict, hostname: HostName) -> int:
-    inventory_plugins.load_plugins(check_api.get_check_api_context, inventory.get_inventory_context)
-
     return inventory.do_inv_check(hostname, options)
 
 

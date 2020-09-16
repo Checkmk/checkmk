@@ -163,7 +163,7 @@ def update_service_info(config_cache, hostnames):
 
 
 def update():
-    config.load_all_checks(check_api.get_check_api_context)
+    config.load_all_agent_based_plugins(check_api.get_check_api_context)
     config.load()
 
     config_cache = config.get_config_cache()

@@ -6,6 +6,7 @@
 #include "TableEventConsole.h"
 
 #include <algorithm>  // IWYU pragma: keep
+#include <cstdlib>
 #include <filesystem>
 #include <functional>  // IWYU pragma: keep
 #include <iosfwd>
@@ -19,6 +20,7 @@
 #include "Column.h"
 #include "EventConsoleConnection.h"
 #include "Logger.h"
+#include "MonitoringCore.h"
 #include "Query.h"
 #include "auth.h"
 
@@ -130,17 +132,7 @@ private:
                 headers = std::move(columns);
                 is_header = false;
             } else {
-                TableEventConsole::ECRow row;
-                int i = 0;
-                columns.resize(headers.size());  // just to be sure...
-                for (const auto &field : columns) {
-                    row._map[headers[i++]] = field;
-                }
-
-                auto it = row._map.find("event_host");
-                row._host = it == row._map.end()
-                                ? nullptr
-                                : mc_->getHostByDesignation(it->second);
+                ECRow row{mc_, headers, columns};
                 if (!query_->processDataset(Row(&row))) {
                     return;
                 }
@@ -153,6 +145,38 @@ private:
     Query *query_;
 };
 }  // namespace
+
+ECRow::ECRow(MonitoringCore *mc, const std::vector<std::string> &headers,
+             const std::vector<std::string> &columns) {
+    auto column_it = columns.cbegin();
+    for (const auto &header : headers) {
+        if (column_it != columns.end()) {
+            map_[header] = *column_it++;
+        }
+    }
+    auto it = map_.find("event_host");
+    host_ = it == map_.end() ? nullptr : mc->getHostByDesignation(it->second);
+}
+
+std::string ECRow::getString(const std::string &column_name) const {
+    return get(column_name, "");
+}
+
+int32_t ECRow::getInt(const std::string &column_name) const {
+    return static_cast<int32_t>(atol(get(column_name, "0").c_str()));
+}
+
+double ECRow::getDouble(const std::string &column_name) const {
+    return atof(get(column_name, "0").c_str());
+}
+
+std::string ECRow::get(const std::string &column_name,
+                       const std::string &default_value) const {
+    auto it = map_.find(column_name);
+    return it == map_.end() ? default_value : it->second;
+}
+
+const MonitoringCore::Host *ECRow::host() const { return host_; }
 
 TableEventConsole::TableEventConsole(MonitoringCore *mc) : Table(mc) {}
 
@@ -207,7 +231,7 @@ bool TableEventConsole::isAuthorizedForEventViaContactGroups(
 
 bool TableEventConsole::isAuthorizedForEventViaHost(
     const MonitoringCore::Contact *ctc, Row row, bool &result) const {
-    if (MonitoringCore::Host *hst = rowData<ECRow>(row)->_host) {
+    if (const MonitoringCore::Host *hst = rowData<ECRow>(row)->host()) {
         return (result = core()->host_has_contact(hst, ctc), true);
     }
     return false;

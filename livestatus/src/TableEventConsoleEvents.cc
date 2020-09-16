@@ -76,7 +76,7 @@ void TableEventConsoleEvents::addColumns(Table *table) {
         offsets));
 
     TableHosts::addColumns(table, "host_", offsets.add([](Row r) {
-        return r.rawData<ECRow>()->_host;
+        return r.rawData<ECRow>()->host();
     }));
 }
 

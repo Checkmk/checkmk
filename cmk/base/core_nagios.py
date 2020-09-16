@@ -6,7 +6,6 @@
 """Code for support of Nagios (and compatible) cores"""
 
 import base64
-import errno
 import os
 import py_compile
 import sys
@@ -914,28 +913,20 @@ def _find_check_plugins(checktype: CheckPluginNameStr) -> List[str]:
 class HostCheckStore:
     """Caring about persistence of the precompiled host check files"""
     @staticmethod
-    def host_check_file_path(hostname: HostName) -> Path:
-        return Path(cmk.utils.paths.precompiled_hostchecks_dir, hostname)
+    def host_check_file_path(serial: ConfigSerial, hostname: HostName) -> Path:
+        return Path(config.make_helper_config_path(serial), "host_checks", hostname)
 
     @staticmethod
-    def host_check_source_file_path(hostname: HostName) -> Path:
+    def host_check_source_file_path(serial: ConfigSerial, hostname: HostName) -> Path:
         # TODO: Use append_suffix(".py") once we are on Python 3.10
-        path = HostCheckStore.host_check_file_path(hostname)
+        path = HostCheckStore.host_check_file_path(serial, hostname)
         return path.with_suffix(path.suffix + ".py")
 
-    def write(self, hostname: HostName, host_check: str) -> None:
-        compiled_filename = self.host_check_file_path(hostname)
-        source_filename = self.host_check_source_file_path(hostname)
+    def write(self, serial: ConfigSerial, hostname: HostName, host_check: str) -> None:
+        compiled_filename = self.host_check_file_path(serial, hostname)
+        source_filename = self.host_check_source_file_path(serial, hostname)
 
         store.makedirs(compiled_filename.parent)
-
-        # TODO: Drop deletion once we respect the serial here
-        for fname in [compiled_filename, source_filename]:
-            try:
-                os.remove(fname)
-            except OSError as e:
-                if e.errno != errno.ENOENT:
-                    raise
 
         store.save_text_to_file(source_filename, host_check)
 
@@ -969,12 +960,12 @@ def _precompile_hostchecks(serial: ConfigSerial) -> None:
                             hostname,
                             tty.normal,
                             stream=sys.stderr)
-            host_check = _dump_precompiled_hostcheck(config_cache, hostname)
+            host_check = _dump_precompiled_hostcheck(config_cache, serial, hostname)
             if host_check is None:
                 console.verbose("(no Checkmk checks)\n")
                 continue
 
-            host_check_store.write(hostname, host_check)
+            host_check_store.write(serial, hostname, host_check)
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise
@@ -983,6 +974,7 @@ def _precompile_hostchecks(serial: ConfigSerial) -> None:
 
 
 def _dump_precompiled_hostcheck(config_cache: ConfigCache,
+                                serial: ConfigSerial,
                                 hostname: HostName,
                                 *,
                                 verify_site_python=True) -> Optional[str]:
@@ -1025,8 +1017,8 @@ if os.path.islink(%(dst)r):
     os.chmod(%(dst)r, 0o755)
 
 """ % {
-                "src": str(HostCheckStore.host_check_source_file_path(hostname)),
-                "dst": str(HostCheckStore.host_check_file_path(hostname)),
+                "src": str(HostCheckStore.host_check_source_file_path(serial, hostname)),
+                "dst": str(HostCheckStore.host_check_file_path(serial, hostname)),
             })
 
     # Remove precompiled directory from sys.path. Leaving it in the path

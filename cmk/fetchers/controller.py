@@ -52,37 +52,46 @@ def cmc_log_level_from_python(log_level: int) -> CmcLogLevel:
 #
 
 
+class PayloadType(enum.Enum):
+    ERROR = enum.auto()
+    AGENT = enum.auto()
+    SNMP = enum.auto()
+
+
 class FetcherHeader:
     """Header is fixed size bytes in format:
 
-    <FETCHER_TYPE><STATUS><PAYLOAD_SIZE>
+    <FETCHER_TYPE><PAYLOAD_TYPE><STATUS><PAYLOAD_SIZE>
 
     This is an application layer protocol used to transmit data
     from the fetcher to the checker.
 
     """
-    fmt = "!HHI"
+    fmt = "!HHHI"
     length = struct.calcsize(fmt)
 
     def __init__(
         self,
-        type_: FetcherType,
+        fetcher_type: FetcherType,
+        payload_type: PayloadType,
         *,
         status: int,
         payload_length: int,
     ) -> None:
-        self.type: Final[FetcherType] = type_
+        self.fetcher_type: Final[FetcherType] = fetcher_type
+        self.payload_type: Final[PayloadType] = payload_type
         self.status: Final[int] = status
         self.payload_length: Final[int] = payload_length
 
     @property
     def name(self) -> str:
-        return self.type.name
+        return self.fetcher_type.name
 
     def __repr__(self) -> str:
-        return "%s(%r, %r, %r)" % (
+        return "%s(%r, %r, status=%r, payload_length=%r)" % (
             type(self).__name__,
-            self.type,
+            self.fetcher_type,
+            self.payload_type,
             self.status,
             self.payload_length,
         )
@@ -101,7 +110,8 @@ class FetcherHeader:
     def __bytes__(self) -> bytes:
         return struct.pack(
             FetcherHeader.fmt,
-            self.type.value,
+            self.fetcher_type.value,
+            self.payload_type.value,
             self.status,
             self.payload_length,
         )
@@ -109,8 +119,16 @@ class FetcherHeader:
     @classmethod
     def from_network(cls, data: bytes) -> 'FetcherHeader':
         try:
-            type_, status, payload_length = struct.unpack(FetcherHeader.fmt, data[:cls.length])
-            return cls(FetcherType(type_), status=status, payload_length=payload_length)
+            fetcher_type, payload_type, status, payload_length = struct.unpack(
+                FetcherHeader.fmt,
+                data[:cls.length],
+            )
+            return cls(
+                FetcherType(fetcher_type),
+                PayloadType(payload_type),
+                status=status,
+                payload_length=payload_length,
+            )
         except struct.error as exc:
             raise ValueError(data) from exc
 
@@ -120,7 +138,7 @@ class FetcherMessage(NamedTuple):
     payload: bytes
 
     def raw_data(self) -> AbstractRawData:
-        if self.header.type is FetcherType.SNMP:
+        if self.header.fetcher_type is FetcherType.SNMP:
             return {SectionName(k): v for k, v in json.loads(self.payload).items()}
         return self.payload
 
@@ -288,14 +306,25 @@ def run_fetcher(entry: Dict[str, Any], mode: Mode, timeout: int) -> bytes:
         else:
             payload = fetcher_data
 
-        fh = FetcherHeader(fetcher_type, status=0, payload_length=len(payload))
+        fh = FetcherHeader(
+            fetcher_type,
+            payload_type=PayloadType.SNMP
+            if fetcher_type is FetcherType.SNMP else PayloadType.AGENT,
+            status=0,
+            payload_length=len(payload),
+        )
         return bytes(fh) + payload
 
     except Exception as e:
         # NOTE. The exception is too broad by design:
         # we need specs for Exception coming from fetchers(and how to process)
         payload = repr(e).encode("utf-8")
-        fh = FetcherHeader(fetcher_type, status=50, payload_length=len(payload))
+        fh = FetcherHeader(
+            fetcher_type,
+            payload_type=PayloadType.ERROR,
+            status=50,
+            payload_length=len(payload),
+        )
         return bytes(fh) + payload
 
 

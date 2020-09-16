@@ -19,6 +19,7 @@ from cmk.fetchers.controller import (
     cmc_log_level_from_python,
     CmcLogLevel,
     FetcherHeader,
+    PayloadType,
     Header,
     make_logging_answer,
     make_payload_answer,
@@ -73,7 +74,7 @@ class TestControllerApi:
         )
         header = FetcherHeader.from_network(message)
         payload = message[len(header):]
-        assert header.type is FetcherType.SNMP
+        assert header.fetcher_type is FetcherType.SNMP
         assert header.status == 50
         assert header.payload_length == len(payload)
         assert payload == b"KeyError('fetcher_params')"
@@ -156,32 +157,41 @@ class TestHeader:
 
 
 class TestFetcherHeader:
-    def test_from_network(self):
-        header = FetcherHeader(FetcherType.TCP, status=1, payload_length=42)
+    @pytest.fixture
+    def header(self):
+        return FetcherHeader(
+            FetcherType.TCP,
+            PayloadType.AGENT,
+            status=42,
+            payload_length=69,
+        )
+
+    def test_from_network(self, header):
         assert FetcherHeader.from_network(bytes(header) + 42 * b"*") == header
 
     def test_from_network_failure(self):
         with pytest.raises(ValueError):
             FetcherHeader.from_network(b"random bytes")
 
-    def test_repr(self):
-        header = FetcherHeader(FetcherType.TCP, status=0, payload_length=42)
+    def test_repr(self, header):
         assert isinstance(repr(header), str)
 
-    def test_hash(self):
-        header = FetcherHeader(FetcherType.TCP, status=0, payload_length=42)
+    def test_hash(self, header):
         assert hash(header) == hash(bytes(header))
 
-    def test_len(self):
-        header = FetcherHeader(FetcherType.TCP, status=0, payload_length=42)
+    def test_len(self, header):
         assert len(header) == len(bytes(header))
         assert len(header) == FetcherHeader.length
 
 
 class TestFetcherHeaderEq:
     @pytest.fixture
-    def type_(self):
+    def fetcher_type(self):
         return FetcherType.NONE
+
+    @pytest.fixture
+    def payload_type(self):
+        return PayloadType.AGENT
 
     @pytest.fixture
     def status(self):
@@ -192,20 +202,42 @@ class TestFetcherHeaderEq:
         return 69
 
     @pytest.fixture
-    def header(self, type_, status, payload_length):
-        return FetcherHeader(type_, status=status, payload_length=payload_length)
+    def header(self, fetcher_type, payload_type, status, payload_length):
+        return FetcherHeader(
+            fetcher_type,
+            payload_type,
+            status=status,
+            payload_length=payload_length,
+        )
 
-    def test_eq(self, header, type_, status, payload_length):
+    def test_eq(self, header, fetcher_type, payload_type, status, payload_length):
         assert header == bytes(header)
         assert bytes(header) == header
         assert bytes(header) == bytes(header)
-        assert header == FetcherHeader(type_, status=status, payload_length=payload_length)
+        assert header == FetcherHeader(
+            fetcher_type,
+            payload_type,
+            status=status,
+            payload_length=payload_length,
+        )
 
-    def test_neq_other_type(self, header):
+    def test_neq_other_payload_type(self, header):
         other = FetcherType.TCP
-        assert other != header.type
+        assert other != header.payload_type
 
         assert header != FetcherHeader(
+            other,
+            payload_type=header.payload_type,
+            status=header.status,
+            payload_length=header.payload_length,
+        )
+
+    def test_neq_other_result_type(self, header):
+        other = PayloadType.ERROR
+        assert other != header.payload_type
+
+        assert header != FetcherHeader(
+            header.fetcher_type,
             other,
             status=header.status,
             payload_length=header.payload_length,
@@ -216,7 +248,8 @@ class TestFetcherHeaderEq:
         assert other != header.status
 
         assert header != FetcherHeader(
-            header.type,
+            header.fetcher_type,
+            header.payload_type,
             status=other,
             payload_length=header.payload_length,
         )
@@ -226,7 +259,8 @@ class TestFetcherHeaderEq:
         assert other != header.payload_length
 
         assert header != FetcherHeader(
-            header.type,
+            header.fetcher_type,
+            header.payload_type,
             status=header.status,
             payload_length=other,
         )

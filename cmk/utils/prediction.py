@@ -8,7 +8,7 @@ import json
 import logging
 import os
 import time
-from typing import Dict, Callable, List, Optional, Tuple
+from typing import Dict, Callable, List, Optional, Tuple, Iterator
 
 from six import ensure_str
 
@@ -176,6 +176,9 @@ class TimeSeries:
 
     def __len__(self) -> int:
         return len(self.values)
+
+    def __iter__(self) -> Iterator[TimeSeriesValue]:
+        yield from self.values
 
 
 def lq_logic(filter_condition: str, values: List[str], join: str) -> str:

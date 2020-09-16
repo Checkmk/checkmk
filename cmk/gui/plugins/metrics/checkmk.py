@@ -98,6 +98,18 @@ metric_info["helper_usage_cmk"] = {
     "color": "15/a",
 }
 
+metric_info["helper_usage_fetcher"] = {
+    "title": _("Fetcher helper usage"),
+    "unit": "%",
+    "color": "15/a",
+}
+
+metric_info["helper_usage_checker"] = {
+    "title": _("Checker helper usage"),
+    "unit": "%",
+    "color": "15/a",
+}
+
 metric_info["helper_usage_generic"] = {
     "title": _("Generic helper usage"),
     "unit": "%",
@@ -293,6 +305,16 @@ graph_info["livestatus_usage"] = {
 
 graph_info["helper_usage_cmk"] = {
     "metrics": [("helper_usage_cmk", "area"),],
+    "range": (0, 100),
+}
+
+graph_info["helper_usage_fetcher"] = {
+    "metrics": [("helper_usage_fetcher", "area"),],
+    "range": (0, 100),
+}
+
+graph_info["helper_usage_checker"] = {
+    "metrics": [("helper_usage_checker", "area"),],
     "range": (0, 100),
 }
 

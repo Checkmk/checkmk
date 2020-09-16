@@ -6069,6 +6069,8 @@ def test_registered_display_hints():
     '.software.applications.check_mk.sites:*.npcd',
     '.software.applications.check_mk.sites:*.check_helper_usage',
     '.software.applications.check_mk.sites:*.check_mk_helper_usage',
+    '.software.applications.check_mk.sites:*.fetcher_helper_usage',
+    '.software.applications.check_mk.sites:*.checker_helper_usage',
     '.software.applications.check_mk.sites:*.livestatus_usage',
     '.software.applications.check_mk.sites:*.num_hosts',
     '.software.applications.check_mk.sites:*.num_services',

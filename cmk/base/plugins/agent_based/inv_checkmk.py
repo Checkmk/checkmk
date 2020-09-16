@@ -50,6 +50,8 @@ def merge_sections(section_livestatus_status: Dict[str, Any], section_omd_status
         # Quick workaround for enabled checker/fetcher mode. Will soon be replaced once the
         # livestatus status table has been updated.
         helper_usage_cmk = float(status['helper_usage_cmk'] or "0") * 100
+        helper_usage_fetcher = float(status['helper_usage_fetcher'] or "0") * 100
+        helper_usage_checker = float(status['helper_usage_checker'] or "0") * 100
 
         helper_usage_generic = float(status['helper_usage_generic']) * 100
         livestatus_usage = float(status['livestatus_usage']) * 100
@@ -62,6 +64,8 @@ def merge_sections(section_livestatus_status: Dict[str, Any], section_omd_status
             'num_services': status['num_services'],
             'check_helper_usage': ("%.2f%%" % helper_usage_generic),
             'check_mk_helper_usage': ("%.2f%%" % helper_usage_cmk),
+            'fetcher_helper_usage': ("%.2f%%" % helper_usage_fetcher),
+            'checker_helper_usage': ("%.2f%%" % helper_usage_checker),
             'livestatus_usage': ("%.2f%%" % livestatus_usage),
         }
 

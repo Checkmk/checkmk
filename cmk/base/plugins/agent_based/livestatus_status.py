@@ -51,6 +51,8 @@ livestatus_status_default_levels = {
     "average_latency_cmk": (30, 60),
     "helper_usage_generic": (60.0, 90.0),
     "helper_usage_cmk": (60.0, 90.0),
+    "helper_usage_fetcher": (40.0, 80.0),
+    "helper_usage_checker": (40.0, 80.0),
     "livestatus_usage": (80.0, 90.0),
     "livestatus_overflows_rate": (0.01, 0.02),
 }
@@ -150,13 +152,11 @@ def check_livestatus_status(item: str, params: Parameters, section_livestatus_st
             (1, lambda x: "%.3fs" % x, "average_latency_cmk", "Average Checkmk latency"),
             (100, render.percent, "helper_usage_generic", "Check helper usage"),
             (100, render.percent, "helper_usage_cmk", "Checkmk helper usage"),
+            (100, render.percent, "helper_usage_fetcher", "Fetcher helper usage"),
+            (100, render.percent, "helper_usage_checker", "Checker helper usage"),
             (100, render.percent, "livestatus_usage", "Livestatus usage"),
             (1, lambda x: "%.1f/s" % x, "livestatus_overflows_rate", "Livestatus overflow rate"),
         ]:
-            if key == "helper_usage_cmk" and status[key] == "":
-                # Quick workaround for enabled checker/fetcher mode. Will soon be replaced once
-                # the livestatus status table has been updated.
-                continue
 
             value = factor * float(status[key])
             yield from check_levels(value=value,

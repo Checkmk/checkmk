@@ -133,6 +133,8 @@ program_start num_hosts num_services'
                 'num_hosts': 1,
                 'num_services': 36,
                 'helper_usage_cmk': 0.00151953,
+                'helper_usage_fetcher': 0.00151953,
+                'helper_usage_checker': 0.00151953,
                 'helper_usage_generic': 0.00151953,
                 'average_latency_cmk': 0.0846039,
                 'average_latency_generic': 0.0846039,

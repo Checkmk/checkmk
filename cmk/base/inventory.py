@@ -341,7 +341,10 @@ def _do_inv_for_realhost(
                 # TODO(ml): This modifies the SNMP fetcher config dynamically.
                 #           Can the fetcher handle that on its own?
                 source.prefetched_sections = host_sections.sections
-                assert source.mode is Mode.INVENTORY
+
+                # When executing the structured status inventory, we are in the Mode.CHECKING
+                assert source.mode is Mode.INVENTORY or source.mode is Mode.CHECKING
+
                 host_section = source.parse(source.fetch())
                 results.append((source, host_section))
                 if host_section.is_ok():

@@ -99,14 +99,13 @@ def check_mem_used(params: Mapping, section: Dict[str, int]) -> CheckGenerator:
 
     totalused, totalused_descr = _get_total_usage(ramused, swapused, pagetables)
 
-    result = next(  # pylint: disable=stop-iteration-return  # this won't raise.
-        memory.check_element(
-            totalused_descr,
-            totalused.bytes,
-            memtotal.bytes,
-            ("ignore", (None, None)),
-            label_total="RAM" if totalused_descr != "RAM" else "",
-        ))
+    result, *_ = memory.check_element(
+        totalused_descr,
+        totalused.bytes,
+        memtotal.bytes,
+        ("ignore", (None, None)),
+        label_total="RAM" if totalused_descr != "RAM" else "",
+    )
     assert isinstance(result, Result)
     infotext = result.summary
 

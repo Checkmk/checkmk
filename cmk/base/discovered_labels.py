@@ -123,14 +123,7 @@ class ABCLabel:
 
 
 class ServiceLabel(ABCLabel):
-    # This docstring is exposed by the agent_based API!
-    """Representing a service label in Checkmk
-
-    This class creates a service label that can be passed to a 'Service' object.
-    It can be used in the discovery function to create a new label like this:
-
-    my_label = ServiceLabel(u"my_label_key", u"my_value")
-    """
+    pass
 
 
 class HostLabel(ABCLabel):

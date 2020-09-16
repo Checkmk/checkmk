@@ -4,20 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable, List, Optional
+from typing import List, Optional
 from cmk.base.api.agent_based.checking_classes import (
+    CheckResult,
     IgnoreResultsError,
     Metric,
     Result,
     state,
 )
-from cmk.base.api.agent_based.type_defs import ABCCheckGenerated
 from cmk.base.check_api_utils import state_markers
 
 
 def aggregate_node_details(
     node_name: str,
-    node_check_returns: Iterable[ABCCheckGenerated],
+    node_check_returns: CheckResult,
 ) -> Optional[Result]:
     """Aggregate the results of a node check into a single Result
 

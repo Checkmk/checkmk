@@ -13,7 +13,8 @@ from pathlib import Path
 from cmk.utils.type_defs import CheckPluginName, InventoryPluginName, ParsedSectionName, SectionName
 from cmk.utils.paths import agent_based_plugins_dir
 
-from cmk.base.api.agent_based.type_defs import CheckPlugin, SectionPlugin
+from cmk.base.api.agent_based.checking_classes import CheckPlugin
+from cmk.base.api.agent_based.type_defs import SectionPlugin
 
 ITEM_VARIABLE = "%s"
 

@@ -21,7 +21,8 @@ from cmk.base.api.agent_based.checking_classes import (
 )
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
 from cmk.base.api.agent_based.register.utils import DUMMY_RULESET_NAME
-from cmk.base.api.agent_based.type_defs import CheckPlugin, Parameters
+from cmk.base.api.agent_based.checking_classes import CheckPlugin
+from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_api_utils import Service as LegacyService
 from cmk.base.check_utils import get_default_parameters
 from cmk.base.discovered_labels import HostLabel, DiscoveredHostLabels
@@ -83,7 +84,7 @@ def _create_discovery_function(
                 )
                 # nasty hack for nasty plugins:
                 # Bypass validation. Item should be None or non-empty string!
-                service._item = element[0]  # pylint: disable=protected-access
+                service = service._replace(item=element[0])
                 yield service
             else:
                 # just let it through. Base must deal with bogus return types anyway.

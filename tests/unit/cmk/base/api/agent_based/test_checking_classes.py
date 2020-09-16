@@ -95,8 +95,6 @@ def test_service_features():
     assert repr(service) == "Service(item=None, parameters={}, labels=[])"
 
     assert service != Service(item="foo")
-    with pytest.raises(TypeError):
-        assert service == "a string"
 
 
 def test_state():
@@ -217,5 +215,3 @@ def test_ignore_results():
     assert str(result2) == "Login to DB failed"
     assert result1 != result2
     assert result2 == IgnoreResults("Login to DB failed")
-    with pytest.raises(TypeError):
-        assert result1 == "a string"

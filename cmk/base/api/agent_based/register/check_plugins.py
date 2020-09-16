@@ -10,13 +10,11 @@ from typing import Any, Callable, Dict, Generator, get_args, List, Optional
 
 from cmk.utils.type_defs import CheckPluginName, RuleSetName
 
-from cmk.base.api.agent_based.type_defs import (
+from cmk.base.api.agent_based.checking_classes import (
     CheckFunction,
     CheckPlugin,
     DiscoveryFunction,
     DiscoveryRuleSetType,
-)
-from cmk.base.api.agent_based.checking_classes import (
     IgnoreResults,
     Metric,
     Result,

@@ -70,7 +70,7 @@ import cmk.base.license_usage as license_usage
 import cmk.base.utils
 from cmk.base.api.agent_based import checking_classes, value_store
 from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
-from cmk.base.api.agent_based.type_defs import CheckGenerator, CheckPlugin, Parameters
+from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_api_utils import MGMT_ONLY as LEGACY_MGMT_ONLY
 from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
 from cmk.base.checkers.host_sections import HostKey, MultiHostSections
@@ -441,7 +441,7 @@ def get_aggregated_result(
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
     service: Service,
-    plugin: Optional[CheckPlugin],
+    plugin: Optional[checking_classes.CheckPlugin],
     params_function: Callable[[], Parameters],
 ) -> Tuple[bool, bool, ServiceCheckResult]:
     """Run the check function and aggregate the subresults
@@ -732,7 +732,7 @@ def _add_state_marker(
     return result_str if state_marker in result_str else result_str + state_marker
 
 
-def _aggregate_results(subresults: CheckGenerator) -> ServiceCheckResult:
+def _aggregate_results(subresults: checking_classes.CheckResult) -> ServiceCheckResult:
 
     perfdata, results = _consume_and_dispatch_result_types(subresults)
     needs_marker = len(results) > 1
@@ -769,7 +769,8 @@ def _aggregate_results(subresults: CheckGenerator) -> ServiceCheckResult:
 
 
 def _consume_and_dispatch_result_types(
-    subresults: CheckGenerator,) -> Tuple[List[MetricTuple], List[checking_classes.Result]]:
+    subresults: checking_classes.CheckResult,
+) -> Tuple[List[MetricTuple], List[checking_classes.Result]]:
     """Consume *all* check results, and *then* raise, if we encountered
     an IgnoreResults instance.
     """
@@ -783,7 +784,6 @@ def _consume_and_dispatch_result_types(
         elif isinstance(subr, checking_classes.Metric):
             perfdata.append((subr.name, subr.value) + subr.levels + subr.boundaries)
         else:
-            assert isinstance(subr, checking_classes.Result)
             results.append(subr)
 
     if ignore_results:

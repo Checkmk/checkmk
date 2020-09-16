@@ -717,15 +717,15 @@ def test_check_single_interface(value_store, item, params, result):
 
 def test_check_single_interface_same_index_descr_alias(value_store):
     item = '07'
-    assert next(
-        interfaces.check_single_interface(
-            item,
-            type_defs.Parameters({}),
-            _create_interfaces(0, index=item, descr=item, alias=item)[0],
-        )) == Result(
-            state=state.OK,
-            summary='Operational state: up',
-        )
+    result, *_ = interfaces.check_single_interface(
+        item,
+        type_defs.Parameters({}),
+        _create_interfaces(0, index=item, descr=item, alias=item)[0],
+    )
+    assert result == Result(
+        state=state.OK,
+        summary='Operational state: up',
+    )
 
 
 @pytest.mark.parametrize('item, params, result', ITEM_PARAMS_RESULTS)

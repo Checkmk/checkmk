@@ -6,20 +6,45 @@
 """Classes used by the API for check plugins
 """
 import enum
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Literal, NamedTuple, Optional, Tuple, Union
 
 from cmk.utils import pnp_cleanup as quote_pnp_string
-from cmk.utils.type_defs import EvalableFloat
-
-from cmk.base.discovered_labels import ServiceLabel
-
-from cmk.base.api.agent_based.type_defs import ABCCheckGenerated, ABCDiscoveryGenerated
+from cmk.utils.type_defs import CheckPluginName, EvalableFloat, ParsedSectionName, RuleSetName
 
 # we may have 0/None for min/max for instance.
 _OptionalPair = Optional[Tuple[Optional[float], Optional[float]]]
 
 
-class Service(ABCDiscoveryGenerated):
+class ServiceLabel(NamedTuple("_ServiceLabelTuple", [("name", str), ("value", str)])):
+    """Representing a service label in Checkmk
+
+    This class creates a service label that can be passed to a 'Service' object.
+    It can be used in the discovery function to create a new label like this:
+
+        >>> my_label = ServiceLabel("my_key", "my_value")
+
+    """
+
+    # A user friendly variant of our ServiceLabel
+    # This is a tiny bit redundant, but it helps decoupling API
+    # code from internal representations.
+    def __init__(self, *_args, **_kwargs):
+        super().__init__()
+        if not isinstance(self.name, str):
+            raise TypeError("Invalid label name given: Only unicode strings are allowed")
+        if not isinstance(self.value, str):
+            raise TypeError("Invalid label value given: Only unicode strings are allowed")
+
+    def __repr__(self):
+        return "%s(%r, %r)" % (self.__class__.__name__, self.name, self.value)
+
+
+class Service(
+        NamedTuple("_ServiceTuple", [
+            ("item", Optional[str]),
+            ("parameters", Dict[str, Any]),
+            ("labels", List[ServiceLabel]),
+        ])):
     """Class representing services that the discover function yields
 
     Args:
@@ -35,54 +60,43 @@ class Service(ABCDiscoveryGenerated):
         )
 
     """
-    def __init__(self,
-                 *,
-                 item: Optional[str] = None,
-                 parameters: Optional[Dict] = None,
-                 labels: Optional[List[ServiceLabel]] = None) -> None:
-        self._item = item
-        self._parameters: Dict[str, Any] = parameters or {}
-        self._labels = labels or []
-
-        self._validate_item(item)
-        self._validate_parameters(parameters)
-        self._validate_labels(labels)
+    def __new__(
+        cls,
+        *,
+        item: Optional[str] = None,
+        parameters: Optional[Dict[str, Any]] = None,
+        labels: Optional[List[ServiceLabel]] = None,
+    ) -> 'Service':
+        return super().__new__(
+            cls,
+            item=cls._parse_item(item),
+            parameters=cls._parse_parameters(parameters),
+            labels=cls._parse_labels(labels),
+        )
 
     @staticmethod
-    def _validate_item(item):
+    def _parse_item(item: Optional[str]) -> Optional[str]:
         if item is None:
-            return
-        if not (item and isinstance(item, str)):
-            raise TypeError("'item' must be non empty string, got %r" % (item,))
+            return None
+        if (item and isinstance(item, str)):
+            return item
+        raise TypeError("'item' must be a non empty string or ommited entirely, got %r" % (item,))
 
     @staticmethod
-    def _validate_parameters(parameters):
+    def _parse_parameters(parameters: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         if parameters is None:
-            return
-        if not isinstance(parameters, dict):
-            raise TypeError("'parameters' must be dict, got %r" % (parameters,))
+            return {}
+        if isinstance(parameters, dict) and all(isinstance(k, str) for k in parameters):
+            return parameters
+        raise TypeError("'parameters' must be dict or None, got %r" % (parameters,))
 
     @staticmethod
-    def _validate_labels(labels):
-        if labels and not (isinstance(labels, list) and
-                           all(isinstance(l, ServiceLabel) for l in labels)):
-            raise TypeError("'labels' must be list of ServiceLabels, got %r" % (labels,))
-
-    @property
-    def item(self) -> Optional[str]:
-        return self._item
-
-    @property
-    def parameters(self) -> Dict[str, Any]:
-        return self._parameters
-
-    @property
-    def labels(self) -> List[ServiceLabel]:
-        return self._labels
-
-    def __repr__(self) -> str:
-        return "%s(item=%r, parameters=%r, labels=%r)" % (self.__class__.__name__, self.item,
-                                                          self.parameters, self._labels)
+    def _parse_labels(labels: Optional[List[ServiceLabel]]) -> List[ServiceLabel]:
+        if not labels:
+            return []
+        if isinstance(labels, list) and all(isinstance(l, ServiceLabel) for l in labels):
+            return labels
+        raise TypeError("'labels' must be list of ServiceLabels or None, got %r" % (labels,))
 
 
 @enum.unique
@@ -95,7 +109,7 @@ class state(enum.Enum):
     CRIT = 2
     UNKNOWN = 3
 
-    def __int__(self):
+    def __int__(self) -> int:
         return int(self.value)
 
     @classmethod
@@ -162,9 +176,36 @@ class state(enum.Enum):
         return cls(max(int(s) for s in args))
 
 
-class Metric(ABCCheckGenerated):
+class Metric(
+        NamedTuple("_MetricTuple", [
+            ("name", str),
+            ("value", EvalableFloat),
+            ("levels", Tuple[Optional[EvalableFloat], Optional[EvalableFloat]]),
+            ("boundaries", Tuple[Optional[EvalableFloat], Optional[EvalableFloat]]),
+        ])):
+    def __new__(
+        cls,
+        name: str,
+        value: float,
+        *,
+        levels: _OptionalPair = None,
+        boundaries: _OptionalPair = None,
+    ) -> 'Metric':
+        cls.validate_name(name)
+
+        if not isinstance(value, (int, float)):
+            raise TypeError("value for metric must be float or int, got %r" % (value,))
+
+        return super().__new__(
+            cls,
+            name=name,
+            value=EvalableFloat(value),
+            levels=cls._sanitize_optionals('levels', levels),
+            boundaries=cls._sanitize_optionals('boundaries', boundaries),
+        )
+
     @staticmethod
-    def validate_name(metric_name):
+    def validate_name(metric_name: str) -> None:
         if not metric_name:
             raise TypeError("metric name must not be empty")
 
@@ -182,8 +223,9 @@ class Metric(ABCCheckGenerated):
             return EvalableFloat(value)
         raise TypeError("%s values for metric must be float, int or None" % field)
 
+    @classmethod
     def _sanitize_optionals(
-        self,
+        cls,
         field: str,
         values: _OptionalPair,
     ) -> Tuple[Optional[EvalableFloat], Optional[EvalableFloat]]:
@@ -191,58 +233,24 @@ class Metric(ABCCheckGenerated):
             return None, None
 
         if not isinstance(values, tuple) or len(values) != 2:
-            raise TypeError("%r for metric must be a 2-tuple" % field)
+            raise TypeError("%r for metric must be a 2-tuple or None" % field)
 
         return (
-            self._sanitize_single_value(field, values[0]),
-            self._sanitize_single_value(field, values[1]),
+            cls._sanitize_single_value(field, values[0]),
+            cls._sanitize_single_value(field, values[1]),
         )
-
-    def __init__(
-        self,
-        name: str,
-        value: float,
-        *,
-        levels: _OptionalPair = None,
-        boundaries: _OptionalPair = None,
-    ) -> None:
-        self.validate_name(name)
-
-        if not isinstance(value, (int, float)):
-            raise TypeError("value for metric must be float or int, got %r" % (value,))
-
-        self._name = name
-        self._value = EvalableFloat(value)
-        self._levels = self._sanitize_optionals('levels', levels)
-        self._boundaries = self._sanitize_optionals('boundaries', boundaries)
-
-    @property
-    def name(self) -> str:
-        return self._name
-
-    @property
-    def value(self) -> EvalableFloat:
-        return self._value
-
-    @property
-    def levels(self) -> Tuple[Optional[EvalableFloat], Optional[EvalableFloat]]:
-        return self._levels
-
-    @property
-    def boundaries(self) -> Tuple[Optional[EvalableFloat], Optional[EvalableFloat]]:
-        return self._boundaries
 
     def __repr__(self):
         return "%s(%r, %r, levels=%r, boundaries=%r)" % (self.__class__.__name__, self.name,
                                                          self.value, self.levels, self.boundaries)
 
 
-class Result(ABCCheckGenerated,
-             NamedTuple("ResultTuple", [
-                 ("state", state),
-                 ("summary", str),
-                 ("details", str),
-             ])):
+class Result(
+        NamedTuple("_ResultTuple", [
+            ("state", state),
+            ("summary", str),
+            ("details", str),
+        ]),):
 
     _state_class = state  # avoid shadowing by keyword called "state"
 
@@ -299,7 +307,7 @@ class IgnoreResultsError(RuntimeError):
     pass
 
 
-class IgnoreResults(ABCCheckGenerated):
+class IgnoreResults:
     def __init__(self, value: str = "currently no results") -> None:
         self._value = value
 
@@ -308,3 +316,31 @@ class IgnoreResults(ABCCheckGenerated):
 
     def __str__(self) -> str:
         return self._value if isinstance(self._value, str) else repr(self._value)
+
+    def __eq__(self, other) -> bool:
+        return other.__class__ == self.__class__ and self._value == other._value
+
+
+CheckResult = Iterable[Union[IgnoreResults, Metric, Result]]
+CheckFunction = Callable[..., CheckResult]
+DiscoveryResult = Iterable[Service]
+DiscoveryFunction = Callable[..., DiscoveryResult]
+DiscoveryRuleSetType = Literal["merged", "all"]
+
+CheckPlugin = NamedTuple(
+    "CheckPlugin",
+    [
+        ("name", CheckPluginName),
+        ("sections", List[ParsedSectionName]),
+        ("service_name", str),
+        ("discovery_function", DiscoveryFunction),
+        ("discovery_default_parameters", Optional[Dict[str, Any]]),
+        ("discovery_ruleset_name", Optional[RuleSetName]),
+        ("discovery_ruleset_type", DiscoveryRuleSetType),
+        ("check_function", CheckFunction),
+        ("check_default_parameters", Optional[Dict[str, Any]]),
+        ("check_ruleset_name", Optional[RuleSetName]),
+        ("cluster_check_function", CheckFunction),
+        ("module", Optional[str]),  # not available for auto migrated plugins.
+    ],
+)

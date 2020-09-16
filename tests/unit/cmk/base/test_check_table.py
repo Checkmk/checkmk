@@ -23,7 +23,7 @@ import cmk.base.api.agent_based.register as agent_based_register
 
 from cmk.base import config
 from cmk.base import check_table
-from cmk.base.api.agent_based.type_defs import CheckPlugin
+from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.check_utils import Service
 
 

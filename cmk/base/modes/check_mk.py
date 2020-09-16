@@ -58,7 +58,7 @@ import cmk.base.obsolete_output as out
 import cmk.base.packaging
 import cmk.base.parent_scan
 import cmk.base.profiling as profiling
-from cmk.base.api.agent_based.register.check_plugins import CheckPlugin
+from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.core_factory import create_core
 from cmk.base.modes import keepalive_option, Mode, modes, Option
 

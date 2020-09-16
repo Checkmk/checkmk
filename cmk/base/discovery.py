@@ -76,13 +76,18 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.section as section
 import cmk.base.utils
 from cmk.base.api.agent_based import checking_classes
-from cmk.base.api.agent_based.type_defs import DiscoveryGenerator, CheckPlugin, Parameters
+from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.caching import config_cache as _config_cache
 from cmk.base.check_utils import FinalSectionContent, LegacyCheckParameters, Service, ServiceID
 from cmk.base.config import SelectedRawSections
 from cmk.base.core_config import MonitoringCore
 from cmk.base.checkers.host_sections import HostKey, MultiHostSections
-from cmk.base.discovered_labels import DiscoveredHostLabels, DiscoveredServiceLabels, HostLabel
+from cmk.base.discovered_labels import (
+    DiscoveredHostLabels,
+    DiscoveredServiceLabels,
+    HostLabel,
+    ServiceLabel,
+)
 
 # Run the discovery queued by check_discovery() - if any
 _marked_host_discovery_timeout = 120
@@ -1192,7 +1197,7 @@ def _find_candidates(
 
 def _find_host_candidates(
     mhs: MultiHostSections,
-    preliminary_candidates: List[CheckPlugin],
+    preliminary_candidates: List[checking_classes.CheckPlugin],
     parsed_sections_of_interest: Set[ParsedSectionName],
 ) -> Set[CheckPluginName]:
 
@@ -1214,7 +1219,7 @@ def _find_host_candidates(
 
 def _find_mgmt_candidates(
     mhs: MultiHostSections,
-    preliminary_candidates: List[CheckPlugin],
+    preliminary_candidates: List[checking_classes.CheckPlugin],
     parsed_sections_of_interest: Set[ParsedSectionName],
 ) -> Set[CheckPluginName]:
 
@@ -1351,10 +1356,9 @@ def _execute_discovery(
 def _enriched_discovered_services(
     hostname: HostName,
     check_plugin_name: CheckPluginName,
-    plugins_services: DiscoveryGenerator,
+    plugins_services: checking_classes.DiscoveryResult,
 ) -> Generator[Service, None, None]:
     for service in plugins_services:
-        assert isinstance(service, checking_classes.Service)
         description = config.service_description(hostname, check_plugin_name, service.item)
         # make sanity check
         if not description:
@@ -1367,7 +1371,8 @@ def _enriched_discovered_services(
             item=service.item,
             description=description,
             parameters=unwrap_parameters(service.parameters),
-            service_labels=DiscoveredServiceLabels(*service.labels),
+            # Convert from APIs ServiceLabel to internal ServiceLabel
+            service_labels=DiscoveredServiceLabels(*(ServiceLabel(*l) for l in service.labels)),
         )
 
 
@@ -1679,7 +1684,7 @@ def _preview_check_source(
 def _preview_params(
     host_name: HostName,
     service: Service,
-    plugin: Optional[CheckPlugin],
+    plugin: Optional[checking_classes.CheckPlugin],
     check_source: str,
 ) -> Optional[LegacyCheckParameters]:
     params: Optional[LegacyCheckParameters] = None

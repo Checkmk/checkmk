@@ -156,8 +156,8 @@ def test_check_windows_services(item, params, yielded_results):
         "states": [("running", None, 2)]
     }, [
         Result(state=state.CRIT,
-               summary='Windows App Update: pending (start type is unknown)',
-               details='Windows App Update: pending (start type is unknown)'),
+               summary='Windows App Update: running (start type is unknown)',
+               details='Windows App Update: running (start type is unknown)'),
     ]),
     ("non-existant-service", services.WINDOWS_SERVICES_CHECK_DEFAULT_PARAMETERS, [
         Result(state=state.CRIT, summary='service not found', details='service not found'),

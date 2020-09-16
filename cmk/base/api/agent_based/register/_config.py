@@ -12,14 +12,14 @@ from cmk.utils.type_defs import (
     CheckPluginName,
     InventoryPluginName,
     ParsedSectionName,
+    RuleSetName,
     SectionName,
 )
 
+from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
 from cmk.base.api.agent_based.type_defs import (
     AgentSectionPlugin,
-    CheckPlugin,
-    RuleSetName,
     SectionPlugin,
     SNMPSectionPlugin,
 )

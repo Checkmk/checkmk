@@ -8,6 +8,8 @@
 
 import inspect
 
+from typing import List
+
 from cmk.utils.type_defs import ParsedSectionName, CheckPluginName, RuleSetName
 
 import cmk.base.api.agent_based.checking_classes as checking_classes
@@ -63,12 +65,13 @@ def test_create_discovery_function(monkeypatch):
     assert inspect.isgeneratorfunction(new_function)
 
     result = list(new_function(["info"]))
-    assert result == [
+    expected: List = [
         checking_classes.Service(item="foo"),
         checking_classes.Service(item="foo", parameters={"levels": "default"}),
         "some string",  # bogus value let through intentionally
         checking_classes.Service(item="bar", parameters={"P": "O"}),
     ]
+    assert result == expected
 
 
 def test_create_check_function():

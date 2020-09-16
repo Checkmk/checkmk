@@ -27,10 +27,13 @@ Example:
 """
 
 from cmk.base.api.agent_based.inventory_classes import InventoryResult
+from cmk.base.api.agent_based.checking_classes import (
+    # TODO (mo) rename these!
+    CheckResult as CheckGenerator,
+    DiscoveryResult as DiscoveryGenerator,
+)
 from cmk.base.api.agent_based.type_defs import (
     AgentStringTable,
-    CheckGenerator,
-    DiscoveryGenerator,
     HostLabelGenerator,
     Parameters,
     SNMPStringByteTable,

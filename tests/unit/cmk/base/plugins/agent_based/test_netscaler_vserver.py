@@ -74,15 +74,15 @@ def test_check_netscaler_vservers_clustered_worst(clustered_vservers):
         1,
         "transition to out of service",
     )
-    assert next(
-        _check_netscaler_vservers(
-            Parameters({
-                "health_levels": (100.0, 0.1),
-                "cluster_status": "worst",
-            }),
-            clustered_vservers,
-        )) == Result(
-            state=state.WARN,
-            summary='Status: transition to out of service (node1)',
-            details='Status: transition to out of service (node1)',
-        )
+    result, *_ = _check_netscaler_vservers(
+        Parameters({
+            "health_levels": (100.0, 0.1),
+            "cluster_status": "worst",
+        }),
+        clustered_vservers,
+    )
+    assert result == Result(
+        state=state.WARN,
+        summary='Status: transition to out of service (node1)',
+        details='Status: transition to out of service (node1)',
+    )

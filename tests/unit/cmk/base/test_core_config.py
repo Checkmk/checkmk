@@ -199,3 +199,9 @@ class TestHelperConfig:
 
         assert store.serial_path.exists()
         assert store.latest_path.resolve().name == prev_serial
+
+
+def test_new_helper_config_serial():
+    assert core_config.new_helper_config_serial() == ConfigSerial("1")
+    assert core_config.new_helper_config_serial() == ConfigSerial("2")
+    assert core_config.new_helper_config_serial() == ConfigSerial("3")

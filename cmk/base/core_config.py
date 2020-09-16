@@ -18,6 +18,7 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
 import cmk.utils.password_store
+import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
@@ -74,9 +75,21 @@ class HelperConfig:
         self.latest_path.symlink_to(self.serial_path.name)
 
 
-def current_core_config_serial() -> ConfigSerial:
-    # TODO: Needs to be changed (increased?) on every invokation
-    return ConfigSerial(str(13))
+def new_helper_config_serial() -> ConfigSerial:
+    """Acquire and return the next helper config serial
+
+    This ID is used to identify a core helper configuration generation. It is used to store the
+    helper config on the file system below var/check_mk/core/helper_config/[serial]. It needs to
+    be unique compared to all currently known serials (the ones that exist in the directory
+    mentioned above).
+    """
+    serial_file = cmk.utils.paths.core_helper_config_dir / "serial.mk"
+
+    serial: int = store.load_object_from_file(serial_file, default=0, lock=True)
+    serial += 1
+
+    store.save_object_to_file(serial_file, serial)
+    return ConfigSerial(str(serial))
 
 
 class MonitoringCore(metaclass=abc.ABCMeta):
@@ -346,7 +359,7 @@ def _create_core_config(core: MonitoringCore) -> ConfigurationWarnings:
     _verify_non_deprecated_checkgroups()
 
     with HelperConfig(
-            current_core_config_serial()).create() as helper_config, _backup_objects_file(core):
+            new_helper_config_serial()).create() as helper_config, _backup_objects_file(core):
         core.create_config(helper_config.serial)
 
     cmk.utils.password_store.save(config.stored_passwords)

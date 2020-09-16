@@ -63,14 +63,20 @@ class TestControllerApi:
             "_serial_")) == core_helper_config_dir / "_serial_" / "fetchers" / "global_config.json"
 
     def test_run_fetcher_with_failure(self):
-        assert run_fetcher(
+        message = run_fetcher(
             {
                 "fetcher_type": "SNMP",
                 "trash": 1
             },
             Mode.CHECKING,
             13,
-        ) == b"SNMP           :50     :26     :KeyError('fetcher_params')"
+        )
+        header = FetcherHeader.from_network(message)
+        payload = message[len(header):]
+        assert header.type is FetcherType.SNMP
+        assert header.status == 50
+        assert header.payload_length == len(payload)
+        assert payload == b"KeyError('fetcher_params')"
 
     def test_run_fetcher_with_exception(self):
         with pytest.raises(RuntimeError):
@@ -156,7 +162,7 @@ class TestFetcherHeader:
 
     def test_from_network_failure(self):
         with pytest.raises(ValueError):
-            FetcherHeader.from_network(b"ABC:42:69:fritz the cat")
+            FetcherHeader.from_network(b"random bytes")
 
     def test_repr(self):
         header = FetcherHeader(FetcherType.TCP, status=0, payload_length=42)
@@ -169,9 +175,7 @@ class TestFetcherHeader:
     def test_len(self):
         header = FetcherHeader(FetcherType.TCP, status=0, payload_length=42)
         assert len(header) == len(bytes(header))
-
-    def test_critical_constants(self):
-        assert FetcherHeader.length == 32
+        assert len(header) == FetcherHeader.length
 
 
 class TestFetcherHeaderEq:

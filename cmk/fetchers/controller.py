@@ -10,6 +10,7 @@
 import enum
 import json
 import os
+import struct
 import logging
 from pathlib import Path
 from typing import Any, Dict, Final, Union, NamedTuple
@@ -52,22 +53,16 @@ def cmc_log_level_from_python(log_level: int) -> CmcLogLevel:
 
 
 class FetcherHeader:
-    """Header is fixed size(16+8+8 = 32 bytes) bytes in format
+    """Header is fixed size bytes in format:
 
-      header: <NAME>:<STATUS>:<SIZE>:
-      NAME   - fetcher name, for example TCP
-      STATUS - error code. ) or 50 or ...
-      SIZE   - 8 bytes 0..9
+    <FETCHER_TYPE><STATUS><PAYLOAD_SIZE>
 
-    Example:
-        "TCP        :0       :12345678:"
-
-    This is second(application) layer protocol and used to transmit results
+    This is an application layer protocol used to transmit data
     from the fetcher to the checker.
-    Header.payload must be encoded with this protocol
+
     """
-    fmt = "{:<15}:{:<7}:{:<7}:"
-    length = 32
+    fmt = "!HHI"
+    length = struct.calcsize(fmt)
 
     def __init__(
         self,
@@ -103,25 +98,20 @@ class FetcherHeader:
     def __len__(self) -> int:
         return FetcherHeader.length
 
-    # E0308: false positive, see https://github.com/PyCQA/pylint/issues/3599
-    def __bytes__(self) -> bytes:  # pylint: disable=E0308
-        return FetcherHeader.fmt.format(
-            self.name[:15],
+    def __bytes__(self) -> bytes:
+        return struct.pack(
+            FetcherHeader.fmt,
+            self.type.value,
             self.status,
             self.payload_length,
-        ).encode("ascii")
+        )
 
     @classmethod
     def from_network(cls, data: bytes) -> 'FetcherHeader':
         try:
-            # to simplify parsing we are using ':' as a splitter
-            type_, status, payload_length = data[:FetcherHeader.length].split(b":")[:3]
-            return cls(
-                FetcherType[type_.decode("ascii").strip()],
-                status=int(status.decode("ascii"), base=10),
-                payload_length=int(payload_length.decode("ascii"), base=10),
-            )
-        except (ValueError, KeyError) as exc:
+            type_, status, payload_length = struct.unpack(FetcherHeader.fmt, data[:cls.length])
+            return cls(FetcherType(type_), status=status, payload_length=payload_length)
+        except struct.error as exc:
             raise ValueError(data) from exc
 
 

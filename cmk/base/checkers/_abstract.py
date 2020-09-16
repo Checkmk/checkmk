@@ -8,7 +8,7 @@ import abc
 import logging
 import sys
 from pathlib import Path
-from typing import Any, cast, Dict, Final, Generic, Optional, TypeVar, Union
+from typing import Any, Dict, Final, Generic, Optional, TypeVar, Union
 
 import cmk.utils
 import cmk.utils.debug
@@ -444,14 +444,12 @@ class ABCSummarizer(Generic[THostSections], metaclass=abc.ABCMeta):
 
     def _extract_status(self, exc: Exception) -> int:
         if isinstance(exc, MKEmptyAgentData):
-            status = self.exit_spec.get("empty_output", 2)
-        elif isinstance(exc, (MKAgentError, MKIPAddressLookupError, MKSNMPError)):
-            status = self.exit_spec.get("connection", 2)
-        elif isinstance(exc, MKTimeout):
-            status = self.exit_spec.get("timeout", 2)
-        else:
-            status = self.exit_spec.get("exception", 3)
-        return cast(int, status)
+            return self.exit_spec.get("empty_output", 2)
+        if isinstance(exc, (MKAgentError, MKIPAddressLookupError, MKSNMPError)):
+            return self.exit_spec.get("connection", 2)
+        if isinstance(exc, MKTimeout):
+            return self.exit_spec.get("timeout", 2)
+        return self.exit_spec.get("exception", 3)
 
     @abc.abstractmethod
     def _summarize(self, host_sections: THostSections) -> ServiceCheckResult:

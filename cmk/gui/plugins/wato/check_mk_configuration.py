@@ -4726,11 +4726,11 @@ def _valuespec_check_mk_exit_status():
                              ListOf(
                                  Tuple(elements=[
                                      RegExpUnicode(help=_(
-                                         'Beside of setting the generic "Missing sections" state '
-                                         'above you can specify a regex pattern to match specific '
-                                         'check plugins and give them an individual state in case '
-                                         'they receive no monitoring data. Note that the first '
-                                         'match is used.'),
+                                         'In addition to setting the generic "Missing monitoring '
+                                         'data" state above you can specify a regex pattern to '
+                                         'match specific check plugins and give them an individual '
+                                         'state in case they receive no monitoring data. Note that '
+                                         'the first match is used.'),
                                                    mode=RegExpUnicode.prefix),
                                      MonitoringState(),
                                  ],

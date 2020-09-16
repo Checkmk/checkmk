@@ -202,7 +202,7 @@ class AgentSummarizerDefault(AgentSummarizer):
 
         if config.agent_min_version and cast(int, agent_version) < config.agent_min_version:
             # TODO: This branch seems to be wrong. Or: In which case is agent_version numeric?
-            status = cast(int, self.exit_spec.get("wrong_version", 1))
+            status = self.exit_spec.get("wrong_version", 1)
             return (status, "old plugin version %s (should be at least %s)%s" %
                     (agent_version, config.agent_min_version, state_markers[status]), [])
 

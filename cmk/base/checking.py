@@ -274,12 +274,10 @@ def _check_plugins_missing_data(
     some_success: bool,
 ) -> Tuple[ServiceState, ServiceDetails]:
     if not some_success:
-        return (cast(int, exit_spec.get("empty_output", 2)), "Got no information from host")
+        return exit_spec.get("empty_output", 2), "Got no information from host"
 
-    specific_plugins_missing_data_spec = cast(
-        List[config.ExitSpecSection],
-        exit_spec.get("specific_missing_sections", []),
-    )
+    # key is a legacy name, kept for compatibility.
+    specific_plugins_missing_data_spec = exit_spec.get("specific_missing_sections", [])
 
     specific_plugins, generic_plugins = set(), set()
     for check_plugin_name in plugins_missing_data:
@@ -291,7 +289,8 @@ def _check_plugins_missing_data(
         else:  # no break
             generic_plugins.add(str(check_plugin_name))
 
-    generic_plugins_status = cast(int, exit_spec.get("missing_sections", 1))
+    # key is a legacy name, kept for compatibility.
+    generic_plugins_status = exit_spec.get("missing_sections", 1)
     infotexts = [
         "Missing monitoring data for check plugins: %s%s" % (
             ", ".join(sorted(generic_plugins)),

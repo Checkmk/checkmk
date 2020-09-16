@@ -32,6 +32,7 @@ from typing import (
     Sequence,
     Set,
     Tuple,
+    TypedDict,
     Union,
     Final,
 )
@@ -122,8 +123,6 @@ host_service_levels = []
 AllHosts = List[str]
 ShadowHosts = Dict[str, Dict]
 AllClusters = Dict[str, List[HostName]]
-ExitSpecSection = Tuple[str, int]
-ExitSpec = Dict[str, Union[int, List[ExitSpecSection]]]
 AgentTargetVersion = Union[None, str, Tuple[str, str], Tuple[str, Dict[str, str]]]
 RRDConfig = Dict[str, Any]
 CheckContext = Dict[str, Any]
@@ -151,6 +150,22 @@ CheckInfo = Dict  # TODO: improve this type
 IPMICredentials = Dict[str, str]
 ManagementCredentials = Union[SNMPCredentials, IPMICredentials]
 SelectedRawSections = Dict[SectionName, SectionPlugin]
+
+
+class ExitSpec(TypedDict, total=False):
+    empty_output: int
+    connection: int
+    timeout: int
+    exception: int
+    wrong_version: int
+    missing_sections: int
+    specific_missing_sections: List[Tuple[str, int]]
+    restricted_address_mismatch: int
+
+
+class _NestedExitSpec(ExitSpec, total=False):
+    overall: ExitSpec
+    individual: Dict[str, ExitSpec]
 
 
 class TimespecificParamList(list):
@@ -2960,17 +2975,20 @@ class HostConfig:
                 host_attributes.get(self.hostname, {}).get("additional_ipv6addresses", []))
 
     def exit_code_spec(self, data_source_id: Optional[str] = None) -> ExitSpec:
-        spec: ExitSpec = {}
+        spec: _NestedExitSpec = {}
         # TODO: Can we use host_extra_conf_merged?
         specs = self._config_cache.host_extra_conf(self.hostname, check_mk_exit_status)
         for entry in specs[::-1]:
             spec.update(entry)
 
-        merged_spec = self._merge_with_data_source_exit_code_spec(spec, data_source_id)
+        merged_spec = self._extract_data_source_exit_code_spec(spec, data_source_id)
         return self._merge_with_optional_exit_code_parameters(spec, merged_spec)
 
-    def _merge_with_data_source_exit_code_spec(self, spec: Dict,
-                                               data_source_id: Optional[str]) -> ExitSpec:
+    def _extract_data_source_exit_code_spec(
+        self,
+        spec: _NestedExitSpec,
+        data_source_id: Optional[str],
+    ) -> ExitSpec:
         if data_source_id is not None:
             try:
                 return spec["individual"][data_source_id]
@@ -2985,14 +3003,16 @@ class HostConfig:
         # Old configuration format
         return spec
 
-    def _merge_with_optional_exit_code_parameters(self, spec: Dict,
-                                                  merged_spec: ExitSpec) -> ExitSpec:
+    def _merge_with_optional_exit_code_parameters(
+        self,
+        spec: _NestedExitSpec,
+        merged_spec: ExitSpec,
+    ) -> ExitSpec:
         # Additional optional parameters which are not part of individual
         # or overall parameters
-        for key in ('restricted_address_mismatch',):
-            value = spec.get(key)
-            if value is not None:
-                merged_spec[key] = value
+        value = spec.get('restricted_address_mismatch')
+        if value is not None:
+            merged_spec['restricted_address_mismatch'] = value
         return merged_spec
 
     @property

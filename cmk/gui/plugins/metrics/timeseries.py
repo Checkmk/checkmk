@@ -25,8 +25,8 @@ if cmk_version.is_raw_edition():
         return evaluate_timeseries_transformation(None, None, None)
 else:
     # Suppression is needed to silence pylint in CRE environment
-    from cmk.gui.cee.plugins.metrics.timeseries import evaluate_timeseries_transformation  # pylint: disable=no-name-in-module
-    from cmk.gui.cee.plugins.metrics.graphs import resolve_combined_single_metric_spec  # pylint: disable=no-name-in-module
+    from cmk.gui.cee.plugins.metrics.timeseries import evaluate_timeseries_transformation  # type: ignore[no-redef] # pylint: disable=no-name-in-module
+    from cmk.gui.cee.plugins.metrics.graphs import resolve_combined_single_metric_spec  # type: ignore[no-redef] # pylint: disable=no-name-in-module
 
 #.
 #   .--Curves--------------------------------------------------------------.

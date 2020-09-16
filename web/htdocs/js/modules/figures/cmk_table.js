@@ -10,10 +10,8 @@ export class TableFigure extends cmk_figures.FigureBase {
     }
 
     initialize(debug) {
+        cmk_figures.FigureBase.prototype.initialize.call(this, debug);
         this._table = this._div_selection.append("table");
-
-        if (debug)
-            this._add_scheduler_debugging();
     }
 
     // Data format

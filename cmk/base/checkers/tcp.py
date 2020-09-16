@@ -9,7 +9,7 @@ from typing import Optional
 
 from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
-from cmk.fetchers import FetcherType
+from cmk.fetchers import FetcherType, TCPFetcher
 from cmk.fetchers.agent import DefaultAgentFileCache
 
 import cmk.base.config as config
@@ -51,15 +51,15 @@ class TCPSource(AgentSource):
             max_age=self.file_cache_max_age,
         ).make()
 
-    def configure_fetcher(self):
-        return {
-            "file_cache": self._make_file_cache().to_json(),
-            "family": socket.AF_INET6 if self.host_config.is_ipv6_primary else socket.AF_INET,
-            "address": (self.ipaddress, self.port or self.host_config.agent_port),
-            "timeout": self.timeout or self.host_config.tcp_connect_timeout,
-            "encryption_settings": self.host_config.agent_encryption,
-            "use_only_cache": self.use_only_cache,
-        }
+    def _make_fetcher(self) -> TCPFetcher:
+        return TCPFetcher(
+            self._make_file_cache(),
+            family=socket.AF_INET6 if self.host_config.is_ipv6_primary else socket.AF_INET,
+            address=(self.ipaddress, self.port or self.host_config.agent_port),
+            timeout=self.timeout or self.host_config.tcp_connect_timeout,
+            encryption_settings=self.host_config.agent_encryption,
+            use_only_cache=self.use_only_cache,
+        )
 
     def _make_summarizer(self) -> AgentSummarizerDefault:
         return AgentSummarizerDefault(self.exit_spec, self)

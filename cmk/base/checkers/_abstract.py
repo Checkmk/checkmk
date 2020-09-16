@@ -8,7 +8,7 @@ import abc
 import logging
 import sys
 from pathlib import Path
-from typing import Any, Dict, final, Final, Generic, Optional, TypeVar, Union
+from typing import final, Final, Generic, Optional, TypeVar, Union
 
 import cmk.utils
 import cmk.utils.debug
@@ -29,7 +29,8 @@ from cmk.utils.type_defs import (
 
 from cmk.snmplib.type_defs import TRawData
 
-from cmk.fetchers import ABCFetcher, ABCFileCache, FetcherType
+from cmk.fetchers import ABCFetcher, ABCFileCache
+from cmk.fetchers.controller import FetcherType
 from cmk.fetchers.type_defs import Mode
 
 import cmk.base.check_api_utils as check_api_utils
@@ -237,6 +238,8 @@ def set_cache_opts(use_caches: bool) -> None:
 
 
 class FileCacheFactory(Generic[TRawData], abc.ABC):
+    """Factory / configuration to FileCache."""
+
     # TODO: Clean these options up! We need to change all call sites to use
     #       a single Checkers() object during processing first. Then we
     #       can change these class attributes to object attributes.
@@ -284,8 +287,6 @@ class ABCSource(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
 
     At best, this should only hold static data, that is, every
     attribute is final.
-
-    Dump the JSON configuration from `configure_fetcher()`.
 
     """
     use_outdated_persisted_sections: bool = False
@@ -341,6 +342,10 @@ class ABCSource(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
             self.id,
         )
 
+    @property
+    def fetcher_configuration(self):
+        return self._make_fetcher().to_json()
+
     @final
     def fetch(self) -> Result[TRawData, Exception]:
         with self._make_fetcher() as fetcher:
@@ -371,22 +376,13 @@ class ABCSource(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         return self._make_summarizer().summarize(host_sections)
 
     @abc.abstractmethod
-    def configure_fetcher(self) -> Dict[str, Any]:
-        """Return a fetcher configuration suitable to create a fetcher.
-
-        See Also:
-            FetcherType: A fetcher factory.
-
-        """
-        raise NotImplementedError
-
-    @abc.abstractmethod
     def _make_file_cache(self) -> ABCFileCache[TRawData]:
         raise NotImplementedError
 
+    @abc.abstractmethod
     def _make_fetcher(self) -> ABCFetcher:
         """Create a fetcher with this configuration."""
-        return self.fetcher_type.from_json(self.configure_fetcher())
+        raise NotImplementedError
 
     @abc.abstractmethod
     def _make_parser(self) -> "ABCParser[TRawData, THostSections]":

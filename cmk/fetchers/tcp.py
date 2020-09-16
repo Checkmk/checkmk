@@ -45,12 +45,22 @@ class TCPFetcher(AgentFetcher):
 
     @classmethod
     def from_json(cls, serialized: Dict[str, Any]) -> "TCPFetcher":
-        address: Tuple[Optional[HostAddress], int] = serialized.pop("address")
+        address: Tuple[HostAddress, int] = serialized.pop("address")
         return cls(
             DefaultAgentFileCache.from_json(serialized.pop("file_cache")),
             address=address,
             **serialized,
         )
+
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            "file_cache": self.file_cache.to_json(),
+            "family": self.family,
+            "address": self.address,
+            "timeout": self.timeout,
+            "encryption_settings": self.encryption_settings,
+            "use_only_cache": self.use_only_cache,
+        }
 
     def __enter__(self) -> 'TCPFetcher':
         self._logger.debug(

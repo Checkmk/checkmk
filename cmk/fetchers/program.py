@@ -43,6 +43,14 @@ class ProgramFetcher(AgentFetcher):
             **serialized,
         )
 
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            "file_cache": self.file_cache.to_json(),
+            "cmdline": self.cmdline,
+            "stdin": self.stdin,
+            "is_cmc": self.is_cmc,
+        }
+
     def __enter__(self) -> 'ProgramFetcher':
         self._logger.debug("Calling: %s", self.cmdline)
         if self.stdin:

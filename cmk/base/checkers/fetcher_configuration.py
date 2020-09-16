@@ -34,7 +34,7 @@ def _make(
     return {
         "fetchers": [{
             "fetcher_type": c.fetcher_type.name,
-            "fetcher_params": c.configure_fetcher(),
+            "fetcher_params": c.fetcher_configuration,
         } for c in make_sources(
             config.HostConfig.make_host_config(hostname),
             ipaddress,

@@ -38,6 +38,14 @@ class PiggybackFetcher(AgentFetcher):
             **serialized,
         )
 
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            "file_cache": self.file_cache.to_json(),
+            "hostname": self.hostname,
+            "address": self.address,
+            "time_settings": self.time_settings,
+        }
+
     def __enter__(self) -> 'PiggybackFetcher':
         for origin in (self.hostname, self.address):
             self._sources.extend(PiggybackFetcher._raw_data(origin, self.time_settings))

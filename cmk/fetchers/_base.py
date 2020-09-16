@@ -22,7 +22,7 @@ from cmk.snmplib.type_defs import TRawData
 
 from .type_defs import Mode
 
-__all__ = ["ABCFetcher", "MKFetcherError"]
+__all__ = ["ABCFetcher", "ABCFileCache", "MKFetcherError", "verify_ipaddress"]
 
 
 class MKFetcherError(MKException):
@@ -151,13 +151,18 @@ class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
     """Interface to the data fetchers."""
     def __init__(self, file_cache: ABCFileCache, logger: logging.Logger) -> None:
         super().__init__()
-        self.file_cache: ABCFileCache[TRawData] = file_cache
+        self.file_cache: Final[ABCFileCache[TRawData]] = file_cache
         self._logger = logger
 
     @classmethod
     @abc.abstractmethod
     def from_json(cls: Type[TFetcher], serialized: Dict[str, Any]) -> TFetcher:
         """Deserialize from JSON."""
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def to_json(self) -> Dict[str, Any]:
+        """Serialize to JSON."""
         raise NotImplementedError()
 
     @abc.abstractmethod

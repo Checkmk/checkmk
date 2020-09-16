@@ -6,7 +6,7 @@
 
 import time
 from pathlib import Path
-from typing import Any, Dict, Iterable, Optional, Sequence, Tuple
+from typing import Collection, Optional, Sequence, Tuple
 
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
 
@@ -18,7 +18,7 @@ from cmk.snmplib.type_defs import (
     SNMPSections,
 )
 
-from cmk.fetchers import FetcherType
+from cmk.fetchers import FetcherType, SNMPFetcher
 from cmk.fetchers.snmp import SNMPFileCache
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -138,24 +138,6 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
             title="Management board - SNMP",
         )
 
-    def configure_fetcher(self) -> Dict[str, Any]:
-        return {
-            "file_cache": self._make_file_cache().to_json(),
-            "snmp_section_trees": {
-                str(s.name): [tree.to_json() for tree in s.trees
-                             ] for s in agent_based_register.iter_all_snmp_sections()
-            },
-            "snmp_section_detects": [(str(n), d) for n, d in self._make_snmp_section_detects()],
-            "configured_snmp_sections": [str(s) for s in self._make_configured_snmp_sections()],
-            "on_error": self.on_snmp_scan_error,
-            "missing_sys_description": config.get_config_cache().in_binary_hostlist(
-                self.snmp_config.hostname,
-                config.snmp_without_sys_descr,
-            ),
-            "use_snmpwalk_cache": self.use_snmpwalk_cache,
-            "snmp_config": self.snmp_config._asdict(),
-        }
-
     def _make_file_cache(self) -> SNMPFileCache:
         return SNMPFileCacheFactory(
             path=self.file_cache_path,
@@ -163,13 +145,30 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
             max_age=self.file_cache_max_age,
         ).make()
 
+    def _make_fetcher(self) -> SNMPFetcher:
+        return SNMPFetcher(
+            self._make_file_cache(),
+            snmp_section_trees={
+                s.name: s.trees for s in agent_based_register.iter_all_snmp_sections()
+            },
+            snmp_section_detects=self._make_snmp_section_detects(),
+            configured_snmp_sections=self._make_configured_snmp_sections(),
+            on_error=self.on_snmp_scan_error,
+            missing_sys_description=config.get_config_cache().in_binary_hostlist(
+                self.snmp_config.hostname,
+                config.snmp_without_sys_descr,
+            ),
+            use_snmpwalk_cache=self.use_snmpwalk_cache,
+            snmp_config=self.snmp_config,
+        )
+
     def _make_parser(self) -> "SNMPParser":
         return SNMPParser(self.hostname, self.persisted_sections_file_path, self._logger)
 
     def _make_summarizer(self) -> "SNMPSummarizer":
         return SNMPSummarizer(self.exit_spec)
 
-    def _make_snmp_section_detects(self) -> Iterable[Tuple[SectionName, SNMPDetectSpec]]:
+    def _make_snmp_section_detects(self) -> Sequence[Tuple[SectionName, SNMPDetectSpec]]:
         """Create list of all SNMP scan specifications.
 
         Here, we evaluate the rule_dependent_detect_spec-attribute of SNMPSectionPlugin. This
@@ -207,7 +206,7 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
 
         return snmp_scan_sections
 
-    def _make_configured_snmp_sections(self) -> Iterable[SectionName]:
+    def _make_configured_snmp_sections(self) -> Collection[SectionName]:
         section_names = set(
             agent_based_register.get_relevant_raw_sections(
                 check_plugin_names=check_table.get_needed_check_names(
@@ -223,7 +222,7 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
         return SNMPSource._sort_section_names(section_names)
 
     @staticmethod
-    def _sort_section_names(section_names: Iterable[SectionName]) -> Iterable[SectionName]:
+    def _sort_section_names(section_names: Collection[SectionName]) -> Collection[SectionName]:
         # In former Checkmk versions (<=1.4.0) CPU check plugins were
         # checked before other check plugins like interface checks.
         # In Checkmk versions >= 1.5.0 the order is random and

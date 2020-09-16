@@ -5,13 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Any, Dict, Final, Optional
+from typing import Final, Optional
 
 from cmk.utils.paths import tmp_dir
 from cmk.utils.piggyback import get_piggyback_raw_data
 from cmk.utils.type_defs import HostAddress, HostName, ServiceCheckResult, SourceType
 
-from cmk.fetchers import FetcherType
+from cmk.fetchers import FetcherType, PiggybackFetcher
 from cmk.fetchers.agent import NoCache
 
 import cmk.base.config as config
@@ -49,13 +49,13 @@ class PiggybackSource(AgentSource):
             max_age=self.file_cache_max_age,
         ).make()
 
-    def configure_fetcher(self) -> Dict[str, Any]:
-        return {
-            "file_cache": self._make_file_cache().to_json(),
-            "hostname": self.hostname,
-            "address": self.ipaddress,
-            "time_settings": self.time_settings,
-        }
+    def _make_fetcher(self) -> PiggybackFetcher:
+        return PiggybackFetcher(
+            self._make_file_cache(),
+            hostname=self.hostname,
+            address=self.ipaddress,
+            time_settings=self.time_settings,
+        )
 
     def _make_summarizer(self) -> "PiggybackSummarizer":
         return PiggybackSummarizer(self.exit_spec, self)

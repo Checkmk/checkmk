@@ -23,7 +23,7 @@ from cmk.fetchers.agent import NoCache
 
 import cmk.base.config as config
 from cmk.base.checkers import Mode
-from cmk.base.checkers.agent import AgentSource, AgentParser, AgentSummarizer
+from cmk.base.checkers.agent import AgentParser, AgentSource, AgentSummarizer
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 
 
@@ -163,6 +163,11 @@ class TestParser:
         assert parsed_options == section_options
 
 
+class StubSummarizer(AgentSummarizer):
+    def _summarize(self, host_sections):
+        return 0, "", []
+
+
 class StubSource(AgentSource):
     def __init__(self, *args, **kwargs):
         super().__init__(
@@ -171,6 +176,9 @@ class StubSource(AgentSource):
             main_data_source=False,
             **kwargs,
         )
+
+    def to_json(self):
+        return {}
 
     def _make_file_cache(self):
         return NoCache(
@@ -181,19 +189,14 @@ class StubSource(AgentSource):
             simulation=True,
         )
 
-    def configure_fetcher(self):
-        return {}
+    def _make_fetcher(self):
+        return self
 
-    def _make_checker(self) -> "StubSource":
-        return StubSource(self, self.persisted_sections_file_path)
+    def _make_checker(self):
+        return self
 
-    def _make_summarizer(self) -> "StubSummarizer":
+    def _make_summarizer(self):
         return StubSummarizer(self.exit_spec)
-
-
-class StubSummarizer(AgentSummarizer):
-    def _summarize(self, host_sections):
-        return 0, "", []
 
 
 class TestAgentSummaryResult:

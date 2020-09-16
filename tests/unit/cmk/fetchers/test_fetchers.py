@@ -16,7 +16,7 @@ import pytest  # type: ignore[import]
 import cmk.utils.store as store
 from cmk.utils.type_defs import Result, SectionName, AgentRawData
 
-from cmk.snmplib.type_defs import SNMPHostConfig, SNMPRawData, SNMPTable, SNMPTree
+from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPHostConfig, SNMPRawData, SNMPTable, SNMPTree
 
 from cmk.fetchers import FetcherType, MKFetcherError
 from cmk.fetchers.agent import DefaultAgentFileCache, NoCache
@@ -122,18 +122,25 @@ class TestIPMIFetcher:
             simulation=True,
         )
 
-    def test_file_cache_deserialization(self, file_cache):
-        assert file_cache == type(file_cache).from_json(file_cache.to_json())
+    @pytest.fixture
+    def fetcher(self, file_cache):
+        return IPMIFetcher(
+            file_cache,
+            address="1.2.3.4",
+            username="us3r",
+            password="secret",
+        )
 
-    def test_fetcher_deserialization(self, file_cache):
-        fetcher = IPMIFetcher.from_json(
-            json_identity({
-                "file_cache": file_cache.to_json(),
-                "address": "1.2.3.4",
-                "username": "us3r",
-                "password": "secret",
-            }))
-        assert isinstance(fetcher, IPMIFetcher)
+    def test_file_cache_deserialization(self, file_cache):
+        assert file_cache == type(file_cache).from_json(json_identity(file_cache.to_json()))
+
+    def test_fetcher_deserialization(self, fetcher):
+        other = type(fetcher).from_json(json_identity(fetcher.to_json()))
+        assert isinstance(other, type(fetcher))
+        assert other.file_cache == fetcher.file_cache
+        assert other.address == fetcher.address
+        assert other.username == fetcher.username
+        assert other.password == fetcher.password
 
     def test_command_raises_IpmiException_handling(self, file_cache, monkeypatch):
         monkeypatch.setattr(IPMIFetcher, "open", lambda self: None)
@@ -173,19 +180,22 @@ class TestPiggybackFetcher:
 
     @pytest.fixture(name="fetcher")
     def fetcher_fixture(self, file_cache):
-        return PiggybackFetcher.from_json(
-            json_identity({
-                "file_cache": file_cache.to_json(),
-                "hostname": "host",
-                "address": "1.2.3.4",
-                "time_settings": [],
-            }))
+        return PiggybackFetcher(
+            file_cache,
+            hostname="host",
+            address="1.2.3.4",
+            time_settings=[],
+        )
 
     def test_file_cache_deserialization(self, file_cache):
-        assert file_cache == type(file_cache).from_json(file_cache.to_json())
+        assert file_cache == type(file_cache).from_json(json_identity(file_cache.to_json()))
 
-    def test_deserialization(self, fetcher):
-        assert isinstance(fetcher, PiggybackFetcher)
+    def test_fetcher_deserialization(self, fetcher):
+        other = type(fetcher).from_json(json_identity(fetcher.to_json()))
+        assert isinstance(other, type(fetcher))
+        assert other.hostname == fetcher.hostname
+        assert other.address == fetcher.address
+        assert other.time_settings == fetcher.time_settings
 
 
 class TestProgramFetcher:
@@ -201,19 +211,22 @@ class TestProgramFetcher:
 
     @pytest.fixture(name="fetcher")
     def fetcher_fixture(self, file_cache):
-        return ProgramFetcher.from_json(
-            json_identity({
-                "file_cache": file_cache.to_json(),
-                "cmdline": "/bin/true",
-                "stdin": None,
-                "is_cmc": False,
-            }))
+        return ProgramFetcher(
+            file_cache,
+            cmdline="/bin/true",
+            stdin=None,
+            is_cmc=False,
+        )
 
     def test_file_cache_deserialization(self, file_cache):
-        assert file_cache == type(file_cache).from_json(file_cache.to_json())
+        assert file_cache == type(file_cache).from_json(json_identity(file_cache.to_json()))
 
     def test_fetcher_deserialization(self, fetcher):
-        assert isinstance(fetcher, ProgramFetcher)
+        other = type(fetcher).from_json(json_identity(fetcher.to_json()))
+        assert isinstance(other, ProgramFetcher)
+        assert other.cmdline == fetcher.cmdline
+        assert other.stdin == fetcher.stdin
+        assert other.is_cmc == fetcher.is_cmc
 
 
 class TestSNMPFetcher:
@@ -229,49 +242,56 @@ class TestSNMPFetcher:
 
     @pytest.fixture(name="fetcher")
     def fetcher_fixture(self, file_cache):
-        return SNMPFetcher.from_json(
-            json_identity({
-                "file_cache": file_cache.to_json(),
-                "snmp_section_trees": {
-                    "pim": [SNMPTree(base=".1.1.1", oids=["1.2", "3.4"]).to_json()],
-                    "pam": [SNMPTree(base=".1.2.3", oids=["4.5", "6.7", "8.9"]).to_json()],
-                    "pum": [
-                        SNMPTree(base=".2.2.2", oids=["2.2"]).to_json(),
-                        SNMPTree(base=".3.3.3", oids=["2.2"]).to_json(),
-                    ],
-                },
-                "snmp_section_detects": [
-                    ("pim", [[("1.2.3.4", "pim device", True)]]),
-                    ("pam", [[("1.2.3.4", "pam device", True)]]),
+        return SNMPFetcher(
+            file_cache,
+            snmp_section_trees={
+                SectionName("pim"): [SNMPTree(base=".1.1.1", oids=["1.2", "3.4"])],
+                SectionName("pam"): [SNMPTree(base=".1.2.3", oids=["4.5", "6.7", "8.9"])],
+                SectionName("pum"): [
+                    SNMPTree(base=".2.2.2", oids=["2.2"]),
+                    SNMPTree(base=".3.3.3", oids=["2.2"]),
                 ],
-                "configured_snmp_sections": [],
-                "on_error": "raise",
-                "missing_sys_description": False,
-                "use_snmpwalk_cache": False,
-                "snmp_config": SNMPHostConfig(
-                    is_ipv6_primary=False,
-                    hostname="bob",
-                    ipaddress="1.2.3.4",
-                    credentials=(),
-                    port=42,
-                    is_bulkwalk_host=False,
-                    is_snmpv2or3_without_bulkwalk_host=False,
-                    bulk_walk_size_of=0,
-                    timing={},
-                    oid_range_limits=[],
-                    snmpv3_contexts=[],
-                    character_encoding=None,
-                    is_usewalk_host=False,
-                    is_inline_snmp_host=False,
-                    record_stats=False,
-                )._asdict(),
-            }))
+            },
+            snmp_section_detects=[
+                (SectionName("pim"), SNMPDetectSpec([[("1.2.3.4", "pim device", True)]])),
+                (SectionName("pam"), SNMPDetectSpec([[("1.2.3.4", "pam device", True)]])),
+            ],
+            configured_snmp_sections=set(),
+            on_error="raise",
+            missing_sys_description=False,
+            use_snmpwalk_cache=False,
+            snmp_config=SNMPHostConfig(
+                is_ipv6_primary=False,
+                hostname="bob",
+                ipaddress="1.2.3.4",
+                credentials=(),
+                port=42,
+                is_bulkwalk_host=False,
+                is_snmpv2or3_without_bulkwalk_host=False,
+                bulk_walk_size_of=0,
+                timing={},
+                oid_range_limits=[],
+                snmpv3_contexts=[],
+                character_encoding=None,
+                is_usewalk_host=False,
+                is_inline_snmp_host=False,
+                record_stats=False,
+            ),
+        )
 
     def test_file_cache_deserialization(self, file_cache):
-        assert file_cache == type(file_cache).from_json(file_cache.to_json())
+        assert file_cache == type(file_cache).from_json(json_identity(file_cache.to_json()))
 
     def test_fetcher_deserialization(self, fetcher):
-        assert isinstance(fetcher, SNMPFetcher)
+        other = type(fetcher).from_json(json_identity(fetcher.to_json()))
+        assert isinstance(other, SNMPFetcher)
+        assert other.snmp_section_trees == fetcher.snmp_section_trees
+        assert other.snmp_section_detects == fetcher.snmp_section_detects
+        assert other.configured_snmp_sections == fetcher.configured_snmp_sections
+        assert other.on_error == fetcher.on_error
+        assert other.missing_sys_description == fetcher.missing_sys_description
+        assert other.use_snmpwalk_cache == fetcher.use_snmpwalk_cache
+        assert other.snmp_config == fetcher.snmp_config
 
 
 class TestTCPFetcher:
@@ -287,25 +307,26 @@ class TestTCPFetcher:
 
     @pytest.fixture(name="fetcher")
     def fetcher_fixture(self, file_cache):
-        return TCPFetcher.from_json(
-            json_identity({
-                "file_cache": file_cache.to_json(),
-                "family": socket.AF_INET,
-                "address": ["1.2.3.4", 6556],
-                "timeout": 0.1,
-                "encryption_settings": {
-                    "encryption": "settings"
-                },
-                "use_only_cache": False,
-            }))
+        return TCPFetcher(
+            file_cache,
+            family=socket.AF_INET,
+            address=("1.2.3.4", 6556),
+            timeout=0.1,
+            encryption_settings={"encryption": "settings"},
+            use_only_cache=False,
+        )
 
     def test_file_cache_deserialization(self, file_cache):
-        assert file_cache == type(file_cache).from_json(file_cache.to_json())
+        assert file_cache == type(file_cache).from_json(json_identity(file_cache.to_json()))
 
     def test_fetcher_deserialization(self, fetcher):
-        # TODO (ml): Probably we have to check here everything
-        assert isinstance(fetcher, TCPFetcher)
-        assert isinstance(fetcher.address, tuple)
+        other = type(fetcher).from_json(json_identity(fetcher.to_json()))
+        assert isinstance(other, type(fetcher))
+        assert other.family == fetcher.family
+        assert other.address == fetcher.address
+        assert other.timeout == fetcher.timeout
+        assert other.encryption_settings == fetcher.encryption_settings
+        assert other.use_only_cache == fetcher.use_only_cache
 
     def test_decrypt_plaintext_is_noop(self, file_cache):
         settings = {"use_regular": "allow"}
@@ -318,7 +339,6 @@ class TestTCPFetcher:
             encryption_settings=settings,
             use_only_cache=False,
         )
-
         assert fetcher._decrypt(output) == output
 
     def test_decrypt_plaintext_with_enforce_raises_MKFetcherError(self, file_cache):

@@ -95,7 +95,7 @@ def test_attribute_defaults(mode, monkeypatch):
 
     source = TCPSource(hostname, ipaddress, mode=mode)
     monkeypatch.setattr(source, "file_cache_path", Path("/my/path/"))
-    assert source.configure_fetcher() == {
+    assert source.fetcher_configuration == {
         "file_cache": {
             "disabled": False,
             "max_age": 0,

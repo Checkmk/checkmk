@@ -5,14 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 
 from six import ensure_str
 
 import cmk.utils.paths
 from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
-from cmk.fetchers import FetcherType
+from cmk.fetchers import FetcherType, ProgramFetcher
 from cmk.fetchers.agent import DefaultAgentFileCache
 
 import cmk.base.config as config
@@ -96,13 +96,13 @@ class ProgramSource(AgentSource):
             max_age=self.file_cache_max_age,
         ).make()
 
-    def configure_fetcher(self) -> Dict[str, Any]:
-        return {
-            "file_cache": self._make_file_cache().to_json(),
-            "cmdline": self.cmdline,
-            "stdin": self.stdin,
-            "is_cmc": config.is_cmc(),
-        }
+    def _make_fetcher(self) -> ProgramFetcher:
+        return ProgramFetcher(
+            self._make_file_cache(),
+            cmdline=self.cmdline,
+            stdin=self.stdin,
+            is_cmc=config.is_cmc(),
+        )
 
     def _make_summarizer(self) -> AgentSummarizerDefault:
         return AgentSummarizerDefault(self.exit_spec, self)

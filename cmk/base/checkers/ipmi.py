@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, cast, Dict, Final, Optional
+from typing import cast, Final, Optional
 
 from cmk.utils.type_defs import (
     HostAddress,
@@ -15,7 +15,7 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
-from cmk.fetchers import FetcherType
+from cmk.fetchers import IPMIFetcher, FetcherType
 from cmk.fetchers.agent import DefaultAgentFileCache
 
 import cmk.base.config as config
@@ -60,19 +60,19 @@ class IPMISource(AgentSource):
             max_age=self.file_cache_max_age,
         ).make()
 
-    def configure_fetcher(self) -> Dict[str, Any]:
+    def _make_fetcher(self) -> IPMIFetcher:
         if not self.credentials:
             raise MKAgentError("Missing credentials")
 
         if self.ipaddress is None:
             raise MKAgentError("Missing IP address")
 
-        return {
-            "file_cache": self._make_file_cache().to_json(),
-            "address": self.ipaddress,
-            "username": self.credentials["username"],
-            "password": self.credentials["password"],
-        }
+        return IPMIFetcher(
+            self._make_file_cache(),
+            address=self.ipaddress,
+            username=self.credentials["username"],
+            password=self.credentials["password"],
+        )
 
     def _make_summarizer(self) -> "IPMISummarizer":
         return IPMISummarizer(self.exit_spec)

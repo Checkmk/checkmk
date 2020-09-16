@@ -45,6 +45,14 @@ class IPMIFetcher(AgentFetcher):
             **serialized,
         )
 
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            "file_cache": self.file_cache.to_json(),
+            "address": self.address,
+            "username": self.username,
+            "password": self.password,
+        }
+
     def __enter__(self) -> 'IPMIFetcher':
         self.open()
         return self

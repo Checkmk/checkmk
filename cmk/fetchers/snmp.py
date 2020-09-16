@@ -92,6 +92,21 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
             snmp_config=SNMPHostConfig(**serialized["snmp_config"]),
         )
 
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            "file_cache": self.file_cache.to_json(),
+            "snmp_section_trees": {
+                str(n): [tree.to_json() for tree in trees
+                        ] for n, trees in self.snmp_section_trees.items()
+            },
+            "snmp_section_detects": [(str(n), d) for n, d in self.snmp_section_detects],
+            "configured_snmp_sections": [str(s) for s in self.configured_snmp_sections],
+            "on_error": self.on_error,
+            "missing_sys_description": self.missing_sys_description,
+            "use_snmpwalk_cache": self.use_snmpwalk_cache,
+            "snmp_config": self.snmp_config._asdict(),
+        }
+
     def __enter__(self) -> 'SNMPFetcher':
         verify_ipaddress(self.snmp_config.ipaddress)
         return self

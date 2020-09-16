@@ -13,10 +13,10 @@ import os
 import struct
 import logging
 from pathlib import Path
-from typing import Any, Dict, Final, Union, NamedTuple
+from typing import Any, Dict, Final, Union
 
 from cmk.utils.paths import core_helper_config_dir
-from cmk.utils.type_defs import HostName, SectionName, ConfigSerial
+from cmk.utils.type_defs import HostName, Result, SectionName, ConfigSerial
 import cmk.utils.log as log
 
 from cmk.snmplib.type_defs import AbstractRawData
@@ -122,7 +122,7 @@ class FetcherHeader:
         )
 
     @classmethod
-    def from_network(cls, data: bytes) -> 'FetcherHeader':
+    def from_bytes(cls, data: bytes) -> 'FetcherHeader':
         try:
             fetcher_type, payload_type, status, payload_length = struct.unpack(
                 FetcherHeader.fmt,
@@ -138,14 +138,96 @@ class FetcherHeader:
             raise ValueError(data) from exc
 
 
-class FetcherMessage(NamedTuple):
-    header: FetcherHeader
-    payload: bytes
+class FetcherMessage:
+    def __init__(
+        self,
+        header: FetcherHeader,
+        payload: bytes,
+    ) -> None:
+        self.header: Final[FetcherHeader] = header
+        self.payload: Final[bytes] = payload
 
-    def raw_data(self) -> AbstractRawData:
-        if self.header.fetcher_type is FetcherType.SNMP:
-            return {SectionName(k): v for k, v in json.loads(self.payload).items()}
-        return self.payload
+    def __repr__(self) -> str:
+        return "%s(%r, %r)" % (type(self).__name__, self.header, self.payload)
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, (FetcherMessage, bytes)):
+            return NotImplemented
+        return bytes(self) == bytes(other)
+
+    def __hash__(self) -> int:
+        return hash((self.header, self.payload))
+
+    def __add__(self, other: Any) -> bytes:
+        if not isinstance(other, bytes):
+            return NotImplemented
+        return bytes(self) + other
+
+    def __len__(self) -> int:
+        return len(bytes(self))
+
+    def __bytes__(self) -> bytes:
+        return self.header + self.payload
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> "FetcherMessage":
+        header = FetcherHeader.from_bytes(data)
+        payload = data[len(header):len(header) + header.payload_length]
+        return cls(header, payload)
+
+    @classmethod
+    def from_raw_data(
+        cls,
+        raw_data: Result[AbstractRawData, Exception],
+        fetcher_type: FetcherType,
+    ) -> "FetcherMessage":
+        if raw_data.is_error():
+            payload = repr(raw_data.error).encode("utf-8")
+            return cls(
+                FetcherHeader(
+                    fetcher_type,
+                    payload_type=PayloadType.ERROR,
+                    status=50,
+                    payload_length=len(payload),
+                ),
+                payload,
+            )
+
+        if fetcher_type is FetcherType.SNMP:
+            assert isinstance(raw_data.ok, dict)
+            payload = json.dumps({str(k): v for k, v in raw_data.ok.items()}).encode("utf8")
+            return cls(
+                FetcherHeader(
+                    fetcher_type,
+                    payload_type=PayloadType.SNMP,
+                    status=0,
+                    payload_length=len(payload),
+                ),
+                payload,
+            )
+
+        assert isinstance(raw_data.ok, bytes)
+        return cls(
+            FetcherHeader(
+                fetcher_type,
+                payload_type=PayloadType.AGENT,
+                status=0,
+                payload_length=len(raw_data.ok),
+            ),
+            raw_data.ok,
+        )
+
+    @property
+    def raw_data(self) -> Result[AbstractRawData, Exception]:
+        if self.header.payload_type is PayloadType.ERROR:
+            try:
+                # TODO(ml): This is brittle.
+                return Result.Error(eval(self.payload.decode("utf8")))
+            except Exception:
+                return Result.Error(Exception(self.payload.decode("utf8")))
+        if self.header.payload_type is PayloadType.SNMP:
+            return Result.OK({SectionName(k): v for k, v in json.loads(self.payload)})
+        return Result.OK(self.payload)
 
 
 class Header:
@@ -206,7 +288,7 @@ class Header:
         return Header.length
 
     @classmethod
-    def from_network(cls, data: bytes) -> 'Header':
+    def from_bytes(cls, data: bytes) -> 'Header':
         try:
             # to simplify parsing we are using ':' as a splitter
             name, state, hint, payload_length = data[:Header.length].split(b":")[:4]
@@ -283,54 +365,34 @@ def load_global_config(serial: ConfigSerial) -> None:
         log.logger.setLevel(config["log_level"])
 
 
-def run_fetcher(entry: Dict[str, Any], mode: Mode, timeout: int) -> bytes:
+def run_fetcher(entry: Dict[str, Any], mode: Mode, timeout: int) -> FetcherMessage:
     """ timeout to be used by concrete fetcher implementation.
     This is important entrypoint to obtain data from fetcher objects.
     """
 
     try:
         fetcher_type = FetcherType[entry["fetcher_type"]]
-    except LookupError as exc:
+    except KeyError as exc:
         raise RuntimeError from exc
 
     try:
         fetcher_params = entry["fetcher_params"]
-
-        with fetcher_type.from_json(fetcher_params) as fetcher:
-            fetcher_data = fetcher.fetch(mode)
-
-        # TODO (sk): Change encoding approach:
-        # Below is weak code, which breaks isolation. It has been left just to keep things running.
-        # In fact, to correctly encode data we must estimate not the fetcher name but the data type.
-        # We do not know anything about relation between fetcher and data, but we certainly know
-        # how to encode different data types.
-        if fetcher_type is FetcherType.SNMP:
-            # Keys of SNMP payload is of type SectionName which can not be encoded using JSON.
-            snmp_fetcher_data = {"%s" % k: v for k, v in fetcher_data.items()}
-            payload = json.dumps(snmp_fetcher_data).encode("utf-8")
-        else:
-            payload = fetcher_data
-
-        fh = FetcherHeader(
-            fetcher_type,
-            payload_type=PayloadType.SNMP
-            if fetcher_type is FetcherType.SNMP else PayloadType.AGENT,
-            status=0,
-            payload_length=len(payload),
+    except KeyError as exc:
+        payload = repr(exc).encode("utf8")
+        return FetcherMessage(
+            FetcherHeader(
+                fetcher_type,
+                PayloadType.ERROR,
+                status=50,
+                payload_length=len(payload),
+            ),
+            payload,
         )
-        return bytes(fh) + payload
 
-    except Exception as e:
-        # NOTE. The exception is too broad by design:
-        # we need specs for Exception coming from fetchers(and how to process)
-        payload = repr(e).encode("utf-8")
-        fh = FetcherHeader(
-            fetcher_type,
-            payload_type=PayloadType.ERROR,
-            status=50,
-            payload_length=len(payload),
-        )
-        return bytes(fh) + payload
+    with fetcher_type.from_json(fetcher_params) as fetcher:
+        raw_data = fetcher.fetch(mode)
+
+    return FetcherMessage.from_raw_data(raw_data, fetcher_type)
 
 
 def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
@@ -355,21 +417,15 @@ def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
     # Threading: some fetcher may be not thread safe(snmp, for example). May be dangerous.
     # Multiprocessing: CPU and memory(at least in terms of kernel) hungry. Also duplicates
     # functionality of the Microcore.
-
-    resulting_blob = [run_fetcher(entry, mode, timeout) for entry in fetchers]
-
-    write_bytes(make_payload_answer(b''.join(resulting_blob)))
-
-    for entry in resulting_blob:
-        fh = FetcherHeader.from_network(entry)
-        status = fh.status
-        if status == 0:
-            continue
-
+    messages = [run_fetcher(entry, mode, timeout) for entry in fetchers]
+    write_bytes(make_payload_answer(b''.join(bytes(msg) for msg in messages)))
+    for msg in (msg for msg in messages if msg.header.payload_type is PayloadType.ERROR):
         # Errors generated by fetchers will be logged by Microcore
         write_bytes(
-            make_logging_answer(fh.name + ": " + entry[FetcherHeader.length:].decode("utf-8"),
-                                log_level=cmc_log_level_from_python(status)))
+            make_logging_answer(
+                "{!s}: {!r}".format(msg.header, msg.raw_data.error),
+                log_level=cmc_log_level_from_python(msg.header.status),
+            ))
 
     write_bytes(make_waiting_answer())
 

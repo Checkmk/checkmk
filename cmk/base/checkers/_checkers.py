@@ -260,11 +260,7 @@ def update_host_sections(
                 # TODO (ml): Can we somehow verify that this is correct?
                 #if fetcher_message["fetcher_type"] != source.id:
                 #    raise LookupError("Checker and fetcher missmatch")
-
-                # TODO: Handle status != 0
-                assert fetcher_message.header.status == 0
-
-                raw_data = Result.OK(fetcher_message.raw_data())
+                raw_data = fetcher_message.raw_data
 
             host_section = source.parse(raw_data)
             result.append((source, host_section))

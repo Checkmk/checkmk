@@ -15,7 +15,7 @@ import cmk.utils.store as store
 from cmk.utils.exceptions import MKException, MKGeneralException, MKIPAddressLookupError
 from cmk.utils.log import logger as cmk_logger
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import HostAddress
+from cmk.utils.type_defs import HostAddress, Result
 
 from cmk.snmplib.type_defs import TRawData
 
@@ -140,8 +140,14 @@ class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
     def _use_cached_data(self, mode: Mode) -> bool:
         """Decide whether to try to read data from cache"""
 
-    def fetch(self, mode: Mode) -> TRawData:
+    def fetch(self, mode: Mode) -> Result[TRawData, Exception]:
         """Return the data from the source, either cached or from IO."""
+        try:
+            return Result.OK(self._fetch(mode))
+        except Exception as exc:
+            return Result.Error(exc)
+
+    def _fetch(self, mode: Mode) -> TRawData:
         # TODO(ml): EAFP would significantly simplify the code.
         if self._use_cached_data(mode):
             raw_data = self._fetch_from_cache()

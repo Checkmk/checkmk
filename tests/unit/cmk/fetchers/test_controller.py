@@ -19,6 +19,7 @@ from cmk.fetchers.controller import (
     cmc_log_level_from_python,
     CmcLogLevel,
     FetcherHeader,
+    FetcherMessage,
     PayloadType,
     Header,
     make_logging_answer,
@@ -72,12 +73,10 @@ class TestControllerApi:
             Mode.CHECKING,
             13,
         )
-        header = FetcherHeader.from_network(message)
-        payload = message[len(header):]
-        assert header.fetcher_type is FetcherType.SNMP
-        assert header.status == 50
-        assert header.payload_length == len(payload)
-        assert payload == b"KeyError('fetcher_params')"
+        assert message.header.fetcher_type is FetcherType.SNMP
+        assert message.header.status == 50
+        assert message.header.payload_length == len(message.payload)
+        assert message.payload == b"KeyError('fetcher_params')"
 
     def test_run_fetcher_with_exception(self):
         with pytest.raises(RuntimeError):
@@ -101,9 +100,9 @@ class TestHeader:
         header = Header("fetch", state, "crit", 42)
         assert bytes(header) == b"fetch:FAILURE:crit    :42      :"
 
-    def test_from_network(self):
+    def test_from_bytes(self):
         header = Header("fetch", "SUCCESS", "crit", 42)
-        assert Header.from_network(bytes(header) + 42 * b"*") == header
+        assert Header.from_bytes(bytes(header) + 42 * b"*") == header
 
     def test_clone(self):
         header = Header("name", Header.State.SUCCESS, "crit", 42)
@@ -166,12 +165,12 @@ class TestFetcherHeader:
             payload_length=69,
         )
 
-    def test_from_network(self, header):
-        assert FetcherHeader.from_network(bytes(header) + 42 * b"*") == header
+    def test_from_bytes_success(self, header):
+        assert FetcherHeader.from_bytes(bytes(header) + 42 * b"*") == header
 
-    def test_from_network_failure(self):
+    def test_from_bytes_failure(self):
         with pytest.raises(ValueError):
-            FetcherHeader.from_network(b"random bytes")
+            FetcherHeader.from_bytes(b"random bytes")
 
     def test_repr(self, header):
         assert isinstance(repr(header), str)
@@ -271,6 +270,39 @@ class TestFetcherHeaderEq:
         message = header + payload
         assert isinstance(message, bytes)
         assert len(message) == len(header) + len(payload)
-        assert FetcherHeader.from_network(message) == header
-        assert FetcherHeader.from_network(message[:len(header)]) == header
+        assert FetcherHeader.from_bytes(message) == header
+        assert FetcherHeader.from_bytes(message[:len(header)]) == header
         assert message[len(header):] == payload
+
+
+class TestFetcherMessage:
+    @pytest.fixture
+    def header(self):
+        return FetcherHeader(
+            FetcherType.TCP,
+            PayloadType.AGENT,
+            status=42,
+            payload_length=69,
+        )
+
+    @pytest.fixture
+    def payload(self, header):
+        return b"\0" * header.payload_length
+
+    @pytest.fixture
+    def message(self, header, payload):
+        return FetcherMessage(header, payload)
+
+    def test_accessors(self, message, header, payload):
+        assert message.header == header
+        assert message.payload == payload
+
+    def test_from_bytes_success(self, message):
+        assert FetcherMessage.from_bytes(bytes(message) + 42 * b"*") == message
+
+    def test_from_bytes_failure(self):
+        with pytest.raises(ValueError):
+            FetcherMessage.from_bytes(b"random bytes")
+
+    def test_len(self, message, header, payload):
+        assert len(message) == len(header) + len(payload)

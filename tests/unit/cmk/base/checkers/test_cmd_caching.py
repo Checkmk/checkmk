@@ -129,7 +129,7 @@ def _patch_data_source(mocker, **kwargs):
 
         result = callback(self, *args, **kwargs)
         if result.is_error():
-            raise result.unwrap_err()
+            raise result.error
         return result
 
     mocker.patch.object(

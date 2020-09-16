@@ -1451,7 +1451,6 @@ class AutomationGetAgentOutput(Automation):
                         continue
 
                     raw_data = source.fetch()
-
                     host_sections = source.parse(raw_data)
                     source_state, source_output, _source_perfdata = source.summarize(host_sections)
                     if source_state != 0:

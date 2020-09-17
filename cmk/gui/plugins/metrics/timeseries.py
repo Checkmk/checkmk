@@ -13,6 +13,11 @@ import cmk.utils.version as cmk_version
 import cmk.gui.escaping as escaping
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
+from cmk.gui.plugins.metrics.utils import (
+    fade_color,
+    parse_color,
+    render_color,
+)
 
 if cmk_version.is_raw_edition():
 
@@ -52,15 +57,20 @@ def compute_graph_curves(metrics, rrd_data):
 
         multi = len(time_series) > 1
         mirror_prefix = "-" if metric_definition["line_type"].startswith("-") else ""
-        for ts in time_series:
+        for i, ts in enumerate(time_series):
             title = metric_definition["title"]
             if ts.metadata.get('title') and multi:
                 title += " - " + ts.metadata['title']
 
+            color = metric_definition.get("color", ts.metadata.get('color', "#000000"))
+            if i % 2 == 1 and not (expression[0] == "transformation" and
+                                   expression[1][0] == "forecast"):
+                color = render_color(fade_color(parse_color(color), 0.3))
+
             curves.append({
                 "line_type": mirror_prefix + ts.metadata.get('line_type', "")
                              if multi else metric_definition["line_type"],
-                "color": ts.metadata.get('color') if multi else metric_definition["color"],
+                "color": color,
                 'title': title,
                 'rrddata': ts
             })
@@ -103,7 +113,7 @@ def evaluate_time_series_expression(expression, rrd_data) -> List[TimeSeries]:
         curves = []
         for m in metrics:
             for curve in evaluate_time_series_expression(m['expression'], rrd_data):
-                curve.metadata = {k: m[k] for k in m if k in ['line_type', 'color', 'title']}
+                curve.metadata = {k: m[k] for k in m if k in ['line_type', 'title']}
                 curves.append(curve)
 
         return curves

@@ -27,6 +27,7 @@
 
 import collections
 import typing
+import cmk.base.plugins.agent_based.utils.eval_regex as eval_regex
 
 fileinfo_groups = []
 
@@ -132,7 +133,7 @@ def fileinfo_groups_get_group_name(group_patterns, filename, reftime):
 
         if matches:
             for nr, group in enumerate(matches):
-                inclusion = instantiate_regex_pattern_once(inclusion, group)
+                inclusion = eval_regex.instantiate_regex_pattern_once(inclusion, group)
                 group_name = group_name.replace("%%%d" % (nr + 1), group)
 
             this_group_name = group_name % tuple(matches[:num_perc_s])
@@ -459,5 +460,4 @@ check_info['fileinfo.groups'] = {
     "service_description": "File group %s",
     "has_perfdata": True,
     "group": "fileinfo-groups",
-    "includes": ["eval_regex.include"],
 }

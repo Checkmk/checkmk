@@ -22,6 +22,7 @@ import cmk.utils.paths
 import cmk.base.plugins.agent_based.utils.logwatch as logwatch
 import cmk.base.plugins.agent_based.logwatch_section as logwatch_section
 import cmk.base.plugins.agent_based.logwatch as logwatch_plugin
+import cmk.base.plugins.agent_based.utils.eval_regex as eval_regex
 
 ItemData = logwatch.ItemData
 
@@ -205,7 +206,7 @@ def _logwatch_instantiate_matched(match, group_name, inclusion):
         return group_name, inclusion
 
     for num, group in enumerate(matches):
-        inclusion = instantiate_regex_pattern_once(inclusion, group)
+        inclusion = eval_regex.instantiate_regex_pattern_once(inclusion, group)
         group_name = group_name.replace("%%%d" % (num + 1), group)
     return group_name % tuple(matches[:num_perc_s]), inclusion
 
@@ -284,7 +285,6 @@ check_info['logwatch.groups'] = {
     'service_description': "Log %s",
     'node_info': True,
     'group': 'logwatch_rules',
-    'includes': ['eval_regex.include']
 }
 
 #.

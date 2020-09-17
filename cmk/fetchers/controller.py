@@ -226,7 +226,7 @@ class FetcherMessage:
             except Exception:
                 return Result.Error(Exception(self.payload.decode("utf8")))
         if self.header.payload_type is PayloadType.SNMP:
-            return Result.OK({SectionName(k): v for k, v in json.loads(self.payload)})
+            return Result.OK({SectionName(k): v for k, v in json.loads(self.payload).items()})
         return Result.OK(self.payload)
 
 

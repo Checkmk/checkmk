@@ -65,6 +65,8 @@ class HelperConfig:
 
     @contextmanager
     def create(self) -> Iterator["HelperConfig"]:
+        self._cleanup()
+
         self.serial_path.mkdir(parents=True, exist_ok=True)
         yield self
         self._create_latest_link()
@@ -73,6 +75,27 @@ class HelperConfig:
         with suppress(FileNotFoundError):
             self.latest_path.unlink()
         self.latest_path.symlink_to(self.serial_path.name)
+
+    def _cleanup(self) -> None:
+        """Cleanup old helper configs
+
+        This is only used when using the Nagios core. The Microcore cares about the cleanup on it's
+        own, because the Microcore holds the information which configs are still needed."""
+        if config.monitoring_core == "cmc":
+            return
+
+        if not cmk.utils.paths.core_helper_config_dir.exists():
+            return
+
+        latest_config_path = self.latest_path.resolve()
+        for config_path in cmk.utils.paths.core_helper_config_dir.iterdir():
+            if config_path.is_symlink() or not config_path.is_dir():
+                continue
+
+            if config_path == latest_config_path:
+                continue
+
+            shutil.rmtree(config_path)
 
 
 def new_helper_config_serial() -> ConfigSerial:

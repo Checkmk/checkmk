@@ -7,6 +7,7 @@
 import pytest  # type: ignore[import]
 from contextlib import suppress
 from pathlib import Path
+import shutil
 
 from testlib import CheckManager
 from testlib.base import Scenario
@@ -159,8 +160,8 @@ class TestHelperConfig:
 
     def test_create_success_replace_latest_link(self, store, serial):
         prev_serial = ConfigSerial("1")
-        prev_dir = cmk.utils.paths.core_helper_config_dir / prev_serial
-        prev_dir.mkdir(parents=True, exist_ok=True)
+        prev_path = cmk.utils.paths.core_helper_config_dir / prev_serial
+        prev_path.mkdir(parents=True, exist_ok=True)
         store.latest_path.symlink_to(prev_serial)
         assert store.latest_path.exists()
 
@@ -187,8 +188,8 @@ class TestHelperConfig:
         assert not store.latest_path.exists()
 
         prev_serial = "13"
-        prev_dir = cmk.utils.paths.core_helper_config_dir / prev_serial
-        prev_dir.mkdir(parents=True, exist_ok=True)
+        prev_path = cmk.utils.paths.core_helper_config_dir / prev_serial
+        prev_path.mkdir(parents=True, exist_ok=True)
         store.latest_path.symlink_to("13")
         assert store.latest_path.exists()
 
@@ -199,6 +200,86 @@ class TestHelperConfig:
 
         assert store.serial_path.exists()
         assert store.latest_path.resolve().name == prev_serial
+
+    @pytest.fixture
+    def nagios_core(self, monkeypatch):
+        ts = Scenario().set_option("monitoring_core", "nagios")
+        ts.apply(monkeypatch)
+
+    @pytest.fixture
+    def cmc_core(self, monkeypatch):
+        ts = Scenario().set_option("monitoring_core", "cmc")
+        ts.apply(monkeypatch)
+
+    @pytest.fixture
+    def prev_serial(self, serial):
+        return ConfigSerial(str(int(serial) - 1))
+
+    @pytest.fixture
+    def prev_prev_serial(self, prev_serial):
+        return ConfigSerial(str(int(prev_serial) - 1))
+
+    @pytest.fixture
+    def prev_helper_config(self, store, prev_serial, prev_prev_serial):
+        assert not store.latest_path.exists()
+
+        def _create_helper_config_dir(serial):
+            path = cmk.utils.paths.core_helper_config_dir / serial
+            path.mkdir(parents=True, exist_ok=True)
+            with suppress(FileNotFoundError):
+                store.latest_path.unlink()
+            store.latest_path.symlink_to(serial)
+
+        _create_helper_config_dir(prev_prev_serial)
+        _create_helper_config_dir(prev_serial)
+
+        assert config.make_helper_config_path(prev_prev_serial).exists()
+        assert config.make_helper_config_path(prev_serial).exists()
+        assert store.latest_path.exists()
+
+    @pytest.mark.usefixtures("nagios_core", "prev_helper_config")
+    def test_cleanup_with_nagios(self, store, prev_helper_config, prev_serial, prev_prev_serial):
+        assert config.monitoring_core == "nagios"
+        prev_path = config.make_helper_config_path(prev_serial)
+
+        assert not store.serial_path.exists()
+        with store.create():
+            assert not config.make_helper_config_path(prev_prev_serial).exists()
+            assert prev_path.exists()
+            assert store.serial_path.exists()
+            assert store.latest_path.resolve() == prev_path
+
+        assert store.latest_path.resolve() == store.serial_path
+
+    @pytest.mark.usefixtures("nagios_core", "prev_helper_config")
+    def test_cleanup_with_broken_latest_link(self, store, prev_serial, prev_prev_serial):
+        assert config.monitoring_core == "nagios"
+        prev_path = config.make_helper_config_path(prev_serial)
+        shutil.rmtree(prev_path)
+
+        assert not prev_path.exists()
+        assert store.latest_path.resolve() == prev_path
+
+        assert not store.serial_path.exists()
+        with store.create():
+            assert not config.make_helper_config_path(prev_prev_serial).exists()
+            assert not prev_path.exists()
+            assert store.serial_path.exists()
+            assert store.latest_path.resolve() == prev_path
+
+        assert store.latest_path.resolve() == store.serial_path
+
+    @pytest.mark.usefixtures("cmc_core", "prev_helper_config")
+    def test_no_cleanup_with_microcore(self, store, prev_serial, prev_prev_serial):
+        assert config.monitoring_core == "cmc"
+        assert not store.serial_path.exists()
+        with store.create():
+            pass
+
+        assert config.make_helper_config_path(prev_prev_serial).exists()
+        assert config.make_helper_config_path(prev_serial).exists()
+        assert store.serial_path.exists()
+        assert store.latest_path.resolve() == store.serial_path
 
 
 def test_new_helper_config_serial():

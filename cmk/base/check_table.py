@@ -6,6 +6,7 @@
 """Code for computing the table of checks of hosts."""
 
 from typing import Iterable, Iterator, List, Literal, Optional, Set
+from contextlib import suppress
 
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.exceptions import MKGeneralException
@@ -18,20 +19,17 @@ from cmk.base.check_utils import CheckTable, Service
 
 
 # TODO: This is just a first cleanup step: Continue cleaning this up.
-# - Check all call sites and cleanup the different
+# - Caching a Dict is dangerous. This should be an immutable mapping.
 # - Make this a helper object of HostConfig?
-# (mo): This is not an object. It only ever gets created for the .get
-# method to be called. It's a bundle of functions.
-class HostCheckTable:
-    def get(
+class HostCheckTable(CheckTable):
+    def __init__(
         self,
         config_cache: config.ConfigCache,
         host_config: config.HostConfig,
-        use_cache: bool,
         skip_autochecks: bool,
         filter_mode: Optional[Literal["only_clustered", "include_clustered"]],
         skip_ignored: bool,
-    ) -> CheckTable:
+    ) -> None:
         """Returns check table for a specific host
 
         Format of check table is: {(checkname, item): (params, description)}
@@ -42,28 +40,16 @@ class HostCheckTable:
         """
         hostname = host_config.hostname
 
-        if host_config.is_ping_host:
-            skip_autochecks = True
-
-        # speed up multiple lookup of same host
-        check_table_cache = config_cache.check_table_cache
-        table_cache_id = hostname, filter_mode
-
-        if not skip_autochecks and use_cache and table_cache_id in check_table_cache:
-            return check_table_cache[table_cache_id]
-
-        check_table = {}
-
         # Now process all entries that are specific to the host
         # in search (single host) or that might match the host.
         if not skip_autochecks:
-            check_table.update({
+            self.update({
                 service.id(): service
                 for service in config_cache.get_autochecks_of(hostname)
                 if self._keep_service(config_cache, host_config, service, filter_mode, skip_ignored)
             })
 
-        check_table.update({
+        self.update({
             service.id(): service
             for service in self._get_static_check_entries(host_config)
             if self._keep_service(config_cache, host_config, service, filter_mode, skip_ignored)
@@ -71,17 +57,12 @@ class HostCheckTable:
 
         # Now add checks a cluster might receive from its nodes
         if host_config.is_cluster:
-            check_table.update({
+            self.update({
                 service.id(): service
                 for service in self._get_clustered_services(config_cache, host_config, hostname,
                                                             skip_autochecks)
                 if self._keep_service(config_cache, host_config, service, filter_mode, skip_ignored)
             })
-
-        if not skip_autochecks and use_cache:
-            check_table_cache[table_cache_id] = check_table
-
-        return check_table
 
     @staticmethod
     def _get_static_check_entries(host_config: config.HostConfig,) -> Iterator[Service]:
@@ -194,12 +175,32 @@ def get_check_table(
     skip_autochecks: bool = False,
     filter_mode: Optional[Literal["only_clustered", "include_clustered"]] = None,
     skip_ignored: bool = True,
-) -> CheckTable:
+) -> HostCheckTable:
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
 
-    return HostCheckTable().get(config_cache, host_config, use_cache, skip_autochecks, filter_mode,
-                                skip_ignored)
+    if host_config.is_ping_host:
+        skip_autochecks = True
+
+    use_cache_for_real = not skip_autochecks and use_cache
+    # speed up multiple lookup of same host
+    table_cache_id = host_config.hostname, filter_mode
+    if use_cache_for_real:
+        with suppress(KeyError):
+            return config_cache.check_table_cache[table_cache_id]
+
+    host_check_table = HostCheckTable(
+        config_cache,
+        host_config,
+        skip_autochecks,
+        filter_mode,
+        skip_ignored,
+    )
+
+    if use_cache_for_real:
+        config_cache.check_table_cache[table_cache_id] = host_check_table
+
+    return host_check_table
 
 
 def get_needed_check_names(

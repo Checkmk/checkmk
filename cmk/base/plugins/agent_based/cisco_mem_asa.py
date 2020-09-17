@@ -28,8 +28,8 @@ False
 from typing import Sequence, Dict
 from contextlib import suppress
 
-from cmk.base.plugins.agent_based.utils.size_trend import size_trend
-from cmk.base.plugins.agent_based.utils.memory import (
+from .utils.size_trend import size_trend
+from .utils.memory import (
     get_levels_mode_from_value,
     check_element,
 )

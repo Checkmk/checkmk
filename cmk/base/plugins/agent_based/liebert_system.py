@@ -16,7 +16,7 @@
 
 from typing import Dict
 
-from cmk.base.plugins.agent_based.utils.liebert import (
+from .utils.liebert import (
     DETECT_LIEBERT,
     parse_liebert_without_unit,
 )

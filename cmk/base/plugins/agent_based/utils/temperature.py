@@ -6,18 +6,18 @@
 
 from typing import Union, Tuple, Optional, TypedDict, Generator
 import time
-from cmk.base.api.agent_based.utils import (
+from ..agent_based_api.v1 import (
     check_levels,
     get_rate,
     get_average,
 )
-from cmk.base.api.agent_based.render import (
+from ..agent_based_api.v1.render import (
     timespan,)
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+from ..agent_based_api.v1 import (
     Result,
     state,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+from ..agent_based_api.v1.type_defs import (
     CheckResult,)
 
 StatusType = int

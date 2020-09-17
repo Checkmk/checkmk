@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any, Dict, Tuple
-from cmk.base.plugins.agent_based.utils.liebert import (
+from .utils.liebert import (
     DETECT_LIEBERT,
     parse_liebert,
 )

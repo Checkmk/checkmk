@@ -13,12 +13,12 @@
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.30.1.2.1.5028 % RH
 
 from typing import Any, Dict, Tuple, Optional
-from cmk.base.plugins.agent_based.utils.liebert import (
+from .utils.liebert import (
     DETECT_LIEBERT,
     parse_liebert,
 )
-from cmk.base.api.agent_based.utils import check_levels
 from .agent_based_api.v1 import (
+    check_levels,
     register,
     SNMPTree,
     Service,

@@ -8,7 +8,6 @@ from typing import (
     Dict,
     Any,
 )
-from cmk.base.api.agent_based.utils import check_levels
 from .agent_based_api.v1 import (
     register,
     Service,

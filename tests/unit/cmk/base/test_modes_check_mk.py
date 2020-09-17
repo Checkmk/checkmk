@@ -13,7 +13,7 @@ from cmk.utils.type_defs import Result
 from cmk.fetchers.tcp import TCPFetcher
 
 import cmk.base.modes.check_mk as check_mk
-from cmk.base.checkers import FileCacheConfigurer
+from cmk.base.checkers import FileCacheFactory
 
 
 class TestModeDumpAgent:
@@ -43,7 +43,7 @@ class TestModeDumpAgent:
     @pytest.mark.usefixtures("scenario")
     @pytest.mark.usefixtures("patch_fetch")
     def test_success(self, hostname, raw_data, capsys):
-        assert FileCacheConfigurer.disabled is False
+        assert FileCacheFactory.disabled is False
 
         check_mk.mode_dump_agent(hostname)
         assert capsys.readouterr().out == raw_data.decode()

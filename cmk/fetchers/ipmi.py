@@ -19,14 +19,14 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import AgentRawData, HostAddress
 
 from . import MKFetcherError
-from .agent import AgentFetcher, AgentFileCache, DefaultAgentFileCache
+from .agent import AgentFetcher, DefaultAgentFileCache
 from .type_defs import Mode
 
 
 class IPMIFetcher(AgentFetcher):
     def __init__(
         self,
-        file_cache: AgentFileCache,
+        file_cache: DefaultAgentFileCache,
         address: HostAddress,
         username: str,
         password: str,
@@ -58,8 +58,8 @@ class IPMIFetcher(AgentFetcher):
             return False
         return True
 
-    def _use_cached_data(self, mode: Mode) -> bool:
-        return mode is not Mode.CHECKING or self.file_cache.simulation
+    def _is_cache_enabled(self, mode: Mode) -> bool:
+        return mode is not Mode.CHECKING
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         if self._command is None:

@@ -29,8 +29,7 @@ from cmk.utils.type_defs import (
 
 from cmk.snmplib.type_defs import TRawData
 
-from cmk.fetchers import ABCFetcher
-from cmk.fetchers.controller import FetcherType
+from cmk.fetchers import ABCFetcher, ABCFileCache, FetcherType
 from cmk.fetchers.type_defs import Mode
 
 import cmk.base.check_api_utils as check_api_utils
@@ -51,7 +50,7 @@ from ._cache import SectionStore
 __all__ = [
     "ABCHostSections",
     "ABCSource",
-    "FileCacheConfigurer",
+    "FileCacheFactory",
     "Mode",
     "set_cache_opts",
 ]
@@ -233,13 +232,11 @@ def set_cache_opts(use_caches: bool) -> None:
     # TODO check these settings vs.
     # cmk/base/automations/check_mk.py:_set_cache_opts_of_checkers
     if use_caches:
-        FileCacheConfigurer.maybe = True
-        FileCacheConfigurer.use_outdated = True
+        FileCacheFactory.maybe = True
+        FileCacheFactory.use_outdated = True
 
 
-class FileCacheConfigurer:
-    """Hold the configuration to FileCache."""
-
+class FileCacheFactory(Generic[TRawData], abc.ABC):
     # TODO: Clean these options up! We need to change all call sites to use
     #       a single Checkers() object during processing first. Then we
     #       can change these class attributes to object attributes.
@@ -254,8 +251,8 @@ class FileCacheConfigurer:
     # Set by the code in different situations where we recommend, but not enforce,
     # to use the cache. The user can always use "--cache" to override this.
     # It's used to 'transport' caching opt between modules, eg:
-    # - modes: FileCacheConfigurer.maybe = use_caches
-    # - discovery: use_caches = FileCacheConfigurer.maybe
+    # - modes: FileCacheFactory.maybe = use_caches
+    # - discovery: use_caches = FileCacheFactory.maybe
     maybe = False
     # Is set by the "--cache" command line. This makes the caching logic use
     # cache files that are even older than the max_cachefile_age of the host/mode.
@@ -264,35 +261,22 @@ class FileCacheConfigurer:
     def __init__(
         self,
         path: Union[Path, str],
-        fetcher_type: FetcherType,
         *,
-        max_age: Optional[int] = None,
+        max_age: int,
         simulation: bool = False,
     ):
         super().__init__()
-        self.path = Path(path)
-        self.fetcher_type: FetcherType = fetcher_type
-        self.max_age: Optional[int] = max_age
-        self.simulation: bool = simulation
+        self.path: Final[Path] = Path(path)
+        self.max_age: Final[int] = max_age
+        self.simulation: Final[bool] = simulation
 
     @classmethod
     def reset_maybe(cls):
         cls.maybe = not cls.disabled
 
-    @final
-    def configure(self) -> Dict[str, Any]:
-        disabled = self.disabled
-        if self.fetcher_type is FetcherType.SNMP:
-            disabled |= self.snmp_disabled
-        else:
-            disabled |= self.agent_disabled
-        return {
-            "path": str(self.path),
-            "max_age": self.max_age,
-            "disabled": disabled,
-            "use_outdated": self.use_outdated,
-            "simulation": self.simulation,
-        }
+    @abc.abstractmethod
+    def make(self) -> ABCFileCache[TRawData]:
+        raise NotImplementedError
 
 
 class ABCSource(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
@@ -337,11 +321,8 @@ class ABCSource(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         if not persisted_section_dir:
             persisted_section_dir = Path(cmk.utils.paths.var_dir) / "persisted_sections" / self.id
 
-        self.file_cache = FileCacheConfigurer(
-            cache_dir / self.hostname,
-            self.fetcher_type,
-            simulation=config.simulation_mode,
-        )
+        self.file_cache_path: Final[Path] = cache_dir / self.hostname
+        self.file_cache_max_age: int = 0
         self.persisted_sections_file_path: Final[Path] = persisted_section_dir / self.hostname
         self.selected_raw_sections: Optional[SelectedRawSections] = None
 
@@ -397,6 +378,10 @@ class ABCSource(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
             FetcherType: A fetcher factory.
 
         """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def _make_file_cache(self) -> ABCFileCache[TRawData]:
         raise NotImplementedError
 
     def _make_fetcher(self) -> ABCFetcher:

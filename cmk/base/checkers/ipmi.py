@@ -16,12 +16,14 @@ from cmk.utils.type_defs import (
 )
 
 from cmk.fetchers import FetcherType
+from cmk.fetchers.agent import DefaultAgentFileCache
 
+import cmk.base.config as config
 from cmk.base.config import HostConfig, IPMICredentials
 from cmk.base.exceptions import MKAgentError
 
 from ._abstract import Mode
-from .agent import AgentSource, AgentHostSections, AgentSummarizer
+from .agent import AgentSource, AgentHostSections, AgentSummarizer, DefaultAgentFileCacheFactory
 
 
 class IPMISource(AgentSource):
@@ -51,6 +53,13 @@ class IPMISource(AgentSource):
             IPMICredentials,
             HostConfig.make_host_config(hostname).management_credentials)
 
+    def _make_file_cache(self) -> DefaultAgentFileCache:
+        return DefaultAgentFileCacheFactory(
+            path=self.file_cache_path,
+            simulation=config.simulation_mode,
+            max_age=self.file_cache_max_age,
+        ).make()
+
     def configure_fetcher(self) -> Dict[str, Any]:
         if not self.credentials:
             raise MKAgentError("Missing credentials")
@@ -59,7 +68,7 @@ class IPMISource(AgentSource):
             raise MKAgentError("Missing IP address")
 
         return {
-            "file_cache": self.file_cache.configure(),
+            "file_cache": self._make_file_cache().to_json(),
             "address": self.ipaddress,
             "username": self.credentials["username"],
             "password": self.credentials["password"],

@@ -92,7 +92,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
             backend=self._backend,
         )
 
-    def _use_cached_data(self, mode: Mode) -> bool:
+    def _is_cache_enabled(self, mode: Mode) -> bool:
         """Decide whether to try to read data from cache
 
         Fetching for SNMP data is special in that we have to list the sections to fetch
@@ -102,7 +102,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         in the cache), but all sections for which the detection spec evaluates to true,
         which can be many more.
         """
-        return mode not in (Mode.DISCOVERY, Mode.CHECKING) or self.file_cache.simulation
+        return mode not in (Mode.DISCOVERY, Mode.CHECKING)
 
     def _fetch_from_io(self, mode: Mode) -> SNMPRawData:
         selected_sections = (self._detect()

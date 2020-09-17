@@ -27,6 +27,7 @@ from cmk.utils.type_defs import (
 )
 from cmk.utils.werks import parse_check_mk_version
 
+from cmk.fetchers.agent import DefaultAgentFileCache, NoCache
 from cmk.fetchers.controller import FetcherType
 
 import cmk.base.config as config
@@ -46,6 +47,7 @@ from ._abstract import (
     ABCHostSections,
     ABCParser,
     ABCSummarizer,
+    FileCacheFactory,
     Mode,
 )
 
@@ -55,6 +57,28 @@ __all__ = ["AgentSource", "AgentHostSections"]
 class AgentHostSections(ABCHostSections[AgentRawData, AgentSections, AgentPersistedSections,
                                         AgentSectionContent]):
     pass
+
+
+class DefaultAgentFileCacheFactory(FileCacheFactory[AgentRawData]):
+    def make(self) -> DefaultAgentFileCache:
+        return DefaultAgentFileCache(
+            path=self.path,
+            max_age=self.max_age,
+            disabled=self.disabled | self.agent_disabled,
+            use_outdated=self.use_outdated,
+            simulation=self.simulation,
+        )
+
+
+class NoCacheFactory(FileCacheFactory[AgentRawData]):
+    def make(self) -> NoCache:
+        return NoCache(
+            path=self.path,
+            max_age=self.max_age,
+            disabled=self.disabled | self.agent_disabled,
+            use_outdated=self.use_outdated,
+            simulation=self.simulation,
+        )
 
 
 class AgentSource(ABCSource[AgentRawData, AgentHostSections]):

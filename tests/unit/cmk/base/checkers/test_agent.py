@@ -7,6 +7,7 @@
 # pylint: disable=protected-access
 
 import logging
+import os
 import time
 from pathlib import Path
 
@@ -18,6 +19,7 @@ from cmk.utils.exceptions import MKTimeout
 from cmk.utils.type_defs import Result, SectionName, SourceType
 
 from cmk.fetchers import FetcherType
+from cmk.fetchers.agent import NoCache
 
 import cmk.base.config as config
 from cmk.base.checkers import Mode
@@ -168,6 +170,15 @@ class StubSource(AgentSource):
             fetcher_type=FetcherType.NONE,
             main_data_source=False,
             **kwargs,
+        )
+
+    def _make_file_cache(self):
+        return NoCache(
+            path=Path(os.devnull),
+            max_age=0,
+            disabled=True,
+            use_outdated=False,
+            simulation=True,
         )
 
     def configure_fetcher(self):

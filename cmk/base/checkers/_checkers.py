@@ -242,7 +242,7 @@ def update_host_sections(
             else:
                 source.selected_raw_sections = _make_piggybacked_sections(host_config)
 
-            source.file_cache.max_age = max_cachefile_age
+            source.file_cache_max_age = max_cachefile_age
 
             host_sections = multi_host_sections.setdefault(
                 HostKey(hostname, ipaddress, source.source_type),

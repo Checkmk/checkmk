@@ -17,14 +17,14 @@ from cmk.utils.exceptions import MKTimeout
 from cmk.utils.type_defs import AgentRawData
 
 from . import MKFetcherError
-from .agent import AgentFetcher, AgentFileCache, DefaultAgentFileCache
+from .agent import AgentFetcher, DefaultAgentFileCache
 from .type_defs import Mode
 
 
 class ProgramFetcher(AgentFetcher):
     def __init__(
         self,
-        file_cache: AgentFileCache,
+        file_cache: DefaultAgentFileCache,
         cmdline: Union[bytes, str],
         stdin: Optional[str],
         is_cmc: bool,
@@ -99,8 +99,8 @@ class ProgramFetcher(AgentFetcher):
         self._process.stderr.close()
         self._process = None
 
-    def _use_cached_data(self, mode: Mode) -> bool:
-        return mode is not Mode.CHECKING or self.file_cache.simulation
+    def _is_cache_enabled(self, mode: Mode) -> bool:
+        return mode is not Mode.CHECKING
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         if self._process is None:

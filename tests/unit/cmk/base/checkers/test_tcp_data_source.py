@@ -94,11 +94,11 @@ def test_attribute_defaults(mode, monkeypatch):
     Scenario().add_host(hostname).apply(monkeypatch)
 
     source = TCPSource(hostname, ipaddress, mode=mode)
-    source.file_cache.path = Path("/my/path/")
+    monkeypatch.setattr(source, "file_cache_path", Path("/my/path/"))
     assert source.configure_fetcher() == {
         "file_cache": {
             "disabled": False,
-            "max_age": None,
+            "max_age": 0,
             "path": "/my/path",
             "simulation": False,
             "use_outdated": False,
@@ -114,7 +114,6 @@ def test_attribute_defaults(mode, monkeypatch):
     }
     assert source.description == "TCP: %s:%s" % (ipaddress, 6556)
     assert source.id == "agent"
-    assert source.file_cache.maybe is False
 
 
 class TestSummaryResult:

@@ -17,14 +17,14 @@ from cmk.utils.type_defs import AgentRawData, HostAddress
 
 from . import MKFetcherError
 from ._base import verify_ipaddress
-from .agent import AgentFetcher, AgentFileCache, DefaultAgentFileCache
+from .agent import AgentFetcher, DefaultAgentFileCache
 from .type_defs import Mode
 
 
 class TCPFetcher(AgentFetcher):
     def __init__(
         self,
-        file_cache: AgentFileCache,
+        file_cache: DefaultAgentFileCache,
         family: socket.AddressFamily,
         address: Tuple[HostAddress, int],
         timeout: float,
@@ -70,8 +70,8 @@ class TCPFetcher(AgentFetcher):
             self._socket.close()
         self._socket = None
 
-    def _use_cached_data(self, mode: Mode) -> bool:
-        return mode is not Mode.CHECKING or self.file_cache.simulation
+    def _is_cache_enabled(self, mode: Mode) -> bool:
+        return mode is not Mode.CHECKING
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         if self._use_only_cache:

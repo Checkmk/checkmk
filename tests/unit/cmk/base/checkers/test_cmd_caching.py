@@ -90,10 +90,10 @@ def _patch_data_source(mocker, **kwargs):
     def parse(self, *args, callback, **kwargs):
         assert isinstance(self, ABCSource), repr(self)
 
-        assert self.file_cache.maybe == defaults["maybe"]
-        assert self.file_cache.disabled == defaults["disabled"]
-        assert self.file_cache.max_age == defaults["max_age"]
-        assert self.file_cache.use_outdated == defaults["use_outdated"]
+        file_cache = self._make_file_cache()
+        assert file_cache.disabled == defaults["disabled"]
+        assert file_cache.use_outdated == defaults["use_outdated"]
+        assert file_cache.max_age == defaults["max_age"]
 
         if isinstance(self, AgentSource):
             assert (

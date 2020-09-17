@@ -12,11 +12,12 @@ from cmk.utils.piggyback import get_piggyback_raw_data
 from cmk.utils.type_defs import HostAddress, HostName, ServiceCheckResult, SourceType
 
 from cmk.fetchers import FetcherType
+from cmk.fetchers.agent import NoCache
 
 import cmk.base.config as config
 
 from ._abstract import Mode
-from .agent import AgentSource, AgentHostSections, AgentSummarizer
+from .agent import AgentSource, AgentHostSections, AgentSummarizer, NoCacheFactory
 
 
 class PiggybackSource(AgentSource):
@@ -41,9 +42,16 @@ class PiggybackSource(AgentSource):
         self.time_settings: Final = (config.get_config_cache().get_piggybacked_hosts_time_settings(
             piggybacked_hostname=hostname))
 
+    def _make_file_cache(self) -> NoCache:
+        return NoCacheFactory(
+            path=self.file_cache_path,
+            simulation=config.simulation_mode,
+            max_age=self.file_cache_max_age,
+        ).make()
+
     def configure_fetcher(self) -> Dict[str, Any]:
         return {
-            "file_cache": self.file_cache.configure(),
+            "file_cache": self._make_file_cache().to_json(),
             "hostname": self.hostname,
             "address": self.ipaddress,
             "time_settings": self.time_settings,

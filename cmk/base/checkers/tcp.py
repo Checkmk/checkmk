@@ -10,11 +10,13 @@ from typing import Optional
 from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
 from cmk.fetchers import FetcherType
+from cmk.fetchers.agent import DefaultAgentFileCache
 
+import cmk.base.config as config
 from cmk.base.config import HostConfig
 
 from ._abstract import Mode
-from .agent import AgentSource, AgentSummarizerDefault
+from .agent import AgentSource, AgentSummarizerDefault, DefaultAgentFileCacheFactory
 
 
 class TCPSource(AgentSource):
@@ -42,9 +44,16 @@ class TCPSource(AgentSource):
         self.port: Optional[int] = None
         self.timeout: Optional[float] = None
 
+    def _make_file_cache(self) -> DefaultAgentFileCache:
+        return DefaultAgentFileCacheFactory(
+            path=self.file_cache_path,
+            simulation=config.simulation_mode,
+            max_age=self.file_cache_max_age,
+        ).make()
+
     def configure_fetcher(self):
         return {
-            "file_cache": self.file_cache.configure(),
+            "file_cache": self._make_file_cache().to_json(),
             "family": socket.AF_INET6 if self.host_config.is_ipv6_primary else socket.AF_INET,
             "address": (self.ipaddress, self.port or self.host_config.agent_port),
             "timeout": self.timeout or self.host_config.tcp_connect_timeout,

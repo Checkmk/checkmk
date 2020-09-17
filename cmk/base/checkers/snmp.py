@@ -19,6 +19,7 @@ from cmk.snmplib.type_defs import (
 )
 
 from cmk.fetchers import FetcherType
+from cmk.fetchers.snmp import SNMPFileCache
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_table as check_table
@@ -29,6 +30,7 @@ from ._abstract import (
     ABCHostSections,
     ABCParser,
     ABCSummarizer,
+    FileCacheFactory,
     Mode,
 )
 
@@ -36,6 +38,17 @@ from ._abstract import (
 class SNMPHostSections(ABCHostSections[SNMPRawData, SNMPSections, SNMPPersistedSections,
                                        SNMPSectionContent]):
     pass
+
+
+class SNMPFileCacheFactory(FileCacheFactory[SNMPRawData]):
+    def make(self) -> SNMPFileCache:
+        return SNMPFileCache(
+            path=self.path,
+            max_age=self.max_age,
+            disabled=self.disabled | self.snmp_disabled,
+            use_outdated=self.use_outdated,
+            simulation=self.simulation,
+        )
 
 
 class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
@@ -127,7 +140,7 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
 
     def configure_fetcher(self) -> Dict[str, Any]:
         return {
-            "file_cache": self.file_cache.configure(),
+            "file_cache": self._make_file_cache().to_json(),
             "snmp_section_trees": {
                 str(s.name): [tree.to_json() for tree in s.trees
                              ] for s in agent_based_register.iter_all_snmp_sections()
@@ -142,6 +155,13 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
             "use_snmpwalk_cache": self.use_snmpwalk_cache,
             "snmp_config": self.snmp_config._asdict(),
         }
+
+    def _make_file_cache(self) -> SNMPFileCache:
+        return SNMPFileCacheFactory(
+            path=self.file_cache_path,
+            simulation=config.simulation_mode,
+            max_age=self.file_cache_max_age,
+        ).make()
 
     def _make_parser(self) -> "SNMPParser":
         return SNMPParser(self.hostname, self.persisted_sections_file_path, self._logger)

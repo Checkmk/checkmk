@@ -13,13 +13,14 @@ import cmk.utils.paths
 from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
 from cmk.fetchers import FetcherType
+from cmk.fetchers.agent import DefaultAgentFileCache
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 from cmk.base.config import SpecialAgentConfiguration
 
 from ._abstract import Mode
-from .agent import AgentSource, AgentSummarizerDefault
+from .agent import AgentSource, AgentSummarizerDefault, DefaultAgentFileCacheFactory
 
 
 class ProgramSource(AgentSource):
@@ -88,9 +89,16 @@ class ProgramSource(AgentSource):
             template=template,
         )
 
+    def _make_file_cache(self) -> DefaultAgentFileCache:
+        return DefaultAgentFileCacheFactory(
+            path=self.file_cache_path,
+            simulation=config.simulation_mode,
+            max_age=self.file_cache_max_age,
+        ).make()
+
     def configure_fetcher(self) -> Dict[str, Any]:
         return {
-            "file_cache": self.file_cache.configure(),
+            "file_cache": self._make_file_cache().to_json(),
             "cmdline": self.cmdline,
             "stdin": self.stdin,
             "is_cmc": config.is_cmc(),

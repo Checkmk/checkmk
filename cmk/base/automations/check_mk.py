@@ -91,11 +91,11 @@ def _set_cache_opts_of_checkers(use_caches: bool) -> None:
     # TODO check these settings vs.
     # cmk/base/checkers/_abstract.py:set_cache_opts
     if use_caches:
-        checkers.FileCacheConfigurer.use_outdated = True
+        checkers.FileCacheFactory.use_outdated = True
         # TODO why does this only apply to TCP data sources and not
         # to all agent data sources?
         checkers.tcp.TCPSource.use_only_cache = True
-    checkers.FileCacheConfigurer.maybe = use_caches
+    checkers.FileCacheFactory.maybe = use_caches
 
 
 class AutomationDiscovery(DiscoveryAutomation):
@@ -1150,7 +1150,7 @@ class AutomationDiagHost(Automation):
                 ipaddress,
                 mode=checkers.Mode.CHECKING,
         ):
-            source.file_cache.max_age = config.check_max_cachefile_age
+            source.file_cache_max_age = config.check_max_cachefile_age
             if isinstance(source, checkers.programs.DSProgramSource) and cmd:
                 source = source.ds(
                     source.hostname,
@@ -1440,13 +1440,13 @@ class AutomationGetAgentOutput(Automation):
         try:
             ipaddress = ip_lookup.lookup_ip_address(host_config)
             if ty == "agent":
-                checkers.FileCacheConfigurer.reset_maybe()
+                checkers.FileCacheFactory.reset_maybe()
                 for source in checkers.make_sources(
                         host_config,
                         ipaddress,
                         mode=checkers.Mode.CHECKING,
                 ):
-                    source.file_cache.max_age = config.check_max_cachefile_age
+                    source.file_cache_max_age = config.check_max_cachefile_age
                     if not isinstance(source, checkers.agent.AgentSource):
                         continue
 

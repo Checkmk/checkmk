@@ -12,14 +12,14 @@ from typing import Any, Dict, List, Optional, Tuple, Type
 from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo, PiggybackTimeSettings
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
 
-from .agent import AgentFileCache, AgentFetcher, NoCache
+from .agent import AgentFetcher, NoCache
 from .type_defs import Mode
 
 
 class PiggybackFetcher(AgentFetcher):
     def __init__(
         self,
-        file_cache: AgentFileCache,
+        file_cache: NoCache,
         hostname: HostName,
         address: Optional[HostAddress],
         time_settings: List[Tuple[Optional[str], str, int]],
@@ -46,8 +46,8 @@ class PiggybackFetcher(AgentFetcher):
                  traceback: Optional[TracebackType]) -> None:
         self._sources.clear()
 
-    def _use_cached_data(self, mode: Mode) -> bool:
-        return mode is not Mode.CHECKING or self.file_cache.simulation
+    def _is_cache_enabled(self, mode: Mode) -> bool:
+        return mode is not Mode.CHECKING
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         raw_data = b""

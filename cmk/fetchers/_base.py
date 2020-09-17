@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import itertools
 import logging
 from pathlib import Path
 from types import TracebackType
@@ -31,23 +32,51 @@ class MKFetcherError(MKException):
 TFileCache = TypeVar("TFileCache", bound="ABCFileCache")
 
 
-class ABCFileCache(Generic[TRawData], metaclass=abc.ABCMeta):
+class ABCFileCache(Generic[TRawData], abc.ABC):
     def __init__(
         self,
         *,
         path: Union[str, Path],
-        max_age: Optional[int],
+        max_age: int,
         disabled: bool,
         use_outdated: bool,
         simulation: bool,
     ) -> None:
         super().__init__()
-        self.path: Final = Path(path)
-        self.max_age = max_age
-        self.disabled = disabled
-        self.use_outdated = use_outdated
-        self.simulation = simulation
-        self._logger: Final = cmk_logger
+        self.path: Final[Path] = Path(path)
+        self.max_age: Final[int] = max_age
+        self.disabled: Final[bool] = disabled
+        self.use_outdated: Final[bool] = use_outdated
+        self.simulation: Final[bool] = simulation
+        self._logger: Final[logging.Logger] = cmk_logger
+
+    def __hash__(self) -> int:
+        *_rest, last = itertools.accumulate(
+            (self.path, self.max_age, self.disabled, self.use_outdated, self.simulation),
+            lambda acc, elem: acc ^ hash(elem),
+            initial=0,
+        )
+        return last
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return all((
+            self.path == other.path,
+            self.max_age == other.max_age,
+            self.disabled == other.disabled,
+            self.use_outdated == other.use_outdated,
+            self.simulation == other.simulation,
+        ))
+
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            "path": str(self.path),
+            "max_age": self.max_age,
+            "disabled": self.disabled,
+            "use_outdated": self.use_outdated,
+            "simulation": self.simulation,
+        }
 
     @classmethod
     def from_json(cls: Type[TFileCache], serialized: Dict[str, Any]) -> TFileCache:
@@ -80,9 +109,12 @@ class ABCFileCache(Generic[TRawData], metaclass=abc.ABCMeta):
 
         may_use_outdated = self.simulation or self.use_outdated
         cachefile_age = cmk.utils.cachefile_age(self.path)
-        if not may_use_outdated and self.max_age is not None and cachefile_age > self.max_age:
-            self._logger.debug("Not using cache (Too old. Age is %d sec, allowed is %s sec)",
-                               cachefile_age, self.max_age)
+        if not may_use_outdated and cachefile_age > self.max_age:
+            self._logger.debug(
+                "Not using cache (Too old. Age is %d sec, allowed is %s sec)",
+                cachefile_age,
+                self.max_age,
+            )
             return None
 
         # TODO: Use some generic store file read function to generalize error handling,
@@ -139,11 +171,6 @@ class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
         """Destroy the data source."""
         raise NotImplementedError()
 
-    @abc.abstractmethod
-    def _use_cached_data(self, mode: Mode) -> bool:
-        """Decide whether to try to read data from cache"""
-        raise NotImplementedError()
-
     @final
     def fetch(self, mode: Mode) -> Result[TRawData, Exception]:
         """Return the data from the source, either cached or from IO."""
@@ -152,9 +179,14 @@ class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
         except Exception as exc:
             return Result.Error(exc)
 
+    @abc.abstractmethod
+    def _is_cache_enabled(self, mode: Mode) -> bool:
+        """Decide whether to try to read data from cache"""
+        raise NotImplementedError()
+
     def _fetch(self, mode: Mode) -> TRawData:
         # TODO(ml): EAFP would significantly simplify the code.
-        if self._use_cached_data(mode):
+        if self.file_cache.simulation or self._is_cache_enabled(mode):
             raw_data = self._fetch_from_cache()
             if raw_data:
                 self._logger.log(VERBOSE, "[%s] Use cached data", self.__class__.__name__)

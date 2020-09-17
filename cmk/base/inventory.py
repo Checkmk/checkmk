@@ -322,7 +322,7 @@ def _do_inv_for_realhost(
         if isinstance(source, checkers.snmp.SNMPSource):
             # TODO(ml): This modifies the SNMP fetcher config dynamically.
             source.on_snmp_scan_error = "raise"  # default
-            checkers.FileCacheConfigurer.snmp_disabled = True
+            checkers.FileCacheFactory.snmp_disabled = True
             source.use_snmpwalk_cache = False
             source.ignore_check_interval = True
             if multi_host_sections is not None:

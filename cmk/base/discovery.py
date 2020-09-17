@@ -308,7 +308,7 @@ def _get_rediscovery_mode(params: Dict) -> str:
 def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[CheckPluginName]],
                  arg_only_new: bool) -> None:
     config_cache = config.get_config_cache()
-    use_caches = not arg_hostnames or checkers.FileCacheConfigurer.maybe
+    use_caches = not arg_hostnames or checkers.FileCacheFactory.maybe
     on_error = "raise" if cmk.utils.debug.enabled() else "warn"
 
     host_names = _preprocess_hostnames(arg_hostnames, config_cache)
@@ -687,13 +687,13 @@ def check_discovery(
 
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:
     # 1. use caches as default:
-    #    - Set FileCacheConfigurer.maybe = True (set max_cachefile_age, else 0)
-    #    - Set FileCacheConfigurer.use_outdated = True
+    #    - Set FileCacheFactory.maybe = True (set max_cachefile_age, else 0)
+    #    - Set FileCacheFactory.use_outdated = True
     # 2. Then these settings are used to read cache file or not
     # 3. If params['inventory_check_do_scan'] = True in 'Periodic service discovery'
     #    then caching is disabled, but only for SNMP data sources:
-    #    - FileCacheConfigurer.snmp_disabled = True
-    #      -> FileCacheConfigurer.disabled = True
+    #    - FileCacheFactory.snmp_disabled = True
+    #      -> FileCacheFactory.disabled = True
     #    For agent-based data sources we do not disable cache because of some special
     #    cases (eg. logwatch) in order to prevent stealing data (log lines etc.)
 
@@ -721,7 +721,7 @@ def check_discovery(
             disable_snmp_caches=params['inventory_check_do_scan'],
         )
 
-    use_caches = checkers.FileCacheConfigurer.maybe
+    use_caches = checkers.FileCacheFactory.maybe
     multi_host_sections = MultiHostSections()
     result = checkers.update_host_sections(
         multi_host_sections,
@@ -1300,7 +1300,7 @@ def _configure_sources(
         source.on_snmp_scan_error = on_error
         source.use_snmpwalk_cache = False
         source.ignore_check_interval = True
-        source.file_cache.snmp_disabled = disable_snmp_caches
+        checkers.FileCacheFactory.snmp_disabled = disable_snmp_caches
 
 
 def _execute_discovery(

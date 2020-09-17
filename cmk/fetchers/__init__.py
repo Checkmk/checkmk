@@ -8,7 +8,7 @@
 import enum
 from typing import Any, Dict, Literal, Type
 
-from ._base import ABCFetcher, MKFetcherError
+from ._base import ABCFetcher, ABCFileCache, MKFetcherError
 from .agent import AgentFileCache
 from .ipmi import IPMIFetcher
 from .piggyback import PiggybackFetcher
@@ -18,6 +18,7 @@ from .tcp import TCPFetcher
 
 __all__ = [
     "ABCFetcher",
+    "ABCFileCache",
     "MKFetcherError",
     "IPMIFetcher",
     "PiggybackFetcher",

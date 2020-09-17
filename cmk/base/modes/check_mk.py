@@ -115,7 +115,7 @@ modes.register_general_option(
 
 
 def option_no_cache() -> None:
-    cmk.base.checkers.FileCacheConfigurer.disabled = True
+    cmk.base.checkers.FileCacheFactory.disabled = True
 
 
 modes.register_general_option(
@@ -400,7 +400,7 @@ def mode_dump_agent(hostname: HostName) -> None:
                 ipaddress,
                 mode=mode,
         ):
-            source.file_cache.max_age = config.check_max_cachefile_age
+            source.file_cache_max_age = config.check_max_cachefile_age
             if not isinstance(source, checkers.agent.AgentSource):
                 continue
 
@@ -1251,7 +1251,7 @@ def mode_inventory(options: Dict, args: List[str]) -> None:
     else:
         # No hosts specified: do all hosts and force caching
         hostnames = sorted(config_cache.all_active_hosts())
-        checkers.FileCacheConfigurer.reset_maybe()
+        checkers.FileCacheFactory.reset_maybe()
         console.verbose("Doing HW/SW inventory on all hosts\n")
 
     if "force" in options:
@@ -1512,7 +1512,7 @@ def mode_discover(options: DiscoverOptions, args: List[str]) -> None:
         # by default. Otherwise Checkmk would have to connect to ALL hosts.
         # This will make Checkmk only contact hosts in case the cache is not
         # new enough.
-        checkers.FileCacheConfigurer.reset_maybe()
+        checkers.FileCacheFactory.reset_maybe()
 
     discovery.do_discovery(set(hostnames), options.get("checks"), options["discover"] == 1)
 

@@ -7,7 +7,7 @@ from typing import Mapping, Optional, Tuple
 
 import time
 
-from ..agent_based_api.v1.type_defs import CheckGenerator, ValueStore
+from ..agent_based_api.v1.type_defs import CheckResult, ValueStore
 
 from ..agent_based_api.v1 import (
     check_levels,
@@ -51,7 +51,7 @@ def check_cpu_util(
     this_time: Optional[float] = None,
     cores=None,
     perf_max=100,
-) -> CheckGenerator:
+) -> CheckResult:
     # Convert legacy param style to new dict style
     if params is None:
         params = {}
@@ -128,7 +128,7 @@ def _check_single_core_util(
     metric: Optional[str],
     levels: Optional[Tuple[float, float]],
     label: str,
-) -> CheckGenerator:
+) -> CheckResult:
     for result in check_levels(
             util,
             levels_upper=levels,
@@ -141,7 +141,7 @@ def _check_single_core_util(
 
 
 def _util_perfdata(core: str, total_perc: float, core_index: int, this_time: float, params: Mapping,
-                   value_store: ValueStore) -> CheckGenerator:
+                   value_store: ValueStore) -> CheckResult:
 
     if "core_util_time" in params:
         threshold, warn, crit = params["core_util_time"]
@@ -203,7 +203,7 @@ def cpu_util_time(
     threshold: float,
     levels: Optional[Tuple[float, float]],
     value_store: ValueStore,
-) -> CheckGenerator:
+) -> CheckResult:
     core_states = value_store.get("cpu.util.core.high", {})
     if perc <= threshold:
         # drop core from states

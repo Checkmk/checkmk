@@ -229,7 +229,7 @@ def convert_esx_counters_if(section: Section) -> interfaces.Section:
 def discover_esx_vsphere_counters_if(
     params: Sequence[type_defs.Parameters],
     section: Section,
-) -> type_defs.DiscoveryGenerator:
+) -> type_defs.DiscoveryResult:
     yield from interfaces.discover_interfaces(
         params,
         convert_esx_counters_if(section),

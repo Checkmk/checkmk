@@ -259,7 +259,7 @@ register.agent_section(
 def discover_lnx_if(
     params: Sequence[type_defs.Parameters],
     section: Section,
-) -> type_defs.DiscoveryGenerator:
+) -> type_defs.DiscoveryResult:
     # Always exclude dockers veth* interfaces on docker nodes
     if_table = [iface for iface in section[0] if not iface.descr.startswith("veth")]
     yield from interfaces.discover_interfaces(
@@ -272,7 +272,7 @@ def check_lnx_if(
     item: str,
     params: type_defs.Parameters,
     section: Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from interfaces.check_multiple_interfaces(
         item,
         params,
@@ -284,7 +284,7 @@ def cluster_check_lnx_if(
     item: str,
     params: type_defs.Parameters,
     section: Mapping[str, Section],
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from interfaces.cluster_check(
         item,
         params,

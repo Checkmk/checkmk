@@ -37,7 +37,7 @@ DISKSTAT_DISKLESS_PATTERN = re.compile("x?[shv]d[a-z]*[0-9]+")
 def discovery_diskstat_generic(
     params: Sequence[type_defs.Parameters],
     section: Section,
-) -> type_defs.DiscoveryGenerator:
+) -> type_defs.DiscoveryResult:
     # Skip over on empty data
     if not section:
         return
@@ -239,7 +239,7 @@ def check_diskstat_dict(
     params: type_defs.Parameters,
     disk: Disk,
     value_store,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     # Averaging
     # Note: this check uses a simple method of averaging: As soon as averaging
     # is turned on the actual metrics are *replaced* by the averaged ones. No

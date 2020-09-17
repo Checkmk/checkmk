@@ -18,9 +18,9 @@ from .agent_based_api.v1 import (
 )
 
 from .agent_based_api.v1.type_defs import (
-    DiscoveryGenerator,
+    DiscoveryResult,
     AgentStringTable,
-    CheckGenerator,
+    CheckResult,
     Parameters,
 )
 
@@ -61,13 +61,13 @@ register.agent_section(
 )
 
 
-def discovery_sap_hana_data_volume(section: sap_hana.ParsedSection) -> DiscoveryGenerator:
+def discovery_sap_hana_data_volume(section: sap_hana.ParsedSection) -> DiscoveryResult:
     for item in section:
         yield Service(item=item)
 
 
 def check_sap_hana_data_volume(item: str, params: Parameters,
-                               section: sap_hana.ParsedSection) -> CheckGenerator:
+                               section: sap_hana.ParsedSection) -> CheckResult:
     item_data = section.get(item)
     if item_data is None:
         return

@@ -107,7 +107,7 @@ def _section_to_interface(section: Section) -> interfaces.Section:
 def discover_fritz_wan_if(
     params: Sequence[type_defs.Parameters],
     section: Section,
-) -> type_defs.DiscoveryGenerator:
+) -> type_defs.DiscoveryResult:
     yield from interfaces.discover_interfaces(
         params,
         _section_to_interface(section),
@@ -118,7 +118,7 @@ def check_fritz_wan_if(
     item: str,
     params: type_defs.Parameters,
     section: Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     params_updated = dict(params)
     params_updated.update({
         'assumed_speed_in': int(section['NewLayer1DownstreamMaxBitRate']),

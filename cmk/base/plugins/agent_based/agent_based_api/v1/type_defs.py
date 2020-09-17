@@ -21,16 +21,15 @@ Example:
             item: str,
             params: Parameters,
             section: Dict[str, str],
-        ) -> CheckGenerator:
+        ) -> CheckResult:
             pass
 
 """
 
 from cmk.base.api.agent_based.inventory_classes import InventoryResult
 from cmk.base.api.agent_based.checking_classes import (
-    # TODO (mo) rename these!
-    CheckResult as CheckGenerator,
-    DiscoveryResult as DiscoveryGenerator,
+    CheckResult,
+    DiscoveryResult,
 )
 from cmk.base.api.agent_based.type_defs import (
     AgentStringTable,
@@ -43,8 +42,8 @@ from cmk.base.api.agent_based.type_defs import (
 
 __all__ = [
     "AgentStringTable",
-    "CheckGenerator",
-    "DiscoveryGenerator",
+    "CheckResult",
+    "DiscoveryResult",
     "HostLabelGenerator",
     "InventoryResult",
     "Parameters",

@@ -15,8 +15,8 @@ from .agent_based_api.v1 import (
     SNMPTree,
 )
 from .agent_based_api.v1.type_defs import (
-    CheckGenerator,
-    DiscoveryGenerator,
+    CheckResult,
+    DiscoveryResult,
     SNMPStringTable,
     Parameters,
 )
@@ -58,7 +58,7 @@ register.snmp_section(
 )
 
 
-def discover_netscaler_sslcertificates(section: Section) -> DiscoveryGenerator:
+def discover_netscaler_sslcertificates(section: Section) -> DiscoveryResult:
     """
     >>> list(discover_netscaler_sslcertificates({'cert1': 3, 'cert2': 100, '': 4}))
     [Service(item='cert1', parameters={}, labels=[]), Service(item='cert2', parameters={}, labels=[])]
@@ -73,7 +73,7 @@ def _check_netscaler_sslcertificates(
     params: Parameters,
     section: Section,
     node_name: Optional[str] = None,
-) -> CheckGenerator:
+) -> CheckResult:
     if item not in section:
         return
     label = 'certificate valid for'
@@ -90,7 +90,7 @@ def check_netscaler_sslcertificates(
     item: str,
     params: Parameters,
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     yield from _check_netscaler_sslcertificates(
         item,
         params,
@@ -102,7 +102,7 @@ def cluster_check_netscaler_sslcertificates(
     item: str,
     params: Parameters,
     section: Mapping[str, Section],
-) -> CheckGenerator:
+) -> CheckResult:
     for node_name, node_section in section.items():
         yield from _check_netscaler_sslcertificates(
             item,

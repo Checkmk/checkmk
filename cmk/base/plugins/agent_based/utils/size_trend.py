@@ -9,7 +9,7 @@ import time
 
 from ..agent_based_api.v1.type_defs import (
     ValueStore,
-    CheckGenerator,
+    CheckResult,
     Parameters,
 )
 from ..agent_based_api.v1 import (
@@ -33,7 +33,7 @@ def size_trend(
     used_mb: float,
     size_mb: float,
     timestamp: Optional[float],
-) -> CheckGenerator:
+) -> CheckResult:
     """Trend computation for size related checks of disks, ram, etc.
     Trends are computed in two steps. In the first step the delta to
     the last check is computed, using a normal check_mk counter.

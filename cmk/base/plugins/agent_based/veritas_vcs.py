@@ -166,7 +166,7 @@ register.agent_section(
 )
 
 
-def discover_veritas_vcs_subsection(subsection: SubSection,) -> type_defs.DiscoveryGenerator:
+def discover_veritas_vcs_subsection(subsection: SubSection,) -> type_defs.DiscoveryResult:
     for item_name in subsection:
         yield Service(item=item_name)
 
@@ -226,7 +226,7 @@ def cluster_check_veritas_vcs_subsection(
     item: str,
     params: type_defs.Parameters,
     subsections: Mapping[str, SubSection],
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     last_cluster_result = None
 
     all_nodes_ok = True
@@ -277,7 +277,7 @@ def cluster_check_veritas_vcs_subsection(
 #   +----------------------------------------------------------------------+
 
 
-def discover_veritas_vcs(section: Section) -> type_defs.DiscoveryGenerator:
+def discover_veritas_vcs(section: Section) -> type_defs.DiscoveryResult:
     yield from discover_veritas_vcs_subsection(section.get('cluster', {}))
 
 
@@ -285,7 +285,7 @@ def check_veritas_vcs(
     item: str,
     params: type_defs.Parameters,
     section: Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from check_veritas_vcs_subsection(
         item,
         params,
@@ -297,7 +297,7 @@ def cluster_check_veritas_vcs(
     item: str,
     params: type_defs.Parameters,
     section: ClusterSection,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from cluster_check_veritas_vcs_subsection(
         item,
         params,
@@ -327,7 +327,7 @@ register.check_plugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_veritas_vcs_system(section: Section) -> type_defs.DiscoveryGenerator:
+def discover_veritas_vcs_system(section: Section) -> type_defs.DiscoveryResult:
     yield from discover_veritas_vcs_subsection(section.get('system', {}))
 
 
@@ -335,7 +335,7 @@ def check_veritas_vcs_system(
     item: str,
     params: type_defs.Parameters,
     section: Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from check_veritas_vcs_subsection(
         item,
         params,
@@ -347,7 +347,7 @@ def cluster_check_veritas_vcs_system(
     item: str,
     params: type_defs.Parameters,
     section: ClusterSection,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from cluster_check_veritas_vcs_subsection(
         item,
         params,
@@ -377,7 +377,7 @@ register.check_plugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_veritas_vcs_group(section: Section) -> type_defs.DiscoveryGenerator:
+def discover_veritas_vcs_group(section: Section) -> type_defs.DiscoveryResult:
     yield from discover_veritas_vcs_subsection(section.get('group', {}))
 
 
@@ -385,7 +385,7 @@ def check_veritas_vcs_group(
     item: str,
     params: type_defs.Parameters,
     section: Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from check_veritas_vcs_subsection(
         item,
         params,
@@ -397,7 +397,7 @@ def cluster_check_veritas_vcs_group(
     item: str,
     params: type_defs.Parameters,
     section: ClusterSection,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from cluster_check_veritas_vcs_subsection(
         item,
         params,
@@ -427,7 +427,7 @@ register.check_plugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_veritas_vcs_resource(section: Section) -> type_defs.DiscoveryGenerator:
+def discover_veritas_vcs_resource(section: Section) -> type_defs.DiscoveryResult:
     yield from discover_veritas_vcs_subsection(section.get('resource', {}))
 
 
@@ -435,7 +435,7 @@ def check_veritas_vcs_resource(
     item: str,
     params: type_defs.Parameters,
     section: Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from check_veritas_vcs_subsection(
         item,
         params,
@@ -447,7 +447,7 @@ def cluster_check_veritas_vcs_resource(
     item: str,
     params: type_defs.Parameters,
     section: ClusterSection,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from cluster_check_veritas_vcs_subsection(
         item,
         params,

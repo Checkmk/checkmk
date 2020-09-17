@@ -21,8 +21,8 @@ from .agent_based_api.v1 import (
 
 from .agent_based_api.v1.type_defs import (
     AgentStringTable,
-    CheckGenerator,
-    DiscoveryGenerator,
+    CheckResult,
+    DiscoveryResult,
     Parameters,
 )
 # Output of old agent (< 1.1.10i2):
@@ -82,7 +82,7 @@ register.agent_section(
 
 
 def discovery_windows_services(params: List[Dict[str, Any]],
-                               section: Dict[str, Dict[str, str]]) -> DiscoveryGenerator:
+                               section: Dict[str, Dict[str, str]]) -> DiscoveryResult:
 
     # Handle single entries (type str)
     def add_matching_services(name, description, service_state, start_type, entry):
@@ -165,9 +165,8 @@ def check_windows_services(item: str, params: Parameters,
             )
 
 
-def cluster_check_windows_services(
-        item: str, params: Parameters,
-        section: Mapping[str, Dict[str, Dict[str, str]]]) -> CheckGenerator:
+def cluster_check_windows_services(item: str, params: Parameters,
+                                   section: Mapping[str, Dict[str, Dict[str, str]]]) -> CheckResult:
     # A service may appear more than once (due to clusters).
     # First make a list of all matching entries with their
     # states
@@ -204,13 +203,12 @@ register.check_plugin(
 )
 
 
-def discovery_services_summary(section: Dict[str, Dict[str, str]]) -> DiscoveryGenerator:
+def discovery_services_summary(section: Dict[str, Dict[str, str]]) -> DiscoveryResult:
     if section:
         yield Service()
 
 
-def check_services_summary(params: Parameters, section: Dict[str, Dict[str,
-                                                                       str]]) -> CheckGenerator:
+def check_services_summary(params: Parameters, section: Dict[str, Dict[str, str]]) -> CheckResult:
     blacklist = params.get("ignored", [])
     stoplist = []
     num_blacklist = 0

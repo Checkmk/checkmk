@@ -19,8 +19,8 @@ from .agent_based_api.v1 import (
 )
 from .agent_based_api.v1.type_defs import (
     SNMPStringTable,
-    CheckGenerator,
-    DiscoveryGenerator,
+    CheckResult,
+    DiscoveryResult,
 )
 Section = Dict[str, Tuple[str, str]]
 OID_sysObjectID = ".1.3.6.1.2.1.1.2.0"
@@ -131,7 +131,7 @@ def parse_infoblox_services(string_table: SNMPStringTable) -> Section:
     }
 
 
-def discovery_infoblox_services(section: Section) -> DiscoveryGenerator:
+def discovery_infoblox_services(section: Section) -> DiscoveryResult:
     """
     >>> for result in discovery_infoblox_services({
     ...         'node-status': ('working', 'Running'),
@@ -144,7 +144,7 @@ def discovery_infoblox_services(section: Section) -> DiscoveryGenerator:
     yield from (Service(item=item) for item in section)
 
 
-def check_infoblox_services(item: str, section: Section) -> CheckGenerator:
+def check_infoblox_services(item: str, section: Section) -> CheckResult:
     """
     >>> for result in check_infoblox_services("memory", {
     ...         'node-status': ('working', 'Running'),
@@ -163,7 +163,7 @@ def check_infoblox_services(item: str, section: Section) -> CheckGenerator:
     )
 
 
-def cluster_check_infoblox_services(item: str, section: Mapping[str, Section]) -> CheckGenerator:
+def cluster_check_infoblox_services(item: str, section: Mapping[str, Section]) -> CheckResult:
     """
     >>> for result in cluster_check_infoblox_services("memory", {
     ...     "node1": {

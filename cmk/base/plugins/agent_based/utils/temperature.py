@@ -18,7 +18,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     state,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
-    CheckGenerator,)
+    CheckResult,)
 
 StatusType = int
 TempUnitType = str
@@ -262,7 +262,7 @@ def check_temperature(
     dev_levels_lower: Optional[Tuple[float, float]] = None,
     dev_status: Optional[StatusType] = None,
     dev_status_name: Optional[str] = None,
-) -> CheckGenerator:
+) -> CheckResult:
     """This function checks the temperature value against specified levels and issues a warn/cirt
     message. Levels can be supplied by the user or the device. The user has the possibility to configure
     the preferred levels. Additionally, it is possible to check temperature trends. All internal

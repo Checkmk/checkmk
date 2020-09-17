@@ -21,9 +21,9 @@ from .agent_based_api.v1 import (
 )
 
 from .agent_based_api.v1.type_defs import (
-    DiscoveryGenerator,
+    DiscoveryResult,
     AgentStringTable,
-    CheckGenerator,
+    CheckResult,
     Parameters,
 )
 from .utils.df import df_check_filesystem_single
@@ -180,14 +180,14 @@ register.agent_section(
 )
 
 
-def discovery_oracle_asm_diskgroup(section: Dict[str, Any]) -> DiscoveryGenerator:
+def discovery_oracle_asm_diskgroup(section: Dict[str, Any]) -> DiscoveryResult:
     for asm_diskgroup_name, attrs in section.items():
         if attrs["dgstate"] in ["MOUNTED", "DISMOUNTED"]:
             yield Service(item=asm_diskgroup_name)
 
 
 def check_oracle_asm_diskgroup(item: str, params: Parameters, section: Dict[str,
-                                                                            Any]) -> CheckGenerator:
+                                                                            Any]) -> CheckResult:
     if item not in section:
         # In case of missing information we assume that the ASM-Instance is
         # checked at a later time.
@@ -386,7 +386,7 @@ def check_oracle_asm_diskgroup(item: str, params: Parameters, section: Dict[str,
 
 
 def cluster_check_oracle_asm_diskgroup(item: str, params: Parameters,
-                                       section: Mapping[str, Dict[str, Any]]) -> CheckGenerator:
+                                       section: Mapping[str, Dict[str, Any]]) -> CheckResult:
 
     # only use data from 1. node in agent output
     # => later calculation of DG size is much easier

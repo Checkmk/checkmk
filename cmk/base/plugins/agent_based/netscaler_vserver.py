@@ -183,7 +183,7 @@ register.snmp_section(
 )
 
 
-def discover_netscaler_vserver(section: Section) -> type_defs.DiscoveryGenerator:
+def discover_netscaler_vserver(section: Section) -> type_defs.DiscoveryResult:
     """
     >>> import pprint
     >>> pprint.pprint(list(discover_netscaler_vserver({
@@ -200,7 +200,7 @@ def discover_netscaler_vserver(section: Section) -> type_defs.DiscoveryGenerator
 def _check_netscaler_vservers(
     params: type_defs.Parameters,
     vsevers: Sequence[VServer],
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     """
     >>> for result in _check_netscaler_vservers(
     ...     type_defs.Parameters({"health_levels": (100.0, 0.1), "cluster_status": "best"}),
@@ -285,7 +285,7 @@ def check_netscaler_vserver(
     item: str,
     params: type_defs.Parameters,
     section: Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     """
     >>> par = type_defs.Parameters({"health_levels": (100.0, 0.1), "cluster_status": "best"})
     >>> assert list(check_netscaler_vserver('item', par, {})) == []
@@ -312,7 +312,7 @@ def cluster_check_netscaler_vserver(
     item: str,
     params: type_defs.Parameters,
     section: Mapping[str, Section],
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     """
     >>> par = type_defs.Parameters({"health_levels": (100.0, 0.1), "cluster_status": "best"})
     >>> vserver = {

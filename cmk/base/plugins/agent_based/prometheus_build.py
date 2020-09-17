@@ -10,8 +10,8 @@ from typing import Dict, Any, Optional
 from .agent_based_api.v1 import (Result, register, type_defs, state, Service)
 
 from .agent_based_api.v1.type_defs import (
-    CheckGenerator,
-    DiscoveryGenerator,
+    CheckResult,
+    DiscoveryResult,
 )
 
 Section = Dict[str, Any]
@@ -33,11 +33,11 @@ register.agent_section(
 )
 
 
-def discovery_prometheus_build(section: Section) -> DiscoveryGenerator:
+def discovery_prometheus_build(section: Section) -> DiscoveryResult:
     yield Service()
 
 
-def check_prometheus_build(section: Section) -> CheckGenerator:
+def check_prometheus_build(section: Section) -> CheckResult:
     yield Result(
         state=state.OK,
         summary=f"Version: {section['version']}",

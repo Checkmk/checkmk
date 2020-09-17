@@ -29,8 +29,8 @@ from .agent_based_api.v1 import (
 )
 from .agent_based_api.v1.type_defs import (
     SNMPStringTable,
-    CheckGenerator,
-    DiscoveryGenerator,
+    CheckResult,
+    DiscoveryResult,
 )
 
 ParsedSection = Dict[str, str]
@@ -40,13 +40,13 @@ def parse_liebert_system(string_table: SNMPStringTable) -> ParsedSection:
     return parse_liebert_without_unit(string_table, str)
 
 
-def discover_liebert_system(section: ParsedSection) -> DiscoveryGenerator:
+def discover_liebert_system(section: ParsedSection) -> DiscoveryResult:
     model = section.get('System Model Number')
     if model:
         yield Service(item=model)
 
 
-def check_liebert_system(item: str, section: ParsedSection) -> CheckGenerator:
+def check_liebert_system(item: str, section: ParsedSection) -> CheckResult:
     # Variable 'item' is used to generate the service description.
     # However, only one item per host is expected, which is why it is not
     # used in this check funtion.

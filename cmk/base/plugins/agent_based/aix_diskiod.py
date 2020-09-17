@@ -84,7 +84,7 @@ def _compute_rates(
 def _check_disk(
     params: type_defs.Parameters,
     disk: diskstat.Disk,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     value_store = get_value_store()
     disk_with_rates = _compute_rates(disk, value_store)
     yield from diskstat.check_diskstat_dict(
@@ -98,7 +98,7 @@ def check_aix_diskiod(
     item: str,
     params: type_defs.Parameters,
     section: diskstat.Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     if item == 'SUMMARY':
         disk = diskstat.summarize_disks(section.items())
     else:
@@ -113,7 +113,7 @@ def cluster_check_aix_diskiod(
     item: str,
     params: type_defs.Parameters,
     section: Mapping[str, diskstat.Section],
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     if item == 'SUMMARY':
         disk = diskstat.summarize_disks(
             item for node_section in section.values() for item in node_section.items())

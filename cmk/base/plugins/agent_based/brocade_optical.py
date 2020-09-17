@@ -292,7 +292,7 @@ def _check_matching_conditions(
 def discover_brocade_optical(
     params: Sequence[type_defs.Parameters],
     section: Section,
-) -> type_defs.DiscoveryGenerator:
+) -> type_defs.DiscoveryResult:
     if section:
         pad_width = max(map(len, section))
     else:
@@ -348,7 +348,7 @@ def _check_light(
     metric_name: str,
     params: type_defs.Parameters,
     lane_num: Optional[int] = None,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     if any(x is None for x in reading):
         return
     txt = _infotext(
@@ -380,7 +380,7 @@ def check_brocade_optical(
     item: str,
     params: type_defs.Parameters,
     section: Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     """
     >>> from pprint import pprint
     >>> for output in check_brocade_optical(

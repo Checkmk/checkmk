@@ -32,8 +32,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     SNMPStringTable,
-    DiscoveryGenerator,
-    CheckGenerator,
+    DiscoveryResult,
+    CheckResult,
     ValueStore,
 )
 
@@ -111,7 +111,7 @@ def parse_juniper_trpz_aps_sessions(string_table: SNMPStringTable) -> Section:
     }, radios
 
 
-def discovery_juniper_trpz_aps_sessions(section: Section) -> DiscoveryGenerator:
+def discovery_juniper_trpz_aps_sessions(section: Section) -> DiscoveryResult:
     yield from (Service(item=name) for name in section[0])
 
 
@@ -120,7 +120,7 @@ def _check_common_juniper_trpz_aps_sessions(
     now: float,
     item: str,
     section: Mapping[str, Section],
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> now = time.time()
     >>> vs = {}
@@ -228,7 +228,7 @@ def _check_common_juniper_trpz_aps_sessions(
 def check_juniper_trpz_aps_sessions(
     item: str,
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     yield from _check_common_juniper_trpz_aps_sessions(
         get_value_store(),
         time.time(),
@@ -240,7 +240,7 @@ def check_juniper_trpz_aps_sessions(
 def cluster_check_juniper_trpz_aps_sessions(
     item: str,
     section: Mapping[str, Section],
-) -> CheckGenerator:
+) -> CheckResult:
     yield from _check_common_juniper_trpz_aps_sessions(
         get_value_store(),
         time.time(),

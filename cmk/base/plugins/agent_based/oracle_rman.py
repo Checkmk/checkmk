@@ -23,8 +23,8 @@ from .agent_based_api.v1 import (
 from .agent_based_api.v1.type_defs import (
     Parameters,
     AgentStringTable,
-    DiscoveryGenerator,
-    CheckGenerator,
+    DiscoveryResult,
+    CheckResult,
 )
 
 # actual format
@@ -150,7 +150,7 @@ register.agent_section(
 )
 
 
-def discovery_oracle_rman(section: SectionOracleRman) -> DiscoveryGenerator:
+def discovery_oracle_rman(section: SectionOracleRman) -> DiscoveryResult:
     for elem in section.values():
 
         sid = elem['sid']
@@ -165,7 +165,7 @@ def discovery_oracle_rman(section: SectionOracleRman) -> DiscoveryGenerator:
             yield Service(item="%s.%s" % (sid, backuptype))
 
 
-def check_oracle_rman(item: str, params: Parameters, section: SectionOracleRman) -> CheckGenerator:
+def check_oracle_rman(item: str, params: Parameters, section: SectionOracleRman) -> CheckResult:
 
     rman_backup = section.get(item)
 
@@ -222,7 +222,7 @@ def check_oracle_rman(item: str, params: Parameters, section: SectionOracleRman)
 
 
 def cluster_check_oracle_rman(item: str, params: Parameters,
-                              section: Mapping[str, SectionOracleRman]) -> CheckGenerator:
+                              section: Mapping[str, SectionOracleRman]) -> CheckResult:
 
     youngest_backup_age: Optional[int] = None
     # take the most current backupage in clustered environments

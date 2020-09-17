@@ -49,8 +49,8 @@ from .agent_based_api.v1 import (
 from .agent_based_api.v1.type_defs import (
     SNMPStringTable,
     Parameters,
-    CheckGenerator,
-    DiscoveryGenerator,
+    CheckResult,
+    DiscoveryResult,
     ValueStore,
 )
 
@@ -131,7 +131,7 @@ register.snmp_section(
 )
 
 
-def discovery_cisco_mem(section: Section) -> DiscoveryGenerator:
+def discovery_cisco_mem(section: Section) -> DiscoveryResult:
     """
     >>> for elem in discovery_cisco_mem({
     ...         'System memory':         ['1251166290', '3043801006'],
@@ -145,7 +145,7 @@ def discovery_cisco_mem(section: Section) -> DiscoveryGenerator:
     yield from (Service(item=item) for item in section if item != "Driver text")
 
 
-def check_cisco_mem(item: str, params: Parameters, section: Section) -> CheckGenerator:
+def check_cisco_mem(item: str, params: Parameters, section: Section) -> CheckResult:
     yield from _idem_check_cisco_mem(get_value_store(), item, params, section)
 
 
@@ -154,7 +154,7 @@ def _idem_check_cisco_mem(
     item: str,
     params: Parameters,
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> vs = {}
     >>> for result in _idem_check_cisco_mem(
@@ -201,7 +201,7 @@ def check_cisco_mem_sub(
     params: Parameters,
     mem_used: int,
     mem_total: int,
-) -> CheckGenerator:
+) -> CheckResult:
     if not mem_total:
         yield Result(state=state.UNKNOWN,
                      summary="Cannot calculate memory usage: Device reports total memory 0")

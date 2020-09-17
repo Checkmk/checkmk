@@ -15,8 +15,8 @@ from .agent_based_api.v1 import (
 
 from .agent_based_api.v1.type_defs import (
     Parameters,
-    CheckGenerator,
-    DiscoveryGenerator,
+    CheckResult,
+    DiscoveryResult,
     ValueStore,
 )
 
@@ -28,7 +28,7 @@ from .utils.mssql_counters import (
 )
 
 
-def discovery_mssql_counters_locks(section: Section) -> DiscoveryGenerator:
+def discovery_mssql_counters_locks(section: Section) -> DiscoveryResult:
     """
     >>> for result in discovery_mssql_counters_locks({
     ...     ('MSSQL_VEEAMSQL2012:Locks', '_Total'): {'lock_requests/sec': 3900449701, 'lock_timeouts/sec': 86978, 'number_of_deadlocks/sec': 19, 'lock_waits/sec': 938, 'lock_wait_time_(ms)': 354413},
@@ -54,7 +54,7 @@ def _check_common(
     item: str,
     params: Parameters,
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     counters, _counter = get_item(item, section)
     now = counters.get("utc_time", time_point)
 
@@ -92,7 +92,7 @@ def _check_base(
     item: str,
     params: Parameters,
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> from contextlib import suppress
     >>> vs = {}
@@ -121,7 +121,7 @@ def check_mssql_counters_locks(
     item: str,
     params: Parameters,
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     yield from _check_base(get_value_store(), time.time(), item, params, section)
 
 
@@ -131,7 +131,7 @@ def _cluster_check_base(
     item: str,
     params: Parameters,
     section: Mapping[str, Section],
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> vs = {}
     >>> for i in range(2):
@@ -167,7 +167,7 @@ def cluster_check_mssql_counters_locks(
     item: str,
     params: Parameters,
     section: Mapping[str, Section],
-) -> CheckGenerator:
+) -> CheckResult:
     yield from _cluster_check_base(get_value_store(), time.time(), item, params, section)
 
 

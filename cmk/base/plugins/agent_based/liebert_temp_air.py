@@ -23,8 +23,8 @@ from .agent_based_api.v1 import (
 )
 from .agent_based_api.v1.type_defs import (
     SNMPStringTable,
-    CheckGenerator,
-    DiscoveryGenerator,
+    CheckResult,
+    DiscoveryResult,
 )
 
 ParsedSection = Dict[str, Any]
@@ -48,7 +48,7 @@ def parse_liebert_temp_air(string_table: SNMPStringTable) -> ParsedSection:
 def discover_liebert_temp_air(
     section_liebert_temp_air: ParsedSection,
     section_liebert_system: Dict[str, str],
-) -> DiscoveryGenerator:
+) -> DiscoveryResult:
     for key, (value, _unit) in section_liebert_temp_air.items():
         if "Unavailable" not in value:
             yield Service(item=_get_item_from_key(key))
@@ -56,7 +56,7 @@ def discover_liebert_temp_air(
 
 def check_liebert_temp_air(item: str, params: TempParamType,
                            section_liebert_temp_air: ParsedSection,
-                           section_liebert_system: Dict[str, str]) -> CheckGenerator:
+                           section_liebert_system: Dict[str, str]) -> CheckResult:
 
     if section_liebert_temp_air is None or section_liebert_system is None:
         return

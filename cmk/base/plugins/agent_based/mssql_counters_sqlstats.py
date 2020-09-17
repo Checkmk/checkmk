@@ -16,8 +16,8 @@ from .agent_based_api.v1 import (
 
 from .agent_based_api.v1.type_defs import (
     Parameters,
-    CheckGenerator,
-    DiscoveryGenerator,
+    CheckResult,
+    DiscoveryResult,
     ValueStore,
 )
 
@@ -29,7 +29,7 @@ from .utils.mssql_counters import (
 )
 
 
-def discovery_mssql_counters_sqlstats(section: Section) -> DiscoveryGenerator:
+def discovery_mssql_counters_sqlstats(section: Section) -> DiscoveryResult:
     """
     >>> for result in discovery_mssql_counters_sqlstats({
     ...     ('MSSQL_VEEAMSQL2012:SQL_Statistics', 'None'): { 'batch_requests/sec': 22476651, 'forced_parameterizations/sec': 0, 'auto-param_attempts/sec': 1133, 'failed_auto-params/sec': 1027, 'safe_auto-params/sec': 8, 'unsafe_auto-params/sec': 98, 'sql_compilations/sec': 2189403, 'sql_re-compilations/sec': 272134, 'sql_attention_rate': 199, 'guided_plan_executions/sec': 0, 'misguided_plan_executions/sec': 0},
@@ -53,7 +53,7 @@ def _check_common(
     item: str,
     params: Parameters,
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     counters, counter = get_item(item, section)
     rate = get_rate_or_none(
         value_store,
@@ -80,7 +80,7 @@ def _check_base(
     item: str,
     params: Parameters,
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> vs = {}
     >>> for i in range(2):
@@ -99,7 +99,7 @@ def check_mssql_counters_sqlstats(
     item: str,
     params: Parameters,
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     yield from _check_base(get_value_store(), time.time(), item, params, section)
 
 
@@ -109,7 +109,7 @@ def _cluster_check_base(
     item: str,
     params: Parameters,
     section: Mapping[str, Section],
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> vs = {}
     >>> for i in range(2):
@@ -129,7 +129,7 @@ def cluster_check_mssql_counters_sqlstats(
     item: str,
     params: Parameters,
     section: Mapping[str, Section],
-) -> CheckGenerator:
+) -> CheckResult:
     yield from _cluster_check_base(get_value_store(), time.time(), item, params, section)
 
 

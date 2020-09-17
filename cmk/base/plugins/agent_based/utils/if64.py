@@ -416,7 +416,7 @@ def check_if64(
     item: str,
     params: type_defs.Parameters,
     section: interfaces.Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from interfaces.check_multiple_interfaces(
         item,
         params,

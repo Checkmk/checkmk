@@ -27,8 +27,8 @@ from .agent_based_api.v1 import (
 )
 from .agent_based_api.v1.type_defs import (
     SNMPStringTable,
-    CheckGenerator,
-    DiscoveryGenerator,
+    CheckResult,
+    DiscoveryResult,
     Parameters,
 )
 
@@ -61,7 +61,7 @@ def parse_liebert_humidity_air(string_table: SNMPStringTable) -> ParsedSection:
 def discover_liebert_humidity_air(
     section_liebert_humidity_air: Optional[ParsedSection],
     section_liebert_system: Optional[Dict[str, str]],
-) -> DiscoveryGenerator:
+) -> DiscoveryResult:
 
     if section_liebert_humidity_air is None:
         return
@@ -76,7 +76,7 @@ def check_liebert_humidity_air(
     params: Parameters,
     section_liebert_humidity_air: Optional[ParsedSection],
     section_liebert_system: Optional[Dict[str, str]],
-) -> CheckGenerator:
+) -> CheckResult:
 
     if section_liebert_humidity_air is None or section_liebert_system is None:
         return

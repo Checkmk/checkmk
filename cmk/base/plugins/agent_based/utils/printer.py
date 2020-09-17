@@ -18,7 +18,7 @@ from ..agent_based_api.v1 import (
     exists,
     check_levels,
 )
-from ..agent_based_api.v1.type_defs import DiscoveryGenerator, CheckGenerator
+from ..agent_based_api.v1.type_defs import DiscoveryResult, CheckResult
 
 Section = Dict[str, int]
 
@@ -50,11 +50,11 @@ PRINTER_PAGES_TYPES = {
 }
 
 
-def discovery_printer_pages(section: Section) -> DiscoveryGenerator:
+def discovery_printer_pages(section: Section) -> DiscoveryResult:
     yield Service()
 
 
-def check_printer_pages_types(section: Section) -> CheckGenerator:
+def check_printer_pages_types(section: Section) -> CheckResult:
     """
     >>> for result in check_printer_pages_types(
     ...     {'pages_color': 21693, 'pages_bw': 54198}):

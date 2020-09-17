@@ -420,7 +420,7 @@ register.agent_section(
 def discover_winperf_if(
     params: Sequence[type_defs.Parameters],
     section: Section,
-) -> type_defs.DiscoveryGenerator:
+) -> type_defs.DiscoveryResult:
     yield from interfaces.discover_interfaces(
         params,
         section[1],
@@ -431,7 +431,7 @@ def check_winperf_if(
     item: str,
     params: type_defs.Parameters,
     section: Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     agent_timestamp, if_table, dhcp_info = section
     yield from interfaces.check_multiple_interfaces(
         item,

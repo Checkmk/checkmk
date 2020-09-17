@@ -18,8 +18,8 @@ from .agent_based_api.v1 import (
 
 from .agent_based_api.v1.type_defs import (
     Parameters,
-    CheckGenerator,
-    DiscoveryGenerator,
+    CheckResult,
+    DiscoveryResult,
     ValueStore,
 )
 
@@ -30,7 +30,7 @@ from .utils.mssql_counters import (
 )
 
 
-def discovery_mssql_counters_pageactivity(section: Section) -> DiscoveryGenerator:
+def discovery_mssql_counters_pageactivity(section: Section) -> DiscoveryResult:
     """
     >>> for result in discovery_mssql_counters_pageactivity({
     ...     ('MSSQL_VEEAMSQL2012:Buffer_Manager', 'None'): { 'page_lookups/sec': 6649047653, 'readahead_pages/sec': 1424319, 'page_reads/sec': 3220650, 'page_writes/sec': 3066377},
@@ -55,7 +55,7 @@ def _check_common(
     item: str,
     params: Parameters,
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     counters, _counter = get_item(item, section)
     now = counters.get("utc_time", time_point)
 
@@ -87,7 +87,7 @@ def _check_base(
     item: str,
     params: Parameters,
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> vs = {}
     >>> for i in range(2):
@@ -112,7 +112,7 @@ def check_mssql_counters_pageactivity(
     item: str,
     params: Parameters,
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     yield from _check_base(get_value_store(), time.time(), item, params, section)
 
 
@@ -122,7 +122,7 @@ def _cluster_check_base(
     item: str,
     params: Parameters,
     section: Mapping[str, Section],
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> vs = {}
     >>> for i in range(2):
@@ -148,7 +148,7 @@ def cluster_check_mssql_counters_pageactivity(
     item: str,
     params: Parameters,
     section: Mapping[str, Section],
-) -> CheckGenerator:
+) -> CheckResult:
     yield from _cluster_check_base(get_value_store(), time.time(), item, params, section)
 
 

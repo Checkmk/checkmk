@@ -13,9 +13,9 @@ from .agent_based_api.v1 import (
 )
 
 from .agent_based_api.v1.type_defs import (
-    DiscoveryGenerator,
+    DiscoveryResult,
     AgentStringTable,
-    CheckGenerator,
+    CheckResult,
 )
 
 
@@ -58,12 +58,12 @@ def _check_sap_hana_status_data(data):
     return cur_state, "Status: %s" % state_name
 
 
-def discovery_sap_hana_status(section: sap_hana.ParsedSection) -> DiscoveryGenerator:
+def discovery_sap_hana_status(section: sap_hana.ParsedSection) -> DiscoveryResult:
     for item in section:
         yield Service(item=item)
 
 
-def check_sap_hana_status(item: str, section: sap_hana.ParsedSection) -> CheckGenerator:
+def check_sap_hana_status(item: str, section: sap_hana.ParsedSection) -> CheckResult:
 
     data = section.get(item)
     if data is None:
@@ -79,7 +79,7 @@ def check_sap_hana_status(item: str, section: sap_hana.ParsedSection) -> CheckGe
     return
 
 
-def cluster_check_sap_hana_status(item: str, section: sap_hana.ParsedSection) -> CheckGenerator:
+def cluster_check_sap_hana_status(item: str, section: sap_hana.ParsedSection) -> CheckResult:
 
     yield Result(state=state.OK, summary='Nodes: %s' % ', '.join(section.keys()))
     for node_section in section.values():

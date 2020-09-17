@@ -496,7 +496,7 @@ def _groups_from_params(
 def discover_interfaces(
     params: Sequence[type_defs.Parameters],
     section: Section,
-) -> type_defs.DiscoveryGenerator:
+) -> type_defs.DiscoveryResult:
     if len(section) == 0:
         return
 
@@ -642,7 +642,7 @@ def _check_ungrouped_ifs(
     section: Section,
     timestamp: float,
     input_is_rate: bool,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     """
     Check one or more ungrouped interfaces. In a non-cluster setup, only one interface will match
     the item and the results will simply be the output of check_single_interface. On a cluster,
@@ -693,7 +693,7 @@ def _check_grouped_ifs(
     group_name: str,
     timestamp: float,
     input_is_rate: bool,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     """
     Grouped interfaces are combined into a single interface, which is then passed to
     check_single_interface.
@@ -848,7 +848,7 @@ def check_multiple_interfaces(
     group_name: str = "Interface group",
     timestamp: Optional[float] = None,
     input_is_rate: bool = False,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
 
     if timestamp is None:
         timestamp = time.time()
@@ -975,7 +975,7 @@ def check_single_interface(
     timestamp: Optional[float] = None,
     input_is_rate: bool = False,
     use_discovered_state_and_speed: bool = True,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
 
     params = _transform_check_params(params)
 
@@ -1369,7 +1369,7 @@ def cluster_check(
     item: str,
     params: type_defs.Parameters,
     section: Mapping[str, Section],
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
 
     ifaces = [
         Interface(**{  # type: ignore[arg-type]

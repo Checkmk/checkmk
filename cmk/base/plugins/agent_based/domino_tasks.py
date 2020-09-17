@@ -6,8 +6,8 @@
 from typing import Dict, List, Optional, Tuple
 
 from .agent_based_api.v1.type_defs import (
-    CheckGenerator,
-    DiscoveryGenerator,
+    CheckResult,
+    DiscoveryResult,
     Parameters,
     SNMPStringTable,
 )
@@ -57,7 +57,7 @@ def discover_domino_tasks(
     params: List[Parameters],
     section_domino_tasks: Optional[ps.Section],
     section_mem: Optional[Dict[str, float]],
-) -> DiscoveryGenerator:
+) -> DiscoveryResult:
     yield from ps.discover_ps(params, section_domino_tasks, section_mem, None)
 
 
@@ -66,7 +66,7 @@ def check_domino_tasks(
     params: Parameters,
     section_domino_tasks: Optional[ps.Section],
     section_mem: Optional[Dict[str, float]],
-) -> CheckGenerator:
+) -> CheckResult:
     if section_domino_tasks is None:
         return
     cpu_cores, lines = section_domino_tasks
@@ -87,7 +87,7 @@ def cluster_check_domino_tasks(
     params: Parameters,
     section_domino_tasks: Dict[str, ps.Section],
     section_mem: Dict[str, Dict[str, int]],
-) -> CheckGenerator:
+) -> CheckResult:
 
     process_lines: ProcessLines = [(node_name, psi, cmd_line)
                                    for node_name, node_section in section_domino_tasks.items()

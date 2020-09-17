@@ -294,7 +294,7 @@ def discover_diskstat(
     params: Sequence[type_defs.Parameters],
     section_diskstat: Optional[diskstat.Section],
     section_multipath: Optional[SectionMultipath],
-) -> type_defs.DiscoveryGenerator:
+) -> type_defs.DiscoveryResult:
     if section_diskstat is None:
         return
     yield from diskstat.discovery_diskstat_generic(
@@ -377,7 +377,7 @@ def check_diskstat(
     params: type_defs.Parameters,
     section_diskstat: Optional[diskstat.Section],
     section_multipath: Optional[SectionMultipath],
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     # Unfortunately, summarizing the disks does not commute with computing the rates for this check.
     # Therefore, we have to compute the rates first.
     if section_diskstat is None:
@@ -428,7 +428,7 @@ def cluster_check_diskstat(
     params: type_defs.Parameters,
     section_diskstat: Mapping[str, Optional[diskstat.Section]],
     section_multipath: Mapping[str, Optional[SectionMultipath]],
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from check_diskstat(
         item,
         params,

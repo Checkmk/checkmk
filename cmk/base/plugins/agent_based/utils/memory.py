@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Dict, Literal, Optional, Tuple, Union
-from ..agent_based_api.v1.type_defs import CheckGenerator
+from ..agent_based_api.v1.type_defs import CheckResult
 
 from ..agent_based_api.v1 import Metric, render, Result, state
 
@@ -112,7 +112,7 @@ def check_element(
     show_free: bool = False,
     metric_name: Optional[str] = None,
     create_percent_metric: bool = False,
-) -> CheckGenerator:
+) -> CheckResult:
     """Yield a check result and metric for one memory element
 
         >>> result, metric = check_element(

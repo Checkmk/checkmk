@@ -14,8 +14,8 @@ from .agent_based_api.v1 import (
 )
 from .agent_based_api.v1.type_defs import (
     Parameters,
-    CheckGenerator,
-    DiscoveryGenerator,
+    CheckResult,
+    DiscoveryResult,
 )
 
 from .utils.mssql_counters import Section, get_int, get_item
@@ -24,7 +24,7 @@ from .utils.mssql_counters import Section, get_int, get_item
 def discovery_mssql_counters_cache_hits(
     params: Parameters,
     section: Section,
-) -> DiscoveryGenerator:
+) -> DiscoveryResult:
     """
     >>> for result in discovery_mssql_counters_cache_hits({}, {
     ...     ('MSSQL_VEEAMSQL2012:Memory_Broker_Clerks', 'Buffer_Pool'): {'memory_broker_clerk_size': 180475, 'simulation_benefit': 0},
@@ -50,7 +50,7 @@ def _check_common(
     node_name: str,
     item: str,
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     counters, counter = get_item(item, section)
     value = get_int(counters, counter)
     base = get_int(counters, "%s_base" % counter)
@@ -64,7 +64,7 @@ def _check_common(
 def check_mssql_counters_cache_hits(
     item: str,
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> for result in check_mssql_counters_cache_hits(
     ...   "MSSQL_VEEAMSQL2012:Catalog_Metadata mssqlsystemresource cache_hit_ratio", {
@@ -82,7 +82,7 @@ def check_mssql_counters_cache_hits(
 def cluster_check_mssql_counters_cache_hits(
     item: str,
     section: Mapping[str, Section],
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> for result in cluster_check_mssql_counters_cache_hits(
     ...   "MSSQL_VEEAMSQL2012:Catalog_Metadata mssqlsystemresource cache_hit_ratio", {

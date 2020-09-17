@@ -7,7 +7,7 @@
 import time
 from typing import Dict, List, Mapping, NamedTuple, Optional, Tuple, Union
 
-from .agent_based_api.v1.type_defs import CheckGenerator, DiscoveryGenerator
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 from .agent_based_api.v1 import (
     get_average,
@@ -31,7 +31,7 @@ class MemBytes(NamedTuple('MemBytes', [('bytes', int), ('kb', float), ('mb', flo
         return render.bytes(self.bytes)
 
 
-def discover_mem_used(section: Dict[str, int]) -> DiscoveryGenerator:
+def discover_mem_used(section: Dict[str, int]) -> DiscoveryResult:
     if ("MemTotal" in section and "PageTotal" not in section and
             not memory.is_linux_section(section)  # handled by more modern check
        ):
@@ -62,7 +62,7 @@ def _get_total_usage(
     return totalused, "Total (%s)" % " + ".join(details)
 
 
-def check_mem_used(params: Mapping, section: Dict[str, int]) -> CheckGenerator:
+def check_mem_used(params: Mapping, section: Dict[str, int]) -> CheckResult:
     # we have used a parse function that creates bytes, but this function
     # still expects kB:
     meminfo = {k: v / 1024.0 for k, v in section.items()}

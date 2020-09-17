@@ -43,8 +43,8 @@ from .agent_based_api.v1 import (
 from .agent_based_api.v1.type_defs import (
     Parameters,
     SNMPStringTable,
-    CheckGenerator,
-    DiscoveryGenerator,
+    CheckResult,
+    DiscoveryResult,
 )
 
 Section = Dict[str, str]
@@ -80,7 +80,7 @@ def parse_cisco_wlc(string_table: SNMPStringTable) -> Section:
     return dict(string_table[0])  # type: ignore[arg-type]
 
 
-def discovery_cisco_wlc(section: Section) -> DiscoveryGenerator:
+def discovery_cisco_wlc(section: Section) -> DiscoveryResult:
     """
     >>> list(discovery_cisco_wlc({'AP19': '1', 'AP02': '1'}))
     [Service(item='AP19', parameters={}, labels=[]), Service(item='AP02', parameters={}, labels=[])]
@@ -105,7 +105,7 @@ def _ap_info(node: Optional[str], wlc_status: str) -> Result:
     )
 
 
-def check_cisco_wlc(item: str, params: Parameters, section: Section) -> CheckGenerator:
+def check_cisco_wlc(item: str, params: Parameters, section: Section) -> CheckResult:
     """
     >>> list(check_cisco_wlc("AP19", {}, {'AP19': '1', 'AP02': '1'}))
     [Result(state=<state.OK: 0>, summary='Accesspoint: online', details='Accesspoint: online')]
@@ -122,7 +122,7 @@ def cluster_check_cisco_wlc(
     item: str,
     params: Parameters,
     section: Mapping[str, Section],
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> list(cluster_check_cisco_wlc("AP19", {}, {"node1": {'AP19': '1', 'AP02': '1'}}))
     [Result(state=<state.OK: 0>, summary='Accesspoint: online (connected to node1)', details='Accesspoint: online (connected to node1)')]

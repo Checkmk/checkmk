@@ -14,14 +14,14 @@ from .agent_based_api.v1 import (
 )
 from .agent_based_api.v1.type_defs import (
     Parameters,
-    CheckGenerator,
-    DiscoveryGenerator,
+    CheckResult,
+    DiscoveryResult,
 )
 
 from .utils.mssql_counters import Section, discovery_mssql_counters_generic, get_int, get_item
 
 
-def discovery_mssql_counters_file_sizes(section: Section) -> DiscoveryGenerator:
+def discovery_mssql_counters_file_sizes(section: Section) -> DiscoveryResult:
     """
     >>> for result in discovery_mssql_counters_file_sizes({
     ...   ('MSSQL_VEEAMSQL2012', 'tempdb'): {'data_file(s)_size_(kb)': 164928, 'log_file(s)_size_(kb)': 13624, 'log_file(s)_used_size_(kb)': 8768, 'percent_log_used': 64, 'active_transactions': 0}
@@ -43,7 +43,7 @@ def _check_mssql_file_sizes(
     item: str,
     params: Parameters,
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     counters, _counter = get_item(item, section)
     log_files_size = get_int(counters, "log_file(s)_size_(kb)")
     data_files_size = get_int(counters, "data_file(s)_size_(kb)")
@@ -89,7 +89,7 @@ def check_mssql_counters_file_sizes(
     item: str,
     params: Parameters,
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> for result in check_mssql_counters_file_sizes(
     ...   "MSSQL_VEEAMSQL2012 tempdb cache_hit_ratio", {}, {
@@ -110,7 +110,7 @@ def cluster_check_mssql_counters_file_sizes(
     item: str,
     params: Parameters,
     section: Mapping[str, Section],
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> for result in cluster_check_mssql_counters_file_sizes(
     ...     "MSSQL_VEEAMSQL2012 tempdb cache_hit_ratio", {}, {"node1": {

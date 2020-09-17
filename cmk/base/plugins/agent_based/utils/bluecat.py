@@ -58,7 +58,7 @@ def _get_service_name(section: Section) -> str:
 def check_bluecat_operational_state(
     params: type_defs.Parameters,
     section: Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     oper_state = section['oper_state']
     service_name = _get_service_name(section)
 
@@ -100,7 +100,7 @@ OKNodeResults = namedtuple(
 def cluster_check_bluecat_operational_state(
     params: type_defs.Parameters,
     section: ClusterSection,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
 
     results = {}
     ok_node_results = None

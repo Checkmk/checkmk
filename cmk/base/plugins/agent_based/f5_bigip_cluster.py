@@ -18,8 +18,8 @@ from .agent_based_api.v1 import (
 from .agent_based_api.v1.type_defs import (
     Parameters,
     SNMPStringTable,
-    CheckGenerator,
-    DiscoveryGenerator,
+    CheckResult,
+    DiscoveryResult,
 )
 
 from .utils.f5_bigip import F5_BIGIP, VERSION_PRE_V11, VERSION_V11_PLUS
@@ -53,7 +53,7 @@ CONFIG_SYNC_STATE_NAMES = {
 }
 
 
-def discover_f5_bigip_config_sync(section: State) -> DiscoveryGenerator:
+def discover_f5_bigip_config_sync(section: State) -> DiscoveryResult:
     # run inventory unless we found a device in unconfigured state
     # don't need to loop over the input as there's only one status
     if not section.state == "-1":
@@ -75,7 +75,7 @@ def parse_f5_bigip_config_sync_pre_v11(string_table: SNMPStringTable) -> State:
 # F5 nodes need to be ntp synced otherwise status reports might be wrong.
 
 
-def check_f5_bigip_config_sync_pre_v11(section: State) -> CheckGenerator:
+def check_f5_bigip_config_sync_pre_v11(section: State) -> CheckResult:
     # possible state values:
     #  -1   unconfigured,           ok only if original status
     #                               otherwise this would mean something is heavily broken?
@@ -126,7 +126,7 @@ def parse_f5_bigip_config_sync_v11_plus(string_table: SNMPStringTable) -> State:
     return State(*string_table[0][0])
 
 
-def check_f5_bigip_config_sync_v11_plus(params: Parameters, section: State) -> CheckGenerator:
+def check_f5_bigip_config_sync_v11_plus(params: Parameters, section: State) -> CheckResult:
     """
     >> for r in check_f5_bigip_config_sync_v11_plus(
     ...         params=Parameters(CONFIG_SYNC_DEFAULT_PARAMETERS),

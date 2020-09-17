@@ -19,8 +19,8 @@ from .agent_based_api.v1 import (
 from .agent_based_api.v1.type_defs import (
     Parameters,
     SNMPStringTable,
-    CheckGenerator,
-    DiscoveryGenerator,
+    CheckResult,
+    DiscoveryResult,
 )
 from .utils.f5_bigip import (
     F5_BIGIP,
@@ -45,7 +45,7 @@ def parse_f5_bigip_cluster_status(string_table: SNMPStringTable) -> NodeState:
     return int(string_table[0][0][0])
 
 
-def discover_f5_bigip_cluster_status(section: NodeState) -> DiscoveryGenerator:
+def discover_f5_bigip_cluster_status(section: NodeState) -> DiscoveryResult:
     yield Service()
 
 
@@ -76,7 +76,7 @@ def _check_f5_bigip_cluster_status_common(
     params: Parameters,
     section: NodeState,
     is_gt_v11_2: bool,
-) -> CheckGenerator:
+) -> CheckResult:
     yield _node_result("", section, is_gt_v11_2, params)
 
 
@@ -84,7 +84,7 @@ def _cluster_check_f5_bigip_cluster_status_common(
     params: Parameters,
     section: Mapping[str, NodeState],
     is_gt_v11_2: bool,
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> for r in _cluster_check_f5_bigip_cluster_status_common(
     ...         params=Parameters({'type': 'active_standby'}),
@@ -111,7 +111,7 @@ def _cluster_check_f5_bigip_cluster_status_common(
 ### Older than v11.2
 
 
-def check_f5_bigip_cluster_status(params: Parameters, section: int) -> CheckGenerator:
+def check_f5_bigip_cluster_status(params: Parameters, section: int) -> CheckResult:
     """
     >>> for r in check_f5_bigip_cluster_status(Parameters({"type": "active_standby"}), 3):
     ...     print(r)
@@ -123,7 +123,7 @@ def check_f5_bigip_cluster_status(params: Parameters, section: int) -> CheckGene
 def cluster_check_f5_bigip_cluster_status(
     params: Parameters,
     section: Mapping[str, NodeState],
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> for r in cluster_check_f5_bigip_cluster_status(
     ...         params=Parameters({"type": "active_standby"}),
@@ -157,14 +157,14 @@ register.check_plugin(
 ### From v11.2 and up
 
 
-def check_f5_bigip_cluster_status_v11_2(params: Parameters, section: int) -> CheckGenerator:
+def check_f5_bigip_cluster_status_v11_2(params: Parameters, section: int) -> CheckResult:
     yield from _check_f5_bigip_cluster_status_common(params, section, True)
 
 
 def cluster_check_f5_bigip_cluster_status_v11_2(
     params: Parameters,
     section: Mapping[str, NodeState],
-) -> CheckGenerator:
+) -> CheckResult:
     yield from _cluster_check_f5_bigip_cluster_status_common(params, section, True)
 
 

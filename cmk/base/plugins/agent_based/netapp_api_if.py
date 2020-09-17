@@ -179,7 +179,7 @@ register.agent_section(
 def discover_netapp_api_if(
     params: Sequence[type_defs.Parameters],
     section: Section,
-) -> type_defs.DiscoveryGenerator:
+) -> type_defs.DiscoveryResult:
     yield from interfaces.discover_interfaces(
         params,
         section[0],
@@ -198,7 +198,7 @@ def check_netapp_api_if(
     item: str,
     params: type_defs.Parameters,
     section: Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
 
     nics, extra_info = section
     yield from interfaces.check_multiple_interfaces(

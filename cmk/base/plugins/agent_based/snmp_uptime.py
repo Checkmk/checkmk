@@ -6,8 +6,8 @@
 import time
 
 from .agent_based_api.v1.type_defs import (
-    CheckGenerator,
-    DiscoveryGenerator,
+    CheckResult,
+    DiscoveryResult,
     Parameters,
     SNMPStringTable,
 )
@@ -61,12 +61,12 @@ register.snmp_section(
 )
 
 
-def discover_snmp_uptime(section: int) -> DiscoveryGenerator:
+def discover_snmp_uptime(section: int) -> DiscoveryResult:
     if section:
         yield Service()
 
 
-def check_snmp_uptime(params: Parameters, section: int) -> CheckGenerator:
+def check_snmp_uptime(params: Parameters, section: int) -> CheckResult:
     if params is None:  # legacy: support older versions of parameters
         params = {}
 

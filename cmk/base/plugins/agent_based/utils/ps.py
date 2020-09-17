@@ -11,8 +11,8 @@ import re
 import time
 
 from ..agent_based_api.v1.type_defs import (
-    CheckGenerator,
-    DiscoveryGenerator,
+    CheckResult,
+    DiscoveryResult,
     HostLabelGenerator,
     Parameters,
     ValueStore,
@@ -472,7 +472,7 @@ def discover_ps(
     section_ps: Optional[Section],
     section_mem: Optional[SectionMem],
     section_cpu: Optional[SectionCpu],
-) -> DiscoveryGenerator:
+) -> DiscoveryResult:
     if not section_ps:
         return
 
@@ -549,7 +549,7 @@ def check_ps_common(
     process_lines: List[Tuple[Optional[str], ps_info, List[str]]],
     cpu_cores: int,
     total_ram: Optional[float],
-) -> CheckGenerator:
+) -> CheckResult:
     params = ps_cleanup_params(params)
 
     with unused_value_remover(get_value_store(), "collective") as value_store:
@@ -587,7 +587,7 @@ def count_check(
     processes: ProcessAggregator,
     params: Parameters,
     info_name: str,
-) -> CheckGenerator:
+) -> CheckResult:
     warnmin, okmin, okmax, warnmax = params["levels"]
     yield from check_levels(
         processes.count,
@@ -608,7 +608,7 @@ def count_check(
 def memory_check(
     processes: ProcessAggregator,
     params: Parameters,
-) -> CheckGenerator:
+) -> CheckResult:
     """Check levels for virtual and physical used memory"""
     for size, label, levels, metric in [
         (processes.virtual_size, "virtual", "virtual_levels", "vsz"),
@@ -630,7 +630,7 @@ def memory_perc_check(
     processes: ProcessAggregator,
     params: Parameters,
     total_ram: Optional[float],
-) -> CheckGenerator:
+) -> CheckResult:
     """Check levels that are in percent of the total RAM of the host"""
     if not total_ram:
         yield Result(
@@ -648,7 +648,7 @@ def memory_perc_check(
     )
 
 
-def cpu_check(percent_cpu: float, params: Parameters) -> CheckGenerator:
+def cpu_check(percent_cpu: float, params: Parameters) -> CheckResult:
     """Check levels for cpu utilization from given process"""
 
     warn_cpu, crit_cpu = params.get("cpulevels", (None, None, None))[:2]
@@ -683,7 +683,7 @@ def cpu_check(percent_cpu: float, params: Parameters) -> CheckGenerator:
 def individual_process_check(
     processes: ProcessAggregator,
     params: Parameters,
-) -> CheckGenerator:
+) -> CheckResult:
     levels = params["single_cpulevels"]
     for p in processes.processes:
         cpu_usage, name, pid = 0.0, None, None
@@ -714,7 +714,7 @@ def uptime_check(
     min_elapsed: float,
     max_elapsed: float,
     params: Parameters,
-) -> CheckGenerator:
+) -> CheckResult:
     """Check how long the process is running"""
     if min_elapsed == max_elapsed:
         yield from check_levels(
@@ -742,7 +742,7 @@ def uptime_check(
 def handle_count_check(
     processes: ProcessAggregator,
     params: Parameters,
-) -> CheckGenerator:
+) -> CheckResult:
     yield from check_levels(
         processes.handle_count,
         metric_name="process_handles",

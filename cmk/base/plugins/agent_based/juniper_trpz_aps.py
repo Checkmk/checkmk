@@ -15,7 +15,7 @@ from .agent_based_api.v1 import (
     any_of,
     startswith,
 )
-from .agent_based_api.v1.type_defs import SNMPStringTable, DiscoveryGenerator, CheckGenerator
+from .agent_based_api.v1.type_defs import SNMPStringTable, DiscoveryResult, CheckResult
 
 Section = Tuple[int, int]
 
@@ -28,11 +28,11 @@ def parse_juniper_trpz_aps(string_table: SNMPStringTable) -> Section:
     return int(string_table[0][0][0]), int(string_table[0][0][1])
 
 
-def discovery_juniper_trpz_aps(section: Section) -> DiscoveryGenerator:
+def discovery_juniper_trpz_aps(section: Section) -> DiscoveryResult:
     yield Service()
 
 
-def _check_common_juniper_trpz_aps(node_name: str, section: Section) -> CheckGenerator:
+def _check_common_juniper_trpz_aps(node_name: str, section: Section) -> CheckResult:
     yield Result(
         state=state.OK,
         summary="%sOnline access points: %d, Sessions: %d" %
@@ -40,7 +40,7 @@ def _check_common_juniper_trpz_aps(node_name: str, section: Section) -> CheckGen
     )
 
 
-def check_juniper_trpz_aps(section: Section) -> CheckGenerator:
+def check_juniper_trpz_aps(section: Section) -> CheckResult:
     """
     >>> for result in check_juniper_trpz_aps((1, 0)):
     ...   print(result)
@@ -53,7 +53,7 @@ def check_juniper_trpz_aps(section: Section) -> CheckGenerator:
     yield from _check_common_juniper_trpz_aps("", section)
 
 
-def cluster_check_juniper_trpz_aps(section: Mapping[str, Section]) -> CheckGenerator:
+def cluster_check_juniper_trpz_aps(section: Mapping[str, Section]) -> CheckResult:
     """
     >>> for result in cluster_check_juniper_trpz_aps({"node1": (1, 2), "node2": (3, 4)}):
     ...   print(result)

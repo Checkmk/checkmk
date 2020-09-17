@@ -28,7 +28,7 @@ from .agent_based_api.v1 import (
     Result,
     state,
 )
-from .agent_based_api.v1.type_defs import AgentStringTable, DiscoveryGenerator, CheckGenerator
+from .agent_based_api.v1.type_defs import AgentStringTable, DiscoveryResult, CheckResult
 
 Section = Dict[str, Dict[str, Any]]
 
@@ -74,7 +74,7 @@ register.agent_section(name="omd_status", parse_function=parse_omd_status)
 def discovery_omd_status(
     section_omd_status: Optional[Section],
     section_omd_info: Optional[Section],
-) -> DiscoveryGenerator:
+) -> DiscoveryResult:
     """
     >>> for service in discovery_omd_status(
     ...     {'heute': {
@@ -112,7 +112,7 @@ def _check_omd_status(
     site_services: Mapping[str, Any],
     others_running: bool,
     extra_text: str,
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> for result in _check_omd_status(
     ...       "stable",
@@ -141,7 +141,7 @@ def check_omd_status(
     item: str,
     section_omd_status: Optional[Section],
     section_omd_info: Optional[Section],
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> for result in check_omd_status(
     ...       "production",
@@ -162,7 +162,7 @@ def cluster_check_omd_status(
     item: str,
     section_omd_status: Mapping[str, Section],
     section_omd_info: Mapping[str, Section],
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> for result in cluster_check_omd_status(
     ...       "production",

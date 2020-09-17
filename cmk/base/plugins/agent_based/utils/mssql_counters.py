@@ -16,7 +16,7 @@ from typing import Dict, Tuple, Set, Optional
 from contextlib import suppress
 
 from ..agent_based_api.v1 import Service, IgnoreResultsError, get_rate, GetRateError
-from ..agent_based_api.v1.type_defs import DiscoveryGenerator, ValueStore
+from ..agent_based_api.v1.type_defs import DiscoveryResult, ValueStore
 
 Counters = Dict[str, float]
 Section = Dict[Tuple[str, str], Counters]
@@ -26,7 +26,7 @@ def discovery_mssql_counters_generic(
     section: Section,
     want_counters: Set[str],
     dflt: Optional[Dict[str, str]] = None,
-) -> DiscoveryGenerator:
+) -> DiscoveryResult:
     yield from (Service(item="%s %s %s" % (obj, instance, counter), parameters=dflt)
                 for (obj, instance), counters in section.items()
                 for counter in counters

@@ -15,8 +15,8 @@ from .agent_based_api.v1 import (
 
 from .agent_based_api.v1.type_defs import (
     Parameters,
-    CheckGenerator,
-    DiscoveryGenerator,
+    CheckResult,
+    DiscoveryResult,
     ValueStore,
 )
 
@@ -28,7 +28,7 @@ from .utils.mssql_counters import (
 )
 
 
-def discovery_mssql_counters_transactions(section: Section) -> DiscoveryGenerator:
+def discovery_mssql_counters_transactions(section: Section) -> DiscoveryResult:
     """
     >>> for result in discovery_mssql_counters_transactions({
     ...     ('MSSQL_VEEAMSQL2012', 'tempdb'): {'transactions/sec': 24410428, 'tracked_transactions/sec': 0, 'write_transactions/sec': 10381607},
@@ -49,7 +49,7 @@ def _check_common(
     item: str,
     params: Parameters,
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     counters, _counter = get_item(item, section)
     now = counters.get("utc_time", time_point)
     for counter_key, title in (
@@ -85,7 +85,7 @@ def _check_base(
     item: str,
     params: Parameters,
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> vs = {}
     >>> for i in range(2):
@@ -110,7 +110,7 @@ def check_mssql_counters_transactions(
     item: str,
     params: Parameters,
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     yield from _check_base(get_value_store(), time.time(), item, params, section)
 
 
@@ -120,7 +120,7 @@ def _cluster_check_base(
     item: str,
     params: Parameters,
     section: Mapping[str, Section],
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> vs = {}
     >>> for i in range(2):
@@ -146,7 +146,7 @@ def cluster_check_mssql_counters_transactions(
     item: str,
     params: Parameters,
     section: Mapping[str, Section],
-) -> CheckGenerator:
+) -> CheckResult:
     yield from _cluster_check_base(get_value_store(), time.time(), item, params, section)
 
 

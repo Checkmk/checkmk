@@ -124,7 +124,7 @@ register.agent_section(
 def discover_winperf_phydisk(
     params: Sequence[type_defs.Parameters],
     section: diskstat.Section,
-) -> type_defs.DiscoveryGenerator:
+) -> type_defs.DiscoveryResult:
     yield from diskstat.discovery_diskstat_generic(
         params,
         section,
@@ -207,7 +207,7 @@ def check_winperf_phydisk(
     item: str,
     params: type_defs.Parameters,
     section: diskstat.Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     # Unfortunately, summarizing the disks does not commute with computing the rates for this check.
     # Therefore, we have to compute the rates first.
 
@@ -241,7 +241,7 @@ def cluster_check_winperf_phydisk(
     item: str,
     params: type_defs.Parameters,
     section: Mapping[str, diskstat.Section],
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     # We potentially overwrite a disk from an earlier section with a disk with the same name from a
     # later section
     disks_merged: Dict[str, diskstat.Disk] = {}

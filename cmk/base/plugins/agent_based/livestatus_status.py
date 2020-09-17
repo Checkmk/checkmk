@@ -22,8 +22,8 @@ from .agent_based_api.v1 import (
 )
 from .agent_based_api.v1.type_defs import (
     AgentStringTable,
-    CheckGenerator,
-    DiscoveryGenerator,
+    CheckResult,
+    DiscoveryResult,
     Parameters,
 )
 
@@ -105,7 +105,7 @@ register.agent_section(
 
 
 def discovery_livestatus_status(section_livestatus_status: ParsedSection,
-                                section_livestatus_ssl_certs: ParsedSection) -> DiscoveryGenerator:
+                                section_livestatus_ssl_certs: ParsedSection) -> DiscoveryResult:
 
     for site, status in section_livestatus_status.items():
         if status is not None:
@@ -113,7 +113,7 @@ def discovery_livestatus_status(section_livestatus_status: ParsedSection,
 
 
 def check_livestatus_status(item: str, params: Parameters, section_livestatus_status: ParsedSection,
-                            section_livestatus_ssl_certs: ParsedSection) -> CheckGenerator:
+                            section_livestatus_ssl_certs: ParsedSection) -> CheckResult:
     if item not in section_livestatus_status:
         return
     status = section_livestatus_status[item]

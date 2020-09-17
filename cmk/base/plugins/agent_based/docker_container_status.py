@@ -14,9 +14,9 @@ from .utils import docker
 from .utils.legacy_docker import DeprecatedDict
 from .snmp_uptime import check_snmp_uptime
 from .agent_based_api.v1.type_defs import (
-    DiscoveryGenerator,
+    DiscoveryResult,
     AgentStringTable,
-    CheckGenerator,
+    CheckResult,
     HostLabelGenerator,
     Parameters,
 )
@@ -124,7 +124,7 @@ register.agent_section(
 #   '----------------------------------------------------------------------'
 
 
-def discover_docker_container_status_health(section: Dict[str, Any]) -> DiscoveryGenerator:
+def discover_docker_container_status_health(section: Dict[str, Any]) -> DiscoveryResult:
     if not _is_active_container(section):
         return
     # Only discover if a healthcheck and health is configured.
@@ -134,7 +134,7 @@ def discover_docker_container_status_health(section: Dict[str, Any]) -> Discover
         yield Service()
 
 
-def check_docker_container_status_health(section: Dict[str, Any]) -> CheckGenerator:
+def check_docker_container_status_health(section: Dict[str, Any]) -> CheckResult:
     if section.get("Status") != "running":
         yield IgnoreResults("Container is not running")
         return
@@ -187,7 +187,7 @@ def discover_docker_container_status(section: Dict[str, Any]):
         yield Service()
 
 
-def check_docker_container_status(section: Dict[str, Any]) -> CheckGenerator:
+def check_docker_container_status(section: Dict[str, Any]) -> CheckResult:
     if isinstance(section, DeprecatedDict):
         yield Result(
             state=state.WARN,
@@ -230,7 +230,7 @@ register.check_plugin(
 
 def discover_docker_container_status_uptime(
         section_docker_container_status: Optional[Dict[str, Any]],
-        section_uptime: Optional[Dict[str, Any]]) -> DiscoveryGenerator:
+        section_uptime: Optional[Dict[str, Any]]) -> DiscoveryResult:
     if section_uptime:
         # if the uptime section of the checkmk agent is
         # present, we don't need this service.

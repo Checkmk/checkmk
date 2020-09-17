@@ -51,13 +51,14 @@ def compute_graph_curves(metrics, rrd_data):
             continue
 
         multi = len(time_series) > 1
+        mirror_prefix = "-" if metric_definition["line_type"].startswith("-") else ""
         for ts in time_series:
             title = metric_definition["title"]
             if ts.metadata.get('title') and multi:
                 title += " - " + ts.metadata['title']
 
             curves.append({
-                "line_type": ts.metadata.get('line_type')
+                "line_type": mirror_prefix + ts.metadata.get('line_type', "")
                              if multi else metric_definition["line_type"],
                 "color": ts.metadata.get('color') if multi else metric_definition["color"],
                 'title': title,

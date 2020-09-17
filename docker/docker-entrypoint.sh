@@ -38,6 +38,8 @@ function create_system_apache_config() {
     echo -e "# Redirect top level requests to the sites base url\\nRedirectMatch 302 ^/$ /$CMK_SITE_ID/\\n" >>"$APACHE_DOCKER_CFG"
 }
 
+exec_hook pre-entrypoint
+
 if [ -z "$CMK_SITE_ID" ]; then
     echo "ERROR: No site ID given"
     exit 1

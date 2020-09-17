@@ -1011,4 +1011,4 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
         return Labels(world=Labels.World.CONFIG, label_source=Labels.Source.EXPLICIT)
 
     def filter_matches(self, crit, value, hostname):
-        return set(value).issuperset(set(crit))
+        return set(value.items()).issuperset(set(crit.items()))

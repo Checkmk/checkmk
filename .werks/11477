@@ -1,0 +1,13 @@
+Title: Fixed host label search
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p18
+Date: 1600345859
+Class: fix
+
+If you searched for host labels in the WATO host search, all hosts that contain
+the label key where listed.
+
+From now on, the label key and value will be considered for the search.

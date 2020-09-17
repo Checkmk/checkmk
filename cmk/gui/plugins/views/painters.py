@@ -114,6 +114,7 @@ class PainterOptionTimestampFormat(PainterOption):
         return DropdownChoice(
             title=_("Time stamp format"),
             default_value=config.default_ts_format,
+            encode_value=False,
             choices=[
                 ("mixed", _("Mixed")),
                 ("abs", _("Absolute")),

@@ -4103,6 +4103,7 @@ def DateFormat(**kwargs):
     """A selection of various date formats"""
     kwargs.setdefault("title", _("Date format"))
     kwargs.setdefault("default_value", "%Y-%m-%d")
+    kwargs.setdefault("encode_value", False)
     return DropdownChoice(choices=[
         ("%Y-%m-%d", "1970-12-18"),
         ("%d.%m.%Y", "18.12.1970"),

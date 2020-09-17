@@ -10,7 +10,7 @@ import pytest  # type: ignore[import]
 
 import cmk.utils.log as log
 from cmk.utils.paths import core_helper_config_dir
-from cmk.utils.type_defs import ConfigSerial
+from cmk.utils.type_defs import ConfigSerial, Result, SectionName
 
 from cmk.fetchers import FetcherType
 from cmk.fetchers.controller import (
@@ -306,3 +306,38 @@ class TestFetcherMessage:
 
     def test_len(self, message, header, payload):
         assert len(message) == len(header) + len(payload)
+
+    def test_from_raw_data_tcp(self):
+        message = FetcherMessage.from_raw_data(Result.OK(b"<<<check_mk>>>Hallo"), FetcherType.TCP)
+        assert message.header.fetcher_type is FetcherType.TCP
+        assert message.header.payload_type is PayloadType.AGENT
+        assert message.payload == b'<<<check_mk>>>Hallo'
+
+    def test_from_raw_data_snmp(self):
+        raw_data = {SectionName('snmp_uptime'): [[['6500337', '11822045']]]}
+        message = FetcherMessage.from_raw_data(Result.OK(raw_data), FetcherType.SNMP)
+        assert message.header.fetcher_type is FetcherType.SNMP
+        assert message.header.payload_type is PayloadType.SNMP
+        assert message.payload == b'{"snmp_uptime": [[["6500337", "11822045"]]]}'
+
+    def test_from_raw_data_exception(self):
+        message = FetcherMessage.from_raw_data(Result.Error(Exception("zomg!")), FetcherType.TCP)
+        assert message.header.fetcher_type is FetcherType.TCP
+        assert message.header.payload_type is PayloadType.ERROR
+        assert message.payload == b"Exception('zomg!')"
+
+    def test_raw_data_tcp(self):
+        result = Result.OK(b"<<<check_mk>>>Hallo")
+        message = FetcherMessage.from_raw_data(result, FetcherType.TCP)
+        assert message.raw_data == result
+
+    def test_raw_data_snmp(self):
+        result = Result.OK({SectionName('snmp_uptime'): [[['6500337', '11822045']]]})
+        message = FetcherMessage.from_raw_data(result, FetcherType.SNMP)
+        assert message.raw_data == result
+
+    def test_raw_data_exception(self):
+        result = Result.Error(Exception("zomg!"))
+        message = FetcherMessage.from_raw_data(result, FetcherType.TCP)
+        assert isinstance(message.raw_data.error, Exception)
+        assert str(message.raw_data.error) == "zomg!"

@@ -23,6 +23,7 @@ from typing import (
     NoReturn,
     Optional,
     Pattern,
+    Sequence,
     Set,
     Tuple,
     Union,
@@ -676,7 +677,7 @@ def _get_post_discovery_services(
 def check_discovery(
     hostname: HostName,
     ipaddress: Optional[HostAddress],
-    fetcher_messages: Optional[List[FetcherMessage]] = None,
+    fetcher_messages: Optional[Sequence[FetcherMessage]] = None,
 ) -> Tuple[int, List[str], List[str], List[Tuple]]:
 
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:

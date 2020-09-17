@@ -117,7 +117,7 @@ def do_check(
     hostname: HostName,
     ipaddress: Optional[HostAddress],
     only_check_plugin_names: Optional[Set[CheckPluginName]] = None,
-    fetcher_messages: Optional[List[FetcherMessage]] = None
+    fetcher_messages: Optional[Sequence[FetcherMessage]] = None
 ) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[str]]:
     cpu_tracking.start("busy")
     console.verbose("Checkmk version %s\n", cmk_version.__version__)

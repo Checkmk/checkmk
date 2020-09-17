@@ -219,7 +219,7 @@ def update_host_sections(
     max_cachefile_age: int,
     selected_raw_sections: Optional[SelectedRawSections],
     host_config: HostConfig,
-    fetcher_messages: Optional[List[FetcherMessage]] = None,
+    fetcher_messages: Optional[Sequence[FetcherMessage]] = None,
 ) -> Sequence[Tuple[ABCSource, Result[ABCHostSections, Exception]]]:
     """Gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
 

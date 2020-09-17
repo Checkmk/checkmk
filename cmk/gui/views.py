@@ -591,7 +591,11 @@ class GUIViewRenderer(ABCViewRenderer):
         layout = self.view.layout
 
         # Display the filter form on page rendering in some cases
-        if view_spec.get("mustsearch") and not html.request.var("filled_in"):
+        # a) The view is a "mustsearch" view (User needs to submit the filter form before data is
+        # shown).
+        # b) After submitting the filter form. The user probably wants to update the filters after
+        # first filtering
+        if (view_spec.get("mustsearch") or html.request.get_ascii_input("filled_in") == "filter"):
             html.final_javascript("cmk.page_menu.open_popup('popup_filters');")
 
         # Actions

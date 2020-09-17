@@ -22,7 +22,7 @@ pytestmark = pytest.mark.checks
 
 @pytest.fixture(scope="module", name="inv_info")
 def _get_inv_info(config_load_all_checks):  # no idea why usefixtures will not work.
-    assert len(inventory_plugins.inv_info) > 98  # sanity check
+    assert len(inventory_plugins.inv_info) > 90  # sanity check
     return inventory_plugins.inv_info.copy()
 
 

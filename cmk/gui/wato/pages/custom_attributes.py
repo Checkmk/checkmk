@@ -434,6 +434,8 @@ class ModeCustomAttrs(WatoMode, metaclass=abc.ABCMeta):
                                         watolib.folder_preserving_link([
                                             ("mode", "edit_%s_attr" % self._type)
                                         ])),
+                                    is_shortcut=True,
+                                    is_suggested=True,
                                 ),
                             ],
                         ),

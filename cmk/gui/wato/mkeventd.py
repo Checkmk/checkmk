@@ -1218,6 +1218,8 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                         html.makeuri_contextless([
                             ("mode", "mkeventd_edit_rule_pack"),
                         ])),
+                    is_shortcut=True,
+                    is_suggested=True,
                 ),
             ],
         )
@@ -1642,6 +1644,8 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     item=make_simple_link(
                         html.makeuri_contextless([("mode", "mkeventd_edit_rule"),
                                                   ("rule_pack", self._rule_pack_id)])),
+                    is_shortcut=True,
+                    is_suggested=True,
                 ),
             ],
         )

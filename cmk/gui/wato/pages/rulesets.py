@@ -751,6 +751,8 @@ class ModeEditRuleset(WatoMode):
                         ("mode", "pattern_editor"),
                         ("host", self._hostname),
                     ])),
+                is_shortcut=True,
+                is_suggested=True,
             )
 
     def action(self):

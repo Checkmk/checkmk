@@ -1043,7 +1043,7 @@ class ModeBIPacks(ModeBI):
         if config.user.may("wato.bi_admin"):
             bi_config_entries.append(
                 PageMenuEntry(
-                    title=_("Add pack"),
+                    title=_("Add rule pack"),
                     icon_name="new",
                     item=make_simple_link(html.makeuri_contextless([("mode", "bi_edit_pack")])),
                     is_shortcut=True,
@@ -1054,7 +1054,7 @@ class ModeBIPacks(ModeBI):
             dropdowns=[
                 PageMenuDropdown(
                     name="packs",
-                    title=_("Packs"),
+                    title=_("Rule packs"),
                     topics=[
                         PageMenuTopic(
                             title=_("BI configuration"),
@@ -1300,7 +1300,7 @@ class ModeBIAggregations(ModeBI):
         if self.have_rules() and self.is_contact_for_pack(self._pack):
             aggr_entries.append(
                 PageMenuEntry(
-                    title=_("Add rule"),
+                    title=_("Add aggregation"),
                     icon_name="new",
                     item=make_simple_link(self.url_to_pack([("mode", "bi_edit_aggregation")])),
                     is_shortcut=True,
@@ -1342,10 +1342,12 @@ class ModeBIAggregations(ModeBI):
                             title=_("In this pack"),
                             entries=[
                                 PageMenuEntry(
-                                    title=_("Aggregations"),
-                                    icon_name="aggr",
+                                    title=_("Rules"),
+                                    icon_name="bi_rules",
                                     item=make_simple_link(self.url_to_pack([("mode", "bi_rules")
                                                                            ]),),
+                                    is_shortcut=True,
+                                    is_suggested=True,
                                 ),
                             ],
                         ),
@@ -1632,6 +1634,8 @@ class ModeBIRules(ModeBI):
                                     icon_name="aggr",
                                     item=make_simple_link(
                                         self.url_to_pack([("mode", "bi_aggregations")]),),
+                                    is_shortcut=True,
+                                    is_suggested=True,
                                 ),
                             ],
                         ),
@@ -1970,7 +1974,7 @@ class ModeBIEditAggregation(ModeBI):
 
     def title(self):
         if self._new:
-            return super().title() + _("Create aggregation")
+            return super().title() + _("Add aggregation")
         return super().title() + _("Edit aggregation")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

@@ -170,6 +170,8 @@ class SimpleListMode(SimpleWatoModeBase):
                                         html.makeuri_contextless([
                                             ("mode", self._mode_type.edit_mode_name())
                                         ])),
+                                    is_shortcut=True,
+                                    is_suggested=True,
                                 ),
                             ],
                         ),

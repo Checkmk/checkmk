@@ -551,7 +551,7 @@ class PageBackup:
             dropdowns=[
                 PageMenuDropdown(
                     name="backups",
-                    title=_("backups"),
+                    title=_("Backups"),
                     topics=[
                         PageMenuTopic(
                             title=_("Setup"),

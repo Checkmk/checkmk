@@ -134,7 +134,7 @@ class ModeUsers(WatoMode):
         if userdb.sync_possible():
             if not self._job_snapshot.is_active():
                 yield PageMenuEntry(
-                    title=_("Start user synchronization"),
+                    title=_("Synchronize users"),
                     icon_name="replicate",
                     item=make_simple_link(html.makeactionuri([("_sync", 1)])),
                 )
@@ -144,12 +144,6 @@ class ModeUsers(WatoMode):
                     icon_name="background_job_details",
                     item=make_simple_link(self._job.detail_url()),
                 )
-
-        yield PageMenuEntry(
-            title=_("LDAP & Active Directory"),
-            icon_name="ldap",
-            item=make_simple_link(watolib.folder_preserving_link([("mode", "ldap_config")])),
-        )
 
     def _page_menu_entries_notify_users(self) -> Iterator[PageMenuEntry]:
         if config.user.may("general.notify"):

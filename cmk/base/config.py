@@ -519,7 +519,10 @@ def _validate_configuraton_variables(vars_before_config: Set[str]) -> None:
     deprecated_variables = {
         # variable name                                # warning introduced *after* version
         'oracle_tablespaces_check_default_increment',  # 1.6
-        # TODO: add logwatch variables here
+        'logwatch_dir',  # 1.6
+        'logwatch_max_filesize',  # 1.6
+        'logwatch_service_output',  # 1.6
+        'logwatch_spool_dir',  # 1.6
     }
 
     unhandled_variables = all_nonfunction_vars() - vars_before_config - ignored_variables
@@ -564,9 +567,9 @@ def _verify_no_deprecated_variables_used() -> None:
 
 
 def _verify_no_deprecated_check_rulesets() -> None:
-    deprecated_rulesets = [
-        ("logwatch", "logwatch_patterns"),
-    ]
+    # this used to do something until the migration of logwatch.
+    # TODO: decide wether we might still need this.
+    deprecated_rulesets: List[Tuple[str, str]] = []
     for check_plugin_name, varname in deprecated_rulesets:
         check_context = get_check_context(check_plugin_name)
         if check_context.get(varname):

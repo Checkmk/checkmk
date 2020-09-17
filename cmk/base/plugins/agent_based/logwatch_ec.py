@@ -25,9 +25,9 @@ from typing import Any, Counter, Dict, Iterable, List, Optional, Tuple, Union
 
 import cmk.utils.debug
 import cmk.utils.paths
+import cmk.base.config  # from cmk.base.config import logwatch_rules will NOT work!
 # import from legacy API until we come up with something better
 from cmk.base.check_api import (
-    get_checkgroup_parameters,
     get_effective_service_level,
     host_name,
     service_extra_conf,
@@ -256,7 +256,7 @@ def check_logwatch_ec_common(
             logfile_settings = service_extra_conf(
                 host_name(),
                 logfile,
-                get_checkgroup_parameters("logwatch_rules", []),
+                cmk.base.config.logwatch_rules,
             )
             for settings in logfile_settings:
                 add_reclassify_settings(settings)

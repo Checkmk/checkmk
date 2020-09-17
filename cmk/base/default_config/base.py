@@ -266,3 +266,5 @@ aggregation_output_format = "multiline"  # new in 1.1.6. Possible also: "multili
 aggr_summary_hostname = "%s-s"
 status_data_inventory: _List = []
 legacy_checks: _List = []
+
+logwatch_rules: _List = []

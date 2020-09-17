@@ -841,9 +841,6 @@ def test__find_candidates():
     }
 
 
-# There are supposed to be 63 services to be discovered. Due to the ongoing migration however, the
-# services in testlib.base:KNOWN_AUTO_MIGRATION_FAILURES can't be detected right now. Please add the
-# 63 in here once KNOWN_AUTO_MIGRATION_FAILURES is empty.
 _expected_services: Dict = {
     (CheckPluginName('apache_status'), '127.0.0.1:5000'): {},
     (CheckPluginName('apache_status'), '127.0.0.1:5004'): {},
@@ -869,6 +866,9 @@ _expected_services: Dict = {
     (CheckPluginName('lnx_if'), '3'): {},
     (CheckPluginName('lnx_thermal'), 'Zone 0'): {},
     (CheckPluginName('lnx_thermal'), 'Zone 1'): {},
+    (CheckPluginName('logwatch'), '/var/log/auth.log'): {},
+    (CheckPluginName('logwatch'), '/var/log/kern.log'): {},
+    (CheckPluginName('logwatch'), '/var/log/syslog'): {},
     (CheckPluginName('local'), 'SäMB_Share_flr01'): {},
     (CheckPluginName('mem_linux'), None): {},
     (CheckPluginName('mkeventd_status'), 'heute'): {},

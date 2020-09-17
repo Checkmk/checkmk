@@ -14,7 +14,7 @@ function exec_hook() {
         for hook in *; do
             if [ ! -d "$hook" ] && [ -x "$hook" ]; then
                 echo "### Running $HOOKDIR/$hook"
-                ./"$hook" || true
+                ./"$hook"
             fi
         done
         popd >/dev/null

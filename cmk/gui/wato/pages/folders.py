@@ -612,10 +612,10 @@ class ModeFolder(WatoMode):
 
         # Move
         if html.request.var("_bulk_move"):
-            target_folder_path = html.request.var("bulk_moveto",
+            target_folder_path = html.request.var("_bulk_moveto",
                                                   html.request.var("_top_bulk_moveto"))
             if target_folder_path == "@":
-                raise MKUserError("bulk_moveto", _("Please select the destination folder"))
+                raise MKUserError("_bulk_moveto", _("Please select the destination folder"))
             target_folder = watolib.Folder.folder(target_folder_path)
             watolib.Folder.current().move_hosts(selected_host_names, target_folder)
             return None, _("Moved %d hosts to %s") % (len(selected_host_names),
@@ -1038,7 +1038,7 @@ class ModeFolder(WatoMode):
 
             choices.insert(0, ("@", _("(select target folder)")))
 
-            html.dropdown("bulk_moveto",
+            html.dropdown("_bulk_moveto",
                           choices,
                           deflt="@",
                           label=_("Move to folder:"),

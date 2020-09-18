@@ -907,14 +907,12 @@ _expected_services: Dict = {
     (CheckPluginName('uptime'), None): {},
 }
 
-# TODO (rb): Re-enable when reviving the cmk/os_family creation
-_expected_host_labels: Dict = {}
-#_expected_host_labels = {
-#    'cmk/os_family': {
-#        'plugin_name': 'check_mk',
-#        'value': 'linux',
-#    },
-#}
+_expected_host_labels = {
+    'cmk/os_family': {
+        'plugin_name': 'check_mk',
+        'value': 'linux',
+    },
+}
 
 
 @pytest.mark.usefixtures("config_load_all_checks")

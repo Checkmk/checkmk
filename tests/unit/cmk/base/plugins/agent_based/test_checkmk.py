@@ -6,7 +6,7 @@
 
 import pytest  # type: ignore[import]
 
-from cmk.base.plugins.agent_based.labels import (
+from cmk.base.plugins.agent_based.check_mk import (
     parse_checkmk_labels,
     host_label_function_labels,
 )

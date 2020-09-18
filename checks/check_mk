@@ -61,69 +61,68 @@ def _get_error_deployment_globally_disabled_state(params, error_text):
 
 
 def inventory_cmk_agent_update(info):
-    for line in info:
-        if line[0] == "AgentUpdate:":
-            return [(None, {})]
+    if "AgentUpdate" in info:
+        return [(None, {})]
 
 
 def check_cmk_agent_update(_no_item, params, info):
-    for line in info:
-        if line[0] == "AgentUpdate:":
-            parsed = {}
-            parts = line[1:]
-            while parts:
-                key = parts[0]
-                if key == "error":
-                    value = " ".join(parts[1:])
-                    parts = []
-                else:
-                    value = parts[1]
-                    if value == "None":
-                        value = None
-                    parts = parts[2:]
-                parsed[key] = value
+    if "AgentUpdate" not in info:
+        return
 
-            now = time.time()
+    parsed = {}
+    parts = info["AgentUpdate"].split()
+    while parts:
+        key = parts[0]
+        if key == "error":
+            value = " ".join(parts[1:])
+            parts = []
+        else:
+            value = parts[1]
+            if value == "None":
+                value = None
+            parts = parts[2:]
+        parsed[key] = value
 
-            if parsed["error"] != "None":
-                error_state = _get_error_deployment_globally_disabled_state(params, parsed["error"])
-                yield error_state, "Error: %s" % parsed["error"]
+    now = time.time()
+
+    if parsed["error"] != "None":
+        error_state = _get_error_deployment_globally_disabled_state(params, parsed["error"])
+        yield error_state, "Error: %s" % parsed["error"]
+    else:
+        yield 0, "No errors"
+
+    if parsed["last_check"]:
+        try:
+            last_check = float(parsed["last_check"])
+            age = now - last_check
+            # Currently there is no crit level
+            warn = 2 * 3600 * 24
+            if age > warn:
+                state = 1
             else:
-                yield 0, "No errors"
+                state = 0
+            if state:
+                levels_text = " (warn at %s)" % (get_age_human_readable(warn))
+            else:
+                levels_text = ""
+            yield state, "Last update check: " + get_timestamp_human_readable(
+                parsed["last_check"]) + levels_text
+        except Exception:
+            yield 1, "No successful connect to server yet"
 
-            if parsed["last_check"]:
-                try:
-                    last_check = float(parsed["last_check"])
-                    age = now - last_check
-                    # Currently there is no crit level
-                    warn = 2 * 3600 * 24
-                    if age > warn:
-                        state = 1
-                    else:
-                        state = 0
-                    if state:
-                        levels_text = " (warn at %s)" % (get_age_human_readable(warn))
-                    else:
-                        levels_text = ""
-                    yield state, "Last update check: " + get_timestamp_human_readable(
-                        parsed["last_check"]) + levels_text
-                except Exception:
-                    yield 1, "No successful connect to server yet"
+    if parsed["last_update"]:
+        yield 0, "Last agent update: %s" % get_timestamp_human_readable(parsed["last_update"])
 
-            if parsed["last_update"]:
-                yield 0, "Last agent update: %s" % get_timestamp_human_readable(
-                    parsed["last_update"])
+    if parsed.get("update_url"):
+        yield 0, "Update URL: %s" % parsed["update_url"]
 
-            if parsed.get("update_url"):
-                yield 0, "Update URL: %s" % parsed["update_url"]
+    if parsed["aghash"]:
+        yield 0, "Agent configuration: %s" % parsed["aghash"][:8]
 
-            if parsed["aghash"]:
-                yield 0, "Agent configuration: %s" % parsed["aghash"][:8]
+    if parsed.get("pending_hash"):
+        yield 0, "Pending installation: %s" % parsed["pending_hash"][:8]
 
-            if parsed.get("pending_hash"):
-                yield 0, "Pending installation: %s" % parsed["pending_hash"][:8]
-
-            return
+    return
 
 
 check_info["check_mk.agent_update"] = {

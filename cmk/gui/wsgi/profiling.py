@@ -20,7 +20,7 @@ class ProfileSwitcher:
     The behaviour can be changed upon setting config.profile to either
         * True: profiling always enabled
         * False: profiling always off
-        * "enable_by_var":  profiling enbaled when "_profile" query parameter present in request
+        * "enable_by_var":  profiling enabled when "_profile" query parameter present in request
 
     """
     def __init__(self, app, profile_file: Optional[pathlib.Path] = None):
@@ -34,17 +34,21 @@ class ProfileSwitcher:
             log_filename=profile_file,
             cachegrind_filename=profile_file.with_suffix(".cachegrind"),
         )
+
+    def _create_dump_script(self):
         script_path = self.profile_file.with_suffix(".py")
-        with script_path.open("w", encoding="utf-8") as f:
-            f.write("#!/usr/bin/env python3\n"
-                    "import pstats\n"
-                    f'stats = pstats.Stats("{self.profile_file}")\n'
-                    "stats.sort_stats('time').print_stats()\n")
-        script_path.chmod(0o755)
-        cmk.utils.log.logger.info("Created profile dump script: %s", script_path)
+        if not script_path.exists():
+            with script_path.open("w", encoding="utf-8") as f:
+                f.write("#!/usr/bin/env python3\n"
+                        "import pstats\n"
+                        f'stats = pstats.Stats("{self.profile_file}")\n'
+                        "stats.sort_stats('time').print_stats()\n")
+            script_path.chmod(0o755)
+            cmk.utils.log.logger.info("Created profile dump script: %s", script_path)
 
     def __call__(self, environ, start_response):
         if _profiling_enabled(environ):
+            self._create_dump_script()
             app = self.profiled_app
         else:
             app = self.app

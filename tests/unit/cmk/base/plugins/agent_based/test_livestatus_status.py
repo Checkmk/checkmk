@@ -12,8 +12,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Result,
     Metric,
 )
+
 from cmk.utils.type_defs import CheckPluginName
 from cmk.base.api.agent_based import value_store
+from cmk.base.api.agent_based.type_defs import Parameters
 import cmk.base.plugins.agent_based.livestatus_status as livestatus_status
 
 NOW_SIMULATED = 581785200, "UTC"
@@ -55,10 +57,10 @@ STRING_TABLE_STATUS = [
         'enable_notifications', 'execute_host_checks', 'execute_service_checks',
         'external_command_buffer_max', 'external_command_buffer_slots',
         'external_command_buffer_usage', 'external_commands', 'external_commands_rate', 'forks',
-        'forks_rate', 'has_event_handlers', 'helper_usage_cmk', 'helper_usage_fetcher',
-        'helper_usage_checker', 'helper_usage_generic', 'helper_usage_real_time', 'host_checks',
-        'host_checks_rate', 'interval_length', 'last_command_check', 'last_log_rotation',
-        'livecheck_overflows', 'livecheck_overflows_rate', 'livechecks', 'livechecks_rate',
+        'forks_rate', 'has_event_handlers', 'helper_usage_cmk', 'helper_usage_generic',
+        'helper_usage_real_time', 'host_checks', 'host_checks_rate', 'interval_length',
+        'last_command_check', 'last_log_rotation', 'livecheck_overflows',
+        'livecheck_overflows_rate', 'livechecks', 'livechecks_rate',
         'livestatus_active_connections', 'livestatus_overflows', 'livestatus_overflows_rate',
         'livestatus_queued_connections', 'livestatus_threads', 'livestatus_usage',
         'livestatus_version', 'log_messages', 'log_messages_rate', 'mk_inventory_last',
@@ -68,8 +70,8 @@ STRING_TABLE_STATUS = [
     ],
     [
         '1', '1', '0', '0', '0', '0', '1', '1', '1', '3390', '0.0319528', '3294', '1', '1', '1',
-        '1', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '60',
-        '0', '1559562137', '0', '0', '0', '0', '1', '0', '0', '0', '20', '0', '1.4.0p38', '4',
+        '1', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '60', '0',
+        '1559562137', '0', '0', '0', '0', '1', '0', '0', '0', '20', '0', '1.4.0p38', '4',
         '9.88131e-324', '0', '3294', '0', '0', '0', '0', '0', '0', '1', '1559629930',
         'Check_MK 1.4.0p38', '3390', '0.0319528', '0', '0'
     ], ['[stable]'],
@@ -197,8 +199,9 @@ PARSED_STATUS = {
         'forks_rate': '0',
         'has_event_handlers': '0',
         'helper_usage_cmk': '0',
-        'helper_usage_fetcher': '0',
-        'helper_usage_checker': '0',
+        # Simulate the host without those counters:
+        #'helper_usage_fetcher': '0',
+        #'helper_usage_checker': '0',
         'helper_usage_generic': '0',
         'helper_usage_real_time': '0',
         'host_checks': '0',
@@ -332,10 +335,21 @@ def test_discovery():
     ]
 
 
-@pytest.mark.parametrize("item, params", [
-    ("heute", livestatus_status.livestatus_status_default_levels),
-])
-def test_check(monkeypatch, item, params):
+@pytest.fixture(name="fetcher_checker_counters")
+def fixture_fetcher_checker_counters_list():
+    return [
+        Result(state=state.OK,
+               summary='Fetcher helper usage: 0%',
+               details='Fetcher helper usage: 0%'),
+        Metric('helper_usage_fetcher', 0.0, levels=(40.0, 80.0), boundaries=(None, None)),
+        Result(state=state.OK,
+               summary='Checker helper usage: 0%',
+               details='Checker helper usage: 0%'),
+        Metric('helper_usage_checker', 0.0, levels=(40.0, 80.0), boundaries=(None, None)),
+    ]
+
+
+def patch_get_value(monkeypatch, item):
     value_store_patched = {}
     for key in [
             "host_checks",
@@ -348,6 +362,30 @@ def test_check(monkeypatch, item, params):
         value_store_patched["livestatus_status.%s.%s" % (item, key)] = [1, 2]
 
     monkeypatch.setattr(livestatus_status, 'get_value_store', lambda: value_store_patched)
+
+
+@pytest.mark.usefixtures("fetcher_checker_counters")
+def test_check_new_counters_in_oldstable(monkeypatch, fetcher_checker_counters):
+    patch_get_value(monkeypatch, "oldstable")
+
+    with on_time(*NOW_SIMULATED):
+        with value_store.context(CheckPluginName("livestatus_status"), None):
+
+            yielded_results = list(
+                livestatus_status.check_livestatus_status(
+                    "oldstable",
+                    Parameters(livestatus_status.livestatus_status_default_levels),
+                    PARSED_STATUS,
+                    PARSED_SSL,
+                ))
+            assert all(x in yielded_results for x in fetcher_checker_counters)
+
+
+@pytest.mark.parametrize("item, params", [
+    ("heute", livestatus_status.livestatus_status_default_levels),
+])
+def test_check(monkeypatch, item, params):
+    patch_get_value(monkeypatch, item)
 
     with on_time(*NOW_SIMULATED):
         with value_store.context(CheckPluginName("livestatus_status"), None):

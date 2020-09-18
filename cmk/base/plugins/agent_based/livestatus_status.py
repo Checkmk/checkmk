@@ -158,7 +158,15 @@ def check_livestatus_status(item: str, params: Parameters, section_livestatus_st
             (1, lambda x: "%.1f/s" % x, "livestatus_overflows_rate", "Livestatus overflow rate"),
         ]:
 
-            value = factor * float(status[key])
+            try:
+                value = factor * float(status[key])
+            except KeyError:
+                # may happen if we are trying to query old host
+                if key in ["helper_usage_fetcher", "helper_usage_checker"]:
+                    value = 0.0
+                else:
+                    raise
+
             yield from check_levels(value=value,
                                     metric_name=key,
                                     levels_upper=params.get(key),

@@ -50,8 +50,14 @@ def merge_sections(section_livestatus_status: Dict[str, Any], section_omd_status
         # Quick workaround for enabled checker/fetcher mode. Will soon be replaced once the
         # livestatus status table has been updated.
         helper_usage_cmk = float(status['helper_usage_cmk'] or "0") * 100
-        helper_usage_fetcher = float(status['helper_usage_fetcher'] or "0") * 100
-        helper_usage_checker = float(status['helper_usage_checker'] or "0") * 100
+        try:
+            helper_usage_fetcher = float(status['helper_usage_fetcher'] or "0") * 100
+            helper_usage_checker = float(status['helper_usage_checker'] or "0") * 100
+        except KeyError:
+            # May happen if we are trying to query old host.
+            # To be consistent we correctly report that usage of the new helpers is zero.
+            helper_usage_fetcher = 0.0
+            helper_usage_checker = 0.0
 
         helper_usage_generic = float(status['helper_usage_generic']) * 100
         livestatus_usage = float(status['livestatus_usage']) * 100

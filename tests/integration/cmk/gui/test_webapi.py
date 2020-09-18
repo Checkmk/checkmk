@@ -669,12 +669,6 @@ def test_bulk_discovery_start_with_defaults(web, local_test_hosts):  # noqa: F81
     assert "discovery successful" in status["job"]["result_msg"]
     assert "discovery started" in status["job"]["output"]
     assert "test-host: discovery successful" in status["job"]["output"]
-    # FIXME:
-    #   There are supposed to be 63 services to be discovered. Due to the ongoing migration
-    #   however, the services in testlib.base:KNOWN_AUTO_MIGRATION_FAILURES can't be detected
-    #   right now. Please add the 63 in here once KNOWN_AUTO_MIGRATION_FAILURES is empty.
-    assert "60 added" in status["job"]["output"]
-    assert "discovery successful" in status["job"]["output"]
 
 
 def test_bulk_discovery_start_with_parameters(web, local_test_hosts):  # noqa: F811 # pylint: disable=redefined-outer-name

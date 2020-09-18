@@ -4,6 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
+
+from testlib.utils import get_standard_linux_agent_output
+
 import cmk.base.config as config
 import cmk.base.autochecks as autochecks
 import cmk.utils.tags
@@ -54,7 +58,12 @@ class Scenario:
         }
         self.config_cache = config.get_config_cache()
 
-    def add_host(self, hostname, tags=None, host_path="/wato/hosts.mk", labels=None):
+    def add_host(self,
+                 hostname,
+                 tags=None,
+                 host_path="/wato/hosts.mk",
+                 labels=None,
+                 ipaddress=None):
         if tags is None:
             tags = {}
         assert isinstance(tags, dict)
@@ -67,7 +76,26 @@ class Scenario:
         self.config["host_paths"][hostname] = host_path
         self.config["host_tags"][hostname] = self._get_effective_tag_config(tags)
         self.config["host_labels"][hostname] = labels
+
+        if ipaddress is not None:
+            self.config.setdefault("ipaddresses", {})[hostname] = ipaddress
+
         return self
+
+    def fake_standard_linux_agent_output(self, *test_hosts):
+        self.set_ruleset(
+            "datasource_programs",
+            [
+                ("cat %s/<HOST>" % cmk.utils.paths.tcp_cache_dir, [], test_hosts, {}),
+            ],
+        )
+        linux_agent_output = get_standard_linux_agent_output()
+
+        for h in test_hosts:
+            cache_path = Path(cmk.utils.paths.tcp_cache_dir, h)
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
+            with cache_path.open("w", encoding="utf-8") as f:
+                f.write(linux_agent_output)
 
     def add_cluster(self, hostname, tags=None, host_path="/wato/hosts.mk", nodes=None):
         if tags is None:

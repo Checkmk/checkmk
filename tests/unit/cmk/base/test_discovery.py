@@ -7,8 +7,13 @@
 # pylint: disable=redefined-outer-name,protected-access
 
 import pytest  # type: ignore[import]
+from typing import Dict
+
+from testlib.base import Scenario
+from testlib.debug_utils import cmk_debug_enabled
 
 from cmk.utils.type_defs import CheckPluginName, SectionName, SourceType
+from cmk.utils.labels import DiscoveredHostLabelsStore
 
 from cmk.base.checkers.agent import AgentHostSections
 from cmk.base.checkers.host_sections import HostKey, MultiHostSections
@@ -17,6 +22,7 @@ from cmk.base.discovered_labels import ServiceLabel, DiscoveredServiceLabels
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 import cmk.base.discovery as discovery
+import cmk.base.autochecks as autochecks
 
 
 def test_discovered_service_init():
@@ -833,3 +839,98 @@ def test__find_candidates():
         CheckPluginName("mgmt_snmp_info"),  # not mgmt_mgmt_...
         CheckPluginName("uptime"),
     }
+
+
+# There are supposed to be 63 services to be discovered. Due to the ongoing migration however, the
+# services in testlib.base:KNOWN_AUTO_MIGRATION_FAILURES can't be detected right now. Please add the
+# 63 in here once KNOWN_AUTO_MIGRATION_FAILURES is empty.
+_expected_services: Dict = {
+    (CheckPluginName('apache_status'), '127.0.0.1:5000'): {},
+    (CheckPluginName('apache_status'), '127.0.0.1:5004'): {},
+    (CheckPluginName('apache_status'), '127.0.0.1:5007'): {},
+    (CheckPluginName('apache_status'), '127.0.0.1:5008'): {},
+    (CheckPluginName('apache_status'), '127.0.0.1:5009'): {},
+    (CheckPluginName('apache_status'), '::1:80'): {},
+    (CheckPluginName('check_mk_agent_update'), None): {},
+    (CheckPluginName('cpu_loads'), None): {},
+    (CheckPluginName('cpu_threads'), None): {},
+    (CheckPluginName('df'), '/'): {},
+    (CheckPluginName('df'), '/boot'): {},
+    (CheckPluginName('df'), '/boot/efi'): {},
+    (CheckPluginName('diskstat'), 'SUMMARY'): {},
+    (CheckPluginName('kernel_performance'), None): {},
+    (CheckPluginName('kernel_util'), None): {},
+    (CheckPluginName('livestatus_status'), 'heute'): {},
+    (CheckPluginName('livestatus_status'), 'test1'): {},
+    (CheckPluginName('livestatus_status'), 'test2'): {},
+    (CheckPluginName('livestatus_status'), 'test3'): {},
+    (CheckPluginName('livestatus_status'), 'test_crawl'): {},
+    (CheckPluginName('lnx_if'), '2'): {},
+    (CheckPluginName('lnx_if'), '3'): {},
+    (CheckPluginName('lnx_thermal'), 'Zone 0'): {},
+    (CheckPluginName('lnx_thermal'), 'Zone 1'): {},
+    (CheckPluginName('local'), 'SäMB_Share_flr01'): {},
+    (CheckPluginName('mem_linux'), None): {},
+    (CheckPluginName('mkeventd_status'), 'heute'): {},
+    (CheckPluginName('mkeventd_status'), 'test1'): {},
+    (CheckPluginName('mkeventd_status'), 'test2'): {},
+    (CheckPluginName('mkeventd_status'), 'test3'): {},
+    (CheckPluginName('mkeventd_status'), 'test_crawl'): {},
+    (CheckPluginName('mknotifyd'), 'heute'): {},
+    (CheckPluginName('mknotifyd'), 'heute_slave_1'): {},
+    (CheckPluginName('mknotifyd'), 'test1'): {},
+    (CheckPluginName('mknotifyd'), 'test2'): {},
+    (CheckPluginName('mknotifyd'), 'test3'): {},
+    (CheckPluginName('mknotifyd'), 'test_crawl'): {},
+    (CheckPluginName('mounts'), '/'): {},
+    (CheckPluginName('mounts'), '/boot'): {},
+    (CheckPluginName('mounts'), '/boot/efi'): {},
+    (CheckPluginName('ntp_time'), None): {},
+    (CheckPluginName('omd_apache'), 'aq'): {},
+    (CheckPluginName('omd_apache'), 'heute'): {},
+    (CheckPluginName('omd_apache'), 'heute_slave_1'): {},
+    (CheckPluginName('omd_apache'), 'onelogin'): {},
+    (CheckPluginName('omd_apache'), 'stable'): {},
+    (CheckPluginName('omd_apache'), 'stable_slave_1'): {},
+    (CheckPluginName('omd_apache'), 'test1'): {},
+    (CheckPluginName('omd_apache'), 'test2'): {},
+    (CheckPluginName('omd_apache'), 'test3'): {},
+    (CheckPluginName('omd_apache'), 'test_crawl'): {},
+    (CheckPluginName('omd_status'), 'heute'): {},
+    (CheckPluginName('omd_status'), 'test1'): {},
+    (CheckPluginName('omd_status'), 'test2'): {},
+    (CheckPluginName('omd_status'), 'test3'): {},
+    (CheckPluginName('omd_status'), 'test_crawl'): {},
+    (CheckPluginName('postfix_mailq'), ''): {},
+    (CheckPluginName('postfix_mailq_status'), ''): {},
+    (CheckPluginName('tcp_conn_stats'), None): {},
+    (CheckPluginName('uptime'), None): {},
+}
+
+# TODO (rb): Re-enable when reviving the cmk/os_family creation
+_expected_host_labels: Dict = {}
+#_expected_host_labels = {
+#    'cmk/os_family': {
+#        'plugin_name': 'check_mk',
+#        'value': 'linux',
+#    },
+#}
+
+
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_do_discovery(monkeypatch):
+    ts = Scenario().add_host("test-host", ipaddress="127.0.0.1")
+    ts.fake_standard_linux_agent_output("test-host")
+    ts.apply(monkeypatch)
+
+    with cmk_debug_enabled():
+        discovery.do_discovery(arg_hostnames={"test-host"},
+                               check_plugin_names=None,
+                               arg_only_new=False)
+
+    services = autochecks.parse_autochecks_file("test-host", config.service_description)
+    found = {(s.check_plugin_name, s.item): s.service_labels.to_dict() for s in services}
+    assert found == _expected_services
+
+    store = DiscoveredHostLabelsStore("test-host")
+    assert store.load() == _expected_host_labels

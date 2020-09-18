@@ -10,14 +10,12 @@
 # caching is checked
 
 from functools import partial
-from pathlib import Path
 
 import pytest  # type: ignore[import]
 
 # No stub files
 from testlib.base import Scenario  # type: ignore[import]
 from testlib.debug_utils import cmk_debug_enabled  # type: ignore[import]
-from testlib.utils import get_standard_linux_agent_output  # type: ignore[import]
 
 import cmk.utils.paths
 from cmk.utils.log import logger
@@ -64,22 +62,7 @@ def scenario_fixture(monkeypatch):
 
     ts.set_option("ipaddresses", dict((h, "127.0.0.1") for h in test_hosts))
     ts.add_cluster("ds-test-cluster1", nodes=["ds-test-node1", "ds-test-node2"])
-
-    ts.set_ruleset(
-        "datasource_programs",
-        [
-            ("cat %s/<HOST>" % cmk.utils.paths.tcp_cache_dir, [], test_hosts, {}),
-        ],
-    )
-
-    linux_agent_output = get_standard_linux_agent_output()
-
-    for h in test_hosts:
-        cache_path = Path(cmk.utils.paths.tcp_cache_dir, h)
-        cache_path.parent.mkdir(parents=True, exist_ok=True)
-
-        with cache_path.open("w", encoding="utf-8") as f:
-            f.write(linux_agent_output)
+    ts.fake_standard_linux_agent_output(*test_hosts)
 
     return ts.apply(monkeypatch)
 

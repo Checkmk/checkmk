@@ -8,16 +8,16 @@ import ast
 import logging
 from functools import partial
 from types import TracebackType
-from typing import Any, Dict, List, Optional, Set, Tuple, Type
+from typing import Any, Collection, Dict, List, Mapping, Optional, Sequence, Tuple, Type
 
 from cmk.utils.type_defs import SectionName
 
-from cmk.snmplib.snmp_scan import gather_available_raw_section_names
 import cmk.snmplib.snmp_table as snmp_table
+from cmk.snmplib.snmp_scan import gather_available_raw_section_names
 from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPHostConfig, SNMPRawData, SNMPTable, SNMPTree
 
 from . import factory
-from ._base import ABCFileCache, ABCFetcher, verify_ipaddress
+from ._base import ABCFetcher, ABCFileCache, verify_ipaddress
 from .type_defs import Mode
 
 __all__ = ["SNMPFetcher", "SNMPFileCache"]
@@ -38,9 +38,9 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         self,
         *,
         file_cache: SNMPFileCache,
-        snmp_section_trees: Dict[SectionName, List[SNMPTree]],
-        snmp_section_detects: List[Tuple[SectionName, SNMPDetectSpec]],
-        configured_snmp_sections: Set[SectionName],
+        snmp_section_trees: Mapping[SectionName, List[SNMPTree]],
+        snmp_section_detects: Sequence[Tuple[SectionName, SNMPDetectSpec]],
+        configured_snmp_sections: Collection[SectionName],
         on_error: str,
         missing_sys_description: bool,
         use_snmpwalk_cache: bool,
@@ -84,7 +84,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
                  traceback: Optional[TracebackType]) -> None:
         pass
 
-    def _detect(self) -> Set[SectionName]:
+    def _detect(self) -> Collection[SectionName]:
         return gather_available_raw_section_names(
             sections=self._snmp_section_detects,
             on_error=self._on_error,

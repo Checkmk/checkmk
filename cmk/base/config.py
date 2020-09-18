@@ -263,7 +263,7 @@ def load(with_conf_d: bool = True,
 
     # Such validation only makes sense when all checks have been loaded
     if all_checks_loaded():
-        verify_non_invalid_variables(vars_before_config)
+        _validate_configuraton_variables(vars_before_config)
         _verify_no_deprecated_check_rulesets()
 
     _verify_no_deprecated_variables_used()
@@ -510,22 +510,32 @@ def _verify_non_duplicate_hosts() -> None:
         sys.exit(3)
 
 
-def verify_non_invalid_variables(vars_before_config: Set[str]) -> None:
-    # Check for invalid configuration variables
-    vars_after_config = all_nonfunction_vars()
+def _validate_configuraton_variables(vars_before_config: Set[str]) -> None:
+    """Check for invalid and deprecated configuration variables"""
     ignored_variables = {
         'vars_before_config', 'parts', 'seen_hostnames', 'taggedhost', 'hostname',
         'service_service_levels', 'host_service_levels'
     }
+    deprecated_variables = {
+        # variable name                                # warning introduced *after* version
+        'oracle_tablespaces_check_default_increment',  # 1.6
+        # TODO: add logwatch variables here
+    }
 
-    found_invalid = 0
-    for name in vars_after_config:
-        if name not in ignored_variables and name not in vars_before_config:
-            console.error("Invalid configuration variable '%s'\n", name)
-            found_invalid += 1
+    unhandled_variables = all_nonfunction_vars() - vars_before_config - ignored_variables
+    deprecated_found = unhandled_variables.intersection(deprecated_variables)
+    invalid_found = unhandled_variables - deprecated_variables
 
-    if found_invalid:
-        console.error("--> Found %d invalid variables\n" % found_invalid)
+    if deprecated_found:
+        for name in sorted(deprecated_found):
+            console.error("Deprecated configuration variable %r\n", name)
+        console.error("--> Found %d deprecated variables\n" % len(deprecated_found))
+        console.error("These variables will have no effect at best. Consider removing them.\n")
+
+    if invalid_found:
+        for name in sorted(invalid_found):
+            console.error("Invalid configuration variable %r\n", name)
+        console.error("--> Found %d invalid variables\n" % len(invalid_found))
         console.error("If you use own helper variables, please prefix them with _.\n")
         sys.exit(1)
 

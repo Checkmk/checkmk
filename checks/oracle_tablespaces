@@ -29,10 +29,6 @@ factory_settings["oracle_tablespaces_defaults"] = {
 # a check parameter, where the behaviour can be configured on a per-service-base.
 oracle_tablespaces_check_autoext = True
 
-# this parameter is deprecated and needed for old configurations with
-# parameter in main.mk. It is not used anymore!
-oracle_tablespaces_check_default_increment = True
-
 # <<<oracle_tablespaces>>>
 # pengt /database/pengt/daten155/dbf/system_01.dbf SYSTEM AVAILABLE YES 38400 4194302 38392 1280 SYSTEM 8192 ONLINE
 # pengt /database/pengt/daten155/dbf/undotbs_01.dbf UNDOTBS1 AVAILABLE YES 128000 4194302 127992 640 ONLINE 8192 ONLINE

@@ -867,7 +867,6 @@ def test_all_check_variables_present(config_check_variables):
         'oracle_recovery_area_defaults',
         'oracle_sessions_default_levels',
         'oracle_tablespaces_check_autoext',
-        'oracle_tablespaces_check_default_increment',
         'oracle_tablespaces_default_levels',
         'oracle_tablespaces_defaults',
         'oracle_undostat_defaults',

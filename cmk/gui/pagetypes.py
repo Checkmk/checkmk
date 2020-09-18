@@ -63,10 +63,12 @@ from cmk.gui.exceptions import (
     MKGeneralException,
     MKAuthException,
 )
+from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.permissions import (
+    permission_section_registry,
     permission_registry,
     declare_permission_section,
-    declare_permission,
+    Permission,
 )
 from cmk.gui.breadcrumb import (
     make_main_menu_breadcrumb,
@@ -662,59 +664,77 @@ class Overridable(Base):
     def declare_overriding_permissions(cls):
         declare_permission_section(cls.type_name(), cls.phrase("title_plural"), do_sort=True)
 
-        declare_permission(
-            "general.edit_" + cls.type_name(),
-            _("Customize %s and use them") % cls.phrase("title_plural"),
-            _("Allows to create own %s, customize builtin %s and use them.") %
-            (cls.phrase("title_plural"), cls.phrase("title_plural")),
-            ["admin", "user"],
-        )
+        permission_registry.register(
+            Permission(
+                section=PermissionSectionGeneral,
+                name="edit_" + cls.type_name(),
+                title=_l("Customize %s and use them") % cls.phrase("title_plural"),
+                description=_l("Allows to create own %s, customize builtin %s and use them.") %
+                (cls.phrase("title_plural"), cls.phrase("title_plural")),
+                defaults=["admin", "user"],
+            ))
 
-        declare_permission(
-            "general.publish_" + cls.type_name(),
-            _("Publish %s") % cls.phrase("title_plural"),
-            _("Make %s visible and usable for other users.") % cls.phrase("title_plural"),
-            ["admin", "user"],
-        )
+        permission_registry.register(
+            Permission(
+                section=PermissionSectionGeneral,
+                name="publish_" + cls.type_name(),
+                title=_l("Publish %s") % cls.phrase("title_plural"),
+                description=_l("Make %s visible and usable for other users.") %
+                cls.phrase("title_plural"),
+                defaults=["admin", "user"],
+            ))
 
-        config.declare_permission(
-            "general.publish_to_foreign_groups_" + cls.type_name(),
-            _("Publish %s to foreign contact groups") % cls.phrase("title_plural"),
-            _("Make %s visible and usable for users of contact groups the publishing user is not a member of."
-             ) % cls.phrase("title_plural"),
-            ["admin"],
-        )
+        permission_registry.register(
+            Permission(
+                section=PermissionSectionGeneral,
+                name="publish_to_foreign_groups_" + cls.type_name(),
+                title=_l("Publish %s to foreign contact groups") % cls.phrase("title_plural"),
+                description=_l(
+                    "Make %s visible and usable for users of contact groups the publishing user is not a member of."
+                ) % cls.phrase("title_plural"),
+                defaults=["admin"],
+            ))
 
         # TODO: Bug: This permission does not seem to be used
-        declare_permission(
-            "general.see_user_" + cls.type_name(),
-            _("See user %s") % cls.phrase("title_plural"),
-            _("Is needed for seeing %s that other users have created.") %
-            cls.phrase("title_plural"),
-            ["admin", "user", "guest"],
-        )
+        permission_registry.register(
+            Permission(
+                section=PermissionSectionGeneral,
+                name="see_user_" + cls.type_name(),
+                title=_l("See user %s") % cls.phrase("title_plural"),
+                description=_l("Is needed for seeing %s that other users have created.") %
+                cls.phrase("title_plural"),
+                defaults=["admin", "user", "guest"],
+            ))
 
-        declare_permission(
-            "general.force_" + cls.type_name(),
-            _("Modify builtin %s") % cls.phrase("title_plural"),
-            _("Make own published %s override builtin %s for all users.") %
-            (cls.phrase("title_plural"), cls.phrase("title_plural")),
-            ["admin"],
-        )
+        permission_registry.register(
+            Permission(
+                section=PermissionSectionGeneral,
+                name="force_" + cls.type_name(),
+                title=_l("Modify builtin %s") % cls.phrase("title_plural"),
+                description=_l("Make own published %s override builtin %s for all users.") %
+                (cls.phrase("title_plural"), cls.phrase("title_plural")),
+                defaults=["admin"],
+            ))
 
-        declare_permission(
-            "general.edit_foreign_" + cls.type_name(),
-            _("Edit foreign %s") % cls.phrase("title_plural"),
-            _("Allows to edit %s created by other users.") % cls.phrase("title_plural"),
-            ["admin"],
-        )
+        permission_registry.register(
+            Permission(
+                section=PermissionSectionGeneral,
+                name="edit_foreign_" + cls.type_name(),
+                title=_l("Edit foreign %s") % cls.phrase("title_plural"),
+                description=_("Allows to edit %s created by other users.") %
+                cls.phrase("title_plural"),
+                defaults=["admin"],
+            ))
 
-        declare_permission(
-            "general.delete_foreign_" + cls.type_name(),
-            _("Delete foreign %s") % cls.phrase("title_plural"),
-            _("Allows to delete %s created by other users.") % cls.phrase("title_plural"),
-            ["admin"],
-        )
+        permission_registry.register(
+            Permission(
+                section=PermissionSectionGeneral,
+                name="delete_foreign_" + cls.type_name(),
+                title=_l("Delete foreign %s") % cls.phrase("title_plural"),
+                description=_l("Allows to delete %s created by other users.") %
+                cls.phrase("title_plural"),
+                defaults=["admin"],
+            ))
 
     @classmethod
     def has_overriding_permission(cls, how):
@@ -891,8 +911,14 @@ class Overridable(Base):
     def declare_permission(cls, page):
         permname = "%s.%s" % (cls.type_name(), page.name())
         if page.is_public() and permname not in permission_registry:
-            declare_permission(permname, page.title(), page.description(),
-                               ['admin', 'user', 'guest'])
+            permission_registry.register(
+                Permission(
+                    section=permission_section_registry[cls.type_name()],
+                    name=page.name(),
+                    title=page.title(),
+                    description=page.description(),
+                    defaults=['admin', 'user', 'guest'],
+                ))
 
     @classmethod
     def custom_list_buttons(cls, instance):

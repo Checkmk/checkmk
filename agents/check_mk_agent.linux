@@ -146,11 +146,11 @@ section_labels() {
     fi
 
     if [ -n "$DEVICE_TYPE" ]; then
-        LABELS+="\n{\"cmk/device_type\":\"$DEVICE_TYPE\"}"
+        LABELS+="{\"cmk/device_type\":\"$DEVICE_TYPE\"}\n"
     fi
 
     if inpath omd; then
-        LABELS+="\n{\"cmk/check_mk_server\":\"yes\"}"
+        LABELS+="{\"cmk/check_mk_server\":\"yes\"}"
     fi
 
     if [ -n "$LABELS" ]; then

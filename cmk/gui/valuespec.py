@@ -3154,6 +3154,7 @@ class Timerange(CascadingDropdown):
 def DateFormat(**args):
     args.setdefault("title", _("Date format"))
     args.setdefault("default_value", "%Y-%m-%d")
+    args.setdefault("encode_value", False)
     args["choices"] = [
         ("%Y-%m-%d", "1970-12-18"),
         ("%d.%m.%Y", "18.12.1970"),

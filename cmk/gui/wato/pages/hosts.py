@@ -384,7 +384,7 @@ class CreateHostMode(HostMode):
             raise HTTPRedirect(inventory_url)
 
         if html.request.var("diag_host"):
-            html.request.set_var("_try", "1")
+            html.request.set_var("_start_on_load", "1")
             return "diag_host", create_msg
 
         return "folder", create_msg

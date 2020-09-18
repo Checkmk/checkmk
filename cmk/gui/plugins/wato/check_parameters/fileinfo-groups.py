@@ -17,7 +17,6 @@ from cmk.gui.valuespec import (
     TextAscii,
     Transform,
     Tuple,
-    RegExpUnicode,
 )
 
 from cmk.gui.plugins.wato import (
@@ -28,11 +27,7 @@ from cmk.gui.plugins.wato import (
 )
 
 from cmk.gui.plugins.wato.check_parameters.file_attributes_utils import (
-    min_age_levels,
-    max_age_levels,
-    min_size_levels,
-    max_size_levels,
-)
+    additional_rules,)
 
 
 def _valuespec_fileinfo_groups():
@@ -242,23 +237,7 @@ def _parameter_valuespec_fileinfo_groups():
                    "and any number of upper or lower levels. If all of the configured levels within "
                    "a conjunction are reached then the related state is reported."),
              )),
-            ("additional_rules",
-             ListOf(Tuple(elements=[
-                 RegExpUnicode(title=_("Filename/- expression"), mode="case_sensitive"),
-                 Dictionary(elements=[
-                     ("maxage", max_age_levels()),
-                     ("minage", min_age_levels()),
-                     ("maxsize", max_size_levels()),
-                     ("minsize", min_size_levels()),
-                 ]),
-             ],),
-                    title=_("Additional rules for files"),
-                    help=_("You can specify a filename or a regular expresion, and additional "
-                           "rules that are applied to the matching files. This means that the "
-                           "rules set for the whole file group are overwritten for those files. "
-                           "Note that the order in which you specify the rules matters: "
-                           "in case of multiple matching rules, the first matching rule is "
-                           "applied."))),
+            (additional_rules()),
         ],
         ignored_keys=["precompiled_patterns", "group_patterns"],
     )

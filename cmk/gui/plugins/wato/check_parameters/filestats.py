@@ -20,6 +20,9 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersStorage,
 )
 
+from cmk.gui.plugins.wato.check_parameters.file_attributes_utils import (
+    additional_rules,)
+
 
 def _item_spec_filestats():
     return TextAscii(title=_("File Group Name"),
@@ -111,6 +114,7 @@ def _parameter_valuespec_filestats():
                      Integer(title=_("Critical if above")),
                  ],
              )),
+            (additional_rules()),
         ],
         help=_("Here you can impose various levels on the results reported by the"
                " mk_filstats plugin. Note that some levels only apply to a matching"

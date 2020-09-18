@@ -278,13 +278,15 @@ class SorterCrashTime(Sorter):
         return cmp_simple_number("crash_time", r1, r2)
 
 
-permission_registry.register(PermissionActionDeleteCrashReport := Permission(
-    section=PermissionSectionAction,
-    name="delete_crash_report",
-    title=_l("Delete crash reports"),
-    description=_l("Delete crash reports created by Checkmk"),
-    defaults=["admin"],
-))
+PermissionActionDeleteCrashReport = permission_registry.register(
+    Permission(
+        section=PermissionSectionAction,
+        name="delete_crash_report",
+        title=_l("Delete crash reports"),
+        description=_l("Delete crash reports created by Checkmk"),
+        defaults=["admin"],
+    ))
+
 
 @command_registry.register
 class CommandDeleteCrashReports(Command):

@@ -196,20 +196,11 @@ body {
     div#main_page_content {
       flex: 1 1 auto;
       height: 100%;
-      padding-right: 12px;
+      padding-right: 11px;
       padding-bottom: 20px;
       overflow: auto;
 
       div.simplebar-track { background-color: $bg-color; }
-
-      div.simplebar-horizontal div.simplebar-scrollbar {
-        height: 6px;
-        &::before { top: 3px; }
-      }
-
-      div.simplebar-vertical {
-        &, div.simplebar-scrollbar { width: 12px; }
-      }
 
       body.dashboard & { padding-bottom: 0; }
     }

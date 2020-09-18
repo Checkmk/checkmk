@@ -1416,9 +1416,20 @@ tr.hidden {
 
 
 .simplebar-scrollbar::before {
-  left: 5px;
   background: $simplebar-scrollbar-color;
-  border-radius: 0;
+  border-radius: 2px;
+}
+
+.simplebar-track {
+  &.simplebar-vertical div.simplebar-scrollbar::before {
+    left: 3px;
+    width: $simplebar-scrollbar-width;
+  }
+
+  &.simplebar-horizontal div.simplebar-scrollbar {
+    top: 3px;
+    height: $simplebar-scrollbar-width;
+  }
 }
 
 .simplebar-scrollbar.simplebar-visible::before {

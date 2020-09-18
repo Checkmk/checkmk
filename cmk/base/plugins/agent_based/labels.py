@@ -53,8 +53,8 @@ def parse_checkmk_labels(string_table):
     return labels
 
 
-register.agent_section(
-    name="check_mk",
-    parse_function=parse_checkmk_labels,
-    host_label_function=host_label_function_labels,
-)
+#register.agent_section(
+#    name="check_mk",
+#    parse_function=parse_checkmk_labels,
+#    host_label_function=host_label_function_labels,
+#)

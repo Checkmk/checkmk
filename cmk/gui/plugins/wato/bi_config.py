@@ -1020,19 +1020,17 @@ class ModeBIEditRule(ABCBIMode):
             raise MKUserError(None,
                               _("Please add at least one child node. Empty rules are useless."))
 
+        self.bi_pack.add_rule(new_bi_rule)
+        try:
+            bi_packs.save_config()
+        except MKGeneralException as e:
+            raise MKUserError(None, str(e))
+
         if self._new:
-            self.bi_pack.add_rule(new_bi_rule)
             self._add_change("bi-new-rule", _("Add BI rule %s") % new_bi_rule.id)
         else:
-            self.bi_pack.add_rule(new_bi_rule)
-            if self._rule_uses_rule(new_bi_rule, new_bi_rule.id):
-                raise MKUserError(
-                    None,
-                    _("There is a cycle in your rules. This rule calls itself - "
-                      "either directly or indirectly."))
             self._add_change("bi-edit-rule", _("Modified BI rule %s") % new_bi_rule.id)
 
-        bi_packs.save_config()
         return "bi_rules"
 
     def _get_forbidden_packs_using_rule(self):
@@ -1499,13 +1497,13 @@ class BIModeEditAggregation(ABCBIMode):
                 aggregation_ids[new_bi_aggregation.id][0].id)
 
         self.bi_pack.add_aggregation(new_bi_aggregation)
+        bi_packs.save_config()
         if self._new:
             self._add_change("bi-new-aggregation",
                              _("Add new BI aggregation %s") % new_bi_aggregation.id)
         else:
             self._add_change("bi-edit-aggregation",
                              _("Modified BI aggregation %s") % (new_bi_aggregation.id))
-        bi_packs.save_config()
         return "bi_aggregations"
 
     def page(self):

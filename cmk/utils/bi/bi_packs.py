@@ -9,11 +9,13 @@ from marshmallow.fields import String, Nested  # type: ignore[import]
 from marshmallow import Schema  # type: ignore[import]
 
 from pathlib import Path
+from cmk.utils.i18n import _
 import cmk.utils.store as store
 import cmk.utils.paths
 
 from typing import List, Dict, Set, Tuple, Type, Optional, Any
 
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.bi.bi_lib import (
     ReqList,
     ReqString,
@@ -250,11 +252,37 @@ class BIAggregationPacks:
         data = BIAggregationPacksSchema().load(config_packs_schema)
         self._instantiate_packs(data.data["packs"])
 
-    def generate_config(self) -> Dict[str, Any]:
-        return BIAggregationPacksSchema().dump(self).data
-
     def save_config(self) -> None:
         store.save_file(self.bi_configuration_file, repr(self.generate_config()))
+
+    def generate_config(self) -> Dict[str, Any]:
+        self._check_rule_cycles()
+        return BIAggregationPacksSchema().dump(self).data
+
+    def _check_rule_cycles(self) -> None:
+        toplevel_rules = {
+            bi_aggregation.node.action.rule_id
+            for bi_aggregation in self.get_all_aggregations()
+            if isinstance(bi_aggregation.node.action, BICallARuleAction)
+        }
+
+        for toplevel_rule in toplevel_rules:
+            self._traverse_rule(self.get_rule_mandatory(toplevel_rule))
+
+    def _traverse_rule(self, bi_rule: BIRule, parents=None) -> None:
+        if not parents:
+            parents = []
+
+        if bi_rule.id in parents:
+            parents.append(bi_rule.id)
+            raise MKGeneralException(
+                _("There is a cycle in your rules. This rule calls itself - "
+                  "either directly or indirectly: %s") % "->".join(parents))
+
+        parents.append(bi_rule.id)
+        for node in bi_rule.nodes:
+            if isinstance(node.action, BICallARuleAction):
+                self._traverse_rule(self.get_rule_mandatory(node.action.rule_id), list(parents))
 
     @property
     def bi_configuration_file(self) -> str:

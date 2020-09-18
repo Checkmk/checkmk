@@ -1484,21 +1484,23 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 # Icons for mkp export and disabling
                 table.cell("", css="buttons")
                 if type_ == ec.RulePackType.unmodified_mkp:
-                    html.icon(
-                        _("This rule pack is provided via the MKP %s.") % id_to_mkp[id_], "mkps")
+                    html.icon("mkps",
+                              _("This rule pack is provided via the MKP %s.") % id_to_mkp[id_])
                 elif type_ == ec.RulePackType.exported:
                     html.icon(
-                        _("This is rule pack can be packaged with the Extension Packages module."),
-                        "package")
+                        "package",
+                        _("This is rule pack can be packaged with the Extension Packages module."))
                 elif type_ == ec.RulePackType.modified_mkp:
                     html.icon(
+                        "new_mkp",
                         _("This rule pack is modified. Originally it was provided via the MKP %s.")
-                        % id_to_mkp[id_], "new_mkp")
+                        % id_to_mkp[id_])
 
                 if rule_pack["disabled"]:
                     html.icon(
+                        "disabled",
                         _("This rule pack is currently disabled. None of its rules will be applied."
-                         ), "disabled")
+                         ))
 
                 # Simulation of all rules in this pack
                 elif event:
@@ -1542,7 +1544,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                             else:
                                 icon = "rulematch"
                                 have_match = True
-                    html.icon(msg, icon)
+                    html.icon(icon, msg)
 
                 table.cell(_("ID"), id_)
                 table.cell(_("Title"), html.render_text(rule_pack["title"]))
@@ -1813,12 +1815,12 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
 
                 table.cell("", css="buttons")
                 if rule.get("disabled"):
-                    html.icon(_("This rule is currently disabled and will not be applied"),
-                              "disabled")
+                    html.icon("disabled",
+                              _("This rule is currently disabled and will not be applied"))
                 elif event:
                     result = cmk.gui.mkeventd.event_rule_matches(self._rule_pack, rule, event)
                     if not isinstance(result, tuple):
-                        html.icon(_("Rule does not match: %s") % result, "rulenmatch")
+                        html.icon("rulenmatch", _("Rule does not match: %s") % result)
                     else:
                         cancelling, groups = result
                         if have_match:
@@ -1834,16 +1836,16 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         if groups:
                             msg += _(" Match groups: %s") % ",".join(
                                 [g or _('&lt;None&gt;') for g in groups])
-                        html.icon(msg, icon)
+                        html.icon(icon, msg)
 
                 if rule.get("invert_matching"):
-                    html.icon(_("Matching is inverted in this rule"), "inverted")
+                    html.icon("inverted", _("Matching is inverted in this rule"))
 
                 if rule.get("contact_groups") is not None:
                     html.icon(
+                        "contactgroups",
                         _("This rule attaches contact group(s) to the events: %s") %
-                        (", ".join(rule["contact_groups"]["groups"]) or _("(none)")),
-                        "contactgroups")
+                        (", ".join(rule["contact_groups"]["groups"]) or _("(none)")))
 
                 table.cell(_("ID"), html.render_a(rule["id"], edit_url))
 

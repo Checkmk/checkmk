@@ -720,8 +720,8 @@ class ModeFolder(WatoMode):
             self._show_subfolder_buttons(subfolder)
             html.close_div()  # hoverarea
         else:
-            html.icon(escaping.strip_tags(subfolder.reason_why_may_not("read")),
-                      "autherr",
+            html.icon("autherr",
+                      escaping.strip_tags(subfolder.reason_why_may_not("read")),
                       class_=["autherr"])
             html.div('', class_="hoverarea")
 
@@ -772,7 +772,7 @@ class ModeFolder(WatoMode):
         permitted_groups, _folder_contact_groups, _use_for_services = subfolder.groups()
         for num, pg in enumerate(permitted_groups):
             cgalias = groups.get(pg, {'alias': pg})['alias']
-            html.icon(_("Contactgroups that have permission on this folder"), "contactgroups")
+            html.icon("contactgroups", _("Contactgroups that have permission on this folder"))
             html.write_text(' %s' % cgalias)
             html.br()
             if num > 1 and len(permitted_groups) > 4:
@@ -908,16 +908,16 @@ class ModeFolder(WatoMode):
         if errors:
             msg = _("Warning: This host has an invalid configuration: ")
             msg += ", ".join(errors)
-            html.icon(msg, "validation_error")
+            html.icon("validation_error", msg)
             html.nbsp()
 
         if host.is_offline():
-            html.icon(_("This host is disabled"), "disabled")
+            html.icon("disabled", _("This host is disabled"))
             html.nbsp()
 
         if host.is_cluster():
-            html.icon(
-                _("This host is a cluster of %s") % ", ".join(host.cluster_nodes()), "cluster")
+            html.icon("cluster",
+                      _("This host is a cluster of %s") % ", ".join(host.cluster_nodes()))
             html.nbsp()
 
         html.a(hostname, href=host.edit_url())

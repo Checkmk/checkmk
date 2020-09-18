@@ -442,7 +442,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             html.icon_button(url, tooltip, "sites", target="main")
             html.a(message, target="main", href=url)
         else:
-            html.icon(tooltip, "sites")
+            html.icon("sites", tooltip)
             html.write_text(message)
 
         html.close_div()

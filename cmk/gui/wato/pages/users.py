@@ -349,7 +349,7 @@ class ModeUsers(WatoMode):
 
                     title += ' (%s %s)' % (render.date(last_seen), render.time_of_day(last_seen))
                     table.cell(_("Act."))
-                    html.icon(title, img_txt)
+                    html.icon(img_txt, title)
 
                     table.cell(_("Last seen"))
                     if last_seen != 0:
@@ -383,7 +383,7 @@ class ModeUsers(WatoMode):
 
                 table.cell(_("State"))
                 if user.get("locked", False):
-                    html.icon(_('The login is currently locked'), 'user_locked')
+                    html.icon('user_locked', _('The login is currently locked'))
 
                 if "disable_notifications" in user and isinstance(user["disable_notifications"],
                                                                   bool):
@@ -392,7 +392,7 @@ class ModeUsers(WatoMode):
                     disable_notifications_opts = user.get("disable_notifications", {})
 
                 if disable_notifications_opts.get("disable", False):
-                    html.icon(_('Notifications are disabled'), 'notif_disabled')
+                    html.icon('notif_disabled', _('Notifications are disabled'))
 
                 # Full name / Alias
                 table.text_cell(_("Alias"), user.get("alias", ""))

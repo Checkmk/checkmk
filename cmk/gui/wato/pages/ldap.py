@@ -168,8 +168,8 @@ class ModeLDAPConfig(LDAPMode):
 
                 table.cell("", css="narrow")
                 if connection.get("disabled"):
-                    html.icon(_("This connection is currently not being used for synchronization."),
-                              "disabled")
+                    html.icon("disabled",
+                              _("This connection is currently not being used for synchronization."))
                 else:
                     html.empty_icon_button()
 

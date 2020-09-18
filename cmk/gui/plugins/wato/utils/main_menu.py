@@ -30,7 +30,7 @@ class MainMenu:
                 continue
 
             html.open_a(href=item.get_url(), onfocus="if (this.blur) this.blur();")
-            html.icon(item.title, item.icon)
+            html.icon(item.icon, item.title)
             html.div(item.title, class_="title")
             html.div(item.description, class_="subtitle")
             html.close_a()

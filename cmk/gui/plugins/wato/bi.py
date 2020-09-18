@@ -1492,24 +1492,24 @@ class ModeBIAggregations(ModeBI):
                 table.text_cell(_("Options"), css="buttons")
 
                 if aggregation["disabled"]:
-                    html.icon(_("This aggregation is currently disabled."), "disabled")
+                    html.icon("disabled", _("This aggregation is currently disabled."))
                 else:
-                    html.icon(_("This aggregation is currently enabled."), "enabled")
+                    html.icon("enabled", _("This aggregation is currently enabled."))
 
                 if aggregation["single_host"]:
-                    html.icon(_("This aggregation covers only data from a single host."), "host")
+                    html.icon("host", _("This aggregation covers only data from a single host."))
                 else:
-                    html.icon(_("This aggregation works with data of multiple hosts."), "aggr")
+                    html.icon("aggr", _("This aggregation works with data of multiple hosts."))
 
                 if aggregation["hard_states"]:
-                    html.icon(_("Base state computation on hard states"), "hard_states")
+                    html.icon("hard_states", _("Base state computation on hard states"))
                 else:
-                    html.icon(_("Base state computation on soft and hard states"), "all_states")
+                    html.icon("all_states", _("Base state computation on soft and hard states"))
 
                 if aggregation["downtime_aggr_warn"]:
-                    html.icon(_("Escalate downtimes based on aggregated WARN state"), "warning")
+                    html.icon("warning", _("Escalate downtimes based on aggregated WARN state"))
                 else:
-                    html.icon(_("Escalate downtimes based on aggregated CRIT state"), "critical")
+                    html.icon("critical", _("Escalate downtimes based on aggregated CRIT state"))
 
                 table.text_cell(_("Groups"), ", ".join(aggregation["groups"]))
 
@@ -1845,8 +1845,8 @@ class ModeBIRules(ModeBI):
 
                     table.cell("", css="narrow")
                     if rule.get("disabled"):
-                        html.icon(_("This rule is currently disabled and will not be applied"),
-                                  "disabled")
+                        html.icon("disabled",
+                                  _("This rule is currently disabled and will not be applied"))
                     else:
                         html.empty_icon_button()
 

@@ -473,7 +473,7 @@ class ModeObjectParameters(WatoMode):
             # Binary rule, no valuespec, outcome is True or False
             else:
                 icon_name = "rule_%s%s" % ("yes" if setting else "no", "_off" if not rules else '')
-                html.icon(title=_("yes") if setting else _("no"), icon=icon_name)
+                html.icon(icon_name, title=_("yes") if setting else _("no"))
         html.close_td()
         html.close_tr()
         html.close_table()

@@ -334,7 +334,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                 table.cell(_("User"), css="narrow nobr")
                 html.write_text(change["user_id"] if change["user_id"] else "")
                 if self._is_foreign(change):
-                    html.icon(_("This change has been made by another user"), "foreign_changes")
+                    html.icon("foreign_changes", _("This change has been made by another user"))
 
                 table.cell(_("Change"), change["text"])
 
@@ -422,7 +422,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                         onclick="cmk.activation.activate_changes(\"site\", \"%s\")" % site_id)
 
                 if can_activate_all and not need_action:
-                    html.icon(_("This site is up-to-date."), "siteuptodate")
+                    html.icon("siteuptodate", _("This site is up-to-date."))
 
                 site_url = site.get("multisiteurl")
                 if site_url:

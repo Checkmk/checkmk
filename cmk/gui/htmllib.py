@@ -2554,10 +2554,9 @@ class html(ABCHTMLGenerator):
     # HTML icon rendering
     #
 
-    # FIXME: Change order of input arguments in one: icon and render_icon!!
     def icon(self,
-             title: Optional[str],
              icon: str,
+             title: Optional[str] = None,
              middle: bool = True,
              id_: Optional[str] = None,
              cssclass: Optional[str] = None,
@@ -2683,8 +2682,8 @@ class html(ABCHTMLGenerator):
                     onfocus="if (this.blur) this.blur();",
                     onclick="cmk.utils.toggle_more(this, %s, %d);%s" %
                     (json.dumps(id_), dom_levels_up, additional_js))
-        self.icon(title=_("Show more items"), icon="show_more", class_="show_more")
-        self.icon(title=_("Show less items"), icon="show_less", class_="show_less")
+        self.icon("show_more", title=_("Show more items"), class_="show_more")
+        self.icon("show_less", title=_("Show less items"), class_="show_less")
         self.close_a()
 
     def popup_trigger(self,

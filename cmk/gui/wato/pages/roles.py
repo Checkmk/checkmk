@@ -484,7 +484,7 @@ class ModeRoleMatrix(WatoMode):
 
                         table.cell(role_id, css="center")
                         if icon_name:
-                            html.icon(None, icon_name)
+                            html.icon(icon_name)
 
             html.end_foldable_container()
 

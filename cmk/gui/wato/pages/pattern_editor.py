@@ -245,7 +245,7 @@ class ModePatternEditor(WatoMode):
 
                     table.row(css=reason_class)
                     table.cell(_('Match'))
-                    html.icon(match_title, "rule%s" % match_img)
+                    html.icon("rule%s" % match_img, match_title)
 
                     cls = ''
                     if match_class == 'match first':

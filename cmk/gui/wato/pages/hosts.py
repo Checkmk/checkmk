@@ -165,7 +165,7 @@ class ABCHostMode(WatoMode, metaclass=abc.ABCMeta):
             html.open_tr()
 
             html.open_td(class_="img")
-            html.icon(title=None, icon="validation_error")
+            html.icon("validation_error")
             html.close_td()
 
             html.open_td()

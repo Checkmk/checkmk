@@ -382,7 +382,7 @@ class SidebarRenderer:
                 continue
 
             html.open_a(href=item.url, target=item.target_name)
-            html.icon(title=None, icon=item.icon_name)
+            html.icon(item.icon_name)
             html.div(item.title)
             html.close_a()
         html.close_div()
@@ -413,7 +413,7 @@ class SidebarRenderer:
         html.open_div(id_="add_snapin")
         html.open_a(href=html.makeuri_contextless([], filename="sidebar_add_snapin.py"),
                     target="main")
-        html.icon(title=_("Add snapins to your sidebar"), icon="add")
+        html.icon("add", title=_("Add snapins to your sidebar"))
         html.close_a()
         html.close_div()
 

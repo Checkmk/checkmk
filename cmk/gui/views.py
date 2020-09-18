@@ -2929,7 +2929,7 @@ def ajax_popup_action_menu():
                     url = 'javascript:void(0);'
                 html.open_a(href=url, target=target_frame, onclick=onclick)
 
-            html.icon('', icon_name)
+            html.icon(icon_name)
             if title:
                 html.write(title)
             else:

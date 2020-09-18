@@ -727,8 +727,8 @@ class ModeDistributedMonitoring(WatoMode):
 
         # The status is fetched asynchronously for all sites. Show a temporary loading icon.
         html.open_div(id_="livestatus_status_%s" % site_id, class_="connection_status")
-        html.icon(_("Fetching livestatus status"),
-                  "reload",
+        html.icon("reload",
+                  _("Fetching livestatus status"),
                   class_=["reloading", "replication_status_loading"])
         html.close_div()
 
@@ -761,8 +761,8 @@ class ModeDistributedMonitoring(WatoMode):
         html.open_div(id_="replication_status_%s" % site_id, class_="connection_status")
         if site.get("replication"):
             # The status is fetched asynchronously for all sites. Show a temporary loading icon.
-            html.icon(_("Fetching replication status"),
-                      "reload",
+            html.icon("reload",
+                      _("Fetching replication status"),
                       class_=["reloading", "replication_status_loading"])
         html.close_div()
 

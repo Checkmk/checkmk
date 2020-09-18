@@ -574,7 +574,7 @@ class SuggestedEntryRenderer:
         html.open_a(href=url,
                     onclick=onclick,
                     id_=("menu_suggestion_%s" % entry.name if entry.name else None))
-        html.icon(title=None, icon=entry.icon_name or "trans")
+        html.icon(entry.icon_name or "trans")
         html.write_text(entry.shortcut_title or entry.title)
         html.close_a()
 
@@ -666,7 +666,7 @@ class DropdownEntryRenderer:
     def _show_link(self, url: str, onclick: Optional[str], target: Optional[str],
                    icon_name: Optional[str], title: str) -> None:
         html.open_a(href=url, onclick=onclick, target=target)
-        html.icon(title=None, icon=icon_name or "trans")
+        html.icon(icon_name or "trans")
         html.span(title)
         html.close_a()
 

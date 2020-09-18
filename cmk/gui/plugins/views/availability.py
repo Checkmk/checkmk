@@ -1021,22 +1021,24 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
             table.cell(_("Until"), render_date(annotation["until"]), css="nobr narrow")
             table.cell("", css="buttons")
             if annotation.get("downtime") is True:
-                html.icon(_("This period has been reclassified as a scheduled downtime"),
-                          "downtime")
+                html.icon("downtime",
+                          _("This period has been reclassified as a scheduled downtime"))
             elif annotation.get("downtime") is False:
                 html.icon(
-                    _("This period has been reclassified as a not being a scheduled downtime"),
-                    "nodowntime")
+                    "nodowntime",
+                    _("This period has been reclassified as a not being a scheduled downtime"))
             recl_host_state = annotation.get("host_state")
             if recl_host_state is not None:
                 html.icon(
+                    "status",
                     _("This period has been reclassified in host state to state: %s" %
-                      host_state_name(recl_host_state)), "status")
+                      host_state_name(recl_host_state)))
             recl_svc_state = annotation.get("service_state")
             if recl_svc_state is not None:
                 html.icon(
+                    "status",
                     _("This period has been reclassified in service state to state: %s" %
-                      service_state_name(recl_svc_state)), "status")
+                      service_state_name(recl_svc_state)))
 
             table.cell(_("Annotation"), html.render_text(annotation["text"]))
             table.cell(_("Author"), annotation["author"])

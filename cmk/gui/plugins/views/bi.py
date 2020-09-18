@@ -204,15 +204,16 @@ class PainterAggrIcons(Painter):
             html.icon_button(avail_url, _("Analyse availability of this aggregation"),
                              "availability")
             if row["aggr_effective_state"]["in_downtime"] != 0:
-                html.icon(_("A service or host in this aggregation is in downtime."),
-                          "derived_downtime")
+                html.icon("derived_downtime",
+                          _("A service or host in this aggregation is in downtime."))
             if row["aggr_effective_state"]["acknowledged"]:
                 html.icon(
+                    "ack",
                     _("The critical problems that make this aggregation non-OK have been acknowledged."
-                     ), "ack")
+                     ))
             if not row["aggr_effective_state"]["in_service_period"]:
-                html.icon(_("This aggregation is currently out of its service period."),
-                          "outof_serviceperiod")
+                html.icon("outof_serviceperiod",
+                          _("This aggregation is currently out of its service period."))
             code = html.drain()
         return "buttons", code
 

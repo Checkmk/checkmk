@@ -1078,7 +1078,7 @@ def show_filter(f: Filter) -> None:
         tb = sys.exc_info()[2]
         tbs = ['Traceback (most recent call last):\n']
         tbs += traceback.format_tb(tb)
-        html.icon(_("This filter cannot be displayed") + " (%s)\n%s" % (e, "".join(tbs)), "alert")
+        html.icon("alert", _("This filter cannot be displayed") + " (%s)\n%s" % (e, "".join(tbs)))
         html.write_text(_("This filter cannot be displayed"))
     html.close_div()
     html.close_div()
@@ -1421,7 +1421,7 @@ def _show_filter_form_buttons(varprefix: str, filter_list_id: str) -> None:
                 onclick="cmk.page_menu.toggle_popup_filter_list(this, %s)" %
                 json.dumps(filter_list_id),
                 class_="add")
-    html.icon(None, icon="add")
+    html.icon("add")
     html.div(html.render_text("Add filter"), class_="description")
     html.close_a()
 
@@ -1857,7 +1857,7 @@ def ajax_popup_add() -> None:
             html.open_a(href=entry.item.link.url,
                         onclick=entry.item.link.onclick,
                         target=entry.item.link.target)
-            html.icon(None, entry.icon_name or "trans")
+            html.icon(entry.icon_name or "trans")
             html.write(entry.title)
             html.close_a()
             html.close_li()

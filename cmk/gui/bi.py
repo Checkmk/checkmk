@@ -3066,7 +3066,7 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
             icon_title = _("This element is currently not in its service period.")
 
         if icon_name and icon_title:
-            html.icon(icon=icon_name, title=icon_title, class_=["icon", "bi"])
+            html.icon(icon_name, title=icon_title, class_=["icon", "bi"])
 
         yield
 

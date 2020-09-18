@@ -886,11 +886,11 @@ class ModeEditRuleset(WatoMode):
         if self._hostname:
             table.cell(_("Ma."))
             title, img = self._match(match_state, rule)
-            html.icon(title, "rule%s" % img, middle=True)
+            html.icon("rule%s" % img, title, middle=True)
 
         table.cell("", css="buttons")
         if rule.is_disabled():
-            html.icon(_("This rule is currently disabled and will not be applied"), "disabled")
+            html.icon("disabled", _("This rule is currently disabled and will not be applied"))
         else:
             html.empty_icon()
 

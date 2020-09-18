@@ -239,9 +239,9 @@ class ABCNotificationsMode(ABCEventsMode):
                     table.cell(css="buttons")
                     what, _anarule, reason = analyse_rules[nr + start_nr]
                     if what == "match":
-                        html.icon(_("This rule matches"), "rulematch")
+                        html.icon("rulematch", _("This rule matches"))
                     elif what == "miss":
-                        html.icon(_("This rule does not match: %s") % reason, "rulenmatch")
+                        html.icon("rulenmatch", _("This rule does not match: %s") % reason)
 
                 if show_buttons and self._actions_allowed(rule):
                     table.cell(_("Actions"), css="buttons")
@@ -258,8 +258,8 @@ class ABCNotificationsMode(ABCEventsMode):
 
                 table.cell("", css="narrow")
                 if rule.get("disabled"):
-                    html.icon(_("This rule is currently disabled and will not be applied"),
-                              "disabled")
+                    html.icon("disabled",
+                              _("This rule is currently disabled and will not be applied"))
                 else:
                     html.empty_icon_button()
 
@@ -272,15 +272,15 @@ class ABCNotificationsMode(ABCEventsMode):
 
                 table.cell(_("Type"), css="narrow")
                 if notify_method[1] is None:
-                    html.icon(_("Cancel notifications for this plugin type"), "notify_cancel")
+                    html.icon("notify_cancel", _("Cancel notifications for this plugin type"))
                 else:
-                    html.icon(_("Create a notification"), "notify_create")
+                    html.icon("notify_create", _("Create a notification"))
 
                 table.cell(_("Plugin"), notify_plugin or _("Plain Email"), css="narrow nowrap")
 
                 table.cell(_("Bulk"), css="narrow")
                 if "bulk" in rule or "bulk_period" in rule:
-                    html.icon(_("This rule configures bulk notifications."), "bulk")
+                    html.icon("bulk", _("This rule configures bulk notifications."))
 
                 table.cell(_("Description"))
                 url = rule.get("docu_url")
@@ -617,13 +617,13 @@ class ModeNotifications(ABCNotificationsMode):
                 table.cell(_("Max. Age (sec)"), "%s" % interval, css="number")
                 table.cell(_("Age (sec)"), "%d" % age, css="number")
                 if interval and age >= interval:
-                    html.icon(_("Age of oldest notification is over maximum age"), "warning")
+                    html.icon("warning", _("Age of oldest notification is over maximum age"))
                 table.cell(_("Timeperiod"), "%s" % timeperiod)
                 table.cell(_("Max. Count"), str(maxcount), css="number")
                 table.cell(_("Count"), str(len(uuids)), css="number")
                 if len(uuids) >= maxcount:
-                    html.icon(_("Number of notifications exceeds maximum allowed number"),
-                              "warning")
+                    html.icon("warning",
+                              _("Number of notifications exceeds maximum allowed number"))
         return True
 
     def _show_notification_backlog(self):
@@ -661,7 +661,7 @@ class ModeNotifications(ABCNotificationsMode):
 
                 if (html.request.var("analyse") and
                         nr == html.request.get_integer_input_mandatory("analyse")):
-                    html.icon(_("You are analysing this notification"), "rulematch")
+                    html.icon("rulematch", _("You are analysing this notification"))
 
                 table.cell(_("Nr."), nr + 1, css="number")
                 if "MICROTIME" in context:
@@ -687,13 +687,13 @@ class ModeNotifications(ABCNotificationsMode):
                     table.cell(_("State"), statename, css=css)
                 elif nottype.startswith("DOWNTIME"):
                     table.cell(_("State"))
-                    html.icon(_("Downtime"), "downtime")
+                    html.icon("downtime", _("Downtime"))
                 elif nottype.startswith("ACK"):
                     table.cell(_("State"))
-                    html.icon(_("Acknowledgement"), "ack")
+                    html.icon("ack", _("Acknowledgement"))
                 elif nottype.startswith("FLAP"):
                     table.cell(_("State"))
-                    html.icon(_("Flapping"), "flapping")
+                    html.icon("flapping", _("Flapping"))
                 else:
                     table.cell(_("State"), "")
 

@@ -46,12 +46,6 @@ def mock_license_usage(monkeypatch):
 
 
 @pytest.fixture(scope="module", autouse=True)
-@pytest.mark.usefixtures("config_load_all_checks")
-def load_plugins():
-    pass  # just enable auto use.
-
-
-@pytest.fixture(scope="module", autouse=True)
 def enable_debug_mode():
     # `debug.disabled()` hides exceptions and makes it
     # *impossible* to debug anything.
@@ -246,6 +240,7 @@ def test_mode_discover_marked_hosts(mocker):
     # assert ABCSource.parse.call_count == 2  # type: ignore[attr-defined]
 
 
+@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.usefixtures("scenario")
 def test_mode_check_discovery_default(mocker):
     _patch_data_source(mocker, max_age=0)
@@ -253,6 +248,7 @@ def test_mode_check_discovery_default(mocker):
     assert ABCSource.parse.call_count == 2  # type: ignore[attr-defined]
 
 
+@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.usefixtures("scenario")
 def test_mode_check_discovery_cached(mocker):
     _patch_data_source(
@@ -267,6 +263,7 @@ def test_mode_check_discovery_cached(mocker):
     assert ABCSource.parse.call_count == 2  # type: ignore[attr-defined]
 
 
+@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.usefixtures("scenario")
 def test_mode_discover_all_hosts(mocker):
     _patch_data_source(mocker, maybe=True, max_age=120)
@@ -276,6 +273,7 @@ def test_mode_discover_all_hosts(mocker):
         len(active_real_hosts) * 2)
 
 
+@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.usefixtures("scenario")
 def test_mode_discover_explicit_hosts(mocker):
     # TODO: Is it correct that no cache is used here?
@@ -284,6 +282,7 @@ def test_mode_discover_explicit_hosts(mocker):
     assert ABCSource.parse.call_count == 2  # type: ignore[attr-defined]
 
 
+@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.usefixtures("scenario")
 def test_mode_discover_explicit_hosts_cache(mocker):
     _patch_data_source(
@@ -297,6 +296,7 @@ def test_mode_discover_explicit_hosts_cache(mocker):
     assert ABCSource.parse.call_count == 2  # type: ignore[attr-defined]
 
 
+@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.usefixtures("scenario")
 def test_mode_discover_explicit_hosts_no_cache(mocker):
     _patch_data_source(mocker, disabled=True, max_age=0)
@@ -387,6 +387,7 @@ def test_mode_dump_agent_explicit_host_no_cache(mocker, capsys):
     ],
     ids=["raise_errors=@raiseerrors", "raise_errors=None"],
 )
+@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("reset_log_level")
 def test_automation_try_discovery_caching(scan, raise_errors, mocker):
@@ -423,6 +424,7 @@ def test_automation_try_discovery_caching(scan, raise_errors, mocker):
         "@scan",
     ],
 )
+@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.usefixtures("scenario")
 def test_automation_discovery_caching(raise_errors, scan, mocker):
     kwargs = {}

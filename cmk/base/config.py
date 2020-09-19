@@ -1028,7 +1028,6 @@ _old_service_descriptions = {
     "nvidia_temp": "Temperature NVIDIA %s",
     "postfix_mailq": lambda item: (False, "Postfix Queue"),
     "ps": "proc_%s",
-    "ps_perf": "proc_%s",
     "qmail_stats": lambda item: (False, "Qmail Queue"),
     "raritan_emx": "Rack %s",
     "raritan_pdu_inlet": "Input Phase %s",

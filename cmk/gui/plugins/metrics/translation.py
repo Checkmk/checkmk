@@ -1985,7 +1985,6 @@ check_metrics["check_mk-smart_stats"] = {
     },
 }
 check_metrics["check_mk-ps"] = ps_translation
-check_metrics["check_mk-ps_perf"] = ps_translation
 check_metrics["check_mk-mssql_counters_sqlstats"] = {
     "batch_requests/sec": {
         "name": "requests_per_second"

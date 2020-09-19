@@ -2141,7 +2141,7 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
         return "use_new_descriptions_for"
 
     def valuespec(self):
-        return ListChoice(
+        return Transform(ListChoice(
             title=_("Use new service descriptions"),
             help=_(
                 "In order to make Check_MK more consistent, "
@@ -2226,7 +2226,6 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                 ("nvidia_temp", _("Temperatures of NVIDIA graphics card")),
                 ("postfix_mailq", _("Postfix: Mail Queue")),
                 ("ps", _("State and Count of Processes")),
-                ("ps_perf", _("State and Count of Processes (with additional performance data)")),
                 ("qmail_stats", _("Qmail: Mail Queue")),
                 ("raritan_emx", _("Raritan EMX Rack: Temperature")),
                 ("raritan_pdu_inlet", _("Raritan PDU: Input Phases")),
@@ -2241,7 +2240,8 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                 ("zfsget", _("Used space in ZFS pools and filesystems")),
             ],
             render_orientation="vertical",
-        )
+        ),
+                         forth=lambda x: [i for i in x if i != 'ps_perf'])
 
 
 @config_variable_registry.register

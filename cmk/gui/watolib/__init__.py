@@ -600,7 +600,6 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 "nvidia_temp",
                 "postfix_mailq",
                 "ps",
-                "ps_perf",
                 "qmail_stats",
                 "raritan_emx",
                 "raritan_pdu_inlet",

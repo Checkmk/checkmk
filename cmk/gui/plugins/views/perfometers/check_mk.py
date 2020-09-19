@@ -484,7 +484,7 @@ perfometers["check_mk-casa_cpu_util"] = perfometer_cpu_utilization
 perfometers["check_mk-juniper_screenos_cpu"] = perfometer_cpu_utilization
 
 
-def perfometer_ps_perf(row, check_command, perf_data):
+def perfometer_ps(row, check_command, perf_data):
     perf_dict = {p[0]: float(p[1]) for p in perf_data}
     try:
         perc = perf_dict["pcpu"]
@@ -493,8 +493,7 @@ def perfometer_ps_perf(row, check_command, perf_data):
         return "", ""
 
 
-perfometers["check_mk-ps"] = perfometer_ps_perf
-perfometers["check_mk-ps.perf"] = perfometer_ps_perf
+perfometers["check_mk-ps"] = perfometer_ps
 
 
 def perfometer_hpux_snmp_cs_cpu(row, check_command, perf_data):

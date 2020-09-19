@@ -56,6 +56,7 @@ from cmk.utils.type_defs import (
     MetricTuple,
     ParsedSectionName,
     RulesetName,
+    SectionName,
     SourceType,
 )
 
@@ -1149,26 +1150,28 @@ def _discover_host_labels_for_source_type(
 
         console.vverbose("Trying host label discovery with: %s\n" %
                          ", ".join(str(s.name) for s in applicable_sections))
-        for plugin in applicable_sections:
-            parsed = multi_host_sections.get_parsed_section(host_key, plugin.parsed_section_name)
+        for section_plugin in _sort_sections_by_label_priority(applicable_sections):
+            parsed = multi_host_sections.get_parsed_section(host_key,
+                                                            section_plugin.parsed_section_name)
 
             if parsed is None:
-                # just for mypy. if parsed was None, the plugin would not have been in the list
+                # just for mypy. if parsed was None, the section would not have been in the list
                 continue
 
             kwargs = {"section": parsed}
             # TODO:
-            # The following block is a special case for the ps plugin. This should be done
+            # The following block is a special case for the ps section. This should be done
             # in a more general sense when CMK-5158 is addressed. Make sure to grep for
             # "CMK-5158" in the code base.
-            if str(plugin.parsed_section_name) == "ps":
+            if str(section_plugin.parsed_section_name) == "ps":
                 ps_check_plugin = agent_based_register.get_check_plugin(CheckPluginName("ps"))
                 assert ps_check_plugin
                 kwargs["params"] = config.get_discovery_parameters(host_key[0], ps_check_plugin)
 
             try:
-                for label in plugin.host_label_function(**kwargs):
-                    label.plugin_name = str(plugin.name)
+                for label in section_plugin.host_label_function(**kwargs):
+                    label.plugin_name = str(section_plugin.name)
+
                     discovered_host_labels.add_label(label)
                     console.vverbose("  %s: %s (%s)\n" %
                                      (label.name, label.value, label.plugin_name))
@@ -1178,12 +1181,19 @@ def _discover_host_labels_for_source_type(
                 if cmk.utils.debug.enabled() or on_error == "raise":
                     raise
                 if on_error == "warn":
-                    console.error("Host label discovery of '%s' failed: %s\n" % (plugin.name, exc))
+                    console.error("Host label discovery of '%s' failed: %s\n" %
+                                  (section_plugin.name, exc))
 
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")
 
     return discovered_host_labels
+
+
+# snmp_info.include sets a couple of host labels for device type but should not
+# overwrite device specific ones. So we put the snmp_info section first.
+def _sort_sections_by_label_priority(sections):
+    return sorted(sections, key=lambda s: (s.name != SectionName("snmp_info"), s.name))
 
 
 #.
@@ -1310,7 +1320,7 @@ def _discover_services(
 
     service_table: cmk.base.check_utils.CheckTable = {}
     try:
-        for check_plugin_name in sorted(plugin_candidates):
+        for check_plugin_name in plugin_candidates:
             try:
                 service_table.update({
                     service.id(): service for service in _execute_discovery(

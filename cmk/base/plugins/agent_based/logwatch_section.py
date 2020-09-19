@@ -46,6 +46,24 @@ def _extract_item_attribute(line: str) -> Optional[Tuple[str, str]]:
 
 
 def parse_logwatch(string_table: AgentStringTable) -> Section:
+    """
+        >>> import pprint
+        >>> pprint.pprint(parse_logwatch([
+        ...     ['[[[mylog]]]'],
+        ...     ['C', 'whoha!', 'Someone', 'mooped!'],
+        ...     ['[[[missinglog:missing]]]'],
+        ...     ['[[[unreadablelog:cannotopen]]]'],
+        ...     ['[[[empty.log]]]'],
+        ...     ['[[[my_other_log]]]'],
+        ...     ['W', 'watch', 'your', 'step!'],
+        ... ]))
+        {'errors': [],
+         'logfiles': {'empty.log': {'attr': 'ok', 'lines': []},
+                      'missinglog': {'attr': 'missing', 'lines': []},
+                      'my_other_log': {'attr': 'ok', 'lines': ['W watch your step!']},
+                      'mylog': {'attr': 'ok', 'lines': ['C whoha! Someone mooped!']},
+                      'unreadablelog': {'attr': 'cannotopen', 'lines': []}}}
+    """
 
     section: Section = {"errors": [], "logfiles": {}}
     item_data: Optional[ItemData] = None

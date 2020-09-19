@@ -7,19 +7,33 @@
 # yapf: disable
 # type: ignore
 
-
-
 checkname = 'logwatch'
 
-
-info = [[None, '[[[mylog]]]'],
-        [None, 'C', 'whoha!', 'Someone', 'mooped!'],
-        [None, '[[[missinglog:missing]]]'],
-        [None, '[[[unreadablelog:cannotopen]]]'],
-        [None, '[[[empty.log]]]'],
-        [None, '[[[my_other_log]]]'],
-        [None, 'W', 'watch', 'your', 'step!']]
-
+parsed = {None: {
+    'errors': [],
+    'logfiles': {
+        'mylog': {
+            'attr': 'ok',
+            'lines': ['C whoha! Someone mooped!'],
+        },
+        'missinglog': {
+            'attr': 'missing',
+            'lines': [],
+        },
+        'unreadablelog': {
+            'attr': 'cannotopen',
+            'lines': [],
+        },
+        'empty.log': {
+            'attr': 'ok',
+            'lines': [],
+        },
+        'my_other_log': {
+            'attr': 'ok',
+            'lines': ['W watch your step!'],
+        },
+    },
+}}
 
 discovery = {
     '': [

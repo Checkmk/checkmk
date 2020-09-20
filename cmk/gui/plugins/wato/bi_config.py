@@ -407,7 +407,7 @@ class ModeBIPacks(ABCBIMode):
         if config.user.may("wato.bi_admin"):
             bi_config_entries.append(
                 PageMenuEntry(
-                    title=_("Add pack"),
+                    title=_("Add BI pack"),
                     icon_name="new",
                     item=make_simple_link(html.makeuri_contextless([("mode", "bi_edit_pack")])),
                     is_shortcut=True,
@@ -418,7 +418,7 @@ class ModeBIPacks(ABCBIMode):
             dropdowns=[
                 PageMenuDropdown(
                     name="packs",
-                    title=_("Packs"),
+                    title=_("BI Packs"),
                     topics=[
                         PageMenuTopic(
                             title=_("BI configuration"),
@@ -1812,7 +1812,7 @@ class BIModeAggregations(ABCBIMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Rules"),
-                                    icon_name="aggr",
+                                    icon_name="bi_rules",
                                     item=make_simple_link(
                                         self.url_to_pack([("mode", "bi_rules")], self.bi_pack),),
                                     is_shortcut=True,

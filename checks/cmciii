@@ -153,6 +153,11 @@ def parse_cmciii(info):
            parsed[this_table][itemname]["_location_"] != location:
             itemname += " %s" % location
 
+        if key == "Status" and container[1] == "Humidity":
+            h_state = parsed["state"][device]['status']
+            if h_state == "3":
+                value = "OK"
+
         parsed[this_table].setdefault(itemname, {"_device_": device, "_location_": location})
         parsed[this_table][itemname].setdefault(key, value)
 

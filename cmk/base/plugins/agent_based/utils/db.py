@@ -10,8 +10,10 @@
 # This restriction is only working with newer agents, because we need an
 # additional parameter at end if each datafile
 
+from ..agent_based_api.v1 import render
 
-def db_get_tablespace_levels_in_bytes(size_bytes, params):
+
+def get_tablespace_levels_in_bytes(size_bytes, params):
     # If the magic factor is used, take table size and magic factor
     # into account in order to move levels
     magic = params.get("magic")
@@ -51,7 +53,6 @@ def db_get_tablespace_levels_in_bytes(size_bytes, params):
         output_as_percentage = False
         warn_bytes = warn * 1024 * 1024
         crit_bytes = crit * 1024 * 1024
-        levels_text = " (warn/crit at %s/%s)" % (get_bytes_human_readable(warn_bytes),
-                                                 get_bytes_human_readable(crit_bytes))
+        levels_text = " (warn/crit at %s/%s)" % (render.bytes(warn_bytes), render.bytes(crit_bytes))
 
     return warn_bytes, crit_bytes, levels_text, output_as_percentage

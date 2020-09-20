@@ -23,6 +23,10 @@
 # MYTMPSPACE SMS NORMAL 64 64 64 959659392
 # SYSTOOLSTMPSPACE SMS NORMAL 32 32 32 959659392
 
+import cmk.base.plugins.agent_based.utils.db
+
+db_get_tablespace_levels_in_bytes = cmk.base.plugins.agent_based.utils.db.get_tablespace_levels_in_bytes
+
 factory_settings["db2_tablespaces_default_levels"] = {
     "levels": (10.0, 5.0),
     "magic_normsize": 1000,
@@ -101,5 +105,5 @@ check_info['db2_tablespaces'] = {
     "has_perfdata": True,
     "group": "db2_tablespaces",
     "default_levels_variable": "db2_tablespaces_default_levels",
-    "includes": ["db.include", "db2.include"]
+    "includes": ["db2.include"]
 }

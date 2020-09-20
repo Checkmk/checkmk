@@ -4,6 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.base.plugins.agent_based.utils.db
+
+db_get_tablespace_levels_in_bytes = cmk.base.plugins.agent_based.utils.db.get_tablespace_levels_in_bytes
+
 # no used space check for Tablsspaces with CONTENTS in ('TEMPORARY','UNDO')
 # It is impossible to check the used space in UNDO and TEMPORARY Tablespaces
 # These Types of Tablespaces are ignored in this plugin.
@@ -366,5 +370,5 @@ check_info['oracle_tablespaces'] = {
     "node_info": True,
     "group": "oracle_tablespaces",
     "default_levels_variable": "oracle_tablespaces_defaults",
-    "includes": ["oracle.include", "db.include"]
+    "includes": ["oracle.include"]
 }

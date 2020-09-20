@@ -181,39 +181,6 @@ class ABCBIMode(WatoMode):
             if html.get_checkbox(varname)
         ]
 
-    def _count_rule_references(self, rule_id):
-        aggr_refs = 0
-        for bi_pack in bi_packs.get_packs().values():
-            for bi_aggregation in bi_pack.get_aggregations().values():
-                if isinstance(bi_aggregation.node.action, BICallARuleAction):
-                    called_rule_id = bi_aggregation.node.action.rule_id
-                    if called_rule_id == rule_id:
-                        aggr_refs += 1
-
-        level = 0
-        rule_refs = 0
-        for bi_pack in bi_packs.get_packs().values():
-            for bi_rule in bi_pack.get_rules().values():
-                lv = self._rule_uses_rule(bi_rule, rule_id)
-                level = max(lv, level)
-                if lv == 1:
-                    rule_refs += 1
-
-        return aggr_refs, rule_refs, level
-
-    def _rule_uses_rule(self, bi_rule, rule_id, level=0):
-        for bi_node in bi_rule.get_nodes():
-            if bi_node.action.type() == "call_a_rule":
-                tmp_rule_id = bi_node.action.rule_id
-                if tmp_rule_id == rule_id:  # Rule is directly being used
-                    return level + 1
-                # Check if lower rules use it
-                bi_subrule = bi_packs.get_rule(tmp_rule_id)
-                lv = self._rule_uses_rule(bi_subrule, rule_id, level + 1)
-                if lv:
-                    return lv
-        return False
-
     def render_rule_tree(self, rule_id, tree_path, tree_prefix=""):
         bi_pack = bi_packs.get_pack_of_rule(rule_id)
         if bi_pack is None:
@@ -696,7 +663,7 @@ class ModeBIRules(ABCBIMode):
                 return ""
 
     def _check_delete_rule_id_permission(self, rule_id):
-        aggr_refs, rule_refs, _level = self._count_rule_references(rule_id)
+        aggr_refs, rule_refs, _level = bi_packs.count_rule_references(rule_id)
         if aggr_refs:
             raise MKUserError(None,
                               _("You cannot delete this rule: it is still used by aggregations."))
@@ -798,7 +765,7 @@ class ModeBIRules(ABCBIMode):
         rules = self.bi_pack.get_rules().items()
         # Sort rules according to nesting level, and then to id
         rules_refs = [
-            (rule_id, rule, self._count_rule_references(rule_id)) for (rule_id, rule) in rules
+            (rule_id, rule, bi_packs.count_rule_references(rule_id)) for (rule_id, rule) in rules
         ]
         rules_refs.sort(key=lambda x: (x[1].properties.title, x[2][2]))
 
@@ -1977,7 +1944,7 @@ class ModeBIRuleTree(ABCBIMode):
         return make_simple_form_page_menu(breadcrumb)
 
     def page(self):
-        _aggr_refs, rule_refs, _level = self._count_rule_references(self._rule_id)
+        _aggr_refs, rule_refs, _level = bi_packs.count_rule_references(self._rule_id)
         if rule_refs == 0:
             with table_element(sortable=False, searchable=False) as table:
                 table.row()

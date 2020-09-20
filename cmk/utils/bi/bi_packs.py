@@ -13,7 +13,16 @@ from cmk.utils.i18n import _
 import cmk.utils.store as store
 import cmk.utils.paths
 
-from typing import List, Dict, Set, Tuple, Type, Optional, Any
+from typing import (
+    List,
+    Dict,
+    Set,
+    Tuple,
+    Type,
+    Optional,
+    Any,
+    NamedTuple,
+)
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.bi.bi_lib import (
@@ -40,6 +49,11 @@ from cmk.utils.bi.bi_search import (
     BIServiceSearch,
 )
 
+RuleReferencesResult = NamedTuple("RuleReferencesResult", [
+    ("aggr_refs", int),
+    ("rule_refs", int),
+    ("level", int),
+])
 #   .--Packs---------------------------------------------------------------.
 #   |                      ____            _                               |
 #   |                     |  _ \ __ _  ___| | _____                        |
@@ -151,6 +165,11 @@ class BIAggregationPacks:
         if bi_rule:
             return bi_rule
         assert False
+
+    def get_all_rules(self) -> List[BIRule]:
+        return [
+            bi_rule for bi_pack in self.packs.values() for bi_rule in bi_pack.get_rules().values()
+        ]
 
     def get_aggregation_group_trees(self) -> List[str]:
         all_groups: Set[str] = set()
@@ -283,6 +302,36 @@ class BIAggregationPacks:
         for node in bi_rule.nodes:
             if isinstance(node.action, BICallARuleAction):
                 self._traverse_rule(self.get_rule_mandatory(node.action.rule_id), list(parents))
+
+    def count_rule_references(self, check_rule_id: str) -> RuleReferencesResult:
+        aggr_refs = 0
+        for bi_aggregation in self.get_all_aggregations():
+            if isinstance(bi_aggregation.node.action, BICallARuleAction):
+                if bi_aggregation.node.action.rule_id == check_rule_id:
+                    aggr_refs += 1
+
+        level = 0
+        rule_refs = 0
+        for bi_rule in self.get_all_rules():
+            lv = self._rule_uses_rule(bi_rule, check_rule_id)
+            level = max(lv, level)
+            if lv == 1:
+                rule_refs += 1
+
+        return RuleReferencesResult(aggr_refs, rule_refs, level)
+
+    def _rule_uses_rule(self, bi_rule: BIRule, check_rule_id: str, level: int = 0) -> int:
+        for bi_node in bi_rule.get_nodes():
+            if isinstance(bi_node.action, BICallARuleAction):
+                node_rule_id = bi_node.action.rule_id
+                if node_rule_id == check_rule_id:  # Rule is directly being used
+                    return level + 1
+                # Check if lower rules use it
+                bi_subrule = bi_packs.get_rule_mandatory(node_rule_id)
+                lv = self._rule_uses_rule(bi_subrule, check_rule_id, level + 1)
+                if lv != -1:
+                    return lv
+        return -1
 
     @property
     def bi_configuration_file(self) -> str:

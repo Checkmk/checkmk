@@ -20,22 +20,6 @@ netapp_api_cpu_default_levels = (90.0, 95.0)
 factory_settings["netapp_api_cpu_cm_default_levels"] = {"levels": (90.0, 95.0)}
 
 
-def parse_netapp_api_cpu(info):
-    cpu_info = {}
-    for line in info:
-        if line[0].startswith("cpu-info"):  # clustermode
-            _, node_name = line[0].split()
-            cpu_info.setdefault("clustermode", {})
-            for entry in line[1:]:
-                key, value = entry.split()
-                cpu_info["clustermode"].setdefault(node_name, {})
-                cpu_info["clustermode"][node_name][key] = value
-        else:
-            cpu_info.setdefault("7mode", {})
-            cpu_info["7mode"][line[0]] = line[1]
-    return cpu_info
-
-
 def inventory_netapp_api_cpu_utilization(parsed):
     if "7mode" in parsed:
         yield (None, "netapp_api_cpu_default_levels")
@@ -84,7 +68,6 @@ def check_netapp_api_cpu_utilization(item, params, parsed, mode):
 
 # Clustermode CPU utilization
 check_info["netapp_api_cpu"] = {
-    "parse_function": parse_netapp_api_cpu,
     "inventory_function": inventory_netapp_api_cpu,
     "check_function": lambda item, params, parsed: check_netapp_api_cpu_utilization(
         item, params, parsed, "clustermode"),

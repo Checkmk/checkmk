@@ -9,42 +9,6 @@ from cmk.base.check_api import MKCounterWrapped
 
 pytestmark = pytest.mark.checks
 
-agent_info = [
-    [
-        ['cpu_busy', '8362860064'],
-        ['num_processors', '2'],
-    ],
-    [
-        ['cpu-info clu1-01', 'num_processors 2'],
-        ['cpu-info clu1-02', 'num_processors 2'],
-        ['cpu-info clu1-01', 'cpu_busy 5340000', 'nvram-battery-status battery_ok'],
-        ['cpu-info clu1-02', 'cpu_busy 5400000', 'nvram-battery-status battery_ok'],
-    ],
-]
-
-result_parsed = [
-    {
-        '7mode': {
-            'cpu_busy': '8362860064',
-            'num_processors': '2'
-        }
-    },
-    {
-        'clustermode': {
-            'clu1-01': {
-                'cpu_busy': '5340000',
-                'num_processors': '2',
-                'nvram-battery-status': 'battery_ok'
-            },
-            'clu1-02': {
-                'cpu_busy': '5400000',
-                'num_processors': '2',
-                'nvram-battery-status': 'battery_ok'
-            }
-        }
-    },
-]
-
 result_parsed_over_time = [
     {
         'clustermode': {
@@ -74,13 +38,6 @@ result_parsed_over_time = [
         }
     },
 ]
-
-
-@pytest.mark.parametrize("info, expected_parsed", list(zip(agent_info, result_parsed)))
-def test_parse_function(check_manager, info, expected_parsed):
-    check = check_manager.get_check("netapp_api_cpu")
-    parsed = check.run_parse(info)
-    assert parsed == expected_parsed
 
 
 @pytest.mark.parametrize("params, first_result_change, second_result_change", [

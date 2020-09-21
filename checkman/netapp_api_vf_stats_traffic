@@ -4,12 +4,12 @@ catalog: hw/storagehw/netapp
 license: GPL
 distribution: check_mk
 description:
- Monitors the traffic of vFilers on the NetApp filer.
- Right now the check is always {OK} and reports the following informations for
- each vFilfer: {Network Data Received/Send}, {Disk Data Read/Written}, {Read/Write Operations Per Second}
+ This check monitors the traffic of vFilers on the NetApp filer. The check is always
+ {OK} and reports the following information: {network data received/sent}, {disk data
+ read/written}, {read/write operations per second}.
 
 item:
- Name of the CPU
+ Name of the vFiler.
 
 inventory:
  One service is created for each vFiler.

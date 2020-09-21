@@ -39,6 +39,9 @@ if_default_error_levels = (0.01, 0.1)
 if_default_traffic_levels = None, None
 if_default_average = None
 
+# netapp_api_vf_stats
+netapp_api_vf_stats_cpu_util_default_levels = (90.0, 95.0)
+
 # ps
 ps_default_levels = {"levels": (1, 1, 99999, 99999)}
 

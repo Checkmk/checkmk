@@ -23,8 +23,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('check', 'ipmi'),
     ('check', 'k8s_stats_fs'),
     ('check', 'k8s_stats_network'),
-    ('check', 'netapp_api_vf_stats'),
-    ('check', 'netapp_api_vf_stats_traffic'),
     ('check', 'ps_perf'),
     ('check', 'site_object_counts'),
     ('check', 'tsm_stagingpools'),

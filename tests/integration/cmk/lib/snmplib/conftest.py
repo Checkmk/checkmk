@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest  # type: ignore[import]
 
-from testlib import wait_until
+from testlib import wait_until  # type: ignore[import]
 
 import cmk.utils.debug as debug
 import cmk.utils.log as log
@@ -64,38 +64,7 @@ def snmpsim_fixture(site, snmp_data_dir, tmp_path_factory):
         #stderr=subprocess.STDOUT,
     )
 
-    # Ensure that snmpsim is ready for clients before starting with the tests
-    def is_listening():
-        exitcode = p.poll()
-        if exitcode is not None:
-            raise Exception("snmpsimd died. Exit code: %d" % exitcode)
-
-        num_sockets = 0
-        try:
-            for e in os.listdir("/proc/%d/fd" % p.pid):
-                try:
-                    if os.readlink("/proc/%d/fd/%s" % (p.pid, e)).startswith("socket:"):
-                        num_sockets += 1
-                except OSError:
-                    pass
-        except OSError:
-            exitcode = p.poll()
-            if exitcode is None:
-                raise
-            raise Exception("snmpsimd died. Exit code: %d" % exitcode)
-
-        if num_sockets < 2:
-            return False
-
-        # Correct module is only available in the site
-        import netsnmp  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
-        var = netsnmp.Varbind("sysDescr.0")
-        result = netsnmp.snmpget(var, Version=2, DestHost="127.0.0.1:1337", Community="public")
-        if result is None or result[0] is None:
-            return False
-        return True
-
-    wait_until(is_listening, timeout=20)
+    wait_until(lambda: _is_listening(p, 1337), timeout=20)
 
     yield
 
@@ -106,6 +75,36 @@ def snmpsim_fixture(site, snmp_data_dir, tmp_path_factory):
     p.terminate()
     p.wait()
     logger.debug("Stopped snmpsimd.")
+
+
+def _is_listening(p, port):
+    exitcode = p.poll()
+    if exitcode is not None:
+        raise Exception("snmpsimd died. Exit code: %d" % exitcode)
+    num_sockets = 0
+    try:
+        for e in os.listdir("/proc/%d/fd" % p.pid):
+            try:
+                if os.readlink("/proc/%d/fd/%s" % (p.pid, e)).startswith("socket:"):
+                    num_sockets += 1
+            except OSError:
+                pass
+
+    except OSError:
+        exitcode = p.poll()
+        if exitcode is None:
+            raise
+        raise Exception("snmpsimd died. Exit code: %d" % exitcode)
+    if num_sockets < 2:
+        return False
+    num_sockets = 0
+    # Correct module is only available in the site
+    import netsnmp  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
+    var = netsnmp.Varbind("sysDescr.0")
+    result = netsnmp.snmpget(var, Version=2, DestHost="127.0.0.1:%s" % port, Community="public")
+    if result is None or result[0] is None:
+        return False
+    return True
 
 
 @pytest.fixture(name="backend",

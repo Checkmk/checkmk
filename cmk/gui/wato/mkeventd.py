@@ -130,8 +130,8 @@ from cmk.gui.plugins.wato.utils import (
 )
 
 from cmk.gui.plugins.wato.check_mk_configuration import (
-    RulespecGroupMonitoringConfigurationServiceChecks,
-    RulespecGroupHostsMonitoringRulesHostChecks,
+    RulespecGroupMonitoringConfigurationVarious,
+    RulespecGroupHostsMonitoringRulesVarious,
     ConfigVariableGroupUserInterface,
     ConfigVariableGroupWATO,
 )
@@ -4206,7 +4206,7 @@ def _valuespec_extra_host_conf__ec_sl():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupHostsMonitoringRulesHostChecks,
+        group=RulespecGroupHostsMonitoringRulesVarious,
         name="extra_host_conf:_ec_sl",
         valuespec=_valuespec_extra_host_conf__ec_sl,
     ))
@@ -4223,7 +4223,7 @@ def _valuespec_extra_service_conf__ec_sl():
 
 rulespec_registry.register(
     ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationServiceChecks,
+        group=RulespecGroupMonitoringConfigurationVarious,
         item_type="service",
         name="extra_service_conf:_ec_sl",
         valuespec=_valuespec_extra_service_conf__ec_sl,

@@ -1254,31 +1254,6 @@ def _custom_service_attributes_custom_service_attribute_choices():
     return sorted(choices, key=lambda x: x[1])
 
 
-def _valuespec_custom_service_attributes():
-    return ListOf(
-        CascadingDropdown(
-            choices=_custom_service_attributes_custom_service_attribute_choices(),
-            orientation="horizontal",
-        ),
-        title=_("Custom service attributes"),
-        help=_("Use this ruleset to assign <a href=\"%s\">%s</a> to services.") %
-        ("wato.py?mode=edit_configvar&varname=custom_service_attributes",
-         _("Custom service attributes")),
-        allow_empty=False,
-        validate=_custom_service_attributes_validate_unique_entries,
-    )
-
-
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationServiceChecks,
-        item_type="service",
-        match_type="all",
-        name="custom_service_attributes",
-        valuespec=_valuespec_custom_service_attributes,
-    ))
-
-
 def _service_tag_rules_validate_unique_entries(value, varprefix):
     seen_ids = []
     for entry in value:
@@ -1295,49 +1270,6 @@ def _service_tag_rules_tag_group_choices():
     return sorted(choices, key=lambda x: x[1])
 
 
-def _valuespec_service_tag_rules():
-    return ListOf(
-        CascadingDropdown(
-            choices=_service_tag_rules_tag_group_choices(),
-            orientation="horizontal",
-        ),
-        title=_("Service tags"),
-        help=_("Use this ruleset to assign <a href=\"%s\">%s</a> to services.") %
-        ("wato.py?mode=tags", _("Tags")),
-        allow_empty=False,
-        validate=_service_tag_rules_validate_unique_entries,
-    )
-
-
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationServiceChecks,
-        item_type="service",
-        match_type="all",
-        name="service_tag_rules",
-        valuespec=_valuespec_service_tag_rules,
-    ))
-
-
-def _valuespec_service_label_rules():
-    return Labels(
-        world=Labels.World.CONFIG,
-        label_source=Labels.Source.RULESET,
-        title=_("Service labels"),
-        help=_("Use this ruleset to assign labels to service of your choice."),
-    )
-
-
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationServiceChecks,
-        item_type="service",
-        match_type="dict",
-        name="service_label_rules",
-        valuespec=_valuespec_service_label_rules,
-    ))
-
-
 @rulespec_group_registry.register
 class RulespecGroupHostsMonitoringRulesHostChecks(RulespecSubGroup):
     @property
@@ -1351,24 +1283,6 @@ class RulespecGroupHostsMonitoringRulesHostChecks(RulespecSubGroup):
     @property
     def title(self):
         return _("Host checks")
-
-
-def _valuespec_host_label_rules():
-    return Labels(
-        world=Labels.World.CONFIG,
-        label_source=Labels.Source.RULESET,
-        title=_("Host labels"),
-        help=_("Use this ruleset to assign labels to hosts of your choice."),
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupHostsMonitoringRulesHostChecks,
-        match_type="dict",
-        name="host_label_rules",
-        valuespec=_valuespec_host_label_rules,
-    ))
 
 
 @config_variable_registry.register
@@ -3495,71 +3409,6 @@ rulespec_registry.register(
     ))
 
 
-def _valuespec_extra_service_conf_notes_url():
-    return TextAscii(
-        label=_("URL:"),
-        title=_("Notes URL for Services"),
-        help=_("With this setting you can set links to documentations "
-               "for each service"),
-        attrencode=True,
-        size=80,
-    )
-
-
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationNotifications,
-        item_type="service",
-        name="extra_service_conf:notes_url",
-        valuespec=_valuespec_extra_service_conf_notes_url,
-    ))
-
-
-def _valuespec_extra_host_conf_notes_url():
-    return TextAscii(
-        label=_("URL:"),
-        title=_("Notes URL for Hosts"),
-        help=_("With this setting you can set links to documentations "
-               "for Hosts"),
-        attrencode=True,
-        size=80,
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupHostsMonitoringRulesNotifications,
-        name="extra_host_conf:notes_url",
-        valuespec=_valuespec_extra_host_conf_notes_url,
-    ))
-
-
-def _valuespec_extra_service_conf_display_name():
-    return TextUnicode(
-        title=_("Alternative display name for Services"),
-        help=_("This rule set allows you to specify an alternative name "
-               "to be displayed for certain services. This name is available as "
-               "a column when creating new views or modifying existing ones. "
-               "It is always visible in the details view of a service. In the "
-               "availability reporting there is an option for using that name "
-               "instead of the normal service description. It does <b>not</b> automatically "
-               "replace the normal service name in all views.<br><br><b>Note</b>: The "
-               "purpose of this rule set is to define unique names for several well-known "
-               "services. It cannot rename services in general."),
-        size=64,
-        attrencode=True,
-    )
-
-
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationNotifications,
-        item_type="service",
-        name="extra_service_conf:display_name",
-        valuespec=_valuespec_extra_service_conf_display_name,
-    ))
-
-
 @rulespec_group_registry.register
 class RulespecGroupMonitoringConfigurationInventoryAndCMK(RulespecSubGroup):
     @property
@@ -3624,24 +3473,6 @@ rulespec_registry.register(
         group=RulespecGroupMonitoringConfigurationInventoryAndCMK,
         name="ignored_checks",
         valuespec=_valuespec_ignored_checks,
-    ))
-
-
-def _help_clustered_services():
-    return _("When you define HA clusters in WATO then you also have to specify which services "
-             "of a node should be assigned to the cluster and which services to the physical "
-             "node. This is done by this ruleset. Please note that the rule will be applied to "
-             "the <i>nodes</i>, not to the cluster.<br><br>Please make sure that you re-"
-             "inventorize the cluster and the physical nodes after changing this ruleset.")
-
-
-rulespec_registry.register(
-    BinaryServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationInventoryAndCMK,
-        help_func=_help_clustered_services,
-        item_type="service",
-        name="clustered_services",
-        title=lambda: _("Clustered services"),
     ))
 
 
@@ -3935,6 +3766,49 @@ class RulespecGroupHostsMonitoringRulesVarious(RulespecSubGroup):
         return _("Various")
 
 
+def _valuespec_custom_service_attributes():
+    return ListOf(
+        CascadingDropdown(
+            choices=_custom_service_attributes_custom_service_attribute_choices(),
+            orientation="horizontal",
+        ),
+        title=_("Custom service attributes"),
+        help=_("Use this ruleset to assign <a href=\"%s\">%s</a> to services.") %
+        ("wato.py?mode=edit_configvar&varname=custom_service_attributes",
+         _("Custom service attributes")),
+        allow_empty=False,
+        validate=_custom_service_attributes_validate_unique_entries,
+    )
+
+
+rulespec_registry.register(
+    ServiceRulespec(
+        group=RulespecGroupMonitoringConfigurationVarious,
+        item_type="service",
+        match_type="all",
+        name="custom_service_attributes",
+        valuespec=_valuespec_custom_service_attributes,
+    ))
+
+
+def _help_clustered_services():
+    return _("When you define HA clusters in WATO then you also have to specify which services "
+             "of a node should be assigned to the cluster and which services to the physical "
+             "node. This is done by this ruleset. Please note that the rule will be applied to "
+             "the <i>nodes</i>, not to the cluster.<br><br>Please make sure that you re-"
+             "inventorize the cluster and the physical nodes after changing this ruleset.")
+
+
+rulespec_registry.register(
+    BinaryServiceRulespec(
+        group=RulespecGroupMonitoringConfigurationVarious,
+        help_func=_help_clustered_services,
+        item_type="service",
+        name="clustered_services",
+        title=lambda: _("Clustered services"),
+    ))
+
+
 def _valuespec_clustered_services_mapping():
     return TextAscii(
         title=_("Clustered services for overlapping clusters"),
@@ -3954,6 +3828,49 @@ rulespec_registry.register(
         item_type="service",
         name="clustered_services_mapping",
         valuespec=_valuespec_clustered_services_mapping,
+    ))
+
+
+def _valuespec_service_label_rules():
+    return Labels(
+        world=Labels.World.CONFIG,
+        label_source=Labels.Source.RULESET,
+        title=_("Service labels"),
+        help=_("Use this ruleset to assign labels to service of your choice."),
+    )
+
+
+rulespec_registry.register(
+    ServiceRulespec(
+        group=RulespecGroupMonitoringConfigurationVarious,
+        item_type="service",
+        match_type="dict",
+        name="service_label_rules",
+        valuespec=_valuespec_service_label_rules,
+    ))
+
+
+def _valuespec_service_tag_rules():
+    return ListOf(
+        CascadingDropdown(
+            choices=_service_tag_rules_tag_group_choices(),
+            orientation="horizontal",
+        ),
+        title=_("Service tags"),
+        help=_("Use this ruleset to assign <a href=\"%s\">%s</a> to services.") %
+        ("wato.py?mode=tags", _("Tags")),
+        allow_empty=False,
+        validate=_service_tag_rules_validate_unique_entries,
+    )
+
+
+rulespec_registry.register(
+    ServiceRulespec(
+        group=RulespecGroupMonitoringConfigurationVarious,
+        item_type="service",
+        match_type="all",
+        name="service_tag_rules",
+        valuespec=_valuespec_service_tag_rules,
     ))
 
 
@@ -3981,6 +3898,24 @@ rulespec_registry.register(
     ))
 
 
+def _valuespec_host_label_rules():
+    return Labels(
+        world=Labels.World.CONFIG,
+        label_source=Labels.Source.RULESET,
+        title=_("Host labels"),
+        help=_("Use this ruleset to assign labels to hosts of your choice."),
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupHostsMonitoringRulesVarious,
+        match_type="dict",
+        name="host_label_rules",
+        valuespec=_valuespec_host_label_rules,
+    ))
+
+
 def _valuespec_extra_service_conf_service_period():
     return TimeperiodSelection(
         title=_("Service period for services"),
@@ -3997,12 +3932,76 @@ def _valuespec_extra_service_conf_service_period():
     )
 
 
+def _valuespec_extra_host_conf_notes_url():
+    return TextAscii(
+        label=_("URL:"),
+        title=_("Notes URL for Hosts"),
+        help=_("With this setting you can set links to documentations "
+               "for Hosts"),
+        attrencode=True,
+        size=80,
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupHostsMonitoringRulesVarious,
+        name="extra_host_conf:notes_url",
+        valuespec=_valuespec_extra_host_conf_notes_url,
+    ))
+
 rulespec_registry.register(
     ServiceRulespec(
         group=RulespecGroupMonitoringConfigurationVarious,
         item_type="service",
         name="extra_service_conf:service_period",
         valuespec=_valuespec_extra_service_conf_service_period,
+    ))
+
+
+def _valuespec_extra_service_conf_display_name():
+    return TextUnicode(
+        title=_("Alternative display name for Services"),
+        help=_("This rule set allows you to specify an alternative name "
+               "to be displayed for certain services. This name is available as "
+               "a column when creating new views or modifying existing ones. "
+               "It is always visible in the details view of a service. In the "
+               "availability reporting there is an option for using that name "
+               "instead of the normal service description. It does <b>not</b> automatically "
+               "replace the normal service name in all views.<br><br><b>Note</b>: The "
+               "purpose of this rule set is to define unique names for several well-known "
+               "services. It cannot rename services in general."),
+        size=64,
+        attrencode=True,
+    )
+
+
+rulespec_registry.register(
+    ServiceRulespec(
+        group=RulespecGroupMonitoringConfigurationVarious,
+        item_type="service",
+        name="extra_service_conf:display_name",
+        valuespec=_valuespec_extra_service_conf_display_name,
+    ))
+
+
+def _valuespec_extra_service_conf_notes_url():
+    return TextAscii(
+        label=_("URL:"),
+        title=_("Notes URL for Services"),
+        help=_("With this setting you can set links to documentations "
+               "for each service"),
+        attrencode=True,
+        size=80,
+    )
+
+
+rulespec_registry.register(
+    ServiceRulespec(
+        group=RulespecGroupMonitoringConfigurationVarious,
+        item_type="service",
+        name="extra_service_conf:notes_url",
+        valuespec=_valuespec_extra_service_conf_notes_url,
     ))
 
 #.

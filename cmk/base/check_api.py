@@ -577,10 +577,10 @@ def get_parsed_item_data(check_function: Callable) -> Callable:
         ...
 
     In case of parsed not being a dict the decorator returns 3
-    (UNKN state) with a wrong usage message.
+    (unknown state) with a wrong usage message.
     In case of item not existing as a key in parsed or parsed[item]
     not existing the decorator gives an empty return leading to
-    cmk.base returning 3 (UNKN state) with an item not found message
+    cmk.base returning 3 (unknown state) with an item not found message
     (see cmk/base/checking.py).
     """
     @functools.wraps(check_function)

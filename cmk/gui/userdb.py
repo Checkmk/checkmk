@@ -384,8 +384,7 @@ def create_session_id() -> str:
 
 
 def refresh_session(username: UserId) -> None:
-    """Updates the current session of the user and returns the session_id or only
-    returns an empty string when single user session mode is not enabled."""
+    """Updates the current session of the user"""
     if not config.single_user_session:
         return  # No session handling at all
 

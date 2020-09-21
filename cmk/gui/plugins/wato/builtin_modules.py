@@ -368,7 +368,8 @@ class MainModuleIntegrateNagiosPlugins(MainModule):
 
     @property
     def description(self):
-        return _("Integrate custom nagios plugins (so called active checks)")
+        return _("Integrate [cms_active_checks#mrpe|custom nagios plugins] into the "
+                 "monitoring as active checks.")
 
     @property
     def sort_index(self):

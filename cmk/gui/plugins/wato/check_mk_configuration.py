@@ -1217,7 +1217,7 @@ class RulespecGroupHostsMonitoringRules(RulespecGroup):
 
     @property
     def help(self):
-        return _("Configure the monitoring behaviour of hosts")
+        return _("Rules to configure the behaviour of monitored hosts.")
 
 
 @rulespec_group_registry.register

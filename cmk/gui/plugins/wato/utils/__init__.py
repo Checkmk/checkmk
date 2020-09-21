@@ -714,7 +714,10 @@ class RulespecGroupMonitoringConfiguration(RulespecGroup):
 
     @property
     def help(self):
-        return _("Configuration of discovered services")
+        return _("Rules to configure existing services in the monitoring. For "
+                 "example, threshold values can be set, the execution time for "
+                 "active checks can be configured or attributes such as labels "
+                 "or tags can be assigned to the services.")
 
 
 @rulespec_group_registry.register
@@ -729,7 +732,12 @@ class RulespecGroupDiscoveryCheckParameters(RulespecGroup):
 
     @property
     def help(self):
-        return _("Rules that change the behaviour of the Checkmk service discovery")
+        return _("Rules that influence the discovery of services. These rules "
+                 "allow, for example, the execution of a periodic service "
+                 "discovery or the deactivation of check plugins and services. "
+                 "Additionally, the discovery of individual check plugins like "
+                 "for example the interface check plugin can "
+                 "be customized.")
 
 
 @rulespec_group_registry.register

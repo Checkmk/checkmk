@@ -509,10 +509,8 @@ class ModeStaticChecksRulesets(ABCRulesetMode):
         return watolib.StaticChecksRulesets()
 
     def _set_title_and_help(self):
-        self._title = _("Manual services")
-        self._help = _(
-            "Here you can create explicit checks that are not being created by the automatic service discovery."
-        )
+        rulegroup = watolib.get_rulegroup("static")
+        self._title, self._help = rulegroup.title, rulegroup.help
 
 
 def _page_menu_entry_predefined_conditions() -> PageMenuEntry:

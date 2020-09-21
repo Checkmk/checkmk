@@ -182,7 +182,11 @@ class RulespecGroupManualChecks(RulespecGroup):
 
     @property
     def help(self):
-        return _("Statically configured Checkmk services that do not rely on the service discovery")
+        return _(
+            "Rules to set up [cms_wato_services#manual_checks|manual services]. Services set "
+            "up in this way do not depend on the service discovery. This is useful if you want "
+            "to enforce compliance with a specific guideline. You can for example ensure that "
+            "a certain Windows service is always present on a host.")
 
 
 @rulespec_group_registry.register

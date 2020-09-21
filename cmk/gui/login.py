@@ -148,23 +148,16 @@ def _auth_cookie_value(username: UserId) -> str:
 
 
 def _invalidate_auth_session() -> None:
-    if config.single_user_session is not None:
-        userdb.invalidate_session(config.user.id)
-
     del_auth_cookie()
     html.del_language_cookie()
 
 
 def _renew_auth_session(username: UserId) -> None:
-    if config.single_user_session is not None:
-        userdb.refresh_session(username)
-
     set_auth_cookie(username)
 
 
-def _create_auth_session(username: UserId) -> None:
-    if config.single_user_session is not None:
-        session_id = userdb.initialize_session(username)
+def _create_auth_session(username: UserId, session_id: str) -> None:
+    if session_id:
         _set_session_cookie(username, session_id)
 
     set_auth_cookie(username)
@@ -215,20 +208,13 @@ def _renew_cookie(cookie_name: str, username: UserId) -> None:
 def _check_auth_cookie(cookie_name: str) -> Optional[UserId]:
     username, issue_time, cookie_hash = _parse_auth_cookie(cookie_name)
     _check_parsed_auth_cookie(username, issue_time, cookie_hash)
+    session_id = _get_session_id_from_cookie(username)
 
-    # Check whether or not there is an idle timeout configured, delete cookie and
-    # require the user to renew the log when the timeout exceeded.
-    if userdb.login_timed_out(username, issue_time):
+    try:
+        userdb.on_access(username, issue_time, session_id)
+    except MKAuthException:
         del_auth_cookie()
-        return None
-
-    # Check whether or not a single user session is allowed at a time and the user
-    # is doing this request with the currently active session.
-    if config.single_user_session is not None:
-        session_id = _get_session_id_from_cookie(username)
-        if not userdb.is_valid_user_session(username, session_id):
-            del_auth_cookie()
-            return None
+        raise
 
     # Once reached this the cookie is a good one. Renew it!
     _renew_cookie(cookie_name, username)
@@ -446,18 +432,13 @@ class LoginPage(Page):
                 # from mixed case to lower case.
                 username = result
 
-                # When single user session mode is enabled, check that there is not another
-                # active session
-                userdb.ensure_user_can_init_session(username)
-
-                # reset failed login counts
-                userdb.on_succeeded_login(username)
+                session_id = userdb.on_succeeded_login(username)
 
                 # The login succeeded! Now:
                 # a) Set the auth cookie
                 # b) Unset the login vars in further processing
                 # c) Redirect to really requested page
-                _create_auth_session(username)
+                _create_auth_session(username, session_id)
 
                 # Never use inplace redirect handling anymore as used in the past. This results
                 # in some unexpected situations. We simpy use 302 redirects now. So we have a
@@ -560,6 +541,8 @@ class LoginPage(Page):
 class LogoutPage(Page):
     def page(self) -> None:
         _invalidate_auth_session()
+        assert config.user.id is not None
+        userdb.on_logout(config.user.id)
 
         if auth_type == 'cookie':
             raise HTTPRedirect(config.url_prefix() + 'check_mk/login.py')

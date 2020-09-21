@@ -27,7 +27,7 @@ import cmk.gui.hooks as hooks
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.valuespec import ValueSpec
-from cmk.gui.exceptions import MKUserError, MKInternalError
+from cmk.gui.exceptions import MKUserError, MKInternalError, MKAuthException
 from cmk.gui.log import logger
 from cmk.gui.valuespec import (
     TextAscii,
@@ -181,26 +181,27 @@ def login_timed_out(username: UserId, last_activity: float) -> bool:
         return False  # no timeout activated at all
 
     timed_out = (time.time() - last_activity) > idle_timeout
-
-    if timed_out:
-        auth_logger.debug("%s login timed out (Inactive for %d seconds)" %
-                          (username, time.time() - last_activity))
-
     return timed_out
 
 
 def update_user_access_time(username: UserId) -> None:
+    """Remember the time the user was seen for the last time"""
     if not config.save_user_access_times:
         return
     save_custom_attr(username, 'last_seen', repr(time.time()))
 
 
-def on_succeeded_login(username: UserId) -> None:
-    num_failed_logins = load_custom_attr(username, 'num_failed_logins', utils.saveint)
-    if num_failed_logins is not None and num_failed_logins != 0:
-        save_custom_attr(username, 'num_failed_logins', '0')
+def get_user_access_time(username: UserId) -> Optional[float]:
+    if not config.save_user_access_times:
+        return None
+    return load_custom_attr(username, 'last_seen', utils.savefloat)
 
-    update_user_access_time(username)
+
+def _reset_failed_logins(username: UserId) -> None:
+    """Login succeeded: Set failed login counter to 0"""
+    num_failed_logins = load_custom_attr(username, 'num_failed_logins', utils.saveint, default=0)
+    if num_failed_logins != 0:
+        save_custom_attr(username, 'num_failed_logins', '0')
 
 
 # userdb.need_to_change_pw returns either False or the reason description why the
@@ -247,21 +248,6 @@ def _user_locked(user_id: UserId) -> bool:
     return user.get('locked', False)
 
 
-def on_failed_login(username: UserId) -> None:
-    users = load_users(lock=True)
-    if username in users:
-        if "num_failed_logins" in users[username]:
-            users[username]["num_failed_logins"] += 1
-        else:
-            users[username]["num_failed_logins"] = 1
-
-        if config.lock_on_logon_failures:
-            if users[username]["num_failed_logins"] >= config.lock_on_logon_failures:
-                users[username]["locked"] = True
-
-        save_users(users)
-
-
 def _root_dir() -> str:
     return cmk.utils.paths.check_mk_config_dir + "/wato/"
 
@@ -305,6 +291,51 @@ class UserSelection(DropdownChoice):
         return text.split(" - ")[-1]
 
 
+def on_succeeded_login(username: UserId) -> str:
+    _ensure_user_can_init_session(username)
+    _reset_failed_logins(username)
+    update_user_access_time(username)
+
+    return _initialize_session(username)
+
+
+def on_failed_login(username: UserId) -> None:
+    users = load_users(lock=True)
+    if username in users:
+        if "num_failed_logins" in users[username]:
+            users[username]["num_failed_logins"] += 1
+        else:
+            users[username]["num_failed_logins"] = 1
+
+        if config.lock_on_logon_failures:
+            if users[username]["num_failed_logins"] >= config.lock_on_logon_failures:
+                users[username]["locked"] = True
+
+        save_users(users)
+
+
+def on_logout(username: UserId) -> None:
+    if config.single_user_session is not None:
+        _invalidate_session(username)
+
+
+def on_access(username: UserId, issue_time: float, session_id: str) -> None:
+    # Check whether or not there is an idle timeout configured, delete cookie and
+    # require the user to renew the log when the timeout exceeded.
+    timed_out = login_timed_out(username, issue_time)
+    if timed_out:
+        raise MKAuthException("%s login timed out (Inactivity exceeded %r)" %
+                              (username, config.user_idle_timeout))
+
+    # Check whether or not a single user session is allowed at a time and the user
+    # is doing this request with the currently active session.
+    if config.single_user_session is not None:
+        if not _is_valid_user_session(username, session_id):
+            raise MKAuthException("Invalid user session")
+
+        _refresh_session(username)
+
+
 #.
 #   .--User Session--------------------------------------------------------.
 #   |       _   _                 ____                _                    |
@@ -329,7 +360,7 @@ class UserSelection(DropdownChoice):
 #   '----------------------------------------------------------------------'
 
 
-def is_valid_user_session(username: UserId, session_id: str) -> bool:
+def _is_valid_user_session(username: UserId, session_id: str) -> bool:
     if config.single_user_session is None:
         return True  # No login session limitation enabled, no validation
 
@@ -347,7 +378,8 @@ def is_valid_user_session(username: UserId, session_id: str) -> bool:
     return False
 
 
-def ensure_user_can_init_session(username: UserId) -> bool:
+def _ensure_user_can_init_session(username: UserId) -> bool:
+    """When single user session mode is enabled, check that there is not another active session"""
     if config.single_user_session is None:
         return True  # No login session limitation enabled, no validation
 
@@ -367,23 +399,23 @@ def ensure_user_can_init_session(username: UserId) -> bool:
     raise MKUserError(None, _("Another session is active"))
 
 
-def initialize_session(username: UserId) -> str:
+def _initialize_session(username: UserId) -> str:
     """Creates a new user login session (if single user session mode is enabled) and
     returns the session_id of the new session."""
     if not config.single_user_session:
         return ""
 
-    session_id = create_session_id()
+    session_id = _create_session_id()
     save_session_info(username, session_id)
     return session_id
 
 
-def create_session_id() -> str:
+def _create_session_id() -> str:
     """Creates a random session id for the user and returns it."""
     return utils.gen_id()
 
 
-def refresh_session(username: UserId) -> None:
+def _refresh_session(username: UserId) -> None:
     """Updates the current session of the user"""
     if not config.single_user_session:
         return  # No session handling at all
@@ -396,7 +428,7 @@ def refresh_session(username: UserId) -> None:
     save_session_info(username, session_id)
 
 
-def invalidate_session(username: UserId) -> None:
+def _invalidate_session(username: UserId) -> None:
     remove_custom_attr(username, "session_info")
 
 

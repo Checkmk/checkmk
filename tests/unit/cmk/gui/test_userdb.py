@@ -52,38 +52,38 @@ def fixture_session_valid(monkeypatch, user_id, fix_time):
 
 def test_is_valid_user_session_single_user_session_disabled(user_id):
     assert config.single_user_session is None
-    assert userdb.is_valid_user_session(user_id, "session1") is True
+    assert userdb._is_valid_user_session(user_id, "session1") is True
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_is_valid_user_session_not_existing(user_id):
-    assert userdb.is_valid_user_session(user_id, "not-existing-session") is False
+    assert userdb._is_valid_user_session(user_id, "not-existing-session") is False
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_is_valid_user_session_still_valid_when_last_activity_extends_timeout(
         user_id, session_timed_out):
-    assert userdb.is_valid_user_session(user_id, session_timed_out) is True
+    assert userdb._is_valid_user_session(user_id, session_timed_out) is True
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_is_valid_user_session_valid(user_id, session_valid):
-    assert userdb.is_valid_user_session(user_id, session_valid) is True
+    assert userdb._is_valid_user_session(user_id, session_valid) is True
 
 
 def test_ensure_user_can_init_no_single_user_session(user_id):
     assert config.single_user_session is None
-    assert userdb.ensure_user_can_init_session(user_id) is True
+    assert userdb._ensure_user_can_init_session(user_id) is True
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_ensure_user_can_init_no_previous_session(user_id):
-    assert userdb.ensure_user_can_init_session(user_id) is True
+    assert userdb._ensure_user_can_init_session(user_id) is True
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_ensure_user_can_init_with_previous_session_timeout(monkeypatch, user_id):
-    assert userdb.ensure_user_can_init_session(user_id) is True
+    assert userdb._ensure_user_can_init_session(user_id) is True
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
@@ -91,34 +91,34 @@ def test_ensure_user_can_not_init_with_previous_session(monkeypatch, user_id):
     monkeypatch.setattr(userdb, "load_session_info", lambda u: ("a", time.time() - 5))
 
     with pytest.raises(MKUserError, match="Another session"):
-        assert userdb.ensure_user_can_init_session(user_id) is False
+        assert userdb._ensure_user_can_init_session(user_id) is False
 
 
 def test_initialize_session_single_user_session_not_enabled(user_id):
-    assert userdb.initialize_session(user_id) == ""
+    assert userdb._initialize_session(user_id) == ""
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_initialize_session_single_user_session(user_id):
-    session_id = userdb.initialize_session(user_id)
+    session_id = userdb._initialize_session(user_id)
     assert session_id != ""
     assert userdb.load_session_info(user_id) == (session_id, int(time.time()))
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_create_session_id_is_correct_type():
-    id1 = userdb.create_session_id()
+    id1 = userdb._create_session_id()
     assert isinstance(id1, str)
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_create_session_id_changes():
-    assert userdb.create_session_id() != userdb.create_session_id()
+    assert userdb._create_session_id() != userdb._create_session_id()
 
 
 def test_refresh_session_single_user_session_not_enabled(user_id):
     assert config.single_user_session is None
-    userdb.refresh_session(user_id)
+    userdb._refresh_session(user_id)
     assert userdb.load_session_info(user_id) is None
 
 
@@ -129,7 +129,7 @@ def test_refresh_session_success(user_id, session_valid):
     old_session_id, old_last_activity = session_info
 
     with on_time("2019-09-05 00:00:30", "UTC"):
-        userdb.refresh_session(user_id)
+        userdb._refresh_session(user_id)
 
         new_session_info = userdb.load_session_info(user_id)
         assert new_session_info is not None
@@ -140,14 +140,14 @@ def test_refresh_session_success(user_id, session_valid):
 
 def test_invalidate_session_single_user_session_disabled(user_id, session_valid):
     assert userdb.load_session_info(user_id) is not None
-    userdb.invalidate_session(user_id)
+    userdb._invalidate_session(user_id)
     assert userdb.load_session_info(user_id) is None
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_invalidate_session(user_id, session_valid):
     assert userdb.load_session_info(user_id) is not None
-    userdb.invalidate_session(user_id)
+    userdb._invalidate_session(user_id)
     assert userdb.load_session_info(user_id) is None
 
 

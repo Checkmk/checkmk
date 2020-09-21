@@ -42,7 +42,7 @@ div.cmk_tab {
     position: relative;
     z-index: 20;
     height: 100%;
-    min-height: 10rem;
+    min-height: 2.5rem;
     padding: 0.2rem;
     margin: 0;
     border: 1px solid $color-table-border;
@@ -86,8 +86,7 @@ div.cmk_tab {
 
 div.cmk_figure {
   div.loading_img {
-    position: absolute;
-    top: 30%;
+    position: relative;
     left: 50%;
     width: 48px;
     height: 48px;

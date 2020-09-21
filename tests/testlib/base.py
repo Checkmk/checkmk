@@ -17,7 +17,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     # failing. These are used in various tests, to predict the
     # expected console output. In an ideal world, this list will (!)
     # be empty. If that is the case, please remove it entirely.
-    ('section', 'oracle_tablespaces'),
     ('section', 'site_object_status'),
     ('section', 'site_object_counts'),
     ('section', 'tsm_stagingpools'),
@@ -28,7 +27,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('check', 'logwatch_groups'),
     ('check', 'netapp_api_vf_stats'),
     ('check', 'netapp_api_vf_stats_traffic'),
-    ('check', 'oracle_tablespaces'),
     ('check', 'ps_perf'),
     ('check', 'site_object_counts'),
     ('check', 'tsm_stagingpools'),

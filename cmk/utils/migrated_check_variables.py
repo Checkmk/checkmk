@@ -49,3 +49,7 @@ services_default_levels = {
     "additional_servicenames": [],
 }
 services_summary_default_levels = {"ignored": [], "state_if_stopped": 0}
+
+# oracle_tablespaces
+oracle_tablespaces_default_levels = (10.0, 5.0)
+oracle_tablespaces_check_autoext = True

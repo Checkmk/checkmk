@@ -4,9 +4,34 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.base.plugins.agent_based.utils.db
+from typing import (
+    Any,
+    Dict,
+    Tuple,
+    Optional,
+    Mapping,
+)
+from .utils import (
+    oracle,
+    db,
+)
+from .agent_based_api.v1.type_defs import (
+    AgentStringTable,
+    DiscoveryResult,
+    CheckResult,
+    Parameters,
+)
 
-db_get_tablespace_levels_in_bytes = cmk.base.plugins.agent_based.utils.db.get_tablespace_levels_in_bytes
+from .agent_based_api.v1 import (
+    state,
+    Service,
+    Result,
+    Metric,
+    register,
+    IgnoreResultsError,
+    render,
+    check_levels,
+)
 
 # no used space check for Tablsspaces with CONTENTS in ('TEMPORARY','UNDO')
 # It is impossible to check the used space in UNDO and TEMPORARY Tablespaces
@@ -14,24 +39,12 @@ db_get_tablespace_levels_in_bytes = cmk.base.plugins.agent_based.utils.db.get_ta
 # This restriction is only working with newer agents, because we need an
 # additional parameter at end if each datafile
 
-# This definition needs to be removed at a later stage
-# A previous version of this check didn't write the parameter
-# name into the autochecks file, but the parameter itself
-# default levels for *free* space. float: percent,
-# integer: MB.
-oracle_tablespaces_default_levels = (10.0, 5.0)
-
-factory_settings["oracle_tablespaces_defaults"] = {
+ORACLE_TABLESPACES_DEFAULTS = {
     "levels": (10.0, 5.0),
     "magic_normsize": 1000,
     "magic_maxlevels": (60.0, 50.0),
     "defaultincrement": True,
 }
-
-# Whether to check auto extend settings. Note: this setting is not ment to
-# be changed anymore. It cannot be edited via WATO either. There now exists
-# a check parameter, where the behaviour can be configured on a per-service-base.
-oracle_tablespaces_check_autoext = True
 
 # <<<oracle_tablespaces>>>
 # pengt /database/pengt/daten155/dbf/system_01.dbf SYSTEM AVAILABLE YES 38400 4194302 38392 1280 SYSTEM 8192 ONLINE
@@ -46,7 +59,6 @@ oracle_tablespaces_check_autoext = True
 # MAE|/opt/oracle/oracle_base/product/11.2.0.4/dbs/pslife_dwh.dbf|PSLIFE_DWH|AVAILABLE||||||RECOVER|8192|OFFLINE|0|PERMANENT
 
 # Order of columns (it is a table of data files, so table spaces appear multiple times)
-# -1 Node info (added by Checkmk)
 # 0  database SID
 # 1  data file name
 # 2  table space name
@@ -63,21 +75,18 @@ oracle_tablespaces_check_autoext = True
 # 13 Tablespace-Type (PERMANENT, UNDO, TEMPORARY)
 
 
-def parse_oracle_tablespaces(info):
-    tablespaces = {}
-    error_sids = {}
+def parse_oracle_tablespaces(string_table: AgentStringTable) -> oracle.SectionTableSpaces:
+    tablespaces: Dict[Tuple[str, str], oracle.TableSpaces] = {}
+    error_sids: oracle.ErrorSids = {}
 
-    for line in info:
-        node_name = line[0]
-        line = line[1:]
-
+    for line in string_table:
         # Check for query errors
-        err = oracle_handle_ora_errors(line)
-        if err is False:
+        check_ora = oracle.OraErrors(line)
+        if check_ora.ignore:
             continue  # ignore ancient agent outputs
-        elif isinstance(err, tuple):
+        if check_ora.has_error:
             sid = line[0]
-            error_sids[sid] = err
+            error_sids[sid] = check_ora
 
         if len(line) not in (13, 14, 15):
             continue
@@ -91,26 +100,40 @@ def parse_oracle_tablespaces(info):
         if len(line) >= 14:
             ts_type = line[13]
         else:
-            # old behaivor is all Tablespaces are treated as PERMANENT
+            # old behavior is all Tablespaces are treated as PERMANENT
             ts_type = 'PERMANENT'
 
         if len(line) == 15:
             db_version = int(line[14].split('.')[0])
 
-        tablespaces.setdefault((node_name, sid, ts_name, db_version), [])
+        tablespaces.setdefault(
+            (sid, ts_name), {
+                'amount_missing_filenames': 0,
+                'autoextensible': False,
+                'datafiles': [],
+                'db_version': db_version,
+                'status': ts_status,
+                'type': ts_type,
+            })
 
-        this_tablespace = {
+        datafiles: oracle.DataFiles = {
             "name": datafile_name,
             "status": datafile_status,
             "autoextensible": autoextensible == "YES",
             "ts_type": ts_type,
             "ts_status": ts_status,
             "file_online_status": file_online_status,
+            "block_size": None,
+            "size": None,
+            "max_size": None,
+            "used_size": None,
+            "free_space": None,
+            "increment_size": None,
         }
 
         try:
             bs = int(block_size)
-            this_tablespace.update({
+            datafiles.update({
                 "block_size": bs,
                 "size": int(filesize_blocks) * bs,
                 "max_size": int(max_filesize_blocks) * bs,
@@ -119,59 +142,36 @@ def parse_oracle_tablespaces(info):
                 "increment_size": int(increment_size) * bs,
             })
 
-        except Exception:
-            this_tablespace.update({
-                "block_size": None,
-                "size": None,
-                "max_size": None,
-                "used_size": None,
-                "free_space": None,
-                "increment_size": None,
-            })
+        except ValueError:
+            pass
+        tablespaces[(sid, ts_name)]['datafiles'].append(datafiles)
 
-        tablespaces[(node_name, sid, ts_name, db_version)].append(this_tablespace)
+    for v in tablespaces.values():
+        v["amount_missing_filenames"] = len([df for df in v['datafiles'] if df['name'] == ''])
+        v["autoextensible"] = any([df['autoextensible'] for df in v['datafiles']])
 
-    # Now join this into one dictionary. If there are more than
-    # one nodes per tablespace, then we select that node with the
-    # most data files
-    result = {}
-    for (node_name, sid, ts_name, db_version), datafiles in tablespaces.items():
-        ts_key = (sid, ts_name)
-        # Use data from this node, if it is the first/only, or if it
-        # has more data files than a previous one
-        if ts_key not in result or \
-           len(result[ts_key]["datafiles"]) < len(datafiles):
-
-            result[ts_key] = {
-                "db_version": db_version,
-                "datafiles": datafiles,
-                "type": datafiles[0]["ts_type"],
-                "status": datafiles[0]["ts_status"],
-                "autoextensible": False,
-                "amount_missing_filenames": len([f for f in datafiles if f['name'] == ''])
-            }
-
-            for df in datafiles:
-                if df["autoextensible"]:
-                    result[ts_key]["autoextensible"] = True
-
-    return result, error_sids
+    return {"error_sids": error_sids, "tablespaces": tablespaces}
 
 
-def inventory_oracle_tablespaces(parsed):
-    tablespaces, _error_sids = parsed
-    for (sid, ts_name), tablespace in tablespaces.items():
+register.agent_section(
+    name="oracle_tablespaces",
+    parse_function=parse_oracle_tablespaces,
+)
+
+
+def discovery_oracle_tablespaces(section: oracle.SectionTableSpaces) -> DiscoveryResult:
+
+    for (sid, ts_name), tablespace in section["tablespaces"].items():
         if tablespace["status"] in ("ONLINE", "READONLY", "OFFLINE"):
-            if oracle_tablespaces_check_autoext:
-                ae = tablespace["autoextensible"]
-            else:
-                ae = None  # means: ignore, only display setting
-
-            parameters = {"autoextend": ae}
-            yield "%s.%s" % (sid, ts_name), parameters
+            yield Service(item="%s.%s" % (sid, ts_name),
+                          parameters={"autoextend": tablespace["autoextensible"]})
 
 
-def check_oracle_tablespaces(item, params, parsed):
+def check_oracle_tablespaces(
+    item: str,
+    params: Parameters,
+    section: oracle.SectionTableSpaces,
+) -> CheckResult:
     try:
         if item.count('.') == 2:
             # Pluggable Database: item = <CDB>.<PDB>.<Tablespace>
@@ -180,12 +180,12 @@ def check_oracle_tablespaces(item, params, parsed):
         else:
             sid, ts_name = item.split('.', 1)
     except ValueError:
-        yield 3, 'Invalid check item (must be <SID>.<tablespace>)'
+        yield Result(state=state.UNKNOWN, summary='Invalid check item (must be <SID>.<tablespace>)')
         return
 
-    tablespaces, error_sids = parsed
-    if sid in error_sids:
-        yield error_sids[sid]
+    if sid in section["error_sids"]:
+        ora_error = section["error_sids"][sid]
+        yield Result(state=ora_error.error_severity, summary=ora_error.error_text)
         return
 
     # In case of missing information we assume that the login into
@@ -193,9 +193,9 @@ def check_oracle_tablespaces(item, params, parsed):
     # switch to UNKNOWN, but will get stale.
     # TODO Treatment as in db2 and mssql dbs
     # "ts_status is None" possible?
-    tablespace = tablespaces.get((sid, ts_name))
+    tablespace = section["tablespaces"].get((sid, ts_name))
     if not tablespace or tablespace["status"] is None:
-        raise MKCounterWrapped("Login into database failed")
+        raise IgnoreResultsError("Login into database failed")
 
     ts_type = tablespace["type"]
     ts_status = tablespace["status"]
@@ -209,13 +209,13 @@ def check_oracle_tablespaces(item, params, parsed):
     num_increments = 0
     increment_size = 0
     free_space = 0
-    file_online_states = {}
+    file_online_states: Dict[str, Dict[str, Any]] = {}
 
     # Conversion of old autochecks params
     if isinstance(params, tuple):
-        params = {"autoextend": params[0], "levels": params[1:]}
+        params = Parameters({"autoextend": params[0], "levels": params[1:]})
 
-    autoext = params.get("autoextend")
+    autoext = params.get("autoextend", None)
     uses_default_increment = False
 
     # check for missing filenames in Tablespaces. This is possible after recreation
@@ -223,8 +223,10 @@ def check_oracle_tablespaces(item, params, parsed):
     # => CRIT, because we are not able to calculate used/free space in Tablespace
     #          in most cases the temporary Tablespace is empty
     if tablespace['amount_missing_filenames'] > 0:
-        yield 2, "%d files with missing filename in %s Tablespace (!!), space calculation not possible" % \
-                   (tablespace['amount_missing_filenames'], ts_type)
+        yield Result(
+            state=state.CRIT,
+            summary="%d files with missing filename in %s Tablespace, space calculation not possible"
+            % (tablespace['amount_missing_filenames'], ts_type))
         return
 
     for datafile in tablespace["datafiles"]:
@@ -243,11 +245,13 @@ def check_oracle_tablespaces(item, params, parsed):
                 file_online_states[df_file_online_status]["sids"].append(sid)
 
             else:
-                yield 2, "One or more datafiles OFFLINE or RECOVER"
+                yield Result(state=state.CRIT, summary="One or more datafiles OFFLINE or RECOVER")
                 return
 
         num_files += 1
-        if datafile["status"] in ["AVAILABLE", "ONLINE", "READONLY"]:
+        if datafile["status"] in ["AVAILABLE", "ONLINE", "READONLY"
+                                 ] and datafile["size"] is not None and datafile[
+                                     "free_space"] is not None and datafile["max_size"] is not None:
             df_size = datafile["size"]
             df_free_space = datafile["free_space"]
             df_max_size = datafile["max_size"]
@@ -258,7 +262,7 @@ def check_oracle_tablespaces(item, params, parsed):
 
             # Autoextensible? Honor max size. Everything is computed in
             # *Bytes* here!
-            if datafile["autoextensible"]:
+            if datafile["autoextensible"] and datafile["increment_size"] is not None:
                 num_extensible += 1
                 incsize = datafile["increment_size"]
 
@@ -292,33 +296,41 @@ def check_oracle_tablespaces(item, params, parsed):
                 max_size += df_size
                 free_space += df_free_space
 
-    yield 0, "%s (%s), Size: %s, %s used (%s of max. %s), Free: %s" % \
-        (ts_status, ts_type, get_bytes_human_readable(current_size),
-         get_percent_human_readable(100.0 * used_size / max_size),
-         get_bytes_human_readable(used_size),
-         get_bytes_human_readable(max_size),
-         get_bytes_human_readable(free_space))
+    yield Result(state=state.OK,
+                 summary="%s (%s), Size: %s, %s used (%s of max. %s), Free: %s" %
+                 (ts_status, ts_type, render.bytes(current_size),
+                  render.percent(100.0 * used_size / max_size), render.bytes(used_size),
+                  render.bytes(max_size), render.bytes(free_space)))
 
     if num_extensible > 0 and db_version <= 10:
         # only display the number of remaining extents in Databases <= 10g
-        yield 0, "%d increments (%s)" % \
-                        (num_increments, get_bytes_human_readable(increment_size))
+        yield Result(state=state.OK,
+                     summary="%d increments (%s)" % (num_increments, render.bytes(increment_size)))
 
     if ts_status != "READONLY":
-        warn, crit, levels_text, _output_as_percentage = \
-            db_get_tablespace_levels_in_bytes(max_size, params)
+        warn, crit, _as_perc, _info_text = \
+            db.get_tablespace_levels_in_bytes(max_size, params)
 
-        yield 0, "", \
-            [("size", current_size, max_size - (warn or 0), max_size - (crit or 0)),\
-            ("used", used_size), ("max_size", max_size)]
+        yield Metric(name="size",
+                     value=current_size,
+                     levels=(max_size - warn, max_size - crit) if warn and crit else None)
+        yield Metric(
+            name="used",
+            value=used_size,
+        )
+        yield Metric(
+            name="max_size",
+            value=max_size,
+        )
 
         # Check increment size, should not be set to default (1)
         if params.get("defaultincrement"):
             if uses_default_increment:
-                yield 1, "DEFAULT INCREMENT"
+                yield Result(state=state.WARN, summary="DEFAULT INCREMENT")
 
     # Check autoextend status if parameter not set to None
     if autoext is not None and ts_status != "READONLY":
+        autoext_info: Optional[str]
         if autoext and num_extensible == 0:
             autoext_info = "NO AUTOEXTEND"
         elif not autoext and num_extensible > 0:
@@ -327,13 +339,13 @@ def check_oracle_tablespaces(item, params, parsed):
             autoext_info = None
 
         if autoext_info:
-            yield params.get("autoextend_severity", 2), autoext_info
+            yield Result(state=state(params.get("autoextend_severity", 2)), summary=autoext_info)
 
     elif num_extensible > 0:
-        yield 0, "autoextend"
+        yield Result(state=state.OK, summary="autoextend")
 
     else:
-        yield 0, "no autoextend"
+        yield Result(state=state.OK, summary="no autoextend")
 
     # Check free space, but only if status is not READONLY
     # and Tablespace-Type must be PERMANENT or TEMPORARY, when temptablespace is True
@@ -342,33 +354,43 @@ def check_oracle_tablespaces(item, params, parsed):
     if ts_status != "READONLY" and \
        (ts_type == 'PERMANENT' or (ts_type == 'TEMPORARY' and params.get("temptablespace"))):
 
-        status = 0
-        if crit is not None and free_space < crit:
-            status = 2
-        elif warn is not None and free_space < warn:
-            status = 1
-
-        if status:
-            yield status, "only %s left%s" % (get_bytes_human_readable(free_space), levels_text)
-
+        yield from check_levels(free_space,
+                                levels_lower=(warn, crit),
+                                render_func=render.bytes,
+                                label="Space left")
     if num_files != 1 or num_avail != 1 or num_extensible != 1:
-        yield 0, "%d data files (%d avail, %d autoext)" % \
-                  (num_files, num_avail, num_extensible)
+        yield Result(state=state.OK,
+                     summary="%d data files (%d avail, %d autoext)" %
+                     (num_files, num_avail, num_extensible))
 
     for file_online_state, attrs in file_online_states.items():
         this_state = attrs["state"]
-        yield this_state, "Datafiles %s: %s" % (file_online_state, ", ".join(attrs["sids"]))
+        yield Result(state=state(this_state),
+                     summary="Datafiles %s: %s" % (file_online_state, ", ".join(attrs["sids"])))
 
 
-# If something changes adapt calculations in related inventory plugin
-check_info['oracle_tablespaces'] = {
-    "parse_function": parse_oracle_tablespaces,
-    "inventory_function": inventory_oracle_tablespaces,
-    "check_function": check_oracle_tablespaces,
-    "service_description": "ORA %s Tablespace",
-    "has_perfdata": True,
-    "node_info": True,
-    "group": "oracle_tablespaces",
-    "default_levels_variable": "oracle_tablespaces_defaults",
-    "includes": ["oracle.include"]
-}
+def cluster_check_oracle_tablespaces(
+        item, params, section: Mapping[str, oracle.SectionTableSpaces]) -> CheckResult:
+    selected_tablespaces: oracle.SectionTableSpaces = {"tablespaces": {}, "error_sids": {}}
+
+    # If there are more than one nodes per tablespace, then we select the node with the
+    # most data files
+    for tablespaces_per_node in section.values():
+        for (sid, ts_name), tablespace in tablespaces_per_node["tablespaces"].items():
+            if (sid,
+                    ts_name) not in selected_tablespaces or len(selected_tablespaces["tablespaces"][
+                        (sid, ts_name)]["datafiles"]) < len(tablespace["datafiles"]):
+                selected_tablespaces["tablespaces"][(sid, ts_name)] = tablespace
+            selected_tablespaces["error_sids"].update(tablespaces_per_node["error_sids"])
+
+    yield from check_oracle_tablespaces(item, params, selected_tablespaces)
+
+
+register.check_plugin(
+    name="oracle_tablespaces",
+    service_name="ORA %s Tablespace",
+    discovery_function=discovery_oracle_tablespaces,
+    check_function=check_oracle_tablespaces,
+    check_default_parameters=ORACLE_TABLESPACES_DEFAULTS,
+    check_ruleset_name="oracle_tablespaces",
+)

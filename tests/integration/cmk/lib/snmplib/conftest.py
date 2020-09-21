@@ -7,6 +7,7 @@
 import logging
 import os
 import subprocess
+from typing import NamedTuple
 from pathlib import Path
 
 import pytest  # type: ignore[import]
@@ -21,13 +22,17 @@ import cmk.snmplib.snmp_cache as snmp_cache
 from cmk.snmplib.type_defs import SNMPHostConfig
 
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
-
 try:
     from cmk.fetchers.cee.snmp_backend.inline import InlineSNMPBackend
 except ImportError:
     InlineSNMPBackend = None  # type: ignore[assignment, misc]
 
 logger = logging.getLogger(__name__)
+
+ProcessDef = NamedTuple("ProcessDef", [
+    ("port", int),
+    ("process", subprocess.Popen),
+])
 
 
 @pytest.fixture(name="snmp_data_dir", scope="module")
@@ -40,31 +45,14 @@ def snmpsim_fixture(site, snmp_data_dir, tmp_path_factory):
     tmp_path = tmp_path_factory.getbasetemp()
     log.logger.setLevel(logging.DEBUG)
     debug.enable()
-    cmd = [
-        "snmpsimd.py",
-        #"--log-level=error",
-        "--cache-dir",
-        str(tmp_path / "snmpsim"),
-        "--data-dir",
-        str(snmp_data_dir),
-        # TODO: Fix port allocation to prevent problems with parallel tests
-        #"--agent-unix-endpoint="
-        "--agent-udpv4-endpoint=127.0.0.1:1337",
-        "--agent-udpv6-endpoint=[::1]:1337",
-        "--v3-user=authOnlyUser",
-        "--v3-auth-key=authOnlyUser",
-        "--v3-auth-proto=MD5",
+
+    process_definitions = [
+        _define_process(idx, auth, tmp_path, snmp_data_dir)
+        for idx, auth in enumerate(_create_auth_list())
     ]
 
-    p = subprocess.Popen(
-        cmd,
-        close_fds=True,
-        # Silence the very noisy output. May be useful to enable this for debugging tests
-        #stdout=open(os.devnull, "w"),
-        #stderr=subprocess.STDOUT,
-    )
-
-    wait_until(lambda: _is_listening(p, 1337), timeout=20)
+    for process_def in process_definitions:
+        wait_until(_create_listening_condition(process_def), timeout=20)
 
     yield
 
@@ -72,12 +60,58 @@ def snmpsim_fixture(site, snmp_data_dir, tmp_path_factory):
     debug.disable()
 
     logger.debug("Stopping snmpsimd...")
-    p.terminate()
-    p.wait()
+    for process_def in process_definitions:
+        process_def.process.terminate()
+        process_def.process.wait()
     logger.debug("Stopped snmpsimd.")
 
 
-def _is_listening(p, port):
+def _define_process(index, auth, tmp_path, snmp_data_dir):
+    port = 1337 + index
+    return ProcessDef(
+        port=port,
+        process=subprocess.Popen(
+            [
+                "snmpsimd.py",
+                #"--log-level=error",
+                "--cache-dir",
+                # Each snmpsim instance needs an own cache directory otherwise
+                # some instances occasionally crash
+                str(tmp_path / "snmpsim%s") % index,
+                "--data-dir",
+                str(snmp_data_dir),
+                # TODO: Fix port allocation to prevent problems with parallel tests
+                #"--agent-unix-endpoint="
+                "--agent-udpv4-endpoint=127.0.0.1:%s" % port,
+                "--agent-udpv6-endpoint=[::1]:%s" % port,
+            ] + auth,
+            close_fds=True,
+            # Silence the very noisy output. May be useful to enable this for debugging tests
+            stdout=open(os.devnull, "w"),
+            stderr=subprocess.STDOUT,
+        ))
+
+
+def _create_auth_list():
+    return [
+        [
+            "--v3-user=authOnlyUser",
+            "--v3-auth-key=authOnlyUser",
+            "--v3-auth-proto=MD5",
+        ],
+    ]
+
+
+# This function is needed because Pylint raises these two error if
+# you create a function depending on a loop variable inside the loop:
+# W0631 (undefined-loop-variable), W0640 (cell-var-from-loop)
+def _create_listening_condition(process_def):
+    return lambda: _is_listening(process_def)
+
+
+def _is_listening(process_def):
+    p = process_def.process
+    port = process_def.port
     exitcode = p.poll()
     if exitcode is not None:
         raise Exception("snmpsimd died. Exit code: %d" % exitcode)

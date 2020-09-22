@@ -526,15 +526,21 @@ components:
           type: string
         active_time_ranges:
           description: The days for which time ranges were specified
-          example: '{''day'': ''all'', ''time_ranges'': [{''start'': ''12:00'', ''end'':
-            ''14:00''}'
+          example:
+            day: all
+            time_ranges:
+            - end: '14:00'
+              start: '12:00'
           items:
             $ref: '#/components/schemas/ConcreteTimeRangeActive'
           type: array
         exceptions:
           description: Specific day exclusions with their list of time ranges
-          example: '[{''date'': ''2020-01-01'', ''time_ranges'': [{''start'': ''14:00'',
-            ''end'': ''18:00''}]}]'
+          example:
+          - date: '2020-01-01'
+            time_ranges:
+            - end: '18:00'
+              start: '14:00'
           items:
             $ref: '#/components/schemas/ConcreteTimePeriodException'
           type: array
@@ -1158,14 +1164,20 @@ components:
           type: string
         active_time_ranges:
           description: The list of active time ranges.
-          example: '[{''day'': ''monday'',''time_ranges'': [{''start'': ''12:00'',''end'':
-            ''14:00''}]}]'
+          example:
+          - day: monday
+            time_ranges:
+            - end: '14:00'
+              start: '12:00'
           items:
             $ref: '#/components/schemas/TimeRangeActive'
           type: array
         exceptions:
-          example: '[{''date'': ''2020-01-01'', ''time_ranges'': [{''start'': ''14:00'',
-            ''end'': ''18:00''}]}]'
+          example:
+          - date: '2020-01-01'
+            time_ranges:
+            - end: '18:00'
+              start: '14:00'
           items:
             $ref: '#/components/schemas/TimePeriodException'
           type: array
@@ -1404,7 +1416,9 @@ components:
           format: date
           type: string
         time_ranges:
-          example: '[{''start'': ''14:00'', ''end'': ''18:00''}]'
+          example:
+          - end: '18:00'
+            start: '14:00'
           items:
             $ref: '#/components/schemas/TimeRange'
           type: array
@@ -1585,13 +1599,18 @@ components:
         active_time_ranges:
           description: The list of active time ranges which replaces the existing
             list of time ranges
-          example: '{''start'': ''12:00'', ''end'': ''14:00''}'
+          example:
+            end: '14:00'
+            start: '12:00'
           items:
             $ref: '#/components/schemas/TimeRangeActive'
           type: array
         exceptions:
-          example: '[{''date'': ''2020-01-01'', ''time_ranges'': [{''start'': ''14:00'',
-            ''end'': ''18:00''}]}]'
+          example:
+          - date: '2020-01-01'
+            time_ranges:
+            - end: '18:00'
+              start: '14:00'
           items:
             $ref: '#/components/schemas/TimePeriodException'
           type: array
@@ -6617,10 +6636,13 @@ paths:
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/time_period/collections/all\"\
           ,\n    json={\n        'name': 'first',\n        'alias': 'alias',\n   \
-          \     'active_time_ranges': \"[{'day': 'monday','time_ranges': [{'start':\
-          \ '12:00','end': '14:00'}]}]\",\n        'exceptions': \"[{'date': '2020-01-01',\
-          \ 'time_ranges': [{'start': '14:00', 'end': '18:00'}]}]\",\n        'exclude':\
-          \ \"['alias']\"\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          \     'active_time_ranges': [{\n            'day': 'monday',\n         \
+          \   'time_ranges': [{\n                'start': '12:00',\n             \
+          \   'end': '14:00'\n            }]\n        }],\n        'exceptions': [{\n\
+          \            'date': '2020-01-01',\n            'time_ranges': [{\n    \
+          \            'start': '14:00',\n                'end': '18:00'\n       \
+          \     }]\n        }],\n        'exclude': \"['alias']\"\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -6630,32 +6652,40 @@ paths:
           POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
           \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
           \ data=json.dumps({\n        'name': 'first',\n        'alias': 'alias',\n\
-          \        'active_time_ranges': \"[{'day': 'monday','time_ranges': [{'start':\
-          \ '12:00','end': '14:00'}]}]\",\n        'exceptions': \"[{'date': '2020-01-01',\
-          \ 'time_ranges': [{'start': '14:00', 'end': '18:00'}]}]\",\n        'exclude':\
-          \ \"['alias']\"\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
-          data = json.loads(response.read())"
+          \        'active_time_ranges': [{\n            'day': 'monday',\n      \
+          \      'time_ranges': [{\n                'start': '12:00',\n          \
+          \      'end': '14:00'\n            }]\n        }],\n        'exceptions':\
+          \ [{\n            'date': '2020-01-01',\n            'time_ranges': [{\n\
+          \                'start': '14:00',\n                'end': '18:00'\n   \
+          \         }]\n        }],\n        'exclude': \"['alias']\"\n    }).encode('utf-8'),\n\
+          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\ \\\n    --data '{\n          \"active_time_ranges\": \"[{'day': 'monday','time_ranges':\
-          \ [{'start': '12:00','end': '14:00'}]}]\",\n          \"alias\": \"alias\"\
-          ,\n          \"exceptions\": \"[{'date': '2020-01-01', 'time_ranges': [{'start':\
-          \ '14:00', 'end': '18:00'}]}]\",\n          \"exclude\": \"['alias']\",\n\
-          \          \"name\": \"first\"\n        }' \\\n    \"$API_URL/domain-types/time_period/collections/all\""
+          \ \\ \\\n    --data '{\n          \"active_time_ranges\": [\n          \
+          \  {\n              \"day\": \"monday\",\n              \"time_ranges\"\
+          : [\n                {\n                  \"end\": \"14:00\",\n        \
+          \          \"start\": \"12:00\"\n                }\n              ]\n  \
+          \          }\n          ],\n          \"alias\": \"alias\",\n          \"\
+          exceptions\": [\n            {\n              \"date\": \"2020-01-01\",\n\
+          \              \"time_ranges\": [\n                {\n                 \
+          \ \"end\": \"18:00\",\n                  \"start\": \"14:00\"\n        \
+          \        }\n              ]\n            }\n          ],\n          \"exclude\"\
+          : \"['alias']\",\n          \"name\": \"first\"\n        }' \\\n    \"$API_URL/domain-types/time_period/collections/all\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/time_period/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    active_time_ranges='[{'day': 'monday','time_ranges':\
-          \ [{'start': '12:00','end': '14:00'}]}]' \\\n    alias='alias' \\\n    exceptions='[{'date':\
-          \ '2020-01-01', 'time_ranges': [{'start': '14:00', 'end': '18:00'}]}]' \\\
-          \n    exclude='['alias']' \\\n    name='first' \\\n    --json"
+          \ application/json\" \\\n    active_time_ranges='[{\"day\": \"monday\",\
+          \ \"time_ranges\": [{\"start\": \"12:00\", \"end\": \"14:00\"}]}]' \\\n\
+          \    alias='alias' \\\n    exceptions='[{\"date\": \"2020-01-01\", \"time_ranges\"\
+          : [{\"start\": \"14:00\", \"end\": \"18:00\"}]}]' \\\n    exclude='['alias']'\
+          \ \\\n    name='first' \\\n    --json"
   /objects/time_period/{name}:
     delete:
       description: ''
@@ -6794,9 +6824,11 @@ paths:
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/time_period/pathname\"\
           ,\n    json={\n        'alias': 'alias',\n        'active_time_ranges':\
-          \ \"{'start': '12:00', 'end': '14:00'}\",\n        'exceptions': \"[{'date':\
-          \ '2020-01-01', 'time_ranges': [{'start': '14:00', 'end': '18:00'}]}]\"\n\
-          \    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          \ {\n            'start': '12:00',\n            'end': '14:00'\n       \
+          \ },\n        'exceptions': [{\n            'date': '2020-01-01',\n    \
+          \        'time_ranges': [{\n                'start': '14:00',\n        \
+          \        'end': '18:00'\n            }]\n        }]\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -6805,29 +6837,35 @@ paths:
           \    f\"{API_URL}/objects/time_period/pathname\",\n    method=\"PUT\",\n\
           \    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
           ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({\n\
-          \        'alias': 'alias',\n        'active_time_ranges': \"{'start': '12:00',\
-          \ 'end': '14:00'}\",\n        'exceptions': \"[{'date': '2020-01-01', 'time_ranges':\
-          \ [{'start': '14:00', 'end': '18:00'}]}]\"\n    }).encode('utf-8'),\n)\n\
-          response = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+          \        'alias': 'alias',\n        'active_time_ranges': {\n          \
+          \  'start': '12:00',\n            'end': '14:00'\n        },\n        'exceptions':\
+          \ [{\n            'date': '2020-01-01',\n            'time_ranges': [{\n\
+          \                'start': '14:00',\n                'end': '18:00'\n   \
+          \         }]\n        }]\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\ \\\n    --data '{\n          \"active_time_ranges\": \"{'start': '12:00',\
-          \ 'end': '14:00'}\",\n          \"alias\": \"alias\",\n          \"exceptions\"\
-          : \"[{'date': '2020-01-01', 'time_ranges': [{'start': '14:00', 'end': '18:00'}]}]\"\
-          \n        }' \\\n    \"$API_URL/objects/time_period/pathname\""
+          \ \\ \\\n    --data '{\n          \"active_time_ranges\": {\n          \
+          \  \"end\": \"14:00\",\n            \"start\": \"12:00\"\n          },\n\
+          \          \"alias\": \"alias\",\n          \"exceptions\": [\n        \
+          \    {\n              \"date\": \"2020-01-01\",\n              \"time_ranges\"\
+          : [\n                {\n                  \"end\": \"18:00\",\n        \
+          \          \"start\": \"14:00\"\n                }\n              ]\n  \
+          \          }\n          ]\n        }' \\\n    \"$API_URL/objects/time_period/pathname\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/time_period/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    active_time_ranges='{'start': '12:00', 'end':\
-          \ '14:00'}' \\\n    alias='alias' \\\n    exceptions='[{'date': '2020-01-01',\
-          \ 'time_ranges': [{'start': '14:00', 'end': '18:00'}]}]' \\\n    --json"
+          \ application/json\" \\\n    active_time_ranges='{\"start\": \"12:00\",\
+          \ \"end\": \"14:00\"}' \\\n    alias='alias' \\\n    exceptions='[{\"date\"\
+          : \"2020-01-01\", \"time_ranges\": [{\"start\": \"14:00\", \"end\": \"18:00\"\
+          }]}]' \\\n    --json"
   /version:
     get:
       description: ''
@@ -6915,7 +6953,7 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/agent/actions/sign\"\
-          ,\n    json={'passphrase': 'sw0rdfish', 'key_id': 42},\n)\nresp.raise_for_status()\n\
+          ,\n    json={'key_id': 42, 'passphrase': 'sw0rdfish'},\n)\nresp.raise_for_status()\n\
           data = resp.json()"
       - label: urllib
         lang: python
@@ -6924,8 +6962,8 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
           \    f\"{API_URL}/domain-types/agent/actions/sign\",\n    method=\"POST\"\
           ,\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
-          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({'passphrase':\
-          \ 'sw0rdfish', 'key_id': 42}).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({'key_id':\
+          \ 42, 'passphrase': 'sw0rdfish'}).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
           data = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -7084,7 +7122,7 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/agent/actions/bake_and_sign\"\
-          ,\n    json={'passphrase': 'sw0rdfish', 'key_id': 42},\n)\nresp.raise_for_status()\n\
+          ,\n    json={'key_id': 42, 'passphrase': 'sw0rdfish'},\n)\nresp.raise_for_status()\n\
           data = resp.json()"
       - label: urllib
         lang: python
@@ -7094,7 +7132,7 @@ paths:
           \    f\"{API_URL}/domain-types/agent/actions/bake_and_sign\",\n    method=\"\
           POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
           \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
-          \ data=json.dumps({'passphrase': 'sw0rdfish', 'key_id': 42}).encode('utf-8'),\n\
+          \ data=json.dumps({'key_id': 42, 'passphrase': 'sw0rdfish'}).encode('utf-8'),\n\
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash

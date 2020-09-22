@@ -400,12 +400,24 @@ class ConcreteTimePeriod(BaseSchema):
     active_time_ranges = fields.List(
         fields.Nested(ConcreteTimeRangeActive),
         description="The days for which time ranges were specified",
-        example="{'day': 'all', 'time_ranges': [{'start': '12:00', 'end': '14:00'}",
+        example={
+            'day': 'all',
+            'time_ranges': [{
+                'start': '12:00',
+                'end': '14:00'
+            }]
+        },
     )
     exceptions = fields.List(
         fields.Nested(ConcreteTimePeriodException),
         description="Specific day exclusions with their list of time ranges",
-        example="[{'date': '2020-01-01', 'time_ranges': [{'start': '14:00', 'end': '18:00'}]}]",
+        example=[{
+            'date': '2020-01-01',
+            'time_ranges': [{
+                'start': '14:00',
+                'end': '18:00'
+            }]
+        }],
     )
     exclude = fields.List(
         fields.String(description="Name of excluding time period", example="holidays"),

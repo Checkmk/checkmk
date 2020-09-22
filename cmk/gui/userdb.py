@@ -236,24 +236,27 @@ def need_to_change_pw(username: UserId) -> Union[bool, str]:
     return False
 
 
-def _is_local_user(user_id: UserId) -> bool:
+def _load_user(user_id: UserId) -> UserSpec:
+    """Loads of a single user profile
+
+    This is called during regular page processing. We must not load the whole user database, because
+    that would take too much time. To optimize this, we have the "cached user profile" files which
+    are read normally when working with a single user.
+    """
     user = load_cached_profile(user_id)
     if user is None:
         # No cached profile present. Load all users to get the users data
         user = load_users(lock=False).get(user_id, {})
         assert user is not None  # help mypy
+    return user
 
-    return user.get('connector', 'htpasswd') == 'htpasswd'
+
+def _is_local_user(user_id: UserId) -> bool:
+    return _load_user(user_id).get('connector', 'htpasswd') == 'htpasswd'
 
 
 def _user_locked(user_id: UserId) -> bool:
-    user = load_cached_profile(user_id)
-    if user is None:
-        # No cached profile present. Load all users to get the users data
-        user = load_users(lock=False).get(user_id, {})
-        assert user is not None  # help mypy
-
-    return user.get('locked', False)
+    return _load_user(user_id).get('locked', False)
 
 
 def _root_dir() -> str:
@@ -972,13 +975,7 @@ def _save_cached_profile(user_id: UserId, user: UserSpec, multisite_keys: List[s
 
 
 def contactgroups_of_user(user_id: UserId) -> List[ContactgroupName]:
-    user = load_cached_profile(user_id)
-    if user is None:
-        # No cached profile present. Load all users to get the users data
-        user = load_users(lock=False).get(user_id, {})
-        assert user is not None  # help mypy
-
-    return user.get("contactgroups", [])
+    return _load_user(user_id).get("contactgroups", [])
 
 
 def _convert_idle_timeout(value: str) -> Union[int, bool, None]:

@@ -133,6 +133,8 @@ def test_registered_pages():
         'ajax_graph',
         'ajax_graph_hover',
         'ajax_render_graph_content',
+        'ajax_initial_dashboard_filters',
+        'ajax_initial_view_filters',
     ]
 
     if not cmk_version.is_raw_edition():

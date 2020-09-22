@@ -744,13 +744,13 @@ def render_context_specs(visual, context_specs):
         return
 
     forms.header(_("Context / Search Filters"))
+    # Trick: the field "context" contains a dictionary with
+    # all filter settings, from which the value spec will automatically
+    # extract those that it needs.
+    value = visual.get('context', {})
     for info_key, spec in context_specs:
         forms.section(spec.title())
         ident = 'context_' + info_key
-        # Trick: the field "context" contains a dictionary with
-        # all filter settings, from which the value spec will automatically
-        # extract those that it needs.
-        value = visual.get('context', {})
         spec.render_input(ident, value)
 
 
@@ -1364,78 +1364,6 @@ def collect_filter_headers(info_keys, table):
 #   '----------------------------------------------------------------------'
 
 
-def render_filter_form(info_list: List[InfoName], mandatory_filters: List[Tuple[str, ValueSpec]],
-                       context: VisualContext) -> str:
-    with html.plugged():
-        show_filter_form(info_list, mandatory_filters, context)
-        return html.drain()
-
-
-def show_filter_form(info_list: List[InfoName], mandatory_filters: List[Tuple[str, ValueSpec]],
-                     context: VisualContext) -> None:
-
-    html.show_user_errors()
-
-    html.begin_form("filter", method="GET", add_transid=False)
-
-    varprefix = ""
-    mandatory_filter_names = [f[0] for f in mandatory_filters]
-    vs_filters = VisualFilterListWithAddPopup(info_list=info_list, ignore=mandatory_filter_names)
-
-    filter_list_id = VisualFilterListWithAddPopup.filter_list_id(varprefix)
-    filter_list_selected_id = filter_list_id + "_selected"
-    _show_filter_form_buttons(varprefix, filter_list_id)
-
-    html.open_div(id_=filter_list_selected_id, class_="side_popup_content")
-    try:
-        # Configure required single info keys (the ones that are not set by the config)
-        if mandatory_filters:
-            html.h2(_("Mandatory context"))
-            for filter_name, valuespec in mandatory_filters:
-                html.h3(valuespec.title())
-                valuespec.render_input(filter_name, None)
-
-        # Give the user the option to redefine filters configured in the dashboard config
-        # and also give the option to add some additional filters
-        if mandatory_filters:
-            html.h3(_("Additional context"))
-
-        vs_filters.render_input(varprefix, context)
-    except Exception:
-        # TODO: Analyse possible cycle
-        import cmk.gui.crash_reporting as crash_reporting
-        crash_reporting.handle_exception_as_gui_crash_report()
-    html.close_div()
-
-    forms.end()
-
-    html.hidden_fields()
-    html.end_form()
-    html.javascript("cmk.utils.add_simplebar_scrollbar(%s);" % json.dumps(filter_list_selected_id))
-
-
-def _show_filter_form_buttons(varprefix: str, filter_list_id: str) -> None:
-    html.open_div(class_="side_popup_controls")
-
-    html.open_a(href="javascript:void(0);",
-                onclick="cmk.page_menu.toggle_popup_filter_list(this, %s)" %
-                json.dumps(filter_list_id),
-                class_="add")
-    html.icon("add")
-    html.div(html.render_text("Add filter"), class_="description")
-    html.close_a()
-
-    html.open_div(class_="update_buttons")
-    html.jsbutton("%s_reset" % varprefix,
-                  _("Reset"),
-                  cssclass="reset",
-                  onclick="cmk.valuespecs.listofmultiple_reset('')")
-    html.button("%s_apply" % varprefix, _("Apply filters"), cssclass="apply submit")
-    html.close_div()
-
-    html.close_div()
-
-
 def FilterChoices(infos: List[InfoName], title: str, help: str):  # pylint: disable=redefined-builtin
     """Select names of filters for the given infos"""
     return DualListChoice(
@@ -1541,7 +1469,9 @@ class VisualFilterListWithAddPopup(VisualFilterList):
 
             html.close_div()
         html.close_div()
-        html.javascript('cmk.valuespecs.listofmultiple_init(%s);' % json.dumps(varprefix))
+        filters_applied = html.request.get_ascii_input("filled_in") == "filter"
+        html.javascript('cmk.valuespecs.listofmultiple_init(%s, %s);' %
+                        (json.dumps(varprefix), json.dumps(filters_applied)))
         # TODO: Currently does not work, because the filter popup (a parent element) has a simplebar
         # scrollbar. Need to investigate...
         html.final_javascript("cmk.utils.add_simplebar_scrollbar(%s);" % json.dumps(filter_list_id))
@@ -1556,6 +1486,79 @@ class PageAjaxVisualFilterListGetChoice(ABCPageListOfMultipleGetChoice):
                                       choices=VisualFilterList.get_choices(info, ignore))
             for info in infos
         ]
+
+
+def render_filter_form(info_list: List[InfoName], mandatory_filters: List[Tuple[str, ValueSpec]],
+                       context: VisualContext, page_name: str, reset_ajax_page: str) -> str:
+    with html.plugged():
+        show_filter_form(info_list, mandatory_filters, context, page_name, reset_ajax_page)
+        return html.drain()
+
+
+def show_filter_form(info_list: List[InfoName], mandatory_filters: List[Tuple[str, ValueSpec]],
+                     context: VisualContext, page_name: str, reset_ajax_page: str) -> None:
+    html.show_user_errors()
+    html.begin_form("filter", method="GET", add_transid=False)
+    varprefix = ""
+    mandatory_filter_names = [f[0] for f in mandatory_filters]
+    vs_filters = VisualFilterListWithAddPopup(info_list=info_list, ignore=mandatory_filter_names)
+
+    filter_list_id = VisualFilterListWithAddPopup.filter_list_id(varprefix)
+    filter_list_selected_id = filter_list_id + "_selected"
+    _show_filter_form_buttons(varprefix, filter_list_id, vs_filters._page_request_vars, page_name,
+                              reset_ajax_page)
+
+    html.open_div(id_=filter_list_selected_id, class_="side_popup_content")
+    try:
+        # Configure required single info keys (the ones that are not set by the config)
+        if mandatory_filters:
+            html.h2(_("Mandatory context"))
+            for filter_name, valuespec in mandatory_filters:
+                html.h3(valuespec.title())
+                valuespec.render_input(filter_name, None)
+
+        # Give the user the option to redefine filters configured in the dashboard config
+        # and also give the option to add some additional filters
+        if mandatory_filters:
+            html.h3(_("Additional context"))
+
+        vs_filters.render_input(varprefix, context)
+    except Exception:
+        # TODO: Analyse possible cycle
+        import cmk.gui.crash_reporting as crash_reporting
+        crash_reporting.handle_exception_as_gui_crash_report()
+    html.close_div()
+
+    forms.end()
+
+    html.hidden_fields()
+    html.end_form()
+    html.javascript("cmk.utils.add_simplebar_scrollbar(%s);" % json.dumps(filter_list_selected_id))
+
+
+def _show_filter_form_buttons(varprefix: str, filter_list_id: str,
+                              page_request_vars: Optional[Dict[str, Any]], view_name: str,
+                              reset_ajax_page: str) -> None:
+    html.open_div(class_="side_popup_controls")
+
+    html.open_a(href="javascript:void(0);",
+                onclick="cmk.page_menu.toggle_popup_filter_list(this, %s)" %
+                json.dumps(filter_list_id),
+                class_="add")
+    html.icon("add")
+    html.div(html.render_text("Add filter"), class_="description")
+    html.close_a()
+
+    html.open_div(class_="update_buttons")
+    html.jsbutton("%s_reset" % varprefix,
+                  _("Reset"),
+                  cssclass="reset",
+                  onclick="cmk.valuespecs.visual_filter_list_reset(%s, %s, %s, %s)" %
+                  (json.dumps(varprefix), json.dumps(page_request_vars), json.dumps(view_name),
+                   json.dumps(reset_ajax_page)))
+    html.button("%s_apply" % varprefix, _("Apply filters"), cssclass="apply submit")
+    html.close_div()
+    html.close_div()
 
 
 # Realizes a Multisite/visual filter in a valuespec. It can render the filter form, get

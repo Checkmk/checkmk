@@ -38,6 +38,8 @@ from cmk.gui.log import logger
 from cmk.gui.globals import html
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.views import ABCAjaxInitialFilters
+from cmk.gui.pages import page_registry
 from cmk.gui.breadcrumb import (
     make_topic_breadcrumb,
     Breadcrumb,
@@ -855,11 +857,21 @@ def _extend_display_dropdown(menu: PageMenu, board: DashboardConfig, board_conte
                               icon_name="filters",
                               item=PageMenuSidePopup(
                                   visuals.render_filter_form(info_list, mandatory_filters,
-                                                             board_context)),
+                                                             board_context, board["name"],
+                                                             "ajax_initial_dashboard_filters")),
                               name="filters",
                               is_shortcut=True,
                           ),
                       ]))
+
+
+@page_registry.register_page("ajax_initial_dashboard_filters")
+class AjaxInitialDashboardFilters(ABCAjaxInitialFilters):
+    def _get_context(self, page_name: str) -> Dict:
+        dashboard_name = page_name
+        board = _load_dashboard_with_cloning(get_permitted_dashboards(), dashboard_name, edit=False)
+        board = _add_context_to_dashboard(board)
+        return board["context"]
 
 
 def _dashboard_add_dashlet_entries(name: DashboardName, board: DashboardConfig,

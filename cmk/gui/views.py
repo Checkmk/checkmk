@@ -1583,7 +1583,53 @@ def create_view_from_valuespec(old_view, view):
 def show_filter_form(view: View, show_filters: List[Filter]) -> None:
     visuals.show_filter_form(info_list=view.datasource.infos,
                              mandatory_filters=[],
-                             context={f.ident: {} for f in show_filters if f.available()})
+                             context={f.ident: {} for f in show_filters if f.available()},
+                             page_name=view.name,
+                             reset_ajax_page="ajax_initial_view_filters")
+
+
+class ABCAjaxInitialFilters(AjaxPage):
+    @abc.abstractmethod
+    def _get_context(self, page_name: str) -> Dict:
+        raise NotImplementedError()
+
+    def page(self) -> Dict[str, str]:
+        request = self.webapi_request()
+        varprefix = request.get("varprefix", "")
+        page_name = request.get("page_name", "")
+        context = self._get_context(page_name)
+        page_request_vars = request.get("page_request_vars")
+        assert isinstance(page_request_vars, dict)
+        vs_filters = visuals.VisualFilterListWithAddPopup(info_list=page_request_vars["infos"],
+                                                          ignore=page_request_vars["ignore"])
+        with html.plugged():
+            vs_filters.render_input(varprefix, context)
+            return {"filters_html": html.drain()}
+
+
+@page_registry.register_page("ajax_initial_view_filters")
+class AjaxInitialViewFilters(ABCAjaxInitialFilters):
+    def _get_context(self, page_name: str) -> Dict:
+        # Obtain the visual filters and the view context
+        view_name = page_name
+        try:
+            view_spec = get_permitted_views()[view_name]
+        except KeyError:
+            raise MKUserError("view_name", _("The requested item %s does not exist") % view_name)
+
+        datasource = data_source_registry[view_spec["datasource"]]()
+        show_filters = visuals.filters_of_visual(view_spec,
+                                                 datasource.infos,
+                                                 link_filters=datasource.link_filters)
+        show_filters = visuals.visible_filters_of_visual(view_spec, show_filters)
+        view_context = view_spec.get("context", {})
+
+        # Return a visual filters dict filled with the view context values
+        return {
+            f.ident: view_context[f.ident] if f.ident in view_context else {}
+            for f in show_filters
+            if f.available()
+        }
 
 
 @cmk.gui.pages.register("view")

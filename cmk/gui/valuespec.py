@@ -2114,9 +2114,15 @@ class ListOfMultiple(ValueSpec):
         if html.request.var("%s_active" % varprefix):
             value = self.from_html_vars(varprefix)
 
+        sorted_idents: List[str] = []
+        for group in self._grouped_choices:
+            for ident, _vs in group.choices:
+                if ident in value and ident in self._choice_dict:
+                    sorted_idents.append(ident)
+
         # Save all selected items
         html.hidden_field('%s_active' % varprefix,
-                          ';'.join([k for k in value.keys() if k in self._choice_dict]),
+                          ';'.join(sorted_idents),
                           id_='%s_active' % varprefix,
                           add_var=True)
 
@@ -2124,10 +2130,8 @@ class ListOfMultiple(ValueSpec):
         html.open_table(id_="%s_table" % varprefix, class_=["valuespec_listof", extra_css])
         html.open_tbody()
 
-        for group in self._grouped_choices:
-            for ident, _vs in group.choices:
-                if ident in value:
-                    self.show_choice_row(varprefix, ident, value)
+        for ident in sorted_idents:
+            self.show_choice_row(varprefix, ident, value)
 
         html.close_tbody()
         html.close_table()

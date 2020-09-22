@@ -680,15 +680,9 @@ export function listofmultiple_del(varprefix, ident) {
         reset_button.disabled = false;
 }
 
-var g_initial_table_html = null;
-var g_initial_active_values = null;
-
-export function listofmultiple_init(varprefix) {
+export function listofmultiple_init(varprefix, was_submitted) {
     var table = document.getElementById(varprefix + "_table");
     var tbody = table.getElementsByTagName("tbody")[0];
-    var active = document.getElementById(varprefix + "_active");
-    g_initial_table_html = table.innerHTML;
-    g_initial_active_values = active.value;
 
     let choice_field = document.getElementById(varprefix + "_choice");
     if (choice_field)
@@ -699,40 +693,23 @@ export function listofmultiple_init(varprefix) {
     if (tbody.childNodes.length >= 1)
         table.parentNode.insertBefore(document.createElement("br"), table.nextSibling);
 
-    // Disable the reset button
+    // Disable the reset button if the form was not submitted yet
     let reset_button = document.getElementById(varprefix + "_reset");
-    if (reset_button)
-        reset_button.disabled = true;
-}
-
-export function listofmultiple_reset(varprefix) {
-    if (g_initial_table_html) {
-        let active = document.getElementById(varprefix + "_active");
-        let active_choices = active.value.split(";");
-        let i;
-        let choice;
-        for (i = 0; i < active_choices.length; i++) {
-            choice = document.getElementById(varprefix + "_add_" + active_choices[i]);
-            utils.remove_class(choice, "disabled");
-        }
-        let table = document.getElementById(varprefix + "_table");
-        active.value = g_initial_active_values;
-        table.innerHTML = g_initial_table_html;
-        listofmultiple_disable_selected_options(varprefix);
-
-        // Disable the reset button
-        let reset_button = document.getElementById(varprefix + "_reset");
+    if (reset_button && !was_submitted) {
         reset_button.disabled = true;
     }
 }
-
 
 // The <option> elements in the <select> field of the currently chosen
 // elements need to be disabled.
 function listofmultiple_disable_selected_options(varprefix)
 {
-    let active_choices = document.getElementById(varprefix + "_active").value.split(";");
+    let active = document.getElementById(varprefix + "_active");
+    if (active.value == "") {
+        return;
+    }
 
+    let active_choices = active.value.split(";");
     let choice_field = document.getElementById(varprefix + "_choice");
     let i;
     if (choice_field) {
@@ -960,4 +937,33 @@ function update_color_picker(varprefix, hex, update_picker) {
 
     if (update_picker)
         vs_color_pickers[varprefix].setHex(hex);
+}
+
+export function visual_filter_list_reset(varprefix, page_request_vars, page_name, reset_ajax_page) {
+    let request = {
+        "varprefix": varprefix,
+        "page_request_vars": page_request_vars,
+        "page_name": page_name
+    };
+    const post_data = "request=" + encodeURIComponent(JSON.stringify(request));
+
+    ajax.call_ajax(reset_ajax_page + ".py", {
+        method: "POST",
+        post_data: post_data,
+        handler_data: {
+            varprefix: varprefix
+        },
+        response_handler: function(handler_data, ajax_response) {
+            let response = JSON.parse(ajax_response);
+            const filters_html = response.result.filters_html;
+            let filter_list = document.getElementById(varprefix + "_popup_filter_list_selected");
+            filter_list.getElementsByClassName("simplebar-content")[0].innerHTML = filters_html;
+            utils.add_simplebar_scrollbar(varprefix + "_popup_filter_list");
+            listofmultiple_disable_selected_options(varprefix);
+        }
+    });
+
+    // Disable the reset button
+    let reset_button = document.getElementById(varprefix + "_reset");
+    reset_button.disabled = true;
 }

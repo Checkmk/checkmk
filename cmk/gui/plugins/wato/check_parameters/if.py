@@ -79,7 +79,8 @@ def transform_if(v):
     try:
         states.remove('9')
         removed_port_state_9 = True
-    except ValueError:
+    # AttributeError --> states = None --> means 'ignore the interface status'
+    except (ValueError, AttributeError):
         removed_port_state_9 = False
     # if only port state 9 was selected, a unique transform is possible
     if removed_port_state_9 and v.get('state') == []:

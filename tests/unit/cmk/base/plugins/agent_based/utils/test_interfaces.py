@@ -807,6 +807,31 @@ def test_check_single_interface_legacy_parameters_2(value_store, item, params, r
         ] + result[2:]
 
 
+@pytest.mark.parametrize('item, params, result', ITEM_PARAMS_RESULTS)
+def test_check_single_interface_ignore_state(value_store, item, params, result):
+    with pytest.raises(IgnoreResultsError):
+        list(
+            interfaces.check_single_interface(
+                item,
+                type_defs.Parameters({
+                    **params,
+                    'state': None,
+                }),
+                _create_interfaces(0, oper_status=4)[int(item) - 1],
+                timestamp=0,
+            ))
+    assert list(
+        interfaces.check_single_interface(
+            item,
+            type_defs.Parameters({
+                **params,
+                'state': None,
+            }),
+            _create_interfaces(4000000, oper_status=4)[int(item) - 1],
+            timestamp=5,
+        )) == result
+
+
 @pytest.mark.parametrize('item, params, result', [
     (
         ITEM_PARAMS_RESULTS[0][0],

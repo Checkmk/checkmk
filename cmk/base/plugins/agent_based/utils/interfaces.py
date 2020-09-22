@@ -939,7 +939,7 @@ def _transform_check_params(params: type_defs.Parameters) -> type_defs.Parameter
     try:
         states.remove('9')
         removed_port_state_9 = True
-    except ValueError:
+    except (ValueError, AttributeError):
         removed_port_state_9 = False
     if removed_port_state_9 and params_mutable.get('state') == []:
         del params_mutable['state']

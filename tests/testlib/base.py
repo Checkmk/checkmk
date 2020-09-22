@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import List, Tuple
 from pathlib import Path
 
 from testlib.utils import get_standard_linux_agent_output
@@ -12,13 +13,11 @@ import cmk.base.config as config
 import cmk.base.autochecks as autochecks
 import cmk.utils.tags
 
-KNOWN_AUTO_MIGRATION_FAILURES = [
+KNOWN_AUTO_MIGRATION_FAILURES: List[Tuple[str, str]] = [
     # this is a list of auto conversions currently
     # failing. These are used in various tests, to predict the
     # expected console output. In an ideal world, this list will (!)
     # be empty. If that is the case, please remove it entirely.
-    ('section', 'tsm_stagingpools'),
-    ('check', 'tsm_stagingpools'),
 ]
 
 

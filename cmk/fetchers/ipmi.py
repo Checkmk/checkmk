@@ -6,7 +6,7 @@
 
 import logging
 from types import TracebackType
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, Final, List, Optional, Type
 
 import pyghmi.constants as ipmi_const  # type: ignore[import]
 import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import]
@@ -27,14 +27,15 @@ class IPMIFetcher(AgentFetcher):
     def __init__(
         self,
         file_cache: DefaultAgentFileCache,
+        *,
         address: HostAddress,
         username: str,
         password: str,
     ) -> None:
         super().__init__(file_cache, logging.getLogger("cmk.fetchers.ipmi"))
-        self._address = address
-        self._username = username
-        self._password = password
+        self.address: Final = address
+        self.username: Final = username
+        self.password: Final = password
         self._command: Optional[ipmi_cmd.Command] = None
 
     @classmethod
@@ -71,12 +72,17 @@ class IPMIFetcher(AgentFetcher):
         return output
 
     def open(self) -> None:
-        self._logger.debug("Connecting to %s:623 (User: %s, Privlevel: 2)", self._address,
-                           self._username)
-        self._command = ipmi_cmd.Command(bmc=self._address,
-                                         userid=self._username,
-                                         password=self._password,
-                                         privlevel=2)
+        self._logger.debug(
+            "Connecting to %s:623 (User: %s, Privlevel: 2)",
+            self.address,
+            self.username,
+        )
+        self._command = ipmi_cmd.Command(
+            bmc=self.address,
+            userid=self.username,
+            password=self.password,
+            privlevel=2,
+        )
 
     def close(self) -> None:
         if self._command is None:

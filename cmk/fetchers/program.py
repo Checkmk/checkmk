@@ -9,7 +9,7 @@ import os
 import signal
 import subprocess
 from types import TracebackType
-from typing import Any, Dict, Optional, Type, Union
+from typing import Any, Dict, Final, Optional, Type, Union
 
 from six import ensure_binary, ensure_str
 
@@ -25,14 +25,15 @@ class ProgramFetcher(AgentFetcher):
     def __init__(
         self,
         file_cache: DefaultAgentFileCache,
+        *,
         cmdline: Union[bytes, str],
         stdin: Optional[str],
         is_cmc: bool,
     ) -> None:
         super().__init__(file_cache, logging.getLogger("cmk.fetchers.program"))
-        self._cmdline = cmdline
-        self._stdin = stdin
-        self._is_cmc = is_cmc
+        self.cmdline: Final = cmdline
+        self.stdin: Final = stdin
+        self.is_cmc: Final = is_cmc
         self._process: Optional[subprocess.Popen] = None
 
     @classmethod
@@ -43,12 +44,15 @@ class ProgramFetcher(AgentFetcher):
         )
 
     def __enter__(self) -> 'ProgramFetcher':
-        self._logger.debug("Calling: %s", self._cmdline)
-        if self._stdin:
-            self._logger.debug("STDIN (first 30 bytes): %s... (total %d bytes)", self._stdin[:30],
-                               len(self._stdin))
+        self._logger.debug("Calling: %s", self.cmdline)
+        if self.stdin:
+            self._logger.debug(
+                "STDIN (first 30 bytes): %s... (total %d bytes)",
+                self.stdin[:30],
+                len(self.stdin),
+            )
 
-        if self._is_cmc:
+        if self.is_cmc:
             # Warning:
             # The preexec_fn parameter is not safe to use in the presence of threads in your
             # application. The child process could deadlock before exec is called. If you
@@ -60,9 +64,9 @@ class ProgramFetcher(AgentFetcher):
             # the place of a previously common use of preexec_fn to call os.setsid() in the
             # child.
             self._process = subprocess.Popen(  # nosec
-                self._cmdline,
+                self.cmdline,
                 shell=True,
-                stdin=subprocess.PIPE if self._stdin else open(os.devnull),
+                stdin=subprocess.PIPE if self.stdin else open(os.devnull),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 start_new_session=True,
@@ -73,9 +77,9 @@ class ProgramFetcher(AgentFetcher):
             # Upon reaching the service_check_timeout Nagios only kills the process
             # group of the active check.
             self._process = subprocess.Popen(  # nosec
-                self._cmdline,
+                self.cmdline,
                 shell=True,
-                stdin=subprocess.PIPE if self._stdin else open(os.devnull),
+                stdin=subprocess.PIPE if self.stdin else open(os.devnull),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 close_fds=True,
@@ -106,9 +110,9 @@ class ProgramFetcher(AgentFetcher):
         if self._process is None:
             raise MKFetcherError("No process")
         stdout, stderr = self._process.communicate(
-            input=ensure_binary(self._stdin) if self._stdin else None)
+            input=ensure_binary(self.stdin) if self.stdin else None)
         if self._process.returncode == 127:
-            exepath = self._cmdline.split()[0]  # for error message, hide options!
+            exepath = self.cmdline.split()[0]  # for error message, hide options!
             raise MKFetcherError("Program '%s' not found (exit code 127)" % ensure_str(exepath))
         if self._process.returncode:
             raise MKFetcherError("Agent exited with code %d: %s" %

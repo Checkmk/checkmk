@@ -139,7 +139,12 @@ class TestIPMIFetcher:
         monkeypatch.setattr(IPMIFetcher, "open", lambda self: None)
 
         with pytest.raises(MKFetcherError):
-            with IPMIFetcher(file_cache, "127.0.0.1", "", ""):
+            with IPMIFetcher(
+                    file_cache,
+                    address="127.0.0.1",
+                    username="",
+                    password="",
+            ):
                 raise IpmiException()
 
     def test_parse_sensor_reading_standard_case(self):
@@ -300,19 +305,33 @@ class TestTCPFetcher:
     def test_fetcher_deserialization(self, fetcher):
         # TODO (ml): Probably we have to check here everything
         assert isinstance(fetcher, TCPFetcher)
-        assert isinstance(fetcher._address, tuple)
+        assert isinstance(fetcher.address, tuple)
 
     def test_decrypt_plaintext_is_noop(self, file_cache):
         settings = {"use_regular": "allow"}
         output = b"<<<section:sep(0)>>>\nbody\n"
-        fetcher = TCPFetcher(file_cache, socket.AF_INET, ("", 0), 0.0, settings, False)
+        fetcher = TCPFetcher(
+            file_cache,
+            family=socket.AF_INET,
+            address=("1.2.3.4", 0),
+            timeout=0.0,
+            encryption_settings=settings,
+            use_only_cache=False,
+        )
 
         assert fetcher._decrypt(output) == output
 
     def test_decrypt_plaintext_with_enforce_raises_MKFetcherError(self, file_cache):
         settings = {"use_regular": "enforce"}
         output = b"<<<section:sep(0)>>>\nbody\n"
-        fetcher = TCPFetcher(file_cache, socket.AF_INET, ("", 0), 0.0, settings, False)
+        fetcher = TCPFetcher(
+            file_cache,
+            family=socket.AF_INET,
+            address=("1.2.3.4", 0),
+            timeout=0.0,
+            encryption_settings=settings,
+            use_only_cache=False,
+        )
 
         with pytest.raises(MKFetcherError):
             fetcher._decrypt(output)
@@ -320,7 +339,14 @@ class TestTCPFetcher:
     def test_decrypt_payload_with_wrong_protocol_raises_MKFetcherError(self, file_cache):
         settings = {"use_regular": "enforce"}
         output = b"the first two bytes are not a number"
-        fetcher = TCPFetcher(file_cache, socket.AF_INET, ("", 0), 0.0, settings, False)
+        fetcher = TCPFetcher(
+            file_cache,
+            family=socket.AF_INET,
+            address=("1.2.3.4", 0),
+            timeout=0.0,
+            encryption_settings=settings,
+            use_only_cache=False,
+        )
 
         with pytest.raises(MKFetcherError):
             fetcher._decrypt(output)
@@ -355,11 +381,11 @@ class TestFetcherCaching:
         # We use the TCPFetcher to test a general feature of the fetchers.
         return TCPFetcher(
             StubFileCache.from_json(file_cache.to_json()),
-            socket.AF_INET,
-            ("", 0),
-            0.0,
-            {},
-            False,
+            family=socket.AF_INET,
+            address=("1.2.3.4", 0),
+            timeout=0.0,
+            encryption_settings={},
+            use_only_cache=False,
         )
 
     @pytest.fixture(autouse=True)

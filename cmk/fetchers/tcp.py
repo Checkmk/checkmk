@@ -8,7 +8,7 @@ import logging
 import socket
 from hashlib import md5, sha256
 from types import TracebackType
-from typing import Any, Dict, List, Optional, Tuple, Type
+from typing import Any, Dict, Final, List, Mapping, Optional, Tuple, Type
 
 from Cryptodome.Cipher import AES
 
@@ -25,24 +25,27 @@ class TCPFetcher(AgentFetcher):
     def __init__(
         self,
         file_cache: DefaultAgentFileCache,
+        *,
         family: socket.AddressFamily,
-        address: Tuple[HostAddress, int],
+        address: Tuple[Optional[HostAddress], int],
         timeout: float,
-        encryption_settings: Dict[str, str],
+        encryption_settings: Mapping[str, str],
         use_only_cache: bool,
     ) -> None:
         super().__init__(file_cache, logging.getLogger("cmk.fetchers.tcp"))
-        self._family = socket.AddressFamily(family)
+        self.family: Final = socket.AddressFamily(family)
         # json has no builtin tuple, we have to convert
-        self._address = tuple(address) if isinstance(address, list) else address
-        self._timeout = timeout
-        self._encryption_settings = encryption_settings
-        self._use_only_cache = use_only_cache
+        verify_ipaddress(address[0])
+        assert address[0] is not None
+        self.address: Final[Tuple[HostAddress, int]] = (address[0], address[1])
+        self.timeout: Final = timeout
+        self.encryption_settings: Final = encryption_settings
+        self.use_only_cache: Final = use_only_cache
         self._socket: Optional[socket.socket] = None
 
     @classmethod
     def from_json(cls, serialized: Dict[str, Any]) -> "TCPFetcher":
-        address = serialized.pop("address")
+        address: Tuple[Optional[HostAddress], int] = serialized.pop("address")
         return cls(
             DefaultAgentFileCache.from_json(serialized.pop("file_cache")),
             address=address,
@@ -50,13 +53,16 @@ class TCPFetcher(AgentFetcher):
         )
 
     def __enter__(self) -> 'TCPFetcher':
-        verify_ipaddress(self._address[0])
-        self._logger.debug("Connecting via TCP to %s:%d (%ss timeout)", self._address[0],
-                           self._address[1], self._timeout)
-        self._socket = socket.socket(self._family, socket.SOCK_STREAM)
+        self._logger.debug(
+            "Connecting via TCP to %s:%d (%ss timeout)",
+            self.address[0],
+            self.address[1],
+            self.timeout,
+        )
+        self._socket = socket.socket(self.family, socket.SOCK_STREAM)
         try:
-            self._socket.settimeout(self._timeout)
-            self._socket.connect(self._address)
+            self._socket.settimeout(self.timeout)
+            self._socket.connect(self.address)
             self._socket.settimeout(None)
         except socket.error:
             self._socket.close()
@@ -65,7 +71,7 @@ class TCPFetcher(AgentFetcher):
 
     def __exit__(self, exc_type: Optional[Type[BaseException]], exc_value: Optional[BaseException],
                  traceback: Optional[TracebackType]) -> None:
-        self._logger.debug("Closing TCP connection to %s:%d", self._address[0], self._address[1])
+        self._logger.debug("Closing TCP connection to %s:%d", self.address[0], self.address[1])
         if self._socket is not None:
             self._socket.close()
         self._socket = None
@@ -74,7 +80,7 @@ class TCPFetcher(AgentFetcher):
         return mode is not Mode.CHECKING
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
-        if self._use_only_cache:
+        if self.use_only_cache:
             raise MKFetcherError("Got no data: No usable cache file present at %s" %
                                  self.file_cache.path)
         if self._socket is None:
@@ -106,12 +112,12 @@ class TCPFetcher(AgentFetcher):
     def _decrypt(self, output: AgentRawData) -> AgentRawData:
         if output.startswith(b"<<<"):
             self._logger.debug("Output is not encrypted")
-            if self._encryption_settings["use_regular"] == "enforce":
+            if self.encryption_settings["use_regular"] == "enforce":
                 raise MKFetcherError(
                     "Agent output is plaintext but encryption is enforced by configuration")
             return output
 
-        if self._encryption_settings["use_regular"] not in ["enforce", "allow"]:
+        if self.encryption_settings["use_regular"] not in ["enforce", "allow"]:
             self._logger.debug("Output is not encrypted")
             return output
 
@@ -121,7 +127,7 @@ class TCPFetcher(AgentFetcher):
         except MKFetcherError:
             raise
         except Exception as e:
-            if self._encryption_settings["use_regular"] == "enforce":
+            if self.encryption_settings["use_regular"] == "enforce":
                 raise MKFetcherError("Failed to decrypt agent output: %s" % e)
 
             # of course the package might indeed have been encrypted but
@@ -129,7 +135,7 @@ class TCPFetcher(AgentFetcher):
             # In this case processing the output will fail
 
         if not output:  # may be caused by xinetd not allowing our address
-            raise MKFetcherError("Empty output from agent at %s:%d" % self._address)
+            raise MKFetcherError("Empty output from agent at %s:%d" % self.address)
         if len(output) < 16:
             raise MKFetcherError("Too short output from agent: %r" % output)
         return output
@@ -142,7 +148,7 @@ class TCPFetcher(AgentFetcher):
         except ValueError:
             raise MKFetcherError("Unsupported protocol version: %r" % output[:2])
         encrypted_pkg = output[2:]
-        encryption_key = self._encryption_settings["passphrase"]
+        encryption_key = self.encryption_settings["passphrase"]
 
         encrypt_digest = sha256 if protocol == 2 else md5
 

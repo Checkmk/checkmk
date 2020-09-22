@@ -27,6 +27,9 @@ from cmk.gui.plugins.webapi import validate_host_attributes
 from cmk.gui.plugins.openapi.endpoints.utils import verify_group_exist
 from cmk.gui.watolib.timeperiods import verify_timeperiod_name_exists
 from cmk.gui.watolib.groups import is_alias_used
+from cmk.gui.watolib.passwords import password_exists, contact_group_choices
+
+import cmk.gui.config as config
 
 
 class InputAttribute(BaseSchema):
@@ -840,6 +843,202 @@ class CreateDowntime(OneOfSchema):
         'service': CreateServiceDowntime,
         'servicegroup': CreateServiceGroupDowntime,
     }
+
+
+class PasswordIdent(fields.String):
+    """A field representing a password identifier"""
+
+    default_error_messages = {
+        'should_exist': 'Identifier missing: {name!r}',
+        'should_not_exist': 'Identifier {name!r} already exists.',
+    }
+
+    def __init__(
+        self,
+        example,
+        required=True,
+        validate=None,
+        should_exist: bool = True,
+        **kwargs,
+    ):
+        self._should_exist = should_exist
+        super().__init__(
+            example=example,
+            required=required,
+            validate=validate,
+            **kwargs,
+        )
+
+    def _validate(self, value):
+        super()._validate(value)
+
+        exists = password_exists(value)
+        if self._should_exist and not exists:
+            self.fail("should_exist", name=value)
+        elif not self._should_exist and exists:
+            self.fail("should_not_exist", name=value)
+
+
+class PasswordOwner(fields.String):
+    """A field representing a password owner group"""
+
+    default_error_messages = {
+        'invalid': 'Specified owner value is not valid: {name!r}',
+    }
+
+    def __init__(
+        self,
+        example,
+        required=True,
+        validate=None,
+        **kwargs,
+    ):
+        super().__init__(
+            example=example,
+            required=required,
+            validate=validate,
+            **kwargs,
+        )
+
+    def _validate(self, value):
+        """Verify if the specified owner is valid for the logged-in user
+
+        Non-admin users cannot specify admin as the owner
+
+        """
+        super()._validate(value)
+        permitted_owners = [group[0] for group in contact_group_choices(only_own=True)]
+        if config.user.may("wato.edit_all_passwords"):
+            permitted_owners.append("admin")
+
+        if value not in permitted_owners:
+            self.fail("invalid", name=value)
+
+
+class PasswordShare(fields.String):
+    """A field representing a password share group"""
+
+    default_error_messages = {
+        'invalid': 'The password cannot be shared with specified group: {name!r}',
+    }
+
+    def __init__(
+        self,
+        example,
+        required=True,
+        validate=None,
+        **kwargs,
+    ):
+        super().__init__(
+            example=example,
+            required=required,
+            validate=validate,
+            **kwargs,
+        )
+
+    def _validate(self, value):
+        super()._validate(value)
+        shareable_groups = [group[0] for group in contact_group_choices()]
+        if value not in ["all", *shareable_groups]:
+            self.fail("invalid", name=value)
+
+
+class InputPassword(BaseSchema):
+    ident = PasswordIdent(
+        example="pass",
+        description="An unique identifier for the password",
+        should_exist=False,
+    )
+    title = fields.String(
+        required=True,
+        example="Kubernetes login",
+        description="A title for the password",
+    )
+    comment = fields.String(required=False,
+                            example="Kommentar",
+                            description="A comment for the password",
+                            missing="")
+
+    documentation_url = fields.String(
+        required=False,
+        attribute="docu_url",
+        example="localhost",
+        description=
+        "An optional URL pointing to documentation or any other page. You can use either global URLs (beginning with http://), absolute local urls (beginning with /) or relative URLs (that are relative to check_mk/).",
+        missing="",
+    )
+
+    password = fields.String(
+        required=True,
+        example="password",
+        description="The password string",
+    )
+
+    owner = PasswordOwner(
+        example="admin",
+        description=
+        "Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
+        required=True,
+        attribute="owned_by",
+    )
+
+    shared = fields.List(
+        PasswordShare(
+            example="all",
+            description=
+            "By default only the members of the owner contact group are permitted to use a a configured password. It is possible to share a password with other groups of users to make them able to use a password in checks.",
+        ),
+        example=["all"],
+        description="The list of members to share the password with",
+        required=False,
+        attribute="shared_with",
+        missing=[],
+    )
+
+
+class UpdatePassword(BaseSchema):
+    title = fields.String(
+        required=False,
+        example="Kubernetes login",
+        description="A title for the password",
+    )
+
+    comment = fields.String(
+        required=False,
+        example="Kommentar",
+        description="A comment for the password",
+    )
+
+    documentation_url = fields.String(
+        required=False,
+        attribute="docu_url",
+        example="localhost",
+        description=
+        "An optional URL pointing to documentation or any other page. You can use either global URLs (beginning with http://), absolute local urls (beginning with /) or relative URLs (that are relative to check_mk/).",
+    )
+
+    password = fields.String(
+        required=False,
+        example="password",
+        description="The password string",
+    )
+
+    owner = PasswordOwner(
+        example="admin",
+        description=
+        "Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
+        required=False,
+        attribute="owned_by")
+
+    shared = fields.List(PasswordShare(
+        example="all",
+        description=
+        "By default only the members of the owner contact group are permitted to use a a configured password. It is possible to share a password with other groups of users to make them able to use a password in checks.",
+    ),
+                         example=["all"],
+                         description="The list of members to share the password with",
+                         required=False,
+                         attribute="shared_with")
 
 
 class AcknowledgeHostProblem(BaseSchema):

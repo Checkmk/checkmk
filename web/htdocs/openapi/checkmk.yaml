@@ -518,6 +518,45 @@ components:
       - $ref: '#/components/schemas/Link'
       properties: {}
       type: object
+    ConcretePassword:
+      properties:
+        ident:
+          description: The unique identifier for the password
+          example: pass
+          type: string
+        title:
+          description: The title for the password
+          example: Kubernetes login
+          type: string
+        comment:
+          description: A comment for the password
+          example: Kommentar
+          type: string
+        documentation_url:
+          description: The URL pointing to documentation or any other page.
+          example: localhost
+          type: string
+        password:
+          description: The password string
+          example: password
+          type: string
+        owner:
+          description: The owner of the password who is able to edit, delete and use
+            existing passwords.
+          example: admin
+          type: string
+        shared:
+          description: The list of members the password is shared with
+          example:
+          - all
+          items:
+            description: The member the password is shared with
+            example: all
+            type: string
+          type: array
+      required:
+      - password
+      type: object
     ConcreteTimePeriod:
       properties:
         alias:
@@ -1140,6 +1179,56 @@ components:
       required:
       - name
       type: object
+    InputPassword:
+      properties:
+        ident:
+          description: An unique identifier for the password
+          example: pass
+          type: string
+        title:
+          description: A title for the password
+          example: Kubernetes login
+          type: string
+        comment:
+          default: ''
+          description: A comment for the password
+          example: Kommentar
+          type: string
+        documentation_url:
+          default: ''
+          description: An optional URL pointing to documentation or any other page.
+            You can use either global URLs (beginning with http://), absolute local
+            urls (beginning with /) or relative URLs (that are relative to check_mk/).
+          example: localhost
+          type: string
+        password:
+          description: The password string
+          example: password
+          type: string
+        owner:
+          description: Each password is owned by a group of users which are able to
+            edit, delete and use existing passwords.
+          example: admin
+          type: string
+        shared:
+          default: []
+          description: The list of members to share the password with
+          example:
+          - all
+          items:
+            description: By default only the members of the owner contact group are
+              permitted to use a a configured password. It is possible to share a
+              password with other groups of users to make them able to use a password
+              in checks.
+            example: all
+            type: string
+          type: array
+      required:
+      - ident
+      - owner
+      - password
+      - title
+      type: object
     InputServiceGroup:
       properties:
         name:
@@ -1578,6 +1667,44 @@ components:
           type: string
       required:
       - name
+      type: object
+    UpdatePassword:
+      properties:
+        title:
+          description: A title for the password
+          example: Kubernetes login
+          type: string
+        comment:
+          description: A comment for the password
+          example: Kommentar
+          type: string
+        documentation_url:
+          description: An optional URL pointing to documentation or any other page.
+            You can use either global URLs (beginning with http://), absolute local
+            urls (beginning with /) or relative URLs (that are relative to check_mk/).
+          example: localhost
+          type: string
+        password:
+          description: The password string
+          example: password
+          type: string
+        owner:
+          description: Each password is owned by a group of users which are able to
+            edit, delete and use existing passwords.
+          example: admin
+          type: string
+        shared:
+          description: The list of members to share the password with
+          example:
+          - all
+          items:
+            description: By default only the members of the owner contact group are
+              permitted to use a a configured password. It is possible to share a
+              password with other groups of users to make them able to use a password
+              in checks.
+            example: all
+            type: string
+          type: array
       type: object
     UpdateServiceGroup:
       properties:
@@ -5149,6 +5276,247 @@ paths:
           \ application/json\" \\\n    entries='[{\"name\": \"windows\", \"attributes\"\
           : {\"name\": \"windows updated\", \"alias\": \"Windows Servers\"}}]' \\\n\
           \    --json"
+  /domain-types/password/collections/all:
+    post:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.password.create_password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InputPassword'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+          headers: {}
+      summary: Create a password
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.password
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/password/collections/all\"\
+          ,\n    json={\n        'ident': 'pass',\n        'title': 'Kubernetes login',\n\
+          \        'comment': 'Kommentar',\n        'documentation_url': 'localhost',\n\
+          \        'password': 'password',\n        'owner': 'admin',\n        'shared':\
+          \ ['all']\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/password/collections/all\",\n    method=\"\
+          POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
+          \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
+          \ data=json.dumps({\n        'ident': 'pass',\n        'title': 'Kubernetes\
+          \ login',\n        'comment': 'Kommentar',\n        'documentation_url':\
+          \ 'localhost',\n        'password': 'password',\n        'owner': 'admin',\n\
+          \        'shared': ['all']\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\ \\\n    --data '{\n          \"comment\": \"Kommentar\",\n        \
+          \  \"documentation_url\": \"localhost\",\n          \"ident\": \"pass\"\
+          ,\n          \"owner\": \"admin\",\n          \"password\": \"password\"\
+          ,\n          \"shared\": [\n            \"all\"\n          ],\n        \
+          \  \"title\": \"Kubernetes login\"\n        }' \\\n    \"$API_URL/domain-types/password/collections/all\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/password/collections/all\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    comment='Kommentar' \\\n    documentation_url='localhost'\
+          \ \\\n    ident='pass' \\\n    owner='admin' \\\n    password='password'\
+          \ \\\n    shared='[\"all\"]' \\\n    title='Kubernetes login' \\\n    --json"
+  /objects/password/{name}:
+    delete:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.password.delete_password
+      parameters:
+      - $ref: '#/components/parameters/name'
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+          headers: {}
+      summary: Delete a password
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.password
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.delete(\n    f\"{API_URL}/objects/password/pathname\"\
+          ,\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/objects/password/pathname\",\n    method=\"DELETE\",\n\
+          \    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
+          ,\n        \"Accept\": \"application/json\",\n    },\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\\n    \"$API_URL/objects/password/pathname\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/objects/password/pathname\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    --json"
+    get:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.password.show_password
+      parameters:
+      - $ref: '#/components/parameters/name'
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConcretePassword'
+          description: ''
+          headers: {}
+      summary: Show a password
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.password
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/objects/password/pathname\"\
+          ,\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/objects/password/pathname\",\n    method=\"GET\",\n  \
+          \  headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
+          ,\n        \"Accept\": \"application/json\",\n    },\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\\n    \"$API_URL/objects/password/pathname\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/objects/password/pathname\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    --json"
+    put:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.password.update_password
+      parameters:
+      - $ref: '#/components/parameters/name'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePassword'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+          headers: {}
+      summary: Update a password
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.password
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/password/pathname\"\
+          ,\n    json={\n        'title': 'Kubernetes login',\n        'comment':\
+          \ 'Kommentar',\n        'documentation_url': 'localhost',\n        'password':\
+          \ 'password',\n        'owner': 'admin',\n        'shared': ['all']\n  \
+          \  },\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/objects/password/pathname\",\n    method=\"PUT\",\n  \
+          \  headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
+          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({\n\
+          \        'title': 'Kubernetes login',\n        'comment': 'Kommentar',\n\
+          \        'documentation_url': 'localhost',\n        'password': 'password',\n\
+          \        'owner': 'admin',\n        'shared': ['all']\n    }).encode('utf-8'),\n\
+          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\ \\\n    --data '{\n          \"comment\": \"Kommentar\",\n        \
+          \  \"documentation_url\": \"localhost\",\n          \"owner\": \"admin\"\
+          ,\n          \"password\": \"password\",\n          \"shared\": [\n    \
+          \        \"all\"\n          ],\n          \"title\": \"Kubernetes login\"\
+          \n        }' \\\n    \"$API_URL/objects/password/pathname\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/password/pathname\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    comment='Kommentar' \\\n    documentation_url='localhost'\
+          \ \\\n    owner='admin' \\\n    password='password' \\\n    shared='[\"\
+          all\"]' \\\n    title='Kubernetes login' \\\n    --json"
   /objects/host/{host_name}/collections/services:
     get:
       description: ''
@@ -7462,6 +7830,14 @@ tags:
     showReadOnly={true} showWriteOnly={true} />
   name: BulkUpdateHostGroup
   x-displayName: Bulk update host groups
+- name: cmk.gui.plugins.openapi.endpoints.password
+  x-displayName: Passwords
+- description: <SchemaDefinition schemaRef="#/components/schemas/InputPassword" showReadOnly={true}
+    showWriteOnly={true} />
+  name: InputPassword
+- description: <SchemaDefinition schemaRef="#/components/schemas/UpdatePassword" showReadOnly={true}
+    showWriteOnly={true} />
+  name: UpdatePassword
 - name: cmk.gui.plugins.openapi.endpoints.service
   x-displayName: Service status endpoints
 - name: cmk.gui.plugins.openapi.endpoints.service_discovery
@@ -7516,6 +7892,7 @@ x-tagGroups:
   - cmk.gui.plugins.openapi.endpoints.host
   - cmk.gui.plugins.openapi.endpoints.host_config
   - cmk.gui.plugins.openapi.endpoints.host_group_config
+  - cmk.gui.plugins.openapi.endpoints.password
   - cmk.gui.plugins.openapi.endpoints.service
   - cmk.gui.plugins.openapi.endpoints.service_discovery
   - cmk.gui.plugins.openapi.endpoints.service_group_config
@@ -7550,6 +7927,8 @@ x-tagGroups:
   - BulkInputHostGroup
   - BulkDeleteHostGroup
   - BulkUpdateHostGroup
+  - InputPassword
+  - UpdatePassword
   - InputServiceGroup
   - BulkInputServiceGroup
   - BulkDeleteServiceGroup

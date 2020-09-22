@@ -425,6 +425,46 @@ class ConcreteTimePeriod(BaseSchema):
     )
 
 
+class ConcretePassword(BaseSchema):
+    ident = fields.String(
+        example="pass",
+        description="The unique identifier for the password",
+    )
+    title = fields.String(
+        example="Kubernetes login",
+        description="The title for the password",
+    )
+    comment = fields.String(
+        example="Kommentar",
+        description="A comment for the password",
+    )
+
+    documentation_url = fields.String(
+        example="localhost",
+        description="The URL pointing to documentation or any other page.",
+    )
+
+    password = fields.String(
+        required=True,
+        example="password",
+        description="The password string",
+    )
+
+    owner = fields.String(
+        example="admin",
+        description=
+        "The owner of the password who is able to edit, delete and use existing passwords.")
+
+    shared = fields.List(
+        fields.String(
+            example="all",
+            description="The member the password is shared with",
+        ),
+        example=["all"],
+        description="The list of members the password is shared with",
+    )
+
+
 class InstalledVersions(BaseSchema):
     site = fields.String(description="The site where this API call was made on.",
                          example="production")

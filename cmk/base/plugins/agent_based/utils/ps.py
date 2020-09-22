@@ -22,6 +22,7 @@ from ..agent_based_api.v1 import (
     get_average,
     get_rate,
     get_value_store,
+    HostLabel,
     IgnoreResultsError,
     Metric,
     regex,
@@ -72,8 +73,7 @@ def host_labels_ps(
             matches = process_matches(command_line, pattern)
             if not matches:
                 continue  # skip not matched lines
-
-            yield from labels.values()
+            yield from (HostLabel(*item) for item in labels.items())
 
 
 def minn(a, b):

@@ -221,4 +221,5 @@ register.agent_section(
     parsed_section_name="ps",
     parse_function=parse_ps_lnx,
     host_label_function=ps.host_labels_ps,
+    supersedes=['ps'],
 )

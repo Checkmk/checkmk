@@ -8,7 +8,7 @@ import abc
 import logging
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Dict, Final, Generic, Optional, Type, TypeVar, Union
+from typing import Any, Dict, final, Final, Generic, Optional, Type, TypeVar, Union
 
 import cmk.utils
 import cmk.utils.store as store
@@ -144,6 +144,7 @@ class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
         """Decide whether to try to read data from cache"""
         raise NotImplementedError()
 
+    @final
     def fetch(self, mode: Mode) -> Result[TRawData, Exception]:
         """Return the data from the source, either cached or from IO."""
         try:

@@ -8,7 +8,7 @@ import abc
 import logging
 import sys
 from pathlib import Path
-from typing import Any, Dict, Final, Generic, Optional, TypeVar, Union
+from typing import Any, Dict, final, Final, Generic, Optional, TypeVar, Union
 
 import cmk.utils
 import cmk.utils.debug
@@ -212,6 +212,7 @@ class ABCParser(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         self.host_config = config.HostConfig.make_host_config(self.hostname)
         self._logger = logger
 
+    @final
     def parse(
         self,
         raw_data: Result[TRawData, Exception],
@@ -278,6 +279,7 @@ class FileCacheConfigurer:
     def reset_maybe(cls):
         cls.maybe = not cls.disabled
 
+    @final
     def configure(self) -> Dict[str, Any]:
         disabled = self.disabled
         if self.fetcher_type is FetcherType.SNMP:
@@ -358,10 +360,12 @@ class ABCSource(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
             self.id,
         )
 
+    @final
     def fetch(self) -> Result[TRawData, Exception]:
         with self._make_fetcher() as fetcher:
             return fetcher.fetch(self.mode)
 
+    @final
     @cpu_tracking.track
     def parse(self, raw_data: Result[TRawData, Exception]) -> Result[THostSections, Exception]:
         try:
@@ -381,6 +385,7 @@ class ABCSource(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
                 raise
             return Result.Error(exc)
 
+    @final
     def summarize(self, host_sections: Result[THostSections, Exception]) -> ServiceCheckResult:
         return self._make_summarizer().summarize(host_sections)
 
@@ -430,6 +435,7 @@ class ABCSummarizer(Generic[THostSections], metaclass=abc.ABCMeta):
         super().__init__()
         self.exit_spec: Final[config.ExitSpec] = exit_spec
 
+    @final
     def summarize(
         self,
         host_sections: Result[THostSections, Exception],

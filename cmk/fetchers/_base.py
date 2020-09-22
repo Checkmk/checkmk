@@ -126,19 +126,23 @@ class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def from_json(cls: Type[TFetcher], serialized: Dict[str, Any]) -> TFetcher:
         """Deserialize from JSON."""
+        raise NotImplementedError()
 
     @abc.abstractmethod
     def __enter__(self) -> 'ABCFetcher':
         """Prepare the data source."""
+        raise NotImplementedError()
 
     @abc.abstractmethod
     def __exit__(self, exc_type: Optional[Type[BaseException]], exc_value: Optional[BaseException],
                  traceback: Optional[TracebackType]) -> Optional[bool]:
         """Destroy the data source."""
+        raise NotImplementedError()
 
     @abc.abstractmethod
     def _use_cached_data(self, mode: Mode) -> bool:
         """Decide whether to try to read data from cache"""
+        raise NotImplementedError()
 
     def fetch(self, mode: Mode) -> Result[TRawData, Exception]:
         """Return the data from the source, either cached or from IO."""
@@ -163,6 +167,7 @@ class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def _fetch_from_io(self, mode: Mode) -> TRawData:
         """Override this method to contact the source and return the raw data."""
+        raise NotImplementedError()
 
     def _fetch_from_cache(self) -> Optional[TRawData]:
         return self.file_cache.read()

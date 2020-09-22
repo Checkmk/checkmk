@@ -23,10 +23,10 @@ def agent_jenkins_arguments(params, hostname, ipaddress):
     ]
 
     if "sections" in params:
-        args += ["-m", params["sections"]]
+        args += ["-m", " ".join(params["sections"])]
     #compatibility with extension package format 1.6
     elif "infos" in params:
-        args += ["-m", params["infos"]]
+        args += ["-m", " ".join(params["infos"])]
 
     if "port" in params:
         args += ["-p", params["port"]]

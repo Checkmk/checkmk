@@ -2186,7 +2186,7 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                 ("cmciii_lcp_airout", _("Rittal CMC-III LCP: Air Out Temperature")),
                 ("cmciii_lcp_water", _("Rittal CMC-III LCP: Water In/Out Temperature")),
                 ("cmk_inventory", _("Monitor hosts for unchecked services (Checkmk Discovery)")),
-                ("dbd2_mem", _("Memory levels for DB2 memory usage")),
+                ("dbd2_mem", _("DB2 memory usage")),
                 ("df", _("Used space in filesystems")),
                 ("df_netapp", _("NetApp Filers: Used Space in Filesystems")),
                 ("df_netapp32", _("NetApp Filers: Used space in Filesystem Using 32-Bit Counters")),

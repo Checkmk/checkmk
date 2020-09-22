@@ -217,5 +217,5 @@ rulespec_registry.register(
         item_spec=lambda: TextAscii(title=_("Name of the monitoring site"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_livestatus_status,
-        title=lambda: _("Performance and settings of a Checkmk site"),
+        title=lambda: _("Checkmk site performance and settings"),
     ))

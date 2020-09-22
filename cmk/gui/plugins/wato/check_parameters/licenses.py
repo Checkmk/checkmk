@@ -80,7 +80,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         item_spec=_item_spec_esx_licenses,
         parameter_valuespec=_vs_license,
-        title=lambda: _("Number of used VMware licenses"),
+        title=lambda: _("VMware licenses"),
     ))
 
 
@@ -97,7 +97,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         item_spec=_item_spec_ibmsvc_licenses,
         parameter_valuespec=_vs_license,
-        title=lambda: _("Number of used IBM SVC licenses"),
+        title=lambda: _("IBM SVC licenses"),
     ))
 
 

@@ -17,6 +17,7 @@ from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     Levels,
+    RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersStorage,
     HostRulespec,
 )
@@ -25,7 +26,7 @@ from cmk.gui.plugins.wato import (
 def _valuespec_diskstat_inventory():
     return Transform(
         Dictionary(
-            title=_("Discovery mode for Disk IO check"),
+            title=_("Disk IO discovery"),
             help=_("This rule controls which and how many checks will be created "
                    "for monitoring individual physical and logical disks. "
                    "Note: the option <i>Create a summary for all read, one for "
@@ -71,7 +72,7 @@ def _valuespec_diskstat_inventory():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupCheckParametersStorage,
+        group=RulespecGroupCheckParametersDiscovery,
         name="diskstat_inventory",
         valuespec=_valuespec_diskstat_inventory,
     ))
@@ -156,5 +157,5 @@ rulespec_registry.register(
         item_spec=_item_spec_diskstat,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_diskstat,
-        title=lambda: _("Levels for disk IO"),
+        title=lambda: _("Disk IO levels"),
     ))

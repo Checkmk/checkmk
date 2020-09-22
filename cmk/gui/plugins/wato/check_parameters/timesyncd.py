@@ -76,5 +76,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersOperatingSystem,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_timesyncd_time,
-        title=lambda: _("State of Systemd Timesyncd time synchronisation"),
+        title=lambda: _("Systemd Timesyncd time synchronisation"),
     ))

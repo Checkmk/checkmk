@@ -102,5 +102,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersPrinters,
         item_spec=lambda: TextAscii(title=_("Printer Name"), allow_empty=True),
         parameter_valuespec=_parameter_valuespec_windows_printer_queues,
-        title=lambda: _("Number of open jobs of a printer on windows"),
+        title=lambda: _("Windows printers: number of open jobs"),
     ))

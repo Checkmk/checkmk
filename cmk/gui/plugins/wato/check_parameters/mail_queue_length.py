@@ -32,5 +32,5 @@ rulespec_registry.register(
         item_spec=lambda: TextAscii(title=_("Mail queue name")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mail_queue_length,
-        title=lambda: _("Number of mails in outgoing mail queue"),
+        title=lambda: _("Mails in outgoing mail queue"),
     ))

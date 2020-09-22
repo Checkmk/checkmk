@@ -86,7 +86,7 @@ rulespec_registry.register(
         item_spec=lambda: TextAscii(title=_("Name of the database"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_db_connections,
-        title=lambda: _("Database Connections (PostgreSQL)"),
+        title=lambda: _("PostgreSQL database connections"),
     ))
 
 
@@ -122,5 +122,5 @@ rulespec_registry.register(
         item_spec=lambda: TextAscii(title=_("Name of the database"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_db_connections_mongodb,
-        title=lambda: _("Database Connections (MongoDB)"),
+        title=lambda: _("MongoDB database connections"),
     ))

@@ -63,5 +63,5 @@ rulespec_registry.register(
         item_spec=_item_spec_hyperv_vms,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_hyperv_vms,
-        title=lambda: _("State of Microsoft Hyper-V Server VMs"),
+        title=lambda: _("Microsoft Hyper-V Server VM state"),
     ))

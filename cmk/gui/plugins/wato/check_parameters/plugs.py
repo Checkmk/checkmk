@@ -64,5 +64,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersEnvironment,
         item_spec=_item_spec_plugs,
         parameter_valuespec=_parameter_valuespec_plugs,
-        title=lambda: _("State of PDU Plugs"),
+        title=lambda: _("PDU Plug state"),
     ))

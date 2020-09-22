@@ -103,5 +103,5 @@ rulespec_registry.register(
         item_spec=lambda: TextAscii(title="Port index"),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ddn_s2a_port_errors,
-        title=lambda: _("Port errors of DDN S2A devices"),
+        title=lambda: _("DDN S2A port errors"),
     ))

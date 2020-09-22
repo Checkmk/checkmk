@@ -45,5 +45,5 @@ rulespec_registry.register(
         item_spec=lambda: TextAscii(title=_("Name of the bonding interface")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_bonding,
-        title=lambda: _("Status of Linux bonding interfaces"),
+        title=lambda: _("Linux bonding interface status"),
     ))

@@ -44,5 +44,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersEnvironment,
         item_spec=_item_spec_siemens_plc_flag,
         parameter_valuespec=_parameter_valuespec_siemens_plc_flag,
-        title=lambda: _("State of Siemens PLC Flags"),
+        title=lambda: _("Siemens PLC Flag state"),
     ))

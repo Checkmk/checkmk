@@ -64,5 +64,5 @@ rulespec_registry.register(
         is_deprecated=True,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mailqueue_length,
-        title=lambda: _("Number of mails in outgoing mail queue"),
+        title=lambda: _("Mails in outgoing mail queue"),
     ))

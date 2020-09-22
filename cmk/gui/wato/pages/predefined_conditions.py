@@ -21,7 +21,7 @@ from cmk.gui.valuespec import (
     Transform,
 )
 
-from cmk.gui.plugins.wato.check_mk_configuration import RulespecGroupUserInterface
+from cmk.gui.plugins.wato.check_mk_configuration import RulespecGroupMonitoringConfiguration
 from cmk.gui.wato.pages.rulesets import VSExplicitConditions, RuleConditions
 from cmk.gui.watolib.rulesets import AllRulesets, SearchedRulesets, FolderRulesets
 from cmk.gui.watolib.hosts_and_folders import Folder
@@ -41,7 +41,7 @@ from cmk.gui.plugins.wato import (
 def dummy_rulespec() -> ServiceRulespec:
     return ServiceRulespec(
         name="dummy",
-        group=RulespecGroupUserInterface,
+        group=RulespecGroupMonitoringConfiguration,
         valuespec=lambda: FixedValue(None),
     )
 

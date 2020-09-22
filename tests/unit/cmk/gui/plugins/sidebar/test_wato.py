@@ -90,7 +90,6 @@ def expected_items() -> Dict[str, List[str]]:
             'predefined_conditions',
             'timeperiods',
             'passwords',
-            'wato.py?mode=rulesets&group=user_interface',
             'sites',
             'auditlog',
             'icons',

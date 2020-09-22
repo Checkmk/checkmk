@@ -4018,21 +4018,6 @@ rulespec_registry.register(
 #   '----------------------------------------------------------------------'
 
 
-@rulespec_group_registry.register
-class RulespecGroupUserInterface(RulespecGroup):
-    @property
-    def name(self):
-        return "user_interface"
-
-    @property
-    def title(self):
-        return _("User Interface")
-
-    @property
-    def help(self):
-        return _("Settings concerning the user interface of Checkmk")
-
-
 def _valuespec_extra_host_conf_icon_image():
     return Transform(
         IconSelector(
@@ -4047,7 +4032,7 @@ def _valuespec_extra_host_conf_icon_image():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupUserInterface,
+        group=RulespecGroupHostsMonitoringRulesVarious,
         name="extra_host_conf:icon_image",
         valuespec=_valuespec_extra_host_conf_icon_image,
     ))
@@ -4067,7 +4052,7 @@ def _valuespec_extra_service_conf_icon_image():
 
 rulespec_registry.register(
     ServiceRulespec(
-        group=RulespecGroupUserInterface,
+        group=RulespecGroupMonitoringConfigurationVarious,
         item_type="service",
         name="extra_service_conf:icon_image",
         valuespec=_valuespec_extra_service_conf_icon_image,
@@ -4083,7 +4068,7 @@ def _valuespec_host_icons_and_actions():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupUserInterface,
+        group=RulespecGroupHostsMonitoringRulesVarious,
         match_type="all",
         name="host_icons_and_actions",
         valuespec=_valuespec_host_icons_and_actions,
@@ -4099,7 +4084,7 @@ def _valuespec_service_icons_and_actions():
 
 rulespec_registry.register(
     ServiceRulespec(
-        group=RulespecGroupUserInterface,
+        group=RulespecGroupMonitoringConfigurationVarious,
         item_type="service",
         match_type="all",
         name="service_icons_and_actions",
@@ -4127,7 +4112,7 @@ def _valuespec_extra_host_conf__ESCAPE_PLUGIN_OUTPUT():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupUserInterface,
+        group=RulespecGroupHostsMonitoringRulesVarious,
         name="extra_host_conf:_ESCAPE_PLUGIN_OUTPUT",
         valuespec=_valuespec_extra_host_conf__ESCAPE_PLUGIN_OUTPUT,
     ))
@@ -4153,7 +4138,7 @@ def _valuespec_extra_service_conf__ESCAPE_PLUGIN_OUTPUT():
 
 rulespec_registry.register(
     ServiceRulespec(
-        group=RulespecGroupUserInterface,
+        group=RulespecGroupMonitoringConfigurationVarious,
         item_type="service",
         name="extra_service_conf:_ESCAPE_PLUGIN_OUTPUT",
         valuespec=_valuespec_extra_service_conf__ESCAPE_PLUGIN_OUTPUT,
@@ -4202,7 +4187,7 @@ rulespec_registry.register(
         group=RulespecGroupAgentGeneralSettings,
         help_func=_help_dyndns_hosts,
         name="dyndns_hosts",
-        title=lambda: _("Hosts with dynamic DNS lookup during monitoring"),
+        title=lambda: _("Hosts with dynamic DNS lookup"),
     ))
 
 

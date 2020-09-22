@@ -802,41 +802,6 @@ class MainModuleTimeperiods(MainModule):
 
 
 @main_module_registry.register
-class MainModuleUserInterface(MainModule):
-    @property
-    def mode_or_url(self):
-        return "wato.py?mode=rulesets&group=user_interface"
-
-    @property
-    def topic(self):
-        return MainModuleTopicGeneral
-
-    @property
-    def title(self):
-        return _("User interface rules")
-
-    @property
-    def icon(self):
-        return "rulesets"
-
-    @property
-    def permission(self):
-        return "rulesets"
-
-    @property
-    def description(self):
-        return _("Configure rulesets setting user interface related settings")
-
-    @property
-    def sort_index(self):
-        return 60
-
-    @property
-    def is_advanced(self):
-        return True
-
-
-@main_module_registry.register
 class MainModuleSites(MainModule):
     @property
     def mode_or_url(self):

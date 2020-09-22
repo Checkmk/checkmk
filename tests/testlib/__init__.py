@@ -12,10 +12,19 @@ import tempfile
 import datetime
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Set
+from types import ModuleType
+from typing import (
+    Any,
+    Callable,
+    Generator,
+    MutableMapping,
+    Set,
+)
 
 import urllib3  # type: ignore[import]
 import freezegun  # type: ignore[import]
+import pytest
+from _pytest.monkeypatch import MonkeyPatch
 
 from testlib.utils import (  # noqa: F401 # pylint: disable=unused-import
     repo_path, cmk_path, cme_path, cmc_path, current_branch_name, virtualenv_path,
@@ -33,7 +42,6 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def skip_unwanted_test_types(item):
-    import pytest  # type: ignore[import] # pylint: disable=import-outside-toplevel
     test_type = item.get_closest_marker("type")
     if test_type is None:
         raise Exception("Test is not TYPE marked: %s" % item)
@@ -464,3 +472,16 @@ def on_time(utctime, timezone):
 
     with set_timezone(timezone), freezegun.freeze_time(utctime):
         yield
+
+
+def get_value_store_fixture(
+        module: ModuleType
+) -> Callable[[MonkeyPatch], Generator[MutableMapping[str, Any], None, None]]:
+    """Creates a fixture for patching get_value_store (check API) in a given module"""
+    @pytest.fixture(name="value_store")
+    def value_store_fixture(monkeypatch):
+        value_store: MutableMapping[str, Any] = {}
+        monkeypatch.setattr(module, 'get_value_store', lambda: value_store)
+        yield value_store
+
+    return value_store_fixture

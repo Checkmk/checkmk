@@ -6,6 +6,7 @@
 
 from contextlib import suppress
 import pytest  # type: ignore[import]
+from testlib import get_value_store_fixture
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResults,
     IgnoreResultsError,
@@ -18,12 +19,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 from cmk.base.plugins.agent_based import winperf_if
 from cmk.base.plugins.agent_based.utils import interfaces
 
-
-@pytest.fixture(name="value_store")
-def value_store_fixture(monkeypatch):
-    value_store: type_defs.ValueStore = {}
-    monkeypatch.setattr(interfaces, 'get_value_store', lambda: value_store)
-    yield value_store
+value_store_fixture = get_value_store_fixture(interfaces)
 
 
 @pytest.mark.parametrize("string_table, settings, items", [

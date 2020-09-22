@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
-
+from testlib import get_value_store_fixture
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
     Metric,
@@ -15,21 +15,12 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 from cmk.base.plugins.agent_based import aix_diskiod
 
+value_store_fixture = get_value_store_fixture(aix_diskiod)
+
 DISK = {
     'read_throughput': 2437253982208,
     'write_throughput': 12421567621120,
 }
-
-
-def _get_value_store():
-    return {}
-
-
-@pytest.fixture(name="value_store")
-def value_store_fixture(monkeypatch):
-    value_store = _get_value_store()
-    monkeypatch.setattr(aix_diskiod, 'get_value_store', lambda: value_store)
-    yield value_store
 
 
 def test_parse_aix_diskiod():
@@ -41,8 +32,7 @@ def test_parse_aix_diskiod():
     }
 
 
-def test_compute_rates():
-    value_store = _get_value_store()
+def test_compute_rates(value_store):
     # first call should result in IngoreResults, second call should yield rates
     with pytest.raises(IgnoreResultsError):
         assert aix_diskiod._compute_rates(DISK, value_store)

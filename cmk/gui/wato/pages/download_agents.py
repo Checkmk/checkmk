@@ -57,6 +57,13 @@ class ABCModeDownloadAgents(WatoMode):
         )
 
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
+        if watolib.has_agent_bakery():
+            yield PageMenuEntry(
+                title=_("Windows, Linux, Solaris, AIX"),
+                icon_name="agents",
+                item=make_simple_link(watolib.folder_preserving_link([("mode", "agents")])),
+            )
+
         if self.name() != "download_agents_windows":
             yield PageMenuEntry(
                 title=_("Windows files"),
@@ -67,23 +74,16 @@ class ABCModeDownloadAgents(WatoMode):
 
         if self.name() != "download_agents_linux":
             yield PageMenuEntry(
-                title=_("Linux files"),
+                title=_("Linux, Solaris, AIX files"),
                 icon_name="download_agents",
                 item=make_simple_link(folder_preserving_link([("mode", "download_agents_linux")])),
             )
 
         if self.name() != "download_agents":
             yield PageMenuEntry(
-                title=_("Other files"),
+                title=_("Other operating systems"),
                 icon_name="download_agents",
                 item=make_simple_link(folder_preserving_link([("mode", "download_agents")])),
-            )
-
-        if watolib.has_agent_bakery():
-            yield PageMenuEntry(
-                title=_("Baked agents"),
-                icon_name="agents",
-                item=make_simple_link(watolib.folder_preserving_link([("mode", "agents")])),
             )
 
     @abc.abstractmethod
@@ -113,15 +113,15 @@ class ABCModeDownloadAgents(WatoMode):
             self._download_table(_("Packaged Agents"), packed)
 
         titles = {
-            '': _('Linux/Unix Agents'),
-            '/plugins': _('Linux/Unix Agents - Plugins'),
-            '/cfg_examples': _('Linux/Unix Agents - Example Configurations'),
-            '/cfg_examples/systemd': _('Linux Agent - Example configuration using with systemd'),
+            '': _('Agents'),
+            '/plugins': _('Plugins'),
+            '/cfg_examples': _('Example Configurations'),
+            '/cfg_examples/systemd': _('Example configuration for systemd'),
             '/windows': _('Windows Agent'),
-            '/windows/plugins': _('Windows Agent - Plugins'),
-            '/windows/mrpe': _('Windows Agent - MRPE Scripts'),
-            '/windows/cfg_examples': _('Windows Agent - Example Configurations'),
-            '/windows/ohm': _('Windows Agent - OpenHardwareMonitor (headless)'),
+            '/windows/plugins': _('Plugins'),
+            '/windows/mrpe': _('Scripts to integrate Nagios plugis'),
+            '/windows/cfg_examples': _('Example Configurations'),
+            '/windows/ohm': _('OpenHardwareMonitor (headless)'),
             '/z_os': _('z/OS'),
             '/sap': _('SAP R/3'),
         }
@@ -191,7 +191,7 @@ class ModeDownloadAgentsOther(ABCModeDownloadAgents):
         return "download_agents"
 
     def title(self) -> str:
-        return _("Download other agents and plugins")
+        return _("Other operating systems")
 
     def _packed_agents(self):
         return []
@@ -203,7 +203,9 @@ class ModeDownloadAgentsOther(ABCModeDownloadAgents):
         return [
             "*.rpm",
             "*.deb",
+            "*.aix",
             "*.linux",
+            "*.solaris",
         ]
 
     def _exclude_paths(self):
@@ -226,7 +228,7 @@ class ModeDownloadAgentsWindows(ABCModeDownloadAgents):
         return "download_agents_windows"
 
     def title(self) -> str:
-        return _("Download Windows agents and plugins")
+        return _("Windows files")
 
     def _packed_agents(self):
         return glob.glob(cmk.utils.paths.agents_dir + "/windows/c*.msi")
@@ -242,7 +244,7 @@ class ModeDownloadAgentsLinux(ABCModeDownloadAgents):
         return "download_agents_linux"
 
     def title(self) -> str:
-        return _("Download Linux agents and plugins")
+        return _("Linux, Solaris, AIX files")
 
     def _packed_agents(self):
         return glob.glob(cmk.utils.paths.agents_dir +
@@ -253,8 +255,6 @@ class ModeDownloadAgentsLinux(ABCModeDownloadAgents):
 
     def _exclude_file_glob_patterns(self):
         return [
-            "*.solaris",
-            "*.aix",
             "*.hpux",
             "*.macosx",
             "*.freebsd",

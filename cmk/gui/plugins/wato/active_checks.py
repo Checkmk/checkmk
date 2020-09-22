@@ -699,7 +699,7 @@ rulespec_registry.register(
 
 def _valuespec_active_checks_tcp():
     return Tuple(
-        title=_("Check connecting to a TCP port"),
+        title=_("Check TCP port connection"),
         help=_("This check tests the connection to a TCP port. It uses "
                "<tt>check_tcp</tt> from the standard Nagios plugins."),
         elements=[
@@ -1265,7 +1265,7 @@ rulespec_registry.register(
 
 def _valuespec_active_checks_ldap():
     return Tuple(
-        title=_("Check access to LDAP service"),
+        title=_("Check LDAP service access"),
         help=_("This check uses <tt>check_ldap</tt> from the standard "
                "Nagios plugins in order to try the response of an LDAP "
                "server."),
@@ -1382,7 +1382,7 @@ def _active_checks_smtp_transform_smtp_address_family(val):
 
 def _valuespec_active_checks_smtp():
     return Tuple(
-        title=_("Check access to SMTP services"),
+        title=_("Check SMTP service access"),
         help=_("This check uses <tt>check_smtp</tt> from the standard "
                "Nagios plugins in order to try the response of an SMTP "
                "server."),
@@ -1524,7 +1524,7 @@ rulespec_registry.register(
 
 def _valuespec_active_checks_disk_smb():
     return Dictionary(
-        title=_("Check access to SMB share"),
+        title=_("Check SMB share access"),
         help=_("This ruleset helps you to configure the classical Nagios "
                "plugin <tt>check_disk_smb</tt> that checks the access to "
                "filesystem shares that are exported via SMB/CIFS."),
@@ -1896,7 +1896,7 @@ rulespec_registry.register(
 
 def _valuespec_active_checks_notify_count():
     return Tuple(
-        title=_("Check Number of Notifications per Contact"),
+        title=_("Check notification number per contact"),
         help=
         _("Check the number of sent notifications per contact using the plugin <tt>check_notify_count</tt> "
           "provided with Check_MK. This plugin counts the total number of notifications sent by the local "

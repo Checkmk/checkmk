@@ -1,0 +1,13 @@
+Title: agent_bi: Filter by groups
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p18
+Date: 1600691610
+
+Filtering aggregations by groups using the datasource program rule
+in the WATO had not been working.

@@ -58,6 +58,32 @@ class PayloadType(enum.Enum):
     SNMP = enum.auto()
 
 
+class ErrorPayload(Protocol):
+    fmt = "!H"
+
+    def __init__(self, error: Exception) -> None:
+        self.error: Final = error
+
+    def __repr__(self) -> str:
+        return "%s(%r)" % (type(self).__name__, self.error)
+
+    def __bytes__(self) -> bytes:
+        payload = repr(self.error).encode("utf8")
+        return struct.pack(ErrorPayload.fmt, len(payload)) + payload
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> "ErrorPayload":
+        length, *_rest = struct.unpack(
+            ErrorPayload.fmt,
+            data[:struct.calcsize(ErrorPayload.fmt)],
+        )
+        start: int = struct.calcsize(ErrorPayload.fmt)
+        try:
+            return cls(eval(data[start:start + length].decode("utf8")))
+        except SyntaxError as exc:
+            raise ValueError(data) from exc
+
+
 class FetcherHeader(Protocol):
     """Header is fixed size bytes in format:
 
@@ -126,13 +152,9 @@ class FetcherHeader(Protocol):
 
 
 class FetcherMessage(Protocol):
-    def __init__(
-        self,
-        header: FetcherHeader,
-        payload: bytes,
-    ) -> None:
+    def __init__(self, header: FetcherHeader, payload: Union[bytes, ErrorPayload]) -> None:
         self.header: Final[FetcherHeader] = header
-        self.payload: Final[bytes] = payload
+        self.payload: Final[bytes] = bytes(payload)
 
     def __repr__(self) -> str:
         return "%s(%r, %r)" % (type(self).__name__, self.header, self.payload)
@@ -153,15 +175,15 @@ class FetcherMessage(Protocol):
         fetcher_type: FetcherType,
     ) -> "FetcherMessage":
         if raw_data.is_error():
-            payload = repr(raw_data.error).encode("utf-8")
+            error = ErrorPayload(raw_data.error)
             return cls(
                 FetcherHeader(
                     fetcher_type,
                     payload_type=PayloadType.ERROR,
                     status=50,
-                    payload_length=len(payload),
+                    payload_length=len(error),
                 ),
-                payload,
+                error,
             )
 
         if fetcher_type is FetcherType.SNMP:
@@ -192,10 +214,9 @@ class FetcherMessage(Protocol):
     def raw_data(self) -> Result[AbstractRawData, Exception]:
         if self.header.payload_type is PayloadType.ERROR:
             try:
-                # TODO(ml): This is brittle.
-                return Result.Error(eval(self.payload.decode("utf8")))
-            except Exception:
-                return Result.Error(Exception(self.payload.decode("utf8")))
+                return Result.Error(ErrorPayload.from_bytes(self.payload).error)
+            except Exception as exc:
+                return Result.Error(exc)
         if self.header.payload_type is PayloadType.SNMP:
             return Result.OK({SectionName(k): v for k, v in json.loads(self.payload).items()})
         return Result.OK(self.payload)
@@ -355,7 +376,7 @@ def run_fetcher(entry: Dict[str, Any], mode: Mode, timeout: int) -> FetcherMessa
     try:
         fetcher_params = entry["fetcher_params"]
     except KeyError as exc:
-        payload = repr(exc).encode("utf8")
+        payload = ErrorPayload(exc)
         return FetcherMessage(
             FetcherHeader(
                 fetcher_type,

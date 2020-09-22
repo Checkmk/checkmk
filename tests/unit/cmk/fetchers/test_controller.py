@@ -18,6 +18,7 @@ from cmk.fetchers.controller import (
     build_json_global_config_file_path,
     cmc_log_level_from_python,
     CmcLogLevel,
+    ErrorPayload,
     FetcherHeader,
     FetcherMessage,
     PayloadType,
@@ -84,8 +85,9 @@ class TestControllerApi:
         )
         assert message.header.fetcher_type is FetcherType.SNMP
         assert message.header.status == 50
-        assert message.header.payload_length == len(message.payload)
-        assert message.payload == b"KeyError('fetcher_params')"
+        assert message.header.payload_length == len(message) - len(message.header)
+        assert type(message.raw_data.error) is KeyError  # pylint: disable=C0123
+        assert str(message.raw_data.error) == repr("fetcher_params")
 
     def test_run_fetcher_with_exception(self):
         with pytest.raises(RuntimeError):
@@ -162,6 +164,25 @@ class TestHeader:
         assert Header.State.SUCCESS == "SUCCESS"
         assert Header.State.WAITING == "WAITING"
         assert Header.default_protocol_name() == "fetch"
+
+
+class TestErrorPayload:
+    @pytest.fixture
+    def error(self):
+        return ErrorPayload(Exception("a very helpful message"))
+
+    def test_from_bytes_success(self, error):
+        assert ErrorPayload.from_bytes(bytes(error)) == error
+
+    def test_from_bytes_failure(self):
+        with pytest.raises(ValueError):
+            ErrorPayload.from_bytes(b"random bytes")
+
+    def test_hash(self, error):
+        assert hash(error) == hash(bytes(error))
+
+    def test_len(self, error):
+        assert len(error) == len(bytes(error))
 
 
 class TestFetcherHeader:
@@ -317,23 +338,27 @@ class TestFetcherMessage:
         assert len(message) == len(header) + len(payload)
 
     def test_from_raw_data_tcp(self):
-        message = FetcherMessage.from_raw_data(Result.OK(b"<<<check_mk>>>Hallo"), FetcherType.TCP)
+        result = Result.OK(b"<<<check_mk>>>Hallo")
+        message = FetcherMessage.from_raw_data(result, FetcherType.TCP)
         assert message.header.fetcher_type is FetcherType.TCP
         assert message.header.payload_type is PayloadType.AGENT
-        assert message.payload == b'<<<check_mk>>>Hallo'
+        assert message.raw_data == result
 
     def test_from_raw_data_snmp(self):
-        raw_data = {SectionName('snmp_uptime'): [[['6500337', '11822045']]]}
-        message = FetcherMessage.from_raw_data(Result.OK(raw_data), FetcherType.SNMP)
+        result = Result.OK({SectionName('snmp_uptime'): [[['6500337', '11822045']]]})
+        message = FetcherMessage.from_raw_data(result, FetcherType.SNMP)
         assert message.header.fetcher_type is FetcherType.SNMP
         assert message.header.payload_type is PayloadType.SNMP
-        assert message.payload == b'{"snmp_uptime": [[["6500337", "11822045"]]]}'
+        assert message.raw_data == result
 
     def test_from_raw_data_exception(self):
-        message = FetcherMessage.from_raw_data(Result.Error(Exception("zomg!")), FetcherType.TCP)
+        error = Result.Error(ValueError("zomg!"))
+        message = FetcherMessage.from_raw_data(error, FetcherType.TCP)
         assert message.header.fetcher_type is FetcherType.TCP
         assert message.header.payload_type is PayloadType.ERROR
-        assert message.payload == b"Exception('zomg!')"
+        # Comparison of exception is "interesting" in Python so we check the type and args.
+        assert type(message.raw_data.error) is type(error.error)
+        assert message.raw_data.error.args == error.error.args
 
     def test_raw_data_tcp(self):
         result = Result.OK(b"<<<check_mk>>>Hallo")

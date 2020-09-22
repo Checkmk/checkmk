@@ -140,7 +140,12 @@ class ModeIcons(WatoMode):
 
     def page(self) -> None:
         html.h3(_("Upload Icon"))
-        html.p(_("Allowed are single PNG image files with a maximum size of 80x80 px."))
+        html.p(
+            _("Here you can add icons, for example to use them in bookmarks or "
+              "in custom actions of views. Allowed are single PNG image files "
+              "with a maximum size of 80x80 px. Custom actions have to be defined "
+              "in the global settings and can be used in the custom icons rules "
+              "of hosts and services."))
 
         html.begin_form('upload_form', method='POST')
         self._vs_upload().render_input('_upload_icon', None)

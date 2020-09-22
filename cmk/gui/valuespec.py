@@ -5244,7 +5244,7 @@ class ImageUpload(FileUpload):
 
         if not file_name.endswith('.png') \
            or mime_type != 'image/png' \
-           or not content.startswith('\x89PNG'):
+           or not content.startswith(b'\x89PNG'):
             raise MKUserError(varprefix, _('Please choose a PNG image.'))
 
         try:

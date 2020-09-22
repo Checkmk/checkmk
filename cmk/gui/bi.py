@@ -33,7 +33,7 @@ from cmk.utils.bi.bi_compiler import BICompiler
 from cmk.utils.bi.bi_lib import SitesCallback
 from cmk.utils.bi.bi_computer import BIComputer, BIAggregationFilter
 from cmk.gui.exceptions import MKConfigError
-from livestatus import SiteId
+from livestatus import SiteId, LivestatusResponse
 
 
 @permission_section_registry.register
@@ -889,20 +889,21 @@ class BIManager:
         return str(Path(watolib.multisite_dir()) / "bi_config.mk")
 
 
-def get_cached_bi_packs():
+def get_cached_bi_packs() -> BIAggregationPacks:
     if "bi_packs" not in g:
         g.bi_packs = BIAggregationPacks(BIManager.bi_configuration_file())
         g.bi_packs.load_config()
     return g.bi_packs
 
 
-def get_cached_bi_manager():
+def get_cached_bi_manager() -> BIManager:
     if "bi_manager" not in g:
-        g.bi_manager = BIAggregationPacks(BIManager.bi_configuration_file())
+        g.bi_manager = BIManager()
     return g.bi_manager
 
 
-def bi_livestatus_query(query: str, only_sites: Optional[List[SiteId]] = None):
+def bi_livestatus_query(query: str,
+                        only_sites: Optional[List[SiteId]] = None) -> LivestatusResponse:
     ls = cmk.gui.sites.live()
     try:
         ls.set_only_sites(only_sites)

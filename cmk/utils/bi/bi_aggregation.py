@@ -8,6 +8,7 @@ from marshmallow import Schema
 from typing import Dict, Type, Optional, Any, List
 
 from cmk.utils.bi.bi_lib import (
+    String,
     ReqString,
     create_nested_schema,
     create_nested_schema_for_class,
@@ -96,7 +97,7 @@ class BIAggregation:
 
 class BIAggregationSchema(Schema):
     id = ReqString(default="", example="aggr1")
-    customer = ReqString(default="", example="customer1")
+    customer = String(default="", example="customer1")
     groups = create_nested_schema_for_class(
         BIAggregationGroups,
         example_config={

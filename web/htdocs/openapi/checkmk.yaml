@@ -3240,12 +3240,12 @@ paths:
           \ [{\n            'arguments': ['foo', 'bar']\n        }],\n        'node_visualization':\
           \ {\n            'type': 'block',\n            'config': {}\n        },\n\
           \        'properties': {\n            'state_messages': {},\n          \
-          \  'docu_url': '',\n            'icon': '',\n            'title': '',\n\
-          \            'comment': ''\n        },\n        'aggregation_function':\
-          \ {\n            'count': 1,\n            'type': 'best',\n            'restrict_state':\
-          \ 2\n        },\n        'computation_options': {\n            'disabled':\
-          \ False\n        },\n        'pack_id': 'pack1'\n    },\n)\nresp.raise_for_status()\n\
-          data = resp.json()"
+          \  'title': '',\n            'comment': '',\n            'icon': '',\n \
+          \           'docu_url': ''\n        },\n        'aggregation_function':\
+          \ {\n            'type': 'best',\n            'restrict_state': 2,\n   \
+          \         'count': 1\n        },\n        'computation_options': {\n   \
+          \         'disabled': False\n        },\n        'pack_id': 'pack1'\n  \
+          \  },\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -3258,12 +3258,13 @@ paths:
           \       'arguments': ['foo', 'bar']\n        }],\n        'node_visualization':\
           \ {\n            'type': 'block',\n            'config': {}\n        },\n\
           \        'properties': {\n            'state_messages': {},\n          \
-          \  'docu_url': '',\n            'icon': '',\n            'title': '',\n\
-          \            'comment': ''\n        },\n        'aggregation_function':\
-          \ {\n            'count': 1,\n            'type': 'best',\n            'restrict_state':\
-          \ 2\n        },\n        'computation_options': {\n            'disabled':\
-          \ False\n        },\n        'pack_id': 'pack1'\n    }).encode('utf-8'),\n\
-          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+          \  'title': '',\n            'comment': '',\n            'icon': '',\n \
+          \           'docu_url': ''\n        },\n        'aggregation_function':\
+          \ {\n            'type': 'best',\n            'restrict_state': 2,\n   \
+          \         'count': 1\n        },\n        'computation_options': {\n   \
+          \         'disabled': False\n        },\n        'pack_id': 'pack1'\n  \
+          \  }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -3288,13 +3289,13 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/bi_rule/rule1\" \\\
           \n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept: application/json\"\
-          \ \\\n    aggregation_function='{\"count\": 1, \"type\": \"best\", \"restrict_state\"\
-          : 2}' \\\n    computation_options='{\"disabled\": false}' \\\n    id='rule1'\
-          \ \\\n    node_visualization='{\"type\": \"block\", \"config\": {}}' \\\n\
-          \    nodes='[]' \\\n    pack_id='pack1' \\\n    params='[{\"arguments\"\
-          : [\"foo\", \"bar\"]}]' \\\n    properties='{\"state_messages\": {}, \"\
-          docu_url\": \"\", \"icon\": \"\", \"title\": \"\", \"comment\": \"\"}' \\\
-          \n    --json"
+          \ \\\n    aggregation_function='{\"type\": \"best\", \"restrict_state\"\
+          : 2, \"count\": 1}' \\\n    computation_options='{\"disabled\": false}'\
+          \ \\\n    id='rule1' \\\n    node_visualization='{\"type\": \"block\", \"\
+          config\": {}}' \\\n    nodes='[]' \\\n    pack_id='pack1' \\\n    params='[{\"\
+          arguments\": [\"foo\", \"bar\"]}]' \\\n    properties='{\"state_messages\"\
+          : {}, \"title\": \"\", \"comment\": \"\", \"icon\": \"\", \"docu_url\":\
+          \ \"\"}' \\\n    --json"
   /objects/bi_aggregation/{aggregation_id}:
     get:
       description: ''
@@ -3401,14 +3402,14 @@ paths:
           ,\n    json={\n        'id': 'aggr1',\n        'customer': 'customer1',\n\
           \        'groups': {\n            'names': ['groupA', 'groupB'],\n     \
           \       'paths': [['path', 'group', 'a'],\n                      ['path',\
-          \ 'group', 'b']]\n        },\n        'node': {\n            'action': {\n\
-          \                'type': 'state_of_host',\n                'host_regex':\
-          \ ''\n            },\n            'search': {\n                'type': 'empty'\n\
-          \            }\n        },\n        'aggregation_visualization': {\n   \
-          \         'layout_id': 'builtin_default',\n            'ignore_rule_styles':\
+          \ 'group', 'b']]\n        },\n        'node': {\n            'search': {\n\
+          \                'type': 'empty'\n            },\n            'action':\
+          \ {\n                'type': 'state_of_host',\n                'host_regex':\
+          \ ''\n            }\n        },\n        'aggregation_visualization': {\n\
+          \            'layout_id': 'builtin_default',\n            'ignore_rule_styles':\
           \ False,\n            'line_style': 'round'\n        },\n        'computation_options':\
-          \ {\n            'disabled': False,\n            'use_hard_states': False,\n\
-          \            'escalate_downtimes_as_warn': False\n        },\n        'pack_id':\
+          \ {\n            'use_hard_states': False,\n            'escalate_downtimes_as_warn':\
+          \ False,\n            'disabled': False\n        },\n        'pack_id':\
           \ 'pack1'\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
@@ -3421,14 +3422,14 @@ paths:
           \        'id': 'aggr1',\n        'customer': 'customer1',\n        'groups':\
           \ {\n            'names': ['groupA', 'groupB'],\n            'paths': [['path',\
           \ 'group', 'a'],\n                      ['path', 'group', 'b']]\n      \
-          \  },\n        'node': {\n            'action': {\n                'type':\
-          \ 'state_of_host',\n                'host_regex': ''\n            },\n \
-          \           'search': {\n                'type': 'empty'\n            }\n\
-          \        },\n        'aggregation_visualization': {\n            'layout_id':\
+          \  },\n        'node': {\n            'search': {\n                'type':\
+          \ 'empty'\n            },\n            'action': {\n                'type':\
+          \ 'state_of_host',\n                'host_regex': ''\n            }\n  \
+          \      },\n        'aggregation_visualization': {\n            'layout_id':\
           \ 'builtin_default',\n            'ignore_rule_styles': False,\n       \
           \     'line_style': 'round'\n        },\n        'computation_options':\
-          \ {\n            'disabled': False,\n            'use_hard_states': False,\n\
-          \            'escalate_downtimes_as_warn': False\n        },\n        'pack_id':\
+          \ {\n            'use_hard_states': False,\n            'escalate_downtimes_as_warn':\
+          \ False,\n            'disabled': False\n        },\n        'pack_id':\
           \ 'pack1'\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
           data = json.loads(response.read())"
       - label: curl
@@ -3462,13 +3463,12 @@ paths:
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    aggregation_visualization='{\"layout_id\":\
           \ \"builtin_default\", \"ignore_rule_styles\": false, \"line_style\": \"\
-          round\"}' \\\n    computation_options='{\"disabled\": false, \"use_hard_states\"\
-          : false, \"escalate_downtimes_as_warn\": false}' \\\n    customer='customer1'\
-          \ \\\n    groups='{\"names\": [\"groupA\", \"groupB\"], \"paths\": [[\"\
-          path\", \"group\", \"a\"], [\"path\", \"group\", \"b\"]]}' \\\n    id='aggr1'\
-          \ \\\n    node='{\"action\": {\"type\": \"state_of_host\", \"host_regex\"\
-          : \"\"}, \"search\": {\"type\": \"empty\"}}' \\\n    pack_id='pack1' \\\n\
-          \    --json"
+          round\"}' \\\n    computation_options='{\"use_hard_states\": false, \"escalate_downtimes_as_warn\"\
+          : false, \"disabled\": false}' \\\n    customer='customer1' \\\n    groups='{\"\
+          names\": [\"groupA\", \"groupB\"], \"paths\": [[\"path\", \"group\", \"\
+          a\"], [\"path\", \"group\", \"b\"]]}' \\\n    id='aggr1' \\\n    node='{\"\
+          search\": {\"type\": \"empty\"}, \"action\": {\"type\": \"state_of_host\"\
+          , \"host_regex\": \"\"}}' \\\n    pack_id='pack1' \\\n    --json"
   /domain-types/bi_pack/collections/all:
     get:
       description: ''

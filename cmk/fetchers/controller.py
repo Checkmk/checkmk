@@ -154,13 +154,13 @@ class FetcherHeader(Protocol):
 class FetcherMessage(Protocol):
     def __init__(self, header: FetcherHeader, payload: Union[bytes, ErrorPayload]) -> None:
         self.header: Final[FetcherHeader] = header
-        self.payload: Final[bytes] = bytes(payload)
+        self._payload: Final[bytes] = bytes(payload)
 
     def __repr__(self) -> str:
-        return "%s(%r, %r)" % (type(self).__name__, self.header, self.payload)
+        return "%s(%r, %r)" % (type(self).__name__, self.header, self.raw_data)
 
     def __bytes__(self) -> bytes:
-        return self.header + self.payload
+        return self.header + self._payload
 
     @classmethod
     def from_bytes(cls, data: bytes) -> "FetcherMessage":
@@ -214,12 +214,12 @@ class FetcherMessage(Protocol):
     def raw_data(self) -> Result[AbstractRawData, Exception]:
         if self.header.payload_type is PayloadType.ERROR:
             try:
-                return Result.Error(ErrorPayload.from_bytes(self.payload).error)
+                return Result.Error(ErrorPayload.from_bytes(self._payload).error)
             except Exception as exc:
                 return Result.Error(exc)
         if self.header.payload_type is PayloadType.SNMP:
-            return Result.OK({SectionName(k): v for k, v in json.loads(self.payload).items()})
-        return Result.OK(self.payload)
+            return Result.OK({SectionName(k): v for k, v in json.loads(self._payload).items()})
+        return Result.OK(self._payload)
 
 
 class Header(Protocol):

@@ -325,7 +325,6 @@ class TestFetcherMessage:
 
     def test_accessors(self, message, header, payload):
         assert message.header == header
-        assert message.payload == payload
 
     def test_from_bytes_success(self, message):
         assert FetcherMessage.from_bytes(bytes(message) + 42 * b"*") == message

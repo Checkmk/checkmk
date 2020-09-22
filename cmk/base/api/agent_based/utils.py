@@ -339,7 +339,7 @@ def check_levels(
         ...     23.0,
         ...     levels_upper=(12., 42.),
         ...     label="Fridge",
-        ...      render_func=lambda v: "%.1f°",
+        ...     render_func=lambda v: "%.1f°",
         ... )
         >>> print(result.summary)
         'Fridge: 23.0° (warn/crit at 12.0°/42.0°)'

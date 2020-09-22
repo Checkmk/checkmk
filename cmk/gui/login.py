@@ -265,7 +265,7 @@ def _auth_cookie_is_valid(cookie_name: str) -> bool:
 # - It calls userdb.create_non_existing_user() but we don't
 # - It calls connection.is_locked() but we don't
 def _check_auth(request: Request) -> Optional[UserId]:
-    user_id: Optional[UserId] = check_auth_web_server(request)
+    user_id = _check_auth_web_server(request)
 
     if html.request.var("_secret"):
         user_id = _check_auth_automation()
@@ -334,7 +334,7 @@ def _check_auth_http_header() -> Optional[UserId]:
     return user_id
 
 
-def check_auth_web_server(request: Request) -> UserId:
+def _check_auth_web_server(request: Request) -> Optional[UserId]:
     """Try to get the authenticated user from the HTTP request
 
     The user may have configured (basic) authentication by the web server. In
@@ -344,6 +344,7 @@ def check_auth_web_server(request: Request) -> UserId:
     if user is not None:
         set_auth_type("web_server")
         return UserId(ensure_str(user))
+    return None
 
 
 def _check_auth_by_cookie() -> Optional[UserId]:

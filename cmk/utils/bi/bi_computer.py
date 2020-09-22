@@ -6,12 +6,9 @@
 
 import copy
 from typing import NamedTuple, List, Tuple, Set, Dict, Optional
-from contextlib import contextmanager
 
 from cmk.utils.type_defs import ServiceName
-from cmk.utils.bi.bi_lib import RequiredBIElement
-from cmk.utils.bi.bi_data_fetcher import BIHostSpec, bi_status_fetcher
-from cmk.utils.bi.bi_compiler import bi_compiler, bi_compiler_auto_cleanup
+from cmk.utils.bi.bi_lib import RequiredBIElement, BIHostSpec
 from cmk.utils.bi.bi_trees import BICompiledRule, BICompiledAggregation, NodeResultBundle
 
 BIAggregationFilter = NamedTuple("BIAggregationFilter", [
@@ -25,7 +22,9 @@ BIAggregationFilter = NamedTuple("BIAggregationFilter", [
 
 
 class BIComputer:
-    def __init__(self):
+    def __init__(self, compiled_aggregations, bi_status_fetcher):
+        self._compiled_aggregations: Dict[str, BICompiledAggregation] = compiled_aggregations
+        self._bi_status_fetcher = bi_status_fetcher
         self._legacy_branch_cache = {}
 
     def compute_aggregation_result(
@@ -33,8 +32,8 @@ class BIComputer:
         aggr_id: str,
         title: str,
     ) -> List[Tuple[BICompiledAggregation, List[NodeResultBundle]]]:
-        compiled_aggregation: Optional[
-            BICompiledAggregation] = bi_compiler.compiled_aggregations.get(aggr_id)
+        compiled_aggregation: Optional[BICompiledAggregation] = self._compiled_aggregations.get(
+            aggr_id)
 
         if not compiled_aggregation:
             return []
@@ -49,7 +48,7 @@ class BIComputer:
     ) -> List[Tuple[BICompiledAggregation, List[NodeResultBundle]]]:
         required_aggregations = self.get_required_aggregations(bi_aggregation_filter)
         required_elements = self.get_required_elements(required_aggregations)
-        bi_status_fetcher.update_states(required_elements)
+        self._bi_status_fetcher.update_states(required_elements)
         return self.compute_results(required_aggregations)
 
     def get_required_aggregations(
@@ -58,7 +57,7 @@ class BIComputer:
         return [(compiled_aggregation,
                  self.get_filtered_aggregation_branches(compiled_aggregation,
                                                         bi_aggregation_filter))
-                for compiled_aggregation in bi_compiler.compiled_aggregations.values()]
+                for compiled_aggregation in self._compiled_aggregations.values()]
 
     def get_required_elements(
         self, required_aggregations: List[Tuple[BICompiledAggregation, List[BICompiledRule]]]
@@ -74,7 +73,9 @@ class BIComputer:
     ) -> List[Tuple[BICompiledAggregation, List[NodeResultBundle]]]:
         results = []
         for compiled_aggregation, branches in required_aggregations:
-            results.append((compiled_aggregation, compiled_aggregation.compute_branches(branches)))
+            results.append((compiled_aggregation,
+                            compiled_aggregation.compute_branches(branches,
+                                                                  self._bi_status_fetcher)))
         return results
 
     def get_filtered_aggregation_branches(
@@ -142,7 +143,7 @@ class BIComputer:
     def compute_legacy_result_for_filter(self,
                                          bi_aggregation_filter: BIAggregationFilter) -> List[Dict]:
         results = self.compute_result_for_filter(bi_aggregation_filter)
-        legacy_results = bi_computer.convert_to_legacy_results(results, bi_aggregation_filter)
+        legacy_results = self.convert_to_legacy_results(results, bi_aggregation_filter)
         return legacy_results
 
     def convert_to_legacy_results(self, results: List[Tuple[BICompiledAggregation,
@@ -211,16 +212,3 @@ class BIComputer:
             legacy_branch = copy.deepcopy(self._legacy_branch_cache[title])
         legacy_branch["aggr_group"] = aggr_group
         return legacy_branch
-
-
-bi_computer = BIComputer()
-
-
-@contextmanager
-def bi_computer_auto_cleanup():
-    try:
-        with bi_compiler_auto_cleanup():
-            yield bi_computer
-    finally:
-        # Free memory
-        bi_status_fetcher.cleanup()

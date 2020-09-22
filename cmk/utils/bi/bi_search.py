@@ -19,9 +19,10 @@ from cmk.utils.bi.bi_lib import (
     ReqList,
     ReqString,
     ReqNested,
+    ABCBISearcher,
+    BIHostSearchMatch,
+    BIServiceSearchMatch,
 )
-
-from cmk.utils.bi.bi_searcher import bi_searcher, BIHostSearchMatch, BIServiceSearchMatch
 
 
 class BIAllHostsChoiceSchema(Schema):
@@ -85,7 +86,7 @@ class BIEmptySearch(ABCBISearch):
     def schema(cls) -> Type["BIEmptySearchSchema"]:
         return BIEmptySearchSchema
 
-    def execute(self, macros: MacroMappings) -> List[Dict]:
+    def execute(self, macros: MacroMappings, bi_searcher: ABCBISearcher) -> List[Dict]:
         return [{}]
 
 
@@ -118,14 +119,14 @@ class BIHostSearch(ABCBISearch):
         self.conditions = search_config["conditions"]
         self.refer_to = search_config["refer_to"]
 
-    def execute(self, macros: MacroMappings) -> List[Dict]:
+    def execute(self, macros: MacroMappings, bi_searcher: ABCBISearcher) -> List[Dict]:
         new_conditions = replace_macros(self.conditions, macros)
         search_matches: List[BIHostSearchMatch] = bi_searcher.search_hosts(new_conditions)
 
         if self.refer_to == "host":
             return self._refer_to_host_results(search_matches)
         if self.refer_to == "child":
-            return self._refer_to_children_results(search_matches)
+            return self._refer_to_children_results(search_matches, bi_searcher)
         if self.refer_to == "parent":
             return self._refer_to_parent_results(search_matches)
         # TODO: child with, will be done in later commit
@@ -144,7 +145,8 @@ class BIHostSearch(ABCBISearch):
             search_results.append(search_result)
         return search_results
 
-    def _refer_to_children_results(self, search_matches: List[BIHostSearchMatch]) -> List[Dict]:
+    def _refer_to_children_results(self, search_matches: List[BIHostSearchMatch],
+                                   bi_searcher: ABCBISearcher) -> List[Dict]:
         search_results = []
         handled_children = set()
         for search_match in search_matches:
@@ -207,7 +209,7 @@ class BIServiceSearch(ABCBISearch):
         super().__init__(search_config)
         self.conditions = search_config["conditions"]
 
-    def execute(self, macros: MacroMappings) -> List[Dict]:
+    def execute(self, macros: MacroMappings, bi_searcher: ABCBISearcher) -> List[Dict]:
         new_conditions = replace_macros(self.conditions, macros)
         search_matches: List[BIServiceSearchMatch] = bi_searcher.search_services(new_conditions)
         search_results = []
@@ -251,7 +253,7 @@ class BIFixedArgumentsSearch(ABCBISearch):
         super().__init__(search_config)
         self.arguments = search_config["arguments"]
 
-    def execute(self, macros: MacroMappings) -> List[Dict]:
+    def execute(self, macros: MacroMappings, bi_searcher: ABCBISearcher) -> List[Dict]:
         results: List[Dict] = []
         new_vars = replace_macros(self.arguments, macros)
         for argument in new_vars:

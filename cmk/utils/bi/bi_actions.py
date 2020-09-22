@@ -14,6 +14,7 @@ from cmk.utils.bi.bi_lib import (
     ABCWithSchema,
     ABCBIAction,
     ABCBICompiledNode,
+    ABCBISearcher,
     replace_macros,
     SearchResult,
     ReqConstant,
@@ -22,7 +23,6 @@ from cmk.utils.bi.bi_lib import (
 )
 
 from cmk.utils.bi.bi_rule_interface import bi_rule_id_registry
-from cmk.utils.bi.bi_searcher import bi_searcher
 from cmk.utils.bi.bi_trees import (
     BICompiledLeaf,
     BIRemainingResult,
@@ -53,9 +53,10 @@ class BICallARuleAction(ABCBIAction, ABCWithSchema):
         self.rule_id = action_config["rule_id"]
         self.params = BIParams(action_config["params"])
 
-    def execute(self, search_result: SearchResult) -> List[ABCBICompiledNode]:
+    def execute(self, search_result: SearchResult,
+                bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
         rule_arguments = replace_macros(self.params.arguments, search_result)
-        return bi_rule_id_registry[self.rule_id].compile(rule_arguments)
+        return bi_rule_id_registry[self.rule_id].compile(rule_arguments, bi_searcher)
 
     def preview_rule_title(self, search_result: SearchResult) -> str:
         bi_rule = bi_rule_id_registry[self.rule_id]
@@ -98,9 +99,9 @@ class BIStateOfHostAction(ABCBIAction, ABCWithSchema):
         super().__init__(action_config)
         self.host_regex = action_config["host_regex"]
 
-    def execute(self, search_result: SearchResult) -> List[ABCBICompiledNode]:
+    def execute(self, search_result: SearchResult,
+                bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
         host_re = replace_macros(self.host_regex, search_result)
-        # TODO: check performance!
         host_matches, _match_groups = bi_searcher.get_host_name_matches(
             list(bi_searcher.hosts.values()), host_re)
 
@@ -141,7 +142,8 @@ class BIStateOfServiceAction(ABCBIAction, ABCWithSchema):
         self.host_regex = action_config["host_regex"]
         self.service_regex = action_config["service_regex"]
 
-    def execute(self, search_result: SearchResult) -> List[ABCBICompiledNode]:
+    def execute(self, search_result: SearchResult,
+                bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
         host_re = replace_macros(self.host_regex, search_result)
         service_re = replace_macros(self.service_regex, search_result)
         host_matches, _match_groups = bi_searcher.get_host_name_matches(
@@ -190,7 +192,8 @@ class BIStateOfRemainingServicesAction(ABCBIAction, ABCWithSchema):
         super().__init__(action_config)
         self.host_regex = action_config["host_regex"]
 
-    def execute(self, search_result: SearchResult) -> List[ABCBICompiledNode]:
+    def execute(self, search_result: SearchResult,
+                bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
         host_re = replace_macros(self.host_regex, search_result)
         host_matches, _match_groups = bi_searcher.get_host_name_matches(
             list(bi_searcher.hosts.values()), host_re)

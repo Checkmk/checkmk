@@ -9,6 +9,8 @@ from contextlib import contextmanager
 from typing import Any, List, Optional, Set, Tuple, Type, Union
 
 from cmk.gui.valuespec import DropdownChoiceEntry
+from pathlib import Path
+import cmk.gui.watolib as watolib
 import cmk.gui.config as config
 import cmk.gui.pages
 import cmk.gui.i18n
@@ -16,7 +18,7 @@ import cmk.gui.utils
 import cmk.gui.view_utils
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import html
+from cmk.gui.globals import html, g
 from cmk.gui.htmllib import HTML, HTMLContent
 from cmk.gui.permissions import (
     permission_section_registry,
@@ -25,14 +27,13 @@ from cmk.gui.permissions import (
     Permission,
 )
 
-from cmk.utils.bi.bi_data_fetcher import bi_status_fetcher
-from cmk.utils.bi.bi_packs import bi_packs
-from cmk.utils.bi.bi_compiler import bi_compiler_auto_cleanup, bi_compiler
-from cmk.utils.bi.bi_computer import bi_computer, bi_computer_auto_cleanup, BIAggregationFilter
+from cmk.utils.bi.bi_packs import BIAggregationPacks
+from cmk.utils.bi.bi_data_fetcher import BIStatusFetcher
+from cmk.utils.bi.bi_compiler import BICompiler
+from cmk.utils.bi.bi_lib import SitesCallback
+from cmk.utils.bi.bi_computer import BIComputer, BIAggregationFilter
 from cmk.gui.exceptions import MKConfigError
-
-import cmk.gui.sites
-cmk.utils.bi.bi_data_fetcher.sites_callback_holder.set_callback(cmk.gui.sites)
+from livestatus import SiteId
 
 
 @permission_section_registry.register
@@ -60,7 +61,7 @@ permission_registry.register(
 
 
 def is_part_of_aggregation(what, site, host, service):
-    return bi_compiler.used_in_aggregation(host, service)
+    return get_cached_bi_manager().compiler.used_in_aggregation(host, service)
 
 
 def get_aggregation_group_trees():
@@ -68,55 +69,54 @@ def get_aggregation_group_trees():
     # aggregation group definitions:
     # - "GROUP"
     # - ["GROUP_1", "GROUP2", ..]
-    bi_packs.load_config()
-    return bi_packs.get_aggregation_group_trees()
+
+    return get_cached_bi_packs().get_aggregation_group_trees()
 
 
 def aggregation_group_choices() -> List[DropdownChoiceEntry]:
     """ Returns a sorted list of aggregation group names """
-    bi_packs.load_config()
-    return bi_packs.get_aggregation_group_choices()
+    return get_cached_bi_packs().get_aggregation_group_choices()
 
 
 def api_get_aggregation_state(filter_names=None, filter_groups=None):
     """ returns the computed aggregation states """
 
-    with aggregation_compute_auto_cleanup():
-        bi_aggregation_filter = BIAggregationFilter([], [], [], filter_names or [], filter_groups or
-                                                    [], [])
-        legacy_results = bi_computer.compute_legacy_result_for_filter(bi_aggregation_filter)
+    bi_manager = BIManager()
+    bi_aggregation_filter = BIAggregationFilter([], [], [], filter_names or [], filter_groups or [],
+                                                [])
+    legacy_results = bi_manager.computer.compute_legacy_result_for_filter(bi_aggregation_filter)
 
-        used_aggr_names = set()
-        filter_groups_set = set(filter_groups or [])
-        modified_rows = []
-        for result in legacy_results:
-            aggr_name = result["aggr_compiled_branch"].properties.title
-            group_names = set(result["aggr_compiled_aggregation"].groups.names)
-            if aggr_name in used_aggr_names:
-                continue
-            used_aggr_names.add(aggr_name)
-            groups = list(group_names if filter_groups is None else group_names - filter_groups_set)
-            del result["aggr_compiled_branch"]
-            del result["aggr_compiled_aggregation"]
-            modified_rows.append({"groups": groups, "tree": result})
+    used_aggr_names = set()
+    filter_groups_set = set(filter_groups or [])
+    modified_rows = []
+    for result in legacy_results:
+        aggr_name = result["aggr_compiled_branch"].properties.title
+        group_names = set(result["aggr_compiled_aggregation"].groups.names)
+        if aggr_name in used_aggr_names:
+            continue
+        used_aggr_names.add(aggr_name)
+        groups = list(group_names if filter_groups is None else group_names - filter_groups_set)
+        del result["aggr_compiled_branch"]
+        del result["aggr_compiled_aggregation"]
+        modified_rows.append({"groups": groups, "tree": result})
 
-        have_sites = {x[0] for x in bi_status_fetcher.states.keys()}
-        missing_aggregations = []
-        required_sites = set()
-        required_aggregations = bi_computer.get_required_aggregations(bi_aggregation_filter)
-        for _bi_aggregation, branches in required_aggregations:
-            for branch in branches:
-                branch_sites = {x[0] for x in branch.required_elements()}
-                required_sites.update(branch_sites)
-                if branch.properties.title not in used_aggr_names:
-                    missing_aggregations.append(branch.properties.title)
+    have_sites = {x[0] for x in bi_manager.status_fetcher.states.keys()}
+    missing_aggregations = []
+    required_sites = set()
+    required_aggregations = bi_manager.computer.get_required_aggregations(bi_aggregation_filter)
+    for _bi_aggregation, branches in required_aggregations:
+        for branch in branches:
+            branch_sites = {x[0] for x in branch.required_elements()}
+            required_sites.update(branch_sites)
+            if branch.properties.title not in used_aggr_names:
+                missing_aggregations.append(branch.properties.title)
 
-        response = {
-            "missing_sites": list(required_sites - have_sites),
-            "missing_aggr": missing_aggregations,
-            "rows": modified_rows
-        }
-        return response
+    response = {
+        "missing_sites": list(required_sites - have_sites),
+        "missing_aggr": missing_aggregations,
+        "rows": modified_rows
+    }
+    return response
 
 
 def check_title_uniqueness(forest):
@@ -194,14 +194,13 @@ def ajax_render_tree():
     only_problems = bool(html.request.var("only_problems"))
 
     rows = []
-    with aggregation_compute_auto_cleanup():
-        bi_status_fetcher.set_assumed_states(config.user.bi_assumptions)
-        aggregation_id = html.request.get_str_input_mandatory("aggregation_id")
-        bi_aggregation_filter = BIAggregationFilter([], [], [aggregation_id],
-                                                    [aggr_title] if aggr_title is not None else [],
-                                                    [aggr_group] if aggr_group is not None else [],
-                                                    [])
-        rows = bi_computer.compute_legacy_result_for_filter(bi_aggregation_filter)
+    bi_manager = BIManager()
+    bi_manager.status_fetcher.set_assumed_states(config.user.bi_assumptions)
+    aggregation_id = html.request.get_str_input_mandatory("aggregation_id")
+    bi_aggregation_filter = BIAggregationFilter([], [], [aggregation_id],
+                                                [aggr_title] if aggr_title is not None else [],
+                                                [aggr_group] if aggr_group is not None else [], [])
+    rows = bi_manager.computer.compute_legacy_result_for_filter(bi_aggregation_filter)
 
     # TODO: Cleanup the renderer to use a class registry for lookup
     renderer_class_name = html.request.var("renderer")
@@ -804,10 +803,9 @@ def compute_bi_aggregation_filter(all_active_filters):
 
 def table(view, columns, query, only_sites, limit, all_active_filters):
     bi_aggregation_filter = compute_bi_aggregation_filter(all_active_filters)
-    with aggregation_compute_auto_cleanup():
-        bi_status_fetcher.set_assumed_states(config.user.bi_assumptions)
-        results = bi_computer.compute_legacy_result_for_filter(bi_aggregation_filter)
-        return results
+    bi_manager = BIManager()
+    bi_manager.status_fetcher.set_assumed_states(config.user.bi_assumptions)
+    return bi_manager.computer.compute_legacy_result_for_filter(bi_aggregation_filter)
 
 
 def hostname_table(view, columns, query, only_sites, limit, all_active_filters):
@@ -846,43 +844,72 @@ def host_table(view, columns, query, only_sites, limit, all_active_filters):
 
 def singlehost_table(view, columns, query, only_sites, limit, all_active_filters, joinbyname,
                      bygroup):
-    bi_packs.load_config()
+
     filter_code = ""
     for filt in all_active_filters:
         header = filt.filter("bi_host_aggregations")
         filter_code += header
     host_columns = [c for c in columns if c.startswith("host_")]
 
-    bi_packs.load_config()
-
     rows = []
-    with aggregation_compute_auto_cleanup():
-        bi_status_fetcher.set_assumed_states(config.user.bi_assumptions)
-        bi_aggregation_filter = compute_bi_aggregation_filter(all_active_filters)
-        required_aggregations = bi_computer.get_required_aggregations(bi_aggregation_filter)
-        bi_status_fetcher.update_states_filtered(filter_code, only_sites, limit, host_columns,
-                                                 bygroup, required_aggregations)
+    bi_manager = BIManager()
+    bi_manager.status_fetcher.set_assumed_states(config.user.bi_assumptions)
+    bi_aggregation_filter = compute_bi_aggregation_filter(all_active_filters)
+    required_aggregations = bi_manager.computer.get_required_aggregations(bi_aggregation_filter)
+    bi_manager.status_fetcher.update_states_filtered(filter_code, only_sites, limit, host_columns,
+                                                     bygroup, required_aggregations)
 
-        aggregation_results = bi_computer.compute_results(required_aggregations)
-        legacy_results = bi_computer.convert_to_legacy_results(aggregation_results,
-                                                               bi_aggregation_filter)
+    aggregation_results = bi_manager.computer.compute_results(required_aggregations)
+    legacy_results = bi_manager.computer.convert_to_legacy_results(aggregation_results,
+                                                                   bi_aggregation_filter)
 
-        for site_host_name, values in bi_status_fetcher.states.items():
-            for legacy_result in legacy_results:
-                if site_host_name in legacy_result["aggr_hosts"]:
-                    # Combine bi columns + extra livestatus columns + bi computation columns into one row
-                    row = values._asdict()
-                    row.update(row["remaining_row_keys"])
-                    del row["remaining_row_keys"]
-                    row.update(legacy_result)
-                    row["site"] = site_host_name[0]
-                    rows.append(row)
+    for site_host_name, values in bi_manager.status_fetcher.states.items():
+        for legacy_result in legacy_results:
+            if site_host_name in legacy_result["aggr_hosts"]:
+                # Combine bi columns + extra livestatus columns + bi computation columns into one row
+                row = values._asdict()
+                row.update(row["remaining_row_keys"])
+                del row["remaining_row_keys"]
+                row.update(legacy_result)
+                row["site"] = site_host_name[0]
+                rows.append(row)
     return rows
 
 
-@contextmanager
-def aggregation_compute_auto_cleanup():
-    with bi_compiler_auto_cleanup() as bi_compiler_handle:
-        bi_compiler_handle.load_compiled_aggregations()
-        with bi_computer_auto_cleanup():
-            yield
+class BIManager:
+    def __init__(self):
+        sites_callback = SitesCallback(cmk.gui.sites.states, bi_livestatus_query)
+        self.compiler = BICompiler(self.bi_configuration_file(), sites_callback)
+        self.compiler.load_compiled_aggregations()
+        self.status_fetcher = BIStatusFetcher(sites_callback)
+        self.computer = BIComputer(self.compiler.compiled_aggregations, self.status_fetcher)
+
+    @classmethod
+    def bi_configuration_file(cls) -> str:
+        return str(Path(watolib.multisite_dir()) / "bi_config.mk")
+
+
+def get_cached_bi_packs():
+    if "bi_packs" not in g:
+        g.bi_packs = BIAggregationPacks(BIManager.bi_configuration_file())
+        g.bi_packs.load_config()
+    return g.bi_packs
+
+
+def get_cached_bi_manager():
+    if "bi_manager" not in g:
+        g.bi_manager = BIAggregationPacks(BIManager.bi_configuration_file())
+    return g.bi_manager
+
+
+def bi_livestatus_query(query: str, only_sites: Optional[List[SiteId]] = None):
+    ls = cmk.gui.sites.live()
+    try:
+        ls.set_only_sites(only_sites)
+        ls.set_prepend_site(True)
+        ls.set_auth_domain('bi')
+        return ls.query(query)
+    finally:
+        ls.set_prepend_site(False)
+        ls.set_only_sites(None)
+        ls.set_auth_domain('read')

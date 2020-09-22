@@ -68,12 +68,13 @@ AVTimelineStatistics = Dict[AVTimelineStateName, _Tuple[int, int, int]]
 AVTimelineStyle = str
 
 from cmk.utils.bi.bi_data_fetcher import (
-    bi_status_fetcher,
     BIServiceWithFullState,
     BIHostStatusInfoRow,
     BIStatusInfo,
     BIHostSpec,
 )
+
+from cmk.gui.bi import BIManager
 
 # Example for annotations:
 # {
@@ -1933,6 +1934,8 @@ def compute_bi_timelines(timeline_containers: List[TimelineContainer], time_rang
                 (values["in_service_period"] != 0),
             )
 
+    bi_manager = BIManager()
+
     # Initial phase, this includes all elements
     from_time, first_phase = phases_list[0]
     first_phase_keys = set(first_phase.keys())
@@ -1942,7 +1945,7 @@ def compute_bi_timelines(timeline_containers: List[TimelineContainer], time_rang
         update_states(timeline_container.states, use_elements, first_phase)
 
         # States does now reflect the host/services states at the beginning of the query range.
-        tree_state = _compute_bi_tree_state(timeline_container)
+        tree_state = _compute_bi_tree_state(timeline_container, bi_manager)
 
         tree_time = time_range[0]
         timeline_container.timewarp_state = tree_state if timewarp == int(tree_time) else None
@@ -1959,7 +1962,7 @@ def compute_bi_timelines(timeline_containers: List[TimelineContainer], time_rang
                 continue
 
             update_states(timeline_container.states, use_elements, phase_hst_svc)
-            next_tree_state = _compute_bi_tree_state(timeline_container)
+            next_tree_state = _compute_bi_tree_state(timeline_container, bi_manager)
 
             timeline_container.timeline.append(
                 create_bi_timeline_entry(timeline_container.aggr_tree,
@@ -2001,7 +2004,7 @@ def create_bi_timeline_entry(tree, aggr_group, from_time, until_time, tree_state
     }
 
 
-def _compute_bi_tree_state(timeline_container) -> BITreeState:
+def _compute_bi_tree_state(timeline_container, bi_manager) -> BITreeState:
     # Convert our status format into that needed by BI
     #
     status = timeline_container.states
@@ -2031,7 +2034,7 @@ def _compute_bi_tree_state(timeline_container) -> BITreeState:
         else:
             hosts[site_host] = state_output
 
-    bi_status_fetcher.states = _compute_status_info(hosts, services_by_host)
+    bi_manager.status_fetcher.states = _compute_status_info(hosts, services_by_host)
     compiled_aggregation = timeline_container.aggr_compiled_aggregation
     branch = timeline_container.aggr_compiled_branch
     results = compiled_aggregation.compute_branches([branch])

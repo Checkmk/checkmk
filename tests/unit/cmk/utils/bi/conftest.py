@@ -7,64 +7,39 @@
 import pytest
 
 from cmk.utils.bi.bi_node_generator import BINodeGenerator
-from cmk.utils.bi.bi_searcher import bi_searcher
+from cmk.utils.bi.bi_searcher import BISearcher
+from cmk.utils.bi.bi_data_fetcher import BIStructureFetcher, BIStatusFetcher
 from cmk.utils.bi.bi_rule import BIRule
 from cmk.utils.bi.bi_rule_interface import bi_rule_id_registry
-from cmk.utils.bi.bi_data_fetcher import bi_structure_fetcher, bi_status_fetcher
-from cmk.utils.bi.bi_packs import bi_packs
+from cmk.utils.bi.bi_lib import SitesCallback
+from cmk.utils.bi.bi_packs import BIAggregationPacks
 
 import bi_test_data.sample_config as sample_config
 
 
 @pytest.fixture(scope="function")
-def use_test_structure_data():
-    try:
-        bi_structure_fetcher.add_site_data("heute", sample_config.bi_structure_states)
-        bi_searcher.set_hosts(bi_structure_fetcher.hosts)
-        yield
-    finally:
-        bi_searcher.cleanup()
-        bi_structure_fetcher.cleanup()
+def bi_searcher():
+    yield BISearcher()
 
 
 @pytest.fixture(scope="function")
-def use_test_status_data():
-    try:
-        bi_status_fetcher.states = bi_status_fetcher.create_bi_status_data(
-            sample_config.bi_status_rows)
-        yield bi_status_fetcher
-    finally:
-        bi_status_fetcher.cleanup()
+def bi_searcher_with_sample_config(bi_searcher):
+    structure_fetcher = BIStructureFetcher(SitesCallback(lambda: None, lambda: None))
+    structure_fetcher.add_site_data("heute", sample_config.bi_structure_states)
+    bi_searcher.set_hosts(structure_fetcher.hosts)
+    yield bi_searcher
 
 
 @pytest.fixture(scope="function")
-def use_test_acknowledgement_status_data():
-    try:
-        bi_status_fetcher.states = bi_status_fetcher.create_bi_status_data(
-            sample_config.bi_acknowledgment_status_rows)
-        yield bi_status_fetcher
-    finally:
-        bi_status_fetcher.cleanup()
+def bi_status_fetcher():
+    status_fetcher = BIStatusFetcher(SitesCallback(lambda: None, lambda: None))
+    yield status_fetcher
 
 
 @pytest.fixture(scope="function")
-def use_test_downtime_status_data():
-    try:
-        bi_status_fetcher.states = bi_status_fetcher.create_bi_status_data(
-            sample_config.bi_downtime_status_rows)
-        yield bi_status_fetcher
-    finally:
-        bi_status_fetcher.cleanup()
-
-
-@pytest.fixture(scope="function")
-def use_test_service_period_status_data():
-    try:
-        bi_status_fetcher.states = bi_status_fetcher.create_bi_status_data(
-            sample_config.bi_service_period_status_rows)
-        yield bi_status_fetcher
-    finally:
-        bi_status_fetcher.cleanup()
+def bi_structure_fetcher():
+    structure_fetcher = BIStructureFetcher(SitesCallback(lambda: None, lambda: None))
+    yield structure_fetcher
 
 
 @pytest.fixture(scope="function")
@@ -81,11 +56,9 @@ def dummy_bi_rule():
 
 
 @pytest.fixture(scope="function")
-def bi_packs_sample_config(monkeypatch):
-    try:
-        bi_packs.load_config_from_schema(sample_config.bi_packs_config)
-        monkeypatch.setattr("cmk.utils.bi.bi_packs.bi_packs.load_config", lambda: None)
-        monkeypatch.setattr("cmk.utils.bi.bi_packs.bi_packs.save_config", lambda: None)
-        yield bi_packs
-    finally:
-        bi_packs.cleanup()
+def bi_packs_sample_config():
+    bi_packs = BIAggregationPacks("")
+    bi_packs.load_config_from_schema(sample_config.bi_packs_config)
+    bi_packs.load_config = lambda: None
+    bi_packs.save_config = lambda: None
+    yield bi_packs

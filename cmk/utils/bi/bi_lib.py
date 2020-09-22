@@ -6,6 +6,7 @@
 
 import abc
 from typing import (
+    Callable,
     TypeVar,
     Any,
     NamedTuple,
@@ -15,35 +16,41 @@ from typing import (
     List,
     Dict,
     Type,
+    Tuple,
+)
+
+from livestatus import SiteId
+from marshmallow import Schema  # type: ignore[import]
+from marshmallow.fields import (  # type: ignore[import]
+    List as MList, Dict as MDict, Constant, Integer, String, Nested, Boolean,
 )
 
 from functools import partial
+ReqList = partial(MList, required=True)
+ReqDict = partial(MDict, required=True)
+ReqConstant = partial(Constant, required=True)
+ReqInteger = partial(Integer, required=True)
+ReqString = partial(String, required=True)
+ReqNested = partial(Nested, required=True)
+ReqBoolean = partial(Boolean, required=True)
 
+MacroMappings = Dict[str, str]
+SearchResult = Dict[str, str]
+
+import cmk.utils.plugin_registry as plugin_registry
 from cmk.utils.bi.type_defs import (
     ActionConfig,
     ComputationConfigDict,
     GroupConfigDict,
     SearchConfig,
 )
-import cmk.utils.plugin_registry as plugin_registry
 from cmk.utils.type_defs import (
     HostName,
     ServiceName,
+    HostState,
+    ServiceState,
+    ServiceDetails,
 )
-
-from marshmallow import Schema, fields
-from livestatus import SiteId
-
-ReqList = partial(fields.List, required=True)
-ReqDict = partial(fields.Dict, required=True)
-ReqConstant = partial(fields.Constant, required=True)
-ReqInteger = partial(fields.Integer, required=True)
-ReqString = partial(fields.String, required=True)
-ReqNested = partial(fields.Nested, required=True)
-ReqBoolean = partial(fields.Boolean, required=True)
-
-MacroMappings = Dict[str, str]
-SearchResult = Dict[str, str]
 
 NodeComputeResult = NamedTuple("NodeComputeResult", [
     ("state", int),
@@ -61,6 +68,70 @@ NodeResultBundle = NamedTuple("NodeResultBundle", [
     ("instance", Any),
 ])
 
+SitesCallback = NamedTuple("SitesCallback", [
+    ("states", Callable),
+    ("query", Callable),
+])
+
+MapGroup2Value = Dict[str, str]
+
+BIServiceData = NamedTuple("BIServiceData", [
+    ("tags", Set[str]),
+    ("labels", MapGroup2Value),
+])
+
+BIHostData = NamedTuple("BIHostData", [
+    ("site_id", str),
+    ("tags", Set[str]),
+    ("labels", MapGroup2Value),
+    ("folder", str),
+    ("services", Dict[str, BIServiceData]),
+    ("children", Tuple[HostName]),
+    ("parents", Tuple[HostName]),
+    ("alias", str),
+    ("name", HostName),
+])
+
+BIHostSpec = NamedTuple("BIHostSpec", [
+    ("site_id", SiteId),
+    ("host_name", HostName),
+])
+BINeededHosts = Set[BIHostSpec]
+
+BIServiceWithFullState = NamedTuple("BIServiceFullState", [
+    ("state", Optional[ServiceState]),
+    ("has_been_checked", bool),
+    ("plugin_output", ServiceDetails),
+    ("hard_state", Optional[ServiceState]),
+    ("current_attempt", int),
+    ("max_check_attempts", int),
+    ("scheduled_downtime_depth", int),
+    ("acknowledged", bool),
+    ("in_service_period", bool),
+])
+BIHostStatusInfoRow = NamedTuple("BIStatusInfoRow", [
+    ("state", Optional[HostState]),
+    ("hard_state", Optional[HostState]),
+    ("plugin_output", str),
+    ("scheduled_downtime_depth", int),
+    ("in_service_period", bool),
+    ("acknowledged", bool),
+    ("services_with_fullstate", Dict[ServiceName, BIServiceWithFullState]),
+    ("remaining_row_keys", dict),
+])
+BIStatusInfo = Dict[BIHostSpec, BIHostStatusInfoRow]
+
+BIHostSearchMatch = NamedTuple("BIHostSearchMatch", [
+    ("host", BIHostData),
+    ("match_groups", tuple),
+])
+
+BIServiceSearchMatch = NamedTuple("BIServiceSearchMatch", [
+    ("host", BIHostData),
+    ("service_description", str),
+    ("match_groups", tuple),
+])
+
 
 class ABCWithSchema(metaclass=abc.ABCMeta):
     @classmethod
@@ -72,15 +143,14 @@ class ABCWithSchema(metaclass=abc.ABCMeta):
 def create_nested_schema_for_class(
         class_template: Type[ABCWithSchema],
         default_schema: Optional[Type[Schema]] = None,
-        example_config: Optional[Union[list, Dict[str, Any]]] = None) -> fields.Nested:
+        example_config: Optional[Union[list, Dict[str, Any]]] = None) -> Nested:
     class_schema = class_template.schema()
     return create_nested_schema(class_schema, default_schema, example_config)
 
 
-def create_nested_schema(
-        base_schema,
-        default_schema: Optional[Type[Schema]] = None,
-        example_config: Optional[Union[list, Dict[str, Any]]] = None) -> fields.Nested:
+def create_nested_schema(base_schema,
+                         default_schema: Optional[Type[Schema]] = None,
+                         example_config: Optional[Union[list, Dict[str, Any]]] = None) -> Nested:
     """
 
     >>> from marshmallow import fields
@@ -158,8 +228,8 @@ class BIAggregationComputationOptionsSchema(Schema):
 class BIAggregationGroups(ABCWithSchema):
     def __init__(self, group_config: GroupConfigDict):
         super().__init__()
-        self.names: List[str] = group_config["names"]
-        self.paths: List[List[str]] = group_config["paths"]
+        self.names: List[str] = group_config["names"]  # type: ignore
+        self.paths: List[List[str]] = group_config["paths"]  # type: ignore
 
     def count(self) -> int:
         return len(self.names) + len(self.paths)
@@ -170,8 +240,8 @@ class BIAggregationGroups(ABCWithSchema):
 
 
 class BIAggregationGroupsSchema(Schema):
-    names = fields.List(ReqString(), default=[], example=["group1", "group2"])
-    paths = fields.List(fields.List(ReqString()), default=[], example=[["path", "of", "group1"]])
+    names = MList(ReqString(), default=[], example=["group1", "group2"])
+    paths = MList(MList(ReqString()), default=[], example=[["path", "of", "group1"]])
 
 
 class BIParams(ABCWithSchema):
@@ -187,7 +257,7 @@ class BIParams(ABCWithSchema):
 
 
 class BIParamsSchema(Schema):
-    arguments = ReqList(fields.String, default=[], example=["testhostParams"])
+    arguments = ReqList(String, default=[], example=["testhostParams"])
 
 
 T = TypeVar("T", str, dict, list)
@@ -232,6 +302,38 @@ def replace_macros_in_string(pattern: str, macros: MacroMappings) -> str:
 #   +----------------------------------------------------------------------+
 
 
+class ABCBISearcher(metaclass=abc.ABCMeta):
+    def __init__(self):
+        self.hosts = {}
+        self._host_regex_match_cache = {}
+        self._host_regex_miss_cache = {}
+
+    @abc.abstractmethod
+    def search_hosts(self, conditions: Dict) -> List[BIHostSearchMatch]:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def search_services(self, conditions: Dict) -> List[BIServiceSearchMatch]:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_host_name_matches(self, hosts: List[BIHostData],
+                              pattern: str) -> Tuple[List[BIHostData], Dict]:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_service_description_matches(self, hosts: List[BIHostData],
+                                        pattern: str) -> List[BIServiceSearchMatch]:
+        raise NotImplementedError()
+
+
+class ABCBIStatusFetcher(metaclass=abc.ABCMeta):
+    def __init__(self, sites_callback: SitesCallback):
+        self._sites_callback = sites_callback
+        self.states: BIStatusInfo = {}
+        self.assumed_states: Dict = {}
+
+
 class ABCBICompiledNode(metaclass=abc.ABCMeta):
     def __init__(self):
         super().__init__()
@@ -247,12 +349,17 @@ class ABCBICompiledNode(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def compile_postprocess(self, bi_branch_root: "ABCBICompiledNode") -> List["ABCBICompiledNode"]:
+    def compile_postprocess(
+        self,
+        bi_branch_root: "ABCBICompiledNode",
+        bi_searcher: ABCBISearcher,
+    ) -> List["ABCBICompiledNode"]:
         raise NotImplementedError()
 
     @abc.abstractmethod
     def compute(self,
                 computation_options: BIAggregationComputationOptions,
+                bi_status_fetcher: ABCBIStatusFetcher,
                 use_assumed=False) -> Optional[NodeResultBundle]:
         raise NotImplementedError()
 
@@ -286,7 +393,8 @@ class ABCBIAction(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def execute(self, search_result: Dict[str, str]) -> List[ABCBICompiledNode]:
+    def execute(self, search_result: Dict[str, str],
+                bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
         raise NotImplementedError()
 
 
@@ -325,7 +433,7 @@ class ABCBISearch(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def execute(self, macros: MacroMappings) -> List[Dict]:
+    def execute(self, macros: MacroMappings, bi_searcher: ABCBISearcher) -> List[Dict]:
         raise NotImplementedError()
 
 

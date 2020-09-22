@@ -10,6 +10,7 @@ from typing import List, Dict, Any, Type, Sequence
 import cmk.utils.plugin_registry
 from cmk.utils.bi.bi_lib import (
     ABCBICompiledNode,
+    ABCBISearcher,
     BIParams,
     ReqString,
     ReqBoolean,
@@ -90,7 +91,8 @@ class ABCBIRule(ABCWithSchema):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def compile(self, extern_arguments: List[str]) -> List[ABCBICompiledNode]:
+    def compile(self, extern_arguments: List[str],
+                bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
         raise NotImplementedError()
 
     @classmethod

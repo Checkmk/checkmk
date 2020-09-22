@@ -9,7 +9,6 @@ import time
 import marshal
 import cmk.utils.paths
 from typing import (
-    NamedTuple,
     Dict,
     Set,
     Tuple,
@@ -17,19 +16,20 @@ from typing import (
     Optional,
 )
 
-from cmk.utils.type_defs import (
-    HostName,
-    HostState,
-    ServiceName,
-    ServiceState,
-    ServiceDetails,
+from cmk.utils.type_defs import HostName
+from cmk.utils.bi.bi_lib import (
+    RequiredBIElement,
+    SitesCallback,
+    ABCBIStatusFetcher,
+    BIStatusInfo,
+    BIHostData,
+    BIServiceData,
+    BIServiceWithFullState,
+    BIHostSpec,
+    BIHostStatusInfoRow,
 )
-from cmk.utils.bi.bi_lib import RequiredBIElement
-from cmk.utils.exceptions import MKGeneralException
 from livestatus import SiteId, LivestatusResponse, LivestatusColumn
 from pathlib import Path
-
-MapGroup2Value = Dict[str, str]
 
 SiteProgramStart = Tuple[SiteId, int]
 
@@ -43,53 +43,6 @@ SiteProgramStart = Tuple[SiteId, int]
 #   +----------------------------------------------------------------------+
 
 # Structure data used by bi_compiler
-
-BIServiceData = NamedTuple("BIServiceData", [
-    ("tags", Set[str]),
-    ("labels", MapGroup2Value),
-])
-
-BIHostData = NamedTuple("BIHostData", [
-    ("site_id", str),
-    ("tags", Set[str]),
-    ("labels", MapGroup2Value),
-    ("folder", str),
-    ("services", Dict[str, BIServiceData]),
-    ("children", Tuple[HostName]),
-    ("parents", Tuple[HostName]),
-    ("alias", str),
-    ("name", HostName),
-])
-
-# Status data used by bi_computer
-BIHostSpec = NamedTuple("BIHostSpec", [
-    ("site_id", SiteId),
-    ("host_name", HostName),
-])
-BINeededHosts = Set[BIHostSpec]
-
-BIServiceWithFullState = NamedTuple("BIServiceFullState", [
-    ("state", Optional[ServiceState]),
-    ("has_been_checked", bool),
-    ("plugin_output", ServiceDetails),
-    ("hard_state", Optional[ServiceState]),
-    ("current_attempt", int),
-    ("max_check_attempts", int),
-    ("scheduled_downtime_depth", int),
-    ("acknowledged", bool),
-    ("in_service_period", bool),
-])
-BIHostStatusInfoRow = NamedTuple("BIStatusInfoRow", [
-    ("state", Optional[HostState]),
-    ("hard_state", Optional[HostState]),
-    ("plugin_output", str),
-    ("scheduled_downtime_depth", int),
-    ("in_service_period", bool),
-    ("acknowledged", bool),
-    ("services_with_fullstate", Dict[ServiceName, BIServiceWithFullState]),
-    ("remaining_row_keys", dict),
-])
-BIStatusInfo = Dict[BIHostSpec, BIHostStatusInfoRow]
 
 #   .--BIStructure Fetcher-------------------------------------------------.
 #   |        ____ ___ ____  _                   _                          |
@@ -114,9 +67,10 @@ def get_cache_dir() -> Path:
 
 
 class BIStructureFetcher:
-    def __init__(self):
-        self._hosts = {}
-        self._have_sites = set()
+    def __init__(self, sites_callback: SitesCallback):
+        self._sites_callback = sites_callback
+        self._hosts: Dict[HostName, BIHostData] = {}
+        self._have_sites: Set[SiteId] = set()
         self._path_lock_structure_cache = Path(get_cache_dir(), "bi_structure_cache.LOCK")
 
         self._site_cache_prefix = "bi_site_cache"
@@ -158,7 +112,7 @@ class BIStructureFetcher:
         only_sites = {kv[0]: kv[1] for kv in missing_program_starts}
 
         query = "GET services\nColumns: %s\nCache: reload\n" % " ".join(self._structure_columns())
-        rows = sites_callback_holder.query(query, list(only_sites.keys()))
+        rows = self._sites_callback.query(query, list(only_sites.keys()))
 
         site_data: Dict[str, Dict] = {}
         headers = ["site"] + self._structure_columns()
@@ -270,8 +224,6 @@ class BIStructureFetcher:
             return marshal.load(f)
 
 
-bi_structure_fetcher = BIStructureFetcher()
-
 #   .--BIState Fetcher-----------------------------------------------------.
 #   | ____ ___ ____  _        _         _____    _       _                 |
 #   || __ )_ _/ ___|| |_ __ _| |_ ___  |  ___|__| |_ ___| |__   ___ _ __   |
@@ -282,11 +234,7 @@ bi_structure_fetcher = BIStructureFetcher()
 #   +----------------------------------------------------------------------+
 
 
-class BIStatusFetcher:
-    def __init__(self):
-        self.states = {}
-        self.assumed_states = {}
-
+class BIStatusFetcher(ABCBIStatusFetcher):
     def set_assumed_states(self, assumed_states) -> None:
         # Streamline format to site, host, service (may be None)
         self.assumed_states = {}
@@ -307,8 +255,7 @@ class BIStatusFetcher:
         self.assumed_states.clear()
 
     # Get all status information for the required_hosts
-    @classmethod
-    def _get_status_info(cls, required_elements) -> BIStatusInfo:
+    def _get_status_info(self, required_elements) -> BIStatusInfo:
         # Query each site only for hosts that that site provides
         req_hosts: Set[HostName] = set()
         req_sites: Set[SiteId] = set()
@@ -325,20 +272,19 @@ class BIStatusFetcher:
         if len(req_hosts) > 1:
             host_filter += "Or: %d\n" % len(req_hosts)
 
-        query = "GET hosts\nColumns: %s\n" % " ".join(cls.get_status_columns()) + host_filter
-        return cls.create_bi_status_data(sites_callback_holder.query(query, list(req_sites)))
+        query = "GET hosts\nColumns: %s\n" % " ".join(self.get_status_columns()) + host_filter
+        return self.create_bi_status_data(self._sites_callback.query(query, list(req_sites)))
 
     # This variant of the function is configured not with a list of
     # hosts but with a livestatus filter header and a list of columns
     # that need to be fetched in any case
-    @classmethod
-    def _get_status_info_filtered(cls, filter_header, only_sites, limit, host_columns, bygroup,
+    def _get_status_info_filtered(self, filter_header, only_sites, limit, host_columns, bygroup,
                                   required_aggregations) -> BIStatusInfo:
-        columns = cls.get_status_columns() + host_columns
+        columns = self.get_status_columns() + host_columns
         query = "GET hosts%s\n" % ("bygroup" if bygroup else "")
         query += "Columns: " + (" ".join(columns)) + "\n"
         query += filter_header
-        data = sites_callback_holder.query(query, only_sites)
+        data = self._sites_callback.query(query, only_sites)
 
         # Now determine aggregation branches which include the site hosts
         site_hosts = {(row[0], row[1]) for row in data}
@@ -371,9 +317,9 @@ class BIStatusFetcher:
             query = "GET hosts%s\n" % ("bygroup" if bygroup else "")
             query += "Columns: " + (" ".join(columns)) + "\n"
             query += host_filter
-            data.extend(sites_callback_holder.query(query, list(remaining_sites)))
+            data.extend(self._sites_callback.query(query, list(remaining_sites)))
 
-        return cls.create_bi_status_data(data, extra_columns=host_columns)
+        return self.create_bi_status_data(data, extra_columns=host_columns)
 
     @classmethod
     def create_bi_status_data(
@@ -406,42 +352,3 @@ class BIStatusFetcher:
             "name", "state", "hard_state", "plugin_output", "scheduled_downtime_depth",
             "in_service_period", "acknowledged", "services_with_fullstate"
         ]
-
-
-class SitesCallbackHolder:
-    def __init__(self):
-        self._sites_callback = None
-
-    def set_callback(self, sites_callback):
-        self._sites_callback = sites_callback
-
-    @property
-    def sites_callback(self):
-        if not self._sites_callback:
-            raise MKGeneralException("Sites callback not initiated")
-        return self._sites_callback
-
-    @property
-    def livestatus_connection(self):
-        return self.sites_callback.live()
-
-    def query(self, query: str, only_sites: Optional[List[SiteId]] = None):
-        ls = self.livestatus_connection
-        try:
-            ls.set_only_sites(only_sites)
-            ls.set_prepend_site(True)
-            ls.set_auth_domain('bi')
-            return ls.query(query)
-        finally:
-            ls.set_prepend_site(False)
-            ls.set_only_sites(None)
-            ls.set_auth_domain('read')
-
-    @property
-    def site_states(self):
-        return self.sites_callback.states()
-
-
-sites_callback_holder = SitesCallbackHolder()
-
-bi_status_fetcher = BIStatusFetcher()

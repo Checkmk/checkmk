@@ -16,6 +16,7 @@ from cmk.utils.bi.bi_lib import (
 from cmk.utils.bi.bi_lib import (
     BIAggregationGroups,
     BIAggregationComputationOptions,
+    ABCBISearcher,
 )
 
 from cmk.utils.bi.bi_rule import BIRule
@@ -57,15 +58,15 @@ class BIAggregation:
         aggregation_config = self.schema()().dump(self)
         return BIAggregation(aggregation_config)
 
-    def compile(self) -> BICompiledAggregation:
+    def compile(self, bi_searcher: ABCBISearcher) -> BICompiledAggregation:
         compiled_branches: List[BICompiledRule] = []
         if not self.computation_options.disabled:
-            branches = self.node.compile({})
+            branches = self.node.compile({}, bi_searcher)
 
             # Each sub-branch represents one BI Aggregation with an unique name
             # The postprocessing phase takes care of the "remaining services" action
             for branch in branches:
-                branch.compile_postprocess(branch)
+                branch.compile_postprocess(branch, bi_searcher)
 
             compiled_branches = self._verify_all_branches_start_with_rule(branches)
 

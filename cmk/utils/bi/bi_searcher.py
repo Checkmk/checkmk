@@ -5,10 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.utils.regex import regex
-from typing import NamedTuple, Dict, List, Tuple
+from typing import Dict, List, Tuple
 from cmk.utils.rulesets.ruleset_matcher import matches_labels, matches_tag_spec
 
-from cmk.utils.bi.bi_data_fetcher import BIHostData
+from cmk.utils.bi.bi_lib import (
+    ABCBISearcher,
+    BIHostSearchMatch,
+    BIServiceSearchMatch,
+    BIHostData,
+)
 
 #   .--Defines-------------------------------------------------------------.
 #   |                  ____        __ _                                    |
@@ -20,16 +25,6 @@ from cmk.utils.bi.bi_data_fetcher import BIHostData
 #   +----------------------------------------------------------------------+
 
 # Search data used by bi_searcher
-BIHostSearchMatch = NamedTuple("BIHostSearchMatch", [
-    ("host", BIHostData),
-    ("match_groups", tuple),
-])
-
-BIServiceSearchMatch = NamedTuple("BIServiceSearchMatch", [
-    ("host", BIHostData),
-    ("service_description", str),
-    ("match_groups", tuple),
-])
 
 #   .--BISearcher----------------------------------------------------------.
 #   |         ____ ___ ____                      _                         |
@@ -41,12 +36,7 @@ BIServiceSearchMatch = NamedTuple("BIServiceSearchMatch", [
 #   +----------------------------------------------------------------------+
 
 
-class BISearcher:
-    def __init__(self):
-        self.hosts = {}
-        self._host_regex_match_cache = {}
-        self._host_regex_miss_cache = {}
-
+class BISearcher(ABCBISearcher):
     def set_hosts(self, hosts: Dict[str, BIHostData]) -> None:
         self.cleanup()
         self.hosts = hosts
@@ -144,7 +134,7 @@ class BISearcher:
         return matched_services
 
     def search_services(self, conditions: Dict) -> List[BIServiceSearchMatch]:
-        host_matches: List[BIHostSearchMatch] = bi_searcher.search_hosts(conditions)
+        host_matches: List[BIHostSearchMatch] = self.search_hosts(conditions)
         service_matches = self.get_service_description_matches([x.host for x in host_matches],
                                                                conditions["service_regex"])
         service_matches = self.filter_service_labels(service_matches, conditions["service_labels"])
@@ -179,6 +169,3 @@ class BISearcher:
             if matches_labels(service_data.labels, required_labels):
                 matched_services.append(service)
         return matched_services
-
-
-bi_searcher = BISearcher()

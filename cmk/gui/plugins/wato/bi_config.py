@@ -73,16 +73,15 @@ from cmk.gui.page_menu import (
 )
 
 from cmk.gui.node_visualization import BILayoutManagement
-
-from cmk.utils.bi.bi_compiler import bi_compiler_auto_cleanup
 from cmk.utils.bi.bi_aggregation_functions import BIAggregationFunctionSchema
-from cmk.utils.bi.bi_packs import bi_packs, BIAggregationPack
+from cmk.utils.bi.bi_packs import BIAggregationPack
 from cmk.utils.bi.bi_rule import BIRule, BIRuleSchema
 from cmk.utils.bi.bi_aggregation import BIAggregation, BIAggregationSchema
 from cmk.gui.permissions import (
     permission_registry,
     Permission,
 )
+from cmk.gui.bi import get_cached_bi_packs, BIManager
 
 # TODO: forbidden import, integrate into bi_config... ?
 import cmk.gui.plugins.wato.bi_valuespecs as bi_valuespecs
@@ -138,7 +137,9 @@ class MainModuleBI(MainModule):
 class ABCBIMode(WatoMode):
     def __init__(self):
         super().__init__()
-        bi_packs.load_config()
+        self._bi_packs = get_cached_bi_packs()
+        self._bi_pack = None
+
         # Most modes need a pack as context
         self._bi_pack = self._get_pack_from_request()
 
@@ -146,7 +147,7 @@ class ABCBIMode(WatoMode):
         if html.request.has_var("pack"):
             pack_id = html.request.get_str_input_mandatory("pack")
             try:
-                return bi_packs.get_pack_mandatory(pack_id)
+                return self._bi_packs.get_pack_mandatory(pack_id)
             except KeyError:
                 raise MKUserError("pack", _("This BI pack does not exist: %s") % pack_id)
         return None
@@ -183,7 +184,7 @@ class ABCBIMode(WatoMode):
         ]
 
     def render_rule_tree(self, rule_id, tree_path, tree_prefix=""):
-        bi_pack = bi_packs.get_pack_of_rule(rule_id)
+        bi_pack = self._bi_packs.get_pack_of_rule(rule_id)
         if bi_pack is None:
             raise MKUserError("pack", _("This BI pack does not exist."))
         bi_rule = bi_pack.get_rule(rule_id)
@@ -230,7 +231,7 @@ class ABCBIMode(WatoMode):
 
     def _allowed_rules(self):
         allowed_rules = {}
-        for bi_pack in sorted(bi_packs.get_packs().values()):
+        for bi_pack in sorted(self._bi_packs.get_packs().values()):
             if bi_valuespecs.may_use_rules_in_pack(bi_pack):
                 allowed_rules.update(bi_pack.get_rules())
         return allowed_rules
@@ -265,13 +266,13 @@ class ModeBIEditPack(ABCBIMode):
                 self.bi_pack.public = vs_config["public"]
                 self._add_change("bi-edit-pack", _("Modified BI pack %s") % self.bi_pack.id)
             else:
-                if bi_packs.pack_exists(vs_config["id"]):
+                if self._bi_packs.pack_exists(vs_config["id"]):
                     raise MKUserError("pack_id", _("A BI pack with this ID already exists."))
                 self._add_change("bi-new-pack", _("Added new BI pack %s") % vs_config["id"])
                 vs_config["rules"] = {}
                 vs_config["aggregations"] = {}
-                bi_packs.add_pack(BIAggregationPack(vs_config))
-            bi_packs.save_config()
+                self._bi_packs.add_pack(BIAggregationPack(vs_config))
+            self._bi_packs.save_config()
 
         return "bi_packs"
 
@@ -435,7 +436,7 @@ class ModeBIPacks(ABCBIMode):
         config.user.need_permission("wato.bi_admin")
 
         pack_id = html.request.get_str_input_mandatory("_delete")
-        pack = bi_packs.get_pack(pack_id)
+        pack = self._bi_packs.get_pack(pack_id)
         if pack is None:
             raise MKUserError("_delete", _("This BI pack does not exist."))
 
@@ -449,14 +450,14 @@ class ModeBIPacks(ABCBIMode):
              ) % (pack_id, pack.title, pack.num_aggregations()))
         if c:
             self._add_change("delete-bi-pack", _("Deleted BI pack %s") % pack_id)
-            bi_packs.delete_pack(pack_id)
-            bi_packs.save_config()
+            self._bi_packs.delete_pack(pack_id)
+            self._bi_packs.save_config()
         elif c is False:
             return ""
 
     def page(self):
         with table_element(title=_("BI Configuration Packs")) as table:
-            for pack in sorted(bi_packs.packs.values(), key=lambda x: x.id):
+            for pack in sorted(self._bi_packs.packs.values(), key=lambda x: x.id):
                 if not bi_valuespecs.may_use_rules_in_pack(pack):
                     continue
 
@@ -642,7 +643,7 @@ class ModeBIRules(ABCBIMode):
         if c:
             self.bi_pack.delete_rule(rule_id)
             self._add_change("bi-delete-rule", _("Deleted BI rule with ID %s") % rule_id)
-            bi_packs.save_config()
+            self._bi_packs.save_config()
         elif c is False:  # not yet confirmed
             return ""
 
@@ -659,12 +660,12 @@ class ModeBIRules(ABCBIMode):
                 for rule_id in selection:
                     self.bi_pack.delete_rule(rule_id)
                     self._add_change("bi-delete-rule", _("Deleted BI rule with ID %s") % rule_id)
-                bi_packs.save_config()
+                self._bi_packs.save_config()
             elif c is False:
                 return ""
 
     def _check_delete_rule_id_permission(self, rule_id):
-        aggr_refs, rule_refs, _level = bi_packs.count_rule_references(rule_id)
+        aggr_refs, rule_refs, _level = self._bi_packs.count_rule_references(rule_id)
         if aggr_refs:
             raise MKUserError(None,
                               _("You cannot delete this rule: it is still used by aggregations."))
@@ -681,7 +682,7 @@ class ModeBIRules(ABCBIMode):
         if target_pack_id is None:
             raise MKUserError(None, _("This BI pack does not exist."))
 
-        target_pack = bi_packs.get_pack(target_pack_id)
+        target_pack = self._bi_packs.get_pack(target_pack_id)
         if target_pack is None:
             raise MKUserError(None, _("This BI pack does not exist."))
 
@@ -701,7 +702,7 @@ class ModeBIRules(ABCBIMode):
                     self._add_change(
                         "bi-move-rule",
                         _("Moved BI rule with ID %s to BI pack %s") % (rule_id, target_pack_id))
-                bi_packs.save_config()
+                self._bi_packs.save_config()
             elif c is False:
                 return ""
 
@@ -757,7 +758,7 @@ class ModeBIRules(ABCBIMode):
 
     def _show_bulk_move_choices(self):
         return [(pack_id, bi_pack)
-                for pack_id, bi_pack in bi_packs.get_packs().items()
+                for pack_id, bi_pack in self._bi_packs.get_packs().items()
                 if pack_id is not self.bi_pack.id and bi_valuespecs.is_contact_for_pack(bi_pack)]
 
     def render_rules(self, title, only_unused):
@@ -765,9 +766,8 @@ class ModeBIRules(ABCBIMode):
 
         rules = self.bi_pack.get_rules().items()
         # Sort rules according to nesting level, and then to id
-        rules_refs = [
-            (rule_id, rule, bi_packs.count_rule_references(rule_id)) for (rule_id, rule) in rules
-        ]
+        rules_refs = [(rule_id, rule, self._bi_packs.count_rule_references(rule_id))
+                      for (rule_id, rule) in rules]
         rules_refs.sort(key=lambda x: (x[1].properties.title, x[2][2]))
 
         with table_element("bi_rules", title) as table:
@@ -849,13 +849,13 @@ class ModeBIRules(ABCBIMode):
                     table.text_cell(_("Documentation URL"), bi_rule.properties.docu_url or "")
 
     def _aggregation_title(self, bi_aggregation):
-        rule = bi_packs.get_rule(bi_aggregation.node.action.rule_id)
+        rule = self._bi_packs.get_rule(bi_aggregation.node.action.rule_id)
         assert rule is not None
         return "%s (%s)" % (rule.properties.title, rule.id)
 
     def _find_aggregation_rule_usages(self):
         aggregations_that_use_rule: Dict[str, List] = {}
-        for pack_id, bi_pack in bi_packs.get_packs().items():
+        for pack_id, bi_pack in self._bi_packs.get_packs().items():
             for aggr_id, bi_aggregation in bi_pack.get_aggregations().items():
                 action = bi_aggregation.node.action
                 if not isinstance(action, BICallARuleAction):
@@ -871,7 +871,7 @@ class ModeBIRules(ABCBIMode):
         return aggregations_that_use_rule
 
     def _aggregation_recursive_sub_rule_ids(self, rule_id):
-        bi_pack = bi_packs.get_pack_of_rule(rule_id)
+        bi_pack = self._bi_packs.get_pack_of_rule(rule_id)
         if bi_pack is None:
             return []
 
@@ -962,10 +962,10 @@ class ModeBIEditRule(ABCBIMode):
             (self.rule_id, new_rule_id))
 
         if c:
-            bi_packs.rename_rule_id(self.rule_id, new_bi_rule.id)
+            self._bi_packs.rename_rule_id(self.rule_id, new_bi_rule.id)
             self._add_change("bi-edit-rule",
                              _("Renamed BI rule from %s to %s") % (self.rule_id, new_rule_id))
-            bi_packs.save_config()
+            self._bi_packs.save_config()
             return "bi_rules"
 
         return False
@@ -974,7 +974,7 @@ class ModeBIEditRule(ABCBIMode):
         if self._new:
             self._rule_id = new_bi_rule.id
 
-        existing_bi_pack = bi_packs.get_pack_of_rule(self._rule_id) if self._rule_id else None
+        existing_bi_pack = self._bi_packs.get_pack_of_rule(self._rule_id) if self._rule_id else None
         if self._new and self._rule_id and existing_bi_pack is not None:
             existing_bi_rule = existing_bi_pack.get_rule(self._rule_id)
             assert existing_bi_rule is not None
@@ -990,7 +990,7 @@ class ModeBIEditRule(ABCBIMode):
 
         self.bi_pack.add_rule(new_bi_rule)
         try:
-            bi_packs.save_config()
+            self._bi_packs.save_config()
         except MKGeneralException as e:
             raise MKUserError(None, str(e))
 
@@ -1003,7 +1003,7 @@ class ModeBIEditRule(ABCBIMode):
 
     def _get_forbidden_packs_using_rule(self):
         forbidden_packs = set()
-        for pack_id, bi_pack in bi_packs.get_packs().items():
+        for pack_id, bi_pack in self._bi_packs.get_packs().items():
             uses_rule = False
             if self.bi_pack.id == bi_pack.id:
                 continue
@@ -1063,7 +1063,7 @@ class ModeBIEditRule(ABCBIMode):
             if bi_node.action.type() != 'call_a_rule':
                 continue
 
-            bi_pack = bi_packs.get_pack_of_rule(bi_rule.id)
+            bi_pack = self._bi_packs.get_pack_of_rule(bi_rule.id)
             if bi_pack is not None and not bi_valuespecs.may_use_rules_in_pack(bi_pack):
                 forbidden_pack = (bi_pack.id, bi_pack.title)
                 rules_without_permissions.setdefault(forbidden_pack, [])
@@ -1083,7 +1083,7 @@ class ModeBIEditRule(ABCBIMode):
         return choice[1]
 
     def _transform_forth_vs_call_rule(self, rule_id):
-        bi_pack = bi_packs.get_rule(rule_id)
+        bi_pack = self._bi_packs.get_rule(rule_id)
         if bi_pack:
             return (bi_pack.id, rule_id)
         return None
@@ -1252,75 +1252,74 @@ class BIAggregationForm(Dictionary):
 @page_registry.register_page("ajax_bi_rule_preview")
 class AjaxBIRulePreview(AjaxPage):
     def page(self):
-        with bi_compiler_auto_cleanup() as bi_compiler:
-            #bi_structure_fetcher.update_data(
-            #    bi_compiler.compute_current_configstatus()["online_sites"])
-            bi_compiler.prepare_for_compilation(
-                bi_compiler.compute_current_configstatus()["online_sites"])
+        bi_manager = BIManager()
+        bi_manager.compiler.prepare_for_compilation(
+            bi_manager.compiler.compute_current_configstatus()["online_sites"])
 
-            # Create preview rule
-            vs = ModeBIEditRule.valuespec()
-            varprefix = html.request.var("varprefix")
-            preview_config = vs.from_html_vars(varprefix)
-            preview_bi_rule = BIRule(preview_config)
+        # Create preview rule
+        vs = ModeBIEditRule.valuespec()
+        varprefix = html.request.var("varprefix")
+        preview_config = vs.from_html_vars(varprefix)
+        preview_bi_rule = BIRule(preview_config)
 
-            mapped_example_arguments = {}
-            example_arguments = json.loads(
-                html.request.get_str_input_mandatory("example_arguments"))
-            for idx, name in enumerate(preview_bi_rule.params.arguments):
-                if idx >= len(example_arguments):
-                    break
-                mapped_example_arguments["$%s$" % name] = example_arguments[idx]
+        mapped_example_arguments = {}
+        example_arguments = json.loads(html.request.get_str_input_mandatory("example_arguments"))
+        for idx, name in enumerate(preview_bi_rule.params.arguments):
+            if idx >= len(example_arguments):
+                break
+            mapped_example_arguments["$%s$" % name] = example_arguments[idx]
 
-            response = []
-            for node in preview_bi_rule.nodes:
-                try:
-                    # TODO: start in thread, check timeout
-                    # Provide performance statistics/advice for bad regex and setups
-                    search_results = node.search.execute(mapped_example_arguments)
-                    modified_search_results = []
-                    for search_result in search_results:
-                        entry = mapped_example_arguments.copy()
-                        entry.update(search_result)
-                        modified_search_results.append(entry)
-                    response.append(_finalize_preview_response(modified_search_results))
-                except MKGeneralException:
-                    response.append([{"Error": _("Can not evaluate search")}])
+        response = []
+        for node in preview_bi_rule.nodes:
+            try:
+                # TODO: start in thread, check timeout
+                # Provide performance statistics/advice for bad regex and setups
+                search_results = node.search.execute(mapped_example_arguments,
+                                                     bi_manager.compiler.bi_searcher)
+                modified_search_results = []
+                for search_result in search_results:
+                    entry = mapped_example_arguments.copy()
+                    entry.update(search_result)
+                    modified_search_results.append(entry)
+                response.append(_finalize_preview_response(modified_search_results))
+            except MKGeneralException:
+                response.append([{"Error": _("Can not evaluate search")}])
 
-            return {
-                "title": _("Search result(s) preview"),
-                "data": response,
-                "params": preview_bi_rule.params.arguments,
-            }
+        return {
+            "title": _("Search result(s) preview"),
+            "data": response,
+            "params": preview_bi_rule.params.arguments,
+        }
 
 
 @page_registry.register_page("ajax_bi_aggregation_preview")
 class AjaxBIAggregationPreview(AjaxPage):
     def page(self):
         # Prepare compiler
-        with bi_compiler_auto_cleanup() as bi_compiler:
-            bi_compiler.prepare_for_compilation(
-                bi_compiler.compute_current_configstatus()["online_sites"])
+        bi_manager = BIManager()
+        bi_manager.compiler.prepare_for_compilation(
+            bi_manager.compiler.compute_current_configstatus()["online_sites"])
 
-            # Create preview aggr
-            varprefix = html.request.var("varprefix")
-            vs = BIModeEditAggregation.get_vs_aggregation()
-            preview_config = vs.from_html_vars(varprefix)
-            preview_bi_aggr = BIAggregation(preview_config)
+        # Create preview aggr
+        varprefix = html.request.var("varprefix")
+        vs = BIModeEditAggregation.get_vs_aggregation()
+        preview_config = vs.from_html_vars(varprefix)
+        preview_bi_aggr = BIAggregation(preview_config)
 
-            response = []
-            try:
-                # TODO: start in thread, check timeout
-                # Provide performance statistics/advice for bad regex and setups
-                search_results = preview_bi_aggr.node.search.execute({})
-                response.append(_finalize_preview_response(search_results))
-            except MKGeneralException:
-                response.append([{_("Error"): _("Can not evaluate search")}])
+        response = []
+        try:
+            # TODO: start in thread, check timeout
+            # Provide performance statistics/advice for bad regex and setups
+            search_results = preview_bi_aggr.node.search.execute({},
+                                                                 bi_manager.compiler.bi_searcher)
+            response.append(_finalize_preview_response(search_results))
+        except MKGeneralException:
+            response.append([{_("Error"): _("Can not evaluate search")}])
 
-            return {
-                "title": _("Search result(s) preview"),
-                "data": response,
-            }
+        return {
+            "title": _("Search result(s) preview"),
+            "data": response,
+        }
 
 
 def _finalize_preview_response(response):
@@ -1409,8 +1408,8 @@ class BIModeEditAggregation(ABCBIMode):
             self._bi_aggregation.pack_id = self.bi_pack.id
         else:
             try:
-                self._bi_aggregation = bi_packs.get_aggregation_mandatory(aggr_id)
-            except KeyError:
+                self._bi_aggregation = self._bi_packs.get_aggregation(aggr_id)
+            except IndexError:
                 raise MKUserError("id", _("This aggregation does not exist."))
 
     @classmethod
@@ -1433,7 +1432,7 @@ class BIModeEditAggregation(ABCBIMode):
 
     def _get_aggregations_by_id(self):
         ids = {}
-        for bi_pack in bi_packs.get_packs().values():
+        for bi_pack in self._bi_packs.get_packs().values():
             for bi_aggregation in bi_pack.get_aggregations().values():
                 ids[bi_aggregation.id] = (bi_pack, bi_aggregation)
         return ids
@@ -1465,7 +1464,7 @@ class BIModeEditAggregation(ABCBIMode):
                 aggregation_ids[new_bi_aggregation.id][0].id)
 
         self.bi_pack.add_aggregation(new_bi_aggregation)
-        bi_packs.save_config()
+        self._bi_packs.save_config()
         if self._new:
             self._add_change("bi-new-aggregation",
                              _("Add new BI aggregation %s") % new_bi_aggregation.id)
@@ -1657,7 +1656,7 @@ class BIModeAggregations(ABCBIMode):
         return self.title_for_pack(self.bi_pack) + " - " + _("Aggregations")
 
     def have_rules(self):
-        return sum(x.num_rules() for x in bi_packs.get_packs().values()) > 0
+        return sum(x.num_rules() for x in self._bi_packs.get_packs().values()) > 0
 
     def action(self):
         self.verify_pack_permission(self.bi_pack)
@@ -1680,7 +1679,7 @@ class BIModeAggregations(ABCBIMode):
             self.bi_pack.delete_aggregation(aggregation_id)
             self._add_change("bi-delete-aggregation",
                              _("Deleted BI aggregation %s") % (aggregation_id))
-            bi_packs.save_config()
+            self._bi_packs.save_config()
         elif c is False:  # not yet confirmed
             return ""
 
@@ -1695,7 +1694,7 @@ class BIModeAggregations(ABCBIMode):
                     self.bi_pack.delete_aggregation(aggregation_id)
                     self._add_change("bi-delete-aggregation",
                                      _("Deleted BI aggregation with ID %s") % (aggregation_id))
-                bi_packs.save_config()
+                self._bi_packs.save_config()
 
             elif c is False:
                 return ""
@@ -1707,8 +1706,8 @@ class BIModeAggregations(ABCBIMode):
             html.javascript('cmk.selection.update_bulk_moveto("%s")' % target)
 
         target_pack = None
-        if target in bi_packs.get_packs():
-            target_pack = bi_packs.get_pack(target)
+        if target in self._bi_packs.get_packs():
+            target_pack = self._bi_packs.get_pack(target)
             self.verify_pack_permission(target_pack)
 
         selection = list(map(str, self._get_selection("aggregation")))
@@ -1726,7 +1725,7 @@ class BIModeAggregations(ABCBIMode):
                         "bi-move-aggregation",
                         _("Moved BI aggregation with ID %s to BI pack %s") %
                         (aggregation_id, target))
-                bi_packs.save_config()
+                self._bi_packs.save_config()
             elif c is False:
                 return ""
 
@@ -1810,7 +1809,7 @@ class BIModeAggregations(ABCBIMode):
 
         move_choices: List[Any] = [
             (pack_id, bi_pack.title)
-            for pack_id, bi_pack in bi_packs.get_packs().items()
+            for pack_id, bi_pack in self._bi_packs.get_packs().items()
             if pack_id is not self.bi_pack.id and bi_valuespecs.is_contact_for_pack(bi_pack)
         ]
 
@@ -1896,7 +1895,7 @@ class BIModeAggregations(ABCBIMode):
                 self.render_aggregation_rule_tree(bi_aggregation)
 
     def render_aggregation_rule_tree(self, bi_aggregation):
-        toplevel_rule = bi_packs.get_rule(bi_aggregation.node.action.rule_id)
+        toplevel_rule = self._bi_packs.get_rule(bi_aggregation.node.action.rule_id)
         if not toplevel_rule:
             html.show_error(_("The top level rule does not exist."))
             return
@@ -1933,7 +1932,7 @@ class ModeBIRuleTree(ABCBIMode):
     def __init__(self):
         super().__init__()
         self._rule_id = html.request.get_str_input_mandatory("id")
-        self._rule_tree_bi_pack = bi_packs.get_pack_of_rule(self._rule_id)
+        self._rule_tree_bi_pack = self._bi_packs.get_pack_of_rule(self._rule_id)
         if not self._rule_tree_bi_pack:
             raise MKUserError("id", _("This BI rule does not exist"))
 
@@ -1945,7 +1944,7 @@ class ModeBIRuleTree(ABCBIMode):
         return make_simple_form_page_menu(breadcrumb)
 
     def page(self):
-        _aggr_refs, rule_refs, _level = bi_packs.count_rule_references(self._rule_id)
+        _aggr_refs, rule_refs, _level = self._bi_packs.count_rule_references(self._rule_id)
         if rule_refs == 0:
             with table_element(sortable=False, searchable=False) as table:
                 table.row()

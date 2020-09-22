@@ -7,11 +7,7 @@
 import json
 
 
-def test_openapi_get_bi_packs(
-    wsgi_app,
-    with_automation_user,
-    bi_packs_sample_config,
-):
+def test_openapi_get_bi_packs(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     base = '/NO_SITE/check_mk/api/v0'
@@ -23,11 +19,7 @@ def test_openapi_get_bi_packs(
     assert packs["value"][0]["title"] == "Default Pack"
 
 
-def test_openapi_get_bi_pack(
-    wsgi_app,
-    with_automation_user,
-    bi_packs_sample_config,
-):
+def test_openapi_get_bi_pack(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     base = '/NO_SITE/check_mk/api/v0'
@@ -40,11 +32,7 @@ def test_openapi_get_bi_pack(
     assert len(pack["members"]["aggregations"]["value"]) == 1
 
 
-def test_openapi_get_bi_aggregation(
-    wsgi_app,
-    with_automation_user,
-    bi_packs_sample_config,
-):
+def test_openapi_get_bi_aggregation(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     base = '/NO_SITE/check_mk/api/v0'
@@ -65,11 +53,7 @@ def test_openapi_get_bi_aggregation(
     assert aggregation["id"] == aggr_id
 
 
-def test_openapi_get_bi_rule(
-    wsgi_app,
-    with_automation_user,
-    bi_packs_sample_config,
-):
+def test_openapi_get_bi_rule(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     base = '/NO_SITE/check_mk/api/v0'
@@ -90,11 +74,7 @@ def test_openapi_get_bi_rule(
     assert rule["id"] == rule_id
 
 
-def test_openapi_modify_bi_aggregation(
-    wsgi_app,
-    with_automation_user,
-    bi_packs_sample_config,
-):
+def test_openapi_modify_bi_aggregation(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     base = '/NO_SITE/check_mk/api/v0'
@@ -102,11 +82,11 @@ def test_openapi_modify_bi_aggregation(
     aggr_id = "default_aggregation"
     response = wsgi_app.get(base + '/objects/bi_aggregation/%s' % aggr_id, status=200)
     aggregation = json.loads(response.text)
-    assert not aggregation["computation_options"]["disabled"]
+    assert aggregation["computation_options"]["disabled"]
     assert not aggregation["computation_options"]["escalate_downtimes_as_warn"]
 
     # Modify and send back
-    aggregation["computation_options"]["disabled"] = True
+    aggregation["computation_options"]["disabled"] = False
     aggregation["computation_options"]["escalate_downtimes_as_warn"] = True
     response = wsgi_app.put(base + '/objects/bi_aggregation/%s' % aggr_id,
                             content_type='application/json',
@@ -116,15 +96,11 @@ def test_openapi_modify_bi_aggregation(
     # Verify changed configuration
     response = wsgi_app.get(base + '/objects/bi_aggregation/%s' % aggr_id, status=200)
     aggregation = json.loads(response.text)
-    assert aggregation["computation_options"]["disabled"]
+    assert not aggregation["computation_options"]["disabled"]
     assert aggregation["computation_options"]["escalate_downtimes_as_warn"]
 
 
-def test_openapi_modify_bi_rule(
-    wsgi_app,
-    with_automation_user,
-    bi_packs_sample_config,
-):
+def test_openapi_modify_bi_rule(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     base = '/NO_SITE/check_mk/api/v0'
@@ -146,11 +122,7 @@ def test_openapi_modify_bi_rule(
     assert "OTHERARGUMENT" in rule["params"]["arguments"]
 
 
-def test_openapi_clone_bi_aggregation(
-    wsgi_app,
-    with_automation_user,
-    bi_packs_sample_config,
-):
+def test_openapi_clone_bi_aggregation(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     base = '/NO_SITE/check_mk/api/v0'
@@ -179,11 +151,7 @@ def test_openapi_clone_bi_aggregation(
     assert len(pack["members"]["aggregations"]["value"]) == 2
 
 
-def test_openapi_clone_bi_rule(
-    wsgi_app,
-    with_automation_user,
-    bi_packs_sample_config,
-):
+def test_openapi_clone_bi_rule(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     base = '/NO_SITE/check_mk/api/v0'

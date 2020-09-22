@@ -43,7 +43,7 @@ from cmk.utils.bi.bi_aggregation_functions import (
     BIAggregationFunctionCountOK,
 )
 from cmk.gui.exceptions import MKUserError
-from cmk.utils.bi.bi_packs import bi_packs
+from cmk.gui.bi import get_cached_bi_packs
 
 from cmk.utils.bi.bi_lib import (
     ABCBISearch,
@@ -364,7 +364,7 @@ class BIConfigCallARuleAction(bi_actions.BICallARuleAction, ABCBIConfigAction):
         def convert_to_vs(value):
             if value.get("rule_id") is None:
                 return None
-            bi_pack = bi_packs.get_pack_of_rule(value["rule_id"])
+            bi_pack = get_cached_bi_packs().get_pack_of_rule(value["rule_id"])
             if bi_pack is None:
                 return None
             return (
@@ -400,7 +400,7 @@ class BIConfigCallARuleAction(bi_actions.BICallARuleAction, ABCBIConfigAction):
     @classmethod
     def _validate_rule_call(cls, value, varprefix):
         (_pack_id, rule_id), arguments = value
-        bi_rule = bi_packs.get_rule(rule_id)
+        bi_rule = get_cached_bi_packs().get_rule(rule_id)
         if bi_rule is None:
             raise MKUserError(varprefix + "_1_0", _("The target rule is no longer available"))
 
@@ -417,7 +417,7 @@ class BIConfigCallARuleAction(bi_actions.BICallARuleAction, ABCBIConfigAction):
     def _allowed_rule_choices(cls):
         # TODO: cache
         choices = []
-        for pack_id, bi_pack in sorted(bi_packs.get_packs().items()):
+        for pack_id, bi_pack in sorted(get_cached_bi_packs().get_packs().items()):
             if may_use_rules_in_pack(bi_pack):
                 pack_choices = [(rule_id, "%s (%s)" % (bi_rule.title, rule_id))
                                 for rule_id, bi_rule in bi_pack.get_rules().items()]

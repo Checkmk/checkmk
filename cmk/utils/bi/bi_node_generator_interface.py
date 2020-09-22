@@ -24,6 +24,7 @@ from cmk.utils.bi.bi_lib import (
     ABCBISearch,
     MacroMappings,
     ABCWithSchema,
+    ABCBISearcher,
 )
 from cmk.utils.bi.type_defs import NodeDict
 
@@ -39,8 +40,5 @@ class ABCBINodeGenerator(ABCWithSchema):
         self.restrict_rule_title: Optional[str] = None
 
     @abc.abstractmethod
-    def compile(
-        self,
-        macros: MacroMappings,
-    ) -> List[ABCBICompiledNode]:
+    def compile(self, macros: MacroMappings, bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
         raise NotImplementedError()

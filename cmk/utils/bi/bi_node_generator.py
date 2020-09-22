@@ -13,11 +13,12 @@
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-from marshmallow import Schema
+from marshmallow import Schema  # type: ignore[import]
 from typing import List, Type
 
 from cmk.utils.bi.bi_lib import (
     ABCBICompiledNode,
+    ABCBISearcher,
     MacroMappings,
     create_nested_schema,
 )
@@ -37,9 +38,9 @@ class BINodeGenerator(ABCBINodeGenerator):
     def schema(cls) -> Type["BINodeGeneratorSchema"]:
         return BINodeGeneratorSchema
 
-    def compile(self, macros: MacroMappings) -> List[ABCBICompiledNode]:
+    def compile(self, macros: MacroMappings, bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
         action_results = []
-        search_results = self.search.execute(macros)
+        search_results = self.search.execute(macros, bi_searcher)
         for search_result in search_results:
             action_arguments = macros.copy()
             action_arguments.update(search_result)
@@ -48,7 +49,7 @@ class BINodeGenerator(ABCBINodeGenerator):
                 if rule_title != self.restrict_rule_title:
                     continue
 
-            action_results.extend(self.action.execute(action_arguments))
+            action_results.extend(self.action.execute(action_arguments, bi_searcher))
         return action_results
 
 

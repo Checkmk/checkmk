@@ -15,10 +15,10 @@ from cmk.utils.bi.bi_search import (
 )
 
 
-def test_empty_search():
+def test_empty_search(bi_searcher):
     schema_config = BIEmptySearch.schema()().dump({})
     search = BIEmptySearch(schema_config)
-    results = search.execute({})
+    results = search.execute({}, bi_searcher)
     assert len(results) == 1
     assert results[0] == {}
 
@@ -56,10 +56,10 @@ def test_empty_search():
     ),
 ])
 def test_fixed_argument_search(config, num_expected_keys, expected_total_length,
-                               use_test_structure_data):
+                               bi_searcher_with_sample_config):
     schema_config = BIFixedArgumentsSearch.schema()().dump({"arguments": config})
     search = BIFixedArgumentsSearch(schema_config)
-    results = search.execute({})
+    results = search.execute({}, bi_searcher_with_sample_config)
     assert len(results) == expected_total_length
     assert len(results[0].keys()) == num_expected_keys
 
@@ -68,10 +68,10 @@ def test_fixed_argument_search(config, num_expected_keys, expected_total_length,
     BIHostSearch,
     BIServiceSearch,
 ])
-def test_host_search(search_class, use_test_structure_data):
+def test_host_search(search_class, bi_searcher_with_sample_config):
     schema_config = search_class.schema()().dump({})
     search = search_class(schema_config)
-    results = search.execute({})
+    results = search.execute({}, bi_searcher_with_sample_config)
     hostnames = {x["$HOSTNAME$"] for x in results}
     assert len(hostnames) == 2
 
@@ -83,7 +83,7 @@ def test_host_search(search_class, use_test_structure_data):
             }
         }})
     search = search_class(schema_config)
-    results = search.execute({})
+    results = search.execute({}, bi_searcher_with_sample_config)
     hostnames = {x["$HOSTNAME$"] for x in results}
     assert len(hostnames) == 1
     assert "heute_clone" in hostnames
@@ -96,7 +96,7 @@ def test_host_search(search_class, use_test_structure_data):
             }
         }})
     search = search_class(schema_config)
-    results = search.execute({})
+    results = search.execute({}, bi_searcher_with_sample_config)
     hostnames = {x["$HOSTNAME$"] for x in results}
     assert len(hostnames) == 1
 
@@ -109,7 +109,7 @@ def test_host_search(search_class, use_test_structure_data):
             }
         }})
     search = search_class(schema_config)
-    results = search.execute({})
+    results = search.execute({}, bi_searcher_with_sample_config)
     hostnames = {x["$HOSTNAME$"] for x in results}
     assert len(hostnames) == 1
     assert "heute_clone" in hostnames
@@ -123,7 +123,7 @@ def test_host_search(search_class, use_test_structure_data):
             }
         }})
     search = search_class(schema_config)
-    results = search.execute({})
+    results = search.execute({}, bi_searcher_with_sample_config)
     assert len(results) == 0
 
     # Alias match
@@ -135,7 +135,7 @@ def test_host_search(search_class, use_test_structure_data):
             }
         }})
     search = search_class(schema_config)
-    results = search.execute({})
+    results = search.execute({}, bi_searcher_with_sample_config)
     hostnames = {x["$HOSTNAME$"] for x in results}
     assert len(hostnames) == 1
 
@@ -149,7 +149,8 @@ def test_host_search(search_class, use_test_structure_data):
     ("Interface", "heute$", 3),
     ("Interface", "heute_clone", 4),
 ])
-def test_service_search(service_regex, host_regex, expected_matches, use_test_structure_data):
+def test_service_search(service_regex, host_regex, expected_matches,
+                        bi_searcher_with_sample_config):
     schema_config = BIServiceSearch.schema()().dump({
         "conditions": {
             "service_regex": service_regex,
@@ -160,5 +161,5 @@ def test_service_search(service_regex, host_regex, expected_matches, use_test_st
         }
     })
     search = BIServiceSearch(schema_config)
-    results = search.execute({})
+    results = search.execute({}, bi_searcher_with_sample_config)
     assert len(results) == expected_matches

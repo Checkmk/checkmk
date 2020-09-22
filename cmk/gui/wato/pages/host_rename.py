@@ -62,6 +62,7 @@ from cmk.gui.plugins.wato import (
     wato_confirm,
 )
 
+import cmk.gui.bi
 from cmk.utils.bi.bi_packs import BIHostRenamer
 
 try:
@@ -655,7 +656,7 @@ def rename_host_in_multisite(oldname, newname):
 
 
 def rename_host_in_bi(oldname, newname):
-    return BIHostRenamer().rename_host(oldname, newname)
+    return BIHostRenamer().rename_host(oldname, newname, cmk.gui.bi.get_cached_bi_packs())
 
 
 def rename_hosts_in_check_mk(

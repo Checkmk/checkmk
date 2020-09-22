@@ -17,9 +17,9 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     ParamDict,)
 
 from cmk.utils.bi.bi_lib import ReqString
-from cmk.utils.bi.bi_packs import bi_packs
 from cmk.utils.bi.bi_rule import BIRule, BIRuleSchema
 from cmk.utils.bi.bi_aggregation import BIAggregation, BIAggregationSchema
+from cmk.gui.bi import get_cached_bi_packs
 
 BI_RULE_ID = ParamDict.create("rule_id", "query")
 BI_AGGR_ID = ParamDict.create("aggregation_id", "query")
@@ -47,6 +47,7 @@ class BIRuleEndpointSchema(BIRuleSchema):
                  response_schema=BIRuleEndpointSchema)
 def get_bi_rule(params):
     """Get BI Rule"""
+    bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
     bi_rule = bi_packs.get_rule(params["rule_id"])
     if bi_rule is None:
@@ -67,6 +68,7 @@ def get_bi_rule(params):
                  response_schema=BIRuleEndpointSchema)
 def put_bi_rule(params):
     """Save BI Rule"""
+    bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
     target_pack = bi_packs.get_pack(params["body"]["pack_id"])
     if target_pack is None:
@@ -108,6 +110,7 @@ class BIAggregationEndpointSchema(BIAggregationSchema):
                  response_schema=BIAggregationEndpointSchema)
 def get_bi_aggregation(params):
     """Get BI Aggregation"""
+    bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
     bi_aggregation = bi_packs.get_aggregation(params["aggregation_id"])
     if bi_aggregation is None:
@@ -128,6 +131,7 @@ def get_bi_aggregation(params):
                  response_schema=BIAggregationEndpointSchema)
 def put_bi_aggregation(params):
     """Save BI Aggregation"""
+    bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
     bi_aggregation = BIAggregation(params["body"])
 
@@ -162,6 +166,7 @@ def put_bi_aggregation(params):
 def get_bi_packs(params):
     """Show all BI Packs"""
 
+    bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
     packs = [
         constructors.collection_item(
@@ -189,6 +194,7 @@ def get_bi_packs(params):
                  response_schema=response_schemas.DomainObject)
 def get_bi_pack(params):
     """Get BI Pack"""
+    bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
     bi_pack = bi_packs.get_pack(params["pack_id"])
     if bi_pack is None:

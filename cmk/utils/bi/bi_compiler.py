@@ -8,17 +8,22 @@ import ast
 import time
 import cmk
 import pprint
-from contextlib import contextmanager
 from pathlib import Path
-from typing import Dict, Set, Optional, TypedDict, List, Tuple
+from typing import (
+    Dict,
+    Set,
+    Optional,
+    TypedDict,
+    Tuple,
+    List,
+)
 
 from cmk.utils.log import logger
-from cmk.utils.bi.bi_packs import bi_packs
-from cmk.utils.bi.bi_searcher import bi_searcher
+from cmk.utils.bi.bi_packs import BIAggregationPacks
+from cmk.utils.bi.bi_searcher import BISearcher
 from cmk.utils.bi.bi_data_fetcher import (
-    bi_structure_fetcher,
+    BIStructureFetcher,
     get_cache_dir,
-    sites_callback_holder,
     SiteProgramStart,
 )
 
@@ -29,6 +34,7 @@ from cmk.utils.i18n import _
 from cmk.utils.bi.bi_trees import BICompiledAggregation, BICompiledAggregationSchema
 from cmk.utils.bi.bi_aggregation import BIAggregation
 from cmk.utils.type_defs import HostName, ServiceName
+from cmk.utils.bi.bi_lib import SitesCallback
 
 
 class ConfigStatus(TypedDict):
@@ -38,9 +44,11 @@ class ConfigStatus(TypedDict):
 
 
 class BICompiler:
-    def __init__(self):
+    def __init__(self, bi_configuration_file, sites_callback: SitesCallback):
+        self._sites_callback = sites_callback
+        self._bi_configuration_file = bi_configuration_file
+
         self._logger = logger.getChild("bi.compiler")
-        self._compiled_with_sitestatus = None
         self._compiled_aggregations: Dict[str, BICompiledAggregation] = {}
         self._path_compilation_lock = Path(get_cache_dir(), "compilation.LOCK")
         self._path_compilation_timestamp = Path(get_cache_dir(), "last_compilation")
@@ -48,6 +56,13 @@ class BICompiler:
         self._path_compiled_aggregations.mkdir(parents=True, exist_ok=True)
         self._part_of_aggregation_map: Dict[Tuple[HostName, Optional[ServiceName]],
                                             List[Tuple[str, str]]] = {}
+
+        self._setup()
+
+    def _setup(self):
+        self._bi_packs = BIAggregationPacks(self._bi_configuration_file)
+        self._bi_structure_fetcher = BIStructureFetcher(self._sites_callback)
+        self.bi_searcher = BISearcher()
 
     @property
     def compiled_aggregations(self) -> Dict[str, BICompiledAggregation]:
@@ -94,6 +109,7 @@ class BICompiler:
         with store.locked(self._path_compilation_lock):
             # Re-check compilation required after lock has been required
             # Another apache might have done the job
+            current_configstatus = self.compute_current_configstatus()
             if not self._compilation_required(current_configstatus):
                 self._logger.debug("No compilation required. An other process already compiled it")
                 return
@@ -101,9 +117,9 @@ class BICompiler:
             self.prepare_for_compilation(current_configstatus["online_sites"])
 
             # Compile the raw tree
-            for aggregation in bi_packs.get_all_aggregations():
+            for aggregation in self._bi_packs.get_all_aggregations():
                 start = time.time()
-                self._compiled_aggregations[aggregation.id] = aggregation.compile()
+                self._compiled_aggregations[aggregation.id] = aggregation.compile(self.bi_searcher)
                 self._logger.debug("Compilation of %s took %f" %
                                    (aggregation.id, time.time() - start))
 
@@ -118,7 +134,7 @@ class BICompiler:
                 self._logger.debug("Dump config took %f" % (time.time() - start))
 
         known_sites = {kv[0]: kv[1] for kv in current_configstatus.get("known_sites", set())}
-        bi_structure_fetcher._cleanup_orphaned_files(known_sites)
+        self._bi_structure_fetcher._cleanup_orphaned_files(known_sites)
 
         self._path_compilation_timestamp.write_text(
             str(current_configstatus["configfile_timestamp"]))
@@ -137,22 +153,22 @@ class BICompiler:
                 used_titles[branch_title] = aggr_id
 
     def prepare_for_compilation(self, online_sites: Set[SiteProgramStart]):
-        bi_packs.load_config()
-        bi_structure_fetcher.update_data(online_sites)
-        bi_searcher.set_hosts(bi_structure_fetcher.hosts)
+        self._bi_packs.load_config()
+        self._bi_structure_fetcher.update_data(online_sites)
+        self.bi_searcher.set_hosts(self._bi_structure_fetcher.hosts)
 
     def compile_aggregation_result(self, aggr_id: str,
                                    title: str) -> Optional[BICompiledAggregation]:
         """ Allows to compile a single aggregation with a given title. Does not save any results to disk """
         current_configstatus = self.compute_current_configstatus()
         self.prepare_for_compilation(current_configstatus["online_sites"])
-        aggregation = bi_packs.get_aggregation(aggr_id)
+        aggregation = self._bi_packs.get_aggregation(aggr_id)
         if not aggregation:
             return None
 
         try:
             aggregation.node.restrict_rule_title = title
-            return aggregation.compile()
+            return aggregation.compile(self.bi_searcher)
         finally:
             aggregation.node.restrict_rule_title = None
 
@@ -181,7 +197,7 @@ class BICompiler:
     def _site_status_changed(self, required_program_starts: Set[SiteProgramStart]) -> bool:
         # The cached data may include more data than the currently required_program_starts
         # Empty branches are simply not shown during computation
-        cached_program_starts = bi_structure_fetcher.get_cached_program_starts()
+        cached_program_starts = self._bi_structure_fetcher.get_cached_program_starts()
         return len(required_program_starts - cached_program_starts) > 0
 
     def compute_current_configstatus(self) -> ConfigStatus:
@@ -192,10 +208,10 @@ class BICompiler:
         }
 
         # The get status message also checks if the remote site is still alive
-        result = sites_callback_holder.query("GET status\nColumns: program_start\nCache: reload")
+        result = self._sites_callback.query("GET status\nColumns: program_start\nCache: reload")
         program_start_times = {row[0]: int(row[1]) for row in result}
 
-        for site_id, values in sites_callback_holder.site_states.items():
+        for site_id, values in self._sites_callback.states().items():
             start_time = program_start_times.get(site_id, 0)
             current_configstatus["known_sites"].add((site_id, start_time))
             if values.get("state") == "online":
@@ -206,7 +222,7 @@ class BICompiler:
     def _get_last_configuration_change(self) -> float:
         conf_dir = cmk.utils.paths.default_config_dir + "/multisite.d"
         latest_timestamp = 0.0
-        wato_config = Path(conf_dir, "wato", bi_packs.bi_configuration_file)
+        wato_config = Path(conf_dir, "wato", self._bi_configuration_file)
         if wato_config.exists():
             latest_timestamp = max(latest_timestamp, wato_config.stat().st_mtime)
 
@@ -216,16 +232,3 @@ class BICompiler:
             latest_timestamp = max(latest_timestamp, path_object.stat().st_mtime)
 
         return latest_timestamp
-
-
-bi_compiler = BICompiler()
-
-
-@contextmanager
-def bi_compiler_auto_cleanup():
-    try:
-        yield bi_compiler
-    finally:
-        # Free memory
-        bi_structure_fetcher.cleanup()
-        bi_compiler.cleanup()

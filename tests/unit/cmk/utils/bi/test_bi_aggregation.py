@@ -6,8 +6,10 @@
 
 # pylint: disable=redefined-outer-name
 
+import pytest
 from cmk.utils.bi.bi_aggregation import BIAggregation
 from cmk.utils.bi.bi_actions import BICallARuleAction
+import bi_test_data.sample_config as sample_config
 
 
 def test_load_aggregation_integrity(bi_packs_sample_config):
@@ -30,34 +32,29 @@ def test_load_aggregation_integrity(bi_packs_sample_config):
     assert action.rule_id == "host"
 
 
-def test_aggregation_status(bi_packs_sample_config, use_test_structure_data, use_test_status_data):
-    _compute_default_aggregation(bi_packs_sample_config, 1, False, 0, 2, True)
+@pytest.mark.parametrize(
+    "status_data, expected_state, expected_acknowledgment, expected_downtime_state, "
+    "expected_computed_branches, expected_service_period", [
+        (sample_config.bi_status_rows, 1, False, 0, 2, True),
+        (sample_config.bi_acknowledgment_status_rows, 1, True, 0, 1, True),
+        (sample_config.bi_downtime_status_rows, 1, False, 1, 1, True),
+        (sample_config.bi_service_period_status_rows, 1, False, 0, 1, False),
+    ])
+def test_compute_aggregation(bi_packs_sample_config, bi_structure_fetcher, bi_searcher,
+                             bi_status_fetcher, status_data, expected_state,
+                             expected_acknowledgment, expected_downtime_state,
+                             expected_computed_branches, expected_service_period):
+    bi_structure_fetcher.add_site_data("heute", sample_config.bi_structure_states)
+    bi_searcher.set_hosts(bi_structure_fetcher.hosts)
+    bi_status_fetcher.states = bi_status_fetcher.create_bi_status_data(status_data)
 
-
-def test_aggregation_acknowledgement(bi_packs_sample_config, use_test_structure_data,
-                                     use_test_acknowledgement_status_data):
-    _compute_default_aggregation(bi_packs_sample_config, 1, True, 0, 1, True)
-
-
-def test_aggregation_downtime(bi_packs_sample_config, use_test_structure_data,
-                              use_test_downtime_status_data):
-    _compute_default_aggregation(bi_packs_sample_config, 1, False, 1, 1, True)
-
-
-def test_aggregation_service_period(bi_packs_sample_config, use_test_structure_data,
-                                    use_test_service_period_status_data):
-    _compute_default_aggregation(bi_packs_sample_config, 1, False, 0, 1, False)
-
-
-def _compute_default_aggregation(sample_config, expected_state, expected_acknowledgment,
-                                 expected_downtime_state, expected_computed_branches,
-                                 expected_service_period):
-    bi_aggregation = sample_config.get_aggregation("default_aggregation")
-    compiled_aggregation = bi_aggregation.compile()
+    bi_aggregation = bi_packs_sample_config.get_aggregation("default_aggregation")
+    compiled_aggregation = bi_aggregation.compile(bi_searcher)
     # Compile aggregations based on structure data
     assert len(compiled_aggregation.branches) == 2
 
-    computed_branches = compiled_aggregation.compute_all()
+    computed_branches = compiled_aggregation.compute_branches(compiled_aggregation.branches,
+                                                              bi_status_fetcher)
     # Compute aggregation with status data
     assert len(computed_branches) == expected_computed_branches
     actual_result = computed_branches[0].actual_result

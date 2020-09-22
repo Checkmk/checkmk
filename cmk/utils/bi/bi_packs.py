@@ -9,7 +9,6 @@ from marshmallow import Schema, fields, pre_dump
 from pathlib import Path
 from cmk.utils.i18n import _
 import cmk.utils.store as store
-import cmk.utils.paths
 
 from typing import (
     List,
@@ -117,13 +116,10 @@ class BIAggregationPack:
 
 
 class BIAggregationPacks:
-    def __init__(self, packs_config: Dict[str, Any]):
+    def __init__(self, bi_configuration_file: str):
         super().__init__()
         self.packs: Dict[str, BIAggregationPack] = {}
-        self._instantiate_packs(packs_config.get("packs", []))
-
-    def _instantiate_packs(self, packs_data: List[Dict[str, Any]]):
-        self.packs = {x["id"]: BIAggregationPack(x) for x in packs_data}
+        self._bi_configuration_file = bi_configuration_file
 
     @classmethod
     def schema(cls) -> Type["BIAggregationPacksSchema"]:
@@ -252,9 +248,9 @@ class BIAggregationPacks:
                     bi_aggregation.node.action.rule_id = new_id
 
     def load_config(self) -> None:
-        self.cleanup()
-        if not Path(self.bi_configuration_file).exists():
-            legacy_filename = self.bi_config_dir / "bi.mk"
+        if not Path(self._bi_configuration_file).exists():
+            base_dir = Path(self._bi_configuration_file)
+            legacy_filename = base_dir.parent / "bi.mk"
             if legacy_filename.exists():
                 packs_data = BILegacyConfigConverter().get_schema_for_packs()
                 self._instantiate_packs(packs_data)
@@ -263,14 +259,18 @@ class BIAggregationPacks:
                 self.load_config_from_schema(bi_sample_config)
                 return
 
-        self.load_config_from_schema(store.load_object_from_file(self.bi_configuration_file))
+        self.load_config_from_schema(store.load_object_from_file(self._bi_configuration_file))
 
     def load_config_from_schema(self, config_packs_schema: Dict) -> None:
+        self.cleanup()
         data = BIAggregationPacksSchema().load(config_packs_schema)
         self._instantiate_packs(data["packs"])
 
+    def _instantiate_packs(self, packs_data: List[Dict[str, Any]]):
+        self.packs = {x["id"]: BIAggregationPack(x) for x in packs_data}
+
     def save_config(self) -> None:
-        store.save_file(self.bi_configuration_file, repr(self.generate_config()))
+        store.save_file(self._bi_configuration_file, repr(self.generate_config()))
 
     def generate_config(self) -> Dict[str, Any]:
         self._check_rule_cycles()
@@ -325,19 +325,11 @@ class BIAggregationPacks:
                 if node_rule_id == check_rule_id:  # Rule is directly being used
                     return level + 1
                 # Check if lower rules use it
-                bi_subrule = bi_packs.get_rule_mandatory(node_rule_id)
+                bi_subrule = self.get_rule_mandatory(node_rule_id)
                 lv = self._rule_uses_rule(bi_subrule, check_rule_id, level + 1)
                 if lv != -1:
                     return lv
         return -1
-
-    @property
-    def bi_configuration_file(self) -> str:
-        return str(self.bi_config_dir / "bi_config.mk")
-
-    @property
-    def bi_config_dir(self) -> Path:
-        return Path(cmk.utils.paths.default_config_dir, "multisite.d", "wato")
 
 
 class BIAggregationPackSchema(Schema):
@@ -372,8 +364,6 @@ class BIAggregationPacksSchema(Schema):
         return {"packs": obj.packs.values()}
 
 
-bi_packs = BIAggregationPacks({})
-
 #.
 #   .--Rename Hosts--------------------------------------------------------.
 #   |   ____                                   _   _           _           |
@@ -388,7 +378,7 @@ bi_packs = BIAggregationPacks({})
 
 
 class BIHostRenamer:
-    def rename_host(self, oldname: str, newname: str) -> List:
+    def rename_host(self, oldname: str, newname: str, bi_packs: BIAggregationPacks) -> List:
         bi_packs.load_config()
         renamed = 0
 

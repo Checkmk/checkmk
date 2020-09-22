@@ -3026,7 +3026,7 @@ rulespec_registry.register(
     ))
 
 
-def _host_check_commands_host_check_command_choices():
+def _host_check_commands_host_check_command_choices() -> List[CascadingDropdownChoice]:
     choices: List[CascadingDropdownChoice] = [
         ("ping", _("PING (active check with ICMP echo request)")),
         ("smart", _("Smart PING (only with Checkmk Micro Core)")),
@@ -3043,10 +3043,11 @@ def _host_check_commands_host_check_command_choices():
                     "with the name of the current host."),
          )),
     ]
+
     if config.user.may('wato.add_or_modify_executables'):
-        return choices + [
-            ("custom", _("Use a custom check plugin..."), PluginCommandLine()),
-        ]
+        choices.append(("custom", _("Use a custom check plugin..."), PluginCommandLine()))
+
+    return choices
 
 
 def _valuespec_host_check_commands():

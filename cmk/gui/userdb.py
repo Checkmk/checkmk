@@ -199,9 +199,17 @@ def get_user_access_time(username: UserId) -> Optional[float]:
 
 def _reset_failed_logins(username: UserId) -> None:
     """Login succeeded: Set failed login counter to 0"""
-    num_failed_logins = load_custom_attr(username, 'num_failed_logins', utils.saveint, default=0)
+    num_failed_logins = _load_failed_logins(username)
     if num_failed_logins != 0:
-        save_custom_attr(username, 'num_failed_logins', '0')
+        _save_failed_logins(username, 0)
+
+
+def _load_failed_logins(username: UserId) -> int:
+    return load_custom_attr(username, 'num_failed_logins', utils.saveint)
+
+
+def _save_failed_logins(username: UserId, count: int) -> None:
+    save_custom_attr(username, 'num_failed_logins', str(count))
 
 
 # userdb.need_to_change_pw returns either False or the reason description why the

@@ -114,7 +114,10 @@ def _parameter_valuespec_filestats():
                      Integer(title=_("Critical if above")),
                  ],
              )),
-            (additional_rules()),
+            (additional_rules(maxage_name='max_age',
+                              minage_name='min_age',
+                              maxsize_name='max_size',
+                              minsize_name='min_size')),
         ],
         help=_("Here you can impose various levels on the results reported by the"
                " mk_filstats plugin. Note that some levels only apply to a matching"

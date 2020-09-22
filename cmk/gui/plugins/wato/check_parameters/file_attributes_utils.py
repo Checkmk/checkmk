@@ -55,15 +55,15 @@ def max_size_levels():
     )
 
 
-def additional_rules():
+def additional_rules(maxage_name, minage_name, maxsize_name, minsize_name):
     return "additional_rules", ListOf(
         Tuple(elements=[
             RegExpUnicode(title=_("Filename/- expression"), mode="case_sensitive"),
             Dictionary(elements=[
-                ("maxage", max_age_levels()),
-                ("minage", min_age_levels()),
-                ("maxsize", max_size_levels()),
-                ("minsize", min_size_levels()),
+                (maxage_name, max_age_levels()),
+                (minage_name, min_age_levels()),
+                (maxsize_name, max_size_levels()),
+                (minsize_name, min_size_levels()),
             ]),
         ],),
         title=_("Additional rules for files"),

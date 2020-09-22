@@ -2641,8 +2641,14 @@ def _factory_default_special_agents_jenkins():
     return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
 
 
+def _transform_jenkins_infos(value):
+    if "infos" in value:
+        value["sections"] = value.pop("infos")
+    return value
+
+
 def _valuespec_special_agents_jenkins():
-    return Dictionary(
+    return Transform(Dictionary(
         title=_("Jenkins jobs and builds"),
         help=_("Requests data from a jenkins instance."),
         optional_keys=["port"],
@@ -2702,7 +2708,8 @@ def _valuespec_special_agents_jenkins():
                  allow_empty=False,
              )),
         ],
-    )
+    ),
+                     forth=_transform_jenkins_infos)
 
 
 rulespec_registry.register(

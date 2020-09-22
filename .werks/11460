@@ -14,3 +14,5 @@ thereby getting a possibility to  modify sensitive information.
 
 With this fix the above mentioned vulnerability is eliminated: a standard user 
 has a right to read and execute.
+
+For more information have a look at the <a href="https://compass-security.com/fileadmin/Research/Advisories/2020-05_CSNC-2020-005_Checkmk_Local_Privilege_Escalation.txt">advisory page</a>.

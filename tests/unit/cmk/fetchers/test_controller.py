@@ -46,7 +46,16 @@ def test_status_to_log_level(status, log_level):
 
 class TestControllerApi:
     def test_controller_success(self):
-        assert make_payload_answer(data=b"payload") == b"fetch:SUCCESS:        :7       :payload"
+        payload = 69 * b"\0"
+        header = FetcherHeader(
+            FetcherType.TCP,
+            PayloadType.AGENT,
+            status=42,
+            payload_length=len(payload),
+        )
+        message = FetcherMessage(header, payload)
+        assert make_payload_answer(message) == (b"fetch:SUCCESS:        :79      :" + header +
+                                                payload)
 
     def test_controller_failure(self):
         assert make_logging_answer(
@@ -93,12 +102,12 @@ class TestHeader:
     @pytest.mark.parametrize("state", [Header.State.SUCCESS, "SUCCESS"])
     def test_success_header(self, state):
         header = Header("name", state, "crit", 41)
-        assert bytes(header) == b"name :SUCCESS:crit    :41      :"
+        assert header == b"name :SUCCESS:crit    :41      :"
 
     @pytest.mark.parametrize("state", [Header.State.FAILURE, "FAILURE"])
     def test_failure_header(self, state):
         header = Header("fetch", state, "crit", 42)
-        assert bytes(header) == b"fetch:FAILURE:crit    :42      :"
+        assert header == b"fetch:FAILURE:crit    :42      :"
 
     def test_from_bytes(self):
         header = Header("fetch", "SUCCESS", "crit", 42)

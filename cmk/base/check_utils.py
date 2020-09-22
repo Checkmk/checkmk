@@ -91,7 +91,7 @@ class Service:
         return hash(self.id())
 
     def __repr__(self) -> str:
-        return "Service(check_plugin_name=%r, item=%r, description=%r, parameters=%r, service_lables=%r)" % (
+        return "Service(check_plugin_name=%r, item=%r, description=%r, parameters=%r, service_labels=%r)" % (
             self._check_plugin_name, self._item, self._description, self._parameters,
             self._service_labels)
 

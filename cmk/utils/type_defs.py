@@ -9,6 +9,7 @@ import abc
 import enum
 import string
 import sys
+from contextlib import suppress
 from typing import (
     Any,
     Dict,
@@ -23,6 +24,7 @@ from typing import (
     Optional,
     Set,
     Tuple,
+    Type,
     TypedDict,
     TypeVar,
     Union,
@@ -138,6 +140,46 @@ class BakerySigningCredentials(TypedDict):
 # TODO: TimeperiodSpec should really be a class or at least a NamedTuple! We
 # can easily transform back and forth for serialization.
 TimeperiodSpec = Dict[str, Union[str, List[Tuple[str, str]]]]
+
+TProtocol = TypeVar("TProtocol", bound="Protocol")
+
+
+class Protocol(abc.ABC):
+    """Base class for serializable data.
+
+    Note:
+        This should be usable as a type. Do not add any
+        concrete implementation here.
+    """
+    def __eq__(self, other: Any) -> bool:
+        with suppress(TypeError):
+            return bytes(self) == bytes(other)
+        return NotImplemented
+
+    def __hash__(self) -> int:
+        return hash(bytes(self))
+
+    def __add__(self, other: Any) -> bytes:
+        with suppress(TypeError):
+            return bytes(self) + bytes(other)
+        return NotImplemented
+
+    def __radd__(self, other: Any) -> bytes:
+        with suppress(TypeError):
+            return bytes(other) + bytes(self)
+        return NotImplemented
+
+    def __len__(self) -> int:
+        return len(bytes(self))
+
+    @abc.abstractmethod
+    def __bytes__(self) -> bytes:
+        raise NotImplementedError
+
+    @classmethod
+    @abc.abstractmethod
+    def from_bytes(cls: Type[TProtocol], data: bytes) -> TProtocol:
+        raise NotImplementedError
 
 
 class ABCName(abc.ABC):

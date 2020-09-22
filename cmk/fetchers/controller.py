@@ -9,16 +9,15 @@
 
 import enum
 import json
+import logging
 import os
 import struct
-import logging
-from contextlib import suppress
 from pathlib import Path
 from typing import Any, Dict, Final, Union
 
-from cmk.utils.paths import core_helper_config_dir
-from cmk.utils.type_defs import HostName, Result, SectionName, ConfigSerial
 import cmk.utils.log as log
+from cmk.utils.paths import core_helper_config_dir
+from cmk.utils.type_defs import ConfigSerial, HostName, Protocol, Result, SectionName
 
 from cmk.snmplib.type_defs import AbstractRawData
 
@@ -59,7 +58,7 @@ class PayloadType(enum.Enum):
     SNMP = enum.auto()
 
 
-class FetcherHeader:
+class FetcherHeader(Protocol):
     """Header is fixed size bytes in format:
 
     <FETCHER_TYPE><PAYLOAD_TYPE><STATUS><PAYLOAD_SIZE>
@@ -97,24 +96,6 @@ class FetcherHeader:
             self.payload_length,
         )
 
-    def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, (FetcherHeader, bytes)):
-            return NotImplemented
-        return bytes(self) == bytes(other)
-
-    def __hash__(self) -> int:
-        return hash(bytes(self))
-
-    def __add__(self, other: Any) -> bytes:
-        with suppress(TypeError):
-            return bytes(self) + bytes(other)
-        return NotImplemented
-
-    def __radd__(self, other: Any) -> bytes:
-        with suppress(TypeError):
-            return bytes(other) + bytes(self)
-        return NotImplemented
-
     def __len__(self) -> int:
         return FetcherHeader.length
 
@@ -144,7 +125,7 @@ class FetcherHeader:
             raise ValueError(data) from exc
 
 
-class FetcherMessage:
+class FetcherMessage(Protocol):
     def __init__(
         self,
         header: FetcherHeader,
@@ -155,27 +136,6 @@ class FetcherMessage:
 
     def __repr__(self) -> str:
         return "%s(%r, %r)" % (type(self).__name__, self.header, self.payload)
-
-    def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, (FetcherMessage, bytes)):
-            return NotImplemented
-        return bytes(self) == bytes(other)
-
-    def __hash__(self) -> int:
-        return hash((self.header, self.payload))
-
-    def __add__(self, other: Any) -> bytes:
-        with suppress(TypeError):
-            return bytes(self) + bytes(other)
-        return NotImplemented
-
-    def __radd__(self, other: Any) -> bytes:
-        with suppress(TypeError):
-            return bytes(other) + bytes(self)
-        return NotImplemented
-
-    def __len__(self) -> int:
-        return len(bytes(self))
 
     def __bytes__(self) -> bytes:
         return self.header + self.payload
@@ -241,7 +201,7 @@ class FetcherMessage:
         return Result.OK(self.payload)
 
 
-class Header:
+class Header(Protocol):
     """Header is fixed size(6+8+9+9 = 32 bytes) bytes in format
 
       header: <ID>:<'SUCCESS'|'FAILURE'>:<HINT>:<SIZE>:
@@ -266,8 +226,13 @@ class Header:
     fmt = "{:<5}:{:<7}:{:<8}:{:<8}:"
     length = 32
 
-    def __init__(self, name: str, state: Union['Header.State', str], severity: str,
-                 payload_length: int) -> None:
+    def __init__(
+        self,
+        name: str,
+        state: Union['Header.State', str],
+        severity: str,
+        payload_length: int,
+    ) -> None:
         self.name = name
         self.state = Header.State(state) if isinstance(state, str) else state
         self.severity = severity  # contains either log_level or empty field
@@ -282,31 +247,17 @@ class Header:
             self.payload_length,
         )
 
-    # E0308: false positive, see https://github.com/PyCQA/pylint/issues/3599
-    def __bytes__(self) -> bytes:  # pylint: disable=E0308
-        return Header.fmt.format(self.name[:5], self.state[:7], self.severity[:8],
-                                 self.payload_length).encode("ascii")
-
-    def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, (Header, bytes)):
-            return NotImplemented
-        return bytes(self) == bytes(other)
-
-    def __hash__(self) -> int:
-        return hash(bytes(self))
-
-    def __add__(self, other: Any) -> bytes:
-        with suppress(TypeError):
-            return bytes(self) + bytes(other)
-        return NotImplemented
-
-    def __radd__(self, other: Any) -> bytes:
-        with suppress(TypeError):
-            return bytes(other) + bytes(self)
-        return NotImplemented
-
     def __len__(self) -> int:
         return Header.length
+
+    # E0308: false positive, see https://github.com/PyCQA/pylint/issues/3599
+    def __bytes__(self) -> bytes:  # pylint: disable=E0308
+        return Header.fmt.format(
+            self.name[:5],
+            self.state[:7],
+            self.severity[:8],
+            self.payload_length,
+        ).encode("ascii")
 
     @classmethod
     def from_bytes(cls, data: bytes) -> 'Header':

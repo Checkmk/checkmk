@@ -3856,3 +3856,22 @@ def test_context_uri_vars(register_builtin_html):
         assert html.request.var("hu") == "hu"
 
     assert list(dict(html.request.itervars()).keys()) == ["bla"]
+
+
+@pytest.mark.parametrize(
+    "context,result",
+    [
+        pytest.param({"site": "sitename"}, [visuals.SiteId("sitename")],
+                     id="Single context site enforced"),
+        pytest.param({"siteopt": {"site": ""}}, None,
+                     id="Multiple contexts no site selected"),
+        pytest.param({"sites": "first|second"},
+                     [visuals.SiteId("first"), visuals.SiteId("second")],
+                     id="Single context Multiple sites selected"),
+        pytest.param({"sites": {"sites": "first|second"}},
+                     [visuals.SiteId("first"), visuals.SiteId("second")],
+                     id="Multiple contexts Multiple sites selected"),
+    ]
+)
+def test_get_only_sites_from_context(context, result):
+    assert visuals.get_only_sites_from_context(context) == result

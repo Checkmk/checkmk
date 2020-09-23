@@ -1317,22 +1317,35 @@ def get_only_sites_from_context(context: dict) -> Optional[List[SiteId]]:
 
       We need to deal with
 
-      a) all possible site filters (site and siteopt).
+      a) all possible site filters (sites, site and siteopt).
       b) with single and multiple contexts
 
       Single contexts are structured like this:
 
       {"site": "sitename"}
+      {"sites": "sitename|second"}
 
       Multiple contexts are structured like this:
 
       {"site": {"site": "sitename"}}
+      {"sites": {"sites": "sitename|second"}}
 
       The difference is no fault or "old" data structure. We can have both kind of structures.
       These are the data structure the visuals work with.
+
+      "site" and "sites" are conflicting filters. The new optional filter
+      "sites" for many sites filter is only used if the view is configured
+      to only this filter.
       """
 
-    for var in [("site"), ("siteopt")]:
+    if "sites" in context and "site" not in context:
+        only_sites = context["sites"]
+        if isinstance(only_sites, dict):
+            only_sites = only_sites["sites"]
+        only_sites = [SiteId(site) for site in only_sites.strip().split("|") if site]
+        return only_sites if only_sites else None
+
+    for var in ["site", "siteopt"]:
         if var in context:
             if isinstance(context[var], dict):
                 site_name = context[var].get("site")

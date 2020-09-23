@@ -1264,19 +1264,22 @@ class SiteFilter(Filter):
                  title: str,
                  sort_index: int,
                  enforce: bool,
-                 description: Optional[str] = None) -> None:
+                 description: Optional[str] = None,
+                 htmlvar: str = "site") -> None:
         super().__init__(ident=ident,
                          title=title,
                          sort_index=sort_index,
                          info="host",
-                         htmlvars=["site"],
+                         htmlvars=[htmlvar],
                          link_columns=[],
                          description=description)
         self.enforce = enforce
 
+    def choices(self):
+        return filter_cme_choices() if cmk_version.is_managed_edition() else filter_cre_choices()
+
     def display(self) -> None:
-        choices = filter_cme_choices() if cmk_version.is_managed_edition() else filter_cre_choices()
-        html.dropdown("site", ([] if self.enforce else [("", "")]) + choices)
+        html.dropdown("site", ([] if self.enforce else [("", "")]) + self.choices())
 
     def heading_info(self):
         if cmk_version.is_managed_edition():
@@ -1303,6 +1306,27 @@ filter_registry.register(
         sort_index=501,
         description=_l("Selection of site is enforced, use this filter for joining"),
         enforce=True,
+    ))
+
+
+class MultipleSitesFilter(SiteFilter):
+    def get_request_sites(self) -> List[str]:
+        var_sites = html.request.get_str_input_mandatory(self.htmlvars[0], "").strip().split("|")
+        return [x for x in var_sites if x]
+
+    def display(self):
+        sites_vs = DualListChoice(choices=self.choices(), rows=4)
+        sites_vs.render_input(self.htmlvars[0], self.get_request_sites())
+
+
+filter_registry.register(
+    MultipleSitesFilter(
+        ident="sites",
+        title=_l("Multiple Sites"),
+        sort_index=502,
+        description=_l("Associative selection of multiple sites"),
+        enforce=False,
+        htmlvar="sites",
     ))
 
 

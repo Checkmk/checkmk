@@ -38,10 +38,15 @@ div.floatfilter {
     height: 17px;
     padding: 5px 8px;
     padding-left: 0;
-    font-size: 10px;
-    color: $secondary-font-color;
-    text-transform: uppercase;
+    font-size: 11px;
+    font-weight: bold;
+    color: $font-color;
     background-color: $floatfilter-bg-color;
+
+    span {
+      border-bottom: $floatfilter-legend-border;
+      padding-bottom: 3px;
+    }
   }
 
   .content {
@@ -113,7 +118,7 @@ div.floatfilter {
 
     input.neg[type=text] {
       position: relative;
-      top: -2px;
+      top: -1px;
       width: 237px;
     }
 
@@ -149,20 +154,21 @@ div.floatfilter {
     nobr {
       margin-left: 4px;
     }
+
+    table {
+      border-spacing: 0;
+
+      td { padding: 0 4px 4px 0; }
+    }
   }
 
   &.service_custom_variable, &.host_custom_variable {
-    .select2-container {
-      max-width: 55%;
-    }
+    .select2-container { max-width: 55%; }
 
-    input, select {
+    input[type="text"] {
       display: inline-block;
-      width: 45%;
-    }
-
-    select {
-      margin-right: 10px;
+      width: 43%;
+      margin-left: 4px;
     }
   }
 
@@ -239,10 +245,6 @@ div.floatfilter {
     }
   }
 
-  &.host_tags .content table {
-    border-spacing: 4px 0;
-  }
-
   &.svchardstate .content, &.svcstate .content {
     .checkbox:not(:last-of-type) {
       margin-right: 8px;
@@ -279,6 +281,22 @@ div.floatfilter {
 
     input {
       padding: 3px;
+    }
+  }
+
+  &.address_families {
+    span.radiobutton_group { margin-bottom: 4px; }
+  }
+
+  &.host_address, &.host_ipv4_address, &.host_ipv6_address {
+    input[type="text"] { margin-bottom: 8px; }
+  }
+
+  &.invswpac {
+    div.content > input[type="text"] { margin-bottom: 8px; }
+    span.min_max_row {
+      display: inline-block;
+      margin: 8px 0;
     }
   }
 }

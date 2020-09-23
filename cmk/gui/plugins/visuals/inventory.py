@@ -410,14 +410,14 @@ class FilterInvFloat(Filter):
         current_value = html.request.var(htmlvar, "")
         html.text_input(htmlvar, default_value=str(current_value), size=8, cssclass="number")
         if self._unit:
-            html.write(self._unit)
+            html.write(" %s" % self._unit)
 
         html.write_text("&nbsp;&nbsp;" + _("To: "))
         htmlvar = self.htmlvars[1]
         current_value = html.request.var(htmlvar, "")
         html.text_input(htmlvar, default_value=str(current_value), size=8, cssclass="number")
         if self._unit:
-            html.write(self._unit)
+            html.write(" %s" % self._unit)
 
     def filter_configs(self):
         "Returns scaled lower and upper bounds"
@@ -533,11 +533,13 @@ class FilterInvHasSoftwarePackage(Filter):
                          label=_("regular expression, substring match"))
         html.end_radio_group()
         html.br()
-        html.write_text(_("Min.&nbsp;Version:"))
+        html.open_span(class_="min_max_row")
+        html.write_text(_("Min.&nbsp;Version: "))
         html.text_input(self._varprefix + "version_from", size=9)
         html.write_text(" &nbsp; ")
-        html.write_text(_("Max.&nbsp;Vers.:"))
+        html.write_text(_("Max.&nbsp;Vers.: "))
         html.text_input(self._varprefix + "version_to", size=9)
+        html.close_span()
         html.br()
         html.checkbox(self._varprefix + "negate",
                       False,

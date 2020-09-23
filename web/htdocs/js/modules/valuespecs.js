@@ -960,6 +960,7 @@ export function visual_filter_list_reset(varprefix, page_request_vars, page_name
             filter_list.getElementsByClassName("simplebar-content")[0].innerHTML = filters_html;
             utils.add_simplebar_scrollbar(varprefix + "_popup_filter_list");
             listofmultiple_disable_selected_options(varprefix);
+            forms.enable_dynamic_form_elements();
         }
     });
 

@@ -261,7 +261,6 @@ class FilterIPAddress(Filter):
     def display(self) -> None:
         html.text_input(self.htmlvars[0])
         html.br()
-        html.br()
         html.begin_radio_group()
         html.radiobutton(self.htmlvars[1], "yes", True, _("Prefix match"))
         html.radiobutton(self.htmlvars[1], "no", False, _("Exact match"))

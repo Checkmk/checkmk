@@ -457,25 +457,24 @@ div#page_menu_popups div.side_popup {
         width: 81%;
       }
 
-      div.legend {
-        margin: 0;
-        font-size: 11px;
-        font-weight: bold;
-        color: $font-color;
-        text-align: left;
-        text-transform: none;
-        border-radius: 0;
-
-        span {
-          border-bottom: $floatfilter-legend-border;
-          padding-bottom: 3px;
-        }
+      div.content {
+        padding: 1px 0 5px;
+        overflow: auto;
       }
-
-      div.content { margin-bottom: 6px; }
 
       span.select2-container--default {
         display: inline-block;
+
+        &:last-child { width: auto !important; }
+      }
+
+      &.host_auxtags {
+        div.content { padding-bottom: 1px; }
+        span.select2-container--default { margin-bottom: 4px; }
+      }
+
+      &.address_families {
+        div.content { padding-bottom: 1px; }
       }
     }
 

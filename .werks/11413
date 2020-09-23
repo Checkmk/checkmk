@@ -1,0 +1,12 @@
+Title: Activate changes: Improved speed of config generation on larger installations
+Class: fix
+Compatible: compat
+Component: core
+Date: 1600871438
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+

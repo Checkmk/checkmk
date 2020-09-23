@@ -217,9 +217,11 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
                 consider_inventory_plugins=self.host_config.do_status_data_inventory,
             ))
 
-        section_names -= self.host_config.disabled_snmp_sections()
+        snmp_section_names = section_names.intersection(
+            s.name for s in agent_based_register.iter_all_snmp_sections()
+        ) - self.host_config.disabled_snmp_sections()
 
-        return SNMPSource._sort_section_names(section_names)
+        return SNMPSource._sort_section_names(snmp_section_names)
 
     @staticmethod
     def _sort_section_names(section_names: Collection[SectionName]) -> Collection[SectionName]:

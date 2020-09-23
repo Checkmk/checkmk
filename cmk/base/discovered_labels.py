@@ -47,6 +47,12 @@ class ABCDiscoveredLabels(MutableMapping, metaclass=abc.ABCMeta):
     def to_dict(self) -> Dict:
         return self._labels
 
+    def to_list(self) -> List:
+        raise NotImplementedError()
+
+    def __repr__(self) -> str:
+        return "%s(%s)" % (self.__class__.__name__, ", ".join(repr(arg) for arg in self.to_list()))
+
 
 class DiscoveredHostLabels(ABCDiscoveredLabels):  # pylint: disable=too-many-ancestors
     """Encapsulates the discovered labels of a single host during runtime"""
@@ -80,9 +86,6 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):  # pylint: disable=too-many-anc
         data = self.to_dict().copy()
         data.update(other.to_dict())
         return DiscoveredHostLabels.from_dict(data)
-
-    def __repr__(self) -> str:
-        return "DiscoveredHostLabels(%s)" % ", ".join(repr(arg) for arg in self.to_list())
 
 
 class ABCLabel:
@@ -180,9 +183,13 @@ class HostLabel(ABCLabel):
 class DiscoveredServiceLabels(ABCDiscoveredLabels):  # pylint: disable=too-many-ancestors
     """Encapsulates the discovered labels of a single service during runtime"""
     def __init__(self, *args: ServiceLabel) -> None:
+        # TODO: Make self._labels also store ServiceLabel objects just like DiscoveredHostLabels
         self._labels: Labels = {}
         super(DiscoveredServiceLabels, self).__init__(*args)
 
     def add_label(self, label: ABCLabel) -> None:
         assert isinstance(label, ServiceLabel)
         self._labels[label.name] = label.value
+
+    def to_list(self) -> List[ServiceLabel]:
+        return sorted([ServiceLabel(k, v) for k, v in self._labels.items()], key=lambda x: x.name)

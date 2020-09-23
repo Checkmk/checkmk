@@ -91,6 +91,14 @@ def test_discovered_service_labels_to_dict():
     }
 
 
+def test_discovered_service_labels_repr():
+    labels = DiscoveredServiceLabels()
+    labels.add_label(ServiceLabel(u"äbc", u"123"))
+    labels.add_label(ServiceLabel(u"ccc", u"ddd"))
+    assert repr(
+        labels) == "DiscoveredServiceLabels(ServiceLabel('ccc', 'ddd'), ServiceLabel('äbc', '123'))"
+
+
 def test_discovered_host_labels_to_dict():
     labels = DiscoveredHostLabels()
     assert labels.to_dict() == {}
@@ -168,6 +176,15 @@ def test_discovered_host_labels_add():
             "plugin_name": "plugin_2",
         },
     }
+
+
+def test_discovered_host_labels_repr():
+    labels = DiscoveredHostLabels()
+    labels.add_label(HostLabel(u"äbc", u"123", "plugin_1"))
+    labels.add_label(HostLabel(u"ccc", u"ddd", "plugin_2"))
+    assert repr(
+        labels
+    ) == "DiscoveredHostLabels(HostLabel('ccc', 'ddd', plugin_name='plugin_2'), HostLabel('äbc', '123', plugin_name='plugin_1'))"
 
 
 def test_discovered_host_label_equal():

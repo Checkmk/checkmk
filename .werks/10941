@@ -6,7 +6,7 @@ Date: 1584908233
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Usage of a password from the password store failed with "unrecognized
 arguments" error. This has been fixed.

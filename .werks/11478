@@ -6,7 +6,7 @@ Date: 1600370424
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The painter values for "Date format" and "Time stamp format" in the display
 options of views were previously encoded.

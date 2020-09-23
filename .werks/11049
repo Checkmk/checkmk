@@ -6,7 +6,7 @@ Date: 1595586224
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Classical passive monitoring checks can now be configured
 to return the state OK if data does not arrive within the

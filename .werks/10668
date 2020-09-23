@@ -6,7 +6,7 @@ Date: 1578467080
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The service consists of several partial results, ie. packet loss, round trip
 average and standard deviation. If at least one of theses results is OK the

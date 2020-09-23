@@ -6,7 +6,7 @@ Date: 1572863256
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 AWS Assume Role let you access resources from another account. This feature enables CheckMK to monitor resources from another AWS account without an explicit monitoring user.
 For more information please see the AWS documentation. 

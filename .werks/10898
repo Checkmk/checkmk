@@ -6,7 +6,7 @@ Date: 1584549455
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The lnx_if check did crash when the value for the network speed could not be parsed correctly.
 The conversion of the network speed got fixed with this werk.

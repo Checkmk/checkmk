@@ -6,7 +6,7 @@ Date: 1579012476
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The previous output "Memory usage 12.3% (12.30 GB/100.00 GB)" is now displayed as
 "RAM: 12.3% - 12.30 GB of 100.00 GB". This is in line with several other memory check plugins.

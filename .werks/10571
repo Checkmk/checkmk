@@ -6,7 +6,7 @@ Date: 1573834840
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 With this check you can monitor graylog streams. It outputs the total number
 of streams and the default stream. The longoutput shows details about each

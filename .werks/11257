@@ -6,7 +6,7 @@ Date: 1596017455
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Checkmk needs to detect the execution in the container to be able to handle the
 site creation correctly. This failed in podman containers, because they use the

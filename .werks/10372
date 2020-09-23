@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The stunnel daemon instance, which is used once encrypted livestatus is enabled,
 is now not logging to syslog anymore. It only logs to the sites log file var/log/stunnel-server.log.

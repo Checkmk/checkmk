@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Previously the Windows Agent may generate too much data during Windows EventLog 
 (logwatch) section generation. In fact, size of the data to be send was 

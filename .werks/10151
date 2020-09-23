@@ -6,7 +6,7 @@ Date: 1570619710
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 If the instance name contained a backslash, the ini-files path was wrongly considered
 to contain a subdirectory. When using the agent bakery, this lead to missing

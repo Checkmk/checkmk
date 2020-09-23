@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 If {{Status data inventory}} is enabled via the rule {{Do hardware/software inventory}}
 then {{HW/SW inventory data}} and {{status data}} are inventorized and merged in the

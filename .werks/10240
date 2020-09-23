@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 In case a host had services configured where the Checkmk check was removed from
 an installation, e.g. by uninstalling an MKP, this could break the service

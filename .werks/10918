@@ -6,7 +6,7 @@ Date: 1588934876
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 A new check to monitor a Huawei WLAN Access Controller (e.g. AC6508).
 The device itself and its created access-points are monitored.

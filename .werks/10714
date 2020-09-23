@@ -6,7 +6,7 @@ Date: 1581499768
 Edition: cre
 Knowledge: undoc
 Level: 3
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The Checkmk Raw Edition was using PNP4Nagios for rendering time series graphs
 since it's birth. This software did a good job for years, but is way of a being

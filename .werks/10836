@@ -6,7 +6,7 @@ Date: 1583483708
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 HW/SW inventory views can be declared with {{declare_invtable_view}} in
 {{local/share/check_mk/web/plugins/views/MY_FILE_NAME.py}}. After this

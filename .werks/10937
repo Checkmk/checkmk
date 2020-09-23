@@ -6,7 +6,7 @@ Date: 1588240123
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 A new check to monitor the status of SAP HANA Connect. It supports HANA V1.0 and HANA 2.0.
 In order to get the needed data from SAP HANA, you need to update the agent plugin "mk_sap_hana" as well.

@@ -6,7 +6,7 @@ Date: 1599040685
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 A bug in the check <tt>vms_if</tt>, which monitors network interfaces
 on OpenVMS, prevented the corresponding services from being discovered

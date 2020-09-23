@@ -6,6 +6,6 @@ Date: 1581408684
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The error message {{TypeError: inv_k8s_daemon_pod_containers() got multiple values for keyword argument 'inventory_tree'}} was shown and has been fixed.

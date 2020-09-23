@@ -6,7 +6,7 @@ Date: 1574177702
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The selection of autocomplete host dropdown fields is now possible by using the up and down arrow keys.
 These dropdown field can for example be found in every rule in the 'Explicit hosts' section.

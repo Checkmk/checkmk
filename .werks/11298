@@ -6,7 +6,7 @@ Date: 1594986046
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The SUSEconnect plugin previously showed a 'Licencing Information Not Found'
 message when it was unable to find relevant licencing information on a specific

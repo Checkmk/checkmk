@@ -6,7 +6,7 @@ Date: 1576066441
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 IE11 does not support many of our used javascript functionalities, we
 managed to restore it to on the network topology view. This werk is an

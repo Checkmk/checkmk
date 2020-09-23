@@ -6,6 +6,6 @@ Date: 1593598281
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The salesforce special agent did crash when the response included non-ASCII characters.

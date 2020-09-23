@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 On clusters a check plugin processes all node data at once. Interfaces may be
 grouped by index. The check plugin {{lnx_if}} serially numbered the interface

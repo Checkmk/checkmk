@@ -6,7 +6,7 @@ Date: 1581018078
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Dashlets on a dashboard can now be cloned. All properties except the position
 and size are copied. The cloned dashlet uses the initial position and size of

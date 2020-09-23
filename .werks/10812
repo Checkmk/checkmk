@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The option "Splunk instance to query" in the related WATO rule is now optional.
 If not set, the hostname of the explicit host is used.

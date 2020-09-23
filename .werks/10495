@@ -6,7 +6,7 @@ Date: 1573387403
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Due to very different MSSQL environments we cannot state default levels in
 general.  One result is that there are a lot of {{MSSQL Connections}} services

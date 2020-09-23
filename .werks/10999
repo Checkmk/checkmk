@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 If old-style parameters (None) are discovered then the service raises an AttributeError:
 'NoneType' object has no attribute 'get'.

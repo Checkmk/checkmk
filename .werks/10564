@@ -6,7 +6,7 @@ Date: 1575286103
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Checkmk can now ship optional extension packages. This feature has been introduced to
 be able to provide feature previews in stable versions. Instead of introducing backported

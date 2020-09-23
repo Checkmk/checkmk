@@ -6,7 +6,7 @@ Date: 1578990146
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The state falsely changed to warning. A missing conversion to the correct magnitude for a value in the Skype Sproc latency check,
 caused this wrong state change.

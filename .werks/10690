@@ -6,7 +6,7 @@ Date: 1584955104
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 In previous versions it was needed to escape backslashes with another backslash.
 This has been cleaned up now. You could leave your configuration untouched and

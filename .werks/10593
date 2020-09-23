@@ -6,7 +6,7 @@ Date: 1580202052
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 If levels in the order of microseconds had to be rendered for the user, the affected checkplugin crashed with a
 UnicodeDecodeError.

@@ -6,7 +6,7 @@ Date: 1589464959
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This fixes a wrong calculation in the check. The CPU utilization used the wrong values.
 The rates for each value got calculated twice which resultet in bogus results.

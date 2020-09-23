@@ -6,7 +6,7 @@ Date: 1597322981
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 On Linux kernel 5.3 and newer versions, VmallocChunk is not set (i.e. set to
 0 kB). This causes the plugin to report a false CRIT status when evaluating the

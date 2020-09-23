@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Please note that if you have configured rules {{Periodic service discovery}}
 for clusters then the service discovery is executed on the cluster nodes.

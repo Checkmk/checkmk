@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 If you edited existing views which used the column "Log Entries: Log: Output",
 the column field was empty and this option was not available to choose.

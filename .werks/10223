@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The {{Checkmk HW/SW Inventory}} service builds up the inventory tree and if
 {{Do status data inventory}} is configured in the ruleset {{Do hardware/software inventory}}

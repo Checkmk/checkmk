@@ -6,7 +6,7 @@ Date: 1573225985
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 In logically separated Brocade FC switches, the interface indices do not start
 with 1. Therefor the index in the speed table does not start with "1073741824".

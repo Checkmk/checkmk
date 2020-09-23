@@ -6,7 +6,7 @@ Date: 1594620154
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The precompile function is an outdated feature that has been removed. Users with services discoverd in checkmk
 version 1.4 or earlier may have to rediscover their services. In this case the service will go to {{UNKNOWN}},

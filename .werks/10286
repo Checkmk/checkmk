@@ -6,7 +6,7 @@ Date: 1569834907
 Edition: cre
 Knowledge: undoc
 Level: 3
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This werk adds the detection and checking of all detected fans, temperature,
 voltage and current probes. The services (except the fan probes) will monitor

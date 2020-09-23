@@ -6,7 +6,7 @@ Date: 1591618786
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 New agent and check plugin to monitor the total and active connections of Zorp firewalls.
 Levels for the total number of connections can be defined in WATO.

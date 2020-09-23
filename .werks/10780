@@ -6,7 +6,7 @@ Date: 1588249062
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 If user tries to forecast a fixed value metric(Metric does not change in
 time), the forecast engine will endlessly try to optimize without noticing

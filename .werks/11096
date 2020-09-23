@@ -6,7 +6,7 @@ Date: 1589359062
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The check hyperv_vms now uses a set of default levels to map the
 state of VMs to monitoring states. Before, by default, the check

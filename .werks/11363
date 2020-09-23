@@ -6,7 +6,7 @@ Date: 1598025212
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The 64-bit version of the interface check for switch ports can be configured
 to also monitor the admin status <tt>ifAdminStatus</tt>. If this option is

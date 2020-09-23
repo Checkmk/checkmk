@@ -6,7 +6,7 @@ Date: 1572858000
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Some host attributes, like the host alias, are now stored in an explicit lookup table.
 The previous version created a rule for each alias, hereby causing lots of uneccessary rule evaluations.

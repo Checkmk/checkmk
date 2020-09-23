@@ -6,7 +6,7 @@ Date: 1584086909
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This werks allows to monitor single files with mk_filestats.
 If configured, a dedicated service is created per matched file on the monitored host.

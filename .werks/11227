@@ -6,7 +6,7 @@ Date: 1593084273
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Moreover if the temperature sensor reports the cpqHeTemperatureCondition status
 "other(1)" ("Temperature could not be determined") then the sensor will not be

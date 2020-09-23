@@ -6,7 +6,7 @@ Date: 1588082904
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 To avoid intentional or unintentional overload due to too many parallel queries
 from one source we set the parameter "per_source" in the default Checkmk agent

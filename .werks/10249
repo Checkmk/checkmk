@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 A "TypeError" exception could occur after creating alert handler
 rules while trying to render the alert handler rule list.

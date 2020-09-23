@@ -6,7 +6,7 @@ Date: 1573646303
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Table of contents is a new report content element that you can use to
 describe the content of your report. However, it only has an effect when

@@ -6,7 +6,7 @@ Date: 1573547256
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Regression from Werk 10359 Fixed copy & paste error The Werk 10359 introduced
 new SQLs for oracle_jobs. There was a typo error in the SQL for Databasese <= 11.2

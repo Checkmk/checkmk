@@ -6,7 +6,7 @@ Date: 1588593194
 Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This check is OK when a given Proxmox node's `status` and it's subscription 'status' match the
 given configured values, WARN otherwise. It shows the node status, subscription status, Proxmox

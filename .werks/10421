@@ -6,7 +6,7 @@ Date: 1571899676
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
  In the previous version, the apache_status plugin did not take into
  account httpd-event based instances during server detection. The updated

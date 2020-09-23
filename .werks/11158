@@ -6,7 +6,7 @@ Date: 1591706369
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The rule "Filesystem grouping patterns" allows for arranging filesystems
 discovered for example by the check <tt>df</tt> into groups. Up to now, the

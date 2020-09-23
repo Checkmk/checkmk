@@ -6,7 +6,7 @@ Date: 1579519270
 Edition: cee
 Knowledge: undoc
 Level: 3
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 To avoid the need for extenal dependencies for the Forecasting Graphs
 Checkmk now ships its own implementation of the prediction algorithm.

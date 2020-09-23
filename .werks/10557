@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The download URLs of extension packages could not be opened in previous 1.6 releases,
 because the Content Security Policy blocked opening external URLs in the content area

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Sometimes the configured site of the sidebar snapins "Micro Core Statistics",
 "Server Performance" and "Event Console Performance" was not saved. As a

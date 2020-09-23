@@ -6,7 +6,7 @@ Date: 1573198166
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The graph for 'Number of processes' was removed in some previous commit.
 Some checks e.g. 'ps' where missing this graph.

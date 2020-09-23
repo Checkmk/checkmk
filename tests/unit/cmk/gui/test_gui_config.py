@@ -598,7 +598,7 @@ def test_registered_permissions():
             'general.publish_custom_graph',
             'general.publish_to_foreign_groups_custom_graph',
             'icons_and_actions.deployment_status',
-            'icons_and_actions.ntop_host_interface',
+            'icons_and_actions.ntop_host',
             'icons_and_actions.ntop_service_interface',
         ]
 

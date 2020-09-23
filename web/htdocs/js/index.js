@@ -61,11 +61,11 @@ try {
     graphs = null;
 }
 
-var ntop_interface_details;
+var ntop_host_details;
 try {
-    ntop_interface_details = require("ntop_interface_details");
+    ntop_host_details = require("ntop_host_details");
 } catch(e) {
-    ntop_interface_details = null;
+    ntop_host_details = null;
 }
 
 var ntop_alerts;
@@ -136,7 +136,7 @@ export const cmk_export = {
         figures: cmk_figures,
         tabs: cmk_tabs,
         ntop: {
-            interface_details: ntop_interface_details,
+            host_details: ntop_host_details,
             alerts: ntop_alerts,
             flows: ntop_flows
         },

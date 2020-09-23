@@ -419,6 +419,9 @@ def test_check_credentials_local_user_disallow_locked(with_user):
 # the config needs to be done after loading the config
 @pytest.fixture()
 def make_cme(monkeypatch, user_id):
+    if not is_managed_repo():
+        pytest.skip("not relevant")
+
     monkeypatch.setattr(cmk.utils.version, "omd_version", lambda: "2.0.0i1.cme")
     assert cmk.utils.version.is_managed_edition()
 
@@ -428,6 +431,9 @@ def make_cme(monkeypatch, user_id):
 
 @pytest.fixture()
 def make_cme_global_user(user_id):
+    if not is_managed_repo():
+        pytest.skip("not relevant")
+
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
     users = userdb.load_users(lock=True)
     users[user_id]["customer"] = managed.SCOPE_GLOBAL
@@ -436,6 +442,9 @@ def make_cme_global_user(user_id):
 
 @pytest.fixture()
 def make_cme_customer_user(user_id):
+    if not is_managed_repo():
+        pytest.skip("not relevant")
+
     users = userdb.load_users(lock=True)
     users[user_id]["customer"] = "test-customer"
     userdb.save_users(users)
@@ -443,6 +452,9 @@ def make_cme_customer_user(user_id):
 
 @pytest.fixture()
 def make_cme_wrong_customer_user(user_id):
+    if not is_managed_repo():
+        pytest.skip("not relevant")
+
     users = userdb.load_users(lock=True)
     users[user_id]["customer"] = "wrong-customer"
     userdb.save_users(users)

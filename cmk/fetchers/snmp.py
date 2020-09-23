@@ -65,7 +65,14 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
 
     @classmethod
     def from_json(cls, serialized: Dict[str, Any]) -> 'SNMPFetcher':
-        serialized["snmp_config"]["credentials"] = tuple(serialized["snmp_config"]["credentials"])
+        # The SNMPv3 configuration is represented by a tuple of different lengths (see
+        # SNMPCredentials). Since we just deserialized from JSON, we have to convert the
+        # list used by JSON back to a tuple.
+        # SNMPv1/v2 communities are represented by a string: Leave it untouched.
+        if isinstance(serialized["snmp_config"]["credentials"], list):
+            serialized["snmp_config"]["credentials"] = tuple(
+                serialized["snmp_config"]["credentials"])
+
         return cls(
             file_cache=SNMPFileCache.from_json(serialized.pop("file_cache")),
             snmp_section_trees={

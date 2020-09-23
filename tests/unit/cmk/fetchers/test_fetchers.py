@@ -264,7 +264,7 @@ class TestSNMPFetcher:
                 is_ipv6_primary=False,
                 hostname="bob",
                 ipaddress="1.2.3.4",
-                credentials=(),
+                credentials="public",
                 port=42,
                 is_bulkwalk_host=False,
                 is_snmpv2or3_without_bulkwalk_host=False,
@@ -292,6 +292,12 @@ class TestSNMPFetcher:
         assert other.missing_sys_description == fetcher.missing_sys_description
         assert other.use_snmpwalk_cache == fetcher.use_snmpwalk_cache
         assert other.snmp_config == fetcher.snmp_config
+
+    def test_fetcher_deserialization_snmpv3_credentials(self, fetcher):
+        fetcher.snmp_config = fetcher.snmp_config._replace(credentials=("authNoPriv", "md5", "md5",
+                                                                        "abc"))
+        other = type(fetcher).from_json(json_identity(fetcher.to_json()))
+        assert other.snmp_config.credentials == fetcher.snmp_config.credentials
 
 
 class TestTCPFetcher:

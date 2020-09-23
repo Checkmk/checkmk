@@ -26,9 +26,15 @@ namespace security {
 void ProtectFiles(const std::filesystem::path& root) {
     using namespace cma::cfg;
 
-    for (const auto& p :
-         {root / kAppDataAppName / files::kUserYmlFile,
-          root / kAppDataAppName / dirs::kBakery / files::kBakeryYmlFile}) {
+    for (const auto& p : {
+             root / kAppDataAppName / files::kUserYmlFile,
+             root / kAppDataAppName / dirs::kBakery / files::kBakeryYmlFile,
+             root / kAppDataAppName / dirs::kInstall,
+             root / kAppDataAppName / dirs::kBackup,
+             root / kAppDataAppName / dirs::kPluginConfig,
+             root / kAppDataAppName / dirs::kUpdate,
+
+         }) {
         if (!wtools::ProtectPathFromUserAccess(p)) {
             XLOG::l.e("Protection of the '{}' failed!", p.u8string());
         }

@@ -1319,6 +1319,10 @@ void ConfigInfo::initFolders(
     folders_.setRoot(ServiceValidName, RootFolder);
     auto root = folders_.getRoot();
 
+    if (!ServiceValidName.empty()) {
+        wtools::ProtectPathFromUserAccess(root);
+    }
+
     if (folders_.getData().empty())
         XLOG::l.crit("Data folder is empty.This is bad.");
     else {

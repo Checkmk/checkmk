@@ -272,7 +272,7 @@ check_metrics["check_mk-ibm_svc_nodestats_diskio"] = {
 memory_simple_translation = {
     "memory_used": {
         "name": "mem_used",
-        "deprecated": "1.7.0i1",
+        "deprecated": "2.0.0i1",
     },
 }
 check_metrics["check_mk-hp_procurve_mem"] = memory_simple_translation
@@ -283,7 +283,7 @@ ram_used_swap_translation = {
     "ramused": {
         "name": "mem_used",
         "scale": MB,
-        "deprecated": "1.7.0i1",
+        "deprecated": "2.0.0i1",
     },
     "mem_used_percent": {
         "auto_graph": False,
@@ -291,13 +291,13 @@ ram_used_swap_translation = {
     "swapused": {
         "name": "swap_used",
         "scale": MB,
-        "deprecated": "1.7.0i1",
+        "deprecated": "2.0.0i1",
     },
     "memused": {
         "name": "mem_lnx_total_used",
         "auto_graph": False,
         "scale": MB,
-        "deprecated": "1.7.0i1",
+        "deprecated": "2.0.0i1",
     },
     "mem_lnx_total_used": {
         "auto_graph": False,
@@ -308,22 +308,22 @@ ram_used_swap_translation = {
     },
     "shared": {
         "name": "mem_lnx_shmem",
-        "deprecated": "1.7.0i1",
+        "deprecated": "2.0.0i1",
         "scale": MB
     },
     "pagetables": {
         "name": "mem_lnx_page_tables",
-        "deprecated": "1.7.0i1",
+        "deprecated": "2.0.0i1",
         "scale": MB
     },
     "mapped": {
         "name": "mem_lnx_mapped",
-        "deprecated": "1.7.0i1",
+        "deprecated": "2.0.0i1",
         "scale": MB
     },
     "committed_as": {
         "name": "mem_lnx_committed_as",
-        "deprecated": "1.7.0i1",
+        "deprecated": "2.0.0i1",
         "scale": MB
     },
 }
@@ -431,7 +431,7 @@ check_metrics["check_mk-mem_win"] = {
     "memory": {
         "name": "mem_used",
         "scale": MB,
-        "deprecated": "1.7.0i1"
+        "deprecated": "2.0.0i1"
     },
     "pagefile": {
         "name": "pagefile_used",
@@ -455,7 +455,7 @@ check_metrics["check_mk-mem_win"] = {
 check_metrics["check_mk-brocade_mlx_module_mem"] = {
     "memused": {
         "name": "mem_used",
-        "deprecated": "1.7.0i1",
+        "deprecated": "2.0.0i1",
     },
 }
 check_metrics["check_mk-jolokia_metrics_mem"] = {
@@ -693,7 +693,7 @@ df_translation = {
     "~(?!%s).*$" % "|".join(df_basic_perfvarnames): {
         "name": "fs_used",
         "scale": MB,
-        "deprecated": "1.7.0i1"
+        "deprecated": "2.0.0i1"
     },
     "fs_used": {
         "scale": MB
@@ -1282,7 +1282,7 @@ check_metrics["check_mk-ibm_svc_systemstats_cache"] = {
 mem_vsphere_hostsystem = {
     "usage": {
         "name": "mem_used",
-        "deprecated": "1.7.0i1"
+        "deprecated": "2.0.0i1"
     },
     "mem_total": {
         "auto_graph": False
@@ -1310,7 +1310,7 @@ check_metrics["check_mk-ibm_svc_host"] = {
 juniper_mem = {
     "usage": {
         "name": "mem_used",
-        "deprecated": "1.7.0i1"
+        "deprecated": "2.0.0i1"
     },
 }
 check_metrics["check_mk-juniper_screenos_mem"] = juniper_mem
@@ -1668,7 +1668,7 @@ check_metrics["check_mk-db2_logsize"] = {
     "~[_/]": {
         "name": "fs_used",
         "scale": MB,
-        "deprecated": "1.7.0i1"
+        "deprecated": "2.0.0i1"
     },
     "fs_used": {
         "scale": MB
@@ -2042,7 +2042,7 @@ check_metrics["check_mk-mssql_counters_transactions"] = {
 cisco_mem_translation = {
     "mem_used": {
         "name": "mem_used_percent",
-        "deprecated": "1.7.0i1"
+        "deprecated": "2.0.0i1"
     },
 }
 check_metrics["check_mk-cisco_cpu_memory"] = cisco_mem_translation

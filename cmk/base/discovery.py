@@ -1396,10 +1396,16 @@ def _get_host_services(
     multi_host_sections: MultiHostSections,
     on_error: str,
 ) -> Tuple[ServicesByTransition, DiscoveredHostLabels]:
-    if host_config.is_cluster:
-        return _get_cluster_services(host_config, ipaddress, multi_host_sections, on_error)
 
-    return _get_node_services(host_config, ipaddress, multi_host_sections, on_error)
+    if host_config.is_cluster:
+        services, discovered_host_labels = _get_cluster_services(host_config, ipaddress,
+                                                                 multi_host_sections, on_error)
+    else:
+        services, discovered_host_labels = _get_node_services(host_config, ipaddress,
+                                                              multi_host_sections, on_error)
+
+    # Now add manual and active service and handle ignored services
+    return _merge_manual_services(host_config, services, on_error), discovered_host_labels
 
 
 # Do the actual work for a non-cluster host or node
@@ -1408,7 +1414,7 @@ def _get_node_services(
     ipaddress: Optional[HostAddress],
     multi_host_sections: MultiHostSections,
     on_error: str,
-) -> Tuple[ServicesByTransition, DiscoveredHostLabels]:
+) -> Tuple[ServicesTable, DiscoveredHostLabels]:
     hostname = host_config.hostname
     services, discovered_host_labels = _get_discovered_services(hostname, ipaddress,
                                                                 multi_host_sections, on_error)
@@ -1422,7 +1428,7 @@ def _get_node_services(
                 check_source = "ignored"
             services[service.id()] = ("clustered_" + check_source, service)
 
-    return _merge_manual_services(host_config, services, on_error), discovered_host_labels
+    return services, discovered_host_labels
 
 
 # Part of _get_node_services that deals with discovered services
@@ -1534,7 +1540,7 @@ def _get_cluster_services(
     ipaddress: Optional[str],
     multi_host_sections: MultiHostSections,
     on_error: str,
-) -> Tuple[ServicesByTransition, DiscoveredHostLabels]:
+) -> Tuple[ServicesTable, DiscoveredHostLabels]:
     if not host_config.nodes:
         return {}, DiscoveredHostLabels()
 
@@ -1580,8 +1586,7 @@ def _get_cluster_services(
 
             # In all other cases either both must be "new" or "vanished" -> let it be
 
-    # Now add manual and active serivce and handle ignored services
-    return _merge_manual_services(host_config, cluster_items, on_error), cluster_host_labels
+    return cluster_items, cluster_host_labels
 
 
 def get_check_preview(host_name: HostName, use_caches: bool,

@@ -2668,7 +2668,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'siemens_plc.info',
         'siemens_plc_cpu_state',
         'silverpeak_VX6000',
-        'site_object_counts',
         'skype',
         'skype.mcu',
         'skype.conferencing',

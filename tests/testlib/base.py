@@ -17,9 +17,7 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     # failing. These are used in various tests, to predict the
     # expected console output. In an ideal world, this list will (!)
     # be empty. If that is the case, please remove it entirely.
-    ('section', 'site_object_counts'),
     ('section', 'tsm_stagingpools'),
-    ('check', 'site_object_counts'),
     ('check', 'tsm_stagingpools'),
 ]
 

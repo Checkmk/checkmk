@@ -66,7 +66,6 @@ except ImportError:
 from cmk.utils.type_defs import HostName
 
 logger = logging.getLogger('cmk.base.notify')
-logger.addHandler(logging.NullHandler())
 
 _log_to_stdout = False
 notify_mode = "notify"

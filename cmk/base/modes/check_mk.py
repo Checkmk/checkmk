@@ -1352,6 +1352,7 @@ def mode_automation(args: List[str]) -> None:
     if not args:
         raise automations.MKAutomationError("You need to provide arguments")
 
+    log.clear_console_logging()
     sys.exit(automations.automations.execute(args[0], args[1:]))
 
 

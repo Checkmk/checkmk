@@ -40,7 +40,6 @@ EventContext = Dict[str, Any]  # TODO Improve this
 Matcher = Callable[[EventRule, EventContext], Optional[str]]
 
 logger = logging.getLogger('cmk.base.events')
-logger.addHandler(logging.NullHandler())
 
 
 def event_keepalive(event_function: Callable,

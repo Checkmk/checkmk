@@ -599,7 +599,7 @@ class ModeNotifications(ABCNotificationsMode):
 
     def _render_bulks(self, only_ripe):
         bulks = watolib.check_mk_local_automation("notification-get-bulks",
-                                                  ["1" if only_ripe else "0"], None)
+                                                  ["1" if only_ripe else "0"])
         if not bulks:
             return False
 

@@ -29,7 +29,7 @@ from cmk.utils.type_defs import (
 
 from cmk.snmplib.type_defs import TRawData
 
-from cmk.fetchers import ABCFetcher, ABCFileCache
+from cmk.fetchers import ABCFetcher, ABCFileCache, MKFetcherError
 from cmk.fetchers.controller import FetcherType
 from cmk.fetchers.type_defs import Mode
 
@@ -432,7 +432,12 @@ class ABCSummarizer(Generic[THostSections], metaclass=abc.ABCMeta):
     def _extract_status(self, exc: Exception) -> int:
         if isinstance(exc, MKEmptyAgentData):
             return self.exit_spec.get("empty_output", 2)
-        if isinstance(exc, (MKAgentError, MKIPAddressLookupError, MKSNMPError)):
+        if isinstance(exc, (
+                MKAgentError,
+                MKFetcherError,
+                MKIPAddressLookupError,
+                MKSNMPError,
+        )):
             return self.exit_spec.get("connection", 2)
         if isinstance(exc, MKTimeout):
             return self.exit_spec.get("timeout", 2)

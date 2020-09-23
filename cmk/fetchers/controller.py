@@ -13,12 +13,16 @@ import logging
 import os
 import pickle
 import struct
+import signal
+import contextlib
 from pathlib import Path
-from typing import Any, Dict, Final, Union
+from typing import Any, Dict, Final, Union, List, Optional, Iterator
+from types import FrameType
 
 import cmk.utils.log as log
 from cmk.utils.paths import core_helper_config_dir
 from cmk.utils.type_defs import ConfigSerial, HostName, Protocol, Result, SectionName
+from cmk.utils.exceptions import MKTimeout
 
 from cmk.snmplib.type_defs import AbstractRawData
 
@@ -353,6 +357,31 @@ def make_waiting_answer() -> bytes:
         ))
 
 
+def _disable_timeout() -> None:
+    """ Disable alarming and remove any running alarms"""
+
+    signal.signal(signal.SIGALRM, signal.SIG_IGN)
+    signal.alarm(0)
+
+
+def _enable_timeout(timeout: int) -> None:
+    """ Raises MKTimeout exception after timeout seconds"""
+    def _handler(signum: int, frame: Optional[FrameType]) -> None:
+        raise MKTimeout("Fetcher timed out")
+
+    signal.signal(signal.SIGALRM, _handler)
+    signal.alarm(timeout)
+
+
+@contextlib.contextmanager
+def timeout_control(timeout: int) -> Iterator[None]:
+    _enable_timeout(timeout)
+    try:
+        yield
+    finally:
+        _disable_timeout()
+
+
 def run_fetchers(serial: ConfigSerial, host_name: HostName, mode: Mode, timeout: int) -> None:
     """Entry point from bin/fetcher"""
     # check that file is present, because lack of the file is not an error at the moment
@@ -383,10 +412,8 @@ def load_global_config(serial: ConfigSerial) -> None:
         log.logger.setLevel(config["log_level"])
 
 
-def run_fetcher(entry: Dict[str, Any], mode: Mode, timeout: int) -> FetcherMessage:
-    """ timeout to be used by concrete fetcher implementation.
-    This is important entrypoint to obtain data from fetcher objects.
-    """
+def run_fetcher(entry: Dict[str, Any], mode: Mode) -> FetcherMessage:
+    """ Entrypoint to obtain data from fetcher objects.    """
 
     try:
         fetcher_type = FetcherType[entry["fetcher_type"]]
@@ -401,7 +428,7 @@ def run_fetcher(entry: Dict[str, Any], mode: Mode, timeout: int) -> FetcherMessa
             FetcherHeader(
                 fetcher_type,
                 PayloadType.ERROR,
-                status=50,
+                status=logging.CRITICAL,
                 payload_length=len(payload),
             ),
             payload,
@@ -411,6 +438,19 @@ def run_fetcher(entry: Dict[str, Any], mode: Mode, timeout: int) -> FetcherMessa
         raw_data = fetcher.fetch(mode)
 
     return FetcherMessage.from_raw_data(raw_data, fetcher_type)
+
+
+def _make_fetcher_timeout_message(fetcher_type: FetcherType, exc: MKTimeout) -> FetcherMessage:
+    payload = ErrorPayload(exc)
+    return FetcherMessage(
+        FetcherHeader(
+            fetcher_type,
+            PayloadType.ERROR,
+            status=logging.ERROR,
+            payload_length=len(payload),
+        ),
+        payload,
+    )
 
 
 def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
@@ -435,7 +475,20 @@ def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
     # Threading: some fetcher may be not thread safe(snmp, for example). May be dangerous.
     # Multiprocessing: CPU and memory(at least in terms of kernel) hungry. Also duplicates
     # functionality of the Microcore.
-    messages = [run_fetcher(entry, mode, timeout) for entry in fetchers]
+
+    messages: List[FetcherMessage] = []
+    with timeout_control(timeout):
+        try:
+            # fill as many messages as possible before timeout exception raised
+            for entry in fetchers:
+                messages.append(run_fetcher(entry, mode))
+        except MKTimeout as exc:
+            # fill missing entries with timeout errors
+            messages.extend([
+                _make_fetcher_timeout_message(FetcherType[entry["fetcher_type"]], exc)
+                for entry in fetchers[len(messages):]
+            ])
+
     write_bytes(make_payload_answer(*messages))
     for msg in filter(
             lambda msg: msg.header.payload_type is PayloadType.ERROR,

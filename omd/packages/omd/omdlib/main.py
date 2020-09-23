@@ -2428,7 +2428,9 @@ def main_update(version_info: VersionInfo, site: SiteContext, global_opts: 'Glob
     #
     # TODO: We should check whether or not we can move the "cmk" command from the CORE hook to
     # another place. Then we could really execute all hooks here.
-    config_set_all(site, ignored_hooks=["CORE", "MKEVENTD"])
+    # TODO: We currently execute "cmk -U" 3 times here. This should really be optimized
+    postponed_hooks = ["CORE", "MKEVENTD", "PNP4NAGIOS"]
+    config_set_all(site, ignored_hooks=postponed_hooks)
 
     # Before the hooks can be executed the tmpfs needs to be mounted, e.g. the Checkmk configuration
     # is being updated (cmk -U). This requires access to the initialized tmpfs.
@@ -2436,12 +2438,12 @@ def main_update(version_info: VersionInfo, site: SiteContext, global_opts: 'Glob
 
     call_scripts(site, 'update-pre-hooks')
 
-    # Now executed the postponed CORE hook
+    # Now executed the postponed hooks
     # Please note that this is explicitly done AFTER update-pre-hooks, because that executes
     # "cmk-update-config" which updates e.g. the autochecks from previous versions to make it
     # loadable by the code of the NEW version
-    _config_set(site, "MKEVENTD")
-    _config_set(site, "CORE")
+    for hook_name in postponed_hooks:
+        _config_set(site, hook_name)
 
     save_site_conf(site)
 

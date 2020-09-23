@@ -11,6 +11,7 @@ import enum
 import json
 import logging
 import os
+import pickle
 import struct
 from pathlib import Path
 from typing import Any, Dict, Final, Union
@@ -85,11 +86,14 @@ class ErrorPayload(Protocol):
 
     @staticmethod
     def _serialize(error: Exception) -> bytes:
-        return repr(error).encode("utf8")
+        return pickle.dumps(error)
 
     @staticmethod
     def _deserialize(data: bytes) -> Exception:
-        return eval(data.decode("utf8"))
+        try:
+            return pickle.loads(data)
+        except pickle.UnpicklingError as exc:
+            raise ValueError(data) from exc
 
 
 class FetcherHeader(Protocol):

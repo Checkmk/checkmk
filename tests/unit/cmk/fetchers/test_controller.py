@@ -5,12 +5,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+import socket
 
 import pytest  # type: ignore[import]
+import pyghmi.exceptions  # type: ignore[import]
 
 import cmk.utils.log as log
 from cmk.utils.paths import core_helper_config_dir
 from cmk.utils.type_defs import ConfigSerial, Result, SectionName
+from cmk.utils.exceptions import (
+    MKException,
+    MKGeneralException,
+    MKTerminate,
+    MKBailOut,
+    MKTimeout,
+    MKSNMPError,
+    MKIPAddressLookupError,
+)
 
 from cmk.fetchers import FetcherType
 from cmk.fetchers.controller import (
@@ -167,12 +178,35 @@ class TestHeader:
 
 
 class TestErrorPayload:
-    @pytest.fixture
-    def error(self):
-        return ErrorPayload(Exception("a very helpful message"))
+    @pytest.fixture(params=[
+        # Our special exceptions.
+        MKException,
+        MKGeneralException,
+        MKTerminate,
+        MKBailOut,
+        MKTimeout,
+        MKSNMPError,
+        MKIPAddressLookupError,
+        # Python exceptions
+        KeyError,
+        LookupError,
+        SyntaxError,
+        ValueError,
+        # Nested Python exceptions
+        socket.herror,
+        socket.timeout,
+        # Third-party exceptions
+        pyghmi.exceptions.IpmiException,
+    ])
+    def error(self, request):
+        return ErrorPayload(request.param("a very helpful message"))
 
     def test_from_bytes_success(self, error):
-        assert ErrorPayload.from_bytes(bytes(error)) == error
+        other = ErrorPayload.from_bytes(bytes(error))
+        assert other is not error
+        assert other == error
+        assert type(other.error) == type(error.error)
+        assert other.error.args == error.error.args
 
     def test_from_bytes_failure(self):
         with pytest.raises(ValueError):

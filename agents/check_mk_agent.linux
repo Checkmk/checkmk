@@ -304,8 +304,6 @@ section_mounts() {
 section_ps() {
     if inpath ps; then
         # processes including username, without kernel processes
-        echo '<<<ps>>>'
-        echo 'dummy section -- refer to section ps_lnx'
         echo '<<<ps_lnx>>>'
         CGROUP=""
         if [ -e /sys/fs/cgroup ]; then

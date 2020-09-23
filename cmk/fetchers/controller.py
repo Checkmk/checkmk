@@ -68,7 +68,7 @@ class ErrorPayload(Protocol):
         return "%s(%r)" % (type(self).__name__, self.error)
 
     def __bytes__(self) -> bytes:
-        payload = repr(self.error).encode("utf8")
+        payload = self._serialize(self.error)
         return struct.pack(ErrorPayload.fmt, len(payload)) + payload
 
     @classmethod
@@ -79,9 +79,17 @@ class ErrorPayload(Protocol):
         )
         start: int = struct.calcsize(ErrorPayload.fmt)
         try:
-            return cls(eval(data[start:start + length].decode("utf8")))
+            return cls(cls._deserialize(data[start:start + length]))
         except SyntaxError as exc:
             raise ValueError(data) from exc
+
+    @staticmethod
+    def _serialize(error: Exception) -> bytes:
+        return repr(error).encode("utf8")
+
+    @staticmethod
+    def _deserialize(data: bytes) -> Exception:
+        return eval(data.decode("utf8"))
 
 
 class FetcherHeader(Protocol):

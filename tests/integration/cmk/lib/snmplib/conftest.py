@@ -99,6 +99,23 @@ def _create_auth_list():
             "--v3-auth-key=authOnlyUser",
             "--v3-auth-proto=MD5",
         ],
+        [
+            "--v3-user=md5desuser",
+            "--v3-auth-key=md5password",
+            "--v3-auth-proto=MD5",
+            "--v3-priv-key=desencryption",
+            "--v3-priv-proto=DES",
+        ],
+        [
+            "--v3-user=noAuthNoPrivUser",
+        ],
+        [
+            "--v3-user=shaaesuser",
+            "--v3-auth-key=shapassword",
+            "--v3-auth-proto=SHA",
+            "--v3-priv-key=aesencryption",
+            "--v3-priv-proto=AES",
+        ],
     ]
 
 
@@ -123,7 +140,6 @@ def _is_listening(process_def):
                     num_sockets += 1
             except OSError:
                 pass
-
     except OSError:
         exitcode = p.poll()
         if exitcode is None:

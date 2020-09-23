@@ -426,7 +426,8 @@ def make_cme(monkeypatch, user_id):
     assert cmk.utils.version.is_managed_edition()
 
     monkeypatch.setattr(config, "current_customer", "test-customer")
-    assert config.current_customer == "test-customer"
+    # Fix CRE mypy tests that do not have this attribute defined
+    assert config.current_customer == "test-customer" # type: ignore[attr-defined]
 
 
 @pytest.fixture()

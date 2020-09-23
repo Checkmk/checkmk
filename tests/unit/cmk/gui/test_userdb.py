@@ -18,6 +18,7 @@ from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.valuespec import Dictionary
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
+from cmk.gui.globals import g
 import cmk.gui.plugins.userdb.utils as utils
 import cmk.gui.plugins.userdb.htpasswd as htpasswd
 import cmk.gui.plugins.userdb.ldap_connector as ldap
@@ -388,19 +389,24 @@ def test_check_credentials_local_user_create_htpasswd_user_ad_hoc():
     assert userdb.user_exists(user_id) is False
     assert userdb._user_exists_according_to_profile(user_id) is False
     assert user_id not in userdb.load_users(lock=False)
+    # TODO: It's bad that we have to do this here (after each load_users)
+    del g.users
 
     htpasswd.Htpasswd(Path(cmk.utils.paths.htpasswd_file)).save(
         {"sha256user": htpasswd.hash_password("cmk")})
     # Once a user exists in the htpasswd, the GUI treats the user as existing user and will
-    # create the missing data structures on on first login
+    # automatically initialize the missing data structures
     assert userdb.user_exists(user_id) is True
     assert userdb._user_exists_according_to_profile(user_id) is False
-    assert str(user_id) not in userdb.load_users(lock=True)
+    assert str(user_id) in userdb.load_users(lock=True)
+    # TODO: It's bad that we have to do this here (after each load_users)
+    del g.users
 
     assert userdb.check_credentials(user_id, "cmk") == user_id
 
+    # Nothing changes during regular access
     assert userdb.user_exists(user_id) is True
-    assert userdb._user_exists_according_to_profile(user_id) is True
+    assert userdb._user_exists_according_to_profile(user_id) is False
     assert str(user_id) in userdb.load_users(lock=False)
 
 

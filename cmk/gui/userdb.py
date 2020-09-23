@@ -117,8 +117,13 @@ def _get_attributes(connection_id: Optional[str], selector: Callable[[UserConnec
 
 
 def create_non_existing_user(connection_id: str, username: UserId) -> None:
-    if _user_exists_according_to_profile(username):
-        return  # User exists not only in htpasswd. Nothing to do...
+    # Since user_exists also looks into the htpasswd and treats all users that can be found there as
+    # "existing users", we don't care about partially known users here and don't create them ad-hoc.
+    # The load_users() method will handle this kind of users (TODO: Consolidate this!).
+    # Which makes this function basically relevant for users that authenticate using an LDAP
+    # connection and do not exist yet.
+    if user_exists(username):
+        return  # User exists. Nothing to do...
 
     users = load_users(lock=True)
     users[username] = new_user_template(connection_id)

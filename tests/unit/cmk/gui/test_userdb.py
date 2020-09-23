@@ -427,7 +427,7 @@ def make_cme(monkeypatch, user_id):
 
     monkeypatch.setattr(config, "current_customer", "test-customer")
     # Fix CRE mypy tests that do not have this attribute defined
-    assert config.current_customer == "test-customer" # type: ignore[attr-defined]
+    assert config.current_customer == "test-customer"  # type: ignore[attr-defined]
 
 
 @pytest.fixture()

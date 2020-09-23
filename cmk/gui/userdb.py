@@ -184,7 +184,7 @@ def login_timed_out(username: UserId, last_activity: float) -> bool:
     return timed_out
 
 
-def update_user_access_time(username: UserId) -> None:
+def _update_user_access_time(username: UserId) -> None:
     """Remember the time the user was seen for the last time"""
     if not config.save_user_access_times:
         return
@@ -305,7 +305,7 @@ class UserSelection(DropdownChoice):
 def on_succeeded_login(username: UserId) -> str:
     _ensure_user_can_init_session(username)
     _reset_failed_logins(username)
-    update_user_access_time(username)
+    _update_user_access_time(username)
 
     return _initialize_session(username)
 
@@ -345,6 +345,9 @@ def on_access(username: UserId, issue_time: float, session_id: str) -> None:
             raise MKAuthException("Invalid user session")
 
         _refresh_session(username)
+
+    # Update online state of the user (if enabled)
+    _update_user_access_time(username)
 
 
 #.

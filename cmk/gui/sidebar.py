@@ -20,7 +20,6 @@ from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 import cmk.gui.utils as utils
 import cmk.gui.config as config
-import cmk.gui.userdb as userdb
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.notify as notify
 import cmk.gui.werks as werks
@@ -655,11 +654,6 @@ def page_side():
 def ajax_snapin():
     """Renders and returns the contents of the requested sidebar snapin(s) in JSON format"""
     html.set_output_format("json")
-    # Update online state of the user (if enabled)
-    if config.user.id is None:
-        raise Exception("no user ID")
-    userdb.update_user_access_time(config.user.id)
-
     user_config = UserSidebarConfig(config.user, config.sidebar)
 
     snapin_id = html.request.var("name")

@@ -180,10 +180,12 @@ def test_on_logout_invalidate_session(user_id):
     assert userdb.load_session_info(user_id) is None
 
 
-@pytest.mark.usefixtures("single_user_session_enabled")
+@pytest.mark.usefixtures("single_user_session_enabled", "save_user_access_times_enabled")
 def test_on_access_update_valid_session(user_id, session_valid):
     old_session = userdb.load_session_info(user_id)
     assert old_session is not None
+    old_access_time = userdb.get_user_access_time(user_id)
+    assert old_access_time is None
 
     userdb.on_access(user_id, 10.0, session_valid)
 
@@ -192,6 +194,8 @@ def test_on_access_update_valid_session(user_id, session_valid):
     assert new_session[0] == old_session[0]
     assert new_session[1] == time.time()
     assert new_session[1] > old_session[1]
+
+    assert userdb.get_user_access_time(user_id) == time.time()
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")

@@ -140,10 +140,6 @@ class ModeFolder(WatoMode):
                             title=_("Agent settings"),
                             entries=list(self._page_menu_entries_agents()),
                         ),
-                        PageMenuTopic(
-                            title=_("User interface settings"),
-                            entries=list(self._page_menu_entries_user_interface()),
-                        ),
                     ],
                 ),
                 PageMenuDropdown(
@@ -487,19 +483,6 @@ class ModeFolder(WatoMode):
             icon_name="rulesets",
             item=make_simple_link(
                 watolib.folder_preserving_link([("mode", "rulesets"), ("group", "snmp")])),
-        )
-
-    def _page_menu_entries_user_interface(self) -> Iterator[PageMenuEntry]:
-        if not config.user.may("wato.rulesets") and not config.user.may("wato.seeall"):
-            return
-
-        yield PageMenuEntry(
-            title=_("User interface"),
-            icon_name="rulesets",
-            item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "rulesets"),
-                                                ("group", "user_interface")])),
-            is_advanced=True,
         )
 
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:

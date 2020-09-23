@@ -136,7 +136,7 @@ function run_cached () {
 
 
 echo "<<<check_mk>>>"
-echo "Version: 1.7.0i1"
+echo "Version: 2.0.0i1"
 echo "AgentOS: solaris"
 echo "Hostname: $(hostname)"
 echo "AgentDirectory: $MK_CONFDIR"

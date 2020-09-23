@@ -70,7 +70,7 @@ def test_inventory():
                      'max_size': 41943040000,
                      'used_size': 22271754240,
                      'num_increments': 20,
-                     'increment_size': 2306867200,
-                     'free_space': 17783848960
+                     'increment_size': 4194304000,
+                     'free_space': 21768437760
                  })
     ]

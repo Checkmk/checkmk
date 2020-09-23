@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import (
-    Any,
     Dict,
     Tuple,
     Optional,
@@ -200,16 +199,6 @@ def check_oracle_tablespaces(
     ts_type = tablespace["type"]
     ts_status = tablespace["status"]
     db_version = tablespace["db_version"]
-    num_files = 0
-    num_avail = 0
-    num_extensible = 0
-    current_size = 0
-    max_size = 0
-    used_size = 0
-    num_increments = 0
-    increment_size = 0
-    free_space = 0
-    file_online_states: Dict[str, Dict[str, Any]] = {}
 
     # Conversion of old autochecks params
     if isinstance(params, tuple):
@@ -229,72 +218,29 @@ def check_oracle_tablespaces(
             % (tablespace['amount_missing_filenames'], ts_type))
         return
 
-    for datafile in tablespace["datafiles"]:
-
-        df_file_online_status = datafile["file_online_status"]
-        if df_file_online_status in ["OFFLINE", "RECOVER"]:
-
-            file_online_states_params = dict(params.get("map_file_online_states", []))
-            if datafile["block_size"] is not None and file_online_states_params and \
-               df_file_online_status in file_online_states_params:
-
-                file_online_states.setdefault(df_file_online_status, {
-                    "state": file_online_states_params[df_file_online_status],
-                    "sids": [],
-                })
-                file_online_states[df_file_online_status]["sids"].append(sid)
-
-            else:
-                yield Result(state=state.CRIT, summary="One or more datafiles OFFLINE or RECOVER")
-                return
-
-        num_files += 1
-        if datafile["status"] in ["AVAILABLE", "ONLINE", "READONLY"
-                                 ] and datafile["size"] is not None and datafile[
-                                     "free_space"] is not None and datafile["max_size"] is not None:
-            df_size = datafile["size"]
-            df_free_space = datafile["free_space"]
-            df_max_size = datafile["max_size"]
-
-            num_avail += 1
-            current_size += df_size
-            used_size += df_size - df_free_space
-
-            # Autoextensible? Honor max size. Everything is computed in
-            # *Bytes* here!
-            if datafile["autoextensible"] and datafile["increment_size"] is not None:
-                num_extensible += 1
-                incsize = datafile["increment_size"]
-
-                if df_size > df_max_size:
-                    max_size += df_size
-                    # current file size > df_max_size => no more extents available
-                    free_extension = 0
-                else:
-                    max_size += df_max_size
-                    free_extension = df_max_size - df_size  # free extension space
-
-                if incsize == datafile["block_size"]:
-                    uses_default_increment = True
-
-                num_increments += free_extension // incsize
-                increment_size += free_extension
-
-                if db_version >= 11:
-                    # Newer versions of Oracle uses every time the remaining space of the
-                    # datafile. There is no need for calculation of remaing space with
-                    # next extend anymore!
-                    free_space += free_extension + df_free_space
-                else:
-                    # The free space in this table is the current free space plus
-                    # the additional space that can be gathered by using all available
-                    # remaining increments
-                    free_space += increment_size + df_free_space
-
-            # not autoextensible: take current size as maximum
-            else:
-                max_size += df_size
-                free_space += df_free_space
+    try:
+        (
+            current_size,
+            used_size,
+            max_size,
+            free_space,
+            num_increments,
+            increment_size,
+            uses_default_increment,
+            num_extensible,
+            num_files,
+            num_avail,
+            file_online_states,
+        ) = oracle.analyze_datafiles(
+            tablespace["datafiles"],
+            db_version,
+            sid,
+            params,
+            True,
+        )
+    except oracle.DatafilesException as exc:
+        yield Result(state=state.CRIT, summary=str(exc))
+        return
 
     yield Result(state=state.OK,
                  summary="%s (%s), Size: %s, %s used (%s of max. %s), Free: %s" %

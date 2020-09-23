@@ -5,8 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
 from typing import (
-    Dict,
     Any,
+    Dict,
+    MutableMapping,
+    Optional,
 )
 from .agent_based_api.v1 import (
     register,
@@ -113,9 +115,34 @@ def discovery_livestatus_status(section_livestatus_status: ParsedSection,
             yield Service(item=site)
 
 
-def check_livestatus_status(item: str, params: Parameters, section_livestatus_status: ParsedSection,
-                            section_livestatus_ssl_certs: ParsedSection) -> CheckResult:
-    if item not in section_livestatus_status:
+def check_livestatus_status(
+    item: str,
+    params: Parameters,
+    section_livestatus_status: Optional[ParsedSection],
+    section_livestatus_ssl_certs: Optional[ParsedSection],
+) -> CheckResult:
+    # Check Performance counters
+    this_time = time.time()
+    value_store = get_value_store()
+    yield from _generate_livestatus_results(
+        item,
+        params,
+        section_livestatus_status,
+        section_livestatus_ssl_certs,
+        value_store,
+        this_time,
+    )
+
+
+def _generate_livestatus_results(
+    item: str,
+    params: Parameters,
+    section_livestatus_status: Optional[ParsedSection],
+    section_livestatus_ssl_certs: Optional[ParsedSection],
+    value_store: MutableMapping[str, Any],
+    this_time: float,
+) -> CheckResult:
+    if section_livestatus_status is None or item not in section_livestatus_status:
         return
     status = section_livestatus_status[item]
 
@@ -125,8 +152,6 @@ def check_livestatus_status(item: str, params: Parameters, section_livestatus_st
         yield Result(state=state(params["site_stopped"]), summary="Site is currently not running")
         return
 
-    # Check Performance counters
-    this_time = time.time()
     for key, title in [
         ("host_checks", "HostChecks"),
         ("service_checks", "ServiceChecks"),
@@ -136,8 +161,8 @@ def check_livestatus_status(item: str, params: Parameters, section_livestatus_st
         ("log_messages", "LogMessages"),
     ]:
         value = get_rate(
-            value_store=get_value_store(),
-            key="livestatus_status.%s.%s" % (item, key),
+            value_store=value_store,
+            key=key,
             time=this_time,
             value=float(status[key]),
         )
@@ -147,7 +172,7 @@ def check_livestatus_status(item: str, params: Parameters, section_livestatus_st
     if status["program_version"].startswith("Check_MK"):
         # We have a CMC here.
 
-        for factor, human_func, key, title in [
+        for factor, render_func, key, label in [
             (1, lambda x: "%.3fs" % x, "average_latency_generic", "Average check latency"),
             (1, lambda x: "%.3fs" % x, "average_latency_cmk", "Average Checkmk latency"),
             (100, render.percent, "helper_usage_generic", "Check helper usage"),
@@ -167,11 +192,13 @@ def check_livestatus_status(item: str, params: Parameters, section_livestatus_st
                 else:
                     raise
 
-            yield from check_levels(value=value,
-                                    metric_name=key,
-                                    levels_upper=params.get(key),
-                                    render_func=human_func,
-                                    label=title)
+            yield from check_levels(
+                value=value,
+                metric_name=key,
+                levels_upper=params[key],
+                render_func=render_func,
+                label=label,
+            )
 
     yield from check_levels(
         value=int(status["num_hosts"]),
@@ -197,18 +224,23 @@ def check_livestatus_status(item: str, params: Parameters, section_livestatus_st
     # the 'date'-command will return an error and thus no result
     # this happens e.g. for hacky raspberry pi setups that are not officially supported
     pem_path = "/omd/sites/%s/etc/ssl/sites/%s.pem" % (item, item)
-    cert_valid_until = section_livestatus_ssl_certs.get(item, {}).get(pem_path)
-    if cert_valid_until is not None and cert_valid_until != '':
-        days_left = (int(cert_valid_until) - time.time()) / 86400.0
-        valid_until_formatted = time.strftime("%Y-%m-%d %H:%M:%S",
-                                              time.localtime(int(cert_valid_until)))
-
-        yield from check_levels(
-            value=days_left,
-            metric_name="site_cert_days",
-            label="Site certificate validity (until %s)" % valid_until_formatted,
-            levels_lower=(params["site_cert_days"][0], params["site_cert_days"][1]),
+    valid_until_str = (None if section_livestatus_ssl_certs is None else
+                       section_livestatus_ssl_certs.get(item, {}).get(pem_path))
+    if valid_until_str:
+        valid_until = int(valid_until_str)
+        yield Result(
+            state=state.OK,
+            summary="Site certificate valid until %s" % render.date(valid_until),
         )
+        secs_left = valid_until - this_time
+        warn_d, crit_d = params["site_cert_days"]
+        yield from check_levels(
+            value=secs_left,
+            label="Expiring in",
+            levels_lower=None if None in (warn_d, crit_d) else (warn_d * 86400.0, crit_d * 86400.0),
+            render_func=render.timespan,
+        )
+        yield Metric("site_cert_days", secs_left / 86400.0)
 
     settings = [
         ("execute_host_checks", "Active host checks are disabled"),

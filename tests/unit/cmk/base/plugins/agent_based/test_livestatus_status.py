@@ -4,8 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import pytest  # type: ignore[import]
-from testlib import on_time
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     State as state,
@@ -13,12 +14,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Metric,
 )
 
-from cmk.utils.type_defs import CheckPluginName
-from cmk.base.api.agent_based import value_store
 from cmk.base.api.agent_based.type_defs import Parameters
 import cmk.base.plugins.agent_based.livestatus_status as livestatus_status
 
-NOW_SIMULATED = 581785200, "UTC"
 STRING_TABLE_STATUS = [
     ['[heute]'],
     [
@@ -335,173 +333,102 @@ def test_discovery():
     ]
 
 
-@pytest.fixture(name="fetcher_checker_counters")
+@pytest.fixture(name="fetcher_checker_counters", scope="module")
 def fixture_fetcher_checker_counters_list():
     return [
         Result(state=state.OK,
                summary='Fetcher helper usage: 0%',
                details='Fetcher helper usage: 0%'),
-        Metric('helper_usage_fetcher', 0.0, levels=(40.0, 80.0), boundaries=(None, None)),
+        Metric('helper_usage_fetcher', 0.0, levels=(40.0, 80.0)),
         Result(state=state.OK,
                summary='Checker helper usage: 0%',
                details='Checker helper usage: 0%'),
-        Metric('helper_usage_checker', 0.0, levels=(40.0, 80.0), boundaries=(None, None)),
+        Metric('helper_usage_checker', 0.0, levels=(40.0, 80.0)),
     ]
 
 
-def patch_get_value(monkeypatch, item):
-    value_store_patched = {}
-    for key in [
-            "host_checks",
-            "service_checks",
-            "forks",
-            "connections",
-            "requests",
-            "log_messages",
-    ]:
-        value_store_patched["livestatus_status.%s.%s" % (item, key)] = [1, 2]
-
-    monkeypatch.setattr(livestatus_status, 'get_value_store', lambda: value_store_patched)
-
-
 @pytest.mark.usefixtures("fetcher_checker_counters")
-def test_check_new_counters_in_oldstable(monkeypatch, fetcher_checker_counters):
-    patch_get_value(monkeypatch, "oldstable")
+def test_check_new_counters_in_oldstabe(fetcher_checker_counters):
+    yielded_results = list(
+        livestatus_status._generate_livestatus_results(
+            "oldstable",
+            Parameters(livestatus_status.livestatus_status_default_levels),
+            PARSED_STATUS,
+            PARSED_SSL,
+            {
+                "host_checks": [1, 2],
+                "service_checks": [1, 2],
+                "forks": [1, 2],
+                "connections": [1, 2],
+                "requests": [1, 2],
+                "log_messages": [1, 2],
+            },
+            581785200,
+        ))
+    assert all(x in yielded_results for x in fetcher_checker_counters)
 
-    with on_time(*NOW_SIMULATED):
-        with value_store.context(CheckPluginName("livestatus_status"), None):
 
-            yielded_results = list(
-                livestatus_status.check_livestatus_status(
-                    "oldstable",
-                    Parameters(livestatus_status.livestatus_status_default_levels),
-                    PARSED_STATUS,
-                    PARSED_SSL,
-                ))
-            assert all(x in yielded_results for x in fetcher_checker_counters)
+def test_check():
 
+    yielded_results = list(
+        livestatus_status._generate_livestatus_results(
+            "heute",
+            Parameters(livestatus_status.livestatus_status_default_levels),
+            PARSED_STATUS,
+            PARSED_SSL,
+            {
+                "host_checks": [1, 2],
+                "service_checks": [1, 2],
+                "forks": [1, 2],
+                "connections": [1, 2],
+                "requests": [1, 2],
+                "log_messages": [1, 2],
+            },
+            581785200,
+        ))
 
-@pytest.mark.parametrize("item, params", [
-    ("heute", livestatus_status.livestatus_status_default_levels),
-])
-def test_check(monkeypatch, item, params):
-    patch_get_value(monkeypatch, item)
-
-    with on_time(*NOW_SIMULATED):
-        with value_store.context(CheckPluginName("livestatus_status"), None):
-
-            yielded_results = list(
-                livestatus_status.check_livestatus_status(item, params, PARSED_STATUS, PARSED_SSL))
-
-            assert yielded_results == [
-                Result(state=state.OK, summary='HostChecks: 0.0/s', details='HostChecks: 0.0/s'),
-                Metric('host_checks',
-                       7.615869237677187e-05,
-                       levels=(None, None),
-                       boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='ServiceChecks: 0.0/s',
-                       details='ServiceChecks: 0.0/s'),
-                Metric('service_checks',
-                       0.0002685888198403617,
-                       levels=(None, None),
-                       boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='ProcessCreations: -0.0/s',
-                       details='ProcessCreations: -0.0/s'),
-                Metric('forks',
-                       -3.4376948802370615e-09,
-                       levels=(None, None),
-                       boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='LivestatusConnects: 0.0/s',
-                       details='LivestatusConnects: 0.0/s'),
-                Metric('connections',
-                       6.261761224351807e-06,
-                       levels=(None, None),
-                       boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='LivestatusRequests: 0.0/s',
-                       details='LivestatusRequests: 0.0/s'),
-                Metric('requests',
-                       8.090614900637924e-06,
-                       levels=(None, None),
-                       boundaries=(None, None)),
-                Result(state=state.OK, summary='LogMessages: 0.0/s', details='LogMessages: 0.0/s'),
-                Metric('log_messages',
-                       1.5985281193102335e-06,
-                       levels=(None, None),
-                       boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='Average check latency: 0.000s',
-                       details='Average check latency: 0.000s'),
-                Metric('average_latency_generic',
-                       2.23711e-06,
-                       levels=(30.0, 60.0),
-                       boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='Average Checkmk latency: 0.000s',
-                       details='Average Checkmk latency: 0.000s'),
-                Metric('average_latency_cmk',
-                       2.01088e-05,
-                       levels=(30.0, 60.0),
-                       boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='Check helper usage: 1.43%',
-                       details='Check helper usage: 1.43%'),
-                Metric('helper_usage_generic',
-                       1.42967,
-                       levels=(60.0, 90.0),
-                       boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='Checkmk helper usage: 0.04%',
-                       details='Checkmk helper usage: 0.04%'),
-                Metric('helper_usage_cmk',
-                       0.043827200000000004,
-                       levels=(60.0, 90.0),
-                       boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='Fetcher helper usage: 0.04%',
-                       details='Fetcher helper usage: 0.04%'),
-                Metric('helper_usage_fetcher',
-                       0.043827200000000004,
-                       levels=(40.0, 80.0),
-                       boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='Checker helper usage: 0.04%',
-                       details='Checker helper usage: 0.04%'),
-                Metric('helper_usage_checker',
-                       0.043827200000000004,
-                       levels=(40.0, 80.0),
-                       boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='Livestatus usage: 0.00%',
-                       details='Livestatus usage: 0.00%'),
-                Metric('livestatus_usage', 3.46e-321, levels=(80.0, 90.0), boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='Livestatus overflow rate: 0.0/s',
-                       details='Livestatus overflow rate: 0.0/s'),
-                Metric('livestatus_overflows_rate',
-                       0.0,
-                       levels=(0.01, 0.02),
-                       boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='Monitored Hosts: 2.00',
-                       details='Monitored Hosts: 2.00'),
-                Metric('monitored_hosts', 2.0, levels=(None, None), boundaries=(None, None)),
-                Result(state=state.OK, summary='Services: 513.00', details='Services: 513.00'),
-                Metric('monitored_services', 513.0, levels=(None, None), boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='Core version: Checkmk 2019.05.31',
-                       details='Core version: Checkmk 2019.05.31'),
-                Result(state=state.OK,
-                       summary='Livestatus version: 2019.05.31',
-                       details='Livestatus version: 2019.05.31'),
-                Result(state=state.OK,
-                       summary='Site certificate validity (until 3017-10-01 08:53:08): 375948.75',
-                       details='Site certificate validity (until 3017-10-01 08:53:08): 375948.75'),
-                Metric('site_cert_days',
-                       375948.7452314815,
-                       levels=(None, None),
-                       boundaries=(None, None)),
-            ]
+    assert yielded_results == [
+        Result(state=state.OK, summary='HostChecks: 0.0/s', details='HostChecks: 0.0/s'),
+        Metric('host_checks', 7.615869237677187e-05),
+        Result(state=state.OK, summary='ServiceChecks: 0.0/s', details='ServiceChecks: 0.0/s'),
+        Metric('service_checks', 0.0002685888198403617),
+        Result(state=state.OK, summary='ProcessCreations: -0.0/s'),
+        Metric('forks', -3.4376948802370615e-09),
+        Result(state=state.OK, summary='LivestatusConnects: 0.0/s'),
+        Metric('connections', 6.261761224351807e-06),
+        Result(state=state.OK, summary='LivestatusRequests: 0.0/s'),
+        Metric('requests', 8.090614900637924e-06),
+        Result(state=state.OK, summary='LogMessages: 0.0/s'),
+        Metric('log_messages', 1.5985281193102335e-06),
+        Result(state=state.OK, summary='Average check latency: 0.000s'),
+        Metric('average_latency_generic', 2.23711e-06, levels=(30.0, 60.0)),
+        Result(state=state.OK, summary='Average Checkmk latency: 0.000s'),
+        Metric('average_latency_cmk', 2.01088e-05, levels=(30.0, 60.0)),
+        Result(state=state.OK, summary='Check helper usage: 1.43%'),
+        Metric('helper_usage_generic', 1.42967, levels=(60.0, 90.0)),
+        Result(state=state.OK, summary='Checkmk helper usage: 0.04%'),
+        Metric('helper_usage_cmk', 0.043827200000000004, levels=(60.0, 90.0)),
+        Result(state=state.OK, summary='Fetcher helper usage: 0.04%'),
+        Metric('helper_usage_fetcher', 0.043827200000000004, levels=(40.0, 80.0)),
+        Result(state=state.OK, summary='Checker helper usage: 0.04%'),
+        Metric('helper_usage_checker', 0.043827200000000004, levels=(40.0, 80.0)),
+        Result(state=state.OK, summary='Livestatus usage: 0.00%'),
+        Metric('livestatus_usage', 3.46e-321, levels=(80.0, 90.0)),
+        Result(state=state.OK, summary='Livestatus overflow rate: 0.0/s'),
+        Metric('livestatus_overflows_rate', 0.0, levels=(0.01, 0.02)),
+        Result(state=state.OK, summary='Monitored Hosts: 2.00'),
+        Metric('monitored_hosts', 2.0),
+        Result(state=state.OK, summary='Services: 513.00'),
+        Metric('monitored_services', 513.0),
+        Result(state=state.OK, summary='Core version: Checkmk 2019.05.31'),
+        Result(state=state.OK, summary='Livestatus version: 2019.05.31'),
+        Result(
+            state=state.OK,
+            summary='Site certificate valid until Oct 01 3017',
+        ),
+        Result(
+            state=state.OK,
+            summary='Expiring in: 1029 years 363 days',
+        ),
+        Metric('site_cert_days', 375948.7452314815),
+    ]

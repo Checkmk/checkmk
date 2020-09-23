@@ -30,8 +30,9 @@ memused_default_levels = (150.0, 200.0)
 hp_prolaint_power_default_levels = None  # yes, P R O L A I N T
 
 # if.include
-# This HostRulespec is deprecated as of v1.7. However, for compatibility reasons, we must not delete
-# this variable.
+# These HostRulespecs are deprecated as of v2.0. However, for compatibility reasons, we must not
+# delete these variable.
+if_disable_if64_hosts = []  # type: ignore[var-annotated]
 if_groups = []  # type: ignore[var-annotated]
 # Obsolete variables, but needed as contained in autochecks of older checks. We need to keep this up
 # for a few years/decades...

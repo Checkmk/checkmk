@@ -558,6 +558,7 @@ rulespec_registry.register(
         help_func=_help_if_disable_if64_hosts,
         name="if_disable_if64_hosts",
         title=lambda: _("Hosts forced to use 'if' instead of 'if64'"),
+        is_deprecated=True,
     ))
 
 rulespec_registry.register(

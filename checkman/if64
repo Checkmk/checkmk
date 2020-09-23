@@ -29,9 +29,9 @@ description:
  configured traffic levels, then those levels are applied to the averaged values.
 
  Note that there are some devices with broken firmware which report that
- they support 64-bit counters even though they do not. In such cases, you
- can use the rule "Hosts forced to use 'if' instead of 'if64'" to enforce the
- usage of the 32-bit interface check.
+ they support 64-bit counters even though they do not. In such cases, use the rule
+ "Include or exclude SNMP sections" to disable the section {if64}. This will make
+ Checkmk fall back to the 32-bit interface check.
 
 item:
  There are three allowed ways to specify an interface: its index {ifIndex}, its

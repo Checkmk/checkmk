@@ -4,13 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=wrong-import-order
-
-from typing import Sequence
 from .agent_based_api.v1 import (
-    always_detect,
-    never_detect,
-    not_exists,
+    exists,
     OIDBytes,
     register,
     SNMPTree,
@@ -53,27 +48,7 @@ def parse_if(string_table: type_defs.SNMPStringByteTable) -> interfaces.Section:
     ]
 
 
-# NOTE: THIS AN API VIOLATION, DO NOT REPLICATE THIS
-# ==================================================================================================
-from cmk.utils.type_defs import RuleSetName
-from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPRuleDependentDetectSpec
-from cmk.base.api.agent_based.register import add_section_plugin, add_discovery_ruleset
-from cmk.base.api.agent_based.register.section_plugins import create_snmp_section_plugin
-
-
-def compute_detect_spec_if(if_disable_if64_hosts: Sequence[bool]) -> SNMPDetectSpec:
-    """
-    >>> compute_detect_spec_if([])
-    [[('.1.3.6.1.2.1.31.1.1.1.6.*', '.*', False)]]
-    >>> compute_detect_spec_if([True])
-    [[('.1.3.6.1.2.1.1.2.0', '.*', True)]]
-    """
-    if if64.is_disabled(if_disable_if64_hosts):
-        return always_detect
-    return not_exists(if64.OID_ifHCInOctets)
-
-
-section_plugin = create_snmp_section_plugin(
+register.snmp_section(
     name="if",
     parse_function=parse_if,
     trees=[
@@ -100,17 +75,8 @@ section_plugin = create_snmp_section_plugin(
             ],
         ),
     ],
-    detect_spec=never_detect,  # does not matter what we put here
-    rule_dependent_detect_spec=SNMPRuleDependentDetectSpec(
-        [RuleSetName('if_disable_if64_hosts')],
-        compute_detect_spec_if,
-    ),
+    detect=exists(".1.3.6.1.2.1.2.2.1.*"),
 )
-add_section_plugin(section_plugin)
-assert section_plugin.rule_dependent_detect_spec
-for discovery_ruleset in section_plugin.rule_dependent_detect_spec.rulesets:
-    add_discovery_ruleset(discovery_ruleset)
-# ==================================================================================================
 
 register.check_plugin(
     name="if",

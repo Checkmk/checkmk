@@ -1,0 +1,30 @@
+Title: Enforcing 32-bit interface checks is now done by disabling if64 SNMP section
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1600869319
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+This werk is only relevant for users who are currently using the ruleset "Hosts
+forced to use 'if' instead of 'if64'".
+
+The rule "Include or exclude SNMP sections", which allows users to disable individual
+SNMP sections, will now replace the more specific rule for enforcing the usage of
+the 32- instead of the 64-bit interface check ("Hosts forced to use 'if' instead
+of 'if64'"). As of this werk, the latter rule is deprecated. To make Checkmk fall
+back to the 32-bit interface check, use "Include or exclude SNMP sections" to disable
+the corresponding 64-bit section (mostly <tt>if64</tt>).
+
+This werk is incompatible only for users who actually activated the rule "Hosts
+forced to use 'if' instead of 'if64'". As described above, such users have
+to deactivate the section <tt>if64</tt>, otherwise, upon re-discovery, Checkmk
+will start to use the check plugin <tt>if64</tt> instead of <tt>if</tt>. Note
+that besides the check plugin <tt>if64</tt>, the rule "Hosts forced to use 'if'
+instead of 'if64'" could also be used to make Checkmk use <tt>if</tt> instead of
+<tt>if_brocade</tt> and <tt>if_lancom</tt>. This option is still available,
+however, in these two particular cases, users will have to deactivate both the
+sections <tt>if_brocade</tt>/<tt>if_lancom</tt> and <tt>if64</tt>. If only the
+former were deactivated, Checkmk would fall back to <tt>if64</tt>.

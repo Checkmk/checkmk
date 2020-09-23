@@ -21,21 +21,14 @@ from cmk.base.api.agent_based.register import add_section_plugin, add_discovery_
 from cmk.base.api.agent_based.register.section_plugins import create_snmp_section_plugin
 
 
-def compute_detect_spec_if64(
-    if_disable_if64_hosts: if64.BinaryHostRules,
-    use_if64adm: if64.BinaryHostRules,
-) -> SNMPDetectSpec:
+def compute_detect_spec_if64(use_if64adm: if64.BinaryHostRules,) -> SNMPDetectSpec:
     """
-    >>> compute_detect_spec_if64([], [])
+    >>> compute_detect_spec_if64([])
     [[('.1.3.6.1.2.1.31.1.1.1.6.*', '.*', True)]]
-    >>> compute_detect_spec_if64([True], [])
-    [[('.1.3.6.1.2.1.1.2.0', '(?!x)x', True)]]
-    >>> compute_detect_spec_if64([], [True])
-    [[('.1.3.6.1.2.1.1.2.0', '(?!x)x', True)]]
-    >>> compute_detect_spec_if64([True], [True])
+    >>> compute_detect_spec_if64([True])
     [[('.1.3.6.1.2.1.1.2.0', '(?!x)x', True)]]
     """
-    if if64.is_disabled(if_disable_if64_hosts) or if64.need_if64adm(use_if64adm):
+    if if64.need_if64adm(use_if64adm):
         return never_detect
     return if64.HAS_ifHCInOctets
 
@@ -49,10 +42,10 @@ section_plugin = create_snmp_section_plugin(
             oids=if64.END_OIDS,
         ),
     ],
+    supersedes=['if'],
     detect_spec=never_detect,  # does not matter what we put here
     rule_dependent_detect_spec=SNMPRuleDependentDetectSpec(
-        [RuleSetName('if_disable_if64_hosts'),
-         RuleSetName('use_if64adm')],
+        [RuleSetName('use_if64adm')],
         compute_detect_spec_if64,
     ),
 )

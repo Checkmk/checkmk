@@ -45,16 +45,8 @@ END_OIDS: List[Union[str, OIDBytes]] = [
 BinaryHostRules = Sequence[bool]
 
 
-def _evaluate_binary_host_rules(list_rules: BinaryHostRules) -> bool:
-    return len(list_rules) > 0 and list_rules[0]
-
-
-def is_disabled(if_disable_if64_hosts: BinaryHostRules) -> bool:
-    return _evaluate_binary_host_rules(if_disable_if64_hosts)
-
-
 def need_if64adm(use_if64adm: BinaryHostRules) -> bool:
-    return _evaluate_binary_host_rules(use_if64adm)
+    return len(use_if64adm) > 0 and use_if64adm[0]
 
 
 OID_ifHCInOctets = '.1.3.6.1.2.1.31.1.1.1.6.*'

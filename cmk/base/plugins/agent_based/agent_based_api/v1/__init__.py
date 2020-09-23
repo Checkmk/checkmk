@@ -33,7 +33,6 @@ from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.api.agent_based.type_defs import SNMPTree
 from cmk.base.api.agent_based.utils import (
     all_of,
-    always_detect,
     any_of,
     check_levels,
     check_levels_predictive,
@@ -65,7 +64,6 @@ __all__ = [
     # begin with section stuff
     "parse_to_string_table",
     "all_of",
-    "always_detect",
     "any_of",
     "exists",
     "equals",

@@ -100,6 +100,26 @@ def test_discovery_ungrouped_all():
     )) == SINGLE_SERVICES
 
 
+def test_discovery_ungrouped_empty_section():
+    assert list(
+        interfaces.discover_interfaces(
+            [
+                type_defs.Parameters({
+                    'discovery_single': (
+                        True,
+                        {
+                            'item_appearance': 'alias',
+                            'pad_portnumbers': True,
+                        },
+                    ),
+                    'matching_conditions': (True, {}),
+                }),
+                DEFAULT_DISCOVERY_PARAMS,
+            ],
+            [],
+        )) == []
+
+
 def test_discovery_ungrouped_admin_status():
     assert list(
         interfaces.discover_interfaces(

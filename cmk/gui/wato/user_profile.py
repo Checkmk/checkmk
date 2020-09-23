@@ -252,7 +252,7 @@ class UserChangePasswordPage(ABCUserProfilePage):
         if cur_password == password:
             raise MKUserError("password", _("The new password must differ from your current one."))
 
-        if userdb.hook_login(config.user.id, cur_password) is False:
+        if userdb.check_credentials(config.user.id, cur_password) is False:
             raise MKUserError("cur_password", _("Your old password is wrong."))
 
         if password2 and password != password2:

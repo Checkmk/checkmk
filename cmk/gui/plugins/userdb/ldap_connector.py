@@ -88,6 +88,7 @@ from cmk.gui.plugins.userdb.utils import (
     get_connection,
     cleanup_connection_id,
     release_users_lock,
+    CheckCredentialsResult,
 )
 
 from cmk.utils.type_defs import UserId
@@ -1068,7 +1069,7 @@ class LDAPUserConnector(UserConnector):
         config.user_connections.append(connection)
 
     # This function only validates credentials, no locked checking or similar
-    def check_credentials(self, user_id, password):
+    def check_credentials(self, user_id, password) -> CheckCredentialsResult:
         self.connect()
 
         # Did the user provide an suffix with his user_id? This might enforce

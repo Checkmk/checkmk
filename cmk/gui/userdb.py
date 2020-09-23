@@ -6,7 +6,7 @@
 
 # TODO: Rework connection management and multiplexing
 
-from typing import cast, Union, Any, Callable, Dict, List, Optional, Tuple
+from typing import cast, Union, Any, Callable, Dict, List, Optional, Tuple, Literal
 import time
 import os
 import traceback
@@ -117,8 +117,8 @@ def _get_attributes(connection_id: Optional[str], selector: Callable[[UserConnec
 
 
 def create_non_existing_user(connection_id: str, username: UserId) -> None:
-    if user_exists(username):
-        return  # User exists. Nothing to do...
+    if _user_exists_according_to_profile(username):
+        return  # User exists not only in htpasswd. Nothing to do...
 
     users = load_users(lock=True)
     users[username] = new_user_template(connection_id)
@@ -1045,38 +1045,49 @@ config.register_post_config_load_hook(update_config_based_user_attributes)
 #   +----------------------------------------------------------------------+
 
 
-# This hook is called to validate the login credentials provided by a user
-def hook_login(username: UserId, password: str) -> Union[UserId, bool]:
+def check_credentials(username: UserId, password: str) -> Union[UserId, Literal[False]]:
+    """Verify the credentials given by a user using all auth connections"""
     for connection_id, connection in active_connections():
-        result = connection.check_credentials(username, password)
         # None        -> User unknown, means continue with other connectors
         # '<user_id>' -> success
         # False       -> failed
-        if result not in [False, None]:
-            username = result
-            if not isinstance(username, str):
-                raise MKInternalError(
-                    _("The username returned by the %s "
-                      "connector is not of type string (%r).") % (connection_id, username))
-            # Check whether or not the user exists (and maybe create it)
-            create_non_existing_user(connection_id, username)
-
-            if not is_customer_user_allowed_to_login(username):
-                # A CME not assigned with the current sites customer
-                # is not allowed to login
-                auth_logger.debug("User '%s' is not allowed to login: Invalid customer" % username)
-                return False
-
-            # Now, after successfull login (and optional user account creation), check whether or
-            # not the user is locked.
-            if _user_locked(username):
-                auth_logger.debug("User '%s' is not allowed to login: Account locked" % username)
-                return False  # The account is locked
-
-            return result
+        result = connection.check_credentials(username, password)
 
         if result is False:
             return False
+
+        if result is None:
+            continue
+
+        user_id: UserId = result
+        if not isinstance(user_id, str):
+            raise MKInternalError(
+                _("The username returned by the %s "
+                  "connector is not of type string (%r).") % (connection_id, user_id))
+
+        # Check whether or not the user exists (and maybe create it)
+        #
+        # We have the cases where users exist "partially"
+        # a) The htpasswd file of the site may have a username:pwhash data set
+        #    and Checkmk does not have a user entry yet
+        # b) LDAP authenticates a user and Checkmk does not have a user entry yet
+        #
+        # In these situations a user account with the "default profile" should be created
+        create_non_existing_user(connection_id, user_id)
+
+        if not is_customer_user_allowed_to_login(user_id):
+            # A CME not assigned with the current sites customer
+            # is not allowed to login
+            auth_logger.debug("User '%s' is not allowed to login: Invalid customer" % user_id)
+            return False
+
+        # Now, after successfull login (and optional user account creation), check whether or
+        # not the user is locked.
+        if _user_locked(user_id):
+            auth_logger.debug("User '%s' is not allowed to login: Account locked" % user_id)
+            return False  # The account is locked
+
+        return user_id
 
     return False
 

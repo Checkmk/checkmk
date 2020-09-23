@@ -20,7 +20,7 @@ import cmk.utils.store as store
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 
-from cmk.gui.plugins.userdb import UserConnector, user_connector_registry
+from cmk.gui.plugins.userdb import UserConnector, user_connector_registry, CheckCredentialsResult
 
 crypt_context = CryptContext(schemes=[
     "sha256_crypt",
@@ -105,7 +105,7 @@ class HtpasswdUserConnector(UserConnector):
     def is_enabled(self):
         return True
 
-    def check_credentials(self, user_id, password):
+    def check_credentials(self, user_id, password) -> CheckCredentialsResult:
         users = self._get_htpasswd().load()
         if user_id not in users:
             return None  # not existing user, skip over

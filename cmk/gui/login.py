@@ -259,7 +259,7 @@ def _auth_cookie_is_valid(cookie_name: str) -> bool:
 # TODO: Needs to be cleaned up. When using HTTP header auth or web server auth it is not
 # ensured that a user exists after letting the user in. This is a problem for the following
 # code! We need to define a point where the following code can rely on an existing user
-# object. userdb.hook_login() is doing some similar stuff
+# object. userdb.check_credentials() is doing some similar stuff
 # - It also checks the type() of the user_id (Not in the same way :-/)
 # - It also calls userdb.is_customer_user_allowed_to_login()
 # - It calls userdb.create_non_existing_user() but we don't
@@ -423,11 +423,8 @@ class LoginPage(Page):
             if "logout.py" in origtarget or 'side.py' in origtarget:
                 origtarget = default_origtarget
 
-            # '<user_id>' -> success
-            # False       -> failed
-            result = userdb.hook_login(username, password)
+            result = userdb.check_credentials(username, password)
             if result:
-                assert isinstance(result, str)
                 # use the username provided by the successful login function, this function
                 # might have transformed the username provided by the user. e.g. switched
                 # from mixed case to lower case.

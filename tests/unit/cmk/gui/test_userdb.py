@@ -6,16 +6,20 @@
 
 import time
 import pytest
+from pathlib import Path
 
-from testlib import on_time
+from testlib import on_time, is_managed_repo
 
+import cmk.utils.paths
 from cmk.utils.type_defs import UserId
+import cmk.utils.version
 
 from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.valuespec import Dictionary
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.plugins.userdb.utils as utils
+import cmk.gui.plugins.userdb.htpasswd as htpasswd
 import cmk.gui.plugins.userdb.ldap_connector as ldap
 
 
@@ -367,3 +371,101 @@ def test_user_attribute_sync_plugins(monkeypatch):
 
     assert "vip" not in utils.user_attribute_registry
     assert "vip" not in ldap.ldap_attribute_plugin_registry
+
+
+def test_check_credentials_local_user(with_user):
+    username, password = with_user
+    assert userdb.check_credentials(username, password) == username
+
+
+@pytest.mark.usefixtures("register_builtin_html")
+def test_check_credentials_local_user_create_htpasswd_user_ad_hoc():
+    user_id = UserId("sha256user")
+    assert userdb.user_exists(user_id) is False
+    assert userdb._user_exists_according_to_profile(user_id) is False
+    assert user_id not in userdb.load_users(lock=False)
+
+    htpasswd.Htpasswd(Path(cmk.utils.paths.htpasswd_file)).save(
+        {"sha256user": htpasswd.hash_password("cmk")})
+    # Once a user exists in the htpasswd, the GUI treats the user as existing user and will
+    # create the missing data structures on on first login
+    assert userdb.user_exists(user_id) is True
+    assert userdb._user_exists_according_to_profile(user_id) is False
+    assert str(user_id) not in userdb.load_users(lock=True)
+
+    assert userdb.check_credentials(user_id, "cmk") == user_id
+
+    assert userdb.user_exists(user_id) is True
+    assert userdb._user_exists_according_to_profile(user_id) is True
+    assert str(user_id) in userdb.load_users(lock=False)
+
+
+def test_check_credentials_local_user_disallow_locked(with_user):
+    user_id, password = with_user
+    assert userdb.check_credentials(user_id, password) == user_id
+
+    users = userdb.load_users(lock=True)
+    users[user_id]["locked"] = True
+    userdb.save_users(users)
+
+    assert userdb.check_credentials(user_id, password) is False
+
+
+# user_id needs to be used here because it executes a reload of the config and the monkeypatch of
+# the config needs to be done after loading the config
+@pytest.fixture()
+def make_cme(monkeypatch, user_id):
+    monkeypatch.setattr(cmk.utils.version, "omd_version", lambda: "2.0.0i1.cme")
+    assert cmk.utils.version.is_managed_edition()
+
+    monkeypatch.setattr(config, "current_customer", "test-customer")
+    assert config.current_customer == "test-customer"
+
+
+@pytest.fixture()
+def make_cme_global_user(user_id):
+    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+    users = userdb.load_users(lock=True)
+    users[user_id]["customer"] = managed.SCOPE_GLOBAL
+    userdb.save_users(users)
+
+
+@pytest.fixture()
+def make_cme_customer_user(user_id):
+    users = userdb.load_users(lock=True)
+    users[user_id]["customer"] = "test-customer"
+    userdb.save_users(users)
+
+
+@pytest.fixture()
+def make_cme_wrong_customer_user(user_id):
+    users = userdb.load_users(lock=True)
+    users[user_id]["customer"] = "wrong-customer"
+    userdb.save_users(users)
+
+
+@pytest.mark.usefixtures("make_cme", "make_cme_global_user")
+def test_check_credentials_managed_global_user_is_allowed(with_user):
+    if not is_managed_repo():
+        pytest.skip("not relevant")
+
+    user_id, password = with_user
+    assert userdb.check_credentials(user_id, password) == user_id
+
+
+@pytest.mark.usefixtures("make_cme", "make_cme_customer_user")
+def test_check_credentials_managed_customer_user_is_allowed(with_user):
+    if not is_managed_repo():
+        pytest.skip("not relevant")
+
+    user_id, password = with_user
+    assert userdb.check_credentials(user_id, password) == user_id
+
+
+@pytest.mark.usefixtures("make_cme", "make_cme_wrong_customer_user")
+def test_check_credentials_managed_wrong_customer_user_is_denied(with_user):
+    if not is_managed_repo():
+        pytest.skip("not relevant")
+
+    user_id, password = with_user
+    assert userdb.check_credentials(user_id, password) is False

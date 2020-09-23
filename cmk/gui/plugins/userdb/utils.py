@@ -6,7 +6,7 @@
 
 import abc
 import os
-from typing import List, Optional, Dict, Any, Tuple, Type
+from typing import List, Optional, Dict, Any, Tuple, Type, Literal, Union
 
 from livestatus import SiteId
 
@@ -23,6 +23,7 @@ RoleSpec = Dict[str, Any]  # TODO: Improve this type
 Roles = Dict[str, RoleSpec]  # TODO: Improve this type
 UserConnectionSpec = Dict[str, Any]  # TODO: Improve this type
 UserSyncConfig = Optional[str]
+CheckCredentialsResult = Union[UserId, None, Literal[False]]
 
 
 def load_cached_profile(user_id: UserId) -> Optional[UserSpec]:
@@ -332,7 +333,7 @@ class UserConnector(metaclass=abc.ABCMeta):
     #     False       -> Login failed
     #     None        -> Unknown user
     @abc.abstractmethod
-    def check_credentials(self, user_id, password):
+    def check_credentials(self, user_id, password) -> CheckCredentialsResult:
         return None
 
     # Optional: Hook function can be registered here to be executed

@@ -13,13 +13,6 @@ import cmk.base.config as config
 import cmk.base.autochecks as autochecks
 import cmk.utils.tags
 
-KNOWN_AUTO_MIGRATION_FAILURES: List[Tuple[str, str]] = [
-    # this is a list of auto conversions currently
-    # failing. These are used in various tests, to predict the
-    # expected console output. In an ideal world, this list will (!)
-    # be empty. If that is the case, please remove it entirely.
-]
-
 
 class Scenario:
     """Helper class to modify the Check_MK base configuration for unit tests"""

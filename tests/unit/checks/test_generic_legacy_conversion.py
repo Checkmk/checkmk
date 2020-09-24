@@ -3,11 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from contextlib import contextmanager
-
 import pytest  # type: ignore[import]
-
-from testlib.base import KNOWN_AUTO_MIGRATION_FAILURES  # type: ignore[import]
 
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.type_defs import SectionName, CheckPluginName
@@ -26,16 +22,6 @@ from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function impo
 from cmk.base.api.agent_based.type_defs import AgentSectionPlugin, SNMPSectionPlugin
 
 pytestmark = pytest.mark.checks
-
-
-@contextmanager
-def known_exceptions(type_, name):
-    if (type_, name) not in KNOWN_AUTO_MIGRATION_FAILURES:
-        yield
-        return
-
-    with pytest.raises(NotImplementedError):
-        yield
 
 
 @pytest.fixture(scope="module", name="snmp_info", autouse=True)
@@ -104,15 +90,14 @@ def test_create_section_plugin_from_legacy(config_check_info, snmp_info, migrate
 
         section_name = SectionName(name)
 
-        with known_exceptions('section', name):
-            section = migrated_agent_sections.get(section_name)
-            if section is not None:
-                assert isinstance(section, AgentSectionPlugin)
-            else:
-                section = migrated_snmp_sections.get(section_name)
-                if section is None:
-                    raise NotImplementedError(name)
-                assert isinstance(section, SNMPSectionPlugin)
+        section = migrated_agent_sections.get(section_name)
+        if section is not None:
+            assert isinstance(section, AgentSectionPlugin)
+        else:
+            section = migrated_snmp_sections.get(section_name)
+            if section is None:
+                raise NotImplementedError(name)
+            assert isinstance(section, SNMPSectionPlugin)
 
         if section is None:
             continue
@@ -148,8 +133,7 @@ def test_scan_function_translation(config_snmp_scan_functions):
         assert scan_func is not None
 
         # make sure we can convert the scan function
-        if ('section', name) not in KNOWN_AUTO_MIGRATION_FAILURES:
-            _ = create_detect_spec(name, scan_func, [])
+        _ = create_detect_spec(name, scan_func, [])
 
 
 @pytest.mark.parametrize("check_name, func_name", [
@@ -186,11 +170,7 @@ def test_all_checks_migrated(config_check_info, migrated_checks):
         n.replace('.', '_').replace('-', '_')
         for n, i in config_check_info.items()
         if i['check_function'])
-    # we know these fail:
-    known_fails = set(name for type_, name in KNOWN_AUTO_MIGRATION_FAILURES if type_ == "check")
-    unexpected = migrated & known_fails
-    assert not unexpected, "these have been migrated unexpectedly: %r" % (unexpected,)
-    failures = true_checks - (migrated | known_fails)
+    failures = true_checks - migrated
     assert not failures, "failed to migrate: %r" % (failures,)
 
 

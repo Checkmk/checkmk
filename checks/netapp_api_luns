@@ -30,14 +30,24 @@ def check_netapp_api_luns(item, params, lun):
         expected = str(params.get("read_only")).lower()
         yield 1, "read-only is %s (expected: %s)" % (lun.get("read-only"), expected)
 
-    mega = 1024.0 * 1024.0
-    size_total = int(lun.get("size")) / mega  # fixed: true-division
-    size_avail = size_total - (int(lun.get("size-used")) / mega)  # fixed: true-division
+    size_total_bytes = int(lun["size"])
 
     if params.get("ignore_levels"):
-        yield 0, "Total size: %s, Used space is ignored" % get_bytes_human_readable(size_total)
+        yield 0, "Total size: %s, Used space is ignored" % get_bytes_human_readable(
+            size_total_bytes)
     else:
-        yield df_check_filesystem_single(item, size_total, size_avail, 0, None, None, params)
+        # df_check_filesystem_single expects input in Megabytes
+        mega = 1024.0 * 1024.0
+        size_avail_bytes = size_total_bytes - int(lun["size-used"])
+        yield df_check_filesystem_single(
+            item,
+            size_total_bytes / mega,
+            size_avail_bytes / mega,
+            0,
+            None,
+            None,
+            params,
+        )
 
 
 def netapp_api_luns_item(name, _values):

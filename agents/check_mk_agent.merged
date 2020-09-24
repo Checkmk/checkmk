@@ -54,43 +54,43 @@ PATH="${newPath#:}"
 export PATH
 unset -v newPath
 
-# 'println()' abstracts the portability of 'printf' and solves the major portability headaches 
-# caused by various implementations of 'echo'.  This is called 'println()' rather than 'echo()' as 
+# 'write()' abstracts the portability of 'printf' and solves the major portability headaches 
+# caused by various implementations of 'echo'.  This is called 'write()' rather than 'echo()' as 
 # an override function, because some shells protect their builtins and complain.
 # Fun exercise: look at Oracle's man page for 'echo', specifically the USAGE section.
 # This also adds the '-j' option to output in json keypair format
-println() {
+write() {
     case "${1}" in
         (-e)
             case "${2}" in
-                (-n)      shift 2; printf -- '%b' "${*}" ;;
-                (*)       shift; printf -- '%b\n' "${*}" ;;
+                (-n|--end) shift 2; printf -- '%b' "${*}" ;;
+                (*)        shift; printf -- '%b\n' "${*}" ;;
             esac
         ;;
         (-E)
             case "${2}" in
-                (-n)      shift 2; printf -- '%s' "${*}" ;;
-                (*)       shift; printf -- '%s\n' "${*}" ;;
+                (-n|--end) shift 2; printf -- '%s' "${*}" ;;
+                (*)        shift; printf -- '%s\n' "${*}" ;;
             esac
         ;;
-        (-j)              shift; printf -- '{"%s": "%s"}\n' "${1}" "${2}" ;;
-        (-n)
+        (-j)               shift; printf -- '{"%s": "%s"}\n' "${1}" "${2}" ;;
+        (-n|--end)
             case "${2}" in
-                (-e)      shift 2; printf -- '%b' "${*}" ;;
-                (-E)      shift 2; printf -- '%s' "${*}" ;;
-                (*)       shift; printf -- '%s' "${*}" ;;
+                (-e)       shift 2; printf -- '%b' "${*}" ;;
+                (-E)       shift 2; printf -- '%s' "${*}" ;;
+                (*)        shift; printf -- '%s' "${*}" ;;
             esac
         ;;
-        (-en|-ne)         shift; printf -- '%b' "${*}" ;;
-        (-En|-nE)         shift; printf -- '%s' "${*}" ;;
-        (*)               printf -- '%s\n' "${*}" ;;
+        (-en|-ne)          shift; printf -- '%b' "${*}" ;;
+        (-En|-nE)          shift; printf -- '%s' "${*}" ;;
+        (*)                printf -- '%s\n' "${*}" ;;
     esac
 }
 
 # Functionalise and standardise 'quiet grep' based tests.
 # This gives us 'grep -q' cleanliness where '>/dev/null 2>&1'
 # would otherwise be required e.g. Solaris, older versions of grep etc
-if println "word" | grep -q "word" >/dev/null 2>&1; then
+if write "word" | grep -q "word" >/dev/null 2>&1; then
     grepq() { grep -q "$@" 2>/dev/null; }
 else
     grepq() { grep "$@" >/dev/null 2>&1; }
@@ -155,16 +155,19 @@ get_shell() {
     elif ps -p "$$" >/dev/null 2>&1; then
         # This double-awk caters for situations where CMD/COMMAND
         # might be a full path e.g. /usr/bin/zsh
-        ps -p "$$" | tail -n 1 | awk '{print $NF}' | awk -F '/' '{print $NF}' | tr -d '()'
+        ps -p "$$" | awk -F'[\t /]' 'END {print $NF}'
     # This one works well except for busybox
     elif ps -o comm= -p "$$" >/dev/null 2>&1; then
         ps -o comm= -p "$$"
     elif ps -o pid,comm= >/dev/null 2>&1; then
         ps -o pid,comm= | awk -v ppid="$$" '$1==ppid {print $2}'
+    # FreeBSD, may require more parsing
+    elif inpath procstat; then
+        procstat -bh $$
     else
-        case "${BASH_VERSION}" in (*.*) printf -- '%s\n' "bash";; esac; return 0
-        case "${KSH_VERSION}" in (*.*) printf -- '%s\n' "ksh";; esac; return 0
-        case "${ZSH_VERSION}" in (*.*) printf -- '%s\n' "zsh";; esac; return 0
+        case "${BASH_VERSION}" in (*.*) printf -- '%s\n' "bash"; return 0 ;; esac
+        case "${KSH_VERSION}" in (*.*) printf -- '%s\n' "ksh"; return 0 ;; esac
+        case "${ZSH_VERSION}" in (*.*) printf -- '%s\n' "zsh"; return 0 ;; esac
         # If we get to this point, fail out:
         return 1
     fi
@@ -372,9 +375,9 @@ fi
 # If we are called via xinetd, try to find only_from configuration
 if var_is_set "${REMOTE_HOST}"; then
     # shellcheck disable=SC2039
-    println -n 'OnlyFrom: '
+    write -n 'OnlyFrom: '
     sed -n '/^service[[:space:]]*'$XINETD_SERVICE_NAME'/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1
-    println
+    write
 fi
 
 # Convert a three number style semantic version number to an integer for version comparisons
@@ -384,12 +387,12 @@ semver_to_int() {
     _sem_ver="${1:?No version number supplied}"
 
     # Strip the variable of any non-numerics or dots
-    _sem_ver="$(println "${_sem_ver}" | sed 's/[^0-9.]//g')"
+    _sem_ver="$(write "${_sem_ver}" | sed 's/[^0-9.]//g')"
 
     # Swap the dots for spaces and assign the outcome to the positional param array
     # We want word splitting here, so we disable shellcheck's complaints
     # shellcheck disable=SC2046
-    set -- $(println "${_sem_ver}" | tr '.' ' ')
+    set -- $(write "${_sem_ver}" | tr '.' ' ')
 
     # Assemble and print our integer
     printf -- '%d%02d%02d' "${1}" "${2:-0}" "${3:-0}"
@@ -428,7 +431,7 @@ fi
 convert_time_to_epoch() {
     # Read our incoming date/time information into our variables
     _month="${1:?No date provided}"; _day="${2}"; _year="${3}"; _timestamp="${4}"
-    println "${_timestamp}" | while IFS=':' read -r _hours _min _sec; do
+    write "${_timestamp}" | while IFS=':' read -r _hours _min _sec; do
         # Convert the month to 0..11 range
         case "${_month}" in
             ([jJ]an*) _month=0 ;;
@@ -487,7 +490,7 @@ get_nfs_mounts() {
 get_ntpq() {
     # If 'ntpq' isn't in PATH, there's no point going further
     inpath ntpq || return 1
-    [ "${1}" = "--header" ] && println '<<<ntp>>>'
+    [ "${1}" = "--header" ] && write '<<<ntp>>>'
     ntpq -np | sed -e 1,2d -e 's/^\\(.\\)/\\1 /' -e 's/^ /%/' || true
 }
 
@@ -527,7 +530,7 @@ is_valid_plugin() {
 # Setup a function to encrypt the output using openssl
 protect_output() {
     if ! inpath openssl; then
-        println "ERROR: protect_output(): 'openssl' not found in PATH" >&2
+        write "ERROR: protect_output(): 'openssl' not found in PATH" >&2
         return
     fi
 
@@ -535,7 +538,7 @@ protect_output() {
     if [ "${1}" = "-rt" ]; then
         # Let's see if RTC_SECRET is defined
         if [ ! -r "${MK_CONFDIR}/real_time_checks.cfg" ]; then
-            println "ERROR: protect_output(): Unable to read real_time_checks.cfg"
+            write "ERROR: protect_output(): Unable to read real_time_checks.cfg"
             return
         fi
         # If we have a defined RTC_SECRET, then we prioritise that.
@@ -560,9 +563,9 @@ protect_output() {
 
     # Print our protocol and/or epoch information
     if [ "${1}" = "-rt" ]; then
-        println -n "${_encCode}$(get_epoch)"
+        write -n "${_encCode}$(get_epoch)"
     else
-        println -n "${_encCode}"
+        write -n "${_encCode}"
     fi
 
     # Call openssl with our required digest and auth
@@ -661,7 +664,7 @@ run_cached() {
 
     _cached_name="${1}"
     _cached_maxage="${2}"
-    _cached_section="println '<<<${_cached_name}:cached($(get_epoch),${_cached_maxage})>>>' ; "
+    _cached_section="write '<<<${_cached_name}:cached($(get_epoch),${_cached_maxage})>>>' ; "
     shift 2
     _cached_cmd="${_cached_section}${*}"
 
@@ -722,9 +725,9 @@ run_cached() {
     if var_is_unset "${_use_cachefile}" && [ ! -e "${_cached_file}".new ]; then
         # When the command fails, the output is throws away ignored
         if [ "${_cached_mrpe}" -eq 1 ]; then
-            println "set -o noclobber ; exec > \"$_cached_file.new\" || exit 1 ; run_mrpe $_cached_name \"$_cached_cmd\" && mv \"$_cached_file.new\" \"$_cached_file\" || rm -f \"$_cached_file\" \"$_cached_file.new\"" | nohup /bin/bash >/dev/null 2>&1 &
+            write "set -o noclobber ; exec > \"$_cached_file.new\" || exit 1 ; run_mrpe $_cached_name \"$_cached_cmd\" && mv \"$_cached_file.new\" \"$_cached_file\" || rm -f \"$_cached_file\" \"$_cached_file.new\"" | nohup /bin/bash >/dev/null 2>&1 &
         else
-            println "set -o noclobber ; exec > \"$_cached_file.new\" || exit 1 ; $_cached_cmd && mv \"$_cached_file.new\" \"$_cached_file\" || rm -f \"$_cached_file\" \"$_cached_file.new\"" | nohup /bin/bash >/dev/null 2>&1 &
+            write "set -o noclobber ; exec > \"$_cached_file.new\" || exit 1 ; $_cached_cmd && mv \"$_cached_file.new\" \"$_cached_file\" || rm -f \"$_cached_file\" \"$_cached_file.new\"" | nohup /bin/bash >/dev/null 2>&1 &
         fi
     fi
     unset -v _cached_section _cached_mrpe _cached_append_age _cached_name _cached_maxage _cached_cmd
@@ -757,7 +760,7 @@ case $(waitmax 1 bash -c ": </dev/tcp/127.0.0.1/9 2>&1") in
                 unset -v _bin_nc
             }
         else
-            println "send_rtc(): Unable to determine communication method" >&2
+            write "send_rtc(): Unable to determine communication method" >&2
         fi
     ;;
 esac
@@ -767,7 +770,7 @@ esac
 # detailed graphing (if you configure your RRDs to this resolution).
 run_real_time_checks() {
     _rt_pid=${MK_VARDIR:?}/real_time_checks.pid
-    println "$$" >"${_rt_pid}"
+    write "$$" >"${_rt_pid}"
 
     while true; do
         # terminate when pidfile is gone or other Real-Time Check process started or configured timeout
@@ -786,7 +789,7 @@ run_real_time_checks() {
                     # protect_output() takes care of printing our protocol and epoch info
                     section_"${_rt_section}" | protect_output -rt
                 else
-                    println -n "99$(get_epoch)"
+                    write -n "99$(get_epoch)"
                     section_"${_rt_section}"
                 fi
             } | dd bs=9999 iflag=fullblock 2>/dev/null | send_rtc "${MK_RTC_HOST}" "${RTC_PORT}"
@@ -802,7 +805,7 @@ run_real_time_checks() {
                     if [ "${ENCRYPTED_RT}" != "no" ]; then
                         ./"${_rt_plugin}" | protect_output -rt
                     else
-                        println -n "99$(get_epoch)"
+                        write -n "99$(get_epoch)"
                         ./"${_rt_plugin}"
                     fi
                 } | dd bs=9999 iflag=fullblock 2>/dev/null | send_rtc "${MK_RTC_HOST}" "${RTC_PORT}"
@@ -823,11 +826,11 @@ run_real_time_checks() {
 section_3ware_raid() {
     if inpath tw_cli; then
         for _tw_ctl in $(tw_cli show | awk 'NR < 4 { next } { print $1 }'); do
-            println '<<<3ware_info>>>'
+            write '<<<3ware_info>>>'
             tw_cli "/${_tw_ctl}" show all | grep -E 'Model =|Firmware|Serial'
-            println '<<<3ware_disks>>>'
+            write '<<<3ware_disks>>>'
             tw_cli "/${_tw_ctl}" show drivestatus | grep -E 'p[0-9]' | sed "s/^/${_tw_ctl}\\//"
-            println '<<<3ware_units>>>'
+            write '<<<3ware_units>>>'
             tw_cli "/${_tw_ctl}" show unitstatus | grep -E 'u[0-9]' | sed "s/^/${_tw_ctl}\\//"
         done
         unset -v _tw_ctl
@@ -837,49 +840,49 @@ section_3ware_raid() {
 # TO-DO: Determine if any of these can be merged into other functions
 section_aix() {
     if inpath lparstat; then
-        println '<<<lparstat_aix>>>'
+        write '<<<lparstat_aix>>>'
         lparstat 1 1
     fi
 
     # powerHA
     if inpath lslpp; then
         _cluster_cmd_output=$(lslpp -l cluster.es.server.rte)
-        if ! println "${_cluster_cmd_output}" | grepq "not installed"; then
+        if ! write "${_cluster_cmd_output}" | grepq "not installed"; then
             # now the following commands should be available
             _nodes=$(cllsnode | grep "NODE" | sed -e s/NODE//g -e s/://g)
             _list_active_nodes=""
             for _node in ${_nodes}; do
                 _active_nodes=$(clgetactivenodes -n "${_node}")
-                if println "${_active_nodes}" | grepq "${_node}"; then
+                if write "${_active_nodes}" | grepq "${_node}"; then
                     _list_active_nodes=${_list_active_nodes}"\\n${_node}"
                 fi
             done
 
             if [ "${_list_active_nodes}" ]; then
-                println '<<<aix_hacmp_nodes>>>'
+                write '<<<aix_hacmp_nodes>>>'
                 # shellcheck disable=SC2039
-                println -e "${_list_active_nodes}"
+                write -e "${_list_active_nodes}"
                 cllsnode
             fi
 
-            println '<<<aix_hacmp_services>>>'
+            write '<<<aix_hacmp_services>>>'
             if inpath clshowsrv ; then
                 waitmax 5 clshowsrv -v
             else # fallback, hardcoded base installation path
                 waitmax 5 /usr/es/sbin/cluster/utilities/clshowsrv -v
             fi
 
-            println '<<<aix_hacmp_resources:sep(58)>>>'
+            write '<<<aix_hacmp_resources:sep(58)>>>'
             waitmax 5 clRGinfo -s
 
             unset -v _cluster_cmd_output _nodes _list_active_nodes _node _active_nodes
         fi
     fi
 
-    println '<<<mpstat_aix>>>'
+    write '<<<mpstat_aix>>>'
     mpstat -a | tail -n1
 
-    println '<<<aix_lvm>>>'
+    write '<<<aix_lvm>>>'
     # -L disables LVM lock for the query. Avoids blocking while LVM is
     # doing changes. For rootvg that is fine.
     lsvg -L -l rootvg
@@ -896,7 +899,7 @@ section_areca_raid() {
 # RAID status of LSI controllers via cfggen
 section_cfggen() {        
     if inpath cfggen; then
-        println '<<<lsi>>>'
+        write '<<<lsi>>>'
         cfggen 0 DISPLAY |
             grep -E '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' |
             sed -e 's/ *//g' -e 's/:/ /'
@@ -919,72 +922,69 @@ section_cpu() {
     case "${MK_OSSTR}" in
         (aix)
             # CPU output of Linux agent simulated (thanks to Cameron Pierce)
-            println '<<<cpu>>>'
+            write '<<<cpu>>>'
             _load=$(uptime|sed -e 's;.*average: \([[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\), \([[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\), \([[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\);\1 \2 \3;')
             _ps=$(ps -eo thcount | awk '{SUM+=$1} END {print SUM}')
             _procs=$(vmstat|grep lcpu|sed -e 's;.*lcpu=\([[:digit:]]\{1,4\}\).*;\1;')
-            println "${_load} 1/${_ps} $$ ${_procs}"
+            write "${_load} 1/${_ps} $$ ${_procs}"
             unset -v _load _ps _procs
         ;;
         (freebsd)
-            println '<<<cpu>>>'
+            write '<<<cpu>>>'
             sysctl -n vm.loadavg | tr -d '{}'
             top -b -n 1 | grep -E '^[0-9]+ processes' | awk '{print $3"/"$1}'
             sysctl -n kern.lastpid
             sysctl -n hw.ncpu
         ;;
         (hpux)
-            println '<<<hpux_cpu>>>'
+            write '<<<hpux_cpu>>>'
             uptime
             # machinfo is unsupported addon thus not in $PATH
             /usr/contrib/bin/machinfo | grep -E 'logical proc|core' | tail -1
         ;;
         (linux)
-            if [ "$(uname -m)" = "armv7l" ]; then
-                _cpu_regex='^processor'
-            else
-                _cpu_regex='^CPU|^processor'
-            fi
+            case "$(uname -m)" in
+                (armv71|armv61) _cpu_regex='^processor' ;;
+                (''|*)          _cpu_regex='^CPU|^processor' ;;
+            esac
             _num_cpus=$(grep -c -E ${_cpu_regex} </proc/cpuinfo)
 
             if var_is_unset "${MK_IS_DOCKERIZED}" && var_is_unset "${MK_IS_LXC_CONTAINER}"; then
-                println '<<<cpu>>>'
-                println "$(cat /proc/loadavg) $_num_cpus"
-                if [ -f "/proc/sys/kernel/threads-max" ]; then
-                    cat /proc/sys/kernel/threads-max
-                fi
+                write '<<<cpu>>>'
+                write "$(cat /proc/loadavg) $_num_cpus"
+                [ -r "/proc/sys/kernel/threads-max" ] && cat /proc/sys/kernel/threads-max
             else
                 if var_is_set "${MK_IS_DOCKERIZED}"; then
-                    println '<<<docker_container_cpu>>>'
+                    write '<<<docker_container_cpu>>>'
                 else
-                    println '<<<lxc_container_cpu>>>'
+                    write '<<<lxc_container_cpu>>>'
                 fi
                 grep "^cpu " /proc/stat
-                println "num_cpus ${_num_cpus}"
+                write "num_cpus ${_num_cpus}"
                 cat /sys/fs/cgroup/cpuacct/cpuacct.stat
             fi
-            unset -v _cpu_regex _num_cpu
+            unset -v _cpu_regex _num_cpus
         ;;
         (mac)
-            println '<<<cpu>>>'
+            write '<<<cpu>>>'
             sysctl -n vm.loadavg | tr -d '{}'
             top -l 1 -n 1 | grep -E '^Processes:' | awk '{$4"/"$2;}'
-            println 'println $$' | bash
+            write 'write $$' | bash
             sysctl -n hw.ncpu
         ;;
         (netbsd|openbsd)
-            println '<<<cpu>>>'
+            write '<<<cpu>>>'
             sysctl -n vm.loadavg | tr -d '{}'
             top -b -n 1 | grep -E '^[0-9]+ processes' | awk '{print $3"/"$1}'
             sysctl -n hw.ncpu
         ;;
         (solaris)
             # Simulated Output of Linux /proc/cpu
-            println '<<<cpu>>>'
+            write '<<<cpu>>>'
             _load=$(uptime|sed -e 's;.*average: \([0-9]\{1,\}\.[0-9]\{1,\}\), \([0-9]\{1,\}\.[0-9]\{1,\}\), \([0-9]\{1,\}\.[0-9]\{1,\}\).*;\1 \2 \3;')
             _nthreads=$(($(ps -AL | wc -l)))
             _procs=$(($(psrinfo | wc -l)))
-            println "${_load} 1/${_nthreads} $$ ${_procs}"
+            write "${_load} 1/${_nthreads} $$ ${_procs}"
             unset -v _load _nthreads _procs
         ;;
     esac
@@ -1007,18 +1007,18 @@ section_df() {
                 /usr/opt/freeware/bin/df -PTlk ${_df_excludefs} | sed 1d
 
                 # df inodes information
-                println '<<<df>>>'
-                println '[df_inodes_start]'
+                write '<<<df>>>'
+                write '[df_inodes_start]'
                 # shellcheck disable=SC2086
                 /usr/opt/freeware/bin/df -PTli ${_df_excludefs} | sed 1d
-                println '[df_inodes_end]'
+                write '[df_inodes_end]'
             else
                 df -kP | sed 's/ / - /' | grep -v ^/proc | grep -v ^Filesystem | grep -v :
             fi
             unset -v _df_excludefs
         ;;
         (freebsd)
-            println '<<<df>>>'
+            write '<<<df>>>'
             # no special zfs handling so far, the ZFS.pools plugin has been tested to
             # work on FreeBSD
             if df -T > /dev/null ; then
@@ -1034,7 +1034,7 @@ section_df() {
             # Filesystems. HP-UX does not provide a filesystem type. We assume
             # modern systems with vxfs only here. The filesystem type is currently
             # not used by the check anyway.
-            println '<<<df>>>'
+            write '<<<df>>>'
             df -kP | 
                 sed 's/ / - /' | 
                 awk '/^(.*-.*)$/ { print $0 } /^([^-]+)$/ { printf $0 }' | 
@@ -1051,42 +1051,42 @@ section_df() {
                 _df_excludefs="${_df_excludefs} -x zfs"
             fi
 
-            println '<<<df>>>'
+            write '<<<df>>>'
             # shellcheck disable=SC2086
             df -PTlk ${_df_excludefs} | sed 1d
 
             # df inodes information
-            println '<<<df>>>'
-            println '[df_inodes_start]'
+            write '<<<df>>>'
+            write '[df_inodes_start]'
             # shellcheck disable=SC2086
             df -PTli ${_df_excludefs} | sed 1d
-            println '[df_inodes_end]'
+            write '[df_inodes_end]'
 
             unset -v _df_excludefs
         ;;
         (mac)
-            println '<<<df>>>'
+            write '<<<df>>>'
             df -kPT hfs,apfs | 
                 grep -Ev "Time Machine|com.apple.TimeMachine.localsnapshots|/Volumes/|/private/var/vm" | 
                 sed 1d |
             while read -r _df_dev _df_rest; do
                 _df_type=$(diskutil info "${_df_dev}" | grep '^\s*Type' | cut -d: -f2 | tr -d '[:space:]')
-                println "${_df_dev} ${_df_type} ${_df_rest}"
+                write "${_df_dev} ${_df_type} ${_df_rest}"
             done
             unset -v df_dev df_type df_rest
         ;;
         (netbsd|openbsd)
-            println '<<<df>>>'
+            write '<<<df>>>'
             df -kPt ffs | sed -e 's/^\([^ ][^ ]*\) \(.*\)$/\1 ffs \2/' | sed 1d
         ;;
         (solaris)
             # Filesystem usage for UFS and VXFS
-            println '<<<df>>>'
+            write '<<<df>>>'
             for _fs in ufs vxfs samfs lofs tmpfs; do
                 df -l -k -F ${_fs} 2>/dev/null | sed 1d | grep -v "^[^ ]*/lib/[^ ]*\\.so\\.1 " | \
                 while read -r _Filesystem _kbytes _used _avail _capacity _Mountedon; do
                     _kbytes=$((_used + _avail))
-                    println "${_Filesystem} ${_fs} ${_kbytes} ${_used} ${_avail} ${_capacity} ${_Mountedon}"
+                    write "${_Filesystem} ${_fs} ${_kbytes} ${_used} ${_avail} ${_capacity} ${_Mountedon}"
                 done
             done
             unset -v _fs _Filesystem _kbytes _used _avail _capacity _Mountedon
@@ -1098,32 +1098,32 @@ section_df() {
 section_diskstat() {
     # Performancecounter Platten
     if var_is_unset "${MK_IS_DOCKERIZED}" && [ -r "/proc/diskstats" ]; then
-        println '<<<diskstat>>>'
+        write '<<<diskstat>>>'
         get_epoch
         _grepFilter=" (x?[shv]d[a-z]*[0-9]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+"
         _grepFilter="${_grepFilter}|VxVM.*|mmcblk.*|dasd[a-z]*|bcache[0-9]+|nvme[0-9]+n[0-9]+) "
         grep -E "${_grepFilter}" </proc/diskstats
         if inpath dmsetup; then
-            println '[dmsetup_info]'
+            write '[dmsetup_info]'
             dmsetup info -c --noheadings --separator ' ' -o name,devno,vg_name,lv_name
         fi
         if [ -d /dev/vx/dsk ]; then
-            println '[vx_dsk]'
+            write '[vx_dsk]'
             stat -c "%t %T %n" /dev/vx/dsk/*/*
         fi
         unset -v _grepFilter
     elif var_is_set "${MK_IS_DOCKERIZED}"; then
-        println '<<<docker_container_diskstat>>>'
-        println "[time]"
+        write '<<<docker_container_diskstat>>>'
+        write "[time]"
         get_epoch
         for _ioFile in io_service_bytes io_serviced; do
-            println "[${_ioFile}]"
+            write "[${_ioFile}]"
             cat "/sys/fs/cgroup/blkio/blkio.throttle.${_ioFile}"
         done
-        println "[names]"
+        write "[names]"
         for _ioFile in /sys/block/*; do
             # shellcheck disable=SC2039
-            println "${_ioFile##*/} $(cat "${_ioFile}/dev")"
+            write "${_ioFile##*/} $(cat "${_ioFile}/dev")"
         done
         unset -v _ioFile
     fi
@@ -1132,18 +1132,18 @@ section_diskstat() {
 section_dm_raid() {
     # RAID status of Linux RAID via device mapper
     if inpath dmraid && _dmstatus=$(waitmax 3 dmraid -r); then
-        println '<<<dmraid>>>'
+        write '<<<dmraid>>>'
 
         # Output name and status
         waitmax 20 dmraid -s | grep -e ^name -e ^status
 
         # Output disk names of the RAID disks
-        _disks=$(println "${_dmstatus}" | cut -f1 -d":")
+        _disks=$(write "${_dmstatus}" | cut -f1 -d":")
 
         for _disk in ${_disks}; do
             _device=$(cat /sys/block/"$(basename "${_disk}")"/device/model)
-            _status=$(println "${_dmstatus}" | grep "^${_disk}")
-            println "${_status} Model: ${_device}"
+            _status=$(write "${_dmstatus}" | grep "^${_disk}")
+            write "${_status} Model: ${_device}"
         done
     fi
     unset -v _dmstatus _disks _disk _device _status 
@@ -1151,7 +1151,7 @@ section_dm_raid() {
 
 section_drbd() {
     if var_is_unset "${MK_IS_DOCKERIZED}" && var_is_unset "${MK_IS_LXC_CONTAINER}" && [ -r /proc/drbd ]; then
-        println '<<<drbd>>>'
+        write '<<<drbd>>>'
         cat /proc/drbd
     fi
 }
@@ -1194,8 +1194,8 @@ section_fileinfo() {
 section_haproxy() {
     for HAPROXY_SOCK in /run/haproxy/admin.sock /var/lib/haproxy/stats; do
         if [ -r "$HAPROXY_SOCK" ] && inpath socat; then
-            println "<<<haproxy:sep(44)>>>"
-            println "show stat" | socat - "UNIX-CONNECT:$HAPROXY_SOCK"
+            write "<<<haproxy:sep(44)>>>"
+            write "show stat" | socat - "UNIX-CONNECT:$HAPROXY_SOCK"
         fi
     done
 }
@@ -1225,24 +1225,24 @@ section_heartbeat() {
         pgrep crmd >/dev/null 2>&1 || 
         pgrep -f pacemaker-controld >/dev/null 2>&1
     }; then
-        println '<<<heartbeat_crm>>>'
+        write '<<<heartbeat_crm>>>'
         TZ=UTC crm_mon -1 -r | grep -v ^$ | sed 's/^ //; /^\sResource Group:/,$ s/^\s//; s/^\s/_/g'
     fi
     if inpath cl_status; then
-        println '<<<heartbeat_rscstatus>>>'
+        write '<<<heartbeat_rscstatus>>>'
         cl_status rscstatus
 
-        println '<<<heartbeat_nodes>>>'
+        write '<<<heartbeat_nodes>>>'
         for _node in $(cl_status listnodes); do
-            if [ "${_node}" != "$(println "${HOSTNAME}" | tr '[:upper:]' '[:lower:]')" ]; then
+            if [ "${_node}" != "$(write "${HOSTNAME}" | tr '[:upper:]' '[:lower:]')" ]; then
                 _status=$(cl_status nodestatus "${_node}")
                 # shellcheck disable=SC2039
-                println -n "${_node} ${_status}"
+                write -n "${_node} ${_status}"
                 for _link in $(cl_status listhblinks "${_node}" 2>/dev/null); do
                     # shellcheck disable=SC2039
-                    println -n " ${_link} $(cl_status hblinkstatus "${_node}" "${_link}")"
+                    write -n " ${_link} $(cl_status hblinkstatus "${_node}" "${_link}")"
                 done
-                println
+                write
             fi
         done
         unset -v _node _status _link
@@ -1251,24 +1251,24 @@ section_heartbeat() {
 
 section_hpux() {
     # Logical Volume Manager
-    println '<<<hpux_lvm:sep(58)>>>'
+    write '<<<hpux_lvm:sep(58)>>>'
     /sbin/vgdisplay -v -F
 
-    println '<<<hpux_serviceguard:sep(124)>>>'
+    write '<<<hpux_serviceguard:sep(124)>>>'
     if inpath cmviewcl; then
         cmviewcl -v -f line | grep summary
     fi
 
     # Kernel tunnables
     if inpath kcusage; then
-        println '<<<hpux_tunables>>>'
+        write '<<<hpux_tunables>>>'
         kcusage -l
     fi
 
     # State of FC HBAs
-    println '<<<hpux_hbahealth:sep(61)>>>'
+    write '<<<hpux_hbahealth:sep(61)>>>'
     for _hba in /dev/fcd*; do
-        println "${_hba}"
+        write "${_hba}"
         /opt/fcms/bin/fcdutil "${_hba}" | 
             grep -e "Driver state" \
                 -e "Topology" \
@@ -1293,7 +1293,7 @@ section_iostat() {
     _grepFilter="^(x?[shv]d[a-z]*[0-9]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+|VxVM.*"
     _grepFilter="${_grepFilter}|mmcblk.*|dasd[a-z]*|bcache[0-9]+|nvme[0-9]+n[0-9]+|hdisk) "
 
-    println "<<<${MK_OSSTR}_iostat>>>"
+    write "<<<${MK_OSSTR}_iostat>>>"
 
     # AIX was formerly under the header '<<<aix_diskiod>>>'
     # TO-DO: Update checkman/aix_diskiod, checks/aix_diskiod etc
@@ -1327,7 +1327,7 @@ section_ipmisensors() {
     # IPMI data via ipmi-sensors (of freeipmi). Please make sure, that if you
     # have installed freeipmi that IPMI is really support by your hardware.
     if (inpath ipmi-sensors && ls /dev/ipmi*) >/dev/null 2>&1; then
-        println '<<<ipmi_sensors>>>'
+        write '<<<ipmi_sensors>>>'
         # Newer ipmi-sensors version have new output format; Legacy format can be used
         if ipmi-sensors --help | grepq legacy-output; then
             _ipmi_format="--legacy-output"
@@ -1353,14 +1353,14 @@ section_jobs() {
     # arbitrary files can be avoided.
     (
         cd "${MK_VARDIR}/job" || return
-        println '<<<job>>>'
+        write '<<<job>>>'
         case "${MK_OSSTR}" in
             (aix)
                 for _username in *; do
                     if [ -d "${_username}" ] && cd "${_username}"; then
                         for _filename in *; do
                             # Maybe a cursory "if [ -r "${_filename}" ]" could go here?
-                            println "==> ${_filename} <=="
+                            write "==> ${_filename} <=="
                             cat "${_filename}"
                         done
                         cd ..
@@ -1386,7 +1386,7 @@ section_jobs() {
 
                         if [ "${_count}" -eq "1" ]; then
                             _filename=$(su -s "${SHELL}" "${_username}" -c "ls -1 *")
-                            println "==> ${_filename} <=="
+                            write "==> ${_filename} <=="
                         fi
 
                         su -s "${SHELL}" "${_username}" -c "head -n1000 *"
@@ -1403,23 +1403,23 @@ section_kernel() {
     case "${MK_OSSTR}" in
         (freebsd)
             # Performancecounter Kernel
-            println "<<<kernel>>>"
+            write "<<<kernel>>>"
             get_epoch
             _forks=$(sysctl -n vm.stats.vm.v_forks)
             _vforks=$(sysctl -n vm.stats.vm.v_vforks)
             _rforks=$(sysctl -n vm.stats.vm.v_rforks)
             _kthreads=$(sysctl -n vm.stats.vm.v_kthreads)
-            println "cpu" "$(sysctl -n kern.cp_time | awk ' { print $1" "$2" "$3" "$5" "$4 } ')"
-            println "ctxt" "$(sysctl -n vm.stats.sys.v_swtch)"
+            write "cpu" "$(sysctl -n kern.cp_time | awk ' { print $1" "$2" "$3" "$5" "$4 } ')"
+            write "ctxt" "$(sysctl -n vm.stats.sys.v_swtch)"
             # TO-DO: confirm that these are all ints and if so, convert to $(())
             # shellcheck disable=SC2003
-            println "processes" "$(expr "${_forks}" + "${_vforks}" + "${_rforks}" + "${_kthreads}")"
+            write "processes" "$(expr "${_forks}" + "${_vforks}" + "${_rforks}" + "${_kthreads}")"
             unset -v _forks _vforks _rforks _kthreads
         ;;
         (linux)
             # Performancecounter Kernel
             if var_is_unset "${MK_IS_DOCKERIZED}" && var_is_unset "${MK_IS_LXC_CONTAINER}"; then
-                println '<<<kernel>>>'
+                write '<<<kernel>>>'
                 get_epoch
                 cat /proc/vmstat /proc/stat
             fi
@@ -1429,7 +1429,7 @@ section_kernel() {
 
 section_local() {
     # Local checks
-    println '<<<local:sep(0)>>>'
+    write '<<<local:sep(0)>>>'
     # Contain the 'cd' within a subshell so that we return
     # where we came from once the subshell closes
     (
@@ -1442,7 +1442,7 @@ section_local() {
             # Call some plugins only every X'th second
             for _skript in [1-9]*/*; do
                 if is_valid_plugin "${_skript}"; then
-                    _skript_cache=$(println "${_skript}" | sed 's/\//\\/')
+                    _skript_cache=$(write "${_skript}" | sed 's/\//\\/')
                     run_cached "local_${_skript_cache}" "${_skript%/*}" "${_skript}"
                 fi
             done
@@ -1454,7 +1454,7 @@ section_local() {
 section_mac() {
     # OSX Timemachine
     if inpath tmutil; then
-        println '<<<timemachine>>>'
+        write '<<<timemachine>>>'
         tmutil latestbackup 2>&1
     fi
 }
@@ -1466,7 +1466,7 @@ section_mac_time() {
     systemsetup -getusingnetworktime | grepq "Network Time: On" || return 1
     # Figure out our OS version so that we can determine our approach
     var_is_blank "${MK_OSVER}" && return 1
-    _macver=$(println "${MK_OSVER}" | tr -d '.')
+    _macver=$(write "${MK_OSVER}" | tr -d '.')
     if [ "${_macver}" -ge "1014" ]; then
         # If this file is missing, create it
         [ -f /var/db/ntp-kod ] || touch /var/db/ntp-kod
@@ -1494,16 +1494,16 @@ section_mailqueue() {
     read_postfix_queue_dirs() {
         _postfix_queue_dir="${1}"
         if var_is_set "${_postfix_queue_dir}"; then
-            println '<<<postfix_mailq>>>'
-            println "[[[${2}]]]"
+            write '<<<postfix_mailq>>>'
+            write "[[[${2}]]]"
 
             for _queue in deferred active; do
                 _count=$(find "${_postfix_queue_dir}/${_queue}" -type f | wc -l)
                 _size=$(du -s "${_postfix_queue_dir}/${_queue}" | awk '{print $1 }')
                 if var_is_empty "${_count}"; then
-                    println "Mail queue is empty"
+                    write "Mail queue is empty"
                 else
-                    println "QUEUE_${_queue} ${_size:-0} ${_count}"
+                    write "QUEUE_${_queue} ${_size:-0} ${_count}"
                 fi
             done
         fi
@@ -1525,14 +1525,14 @@ section_mailqueue() {
                 # Only handle the last 6 lines (includes the summary line at the bottom and
                 # the last message in the queue. The last message is not used at the moment
                 # but it could be used to get the timestamp of the last message.
-                println '<<<postfix_mailq>>>'
+                write '<<<postfix_mailq>>>'
                 postfix_queue_dir=$(postconf -h queue_directory)
                 postfix_count=$(find "$postfix_queue_dir"/deferred -type f | wc -l)
                 postfix_size=$(du -ks "$postfix_queue_dir"/deferred | awk '{print $1 }')
                 if [ "$postfix_count" -gt 0 ]; then
-                    println "$postfix_size" Kbytes in "$postfix_count" Requests.
+                    write "$postfix_size" Kbytes in "$postfix_count" Requests.
                 else
-                    println Mail queue is empty
+                    write Mail queue is empty
                 fi
             ;;
             (linux)
@@ -1553,54 +1553,54 @@ section_mailqueue() {
         esac
 
     elif [ -x /usr/sbin/ssmtp ]; then
-        println '<<<postfix_mailq>>>'
+        write '<<<postfix_mailq>>>'
         mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
 
     # *bsd but should be a reasonable generic fallback
     elif inpath mailq && getent passwd postfix >/dev/null 2>&1; then
-        println '<<<postfix_mailq>>>'
+        write '<<<postfix_mailq>>>'
         mailq | tail -n 6
     fi
 
     # From AIX, seems generic enough
     if [ -x /usr/sbin/sendmail ] ; then
-        println '<<<postfix_mailq>>>';
+        write '<<<postfix_mailq>>>';
         mailq 2>&1 | tail -n 6
     fi
 
     # Postfix status monitoring. Can handle multiple instances.
     if inpath postfix; then
-        println "<<<postfix_mailq_status:sep(58)>>>"
+        write "<<<postfix_mailq_status:sep(58)>>>"
         for i in /var/spool/postfix*/; do
             if [ -e "$i/pid/master.pid" ]; then
                 if [ -r "$i/pid/master.pid" ]; then
                     postfix_pid=$(sed 's/ //g' <"$i/pid/master.pid") # handle possible spaces in output
                     if readlink -- "/proc/${postfix_pid}/exe" | grepq ".*postfix/\\(s\\?bin/\\)\\?master.*"; then
-                        println "$i:the Postfix mail system is running:PID:$postfix_pid" | sed 's/\/var\/spool\///g'
+                        write "$i:the Postfix mail system is running:PID:$postfix_pid" | sed 's/\/var\/spool\///g'
                     else
-                        println "$i:PID file exists but instance is not running!" | sed 's/\/var\/spool\///g'
+                        write "$i:PID file exists but instance is not running!" | sed 's/\/var\/spool\///g'
                     fi
                 else
-                    println "$i:PID file exists but is not readable"
+                    write "$i:PID file exists but is not readable"
                 fi
             else
-                println "$i:the Postfix mail system is not running" | sed 's/\/var\/spool\///g'
+                write "$i:the Postfix mail system is not running" | sed 's/\/var\/spool\///g'
             fi
         done
     fi
 
     # Check status of qmail mailqueue
     if inpath qmail-qstat; then
-        println "<<<qmail_stats>>>"
+        write "<<<qmail_stats>>>"
         qmail-qstat
     fi
 
     # Nullmailer queue monitoring
     if inpath nullmailer-send && [ -d /var/spool/nullmailer/queue ]; then
-        println '<<<nullmailer_mailq>>>'
+        write '<<<nullmailer_mailq>>>'
         COUNT=$(find /var/spool/nullmailer/queue -type f | wc -l)
         SIZE=$(du -s /var/spool/nullmailer/queue | awk '{print $1 }')
-        println "$SIZE $COUNT"
+        write "$SIZE $COUNT"
     fi
 }
 
@@ -1617,39 +1617,39 @@ section_megaraid() {
     done
 
     if inpath lsicli; then
-        println '<<<megaraid_pdisks>>>'
+        write '<<<megaraid_pdisks>>>'
         for part in $(lsicli -EncInfo -aALL -NoLog </dev/null |
             sed -rn 's/:/ /g; s/[[:space:]]+/ /g; s/^ //; s/ $//; s/Number of enclosures on adapter ([0-9]+).*/adapter \1/g; /^(Enclosure|Device ID|adapter) [0-9]+$/ p'); do
-            [ "$part" = adapter ] && println ""
+            [ "$part" = adapter ] && write ""
             # shellcheck disable=SC2039
-            [ "$part" = 'Enclosure' ] && println -ne "\\ndev2enc"
+            [ "$part" = 'Enclosure' ] && write -ne "\\ndev2enc"
             # shellcheck disable=SC2039
-            println -n " $part"
+            write -n " $part"
         done
-        println
+        write
         lsicli -PDList -aALL -NoLog </dev/null |
             grep -E 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Adapter|Predictive Failure Count'
-        println '<<<megaraid_ldisks>>>'
+        write '<<<megaraid_ldisks>>>'
         lsicli -LDInfo -Lall -aALL -NoLog </dev/null | grep -E 'Size|State|Number|Adapter|Virtual'
-        println '<<<megaraid_bbu>>>'
+        write '<<<megaraid_bbu>>>'
         lsicli -AdpBbuCmd -GetBbuStatus -aALL -NoLog </dev/null | grep -v Exit
         # CMK-3937 / c6ecb68 / PR #120
         # if lsicli is storcli64; then
-        #     println "<<<storcli_pdisks>>>"
+        #     write "<<<storcli_pdisks>>>"
         #     lsicli /call/eall/sall show
-        #     println "<<<storcli_vdrives>>>"
+        #     write "<<<storcli_vdrives>>>"
         #     /opt/MegaRAID/storcli/storcli64 /call/vall show
         # fi
     fi
 }
 
 # TO-DO: Standardise section headers
-# We ignore the shellcheck alerts for 'println -n' as our 'println()' solves this
+# We ignore the shellcheck alerts for 'write -n' as our 'write()' solves this
 # shellcheck disable=SC2039
 section_mem() {
     case "${MK_OSSTR}" in
         (aix)
-            println '<<<aix_memory>>>'
+            write '<<<aix_memory>>>'
             vmstat -v  | tr -s ' '
             swap -s
             # TO-DO: Possible candidates?
@@ -1658,19 +1658,19 @@ section_mem() {
             # lsps -a
         ;;
         (hpux)
-            println '<<<hpux_mem>>>'
+            write '<<<hpux_mem>>>'
             machinfo | grep ^Memory
             vmstat | sed -n 3p
         ;;
         (linux)
             if var_is_unset "${MK_IS_DOCKERIZED}"; then
-                println '<<<mem>>>'
+                write '<<<mem>>>'
                 grep -E -v '^Swap:|^Mem:|total:' </proc/meminfo
             else
-                println '<<<docker_container_mem>>>'
+                write '<<<docker_container_mem>>>'
                 cat /sys/fs/cgroup/memory/memory.stat
-                println "usage_in_bytes $(cat /sys/fs/cgroup/memory/memory.usage_in_bytes)"
-                println "limit_in_bytes $(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)"
+                write "usage_in_bytes $(cat /sys/fs/cgroup/memory/memory.usage_in_bytes)"
+                write "limit_in_bytes $(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)"
                 grep -F 'MemTotal:' /proc/meminfo
             fi
         ;;
@@ -1682,27 +1682,27 @@ section_mem() {
             _pageSize=$(vm_stat | awk '/^Mach/{print $8}')
             _compressedPagesStored=$(vm_stat | awk '/stored in compressor:/{print $5}')
             _compressedPagesOccupied=$(vm_stat | awk '/occupied by compressor:/{print $5}')
-            _memFree=$(println "( ${_pagesSpeculative} + ${_pagesInactive} + ${_pagesFree} ) * ${_pageSize} / 1024" | bc)
-            _swapTotal=$(println "${_compressedPagesStored} * ${_pageSize} / 1024" | bc)
-            _swapFree=$(println "( ${_compressedPagesStored} - ${_compressedPagesOccupied} ) * ${_pageSize} / 1024" | bc)
-            println '<<<mem>>>'
-            println "MemTotal: $(println "$(sysctl -n hw.memsize)/1024" | bc) kB"
-            println "MemFree: ${_memFree} kB"
-            println "SwapTotal: ${_swapTotal} kB"
-            println "SwapFree: ${_swapFree} kB"
+            _memFree=$(write "( ${_pagesSpeculative} + ${_pagesInactive} + ${_pagesFree} ) * ${_pageSize} / 1024" | bc)
+            _swapTotal=$(write "${_compressedPagesStored} * ${_pageSize} / 1024" | bc)
+            _swapFree=$(write "( ${_compressedPagesStored} - ${_compressedPagesOccupied} ) * ${_pageSize} / 1024" | bc)
+            write '<<<mem>>>'
+            write "MemTotal: $(write "$(sysctl -n hw.memsize)/1024" | bc) kB"
+            write "MemFree: ${_memFree} kB"
+            write "SwapTotal: ${_swapTotal} kB"
+            write "SwapFree: ${_swapFree} kB"
 
             unset -v _pagesSpeculative _pagesInactive _pagesFree _pageSize _swapTotal _swapFree
             unset -v _compressedPagesStored _compressedPagesOccupied _memFree
         ;;
         (openbsd)
-            println "<<<mem>>>"
+            write "<<<mem>>>"
             MEM_FREE=$(vmstat | tail -n1 | awk '{ print $5 }')
             MEM_TOTAL=$(sysctl hw.usermem | cut -d= -f2)
-            MEM_TOTAL=$(println "$MEM_TOTAL/1024" | bc)
+            MEM_TOTAL=$(write "$MEM_TOTAL/1024" | bc)
 
             SWAPCTL_OUTPUT=$(swapctl -k -s)
-            SWAP_FREE=$(println "$SWAPCTL_OUTPUT" | awk '{ print $7 }')
-            SWAP_TOTAL=$(println "$SWAPCTL_OUTPUT" | awk '{ print $2 }')
+            SWAP_FREE=$(write "$SWAPCTL_OUTPUT" | awk '{ print $7 }')
+            SWAP_TOTAL=$(write "$SWAPCTL_OUTPUT" | awk '{ print $2 }')
 
             # if there is no swap space swap values are 0
             if var_is_unset "$SWAPCTL_OUTPUT"; then
@@ -1710,17 +1710,17 @@ section_mem() {
                 SWAP_TOTAL=0
             fi
 
-            println -e "MemTotal:\\t$MEM_TOTAL kB"
-            println -e "MemFree:\\t$MEM_FREE kB"
-            println -e "SwapTotal:\\t$SWAP_TOTAL kB"
-            println -e "SwapFree:\\t$SWAP_FREE kB"
+            write -e "MemTotal:\\t$MEM_TOTAL kB"
+            write -e "MemFree:\\t$MEM_FREE kB"
+            write -e "SwapTotal:\\t$SWAP_TOTAL kB"
+            write -e "SwapFree:\\t$SWAP_FREE kB"
         ;;
         (solaris)
             # We prefer to use 'statgrab' if it's available.  See section_statgrab()
             # If 'statgrab' isn't available, we offer this workaround
             if ! inpath statgrab; then
                 if [ -x /usr/bin/top ] || [ -x /usr/local/bin/top ]; then
-                    println "<<<solaris_mem>>>"
+                    write "<<<solaris_mem>>>"
                     if [ -x /usr/bin/top ]; then /usr/bin/top | grep '^Memory:'; fi
                     if [ -x /usr/local/bin/top ]; then /usr/local/bin/top | grep '^Memory:'; fi
                 fi
@@ -1732,7 +1732,7 @@ section_mem() {
 section_mkbackup() {
     # Collect states of configured Check_MK site backup jobs
     if ls /omd/sites/*/var/check_mk/backup/*.state >/dev/null 2>&1; then
-        println "<<<mkbackup>>>"
+        write "<<<mkbackup>>>"
         for _state_file in /omd/sites/*/var/check_mk/backup/*.state; do
             _omd_site=${_state_file#/*/*/*}
             _omd_site=${_omd_site%%/*}
@@ -1741,9 +1741,9 @@ section_mkbackup() {
             _job_ident=${_job_ident##*/}
 
             if [ "${_job_ident}" != "restore" ]; then
-                println "[[[site:${_omd_site}:${_job_ident}]]]"
+                write "[[[site:${_omd_site}:${_job_ident}]]]"
                 cat "${_state_file}"
-                println
+                write
             fi
         done
         unset -v _state_file _omd_site _job_ident
@@ -1751,15 +1751,15 @@ section_mkbackup() {
 
     # Collect states of configured CMA backup jobs
     if inpath mkbackup && ls /var/lib/mkbackup/*.state >/dev/null 2>&1; then
-        println "<<<mkbackup>>>"
+        write "<<<mkbackup>>>"
         for _state_file in /var/lib/mkbackup/*.state; do
             _job_ident=${_state_file%.state}
             _job_ident=${_job_ident##*/}
 
             if [ "${_job_ident}" != "restore" ]; then
-                println "[[[system:${_job_ident}]]]"
+                write "[[[system:${_job_ident}]]]"
                 cat "$F"
-                println
+                write
             fi
         done
         unset -v _state_file _job_ident
@@ -1772,13 +1772,13 @@ section_mounts() {
             # Check mount options.
             # FreeBSD doesn't do remount-ro on errors, but the users might consider
             # security related mount options more important.
-            println '<<<mounts>>>'
+            write '<<<mounts>>>'
             mount -p -t ufs
         ;;
         (linux)
             # Check mount options. Filesystems may switch to 'ro' in case
             # of a read error.
-            println '<<<mounts>>>'
+            write '<<<mounts>>>'
             grep ^/dev </proc/mounts | grep -v " squashfs "
         ;;
 
@@ -1790,15 +1790,15 @@ run_mrpe() {
     shift
     _mrpe_cmdline="${*}"
 
-    println '<<<mrpe>>>'
+    write '<<<mrpe>>>'
 
     _mrpe_plugin=${_mrpe_cmdline%% *}
     _mrpe_output=$(eval "${_mrpe_cmdline}")
 
-    # We ignore the shellcheck alerts for 'println -n' as our 'println()' solves this
+    # We ignore the shellcheck alerts for 'write -n' as our 'write()' solves this
     # shellcheck disable=SC2039
-    println -n "(${_mrpe_plugin##*/}) ${_mrpe_descr} ${?} ${_mrpe_output}" | tr \\n \\1
-    println
+    write -n "(${_mrpe_plugin##*/}) ${_mrpe_descr} ${?} ${_mrpe_output}" | tr \\n \\1
+    write
 
     # Unset the function variables
     unset -v _mrpe_descr _mrpe_cmdline _mrpe_plugin _mrpe_output
@@ -1819,11 +1819,11 @@ section_mrpe() {
                     (\(*)
                         # If we do start with '(', then split 'params' out of '_mrpe_cmdline'
                         # We strip the brackets from 'params' and rewrite '_mrpe_cmdline' without the params
-                        _mrpe_params=$(println "${_mrpe_cmdline% *}" | tr -d '()')
+                        _mrpe_params=$(write "${_mrpe_cmdline% *}" | tr -d '()')
                         _mrpe_cmdline="${_mrpe_cmdline##* }"
 
                         # split multiple parameter assignments
-                        for _par in $(println "${_mrpe_params}" | tr ":" "\\n"); do 
+                        for _par in $(write "${_mrpe_params}" | tr ":" "\\n"); do 
                             # split each assignment
                             _key="${_par%=*}"
                             _value="${_par#*=}"
@@ -1851,26 +1851,26 @@ section_multipathing() {
         (aix)
             # TO-DO: Consider merging in mpio_get_config, lsmpio, sanlun, 
             # dlnkmgr, powermt and pcmpath handling
-            println '<<<aix_multipath>>>'
+            write '<<<aix_multipath>>>'
             lspath -F"name parent status"
         ;;
         (freebsd)
             # Multipathing is supported in FreeBSD by now
             # http://www.mywushublog.com/2010/06/freebsd-and-multipath/
             if kldstat -v | grep g_multipath > /dev/null ; then
-                println '<<<freebsd_multipath>>>'
+                write '<<<freebsd_multipath>>>'
                 gmultipath status | grep -v ^Name
             fi
         ;;
         (hpux)
             # Multipathing
-            println '<<<hpux_multipath>>>'
+            write '<<<hpux_multipath>>>'
             scsimgr lun_map | grep -E '^[[:space:]]*(LUN PATH|State|World Wide Identifier)'
         ;;
         (linux)
             if inpath multipath; then
                 if [ -f /etc/multipath.conf ]; then
-                    println '<<<multipath>>>'
+                    write '<<<multipath>>>'
                     multipath -l
                 fi
             fi
@@ -1878,7 +1878,7 @@ section_multipathing() {
         (solaris)
             if inpath mpathadm; then
                 if [ "$zonename" = "global" ]; then
-                    println '<<<solaris_multipath>>>'
+                    write '<<<solaris_multipath>>>'
                     mpathadm list LU | 
                         nawk '{if(NR%3==1){dev=$1}
                                 if(NR%3==2){tc=$NF}
@@ -1892,16 +1892,16 @@ section_multipathing() {
 section_net() {
     case "${MK_OSSTR}" in
         (aix)
-            println "<<<aix_if>>>"
+            write "<<<aix_if>>>"
             for _ent in $(ifconfig -a | grep '^en' | cut -d ":" -f 1); do
-                println "[${_ent}]"
+                write "[${_ent}]"
                 entstat "${_ent}" | grep -E "(^Hardware|^Bytes:|^Packets:|^Transmit|^Broadcast:|^Multicast:)"
                 entstat "${_ent}" | grep -p "Driver Flags:"
             done
             unset -v _ent
         ;;
         (hpux)
-            println '<<<hpux_if>>>'
+            write '<<<hpux_if>>>'
             for _nic in $(nwmgr -g | sed -n '/^lan/s/\(^[^ ]* \).*/\1/p'); do
                 nwmgr -g --st mib -c "${_nic}"
             done
@@ -1910,50 +1910,50 @@ section_net() {
         (linux)
             # New variant: Information about speed and state in one section
             if inpath ip; then
-                println '<<<lnx_if>>>'
-                println "[start_iplink]"
+                write '<<<lnx_if>>>'
+                write "[start_iplink]"
                 ip address
-                println "[end_iplink]"
+                write "[end_iplink]"
             fi
 
-            println '<<<lnx_if:sep(58)>>>'
+            write '<<<lnx_if:sep(58)>>>'
             sed 1,2d /proc/net/dev
             sed -e 1,2d /proc/net/dev | cut -d':' -f1 | sort | while read -r _eth; do
-                println "[${_eth}]"
+                write "[${_eth}]"
                 if inpath ethtool; then
                     ethtool "${_eth}" | grep -E '(Speed|Duplex|Link detected|Auto-negotiation):'
                 else
                     # If interface down we get "Invalid argument"
                     _speed=$(cat "/sys/class/net/${_eth}/speed" 2>/dev/null)
-                    var_is_set "${_speed}" && println -e "\tSpeed: ${_speed}Mb/s\n"
+                    var_is_set "${_speed}" && write -e "\tSpeed: ${_speed}Mb/s\n"
                 fi
                 # shellcheck disable=SC2039
-                println -e "\tAddress: $(cat "/sys/class/net/${_eth}/address")\n"
+                write -e "\tAddress: $(cat "/sys/class/net/${_eth}/address")\n"
             done
             unset -v _eth _speed
         ;;
         (mac)
-            println '<<<lnx_if>>>'
-            println "[start_iplink]"
+            write '<<<lnx_if>>>'
+            write "[start_iplink]"
             _linkNum=1
             if inpath ip; then
                 _interfaces=$(ip a | awk -F ':' '/^[a-z]/{print $1}' | grep -Ev '^(awdl0|utun|llw)')
                 var_is_blank "${_interfaces}" && return
                 for _link in ${_interfaces}; do
-                    println "${_linkNum}: $(ip a show "${_link}")"
+                    write "${_linkNum}: $(ip a show "${_link}")"
                     _linkNum=$(( _linkNum + 1 ))
                 done
             else
                 _interfaces=$(netstat -inb | awk '/(^en|^lo).*Link/ && $7>0{print $1}')
                 var_is_blank "${_interfaces}" && return
                 for _link in ${_interfaces}; do
-                    println "${_linkNum}: $(ifconfig "${_link}")"
+                    write "${_linkNum}: $(ifconfig "${_link}")"
                     _linkNum=$(( _linkNum + 1 ))
                 done
             fi
-            println "[end_iplink]"
+            write "[end_iplink]"
 
-            println '<<<lnx_if:sep(58)>>>';
+            write '<<<lnx_if:sep(58)>>>';
             # Format:
             # Name, IBytes, IPckts, IErr, Drop, 0 (fifo), 0 (frame), 0 (compressed), 0 (multicast),
             #    Coll, Obyts, OPckts, OErrs, 0 (drop), 0 (fifo), 0 (coll), 0 (drop)
@@ -1967,24 +1967,24 @@ section_net() {
             for _iface in ${_interfaces}; do
                 _cur_ifconfig=$(ifconfig -v "${_iface}")
                 # Alt: grep -E "^\s*(down)?link rate:\s*" | cut -d " " -f3,4 | sed -E 's, (.)bps$,\1b/s,'
-                _ifspeed=$(println "${_cur_ifconfig}" | grep -Eo '[0-9]+baseT' | sed -e 's@baseT@Mb/s@')
-                println "${_cur_ifconfig}" | grepq "full-duplex" && _ifduplex="Full"
-                println "${_cur_ifconfig}" | grepq "media: autoselect" && _ifauto="on"
-                println "${_cur_ifconfig}" | grepq "status: active" && _iflink="yes"
+                _ifspeed=$(write "${_cur_ifconfig}" | grep -Eo '[0-9]+baseT' | sed -e 's@baseT@Mb/s@')
+                write "${_cur_ifconfig}" | grepq "full-duplex" && _ifduplex="Full"
+                write "${_cur_ifconfig}" | grepq "media: autoselect" && _ifauto="on"
+                write "${_cur_ifconfig}" | grepq "status: active" && _iflink="yes"
                 [ "${_iface}" = "lo0" ] && _iflink="yes"
-                _ifaddr=$(println "${_cur_ifconfig}" | grep -E '^\s*ether' | cut -d " " -f2)
-                println "[${_iface}]"
-                println -e "\tSpeed: ${_ifspeed:-Unknown!}"
-                println -e "\tDuplex: ${_ifduplex:-Half}"
-                println -e "\tAuto-negotiation: ${_ifauto:-off}"
-                println -e "\tLink detected: ${_iflink:-no}"
-                println -e "\tAddress: ${_ifaddr:-00:00:00:00:00:00}"
+                _ifaddr=$(write "${_cur_ifconfig}" | grep -E '^\s*ether' | cut -d " " -f2)
+                write "[${_iface}]"
+                write -e "\tSpeed: ${_ifspeed:-Unknown!}"
+                write -e "\tDuplex: ${_ifduplex:-Half}"
+                write -e "\tAuto-negotiation: ${_ifauto:-off}"
+                write -e "\tLink detected: ${_iflink:-no}"
+                write -e "\tAddress: ${_ifaddr:-00:00:00:00:00:00}"
             done
 
             unset -v _linkNum _link _iface _cur_ifconfig _ifspeed _ifduplex _ifauto _iflink _ifaddr
         ;;
         (openbsd)
-            println '<<<lnx_if:sep(58)>>>'
+            write '<<<lnx_if:sep(58)>>>'
             # Example line:
             # em0     1500  <Link>      08:00:27:e6:c4:70    16358     0      254     0     0
             netstat -in | grep '<Link>' | grep -E -v "\\*|lo|pfsync|enc" |
@@ -1996,14 +1996,14 @@ section_net() {
                         while read -r _ _ _ _ _bytesIn _bytesOut; do
                             _ifData="${_ifName}:${_bytesIn} ${_pktsIn} ${_errsIn} 0 0 0 0 0 ${_bytesOut}"
                             _ifData="${_ifData} ${_pktsOut} ${_errsOut} 0 0 ${_collisions} 0 0"
-                            println "${_ifData}"
+                            write "${_ifData}"
                         done
                 done
 
             unset -v _ifName _pktsIn _errsIn _pktsOut _errsOut _collisions _ifData
 
             for _ifName in $(netstat -in | awk '/<Link>/{print $1}' | grep -E -v "\\*|lo|pfsync|enc"); do
-                println "[${_ifName}]"
+                write "[${_ifName}]"
 
                 _macAddr=$(ifconfig "${_ifName}" | awk '/lladdr/{print $NF}')
 
@@ -2012,33 +2012,33 @@ section_net() {
                 _ifData=$(ifconfig "${_ifName}" | grep "media:")
 
                 # Speed
-                _ifSpeed=$(println "${_ifData}" | cut -d\( -f2 | cut -db -f1)
+                _ifSpeed=$(write "${_ifData}" | cut -d\( -f2 | cut -db -f1)
                 # shellcheck disable=SC2039
-                [ "${_ifSpeed}" ] && println -e "\\tSpeed: ${_ifSpeed}Mb/s"
+                [ "${_ifSpeed}" ] && write -e "\\tSpeed: ${_ifSpeed}Mb/s"
 
                 # Detect duplexity - in reality only available for physical devices but
                 # virtual ones like CARP devices will get at least a half duplex
                 # shellcheck disable=SC2039
                 case "${_ifData}" in
-                    (*full-duplex*)  println -e "\\tDuplex: Full" ;;
-                    (*half-duplex*)  println -e "\\tDuplex: Half" ;;
-                    (*)             println -e "\\tDuplex: Unknown" ;;
+                    (*full-duplex*)  write -e "\\tDuplex: Full" ;;
+                    (*half-duplex*)  write -e "\\tDuplex: Half" ;;
+                    (*)             write -e "\\tDuplex: Unknown" ;;
                 esac
 
                 # Auto-negotiation
                 # shellcheck disable=SC2039
                 case "${_ifData}" in
-                    (*autoselect*)   println -e "\\tAuto-negotiation: on" ;;
-                    (*)             println -e "\\tAuto-negotiation: off" ;;
+                    (*autoselect*)   write -e "\\tAuto-negotiation: on" ;;
+                    (*)             write -e "\\tAuto-negotiation: off" ;;
                 esac
 
                 # Detect detected link
                 if ifconfig "${_ifName}" | grep "status:" | grepq -E "active|backup|master"; then
                     # shellcheck disable=SC2039
-                    println -e "\\tLink detected: yes"
+                    write -e "\\tLink detected: yes"
                 fi
                 # shellcheck disable=SC2039
-                println -e "\\tAddress: ${_macAddr}"
+                write -e "\\tAddress: ${_macAddr}"
             done
 
             unset -v _ifName _ifData _ifSpeed _macAddr
@@ -2049,7 +2049,7 @@ section_net() {
 section_net_bonding() {
     # Current state of bonding interfaces
     if [ -e /proc/net/bonding ]; then
-        println '<<<lnx_bonding:sep(58)>>>'
+        write '<<<lnx_bonding:sep(58)>>>'
         (
             cd /proc/net/bonding || return
             head -v -n 1000 ./*
@@ -2062,9 +2062,9 @@ section_net_ctr() {
         (freebsd)
             # Network device statistics (Packets, Collisions, etc)
             # only the "Link/Num" interface has all counters.
-            println '<<<netctr>>>'
+            write '<<<netctr>>>'
             get_epoch
-            if [ "$(println "${osver}" | cut -f1 -d\. )" -gt "8" ]; then
+            if [ "$(write "${osver}" | cut -f1 -d\. )" -gt "8" ]; then
                 netstat -inb |
                     grep -Ev '(^Name|lo|plip)' |
                     grep Link | 
@@ -2078,14 +2078,14 @@ section_net_ctr() {
             fi
         ;;
         (mac)
-            println '<<<netctr>>>';
+            write '<<<netctr>>>';
             get_epoch
             netstat -inb | 
                 grep -Ev '(^Name|lo|plip)' | 
                 awk '/Link/{ print $1,$7,$5,$6,"0","0","0","0","0",$10,$8,$9,"0","0",$11,"0","0"; }'
         ;;
         (netbsd)
-            println '<<<netctr>>>'
+            write '<<<netctr>>>'
             # BI= Bytes in
             # PI= Packets in
             # EI= Errors in
@@ -2109,7 +2109,7 @@ section_net_ctr() {
               CO=$( netstat -in | grep -Ev Name | awk '/Link/{print $9}' | sed -ne $Z1$Z2 )
               FF2="0 0"
                 if [ "$PI" -gt "0" ]; then
-                    println "$BI $PI $EI $FF1 $BO $PO $EO $FF2 $CO $FF2"
+                    write "$BI $PI $EI $FF1 $BO $PO $EO $FF2 $CO $FF2"
                 fi
               Z1=$((Z1+1))
             done
@@ -2120,10 +2120,10 @@ section_net_openvswitch_bonding() {
     # Same as section_net_bonding(), but for Open vSwitch bonding
     if inpath ovs-appctl; then
         _bonds=$(ovs-appctl bond/list)
-        _col=$(println "${_bonds}" | awk '{for(i=1;i<=NF;i++) {if($i = "bond") printf("%d", i)} exit 0}')
-        println '<<<ovs_bonding:sep(58)>>>'
-        for _bond in $(println "${_bonds}" | sed -e 1d | cut -f"${_col}"); do
-            println "[${_bond}]"
+        _col=$(write "${_bonds}" | awk '{for(i=1;i<=NF;i++) {if($i = "bond") printf("%d", i)} exit 0}')
+        write '<<<ovs_bonding:sep(58)>>>'
+        for _bond in $(write "${_bonds}" | sed -e 1d | cut -f"${_col}"); do
+            write "[${_bond}]"
             ovs-appctl bond/show "${_bond}"
         done
     fi
@@ -2138,19 +2138,19 @@ section_nfs() {
             (aix)   statFmt="ok - - - -" ;;
             (linux) statFmt="ok %b %f %a %s" ;;
         esac
-        println '<<<nfsmounts>>>'
+        write '<<<nfsmounts>>>'
         get_nfs_mounts | while read -r mountPoint; do
             waitmax -s 9 5 stat -f -c "${mountPoint} ${statFmt}" "${mountPoint}" \
-            || println "${mountPoint} hanging 0 0 0 0"
+            || write "${mountPoint} hanging 0 0 0 0"
         done
 
-        println '<<<cifsmounts>>>'
+        write '<<<cifsmounts>>>'
         get_cifs_mounts | while read -r mountPoint; do
             if [ ! -r "${mountPoint}" ]; then
-                println "${mountPoint} Permission denied"
+                write "${mountPoint} Permission denied"
             else
                 waitmax -s 9 2 stat -f -c "${mountPoint} ${statFmt}" "${mountPoint}" \
-                    || println "${mountPoint} hanging 0 0 0 0"
+                    || write "${mountPoint} hanging 0 0 0 0"
             fi
         done
     fi
@@ -2205,12 +2205,12 @@ section_nvidia() {
     # See PR #129 / f8a96be
     if inpath nvidia-smi; then
         _nvidia_settings="GPUErrors"
-        println '<<<nvidia-smi>>>'
+        write '<<<nvidia-smi>>>'
         waitmax 2 nvidia-smi --query-gpu=temperature.gpu --format=csv,nounits,noheader | sed "s/^/GPUCoreTemp: /"
     fi
 
     if inpath nvidia-settings && [ -S /tmp/.X11-unix/X0 ]; then
-        println '<<<nvidia>>>'
+        write '<<<nvidia>>>'
         for _var in ${_nvidia_settings:-GPUErrors GPUCoreTemp}; do
             DISPLAY=:0 waitmax 2 nvidia-settings -t -q "${_var}" | sed "s/^/${_var}: /"
         done
@@ -2221,41 +2221,41 @@ section_nvidia() {
 section_omd() {
     # Check status of OMD sites and Check_MK Notification spooler
     if inpath omd; then
-        println '<<<labels:sep(0)>>>'
-        # println '{"cmk/check_mk_server": "yes"}'
-        println -j "cmk/check_mk_server" "yes"
+        write '<<<labels:sep(0)>>>'
+        # write '{"cmk/check_mk_server": "yes"}'
+        write -j "cmk/check_mk_server" "yes"
 
         run_cached omd_status 60 "omd status --bare || true"
-        println '<<<mknotifyd:sep(0)>>>'
+        write '<<<mknotifyd:sep(0)>>>'
         get_epoch
         for _statefile in /omd/sites/*/var/log/mknotifyd.state; do
             if [ -e "${_statefile}" ]; then
                 _site=${_statefile%/var/log*}
                 _site=${_site#/omd/sites/}
-                println "[${_site}]"
+                write "[${_site}]"
                 grep -v '^#' <"${_statefile}"
             fi
             unset -v _site
         done
 
-        println '<<<omd_apache:sep(124)>>>'
+        write '<<<omd_apache:sep(124)>>>'
         for _statsfile in /omd/sites/*/var/log/apache/stats; do
             if [ -e "${_statsfile}" ]; then
                 _site=${_statsfile%/var/log*}
                 _site=${_site#/omd/sites/}
-                println "[${_site}]"
+                write "[${_site}]"
                 cat "${_statsfile}"
                 : >"${_statsfile}"
                 # prevent next section to fail caused by a missing newline at the end of the statsfile
-                println
+                write
             fi
             unset -v _site
         done
     fi
 
-    println '<<<omd_info:sep(59)>>>'
-    println '[versions]'
-    println 'version;number;edition;demo'
+    write '<<<omd_info:sep(59)>>>'
+    write '[versions]'
+    write 'version;number;edition;demo'
     for _versiondir in /omd/versions/*; do
         _omd_version=${_versiondir#/omd/versions/}
 
@@ -2272,10 +2272,10 @@ section_omd() {
         esac
         _omd_edition=${_omd_number##*.}
         _omd_number=${_omd_number%.*}
-        println "${_omd_version};${_omd_number};${_omd_edition};${_omd_demo}"
+        write "${_omd_version};${_omd_number};${_omd_edition};${_omd_demo}"
     done
-    println '[sites]'
-    println 'site;used_version;autostart'
+    write '[sites]'
+    write 'site;used_version;autostart'
     for _sitedir in /omd/sites/*; do
         _site=${_sitedir#/omd/sites/}
         _used_version=$(readlink "${_sitedir}"/version)
@@ -2284,7 +2284,7 @@ section_omd() {
         if grepq "CONFIG_AUTOSTART[[:blank:]]*=[[:blank:]]*'on'" "${_sitedir}"/etc/omd/site.conf; then
             _autostart="1"
         fi
-        println "${_site};${_used_version};${_autostart}"
+        write "${_site};${_used_version};${_autostart}"
     done
 
     unset -v _autostart _site _sitedir _statefile _statsfile _used_version _versiondir
@@ -2296,19 +2296,19 @@ section_omd_core() (
     # Since cd is a shell builtin the check does not affect the performance
     # on non-OMD machines.
     if cd /omd/sites; then
-        println '<<<livestatus_status:sep(59)>>>'
+        write '<<<livestatus_status:sep(59)>>>'
         for _site in *; do
             if [ -S "/omd/sites/${_site}/tmp/run/live" ]; then
-                println "[${_site}]"
+                write "[${_site}]"
                 # shellcheck disable=SC2039
-                println -e "GET status" |
+                write -e "GET status" |
                     waitmax 3 "/omd/sites/${_site}/bin/unixcat" "/omd/sites/${_site}/tmp/run/live"
             fi
         done
 
-        println '<<<livestatus_ssl_certs:sep(124)>>>'
+        write '<<<livestatus_ssl_certs:sep(124)>>>'
         for _site in *; do
-            println "[${_site}]"
+            write "[${_site}]"
             for _pem_path in "/omd/sites/${_site}/etc/ssl/ca.pem" "/omd/sites/${_site}/etc/ssl/sites/${_site}.pem"; do
                 if [ -f "${_pem_path}" ]; then
                     _cert_date=$(
@@ -2317,17 +2317,17 @@ section_omd_core() (
                             awk '{printf("%s %02d %d %s\n", $1,$2,$4,$3)}'
                     )
                     # TO-DO: Confirm that this works
-                    println "${_pem_path}|$(calculate_cert_epoch "${_cert_date}")"
+                    write "${_pem_path}|$(calculate_cert_epoch "${_cert_date}")"
                 fi
             done
         done
 
-        println '<<<mkeventd_status:sep(0)>>>'
+        write '<<<mkeventd_status:sep(0)>>>'
         for _site in *; do
             if [ -S "/omd/sites/${_site}/tmp/run/mkeventd/status" ]; then
-                println "[\"${_site}\"]"
+                write "[\"${_site}\"]"
                 # shellcheck disable=SC2039
-                println -e "GET status\\nOutputFormat: json" |
+                write -e "GET status\\nOutputFormat: json" |
                     waitmax 3 "/omd/sites/${_site}/bin/unixcat" "/omd/sites/${_site}/tmp/run/mkeventd/status"
             fi
         done
@@ -2346,7 +2346,7 @@ section_openvpn() {
         return 0
     fi
     
-    println '<<<openvpn_clients:sep(44)>>>'
+    write '<<<openvpn_clients:sep(44)>>>'
     sed -n -e '/CLIENT LIST/,/ROUTING TABLE/p' < "${_openvpn_logfile}" |
         sed -e 1,3d -e '$d'
 
@@ -2366,7 +2366,7 @@ section_plugins() {
             # Call some plugins only every Xth second
             for _skript in [1-9]*/*; do
                 if is_valid_plugin "${_skript}"; then
-                    _skript_cache=$(println "${_skript}" | sed 's/\//\\/')
+                    _skript_cache=$(write "${_skript}" | sed 's/\//\\/')
                     run_cached "plugins_${_skript_cache}" "${_skript%/*}" "${_skript}"
                 fi
             done
@@ -2378,9 +2378,9 @@ section_plugins() {
 section_proxmox() {
     # Proxmox Cluster
     if inpath pvecm; then
-        println "<<<pvecm_status:sep(58)>>>"
+        write "<<<pvecm_status:sep(58)>>>"
         pvecm status
-        println "<<<pvecm_nodes>>>"
+        write "<<<pvecm_nodes>>>"
         pvecm nodes
     fi
 }
@@ -2388,13 +2388,13 @@ section_proxmox() {
 section_ps() {
     case "${MK_OSSTR}" in
         (aix)
-            println '<<<ps>>>'
+            write '<<<ps>>>'
             ps -ef -F user,vszsize,rssize,pcpu,etime,pid,args | 
                 sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
         ;;
         (freebsd)
             # processes including username, without kernel processes
-            println '<<<ps>>>'
+            write '<<<ps>>>'
             COLUMNS=10000
             if [ "$is_jailed" = "0" ]; then
                 ps ax -o state,user,vsz,rss,pcpu,command | 
@@ -2407,32 +2407,30 @@ section_ps() {
         (hpux)
             # Process table: HP-UX does not provide a resident size of processes.
             # We send a 0 here for RSZ.
-            println '<<<ps>>>'
+            write '<<<ps>>>'
             UNIX95=yes ps -ef -o user,vsz,pcpu,args | 
                 sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,0,\3) /'
         ;;
         (linux)
             if inpath ps; then
                 # processes including username, without kernel processes
-                println '<<<ps>>>'
-                println 'dummy section -- refer to section ps_lnx'
-                println '<<<ps_lnx>>>'
+                write '<<<ps_lnx>>>'
                 CGROUP=""
                 if [ -e /sys/fs/cgroup ]; then
                     CGROUP="cgroup:512,"
                 fi
                 # shellcheck disable=SC2039
-                println "[header] $(ps ax -o "$CGROUP"user:32,vsz,rss,cputime,etime,pid,command --columns 10000)"
+                write "[header] $(ps ax -o "$CGROUP"user:32,vsz,rss,cputime,etime,pid,command --columns 10000)"
             fi
         ;;
         (mac|netbsd|openbsd)
-            println '<<<ps>>>'
+            write '<<<ps>>>'
             COLUMNS=10000
             ps ax -o user,vsz,rss,pcpu,command | 
                 sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
         ;;
         (solaris)
-            println '<<<ps>>>'
+            write '<<<ps>>>'
             # The default solaris ps command strips the command lines of the processes. But for good process
             # matching on the server we really need to whole command line. On linux there are arguments to
             # make ps output the whole command line, but on solaris this seems to be missing. We use the ucb
@@ -2447,17 +2445,17 @@ section_ps() {
 
                         # Directly use ps output when line is too slow to be stripped
                         if [ ${#LINE} -lt 100 ]; then
-                            println "$LINE"
+                            write "$LINE"
                             continue
                         fi
 
-                        CMD=$(println "$UCB_PS" | grep "^[ ]*$PID " | head -n1 | \
+                        CMD=$(write "$UCB_PS" | grep "^[ ]*$PID " | head -n1 | \
                             awk '{ s = ""; for (i = 5; i <= NF; i++) s = s $i " "; print s }')
                         # Only use the ucb ps line when it's not empty (process might already been gone)
                         if var_is_unset "$CMD"; then
-                            println "$LINE"
+                            write "$LINE"
                         else
-                            println "${STATS}) ${CMD}"
+                            write "${STATS}) ${CMD}"
                         fi
                     done
             else
@@ -2472,12 +2470,12 @@ section_soft_raid() {
     case "${MK_OSSTR}" in
         (freebsd)
             # Soft-RAID
-            println '<<<freebsd_geom_mirrors>>>'
+            write '<<<freebsd_geom_mirrors>>>'
             gmirror status | grep -v ^Name
         ;;
         (linux)
             # RAID status of Linux software RAID
-            println '<<<md>>>'
+            write '<<<md>>>'
             cat /proc/mdstat
         ;;
     esac
@@ -2490,10 +2488,10 @@ section_realtime_checks() {
     # Validate that we're configured and equipped, otherwise return
     if [ -r "${MK_CONFDIR}/real_time_checks.cfg" ]; then
         if var_is_unset "${MK_RTC_HOST}"; then
-            println "ERROR: \${MK_RTC_HOST} not specified. Not starting Real-Time Checks." >&2
+            write "ERROR: \${MK_RTC_HOST} not specified. Not starting Real-Time Checks." >&2
             return
         elif ! inpath openssl; then
-            println "ERROR: openssl command is missing. Not starting Real-Time Checks." >&2
+            write "ERROR: openssl command is missing. Not starting Real-Time Checks." >&2
             return
         fi
     else
@@ -2532,10 +2530,10 @@ section_runas() {
                             (\(*)
                                 # If we do start with '(', then split 'params' out of 'cmdline'
                                 # We strip the brackets from 'params' and rewrite 'cmdline' without the params
-                                params=$(println "${cmdline% *}" | tr -d '()')
+                                params=$(write "${cmdline% *}" | tr -d '()')
                                 cmdline="${cmdline##* }"
                                 # split multiple parameter assignments
-                                for par in $(println "${params}" | tr ":" "\\n"); do 
+                                for par in $(write "${params}" | tr ":" "\\n"); do 
                                     # split each assignment
                                     key="${par%=*}"
                                     value="${par#*=}"
@@ -2567,7 +2565,7 @@ section_runas() {
                     done
                 ;;
                 (local|plugin)
-                    [ "$type" = "local" ] && println "<<<local:sep(0)>>>"
+                    [ "$type" = "local" ] && write "<<<local:sep(0)>>>"
                     find "$include" -executable -type f |
                         while read -r filename; do
                             runas_user "${user}" "${filename}"
@@ -2582,22 +2580,22 @@ section_services() {
     case "${MK_OSSTR}" in
         (linux)
             if inpath systemctl; then
-                println '<<<systemd_units>>>'
-                println "[list-unit-files]"
+                write '<<<systemd_units>>>'
+                write "[list-unit-files]"
                 systemctl list-unit-files --no-pager
-                println "[all]"
+                write "[all]"
                 systemctl --all --no-pager | sed '/^$/q'
             fi
 
             # Next we check for 'chkconfig'
             if inpath chkconfig; then
-                println '<<<chkconfig>>>'
+                write '<<<chkconfig>>>'
                 chkconfig --list 2>&1
             fi
 
             # Some debian hosts have sysv-rc-conf
             if inpath sysv-rc-conf; then
-                println '<<<sysv-rc-conf>>>'
+                write '<<<sysv-rc-conf>>>'
                 sysv-rc-conf
             fi
         ;;
@@ -2606,7 +2604,7 @@ section_services() {
             # We can get a list of all service instances, including disabled
             # or incomplete ones by 'svcs -a'
             if inpath svcs; then
-                println '<<<solaris_services>>>'
+                write '<<<solaris_services>>>'
                 svcs -a
             fi
         ;;
@@ -2617,14 +2615,14 @@ section_solaris() {
     if inpath prtdiag; then
         # prtdiag does not work in local zones
         if [ "${zonename}" = "global" ]; then
-            run_cached solaris_prtdiag_status 300 '/usr/sbin/prtdiag 1>/dev/null 2>&1; println $?'
+            run_cached solaris_prtdiag_status 300 '/usr/sbin/prtdiag 1>/dev/null 2>&1; write $?'
         fi
     fi
 
     # Displaying Information About Faults or Defects
     # If there are no faults the output of this command will be empty.
     if inpath fmadm; then
-        println '<<<solaris_fmadm:sep(58)>>>'
+        write '<<<solaris_fmadm:sep(58)>>>'
         fmadm faulty
     fi
 }
@@ -2644,7 +2642,7 @@ section_spooldir() {
 
                 # Split any leading digits from a filename and assign to 'maxage'
                 # This should ignore further digits e.g. '600file20' will output '600'
-                _maxage="$(println "${_file}" | sed 's/^[^0-9]*//;s/[^0-9].*$//')"
+                _maxage="$(write "${_file}" | sed 's/^[^0-9]*//;s/[^0-9].*$//')"
 
                 # If 'maxage' is set, then we grab the file's mtime, subtract it from
                 # the epoch time, and compare that to 'maxage'
@@ -2676,14 +2674,14 @@ section_statgrab() {
                 statgrab "$statgrab_vars_mem" 1>>/tmp/statgrab.$$
 
                 for s in $statgrab_sections; do
-                    println "<<<statgrab_$s>>>"
+                    write "<<<statgrab_$s>>>"
                     grep "^${s}\\." /tmp/statgrab.$$ | cut -d. -f2-99 | sed 's/ *= */ /'
                 done
 
-                println '<<<statgrab_net>>>'
+                write '<<<statgrab_net>>>'
                 statgrab net. 2>&1 | cut -d. -f2-99 | sed 's/ *= */ /'
 
-                println '<<<statgrab_mem>>>'
+                write '<<<statgrab_mem>>>'
                 grep -E "^(swap|mem)\\." /tmp/statgrab.$$ | sed 's/ *= */ /'
 
                 [ -f /tmp/statgrab.$$ ] && rm -f /tmp/statgrab.$$
@@ -2702,13 +2700,13 @@ section_statgrab() {
 
                 statgrab "$statgrab_vars" | grep -v md 1> /tmp/statgrab.$$
                 for s in $statgrab_sections; do
-                    println "<<<statgrab_$s>>>"
+                    write "<<<statgrab_$s>>>"
                     grep "^$s\\." /tmp/statgrab.$$ | cut -d. -f2-99 | sed 's/ *= */ /'
                 done
 
                 # <<<statgrab_mem>>> info is preferred over <<<solaris_mem>>>
                 # since solaris_mem is under suspicion to be buggy.
-                println '<<<statgrab_mem>>>'
+                write '<<<statgrab_mem>>>'
                 grep -E "^(swap|mem)\\." /tmp/statgrab.$$ | sed 's/ *= */ /'
 
                 [ -f /tmp/statgrab.$$ ] && rm -f /tmp/statgrab.$$
@@ -2723,7 +2721,7 @@ section_tcp_stats() {
     filter_netstats() {
         awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'
     }
-    println '<<<tcp_conn_stats>>>'
+    write '<<<tcp_conn_stats>>>'
     case "${MK_OSSTR}" in
         (aix|mac)   _netstat_opts="-ntfinet" ;;
         (freebsd)   _netstat_opts="-na" ;;
@@ -2734,7 +2732,7 @@ section_tcp_stats() {
                 # We simply ignore this warning until we can come up with a cleaner way to do this
                 # shellcheck disable=SC2181
                 if [ $? = 0 ]; then
-                    println "${_tcp_stats}"
+                    write "${_tcp_stats}"
                 elif inpath ss; then
                     ss -ant | 
                         grep -v ^State | 
@@ -2767,7 +2765,7 @@ section_thermal() {
             var_is_unset "${MK_IS_LXC_CONTAINER}" && 
             ls /sys/class/thermal/thermal_zone* >/dev/null 2>&1
         }; then
-        println '<<<lnx_thermal:sep(124)>>>'
+        write '<<<lnx_thermal:sep(124)>>>'
         for _sysPath in /sys/class/thermal/thermal_zone*; do
             _line="${_sysPath##*/}"
             if [ ! -e "${_sysPath}/mode" ]; then 
@@ -2782,7 +2780,7 @@ section_thermal() {
             for _type in "${_sysPath}"/trip_point_*_type; do
                 _line="${_line}$(tr <"${_type}" \\n "|")"
             done
-            println "${_line%?}"
+            write "${_line%?}"
         done
         unset _sysPath _line _temp _type
     fi
@@ -2792,7 +2790,7 @@ section_thermal() {
 section_timesyncd() {
     inpath timedatectl || return 1
     timedatectl timesync-status >/dev/null 2>&1 || return 1
-    println "<<<timesyncd>>>"
+    write "<<<timesyncd>>>"
     timedatectl timesync-status
     get_file_mtime /var/lib/systemd/timesync/clock | awk '{print "[[["$1"]]]"}'
     return 0
@@ -2801,13 +2799,13 @@ section_timesyncd() {
 # Libelle Business Shadow
 section_libelle() {
     if inpath trd; then
-        println "<<<libelle_business_shadow:sep(58)>>>"
+        write "<<<libelle_business_shadow:sep(58)>>>"
         trd -s
     fi
 }
 
 section_uptime() {
-    println '<<<uptime>>>'
+    write '<<<uptime>>>'
     case "${MK_OSSTR}" in
         (aix)
             # uptime formats
@@ -2821,22 +2819,22 @@ section_uptime() {
             
             _uptime=$(uptime | sed -e 's/^.*up//g' -e 's/[0-9]* user.*//g')
             case ${_uptime} in
-                ( *day* ) _up_days=$(println "${_uptime}" | sed -e 's/days\{0,1\},.*//g') ;;
+                ( *day* ) _up_days=$(write "${_uptime}" | sed -e 's/days\{0,1\},.*//g') ;;
                 ( * ) _up_days="0" ;;
             esac
 
             case ${_uptime} in
                 ( *:* )
-                    _up_hours=$(println "${_uptime}" | sed -e 's/.*days\{0,1\},//g' -e 's/:.*//g')
-                    _up_mins=$(println "${_uptime}" | sed -e 's/.*days\{0,1\},//g' -e 's/.*://g' -e 's/,.*//g')
+                    _up_hours=$(write "${_uptime}" | sed -e 's/.*days\{0,1\},//g' -e 's/:.*//g')
+                    _up_mins=$(write "${_uptime}" | sed -e 's/.*days\{0,1\},//g' -e 's/.*://g' -e 's/,.*//g')
                 ;;
                 ( *hr* )
-                    _up_hours=$(println "${_uptime}" | sed -e 's/hrs\{0,1\},.*//g' -e 's/.*,//g')
+                    _up_hours=$(write "${_uptime}" | sed -e 's/hrs\{0,1\},.*//g' -e 's/.*,//g')
                     _up_mins=0
                 ;;
                 ( *min* )
                     _up_hours=0
-                    _up_mins=$(println "${_uptime}" | sed -e 's/mins\{0,1\},.*//g' -e 's/.*hrs\{0,1\},//g' -e 's/.*days\{0,1\},//g')
+                    _up_mins=$(write "${_uptime}" | sed -e 's/mins\{0,1\},.*//g' -e 's/.*hrs\{0,1\},//g' -e 's/.*days\{0,1\},//g')
                 ;;
                 ( * )
                     _up_hours="0"
@@ -2844,7 +2842,7 @@ section_uptime() {
                 ;;
             esac
 
-            println $(((_up_days*86400)+(_up_hours*3600)+(_up_mins*60)))
+            write $(((_up_days*86400)+(_up_hours*3600)+(_up_mins*60)))
             unset -v _uptime _up_hours _up_mins
         ;;
         (freebsd)
@@ -2853,31 +2851,31 @@ section_uptime() {
             # pgrep is not appropriate (or even available?) here
             # shellcheck disable=SC2009
             _idle_seconds=$(ps axw | grep "[i]dle" | awk '/idle/{print $4}' | cut -f1 -d':' )
-            println "${_up_seconds} ${_idle_seconds}"
+            write "${_up_seconds} ${_idle_seconds}"
             unset -v _up_seconds _idle_seconds
         ;;
         (linux)
             if var_is_unset "${MK_IS_DOCKERIZED}"; then
                 cat /proc/uptime
             else
-                println "$(($(get_epoch) - $(stat -c %Z /dev/pts)))"
+                write "$(($(get_epoch) - $(stat -c %Z /dev/pts)))"
             fi
         ;;
         (mac|netbsd|openbsd)
-            println "$(get_epoch) - $(sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' | tr -d ' ')" | bc
+            write "$(get_epoch) - $(sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' | tr -d ' ')" | bc
         ;;
         (solaris)
             # Solaris doesn't always give a consistent output on uptime, thus include side information
             # Tested in VM for solaris 10/11
             _ctime=$(nawk 'BEGIN{print srand()}')
             _btime=$(kstat '-p' 'unix:::boot_time' 2>&1|grep 'boot_time'|awk '{print $2}')
-            println $((_ctime - _btime));
-            println '[uptime_solaris_start]'
+            write $((_ctime - _btime));
+            write '[uptime_solaris_start]'
             uname -a
             zonename
             uptime
             kstat -p unix:0:system_misc:snaptime
-            println '[uptime_solaris_end]'
+            write '[uptime_solaris_end]'
             unset -v _ctime _btime
         ;;
     esac
@@ -2885,7 +2883,7 @@ section_uptime() {
     # 'who -b' is a mostly portable way to report the boot time
     # TO-DO: is this information header the correct format?
     if who -b > /dev/null 2>&1; then
-        println "[who_b_boot_time]"
+        write "[who_b_boot_time]"
         who -b
     fi
 }
@@ -2893,7 +2891,7 @@ section_uptime() {
 # HTTP Accelerator Statistics
 section_http_accelerator() {
     if inpath varnishstat; then
-        println "<<<varnish>>>"
+        write "<<<varnish>>>"
         varnishstat -1
     fi
 }
@@ -2902,13 +2900,13 @@ section_vbox_guest() {
     # VirtualBox Guests. Section must always been output. Otherwise the
     # check would not be executed in case no guest additions are installed.
     # And that is something the check wants to detect
-    println '<<<vbox_guest>>>'
+    write '<<<vbox_guest>>>'
     if inpath VBoxControl; then
         if lsmod | grepq vboxguest; then
             VBoxControl -nologo guestproperty enumerate | cut -d, -f1,2
         fi
     else
-        println "ERROR"
+        write "ERROR"
     fi
 }
 
@@ -2917,7 +2915,7 @@ section_veritas_cluster() {
     # Software is always installed in /opt/VRTSvcs.
     # Secure mode must be off to allow root to execute commands
     if [ -x /opt/VRTSvcs/bin/haclus ]; then
-        println "<<<veritas_vcs>>>"
+        write "<<<veritas_vcs>>>"
         vcshost=$(hostname | cut -d. -f1)
         waitmax -s 9 2 /opt/VRTSvcs/bin/haclus -display -localclus | grep -e ClusterName -e ClusState
         waitmax -s 9 2 /opt/VRTSvcs/bin/hasys -display -attribute SysState
@@ -2931,12 +2929,12 @@ section_veritas_cluster() {
 section_vmstat() {
     case "${MK_OSSTR}" in
         (aix)
-            println '<<<vmstat_aix>>>'
+            write '<<<vmstat_aix>>>'
             vmstat | tail -n1
         ;;
         (hpux)
             # Several machine performance counters
-            println '<<<hpux_vmstat>>>'
+            write '<<<hpux_vmstat>>>'
             vmstat -s
         ;;
     esac
@@ -2948,24 +2946,24 @@ section_zfs() {
     case "${MK_OSSTR}" in
         (freebsd)
             if inpath zfs; then
-                println '<<<zfsget>>>'
+                write '<<<zfsget>>>'
                 zfs get -t filesystem,volume -Hp name,quota,used,avail,mountpoint,type ||
                 zfs get -Hp name,quota,used,avail,mountpoint,type
-                println '[df]'
+                write '[df]'
                 df -kP -t zfs | sed 1d
                 # arc stats for zfs_arc_cache
-                println '<<<zfs_arc_cache>>>'
+                write '<<<zfs_arc_cache>>>'
                 sysctl -q kstat.zfs.misc.arcstats | 
                     sed -e 's/kstat.zfs.misc.arcstats.//g' -e 's/: / = /g'
             fi
         ;;
         (linux|solaris)     
             if inpath zfs; then
-                println '<<<zfsget:sep(9)>>>'
+                write '<<<zfsget:sep(9)>>>'
                 zfs get -t filesystem,volume -Hp name,quota,used,avail,mountpoint,type ||
                     zfs get -Hp name,referenced,avail,mountpoint,type | sed 's/referenced/used/g'
-                println '<<<zfsget>>>'
-                println '[df]'
+                write '<<<zfsget>>>'
+                write '[df]'
                 df -PTlk -t zfs | sed 1d
             fi
         ;;
@@ -2974,13 +2972,13 @@ section_zfs() {
     if [ "${MK_OSSTR}" = "solaris" ]; then
         # ZFS arc cache
         # newer Solaris (>=11.3) do not provide hits and misses via mdb -k
-        println '<<<zfs_arc_cache>>>'
+        write '<<<zfs_arc_cache>>>'
         if inpath kstat; then
             kstat -p zfs:0:arcstats | 
                 sed -e 's/.*arcstats://g' | 
                 awk '{printf "%s = %s\n", $1, $2;}'
         elif inpath; then
-            println '::arc' | mdb -k
+            write '::arc' | mdb -k
         fi
     fi
 }
@@ -2990,22 +2988,22 @@ section_zpool() {
         (freebsd)
             # check zpool status
             if [ -x /sbin/zpool ]; then
-                println "<<<zpool_status>>>"
+                write "<<<zpool_status>>>"
                 /sbin/zpool status -x | grep -v "errors: No known data errors"
             fi
         ;;
         (linux)
             if inpath zpool; then
-                println "<<<zpool_status>>>"
+                write "<<<zpool_status>>>"
                 zpool status -x
-                println "<<<zpool>>>"
+                write "<<<zpool>>>"
                 zpool list
             fi
         ;;
         (solaris)
             if [ -x /sbin/zpool ]; then
                 run_cached zpool_status 120 "/sbin/zpool status -x"
-                println '<<<zpool>>>'
+                write '<<<zpool>>>'
                 zpool list
             fi
         ;;

@@ -40,6 +40,7 @@ import cmk.gui.pagetypes as pagetypes
 import cmk.gui.visuals as visuals
 from cmk.gui.plugins.views.utils import get_all_views
 from cmk.gui.plugins.dashboard.utils import get_all_dashboards
+from cmk.gui.plugins.userdb.utils import save_connection_config, load_connection_config
 import cmk.gui.watolib.tags  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.hosts_and_folders  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.rulesets  # pylint: disable=cmk-module-layer-violation
@@ -119,6 +120,7 @@ class UpdateConfig:
             (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
             (self._update_fs_used_name, "Migrating fs_used name"),
             (self._migrate_pagetype_topics_to_ids, "Migrate pagetype topics"),
+            (self._add_missing_type_to_ldap_connections, "Migrate LDAP connections"),
         ]
 
     # FS_USED UPDATE DELETE THIS FOR CMK 1.8, THIS ONLY migrates 1.6->1.7
@@ -375,6 +377,19 @@ class UpdateConfig:
 
         spec["topic"] = name
         return True, True
+
+    def _add_missing_type_to_ldap_connections(self):
+        """Each user connections needs to declare it's connection type.
+
+        This is done using the "type" attribute. Previous versions did not always set this
+        attribute, which is corrected with this update method."""
+        connections = load_connection_config()
+        if not connections:
+            return
+
+        for connection in connections:
+            connection.setdefault("type", "ldap")
+        save_connection_config(connections)
 
 
 def _id_from_title(title):

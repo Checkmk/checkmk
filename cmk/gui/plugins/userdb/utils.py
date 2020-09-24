@@ -7,6 +7,7 @@
 import abc
 import os
 from typing import List, Optional, Dict, Any, Tuple, Type, Literal, Union
+from contextlib import suppress
 
 from livestatus import SiteId
 
@@ -149,6 +150,11 @@ def get_connection(connection_id: Optional[str]) -> 'Optional[UserConnector]':
     return g.user_connections[connection_id]
 
 
+def clear_user_connection_cache() -> None:
+    with suppress(AttributeError):
+        del g.user_connections
+
+
 def active_connections() -> 'List[Tuple[str, UserConnector]]':
     enabled_configs = [
         cfg  #
@@ -218,6 +224,8 @@ def save_connection_config(connections: List[UserConnectionSpec],
 
     for connector_class in user_connector_registry.values():
         connector_class.config_changed()
+
+    clear_user_connection_cache()
 
 
 #.

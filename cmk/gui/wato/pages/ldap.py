@@ -258,6 +258,8 @@ class ModeEditLDAPConnection(LDAPMode):
         self._connection_cfg = vs.from_html_vars("connection")
         vs.validate_value(self._connection_cfg, "connection")
 
+        self._connection_cfg["type"] = "ldap"
+
         if self._new:
             self._connections.insert(0, self._connection_cfg)
             self._connection_id = self._connection_cfg["id"]

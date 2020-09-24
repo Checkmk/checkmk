@@ -44,7 +44,10 @@ Section = Tuple[int, List[Tuple[ps_info, List[str]]]]
 def get_discovery_specs(params):
     inventory_specs = []
     for value in params[:-1]:  # skip empty default parameters
-        default_params = value.get('default_params', value)
+        # We cast to a dict here because value is of type Parameters, which is not mutable. Thus,
+        # the assignment default_params["cpu_rescale_max"] = None might fail in case we still have
+        # some legacy-style parameters which do not have the entry default_params.
+        default_params = dict(value.get('default_params', value))
         if "cpu_rescale_max" not in default_params:
             default_params["cpu_rescale_max"] = None
 
@@ -56,7 +59,6 @@ def get_discovery_specs(params):
             value.get('label', {}),
             default_params,
         ))
-
     return inventory_specs
 
 

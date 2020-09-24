@@ -23,6 +23,12 @@ from cmk.gui.plugins.wato import (
 )
 
 
+def transform_diskstat(params):
+    if isinstance(params, list):
+        return {mode: True for mode in params}
+    return params
+
+
 def _valuespec_diskstat_inventory():
     return Transform(
         Dictionary(
@@ -66,7 +72,7 @@ def _valuespec_diskstat_inventory():
             ],
             default_keys=['summary'],
         ),
-        forth=lambda vs: {mode: True for mode in vs} if isinstance(vs, list) else vs,
+        forth=transform_diskstat,
     )
 
 

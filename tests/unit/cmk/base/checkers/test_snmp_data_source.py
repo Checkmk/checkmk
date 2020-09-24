@@ -11,9 +11,9 @@ import pytest  # type: ignore[import]
 from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.utils.exceptions import MKIPAddressLookupError
-from cmk.utils.type_defs import ErrorResult, OKResult, RuleSetName, SourceType
+from cmk.utils.type_defs import ErrorResult, OKResult, SourceType
 
-from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPRuleDependentDetectSpec, SNMPTree
+from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
@@ -153,100 +153,23 @@ class TestSNMPSummaryResult:
         assert source.summarize(ErrorResult(Exception())) == (3, "(?)", [])
 
 
-@pytest.fixture(name="discovery_rulesets")
-def discovery_rulesets_fixture(monkeypatch, hostname):
-    def host_extra_conf(self, hn, rules):
-        if hn == hostname:
-            return rules
-        return []
-
-    def get_discovery_ruleset(ruleset_name):
-        if str(ruleset_name) == 'discovery_ruleset':
-            return [True]
-        return []
-
-    monkeypatch.setattr(
-        config.ConfigCache,
-        'host_extra_conf',
-        host_extra_conf,
+def test_make_snmp_section_detects(monkeypatch, hostname, ipaddress):
+    plugin = section_plugins.create_snmp_section_plugin(
+        name="norris",
+        parse_function=lambda string_table: None,
+        trees=[
+            SNMPTree(
+                base='.1.2.3',
+                oids=['2.3'],
+            ),
+        ],
+        detect_spec=SNMPDetectSpec([[('.1.2.3.4.5', 'Foo.*', True)]]),
     )
     monkeypatch.setattr(
         register,
-        'get_discovery_ruleset',
-        get_discovery_ruleset,
+        'iter_all_snmp_sections',
+        lambda: [plugin],
     )
-
-
-class TestSNMPSource_make_snmp_scan_sections:
-    @staticmethod
-    def do_monkeypatch_and_make_source(monkeypatch, plugin, hostname, ipaddress):
-        monkeypatch.setattr(
-            register,
-            'iter_all_snmp_sections',
-            lambda: [plugin],
-        )
-        Scenario().add_host(hostname).apply(monkeypatch)
-        return SNMPSource.snmp(hostname, ipaddress, mode=Mode.DISCOVERY)
-
-    def test_rule_indipendent(
-        self,
-        monkeypatch,
-        hostname,
-        ipaddress,
-    ):
-        plugin = section_plugins.create_snmp_section_plugin(
-            name="norris",
-            parse_function=lambda string_table: None,
-            trees=[
-                SNMPTree(
-                    base='.1.2.3',
-                    oids=['2.3'],
-                ),
-            ],
-            detect_spec=SNMPDetectSpec([[('.1.2.3.4.5', 'Foo.*', True)]]),
-        )
-        source = self.do_monkeypatch_and_make_source(
-            monkeypatch,
-            plugin,
-            hostname,
-            ipaddress,
-        )
-        assert source._make_snmp_section_detects() == [(plugin.name, plugin.detect_spec)]
-
-    def test_rule_dependent(
-        self,
-        monkeypatch,
-        discovery_rulesets,
-        hostname,
-        ipaddress,
-    ):
-        detect_spec_1 = SNMPDetectSpec([[('.1.2.3.4.5', 'Bar.*', False)]])
-        detect_spec_2 = SNMPDetectSpec([[('.7.8.9', 'huh.*', True)]])
-
-        def evaluator(discovery_ruleset):
-            if len(discovery_ruleset) > 0 and discovery_ruleset[0]:
-                return detect_spec_1
-            return detect_spec_2
-
-        plugin = section_plugins.create_snmp_section_plugin(
-            name="norris",
-            parse_function=lambda string_table: None,
-            trees=[
-                SNMPTree(
-                    base='.1.2.3',
-                    oids=['2.3'],
-                ),
-            ],
-            detect_spec=SNMPDetectSpec([[('.1.2.3.4.5', 'Foo.*', True)]]),
-            rule_dependent_detect_spec=SNMPRuleDependentDetectSpec(
-                [RuleSetName('discovery_ruleset')],
-                evaluator,
-            ),
-        )
-        source = self.do_monkeypatch_and_make_source(
-            monkeypatch,
-            plugin,
-            hostname,
-            ipaddress,
-        )
-        assert source._make_snmp_section_detects() == [(plugin.name, detect_spec_1)]
+    Scenario().add_host(hostname).apply(monkeypatch)
+    source = SNMPSource.snmp(hostname, ipaddress, mode=Mode.DISCOVERY)
+    assert source._make_snmp_section_detects() == [(plugin.name, plugin.detect_spec)]

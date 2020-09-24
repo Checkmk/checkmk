@@ -14,13 +14,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import ParsedSectionName, SectionName
 
-from cmk.snmplib.type_defs import (
-    OIDBytes,
-    OIDSpec,
-    SNMPDetectSpec,
-    SNMPRuleDependentDetectSpec,
-    SNMPTree,
-)
+from cmk.snmplib.type_defs import OIDBytes, OIDSpec, SNMPDetectSpec, SNMPTree
 
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
@@ -204,17 +198,11 @@ def create_snmp_section_plugin(
     detect_spec: SNMPDetectSpec,
     trees: List[SNMPTree],
     module: Optional[str] = None,
-    rule_dependent_detect_spec: Optional[SNMPRuleDependentDetectSpec] = None,
 ) -> SNMPSectionPlugin:
     """Return an SNMPSectionPlugin object after validating and converting the arguments one by one
 
     For a detailed description of the parameters please refer to the exposed function in the
     'register' namespace of the API.
-
-    Args:
-        rule_dependent_detect_spec: Not an official part of the API. Used for dynamically computing
-        SNMP detection conditions based on the configured discovery rules for the current host. This
-        is needed by for example needed by some interface checks.
     """
     section_name = SectionName(name)
 
@@ -239,7 +227,6 @@ def create_snmp_section_plugin(
         detect_spec,
         trees,
         module,
-        rule_dependent_detect_spec,
     )
 
 

@@ -10,9 +10,9 @@ from typing import List
 
 import pytest  # type: ignore[import]
 
-from cmk.utils.type_defs import ParsedSectionName, RuleSetName, SectionName
+from cmk.utils.type_defs import ParsedSectionName, SectionName
 
-from cmk.snmplib.type_defs import OIDEnd, SNMPDetectSpec, SNMPRuleDependentDetectSpec, SNMPTree
+from cmk.snmplib.type_defs import OIDEnd, SNMPDetectSpec, SNMPTree
 
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
 from cmk.base.api.agent_based.type_defs import (
@@ -125,11 +125,6 @@ def test_create_snmp_section_plugin():
         [('.1.2.3.4.5', 'Foo.*', True)],
     ])
 
-    rule_dependent_detect = SNMPRuleDependentDetectSpec(
-        [RuleSetName('a'), RuleSetName('b')],
-        lambda a, b: detect,
-    )
-
     plugin = section_plugins.create_snmp_section_plugin(
         name="norris",
         parsed_section_name="chuck",
@@ -137,11 +132,10 @@ def test_create_snmp_section_plugin():
         trees=trees,
         detect_spec=detect,
         supersedes=["foo", "bar"],
-        rule_dependent_detect_spec=rule_dependent_detect,
     )
 
     assert isinstance(plugin, SNMPSectionPlugin)
-    assert len(plugin) == 9
+    assert len(plugin) == 8
     assert plugin.name == SectionName("norris")
     assert plugin.parsed_section_name == ParsedSectionName("chuck")
     assert plugin.parse_function is _parse_dummy
@@ -149,7 +143,6 @@ def test_create_snmp_section_plugin():
     assert plugin.detect_spec == detect
     assert plugin.trees == trees
     assert plugin.supersedes == {SectionName("bar"), SectionName("foo")}
-    assert plugin.rule_dependent_detect_spec == rule_dependent_detect
 
 
 def test_validate_supersedings_raise_implicit():

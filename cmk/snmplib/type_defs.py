@@ -6,8 +6,6 @@
 
 import abc
 import collections
-import dataclasses
-import inspect
 import logging
 import string
 from typing import (
@@ -19,7 +17,6 @@ from typing import (
     List,
     NamedTuple,
     Optional,
-    Sequence,
     Tuple,
     TypeVar,
     Union,
@@ -31,7 +28,6 @@ from cmk.utils.type_defs import AgentRawData as _AgentRawData
 from cmk.utils.type_defs import CheckPluginNameStr as _CheckPluginName
 from cmk.utils.type_defs import HostAddress as _HostAddress
 from cmk.utils.type_defs import HostName as _HostName
-from cmk.utils.type_defs import RuleSetName as _RuleSetName
 from cmk.utils.type_defs import SectionName as _SectionName
 
 SNMPContextName = str
@@ -98,53 +94,6 @@ class SNMPDetectSpec(List[List[SNMPDetectAtom]]):
     Note that the structure of this object is not part of the API,
     and may change at any time.
     """
-
-
-@dataclasses.dataclass
-class SNMPRuleDependentDetectSpec:
-    """Structure for specifying SNMP detection specifications which depend on discovery rulesets
-
-    Args:
-        rulesets: Names of the discovery rulesets needed to compute the dectection specifications.
-        evaluator: Function which returns the current detection specifications based on the
-        user-defined rules for the current host. Input arguments must have the sames names and the
-        same order as the ruleset names. The return value must be of the type SNMPDetectSpec.
-
-    At runtime, evaluator will be provided with the lists of user-configured discovery rules that
-    were specified in rulesets.
-
-    Example:
-        rulesets = [RuleSetName('discovery_ruleset_1'), RuleSetName('discovery_ruleset_2')]
-
-        def evaluator(
-            discovery_ruleset_1: List[bool],
-            discovery_ruleset_2: List[Mapping],
-        ):
-            if len(discovery_ruleset_1) > 0 and discovery_ruleset_1[0]:
-                return SNMPDetectSpec([[('.1.2.3.4.5', 'Foo.*', True)]])
-            else:
-                discovery_ruleset_2_merged = {}
-                for discover_rule_2 in discovery_ruleset_2[::-1]:
-                    discovery_ruleset_2_merged.update(discover_rule_2)
-                if discovery_ruleset_2_merged.get('key2', 0) > 1:
-                    return SNMPDetectSpec([[('.5.3.2', 'Bar.*', True)]])
-            return SNMPDetectSpec([[('.7.8.9', 'Hohoho.*', True)]])
-
-        rule_dependent_detect_spec = SNMPRuleDependentDetectSpec(rulesets, evaluator)
-
-    Note:
-        The structure of this object is not part of the API and may change at any time.
-    """
-    rulesets: Sequence[_RuleSetName]
-    evaluator: Callable[..., SNMPDetectSpec]
-
-    def __post_init__(self):
-        expected_args = [str(ruleset) for ruleset in self.rulesets]
-        if expected_args != list(inspect.signature(self.evaluator).parameters):
-            if len(expected_args) == 0:
-                raise TypeError("evaluator must not accept any arguments")
-            raise TypeError("evaluator must accept exactly the following arguments: %s" %
-                            ', '.join(expected_args))
 
 
 # Wraps the configuration of a host into a single object for the SNMP code

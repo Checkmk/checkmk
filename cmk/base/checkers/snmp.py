@@ -169,42 +169,14 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
         return SNMPSummarizer(self.exit_spec)
 
     def _make_snmp_section_detects(self) -> Sequence[Tuple[SectionName, SNMPDetectSpec]]:
-        """Create list of all SNMP scan specifications.
-
-        Here, we evaluate the rule_dependent_detect_spec-attribute of SNMPSectionPlugin. This
-        attribute is not an official part of the API. It allows for dynamically computing SNMP
-        detection specifications based on user-defined discovery rulesets. This is needed by some
-        check plugins, such as if and if64.
-
-        In case this attribute is not set, we simply use SNMPSectionPlugin.detect_spec, which is
-        the official way for specifying detection conditions.
-        """
-        snmp_scan_sections = []
-        config_cache = config.get_config_cache()
-
+        """Create list of all SNMP scan specifications"""
         disabled_sections = self.host_config.disabled_snmp_sections()
-
-        for snmp_section_plugin in agent_based_register.iter_all_snmp_sections():
-            if snmp_section_plugin.name in disabled_sections:
-                continue
-
-            if snmp_section_plugin.rule_dependent_detect_spec is None:
-                detect_spec = snmp_section_plugin.detect_spec
-            else:
-                # fetch user-defined discovery rules
-                rules_for_host = [
-                    config_cache.host_extra_conf(
-                        self.hostname,
-                        agent_based_register.get_discovery_ruleset(ruleset),
-                    ) for ruleset in snmp_section_plugin.rule_dependent_detect_spec.rulesets
-                ]
-                # call evaluator with these rules, returning an SNMPDetectSpec
-                detect_spec = snmp_section_plugin.rule_dependent_detect_spec.evaluator(
-                    *rules_for_host)
-
-            snmp_scan_sections.append((snmp_section_plugin.name, detect_spec))
-
-        return snmp_scan_sections
+        return [(
+            snmp_section_plugin.name,
+            snmp_section_plugin.detect_spec,
+        )
+                for snmp_section_plugin in agent_based_register.iter_all_snmp_sections()
+                if snmp_section_plugin.name not in disabled_sections]
 
     def _make_configured_snmp_sections(self) -> Collection[SectionName]:
         section_names = set(

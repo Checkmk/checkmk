@@ -25,7 +25,7 @@ from cmk.utils.type_defs import (
     ParsedSectionName,
     SectionName,
 )
-from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPRuleDependentDetectSpec, SNMPTree
+from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree
 
 from cmk.base.discovered_labels import HostLabel
 
@@ -85,10 +85,6 @@ SNMPSectionPlugin = NamedTuple(
         ("detect_spec", SNMPDetectSpec),
         ("trees", List[SNMPTree]),
         ("module", Optional[str]),  # not available for auto migrated plugins.
-        # This attribute is not an official part of the API and setting it requires explicit API
-        # violations. It is used for dynamically computing the used detection specifications based
-        # on user-defined discovery rules. This is for example needed by some interface checks.
-        ("rule_dependent_detect_spec", Optional[SNMPRuleDependentDetectSpec]),
     ],
 )
 

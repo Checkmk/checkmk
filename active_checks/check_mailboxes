@@ -226,10 +226,14 @@ def main(options):
     messages = []
     now = time.time()
 
-    for mb in imap.mailboxes():
-        if options.mailboxes and mb not in options.mailboxes:
-            continue
+    available_mailboxes = imap.mailboxes()
+    mailboxes_to_inspect = ['"%s"' % mb for mb in (options.mailboxes or available_mailboxes)]
+    if options.mailboxes and any(mb not in available_mailboxes for mb in options.mailboxes):
+        output("Following provided mailbox names are not available: %r" %
+               [mb for mb in options.mailboxes if mb not in available_mailboxes])
+        sys.exit(3)
 
+    for mb in mailboxes_to_inspect:
         if options.crit_count and options.warn_count:
             count = len(imap.mails(mb))
             if count >= options.crit_count:

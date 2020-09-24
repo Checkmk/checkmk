@@ -33,7 +33,7 @@ from cmk.fetchers.controller import (
     FetcherHeader,
     FetcherMessage,
     PayloadType,
-    Header,
+    CMCHeader,
     make_logging_answer,
     make_payload_answer,
     make_waiting_answer,
@@ -111,41 +111,41 @@ class TestControllerApi:
         assert captured.err == b""
 
 
-class TestHeader:
-    @pytest.mark.parametrize("state", [Header.State.SUCCESS, "SUCCESS"])
+class TestCMCHeader:
+    @pytest.mark.parametrize("state", [CMCHeader.State.SUCCESS, "SUCCESS"])
     def test_success_header(self, state):
-        header = Header("name", state, "crit", 41)
+        header = CMCHeader("name", state, "crit", 41)
         assert header == b"name :SUCCESS:crit    :41      :"
 
-    @pytest.mark.parametrize("state", [Header.State.FAILURE, "FAILURE"])
+    @pytest.mark.parametrize("state", [CMCHeader.State.FAILURE, "FAILURE"])
     def test_failure_header(self, state):
-        header = Header("fetch", state, "crit", 42)
+        header = CMCHeader("fetch", state, "crit", 42)
         assert header == b"fetch:FAILURE:crit    :42      :"
 
     def test_from_bytes(self):
-        header = Header("fetch", "SUCCESS", "crit", 42)
-        assert Header.from_bytes(bytes(header) + 42 * b"*") == header
+        header = CMCHeader("fetch", "SUCCESS", "crit", 42)
+        assert CMCHeader.from_bytes(bytes(header) + 42 * b"*") == header
 
     def test_clone(self):
-        header = Header("name", Header.State.SUCCESS, "crit", 42)
+        header = CMCHeader("name", CMCHeader.State.SUCCESS, "crit", 42)
         other = header.clone()
         assert other is not header
         assert other == header
 
     def test_eq(self):
-        header = Header("name", Header.State.SUCCESS, "crit", 42)
+        header = CMCHeader("name", CMCHeader.State.SUCCESS, "crit", 42)
         assert header == bytes(header)
         assert bytes(header) == header
 
     def test_neq(self):
-        header = Header("name", Header.State.SUCCESS, "crit", 42)
+        header = CMCHeader("name", CMCHeader.State.SUCCESS, "crit", 42)
 
         other_name = header.clone()
         other_name.name = "toto"
         assert header != other_name
 
         other_state = header.clone()
-        other_state.state = Header.State.FAILURE
+        other_state.state = CMCHeader.State.FAILURE
         assert header != other_state
 
         other_crit = header.clone()
@@ -157,24 +157,24 @@ class TestHeader:
         assert header != other_len
 
     def test_repr(self):
-        header = Header("name", "SUCCESS", "crit", 42)
+        header = CMCHeader("name", "SUCCESS", "crit", 42)
         assert isinstance(repr(header), str)
 
     def test_hash(self):
-        header = Header("name", "SUCCESS", "crit", 42)
+        header = CMCHeader("name", "SUCCESS", "crit", 42)
         assert hash(header) == hash(bytes(header))
 
     def test_len(self):
-        header = Header("name", "SUCCESS", "crit", 42)
+        header = CMCHeader("name", "SUCCESS", "crit", 42)
         assert len(header) == len(bytes(header))
 
     def test_critical_constants(self):
         """ ATTENTION: Changing of those constants may require changing of C++ code"""
-        assert Header.length == 32
-        assert Header.State.FAILURE == "FAILURE"
-        assert Header.State.SUCCESS == "SUCCESS"
-        assert Header.State.WAITING == "WAITING"
-        assert Header.default_protocol_name() == "fetch"
+        assert CMCHeader.length == 32
+        assert CMCHeader.State.FAILURE == "FAILURE"
+        assert CMCHeader.State.SUCCESS == "SUCCESS"
+        assert CMCHeader.State.WAITING == "WAITING"
+        assert CMCHeader.default_protocol_name() == "fetch"
 
 
 class TestErrorPayload:
@@ -205,7 +205,7 @@ class TestErrorPayload:
         other = ErrorPayload.from_bytes(bytes(error))
         assert other is not error
         assert other == error
-        assert type(other.error) == type(error.error)
+        assert type(other.error) == type(error.error)  # pylint: disable=C0123
         assert other.error.args == error.error.args
 
     def test_from_bytes_failure(self):

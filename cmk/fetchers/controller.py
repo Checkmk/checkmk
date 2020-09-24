@@ -234,7 +234,7 @@ class FetcherMessage(Protocol):
         return Result.OK(self._payload)
 
 
-class Header(Protocol):
+class CMCHeader(Protocol):
     """Header is fixed size(6+8+9+9 = 32 bytes) bytes in format
 
       header: <ID>:<'SUCCESS'|'FAILURE'>:<HINT>:<SIZE>:
@@ -262,12 +262,12 @@ class Header(Protocol):
     def __init__(
         self,
         name: str,
-        state: Union['Header.State', str],
+        state: Union['CMCHeader.State', str],
         severity: str,
         payload_length: int,
     ) -> None:
         self.name = name
-        self.state = Header.State(state) if isinstance(state, str) else state
+        self.state = CMCHeader.State(state) if isinstance(state, str) else state
         self.severity = severity  # contains either log_level or empty field
         self.payload_length = payload_length
 
@@ -281,11 +281,11 @@ class Header(Protocol):
         )
 
     def __len__(self) -> int:
-        return Header.length
+        return CMCHeader.length
 
     # E0308: false positive, see https://github.com/PyCQA/pylint/issues/3599
     def __bytes__(self) -> bytes:  # pylint: disable=E0308
-        return Header.fmt.format(
+        return CMCHeader.fmt.format(
             self.name[:5],
             self.state[:7],
             self.severity[:8],
@@ -293,10 +293,10 @@ class Header(Protocol):
         ).encode("ascii")
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> 'Header':
+    def from_bytes(cls, data: bytes) -> 'CMCHeader':
         try:
             # to simplify parsing we are using ':' as a splitter
-            name, state, hint, payload_length = data[:Header.length].split(b":")[:4]
+            name, state, hint, payload_length = data[:CMCHeader.length].split(b":")[:4]
             return cls(
                 name.decode("ascii"),
                 state.decode("ascii"),
@@ -306,8 +306,8 @@ class Header(Protocol):
         except ValueError as exc:
             raise ValueError(data) from exc
 
-    def clone(self) -> 'Header':
-        return Header(self.name, self.state, self.severity, self.payload_length)
+    def clone(self) -> 'CMCHeader':
+        return CMCHeader(self.name, self.state, self.severity, self.payload_length)
 
     @staticmethod
     def default_protocol_name() -> str:
@@ -317,9 +317,9 @@ class Header(Protocol):
 def make_payload_answer(*messages: FetcherMessage) -> bytes:
     """ Provides valid binary payload to be send from fetcher to checker"""
     payload = b"".join(bytes(msg) for msg in messages)
-    return Header(
-        name=Header.default_protocol_name(),
-        state=Header.State.SUCCESS,
+    return CMCHeader(
+        name=CMCHeader.default_protocol_name(),
+        state=CMCHeader.State.SUCCESS,
         severity=" ",
         payload_length=len(payload),
     ) + payload
@@ -327,9 +327,9 @@ def make_payload_answer(*messages: FetcherMessage) -> bytes:
 
 def make_logging_answer(message: str, log_level: CmcLogLevel) -> bytes:
     """ Logs data using logging facility of the microcore """
-    return Header(
-        name=Header.default_protocol_name(),
-        state=Header.State.FAILURE,
+    return CMCHeader(
+        name=CMCHeader.default_protocol_name(),
+        state=CMCHeader.State.FAILURE,
         severity=log_level,
         payload_length=len(message),
     ) + message.encode("utf-8")
@@ -337,9 +337,9 @@ def make_logging_answer(message: str, log_level: CmcLogLevel) -> bytes:
 
 def make_waiting_answer() -> bytes:
     return bytes(
-        Header(
-            name=Header.default_protocol_name(),
-            state=Header.State.WAITING,
+        CMCHeader(
+            name=CMCHeader.default_protocol_name(),
+            state=CMCHeader.State.WAITING,
             severity=" ",
             payload_length=0,
         ))

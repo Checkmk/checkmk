@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
 from typing import Callable, Dict, Iterable, List, Literal, Optional, Set, Tuple, Union
 
 import inspect
@@ -23,10 +24,12 @@ DUMMY_RULESET_NAME = "non_existent_auto_migration_dummy_rule"
 
 def get_validated_plugin_module_name() -> Optional[str]:
     """Find out which module registered the plugin and make sure its in the right place"""
-    try:
-        calling_from = inspect.stack()[2].filename
-    except UnicodeDecodeError:  # calling from precompiled host file
+    # We used this before, but it was a performance killer. The method below is a lot faster.
+    # calling_from = inspect.stack()[2].filename
+    frame = sys._getframe(2)
+    if not frame:
         return None
+    calling_from = frame.f_code.co_filename
 
     path = Path(calling_from)
     if not path.parent.parts[-3:] == agent_based_plugins_dir.parts[-3:]:

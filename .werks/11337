@@ -1,0 +1,14 @@
+Title: job: addition of job monitoring to AIX agent
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1600950786
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+This change introduces the job monitoring functionality to the
+AIX agent. The behaviour is similar to the job monitoring process
+of the Solaris and Linux agent. The resulting services contain time
+related information of the jobs.

@@ -432,3 +432,24 @@ if [ -d "$SPOOLDIR" ] && [ -r "$SPOOLDIR" ]; then
     done
     cd - > /dev/null
 fi
+
+
+# Get statistics about monitored jobs. Below the job directory there
+# is a sub directory per user that ran a job. That directory must be
+# owned by the user so that a symlink or hardlink attack for reading
+# arbitrary files can be avoided.
+if [ -d "$MK_VARDIR/job" ]; then
+    echo '<<<job>>>'
+    CDIR=$(pwd)
+    cd $MK_VARDIR/job > /dev/null
+    for username in *; do
+        if [ -d "$username" ] && cd "$username"; then
+            for i in *; do
+               echo "==> $i <=="
+               cat $i
+            done
+            cd .. > /dev/null
+        fi
+    done
+    cd $CDIR > /dev/null
+fi

@@ -453,8 +453,11 @@ def _do_discovery_for(
         multi_host_sections,
         on_error=on_error,
     )
-    new_host_labels, host_labels_per_plugin = \
-        _perform_host_label_discovery(hostname, discovered_host_labels, only_new)
+    new_host_labels, host_labels_per_plugin = _perform_host_label_discovery(
+        hostname,
+        discovered_host_labels,
+        only_new,
+    )
     DiscoveredHostLabelsStore(hostname).save(new_host_labels.to_dict())
 
     messages = []
@@ -580,8 +583,11 @@ def discover_on_host(
         err = str(e)
 
     if mode != "remove":
-        new_host_labels, host_labels_per_plugin = \
-            _perform_host_label_discovery(hostname, discovered_host_labels, only_new=True)
+        new_host_labels, host_labels_per_plugin = _perform_host_label_discovery(
+            hostname,
+            discovered_host_labels,
+            only_new=True,
+        )
         DiscoveredHostLabelsStore(hostname).save(new_host_labels.to_dict())
         counts["self_new_host_labels"] = sum(host_labels_per_plugin.values())
         counts["self_total_host_labels"] = len(new_host_labels)

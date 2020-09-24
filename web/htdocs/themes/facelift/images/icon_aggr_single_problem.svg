@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 289 413" style="enable-background:new 0 0 289 413;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#858A8C;}
+	.st1{fill:#FFD90A;}
+	.st2{fill-rule:evenodd;clip-rule:evenodd;fill:#28A2F3;stroke:#28A2F3;stroke-width:30;stroke-linejoin:round;}
+</style>
+<g id="Menu-Icons-EXPORT">
+	<g id="EXPORT" transform="translate(-346.000000, -435.000000)">
+		
+			<g id="business-intelligence-copy-2" transform="translate(490.500000, 649.500000) rotate(-270.000000) translate(-490.500000, -649.500000) translate(291.000000, 505.000000)">
+			
+				<rect id="Rectangle" x="210.6" y="32.7" transform="matrix(2.535182e-06 1 -1 2.535182e-06 374.4037 -84.9505)" class="st0" width="38.1" height="224.1"/>
+			
+				<rect id="Rectangle_1_" x="255.2" y="201.5" transform="matrix(2.535182e-06 1 -1 2.535182e-06 543.1806 -5.2306)" class="st0" width="38.1" height="135"/>
+			
+				<rect id="Rectangle_2_" x="255.2" y="-47.8" transform="matrix(2.535182e-06 1 -1 2.535182e-06 293.9652 -254.4453)" class="st0" width="38.1" height="135"/>
+			
+				<rect id="Rectangle_3_" x="82.4" y="125" transform="matrix(2.535182e-06 1 -1 2.535182e-06 369.7354 -81.7186)" class="st0" width="286.6" height="38.1"/>
+			<g id="Group" transform="translate(302.187989, 96.000000)">
+				
+					<rect id="Rectangle_4_" x="0" y="1" transform="matrix(2.535182e-06 1 -1 2.535182e-06 96.5147 0.9393)" class="st1" width="95.5" height="95.5"/>
+			</g>
+			<polygon id="Triangle" class="st2" points="0.5,144.5 120.5,77 120.5,212 			"/>
+		</g>
+	</g>
+</g>
+</svg>

@@ -357,6 +357,7 @@ def make_topic_menu(visuals: List[Tuple[str, Tuple[str, Visual]]]) -> List[Topic
                 sort_index=visual["sort_index"],
                 is_advanced=visual["is_advanced"],
                 icon_name=visual["icon"],
+                emblem=visual.get("emblem", None),
             ))
 
     # Sort the items of all topics

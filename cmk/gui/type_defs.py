@@ -92,6 +92,7 @@ TopicMenuItem = NamedTuple("TopicMenuItem", [
     ("sort_index", int),
     ("is_advanced", bool),
     ("icon_name", Optional[str]),
+    ("emblem", Optional[str]),
 ])
 
 TopicMenuTopic = NamedTuple("TopicMenuTopic", [

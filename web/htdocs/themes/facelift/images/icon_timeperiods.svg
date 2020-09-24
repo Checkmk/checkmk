@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 383 419" style="enable-background:new 0 0 383 419;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#E1DCF3;}
+	.st1{fill:#ED3B3B;}
+	.st2{fill:#858A8C;}
+	.st3{fill:#402810;}
+</style>
+<g id="Menu-Icons-EXPORT">
+	<g id="EXPORT" transform="translate(-514.000000, -521.000000)">
+		<g id="calendar" transform="translate(514.000000, 521.000000)">
+			<path id="Path" class="st0" d="M322.3,36.4H60.8c-32.9,0-60.1,27.2-60.1,60.1v262c0,32.9,27.2,60.1,60.1,60.1h261.6
+				c32.9,0,60.1-27.2,60.1-60.1V97C382.5,63.6,355.7,36.4,322.3,36.4z"/>
+			<g id="Group" transform="translate(0.000000, 36.205714)">
+				<path id="Path_1_" class="st1" d="M322.3,0.2H60.8C27.9,0.2,0.7,27.4,0.7,60.3v47h382.2V60.8C382.5,27.4,355.7,0.2,322.3,0.2z"
+					/>
+				<path id="Shape" class="st2" d="M80,155.8h40.7v40H80V155.8z M141.1,155.8h40.7v40h-40.7V155.8z M202.2,155.8h40.7v40h-40.7
+					V155.8z M263.3,155.8H304v40h-40.7V155.8z M80,215.8h40.7v40H80V215.8z M141.1,215.8h40.7v40h-40.7V215.8z M202.2,215.8h40.7v40
+					h-40.7V215.8z M263.3,215.8H304v40h-40.7V215.8z M80,275.8h40.7v40H80V275.8z M141.1,275.8h40.7v40h-40.7V275.8z M202.2,275.8
+					h40.7v40h-40.7V275.8z M263.3,275.8H304v40h-40.7V275.8z"/>
+			</g>
+			<g id="Group_1_" transform="translate(88.868571, 0.000000)">
+				<path id="Path_2_" class="st3" d="M18,64.5V8.8C18,3.9,14,0,9.2,0S0.4,3.9,0.4,8.8v55.7c0,4.8,3.9,8.8,8.8,8.8S18,69.3,18,64.5z
+					"/>
+				<path id="Path_3_" class="st3" d="M196.2,73.3c4.8,0,8.8-3.9,8.8-8.8V8.8c0-4.8-3.9-8.8-8.8-8.8s-8.8,3.9-8.8,8.8v55.7
+					C187.4,69.3,191.3,73.3,196.2,73.3z"/>
+			</g>
+		</g>
+	</g>
+</g>
+</svg>

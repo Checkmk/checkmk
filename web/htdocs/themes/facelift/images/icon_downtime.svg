@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 320 394" style="enable-background:new 0 0 320 394;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#ED3B3B;}
+	.st1{fill:#F5F0FF;}
+	.st2{fill:#D62727;}
+</style>
+<g id="Menu-Icons-EXPORT">
+	<g id="EXPORT" transform="translate(-546.000000, -533.000000)">
+		<g id="downtimes" transform="translate(546.000000, 533.000000)">
+			<path id="Path" class="st0" d="M272.7,319.9l-83.8,21.9L70.2,323.4l-23-3.6l68.6-305.2C117.8,6.1,125.5,0,134.3,0h51.5
+				c8.8,0,16.4,6.1,18.3,14.7l66.5,295.5L272.7,319.9z"/>
+			<polygon id="Path_1_" class="st1" points="251.1,223.8 68.9,223.8 97.6,96 222.4,96 			"/>
+			<path id="Path_2_" class="st2" d="M319.7,356.5v37.3H0.3v-37.3c0-20.2,16.4-36.7,36.7-36.7h246.1
+				C303.3,319.9,319.7,336.3,319.7,356.5z"/>
+			<path id="Path_3_" class="st0" d="M319.7,356.5v37.3h-258v-37.3c0-20.2,16.4-36.7,36.7-36.7h184.7
+				C303.3,319.9,319.7,336.3,319.7,356.5z"/>
+		</g>
+	</g>
+</g>
+</svg>

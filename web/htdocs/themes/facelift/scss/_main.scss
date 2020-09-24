@@ -301,6 +301,19 @@ input[type="submit"]:focus {
 img.icon {
   width: 20px;
   height: 20px;
+
+}
+
+span.emblem {
+  position: relative;
+}
+
+img.emblem {
+  position: absolute;
+  right: -5px;
+  bottom: -12px;
+  width: 10px;
+  height: 10px;
 }
 
 a.inline img.icon, img.icon.inline, div.icon {

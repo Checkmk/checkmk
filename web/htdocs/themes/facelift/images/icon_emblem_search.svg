@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 48 48" style="enable-background:new 0 0 48 48;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill-rule:evenodd;clip-rule:evenodd;}
+	.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#FFFFFF;}
+	.st2{fill:none;stroke:#FFFFFF;stroke-width:6.5;}
+</style>
+<g id="Menu-Icons-EXPORT">
+	<g id="EXPORT" transform="translate(-1166.000000, -5734.000000)">
+		<g id="embleme" transform="translate(356.000000, 5734.000000)">
+			<g id="search" transform="translate(810.000000, 0.000000)">
+				<path id="Fill-1" class="st0" d="M24,47.6C11,47.6,0.4,37,0.4,24S11,0.4,24,0.4S47.6,11,47.6,24S37,47.6,24,47.6"/>
+				<path id="Fill-12" class="st1" d="M29.4,24.9l8.4,8.4c0.6,0.6,0.9,1.4,0.5,1.7l-3,3c-0.3,0.3-1.1,0.1-1.7-0.5l-8.4-8.4
+					c-0.6-0.6-0.9-1.4-0.5-1.7l3-3C28,24,28.7,24.3,29.4,24.9"/>
+				<path id="Stroke-18" class="st2" d="M27.2,14.9c3.4,3.4,3.4,8.8,0,12.1c-3.4,3.4-8.8,3.4-12.1,0s-3.4-8.8,0-12.1
+					C18.4,11.5,23.9,11.5,27.2,14.9z"/>
+			</g>
+		</g>
+	</g>
+</g>
+</svg>

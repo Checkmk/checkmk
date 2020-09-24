@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 384 437" style="enable-background:new 0 0 384 437;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill-rule:evenodd;clip-rule:evenodd;fill:#12C0FF;}
+	.st1{filter:url(#Adobe_OpacityMaskFilter);}
+	.st2{fill-rule:evenodd;clip-rule:evenodd;fill:#FFFFFF;}
+	.st3{mask:url(#mask-2_1_);fill-rule:evenodd;clip-rule:evenodd;fill:#12C0FF;}
+	.st4{fill-rule:evenodd;clip-rule:evenodd;fill:#00ABE9;}
+</style>
+<g id="Menu-Icons-EXPORT">
+	<g id="EXPORT" transform="translate(-514.000000, -513.000000)">
+		<g id="users" transform="translate(514.000000, 513.000000)">
+			<path id="Fill-1" class="st0" d="M192,0C128.5,0,76.8,51.7,76.8,115.2c0,63.5,51.7,115.2,115.2,115.2s115.2-51.7,115.2-115.2
+				C307.2,51.7,255.5,0,192,0"/>
+			<g id="Group-5" transform="translate(0.000000, 257.706667)">
+				<g id="Clip-4">
+				</g>
+				<defs>
+					<filter id="Adobe_OpacityMaskFilter" filterUnits="userSpaceOnUse" x="0" y="0" width="384" height="179.2">
+						<feColorMatrix  type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0"/>
+					</filter>
+				</defs>
+				<mask maskUnits="userSpaceOnUse" x="0" y="0" width="384" height="179.2" id="mask-2_1_">
+					<g class="st1">
+						<polygon id="path-1_1_" class="st2" points="0,0 384,0 384,179.2 0,179.2 						"/>
+					</g>
+				</mask>
+				<path id="Fill-3" class="st3" d="M382,82.4C347.4,30.7,289.8,0,227.6,0h-71.2C94.2,0,36.6,30.7,2,82.4l-2,3.3v93.4h384V85.8
+					L382,82.4z"/>
+			</g>
+			<path id="Fill-6" class="st4" d="M192,230.4V0c63.5,0,115.2,51.7,115.2,115.2C307.2,178.7,255.5,230.4,192,230.4"/>
+			<path id="Fill-8" class="st4" d="M384,343.5v93.4H192V257.7h35.6c62.2,0,119.8,30.7,154.4,82.4L384,343.5z"/>
+		</g>
+	</g>
+</g>
+</svg>

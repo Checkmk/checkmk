@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 378 378" style="enable-background:new 0 0 378 378;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#8F5ED8;}
+	.st1{fill:#7C44D0;}
+	.st2{fill:none;stroke:#5A24AB;stroke-width:36;}
+</style>
+<g id="Menu-Icons-EXPORT">
+	<g id="EXPORT" transform="translate(-302.000000, -461.000000)">
+		<g id="Service-level" transform="translate(302.000000, 461.000000)">
+			<polygon id="Path" class="st0" points="239.6,0 270.5,47.8 327.3,50.6 330.2,107.4 378,138.3 352,189 378,239.6 330.2,270.5 
+				327.4,327.3 270.6,330.2 239.7,378 189,352 138.4,378 107.5,330.2 50.7,327.4 47.8,270.6 0,239.7 26,189 0,138.4 47.8,107.5 
+				50.6,50.7 107.4,47.8 138.3,0 189,26 			"/>
+			<polygon id="Path_1_" class="st1" points="239.6,0 270.5,47.8 327.3,50.6 330.2,107.4 378,138.3 352,189 378,239.6 330.2,270.5 
+				327.4,327.3 270.6,330.2 239.7,378 189,352 189,26 			"/>
+			<polyline id="Path-6" class="st2" points="95.4,184.5 156.2,245.4 283.5,118.1 			"/>
+		</g>
+	</g>
+</g>
+</svg>

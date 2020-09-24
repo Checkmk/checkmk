@@ -53,6 +53,7 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
             sort_index=10,
             is_advanced=False,
             icon_name="topic_change_password",
+            emblem=None,
         ),
         TopicMenuItem(
             name="user_profile",
@@ -61,6 +62,7 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
             sort_index=20,
             is_advanced=False,
             icon_name="topic_profile",
+            emblem=None,
         ),
         TopicMenuItem(
             name="logout",
@@ -69,6 +71,7 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
             sort_index=30,
             is_advanced=False,
             icon_name="sidebar_logout",
+            emblem=None,
         ),
     ]
 
@@ -82,6 +85,7 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
                 sort_index=30,
                 is_advanced=False,
                 icon_name="topic_events",
+                emblem=None,
             ))
 
     return [TopicMenuTopic(

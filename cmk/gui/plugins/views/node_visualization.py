@@ -5,8 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from . import (
-    multisite_builtin_views,)
+from . import multisite_builtin_views
 
 multisite_builtin_views.update({
     'topology_filters': {

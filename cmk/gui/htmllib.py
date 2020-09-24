@@ -2560,14 +2560,16 @@ class html(ABCHTMLGenerator):
              middle: bool = True,
              id_: Optional[str] = None,
              cssclass: Optional[str] = None,
-             class_: CSSSpec = None) -> None:
+             class_: CSSSpec = None,
+             emblem: Optional[str] = None) -> None:
         self.write_html(
             self.render_icon(icon_name=icon,
                              title=title,
                              middle=middle,
                              id_=id_,
                              cssclass=cssclass,
-                             class_=class_))
+                             class_=class_,
+                             emblem=emblem))
 
     def empty_icon(self) -> None:
         self.write_html(self.render_icon("trans"))
@@ -2578,14 +2580,15 @@ class html(ABCHTMLGenerator):
                     middle: bool = True,
                     id_: Optional[str] = None,
                     cssclass: Optional[str] = None,
-                    class_: CSSSpec = None) -> HTML:
+                    class_: CSSSpec = None,
+                    emblem: Optional[str] = None) -> HTML:
         classes = ["icon", cssclass]
         if isinstance(class_, list):
             classes.extend(class_)
         else:
             classes.append(class_)
 
-        return self._render_start_tag(
+        icon = self._render_start_tag(
             'img',
             close_tag=True,
             title=title,
@@ -2594,6 +2597,12 @@ class html(ABCHTMLGenerator):
             align='absmiddle' if middle else None,
             src=(icon_name if "/" in icon_name else self._detect_icon_path(icon_name)),
         )
+
+        if emblem:
+            emblem_path = self._detect_icon_path("emblem_" + emblem)
+            return self.render_span(icon + self.render_img(emblem_path, class_="emblem"),
+                                    class_="emblem")
+        return icon
 
     def _detect_icon_path(self, icon_name: str) -> str:
         """Detect from which place an icon shall be used and return it's path relative to

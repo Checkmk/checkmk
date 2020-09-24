@@ -1822,6 +1822,7 @@ def _customize_menu_topics() -> List[TopicMenuTopic]:
             sort_index=10,
             is_advanced=False,
             icon_name="view",
+            emblem=None,
         ),
         TopicMenuItem(
             name="dashboards",
@@ -1830,18 +1831,18 @@ def _customize_menu_topics() -> List[TopicMenuTopic]:
             sort_index=20,
             is_advanced=False,
             icon_name="dashboard",
+            emblem=None,
         ),
     ]
     graph_items = []
     business_reporting_items = [
-        TopicMenuItem(
-            name="reports",
-            title=_("Reports"),
-            url="edit_reports.py",
-            sort_index=10,
-            is_advanced=True,
-            icon_name="report",
-        ),
+        TopicMenuItem(name="reports",
+                      title=_("Reports"),
+                      url="edit_reports.py",
+                      sort_index=10,
+                      is_advanced=True,
+                      icon_name="report",
+                      emblem=None),
     ]
 
     for index, page_type_ in enumerate(all_page_types().values()):
@@ -1852,6 +1853,7 @@ def _customize_menu_topics() -> List[TopicMenuTopic]:
             sort_index=40 + (index * 10),
             is_advanced=page_type_.type_is_advanced(),
             icon_name=page_type_.type_name(),
+            emblem=None,
         )
 
         if page_type_.type_name() in ("pagetype_topic", "bookmark_list", "custom_snapin"):

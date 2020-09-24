@@ -2910,7 +2910,7 @@ def _page_menu_entries_related_ec(mode_name: str) -> Iterator[PageMenuEntry]:
     if mode_name != "mkeventd_rule_packs":
         yield PageMenuEntry(
             title=_("Rule packs"),
-            icon_name="mkeventd",
+            icon_name="event",
             item=make_simple_link(html.makeuri_contextless([("mode", "mkeventd_rule_packs")])),
         )
 
@@ -3031,7 +3031,7 @@ class MainModuleEventConsole(MainModule):
 
     @property
     def icon(self):
-        return "mkeventd"
+        return "event"
 
     @property
     def permission(self):

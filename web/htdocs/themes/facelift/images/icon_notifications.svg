@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 379 414" style="enable-background:new 0 0 379 414;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill-rule:evenodd;clip-rule:evenodd;fill:#EDBA3B;}
+	.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#F7D360;}
+</style>
+<g id="Menu-Icons-EXPORT">
+	<g id="EXPORT" transform="translate(-515.000000, -525.000000)">
+		<g id="notifications" transform="translate(514.000000, 525.000000)">
+			<path id="Fill-1" class="st0" d="M251.6,351.9c0,33.9-27.5,61.4-61.4,61.4s-61.4-27.5-61.4-61.4l61.5-31.6L251.6,351.9z"/>
+			<path id="Fill-3" class="st1" d="M248.6,370.8c-6.4,19.6-22.1,34.7-42,40.2c-12.3-3.4-23.3-10.6-31.3-20.5
+				c-2.9-3.7-3.5-8.6-1.4-12.8c2-4.2,6.3-6.9,11-6.9H248.6z"/>
+			<path id="Fill-5" class="st1" d="M348.7,290.5L216.8,319L31.7,290.5c12.7,0.5,24.2-7.9,27.4-20.2
+				C81.7,209.4,21.6,32.1,190.2,32.1s108.6,177.3,131.1,238.1C324.6,282.6,336,291,348.7,290.5"/>
+			<g id="Group-9" transform="translate(0.000000, 289.857143)">
+				<path id="Fill-7" class="st0" d="M379.4,31.3c0,17-13.8,30.7-30.7,30.7h-317C14.7,62,1,48.3,1,31.3S14.7,0.6,31.7,0.6h317
+					C365.7,0.6,379.4,14.4,379.4,31.3"/>
+			</g>
+			<path id="Fill-10" class="st0" d="M321.3,270.3H156.5c-8.5,0-16.7-3.5-22.6-9.6c-5.9-6.1-9.1-14.4-8.8-22.9
+				c2.3-75.1-9.7-204.2,63.9-205.7c-201.8,1-72.8,258.3-157.3,258.3h317C336,291,324.6,282.6,321.3,270.3"/>
+			<g id="Group-14" transform="translate(89.285714, 289.857143)">
+				<path id="Fill-12" class="st1" d="M290.1,31.3c0,17-13.7,30.7-30.7,30.7H31.1c-17,0-30.7-13.7-30.7-30.7S14.2,0.6,31.1,0.6
+					h228.3C276.4,0.6,290.1,14.4,290.1,31.3"/>
+			</g>
+			<g id="Group-17" transform="translate(158.714286, 0.000000)">
+				<path id="Fill-15" class="st0" d="M62.7,34.5c0.1-0.8,0.1-1.6,0.1-2.4c0-17.3-14-31.3-31.3-31.3S0.2,14.9,0.2,32.1
+					c0,0.8,0,1.6,0.1,2.4"/>
+			</g>
+		</g>
+	</g>
+</g>
+</svg>

@@ -87,7 +87,7 @@ class Comparable(Protocol):
 # NOTE: Bounds are inclusive!
 class Bounds(Generic[C]):
     def __init__(self, lower: _Optional[C], upper: _Optional[C]) -> None:
-        super(Bounds, self).__init__()
+        super().__init__()
         self.__lower = lower
         self.__upper = upper
 
@@ -117,7 +117,7 @@ class ValueSpec:
             default_value: Any = DEF_VALUE,
             validate: _Optional[ValueSpecValidateFunc] = None,
             **kwargs):
-        super(ValueSpec, self).__init__()
+        super().__init__()
         self._title = title
         self._help = help
         if default_value is not DEF_VALUE:
@@ -242,10 +242,7 @@ class FixedValue(ValueSpec):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(FixedValue, self).__init__(title=title,
-                                         help=help,
-                                         default_value=default_value,
-                                         validate=validate)
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._value = value
         self._totext = totext
 
@@ -285,10 +282,7 @@ class Age(ValueSpec):
         validate: _Optional[ValueSpecValidateFunc] = None,
         cssclass: _Optional[str] = None,
     ):
-        super(Age, self).__init__(title=title,
-                                  help=help,
-                                  default_value=default_value,
-                                  validate=validate)
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._label = label
         self._bounds = Bounds[Seconds](minvalue, maxvalue)
         self._display = display if display is not None else \
@@ -375,7 +369,7 @@ class NumericRenderer:
         thousand_sep: _Optional[str],
         align: str,
     ):
-        super(NumericRenderer, self).__init__()
+        super().__init__()
         if size is not None:
             self._size = size
         elif maxvalue is not None:
@@ -432,10 +426,7 @@ class Integer(ValueSpec):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(Integer, self).__init__(title=title,
-                                      help=help,
-                                      default_value=default_value,
-                                      validate=validate)
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._bounds = Bounds[int](minvalue, maxvalue)
         self._renderer = NumericRenderer(size=size,
                                          maxvalue=maxvalue,
@@ -532,10 +523,7 @@ class TextAscii(ValueSpec):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(TextAscii, self).__init__(title=title,
-                                        help=help,
-                                        default_value=default_value,
-                                        validate=validate)
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._label = label
         self._size = size  # also possible: "max"
         self._try_max_width = try_max_width  # If set, uses calc(100%-10px)
@@ -720,7 +708,7 @@ class RegExp(TextAscii):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(RegExp, self).__init__(
+        super().__init__(
             label=label,
             size=size,
             try_max_width=try_max_width,
@@ -751,7 +739,7 @@ class RegExp(TextAscii):
     def help(self) -> Union[str, HTML, None]:
         help_text: List[Union[str, HTML]] = []
 
-        default_help_text = super(RegExp, self).help()
+        default_help_text = super().help()
         if default_help_text is not None:
             help_text.append(default_help_text + "<br><br>")
 
@@ -797,7 +785,7 @@ class RegExp(TextAscii):
         return " ".join(classes)
 
     def _validate_value(self, value, varprefix):
-        super(RegExp, self)._validate_value(value, varprefix)
+        super()._validate_value(value, varprefix)
 
         # Check if the string is a valid regex
         try:
@@ -848,7 +836,7 @@ class EmailAddress(TextUnicode):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(EmailAddress, self).__init__(
+        super().__init__(
             label=label,
             size=size,
             try_max_width=try_max_width,
@@ -902,7 +890,7 @@ class EmailAddress(TextUnicode):
 
     def value_to_text(self, value: str) -> str:
         if not value:
-            return super(EmailAddress, self).value_to_text(value)
+            return super().value_to_text(value)
         if self._make_clickable:
             # TODO: This is a workaround for a bug. This function needs to return str objects right now.
             return "%s" % html.render_a(HTML(value), href="mailto:%s" % value)
@@ -1027,7 +1015,7 @@ class TextAsciiAutocomplete(TextAscii):
                             (json.dumps(completion_ident),
                              json.dumps(completion_params),
                              json.dumps(onkeyup), onkeyup)
-        super(TextAsciiAutocomplete, self).__init__(
+        super().__init__(
             label=label,
             size=size,
             try_max_width=try_max_width,
@@ -1104,9 +1092,7 @@ class MonitoredHostname(TextAsciiAutocomplete):
     ident = "monitored_hostname"
 
     def __init__(self, **kwargs):
-        super(MonitoredHostname, self).__init__(completion_ident=self.ident,
-                                                completion_params={},
-                                                **kwargs)
+        super().__init__(completion_ident=self.ident, completion_params={}, **kwargs)
 
     @classmethod
     def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
@@ -1178,7 +1164,7 @@ class HostAddress(TextAscii):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(HostAddress, self).__init__(
+        super().__init__(
             label=label,
             size=size,
             try_max_width=try_max_width,
@@ -1326,7 +1312,7 @@ class Url(TextAscii):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(Url, self).__init__(
+        super().__init__(
             label=label,
             size=size,
             try_max_width=try_max_width,
@@ -1355,7 +1341,7 @@ class Url(TextAscii):
 
     def _validate_value(self, value: str, varprefix: str) -> None:
         assert value is not None
-        super(Url, self)._validate_value(value, varprefix)
+        super()._validate_value(value, varprefix)
 
         if self._allow_empty and value == "":
             return
@@ -1370,7 +1356,7 @@ class Url(TextAscii):
                 _("Invalid URL scheme. Must be one of: %s") % ", ".join(self._allowed_schemes))
 
     def from_html_vars(self, varprefix: str) -> str:
-        value = super(Url, self).from_html_vars(varprefix)
+        value = super().from_html_vars(varprefix)
         if value and "://" not in value:
             value = self._default_scheme + "://" + value
         return value
@@ -1467,7 +1453,7 @@ class TextAreaUnicode(TextUnicode):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(TextAreaUnicode, self).__init__(
+        super().__init__(
             label=label,
             size=size,
             try_max_width=try_max_width,
@@ -1570,7 +1556,7 @@ class Filename(TextAscii):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(Filename, self).__init__(
+        super().__init__(
             label=label,
             size=size,
             try_max_width=try_max_width,
@@ -1646,10 +1632,7 @@ class ListOfStrings(ValueSpec):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(ListOfStrings, self).__init__(title=title,
-                                            help=help,
-                                            default_value=default_value,
-                                            validate=validate)
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
 
         self._valuespec = valuespec if valuespec is not None else TextAscii(size=size)
         self._vertical = orientation == "vertical"
@@ -1663,7 +1646,7 @@ class ListOfStrings(ValueSpec):
 
     def help(self) -> Union[str, HTML, None]:
         help_texts = [
-            super(ListOfStrings, self).help(),
+            super().help(),
             self._valuespec.help(),
         ]
 
@@ -1804,10 +1787,7 @@ class ListOf(ValueSpec):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(ListOf, self).__init__(title=title,
-                                     help=help,
-                                     default_value=default_value,
-                                     validate=validate)
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._valuespec = valuespec
         self._magic = magic
         self._add_label = add_label if add_label else _("Add new element")
@@ -2068,10 +2048,7 @@ class ListOfMultiple(ValueSpec):
         validate: _Optional[ValueSpecValidateFunc] = None,
         allow_empty: bool = True,
     ):
-        super(ListOfMultiple, self).__init__(title=title,
-                                             help=help,
-                                             default_value=default_value,
-                                             validate=validate)
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         # Normalize all to grouped choice structure
         grouped: GroupedListOfMultipleChoices = []
         ungrouped_group = ListOfMultipleChoiceGroup(title="", choices=[])
@@ -2241,10 +2218,7 @@ class Float(ValueSpec):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(Float, self).__init__(title=title,
-                                    help=help,
-                                    default_value=default_value,
-                                    validate=validate)
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._bounds = Bounds[float](minvalue, maxvalue)
         self._renderer = NumericRenderer(size=size,
                                          maxvalue=maxvalue,
@@ -2307,20 +2281,22 @@ class Percentage(Float):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(Percentage, self).__init__(decimal_separator=decimal_separator,
-                                         allow_int=allow_int,
-                                         size=size,
-                                         minvalue=minvalue,
-                                         maxvalue=maxvalue,
-                                         label=label,
-                                         unit=unit,
-                                         thousand_sep=thousand_sep,
-                                         display_format=display_format,
-                                         align=align,
-                                         title=title,
-                                         help=help,
-                                         default_value=default_value,
-                                         validate=validate)
+        super().__init__(
+            decimal_separator=decimal_separator,
+            allow_int=allow_int,
+            size=size,
+            minvalue=minvalue,
+            maxvalue=maxvalue,
+            label=label,
+            unit=unit,
+            thousand_sep=thousand_sep,
+            display_format=display_format,
+            align=align,
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
 
     def value_to_text(self, value: float) -> str:
         return (self._display_format + "%%") % value
@@ -2333,7 +2309,7 @@ class Percentage(Float):
                     _("The value %r has type %s, but must be either float or int") %
                     (value, _type_name(value)))
         else:
-            super(Percentage, self).validate_datatype(value, varprefix)
+            super().validate_datatype(value, varprefix)
 
 
 class Checkbox(ValueSpec):
@@ -2348,10 +2324,7 @@ class Checkbox(ValueSpec):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(Checkbox, self).__init__(title=title,
-                                       help=help,
-                                       default_value=default_value,
-                                       validate=validate)
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._label = label
         self._true_label = true_label if true_label is not None else _("on")
         self._false_label = false_label if false_label is not None else _("off")
@@ -2419,10 +2392,7 @@ class DropdownChoice(ValueSpec):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(DropdownChoice, self).__init__(title=title,
-                                             help=help,
-                                             default_value=default_value,
-                                             validate=validate)
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._choices = choices
         self._help_separator = help_separator
         self._label = label
@@ -2656,10 +2626,7 @@ class CascadingDropdown(ValueSpec):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(CascadingDropdown, self).__init__(title=title,
-                                                help=help,
-                                                default_value=default_value,
-                                                validate=validate)
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
 
         if isinstance(choices, list):
             self._choices: Union[List[CascadingDropdownCleanChoice], Callable[
@@ -2991,10 +2958,7 @@ class ListChoice(ValueSpec):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(ListChoice, self).__init__(title=title,
-                                         help=help,
-                                         default_value=default_value,
-                                         validate=validate)
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._choices = choices
         self._columns = columns
         self._allow_empty = allow_empty
@@ -3135,18 +3099,20 @@ class DualListChoice(ListChoice):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(DualListChoice, self).__init__(choices=choices,
-                                             columns=columns,
-                                             allow_empty=allow_empty,
-                                             empty_text=empty_text,
-                                             render_function=render_function,
-                                             toggle_all=toggle_all,
-                                             render_orientation=render_orientation,
-                                             no_elements_text=no_elements_text,
-                                             title=title,
-                                             help=help,
-                                             default_value=default_value,
-                                             validate=validate)
+        super().__init__(
+            choices=choices,
+            columns=columns,
+            allow_empty=allow_empty,
+            empty_text=empty_text,
+            render_function=render_function,
+            toggle_all=toggle_all,
+            render_orientation=render_orientation,
+            no_elements_text=no_elements_text,
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
         self._autoheight = autoheight
         self._custom_order = custom_order
         self._instant_add = instant_add
@@ -3243,7 +3209,7 @@ class DualListChoice(ListChoice):
 
     def _validate_value(self, value, varprefix):
         try:
-            super(DualListChoice, self)._validate_value(value, varprefix)
+            super()._validate_value(value, varprefix)
         except MKUserError as e:
             v = "" if e.varname is None else e.varname
             raise MKUserError(v + "_selected", e.message)
@@ -3299,26 +3265,28 @@ class OptionalDropdownChoice(DropdownChoice):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(OptionalDropdownChoice, self).__init__(choices=choices,
-                                                     sorted=sorted,
-                                                     label=label,
-                                                     help_separator=help_separator,
-                                                     prefix_values=prefix_values,
-                                                     empty_text=empty_text,
-                                                     invalid_choice=invalid_choice,
-                                                     invalid_choice_title=invalid_choice_title,
-                                                     invalid_choice_error=invalid_choice_error,
-                                                     no_preselect=no_preselect,
-                                                     no_preselect_value=no_preselect_value,
-                                                     no_preselect_title=no_preselect_title,
-                                                     no_preselect_error=no_preselect_error,
-                                                     on_change=on_change,
-                                                     read_only=read_only,
-                                                     encode_value=encode_value,
-                                                     title=title,
-                                                     help=help,
-                                                     default_value=default_value,
-                                                     validate=validate)
+        super().__init__(
+            choices=choices,
+            sorted=sorted,
+            label=label,
+            help_separator=help_separator,
+            prefix_values=prefix_values,
+            empty_text=empty_text,
+            invalid_choice=invalid_choice,
+            invalid_choice_title=invalid_choice_title,
+            invalid_choice_error=invalid_choice_error,
+            no_preselect=no_preselect,
+            no_preselect_value=no_preselect_value,
+            no_preselect_title=no_preselect_title,
+            no_preselect_error=no_preselect_error,
+            on_change=on_change,
+            read_only=read_only,
+            encode_value=encode_value,
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
 
         self._explicit = explicit
         self._otherlabel = otherlabel if otherlabel is not None else _("Other")
@@ -3428,7 +3396,7 @@ class RelativeDate(OptionalDropdownChoice):
         kwargs['explicit'] = Integer()
         kwargs['otherlabel'] = _("in ... days")
 
-        super(RelativeDate, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         if "default_days" in kwargs:
             self._default_value = kwargs["default_days"] * seconds_per_day + today()
@@ -3440,7 +3408,7 @@ class RelativeDate(OptionalDropdownChoice):
 
     def render_input(self, varprefix, value):
         reldays = int((round_date(value) - today()) / seconds_per_day)  # fixed: true-division
-        super(RelativeDate, self).render_input(varprefix, reldays)
+        super().render_input(varprefix, reldays)
 
     def value_to_text(self, value):
         reldays = int((round_date(value) - today()) / seconds_per_day)  # fixed: true-division
@@ -3456,7 +3424,7 @@ class RelativeDate(OptionalDropdownChoice):
         return _("in %d days") % reldays
 
     def from_html_vars(self, varprefix):
-        reldays = super(RelativeDate, self).from_html_vars(varprefix)
+        reldays = super().from_html_vars(varprefix)
         return today() + reldays * seconds_per_day
 
     def validate_datatype(self, value, varprefix):
@@ -3471,7 +3439,7 @@ class AbsoluteDate(ValueSpec):
     zero (or will be ignored if non-zero), as long as include_time is not set
     to True"""
     def __init__(self, **kwargs):
-        super(AbsoluteDate, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self._show_titles = kwargs.get("show_titles", True)
         self._label = kwargs.get("label")
         self._include_time = kwargs.get("include_time", False)
@@ -3681,10 +3649,7 @@ class Timeofday(ValueSpec):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(Timeofday, self).__init__(title=title,
-                                        help=help,
-                                        default_value=default_value,
-                                        validate=validate)
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._allow_24_00 = allow_24_00
         self._allow_empty = allow_empty
 
@@ -3773,10 +3738,7 @@ class TimeofdayRange(ValueSpec):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(TimeofdayRange, self).__init__(title=title,
-                                             help=help,
-                                             default_value=default_value,
-                                             validate=validate)
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._allow_empty = allow_empty
         self._bounds = (
             Timeofday(allow_empty=self._allow_empty, allow_24_00=True),
@@ -3911,7 +3873,7 @@ class Timerange(CascadingDropdown):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(Timerange, self).__init__(
+        super().__init__(
             choices=self._prepare_choices,
             label=label,
             separator=separator,
@@ -4154,10 +4116,7 @@ class Optional(ValueSpec):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(Optional, self).__init__(title=title,
-                                       help=help,
-                                       default_value=default_value,
-                                       validate=validate)
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._valuespec = valuespec
         self._label = label
         self._negate = negate
@@ -4257,10 +4216,7 @@ class Alternative(ValueSpec):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(Alternative, self).__init__(title=title,
-                                          help=help,
-                                          default_value=default_value,
-                                          validate=validate)
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._elements = elements
         self._match = match  # custom match function, returns index in elements
         self._show_alternative_title = show_alternative_title
@@ -4392,10 +4348,7 @@ class Tuple(ValueSpec):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(Tuple, self).__init__(title=title,
-                                    help=help,
-                                    default_value=default_value,
-                                    validate=validate)
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._elements = elements
         self._show_titles = show_titles
         self._orientation = orientation  # also: horizontal, float
@@ -4542,10 +4495,7 @@ class Dictionary(ValueSpec):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(Dictionary, self).__init__(title=title,
-                                         help=help,
-                                         default_value=default_value,
-                                         validate=validate)
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._elements = elements
         self._empty_text = empty_text if empty_text is not None else _("(no parameters)")
 
@@ -4877,10 +4827,7 @@ class ElementSelection(ValueSpec):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(ElementSelection, self).__init__(title=title,
-                                               help=help,
-                                               default_value=default_value,
-                                               validate=validate)
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._loaded_at: _Optional[int] = None
         self._label = label
         self._empty_text = empty_text if empty_text is not None else \
@@ -4959,7 +4906,7 @@ class Foldable(ValueSpec):
                  valuespec: ValueSpec,
                  title_function: _Optional[Callable[[Any], str]] = None,
                  **kwargs: Any) -> None:  # pylint: disable=redefined-builtin
-        super(Foldable, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self._valuespec = valuespec
         self._title_function = title_function
 
@@ -5030,10 +4977,7 @@ class Transform(ValueSpec):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(Transform, self).__init__(title=title,
-                                        help=help,
-                                        default_value=default_value,
-                                        validate=validate)
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._valuespec = valuespec
         self._back = back
         self._forth = forth
@@ -5054,7 +4998,7 @@ class Transform(ValueSpec):
         return self._valuespec.title()
 
     def help(self) -> Union[str, HTML, None]:
-        transform_help = super(Transform, self).help()
+        transform_help = super().help()
         if transform_help:
             return transform_help
         return self._valuespec.help()
@@ -5092,11 +5036,11 @@ class Transform(ValueSpec):
 # TODO: Change to factory, cleanup kwargs
 class LDAPDistinguishedName(TextUnicode):
     def __init__(self, enforce_suffix: _Optional[str] = None, **kwargs: Any) -> None:
-        super(LDAPDistinguishedName, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.enforce_suffix = enforce_suffix
 
     def _validate_value(self, value: str, varprefix: str) -> None:
-        super(LDAPDistinguishedName, self)._validate_value(value, varprefix)
+        super()._validate_value(value, varprefix)
 
         # Check whether or not the given DN is below a base DN
         if self.enforce_suffix and value and not value.lower().endswith(
@@ -5121,7 +5065,7 @@ class Password(TextAscii):
             else:
                 kwargs["help"] = plain_help
 
-        super(Password, self).__init__(attrencode=True, **kwargs)
+        super().__init__(attrencode=True, **kwargs)
 
     def render_input(self, varprefix: str, value: _Optional[str]) -> None:
         if value is None:
@@ -5154,10 +5098,10 @@ class Password(TextAscii):
 class PasswordSpec(Password):
     # TODO: Cleanup kwargs
     def __init__(self, hidden: bool = True, **kwargs: Any) -> None:
-        super(PasswordSpec, self).__init__(hidden=hidden, **kwargs)
+        super().__init__(hidden=hidden, **kwargs)
 
     def render_input(self, varprefix: str, value: _Optional[str]) -> None:
-        super(PasswordSpec, self).render_input(varprefix, value)
+        super().render_input(varprefix, value)
         if not value:
             html.icon_button("#",
                              _("Randomize password"),
@@ -5174,7 +5118,7 @@ class PasswordSpec(Password):
 
 class FileUpload(ValueSpec):
     def __init__(self, **kwargs):
-        super(FileUpload, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self._allow_empty = kwargs.get('allow_empty', True)
         self._allowed_extensions = kwargs.get('allowed_extensions')
         self._allow_empty_content = kwargs.get('allow_empty_content', True)
@@ -5219,7 +5163,7 @@ class ImageUpload(FileUpload):
     def __init__(self, max_size=None, show_current_image=False, **kwargs):
         self._max_size = max_size
         self._show_current_image = show_current_image
-        super(ImageUpload, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def render_input(self, varprefix, value):
         if self._show_current_image and value:
@@ -5233,12 +5177,12 @@ class ImageUpload(FileUpload):
             html.open_tr()
             html.td(_("Upload new:"))
             html.open_td()
-            super(ImageUpload, self).render_input(varprefix, value)
+            super().render_input(varprefix, value)
             html.close_td()
             html.close_tr()
             html.close_table()
         else:
-            super(ImageUpload, self).render_input(varprefix, value)
+            super().render_input(varprefix, value)
 
     def _validate_value(self, value, varprefix):
         if not value:
@@ -5280,10 +5224,10 @@ class UploadOrPasteTextFile(Alternative):
         else:
             kwargs["match"] = lambda *args: 1
 
-        super(UploadOrPasteTextFile, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def from_html_vars(self, varprefix):
-        value = super(UploadOrPasteTextFile, self).from_html_vars(varprefix)
+        value = super().from_html_vars(varprefix)
         # Convert textarea value to format of upload field
         if not isinstance(value, tuple):
             value = (None, None, value)
@@ -5332,7 +5276,7 @@ class ABCTextOrRegExp(Alternative, metaclass=abc.ABCMeta):
             "orientation": "horizontal",
         })
 
-        super(ABCTextOrRegExp, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
 
 class TextOrRegExp(ABCTextOrRegExp):
@@ -5377,10 +5321,7 @@ class Labels(ValueSpec):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        super(Labels, self).__init__(title=title,
-                                     help=help,
-                                     default_value=default_value,
-                                     validate=validate)
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._world = world
         # Set this source to mark the labels that have no explicit label source set
         self._label_source = label_source
@@ -5388,7 +5329,7 @@ class Labels(ValueSpec):
         self._max_labels = max_labels
 
     def help(self) -> Union[str, HTML, None]:
-        h = super(Labels, self).help()
+        h = super().help()
         return (u"" if h is None else h) + _(
             "Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>os:windows</tt>."
         )
@@ -5492,7 +5433,7 @@ def _encode_labels_for_tagify(labels):
 
 class IconSelector(ValueSpec):
     def __init__(self, allow_empty=True, empty_img="empty", show_builtin_icons=False, **kwargs):
-        super(IconSelector, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self._allow_empty = allow_empty
         self._empty_img = empty_img
         self._show_builtin_icons = show_builtin_icons
@@ -5749,7 +5690,7 @@ class Color(ValueSpec):
     def __init__(self, **kwargs):
         kwargs["regex"] = "#[0-9]{3,6}"
         kwargs["regex_error"] = _("The color needs to be given in hex format.")
-        super(Color, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self._on_change = kwargs.get("on_change")
         self._allow_empty = kwargs.get("allow_empty", True)
 
@@ -5870,7 +5811,7 @@ class CAorCAChain(UploadOrPasteTextFile):
     def __init__(self, **args):
         args.setdefault("title", _("Certificate Chain (Root / Intermediate Certificate)"))
         args.setdefault("file_title", _("CRT/PEM File"))
-        super(CAorCAChain, self).__init__(**args)
+        super().__init__(**args)
 
     def from_html_vars(self, varprefix):
         value = Alternative.from_html_vars(self, varprefix)
@@ -5951,7 +5892,7 @@ class SiteChoice(DropdownChoice):
             "invalid_choice_title": _("Unknown site (%s)"),
         })
 
-        super(SiteChoice, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def _site_default_value(self):
         if config.is_wato_slave_site():
@@ -6005,7 +5946,7 @@ def rule_option_elements(disabling: bool = True) -> List[DictionaryEntry]:
 
 class RuleComment(TextAreaUnicode):
     def __init__(self) -> None:
-        super(RuleComment, self).__init__(
+        super().__init__(
             title=_("Comment"),
             help=_("An optional comment that may be used to explain the purpose of this object. "
                    "The comment is only visible in this dialog and may help other users "
@@ -6018,7 +5959,7 @@ class RuleComment(TextAreaUnicode):
     def render_input(self, varprefix: str, value: str) -> None:  # type: ignore[override]
         html.open_div(style="white-space: nowrap;")
 
-        super(RuleComment, self).render_input(varprefix, value)
+        super().render_input(varprefix, value)
 
         date_and_user = "%s %s: " % (time.strftime("%F", time.localtime()), config.user.id)
 

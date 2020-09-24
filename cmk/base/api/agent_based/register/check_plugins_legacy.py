@@ -18,6 +18,7 @@ from cmk.base.api.agent_based.checking_classes import (
     state,
     Result,
     Service,
+    ServiceLabel,
 )
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
 from cmk.base.api.agent_based.register.utils import DUMMY_RULESET_NAME
@@ -74,7 +75,7 @@ def _create_discovery_function(
                 yield Service(
                     item=element.item,
                     parameters=wrap_parameters(element.parameters or {}),
-                    labels=list(element.service_labels),
+                    labels=[ServiceLabel(l.name, l.value) for l in element.service_labels],
                 )
             elif isinstance(element, tuple) and len(element) in (2, 3):
                 parameters = _resolve_string_parameters(element[-1], check_name, get_check_context)

@@ -1893,14 +1893,14 @@ def notify_bulk(dirname: str, uuids: UUIDs) -> None:
             bulk_context.reverse()
 
         assert isinstance(old_params, dict)
+        plugin_text = "bulk " + (plugin_name or "plain email")
         context_lines = create_bulk_parameter_context(old_params)
         for context in bulk_context:
             # Do not forget to add this to the monitoring log. We create
             # a single entry for each notification contained in the bulk.
             # It is important later to have this precise information.
-            plugin_name = "bulk " + (plugin_name or "plain email")
             _log_to_history(
-                notification_message(NotificationPluginName(plugin_name),
+                notification_message(NotificationPluginName(plugin_text),
                                      NotificationContext(context)))
 
             context_lines.append("\n")
@@ -1913,7 +1913,7 @@ def notify_bulk(dirname: str, uuids: UUIDs) -> None:
         for context in bulk_context:
             _log_to_history(
                 notification_result_message(
-                    NotificationPluginName("bulk " + (plugin_name or "plain email")),
+                    NotificationPluginName(plugin_text),
                     NotificationContext(context),
                     NotificationResultCode(exitcode),
                     output_lines,

@@ -53,6 +53,8 @@ from cmk.gui.http import Request  # pylint: disable=cmk-module-layer-violation
 
 import cmk.update_rrd_fs_names
 
+from cmk.gui.plugins.wato.check_parameters.diskstat import transform_diskstat
+
 # mapping removed check plugins to their replacement:
 REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("ps_perf"): CheckPluginName("ps"),
@@ -63,6 +65,8 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("statgrab_mem"): CheckPluginName("mem_used"),
     CheckPluginName("cisco_mem_asa64"): CheckPluginName("cisco_mem_asa"),
 }
+
+WATO_RULESET_PARAM_TRANSFORMS = [('diskstat_inventory', transform_diskstat)]
 
 
 # TODO: Better make our application available?
@@ -189,7 +193,21 @@ class UpdateConfig:
     def _rewrite_wato_rulesets(self):
         all_rulesets = cmk.gui.watolib.rulesets.AllRulesets()
         all_rulesets.load()
+
+        self._transform_wato_rulesets_params(all_rulesets, WATO_RULESET_PARAM_TRANSFORMS)
+
         all_rulesets.save()
+
+    def _transform_wato_rulesets_params(self, all_rulesets, transforms):
+        for param_name, transform_func in transforms:
+            try:
+                ruleset = all_rulesets.get(param_name)
+            except KeyError:
+                continue
+            rules = ruleset.get_rules()
+            for rule in rules:
+                transformed_params = transform_func(rule[2].value)
+                rule[2].value = transformed_params
 
     def _initialize_gui_environment(self):
         self._logger.log(VERBOSE, "Loading GUI plugins...")

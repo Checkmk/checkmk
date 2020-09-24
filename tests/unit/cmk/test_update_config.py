@@ -15,6 +15,9 @@ import cmk.utils.log
 import cmk.update_config as update_config
 import cmk.gui.config
 import cmk.utils.paths
+from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.rulesets import Rule, Ruleset
+from cmk.gui.plugins.wato.check_parameters.diskstat import transform_diskstat
 
 
 @pytest.fixture()
@@ -70,3 +73,39 @@ def test_cleanup_version_specific_caches(uc):
         uc._cleanup_version_specific_caches()
         assert not cached_file.exists()
         assert base_dir.exists()
+
+
+@pytest.mark.parametrize('ruleset_name, transforms, param_value, transformed_param_value', [
+    (
+        'diskstat_inventory',
+        [('diskstat_inventory', transform_diskstat)],
+        ['summary', 'lvm'],
+        {
+            'summary': True,
+            'lvm': True
+        },
+    ),
+])
+def test__transform_wato_rulesets_params(
+    ruleset_name,
+    transforms,
+    param_value,
+    transformed_param_value,
+):
+    ruleset = _instantiate_ruleset(ruleset_name, param_value)
+
+    uc = update_config.UpdateConfig(cmk.utils.log.logger, argparse.Namespace())
+
+    uc._transform_wato_rulesets_params(ruleset, transforms)
+
+    assert len(ruleset.get(ruleset_name).get_rules()[0]) == 3
+    assert ruleset.get(ruleset_name).get_rules()[0][2].value == transformed_param_value
+
+
+def _instantiate_ruleset(ruleset_name, param_value):
+    ruleset = Ruleset(ruleset_name, '')
+    rule = Rule(Folder(''), ruleset)
+    rule.value = param_value
+    ruleset.append_rule(Folder(''), rule)
+    assert ruleset.get_rules()
+    return {ruleset_name: ruleset}

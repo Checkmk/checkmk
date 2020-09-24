@@ -1883,7 +1883,7 @@ def notify_bulk(dirname: str, uuids: UUIDs) -> None:
             unhandled_uuids.append((mtime, notify_uuid))
             continue
 
-        bulk_context.append(context)
+        bulk_context.append(NotificationContext(context))
 
     if bulk_context:  # otherwise: only corrupted files
         # Per default the uuids are sorted chronologically from oldest to newest
@@ -1893,15 +1893,13 @@ def notify_bulk(dirname: str, uuids: UUIDs) -> None:
             bulk_context.reverse()
 
         assert isinstance(old_params, dict)
-        plugin_text = "bulk " + (plugin_name or "plain email")
+        plugin_text = NotificationPluginName("bulk " + (plugin_name or "plain email"))
         context_lines = create_bulk_parameter_context(old_params)
         for context in bulk_context:
             # Do not forget to add this to the monitoring log. We create
             # a single entry for each notification contained in the bulk.
             # It is important later to have this precise information.
-            _log_to_history(
-                notification_message(NotificationPluginName(plugin_text),
-                                     NotificationContext(context)))
+            _log_to_history(notification_message(plugin_text, context))
 
             context_lines.append("\n")
             for varname, value in context.items():
@@ -1912,12 +1910,7 @@ def notify_bulk(dirname: str, uuids: UUIDs) -> None:
 
         for context in bulk_context:
             _log_to_history(
-                notification_result_message(
-                    NotificationPluginName(plugin_text),
-                    NotificationContext(context),
-                    NotificationResultCode(exitcode),
-                    output_lines,
-                ))
+                notification_result_message(plugin_text, context, exitcode, output_lines))
     else:
         logger.info("No valid notification file left. Skipping this bulk.")
 
@@ -1942,8 +1935,9 @@ def notify_bulk(dirname: str, uuids: UUIDs) -> None:
             logger.info("Warning: cannot remove directory %s: %s", dirname, e)
 
 
-def call_bulk_notification_script(plugin_name: NotificationPluginNameStr,
-                                  context_lines: List[str]) -> Tuple[int, List[str]]:
+def call_bulk_notification_script(
+        plugin_name: NotificationPluginNameStr,
+        context_lines: List[str]) -> Tuple[NotificationResultCode, List[str]]:
     path = path_to_notification_script(plugin_name)
     if not path:
         raise MKGeneralException("Notification plugin %s not found" % plugin_name)
@@ -1982,7 +1976,7 @@ def call_bulk_notification_script(plugin_name: NotificationPluginNameStr,
     for line in output_lines:
         logger.info("%s: %s", plugin_name, line.rstrip())
 
-    return exitcode, output_lines
+    return NotificationResultCode(exitcode), output_lines
 
 
 #.

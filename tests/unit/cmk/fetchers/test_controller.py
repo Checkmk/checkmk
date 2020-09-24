@@ -23,8 +23,11 @@ from cmk.utils.exceptions import (
     MKIPAddressLookupError,
 )
 
+from cmk.snmplib.type_defs import SNMPTable
+
 from cmk.fetchers import FetcherType
 from cmk.fetchers.controller import (
+    AgentPayload,
     build_json_file_path,
     build_json_global_config_file_path,
     cmc_log_level_from_python,
@@ -38,6 +41,7 @@ from cmk.fetchers.controller import (
     make_payload_answer,
     make_waiting_answer,
     run_fetcher,
+    SNMPPayload,
     write_bytes,
 )
 from cmk.fetchers.type_defs import Mode
@@ -58,7 +62,7 @@ def test_status_to_log_level(status, log_level):
 
 class TestControllerApi:
     def test_controller_success(self):
-        payload = 69 * b"\0"
+        payload = AgentPayload(69 * b"\0")
         header = FetcherHeader(
             FetcherType.TCP,
             PayloadType.AGENT,
@@ -66,7 +70,8 @@ class TestControllerApi:
             payload_length=len(payload),
         )
         message = FetcherMessage(header, payload)
-        assert make_payload_answer(message) == (b"fetch:SUCCESS:        :79      :" + header +
+        assert len(message) == 89
+        assert make_payload_answer(message) == (b"fetch:SUCCESS:        :89      :" + header +
                                                 payload)
 
     def test_controller_failure(self):
@@ -176,6 +181,25 @@ class TestCMCHeader:
         assert CMCHeader.default_protocol_name() == "fetch"
 
 
+class TestAgentPayload:
+    @pytest.fixture
+    def payload(self):
+        return AgentPayload(b"<<<hello>>>\nworld")
+
+    def test_from_bytes_success(self, payload):
+        assert AgentPayload.from_bytes(bytes(payload)) == payload
+
+
+class TestSNMPPayload:
+    @pytest.fixture
+    def payload(self):
+        table: SNMPTable = []
+        return SNMPPayload({SectionName("name"): table})
+
+    def test_from_bytes_success(self, payload):
+        assert SNMPPayload.from_bytes(bytes(payload)) == payload
+
+
 class TestErrorPayload:
     @pytest.fixture(params=[
         # Our special exceptions.
@@ -204,8 +228,8 @@ class TestErrorPayload:
         other = ErrorPayload.from_bytes(bytes(error))
         assert other is not error
         assert other == error
-        assert type(other.error) == type(error.error)  # pylint: disable=C0123
-        assert other.error.args == error.error.args
+        assert type(other.result().error) == type(error.result().error)  # pylint: disable=C0123
+        assert other.result().error.args == error.result().error.args
 
     def test_from_bytes_failure(self):
         with pytest.raises(ValueError):
@@ -350,7 +374,7 @@ class TestFetcherMessage:
 
     @pytest.fixture
     def payload(self, header):
-        return b"\0" * header.payload_length
+        return AgentPayload(b"\0" * (header.payload_length - AgentPayload.length))
 
     @pytest.fixture
     def message(self, header, payload):

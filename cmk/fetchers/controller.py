@@ -7,24 +7,25 @@
 #
 # Protocol fetcher -> core: <header><payload>
 
+import abc
+import contextlib
 import enum
 import json
 import logging
 import os
 import pickle
-import struct
 import signal
-import contextlib
+import struct
 from pathlib import Path
-from typing import Any, Dict, Final, Union, List, Optional, Iterator
 from types import FrameType
+from typing import Any, Dict, Final, Iterator, List, Optional, Type, Union
 
 import cmk.utils.log as log
+from cmk.utils.exceptions import MKTimeout
 from cmk.utils.paths import core_helper_config_dir
 from cmk.utils.type_defs import ConfigSerial, HostName, Protocol, Result, SectionName
-from cmk.utils.exceptions import MKTimeout
 
-from cmk.snmplib.type_defs import AbstractRawData
+from cmk.snmplib.type_defs import AbstractRawData, SNMPRawData
 
 from . import FetcherType
 from .type_defs import Mode
@@ -61,8 +62,18 @@ class Header(Protocol):
     pass
 
 
-class Payload(Protocol):
-    pass
+class L3Message(Protocol):
+    fmt = "!HQ"
+    length = struct.calcsize(fmt)
+
+    @property
+    @abc.abstractmethod
+    def payload_type(self) -> "PayloadType":
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def result(self) -> Result[AbstractRawData, Exception]:
+        raise NotImplementedError
 
 
 class PayloadType(enum.Enum):
@@ -70,31 +81,107 @@ class PayloadType(enum.Enum):
     AGENT = enum.auto()
     SNMP = enum.auto()
 
+    def make(self) -> Type[L3Message]:
+        # This typing error is a false positive.  There are tests to demonstrate that.
+        return {  # type: ignore[return-value]
+            PayloadType.ERROR: ErrorPayload,
+            PayloadType.AGENT: AgentPayload,
+            PayloadType.SNMP: SNMPPayload,
+        }[self]
 
-class ErrorPayload(Payload):
-    fmt = "!H"
 
-    def __init__(self, error: Exception) -> None:
-        self.error: Final = error
+class AgentPayload(L3Message):
+    payload_type = PayloadType.AGENT
+
+    def __init__(self, value: bytes) -> None:
+        self._value: Final = value
 
     def __repr__(self) -> str:
-        return "%s(%r)" % (type(self).__name__, self.error)
+        return "%s(%r)" % (type(self).__name__, self._value)
 
     def __bytes__(self) -> bytes:
-        payload = self._serialize(self.error)
-        return struct.pack(ErrorPayload.fmt, len(payload)) + payload
+        return struct.pack(L3Message.fmt, self.payload_type.value, len(self._value)) + self._value
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> "AgentPayload":
+        _type, length, *_rest = struct.unpack(
+            L3Message.fmt,
+            data[:L3Message.length],
+        )
+        try:
+            return cls(data[L3Message.length:L3Message.length + length])
+        except SyntaxError as exc:
+            raise ValueError(repr(data)) from exc
+
+    def result(self) -> Result[AbstractRawData, Exception]:
+        return Result.OK(self._value)
+
+
+class SNMPPayload(L3Message):
+    payload_type = PayloadType.SNMP
+
+    def __init__(self, value: SNMPRawData) -> None:
+        self._value: Final[SNMPRawData] = value
+
+    def __repr__(self) -> str:
+        return "%s(%r)" % (type(self).__name__, self._value)
+
+    def __bytes__(self) -> bytes:
+        payload = self._serialize(self._value)
+        return struct.pack(SNMPPayload.fmt, self.payload_type.value, len(payload)) + payload
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> "SNMPPayload":
+        _type, length, *_rest = struct.unpack(
+            SNMPPayload.fmt,
+            data[:L3Message.length],
+        )
+        try:
+            return cls(cls._deserialize(data[L3Message.length:L3Message.length + length]))
+        except SyntaxError as exc:
+            raise ValueError(repr(data)) from exc
+
+    def result(self) -> Result[SNMPRawData, Exception]:
+        return Result.OK(self._value)
+
+    @staticmethod
+    def _serialize(value: SNMPRawData) -> bytes:
+        return json.dumps({str(k): v for k, v in value.items()}).encode("utf8")
+
+    @staticmethod
+    def _deserialize(data: bytes) -> SNMPRawData:
+        try:
+            return {SectionName(k): v for k, v in json.loads(data.decode("utf8")).items()}
+        except json.JSONDecodeError:
+            raise ValueError(repr(data))
+
+
+class ErrorPayload(L3Message):
+    payload_type = PayloadType.ERROR
+
+    def __init__(self, error: Exception) -> None:
+        self._error: Final = error
+
+    def __repr__(self) -> str:
+        return "%s(%r)" % (type(self).__name__, self._error)
+
+    def __bytes__(self) -> bytes:
+        payload = self._serialize(self._error)
+        return struct.pack(L3Message.fmt, self.payload_type.value, len(payload)) + payload
 
     @classmethod
     def from_bytes(cls, data: bytes) -> "ErrorPayload":
-        length, *_rest = struct.unpack(
-            ErrorPayload.fmt,
-            data[:struct.calcsize(ErrorPayload.fmt)],
+        _type, length, *_rest = struct.unpack(
+            L3Message.fmt,
+            data[:L3Message.length],
         )
-        start: int = struct.calcsize(ErrorPayload.fmt)
         try:
-            return cls(cls._deserialize(data[start:start + length]))
+            return cls(cls._deserialize(data[L3Message.length:L3Message.length + length]))
         except SyntaxError as exc:
-            raise ValueError(data) from exc
+            raise ValueError(repr(data)) from exc
+
+    def result(self) -> Result[AbstractRawData, Exception]:
+        return Result.Error(self._error)
 
     @staticmethod
     def _serialize(error: Exception) -> bytes:
@@ -176,20 +263,21 @@ class FetcherHeader(Header):
 
 
 class FetcherMessage(Protocol):
-    def __init__(self, header: FetcherHeader, payload: Union[bytes, ErrorPayload]) -> None:
+    def __init__(self, header: FetcherHeader, payload: L3Message) -> None:
         self.header: Final[FetcherHeader] = header
-        self._payload: Final[bytes] = bytes(payload)
+        self.payload: Final[L3Message] = payload
 
     def __repr__(self) -> str:
-        return "%s(%r, %r)" % (type(self).__name__, self.header, self.raw_data)
+        return "%s(%r, %r)" % (type(self).__name__, self.header, self.payload)
 
     def __bytes__(self) -> bytes:
-        return self.header + self._payload
+        return self.header + self.payload
 
     @classmethod
     def from_bytes(cls, data: bytes) -> "FetcherMessage":
         header = FetcherHeader.from_bytes(data)
-        payload = data[len(header):len(header) + header.payload_length]
+        payload = header.payload_type.make().from_bytes(
+            data[len(header):len(header) + header.payload_length],)
         return cls(header, payload)
 
     @classmethod
@@ -199,51 +287,45 @@ class FetcherMessage(Protocol):
         fetcher_type: FetcherType,
     ) -> "FetcherMessage":
         if raw_data.is_error():
-            error = ErrorPayload(raw_data.error)
+            error_payload = ErrorPayload(raw_data.error)
             return cls(
                 FetcherHeader(
                     fetcher_type,
                     payload_type=PayloadType.ERROR,
                     status=50,
-                    payload_length=len(error),
+                    payload_length=len(error_payload),
                 ),
-                error,
+                error_payload,
             )
 
         if fetcher_type is FetcherType.SNMP:
             assert isinstance(raw_data.ok, dict)
-            payload = json.dumps({str(k): v for k, v in raw_data.ok.items()}).encode("utf8")
+            snmp_payload = SNMPPayload(raw_data.ok)
             return cls(
                 FetcherHeader(
                     fetcher_type,
                     payload_type=PayloadType.SNMP,
                     status=0,
-                    payload_length=len(payload),
+                    payload_length=len(snmp_payload),
                 ),
-                payload,
+                snmp_payload,
             )
 
         assert isinstance(raw_data.ok, bytes)
+        agent_payload = AgentPayload(raw_data.ok)
         return cls(
             FetcherHeader(
                 fetcher_type,
                 payload_type=PayloadType.AGENT,
                 status=0,
-                payload_length=len(raw_data.ok),
+                payload_length=len(agent_payload),
             ),
-            raw_data.ok,
+            agent_payload,
         )
 
     @property
     def raw_data(self) -> Result[AbstractRawData, Exception]:
-        if self.header.payload_type is PayloadType.ERROR:
-            try:
-                return Result.Error(ErrorPayload.from_bytes(self._payload).error)
-            except Exception as exc:
-                return Result.Error(exc)
-        if self.header.payload_type is PayloadType.SNMP:
-            return Result.OK({SectionName(k): v for k, v in json.loads(self._payload).items()})
-        return Result.OK(self._payload)
+        return self.payload.result()
 
 
 class CMCHeader(Header):

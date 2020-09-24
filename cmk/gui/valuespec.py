@@ -2805,40 +2805,44 @@ class CascadingDropdown(ValueSpec):
                          })))
 
     def value_to_text(self, value: CascadingDropdownChoiceValue) -> str:
-        choices = self.choices()
-        for val, title, vs in choices:
-            if not vs:  # Handle choices without nested valuespec
-                if value == val:
-                    return title
-                continue
+        # We need a name - it's the first element in a tuple or the whole (str-)value
+        value_name = value[0] if isinstance(value, tuple) else value
 
-            assert isinstance(value, tuple)
+        # choices are organized like a dict - pick the one we need
+        # the first elements of choices can be `str` or `(str, str)` so eighter
+        # @value_name or @value might match
+        try:
+            val, title, vs = next(elem for elem in self.choices() if elem[0] in {value_name, value})
+        except StopIteration:
+            return "Could not render: %r" % (value,)
 
-            if not value:
-                continue
+        if vs is None and val == value:
+            return title
 
-            if value[0] != val:
-                continue  # Skip not selected choices
+        # This assertion seems to be valid in all encountered cases but in case
+        # elem ∈ (str, str, ValueSpec) and
+        # value ∈ str
+        # this will fail - expect the bug happening here
+        assert isinstance(value, tuple), "value is %r (not a tuple) and vs not None" % (value,)
 
-            rendered_value = vs.value_to_text(value[1])
-            if not rendered_value:
-                return title
+        rendered_value = vs and vs.value_to_text(value[1])
+        if not rendered_value:
+            return title
 
-            if self._render == CascadingDropdown.Render.foldable:
-                with html.plugged():
-                    html.begin_foldable_container("foldable_cascading_dropdown",
-                                                  id_=hashlib.sha256(ensure_binary(
-                                                      repr(value))).hexdigest(),
-                                                  isopen=False,
-                                                  title=title,
-                                                  indent=False)
-                    html.write(vs.value_to_text(value[1]))
-                    html.end_foldable_container()
-                return html.drain()
+        if self._render == CascadingDropdown.Render.foldable:
+            with html.plugged():
+                html.begin_foldable_container(
+                    "foldable_cascading_dropdown",
+                    id_=hashlib.sha256(ensure_binary(repr(value))).hexdigest(),
+                    isopen=False,
+                    title=title,
+                    indent=False,
+                )
+                html.write(rendered_value)
+                html.end_foldable_container()
+            return html.drain()
 
-            return title + self._separator + vs.value_to_text(value[1])
-
-        return u""  # Nothing selected? Should never happen
+        return title + self._separator + rendered_value
 
     def value_to_json(self, value):
         choices = self.choices()

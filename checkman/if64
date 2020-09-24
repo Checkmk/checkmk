@@ -28,6 +28,13 @@ description:
  performance values: the averaged in- and outgoing traffic in bytes. If you have
  configured traffic levels, then those levels are applied to the averaged values.
 
+ This check also supports monitoring of the administrative status ({ifAdminStatus}),
+ however, by default, this option is deactivated to reduce SNMP traffic. To activate
+ the monitoring of the admin status, you have to configure Checkmk to fetch this
+ information. This is done by activating the section {if64adm} via the rule "Include
+ or exclude SNMP sections", which will lead to an increase in SNMP traffic of
+ approximately 5%.
+
  Note that there are some devices with broken firmware which report that
  they support 64-bit counters even though they do not. In such cases, use the rule
  "Include or exclude SNMP sections" to disable the section {if64}. This will make

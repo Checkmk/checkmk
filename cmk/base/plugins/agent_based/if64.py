@@ -4,66 +4,125 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=wrong-import-order
-
+from typing import (
+    Dict,
+    Mapping,
+    Optional,
+    Sequence,
+)
 from .agent_based_api.v1 import (
-    never_detect,
     register,
     SNMPTree,
+    type_defs,
 )
 from .utils import if64, interfaces
 
-# NOTE: THIS AN API VIOLATION, DO NOT REPLICATE THIS
-# ==================================================================================================
-from cmk.utils.type_defs import RuleSetName
-from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPRuleDependentDetectSpec
-from cmk.base.api.agent_based.register import add_section_plugin, add_discovery_ruleset
-from cmk.base.api.agent_based.register.section_plugins import create_snmp_section_plugin
+If64AdmSection = Sequence[str]
 
 
-def compute_detect_spec_if64(use_if64adm: if64.BinaryHostRules,) -> SNMPDetectSpec:
-    """
-    >>> compute_detect_spec_if64([])
-    [[('.1.3.6.1.2.1.31.1.1.1.6.*', '.*', True)]]
-    >>> compute_detect_spec_if64([True])
-    [[('.1.3.6.1.2.1.1.2.0', '(?!x)x', True)]]
-    """
-    if if64.need_if64adm(use_if64adm):
-        return never_detect
-    return if64.HAS_ifHCInOctets
+def parse_if64adm(string_table: type_defs.SNMPStringTable) -> If64AdmSection:
+    return [sub_table[0] for sub_table in string_table[0]]
 
 
-section_plugin = create_snmp_section_plugin(
+register.snmp_section(
     name="if64",
-    parse_function=if64.parse_if64_if6adm,
+    parse_function=if64.parse_if64,
     trees=[
         SNMPTree(
             base=if64.BASE_OID,
             oids=if64.END_OIDS,
         ),
     ],
+    detect=if64.HAS_ifHCInOctets,
     supersedes=['if'],
-    detect_spec=never_detect,  # does not matter what we put here
-    rule_dependent_detect_spec=SNMPRuleDependentDetectSpec(
-        [RuleSetName('use_if64adm')],
-        compute_detect_spec_if64,
-    ),
 )
-add_section_plugin(section_plugin)
-assert section_plugin.rule_dependent_detect_spec
-for discovery_ruleset in section_plugin.rule_dependent_detect_spec.rulesets:
-    add_discovery_ruleset(discovery_ruleset)
-# ==================================================================================================
+
+# Note: This section is by default deactivated (hard-coded in
+# cmk.base.config.disabled_snmp_sections) to reduce SNMP traffic. To activate it, use the SNMP
+# Rulespec snmp_exclude_sections.
+register.snmp_section(
+    name="if64adm",
+    parse_function=parse_if64adm,
+    trees=[
+        SNMPTree(
+            base=if64.BASE_OID,
+            oids=["2.2.1.7"],  # ifAdminStatus
+        ),
+    ],
+    detect=if64.HAS_ifHCInOctets,
+)
+
+
+def _add_admin_status_to_ifaces(
+    section_if64: interfaces.Section,
+    section_if64adm: Optional[If64AdmSection],
+) -> None:
+    if section_if64adm is None or len(section_if64) != len(section_if64adm):
+        return
+    for iface, admin_status in zip(section_if64, section_if64adm):
+        iface.admin_status = admin_status
+
+
+def discover_if64(
+    params: Sequence[type_defs.Parameters],
+    section_if64: Optional[interfaces.Section],
+    section_if64adm: Optional[If64AdmSection],
+) -> type_defs.DiscoveryResult:
+    if section_if64 is None:
+        return
+    _add_admin_status_to_ifaces(section_if64, section_if64adm)
+    yield from interfaces.discover_interfaces(
+        params,
+        section_if64,
+    )
+
+
+def check_if64(
+    item: str,
+    params: type_defs.Parameters,
+    section_if64: Optional[interfaces.Section],
+    section_if64adm: Optional[If64AdmSection],
+) -> type_defs.CheckResult:
+    if section_if64 is None:
+        return
+    _add_admin_status_to_ifaces(section_if64, section_if64adm)
+    yield from if64.generic_check_if64(
+        item,
+        params,
+        section_if64,
+    )
+
+
+def cluster_check_if64(
+    item: str,
+    params: type_defs.Parameters,
+    section_if64: Mapping[str, Optional[interfaces.Section]],
+    section_if64adm: Mapping[str, Optional[If64AdmSection]],
+) -> type_defs.CheckResult:
+
+    sections_w_admin_status: Dict[str, interfaces.Section] = {}
+    for node_name, node_section_if64 in section_if64.items():
+        if node_section_if64 is not None:
+            _add_admin_status_to_ifaces(node_section_if64, section_if64adm[node_name])
+            sections_w_admin_status[node_name] = node_section_if64
+
+    yield from interfaces.cluster_check(
+        item,
+        params,
+        sections_w_admin_status,
+    )
+
 
 register.check_plugin(
     name="if64",
+    sections=['if64', 'if64adm'],
     service_name="Interface %s",
     discovery_ruleset_name="inventory_if_rules",
     discovery_ruleset_type="all",
     discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
-    discovery_function=interfaces.discover_interfaces,
+    discovery_function=discover_if64,
     check_ruleset_name="if",
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
-    check_function=if64.check_if64,
-    cluster_check_function=interfaces.cluster_check,
+    check_function=check_if64,
+    cluster_check_function=cluster_check_if64,
 )

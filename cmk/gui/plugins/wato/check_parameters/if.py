@@ -255,10 +255,12 @@ def _vs_regex_matching(match_obj):
 def _note_for_admin_state_options():
     return _(
         "Note: The admin state is in general only available for the 64-bit SNMP interface check. "
-        "Additionally, you have to specifically configure checkmk to fetch this information using "
-        "the rule <a href='wato.py?mode=edit_ruleset&varname=use_if64adm'>SNMP Interface check: "
-        "Monitor ifAdminStatus (use 'if64adm' instead of 'if64')</a>. Using this option on hosts "
-        "which are not configured to report the admin state will have no effect.")
+        "Additionally, you have to specifically configure Checkmk to fetch this information, "
+        "otherwise, using this option will have no effect. To make Checkmk fetch the admin status, "
+        "activate the section <tt>if64adm</tt> via the rule "
+        "<a href='wato.py?mode=edit_ruleset&varname=snmp_exclude_sections'>Include or exclude SNMP "
+        "sections</a>. Note that this will lead to an increase in SNMP traffic of approximately "
+        "5%.")
 
 
 def _admin_states():
@@ -559,28 +561,6 @@ rulespec_registry.register(
         name="if_disable_if64_hosts",
         title=lambda: _("Hosts forced to use 'if' instead of 'if64'"),
         is_deprecated=True,
-    ))
-
-rulespec_registry.register(
-    BinaryHostRulespec(
-        group=RulespecGroupCheckParametersNetworking,
-        help_func=lambda: _(
-            "On hosts where this option is activated, the 64-bit SNMP interface check will "
-            "in addition to the default output also monitor the admin state "
-            "<tt>ifAdminStatus</tt>. The admin state can be used both when configuring the "
-            "<a href='wato.py?mode=edit_ruleset&varname=inventory_df_rules'>discovery of "
-            "interfaces (\"Network interface and switch port discovery\")</a> and the "
-            "<a href='wato.py?mode=edit_ruleset&varname=checkgroup_parameters:if'>corresponding "
-            "monitoring states (\"Network interfaces and switch ports\")</a>. Note that activating "
-            "this option will lead to an increase in SNMP traffic of approximately 5%. Also note "
-            "that after activating or deactivating this option, you have to-rediscover the "
-            "services of affected hosts for this change to have an effect. This is necessary "
-            "because when reporting the admin state, checkmk uses a different check plugin "
-            "(<tt>if64adm</tt> instead of <tt>if64</tt>). However, by default, <tt>if64adm</tt> "
-            "generates the same services as <tt>if64</tt>, but with additional output."),
-        name="use_if64adm",
-        title=lambda: _(
-            "SNMP Interface check: Monitor ifAdminStatus (use 'if64adm' instead of 'if64')"),
     ))
 
 

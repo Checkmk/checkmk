@@ -190,7 +190,6 @@ def statename(st: str) -> str:
         '6': 'not present',
         '7': 'lower layer down',
         '8': 'degraded',
-        '9': 'admin down',
     }
     return names.get(st, st)
 

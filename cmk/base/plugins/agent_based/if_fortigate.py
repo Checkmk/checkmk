@@ -18,7 +18,7 @@ END_OIDS = if64.END_OIDS[:18] + ["31.1.1.1.1"] + if64.END_OIDS[19:]
 
 register.snmp_section(
     name="if_fortigate",
-    parse_function=if64.parse_if64_if6adm,
+    parse_function=if64.parse_if64,
     trees=[
         SNMPTree(
             base=if64.BASE_OID,
@@ -26,7 +26,7 @@ register.snmp_section(
         ),
     ],
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356"),
-    supersedes=['if', 'if64', 'if64adm'],
+    supersedes=['if', 'if64'],
 )
 
 register.check_plugin(
@@ -38,6 +38,6 @@ register.check_plugin(
     discovery_function=interfaces.discover_interfaces,
     check_ruleset_name="if",
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
-    check_function=if64.check_if64,
+    check_function=if64.generic_check_if64,
     cluster_check_function=interfaces.cluster_check,
 )

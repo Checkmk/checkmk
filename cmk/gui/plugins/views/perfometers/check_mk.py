@@ -344,7 +344,6 @@ def perfometer_check_mk_if(row, check_command, perf_data):
 
 perfometers["check_mk-if"] = perfometer_check_mk_if
 perfometers["check_mk-if64"] = perfometer_check_mk_if
-perfometers["check_mk-if64adm"] = perfometer_check_mk_if
 perfometers["check_mk-if64_tplink"] = perfometer_check_mk_if
 perfometers["check_mk-winperf_if"] = perfometer_check_mk_if
 perfometers["check_mk-vms_if"] = perfometer_check_mk_if

@@ -907,7 +907,6 @@ check_metrics["check_mk-fritz"] = if_translation
 check_metrics["check_mk-fritz_wan_if"] = if_translation
 check_metrics["check_mk-hitachi_hnas_fc_if"] = if_translation
 check_metrics["check_mk-if64"] = if_translation
-check_metrics["check_mk-if64adm"] = if_translation
 check_metrics["check_mk-hpux_if"] = if_translation
 check_metrics["check_mk-if64_tplink"] = if_translation
 check_metrics["check_mk-if_lancom"] = if_translation

@@ -2592,8 +2592,8 @@ class HostConfig:
         """Return a set of disabled snmp sections
         """
         rules = self._config_cache.host_extra_conf(self.hostname, snmp_exclude_sections)
-        merged_section_settings: Dict[str, bool] = {}
-        for rule in rules[-1::-1]:
+        merged_section_settings = {'if64adm': True}
+        for rule in reversed(rules):
             merged_section_settings.update(dict(rule.get("sections", [])))
 
         return {

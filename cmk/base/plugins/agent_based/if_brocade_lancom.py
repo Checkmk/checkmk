@@ -107,7 +107,7 @@ register.snmp_section(
     parse_function=parse_if_brocade,
     trees=SNMP_TREES,
     detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "Brocade VDX Switch"), if64.HAS_ifHCInOctets),
-    supersedes=['if', 'if64', 'if64adm'],
+    supersedes=['if', 'if64'],
 )
 
 register.snmp_section(
@@ -122,7 +122,7 @@ register.snmp_section(
             if64.HAS_ifHCInOctets,
         ),
     ),
-    supersedes=['if', 'if64', 'if64adm'],
+    supersedes=['if', 'if64'],
 )
 
 register.check_plugin(
@@ -134,7 +134,7 @@ register.check_plugin(
     discovery_function=interfaces.discover_interfaces,
     check_ruleset_name="if",
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
-    check_function=if64.check_if64,
+    check_function=if64.generic_check_if64,
     cluster_check_function=interfaces.cluster_check,
 )
 
@@ -147,6 +147,6 @@ register.check_plugin(
     discovery_function=interfaces.discover_interfaces,
     check_ruleset_name="if",
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
-    check_function=if64.check_if64,
+    check_function=if64.generic_check_if64,
     cluster_check_function=interfaces.cluster_check,
 )

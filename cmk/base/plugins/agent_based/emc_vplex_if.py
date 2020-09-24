@@ -76,7 +76,7 @@ register.snmp_section(
         equals(".1.3.6.1.2.1.1.1.0", ""),
         exists(".1.3.6.1.4.1.1139.21.2.2.8.1.*"),
     ),
-    supersedes=['if', 'if64', 'if64adm'],
+    supersedes=['if', 'if64'],
 )
 
 register.check_plugin(
@@ -88,6 +88,6 @@ register.check_plugin(
     discovery_function=interfaces.discover_interfaces,
     check_ruleset_name="if",
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
-    check_function=if64.check_if64,
+    check_function=if64.generic_check_if64,
     cluster_check_function=interfaces.cluster_check,
 )

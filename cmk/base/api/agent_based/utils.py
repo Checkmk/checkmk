@@ -223,15 +223,6 @@ def not_exists(oidstr: str) -> SNMPDetectSpec:
     return _negate(exists(oidstr))
 
 
-never_detect = SNMPDetectSpec([[(
-    # does not matter which OID we use here
-    ".1.3.6.1.2.1.1.2.0",
-    # this regex will never match: anything not followed by an x and also followed by an x,
-    # i.e. nothing
-    "(?!x)x",
-    True,
-)]])
-
 #          _               _        _                _
 #      ___| |__   ___  ___| | __   | | _____   _____| |___
 #     / __| '_ \ / _ \/ __| |/ /   | |/ _ \ \ / / _ \ / __|

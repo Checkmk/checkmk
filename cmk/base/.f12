@@ -16,6 +16,7 @@ sudo rsync \
     --exclude=cee \
     --exclude=cee.py \
     --exclude=cme.py \
+    --delete-excluded \
     -a * $ROOT/lib/python3/cmk/base/
 
 # Ensure cmk.base[.cee] is a namespace package

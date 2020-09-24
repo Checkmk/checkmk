@@ -64,6 +64,7 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("solaris_mem"): CheckPluginName("mem_used"),
     CheckPluginName("statgrab_mem"): CheckPluginName("mem_used"),
     CheckPluginName("cisco_mem_asa64"): CheckPluginName("cisco_mem_asa"),
+    CheckPluginName("if64adm"): CheckPluginName("if64"),
 }
 
 WATO_RULESET_PARAM_TRANSFORMS = [('diskstat_inventory', transform_diskstat)]

@@ -236,11 +236,16 @@ check_info['mysql.connections'] = {
 #   |                   |____/ \__\__,_|\__|\__,_|___/                     |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
+factory_settings["MYSQL_GALERA_DEFAULT_PARAMETERS"] = {}
+
+
+def _has_wsrep_provider(data) -> bool:
+    return data.get('wsrep_provider') not in (None, 'none')
 
 
 def inventory_mysql_galerasync(parsed):
     for instance, data in parsed.items():
-        if data.get('wsrep_provider') is not None and 'wsrep_local_state_comment' in data:
+        if _has_wsrep_provider(data) and 'wsrep_local_state_comment' in data:
             yield instance, {}
 
 
@@ -276,7 +281,7 @@ check_info['mysql.galerasync'] = {
 
 def inventory_mysql_galeradonor(parsed):
     for instance, data in parsed.items():
-        if data.get('wsrep_provider') is not None and 'wsrep_sst_donor' in data:
+        if _has_wsrep_provider(data) and 'wsrep_sst_donor' in data:
             yield instance, {'wsrep_sst_donor': data['wsrep_sst_donor']}
 
 
@@ -301,6 +306,7 @@ check_info['mysql.galeradonor'] = {
     "inventory_function": inventory_mysql_galeradonor,
     "check_function": check_mysql_galeradonor,
     "service_description": "MySQL Galera Donor %s",
+    "default_levels_variable": "MYSQL_GALERA_DEFAULT_PARAMETERS",
 }
 
 #.
@@ -316,7 +322,7 @@ check_info['mysql.galeradonor'] = {
 
 def inventory_mysql_galerastartup(parsed):
     for instance, data in parsed.items():
-        if data.get('wsrep_provider') is not None and 'wsrep_cluster_address' in data:
+        if _has_wsrep_provider(data) and 'wsrep_cluster_address' in data:
             yield instance, {}
 
 
@@ -356,7 +362,7 @@ check_info['mysql.galerastartup'] = {
 
 def inventory_mysql_galerasize(parsed):
     for instance, data in parsed.items():
-        if data.get('wsrep_provider') is not None and 'wsrep_cluster_size' in data:
+        if _has_wsrep_provider(data) and 'wsrep_cluster_size' in data:
             yield instance, {'invsize': data['wsrep_cluster_size']}
 
 
@@ -381,6 +387,7 @@ check_info['mysql.galerasize'] = {
     "inventory_function": inventory_mysql_galerasize,
     "check_function": check_mysql_galerasize,
     "service_description": "MySQL Galera Size %s",
+    "default_levels_variable": "MYSQL_GALERA_DEFAULT_PARAMETERS",
 }
 
 #.
@@ -396,7 +403,7 @@ check_info['mysql.galerasize'] = {
 
 def inventory_mysql_galerastatus(parsed):
     for instance, data in parsed.items():
-        if data.get('wsrep_provider') is not None and 'wsrep_cluster_status' in data:
+        if _has_wsrep_provider(data) and 'wsrep_cluster_status' in data:
             yield instance, {}
 
 

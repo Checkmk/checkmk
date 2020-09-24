@@ -53,13 +53,21 @@ def cmc_log_level_from_python(log_level: int) -> CmcLogLevel:
 #
 
 
+class Header(Protocol):
+    pass
+
+
+class Payload(Protocol):
+    pass
+
+
 class PayloadType(enum.Enum):
     ERROR = enum.auto()
     AGENT = enum.auto()
     SNMP = enum.auto()
 
 
-class ErrorPayload(Protocol):
+class ErrorPayload(Payload):
     fmt = "!H"
 
     def __init__(self, error: Exception) -> None:
@@ -96,7 +104,7 @@ class ErrorPayload(Protocol):
             raise ValueError(data) from exc
 
 
-class FetcherHeader(Protocol):
+class FetcherHeader(Header):
     """Header is fixed size bytes in format:
 
     <FETCHER_TYPE><PAYLOAD_TYPE><STATUS><PAYLOAD_SIZE>
@@ -234,7 +242,7 @@ class FetcherMessage(Protocol):
         return Result.OK(self._payload)
 
 
-class CMCHeader(Protocol):
+class CMCHeader(Header):
     """Header is fixed size(6+8+9+9 = 32 bytes) bytes in format
 
       header: <ID>:<'SUCCESS'|'FAILURE'>:<HINT>:<SIZE>:

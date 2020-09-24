@@ -35,7 +35,7 @@ def check_netapp_api_luns(item, params, lun):
     size_avail = size_total - (int(lun.get("size-used")) / mega)  # fixed: true-division
 
     if params.get("ignore_levels"):
-        yield 0, "Total size: %s, Used space is ignored" % get_bytes_human_readable(size_total)
+        yield 0, "Total size: %s, Used space is ignored" % get_bytes_human_readable(size_total*mega)
     else:
         yield df_check_filesystem_single(item, size_total, size_avail, 0, None, None, params)
 

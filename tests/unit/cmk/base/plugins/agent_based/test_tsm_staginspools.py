@@ -8,7 +8,7 @@ import pytest
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Metric,
     Result,
-    state,
+    State as state,
     type_defs,
 )
 from cmk.base.plugins.agent_based import tsm_stagingpools

@@ -10,7 +10,7 @@ from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
     Parameters,
 )
-from .agent_based_api.v1 import get_value_store, register, Result, Service, state
+from .agent_based_api.v1 import get_value_store, register, Result, Service, State as state
 from .utils import cpu_util
 
 

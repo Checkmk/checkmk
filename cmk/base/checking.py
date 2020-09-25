@@ -737,9 +737,9 @@ def _aggregate_results(subresults: checking_classes.CheckResult) -> ServiceCheck
 
     summaries: List[str] = []
     details: List[str] = []
-    status = checking_classes.state(0)
+    status = checking_classes.State.OK
     for result in results:
-        status = checking_classes.state.worst(status, result.state)
+        status = checking_classes.State.worst(status, result.state)
         state_marker = check_api_utils.state_markers[int(result.state)] if needs_marker else ""
 
         if result.summary:

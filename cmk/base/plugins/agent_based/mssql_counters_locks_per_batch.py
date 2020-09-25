@@ -106,7 +106,7 @@ def _check_base(
     ...     }):
     ...       print(result)
     Cannot calculate rates yet
-    Result(state=<state.OK: 0>, summary='1.0', details='1.0')
+    Result(state=<State.OK: 0>, summary='1.0', details='1.0')
     Metric('locks_per_batch', 1.0, levels=(None, None), boundaries=(None, None))
     """
     yield from _check_common(value_store, "", item, params, section)
@@ -137,7 +137,7 @@ def _cluster_check_base(
     ...     }}):
     ...       print(result)
     Cannot calculate rates yet
-    Result(state=<state.OK: 0>, summary='[node1] 1.0', details='[node1] 1.0')
+    Result(state=<State.OK: 0>, summary='[node1] 1.0', details='[node1] 1.0')
     Metric('locks_per_batch', 1.0, levels=(None, None), boundaries=(None, None))
     """
     for node_name, node_section in section.items():

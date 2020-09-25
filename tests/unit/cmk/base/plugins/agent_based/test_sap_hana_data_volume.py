@@ -10,7 +10,7 @@ from freezegun import freeze_time  # type: ignore[import]
 from cmk.utils.type_defs import CheckPluginName
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
-    state,
+    State as state,
     Result,
     Metric,
 )

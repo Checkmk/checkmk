@@ -7,7 +7,7 @@
 import pytest  # type: ignore[import]
 from freezegun import freeze_time  # type: ignore[import]
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (Service, state, Result, Metric)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Service, State as state, Result, Metric
 import cmk.base.plugins.agent_based.sap_hana_backup as sap_hana_backup
 
 NOW_SIMULATED = "2019-05-17 00:00:00.000000"

@@ -23,7 +23,7 @@ from .agent_based_api.v1 import (
     SNMPTree,
     Service,
     Result,
-    state,
+    State as state,
 )
 from .agent_based_api.v1.type_defs import (
     SNMPStringTable,

@@ -73,7 +73,7 @@ def check_mssql_counters_cache_hits(
     ...     ('MSSQL_VEEAMSQL2012:Catalog_Metadata', 'mssqlsystemresource'): {'cache_hit_ratio': 77478, 'cache_hit_ratio_base': 77796, 'cache_entries_count': 73, 'cache_entries_pinned_count': 0},
     ... }):
     ...   print(result)
-    Result(state=<state.OK: 0>, summary='99.6%', details='99.6%')
+    Result(state=<State.OK: 0>, summary='99.6%', details='99.6%')
     Metric('cache_hit_ratio', 99.59123862409379, levels=(None, None), boundaries=(None, None))
     """
     yield from _check_common("", item, section)
@@ -93,7 +93,7 @@ def cluster_check_mssql_counters_cache_hits(
     ...     },
     ... }):
     ...   print(result)
-    Result(state=<state.OK: 0>, summary='[node1] 99.6%', details='[node1] 99.6%')
+    Result(state=<State.OK: 0>, summary='[node1] 99.6%', details='[node1] 99.6%')
     Metric('cache_hit_ratio', 99.59123862409379, levels=(None, None), boundaries=(None, None))
     """
     for node_name, node_section in section.items():

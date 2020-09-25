@@ -64,7 +64,7 @@ def size_trend(
 
     Yields:
       Result- and Metric- instances for the trend computation.
-    >>> from ..agent_based_api.v1 import GetRateError, Result, state
+    >>> from ..agent_based_api.v1 import GetRateError, Result
     >>> vs = {}
     >>> t0 = time.time()
     >>> for i in range(2):
@@ -89,10 +89,10 @@ def size_trend(
     ...     except GetRateError:
     ...         pass
     Metric('growth', 1200.0, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.CRIT: 2>, summary='trend per 1 day 0 hours: +1.17 GiB (warn/crit at +1000 B/+1.95 KiB)', details='trend per 1 day 0 hours: +1.17 GiB (warn/crit at +1000 B/+1.95 KiB)')
-    Result(state=<state.WARN: 1>, summary='trend per 1 day 0 hours: +60.0% (warn/crit at +50.0%/+70.0%)', details='trend per 1 day 0 hours: +60.0% (warn/crit at +50.0%/+70.0%)')
+    Result(state=<State.CRIT: 2>, summary='trend per 1 day 0 hours: +1.17 GiB (warn/crit at +1000 B/+1.95 KiB)', details='trend per 1 day 0 hours: +1.17 GiB (warn/crit at +1000 B/+1.95 KiB)')
+    Result(state=<State.WARN: 1>, summary='trend per 1 day 0 hours: +60.0% (warn/crit at +50.0%/+70.0%)', details='trend per 1 day 0 hours: +60.0% (warn/crit at +50.0%/+70.0%)')
     Metric('trend', 1200.0, levels=(1000.0, 1400.0), boundaries=(0.0, 83.33333333333333))
-    Result(state=<state.CRIT: 2>, summary='Time left until resource_name full: 1 day 13 hours (warn/crit below 3 days 0 hours/2 days 0 hours)', details='Time left until resource_name full: 1 day 13 hours (warn/crit below 3 days 0 hours/2 days 0 hours)')
+    Result(state=<State.CRIT: 2>, summary='Time left until resource_name full: 1 day 13 hours (warn/crit below 3 days 0 hours/2 days 0 hours)', details='Time left until resource_name full: 1 day 13 hours (warn/crit below 3 days 0 hours/2 days 0 hours)')
     Metric('trend_hoursleft', 37.0, levels=(None, None), boundaries=(None, None))
     """
     MB = 1024 * 1024

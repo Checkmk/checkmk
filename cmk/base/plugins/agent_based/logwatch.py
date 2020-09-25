@@ -31,7 +31,15 @@ from cmk.base.check_api import get_checkgroup_parameters, host_extra_conf, host_
 import cmk.base.config  # from cmk.base.config import logwatch_rule will NOT work!
 
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, Parameters
-from .agent_based_api.v1 import get_value_store, regex, register, render, Result, Service, state
+from .agent_based_api.v1 import (
+    get_value_store,
+    regex,
+    register,
+    render,
+    Result,
+    Service,
+    State as state,
+)
 from .utils import logwatch, eval_regex
 
 ClusterSection = Dict[Optional[str], logwatch.Section]

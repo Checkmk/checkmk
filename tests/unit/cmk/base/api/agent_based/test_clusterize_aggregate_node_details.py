@@ -10,7 +10,7 @@ from cmk.base.api.agent_based.checking_classes import (
     IgnoreResultsError,
     Metric,
     Result,
-    state,
+    State as state,
 )
 from cmk.base.api.agent_based.clusterize import aggregate_node_details
 

@@ -27,7 +27,7 @@ from cmk.base.api.agent_based.checking_classes import (
     Result,
     Service,
     ServiceLabel,
-    state,
+    State,
 )
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.api.agent_based.type_defs import SNMPTree
@@ -99,7 +99,7 @@ __all__ = [
     "Service",
     "ServiceLabel",
     "SNMPTree",
-    "state",
+    "State",
     "TableRow",
     "type_defs",
     "GetRateError",

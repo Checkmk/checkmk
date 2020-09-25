@@ -12,7 +12,7 @@ import pytest  # type: ignore[import]
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Result,
     Metric,
-    state,
+    State as state,
 )
 
 from cmk.base.plugins.agent_based.printer_pages import parse_printer_pages

@@ -100,7 +100,7 @@ class Service(
 
 
 @enum.unique
-class state(enum.Enum):
+class State(enum.Enum):
     """States of check results
     """
     # Don't use IntEnum to prevent "state.CRIT < state.UNKNOWN" from evaluating to True.
@@ -113,7 +113,7 @@ class state(enum.Enum):
         return int(self.value)
 
     @classmethod
-    def best(cls, *args: Union['state', int]) -> 'state':
+    def best(cls, *args: Union['State', int]) -> 'State':
         """Returns the best of all passed states
 
         You can pass an arbitrary number of arguments, and the return value will be
@@ -122,17 +122,16 @@ class state(enum.Enum):
             `OK -> WARN -> UNKNOWN -> CRIT`
 
         Args:
-            args: Any number of either one of state.OK, state.WARN, state.CRIT, state.UNKNOWN or an
-            integer in [0, 3].
+            args: Any number of one of State.OK, State.WARN, State.CRIT, State.UNKNOWN
 
         Returns:
-            The best of the input states, one of state.OK, state.WARN, state.CRIT, state.UNKNOWN.
+            The best of the input states, one of State.OK, State.WARN, State.CRIT, State.UNKNOWN.
 
         Examples:
-            >>> state.best(state.OK, state.WARN, state.CRIT, state.UNKNOWN)
-            <state.OK: 0>
-            >>> state.best(0, 1, state.CRIT)
-            <state.OK: 0>
+            >>> State.best(State.OK, State.WARN, State.CRIT, State.UNKNOWN)
+            <State.OK: 0>
+            >>> State.best(0, 1, State.CRIT)
+            <State.OK: 0>
         """
         _sorted = {
             cls.OK: 0,
@@ -150,7 +149,7 @@ class state(enum.Enum):
         return best
 
     @classmethod
-    def worst(cls, *args: Union['state', int]) -> 'state':
+    def worst(cls, *args: Union['State', int]) -> 'State':
         """Returns the worst of all passed states.
 
         You can pass an arbitrary number of arguments, and the return value will be
@@ -159,16 +158,15 @@ class state(enum.Enum):
             `OK < WARN < UNKNOWN < CRIT`
 
         Args:
-            args: Any number of either one of state.OK, state.WARN, state.CRIT, state.UNKNOWN or an
-            integer in [0, 3].
+            args: Any number of one of State.OK, State.WARN, State.CRIT, State.UNKNOWN
 
         Returns:
-            The worst of the input states, one of state.OK, state.WARN, state.CRIT, state.UNKNOWN.
+            The worst of the input States, one of State.OK, State.WARN, State.CRIT, State.UNKNOWN.
 
         Examples:
-            >>> state.worst(state.OK, state.WARN, state.CRIT, state.UNKNOWN)
-            <state.CRIT: 2>
-            >>> state.worst(0, 1, state.CRIT)
+            >>> State.worst(State.OK, State.WARN, State.CRIT, State.UNKNOWN)
+            <State.CRIT: 2>
+            >>> State.worst(0, 1, State.CRIT)
             <state.CRIT: 2>
         """
         if cls.CRIT in args or 2 in args:
@@ -247,23 +245,20 @@ class Metric(
 
 class Result(
         NamedTuple("_ResultTuple", [
-            ("state", state),
+            ("state", State),
             ("summary", str),
             ("details", str),
         ]),):
-
-    _state_class = state  # avoid shadowing by keyword called "state"
-
-    def __new__(  # pylint: disable=redefined-outer-name
+    def __new__(
         cls,
         *,
-        state: state,
+        state: State,
         summary: Optional[str] = None,
         notice: Optional[str] = None,
         details: Optional[str] = None,
     ) -> 'Result':
-        if not isinstance(state, cls._state_class):
-            raise TypeError("'state' must be a checkmk state constant, got %r" % (state,))
+        if not isinstance(state, State):
+            raise TypeError("'state' must be a checkmk State constant, got %r" % (state,))
 
         for var, name in (
             (summary, "summary"),
@@ -291,7 +286,7 @@ class Result(
             details = summary or notice
 
         if not summary:
-            summary = notice if notice and state != cls._state_class.OK else ""
+            summary = notice if notice and state != State.OK else ""
 
         assert details is not None  # makes mypy happy
 

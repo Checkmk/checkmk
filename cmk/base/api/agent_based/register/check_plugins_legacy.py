@@ -15,10 +15,10 @@ from cmk.utils.check_utils import maincheckify, wrap_parameters, unwrap_paramete
 from cmk.base import item_state
 from cmk.base.api.agent_based.checking_classes import (
     Metric,
-    state,
     Result,
     Service,
     ServiceLabel,
+    State,
 )
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
 from cmk.base.api.agent_based.register.utils import DUMMY_RULESET_NAME
@@ -174,7 +174,7 @@ def _create_new_result(
         legacy_text: str,
         legacy_metrics: Union[Tuple, List] = (),
 ) -> Generator[Union[Metric, Result], None, bool]:
-    result_state = state(legacy_state)
+    result_state = State(legacy_state)
 
     if legacy_state or legacy_text:  # skip "Null"-Result
         if is_details:

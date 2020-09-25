@@ -38,7 +38,7 @@ from .agent_based_api.v1 import (
     register,
     Service,
     Result,
-    state,
+    State as state,
     startswith,
     all_of,
     matches,
@@ -170,10 +170,10 @@ def _idem_check_cisco_mem(
     ...          'MEMPOOL_DMA': ['429262192', '378092176'],
     ...          'MEMPOOL_GLOBAL_SHARED': ['1092814800', '95541296']}):
     ...     print(result)
-    Result(state=<state.OK: 0>, summary='Usage: 53.2% - 409 MiB of 770 MiB', details='Usage: 53.2% - 409 MiB of 770 MiB')
+    Result(state=<State.OK: 0>, summary='Usage: 53.2% - 409 MiB of 770 MiB', details='Usage: 53.2% - 409 MiB of 770 MiB')
     Metric('mem_used_percent', 53.16899356888102, levels=(None, None), boundaries=(0.0, None))
     """
-    if not item in section:
+    if item not in section:
         return
     values = section[item]
     # We've seen SNMP outputs containing empty entries for free or used memory.

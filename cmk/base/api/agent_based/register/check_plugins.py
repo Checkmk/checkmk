@@ -19,7 +19,7 @@ from cmk.base.api.agent_based.checking_classes import (
     Metric,
     Result,
     Service,
-    state,
+    State,
 )
 from cmk.base.api.agent_based.register.utils import (
     create_subscribed_sections,
@@ -125,7 +125,7 @@ def unfit_for_clustering_wrapper(check_function):
     @functools.wraps(check_function, ("__attributes__",))
     def unfit_for_clustering(*args, **kwargs):
         yield Result(
-            state=state.UNKNOWN,
+            state=State.UNKNOWN,
             summary=("This service is not ready to handle clustered data. "
                      "Please change your configuration."),
         )

@@ -10,7 +10,7 @@ from cmk.base.api.agent_based.checking_classes import (
     IgnoreResults,
     ServiceLabel,
     Service,
-    state,
+    State as state,
     Metric,
     Result,
 )

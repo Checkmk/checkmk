@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (Service, state, Result, Metric)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Service, State as state, Result, Metric
 import cmk.base.plugins.agent_based.sap_hana_status as sap_hana_status
 
 ITEM = "H90 33"

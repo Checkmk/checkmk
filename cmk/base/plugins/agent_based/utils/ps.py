@@ -29,7 +29,7 @@ from ..agent_based_api.v1 import (
     render,
     Result,
     Service,
-    state,
+    State as state,
 )
 
 ps_info = collections.namedtuple(

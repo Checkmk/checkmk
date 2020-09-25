@@ -13,7 +13,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Metric,
     Result,
     Service,
-    state,
+    State as state,
     type_defs,
 )
 from cmk.base.plugins.agent_based import winperf_if

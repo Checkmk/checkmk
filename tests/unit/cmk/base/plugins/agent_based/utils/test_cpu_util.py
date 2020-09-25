@@ -6,7 +6,7 @@
 from typing import Any, Dict
 import pytest  # type: ignore[import]
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State as state
 from cmk.base.plugins.agent_based.utils import cpu_util
 
 pytestmark = pytest.mark.checks

@@ -89,7 +89,7 @@ def _check_base(
     ...   }):
     ...     print(result)
     Cannot calculate rates yet
-    Result(state=<state.OK: 0>, summary='1.0/s', details='1.0/s')
+    Result(state=<State.OK: 0>, summary='1.0/s', details='1.0/s')
     Metric('sql_compilations_per_second', 1.0, levels=(None, None), boundaries=(None, None))
     """
     yield from _check_common(value_store, time_point, "", item, params, section)
@@ -118,7 +118,7 @@ def _cluster_check_base(
     ...   }}):
     ...     print(result)
     Cannot calculate rates yet
-    Result(state=<state.OK: 0>, summary='[node1] 1.0/s', details='[node1] 1.0/s')
+    Result(state=<State.OK: 0>, summary='[node1] 1.0/s', details='[node1] 1.0/s')
     Metric('sql_compilations_per_second', 1.0, levels=(None, None), boundaries=(None, None))
     """
     for node_name, node_section in section.items():

@@ -99,16 +99,16 @@ def test_create_check_function():
     result = new_function(item="Test Item", section=["info"])
     assert list(result) == [
         checking_classes.Result(
-            state=checking_classes.state.OK,
+            state=checking_classes.State.OK,
             summary="Main info",
         ),
         checking_classes.Metric("mymetric", 23.0, levels=(2.0, 3.0)),
         checking_classes.Result(
-            state=checking_classes.state.WARN,
+            state=checking_classes.State.WARN,
             summary="still main, but very long",
             details="additional1",
         ),
-        checking_classes.Result(state=checking_classes.state.CRIT,
+        checking_classes.Result(state=checking_classes.State.CRIT,
                                 details="additional2\nadditional3"),
     ]
 

@@ -34,7 +34,7 @@ from cmk.base.check_api import (
 )
 
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, Parameters
-from .agent_based_api.v1 import Metric, register, Result, Service, state
+from .agent_based_api.v1 import Metric, register, Result, Service, State as state
 from .utils import logwatch
 
 ClusterSection = Dict[Optional[str], logwatch.Section]

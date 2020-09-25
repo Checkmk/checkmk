@@ -7,7 +7,7 @@
 import pytest  # type: ignore[import]
 
 from cmk.base.plugins.agent_based import pulse_secure_users
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, state, Metric, type_defs
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State as state, Metric, type_defs
 
 
 @pytest.mark.parametrize("string_table,expected_parsed_data", [

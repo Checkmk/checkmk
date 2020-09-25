@@ -38,7 +38,7 @@ from ..agent_based_api.v1 import (
     render,
     Result,
     Service,
-    state,
+    State as state,
     type_defs,
 )
 

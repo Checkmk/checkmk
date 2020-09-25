@@ -14,7 +14,7 @@ from cmk.base.plugins.agent_based.f5_bigip_cluster import (
     CONFIG_SYNC_DEFAULT_PARAMETERS,
     State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State as state
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters
 
 

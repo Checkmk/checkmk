@@ -26,7 +26,7 @@ from .agent_based_api.v1 import (
     register,
     Service,
     Result,
-    state,
+    State as state,
 )
 from .agent_based_api.v1.type_defs import AgentStringTable, DiscoveryResult, CheckResult
 
@@ -120,7 +120,7 @@ def _check_omd_status(
     ...       False,
     ...       ""):
     ...     print(result)
-    Result(state=<state.OK: 0>, summary='running', details='running')
+    Result(state=<State.OK: 0>, summary='running', details='running')
     """
     if "overall" not in site_services:
         yield Result(state=state.CRIT, summary="defective installation")
@@ -151,7 +151,7 @@ def check_omd_status(
     ...          "overall": 'running'}},
     ...       {}):
     ...     print(result)
-    Result(state=<state.OK: 0>, summary='running', details='running')
+    Result(state=<State.OK: 0>, summary='running', details='running')
     """
     if not section_omd_status or item not in section_omd_status:
         return
@@ -173,7 +173,7 @@ def cluster_check_omd_status(
     ...            "overall": 'running'}}},
     ...       {"monitoring": {}}):
     ...     print(result)
-    Result(state=<state.OK: 0>, summary='running', details='running')
+    Result(state=<State.OK: 0>, summary='running', details='running')
     """
     # TODO(frans)(question): shouldn't it be better to look for =="running" ?
     any_running = any(

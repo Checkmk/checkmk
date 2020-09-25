@@ -12,7 +12,7 @@ from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
     Parameters,
 )
-from .agent_based_api.v1 import IgnoreResults, register, Result, Service, state
+from .agent_based_api.v1 import IgnoreResults, register, Result, Service, State as state
 
 SectionDatabases = Dict[str, Dict[str, str]]
 

@@ -10,7 +10,7 @@ import cmk.base.plugins.agent_based.oracle_tablespaces as oracle_tablespaces
 from cmk.base.plugins.agent_based.utils.oracle import OraErrors, SectionTableSpaces
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
-    state,
+    State as state,
     Result,
     Metric,
     IgnoreResultsError,

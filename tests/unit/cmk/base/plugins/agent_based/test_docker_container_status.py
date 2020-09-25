@@ -9,7 +9,7 @@ from testlib import on_time  # type: ignore[import]
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
-    state,
+    State as state,
     Result,
     IgnoreResults,
     Metric,

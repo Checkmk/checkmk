@@ -19,7 +19,7 @@ from typing import Any, Counter, Dict, Iterable, List, Optional, Sequence, Set, 
 import re
 
 from ..agent_based_api.v1.type_defs import Parameters
-from ..agent_based_api.v1 import regex, Result, state
+from ..agent_based_api.v1 import regex, Result, State as state
 
 ItemData = TypedDict(
     "ItemData",
@@ -108,8 +108,8 @@ def errors(cluster_section: Dict[Optional[str], Section]) -> Iterable[Result]:
         ... }
         >>> for r in errors(cluster_section):
         ...     print((r.state, r.summary))
-        (<state.UNKNOWN: 3>, 'error w/o node info')
-        (<state.UNKNOWN: 3>, '[node] some error')
+        (<State.UNKNOWN: 3>, 'error w/o node info')
+        (<State.UNKNOWN: 3>, '[node] some error')
     """
     for node, node_data in cluster_section.items():
         for error_msg in node_data['errors']:

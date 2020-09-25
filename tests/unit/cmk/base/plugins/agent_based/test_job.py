@@ -15,7 +15,7 @@ from cmk.base.plugins.agent_based import job
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     clusterize,
     Result,
-    state,
+    State as state,
     Metric,
     type_defs,
 )

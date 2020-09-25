@@ -7,7 +7,7 @@
 
 import json
 from typing import Dict, Any, Optional
-from .agent_based_api.v1 import (Result, register, type_defs, state, Service)
+from .agent_based_api.v1 import Result, register, type_defs, State as state, Service
 
 from .agent_based_api.v1.type_defs import (
     CheckResult,

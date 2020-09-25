@@ -11,7 +11,7 @@ import pytest  # type: ignore[import]
 import cmk.base.core
 import cmk.base.config
 import cmk.base.checking
-from cmk.base.api.agent_based.checking_classes import Result, state, Metric
+from cmk.base.api.agent_based.checking_classes import Result, State as state, Metric
 
 
 @pytest.mark.parametrize(

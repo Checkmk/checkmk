@@ -16,7 +16,7 @@ from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.api.agent_based import value_store
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State as state
 from cmk.base.plugins.agent_based import ps_section
 from cmk.base.plugins.agent_based.utils import ps as ps_utils
 

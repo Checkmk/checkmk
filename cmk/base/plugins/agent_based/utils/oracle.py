@@ -1,5 +1,5 @@
 from typing import List, TypedDict, Dict, Tuple, Optional, Any
-from ..agent_based_api.v1 import state, type_defs
+from ..agent_based_api.v1 import State as state, type_defs
 
 
 class DatafilesException(RuntimeError):
@@ -12,13 +12,13 @@ class OraErrors:
     ... ["", "select"], ["", "ORA-bar"], ["ORA-bar", "some", "data"]):
     ...     [OraErrors(line).ignore,OraErrors(line).has_error,
     ...     OraErrors(line).error_text,OraErrors(line).error_severity]
-    [False, False, '', <state.OK: 0>]
-    [False, True, 'ORA- foo', <state.UNKNOWN: 3>]
-    [False, True, 'ORA-', <state.UNKNOWN: 3>]
-    [True, False, '', <state.OK: 0>]
-    [True, False, '', <state.OK: 0>]
-    [False, True, 'Found error in agent output "ORA-bar"', <state.UNKNOWN: 3>]
-    [False, True, 'Found error in agent output "ORA-bar some data"', <state.UNKNOWN: 3>]
+    [False, False, '', <State.OK: 0>]
+    [False, True, 'ORA- foo', <State.UNKNOWN: 3>]
+    [False, True, 'ORA-', <State.UNKNOWN: 3>]
+    [True, False, '', <State.OK: 0>]
+    [True, False, '', <State.OK: 0>]
+    [False, True, 'Found error in agent output "ORA-bar"', <State.UNKNOWN: 3>]
+    [False, True, 'Found error in agent output "ORA-bar some data"', <State.UNKNOWN: 3>]
     """
     def __init__(self, line: List[str]):
         # Default values

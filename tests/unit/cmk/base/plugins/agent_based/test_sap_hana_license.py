@@ -8,7 +8,7 @@ import pytest  # type: ignore[import]
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
-    state,
+    State as state,
     Result,
     Metric,
 )

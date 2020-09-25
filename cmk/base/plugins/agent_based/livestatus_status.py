@@ -13,7 +13,7 @@ from .agent_based_api.v1 import (
     Service,
     Result,
     Metric,
-    state,
+    State as state,
     get_rate,
     get_value_store,
     render,

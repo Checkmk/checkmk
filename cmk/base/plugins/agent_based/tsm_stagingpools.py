@@ -9,7 +9,7 @@ from .agent_based_api.v1 import (
     check_levels,
     type_defs,
     register,
-    state,
+    State as state,
     Result,
     Service,
     Metric,

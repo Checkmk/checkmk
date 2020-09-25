@@ -96,11 +96,11 @@ def check_mssql_counters_file_sizes(
     ...     ('MSSQL_VEEAMSQL2012', 'tempdb'): {'data_file(s)_size_(kb)': 164928, 'log_file(s)_size_(kb)': 13624, 'log_file(s)_used_size_(kb)': 8768, 'percent_log_used': 64, 'active_transactions': 0}
     ... }):
     ...   print(result)
-    Result(state=<state.OK: 0>, summary='Data files: 161 MiB', details='Data files: 161 MiB')
+    Result(state=<State.OK: 0>, summary='Data files: 161 MiB', details='Data files: 161 MiB')
     Metric('data_files', 168886272.0, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.OK: 0>, summary='Log files total: 13.3 MiB', details='Log files total: 13.3 MiB')
+    Result(state=<State.OK: 0>, summary='Log files total: 13.3 MiB', details='Log files total: 13.3 MiB')
     Metric('log_files', 13950976.0, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.OK: 0>, summary='Log files used: 8.56 KiB', details='Log files used: 8.56 KiB')
+    Result(state=<State.OK: 0>, summary='Log files used: 8.56 KiB', details='Log files used: 8.56 KiB')
     Metric('log_files_used', 8768.0, levels=(None, None), boundaries=(None, None))
     """
     yield from _check_mssql_file_sizes("", item, params, section)
@@ -117,11 +117,11 @@ def cluster_check_mssql_counters_file_sizes(
     ...       ('MSSQL_VEEAMSQL2012', 'tempdb'): {'data_file(s)_size_(kb)': 164928, 'log_file(s)_size_(kb)': 13624, 'log_file(s)_used_size_(kb)': 8768, 'percent_log_used': 64, 'active_transactions': 0}
     ... }}):
     ...   print(result)
-    Result(state=<state.OK: 0>, summary='[node1] Data files: 161 MiB', details='[node1] Data files: 161 MiB')
+    Result(state=<State.OK: 0>, summary='[node1] Data files: 161 MiB', details='[node1] Data files: 161 MiB')
     Metric('data_files', 168886272.0, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.OK: 0>, summary='[node1] Log files total: 13.3 MiB', details='[node1] Log files total: 13.3 MiB')
+    Result(state=<State.OK: 0>, summary='[node1] Log files total: 13.3 MiB', details='[node1] Log files total: 13.3 MiB')
     Metric('log_files', 13950976.0, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.OK: 0>, summary='Log files used: 8.56 KiB', details='Log files used: 8.56 KiB')
+    Result(state=<State.OK: 0>, summary='Log files used: 8.56 KiB', details='Log files used: 8.56 KiB')
     Metric('log_files_used', 8768.0, levels=(None, None), boundaries=(None, None))
     """
     for node_name, node_section in section.items():

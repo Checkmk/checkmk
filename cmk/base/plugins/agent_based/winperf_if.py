@@ -18,7 +18,7 @@ from typing import (
 from .agent_based_api.v1 import (
     register,
     Result,
-    state,
+    State as state,
     type_defs,
 )
 from .utils import interfaces

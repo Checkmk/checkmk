@@ -98,11 +98,11 @@ def _check_base(
     Cannot calculate rates yet
     Cannot calculate rates yet
     Cannot calculate rates yet
-    Result(state=<state.OK: 0>, summary='Reads: 1.0/s', details='Reads: 1.0/s')
+    Result(state=<State.OK: 0>, summary='Reads: 1.0/s', details='Reads: 1.0/s')
     Metric('page_reads_per_second', 1.0, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.OK: 0>, summary='Writes: 1.0/s', details='Writes: 1.0/s')
+    Result(state=<State.OK: 0>, summary='Writes: 1.0/s', details='Writes: 1.0/s')
     Metric('page_writes_per_second', 1.0, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.OK: 0>, summary='Lookups: 1.0/s', details='Lookups: 1.0/s')
+    Result(state=<State.OK: 0>, summary='Lookups: 1.0/s', details='Lookups: 1.0/s')
     Metric('page_lookups_per_second', 1.0, levels=(None, None), boundaries=(None, None))
     """
     yield from _check_common(value_store, time_point, "", item, params, section)
@@ -133,11 +133,11 @@ def _cluster_check_base(
     Cannot calculate rates yet
     Cannot calculate rates yet
     Cannot calculate rates yet
-    Result(state=<state.OK: 0>, summary='[node1] Reads: 1.0/s', details='[node1] Reads: 1.0/s')
+    Result(state=<State.OK: 0>, summary='[node1] Reads: 1.0/s', details='[node1] Reads: 1.0/s')
     Metric('page_reads_per_second', 1.0, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.OK: 0>, summary='[node1] Writes: 1.0/s', details='[node1] Writes: 1.0/s')
+    Result(state=<State.OK: 0>, summary='[node1] Writes: 1.0/s', details='[node1] Writes: 1.0/s')
     Metric('page_writes_per_second', 1.0, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.OK: 0>, summary='[node1] Lookups: 1.0/s', details='[node1] Lookups: 1.0/s')
+    Result(state=<State.OK: 0>, summary='[node1] Lookups: 1.0/s', details='[node1] Lookups: 1.0/s')
     Metric('page_lookups_per_second', 1.0, levels=(None, None), boundaries=(None, None))
     """
     for node_name, node_section in section.items():

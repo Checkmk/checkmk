@@ -17,7 +17,7 @@ from .agent_based_api.v1 import (
     render,
     Result,
     Service,
-    state,
+    State as state,
 )
 
 from .utils import memory

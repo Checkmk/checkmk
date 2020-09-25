@@ -13,7 +13,7 @@ from cmk.base.plugins.agent_based.liebert_system import (
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Result,
-    state,
+    State as state,
     Service,
 )
 

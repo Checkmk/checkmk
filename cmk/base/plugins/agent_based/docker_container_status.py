@@ -24,7 +24,7 @@ from .agent_based_api.v1 import (
     register,
     Service,
     Result,
-    state,
+    State as state,
     HostLabel,
     IgnoreResults,
 )

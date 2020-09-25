@@ -7,7 +7,7 @@
 from typing import Dict, Literal, Optional, Tuple, Union
 from ..agent_based_api.v1.type_defs import CheckResult
 
-from ..agent_based_api.v1 import Metric, render, Result, state
+from ..agent_based_api.v1 import Metric, render, Result, State as state
 
 
 def is_linux_section(section: Dict[str, int]) -> bool:
@@ -93,7 +93,7 @@ def compute_state(value: float, warn: Optional[float], crit: Optional[float]) ->
     """get state according to levels
 
         >>> print(compute_state(23., 12, 42))
-        state.WARN
+        State.WARN
 
     """
     if crit is not None and value >= crit:
@@ -125,7 +125,7 @@ def check_element(
         >>> print(result.summary)
         Short term memory: 23.0% - 46 B of 200 B (warn/crit at 12.0%/42.0% used)
         >>> print(result.state)
-        state.WARN
+        State.WARN
         >>> print(metric)
         Metric('mem_used_percent', 23.0, levels=(12.0, 42.0), boundaries=(0.0, None))
 

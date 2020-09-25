@@ -15,7 +15,7 @@ from ..agent_based_api.v1.render import (
     timespan,)
 from ..agent_based_api.v1 import (
     Result,
-    state,
+    State as state,
 )
 from ..agent_based_api.v1.type_defs import (
     CheckResult,)

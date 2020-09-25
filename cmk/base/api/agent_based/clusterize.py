@@ -10,7 +10,7 @@ from cmk.base.api.agent_based.checking_classes import (
     IgnoreResultsError,
     Metric,
     Result,
-    state,
+    State,
 )
 from cmk.base.check_api_utils import state_markers
 
@@ -70,6 +70,6 @@ def aggregate_node_details(
     details_lines: List[str] = sum((d.split('\n') for d in details_with_markers), [])
 
     return Result(
-        state=state.worst(*(r.state for r in results)),
+        state=State.worst(*(r.state for r in results)),
         details="\n".join("[%s]: %s" % (node_name, d) for d in details_lines),
     )

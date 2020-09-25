@@ -13,7 +13,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Result,
     Metric,
     IgnoreResults,
-    state,
+    State as state,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import ValueStore
 

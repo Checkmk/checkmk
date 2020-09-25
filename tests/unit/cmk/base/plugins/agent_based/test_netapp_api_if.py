@@ -8,7 +8,7 @@ import pytest  # type: ignore[import]
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Result,
     Service,
-    state,
+    State as state,
     type_defs,
 )
 from cmk.base.plugins.agent_based import netapp_api_if

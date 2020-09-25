@@ -15,7 +15,7 @@ from cmk.base.plugins.agent_based.cisco_wlc import (
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Result,
     Service,
-    state,
+    State as state,
 )
 
 

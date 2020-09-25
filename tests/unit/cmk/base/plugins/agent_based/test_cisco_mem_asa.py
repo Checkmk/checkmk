@@ -17,7 +17,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     Result,
     Metric,
-    state,
+    State as state,
 )
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters, ValueStore

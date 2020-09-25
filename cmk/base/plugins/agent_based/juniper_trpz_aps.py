@@ -10,7 +10,7 @@ from .agent_based_api.v1 import (
     Service,
     Metric,
     Result,
-    state,
+    State as state,
     register,
     any_of,
     startswith,
@@ -46,7 +46,7 @@ def check_juniper_trpz_aps(section: Section) -> CheckResult:
     ...   print(result)
     Metric('ap_devices_total', 1.0, levels=(None, None), boundaries=(None, None))
     Metric('total_sessions', 0.0, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.OK: 0>, summary='Online access points: 1, Sessions: 0', details='Online access points: 1, Sessions: 0')
+    Result(state=<State.OK: 0>, summary='Online access points: 1, Sessions: 0', details='Online access points: 1, Sessions: 0')
     """
     yield Metric('ap_devices_total', section[0])
     yield Metric('total_sessions', section[1])
@@ -57,11 +57,11 @@ def cluster_check_juniper_trpz_aps(section: Mapping[str, Section]) -> CheckResul
     """
     >>> for result in cluster_check_juniper_trpz_aps({"node1": (1, 2), "node2": (3, 4)}):
     ...   print(result)
-    Result(state=<state.OK: 0>, summary='Total: 4 access points, Sessions: 6', details='Total: 4 access points, Sessions: 6')
+    Result(state=<State.OK: 0>, summary='Total: 4 access points, Sessions: 6', details='Total: 4 access points, Sessions: 6')
     Metric('ap_devices_total', 4.0, levels=(None, None), boundaries=(None, None))
     Metric('total_sessions', 6.0, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.OK: 0>, summary='[node1] Online access points: 1, Sessions: 2', details='[node1] Online access points: 1, Sessions: 2')
-    Result(state=<state.OK: 0>, summary='[node2] Online access points: 3, Sessions: 4', details='[node2] Online access points: 3, Sessions: 4')
+    Result(state=<State.OK: 0>, summary='[node1] Online access points: 1, Sessions: 2', details='[node1] Online access points: 1, Sessions: 2')
+    Result(state=<State.OK: 0>, summary='[node2] Online access points: 3, Sessions: 4', details='[node2] Online access points: 3, Sessions: 4')
     """
     total_aps = sum(n[0] for n in section.values())
     total_sessions = sum(n[1] for n in section.values())

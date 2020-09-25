@@ -19,7 +19,7 @@ from ..agent_based_api.v1 import (
     check_levels,
     Metric,
     Result,
-    state,
+    State as state,
     type_defs,
 )
 

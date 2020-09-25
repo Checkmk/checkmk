@@ -11,7 +11,7 @@ from cmk.base.plugins.agent_based.utils import temperature
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Result,
     Metric,
-    state,
+    State as state,
     IgnoreResultsError,
 )
 

@@ -13,7 +13,7 @@ import pytest  # type: ignore[import]
 import cmk.base.config
 from cmk.base.plugins.agent_based import logwatch
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State as state
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters
 
 pytestmark = pytest.mark.checks

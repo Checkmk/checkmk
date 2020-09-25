@@ -19,7 +19,7 @@ from ..agent_based_api.v1 import (
     render,
     Metric,
     Result,
-    state,
+    State as state,
     check_levels,
 )
 from ..agent_based_api.v1.type_defs import (
@@ -204,19 +204,19 @@ def _check_inodes(levels: Dict[str, Any], inodes_total: Optional[float],
     >>> from pprint import pprint as pp
     >>> levels={"inodes_levels":(10, 5),"show_inodes":"onproblem"}
     >>> pp(list(_check_inodes(levels, 80, 60)))
-    [Result(state=<state.OK: 0>, summary='Inodes Used: 20.00 ', details='Inodes Used: 20.00 '),
+    [Result(state=<State.OK: 0>, summary='Inodes Used: 20.00 ', details='Inodes Used: 20.00 '),
      Metric('inodes_used', 20.0, levels=(70.0, 75.0), boundaries=(0.0, 80.0))]
 
     >>> levels["show_inodes"] = "always"
     >>> pp(list(_check_inodes(levels, 80, 20)))
-    [Result(state=<state.OK: 0>, summary='Inodes Used: 60.00 , inodes available: 20.00 /25.0%', \
+    [Result(state=<State.OK: 0>, summary='Inodes Used: 60.00 , inodes available: 20.00 /25.0%', \
 details='Inodes Used: 60.00 , inodes available: 20.00 /25.0%'),
      Metric('inodes_used', 60.0, levels=(70.0, 75.0), boundaries=(0.0, 80.0))]
 
     >>> levels["show_inodes"]="onlow"
     >>> levels["inodes_levels"]= (40, 35)
     >>> pp(list(_check_inodes(levels, 80, 20)))
-    [Result(state=<state.CRIT: 2>, summary='Inodes Used: 60.00  (warn/crit at 40.00 /45.00 ), \
+    [Result(state=<State.CRIT: 2>, summary='Inodes Used: 60.00  (warn/crit at 40.00 /45.00 ), \
 inodes available: 20.00 /25.0%', details='Inodes Used: 60.00  (warn/crit at 40.00 /45.00 ), \
 inodes available: 20.00 /25.0%'),
      Metric('inodes_used', 60.0, levels=(40.0, 45.0), boundaries=(0.0, 80.0))]

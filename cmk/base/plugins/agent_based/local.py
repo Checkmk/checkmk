@@ -27,7 +27,7 @@ from .agent_based_api.v1 import (
     render,
     Result,
     Service,
-    state,
+    State as state,
 )
 from .agent_based_api.v1.clusterize import aggregate_node_details
 from .agent_based_api.v1.type_defs import Parameters

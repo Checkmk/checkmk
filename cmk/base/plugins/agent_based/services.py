@@ -16,7 +16,7 @@ from .agent_based_api.v1 import (
     Service,
     Result,
     register,
-    state,
+    State as state,
 )
 
 from .agent_based_api.v1.type_defs import (

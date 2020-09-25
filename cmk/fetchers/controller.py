@@ -18,7 +18,7 @@ import signal
 import struct
 from pathlib import Path
 from types import FrameType
-from typing import Any, Dict, Final, Iterator, List, Optional, Type, Union
+from typing import Any, Dict, Final, Iterator, List, Optional, Type, Union, NamedTuple
 
 import cmk.utils.log as log
 from cmk.utils.exceptions import MKTimeout
@@ -462,6 +462,24 @@ def timeout_control(timeout: int) -> Iterator[None]:
         yield
     finally:
         _disable_timeout()
+
+
+Command = NamedTuple("Command", [
+    ("serial", ConfigSerial),
+    ("host_name", HostName),
+    ("mode", Mode),
+    ("timeout", int),
+])
+
+
+def process_command(command: Command) -> None:
+    load_global_config(command.serial)
+    run_fetchers(
+        serial=command.serial,
+        host_name=command.host_name,
+        mode=command.mode,
+        timeout=command.timeout,
+    )
 
 
 def run_fetchers(serial: ConfigSerial, host_name: HostName, mode: Mode, timeout: int) -> None:

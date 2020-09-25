@@ -11,7 +11,8 @@ import inspect
 
 from pathlib import Path
 
-from cmk.utils.type_defs import CheckPluginName, InventoryPluginName, ParsedSectionName, SectionName
+from cmk.utils.type_defs import (CheckPluginName, InventoryPluginName, ParsedSectionName,
+                                 SectionName, RuleSetName)
 from cmk.utils.paths import agent_based_plugins_dir
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
@@ -147,7 +148,7 @@ def validate_default_parameters(
 
 def validate_check_ruleset_item_consistency(
     check_plugin: CheckPlugin,
-    registered_check_plugins: Dict[CheckPluginName, CheckPlugin],
+    check_plugins_by_ruleset_name: Dict[Optional[RuleSetName], List[CheckPlugin]],
 ) -> None:
     """Validate check plugins sharing a check_ruleset_name have either all or none an item.
 
@@ -158,10 +159,7 @@ def validate_check_ruleset_item_consistency(
             str(check_plugin.check_ruleset_name) == DUMMY_RULESET_NAME):
         return
 
-    present_check_plugins = [
-        p for p in registered_check_plugins.values()
-        if p.check_ruleset_name and p.check_ruleset_name == check_plugin.check_ruleset_name
-    ]
+    present_check_plugins = check_plugins_by_ruleset_name[check_plugin.check_ruleset_name]
     if not present_check_plugins:
         return
 

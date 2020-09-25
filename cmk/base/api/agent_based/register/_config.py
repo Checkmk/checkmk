@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any, Dict, Iterable, List, Optional, Set
-
+from collections import defaultdict
 import itertools
 
 from cmk.utils.type_defs import (
@@ -37,10 +37,14 @@ registered_inventory_plugins: Dict[InventoryPluginName, InventoryPlugin] = {}
 
 stored_discovery_rulesets: Dict[RuleSetName, List[Dict[str, Any]]] = {}
 
+# Lookup table for optimizing validate_check_ruleset_item_consistency()
+_check_plugins_by_ruleset_name: Dict[Optional[RuleSetName], List[CheckPlugin]] = defaultdict(list)
+
 
 def add_check_plugin(check_plugin: CheckPlugin) -> None:
-    validate_check_ruleset_item_consistency(check_plugin, registered_check_plugins)
+    validate_check_ruleset_item_consistency(check_plugin, _check_plugins_by_ruleset_name)
     registered_check_plugins[check_plugin.name] = check_plugin
+    _check_plugins_by_ruleset_name[check_plugin.check_ruleset_name].append(check_plugin)
 
 
 def add_discovery_ruleset(ruleset_name: RuleSetName) -> None:

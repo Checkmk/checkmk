@@ -659,6 +659,7 @@ modes.register(
             "arguments for a help on packaging."
         ],
         needs_config=False,
+        needs_checks=False,
     ))
 
 #.
@@ -681,6 +682,7 @@ modes.register(
         long_option="localize",
         handler_function=mode_localize,
         needs_config=False,
+        needs_checks=False,
         argument=True,
         argument_descr="COMMAND",
         argument_optional=True,
@@ -820,6 +822,7 @@ modes.register(
         long_option="snmptranslate",
         handler_function=mode_snmptranslate,
         needs_config=False,
+        needs_checks=False,
         argument=True,
         argument_descr="HOST",
         short_help="Do snmptranslate on walk",
@@ -1198,6 +1201,7 @@ modes.register(
         argument_descr="CHECKTYPE",
         argument_optional=True,
         needs_config=False,
+        needs_checks=False,
         short_help="Show manpage for check CHECKTYPE",
         long_help=[
             "Shows documentation about a check type. If /usr/bin/less is "
@@ -1228,6 +1232,7 @@ modes.register(
         short_option="m",
         handler_function=mode_browse_man,
         needs_config=False,
+        needs_checks=False,
         short_help="Open interactive manpage browser",
     ))
 

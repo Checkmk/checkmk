@@ -144,6 +144,10 @@ class MainModule(MenuItem, metaclass=abc.ABCMeta):
     def icon(self) -> str:
         raise NotImplementedError()
 
+    @property
+    def emblem(self) -> Optional[str]:
+        return None
+
     @abc.abstractproperty
     def permission(self) -> Optional[str]:
         raise NotImplementedError()

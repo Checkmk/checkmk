@@ -77,11 +77,11 @@ def get_wato_menu_items() -> List[TopicMenuTopic]:
             TopicMenuItem(
                 name=module.mode_or_url,
                 title=module.title,
-                icon_name=module.icon,
                 url=module.get_url(),
                 sort_index=module.sort_index,
                 is_advanced=module.is_advanced,
-                emblem=None,
+                icon_name=module.icon,
+                emblem=module.emblem,
             ))
 
     # Sort the items of all topics

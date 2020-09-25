@@ -180,6 +180,7 @@ multisite_builtin_views.update({
         "topic": "analyze",
         "sort_index": 50,
         'icon': 'service_discovery',
+        'emblem': 'pending',
     },
     'allservices': {
         'browser_reload': 90,

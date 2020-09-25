@@ -1,28 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 364 395" style="enable-background:new 0 0 364 395;" xml:space="preserve">
+	 viewBox="0 0 384 416" style="enable-background:new 0 0 384 416;" xml:space="preserve">
 <style type="text/css">
-	.st0{fill:none;stroke:#F9C10A;stroke-width:20.16;}
-	.st1{fill:#BA8D05;}
-	.st2{fill:#F9C10A;}
-	.st3{fill:#DEA808;stroke:#045873;stroke-width:20.16;stroke-linecap:round;stroke-linejoin:round;}
+	.st0{fill:#858A8C;}
+	.st1{fill:#FFD90A;}
 </style>
 <g id="Menu-Icons-EXPORT">
-	<g id="EXPORT" transform="translate(-526.000000, -530.000000)">
-		<g id="robot_yellow" transform="translate(526.000000, 541.000000)">
-			<path id="Path" class="st0" d="M181.6,80.6V29.7c0-16.4,13.3-29.7,29.7-29.7h1c16.4,0,29.7,13.3,29.7,29.7l0,0"/>
-			<path id="Path_1_" class="st1" d="M299.3,171.2h22.1c23,0,41.7,18.7,41.7,41.7v57.8c0,23-18.7,41.7-41.7,41.7h-22.1V171.2z"/>
-			<path id="Path_2_" class="st1" d="M63.9,171.2H41.8c-23,0-41.7,18.7-41.7,41.7v57.8c0,23,18.7,41.7,41.7,41.7h22.1V171.2
-				L63.9,171.2z"/>
-			<path id="Path_3_" class="st1" d="M195.4,60.5h-27.6c-25.8,0-46.7,20.9-46.7,46.7c0,7.6,6.2,13.8,13.8,13.8h93.4
-				c7.6,0,13.8-6.2,13.8-13.8C242.1,81.4,221.1,60.5,195.4,60.5z"/>
-			<path id="Path_4_" class="st2" d="M272.1,90.7H91.1c-33.5,0-60.7,27.1-60.7,60.4v171.5c0,33.3,27.2,60.4,60.7,60.4h181.1
-				c33.5,0,60.7-27.1,60.7-60.4V151.1C332.8,117.8,305.6,90.7,272.1,90.7z"/>
-			
-				<ellipse id="Oval" transform="matrix(0.2298 -0.9732 0.9732 0.2298 147.22 266.6605)" class="st2" cx="242.1" cy="40.3" rx="20.2" ry="20.2"/>
-			
-				<ellipse id="Oval_1_" transform="matrix(0.1602 -0.9871 0.9871 0.1602 12.7716 418.2112)" class="st3" cx="252.2" cy="201.6" rx="30.2" ry="30.2"/>
-			<circle id="Oval_2_" class="st3" cx="117.8" cy="201.6" r="30.2"/>
+	<g id="EXPORT" transform="translate(-514.000000, -525.000000)">
+		<g id="discovery-settings" transform="translate(514.000000, 525.000000)">
+			<path id="Shape" class="st0" d="M33.9,43.3h214.6v67.8H33.9V43.3z M22.6,416h338.8v-22.6c0-12.4-10.2-22.6-22.6-22.6H45.2
+				c-12.4,0-22.6,10.2-22.6,22.6V416z"/>
+			<path id="Shape_1_" class="st0" d="M314,128.8l-56.5-38.4L314,52l47.4,29.4L384,45.2L312.8,0l-131,90.4l131,90.4l71.2-45.2
+				l-22.6-36.1L314,128.8z M101.6,67.8H22.6L124.2,384h79.1L101.6,67.8z"/>
+			<path id="Shape_2_" class="st1" d="M176.2,292.5c-4.5-6.8-11.3-10.2-19.2-10.2h-21.5c-7.9,0-14.7,3.4-19.2,10.2L56.5,384h180.7
+				L176.2,292.5z M146.8,350.1c-12.4,0-22.6-10.2-22.6-22.6s10.2-22.6,22.6-22.6c12.4,0,22.6,10.2,22.6,22.6
+				S159.2,350.1,146.8,350.1z M67.8,22.6C30.5,22.6,0,53.1,0,90.4s30.5,67.8,67.8,67.8s67.8-30.5,67.8-67.8S105,22.6,67.8,22.6z
+				 M67.8,112.9c-12.4,0-22.6-10.2-22.6-22.6s10.2-22.6,22.6-22.6s22.6,10.2,22.6,22.6S80.2,112.9,67.8,112.9z M259.8,146.8h-33.9
+				c-12.4,0-22.6-10.2-22.6-22.6V56.5c0-12.4,10.2-22.6,22.6-22.6h33.9V146.8z"/>
 		</g>
 	</g>
 </g>

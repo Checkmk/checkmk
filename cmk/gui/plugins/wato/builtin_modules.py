@@ -254,7 +254,11 @@ class MainModuleHostAndServiceParameters(MainModule):
 
     @property
     def icon(self):
-        return "rulesets"
+        return "folder"
+
+    @property
+    def emblem(self):
+        return "settings"
 
     @property
     def permission(self):
@@ -324,7 +328,7 @@ class MainModuleNetworkingServices(MainModule):
 
     @property
     def icon(self):
-        return "rulesets"
+        return "network_services"
 
     @property
     def permission(self):
@@ -360,7 +364,7 @@ class MainModuleIntegrateNagiosPlugins(MainModule):
 
     @property
     def icon(self):
-        return "rulesets"
+        return "nagios"
 
     @property
     def permission(self):
@@ -1100,7 +1104,11 @@ class MainModuleMonitoringRules(MainModule):
 
     @property
     def icon(self):
-        return "rulesets"
+        return "services"
+
+    @property
+    def emblem(self):
+        return "settings"
 
     @property
     def permission(self):
@@ -1135,7 +1143,7 @@ class MainModuleDiscoveryRules(MainModule):
 
     @property
     def icon(self):
-        return "rulesets"
+        return "service_discovery"
 
     @property
     def permission(self):
@@ -1245,7 +1253,7 @@ class MainModuleOtherAgents(MainModule):
 
     @property
     def icon(self):
-        return "download_agents"
+        return "os_other"
 
     @property
     def permission(self):
@@ -1280,7 +1288,11 @@ class MainModuleAgentAccessRules(MainModule):
 
     @property
     def icon(self):
-        return "rulesets"
+        return "agents"
+
+    @property
+    def emblem(self):
+        return "settings"
 
     @property
     def permission(self):
@@ -1315,7 +1327,7 @@ class MainModuleSNMPRules(MainModule):
 
     @property
     def icon(self):
-        return "rulesets"
+        return "snmp"
 
     @property
     def permission(self):
@@ -1350,7 +1362,7 @@ class MainModuleVMCloudContainer(MainModule):
 
     @property
     def icon(self):
-        return "rulesets"
+        return "cloud"
 
     @property
     def permission(self):
@@ -1385,7 +1397,7 @@ class MainModuleOtherIntegrations(MainModule):
 
     @property
     def icon(self):
-        return "rulesets"
+        return "integrations_other"
 
     @property
     def permission(self):
@@ -1420,7 +1432,7 @@ class MainModuleCustomIntegrations(MainModule):
 
     @property
     def icon(self):
-        return "rulesets"
+        return "integrations_custom"
 
     @property
     def permission(self):

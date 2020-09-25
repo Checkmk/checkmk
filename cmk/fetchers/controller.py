@@ -473,13 +473,16 @@ Command = NamedTuple("Command", [
 
 
 def process_command(command: Command) -> None:
-    load_global_config(command.serial)
-    run_fetchers(
-        serial=command.serial,
-        host_name=command.host_name,
-        mode=command.mode,
-        timeout=command.timeout,
-    )
+    try:
+        load_global_config(command.serial)
+        run_fetchers(
+            serial=command.serial,
+            host_name=command.host_name,
+            mode=command.mode,
+            timeout=command.timeout,
+        )
+    finally:
+        write_bytes(make_waiting_answer())
 
 
 def run_fetchers(serial: ConfigSerial, host_name: HostName, mode: Mode, timeout: int) -> None:
@@ -491,7 +494,6 @@ def run_fetchers(serial: ConfigSerial, host_name: HostName, mode: Mode, timeout:
         # this happens during development(or filesystem is broken)
         msg = f"fetcher file for host '{host_name}' and {serial} is absent"
         write_bytes(make_logging_answer(msg, log_level=CmcLogLevel.WARNING))
-        write_bytes(make_waiting_answer())
         return
 
     # Usually OMD_SITE/var/check_mk/core/fetcher-config/[config-serial]/[host].json
@@ -504,7 +506,6 @@ def load_global_config(serial: ConfigSerial) -> None:
         # this happens during development(or filesystem is broken)
         msg = f"fetcher global config {serial} is absent"
         write_bytes(make_logging_answer(msg, log_level=CmcLogLevel.WARNING))
-        write_bytes(make_waiting_answer())
         return
 
     with global_json_file.open() as f:
@@ -600,8 +601,6 @@ def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
                 "{!s}: {!r}".format(msg.header, msg.raw_data.error),
                 log_level=cmc_log_level_from_python(msg.header.status),
             ))
-
-    write_bytes(make_waiting_answer())
 
 
 def read_json_file(serial: ConfigSerial, host_name: HostName) -> str:

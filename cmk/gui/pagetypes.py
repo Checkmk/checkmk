@@ -305,6 +305,14 @@ class Base:
     def type_name(cls) -> str:
         raise NotImplementedError()
 
+    @classmethod
+    def type_icon(cls) -> str:
+        raise NotImplementedError()
+
+    @classmethod
+    def type_emblem(cls) -> _Optional[str]:
+        return None
+
     # Lädt alle Dinge vom aktuellen User-Homeverzeichnis und
     # mergt diese mit den übergebenen eingebauten
     @classmethod
@@ -1665,6 +1673,10 @@ class PagetypeTopics(Overridable):
         return "pagetype_topic"
 
     @classmethod
+    def type_icon(cls):
+        return "pagetype_topic"
+
+    @classmethod
     def phrase(cls, phrase):
         return {
             "title": _("Topic"),
@@ -1852,8 +1864,8 @@ def _customize_menu_topics() -> List[TopicMenuTopic]:
             url="%ss.py" % page_type_.type_name(),
             sort_index=40 + (index * 10),
             is_advanced=page_type_.type_is_advanced(),
-            icon_name=page_type_.type_name(),
-            emblem=None,
+            icon_name=page_type_.type_icon(),
+            emblem=page_type_.type_emblem(),
         )
 
         if page_type_.type_name() in ("pagetype_topic", "bookmark_list", "custom_snapin"):

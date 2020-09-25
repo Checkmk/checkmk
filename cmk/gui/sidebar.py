@@ -802,6 +802,10 @@ class CustomSnapins(pagetypes.Overridable):
         return "custom_snapin"
 
     @classmethod
+    def type_icon(cls):
+        return "custom_snapin"
+
+    @classmethod
     def type_is_advanced(cls) -> bool:
         return True
 

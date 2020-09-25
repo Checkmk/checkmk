@@ -42,6 +42,10 @@ class BookmarkList(pagetypes.Overridable):
         return "bookmark_list"
 
     @classmethod
+    def type_icon(cls):
+        return "bookmark_list"
+
+    @classmethod
     def phrase(cls, phrase):
         return {
             "title": _("Bookmark list"),

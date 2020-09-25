@@ -1,0 +1,16 @@
+Title: netapp_api_luns: Report correct total size
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p18
+Date: 1601015166
+
+The check plugin <tt>netapp_api_luns</tt>, which monitors the usage of LUNs of
+Netapp filers, can be configured to not apply any levels to the used storage and
+only report the total size of the LUN instead. The size report by the check
+plugin in this particular case was wrong by a factor of 1024^2, which is fixed
+by this werk.

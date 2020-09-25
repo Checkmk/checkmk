@@ -4994,7 +4994,7 @@ rulespec_registry.register(
 
 def _valuespec_snmp_config_agent_sections():
     return Dictionary(
-        title=_("Exclude SNMP sections"),
+        title=_("Include or exclude SNMP sections"),
         elements=[
             (
                 "sections",
@@ -5008,13 +5008,17 @@ def _valuespec_snmp_config_agent_sections():
                     ],),),
             ),
         ],
-        help=_("This option allows to omit individual sections from beeing fetched at all. "
+        help=_("This option allows to omit individual sections from being fetched at all. "
                "Disabled sections will not be fetched. As a result, associated Checkmk "
                "services may be entirely missing.") + " " +
-        _("However, some check plugins "
-          "can get their data from one section of a prioritized list of different sections, "
-          "in which case you may want to disable individual sections, instead of the check "
-          "plugin itself."),
+        _("However, some check plugins process multiple sections and their behavior may change if "
+          "one of them is excluded. In such cases, you may want to disable individual sections, "
+          "instead of the check plugin itself. Furthermore, SNMP sections can supersede other SNMP "
+          "sections in order to prevent duplicate services. By excluding a section which "
+          "supersedes another one, the superseded section might become available. One such use "
+          "case is the enforcing of 32-bit network interface counters (section <tt>if</tt>, "
+          "superseded by <tt>if64</tt>) in case the 64-bit counters reported by the device are "
+          "useless due to broken firmware."),
         validate=_validate_snmp_config_agent_sections,
         optional_keys=[],
     )

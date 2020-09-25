@@ -1988,7 +1988,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'hr_fs',
         'hr_ps',
         'huawei_osn_fan',
-        'huawei_osn_if',
         'huawei_osn_laser',
         'huawei_osn_power',
         'huawei_osn_temp',

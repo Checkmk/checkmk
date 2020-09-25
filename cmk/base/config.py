@@ -1135,7 +1135,7 @@ def service_ignored(
     if check_plugin_name is not None:
         check_plugin_name_str = str(check_plugin_name)
 
-        if str(check_plugin_name) in ignored_checktypes:
+        if check_plugin_name_str in ignored_checktypes:
             return True
 
         if _checktype_ignored_for_host(host_name, check_plugin_name_str):

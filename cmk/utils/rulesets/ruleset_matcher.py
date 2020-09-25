@@ -125,8 +125,9 @@ class RulesetMatcher:
 
         # When the requested host is part of the local sites configuration,
         # then use only the sites hosts for processing the rules
-        with_foreign_hosts = match_object.host_name not in \
-                                self.ruleset_optimizer.all_processed_hosts()
+        with_foreign_hosts = (match_object.host_name
+                              not in self.ruleset_optimizer.all_processed_hosts())
+
         optimized_ruleset = self.ruleset_optimizer.get_host_ruleset(ruleset,
                                                                     with_foreign_hosts,
                                                                     is_binary=is_binary)
@@ -457,18 +458,20 @@ class RulesetOptimizer:
                 return matched_by_tags
 
         matching: Set[str] = set()
-        only_specific_hosts = hostlist is not None \
-            and not isinstance(hostlist, dict) \
-            and all(not isinstance(x, dict) for x in hostlist)
+        only_specific_hosts = (hostlist is not None and not isinstance(hostlist, dict) and
+                               all(not isinstance(x, dict) for x in hostlist))
 
         if hostlist == []:
             pass  # Empty host list -> Nothing matches
+
         elif not tags and not labels and not hostlist:
             # If no tags are specified and the hostlist only include @all (all hosts)
             matching = valid_hosts
+
         elif not tags and not labels and only_specific_hosts and hostlist is not None:
             # If no tags are specified and there are only specific hosts we already have the matches
             matching = valid_hosts.intersection(hostlist)
+
         else:
             # If the rule has only exact host restrictions, we can thin out the list of hosts to check
             if only_specific_hosts and hostlist is not None:

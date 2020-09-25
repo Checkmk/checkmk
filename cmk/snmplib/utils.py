@@ -4,14 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import functools
 import re
 from typing import Callable, List, Optional, Tuple
 
 from six import iterbytes
 
 from cmk.utils.regex import regex
-from .type_defs import OID, OIDFunction, SNMPDetectAtom, SNMPDetectSpec, SNMPScanFunction
+from .type_defs import OID, SNMPDetectAtom, SNMPDetectSpec
 
 SNMPRowInfoForStoredWalk = List[Tuple[OID, str]]
 
@@ -56,39 +55,3 @@ def binstring_to_int(binstring: bytes) -> int:
         value += mult * byte
         mult *= 256
     return value
-
-
-class MutexScanRegistry:
-    """Register scan functions that are checked before a fallback is used
-
-    Add any number of scan functions to a registry instance by decorating
-    them like this:
-
-        @mutex_scan_registry_instance.register
-        def my_snmp_scan_function(oid):
-            ...
-
-    You can then declare a scan function to be a fallback to those functions
-    by decorating it with "@mutex_scan_registry_instance.as_fallback",
-    meaning that the fallback function will only be evaluated if all of the
-    scan functions registered earlier return something falsey.
-    """
-    def __init__(self) -> None:
-        super(MutexScanRegistry, self).__init__()
-        self._specific_scans: List[SNMPScanFunction] = []
-
-    def _is_specific(self, oid: OIDFunction) -> bool:
-        return any(scan(oid) for scan in self._specific_scans)
-
-    def register(self, scan_function: SNMPScanFunction) -> SNMPScanFunction:
-        self._specific_scans.append(scan_function)
-        return scan_function
-
-    def as_fallback(self, scan_function: SNMPScanFunction) -> SNMPScanFunction:
-        @functools.wraps(scan_function)
-        def wrapper(oid: OIDFunction) -> bool:
-            if self._is_specific(oid):
-                return False
-            return scan_function(oid)
-
-        return wrapper

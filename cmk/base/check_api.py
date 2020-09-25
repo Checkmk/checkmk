@@ -117,7 +117,6 @@ from cmk.utils.type_defs import (
     ServiceState,
 )
 
-import cmk.snmplib.utils as _snmp_utils
 from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-import
     OID_BIN, OID_END, OID_END_BIN, OID_END_OCTET_STRING, OID_STRING, OIDBytes, OIDCached,
 )
@@ -172,8 +171,6 @@ core_state_names = _defines.short_service_state_names()
 # backwards compatibility: allow to pass integer.
 BINARY = lambda x: OIDBytes(str(x))
 CACHED_OID = lambda x: OIDCached(str(x))
-
-network_interface_scan_registry = _snmp_utils.MutexScanRegistry()
 
 
 def saveint(i: Any) -> int:

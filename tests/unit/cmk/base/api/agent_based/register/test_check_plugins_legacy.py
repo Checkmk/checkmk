@@ -79,9 +79,9 @@ def test_create_check_function():
         assert item == "Test Item"
         assert _no_params == {}
         assert info == ["info"]
-        yield 0, "Main info", [("mymetric", 23, 2, 3)]
-        yield 1, "still main, but very long\nadditional1"
-        yield 2, "additional2\nadditional3"
+        yield 0, "Main info", [("metric1", 23, 2, 3)]
+        yield 1, "still main, but very long\nadditional1", [("metric2", 23, None, None, "0", None)]
+        yield 2, "additional2\nadditional3", [("metric3", 23, "wtf is this")]
 
     new_function = check_plugins_legacy._create_check_function(
         "test_plugin",
@@ -102,14 +102,18 @@ def test_create_check_function():
             state=checking_classes.State.OK,
             summary="Main info",
         ),
-        checking_classes.Metric("mymetric", 23.0, levels=(2.0, 3.0)),
+        checking_classes.Metric("metric1", 23.0, levels=(2.0, 3.0)),
         checking_classes.Result(
             state=checking_classes.State.WARN,
             summary="still main, but very long",
             details="additional1",
         ),
-        checking_classes.Result(state=checking_classes.State.CRIT,
-                                details="additional2\nadditional3"),
+        checking_classes.Metric("metric2", 23.0, boundaries=(0.0, None)),
+        checking_classes.Result(
+            state=checking_classes.State.CRIT,
+            details="additional2\nadditional3",
+        ),
+        checking_classes.Metric("metric3", 23.0),
     ]
 
 

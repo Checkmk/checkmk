@@ -168,6 +168,13 @@ def _create_check_function(name: str, check_info_dict: Dict[str, Any],
     return check_result_generator
 
 
+def _get_float(raw_value: Any) -> Optional[float]:
+    try:
+        return float(raw_value)
+    except (TypeError, ValueError):
+        return None
+
+
 def _create_new_result(
         is_details: bool,
         legacy_state: int,
@@ -193,7 +200,12 @@ def _create_new_result(
         # fill up with None:
         name, value, warn, crit, min_, max_ = (
             v for v, _ in itertools.zip_longest(metric, range(6)))
-        yield Metric(str(name), float(value), levels=(warn, crit), boundaries=(min_, max_))
+        yield Metric(
+            str(name),
+            float(value),
+            levels=(_get_float(warn), _get_float(crit)),
+            boundaries=(_get_float(min_), _get_float(max_)),
+        )
 
     return is_details
 

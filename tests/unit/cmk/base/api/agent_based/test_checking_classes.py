@@ -31,6 +31,8 @@ def test_parameters_features():
     par0 = Parameters({})
     par1 = Parameters({'olaf': 'schneemann'})
 
+    assert repr(par1) == "Parameters({'olaf': 'schneemann'})"
+
     assert len(par0) == 0
     assert len(par1) == 1
 

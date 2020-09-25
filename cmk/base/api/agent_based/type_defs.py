@@ -34,6 +34,7 @@ class Parameters(Mapping):
     """Parameter objects are used to pass parameters to plugin functions"""
     def __init__(self, data):
         if not isinstance(data, dict):
+            self._data = data  # error handling will try to repr(self).
             raise TypeError("Parameters expected dict, got %r" % (data,))
         self._data = dict(data)
 

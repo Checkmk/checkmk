@@ -26,8 +26,7 @@ Levels = Tuple[Optional[float], Optional[float]]
 def size_trend(
     *,
     value_store: ValueStore,
-    check: str,
-    item: str,
+    value_store_key: str,
     resource: str,
     levels: Parameters,
     used_mb: float,
@@ -45,8 +44,8 @@ def size_trend(
       Use at your own risk!
 
     Args:
-      check (str): The name of the check, e.g. "df".
-      item (str): The name of the item, e.g. the mountpoint "/" for df.
+      value_store: Retrived value_store by calling check function
+      value_store_key (str): The key (prefix) to use in the value_store
       resource (str): The resource in question, e.g. "disk", "ram", "swap".
       levels (dict): Level parameters for the trend computation. Items:
           "trend_range"       : 24,        # interval for the trend in hours
@@ -60,7 +59,6 @@ def size_trend(
         and average. Defaults to "None".
       used_mb (float): Used space in MB.
       size_mb (float): Max. available space in MB.
-      value_store: Retrived value_store by calling check function
 
     Yields:
       Result- and Metric- instances for the trend computation.
@@ -71,8 +69,7 @@ def size_trend(
     ...     try:
     ...         for result in size_trend(
     ...                 value_store=vs,
-    ...                 check="check_name",
-    ...                 item="item_name",
+    ...                 value_store_key="vskey",
     ...                 resource="resource_name",
     ...                 levels={
     ...                     "trend_range": 24,
@@ -102,11 +99,11 @@ def size_trend(
     range_sec = levels["trend_range"] * SEC_PER_H
     timestamp = timestamp or time.time()
 
-    mb_per_sec = get_rate(value_store, "%s.%s.delta" % (check, item), timestamp, used_mb)
+    mb_per_sec = get_rate(value_store, "%s.delta" % value_store_key, timestamp, used_mb)
 
     avg_mb_per_sec = get_average(
         value_store=value_store,
-        key="%s.%s.trend" % (check, item),
+        key="%s.trend" % value_store_key,
         time=timestamp,
         value=mb_per_sec,
         backlog_minutes=range_sec // 60,

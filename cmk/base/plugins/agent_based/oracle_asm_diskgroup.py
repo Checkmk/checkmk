@@ -320,15 +320,16 @@ def check_oracle_asm_diskgroup(item: str, params: Parameters, section: Dict[str,
         add_text = ', required mirror free space used'
 
     result_list = list(
-        df_check_filesystem_single(value_store=get_value_store(),
-                                   check="oracle_asm_diskgroup",
-                                   mountpoint=item,
-                                   size_mb=float(total_mb),
-                                   avail_mb=free_space_mb,
-                                   reserved_mb=0,
-                                   inodes_total=None,
-                                   inodes_avail=None,
-                                   params=params))
+        df_check_filesystem_single(
+            value_store=get_value_store(),
+            mountpoint=item,
+            size_mb=float(total_mb),
+            avail_mb=free_space_mb,
+            reserved_mb=0,
+            inodes_total=None,
+            inodes_avail=None,
+            params=params,
+        ),)
     yield from result_list
     aggregated_state = state.worst(
         *[elem.state for elem in result_list if isinstance(elem, Result)])

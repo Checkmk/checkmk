@@ -120,8 +120,8 @@ def test_sap_hana_data_volume_discovery():
 @pytest.fixture(name="value_store_patch")
 def value_store_fixture(monkeypatch):
     value_store_patched = {
-        "sap_hana_data_volume.H62 10 - DATA 20.delta": [2000000, 30000000],
-        "sap_hana_data_volume.H62 10 - DATA 20.trend": [LAST_TIME_EPOCH, LAST_TIME_EPOCH, 8989]
+        "H62 10 - DATA 20.delta": [2000000, 30000000],
+        "H62 10 - DATA 20.trend": [LAST_TIME_EPOCH, LAST_TIME_EPOCH, 8989]
     }
     monkeypatch.setattr(sap_hana_data_volume, 'get_value_store', lambda: value_store_patched)
     yield value_store_patched
@@ -179,7 +179,6 @@ def value_store_fixture(monkeypatch):
 @freeze_time(NOW_SIMULATED)
 def test_sap_hana_data_volume_check(value_store_patch, item, params, expected_results):
 
-    with value_store.context(CheckPluginName("sap_hana_data_volume"), None):
-        yielded_results = list(
-            sap_hana_data_volume.check_sap_hana_data_volume(item, params, PARSED_SECTION))
-        assert yielded_results == expected_results
+    yielded_results = list(
+        sap_hana_data_volume.check_sap_hana_data_volume(item, params, PARSED_SECTION))
+    assert yielded_results == expected_results

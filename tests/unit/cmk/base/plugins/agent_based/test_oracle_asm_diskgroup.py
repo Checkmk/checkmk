@@ -70,7 +70,7 @@ SECTION_WITH_FG = {
 @pytest.fixture(name="value_store_patch")
 def value_store_fixture(monkeypatch):
     value_store_patched = {
-        "oracle_asm_diskgroup.%s.delta" % ITEM: [2000000, 30000000],
+        "%s.delta" % ITEM: [2000000, 30000000],
     }
     monkeypatch.setattr(oracle_asm_diskgroup, 'get_value_store', lambda: value_store_patched)
     yield value_store_patched
@@ -269,7 +269,6 @@ def test_check(value_store_patch, section, params, expected):
 ])
 def test_cluster(value_store_patch, section, params, expected):
     with on_time(*NOW_SIMULATED):
-        with value_store.context(CheckPluginName("oracle_asm_diskgroup"), None):
-            yielded_results = list(
-                oracle_asm_diskgroup.cluster_check_oracle_asm_diskgroup(ITEM, params, section))
-            assert yielded_results == expected
+        yielded_results = list(
+            oracle_asm_diskgroup.cluster_check_oracle_asm_diskgroup(ITEM, params, section))
+        assert yielded_results == expected

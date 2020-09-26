@@ -75,8 +75,12 @@ def check_sap_hana_data_volume(item: str, params: Parameters,
     used = item_data['used']
     avail = size - used
 
-    yield from df.df_check_filesystem_list(get_value_store(), "sap_hana_data_volume", item, params,
-                                           [(item, size, avail, 0)])
+    yield from df.df_check_filesystem_list(
+        get_value_store(),
+        item,
+        params,
+        [(item, size, avail, 0)],
+    )
 
     service = item_data.get('service')
     if service:

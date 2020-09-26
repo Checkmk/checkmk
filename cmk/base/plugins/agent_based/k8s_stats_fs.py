@@ -55,7 +55,7 @@ def _check__k8s_stats_fs__core(
     section: Section,
 ) -> CheckResult:
     """
-    >>> value_store = {'unneeded./dev/sda1.delta': (1553765630.0, 4158.4921875)}
+    >>> value_store = {'/dev/sda1.delta': (1553765630.0, 4158.4921875)}
     >>> for result in _check__k8s_stats_fs__core(value_store, "/dev/sda1", {}, {
     ...       'filesystem': {"/dev/sda1": [{'capacity': 17293533184, 'available': 12933038080}]},
     ...       'timestamp': 1553765631.0,
@@ -78,7 +78,6 @@ def _check__k8s_stats_fs__core(
     with suppress(GetRateError):
         yield from df_check_filesystem_single(
             value_store=value_store,
-            check="unneeded",
             mountpoint=item,
             size_mb=disk["capacity"] / 1024**2,
             avail_mb=disk["available"] / 1024**2,

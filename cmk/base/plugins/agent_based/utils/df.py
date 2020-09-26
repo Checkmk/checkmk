@@ -286,7 +286,6 @@ inodes available: 20.00 /25.0%'),
 
 def df_check_filesystem_single(
     value_store: ValueStore,
-    check: str,
     mountpoint: str,
     size_mb: float,
     avail_mb: float,
@@ -361,8 +360,7 @@ def df_check_filesystem_single(
 
     yield from size_trend(
         value_store=value_store,
-        check=check,
-        item=mountpoint,
+        value_store_key=mountpoint,
         resource="disk",
         levels=levels,
         used_mb=used_mb,
@@ -375,7 +373,6 @@ def df_check_filesystem_single(
 
 def df_check_filesystem_list(
     value_store: ValueStore,
-    check: str,
     item: str,
     params: Parameters,
     fslist_blocks: List[Tuple[str, float, float, float]],
@@ -411,7 +408,6 @@ def df_check_filesystem_list(
         data, inodes_data = blocks_info.get(item, {}), inodes_info.get(item, {})
         yield from df_check_filesystem_single(
             value_store,
-            check,
             item,
             data["size_mb"],
             data["avail_mb"],
@@ -437,7 +433,6 @@ def df_check_filesystem_list(
 
     yield from df_check_filesystem_single(
         value_store,
-        check,
         item,
         total_size_mb,
         total_avail_mb,

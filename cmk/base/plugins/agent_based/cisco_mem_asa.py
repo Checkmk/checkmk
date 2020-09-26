@@ -229,8 +229,7 @@ def check_cisco_mem_sub(
         with suppress(GetRateError):
             yield from size_trend(
                 value_store=value_store,
-                check="cisco_mem",
-                item=item,
+                value_store_key=item,
                 resource="memory",
                 levels=params,
                 used_mb=mem_used / mega,

@@ -12,7 +12,7 @@ import pytest  # type: ignore[import]
 # No stub file
 from testlib.base import Scenario  # type: ignore[import]
 
-from cmk.utils.type_defs import Result
+from cmk.utils.type_defs import OKResult
 
 from cmk.base.checkers._abstract import Mode
 from cmk.base.checkers.agent import AgentHostSections, AgentSummarizerDefault
@@ -131,7 +131,7 @@ class TestSummaryResult:
             mode=mode,
         )
 
-        assert source.summarize(Result.OK(AgentHostSections())) == (
+        assert source.summarize(OKResult(AgentHostSections())) == (
             0,
             "Version: unknown, OS: unknown",
             [],

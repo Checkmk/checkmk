@@ -16,7 +16,7 @@ import pytest  # type: ignore[import]
 from testlib.base import Scenario
 
 from cmk.utils.exceptions import MKTimeout
-from cmk.utils.type_defs import Result, SectionName, SourceType
+from cmk.utils.type_defs import ErrorResult, OKResult, SectionName, SourceType
 
 from cmk.fetchers import FetcherType
 from cmk.fetchers.agent import NoCache
@@ -57,7 +57,7 @@ class TestParser:
             b"second line",
         ))
 
-        ahs = AgentParser(hostname, Path(""), logger).parse(Result.OK(raw_data)).ok
+        ahs = AgentParser(hostname, Path(""), logger).parse(OKResult(raw_data)).ok
 
         assert ahs.sections == {
             SectionName("a_section"): [["first", "line"], ["second", "line"]],
@@ -92,7 +92,7 @@ class TestParser:
             b"first line",
         ))
 
-        ahs = AgentParser(hostname, Path(""), logger).parse(Result.OK(raw_data)).ok
+        ahs = AgentParser(hostname, Path(""), logger).parse(OKResult(raw_data)).ok
 
         assert ahs.sections == {}
         assert ahs.cache_info == {}
@@ -135,7 +135,7 @@ class TestParser:
             b"second line",
         ))
 
-        ahs = AgentParser(hostname, Path(""), logger).parse(Result.OK(raw_data)).ok
+        ahs = AgentParser(hostname, Path(""), logger).parse(OKResult(raw_data)).ok
 
         assert ahs.sections == {SectionName("section"): [["first", "line"], ["second", "line"]]}
         assert ahs.cache_info == {SectionName("section"): (time_time, time_delta)}
@@ -229,20 +229,20 @@ class TestAgentSummaryResult:
 
     @pytest.mark.usefixtures("scenario")
     def test_defaults(self, source):
-        assert source.summarize(Result.OK(source.default_host_sections)) == (0, "", [])
+        assert source.summarize(OKResult(source.default_host_sections)) == (0, "", [])
 
     @pytest.mark.usefixtures("scenario")
     def test_with_exception(self, source):
-        assert source.summarize(Result.Error(Exception())) == (3, "(?)", [])
+        assert source.summarize(ErrorResult(Exception())) == (3, "(?)", [])
 
     @pytest.mark.usefixtures("scenario")
     def test_with_MKEmptyAgentData_exception(self, source):
-        assert source.summarize(Result.Error(MKEmptyAgentData())) == (2, "(!!)", [])
+        assert source.summarize(ErrorResult(MKEmptyAgentData())) == (2, "(!!)", [])
 
     @pytest.mark.usefixtures("scenario")
     def test_with_MKAgentError_exception(self, source):
-        assert source.summarize(Result.Error(MKAgentError())) == (2, "(!!)", [])
+        assert source.summarize(ErrorResult(MKAgentError())) == (2, "(!!)", [])
 
     @pytest.mark.usefixtures("scenario")
     def test_with_MKTimeout_exception(self, source):
-        assert source.summarize(Result.Error(MKTimeout())) == (2, "(!!)", [])
+        assert source.summarize(ErrorResult(MKTimeout())) == (2, "(!!)", [])

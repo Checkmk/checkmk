@@ -16,11 +16,13 @@ import cmk.utils.log  # TODO: Remove this!
 import cmk.utils.misc
 import cmk.utils.paths
 import cmk.utils.tty as tty
-from cmk.utils.exceptions import MKSNMPError, MKTimeout, MKIPAddressLookupError
+from cmk.utils.exceptions import MKIPAddressLookupError, MKSNMPError, MKTimeout
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import (
+    ErrorResult,
     HostAddress,
     HostName,
+    OKResult,
     Result,
     SectionName,
     ServiceCheckResult,
@@ -218,11 +220,11 @@ class ABCParser(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         raw_data: Result[TRawData, Exception],
     ) -> Result[THostSections, Exception]:
         if raw_data.is_error():
-            return Result.Error(raw_data.error)
+            return ErrorResult(raw_data.error)
         try:
-            return Result.OK(self._parse(raw_data.ok))
+            return OKResult(self._parse(raw_data.ok))
         except Exception as exc:
-            return Result.Error(exc)
+            return ErrorResult(exc)
 
     @abc.abstractmethod
     def _parse(self, raw_data: TRawData) -> THostSections:
@@ -369,7 +371,7 @@ class ABCSource(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
             self._logger.log(VERBOSE, "ERROR: %s", exc)
             if cmk.utils.debug.enabled():
                 raise
-            return Result.Error(exc)
+            return ErrorResult(exc)
 
     @final
     def summarize(self, host_sections: Result[THostSections, Exception]) -> ServiceCheckResult:

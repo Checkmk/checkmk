@@ -14,7 +14,7 @@ from typing import Optional
 import pytest  # type: ignore[import]
 
 import cmk.utils.store as store
-from cmk.utils.type_defs import Result, SectionName, AgentRawData
+from cmk.utils.type_defs import AgentRawData, OKResult, SectionName
 
 from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPHostConfig, SNMPRawData, SNMPTable, SNMPTree
 
@@ -425,19 +425,19 @@ class TestFetcherCaching:
 
     def test_fetch_not_reading_cache_in_checking_mode(self, fetcher):
         assert fetcher.file_cache.cache == b"cached_section"
-        assert fetcher.fetch(Mode.CHECKING) == Result.OK(b"fetched_section")
+        assert fetcher.fetch(Mode.CHECKING) == OKResult(b"fetched_section")
         assert fetcher.file_cache.cache == b"fetched_section"
 
     # We are in fact testing a generic feature of the ABCFetcher and use the TCPFetcher for this
     def test_fetch_reading_cache_in_discovery_mode(self, fetcher):
         assert fetcher.file_cache.cache == b"cached_section"
-        assert fetcher.fetch(Mode.DISCOVERY) == Result.OK(b"cached_section")
+        assert fetcher.fetch(Mode.DISCOVERY) == OKResult(b"cached_section")
         assert fetcher.file_cache.cache == b"cached_section"
 
     # We are in fact testing a generic feature of the ABCFetcher and use the TCPFetcher for this
     def test_fetch_reading_cache_in_inventory_mode(self, fetcher):
         assert fetcher.file_cache.cache == b"cached_section"
-        assert fetcher.fetch(Mode.INVENTORY) == Result.OK(b"cached_section")
+        assert fetcher.fetch(Mode.INVENTORY) == OKResult(b"cached_section")
         assert fetcher.file_cache.cache == b"cached_section"
 
 

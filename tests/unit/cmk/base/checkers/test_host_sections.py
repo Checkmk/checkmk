@@ -14,34 +14,33 @@ import pytest  # type: ignore[import]
 from testlib.base import Scenario  # type: ignore[import]
 
 import cmk.utils.piggyback
-from cmk.utils.type_defs import ParsedSectionName, Result, SectionName, SourceType
-
-from cmk.fetchers import (
-    IPMIFetcher,
-    PiggybackFetcher,
-    ProgramFetcher,
-    SNMPFetcher,
-    TCPFetcher,
+from cmk.utils.type_defs import (
+    OKResult,
+    ParsedSectionName,
+    SectionName,
+    SourceType,
 )
+
+from cmk.fetchers import IPMIFetcher, PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.checkers import (
+    _checkers,
     ABCHostSections,
     ABCSource,
-    _checkers,
-    update_host_sections,
-    make_sources,
     make_nodes,
+    make_sources,
     Mode,
+    update_host_sections,
 )
 from cmk.base.checkers.agent import AgentHostSections
 from cmk.base.checkers.host_sections import HostKey, MultiHostSections
 from cmk.base.checkers.piggyback import PiggybackSource
 from cmk.base.checkers.programs import ProgramSource
-from cmk.base.checkers.snmp import SNMPSource, SNMPHostSections
+from cmk.base.checkers.snmp import SNMPHostSections, SNMPSource
 from cmk.base.checkers.tcp import TCPSource
 
 _TestSection = collections.namedtuple(
@@ -454,7 +453,7 @@ class TestMakeHostSectionsHosts:
         monkeypatch.setattr(
             ABCSource,
             "parse",
-            lambda self, raw_data: Result.OK(
+            lambda self, raw_data: OKResult(
                 DummyHostSection(
                     sections=
                     {SectionName("section_name_%s" % self.hostname): [["section_content"]]},
@@ -701,7 +700,7 @@ class TestMakeHostSectionsClusters:
         monkeypatch.setattr(
             ABCSource,
             "parse",
-            lambda self, *args, **kwargs: Result.OK(DummyHostSection(
+            lambda self, *args, **kwargs: OKResult(DummyHostSection(
                 sections={SectionName("section_name_%s" % self.hostname): [["section_content"]]},
                 cache_info={},
                 piggybacked_raw_data={},
@@ -799,7 +798,7 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
         return {}
 
     def check(_, *args, **kwargs):
-        return Result.OK(AgentHostSections(sections={section_name: [[str(section_name)]]}))
+        return OKResult(AgentHostSections(sections={section_name: [[str(section_name)]]}))
 
     monkeypatch.setattr(
         ip_lookup,

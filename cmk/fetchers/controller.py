@@ -23,7 +23,15 @@ from typing import Any, Dict, Final, Iterator, List, Optional, Type, Union, Name
 import cmk.utils.log as log
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.paths import core_helper_config_dir
-from cmk.utils.type_defs import ConfigSerial, HostName, Protocol, Result, SectionName
+from cmk.utils.type_defs import (
+    ConfigSerial,
+    ErrorResult,
+    HostName,
+    OKResult,
+    Protocol,
+    Result,
+    SectionName,
+)
 
 from cmk.snmplib.type_defs import AbstractRawData, SNMPRawData
 
@@ -114,7 +122,7 @@ class AgentPayload(L3Message):
             raise ValueError(repr(data)) from exc
 
     def result(self) -> Result[AbstractRawData, Exception]:
-        return Result.OK(self._value)
+        return OKResult(self._value)
 
 
 class SNMPPayload(L3Message):
@@ -142,7 +150,7 @@ class SNMPPayload(L3Message):
             raise ValueError(repr(data)) from exc
 
     def result(self) -> Result[SNMPRawData, Exception]:
-        return Result.OK(self._value)
+        return OKResult(self._value)
 
     @staticmethod
     def _serialize(value: SNMPRawData) -> bytes:
@@ -181,7 +189,7 @@ class ErrorPayload(L3Message):
             raise ValueError(repr(data)) from exc
 
     def result(self) -> Result[AbstractRawData, Exception]:
-        return Result.Error(self._error)
+        return ErrorResult(self._error)
 
     @staticmethod
     def _serialize(error: Exception) -> bytes:

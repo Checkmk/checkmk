@@ -323,21 +323,7 @@ class Result(Generic[T_co, E_co], abc.ABC):
         without `join`, `bind`, `fold` or `map`.
 
     """
-    @staticmethod
-    def Error(err: E_co):  # type: ignore[misc]
-        # mypy complains about the variance of the argument but
-        # both static methods only forward it to the respective
-        # `__init__()`, which is safe.
-        #
-        # See Also:
-        #   - https://github.com/python/mypy/pull/2888
-        #   - https://github.com/python/mypy/issues/7049
-        return _Error(err)
-
-    @staticmethod
-    def OK(ok: T_co):  # type: ignore[misc]
-        # mypy: See comments to Err().
-        return _OK(ok)
+    __slots__ = ()
 
     @abc.abstractmethod
     def __hash__(self) -> int:
@@ -390,14 +376,14 @@ class Result(Generic[T_co, E_co], abc.ABC):
         raise NotImplementedError
 
 
-class _OK(Result[T_co, E_co]):
+class OKResult(Result[T_co, E_co]):
     __slots__ = ["_ok"]
 
     def __init__(self, ok: T_co):
         self._ok: Final[T_co] = ok
 
     def __repr__(self):
-        return "Result.OK(%r)" % self.ok
+        return "%s(%r)" % (type(self).__name__, self.ok)
 
     def __hash__(self) -> int:
         return hash(self.ok)
@@ -405,24 +391,24 @@ class _OK(Result[T_co, E_co]):
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Result):
             return NotImplemented
-        if not isinstance(other, _OK):
+        if not isinstance(other, OKResult):
             return False
         return self.ok == other.ok
 
     def __lt__(self, other: Any) -> bool:
         if not isinstance(other, Result):
             return NotImplemented
-        if isinstance(other, _Error):
+        if isinstance(other, ErrorResult):
             return True
-        assert isinstance(other, _OK)
+        assert isinstance(other, OKResult)
         return self.ok < other.ok
 
     def __gt__(self, other: Any) -> bool:
         if not isinstance(other, Result):
             return NotImplemented
-        if isinstance(other, _Error):
+        if isinstance(other, ErrorResult):
             return False
-        assert isinstance(other, _OK)
+        assert isinstance(other, OKResult)
         return self.ok > other.ok
 
     def __iter__(self) -> Iterable[T_co]:
@@ -443,14 +429,14 @@ class _OK(Result[T_co, E_co]):
         return False
 
 
-class _Error(Result[T_co, E_co]):
+class ErrorResult(Result[T_co, E_co]):
     __slots__ = ["_error"]
 
     def __init__(self, error: E_co):
         self._error: Final[E_co] = error
 
     def __repr__(self):
-        return "Result.Error(%r)" % self.error
+        return "%s(%r)" % (type(self).__name__, self.error)
 
     def __hash__(self) -> int:
         return hash(self.error)
@@ -458,24 +444,24 @@ class _Error(Result[T_co, E_co]):
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Result):
             return NotImplemented
-        if not isinstance(other, _Error):
+        if not isinstance(other, ErrorResult):
             return False
         return self.error == other.error
 
     def __lt__(self, other: Any) -> bool:
         if not isinstance(other, Result):
             return NotImplemented
-        if isinstance(other, _OK):
+        if isinstance(other, OKResult):
             return False
-        assert isinstance(other, _Error)
+        assert isinstance(other, ErrorResult)
         return self._error < other._error
 
     def __gt__(self, other: Any) -> bool:
         if not isinstance(other, Result):
             return NotImplemented
-        if isinstance(other, _OK):
+        if isinstance(other, OKResult):
             return True
-        assert isinstance(other, _Error)
+        assert isinstance(other, ErrorResult)
         return self._error > other._error
 
     def __iter__(self) -> Iterable[T_co]:

@@ -7,7 +7,7 @@ from ast import literal_eval
 
 import pytest  # type: ignore[import]
 
-from cmk.utils.type_defs import EvalableFloat, Result
+from cmk.utils.type_defs import ErrorResult, EvalableFloat, OKResult, Result
 
 from cmk.snmplib.type_defs import OIDBytes, OIDSpec
 
@@ -67,7 +67,7 @@ class TestOkResult:
 
     @pytest.fixture
     def result(self, value):
-        return Result.OK(value)
+        return OKResult(value)
 
     def test_eq(self, result, value):
         assert (result == value) is False
@@ -75,13 +75,13 @@ class TestOkResult:
         assert (result != value) is True
         assert (value != result) is True
 
-        ok = Result.OK(value)
+        ok: Result[int, int] = OKResult(value)
         assert (result == ok) is True
         assert (ok == result) is True
         assert (result != ok) is False
         assert (ok != result) is False
 
-        err = Result.Error(value)
+        err: Result[int, int] = ErrorResult(value)
         assert (result == err) is False
         assert (err == result) is False
         assert (result != err) is True
@@ -101,21 +101,21 @@ class TestOkResult:
         assert result.is_error() is False
 
     def test_cmp_ok(self, result):
-        other = Result.OK(1)
+        other: Result[int, int] = OKResult(1)
         assert result.ok < other.ok
 
         assert result != other
 
         assert result < other
         assert result <= other
-        assert result <= Result.OK(result.ok)
+        assert result <= OKResult(result.ok)
 
         assert other > result
         assert other >= result
-        assert other >= Result.OK(other.ok)
+        assert other >= OKResult(other.ok)
 
     def test_cmp_err(self, result, value):
-        other = Result.Error(value)
+        other: Result[int, int] = ErrorResult(value)
         assert result.ok == other.error
 
         assert result != other
@@ -137,7 +137,7 @@ class TestErrorResult:
 
     @pytest.fixture
     def result(self, value):
-        return Result.Error(value)
+        return ErrorResult(value)
 
     def test_eq(self, result, value):
         assert (result == value) is False
@@ -145,13 +145,13 @@ class TestErrorResult:
         assert (result != value) is True
         assert (value != result) is True
 
-        ok = Result.OK(value)
+        ok: Result[int, int] = OKResult(value)
         assert (result == ok) is False
         assert (ok == result) is False
         assert (result != ok) is True
         assert (ok != result) is True
 
-        err = Result.Error(value)
+        err: Result[int, int] = ErrorResult(value)
         assert (result == err) is True
         assert (err == result) is True
         assert (result != err) is False
@@ -171,21 +171,21 @@ class TestErrorResult:
         assert result.is_error() is True
 
     def test_cmp_err(self, result):
-        other = Result.Error(1)
+        other: Result[int, int] = ErrorResult(1)
         assert result.error < other.error
 
         assert result != other
 
         assert result < other
         assert result <= other
-        assert result <= Result.Error(result.error)
+        assert result <= ErrorResult(result.error)
 
         assert other > result
         assert other >= result
-        assert other >= Result.Error(other.error)
+        assert other >= ErrorResult(other.error)
 
     def test_cmp_ok(self, result, value):
-        other = Result.OK(value)
+        other: Result[int, int] = OKResult(value)
         assert result.error == other.ok
 
         assert result != other

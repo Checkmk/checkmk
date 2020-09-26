@@ -10,14 +10,15 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario  # type: ignore[import]
 
-from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPRuleDependentDetectSpec, SNMPTree
-from cmk.utils.type_defs import Result, RuleSetName, SourceType
 from cmk.utils.exceptions import MKIPAddressLookupError
+from cmk.utils.type_defs import ErrorResult, OKResult, RuleSetName, SourceType
 
-from cmk.base.api.agent_based import register
-from cmk.base.api.agent_based.register import section_plugins
+from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPRuleDependentDetectSpec, SNMPTree
+
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
+from cmk.base.api.agent_based import register
+from cmk.base.api.agent_based.register import section_plugins
 from cmk.base.checkers import Mode
 from cmk.base.checkers.agent import AgentHostSections
 from cmk.base.checkers.snmp import SNMPSource
@@ -145,11 +146,11 @@ class TestSNMPSummaryResult:
 
     @pytest.mark.usefixtures("scenario")
     def test_defaults(self, source):
-        assert source.summarize(Result.OK(AgentHostSections())) == (0, "Success", [])
+        assert source.summarize(OKResult(AgentHostSections())) == (0, "Success", [])
 
     @pytest.mark.usefixtures("scenario")
     def test_with_exception(self, source):
-        assert source.summarize(Result.Error(Exception())) == (3, "(?)", [])
+        assert source.summarize(ErrorResult(Exception())) == (3, "(?)", [])
 
 
 @pytest.fixture(name="discovery_rulesets")

@@ -8,7 +8,7 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
 
-from cmk.utils.type_defs import Result
+from cmk.utils.type_defs import OKResult
 
 from cmk.fetchers.tcp import TCPFetcher
 
@@ -31,7 +31,7 @@ class TestModeDumpAgent:
 
     @pytest.fixture
     def patch_fetch(self, raw_data, monkeypatch):
-        monkeypatch.setattr(TCPFetcher, "fetch", lambda self, mode: Result.OK(raw_data))
+        monkeypatch.setattr(TCPFetcher, "fetch", lambda self, mode: OKResult(raw_data))
 
     @pytest.fixture
     def scenario(self, hostname, ipaddress, monkeypatch):

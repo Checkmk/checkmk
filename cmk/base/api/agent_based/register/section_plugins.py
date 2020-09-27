@@ -26,7 +26,6 @@ from cmk.base.api.agent_based.type_defs import (
     SNMPStringByteTable,
     SNMPStringTable,
 )
-from cmk.base.api.agent_based.utils import parse_to_string_table
 from cmk.base.api.agent_based.register.utils import validate_function_arguments
 
 from cmk.base.discovered_labels import HostLabel
@@ -53,6 +52,36 @@ def _validate_parse_function(parse_function: Union[AgentParseFunction, SNMPParse
         if arg.annotation != expected_annotation[0]:
             raise TypeError('expected parse function argument annotation %r, got %r' %
                             (expected_annotation[1], arg.annotation))
+
+
+def _create_agent_parse_function(
+    parse_function: Optional[AgentParseFunction],) -> AgentParseFunction:
+    if parse_function is None:
+        return lambda string_table: string_table
+
+    _validate_parse_function(
+        parse_function,
+        expected_annotation=(AgentStringTable, "AgentStringTable"),
+    )
+    return parse_function
+
+
+def _create_snmp_parse_function(
+    parse_function: Optional[SNMPParseFunction],
+    trees: List[SNMPTree],
+) -> SNMPParseFunction:
+    if parse_function is None:
+        return lambda string_table: string_table
+
+    needs_bytes = any(isinstance(oid, OIDBytes) for tree in trees for oid in tree.oids)
+
+    _validate_parse_function(
+        parse_function,
+        expected_annotation=(  #
+            (SNMPStringByteTable, "SNMPStringByteTable") if needs_bytes else
+            (SNMPStringTable, "SNMPStringTable")),
+    )
+    return parse_function
 
 
 def _validate_supersedings(own_name: SectionName, supersedes: List[SectionName]) -> None:
@@ -156,7 +185,7 @@ def create_agent_section_plugin(
     *,
     name: str,
     parsed_section_name: Optional[str] = None,
-    parse_function: AgentParseFunction,
+    parse_function: Optional[AgentParseFunction] = None,
     host_label_function: Optional[HostLabelFunction] = None,
     supersedes: Optional[List[str]] = None,
     module: Optional[str] = None,
@@ -168,15 +197,10 @@ def create_agent_section_plugin(
     """
     section_name = SectionName(name)
 
-    _validate_parse_function(
-        parse_function,
-        expected_annotation=(AgentStringTable, "AgentStringTable"),
-    )
-
     return AgentSectionPlugin(
         section_name,
         ParsedSectionName(parsed_section_name if parsed_section_name else str(section_name)),
-        parse_function,
+        _create_agent_parse_function(parse_function),
         _create_host_label_function(
             host_label_function,
             # TODO:
@@ -193,12 +217,12 @@ def create_agent_section_plugin(
 def create_snmp_section_plugin(
     *,
     name: str,
-    parsed_section_name: Optional[str] = None,
-    parse_function: SNMPParseFunction,
-    host_label_function: Optional[HostLabelFunction] = None,
-    supersedes: Optional[List[str]] = None,
     detect_spec: SNMPDetectSpec,
     trees: List[SNMPTree],
+    parsed_section_name: Optional[str] = None,
+    parse_function: Optional[SNMPParseFunction] = None,
+    host_label_function: Optional[HostLabelFunction] = None,
+    supersedes: Optional[List[str]] = None,
     module: Optional[str] = None,
 ) -> SNMPSectionPlugin:
     """Return an SNMPSectionPlugin object after validating and converting the arguments one by one
@@ -208,19 +232,13 @@ def create_snmp_section_plugin(
     """
     section_name = SectionName(name)
 
-    if any(isinstance(oid, OIDBytes) for tree in trees for oid in tree.oids):
-        expected_annotation: Tuple[Type, str] = (SNMPStringByteTable, "SNMPStringByteTable")
-    else:
-        expected_annotation = (SNMPStringTable, "SNMPStringTable")
-
-    _validate_parse_function(parse_function, expected_annotation=expected_annotation)
     _validate_detect_spec(detect_spec)
     _validate_snmp_trees(trees)
 
     return SNMPSectionPlugin(
         section_name,
         ParsedSectionName(parsed_section_name if parsed_section_name else str(section_name)),
-        parse_function,
+        _create_snmp_parse_function(parse_function, trees),
         _create_host_label_function(
             host_label_function,
             default_params=None,
@@ -258,7 +276,7 @@ def trivial_section_factory(section_name: SectionName) -> AgentSectionPlugin:
     return AgentSectionPlugin(
         name=section_name,
         parsed_section_name=ParsedSectionName(str(section_name)),
-        parse_function=parse_to_string_table,
+        parse_function=lambda string_table: string_table,
         host_label_function=_noop_host_label_function,
         supersedes=set(),
         module=None,

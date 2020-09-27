@@ -6,14 +6,12 @@
 
 from .agent_based_api.v1 import (
     exists,
-    parse_to_string_table,
     register,
     SNMPTree,
 )
 
 register.snmp_section(
     name="dell_hw_info",
-    parse_function=parse_to_string_table,
     trees=[
         SNMPTree(
             base=".1.3.6.1.4.1.674.10892.5",

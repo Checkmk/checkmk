@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from .agent_based_api.v1 import (
-    parse_to_string_table,
     register,
     SNMPTree,
 )
@@ -13,7 +12,6 @@ from .utils import checkpoint
 
 register.snmp_section(
     name="checkpoint_inv_tunnels",
-    parse_function=parse_to_string_table,
     trees=[
         SNMPTree(
             base=".1.3.6.1.4.1.2620.500.9002.1",

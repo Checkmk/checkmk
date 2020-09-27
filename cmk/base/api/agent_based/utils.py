@@ -21,18 +21,6 @@ import cmk.base.prediction
 from cmk.base.api.agent_based.checking_classes import IgnoreResultsError, Metric, Result, State
 from cmk.base.api.agent_based.type_defs import ValueStore
 
-
-# annotating this breaks validation.
-# yet another reason to not use this.
-def parse_to_string_table(string_table):
-    """A function that returns its argument unchanged.
-
-    Provided for developers who don't want to implement a parse function
-    in their section definition (which they should).
-    """
-    return string_table
-
-
 #     ____       _            _
 #    |  _ \  ___| |_ ___  ___| |_   ___ _ __   ___  ___
 #    | | | |/ _ \ __/ _ \/ __| __| / __| '_ \ / _ \/ __|

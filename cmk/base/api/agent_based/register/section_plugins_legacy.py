@@ -23,7 +23,6 @@ from cmk.base.api.agent_based.type_defs import (
     SNMPSectionPlugin,
 )
 from cmk.base.api.agent_based.type_defs import AgentStringTable
-from cmk.base.api.agent_based.utils import parse_to_string_table
 from cmk.base.check_api_utils import Service
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 
@@ -34,11 +33,12 @@ def get_section_name(check_plugin_name: str) -> str:
     return check_plugin_name.split(".", 1)[0]
 
 
-def _create_agent_parse_function(original_parse_function: Optional[Callable]) -> AgentParseFunction:
+def _create_agent_parse_function(
+    original_parse_function: Optional[Callable],) -> AgentParseFunction:
     """Wrap parse function to comply to signature requirement"""
 
     if original_parse_function is None:
-        return parse_to_string_table
+        return lambda string_table: string_table
 
     # do not use functools.wraps, the point is the new argument name!
     def parse_function(string_table: AgentStringTable) -> Any:
@@ -161,8 +161,10 @@ def _create_snmp_trees(snmp_info: Any) -> Tuple[List[SNMPTree], Callable]:
     return trees, layout_recover_function
 
 
-def _create_snmp_parse_function(original_parse_function: Optional[Callable],
-                                recover_layout_function: Callable) -> SNMPParseFunction:
+def _create_snmp_parse_function(
+    original_parse_function: Optional[Callable],
+    recover_layout_function: Callable,
+) -> SNMPParseFunction:
     """Wrap parse function to comply to new API
 
     The created parse function will comply to the new signature requirement of
@@ -171,15 +173,20 @@ def _create_snmp_parse_function(original_parse_function: Optional[Callable],
     Additionally we undo the change of the data layout induced by the new
     spec for SNMPTrees.
     """
-    if original_parse_function is None:
-        original_parse_function = parse_to_string_table
 
     # do not use functools.wraps, the point is the new argument name!
     def parse_function(string_table) -> Any:
-        return original_parse_function(  # type: ignore
-            recover_layout_function(string_table),)
 
-    parse_function.__name__ = original_parse_function.__name__
+        relayouted_string_table = recover_layout_function(string_table)
+
+        if original_parse_function is None:
+            return relayouted_string_table
+
+        return original_parse_function(relayouted_string_table)
+
+    if original_parse_function is not None:
+        parse_function.__name__ = original_parse_function.__name__
+
     return parse_function
 
 

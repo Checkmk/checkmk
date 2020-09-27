@@ -42,7 +42,7 @@ def agent_section(
     *,
     name: str,
     parsed_section_name: Optional[str] = None,
-    parse_function: AgentParseFunction,
+    parse_function: Optional[AgentParseFunction] = None,
     host_label_function: Optional[HostLabelFunction] = None,
     supersedes: Optional[List[str]] = None,
 ) -> None:
@@ -83,7 +83,7 @@ def snmp_section(
     *,
     name: str,
     parsed_section_name: Optional[str] = None,
-    parse_function: SNMPParseFunction,
+    parse_function: Optional[SNMPParseFunction] = None,
     host_label_function: Optional[HostLabelFunction] = None,
     detect: SNMPDetectSpec,
     trees: List[SNMPTree],

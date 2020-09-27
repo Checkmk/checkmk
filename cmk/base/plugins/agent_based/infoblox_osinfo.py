@@ -8,14 +8,12 @@ from .agent_based_api.v1 import (
     all_of,
     contains,
     exists,
-    parse_to_string_table,
     register,
     SNMPTree,
 )
 
 register.snmp_section(
     name="infoblox_osinfo",
-    parse_function=parse_to_string_table,
     trees=[
         SNMPTree(
             base=".1.3.6.1.4.1.2021.100",

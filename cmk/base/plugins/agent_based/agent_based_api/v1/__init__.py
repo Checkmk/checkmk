@@ -49,7 +49,6 @@ from cmk.base.api.agent_based.utils import (
     not_exists,
     not_matches,
     not_startswith,
-    parse_to_string_table,
     startswith,
     GetRateError,
 )
@@ -61,7 +60,6 @@ from . import register, render, clusterize, type_defs
 __all__ = [
     # the order is relevant for the shinx doc!
     # begin with section stuff
-    "parse_to_string_table",
     "all_of",
     "any_of",
     "exists",

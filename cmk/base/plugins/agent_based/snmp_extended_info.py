@@ -7,14 +7,12 @@
 from .agent_based_api.v1 import (
     exists,
     OIDEnd,
-    parse_to_string_table,
     register,
     SNMPTree,
 )
 
 register.snmp_section(
     name="snmp_extended_info",
-    parse_function=parse_to_string_table,
     trees=[
         SNMPTree(
             base=".1.3.6.1.2.1.47.1.1.1.1",

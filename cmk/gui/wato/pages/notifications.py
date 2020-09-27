@@ -1229,13 +1229,13 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
         headers_part2: List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]] = [
             (_("Conditions"), [
-                "match_site", "match_folder", "match_hosttags", "match_hostgroups", "match_hosts",
-                "match_exclude_hosts", "match_servicegroups", "match_exclude_servicegroups",
-                "match_servicegroups_regex", "match_exclude_servicegroups_regex", "match_services",
-                "match_exclude_services", "match_checktype", "match_contacts",
-                "match_contactgroups", "match_plugin_output", "match_timeperiod",
-                "match_escalation", "match_escalation_throttle", "match_sl", "match_host_event",
-                "match_service_event", "match_ec", "match_notification_comment"
+                "match_site", "match_folder", "match_hosttags", "match_hostlabels",
+                "match_hostgroups", "match_hosts", "match_exclude_hosts", "match_servicelabels",
+                "match_servicegroups", "match_exclude_servicegroups", "match_servicegroups_regex",
+                "match_exclude_servicegroups_regex", "match_services", "match_exclude_services",
+                "match_checktype", "match_contacts", "match_contactgroups", "match_plugin_output",
+                "match_timeperiod", "match_escalation", "match_escalation_throttle", "match_sl",
+                "match_host_event", "match_service_event", "match_ec", "match_notification_comment"
             ]),
         ]
 
@@ -1285,14 +1285,14 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                            forth=lambda x: x if isinstance(x, tuple) else ("always", x))),
             ],
             optional_keys=[
-                "match_site", "match_folder", "match_hosttags", "match_hostgroups", "match_hosts",
-                "match_exclude_hosts", "match_servicegroups", "match_exclude_servicegroups",
-                "match_servicegroups_regex", "match_exclude_servicegroups_regex", "match_services",
-                "match_exclude_services", "match_contacts", "match_contactgroups",
-                "match_plugin_output", "match_timeperiod", "match_escalation",
-                "match_escalation_throttle", "match_sl", "match_host_event", "match_service_event",
-                "match_ec", "match_notification_comment", "match_checktype", "bulk",
-                "contact_users", "contact_groups", "contact_emails", "contact_match_macros",
+                "match_site", "match_folder", "match_hosttags", "match_hostlabels",
+                "match_hostgroups", "match_hosts", "match_exclude_hosts", "match_servicelabels",
+                "match_servicegroups", "match_exclude_servicegroups", "match_servicegroups_regex",
+                "match_exclude_servicegroups_regex", "match_services", "match_exclude_services",
+                "match_contacts", "match_contactgroups", "match_plugin_output", "match_timeperiod",
+                "match_escalation", "match_escalation_throttle", "match_sl", "match_host_event",
+                "match_service_event", "match_ec", "match_notification_comment", "match_checktype",
+                "bulk", "contact_users", "contact_groups", "contact_emails", "contact_match_macros",
                 "contact_match_groups"
             ],
             headers=headers_part1 + contact_headers + headers_part2,

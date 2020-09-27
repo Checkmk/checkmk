@@ -33,9 +33,10 @@ from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
     ABCPageListOfMultipleGetChoice, Alternative, CascadingDropdown, Checkbox, Dictionary,
     DocumentationURL, DropdownChoice, DualListChoice, ElementSelection, FixedValue, Float, Integer,
-    ListChoice, ListOf, ListOfMultiple, ListOfStrings, MonitoredHostname, OptionalDropdownChoice,
-    Password, Percentage, RegExp, RegExpUnicode, RuleComment, TextAscii, TextAsciiAutocomplete,
-    TextUnicode, Transform, Tuple, Url, ValueSpec, ValueSpecHelp, rule_option_elements,
+    Labels, ListChoice, ListOf, ListOfMultiple, ListOfStrings, MonitoredHostname,
+    OptionalDropdownChoice, Password, Percentage, RegExp, RegExpUnicode, RuleComment, TextAscii,
+    TextAsciiAutocomplete, TextUnicode, Transform, Tuple, Url, ValueSpec, ValueSpecHelp,
+    rule_option_elements,
 )
 from cmk.gui.plugins.wato.utils.base_modes import (  # noqa: F401 # pylint: disable=unused-import
     ActionResult, WatoMode,
@@ -1190,6 +1191,13 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
     @classmethod
     def _generic_rule_match_conditions(cls):
         return _simple_host_rule_match_conditions() + [
+            ("match_servicelabels",
+             Labels(
+                 Labels.World.CORE,
+                 title=_("Match Service Labels"),
+                 help=_(
+                     "Use this condition to select hosts based on the configured service labels."),
+             )),
             ("match_servicegroups",
              ServiceGroupChoice(
                  title=_("Match Service Groups"),
@@ -2161,6 +2169,12 @@ def _multi_folder_rule_match_condition():
 def _common_host_rule_match_conditions():
     return [
         ("match_hosttags", HostTagCondition(title=_("Match Host Tags"))),
+        ("match_hostlabels",
+         Labels(
+             Labels.World.CORE,
+             title=_("Match Host Labels"),
+             help=_("Use this condition to select hosts based on the configured host labels."),
+         )),
         ("match_hostgroups",
          HostGroupChoice(
              title=_("Match Host Groups"),

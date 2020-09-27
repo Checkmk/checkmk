@@ -801,6 +801,8 @@ def rbn_match_rule(rule: EventRule, context: EventContext) -> Optional[str]:
         rbn_match_host_event,
         rbn_match_service_event,
         rbn_match_notification_comment,
+        rbn_match_hostlabels,
+        rbn_match_servicelabels,
         rbn_match_event_console,
     ], rule, context)
 
@@ -999,6 +1001,35 @@ def rbn_match_notification_comment(rule: EventRule, context: EventContext) -> Op
         if not r.match(notification_comment):
             return "The beginning of the notification comment '%s' is not matched by the regex '%s'" % (
                 notification_comment, rule["match_notification_comment"])
+    return None
+
+
+def rbn_match_hostlabels(rule: EventRule, context: EventContext) -> Optional[str]:
+    if "match_hostlabels" in rule:
+        return _rbn_handle_labels(rule, context, "host")
+
+    return None
+
+
+def rbn_match_servicelabels(rule: EventRule, context: EventContext) -> Optional[str]:
+    if "match_servicelabels" in rule:
+        return _rbn_handle_labels(rule, context, "service")
+
+    return None
+
+
+def _rbn_handle_labels(rule: EventRule, context: EventContext, what: str) -> Optional[str]:
+    labels: Dict[str, Any] = {}
+    context_str = "%sLABEL" % what.upper()
+    labels = {
+        variable.replace("%s_" % context_str, ""): value
+        for variable, value in context.items()
+        if variable.startswith(context_str)
+    }
+
+    if not set(labels.items()).issuperset(set(rule["match_%slabels" % what].items())):
+        return "The %s labels %s did not match %s" % (what, rule["match_%slabels" % what], labels)
+
     return None
 
 

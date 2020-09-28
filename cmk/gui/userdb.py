@@ -393,7 +393,7 @@ def _is_valid_user_session(username: UserId, session_id: str) -> bool:
     if config.single_user_session is None:
         return True  # No login session limitation enabled, no validation
 
-    session_infos = load_session_info(username)
+    session_infos = _load_session_infos(username)
     if not session_infos:
         return False  # no session active
 
@@ -411,7 +411,7 @@ def _ensure_user_can_init_session(username: UserId) -> bool:
 
     session_timeout = config.single_user_session
 
-    for session_info in load_session_info(username).values():
+    for session_info in _load_session_infos(username).values():
         if (time.time() - session_info.last_activity) > session_timeout:
             continue  # Former active session timed out
 
@@ -429,7 +429,7 @@ def _initialize_session(username: UserId) -> str:
     if not config.single_user_session:
         return ""
 
-    session_infos = load_session_info(username)
+    session_infos = _load_session_infos(username)
 
     session_id = _create_session_id()
     now = int(time.time())
@@ -439,7 +439,7 @@ def _initialize_session(username: UserId) -> str:
         last_activity=now,
     )
 
-    save_session_info(username, session_infos)
+    _save_session_infos(username, session_infos)
 
     return session_id
 
@@ -454,28 +454,28 @@ def _refresh_session(username: UserId, session_id: str) -> None:
     if not config.single_user_session:
         return  # No session handling at all
 
-    session_infos = load_session_info(username)
+    session_infos = _load_session_infos(username)
     if session_id not in session_infos:
         return  # Don't refresh. Session is not valid anymore
 
     session_infos[session_id].last_activity = int(time.time())
-    save_session_info(username, session_infos)
+    _save_session_infos(username, session_infos)
 
 
 def _invalidate_session(username: UserId, session_id: str) -> None:
-    session_infos = load_session_info(username)
+    session_infos = _load_session_infos(username)
     with suppress(KeyError):
         del session_infos[session_id]
-        save_session_info(username, session_infos)
+        _save_session_infos(username, session_infos)
 
 
-def save_session_info(username: UserId, session_infos: Dict[str, SessionInfo]) -> None:
+def _save_session_infos(username: UserId, session_infos: Dict[str, SessionInfo]) -> None:
     """Saves the sessions for the current user"""
     save_custom_attr(username, "session_info",
                      repr({k: asdict(v) for k, v in session_infos.items()}))
 
 
-def load_session_info(username: UserId) -> Dict[str, SessionInfo]:
+def _load_session_infos(username: UserId) -> Dict[str, SessionInfo]:
     """Returns the stored sessions of the given user"""
     return load_custom_attr(username, "session_info", _convert_session_info) or {}
 

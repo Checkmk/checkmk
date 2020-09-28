@@ -156,7 +156,7 @@ def check_heartbeat_crm(_no_item, params, info):
 
     first_line = ' '.join(info[0])
     if first_line.lower().startswith(
-            "critical") or 'connection to cluster failed' in first_line.lower():
+        ("critical", "error:")) or 'connection to cluster failed' in first_line.lower():
         return 2, first_line
 
     last_updated, dc, numNodes, numResources = heartbeat_crm_parse_general(info)

@@ -43,8 +43,10 @@ def _validate_parse_function(parse_function: Union[AgentParseFunction, SNMPParse
         raise TypeError("parse function must not be a generator function: %r" % (parse_function,))
 
     parameters = inspect.signature(parse_function).parameters
-    if list(parameters) != ['string_table']:
-        raise ValueError("parse function must accept exactly one argument 'string_table'")
+    parameter_names = list(parameters)
+    if parameter_names != ['string_table']:
+        raise ValueError("parse function must accept exactly one argument 'string_table' (got %r)" %
+                         parameter_names)
 
     arg = parameters['string_table']
     if arg.annotation is not arg.empty:  # why is inspect._empty trueish?!

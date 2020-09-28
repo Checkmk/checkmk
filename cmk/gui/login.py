@@ -7,7 +7,7 @@
 import http.client
 import os
 import traceback
-from hashlib import md5
+from hashlib import sha256
 from typing import List, Union, Optional, Tuple
 from pathlib import Path
 from contextlib import suppress
@@ -128,7 +128,7 @@ def _generate_hash(username: UserId, value: str) -> str:
     """Generates a hash to be added into the cookie value"""
     secret = _load_secret()
     serial = _load_serial(username)
-    return md5(ensure_binary(value + str(serial) + secret)).hexdigest()
+    return sha256(ensure_binary(value + str(serial) + secret)).hexdigest()
 
 
 def del_auth_cookie() -> None:

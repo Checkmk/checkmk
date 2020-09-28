@@ -422,12 +422,7 @@ def _ensure_user_can_init_session(username: UserId) -> bool:
 def _initialize_session(username: UserId) -> str:
     """Creates a new user login session (if single user session mode is enabled) and
     returns the session_id of the new session."""
-    session_infos = _load_session_infos(username)
-
-    # In single user session mode there is only one session allowed at a time. Once we reach
-    # this place, we can be sure that we are allowed to remove all existing ones.
-    if config.single_user_session:
-        session_infos.clear()
+    session_infos = _cleanup_old_sessions(_load_session_infos(username))
 
     session_id = _create_session_id()
     now = int(time.time())
@@ -440,6 +435,24 @@ def _initialize_session(username: UserId) -> str:
     _save_session_infos(username, session_infos)
 
     return session_id
+
+
+def _cleanup_old_sessions(session_infos: Dict[str, SessionInfo]) -> Dict[str, SessionInfo]:
+    """Remove invalid / outdated sessions
+
+    In single user session mode all sessions are removed. In regular mode, the sessions are limited
+    to 20 per user. Sessions with an inactivity > 7 days are also removed.
+    """
+    if config.single_user_session:
+        # In single user session mode there is only one session allowed at a time. Once we
+        # reach this place, we can be sure that we are allowed to remove all existing ones.
+        return {}
+
+    return {
+        s.session_id: s
+        for s in sorted(session_infos.values(), key=lambda s: s.last_activity)[:20]
+        if time.time() - s.last_activity < 86400 * 7
+    }
 
 
 def _create_session_id() -> str:

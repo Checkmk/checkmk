@@ -337,6 +337,38 @@ def test_initialize_session_single_user_session(user_id):
     )
 
 
+def test_cleanup_old_sessions_no_existing():
+    assert userdb._cleanup_old_sessions({}) == {}
+
+
+def test_cleanup_old_sessions_remove_outdated():
+    assert list(
+        userdb._cleanup_old_sessions({
+            "outdated": userdb.SessionInfo(
+                session_id="outdated",
+                started_at=int(time.time()) - (86400 * 10),
+                last_activity=int(time.time()) - (86400 * 8),
+            ),
+            "keep": userdb.SessionInfo(
+                session_id="keep",
+                started_at=int(time.time()) - (86400 * 10),
+                last_activity=int(time.time()) - (86400 * 5),
+            ),
+        }).keys()) == ["keep"]
+
+
+def test_cleanup_old_sessions_too_many():
+    sessions = {
+        f"keep_{num}": userdb.SessionInfo(
+            session_id=f"keep_{num}",
+            started_at=int(time.time()) - (86400 * 10),
+            last_activity=int(time.time()) - (86400 * 5) + num,
+        ) for num in range(20)
+    }
+
+    assert "keep_20" not in list(userdb._cleanup_old_sessions(sessions).keys())
+
+
 def test_create_session_id_is_correct_type():
     id1 = userdb._create_session_id()
     assert isinstance(id1, str)

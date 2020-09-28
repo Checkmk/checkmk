@@ -6,11 +6,11 @@
 
 import http.client
 import os
-import time
 import traceback
 from hashlib import md5
 from typing import List, Union, Optional, Tuple
 from pathlib import Path
+from contextlib import suppress
 
 from six import ensure_binary, ensure_str
 from werkzeug.local import LocalProxy
@@ -120,8 +120,8 @@ def _load_serial(username: UserId) -> int:
     return userdb.load_custom_attr(username, 'serial', int, 0)
 
 
-def _generate_auth_hash(username: UserId, now: float) -> str:
-    return _generate_hash(username, ensure_str(username) + str(now))
+def _generate_auth_hash(username: UserId, session_id: str) -> str:
+    return _generate_hash(username, ensure_str(username) + session_id)
 
 
 def _generate_hash(username: UserId, value: str) -> str:
@@ -142,9 +142,8 @@ def del_auth_cookie() -> None:
                 html.response.delete_cookie(cookie_name)
 
 
-def _auth_cookie_value(username: UserId) -> str:
-    now = time.time()
-    return ":".join([ensure_str(username), str(now), _generate_auth_hash(username, now)])
+def _auth_cookie_value(username: UserId, session_id: str) -> str:
+    return ":".join([ensure_str(username), session_id, _generate_auth_hash(username, session_id)])
 
 
 def _invalidate_auth_session() -> None:
@@ -152,49 +151,36 @@ def _invalidate_auth_session() -> None:
     html.del_language_cookie()
 
 
-def _renew_auth_session(username: UserId) -> None:
-    set_auth_cookie(username)
+def _renew_auth_session(username: UserId, session_id: str) -> None:
+    _set_auth_cookie(username, session_id)
 
 
 def _create_auth_session(username: UserId, session_id: str) -> None:
-    if session_id:
-        _set_session_cookie(username, session_id)
-
-    set_auth_cookie(username)
+    _set_auth_cookie(username, session_id)
 
 
-def set_auth_cookie(username: UserId) -> None:
-    html.response.set_http_cookie(auth_cookie_name(), _auth_cookie_value(username))
+def update_auth_cookie(username: UserId) -> None:
+    _set_auth_cookie(username, _get_session_id_from_cookie(username))
 
 
-def _set_session_cookie(username: UserId, session_id: str) -> None:
-    html.response.set_http_cookie(_session_cookie_name(),
-                                  _session_cookie_value(username, session_id))
-
-
-def _session_cookie_name() -> str:
-    return 'session%s' % site_cookie_suffix()
-
-
-def _session_cookie_value(username: UserId, session_id: str) -> str:
-    value = ensure_str(username) + ":" + session_id
-    return value + ":" + _generate_hash(username, value)
+def _set_auth_cookie(username: UserId, session_id: str) -> None:
+    html.response.set_http_cookie(auth_cookie_name(), _auth_cookie_value(username, session_id))
 
 
 def _get_session_id_from_cookie(username: UserId) -> str:
-    raw_value = html.request.cookie(_session_cookie_name(), "::")
-    assert raw_value is not None
-    cookie_username, session_id, cookie_hash = raw_value.split(':', 2)
+    cookie_username, session_id, cookie_hash = _parse_auth_cookie(auth_cookie_name())
 
-    if ensure_str(cookie_username) != username \
-       or cookie_hash != _generate_hash(username, cookie_username + ":" + session_id):
-        auth_logger.error("Invalid session: %s, Cookie: %r" % (username, raw_value))
+    # Has been checked before, but validate before using that information, just to be sure
+    _check_parsed_auth_cookie(username, session_id, cookie_hash)
+
+    if cookie_username != username:
+        auth_logger.error("Invalid session: (User: %s, Session: %s)", username, session_id)
         return ""
 
     return session_id
 
 
-def _renew_cookie(cookie_name: str, username: UserId) -> None:
+def _renew_cookie(cookie_name: str, username: UserId, session_id: str) -> None:
     # Do not renew if:
     # a) The _ajaxid var is set
     # b) A logout is requested
@@ -202,22 +188,21 @@ def _renew_cookie(cookie_name: str, username: UserId) -> None:
        and cookie_name == auth_cookie_name():
         auth_logger.debug("Renewing auth cookie (%s.py, vars: %r)" %
                           (html.myfile, dict(html.request.itervars())))
-        _renew_auth_session(username)
+        _renew_auth_session(username, session_id)
 
 
 def _check_auth_cookie(cookie_name: str) -> Optional[UserId]:
-    username, issue_time, cookie_hash = _parse_auth_cookie(cookie_name)
-    _check_parsed_auth_cookie(username, issue_time, cookie_hash)
-    session_id = _get_session_id_from_cookie(username)
+    username, session_id, cookie_hash = _parse_auth_cookie(cookie_name)
+    _check_parsed_auth_cookie(username, session_id, cookie_hash)
 
     try:
-        userdb.on_access(username, issue_time, session_id)
+        userdb.on_access(username, session_id)
     except MKAuthException:
         del_auth_cookie()
         raise
 
     # Once reached this the cookie is a good one. Renew it!
-    _renew_cookie(cookie_name, username)
+    _renew_cookie(cookie_name, username, session_id)
 
     if html.myfile != 'user_change_pw':
         result = userdb.need_to_change_pw(username)
@@ -229,20 +214,26 @@ def _check_auth_cookie(cookie_name: str) -> Optional[UserId]:
     return username
 
 
-def _parse_auth_cookie(cookie_name: str) -> Tuple[UserId, float, str]:
+def _parse_auth_cookie(cookie_name: str) -> Tuple[UserId, str, str]:
     raw_cookie = html.request.cookie(cookie_name, "::")
     assert raw_cookie is not None
 
     raw_value = ensure_str(raw_cookie)
-    username, issue_time, cookie_hash = raw_value.split(':', 2)
-    return UserId(username), float(issue_time) if issue_time else 0.0, ensure_str(cookie_hash)
+    username, session_id, cookie_hash = raw_value.split(':', 2)
+
+    # Refuse pre 2.0 cookies: These held the "issue time" in the 2nd field.
+    with suppress(ValueError):
+        float(session_id)
+        raise MKAuthException("Refusing pre 2.0 auth cookie")
+
+    return UserId(username), session_id, cookie_hash
 
 
-def _check_parsed_auth_cookie(username: UserId, issue_time: float, cookie_hash: str) -> None:
+def _check_parsed_auth_cookie(username: UserId, session_id: str, cookie_hash: str) -> None:
     if not userdb.user_exists(username):
         raise MKAuthException(_('Username is unknown'))
 
-    if cookie_hash != _generate_auth_hash(username, issue_time):
+    if cookie_hash != _generate_auth_hash(username, session_id):
         raise MKAuthException(_('Invalid credentials'))
 
 
@@ -330,7 +321,10 @@ def _check_auth_http_header() -> Optional[UserId]:
 
     user_id = UserId(ensure_str(user_id))
     set_auth_type("http_header")
-    _renew_cookie(auth_cookie_name(), user_id)
+
+    if auth_cookie_name() not in html.request.cookies:
+        userdb.on_succeeded_login(user_id)
+
     return user_id
 
 
@@ -539,8 +533,10 @@ class LoginPage(Page):
 class LogoutPage(Page):
     def page(self) -> None:
         assert config.user.id is not None
-        session_id = _get_session_id_from_cookie(config.user.id)
+
         _invalidate_auth_session()
+
+        session_id = _get_session_id_from_cookie(config.user.id)
         userdb.on_logout(config.user.id, session_id)
 
         if auth_type == 'cookie':

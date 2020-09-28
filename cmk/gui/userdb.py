@@ -180,7 +180,7 @@ def _user_exists_according_to_profile(username: UserId) -> bool:
             or os.path.exists(base_path + "serial.mk")
 
 
-def login_timed_out(username: UserId, last_activity: float) -> bool:
+def login_timed_out(username: UserId, last_activity: int) -> bool:
     idle_timeout = load_custom_attr(username, "idle_timeout", _convert_idle_timeout, None)
     if idle_timeout is None:
         idle_timeout = config.user_idle_timeout
@@ -337,16 +337,17 @@ def on_logout(username: UserId, session_id: str) -> None:
     _invalidate_session(username, session_id)
 
 
-def on_access(username: UserId, issue_time: float, session_id: str) -> None:
+def on_access(username: UserId, session_id: str) -> None:
+    if not _is_valid_user_session(username, session_id):
+        raise MKAuthException("Invalid user session")
+
     # Check whether or not there is an idle timeout configured, delete cookie and
     # require the user to renew the log when the timeout exceeded.
-    timed_out = login_timed_out(username, issue_time)
+    session_info = _load_session_infos(username)[session_id]
+    timed_out = login_timed_out(username, session_info.last_activity)
     if timed_out:
         raise MKAuthException("%s login timed out (Inactivity exceeded %r)" %
                               (username, config.user_idle_timeout))
-
-    if not _is_valid_user_session(username, session_id):
-        raise MKAuthException("Invalid user session")
 
     _refresh_session(username, session_id)
 

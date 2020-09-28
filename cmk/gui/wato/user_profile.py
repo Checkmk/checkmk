@@ -281,7 +281,7 @@ class UserChangePasswordPage(ABCUserProfilePage):
         userdb.save_users(users)
 
         # Set the new cookie to prevent logout for the current user
-        login.set_auth_cookie(config.user.id)
+        login.update_auth_cookie(config.user.id)
 
         return True
 

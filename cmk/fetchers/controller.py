@@ -472,23 +472,33 @@ def timeout_control(timeout: int) -> Iterator[None]:
         _disable_timeout()
 
 
-Command = NamedTuple("Command", [
-    ("serial", ConfigSerial),
-    ("host_name", HostName),
-    ("mode", Mode),
-    ("timeout", int),
-])
+class Command(NamedTuple):
+    serial: ConfigSerial
+    host_name: HostName
+    mode: Mode
+    timeout: int
+
+    @staticmethod
+    def from_str(command: str) -> "Command":
+        raw_serial, host_name, mode_name, timeout = command.split(sep=";", maxsplit=3)
+        return Command(
+            serial=ConfigSerial(raw_serial),
+            host_name=host_name,
+            mode=Mode.CHECKING if mode_name == "checking" else Mode.DISCOVERY,
+            timeout=int(timeout),
+        )
 
 
 def process_command(command: Command) -> None:
-    try:
+    with _confirm_command_processed():
         load_global_config(command.serial)
-        run_fetchers(
-            serial=command.serial,
-            host_name=command.host_name,
-            mode=command.mode,
-            timeout=command.timeout,
-        )
+        run_fetchers(**command._asdict())
+
+
+@contextlib.contextmanager
+def _confirm_command_processed() -> Iterator[None]:
+    try:
+        yield
     finally:
         log.logger.info("Command done")
         write_bytes(make_waiting_answer())

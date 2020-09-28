@@ -1059,6 +1059,27 @@ components:
       - $ref: '#/components/schemas/Link'
       properties: {}
       type: object
+    ConcreteHostTagGroup:
+      properties:
+        links:
+          description: list of links to other resources.
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        domainType:
+          default: host_tag_group
+        id:
+          type: string
+        title:
+          type: string
+        members:
+          $ref: '#/components/schemas/ObjectMemberDict'
+        extensions:
+          type: object
+      required:
+      - domainType
+      - links
+      type: object
     ConcretePassword:
       properties:
         ident:
@@ -1510,6 +1531,15 @@ components:
       - servicegroup_name
       - start_time
       type: object
+    DeleteHostTagGroup:
+      properties:
+        repair:
+          default: false
+          description: The host tag group can still be in use. Setting repair to True
+            gives permission to automatically remove the tag from the affected hosts.
+          example: false
+          type: boolean
+      type: object
     DomainObject:
       properties:
         links:
@@ -1674,6 +1704,32 @@ components:
       - domainType
       - links
       type: object
+    HostTag:
+      properties:
+        ident:
+          default: null
+          description: An unique id for the tag
+          example: tag_id
+          nullable: true
+          type: string
+        title:
+          description: The title of the tag
+          example: Tag
+          type: string
+        aux_tags:
+          default: []
+          description: The list of auxiliary tag ids. Built-in tags (ip-v4, ip-v6,
+            snmp, tcp, ping) and custom defined tags are allowed.
+          example:
+          - ip-v4, ip-v6
+          items:
+            description: An auxiliary tag id
+            example: ip-v4
+            type: string
+          type: array
+      required:
+      - title
+      type: object
     InputContactGroup:
       properties:
         name:
@@ -1696,6 +1752,38 @@ components:
           type: string
       required:
       - name
+      type: object
+    InputHostTagGroup:
+      properties:
+        ident:
+          description: An id for the host tag group
+          example: group_id
+          type: string
+        title:
+          description: A title for the host tag
+          example: Kubernetes
+          type: string
+        topic:
+          description: Different tags can be grouped in a topic
+          example: Data Sources
+          type: string
+        help:
+          default: ''
+          description: A help description for the tag group
+          example: Kubernetes Pods
+          type: string
+        tags:
+          description: A list of host tags belonging to the host tag group
+          example:
+          - ident: pod
+            title: Pod
+          items:
+            $ref: '#/components/schemas/HostTag'
+          type: array
+      required:
+      - tags
+      - title
+      - topic
       type: object
     InputPassword:
       properties:
@@ -2251,6 +2339,36 @@ components:
           $ref: '#/components/schemas/InputHostGroup'
       required:
       - name
+      type: object
+    UpdateHostTagGroup:
+      properties:
+        title:
+          description: A title for the host tag
+          example: Kubernetes
+          type: string
+        topic:
+          description: Different tags can be grouped in a topic
+          example: Data Sources
+          type: string
+        help:
+          description: A help description for the tag group
+          example: Kubernetes Pods
+          type: string
+        tags:
+          description: A list of host tags belonging to the host tag group
+          example:
+          - ident: pod
+            title: Pod
+          items:
+            $ref: '#/components/schemas/HostTag'
+          type: array
+        repair:
+          default: false
+          description: The host tag group can be in use by other hosts. Setting repair
+            to True gives permission to automatically update the tag from the affected
+            hosts.
+          example: false
+          type: boolean
       type: object
     UpdatePassword:
       properties:
@@ -2822,6 +2940,13 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.acknowledgement.set_acknowledgement_on_host_service
       parameters:
+      - description: The service description.
+        in: path
+        name: service_description
+        required: true
+        schema:
+          example: Memory
+          type: string
       - description: A hostname.
         in: path
         name: host_name
@@ -2829,13 +2954,6 @@ paths:
         schema:
           example: example.com
           pattern: '[-0-9a-zA-Z_.]+'
-          type: string
-      - description: The service description.
-        in: path
-        name: service_description
-        required: true
-        schema:
-          example: Memory
           type: string
       requestBody:
         content:
@@ -3367,12 +3485,12 @@ paths:
           ,\n    json={\n        'id': 'rule1',\n        'nodes': [],\n        'params':\
           \ [{\n            'arguments': ['foo', 'bar']\n        }],\n        'node_visualization':\
           \ {\n            'config': {},\n            'type': 'block'\n        },\n\
-          \        'properties': {\n            'icon': '',\n            'title':\
-          \ '',\n            'state_messages': {},\n            'docu_url': '',\n\
-          \            'comment': ''\n        },\n        'aggregation_function':\
-          \ {\n            'type': 'best',\n            'count': 1,\n            'restrict_state':\
-          \ 2\n        },\n        'computation_options': {\n            'disabled':\
-          \ False\n        },\n        'pack_id': 'pack1'\n    },\n)\nresp.raise_for_status()\n\
+          \        'properties': {\n            'docu_url': '',\n            'state_messages':\
+          \ {},\n            'icon': '',\n            'comment': '',\n           \
+          \ 'title': ''\n        },\n        'aggregation_function': {\n         \
+          \   'restrict_state': 2,\n            'count': 1,\n            'type': 'best'\n\
+          \        },\n        'computation_options': {\n            'disabled': False\n\
+          \        },\n        'pack_id': 'pack1'\n    },\n)\nresp.raise_for_status()\n\
           data = resp.json()"
       - label: urllib
         lang: python
@@ -3385,13 +3503,13 @@ paths:
           \     'id': 'rule1',\n        'nodes': [],\n        'params': [{\n     \
           \       'arguments': ['foo', 'bar']\n        }],\n        'node_visualization':\
           \ {\n            'config': {},\n            'type': 'block'\n        },\n\
-          \        'properties': {\n            'icon': '',\n            'title':\
-          \ '',\n            'state_messages': {},\n            'docu_url': '',\n\
-          \            'comment': ''\n        },\n        'aggregation_function':\
-          \ {\n            'type': 'best',\n            'count': 1,\n            'restrict_state':\
-          \ 2\n        },\n        'computation_options': {\n            'disabled':\
-          \ False\n        },\n        'pack_id': 'pack1'\n    }).encode('utf-8'),\n\
-          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+          \        'properties': {\n            'docu_url': '',\n            'state_messages':\
+          \ {},\n            'icon': '',\n            'comment': '',\n           \
+          \ 'title': ''\n        },\n        'aggregation_function': {\n         \
+          \   'restrict_state': 2,\n            'count': 1,\n            'type': 'best'\n\
+          \        },\n        'computation_options': {\n            'disabled': False\n\
+          \        },\n        'pack_id': 'pack1'\n    }).encode('utf-8'),\n)\nresponse\
+          \ = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -3416,13 +3534,13 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/bi_rule/rule1\" \\\
           \n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept: application/json\"\
-          \ \\\n    aggregation_function='{\"type\": \"best\", \"count\": 1, \"restrict_state\"\
-          : 2}' \\\n    computation_options='{\"disabled\": false}' \\\n    id='rule1'\
-          \ \\\n    node_visualization='{\"config\": {}, \"type\": \"block\"}' \\\n\
-          \    nodes='[]' \\\n    pack_id='pack1' \\\n    params='[{\"arguments\"\
-          : [\"foo\", \"bar\"]}]' \\\n    properties='{\"icon\": \"\", \"title\":\
-          \ \"\", \"state_messages\": {}, \"docu_url\": \"\", \"comment\": \"\"}'\
-          \ \\\n    --json"
+          \ \\\n    aggregation_function='{\"restrict_state\": 2, \"count\": 1, \"\
+          type\": \"best\"}' \\\n    computation_options='{\"disabled\": false}' \\\
+          \n    id='rule1' \\\n    node_visualization='{\"config\": {}, \"type\":\
+          \ \"block\"}' \\\n    nodes='[]' \\\n    pack_id='pack1' \\\n    params='[{\"\
+          arguments\": [\"foo\", \"bar\"]}]' \\\n    properties='{\"docu_url\": \"\
+          \", \"state_messages\": {}, \"icon\": \"\", \"comment\": \"\", \"title\"\
+          : \"\"}' \\\n    --json"
   /objects/bi_aggregation/{aggregation_id}:
     get:
       description: ''
@@ -3529,9 +3647,9 @@ paths:
           \       'paths': [['path', 'group', 'a'],\n                      ['path',\
           \ 'group', 'b']]\n        },\n        'node': {\n            'search': {\n\
           \                'type': 'empty'\n            },\n            'action':\
-          \ {\n                'type': 'state_of_host',\n                'host_regex':\
-          \ ''\n            }\n        },\n        'aggregation_visualization': {\n\
-          \            'layout_id': 'builtin_default',\n            'ignore_rule_styles':\
+          \ {\n                'host_regex': '',\n                'type': 'state_of_host'\n\
+          \            }\n        },\n        'aggregation_visualization': {\n   \
+          \         'layout_id': 'builtin_default',\n            'ignore_rule_styles':\
           \ False,\n            'line_style': 'round'\n        },\n        'computation_options':\
           \ {\n            'escalate_downtimes_as_warn': False,\n            'disabled':\
           \ False,\n            'use_hard_states': False\n        },\n        'pack_id':\
@@ -3548,15 +3666,14 @@ paths:
           \ {\n            'names': ['groupA', 'groupB'],\n            'paths': [['path',\
           \ 'group', 'a'],\n                      ['path', 'group', 'b']]\n      \
           \  },\n        'node': {\n            'search': {\n                'type':\
-          \ 'empty'\n            },\n            'action': {\n                'type':\
-          \ 'state_of_host',\n                'host_regex': ''\n            }\n  \
-          \      },\n        'aggregation_visualization': {\n            'layout_id':\
-          \ 'builtin_default',\n            'ignore_rule_styles': False,\n       \
-          \     'line_style': 'round'\n        },\n        'computation_options':\
-          \ {\n            'escalate_downtimes_as_warn': False,\n            'disabled':\
-          \ False,\n            'use_hard_states': False\n        },\n        'pack_id':\
-          \ 'pack1'\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
-          data = json.loads(response.read())"
+          \ 'empty'\n            },\n            'action': {\n                'host_regex':\
+          \ '',\n                'type': 'state_of_host'\n            }\n        },\n\
+          \        'aggregation_visualization': {\n            'layout_id': 'builtin_default',\n\
+          \            'ignore_rule_styles': False,\n            'line_style': 'round'\n\
+          \        },\n        'computation_options': {\n            'escalate_downtimes_as_warn':\
+          \ False,\n            'disabled': False,\n            'use_hard_states':\
+          \ False\n        },\n        'pack_id': 'pack1'\n    }).encode('utf-8'),\n\
+          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -3592,9 +3709,8 @@ paths:
           \ false, \"disabled\": false, \"use_hard_states\": false}' \\\n    customer='customer1'\
           \ \\\n    groups='{\"names\": [\"groupA\", \"groupB\"], \"paths\": [[\"\
           path\", \"group\", \"a\"], [\"path\", \"group\", \"b\"]]}' \\\n    id='aggr1'\
-          \ \\\n    node='{\"search\": {\"type\": \"empty\"}, \"action\": {\"type\"\
-          : \"state_of_host\", \"host_regex\": \"\"}}' \\\n    pack_id='pack1' \\\n\
-          \    --json"
+          \ \\\n    node='{\"search\": {\"type\": \"empty\"}, \"action\": {\"host_regex\"\
+          : \"\", \"type\": \"state_of_host\"}}' \\\n    pack_id='pack1' \\\n    --json"
   /domain-types/bi_pack/collections/all:
     get:
       description: ''
@@ -4266,6 +4382,13 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.downtime.list_service_downtimes
       parameters:
+      - description: The service description.
+        in: query
+        name: service_description
+        required: false
+        schema:
+          example: Memory
+          type: string
       - description: A hostname.
         in: query
         name: host_name
@@ -4273,13 +4396,6 @@ paths:
         schema:
           example: example.com
           pattern: '[-0-9a-zA-Z_.]+'
-          type: string
-      - description: The service description.
-        in: query
-        name: service_description
-        required: false
-        schema:
-          example: Memory
           type: string
       responses:
         default:
@@ -4418,6 +4534,13 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.downtime.delete_downtime
       parameters:
+      - description: The id of the downtime
+        in: path
+        name: downtime_id
+        required: true
+        schema:
+          example: '54'
+          type: string
       - description: A hostname.
         in: path
         name: host_name
@@ -4425,13 +4548,6 @@ paths:
         schema:
           example: example.com
           pattern: '[-0-9a-zA-Z_.]+'
-          type: string
-      - description: The id of the downtime
-        in: path
-        name: downtime_id
-        required: true
-        schema:
-          example: '54'
           type: string
       responses:
         default:
@@ -4539,430 +4655,6 @@ paths:
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    entries='[1120, 1121]' \\\n    host_name='example.com'\
           \ \\\n    --json"
-  /domain-types/agent/actions/sign:
-    post:
-      description: ''
-      operationId: cmk.gui.cee.plugins.openapi.endpoints.agent.sign_agents
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AgentSign'
-        required: true
-      responses:
-        default:
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-          description: Any unsuccessful or unexpected result.
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ActionResult'
-          description: ''
-          headers: {}
-      summary: Sign all agents
-      tags:
-      - cmk.gui.cee.plugins.openapi.endpoints.agent
-      x-codeSamples:
-      - label: requests
-        lang: python
-        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
-          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
-          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
-          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
-          \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/agent/actions/sign\"\
-          ,\n    json={'key_id': 42, 'passphrase': 'sw0rdfish'},\n)\nresp.raise_for_status()\n\
-          data = resp.json()"
-      - label: urllib
-        lang: python
-        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
-          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
-          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
-          \    f\"{API_URL}/domain-types/agent/actions/sign\",\n    method=\"POST\"\
-          ,\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
-          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({'key_id':\
-          \ 42, 'passphrase': 'sw0rdfish'}).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
-          data = json.loads(response.read())"
-      - label: curl
-        lang: bash
-        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
-          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
-          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\ \\\n    --data '{\n          \"key_id\": 42,\n          \"passphrase\"\
-          : \"sw0rdfish\"\n        }' \\\n    \"$API_URL/domain-types/agent/actions/sign\""
-      - label: httpie
-        lang: bash
-        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
-          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/agent/actions/sign\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    key_id='42' \\\n    passphrase='sw0rdfish'\
-          \ \\\n    --json"
-  /collections/agent:
-    get:
-      description: ''
-      operationId: cmk.gui.cee.plugins.openapi.endpoints.agent.list_agents
-      responses:
-        default:
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-          description: Any unsuccessful or unexpected result.
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DomainObjectCollection'
-          description: ''
-          headers: {}
-      summary: Show all agents
-      tags:
-      - cmk.gui.cee.plugins.openapi.endpoints.agent
-      x-codeSamples:
-      - label: requests
-        lang: python
-        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
-          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
-          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
-          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
-          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/collections/agent\"\
-          ,\n)\nresp.raise_for_status()\ndata = resp.json()"
-      - label: urllib
-        lang: python
-        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
-          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
-          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
-          \    f\"{API_URL}/collections/agent\",\n    method=\"GET\",\n    headers={\n\
-          \        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\",\n       \
-          \ \"Accept\": \"application/json\",\n    },\n)\nresponse = urllib.request.urlopen(request)\n\
-          data = json.loads(response.read())"
-      - label: curl
-        lang: bash
-        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
-          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
-          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\\n    \"$API_URL/collections/agent\""
-      - label: httpie
-        lang: bash
-        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
-          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/collections/agent\" \\\n \
-          \   \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept: application/json\"\
-          \ \\\n    --json"
-  /domain-types/agent/actions/bake:
-    post:
-      description: ''
-      operationId: cmk.gui.cee.plugins.openapi.endpoints.agent.bake_all_agents
-      responses:
-        default:
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-          description: Any unsuccessful or unexpected result.
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ActionResultScalar'
-          description: ''
-          headers: {}
-      summary: Bake all agents
-      tags:
-      - cmk.gui.cee.plugins.openapi.endpoints.agent
-      x-codeSamples:
-      - label: requests
-        lang: python
-        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
-          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
-          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
-          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
-          \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/agent/actions/bake\"\
-          ,\n)\nresp.raise_for_status()\ndata = resp.json()"
-      - label: urllib
-        lang: python
-        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
-          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
-          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
-          \    f\"{API_URL}/domain-types/agent/actions/bake\",\n    method=\"POST\"\
-          ,\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
-          ,\n        \"Accept\": \"application/json\",\n    },\n)\nresponse = urllib.request.urlopen(request)\n\
-          data = json.loads(response.read())"
-      - label: curl
-        lang: bash
-        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
-          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
-          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\\n    \"$API_URL/domain-types/agent/actions/bake\""
-      - label: httpie
-        lang: bash
-        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
-          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/agent/actions/bake\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    --json"
-  /domain-types/agent/actions/bake_and_sign:
-    post:
-      description: ''
-      operationId: cmk.gui.cee.plugins.openapi.endpoints.agent.bake_and_sign_all_agents
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AgentSign'
-        required: true
-      responses:
-        default:
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-          description: Any unsuccessful or unexpected result.
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ActionResultScalar'
-          description: ''
-          headers: {}
-      summary: Bake and sign all agents
-      tags:
-      - cmk.gui.cee.plugins.openapi.endpoints.agent
-      x-codeSamples:
-      - label: requests
-        lang: python
-        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
-          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
-          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
-          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
-          \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/agent/actions/bake_and_sign\"\
-          ,\n    json={'key_id': 42, 'passphrase': 'sw0rdfish'},\n)\nresp.raise_for_status()\n\
-          data = resp.json()"
-      - label: urllib
-        lang: python
-        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
-          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
-          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
-          \    f\"{API_URL}/domain-types/agent/actions/bake_and_sign\",\n    method=\"\
-          POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
-          \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
-          \ data=json.dumps({'key_id': 42, 'passphrase': 'sw0rdfish'}).encode('utf-8'),\n\
-          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
-      - label: curl
-        lang: bash
-        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
-          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
-          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\ \\\n    --data '{\n          \"key_id\": 42,\n          \"passphrase\"\
-          : \"sw0rdfish\"\n        }' \\\n    \"$API_URL/domain-types/agent/actions/bake_and_sign\""
-      - label: httpie
-        lang: bash
-        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
-          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/agent/actions/bake_and_sign\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    key_id='42' \\\n    passphrase='sw0rdfish'\
-          \ \\\n    --json"
-  /domain-types/agent/actions/automatic-deployment:
-    get:
-      description: ''
-      operationId: cmk.gui.cee.plugins.openapi.endpoints.agent.automatic_deployment_status
-      responses:
-        default:
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-          description: Any unsuccessful or unexpected result.
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ActionResultObject'
-          description: ''
-          headers: {}
-      summary: Show the status of the automatic deployment system
-      tags:
-      - cmk.gui.cee.plugins.openapi.endpoints.agent
-      x-codeSamples:
-      - label: requests
-        lang: python
-        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
-          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
-          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
-          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
-          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/domain-types/agent/actions/automatic-deployment\"\
-          ,\n)\nresp.raise_for_status()\ndata = resp.json()"
-      - label: urllib
-        lang: python
-        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
-          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
-          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
-          \    f\"{API_URL}/domain-types/agent/actions/automatic-deployment\",\n \
-          \   method=\"GET\",\n    headers={\n        \"Authorization\": f\"Bearer\
-          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
-          \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
-      - label: curl
-        lang: bash
-        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
-          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
-          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\\n    \"$API_URL/domain-types/agent/actions/automatic-deployment\""
-      - label: httpie
-        lang: bash
-        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
-          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/domain-types/agent/actions/automatic-deployment\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    --json"
-  /domain-types/agent/actions/baking_status:
-    get:
-      description: ''
-      operationId: cmk.gui.cee.plugins.openapi.endpoints.agent.baking_status
-      responses:
-        default:
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-          description: Any unsuccessful or unexpected result.
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ActionResultObject'
-          description: ''
-          headers: {}
-      summary: Show the baking status
-      tags:
-      - cmk.gui.cee.plugins.openapi.endpoints.agent
-      x-codeSamples:
-      - label: requests
-        lang: python
-        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
-          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
-          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
-          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
-          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/domain-types/agent/actions/baking_status\"\
-          ,\n)\nresp.raise_for_status()\ndata = resp.json()"
-      - label: urllib
-        lang: python
-        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
-          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
-          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
-          \    f\"{API_URL}/domain-types/agent/actions/baking_status\",\n    method=\"\
-          GET\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
-          ,\n        \"Accept\": \"application/json\",\n    },\n)\nresponse = urllib.request.urlopen(request)\n\
-          data = json.loads(response.read())"
-      - label: curl
-        lang: bash
-        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
-          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
-          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\\n    \"$API_URL/domain-types/agent/actions/baking_status\""
-      - label: httpie
-        lang: bash
-        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
-          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/domain-types/agent/actions/baking_status\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    --json"
-  /objects/agent/{agent_hash}:
-    get:
-      description: 'This may be done via the host or by the agent''s hash. In any
-        case the operating system
-
-        needs to be specified.'
-      operationId: cmk.gui.cee.plugins.openapi.endpoints.agent.download_agent
-      parameters:
-      - description: The type of the operating system. May be one of aix_tgz, linux_deb,
-          linux_rpm, linux_tgz, solaris_pkg, solaris_tgz, windows_msi
-        in: query
-        name: os_type
-        required: false
-        schema:
-          example: linux_tgz
-          pattern: aix_tgz|linux_deb|linux_rpm|linux_tgz|solaris_pkg|solaris_tgz|windows_msi
-          type: string
-      - description: A hostname.
-        in: query
-        name: host_name
-        required: false
-        schema:
-          example: example.com
-          pattern: '[-0-9a-zA-Z_.]+'
-          type: string
-      - description: The configuration hash representing an agent.
-        in: path
-        name: agent_hash
-        required: true
-        schema:
-          example: 80e99ba3a66d4880
-          pattern: '[a-fA-F0-9]{16}'
-          type: string
-      responses:
-        default:
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-          description: Any unsuccessful or unexpected result.
-        '204':
-          description: Operation done successfully. No further output.
-          headers: {}
-      summary: Download a single agent
-      tags:
-      - cmk.gui.cee.plugins.openapi.endpoints.agent
-      x-codeSamples:
-      - label: requests
-        lang: python
-        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
-          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
-          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
-          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
-          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/objects/agent/80e99ba3a66d4880\"\
-          ,\n    params={  # goes into query string\n        \"os_type\": \"linux_tgz\"\
-          ,  # (required) The type of the operating system.\n        \"host_name\"\
-          : \"example.com\",  # (required) A hostname.\n    },\n)\nresp.raise_for_status()\n\
-          data = resp.json()"
-      - label: urllib
-        lang: python
-        source: "#!/usr/bin/env python3\nimport json\nimport urllib.parse\nimport\
-          \ urllib.request\n\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
-          \ = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\n\nUSERNAME = \"\
-          automation\"\nPASSWORD = \"test123\"\n\nquery_string = urllib.parse.urlencode({\n\
-          \    \"os_type\": \"linux_tgz\",  # (required) The type of the operating\
-          \ system.\n    \"host_name\": \"example.com\",  # (required) A hostname.\n\
-          })\n\nrequest = urllib.request.Request(\n    f\"{API_URL}/objects/agent/80e99ba3a66d4880?{query_string}\"\
-          ,\n    method=\"GET\",\n    headers={\n        \"Authorization\": f\"Bearer\
-          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
-          \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
-      - label: curl
-        lang: bash
-        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
-          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
-          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\\n    -G  \\\n    --data-urlencode \"os_type=linux_tgz\" \\\n    --data-urlencode\
-          \ \"host_name=example.com\"\n    \"$API_URL/objects/agent/80e99ba3a66d4880\""
-      - label: httpie
-        lang: bash
-        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
-          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/objects/agent/80e99ba3a66d4880\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    os_type==\"linux_tgz\" \\\n    host_name==\"\
-          example.com\" \\\n    --json"
   /domain-types/folder_config/collections/all:
     get:
       description: ''
@@ -6698,6 +6390,330 @@ paths:
           \ application/json\" \\\n    entries='[{\"name\": \"windows\", \"attributes\"\
           : {\"name\": \"windows updated\", \"alias\": \"Windows Servers\"}}]' \\\n\
           \    --json"
+  /domain-types/host_tag_group/collections/all:
+    post:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.host_tag.create_host_tag_group
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InputHostTagGroup'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainObject'
+          description: ''
+          headers:
+            ETag:
+              allowEmptyValue: false
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along in the "If-Match"
+                request-header for subsequent modifications.
+              example: a20ceacf346041dc
+              required: true
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+      summary: Create a host tag group
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.host_tag
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/host_tag_group/collections/all\"\
+          ,\n    json={\n        'ident': 'group_id',\n        'title': 'Kubernetes',\n\
+          \        'topic': 'Data Sources',\n        'help': 'Kubernetes Pods',\n\
+          \        'tags': [{\n            'ident': 'pod',\n            'title': 'Pod'\n\
+          \        }]\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/host_tag_group/collections/all\",\n    method=\"\
+          POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
+          \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
+          \ data=json.dumps({\n        'ident': 'group_id',\n        'title': 'Kubernetes',\n\
+          \        'topic': 'Data Sources',\n        'help': 'Kubernetes Pods',\n\
+          \        'tags': [{\n            'ident': 'pod',\n            'title': 'Pod'\n\
+          \        }]\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\ \\\n    --data '{\n          \"help\": \"Kubernetes Pods\",\n     \
+          \     \"ident\": \"group_id\",\n          \"tags\": [\n            {\n \
+          \             \"ident\": \"pod\",\n              \"title\": \"Pod\"\n  \
+          \          }\n          ],\n          \"title\": \"Kubernetes\",\n     \
+          \     \"topic\": \"Data Sources\"\n        }' \\\n    \"$API_URL/domain-types/host_tag_group/collections/all\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/host_tag_group/collections/all\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    help='Kubernetes Pods' \\\n    ident='group_id'\
+          \ \\\n    tags='[{\"ident\": \"pod\", \"title\": \"Pod\"}]' \\\n    title='Kubernetes'\
+          \ \\\n    topic='Data Sources' \\\n    --json"
+  /objects/host_tag_group/{name}:
+    delete:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.host_tag.delete_host_tag_group
+      parameters:
+      - description: The ETag of the object to be modified. This value comes from
+          the ETag HTTP header whenever the object is displayed. To update this object
+          the currently stored ETag needs to be the same as the one sent.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          example: a20ceacf346041dc
+          type: string
+      - description: The name of the host tag group
+        in: path
+        name: name
+        required: true
+        schema:
+          example: datasource
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteHostTagGroup'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+          headers: {}
+      summary: Delete a host tag group
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.host_tag
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.delete(\n    f\"{API_URL}/objects/host_tag_group/datasource\"\
+          ,\n    json={'repair': False},\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/objects/host_tag_group/datasource\",\n    method=\"DELETE\"\
+          ,\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
+          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({'repair':\
+          \ False}).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\ \\\n    --data '{\n          \"repair\": false\n        }' \\\n   \
+          \ \"$API_URL/objects/host_tag_group/datasource\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/objects/host_tag_group/datasource\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    repair='False' \\\n    --json"
+    get:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.host_tag.show_host_tag_group
+      parameters:
+      - description: The name of the host tag group
+        in: path
+        name: name
+        required: true
+        schema:
+          example: datasource
+          type: string
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConcreteHostTagGroup'
+          description: ''
+          headers:
+            ETag:
+              allowEmptyValue: false
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along in the "If-Match"
+                request-header for subsequent modifications.
+              example: a20ceacf346041dc
+              required: true
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+      summary: Show host tag group
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.host_tag
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/objects/host_tag_group/datasource\"\
+          ,\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/objects/host_tag_group/datasource\",\n    method=\"GET\"\
+          ,\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
+          ,\n        \"Accept\": \"application/json\",\n    },\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\\n    \"$API_URL/objects/host_tag_group/datasource\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/objects/host_tag_group/datasource\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    --json"
+    put:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.host_tag.update_host_tag_group
+      parameters:
+      - description: The ETag of the object to be modified. This value comes from
+          the ETag HTTP header whenever the object is displayed. To update this object
+          the currently stored ETag needs to be the same as the one sent.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          example: a20ceacf346041dc
+          type: string
+      - description: The name of the host tag group
+        in: path
+        name: name
+        required: true
+        schema:
+          example: datasource
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateHostTagGroup'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConcreteHostTagGroup'
+          description: ''
+          headers:
+            ETag:
+              allowEmptyValue: false
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along in the "If-Match"
+                request-header for subsequent modifications.
+              example: a20ceacf346041dc
+              required: true
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+      summary: Update a host tag group
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.host_tag
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/host_tag_group/datasource\"\
+          ,\n    json={\n        'title': 'Kubernetes',\n        'topic': 'Data Sources',\n\
+          \        'help': 'Kubernetes Pods',\n        'tags': [{\n            'ident':\
+          \ 'pod',\n            'title': 'Pod'\n        }],\n        'repair': False\n\
+          \    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/objects/host_tag_group/datasource\",\n    method=\"PUT\"\
+          ,\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
+          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({\n\
+          \        'title': 'Kubernetes',\n        'topic': 'Data Sources',\n    \
+          \    'help': 'Kubernetes Pods',\n        'tags': [{\n            'ident':\
+          \ 'pod',\n            'title': 'Pod'\n        }],\n        'repair': False\n\
+          \    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\ \\\n    --data '{\n          \"help\": \"Kubernetes Pods\",\n     \
+          \     \"repair\": false,\n          \"tags\": [\n            {\n       \
+          \       \"ident\": \"pod\",\n              \"title\": \"Pod\"\n        \
+          \    }\n          ],\n          \"title\": \"Kubernetes\",\n          \"\
+          topic\": \"Data Sources\"\n        }' \\\n    \"$API_URL/objects/host_tag_group/datasource\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/host_tag_group/datasource\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    help='Kubernetes Pods' \\\n    repair='False'\
+          \ \\\n    tags='[{\"ident\": \"pod\", \"title\": \"Pod\"}]' \\\n    title='Kubernetes'\
+          \ \\\n    topic='Data Sources' \\\n    --json"
   /domain-types/password/collections/all:
     post:
       description: ''
@@ -6968,6 +6984,12 @@ paths:
       description: This list is filterable by various parameters.
       operationId: cmk.gui.plugins.openapi.endpoints.service._list_host_services
       parameters:
+      - description: Restrict the query to this particular site.
+        in: query
+        name: site
+        required: false
+        schema:
+          type: string
       - description: An query expression in nested dictionary form. If you want to
           use multiple expressions, nest them with the AND/OR operators.
         in: query
@@ -6992,12 +7014,6 @@ paths:
             type: string
           type: array
         style: form
-      - description: Restrict the query to this particular site.
-        in: query
-        name: site
-        required: false
-        schema:
-          type: string
       - description: A hostname.
         in: path
         name: host_name
@@ -7071,6 +7087,20 @@ paths:
       description: This list is filterable by various parameters.
       operationId: cmk.gui.plugins.openapi.endpoints.service._list_all_services
       parameters:
+      - description: Restrict the query to this particular site.
+        in: query
+        name: site
+        required: false
+        schema:
+          type: string
+      - description: A hostname.
+        in: query
+        name: host_name
+        required: false
+        schema:
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
+          type: string
       - description: An query expression in nested dictionary form. If you want to
           use multiple expressions, nest them with the AND/OR operators.
         in: query
@@ -7095,20 +7125,6 @@ paths:
             type: string
           type: array
         style: form
-      - description: A hostname.
-        in: query
-        name: host_name
-        required: false
-        schema:
-          example: example.com
-          pattern: '[-0-9a-zA-Z_.]+'
-          type: string
-      - description: Restrict the query to this particular site.
-        in: query
-        name: site
-        required: false
-        schema:
-          type: string
       responses:
         default:
           content:
@@ -7337,14 +7353,6 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.service_discovery.execute
       parameters:
-      - description: A hostname.
-        in: path
-        name: host_name
-        required: true
-        schema:
-          example: example.com
-          pattern: '[-0-9a-zA-Z_.]+'
-          type: string
       - description: 'The mode of the discovery action. May be one of the following:
           tabula-rasa'
         in: path
@@ -7353,6 +7361,14 @@ paths:
         schema:
           example: tabula-rasa
           pattern: tabula-rasa
+          type: string
+      - description: A hostname.
+        in: path
+        name: host_name
+        required: true
+        schema:
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
           type: string
       responses:
         default:
@@ -8295,6 +8311,430 @@ paths:
           \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/version\" \\\n    \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    \"Accept: application/json\" \\\n\
           \    --json"
+  /domain-types/agent/actions/sign:
+    post:
+      description: ''
+      operationId: cmk.gui.cee.plugins.openapi.endpoints.agent.sign_agents
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentSign'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+          description: ''
+          headers: {}
+      summary: Sign all agents
+      tags:
+      - cmk.gui.cee.plugins.openapi.endpoints.agent
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/agent/actions/sign\"\
+          ,\n    json={'key_id': 42, 'passphrase': 'sw0rdfish'},\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/agent/actions/sign\",\n    method=\"POST\"\
+          ,\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
+          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({'key_id':\
+          \ 42, 'passphrase': 'sw0rdfish'}).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\ \\\n    --data '{\n          \"key_id\": 42,\n          \"passphrase\"\
+          : \"sw0rdfish\"\n        }' \\\n    \"$API_URL/domain-types/agent/actions/sign\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/agent/actions/sign\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    key_id='42' \\\n    passphrase='sw0rdfish'\
+          \ \\\n    --json"
+  /collections/agent:
+    get:
+      description: ''
+      operationId: cmk.gui.cee.plugins.openapi.endpoints.agent.list_agents
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainObjectCollection'
+          description: ''
+          headers: {}
+      summary: Show all agents
+      tags:
+      - cmk.gui.cee.plugins.openapi.endpoints.agent
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/collections/agent\"\
+          ,\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/collections/agent\",\n    method=\"GET\",\n    headers={\n\
+          \        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\",\n       \
+          \ \"Accept\": \"application/json\",\n    },\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\\n    \"$API_URL/collections/agent\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/collections/agent\" \\\n \
+          \   \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept: application/json\"\
+          \ \\\n    --json"
+  /domain-types/agent/actions/bake:
+    post:
+      description: ''
+      operationId: cmk.gui.cee.plugins.openapi.endpoints.agent.bake_all_agents
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResultScalar'
+          description: ''
+          headers: {}
+      summary: Bake all agents
+      tags:
+      - cmk.gui.cee.plugins.openapi.endpoints.agent
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/agent/actions/bake\"\
+          ,\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/agent/actions/bake\",\n    method=\"POST\"\
+          ,\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
+          ,\n        \"Accept\": \"application/json\",\n    },\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\\n    \"$API_URL/domain-types/agent/actions/bake\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/agent/actions/bake\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    --json"
+  /domain-types/agent/actions/bake_and_sign:
+    post:
+      description: ''
+      operationId: cmk.gui.cee.plugins.openapi.endpoints.agent.bake_and_sign_all_agents
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentSign'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResultScalar'
+          description: ''
+          headers: {}
+      summary: Bake and sign all agents
+      tags:
+      - cmk.gui.cee.plugins.openapi.endpoints.agent
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/agent/actions/bake_and_sign\"\
+          ,\n    json={'key_id': 42, 'passphrase': 'sw0rdfish'},\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/agent/actions/bake_and_sign\",\n    method=\"\
+          POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
+          \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
+          \ data=json.dumps({'key_id': 42, 'passphrase': 'sw0rdfish'}).encode('utf-8'),\n\
+          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\ \\\n    --data '{\n          \"key_id\": 42,\n          \"passphrase\"\
+          : \"sw0rdfish\"\n        }' \\\n    \"$API_URL/domain-types/agent/actions/bake_and_sign\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/agent/actions/bake_and_sign\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    key_id='42' \\\n    passphrase='sw0rdfish'\
+          \ \\\n    --json"
+  /domain-types/agent/actions/automatic-deployment:
+    get:
+      description: ''
+      operationId: cmk.gui.cee.plugins.openapi.endpoints.agent.automatic_deployment_status
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResultObject'
+          description: ''
+          headers: {}
+      summary: Show the status of the automatic deployment system
+      tags:
+      - cmk.gui.cee.plugins.openapi.endpoints.agent
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/domain-types/agent/actions/automatic-deployment\"\
+          ,\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/agent/actions/automatic-deployment\",\n \
+          \   method=\"GET\",\n    headers={\n        \"Authorization\": f\"Bearer\
+          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
+          \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\\n    \"$API_URL/domain-types/agent/actions/automatic-deployment\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/domain-types/agent/actions/automatic-deployment\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    --json"
+  /domain-types/agent/actions/baking_status:
+    get:
+      description: ''
+      operationId: cmk.gui.cee.plugins.openapi.endpoints.agent.baking_status
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResultObject'
+          description: ''
+          headers: {}
+      summary: Show the baking status
+      tags:
+      - cmk.gui.cee.plugins.openapi.endpoints.agent
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/domain-types/agent/actions/baking_status\"\
+          ,\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/agent/actions/baking_status\",\n    method=\"\
+          GET\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
+          ,\n        \"Accept\": \"application/json\",\n    },\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\\n    \"$API_URL/domain-types/agent/actions/baking_status\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/domain-types/agent/actions/baking_status\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    --json"
+  /objects/agent/{agent_hash}:
+    get:
+      description: 'This may be done via the host or by the agent''s hash. In any
+        case the operating system
+
+        needs to be specified.'
+      operationId: cmk.gui.cee.plugins.openapi.endpoints.agent.download_agent
+      parameters:
+      - description: The type of the operating system. May be one of aix_tgz, linux_deb,
+          linux_rpm, linux_tgz, solaris_pkg, solaris_tgz, windows_msi
+        in: query
+        name: os_type
+        required: false
+        schema:
+          example: linux_tgz
+          pattern: aix_tgz|linux_deb|linux_rpm|linux_tgz|solaris_pkg|solaris_tgz|windows_msi
+          type: string
+      - description: A hostname.
+        in: query
+        name: host_name
+        required: false
+        schema:
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
+          type: string
+      - description: The configuration hash representing an agent.
+        in: path
+        name: agent_hash
+        required: true
+        schema:
+          example: 80e99ba3a66d4880
+          pattern: '[a-fA-F0-9]{16}'
+          type: string
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+          headers: {}
+      summary: Download a single agent
+      tags:
+      - cmk.gui.cee.plugins.openapi.endpoints.agent
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/objects/agent/80e99ba3a66d4880\"\
+          ,\n    params={  # goes into query string\n        \"os_type\": \"linux_tgz\"\
+          ,  # (required) The type of the operating system.\n        \"host_name\"\
+          : \"example.com\",  # (required) A hostname.\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.parse\nimport\
+          \ urllib.request\n\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
+          \ = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\n\nUSERNAME = \"\
+          automation\"\nPASSWORD = \"test123\"\n\nquery_string = urllib.parse.urlencode({\n\
+          \    \"os_type\": \"linux_tgz\",  # (required) The type of the operating\
+          \ system.\n    \"host_name\": \"example.com\",  # (required) A hostname.\n\
+          })\n\nrequest = urllib.request.Request(\n    f\"{API_URL}/objects/agent/80e99ba3a66d4880?{query_string}\"\
+          ,\n    method=\"GET\",\n    headers={\n        \"Authorization\": f\"Bearer\
+          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
+          \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\\n    -G  \\\n    --data-urlencode \"os_type=linux_tgz\" \\\n    --data-urlencode\
+          \ \"host_name=example.com\"\n    \"$API_URL/objects/agent/80e99ba3a66d4880\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/objects/agent/80e99ba3a66d4880\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    os_type==\"linux_tgz\" \\\n    host_name==\"\
+          example.com\" \\\n    --json"
 security:
 - BearerAuth: []
 tags:
@@ -8378,29 +8818,6 @@ tags:
     [Checkmk guide](https://checkmk.com/cms_basics_downtimes.html).'
   name: cmk.gui.plugins.openapi.endpoints.downtime
   x-displayName: Downtimes
-- description: 'An agent is a small program that is installed on a host in order for
-    Checkmk to be able query
-
-    data from the host.
-
-
-    Servers running Windows, Linux or Unix can only be monitored by Checkmk if you
-    install one
-
-    of the Checkmk agents.
-
-
-    Checkmk can update its agent automatically. In this way you can take advantage
-    of the Agent
-
-    Bakery function to apply individual configurations to hosts.
-
-
-    You can find an introduction to agent deployment in the
-
-    [Checkmk guide](https://checkmk.com/cms_agent_deployment.html).'
-  name: cmk.gui.cee.plugins.openapi.endpoints.agent
-  x-displayName: Agents
 - description: 'Folders are used in Checkmk to organize the hosts in a tree structure.
 
     The root (or main) folder is always existing, other folders can be created manually.
@@ -8453,6 +8870,8 @@ tags:
     [Checkmk guide](https://checkmk.com/cms_wato_hosts.html).'
   name: cmk.gui.plugins.openapi.endpoints.host_group_config
   x-displayName: Host groups
+- name: cmk.gui.plugins.openapi.endpoints.host_tag
+  x-displayName: Host Tag Groups
 - description: 'The passwords in question here are those that are stored in the CMK
     password store and are needed
 
@@ -8521,6 +8940,29 @@ tags:
     endpoint folders.
   name: cmk.gui.plugins.openapi.endpoints.version
   x-displayName: Miscellaneous
+- description: 'An agent is a small program that is installed on a host in order for
+    Checkmk to be able query
+
+    data from the host.
+
+
+    Servers running Windows, Linux or Unix can only be monitored by Checkmk if you
+    install one
+
+    of the Checkmk agents.
+
+
+    Checkmk can update its agent automatically. In this way you can take advantage
+    of the Agent
+
+    Bakery function to apply individual configurations to hosts.
+
+
+    You can find an introduction to agent deployment in the
+
+    [Checkmk guide](https://checkmk.com/cms_agent_deployment.html).'
+  name: cmk.gui.cee.plugins.openapi.endpoints.agent
+  x-displayName: Agents
 x-ignoredHeaderParameters:
 - User-Agent
 - X-Test-Header
@@ -8539,14 +8981,15 @@ x-tagGroups:
   - cmk.gui.plugins.openapi.endpoints.bi
   - cmk.gui.plugins.openapi.endpoints.contact_group_config
   - cmk.gui.plugins.openapi.endpoints.downtime
-  - cmk.gui.cee.plugins.openapi.endpoints.agent
   - cmk.gui.plugins.openapi.endpoints.folder_config
   - cmk.gui.plugins.openapi.endpoints.host_config
   - cmk.gui.plugins.openapi.endpoints.host_group_config
+  - cmk.gui.plugins.openapi.endpoints.host_tag
   - cmk.gui.plugins.openapi.endpoints.password
   - cmk.gui.plugins.openapi.endpoints.service_discovery
   - cmk.gui.plugins.openapi.endpoints.service_group_config
   - cmk.gui.plugins.openapi.endpoints.time_period
   - cmk.gui.plugins.openapi.endpoints.version
+  - cmk.gui.cee.plugins.openapi.endpoints.agent
 - name: Endpoints
   tags: []

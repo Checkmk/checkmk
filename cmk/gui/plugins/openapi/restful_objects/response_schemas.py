@@ -367,6 +367,13 @@ class CollectionItem(OneOfSchema):
     type_field_remove = False
 
 
+class ConcreteHostTagGroup(DomainObject):
+    domainType = fields.Constant(
+        "host_tag_group",
+        required=True,
+    )
+
+
 class DomainObjectCollection(Linkable):
     id = fields.String()
     domainType: fields.Field = fields.String()

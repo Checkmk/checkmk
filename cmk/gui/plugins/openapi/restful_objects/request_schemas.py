@@ -27,6 +27,7 @@ from cmk.gui.plugins.openapi.endpoints.utils import verify_group_exist
 from cmk.gui.watolib.timeperiods import verify_timeperiod_name_exists
 from cmk.gui.watolib.groups import is_alias_used
 from cmk.gui.watolib.passwords import password_exists, contact_group_choices
+from cmk.gui.watolib.tags import load_tag_config, load_aux_tags
 
 
 class InputAttribute(BaseSchema):
@@ -1023,6 +1024,203 @@ class UpdatePassword(BaseSchema):
                          description="The list of members to share the password with",
                          required=False,
                          attribute="shared_with")
+
+
+class HostTagGroupId(fields.String):
+    """A field representing a host tag group id"""
+
+    default_error_messages = {
+        'invalid': 'The specified tag group id is already in use: {name!r}',
+    }
+
+    def _validate(self, value):
+        super()._validate(value)
+        host_tag_group_config = load_tag_config()
+        if not host_tag_group_config.valid_id(value):
+            self.fail("invalid", name=value)
+
+
+class Tags(fields.List):
+    """A field representing a tags list"""
+
+    default_error_messages = {
+        'duplicate': 'Tags IDs must be unique. You\'ve used the following at least twice: {name!r}',
+        'invalid_none': 'Cannot use an empty tag ID for single entry',
+        'multi_none': 'Only one tag id is allowed to be empty'
+    }
+
+    def __init__(
+        self,
+        cls,
+        example,
+        required=True,
+        validate=None,
+        **kwargs,
+    ):
+        super().__init__(
+            cls_or_instance=cls,
+            example=example,
+            required=required,
+            validate=validate,
+            **kwargs,
+        )
+
+    def _validate(self, value):
+        super()._validate(value)
+
+        self._unique_ids(value)
+        self._valid_none_tag(value)
+
+    def _valid_none_tag(self, value):
+        none_tag_exists = False
+        for tag in value:
+            tag_id = tag.get("id")
+            if tag_id is None:
+                if len(value) == 1:
+                    self.fail("invalid_none")
+
+                if none_tag_exists:
+                    self.fail("multi_none")
+
+                none_tag_exists = True
+
+    def _unique_ids(self, tags):
+        seen_ids = set()
+        for tag in tags:
+            tag_id = tag.get("id")
+            if tag_id in seen_ids:
+                self.fail("duplicate", name=tag_id)
+            seen_ids.add(tag_id)
+
+
+class AuxTag(fields.String):
+    default_error_messages = {
+        'invalid': 'The specified auxiliary tag id is not valid: {name!r}',
+    }
+
+    def __init__(
+        self,
+        example,
+        required=True,
+        validate=None,
+        **kwargs,
+    ):
+        super().__init__(
+            example=example,
+            required=required,
+            validate=validate,
+            **kwargs,
+        )
+
+    def _validate(self, value):
+        super()._validate(value)
+        available_aux_tags = load_aux_tags()
+        if value not in available_aux_tags:
+            self.fail("invalid", name=value)
+
+
+class HostTag(BaseSchema):
+    ident = fields.String(required=False,
+                          example="tag_id",
+                          description="An unique id for the tag",
+                          missing=None,
+                          attribute="id")
+    title = fields.String(
+        required=True,
+        example="Tag",
+        description="The title of the tag",
+    )
+    aux_tags = fields.List(
+        AuxTag(
+            example="ip-v4",
+            description="An auxiliary tag id",
+            required=False,
+        ),
+        description=
+        "The list of auxiliary tag ids. Built-in tags (ip-v4, ip-v6, snmp, tcp, ping) and custom defined tags are allowed.",
+        example=["ip-v4, ip-v6"],
+        required=False,
+        missing=[],
+    )
+
+
+class InputHostTagGroup(BaseSchema):
+    ident = HostTagGroupId(
+        example="group_id",
+        description="An id for the host tag group",
+        attribute="id",
+    )
+    title = fields.String(
+        required=True,
+        example="Kubernetes",
+        description="A title for the host tag",
+    )
+    topic = fields.String(
+        required=True,
+        example="Data Sources",
+        description="Different tags can be grouped in a topic",
+    )
+
+    help = fields.String(
+        required=False,
+        example="Kubernetes Pods",
+        description="A help description for the tag group",
+        missing="",
+    )
+    tags = Tags(
+        fields.Nested(HostTag),
+        required=True,
+        example=[{
+            "ident": "pod",
+            "title": "Pod"
+        }],
+        description="A list of host tags belonging to the host tag group",
+    )
+
+
+class DeleteHostTagGroup(BaseSchema):
+    repair = fields.Boolean(
+        required=False,
+        missing=False,
+        example=False,
+        description=
+        "The host tag group can still be in use. Setting repair to True gives permission to automatically remove the tag from the affected hosts."
+    )
+
+
+class UpdateHostTagGroup(BaseSchema):
+    title = fields.String(
+        required=False,
+        example="Kubernetes",
+        description="A title for the host tag",
+    )
+    topic = fields.String(
+        required=False,
+        example="Data Sources",
+        description="Different tags can be grouped in a topic",
+    )
+
+    help = fields.String(
+        required=False,
+        example="Kubernetes Pods",
+        description="A help description for the tag group",
+    )
+    tags = Tags(
+        fields.Nested(HostTag),
+        required=False,
+        example=[{
+            "ident": "pod",
+            "title": "Pod"
+        }],
+        description="A list of host tags belonging to the host tag group",
+    )
+    repair = fields.Boolean(
+        required=False,
+        missing=False,
+        example=False,
+        description=
+        "The host tag group can be in use by other hosts. Setting repair to True gives permission to automatically update the tag from the affected hosts."
+    )
 
 
 class AcknowledgeHostProblem(BaseSchema):

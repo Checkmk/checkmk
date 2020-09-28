@@ -723,12 +723,16 @@ def etag_of_dict(dict_: Dict[str, Any]) -> ETags:
 
     """
     def _update(_hash_obj, _d):
-        for key, value in sorted(_d.items()):
-            _hash_obj.update(key.encode('utf-8'))
-            if isinstance(value, dict):
+        if isinstance(_d, list):
+            for value in sorted(_d):
                 _update(_hash_obj, value)
-            else:
-                _hash_obj.update(value.encode('utf-8'))
+        else:
+            for key, value in sorted(_d.items()):
+                _hash_obj.update(key.encode('utf-8'))
+                if isinstance(value, (dict, list)):
+                    _update(_hash_obj, value)
+                else:
+                    _hash_obj.update(value.encode('utf-8'))
 
     _hash = hashlib.sha256()
     _update(_hash, dict_)

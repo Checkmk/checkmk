@@ -25,6 +25,7 @@ from .type_defs import (
     OID_STRING,
     OIDBytes,
     OIDCached,
+    OIDSpec,
     OIDWithColumns,
     SNMPColumn,
     SNMPDecodedValues,
@@ -64,7 +65,7 @@ SPECIAL_COLUMNS = [
 def _get_snmp_table(section_name: Optional[SectionName], tree: SNMPTree, use_snmpwalk_cache: bool,
                     *, backend: ABCSNMPBackend) -> SNMPTable:
     # TODO (mo) clean this up further!
-    oid, targetcolumns = cast(OIDWithColumns, (str(tree.base), tree.oids))
+    _oid, targetcolumns = cast(OIDWithColumns, (str(tree.base), tree.oids))
 
     index_column = -1
     index_format = None
@@ -95,7 +96,7 @@ def _get_snmp_table(section_name: Optional[SectionName], tree: SNMPTree, use_snm
         else:
             rowinfo = _get_snmpwalk(
                 section_name,
-                oid,
+                tree.base,
                 fetchoid,
                 column,
                 use_snmpwalk_cache,
@@ -186,7 +187,7 @@ def _key_oid_pairs(pair1: Tuple[OID, SNMPRawValue]) -> List[int]:
 
 def _get_snmpwalk(
     section_name: Optional[SectionName],
-    oid: OID,
+    base: OIDSpec,
     fetchoid: OID,
     column: SNMPColumn,
     use_snmpwalk_cache: bool,
@@ -198,14 +199,19 @@ def _get_snmpwalk(
     cached = _get_cached_snmpwalk(backend.hostname, fetchoid) if get_from_cache else None
     if cached is not None:
         return cached
-    rowinfo = _perform_snmpwalk(section_name, oid, fetchoid, backend=backend)
+    rowinfo = _perform_snmpwalk(section_name, base, fetchoid, backend=backend)
     if save_to_cache:
         _save_snmpwalk_cache(backend.hostname, fetchoid, rowinfo)
     return rowinfo
 
 
-def _perform_snmpwalk(section_name: Optional[SectionName], base_oid: OID, fetchoid: OID, *,
-                      backend: ABCSNMPBackend) -> SNMPRowInfo:
+def _perform_snmpwalk(
+    section_name: Optional[SectionName],
+    base_oid: OIDSpec,
+    fetchoid: OID,
+    *,
+    backend: ABCSNMPBackend,
+) -> SNMPRowInfo:
     added_oids: Set[OID] = set([])
     rowinfo: SNMPRowInfo = []
 
@@ -215,7 +221,7 @@ def _perform_snmpwalk(section_name: Optional[SectionName], base_oid: OID, fetcho
             # revert back to legacy "possilbly-empty-string"-Type
             # TODO: pass Optional[SectionName] along!
             check_plugin_name=str(section_name) if section_name else "",
-            table_base_oid=base_oid,
+            table_base_oid=str(base_oid),
             context_name=context_name,
         )
 

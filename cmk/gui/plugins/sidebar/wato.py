@@ -33,10 +33,10 @@ from cmk.gui.plugins.wato.utils.main_menu import (
 
 def render_wato(mini):
     if not config.wato_enabled:
-        html.write_text(_("WATO is disabled."))
+        html.write_text(_("Setup is disabled."))
         return False
     if not config.user.may("wato.use"):
-        html.write_text(_("You are not allowed to use Checkmk's web configuration GUI."))
+        html.write_text(_("You are not allowed to use the setup."))
         return False
 
     menu = get_wato_menu_items()
@@ -47,7 +47,8 @@ def render_wato(mini):
                 html.icon_button(url=item.url,
                                  title=item.title,
                                  icon=item.icon_name or "wato",
-                                 target="main")
+                                 target="main",
+                                 emblem=item.emblem)
     else:
         show_topic_menu(treename="wato", menu=menu, show_item_icons=True)
 
@@ -110,11 +111,11 @@ class SidebarSnapinWATO(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("WATO - Configuration")
+        return _("Setup")
 
     @classmethod
     def description(cls):
-        return _("Direct access to WATO - the web administration GUI of Checkmk")
+        return _("Direct access to the setup menu")
 
     @classmethod
     def allowed_roles(cls):
@@ -137,11 +138,11 @@ class SidebarSnapinWATOMini(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("WATO - Quickaccess")
+        return _("Quick setup")
 
     @classmethod
     def description(cls):
-        return _("Access to WATO modules with only icons (saves space)")
+        return _("Access to the setup menu with only icons (saves space)")
 
     @classmethod
     def allowed_roles(cls):

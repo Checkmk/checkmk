@@ -2643,8 +2643,8 @@ class html(ABCHTMLGenerator):
                            style: Optional[str] = None,
                            target: Optional[str] = None,
                            cssclass: Optional[str] = None,
-                           class_: CSSSpec = None) -> HTML:
-
+                           class_: CSSSpec = None,
+                           emblem: Optional[str] = None) -> HTML:
         # Same API as other elements: class_ can be a list or string/None
         classes = [cssclass]
         if isinstance(class_, list):
@@ -2656,7 +2656,7 @@ class html(ABCHTMLGenerator):
         assert href is not None
 
         return self.render_a(
-            content=HTML(self.render_icon(icon, cssclass="iconbutton")),
+            content=HTML(self.render_icon(icon, emblem=emblem, cssclass="iconbutton")),
             href=href,
             title=title,
             id_=id_,
@@ -2676,10 +2676,11 @@ class html(ABCHTMLGenerator):
                     style: Optional[str] = None,
                     target: Optional[str] = None,
                     cssclass: Optional[str] = None,
-                    class_: CSSSpec = None) -> None:
+                    class_: CSSSpec = None,
+                    emblem: Optional[str] = None) -> None:
         self.write_html(
-            self.render_icon_button(url, title, icon, id_, onclick, style, target, cssclass,
-                                    class_))
+            self.render_icon_button(url, title, icon, id_, onclick, style, target, cssclass, class_,
+                                    emblem))
 
     def more_button(self, id_: str, dom_levels_up: int, additional_js: str = "") -> None:
         if config.user.get_attribute("ui_basic_advanced_mode") in ("enforce_basic",

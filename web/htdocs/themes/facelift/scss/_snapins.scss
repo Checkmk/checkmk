@@ -438,14 +438,17 @@ div.spacertop {
   padding-top: 6px;
   clear: right;
 
-  img {
-    position: relative;
-    left: 3px;
+  img.icon {
     width: 18px;
     height: 18px;
     padding: 0;
-    margin-right: 3.9px;
-    margin-bottom: 4px;
+    margin-right: 6px;
+    margin-bottom: 6px;
+  }
+
+  img.emblem {
+    right: 3px;
+    bottom: -3px;
   }
 
   div.footnotelink {
@@ -454,6 +457,18 @@ div.spacertop {
 
   div.clear {
     clear: right;
+  }
+}
+
+#snapin_admin {
+  li {
+    margin-bottom: 4px;
+    line-height: $font-size-default;
+  }
+
+  img.emblem {
+    right: 0;
+    bottom: -7px;
   }
 }
 

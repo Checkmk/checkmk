@@ -59,14 +59,14 @@ def _create_layout_recover_function(suboids_list: List[Optional[LayoutRecoverSub
     cumulative_lengths = [sum(elements_lengths[:i]) for i in range(len(elements_lengths) + 1)]
     index_pairs = list(zip(cumulative_lengths, cumulative_lengths[1:]))
 
-    def layout_recover_function(table):
+    def layout_recover_function(string_table):
         reformatted = []
         for suboids, (begin, end) in zip(suboids_list, index_pairs):
             if suboids is None:
-                new_table = table[begin]
+                new_table = string_table[begin]
             else:
                 new_table = []
-                for suboid, subtable in zip(suboids, table[begin:end]):
+                for suboid, subtable in zip(suboids, string_table[begin:end]):
                     new_table += [["%s.%s" % (suboid, row[0])] + row[1:] for row in subtable]
             reformatted.append(new_table)
         return reformatted

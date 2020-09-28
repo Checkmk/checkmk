@@ -46,16 +46,9 @@ SNMPColumn = Union[str, int, Tuple[SNMPValueEncoding, str]]
 SNMPColumns = List[SNMPColumn]
 OID = str
 OIDWithColumns = Tuple[OID, SNMPColumns]
-OIDWithSubOIDsAndColumns = Tuple[OID, List[OID], SNMPColumns]
 OIDFunction = Callable[[OID, Optional[SNMPDecodedString], Optional[_CheckPluginName]],
                        Optional[SNMPDecodedString]]
 SNMPScanFunction = Callable[[OIDFunction], bool]
-# TODO (CMK-4490): Typing here is just wrong as there is no practical
-# difference between an OIDWithColumns and OIDWithSubOIDsAndColumns with
-# an empty List[OID].
-OIDSingleInfo = Union[OIDWithColumns, OIDWithSubOIDsAndColumns]
-OIDMultiInfo = List[OIDSingleInfo]
-OIDInfo = Union[OIDSingleInfo, OIDMultiInfo]
 SNMPRawValue = bytes
 SNMPRowInfo = List[Tuple[OID, SNMPRawValue]]
 

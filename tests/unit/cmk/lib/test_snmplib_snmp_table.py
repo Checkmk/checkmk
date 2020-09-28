@@ -44,30 +44,6 @@ class SNMPTestBackend(ABCSNMPBackend):
         return [("%s.%s" % (oid, r), b"C0FEFE") for r in (1, 2, 3)]
 
 
-TREE_2TUPLE = ('.1.3.6.1.4.1.13595.2.2.3.1', [OID_END, BINARY("16")])
-
-TREE_3TUPLE = (
-    '.1.3.6.1.4.1.3854.1.2.2.1.19.33',
-    ["1", "2"],  # TODO: Allow integers here! Some plugins use them!
-    ["2.1.2", "2.1.14"],
-)
-
-DATA_2TUPLE = [
-    ['1', [67, 48, 70, 69, 70, 69]],
-    ['2', [67, 48, 70, 69, 70, 69]],
-    ['3', [67, 48, 70, 69, 70, 69]],
-]
-
-DATA_3TUPLE = [
-    ['1.C0FEFE', 'C0FEFE'],
-    ['1.C0FEFE', 'C0FEFE'],
-    ['1.C0FEFE', 'C0FEFE'],
-    ['2.C0FEFE', 'C0FEFE'],
-    ['2.C0FEFE', 'C0FEFE'],
-    ['2.C0FEFE', 'C0FEFE'],
-]
-
-
 @pytest.mark.parametrize("column", snmp_table.SPECIAL_COLUMNS)
 def test_value_encoding(column):
     assert snmp_table._value_encoding(column) == "string"
@@ -82,11 +58,12 @@ def test_value_encoding(column):
                 OIDBytes("16"),
             ],
         ),
-        DATA_2TUPLE,
+        [
+            ['1', [67, 48, 70, 69, 70, 69]],
+            ['2', [67, 48, 70, 69, 70, 69]],
+            ['3', [67, 48, 70, 69, 70, 69]],
+        ],
     ),
-    (TREE_2TUPLE, DATA_2TUPLE),
-    (TREE_3TUPLE, DATA_3TUPLE),
-    ([TREE_2TUPLE, TREE_3TUPLE], [DATA_2TUPLE, DATA_3TUPLE]),
 ])
 def test_get_snmp_table(monkeypatch, snmp_info, expected_values):
     def get_all_snmp_tables(info):
@@ -98,23 +75,6 @@ def test_get_snmp_table(monkeypatch, snmp_info, expected_values):
         ]
 
     assert get_all_snmp_tables(snmp_info) == expected_values
-
-    # only conduct further tests for legacy spec
-    if (isinstance(snmp_info, SNMPTree) or
-            isinstance(snmp_info, list) and all(isinstance(t, SNMPTree) for t in snmp_info)):
-        return
-
-    # when converting it to the new SNMPTree object, ...
-    snmp_info_as_tree_list, layout_recovery = _create_snmp_trees(snmp_info)
-
-    # ... using those to get the snmp data, ...
-    reformatted_values = get_all_snmp_tables(snmp_info_as_tree_list)
-
-    # ... and then applying the layout recovery function
-    recovered = layout_recovery(reformatted_values)
-
-    # ... we should get the expected data
-    assert recovered == expected_values
 
 
 @pytest.mark.parametrize(

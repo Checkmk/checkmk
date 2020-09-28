@@ -442,14 +442,9 @@ def _do_discovery_for(
 
     autochecks.save_autochecks_file(hostname, new_services)
 
-    section.section_step("Executing host label discovery")
     discovered_host_labels = _discover_host_labels(
-        HostKey(hostname, ipaddress, SourceType.HOST),
-        multi_host_sections,
-        on_error=on_error,
-    )
-    discovered_host_labels += _discover_host_labels(
-        HostKey(hostname, ipaddress, SourceType.MANAGEMENT),
+        hostname,
+        ipaddress,
         multi_host_sections,
         on_error=on_error,
     )
@@ -1103,6 +1098,29 @@ def _may_rediscover(params: config.DiscoveryCheckParameters, now_ts: float,
 
 
 def _discover_host_labels(
+    hostname: HostName,
+    ipaddress: Optional[HostAddress],
+    multi_host_sections: MultiHostSections,
+    on_error: str,
+) -> DiscoveredHostLabels:
+
+    section.section_step("Executing host label discovery")
+
+    discovered_host_labels = _discover_host_labels_for_source_type(
+        HostKey(hostname, ipaddress, SourceType.HOST),
+        multi_host_sections,
+        on_error=on_error,
+    )
+    discovered_host_labels += _discover_host_labels_for_source_type(
+        HostKey(hostname, ipaddress, SourceType.MANAGEMENT),
+        multi_host_sections,
+        on_error=on_error,
+    )
+
+    return discovered_host_labels
+
+
+def _discover_host_labels_for_source_type(
     host_key: checkers.host_sections.HostKey,
     multi_host_sections: MultiHostSections,
     on_error: str,
@@ -1465,14 +1483,9 @@ def _get_discovered_services(
         check_source = "vanished" if existing_service.id() not in services else "old"
         services[existing_service.id()] = check_source, existing_service
 
-    section.section_step("Executing host label discovery")
     discovered_host_labels = _discover_host_labels(
-        HostKey(hostname, ipaddress, SourceType.HOST),
-        multi_host_sections,
-        on_error,
-    )
-    discovered_host_labels += _discover_host_labels(
-        HostKey(hostname, ipaddress, SourceType.MANAGEMENT),
+        hostname,
+        ipaddress,
         multi_host_sections,
         on_error,
     )

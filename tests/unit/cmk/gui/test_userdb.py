@@ -100,7 +100,6 @@ def fixture_session_pre_20(monkeypatch, user_id, fix_time):
     return session_id
 
 
-@pytest.mark.usefixtures("single_user_session_enabled")
 def test_load_pre_20_session(user_id, session_pre_20):
     old_session = userdb._load_session_infos(user_id)
     assert isinstance(old_session, dict)
@@ -108,9 +107,9 @@ def test_load_pre_20_session(user_id, session_pre_20):
     assert old_session["sess2"].last_activity == int(time.time()) - 5
 
 
-@pytest.mark.usefixtures("single_user_session_enabled", "save_user_access_times_enabled")
+@pytest.mark.usefixtures("save_user_access_times_enabled")
 def test_on_succeeded_login(user_id):
-    assert config.single_user_session == 10
+    assert config.single_user_session is None
     assert config.save_user_access_times is True
 
     # Never logged in before
@@ -138,13 +137,12 @@ def test_on_succeeded_login(user_id):
     assert userdb.get_user_access_time(user_id) == time.time()
 
 
-@pytest.mark.usefixtures("single_user_session_enabled")
 def test_on_succeeded_login_without_user_access_time_enabled(user_id):
     userdb.on_succeeded_login(user_id)
     assert userdb.get_user_access_time(user_id) is None
 
 
-@pytest.mark.usefixtures("single_user_session_enabled", "register_builtin_html")
+@pytest.mark.usefixtures("register_builtin_html")
 def test_on_failed_login_no_locking(user_id):
     assert config.lock_on_logon_failures is False
     assert userdb._load_failed_logins(user_id) == 0
@@ -163,7 +161,7 @@ def test_on_failed_login_no_locking(user_id):
     assert userdb._user_locked(user_id) is False
 
 
-@pytest.mark.usefixtures("single_user_session_enabled", "register_builtin_html")
+@pytest.mark.usefixtures("register_builtin_html")
 def test_on_failed_login_count_reset_on_succeeded_login(user_id):
     assert config.lock_on_logon_failures is False
     assert userdb._load_failed_logins(user_id) == 0
@@ -178,8 +176,7 @@ def test_on_failed_login_count_reset_on_succeeded_login(user_id):
     assert userdb._user_locked(user_id) is False
 
 
-@pytest.mark.usefixtures("single_user_session_enabled", "lock_on_logon_failures_enabled",
-                         "register_builtin_html")
+@pytest.mark.usefixtures("lock_on_logon_failures_enabled", "register_builtin_html")
 def test_on_failed_login_with_locking(user_id):
     assert config.lock_on_logon_failures == 3
     assert userdb._load_failed_logins(user_id) == 0
@@ -198,13 +195,6 @@ def test_on_failed_login_with_locking(user_id):
     assert userdb._user_locked(user_id) is True
 
 
-def test_on_logout_no_single_user_session(user_id):
-    assert not userdb._load_session_infos(user_id)
-    userdb.on_logout(user_id, session_id="")
-    assert not userdb._load_session_infos(user_id)
-
-
-@pytest.mark.usefixtures("single_user_session_enabled")
 def test_on_logout_no_session(user_id):
     assert userdb.on_succeeded_login(user_id)
     assert userdb._load_session_infos(user_id)
@@ -213,7 +203,6 @@ def test_on_logout_no_session(user_id):
     assert userdb._load_session_infos(user_id)
 
 
-@pytest.mark.usefixtures("single_user_session_enabled")
 def test_on_logout_invalidate_session(user_id):
     session_id = userdb.on_succeeded_login(user_id)
     assert session_id in userdb._load_session_infos(user_id)
@@ -222,7 +211,20 @@ def test_on_logout_invalidate_session(user_id):
     assert not userdb._load_session_infos(user_id)
 
 
-@pytest.mark.usefixtures("single_user_session_enabled", "save_user_access_times_enabled")
+def test_access_denied_with_invalidated_session(user_id):
+    session_id = userdb.on_succeeded_login(user_id)
+    assert session_id in userdb._load_session_infos(user_id)
+
+    userdb.on_access(user_id, 10.0, session_id)
+
+    userdb.on_logout(user_id, session_id)
+    assert not userdb._load_session_infos(user_id)
+
+    with pytest.raises(MKAuthException, match="Invalid user session"):
+        userdb.on_access(user_id, 10.0, session_id)
+
+
+@pytest.mark.usefixtures("save_user_access_times_enabled")
 def test_on_access_update_valid_session(user_id, session_valid):
     old_session_infos = userdb._load_session_infos(user_id)
     old_session = old_session_infos[session_valid]
@@ -243,7 +245,6 @@ def test_on_access_update_valid_session(user_id, session_valid):
     assert userdb.get_user_access_time(user_id) == time.time()
 
 
-@pytest.mark.usefixtures("single_user_session_enabled")
 def test_on_access_update_idle_session(user_id, session_timed_out):
     old_session_infos = userdb._load_session_infos(user_id)
     old_session = old_session_infos[session_timed_out]
@@ -279,7 +280,7 @@ def test_on_succeeded_login_already_existing_session(user_id, session_valid):
 
 def test_is_valid_user_session_single_user_session_disabled(user_id):
     assert config.single_user_session is None
-    assert userdb._is_valid_user_session(user_id, "session1") is True
+    assert userdb._is_valid_user_session(user_id, "session1") is False
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
@@ -319,11 +320,6 @@ def test_ensure_user_can_not_init_with_previous_session(user_id, session_valid):
         assert userdb._ensure_user_can_init_session(user_id) is False
 
 
-def test_initialize_session_single_user_session_not_enabled(user_id):
-    assert userdb._initialize_session(user_id) == ""
-
-
-@pytest.mark.usefixtures("single_user_session_enabled")
 def test_initialize_session_single_user_session(user_id):
     session_id = userdb._initialize_session(user_id)
     assert session_id != ""
@@ -335,24 +331,15 @@ def test_initialize_session_single_user_session(user_id):
     )
 
 
-@pytest.mark.usefixtures("single_user_session_enabled")
 def test_create_session_id_is_correct_type():
     id1 = userdb._create_session_id()
     assert isinstance(id1, str)
 
 
-@pytest.mark.usefixtures("single_user_session_enabled")
 def test_create_session_id_changes():
     assert userdb._create_session_id() != userdb._create_session_id()
 
 
-def test_refresh_session_single_user_session_not_enabled(user_id):
-    assert config.single_user_session is None
-    userdb._refresh_session(user_id, "")
-    assert not userdb._load_session_infos(user_id)
-
-
-@pytest.mark.usefixtures("single_user_session_enabled")
 def test_refresh_session_success(user_id, session_valid):
     session_infos = userdb._load_session_infos(user_id)
     assert session_infos
@@ -368,13 +355,6 @@ def test_refresh_session_success(user_id, session_valid):
         assert new_session.last_activity > old_session.last_activity
 
 
-def test_invalidate_session_single_user_session_disabled(user_id, session_valid):
-    assert session_valid in userdb._load_session_infos(user_id)
-    userdb._invalidate_session(user_id, session_valid)
-    assert not userdb._load_session_infos(user_id)
-
-
-@pytest.mark.usefixtures("single_user_session_enabled")
 def test_invalidate_session(user_id, session_valid):
     assert session_valid in userdb._load_session_infos(user_id)
     userdb._invalidate_session(user_id, session_valid)

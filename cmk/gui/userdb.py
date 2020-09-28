@@ -334,8 +334,7 @@ def on_failed_login(username: UserId) -> None:
 
 
 def on_logout(username: UserId, session_id: str) -> None:
-    if config.single_user_session is not None:
-        _invalidate_session(username, session_id)
+    _invalidate_session(username, session_id)
 
 
 def on_access(username: UserId, issue_time: float, session_id: str) -> None:
@@ -346,13 +345,10 @@ def on_access(username: UserId, issue_time: float, session_id: str) -> None:
         raise MKAuthException("%s login timed out (Inactivity exceeded %r)" %
                               (username, config.user_idle_timeout))
 
-    # Check whether or not a single user session is allowed at a time and the user
-    # is doing this request with the currently active session.
-    if config.single_user_session is not None:
-        if not _is_valid_user_session(username, session_id):
-            raise MKAuthException("Invalid user session")
+    if not _is_valid_user_session(username, session_id):
+        raise MKAuthException("Invalid user session")
 
-        _refresh_session(username, session_id)
+    _refresh_session(username, session_id)
 
     # Update online state of the user (if enabled)
     _update_user_access_time(username)
@@ -390,18 +386,17 @@ class SessionInfo:
 
 
 def _is_valid_user_session(username: UserId, session_id: str) -> bool:
-    if config.single_user_session is None:
-        return True  # No login session limitation enabled, no validation
-
+    """Return True in case this request is done with a currently valid user session"""
     session_infos = _load_session_infos(username)
     if not session_infos:
         return False  # no session active
 
     if session_id not in session_infos:
-        auth_logger.debug("%s session_id %s not valid (timed out?)", username, session_id)
+        auth_logger.debug("%s session_id %s not valid (logged out or timed out?)", username,
+                          session_id)
         return False
 
-    return True  # Current session. Fine.
+    return True
 
 
 def _ensure_user_can_init_session(username: UserId) -> bool:
@@ -426,10 +421,12 @@ def _ensure_user_can_init_session(username: UserId) -> bool:
 def _initialize_session(username: UserId) -> str:
     """Creates a new user login session (if single user session mode is enabled) and
     returns the session_id of the new session."""
-    if not config.single_user_session:
-        return ""
-
     session_infos = _load_session_infos(username)
+
+    # In single user session mode there is only one session allowed at a time. Once we reach
+    # this place, we can be sure that we are allowed to remove all existing ones.
+    if config.single_user_session:
+        session_infos.clear()
 
     session_id = _create_session_id()
     now = int(time.time())
@@ -451,9 +448,6 @@ def _create_session_id() -> str:
 
 def _refresh_session(username: UserId, session_id: str) -> None:
     """Updates the current session of the user"""
-    if not config.single_user_session:
-        return  # No session handling at all
-
     session_infos = _load_session_infos(username)
     if session_id not in session_infos:
         return  # Don't refresh. Session is not valid anymore

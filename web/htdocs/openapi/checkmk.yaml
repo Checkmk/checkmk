@@ -124,7 +124,6 @@ components:
           type: array
         resultType:
           default: object
-          type: string
         result:
           type: object
         value:
@@ -146,7 +145,6 @@ components:
           type: array
         resultType:
           default: scalar
-          type: string
         result:
           type: object
         value:
@@ -315,7 +313,6 @@ components:
           type: integer
         type:
           default: best
-          type: string
       required:
       - count
       - restrict_state
@@ -329,7 +326,6 @@ components:
           $ref: '#/components/schemas/BIAggregationFunctionCountSettings'
         type:
           default: count_ok
-          type: string
       required:
       - levels_ok
       - levels_warn
@@ -364,7 +360,6 @@ components:
           type: integer
         type:
           default: worst
-          type: string
       required:
       - count
       - restrict_state
@@ -410,7 +405,6 @@ components:
       properties:
         type:
           default: all_hosts
-          type: string
       required:
       - type
       type: object
@@ -426,7 +420,6 @@ components:
           type: string
         type:
           default: call_a_rule
-          type: string
       required:
       - params
       - rule_id
@@ -436,7 +429,6 @@ components:
       properties:
         type:
           default: empty
-          type: string
       required:
       - type
       type: object
@@ -448,7 +440,6 @@ components:
           type: array
         type:
           default: fixed_arguments
-          type: string
       required:
       - arguments
       - type
@@ -472,7 +463,6 @@ components:
           type: string
         type:
           default: host_alias_regex
-          type: string
       required:
       - pattern
       - type
@@ -497,7 +487,6 @@ components:
           type: string
         type:
           default: host_name_regex
-          type: string
       required:
       - pattern
       - type
@@ -514,7 +503,6 @@ components:
           type: string
         type:
           default: host_search
-          type: string
       required:
       - conditions
       - refer_to
@@ -526,7 +514,7 @@ components:
           allOf:
           - $ref: '#/components/schemas/BIAction'
           example:
-            host_regex: testhost
+            host_regex: ''
             type: state_of_host
         search:
           allOf:
@@ -541,10 +529,8 @@ components:
       properties:
         config:
           default: &id001 {}
-          type: string
         type:
           default: block
-          type: string
       required:
       - config
       - type
@@ -553,10 +539,8 @@ components:
       properties:
         config:
           default: {}
-          type: string
         type:
           default: force
-          type: string
       required:
       - config
       - type
@@ -577,7 +561,6 @@ components:
           type: integer
         type:
           default: hierarchy
-          type: string
       required:
       - layer_height
       - node_size
@@ -605,10 +588,8 @@ components:
       properties:
         config:
           default: {}
-          type: string
         type:
           default: none
-          type: string
       required:
       - config
       - type
@@ -626,7 +607,6 @@ components:
           type: integer
         type:
           default: radial
-          type: string
       required:
       - degree
       - radius
@@ -754,7 +734,6 @@ components:
           $ref: '#/components/schemas/ServiceConditions'
         type:
           default: service_search
-          type: string
       required:
       - conditions
       - type
@@ -766,7 +745,6 @@ components:
           type: string
         type:
           default: state_of_host
-          type: string
       required:
       - host_regex
       - type
@@ -778,7 +756,6 @@ components:
           type: string
         type:
           default: state_of_remaining_services
-          type: string
       required:
       - host_regex
       - type
@@ -793,7 +770,6 @@ components:
           type: string
         type:
           default: state_of_service
-          type: string
       required:
       - host_regex
       - service_regex
@@ -1205,11 +1181,11 @@ components:
       type: object
     ConcreteTimeRange:
       properties:
-        end:
+        start:
           description: The hour of the time period.
           example: '14:00'
           type: string
-        start:
+        end:
           description: The hour of the time period.
           example: '14:00'
           type: string
@@ -1234,13 +1210,14 @@ components:
           type: array
         domainType:
           default: contact_group
-          type: string
         id:
           type: string
         title:
           type: string
         members:
           $ref: '#/components/schemas/ObjectMemberDict'
+        extensions:
+          type: object
       required:
       - domainType
       - links
@@ -1598,13 +1575,15 @@ components:
             $ref: '#/components/schemas/Link'
           type: array
         domainType:
-          type: string
+          default: null
         id:
           type: string
         title:
           type: string
         members:
           $ref: '#/components/schemas/ObjectMemberDict'
+        extensions:
+          type: object
       required:
       - domainType
       - links
@@ -1638,15 +1617,15 @@ components:
           type: array
         domainType:
           default: folder_config
-          type: string
         id:
           type: string
         title:
           type: string
         members:
           $ref: '#/components/schemas/FolderMembers'
+        extensions:
+          type: object
       required:
-      - domainType
       - links
       type: object
     FolderCollection:
@@ -1660,7 +1639,6 @@ components:
           type: string
         domainType:
           default: folder_config
-          type: string
         value:
           items:
             $ref: '#/components/schemas/ConcreteFolder'
@@ -1691,7 +1669,6 @@ components:
           type: array
         domainType:
           default: host_config
-          type: string
         id:
           type: string
         title:
@@ -1713,7 +1690,6 @@ components:
           type: array
         domainType:
           default: host_config
-          type: string
         id:
           type: string
         title:
@@ -1758,13 +1734,14 @@ components:
           type: array
         domainType:
           default: host_group
-          type: string
         id:
           type: string
         title:
           type: string
         members:
           $ref: '#/components/schemas/ObjectMemberDict'
+        extensions:
+          type: object
       required:
       - domainType
       - links
@@ -1931,13 +1908,12 @@ components:
       type: object
     Link:
       properties:
-        arguments:
-          description: map that may be used as the basis for any data (arguments or
-            properties) required to follow the link.
-          nullable: true
-          type: object
         domainType:
           default: link
+        rel:
+          description: Indicates the nature of the relationship of the related resource
+            to the resource that generated this representation
+          example: self
           type: string
         href:
           description: The (absolute) address of the related resource. Any characters
@@ -1950,10 +1926,9 @@ components:
           example: GET
           pattern: GET|PUT|POST|DELETE
           type: string
-        rel:
-          description: Indicates the nature of the relationship of the related resource
-            to the resource that generated this representation
-          example: self
+        type:
+          description: The media type that the linked resource will return
+          example: application/json
           type: string
         title:
           description: string that the consuming application may use to render the
@@ -1961,10 +1936,11 @@ components:
           example: The object itself
           nullable: true
           type: string
-        type:
-          description: The media type that the linked resource will return
-          example: application/json
-          type: string
+        arguments:
+          description: map that may be used as the basis for any data (arguments or
+            properties) required to follow the link.
+          nullable: true
+          type: object
       required:
       - domainType
       - href
@@ -1995,13 +1971,16 @@ components:
           example: invalid
           nullable: true
           type: string
-        x-ro-invalidReason:
+        x_ro_invalidReason:
           description: Provides the reason why a SET OF proposed values for properties
             or arguments is invalid.
           nullable: true
           type: string
         memberType:
           default: action
+        parameters:
+          type: object
+        name:
           type: string
       required:
       - id
@@ -2030,18 +2009,19 @@ components:
           example: invalid
           nullable: true
           type: string
-        x-ro-invalidReason:
+        x_ro_invalidReason:
           description: Provides the reason why a SET OF proposed values for properties
             or arguments is invalid.
           nullable: true
           type: string
         memberType:
           default: collection
-          type: string
         value:
           items:
             $ref: '#/components/schemas/Link'
           type: array
+        name:
+          type: string
       required:
       - id
       - links
@@ -2087,13 +2067,14 @@ components:
           example: invalid
           nullable: true
           type: string
-        x-ro-invalidReason:
+        x_ro_invalidReason:
           description: Provides the reason why a SET OF proposed values for properties
             or arguments is invalid.
           nullable: true
           type: string
         memberType:
           default: property
+        name:
           type: string
       required:
       - id
@@ -2138,13 +2119,14 @@ components:
           type: array
         domainType:
           default: service_group
-          type: string
         id:
           type: string
         title:
           type: string
         members:
           $ref: '#/components/schemas/ObjectMemberDict'
+        extensions:
+          type: object
       required:
       - domainType
       - links
@@ -2168,13 +2150,13 @@ components:
       type: object
     TimeRange:
       properties:
-        end:
-          description: The end time of the period's time range
-          example: '16:00'
-          type: string
         start:
           description: The start time of the period's time range
           example: '14:00'
+          type: string
+        end:
+          description: The end time of the period's time range
+          example: '16:00'
           type: string
       required:
       - end
@@ -2194,12 +2176,12 @@ components:
       type: object
     UpdateContactGroup:
       properties:
-        attributes:
-          $ref: '#/components/schemas/InputContactGroup'
         name:
           description: The name of the contact group.
           example: OnCall
           type: string
+        attributes:
+          $ref: '#/components/schemas/InputContactGroup'
       required:
       - name
       type: object
@@ -2276,6 +2258,11 @@ components:
       type: object
     UpdateHostEntry:
       properties:
+        host_name:
+          description: The hostname or IP address itself.
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
+          type: string
         attributes:
           description: Replace all currently set attributes on the host, with these
             attributes. Any previously set attributes which are not given here will
@@ -2283,11 +2270,12 @@ components:
           example:
             ipaddress: 192.168.0.123
           type: object
-        host_name:
-          description: The hostname or IP address itself.
-          example: example.com
-          pattern: '[-0-9a-zA-Z_.]+'
-          type: string
+        update_attributes:
+          description: Just update the hosts attributes with these attributes. The
+            previously set attributes will not be touched.
+          example:
+            ipaddress: 192.168.0.123
+          type: object
         nodes:
           description: Nodes where the host should be the cluster-container of.
           example:
@@ -2300,23 +2288,17 @@ components:
             pattern: '[-0-9a-zA-Z_.]+'
             type: string
           type: array
-        update_attributes:
-          description: Just update the hosts attributes with these attributes. The
-            previously set attributes will not be touched.
-          example:
-            ipaddress: 192.168.0.123
-          type: object
       required:
       - host_name
       type: object
     UpdateHostGroup:
       properties:
-        attributes:
-          $ref: '#/components/schemas/InputHostGroup'
         name:
           description: The name of the host group.
           example: windows
           type: string
+        attributes:
+          $ref: '#/components/schemas/InputHostGroup'
       required:
       - name
       type: object
@@ -2360,12 +2342,12 @@ components:
       type: object
     UpdateServiceGroup:
       properties:
-        attributes:
-          $ref: '#/components/schemas/InputServiceGroup'
         name:
           description: The name of the service group.
           example: windows
           type: string
+        attributes:
+          $ref: '#/components/schemas/InputServiceGroup'
       required:
       - name
       type: object
@@ -3254,16 +3236,16 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/bi_rule/rule1\"\
-          ,\n    json={\n        'nodes': [],\n        'properties': {\n         \
-          \   'title': '',\n            'state_messages': {},\n            'docu_url':\
-          \ '',\n            'comment': '',\n            'icon': ''\n        },\n\
-          \        'pack_id': 'pack1',\n        'node_visualization': {\n        \
-          \    'config': {},\n            'type': 'block'\n        },\n        'aggregation_function':\
-          \ {\n            'restrict_state': 2,\n            'count': 1,\n       \
-          \     'type': 'best'\n        },\n        'computation_options': {\n   \
-          \         'disabled': False\n        },\n        'id': 'rule1',\n      \
-          \  'params': [{\n            'arguments': ['foo', 'bar']\n        }]\n \
-          \   },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          ,\n    json={\n        'id': 'rule1',\n        'nodes': [],\n        'params':\
+          \ [{\n            'arguments': ['foo', 'bar']\n        }],\n        'node_visualization':\
+          \ {\n            'type': 'block',\n            'config': {}\n        },\n\
+          \        'properties': {\n            'state_messages': {},\n          \
+          \  'docu_url': '',\n            'icon': '',\n            'title': '',\n\
+          \            'comment': ''\n        },\n        'aggregation_function':\
+          \ {\n            'count': 1,\n            'type': 'best',\n            'restrict_state':\
+          \ 2\n        },\n        'computation_options': {\n            'disabled':\
+          \ False\n        },\n        'pack_id': 'pack1'\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -3272,17 +3254,16 @@ paths:
           \    f\"{API_URL}/objects/bi_rule/rule1\",\n    method=\"PUT\",\n    headers={\n\
           \        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\",\n       \
           \ \"Accept\": \"application/json\",\n    },\n    data=json.dumps({\n   \
-          \     'nodes': [],\n        'properties': {\n            'title': '',\n\
-          \            'state_messages': {},\n            'docu_url': '',\n      \
-          \      'comment': '',\n            'icon': ''\n        },\n        'pack_id':\
-          \ 'pack1',\n        'node_visualization': {\n            'config': {},\n\
-          \            'type': 'block'\n        },\n        'aggregation_function':\
-          \ {\n            'restrict_state': 2,\n            'count': 1,\n       \
-          \     'type': 'best'\n        },\n        'computation_options': {\n   \
-          \         'disabled': False\n        },\n        'id': 'rule1',\n      \
-          \  'params': [{\n            'arguments': ['foo', 'bar']\n        }]\n \
-          \   }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
-          data = json.loads(response.read())"
+          \     'id': 'rule1',\n        'nodes': [],\n        'params': [{\n     \
+          \       'arguments': ['foo', 'bar']\n        }],\n        'node_visualization':\
+          \ {\n            'type': 'block',\n            'config': {}\n        },\n\
+          \        'properties': {\n            'state_messages': {},\n          \
+          \  'docu_url': '',\n            'icon': '',\n            'title': '',\n\
+          \            'comment': ''\n        },\n        'aggregation_function':\
+          \ {\n            'count': 1,\n            'type': 'best',\n            'restrict_state':\
+          \ 2\n        },\n        'computation_options': {\n            'disabled':\
+          \ False\n        },\n        'pack_id': 'pack1'\n    }).encode('utf-8'),\n\
+          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -3307,13 +3288,13 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/bi_rule/rule1\" \\\
           \n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept: application/json\"\
-          \ \\\n    aggregation_function='{\"restrict_state\": 2, \"count\": 1, \"\
-          type\": \"best\"}' \\\n    computation_options='{\"disabled\": false}' \\\
-          \n    id='rule1' \\\n    node_visualization='{\"config\": {}, \"type\":\
-          \ \"block\"}' \\\n    nodes='[]' \\\n    pack_id='pack1' \\\n    params='[{\"\
-          arguments\": [\"foo\", \"bar\"]}]' \\\n    properties='{\"title\": \"\"\
-          , \"state_messages\": {}, \"docu_url\": \"\", \"comment\": \"\", \"icon\"\
-          : \"\"}' \\\n    --json"
+          \ \\\n    aggregation_function='{\"count\": 1, \"type\": \"best\", \"restrict_state\"\
+          : 2}' \\\n    computation_options='{\"disabled\": false}' \\\n    id='rule1'\
+          \ \\\n    node_visualization='{\"type\": \"block\", \"config\": {}}' \\\n\
+          \    nodes='[]' \\\n    pack_id='pack1' \\\n    params='[{\"arguments\"\
+          : [\"foo\", \"bar\"]}]' \\\n    properties='{\"state_messages\": {}, \"\
+          docu_url\": \"\", \"icon\": \"\", \"title\": \"\", \"comment\": \"\"}' \\\
+          \n    --json"
   /objects/bi_aggregation/{aggregation_id}:
     get:
       description: ''
@@ -3417,19 +3398,18 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/bi_aggregation/aggregation1\"\
-          ,\n    json={\n        'pack_id': 'pack1',\n        'groups': {\n      \
-          \      'names': ['groupA', 'groupB'],\n            'paths': [['path', 'group',\
-          \ 'a'],\n                      ['path', 'group', 'b']]\n        },\n   \
-          \     'aggregation_visualization': {\n            'ignore_rule_styles':\
-          \ False,\n            'layout_id': 'builtin_default',\n            'line_style':\
-          \ 'round'\n        },\n        'node': {\n            'search': {\n    \
-          \            'type': 'empty'\n            },\n            'action': {\n\
-          \                'host_regex': '',\n                'type': 'state_of_host'\n\
-          \            }\n        },\n        'computation_options': {\n         \
-          \   'disabled': False,\n            'use_hard_states': False,\n        \
-          \    'escalate_downtimes_as_warn': False\n        },\n        'id': 'aggr1',\n\
-          \        'customer': 'customer1'\n    },\n)\nresp.raise_for_status()\ndata\
-          \ = resp.json()"
+          ,\n    json={\n        'id': 'aggr1',\n        'customer': 'customer1',\n\
+          \        'groups': {\n            'names': ['groupA', 'groupB'],\n     \
+          \       'paths': [['path', 'group', 'a'],\n                      ['path',\
+          \ 'group', 'b']]\n        },\n        'node': {\n            'action': {\n\
+          \                'type': 'state_of_host',\n                'host_regex':\
+          \ ''\n            },\n            'search': {\n                'type': 'empty'\n\
+          \            }\n        },\n        'aggregation_visualization': {\n   \
+          \         'layout_id': 'builtin_default',\n            'ignore_rule_styles':\
+          \ False,\n            'line_style': 'round'\n        },\n        'computation_options':\
+          \ {\n            'disabled': False,\n            'use_hard_states': False,\n\
+          \            'escalate_downtimes_as_warn': False\n        },\n        'pack_id':\
+          \ 'pack1'\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -3438,18 +3418,18 @@ paths:
           \    f\"{API_URL}/objects/bi_aggregation/aggregation1\",\n    method=\"\
           PUT\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
           ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({\n\
-          \        'pack_id': 'pack1',\n        'groups': {\n            'names':\
-          \ ['groupA', 'groupB'],\n            'paths': [['path', 'group', 'a'],\n\
-          \                      ['path', 'group', 'b']]\n        },\n        'aggregation_visualization':\
-          \ {\n            'ignore_rule_styles': False,\n            'layout_id':\
-          \ 'builtin_default',\n            'line_style': 'round'\n        },\n  \
-          \      'node': {\n            'search': {\n                'type': 'empty'\n\
-          \            },\n            'action': {\n                'host_regex':\
-          \ '',\n                'type': 'state_of_host'\n            }\n        },\n\
-          \        'computation_options': {\n            'disabled': False,\n    \
-          \        'use_hard_states': False,\n            'escalate_downtimes_as_warn':\
-          \ False\n        },\n        'id': 'aggr1',\n        'customer': 'customer1'\n\
-          \    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          \        'id': 'aggr1',\n        'customer': 'customer1',\n        'groups':\
+          \ {\n            'names': ['groupA', 'groupB'],\n            'paths': [['path',\
+          \ 'group', 'a'],\n                      ['path', 'group', 'b']]\n      \
+          \  },\n        'node': {\n            'action': {\n                'type':\
+          \ 'state_of_host',\n                'host_regex': ''\n            },\n \
+          \           'search': {\n                'type': 'empty'\n            }\n\
+          \        },\n        'aggregation_visualization': {\n            'layout_id':\
+          \ 'builtin_default',\n            'ignore_rule_styles': False,\n       \
+          \     'line_style': 'round'\n        },\n        'computation_options':\
+          \ {\n            'disabled': False,\n            'use_hard_states': False,\n\
+          \            'escalate_downtimes_as_warn': False\n        },\n        'pack_id':\
+          \ 'pack1'\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
           data = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -3480,14 +3460,15 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/bi_aggregation/aggregation1\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    aggregation_visualization='{\"ignore_rule_styles\"\
-          : false, \"layout_id\": \"builtin_default\", \"line_style\": \"round\"}'\
-          \ \\\n    computation_options='{\"disabled\": false, \"use_hard_states\"\
+          \ application/json\" \\\n    aggregation_visualization='{\"layout_id\":\
+          \ \"builtin_default\", \"ignore_rule_styles\": false, \"line_style\": \"\
+          round\"}' \\\n    computation_options='{\"disabled\": false, \"use_hard_states\"\
           : false, \"escalate_downtimes_as_warn\": false}' \\\n    customer='customer1'\
           \ \\\n    groups='{\"names\": [\"groupA\", \"groupB\"], \"paths\": [[\"\
           path\", \"group\", \"a\"], [\"path\", \"group\", \"b\"]]}' \\\n    id='aggr1'\
-          \ \\\n    node='{\"search\": {\"type\": \"empty\"}, \"action\": {\"host_regex\"\
-          : \"\", \"type\": \"state_of_host\"}}' \\\n    pack_id='pack1' \\\n    --json"
+          \ \\\n    node='{\"action\": {\"type\": \"state_of_host\", \"host_regex\"\
+          : \"\"}, \"search\": {\"type\": \"empty\"}}' \\\n    pack_id='pack1' \\\n\
+          \    --json"
   /domain-types/bi_pack/collections/all:
     get:
       description: ''
@@ -3564,7 +3545,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DomainObjectCollection'
+                $ref: '#/components/schemas/DomainObject'
           description: ''
           headers: {}
       summary: Get BI Pack
@@ -8426,7 +8407,7 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/agent/actions/sign\"\
-          ,\n    json={'passphrase': 'sw0rdfish', 'key_id': 42},\n)\nresp.raise_for_status()\n\
+          ,\n    json={'key_id': 42, 'passphrase': 'sw0rdfish'},\n)\nresp.raise_for_status()\n\
           data = resp.json()"
       - label: urllib
         lang: python
@@ -8435,8 +8416,8 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
           \    f\"{API_URL}/domain-types/agent/actions/sign\",\n    method=\"POST\"\
           ,\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
-          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({'passphrase':\
-          \ 'sw0rdfish', 'key_id': 42}).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({'key_id':\
+          \ 42, 'passphrase': 'sw0rdfish'}).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
           data = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -8595,7 +8576,7 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/agent/actions/bake_and_sign\"\
-          ,\n    json={'passphrase': 'sw0rdfish', 'key_id': 42},\n)\nresp.raise_for_status()\n\
+          ,\n    json={'key_id': 42, 'passphrase': 'sw0rdfish'},\n)\nresp.raise_for_status()\n\
           data = resp.json()"
       - label: urllib
         lang: python
@@ -8605,7 +8586,7 @@ paths:
           \    f\"{API_URL}/domain-types/agent/actions/bake_and_sign\",\n    method=\"\
           POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
           \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
-          \ data=json.dumps({'passphrase': 'sw0rdfish', 'key_id': 42}).encode('utf-8'),\n\
+          \ data=json.dumps({'key_id': 42, 'passphrase': 'sw0rdfish'}).encode('utf-8'),\n\
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash

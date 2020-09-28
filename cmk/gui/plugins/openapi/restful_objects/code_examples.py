@@ -28,7 +28,6 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     LocationType,
     OperationSpecType,
     ParamDict,
-    RequestSchema,
 )
 
 CODE_TEMPLATES_LOCK = threading.Lock()
@@ -277,8 +276,9 @@ def to_dict(schema: Schema) -> Dict[str, str]:
         >>> from marshmallow import Schema, fields
         >>> class SayHello(Schema):
         ...      message = fields.String(example="Hello world!")
+        ...      message2 = fields.String(example="Hello Bob!")
         >>> to_dict(SayHello())
-        {'message': 'Hello world!'}
+        {'message': 'Hello world!', 'message2': 'Hello Bob!'}
 
         >>> class Nobody(Schema):
         ...      expects = fields.String()
@@ -296,7 +296,7 @@ def to_dict(schema: Schema) -> Dict[str, str]:
 
     """
     ret = {}
-    for name, field in schema.fields.items():
+    for name, field in schema.declared_fields.items():
         if 'example' not in field.metadata:
             raise KeyError(f"Schema '{schema.__class__.__name__}.{name}' has no example.")
         ret[name] = field.metadata['example']
@@ -353,7 +353,7 @@ def _transform_params(param_list):
 def code_samples(
     path: str,
     method: HTTPMethod,
-    request_schema: RequestSchema,
+    request_schema: Optional[Type[Schema]],
     operation_spec: OperationSpecType,
 ) -> List[Dict[str, str]]:
     """Create a list of rendered code sample Objects
@@ -396,7 +396,24 @@ def _filter_params(
     return query_parameters
 
 
-def yapf_format(obj):
+def yapf_format(obj) -> str:
+    """Format the object nicely.
+
+    Examples:
+
+        While this should format in a stable manner, I'm not quite sure about it.
+
+        >>> yapf_format({'password': 'foo', 'username': 'bar'})
+        "{'password': 'foo', 'username': 'bar'}\\n"
+
+    Args:
+        obj:
+            A python object, which gets represented as valid Python-code when a str() is applied.
+
+    Returns:
+        A string of the object, formatted nicely.
+
+    """
     style = {
         'COLUMN_LIMIT': 50,
         'ALLOW_SPLIT_BEFORE_DICT_VALUE': False,
@@ -429,18 +446,19 @@ def _get_schema(schema: Optional[Union[str, Type[Schema]]]) -> Optional[Schema]:
     # We just take the first one and go with that, as we have no way of letting the user chose
     # the dispatching-key by himself (this is a limitation of ReDoc).
     _schema: Schema = resolve_schema_instance(schema)
-    if _schema_is_multiple(_schema):
-        first_key = list(_schema.type_schemas.keys())[0]
-        _schema = resolve_schema_instance(_schema.type_schemas[first_key])
+    if _schema_is_multiple(schema):
+        type_schemas = _schema.type_schemas  # type: ignore[attr-defined]
+        first_key = list(type_schemas.keys())[0]
+        _schema = resolve_schema_instance(type_schemas[first_key])
 
     return _schema
 
 
-def _schema_is_multiple(schema: Optional[Union[str, Schema]]) -> bool:
+def _schema_is_multiple(schema: Optional[Union[str, Type[Schema]]]) -> bool:
     if schema is None:
         return False
     _schema = resolve_schema_instance(schema)
-    return hasattr(_schema, 'type_schemas') and _schema.type_schemas
+    return bool(getattr(_schema, 'type_schemas', None))
 
 
 def _jinja_environment() -> jinja2.Environment:

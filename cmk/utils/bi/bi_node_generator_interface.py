@@ -14,7 +14,7 @@
 #   +----------------------------------------------------------------------+
 
 import abc
-from typing import List, Dict, Any, Optional
+from typing import List, Optional
 
 from cmk.utils.bi.bi_lib import (
     bi_search_registry,
@@ -25,10 +25,11 @@ from cmk.utils.bi.bi_lib import (
     MacroMappings,
     ABCWithSchema,
 )
+from cmk.utils.bi.type_defs import NodeDict
 
 
 class ABCBINodeGenerator(ABCWithSchema):
-    def __init__(self, node_config: Dict[str, Any]):
+    def __init__(self, node_config: NodeDict):
         super().__init__()
         self.search: ABCBISearch = bi_search_registry.instantiate(node_config["search"])
         self.action: ABCBIAction = bi_action_registry.instantiate(node_config["action"])

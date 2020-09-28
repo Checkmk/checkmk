@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from marshmallow import Schema  # type: ignore[import]
+from marshmallow import Schema
 from typing import Dict, Type, Optional, Any, List
 
 from cmk.utils.bi.bi_lib import (
@@ -22,6 +22,7 @@ from cmk.utils.bi.bi_rule import BIRule
 from cmk.utils.bi.bi_trees import BICompiledAggregation, BICompiledRule
 from cmk.utils.bi.bi_node_generator import BINodeGenerator
 from cmk.utils.bi.bi_node_vis import BIAggregationVisualizationSchema
+from cmk.utils.bi.type_defs import AggrConfigDict
 
 #   .--Aggregation---------------------------------------------------------.
 #   |         _                                    _   _                   |
@@ -34,10 +35,10 @@ from cmk.utils.bi.bi_node_vis import BIAggregationVisualizationSchema
 
 
 class BIAggregation:
-    def __init__(self, aggr_config: Optional[Dict[str, Any]] = None, pack_id: str = ""):
+    def __init__(self, aggr_config: Optional[AggrConfigDict] = None, pack_id: str = ""):
         super().__init__()
         if aggr_config is None:
-            aggr_config = self.schema()().dump({}).data
+            aggr_config = self.schema()().dump({})
         self.id = aggr_config["id"]
         # TODO: may be None -> SCOPE_GLOBAL
         self.customer = aggr_config.get("customer")
@@ -53,7 +54,7 @@ class BIAggregation:
         return BIAggregationSchema
 
     def clone(self) -> "BIAggregation":
-        aggregation_config = self.schema()().dump(self).data
+        aggregation_config = self.schema()().dump(self)
         return BIAggregation(aggregation_config)
 
     def compile(self) -> BICompiledAggregation:

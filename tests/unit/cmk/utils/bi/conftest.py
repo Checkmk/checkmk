@@ -71,9 +71,9 @@ def use_test_service_period_status_data():
 def dummy_bi_rule():
     rule_id = "dummy_rule"
     try:
-        node_schema = BINodeGenerator.schema()().dump({}).data
+        node_schema = BINodeGenerator.schema()().dump({})
         node_schema["action"]["host_regex"] = "heute_clone"
-        schema_config = BIRule.schema()().dump({"id": rule_id}).data
+        schema_config = BIRule.schema()().dump({"id": rule_id})
         schema_config["nodes"].append(node_schema)
         yield BIRule(schema_config)
     finally:

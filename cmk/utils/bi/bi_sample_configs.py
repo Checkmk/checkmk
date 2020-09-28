@@ -34,7 +34,6 @@ bi_sample_config = {
                 'search': {
                     'conditions': {
                         'host_choice': {
-                            'pattern': '',
                             'type': 'all_hosts'
                         },
                         'host_folder': '',
@@ -580,7 +579,6 @@ bi_sample_config = {
             'nodes': [{
                 'action': {
                     'host_regex': '$HOSTNAME$',
-                    'show_remaining': True,
                     'type': 'state_of_remaining_services'
                 },
                 'search': {

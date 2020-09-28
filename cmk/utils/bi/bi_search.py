@@ -4,9 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Dict, Type, Any
+from typing import List, Dict, Type, Any, Union
 
-from marshmallow import Schema, validate  # type: ignore[import]
+from marshmallow import Schema, validate, fields
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from cmk.utils.bi.bi_lib import (
@@ -14,14 +14,13 @@ from cmk.utils.bi.bi_lib import (
     replace_macros,
     bi_search_registry,
     ABCBISearch,
-    Nested,
-    String,
     ReqConstant,
     ReqDict,
     ReqList,
     ReqString,
     ReqNested,
 )
+
 from cmk.utils.bi.bi_searcher import bi_searcher, BIHostSearchMatch, BIServiceSearchMatch
 
 
@@ -85,9 +84,6 @@ class BIEmptySearch(ABCBISearch):
     @classmethod
     def schema(cls) -> Type["BIEmptySearchSchema"]:
         return BIEmptySearchSchema
-
-    def __init__(self, search_config: Dict[str, Any]):
-        super().__init__(search_config)
 
     def execute(self, macros: MacroMappings) -> List[Dict]:
         return [{}]
@@ -183,7 +179,7 @@ class BIHostSearch(ABCBISearch):
 
 class BIHostSearchSchema(Schema):
     type = ReqConstant(BIHostSearch.type())
-    conditions = ReqNested(HostConditionsSchema, default=HostConditionsSchema().dump({}).data)
+    conditions = ReqNested(HostConditionsSchema, default=HostConditionsSchema().dump({}))
     refer_to = ReqString(validate=validate.OneOf(["host", "child", "parent"]), default="host")
 
 
@@ -228,7 +224,7 @@ class BIServiceSearch(ABCBISearch):
 
 class BIServiceSearchSchema(Schema):
     type = ReqConstant(BIServiceSearch.type())
-    conditions = ReqNested(ServiceConditionsSchema, default=ServiceConditionsSchema().dump({}).data)
+    conditions = ReqNested(ServiceConditionsSchema, default=ServiceConditionsSchema().dump({}))
 
 
 #   .--Fixed---------------------------------------------------------------.
@@ -270,12 +266,12 @@ class BIFixedArgumentsSearch(ABCBISearch):
 
 class BIFixedArgumentsSearchTokenSchema(Schema):
     key = ReqString()
-    values = ReqList(String)
+    values = ReqList(fields.String)
 
 
 class BIFixedArgumentsSearchSchema(Schema):
     type = ReqConstant(BIFixedArgumentsSearch.type())
-    arguments = ReqList(Nested(BIFixedArgumentsSearchTokenSchema))
+    arguments = ReqList(fields.Nested(BIFixedArgumentsSearchTokenSchema))
 
 
 #   .--Schemas-------------------------------------------------------------.
@@ -293,5 +289,7 @@ class BISearchSchema(OneOfSchema):
     type_field_remove = False
     type_schemas = dict((k, v.schema()) for k, v in bi_search_registry.items())
 
-    def get_obj_type(self, obj: ABCBISearch) -> str:
+    def get_obj_type(self, obj: Union[ABCBISearch, dict]) -> str:
+        if isinstance(obj, dict):
+            return obj["type"]
         return obj.type()

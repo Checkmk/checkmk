@@ -16,7 +16,7 @@ from cmk.utils.bi.bi_search import (
 
 
 def test_empty_search():
-    schema_config = BIEmptySearch.schema()().dump({}).data
+    schema_config = BIEmptySearch.schema()().dump({})
     search = BIEmptySearch(schema_config)
     results = search.execute({})
     assert len(results) == 1
@@ -57,7 +57,7 @@ def test_empty_search():
 ])
 def test_fixed_argument_search(config, num_expected_keys, expected_total_length,
                                use_test_structure_data):
-    schema_config = BIFixedArgumentsSearch.schema()().dump({"arguments": config}).data
+    schema_config = BIFixedArgumentsSearch.schema()().dump({"arguments": config})
     search = BIFixedArgumentsSearch(schema_config)
     results = search.execute({})
     assert len(results) == expected_total_length
@@ -69,20 +69,19 @@ def test_fixed_argument_search(config, num_expected_keys, expected_total_length,
     BIServiceSearch,
 ])
 def test_host_search(search_class, use_test_structure_data):
-    schema_config = search_class.schema()().dump({}).data
+    schema_config = search_class.schema()().dump({})
     search = search_class(schema_config)
     results = search.execute({})
     hostnames = {x["$HOSTNAME$"] for x in results}
     assert len(hostnames) == 2
 
     # Tag match
-    schema_config = search_class.schema()().dump({
-        "conditions": {
+    schema_config = search_class.schema()().dump(
+        {"conditions": {
             "host_tags": {
                 "cmk-agent": "clone-tag"
             }
-        }
-    }).data
+        }})
     search = search_class(schema_config)
     results = search.execute({})
     hostnames = {x["$HOSTNAME$"] for x in results}
@@ -90,27 +89,25 @@ def test_host_search(search_class, use_test_structure_data):
     assert "heute_clone" in hostnames
 
     # Label match
-    schema_config = search_class.schema()().dump({
-        "conditions": {
+    schema_config = search_class.schema()().dump(
+        {"conditions": {
             "host_labels": {
                 "cmk/check_mk_server": "yes"
             }
-        }
-    }).data
+        }})
     search = search_class(schema_config)
     results = search.execute({})
     hostnames = {x["$HOSTNAME$"] for x in results}
     assert len(hostnames) == 1
 
     # Regex match hit
-    schema_config = search_class.schema()().dump({
-        "conditions": {
+    schema_config = search_class.schema()().dump(
+        {"conditions": {
             "host_choice": {
                 "type": "host_name_regex",
                 "pattern": "heute_cl.*"
             }
-        }
-    }).data
+        }})
     search = search_class(schema_config)
     results = search.execute({})
     hostnames = {x["$HOSTNAME$"] for x in results}
@@ -118,27 +115,25 @@ def test_host_search(search_class, use_test_structure_data):
     assert "heute_clone" in hostnames
 
     # Regex match miss
-    schema_config = search_class.schema()().dump({
-        "conditions": {
+    schema_config = search_class.schema()().dump(
+        {"conditions": {
             "host_choice": {
                 "type": "host_name_regex",
                 "pattern": "heute_missing.*"
             }
-        }
-    }).data
+        }})
     search = search_class(schema_config)
     results = search.execute({})
     assert len(results) == 0
 
     # Alias match
-    schema_config = search_class.schema()().dump({
-        "conditions": {
+    schema_config = search_class.schema()().dump(
+        {"conditions": {
             "host_choice": {
                 "type": "host_alias_regex",
                 "pattern": "heute_alias"
             }
-        }
-    }).data
+        }})
     search = search_class(schema_config)
     results = search.execute({})
     hostnames = {x["$HOSTNAME$"] for x in results}
@@ -163,7 +158,7 @@ def test_service_search(service_regex, host_regex, expected_matches, use_test_st
                 "pattern": host_regex,
             }
         }
-    }).data
+    })
     search = BIServiceSearch(schema_config)
     results = search.execute({})
     assert len(results) == expected_matches

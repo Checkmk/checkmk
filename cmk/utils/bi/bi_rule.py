@@ -14,8 +14,7 @@
 #   +----------------------------------------------------------------------+
 
 from typing import List, Dict, Type, Sequence, Optional, Any
-from marshmallow import Schema  # type: ignore[import]
-from marshmallow.fields import Nested  # type: ignore[import]
+from marshmallow import Schema, fields
 
 from cmk.utils.bi.bi_lib import (
     bi_aggregation_function_registry,
@@ -85,7 +84,7 @@ class BIRule(ABCBIRule, ABCWithSchema):
         return BIRuleSchema
 
     def clone(self) -> "BIRule":
-        rule_config = self.schema()().dump(self).data
+        rule_config = self.schema()().dump(self)
         return BIRule(rule_config)
 
     def get_nodes(self) -> Sequence[BINodeGenerator]:
@@ -158,7 +157,7 @@ class BIRule(ABCBIRule, ABCWithSchema):
 
 class BIRuleSchema(Schema):
     id = ReqString(default="", example="rule1")
-    nodes = ReqList(Nested(BINodeGeneratorSchema), default=[], example=[])
+    nodes = ReqList(fields.Nested(BINodeGeneratorSchema), default=[], example=[])
     params = create_nested_schema_for_class(BIParams,
                                             example_config=[{
                                                 "arguments": ["foo", "bar"],

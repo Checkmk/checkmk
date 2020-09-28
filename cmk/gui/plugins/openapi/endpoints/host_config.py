@@ -81,12 +81,13 @@ def list_hosts(param):
     return _host_collection(watolib.Folder.root_folder().all_hosts_recursively().values())
 
 
-def _host_collection(hosts):
-    return constructors.serve_json({
+def _host_collection(hosts) -> Response:
+    host_collection = {
         'id': 'host',
+        'domainType': 'host_config',
         'value': [
             constructors.collection_item(
-                domain_type='host',
+                domain_type='host_config',
                 obj={
                     'title': host.name(),
                     'id': host.id()
@@ -94,7 +95,8 @@ def _host_collection(hosts):
             ) for host in hosts
         ],
         'links': [constructors.link_rel('self', constructors.collection_href('host_config'))],
-    })
+    }
+    return constructors.serve_json(host_collection)
 
 
 @endpoint_schema(constructors.object_href('host_config', '{host_name}'),

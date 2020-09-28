@@ -7,6 +7,37 @@
 from cmk.gui.plugins.openapi.restful_objects import response_schemas
 
 
+def test_host_collection():
+    errors = response_schemas.HostCollection().validate({
+        'id': 'host',
+        'domainType': 'host_config',
+        'value': [{
+            'rel': 'urn:org.restfulobjects:rels/value;collection="all"',
+            'href': '/objects/host_config/foobar',
+            'method': 'GET',
+            'type': 'application/json;profile="urn:org.restfulobjects:rels/object"',
+            'domainType': 'link',
+            'title': 'foobar'
+        }, {
+            'rel': 'urn:org.restfulobjects:rels/value;collection="all"',
+            'href': '/objects/host_config/sample',
+            'method': 'GET',
+            'type': 'application/json;profile="urn:org.restfulobjects:rels/object"',
+            'domainType': 'link',
+            'title': 'sample'
+        }],
+        'links': [{
+            'rel': 'self',
+            'href': '/domain-types/host_config/collections/all',
+            'method': 'GET',
+            'type': 'application/json',
+            'domainType': 'link'
+        }]
+    })
+    if errors:
+        raise Exception(errors)
+
+
 def test_domain_object():
     errors = response_schemas.DomainObject().validate({
         'domainType': 'folder',
@@ -21,16 +52,19 @@ def test_domain_object():
             }
         },
         'links': [{
+            'domainType': 'link',
             'href': '/objects/folder/a71684ebd8fe49548263083a3da332c8',
             'method': 'GET',
             'rel': 'self',
             'type': 'application/json'
         }, {
+            'domainType': 'link',
             'href': '/objects/folder/a71684ebd8fe49548263083a3da332c8',
             'method': 'PUT',
             'rel': '.../update',
             'type': 'application/json'
         }, {
+            'domainType': 'link',
             'href': '/objects/folder/a71684ebd8fe49548263083a3da332c8',
             'method': 'DELETE',
             'rel': '.../delete',
@@ -40,16 +74,19 @@ def test_domain_object():
             'move': {
                 'id': 'move',
                 'links': [{
+                    'domainType': 'link',
                     'href': '/objects/folder/a71684ebd8fe49548263083a3da332c8',
                     'method': 'GET',
                     'rel': 'up',
                     'type': 'application/json'
                 }, {
+                    'domainType': 'link',
                     'href': '/objects/folder/a71684ebd8fe49548263083a3da332c8/actions/move',
                     'method': 'GET',
                     'rel': '.../details;action="move"',
                     'type': 'application/json'
                 }, {
+                    'domainType': 'link',
                     'href': '/objects/folder/a71684ebd8fe49548263083a3da332c8/actions/move/invoke',
                     'method': 'POST',
                     'rel': '.../invoke;action="move"',

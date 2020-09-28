@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import List, Union, Dict, Type, Any
-from marshmallow import Schema, validate  # type: ignore[import]
+from marshmallow import Schema, validate
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from cmk.utils.bi.bi_lib import (
@@ -197,5 +197,7 @@ class BIAggregationFunctionSchema(OneOfSchema):
     #    "count_ok": BIAggregationFunctionCountOKSchema,
     #}
 
-    def get_obj_type(self, obj: ABCBIAggregationFunction) -> str:
+    def get_obj_type(self, obj: Union[ABCBIAggregationFunction, dict]) -> str:
+        if isinstance(obj, dict):
+            return obj["type"]
         return obj.type()

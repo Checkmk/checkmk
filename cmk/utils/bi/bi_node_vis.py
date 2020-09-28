@@ -13,7 +13,7 @@
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-from marshmallow import Schema  # type: ignore[import]
+from marshmallow import Schema
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 from cmk.utils.bi.bi_lib import (
     ReqConstant,

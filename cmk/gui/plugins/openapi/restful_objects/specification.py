@@ -57,8 +57,9 @@ such a method. In these cases the HTTP method to use has to be POST. You can't o
 """
 from typing import List, Literal, Sequence, Union
 
-import apispec.utils  # type: ignore
-import apispec_oneofschema  # type: ignore
+import apispec.utils  # type: ignore[import]
+import apispec.ext.marshmallow as marshmallow  # type: ignore[import]
+import apispec_oneofschema  # type: ignore[import]
 
 from cmk.gui.plugins.openapi import plugins
 from cmk.gui.plugins.openapi.restful_objects.parameters import (
@@ -68,8 +69,6 @@ from cmk.gui.plugins.openapi.restful_objects.parameters import (
     NAME,
     SERVICE_DESCRIPTION,
 )
-
-# Path parameters look like {varname} and need to be checked.
 from cmk.gui.plugins.openapi.restful_objects.type_defs import ParameterReference, PrimitiveParameter
 
 DEFAULT_HEADERS = [
@@ -124,6 +123,7 @@ SPEC = apispec.APISpec("Checkmk REST API",
                        "0.3.2",
                        apispec.utils.OpenAPIVersion("3.0.2"),
                        plugins=[
+                           marshmallow.MarshmallowPlugin(),
                            plugins.ValueTypedDictMarshmallowPlugin(),
                            apispec_oneofschema.MarshmallowPlugin(),
                        ],

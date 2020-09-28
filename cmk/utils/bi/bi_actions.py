@@ -4,13 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from marshmallow import Schema  # type: ignore[import]
+from marshmallow import Schema
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
-from typing import List, Dict, Type, Any
+from typing import List, Dict, Type, Any, Union
 from cmk.utils.bi.bi_lib import (
     BIParams,
     BIParamsSchema,
     bi_action_registry,
+    ABCWithSchema,
     ABCBIAction,
     ABCBICompiledNode,
     replace_macros,
@@ -38,7 +39,7 @@ from cmk.utils.bi.bi_trees import (
 
 
 @bi_action_registry.register
-class BICallARuleAction(ABCBIAction):
+class BICallARuleAction(ABCBIAction, ABCWithSchema):
     @classmethod
     def type(cls) -> str:
         return "call_a_rule"
@@ -69,8 +70,8 @@ class BICallARuleActionSchema(Schema):
     type = ReqConstant(BICallARuleAction.type())
     rule_id = ReqString(default="", example="test_rule_1")
     params = ReqNested(BIParamsSchema,
-                       default=BIParamsSchema().dump({}).data,
-                       example=BIParamsSchema().dump({}).data)
+                       default=BIParamsSchema().dump({}),
+                       example=BIParamsSchema().dump({}))
 
 
 #   .--StateOfHost---------------------------------------------------------.
@@ -84,7 +85,7 @@ class BICallARuleActionSchema(Schema):
 
 
 @bi_action_registry.register
-class BIStateOfHostAction(ABCBIAction):
+class BIStateOfHostAction(ABCBIAction, ABCWithSchema):
     @classmethod
     def type(cls) -> str:
         return "state_of_host"
@@ -126,7 +127,7 @@ class BIStateOfHostActionSchema(Schema):
 
 
 @bi_action_registry.register
-class BIStateOfServiceAction(ABCBIAction):
+class BIStateOfServiceAction(ABCBIAction, ABCWithSchema):
     @classmethod
     def type(cls) -> str:
         return "state_of_service"
@@ -176,7 +177,7 @@ class BIStateOfServiceActionSchema(Schema):
 
 
 @bi_action_registry.register
-class BIStateOfRemainingServicesAction(ABCBIAction):
+class BIStateOfRemainingServicesAction(ABCBIAction, ABCWithSchema):
     @classmethod
     def type(cls) -> str:
         return "state_of_remaining_services"
@@ -223,5 +224,7 @@ class BIActionSchema(OneOfSchema):
     #    "state_of_remaining_services": BIStateOfRemainingServicesActionSchema,
     #}
 
-    def get_obj_type(self, obj: ABCBIAction) -> str:
+    def get_obj_type(self, obj: Union[ABCBIAction, dict]) -> str:
+        if isinstance(obj, dict):
+            return obj["type"]
         return obj.type()

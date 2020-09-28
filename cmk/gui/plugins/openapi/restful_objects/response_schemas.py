@@ -171,14 +171,18 @@ class ObjectMemberBase(Linkable):
 class ObjectCollectionMember(ObjectMemberBase):
     memberType = fields.Constant('collection')
     value = fields.List(fields.Nested(LinkSchema()))
+    name = fields.String()
 
 
 class ObjectPropertyMember(ObjectMemberBase):
     memberType = fields.Constant('property')
+    name = fields.String()
 
 
 class ObjectActionMember(ObjectMemberBase):
     memberType = fields.Constant('action')
+    parameters = fields.Dict()
+    name = fields.String()
 
 
 class ObjectMember(OneOfSchema):
@@ -195,7 +199,7 @@ class ObjectMemberDict(plugins.ValueTypedDictSchema):
 
 
 class ActionResultBase(Linkable):
-    resultType = fields.String(required=True, example='object')
+    resultType = fields.Constant(None, required=True, example='object')
     result = fields.Dict()
 
 
@@ -227,11 +231,12 @@ class AttributeDict(plugins.ValueTypedDictSchema):
 
 
 class DomainObject(Linkable):
-    domainType = fields.String(required=True)
+    domainType = fields.Constant(None, required=True)
     # Generic things to ease development. Should be changed for more concrete schemas.
     id = fields.String()
     title = fields.String()
     members = fields.Nested(ObjectMemberDict())
+    extensions = fields.Dict()
 
 
 class FolderMembers(BaseSchema):
@@ -246,13 +251,11 @@ class FolderMembers(BaseSchema):
 
 
 class FolderSchema(Linkable):
-    domainType = fields.Constant(
-        "folder_config",
-        required=True,
-    )
+    domainType = fields.Constant("folder_config")
     id = fields.String()
     title = fields.String()
     members = fields.Nested(FolderMembers())
+    extensions = fields.Dict()
 
 
 class ConcreteFolder(OneOfSchema):
@@ -260,6 +263,7 @@ class ConcreteFolder(OneOfSchema):
         'folder_config': FolderSchema,
         'link': LinkSchema,
     }
+    type_field_remove = False
     type_field = 'domainType'
 
 
@@ -328,13 +332,14 @@ class ConcreteHost(OneOfSchema):
         'link': LinkSchema,
     }
     type_field = 'domainType'
+    type_field_remove = False
 
 
 class HostCollection(Linkable):
     domainType = fields.Constant("host_config", required=True)
     id = fields.String()
     title = fields.String()
-    value = fields.List(fields.Nested(ConcreteHost))
+    value = fields.Nested(ConcreteHost, many=True)
 
 
 class ObjectAction(Linkable):
@@ -343,7 +348,7 @@ class ObjectAction(Linkable):
 
 class DomainObjectCollection(Linkable):
     id = fields.String()
-    domainType = fields.String()
+    domainType: fields.Field = fields.String()
     value = fields.List(fields.Nested(LinkSchema))
     extensions = fields.Dict()
 
@@ -419,7 +424,7 @@ class ConcreteTimePeriod(BaseSchema):
             }]
         }],
     )
-    exclude = fields.List(
+    exclude = fields.List(  # type: ignore[assignment]
         fields.String(description="Name of excluding time period", example="holidays"),
         description="The collection of time period aliases whose periods are excluded",
     )

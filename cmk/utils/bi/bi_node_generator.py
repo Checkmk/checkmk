@@ -13,23 +13,23 @@
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-from marshmallow import Schema  # type: ignore[import]
+from marshmallow import Schema
 from typing import List, Type
 
 from cmk.utils.bi.bi_lib import (
     ABCBICompiledNode,
-    ReqNested,
     MacroMappings,
+    create_nested_schema,
 )
 
 from cmk.utils.bi.bi_actions import (
     BIActionSchema,
-    BICallARuleAction,
     BIStateOfHostActionSchema,
+    BICallARuleAction,
 )
 
 from cmk.utils.bi.bi_node_generator_interface import ABCBINodeGenerator
-from cmk.utils.bi.bi_search import BISearchSchema
+from cmk.utils.bi.bi_search import BISearchSchema, BIEmptySearchSchema
 
 
 class BINodeGenerator(ABCBINodeGenerator):
@@ -53,9 +53,5 @@ class BINodeGenerator(ABCBINodeGenerator):
 
 
 class BINodeGeneratorSchema(Schema):
-    search = ReqNested(BISearchSchema, default={"type": "empty"}, example={"type": "empty"})
-    action = ReqNested(BIActionSchema,
-                       default=BIStateOfHostActionSchema().dump({}).data,
-                       example=BIStateOfHostActionSchema().dump({
-                           "host_regex": "testhost"
-                       }).data)
+    search = create_nested_schema(BISearchSchema, default_schema=BIEmptySearchSchema)
+    action = create_nested_schema(BIActionSchema, default_schema=BIStateOfHostActionSchema)

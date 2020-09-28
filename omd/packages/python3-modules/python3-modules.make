@@ -113,10 +113,10 @@ PYTHON3_MODULES_LIST += PyMySQL-0.9.3.tar.gz # needed by check_sql active check
 PYTHON3_MODULES_LIST += psycopg2-binary-2.8.4.tar.gz # needed by check_sql active check
 
 # To automatically generate checkmk.yaml OpenAPI spec file
-PYTHON3_MODULES_LIST += apispec-2.0.2.tar.gz
-PYTHON3_MODULES_LIST += marshmallow-2.20.5.tar.gz
-PYTHON3_MODULES_LIST += marshmallow-oneofschema-1.0.6.tar.gz
-PYTHON3_MODULES_LIST += apispec-oneofschema-2.1.1.tar.gz
+PYTHON3_MODULES_LIST += apispec-3.3.1.tar.gz
+PYTHON3_MODULES_LIST += marshmallow-3.7.1.tar.gz
+PYTHON3_MODULES_LIST += marshmallow-oneofschema-2.0.1.tar.gz
+PYTHON3_MODULES_LIST += apispec-oneofschema-3.0.0.tar.gz
 
 PYTHON3_MODULES_LIST += mypy_extensions-0.4.3.tar.gz  # direct dependency
 PYTHON3_MODULES_LIST += typing_extensions-3.7.4.1.tar.gz  # direct dependency

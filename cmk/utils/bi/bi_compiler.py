@@ -114,7 +114,7 @@ class BICompiler:
                 result = BICompiledAggregationSchema().dump(aggr)
                 # TODO: remove pprint before going live, change to marshal
                 self._path_compiled_aggregations.joinpath(aggr_id).write_text(
-                    pprint.pformat(result.data))
+                    pprint.pformat(result))
                 self._logger.debug("Dump config took %f" % (time.time() - start))
 
         known_sites = {kv[0]: kv[1] for kv in current_configstatus.get("known_sites", set())}

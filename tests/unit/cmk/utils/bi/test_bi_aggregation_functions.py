@@ -25,11 +25,11 @@ from cmk.utils.bi.bi_aggregation_functions import (
     ([-1, -1], -1, -1),
 ])
 def test_aggr_default(states, expected_best_state, expected_worst_state):
-    best_aggr_config = BIAggregationFunctionBest.schema()().dump({}).data
+    best_aggr_config = BIAggregationFunctionBest.schema()().dump({})
     best_aggr_function = BIAggregationFunctionBest(best_aggr_config)
     assert best_aggr_function.aggregate(states) == expected_best_state
 
-    worst_aggr_config = BIAggregationFunctionWorst.schema()().dump({}).data
+    worst_aggr_config = BIAggregationFunctionWorst.schema()().dump({})
     worst_aggr_function = BIAggregationFunctionWorst(worst_aggr_config)
     assert worst_aggr_function.aggregate(states) == expected_worst_state
 
@@ -44,11 +44,11 @@ def test_aggr_default(states, expected_best_state, expected_worst_state):
     ([-1, -1], -1, -1),
 ])
 def test_aggr_exceed_count(states, expected_best_state, expected_worst_state):
-    best_aggr_config = BIAggregationFunctionBest.schema()().dump({"count": 5}).data
+    best_aggr_config = BIAggregationFunctionBest.schema()().dump({"count": 5})
     best_aggr_function = BIAggregationFunctionBest(best_aggr_config)
     assert best_aggr_function.aggregate(states) == expected_best_state
 
-    worst_aggr_config = BIAggregationFunctionWorst.schema()().dump({"count": 5}).data
+    worst_aggr_config = BIAggregationFunctionWorst.schema()().dump({"count": 5})
     worst_aggr_function = BIAggregationFunctionWorst(worst_aggr_config)
     assert worst_aggr_function.aggregate(states) == expected_worst_state
 
@@ -64,11 +64,11 @@ def test_aggr_exceed_count(states, expected_best_state, expected_worst_state):
     ([-1, -1], -1, -1),
 ])
 def test_aggr_restrict_state_warn(states, expected_best_state, expected_worst_state):
-    best_aggr_config = BIAggregationFunctionBest.schema()().dump({"restrict_state": 1}).data
+    best_aggr_config = BIAggregationFunctionBest.schema()().dump({"restrict_state": 1})
     best_aggr_function = BIAggregationFunctionBest(best_aggr_config)
     assert best_aggr_function.aggregate(states) == expected_best_state
 
-    worst_aggr_config = BIAggregationFunctionWorst.schema()().dump({"restrict_state": 1}).data
+    worst_aggr_config = BIAggregationFunctionWorst.schema()().dump({"restrict_state": 1})
     worst_aggr_function = BIAggregationFunctionWorst(worst_aggr_config)
     assert worst_aggr_function.aggregate(states) == expected_worst_state
 
@@ -97,6 +97,6 @@ def test_aggr_count_ok(states, ok_type, ok_value, warn_type, warn_value, expecte
             "value": warn_value
         },
     }
-    aggr_config = BIAggregationFunctionCountOK.schema()().dump(schema_config).data
+    aggr_config = BIAggregationFunctionCountOK.schema()().dump(schema_config)
     aggr_function = BIAggregationFunctionCountOK(aggr_config)
     assert aggr_function.aggregate(states) == expected_state

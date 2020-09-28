@@ -3,16 +3,16 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-from marshmallow import Schema, MarshalResult, UnmarshalResult  # type: ignore
-from apispec.ext import marshmallow  # type: ignore
-from apispec.ext.marshmallow import common  # type: ignore
+from typing import Type, Any, Union
+from marshmallow import Schema, fields, ValidationError
+from apispec.ext import marshmallow  # type: ignore[import]
+from apispec.ext.marshmallow import common  # type: ignore[import]
 
 
 class ValueTypedDictOpenAPIConverter(marshmallow.OpenAPIConverter):
     def schema2jsonschema(self, schema):
         if self.openapi_version.major < 3 or not is_value_typed_dict(schema):
-            return super(ValueTypedDictOpenAPIConverter, self).schema2jsonschema(schema)
+            return super().schema2jsonschema(schema)
 
         schema_type = schema.value_type
         schema_instance = common.resolve_schema_instance(schema_type)
@@ -54,21 +54,22 @@ class ValueTypedDictSchema(Schema):
     """
     key_name: str = 'name'
     keep_key: bool = True
-    value_type: Schema = None
+    value_type: Union[Type[Schema], fields.Field]
 
-    def dump(self, obj, many=None, update_fields=True, **kwargs):
+    def dump(self, obj: Any, *, many=None):
         schema = common.resolve_schema_instance(self.value_type)
         result = {}
         for entry in obj:
-            part = schema.dump(entry).data
+            part = schema.dump(entry)
             result[part[self.key_name]] = part
             if not self.keep_key:
                 del part[self.key_name]
-        return MarshalResult(result, [])
+        return result
 
-    def load(self, data, many=None, partial=None):
+    def load(self, data, *, many=None, partial=None, unknown=None):
+
         if not isinstance(data, dict):
-            return UnmarshalResult({}, {'_schema': 'Invalid data type: %s' % data})
+            raise ValidationError({'_schema': f'Invalid data type: {data}'})
 
         schema = common.resolve_schema_instance(self.value_type)
         res = []
@@ -76,9 +77,9 @@ class ValueTypedDictSchema(Schema):
             payload = value.copy()
             payload[self.key_name] = key
             result = schema.load(payload)
-            res.append(result.data)
+            res.append(result)
 
-        return UnmarshalResult(res, [])
+        return res
 
 
 def is_value_typed_dict(schema):
@@ -89,12 +90,9 @@ def is_value_typed_dict(schema):
 
 class ValueTypedDictMarshmallowPlugin(marshmallow.MarshmallowPlugin):
     def init_spec(self, spec):
-        super(ValueTypedDictMarshmallowPlugin, self).init_spec(spec)
-        self.openapi = ValueTypedDictOpenAPIConverter(
+        super().init_spec(spec)
+        self.converter = ValueTypedDictOpenAPIConverter(
             openapi_version=spec.openapi_version,
             schema_name_resolver=self.schema_name_resolver,
             spec=spec,
         )
-        self.openapi_version = spec.openapi_version
-        # Fix for the openapi attribute being renamed in apispec 3.0.0
-        self.converter = self.openapi

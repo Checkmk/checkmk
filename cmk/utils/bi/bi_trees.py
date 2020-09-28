@@ -5,9 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import List, Optional, Any, Set, Dict, Tuple, Union
-import marshmallow  # type: ignore[import]
-from marshmallow import Schema  # type: ignore[import]
-from marshmallow.fields import String, Nested  # type: ignore[import]
+from marshmallow import Schema, fields, pre_dump
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 from livestatus import SiteId
 
@@ -135,7 +133,11 @@ class BICompiledLeaf(ABCBICompiledNode):
                 entity.plugin_output,
                 bool(entity.in_service_period),
                 {},
-            ), assumed_result, [], self)
+            ),
+            assumed_result,
+            [],
+            self,
+        )
 
     def _get_state_name(self, state: Union[HostState, ServiceState]) -> str:
         if self.service_description:
@@ -155,7 +157,7 @@ class BISiteHostPairSchema(Schema):
     site_id = ReqString()
     host_name = ReqString()
 
-    @marshmallow.pre_dump
+    @pre_dump
     def pre_dump(self, obj: Tuple) -> Dict:
         # Convert aggregations and rules to list
         return {"site_id": obj[0], "host_name": obj[1]}
@@ -163,10 +165,10 @@ class BISiteHostPairSchema(Schema):
 
 class BICompiledLeafSchema(Schema):
     type = ReqConstant(BICompiledLeaf.type())
-    required_hosts = ReqList(Nested(BISiteHostPairSchema))
+    required_hosts = ReqList(fields.Nested(BISiteHostPairSchema))
     site_id = ReqString()
     host_name = ReqString()
-    service_description = String()
+    service_description = fields.String()
 
 
 #   .--Rule----------------------------------------------------------------.
@@ -282,8 +284,8 @@ class BICompiledRule(ABCBICompiledNode):
 class BICompiledRuleSchema(Schema):
     id = ReqString()
     type = ReqConstant(BICompiledRule.type())
-    required_hosts = ReqList(Nested(BISiteHostPairSchema))
-    nodes = ReqList(Nested("BIResultSchema"))
+    required_hosts = ReqList(fields.Nested(BISiteHostPairSchema))
+    nodes = ReqList(fields.Nested("BIResultSchema"))
     aggregation_function = ReqNested(
         BIAggregationFunctionSchema,
         example={
@@ -293,7 +295,7 @@ class BICompiledRuleSchema(Schema):
         },
     )
     node_visualization = ReqNested(BINodeVisLayoutStyleSchema,
-                                   example=BINodeVisBlockStyleSchema().dump({}).data)
+                                   example=BINodeVisBlockStyleSchema().dump({}))
     properties = ReqNested("BIRulePropertiesSchema", example={})
 
 
@@ -471,7 +473,7 @@ class BICompiledAggregation:
 
 class BICompiledAggregationSchema(Schema):
     id = ReqString()
-    branches = ReqList(Nested(BICompiledRuleSchema))
+    branches = ReqList(fields.Nested(BICompiledRuleSchema))
     aggregation_visualization = ReqNested(BIAggregationVisualizationSchema)
     computation_options = create_nested_schema_for_class(
         BIAggregationComputationOptions,

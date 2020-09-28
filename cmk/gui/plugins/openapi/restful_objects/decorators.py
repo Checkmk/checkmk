@@ -15,13 +15,13 @@ connexion is disabled.
 import dataclasses
 import functools
 from types import FunctionType
-from typing import Any, Dict, List, Optional, Sequence, Set, Union
+from typing import Any, Dict, List, Optional, Sequence, Set, Union, Type
 
 import apispec  # type: ignore[import]
 import apispec.utils  # type: ignore[import]
 from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[import]
 from connexion import problem, ProblemException  # type: ignore[import]
-from marshmallow import Schema  # type: ignore[import]
+from marshmallow import Schema, ValidationError
 from werkzeug.utils import import_string
 
 from cmk.gui.plugins.openapi.restful_objects.code_examples import code_samples
@@ -43,10 +43,7 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     ParamDict,
     ParameterReference,
     PrimitiveParameter,
-    RequestSchema,
-    ResponseSchema,
     ResponseType,
-    SchemaInstanceOrClass,
     ValidatorType,
 )
 
@@ -134,10 +131,11 @@ class Endpoint:
     parameters: Optional[Sequence[AnyParameterAndReference]] = None
     content_type: str = 'application/json'
     output_empty: bool = False
-    response_schema: ResponseSchema = None
-    request_schema: RequestSchema = None
+    parameter_schema: Optional[Type[Schema]] = None
+    response_schema: Optional[Type[Schema]] = None
+    request_schema: Optional[Type[Schema]] = None
     request_body_required: bool = True
-    error_schema: Schema = ApiError
+    error_schema: Type[Schema] = ApiError
     etag: Optional[ETagBehaviour] = None
     will_do_redirects: bool = False
     options: Dict[str, str] = dataclasses.field(default_factory=dict)
@@ -369,7 +367,11 @@ def _add_tag(tag: OpenAPITag, tag_group: Optional[str] = None) -> None:
         _assign_to_tag_group(tag_group, name)
 
 
-def wrap_with_validation(func, request_schema: RequestSchema, response_schema: ResponseSchema):
+def wrap_with_validation(
+    func,
+    request_schema: Optional[Type[Schema]],
+    response_schema: Optional[Type[Schema]],
+):
     """Wrap a function with schema validation logic.
 
     Args:
@@ -417,7 +419,10 @@ def wrap_with_validation(func, request_schema: RequestSchema, response_schema: R
                 status=500,
                 title="Server was about to send an invalid response.",
                 detail="This is an error of the implementation.",
-                ext={'errors': errors},
+                ext={
+                    'errors': errors,
+                    'orig': response.original_data
+                },
             )
         return response
 
@@ -451,7 +456,7 @@ def _schema_definition(schema_name: str):
     return f'<SchemaDefinition schemaRef="{ref}" showReadOnly={{true}} showWriteOnly={{true}} />'
 
 
-def _tag_from_schema(schema: SchemaInstanceOrClass) -> OpenAPITag:
+def _tag_from_schema(schema: Type[Schema]) -> OpenAPITag:
     """Construct a Tag-Dict from a Schema instance or class
 
     Examples:
@@ -473,9 +478,6 @@ def _tag_from_schema(schema: SchemaInstanceOrClass) -> OpenAPITag:
         >>> tag = _tag_from_schema(TestSchema)
         >>> assert tag == expected, tag
 
-        >>> tag = _tag_from_schema(TestSchema())
-        >>> assert tag == expected, tag
-
     Args:
         schema (marshmallow.Schema):
             A marshmallow Schema class or instance.
@@ -484,9 +486,6 @@ def _tag_from_schema(schema: SchemaInstanceOrClass) -> OpenAPITag:
         A dict containing the tag name and the description, which is taken from
 
     """
-    if getattr(schema, '__name__', None) is None:
-        return _tag_from_schema(schema.__class__)
-
     tag: OpenAPITag = {'name': _schema_name(schema.__name__)}
     docstring_name = _docstring_name(schema.__doc__)
     if docstring_name:
@@ -626,12 +625,13 @@ def schema_loads(schema, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     if schema is None:
         return None
     schema_ = resolve_schema_instance(schema)
-    result = schema_.load(data)
-    if result.errors:
+    try:
+        result = schema_.load(data)
+    except ValidationError as exc:
         raise ProblemException(
             status=400,
             title="The request could not be validated.",
             detail="There is an error in your submitted data.",
-            ext={'errors': result.errors},
+            ext={'errors': exc.messages},
         )
-    return result.data
+    return result

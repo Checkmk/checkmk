@@ -4,9 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import marshmallow  # type: ignore[import]
-from marshmallow.fields import String, Nested  # type: ignore[import]
-from marshmallow import Schema  # type: ignore[import]
+from marshmallow import Schema, fields, pre_dump
 
 from pathlib import Path
 from cmk.utils.i18n import _
@@ -269,14 +267,14 @@ class BIAggregationPacks:
 
     def load_config_from_schema(self, config_packs_schema: Dict) -> None:
         data = BIAggregationPacksSchema().load(config_packs_schema)
-        self._instantiate_packs(data.data["packs"])
+        self._instantiate_packs(data["packs"])
 
     def save_config(self) -> None:
         store.save_file(self.bi_configuration_file, repr(self.generate_config()))
 
     def generate_config(self) -> Dict[str, Any]:
         self._check_rule_cycles()
-        return BIAggregationPacksSchema().dump(self).data
+        return BIAggregationPacksSchema().dump(self)
 
     def _check_rule_cycles(self) -> None:
         toplevel_rules = {
@@ -345,13 +343,15 @@ class BIAggregationPacks:
 class BIAggregationPackSchema(Schema):
     id = ReqString(default="", example="bi_pack1")
     title = ReqString(default="", example="BI Title")
-    contact_groups = ReqList(String(), default=[], example=["contactgroup_a", "contactgroup_b"])
+    contact_groups = ReqList(fields.String(),
+                             default=[],
+                             example=["contactgroup_a", "contactgroup_b"])
     public = ReqBoolean(default=False)
-    rules = ReqList(Nested(BIRuleSchema()), default=[])
-    aggregations = ReqList(Nested(BIAggregationSchema()), default=[])
+    rules = ReqList(fields.Nested(BIRuleSchema()), default=[])
+    aggregations = ReqList(fields.Nested(BIAggregationSchema()), default=[])
 
-    @marshmallow.pre_dump
-    def pre_dump(self, obj: BIAggregationPack) -> Dict:
+    @pre_dump
+    def pre_dumper(self, obj: BIAggregationPack, many=False) -> Dict:
         # Convert aggregations and rules to list
         return {
             "id": obj.id,
@@ -366,8 +366,8 @@ class BIAggregationPackSchema(Schema):
 class BIAggregationPacksSchema(Schema):
     packs = ReqList(ReqNested(BIAggregationPackSchema))
 
-    @marshmallow.pre_dump
-    def pre_dump(self, obj: BIAggregationPacks) -> Dict:
+    @pre_dump
+    def pre_dumper(self, obj: BIAggregationPacks, many=None) -> Dict:
         # Convert packs to list
         return {"packs": obj.packs.values()}
 

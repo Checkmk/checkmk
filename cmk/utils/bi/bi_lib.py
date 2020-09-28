@@ -12,33 +12,38 @@ from typing import (
     Optional,
     Union,
     Set,
-    List as TList,
-    Dict as TDict,
+    List,
+    Dict,
     Type,
-)
-from marshmallow import Schema  # type: ignore[import]
-from marshmallow.fields import (  # type: ignore[import]
-    List, Dict, Constant, Integer, String, Nested, Boolean,
 )
 
 from functools import partial
-ReqList = partial(List, required=True)
-ReqDict = partial(Dict, required=True)
-ReqConstant = partial(Constant, required=True)
-ReqInteger = partial(Integer, required=True)
-ReqString = partial(String, required=True)
-ReqNested = partial(Nested, required=True)
-ReqBoolean = partial(Boolean, required=True)
 
-MacroMappings = TDict[str, str]
-SearchResult = TDict[str, str]
-
+from cmk.utils.bi.type_defs import (
+    ActionConfig,
+    ComputationConfigDict,
+    GroupConfigDict,
+    SearchConfig,
+)
 import cmk.utils.plugin_registry as plugin_registry
-from livestatus import SiteId
 from cmk.utils.type_defs import (
     HostName,
     ServiceName,
 )
+
+from marshmallow import Schema, fields
+from livestatus import SiteId
+
+ReqList = partial(fields.List, required=True)
+ReqDict = partial(fields.Dict, required=True)
+ReqConstant = partial(fields.Constant, required=True)
+ReqInteger = partial(fields.Integer, required=True)
+ReqString = partial(fields.String, required=True)
+ReqNested = partial(fields.Nested, required=True)
+ReqBoolean = partial(fields.Boolean, required=True)
+
+MacroMappings = Dict[str, str]
+SearchResult = Dict[str, str]
 
 NodeComputeResult = NamedTuple("NodeComputeResult", [
     ("state", int),
@@ -66,15 +71,34 @@ class ABCWithSchema(metaclass=abc.ABCMeta):
 
 def create_nested_schema_for_class(
         class_template: Type[ABCWithSchema],
-        default_schema: Optional[Schema] = None,
-        example_config: Optional[Union[list, TDict[str, Any]]] = None) -> Nested:
+        default_schema: Optional[Type[Schema]] = None,
+        example_config: Optional[Union[list, Dict[str, Any]]] = None) -> fields.Nested:
     class_schema = class_template.schema()
     return create_nested_schema(class_schema, default_schema, example_config)
 
 
-def create_nested_schema(base_schema,
-                         default_schema: Optional[Schema] = None,
-                         example_config: Optional[Union[list, TDict[str, Any]]] = None) -> Nested:
+def create_nested_schema(
+        base_schema,
+        default_schema: Optional[Type[Schema]] = None,
+        example_config: Optional[Union[list, Dict[str, Any]]] = None) -> fields.Nested:
+    """
+
+    >>> from marshmallow import fields
+    >>> class Foo(Schema):
+    ...      field = fields.String()
+
+    >>> nested = create_nested_schema(Foo)
+    >>> nested.default
+    {}
+
+    Args:
+        base_schema:
+        default_schema:
+        example_config:
+
+    Returns:
+
+    """
     default_config = get_schema_default_config(default_schema or base_schema)
     example = example_config or default_config
     return ReqNested(
@@ -84,8 +108,27 @@ def create_nested_schema(base_schema,
     )
 
 
-def get_schema_default_config(schema: Schema, params=None) -> TDict[str, Any]:
-    return schema().dump({} if params is None else params).data
+def get_schema_default_config(schema: Type[Schema], params=None) -> Dict[str, Any]:
+    """
+
+    >>> from marshmallow import fields
+    >>> class Foo(Schema):
+    ...       field = fields.String(default="bar")
+
+    >>> get_schema_default_config(Foo)
+    {'field': 'bar'}
+
+    >>> get_schema_default_config(Foo, {'field': 'foo', 'omit': 'this'})
+    {'field': 'foo'}
+
+    Args:
+        schema:
+        params:
+
+    Returns:
+
+    """
+    return schema().dump({} if params is None else params)
 
 
 class RequiredBIElement(NamedTuple):
@@ -95,7 +138,7 @@ class RequiredBIElement(NamedTuple):
 
 
 class BIAggregationComputationOptions(ABCWithSchema):
-    def __init__(self, computation_config):
+    def __init__(self, computation_config: ComputationConfigDict):
         super().__init__()
         self.disabled = computation_config["disabled"]
         self.use_hard_states = computation_config["use_hard_states"]
@@ -113,7 +156,7 @@ class BIAggregationComputationOptionsSchema(Schema):
 
 
 class BIAggregationGroups(ABCWithSchema):
-    def __init__(self, group_config: TDict[str, Union[TList[str], TList[TList[str]]]]):
+    def __init__(self, group_config: GroupConfigDict):
         super().__init__()
         self.names: List[str] = group_config["names"]
         self.paths: List[List[str]] = group_config["paths"]
@@ -127,12 +170,12 @@ class BIAggregationGroups(ABCWithSchema):
 
 
 class BIAggregationGroupsSchema(Schema):
-    names = List(ReqString(), default=[], example=["group1", "group2"])
-    paths = List(List(ReqString()), default=[], example=[["path", "of", "group1"]])
+    names = fields.List(ReqString(), default=[], example=["group1", "group2"])
+    paths = fields.List(fields.List(ReqString()), default=[], example=[["path", "of", "group1"]])
 
 
 class BIParams(ABCWithSchema):
-    def __init__(self, params_config: TDict[str, TList[str]]):
+    def __init__(self, params_config: Dict[str, List[str]]):
         super().__init__()
         self.arguments = params_config["arguments"]
         # Note: The BIParams may get additional options
@@ -144,7 +187,7 @@ class BIParams(ABCWithSchema):
 
 
 class BIParamsSchema(Schema):
-    arguments = ReqList(String, default=[], example=["testhostParams"])
+    arguments = ReqList(fields.String, default=[], example=["testhostParams"])
 
 
 T = TypeVar("T", str, dict, list)
@@ -159,15 +202,15 @@ def replace_macros(pattern: T, macros: MacroMappings) -> T:
         return replace_macros_in_dict(pattern, macros)
 
 
-def replace_macros_in_list(elements: TList[str], macros: MacroMappings) -> TList[str]:
-    new_list: TList[str] = []
+def replace_macros_in_list(elements: List[str], macros: MacroMappings) -> List[str]:
+    new_list: List[str] = []
     for element in elements:
         new_list.append(replace_macros(element, macros))
     return new_list
 
 
-def replace_macros_in_dict(old_dict: TDict[str, str], macros: MacroMappings) -> TDict[str, str]:
-    new_dict: TDict[str, str] = {}
+def replace_macros_in_dict(old_dict: Dict[str, str], macros: MacroMappings) -> Dict[str, str]:
+    new_dict: Dict[str, str] = {}
     for key, value in old_dict.items():
         new_dict[replace_macros(key, macros)] = replace_macros(value, macros)
     return new_dict
@@ -204,8 +247,7 @@ class ABCBICompiledNode(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def compile_postprocess(self,
-                            bi_branch_root: "ABCBICompiledNode") -> TList["ABCBICompiledNode"]:
+    def compile_postprocess(self, bi_branch_root: "ABCBICompiledNode") -> List["ABCBICompiledNode"]:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -230,7 +272,7 @@ class ABCBICompiledNode(metaclass=abc.ABCMeta):
 
 
 class ABCBIAction(metaclass=abc.ABCMeta):
-    def __init__(self, action_config: TDict[str, Any]):
+    def __init__(self, action_config: Dict[str, Any]):
         super().__init__()
 
     @classmethod
@@ -244,7 +286,7 @@ class ABCBIAction(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def execute(self, search_result: TDict[str, str]) -> TList[ABCBICompiledNode]:
+    def execute(self, search_result: Dict[str, str]) -> List[ABCBICompiledNode]:
         raise NotImplementedError()
 
 
@@ -252,7 +294,7 @@ class BIActionRegistry(plugin_registry.Registry[Type[ABCBIAction]]):
     def plugin_name(self, instance: Type[ABCBIAction]) -> str:
         return instance.type()
 
-    def instantiate(self, action_config: TDict[str, Any]) -> ABCBIAction:
+    def instantiate(self, action_config: ActionConfig) -> ABCBIAction:
         return self._entries[action_config["type"]](action_config)
 
 
@@ -269,7 +311,7 @@ bi_action_registry = BIActionRegistry()
 
 
 class ABCBISearch(metaclass=abc.ABCMeta):
-    def __init__(self, search_config: TDict[str, Any]):
+    def __init__(self, search_config: Dict[str, Any]):
         super().__init__()
 
     @classmethod
@@ -283,7 +325,7 @@ class ABCBISearch(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def execute(self, macros: MacroMappings) -> TList[TDict]:
+    def execute(self, macros: MacroMappings) -> List[Dict]:
         raise NotImplementedError()
 
 
@@ -291,7 +333,7 @@ class BISearchRegistry(plugin_registry.Registry[Type[ABCBISearch]]):
     def plugin_name(self, instance: Type[ABCBISearch]) -> str:
         return instance.type()
 
-    def instantiate(self, search_config: TDict[str, Any]) -> ABCBISearch:
+    def instantiate(self, search_config: SearchConfig) -> ABCBISearch:
         return self._entries[search_config["type"]](search_config)
 
 
@@ -308,7 +350,7 @@ bi_search_registry = BISearchRegistry()
 
 
 class ABCBIAggregationFunction(metaclass=abc.ABCMeta):
-    def __init__(self, aggr_function_config: TDict[str, Any]):
+    def __init__(self, aggr_function_config: Dict[str, Any]):
         super().__init__()
 
     @classmethod
@@ -317,7 +359,7 @@ class ABCBIAggregationFunction(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def aggregate(self, states: TList[float]) -> Union[int, float]:
+    def aggregate(self, states: List[float]) -> Union[int, float]:
         raise NotImplementedError()
 
     @classmethod
@@ -330,7 +372,7 @@ class BIAggregationFunctionRegistry(plugin_registry.Registry[Type[ABCBIAggregati
     def plugin_name(self, instance: Type[ABCBIAggregationFunction]) -> str:
         return instance.type()
 
-    def instantiate(self, aggr_func_config: TDict[str, Any]) -> ABCBIAggregationFunction:
+    def instantiate(self, aggr_func_config: Dict[str, Any]) -> ABCBIAggregationFunction:
         return self._entries[aggr_func_config["type"]](aggr_func_config)
 
 

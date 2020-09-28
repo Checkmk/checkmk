@@ -29,7 +29,7 @@ from cmk.utils.bi.bi_trees import (
 ])
 def test_state_of_host_execute(host_regex, num_results, num_results_unknown,
                                use_test_structure_data):
-    schema_config = BIStateOfHostAction.schema()().dump({"host_regex": host_regex}).data
+    schema_config = BIStateOfHostAction.schema()().dump({"host_regex": host_regex})
     action = BIStateOfHostAction(schema_config)
     results = action.execute({"$HOSTNAME$": "heute"})
     assert len(results) == num_results
@@ -53,7 +53,7 @@ def test_state_of_service_execute(host_regex, num_results, num_results_unknown,
     schema_config = BIStateOfServiceAction.schema()().dump({
         "host_regex": host_regex,
         "service_regex": "Uptime"
-    }).data
+    })
     action = BIStateOfServiceAction(schema_config)
     results = action.execute({"$HOSTNAME$": "heute"})
     assert len(results) == num_results
@@ -70,7 +70,7 @@ def test_state_of_service_execute(host_regex, num_results, num_results_unknown,
 
 def test_call_a_rule_execute(dummy_bi_rule, use_test_structure_data):
     # noqa: F811 # pylint: disable=unused-import
-    schema_config = BICallARuleAction.schema()().dump({"rule_id": dummy_bi_rule.id}).data
+    schema_config = BICallARuleAction.schema()().dump({"rule_id": dummy_bi_rule.id})
     action = BICallARuleAction(schema_config)
     results = action.execute({})
     assert len(results) == 1
@@ -87,9 +87,7 @@ def test_state_of_remaining(host_regex, num_host_matches, num_host_matches_unkno
                             use_test_structure_data):
     # TODO: Test misses compile_postprocess (reveals number of services)
     #       this requires a more complicated setup -> bi_aggregation_test
-    schema_config = BIStateOfRemainingServicesAction.schema()().dump({
-        "host_regex": host_regex
-    }).data
+    schema_config = BIStateOfRemainingServicesAction.schema()().dump({"host_regex": host_regex})
     action = BIStateOfRemainingServicesAction(schema_config)
     results = action.execute({"$HOSTNAME$": "heute"})
     assert len(results) == 1

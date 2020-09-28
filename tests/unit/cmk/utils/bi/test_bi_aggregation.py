@@ -19,7 +19,7 @@ def test_load_aggregation_integrity(bi_packs_sample_config):
 
     # Generate the schema for the default_aggregation and instantiate a new aggregation from it
     aggregation_schema = BIAggregation.schema()()
-    schema_config = aggregation_schema.dump(default_aggregation).data
+    schema_config = aggregation_schema.dump(default_aggregation)
     cloned_aggregation = BIAggregation(schema_config)
     assert cloned_aggregation.id == "default_aggregation"
     assert cloned_aggregation.groups.names == ["Hosts"]

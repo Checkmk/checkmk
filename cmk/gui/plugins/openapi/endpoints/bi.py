@@ -54,7 +54,7 @@ def get_bi_rule(params):
     assert bi_rule is not None
 
     data = {"pack_id": bi_rule.pack_id}
-    data.update(BIRuleSchema().dump(bi_rule).data)
+    data.update(BIRuleSchema().dump(bi_rule))
     return constructors.serve_json(data)
 
 
@@ -78,7 +78,7 @@ def put_bi_rule(params):
     bi_packs.save_config()
 
     data = {"pack_id": bi_rule.pack_id}
-    data.update(bi_rule.schema()().dump(bi_rule).data)
+    data.update(bi_rule.schema()().dump(bi_rule))
     return constructors.serve_json(data)
 
 
@@ -115,7 +115,7 @@ def get_bi_aggregation(params):
     assert bi_aggregation is not None
 
     data = {"pack_id": bi_aggregation.pack_id}
-    data.update(BIAggregationSchema().dump(bi_aggregation).data)
+    data.update(BIAggregationSchema().dump(bi_aggregation))
     return constructors.serve_json(data)
 
 
@@ -140,7 +140,7 @@ def put_bi_aggregation(params):
     bi_packs.save_config()
 
     data = {"pack_id": bi_aggregation.pack_id}
-    data.update(bi_aggregation.schema()().dump(bi_aggregation).data)
+    data.update(bi_aggregation.schema()().dump(bi_aggregation))
     return constructors.serve_json(data)
 
 
@@ -186,7 +186,7 @@ def get_bi_packs(params):
                  method='get',
                  parameters=[BI_PACK_ID(location="path", example="pack1")],
                  request_body_required=False,
-                 response_schema=response_schemas.DomainObjectCollection)
+                 response_schema=response_schemas.DomainObject)
 def get_bi_pack(params):
     """Get BI Pack"""
     bi_packs.load_config()

@@ -6,7 +6,7 @@
 """A few upgraded Fields which handle some OpenAPI validation internally."""
 import collections.abc
 import re
-from typing import Any, Optional, Tuple
+from typing import Any, Optional, Tuple, Callable
 
 from marshmallow import fields as _fields  # type: ignore[import]
 
@@ -94,7 +94,7 @@ The maximum length is 3.
         'minimum': "{value!r} is smaller than the minimum ({minimum}).",
     }
 
-    def _deserialize(self, value, attr, data):
+    def _deserialize(self, value, attr, data, **kwargs):
         value = super()._deserialize(value, attr, data)
         enum = self.metadata.get('enum')
         if enum and value not in enum:
@@ -182,7 +182,7 @@ class Integer(_fields.Integer):
         'multipleOf': "{value!r} is not a multiple of {multipleOf!r}."
     }
 
-    def _deserialize(self, value, attr, data):
+    def _deserialize(self, value, attr, data, **kwargs):
         value = super()._deserialize(value, attr, data)
 
         enum = self.metadata.get('enum')
@@ -249,6 +249,7 @@ class UniqueFields:
     Currently supported Fields are `List` and `Nested(..., many=True, ...)`
 
     """
+    fail: Callable[..., None]
 
     default_error_messages = {
         'duplicate': "Duplicate entry found at entry #{idx}: {entry!r}",
@@ -256,7 +257,7 @@ class UniqueFields:
                            "(optional fields {optional!r})"),
     }
 
-    def _verify_unique_schema_entries(self: _fields.Field, value, fields):
+    def _verify_unique_schema_entries(self, value, fields):
         required_fields = tuple([name for name, field in fields.items() if field.required])
         seen = set()
         for idx, entry in enumerate(value, start=1):
@@ -286,7 +287,7 @@ class UniqueFields:
 
             seen.add(entry_hash)
 
-    def _verify_unique_scalar_entries(self: _fields.Field, value):
+    def _verify_unique_scalar_entries(self, value):
         # FIXME: Pretty sure that List(List(List(...))) will break this.
         #        I have yet to see this use-case though.
         seen = set()
@@ -311,7 +312,11 @@ class List(_fields.List, UniqueFields):
             ...      id = String()
             ...      lists = List(String(), uniqueItems=True)
 
-            >>> Foo().load({'lists': ['2', '2']}).errors
+            >>> import pytest
+            >>> from marshmallow import ValidationError
+            >>> with pytest.raises(ValidationError) as exc:
+            ...     Foo().load({'lists': ['2', '2']})
+            >>> exc.value.messages
             {'lists': ["Duplicate entry found at entry #2: '2'"]}
 
         With nested schemas:
@@ -319,10 +324,14 @@ class List(_fields.List, UniqueFields):
             >>> class Bar(Schema):
             ...      entries = List(Nested(Foo), allow_none=False, required=True, uniqueItems=True)
 
-            >>> Bar().load({'entries': [{'id': '1'}, {'id': '2'}, {'id': '2'}]}).errors
+            >>> with pytest.raises(ValidationError) as exc:
+            ...     Bar().load({'entries': [{'id': '1'}, {'id': '2'}, {'id': '2'}]})
+            >>> exc.value.messages
             {'entries': ["Duplicate entry found at entry #3: {'id': '2'}"]}
 
-            >>> Bar().load({'entries': [{'lists': ['2']}, {'lists': ['2']}]}).errors
+            >>> with pytest.raises(ValidationError) as exc:
+            ...     Bar().load({'entries': [{'lists': ['2']}, {'lists': ['2']}]})
+            >>> exc.value.messages
             {'entries': ["Duplicate entry found at entry #2: {'lists': ['2']}"]}
 
         Some more examples:
@@ -335,20 +344,22 @@ class List(_fields.List, UniqueFields):
             >>> class Bulk(Schema):
             ...      entries = List(Nested(Service), uniqueItems=True)
 
-            >>> Bulk().load({"entries": [
-            ...     {'host': 'example', 'description': 'CPU load', 'recur': 'week'},
-            ...     {'host': 'example', 'description': 'CPU load', 'recur': 'day'},
-            ...     {'host': 'host', 'description': 'CPU load'}
-            ... ]}).errors
+            >>> with pytest.raises(ValidationError) as exc:
+            ...     Bulk().load({"entries": [
+            ...         {'host': 'example', 'description': 'CPU load', 'recur': 'week'},
+            ...         {'host': 'example', 'description': 'CPU load', 'recur': 'day'},
+            ...         {'host': 'host', 'description': 'CPU load'}
+            ...     ]})
+            >>> exc.value.messages
             {'entries': ["Duplicate entry found at entry #2: \
 {'description': 'CPU load', 'host': 'example'} (optional fields {'recur': 'day'})"]}
 
     """
-    def _deserialize(self, value, attr, data):
+    def _deserialize(self, value, attr, data, **kwargs):
         value = super()._deserialize(value, attr, data)
         if self.metadata.get('uniqueItems'):
-            if isinstance(self.container, Nested):
-                self._verify_unique_schema_entries(value, self.container.schema.fields)
+            if isinstance(self.inner, Nested):
+                self._verify_unique_schema_entries(value, self.inner.schema.fields)
             else:
                 self._verify_unique_scalar_entries(value)
 
@@ -379,12 +390,16 @@ class Nested(_fields.Nested, UniqueFields):
             ...     {'host': 'host', 'description': 'CPU load'}
             ... ]
 
-            >>> Bulk().load({'entries': entries}).errors
+            >>> import pytest
+            >>> from marshmallow import ValidationError
+            >>> with pytest.raises(ValidationError) as exc:
+            ...     Bulk().load({'entries': entries})
+            >>> exc.value.messages
             {'entries': ["Duplicate entry found at entry #2: \
 {'description': 'CPU load', 'host': 'example'} (optional fields {'recur': 'day'})"]}
 
     """
-    def _deserialize(self, value, attr, data):
+    def _deserialize(self, value, attr, data, partial=None, **kwargs):
         value = super()._deserialize(value, attr, data)
         if self.many and self.metadata.get('uniqueItems'):
             self._verify_unique_schema_entries(value, self.schema.fields)
@@ -399,6 +414,7 @@ Dict = _fields.Dict
 Constant = _fields.Constant
 Time = _fields.Time
 Date = _fields.Date
+Field = _fields.Field
 
 # Shortcuts
 Int = Integer
@@ -420,4 +436,5 @@ __all__ = [
     'Str',
     'String',
     'Time',
+    'Field',
 ]

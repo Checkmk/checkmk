@@ -84,7 +84,6 @@ pytz = "==2020.1" # needed by Flask-Babel
 Babel = "==2.8.0" # needed by Flask-Babel
 Flask-Babel = "==1.0.0" # needed by GUI for i18n support (lazy gettext)
 inflection = "==0.3.1" # needed by connexion
-openapi-spec-validator = "==0.2.8" # needed by connexion
 swagger_ui_bundle = "==0.0.6" # direct dependency
 connexion = {version = "==2.4.0",extras = ["swagger-ui"]}  # direct dependency
 psutil = "==5.6.7" # needed for omdlib
@@ -118,10 +117,11 @@ boto3 = "==1.11.11" # needed by boto3 (aws)
 python-snap7 = "==0.10" # needed by Siemens PLC special agent
 PyMySQL = "==0.9.3" # needed by check_sql active check
 psycopg2-binary = "==2.8.4" # needed by check_sql active check
-apispec = "==2.0.2"
-marshmallow = "==2.20.5"
-marshmallow-oneofschema = "==1.0.6"
-apispec-oneofschema = "==2.1.1"
+apispec = "==3.3.1"  # direct dependency
+marshmallow = "==3.7.1"  # direct dependency
+marshmallow-oneofschema = "==2.0.1"  # direct dependency
+apispec-oneofschema = "==3.0.0"  # direct dependency
+openapi-spec-validator = "==0.2.9" # direct dependency
 mypy_extensions = "==0.4.3"  # direct dependency
 typing_extensions = "==3.7.4.1"  # direct dependency
 dnspython = "==1.16.0"  # needed by python-active-directory

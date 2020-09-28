@@ -7,7 +7,7 @@
 from marshmallow import ValidationError  # type: ignore[import]
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
-from cmk.gui import watolib
+from cmk.gui import watolib, config
 from cmk.utils.defines import weekday_ids
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.openapi import fields
@@ -28,8 +28,6 @@ from cmk.gui.plugins.openapi.endpoints.utils import verify_group_exist
 from cmk.gui.watolib.timeperiods import verify_timeperiod_name_exists
 from cmk.gui.watolib.groups import is_alias_used
 from cmk.gui.watolib.passwords import password_exists, contact_group_choices
-
-import cmk.gui.config as config
 
 
 class InputAttribute(BaseSchema):
@@ -98,8 +96,12 @@ class FolderField(fields.String):
     }
     pattern = "[a-fA-F0-9]{32}|root"
 
-    def _deserialize(self, value, attr, data):
-        value = super()._deserialize(value, attr, data)
+    def _deserialize(self, value, attr, data, **kwargs):
+        value = super()._deserialize(
+            value,
+            attr,
+            data,
+        )
         try:
             if value == 'root':
                 folder = watolib.Folder.root_folder()
@@ -726,7 +728,7 @@ class InputTimePeriod(BaseSchema):
         }],
     )
 
-    exclude = fields.List(
+    exclude = fields.List(  # type: ignore[assignment]
         TimePeriodAlias(
             example="alias",
             description="The alias for a time period.",

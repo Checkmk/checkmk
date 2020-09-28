@@ -1,6 +1,11 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+
 import time
 import pprint
 import pytest
+from pathlib2 import Path
+import gzip
 from testlib import repo_path, cmk_path, cmc_path, cme_path, CMKWebSession
 
 from cmk.utils.exceptions import MKGeneralException
@@ -455,6 +460,28 @@ def test_structured_data_StructuredDataTree_load_from(tree_name):
     with pytest.raises(TypeError):
         StructuredDataTree().load_from()
     StructuredDataTree().load_from(tree_name)
+
+
+def test_structured_data_StructuredDataTree_save_gzip(tmp_path):
+    filename = "heute"
+    target = Path(tmp_path).joinpath(filename)
+    raw_tree = {
+        "node": {
+            "foo": 1,
+            "bär": 2,
+        },
+    }
+    tree = StructuredDataTree().create_tree_from_raw_tree(raw_tree)
+
+    tree.save_to(tmp_path, filename)
+
+    assert target.exists()
+
+    gzip_filepath = target.with_suffix('.gz')
+    assert gzip_filepath.exists()
+
+    with gzip.open(str(gzip_filepath), 'rb') as f:
+        f.read()
 
 
 tree_old_addresses_arrays_memory = StructuredDataTree().load_from(

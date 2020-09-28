@@ -538,9 +538,10 @@ class LoginPage(Page):
 @page_registry.register_page("logout")
 class LogoutPage(Page):
     def page(self) -> None:
-        _invalidate_auth_session()
         assert config.user.id is not None
-        userdb.on_logout(config.user.id)
+        session_id = _get_session_id_from_cookie(config.user.id)
+        _invalidate_auth_session()
+        userdb.on_logout(config.user.id, session_id)
 
         if auth_type == 'cookie':
             raise HTTPRedirect(config.url_prefix() + 'check_mk/login.py')

@@ -11,7 +11,10 @@ import time
 import os
 import traceback
 import copy
+import ast
+from dataclasses import dataclass, asdict
 from pathlib import Path
+from contextlib import suppress
 
 from six import ensure_str
 
@@ -330,9 +333,9 @@ def on_failed_login(username: UserId) -> None:
         save_users(users)
 
 
-def on_logout(username: UserId) -> None:
+def on_logout(username: UserId, session_id: str) -> None:
     if config.single_user_session is not None:
-        _invalidate_session(username)
+        _invalidate_session(username, session_id)
 
 
 def on_access(username: UserId, issue_time: float, session_id: str) -> None:
@@ -349,7 +352,7 @@ def on_access(username: UserId, issue_time: float, session_id: str) -> None:
         if not _is_valid_user_session(username, session_id):
             raise MKAuthException("Invalid user session")
 
-        _refresh_session(username)
+        _refresh_session(username, session_id)
 
     # Update online state of the user (if enabled)
     _update_user_access_time(username)
@@ -379,22 +382,26 @@ def on_access(username: UserId, issue_time: float, session_id: str) -> None:
 #   '----------------------------------------------------------------------'
 
 
+@dataclass
+class SessionInfo:
+    session_id: str
+    started_at: int
+    last_activity: int
+
+
 def _is_valid_user_session(username: UserId, session_id: str) -> bool:
     if config.single_user_session is None:
         return True  # No login session limitation enabled, no validation
 
-    session_info = load_session_info(username)
-    if session_info is None:
+    session_infos = load_session_info(username)
+    if not session_infos:
         return False  # no session active
-    active_session_id, last_activity = session_info
 
-    if session_id == active_session_id:
-        return True  # Current session. Fine.
+    if session_id not in session_infos:
+        auth_logger.debug("%s session_id %s not valid (timed out?)", username, session_id)
+        return False
 
-    auth_logger.debug("%s session_id not valid (timed out?) (Inactive for %d seconds)" %
-                      (username, time.time() - last_activity))
-
-    return False
+    return True  # Current session. Fine.
 
 
 def _ensure_user_can_init_session(username: UserId) -> bool:
@@ -404,18 +411,16 @@ def _ensure_user_can_init_session(username: UserId) -> bool:
 
     session_timeout = config.single_user_session
 
-    session_info = load_session_info(username)
-    if session_info is None:
-        return True  # No session active
+    for session_info in load_session_info(username).values():
+        if (time.time() - session_info.last_activity) > session_timeout:
+            continue  # Former active session timed out
 
-    last_activity = session_info[1]
-    if (time.time() - last_activity) > session_timeout:
-        return True  # Former active session timed out
+        auth_logger.debug("%s another session is active (inactive for: %d seconds)" %
+                          (username, time.time() - session_info.last_activity))
 
-    auth_logger.debug("%s another session is active (inactive for: %d seconds)" %
-                      (username, time.time() - last_activity))
+        raise MKUserError(None, _("Another session is active"))
 
-    raise MKUserError(None, _("Another session is active"))
+    return True  # No session active
 
 
 def _initialize_session(username: UserId) -> str:
@@ -424,8 +429,18 @@ def _initialize_session(username: UserId) -> str:
     if not config.single_user_session:
         return ""
 
+    session_infos = load_session_info(username)
+
     session_id = _create_session_id()
-    save_session_info(username, session_id)
+    now = int(time.time())
+    session_infos[session_id] = SessionInfo(
+        session_id=session_id,
+        started_at=now,
+        last_activity=now,
+    )
+
+    save_session_info(username, session_infos)
+
     return session_id
 
 
@@ -434,41 +449,54 @@ def _create_session_id() -> str:
     return utils.gen_id()
 
 
-def _refresh_session(username: UserId) -> None:
+def _refresh_session(username: UserId, session_id: str) -> None:
     """Updates the current session of the user"""
     if not config.single_user_session:
         return  # No session handling at all
 
-    session_info = load_session_info(username)
-    if session_info is None:
+    session_infos = load_session_info(username)
+    if session_id not in session_infos:
         return  # Don't refresh. Session is not valid anymore
 
-    session_id = session_info[0]
-    save_session_info(username, session_id)
+    session_infos[session_id].last_activity = int(time.time())
+    save_session_info(username, session_infos)
 
 
-def _invalidate_session(username: UserId) -> None:
-    remove_custom_attr(username, "session_info")
+def _invalidate_session(username: UserId, session_id: str) -> None:
+    session_infos = load_session_info(username)
+    with suppress(KeyError):
+        del session_infos[session_id]
+        save_session_info(username, session_infos)
 
 
-# Saves the current session_id and the current time (last activity)
-def save_session_info(username: UserId, session_id: str) -> None:
-    save_custom_attr(username, "session_info", "%s|%s" % (session_id, int(time.time())))
+def save_session_info(username: UserId, session_infos: Dict[str, SessionInfo]) -> None:
+    """Saves the sessions for the current user"""
+    save_custom_attr(username, "session_info",
+                     repr({k: asdict(v) for k, v in session_infos.items()}))
 
 
-# Returns either None (when no session_id available) or a two element
-# tuple where the first element is the sesssion_id and the second the
-# timestamp of the last activity.
-def load_session_info(username: UserId) -> Optional[Tuple[str, int]]:
-    return load_custom_attr(username, "session_info", _convert_session_info)
+def load_session_info(username: UserId) -> Dict[str, SessionInfo]:
+    """Returns the stored sessions of the given user"""
+    return load_custom_attr(username, "session_info", _convert_session_info) or {}
 
 
-def _convert_session_info(value: str) -> Optional[Tuple[str, int]]:
+def _convert_session_info(value: str) -> Dict[str, SessionInfo]:
     if value == "":
-        return None
+        return {}
 
+    if value.startswith("{"):
+        return {k: SessionInfo(**v) for k, v in ast.literal_eval(value).items()}
+
+    # Transform pre 2.0 values
     session_id, last_activity = value.split("|", 1)
-    return session_id, int(last_activity)
+    return {
+        session_id: SessionInfo(
+            session_id=session_id,
+            # We don't have that information. The best guess is to use the last activitiy
+            started_at=int(last_activity),
+            last_activity=int(last_activity),
+        ),
+    }
 
 
 #.

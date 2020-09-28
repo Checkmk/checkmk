@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from typing import Callable, cast, List, Optional, Set, Tuple, Union
+from typing import Callable, cast, List, Optional, Set, Tuple
 
 from six import ensure_binary
 
@@ -25,7 +25,6 @@ from .type_defs import (
     OID_STRING,
     OIDBytes,
     OIDCached,
-    OIDSpec,
     OIDWithColumns,
     SNMPColumn,
     SNMPDecodedValues,
@@ -75,7 +74,7 @@ def _get_snmp_table(section_name: Optional[SectionName], tree: SNMPTree, use_snm
     max_len_col = -1
 
     for column in targetcolumns:
-        fetchoid = _compute_fetch_oid(oid, None, column)
+        fetchoid: OID = "%s.%s" % (tree.base, column)
         value_encoding = _value_encoding(column)
         # column may be integer or string like "1.5.4.2.3"
         # if column is 0, we do not fetch any data from snmp, but use
@@ -237,18 +236,6 @@ def _perform_snmpwalk(section_name: Optional[SectionName], base_oid: OID, fetcho
                 added_oids.add(row_oid)
 
     return rowinfo
-
-
-def _compute_fetch_oid(oid: Union[OID, OIDSpec], suboid: Optional[OID], column: SNMPColumn) -> OID:
-    if suboid:
-        fetchoid = "%s.%s" % (oid, suboid)
-    else:
-        fetchoid = str(oid)
-
-    if str(column) != "":
-        fetchoid += "." + str(column)
-
-    return fetchoid
 
 
 def _sanitize_snmp_encoding(columns: ResultColumnsSanitized,

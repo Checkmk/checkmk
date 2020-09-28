@@ -93,10 +93,17 @@ import sys
 import time
 from stat import S_ISDIR, S_ISREG
 
+# NOTE: The tool 3to2 runs when the agent is configured for python 2.5/2.6
+#       and converts the import automatically to 'ConfigParser'.
+#       It does not run for python 2.7, which is why the try/except block
+#       is needed; python 2.7.17 supports importing 'configparser', but from
+#       2.7.18 this is not supported. The documentation explicitly states
+#       that the module 'configparser' is supported from python 3.
+#       https://docs.python.org/2/library/configparser.html
 try:
-    import ConfigParser as configparser  # type: ignore[import]
-except ImportError:  # Python3
-    import configparser  # type: ignore[import,no-redef]
+    import configparser
+except ImportError:  # Python2
+    import ConfigParser as configparser  # type: ignore
 
 
 def ensure_str(s):

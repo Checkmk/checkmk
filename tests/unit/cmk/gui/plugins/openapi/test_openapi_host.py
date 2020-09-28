@@ -7,7 +7,7 @@
 from cmk.gui.plugins.openapi.livestatus_helpers.testing import MockLiveStatusConnection
 
 
-def test_openapi_livestatus_hosts(
+def test_openapi_livestatus_hosts_generic_filter(
     wsgi_app,
     with_automation_user,
     suppress_automation_calls,
@@ -30,7 +30,7 @@ def test_openapi_livestatus_hosts(
 
     live.expect_query([
         'GET hosts',
-        'Columns: name address alias downtimes_with_info scheduled_downtime_depth',
+        'Columns: name',
     ],)
     with live:
         resp = wsgi_app.call_method(
@@ -42,13 +42,14 @@ def test_openapi_livestatus_hosts(
 
     live.expect_query([
         'GET hosts',
-        'Columns: name address alias downtimes_with_info scheduled_downtime_depth',
+        'Columns: name',
         'Filter: alias ~ heute',
     ],)
     with live:
         resp = wsgi_app.call_method(
             'get',
-            base + "/domain-types/host/collections/all?host_alias=heute",
+            base +
+            '/domain-types/host/collections/all?query={"op": "~", "left": "hosts.alias", "right": "heute"}',
             status=200,
         )
         assert len(resp.json['value']) == 1

@@ -9,10 +9,9 @@ import json
 import sys
 
 from openapi_spec_validator import validate_spec  # type: ignore[import]
-
 from cmk.gui.plugins.openapi.restful_objects import SPEC
 from cmk.gui.plugins.openapi.restful_objects.decorators import Endpoint
-from cmk.gui.plugins.openapi.restful_objects.type_defs import ENDPOINT_REGISTRY
+from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
 from cmk.utils import version
 
 # NOTE
@@ -30,10 +29,14 @@ def generate(args=None):
 
     endpoint: Endpoint
     for endpoint in ENDPOINT_REGISTRY:
-        SPEC.path(
-            path=endpoint.path,
-            operations={endpoint.method.lower(): endpoint.to_operation_dict()},
-        )
+        try:
+            SPEC.path(
+                path=endpoint.path,
+                operations=endpoint.to_operation_dict(),
+            )
+        except TypeError:
+            print(endpoint, file=sys.stderr)
+            raise
 
     # NOTE: deepcopy the dict because validate_spec modifies the SPEC in-place, leaving some
     # internal properties lying around, which leads to an invalid spec-file.
@@ -47,6 +50,8 @@ def generate(args=None):
 
     return output
 
+
+__all__ = ['ENDPOINT_REGISTRY']
 
 if __name__ == '__main__':
     print(generate(sys.argv))

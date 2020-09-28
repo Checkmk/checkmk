@@ -7,9 +7,9 @@
 
 import json
 
-from connexion import problem  # type: ignore[import]
-
 from cmk.gui.http import Response
+from cmk.gui.plugins.openapi.utils import problem
+from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
 from cmk.gui.watolib.passwords import (
     save_password,
     load_password_to_modify,
@@ -42,7 +42,7 @@ def create_password(params):
 @endpoint_schema(constructors.object_href('password', '{name}'),
                  '.../update',
                  method='put',
-                 parameters=['name'],
+                 path_params=[NAME_FIELD],
                  request_schema=request_schemas.UpdatePassword,
                  output_empty=True)
 def update_password(params):
@@ -58,7 +58,7 @@ def update_password(params):
 @endpoint_schema(constructors.object_href('password', '{name}'),
                  '.../delete',
                  method='delete',
-                 parameters=['name'],
+                 path_params=[NAME_FIELD],
                  request_body_required=False,
                  output_empty=True)
 def delete_password(params):
@@ -76,7 +76,7 @@ def delete_password(params):
 @endpoint_schema(constructors.object_href('password', '{name}'),
                  'cmk/show',
                  method='get',
-                 parameters=['name'],
+                 path_params=[NAME_FIELD],
                  response_schema=response_schemas.ConcretePassword)
 def show_password(params):
     """Show a password"""

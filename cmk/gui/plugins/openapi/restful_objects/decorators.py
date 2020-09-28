@@ -14,53 +14,91 @@ connexion is disabled.
 """
 import dataclasses
 import functools
+import hashlib
 from types import FunctionType
-from typing import Any, Dict, List, Optional, Sequence, Set, Union, Type
+from typing import Any, Dict, List, Optional, Sequence, Set, Type, Union, Tuple, Literal
 
 import apispec  # type: ignore[import]
 import apispec.utils  # type: ignore[import]
-from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[import]
-from connexion import problem, ProblemException  # type: ignore[import]
 from marshmallow import Schema, ValidationError
+from marshmallow.schema import SchemaMeta
+from werkzeug.routing import Rule
 from werkzeug.utils import import_string
 
+from cmk.gui.globals import request
+from cmk.gui.plugins.openapi import fields
+from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.plugins.openapi.restful_objects.code_examples import code_samples
 from cmk.gui.plugins.openapi.restful_objects.parameters import (
     ETAG_HEADER_PARAM,
     ETAG_IF_MATCH_HEADER,
 )
-from cmk.gui.plugins.openapi.restful_objects.params import path_parameters
+from cmk.gui.plugins.openapi.restful_objects.params import path_parameters, to_schema, to_openapi
 from cmk.gui.plugins.openapi.restful_objects.response_schemas import ApiError
-from cmk.gui.plugins.openapi.restful_objects.specification import find_all_parameters, SPEC
+from cmk.gui.plugins.openapi.restful_objects.specification import (
+    find_all_parameters,
+    SPEC,
+)
+from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
 from cmk.gui.plugins.openapi.restful_objects.type_defs import (
-    AnyParameterAndReference,
-    ENDPOINT_REGISTRY,
     EndpointName,
     ETagBehaviour,
     HTTPMethod,
+    OpenAPIParameter,
     OpenAPITag,
     OperationSpecType,
-    ParamDict,
-    ParameterReference,
-    PrimitiveParameter,
+    LocationType,
+    RawParameter,
     ResponseType,
-    ValidatorType,
+    SchemaParameter,
 )
-
-
-def _constantly(arg):
-    return lambda *args, **kw: arg
-
 
 _SEEN_ENDPOINTS: Set[FunctionType] = set()
 
-# FIXME: Group of endpoints is currently derived from module-name. This prevents sub-packages.
+
+def to_named_schema(fields_: Dict[str, fields.Field]) -> Type[Schema]:
+    attrs: Dict[str, Any] = fields_.copy()
+    attrs["Meta"] = type(
+        "GeneratedMeta",
+        (Schema.Meta,),
+        {"register": True},
+    )
+    _hash = hashlib.sha256()
+
+    def _update(d_):
+        for key, value in sorted(d_.items()):
+            _hash.update(str(key).encode('utf-8'))
+            if hasattr(value, 'metadata'):
+                _update(value.metadata)
+            else:
+                _hash.update(str(value).encode('utf-8'))
+
+    _update(fields_)
+
+    name = f"GeneratedSchema{_hash.hexdigest()}"
+    schema_cls: Type[Schema] = type(name, (Schema,), attrs)
+    return schema_cls
 
 
-def _reduce_to_primitives(
-    parameters: Optional[Sequence[AnyParameterAndReference]],
-) -> List[Union[PrimitiveParameter, ParameterReference]]:
-    return [p.to_dict() if isinstance(p, ParamDict) else p for p in (parameters or [])]
+def coalesce_schemas(
+    parameters: Sequence[Tuple[LocationType,
+                               Sequence[RawParameter]]],) -> Sequence[SchemaParameter]:
+    rv: List[SchemaParameter] = []
+    for location, params in parameters:
+        if not params:
+            continue
+
+        to_convert: Dict[str, fields.Field] = {}
+        for param in params:
+            if isinstance(param, SchemaMeta):
+                rv.append({'in': location, 'schema': param})
+            else:
+                to_convert.update(param)
+
+        if to_convert:
+            rv.append({'in': location, 'schema': to_named_schema(to_convert)})
+
+    return rv
 
 
 @dataclasses.dataclass
@@ -75,7 +113,8 @@ class Endpoint:
     Args:
         path:
             The URI. Can contain 0-N placeholders like this: /path/{placeholder1}/{placeholder2}.
-            These variables have to be defined elsewhere first. See the `specification` module.
+            These variables have to be defined elsewhere first. See the {query,path,header}_params
+            Arguments of this class.
 
         name:
             The name of the endpoint. This is the name where this endpoint is "registered" under
@@ -90,20 +129,28 @@ class Endpoint:
             The content-type under which this endpoint shall be executed. Multiple endpoints may
             be defined for any one URL, but only one endpoint per url-content-type combination.
 
-        parameters:
-            A list of parameter-names which are required by this endpoint. These parameters have
-            to be defined elsewhere.
-
         output_empty:
             When set to `True`, no output will be sent to the client and the HTTP status code
             will be set to 204 (OK, no-content). No response validation will be done.
 
         response_schema:
-            The Schema with which to validate the HTTP response.
+            The Schema subclass with which to validate the HTTP response.
 
         request_schema:
-            The Schema with which to validate the HTTP request. This will not validate HTTP
-            headers though.
+            The Schema subclass with which to validate the HTTP request. This will not validate
+            HTTP headers, or query parameters though. For validating query parameters use the
+            `path_params`, `query_params` and `header_params` parameters.
+
+        path_params:
+            All parameters, which are expected to be present in the URL itself. The `path` needs to
+            contain this parameters in form of placeholders like this: `{variable_name}`.
+
+        query_params:
+            All parameters which are expected to be present in the `query string`. If not present
+            the parameters may be sent to the endpoint, but they will be filtered out.
+
+        header_params:
+            All parameters, which are expected via HTTP headers.
 
         request_body_required:
             If set to True (default), a `response_schema` will be required.
@@ -128,44 +175,181 @@ class Endpoint:
     path: str
     name: EndpointName
     method: HTTPMethod = 'get'
-    parameters: Optional[Sequence[AnyParameterAndReference]] = None
     content_type: str = 'application/json'
     output_empty: bool = False
-    parameter_schema: Optional[Type[Schema]] = None
     response_schema: Optional[Type[Schema]] = None
     request_schema: Optional[Type[Schema]] = None
+    path_params: Optional[Sequence[RawParameter]] = None
+    query_params: Optional[Sequence[RawParameter]] = None
+    header_params: Optional[Sequence[RawParameter]] = None
     request_body_required: bool = True
     error_schema: Type[Schema] = ApiError
     etag: Optional[ETagBehaviour] = None
     will_do_redirects: bool = False
     options: Dict[str, str] = dataclasses.field(default_factory=dict)
+    tag_group: Literal['Monitoring', 'Setup'] = 'Setup'
     func: Optional[FunctionType] = None
     operation_id: Optional[str] = None
+    wrapped: Optional[Any] = None
 
     def __call__(self, func):
         """This is the real decorator.
         Returns:
         A wrapped function. The wrapper does input and output validation.
         """
-        wrapped = wrap_with_validation(func, self.request_schema, self.response_schema)
+        header_schema = to_schema(self.header_params)
+        path_schema = to_schema(self.path_params, required='all')
+        query_schema = to_schema(self.query_params)
 
         self.func = func
+
+        wrapped = self.wrap_with_validation(
+            self.request_schema,
+            self.response_schema,
+            header_schema,
+            path_schema,
+            query_schema,
+        )
+
+        _verify_parameters2(self.path, path_schema)
+
         self.operation_id = func.__module__ + "." + func.__name__
 
-        ENDPOINT_REGISTRY.add_endpoint(
-            self,
-            find_all_parameters(_reduce_to_primitives(self.parameters)),
-        )
+        def _mandatory_parameter_names(*params):
+            schema: Type[Schema]
+            req = []
+            for schema in params:
+                if not schema:
+                    continue
+                for name, field in schema().declared_fields.items():
+                    if field.required:
+                        req.append(field.attribute or name)
+            return tuple(sorted(req))
+
+        params = _mandatory_parameter_names(header_schema, path_schema, query_schema)
+
+        # Call to see if a Rule can be constructed. Will throw an ValueError if not possible.
+        _ = self.werkzeug_rule()
+
+        ENDPOINT_REGISTRY.add_endpoint(self, params)
 
         if not self.output_empty and self.response_schema is None:
             raise ValueError(
-                f"{self.operation_id}: 'response_schema' required when output will be sent!")
+                f"{self.operation_id}: 'response_schema' required when output will be sent.")
 
         if self.output_empty and self.response_schema:
-            raise ValueError(
-                f"{self.operation_id}: On empty output 'output_schema' may not be used.")
+            raise ValueError(f"{self.operation_id}: If `output_empty` is True, "
+                             "'response_schema' may not be used.")
 
-        return wrapped
+        self.wrapped = wrapped
+        return self.wrapped
+
+    def wrap_with_validation(
+        self,
+        request_schema: Optional[Type[Schema]],
+        response_schema: Optional[Type[Schema]],
+        header_schema: Optional[Type[Schema]],
+        path_schema: Optional[Type[Schema]],
+        query_schema: Optional[Type[Schema]],
+    ):
+        """Wrap a function with schema validation logic.
+
+        Args:
+            request_schema:
+                Optionally, a request-schema which actually won't get used, as long as the `connexion`
+                library still does the input-validation.
+
+            response_schema:
+                Optionally, a response-schema, which *will* get validated if passed.
+
+        Returns:
+            The wrapping function.
+        """
+        if self.func is None:
+            raise RuntimeError("Decorating failure. function not set.")
+
+        @functools.wraps(self.func)
+        def _validating_wrapper(param):
+            try:
+                if path_schema:
+                    param.update(path_schema().load(param))
+
+                if query_schema:
+                    param.update(query_schema().load(request.args))
+
+                if header_schema:
+                    param.update(header_schema().load(request.headers))
+
+                if request_schema:
+                    body = request_schema().load(request.json)
+                    param['body'] = body
+            except ValidationError as exc:
+
+                def _format_fields(_messages: Union[List, Dict]) -> str:
+                    if isinstance(_messages, list):
+                        return ', '.join(_messages)
+                    if isinstance(_messages, dict):
+                        return ', '.join(_messages.keys())
+                    return ''
+
+                if isinstance(exc.messages, dict):
+                    messages = exc.messages
+                else:
+                    messages = {'exc': exc.messages}
+                return problem(
+                    status=400,
+                    title="Bad request.",
+                    detail=f"These fields have problems: {_format_fields(exc.messages)}",
+                    ext=messages,
+                )
+
+            # make pylint happy
+            assert callable(self.func)
+            # FIXME
+            # We need to get the "original data" somewhere and are currently "piggy-backing"
+            # it on the response instance. This is somewhat problematic because it's not
+            # expected behaviour and not a valid interface of Response. Needs refactoring.
+            response = self.func(param)
+            if hasattr(response, 'original_data') and response_schema:
+                try:
+                    response_schema().load(response.original_data)
+                    return response
+                except ValidationError as exc:
+                    # Hope we never get here in production.
+                    return problem(
+                        status=500,
+                        title="Server was about to send an invalid response.",
+                        detail="This is an error of the implementation.",
+                        ext={
+                            'errors': exc.messages,
+                            'orig': response.original_data
+                        },
+                    )
+
+            return response
+
+        return _validating_wrapper
+
+    def werkzeug_rule(self) -> Rule:
+        replace = {}
+        if self.path_params is not None:
+            parameters = to_openapi(self.path_params, 'path')
+            for param in parameters:
+                name = param['name']
+                replace[name] = f"<string:{name}>"
+        try:
+            path = self.path.format(**replace)
+        except KeyError:
+            raise ValueError(f"Endpoint {self.path} has unspecified path parameters. "
+                             f"Specified: {replace}")
+        return Rule(
+            path,
+            methods=[self.method],
+            endpoint=self.wrapped,
+        )
+
+    def make_url(self, parameter_values: Dict[str, Any]):
+        return self.path.format(**parameter_values)
 
     def to_operation_dict(self) -> OperationSpecType:
         """Generate the openapi spec part of this endpoint.
@@ -178,9 +362,11 @@ class Endpoint:
         module_obj = import_string(self.func.__module__)
         module_name = module_obj.__name__
 
-        headers: Dict[str, PrimitiveParameter] = {}
+        headers: Dict[str, OpenAPIParameter] = {}
         if self.etag in ('output', 'both'):
-            headers.update(ETAG_HEADER_PARAM.header_dict())
+            etag_header = to_openapi([ETAG_HEADER_PARAM], 'header')[0]
+            del etag_header['in']
+            headers[etag_header.pop('name')] = etag_header
 
         responses: ResponseType = {}
 
@@ -220,7 +406,7 @@ class Endpoint:
         docstring_desc = _docstring_description(module_obj.__doc__)
         if docstring_desc:
             tag_obj['description'] = docstring_desc
-        _add_tag(tag_obj, tag_group='Endpoints')
+        _add_tag(tag_obj, tag_group=self.tag_group)
 
         operation_spec: OperationSpecType = {
             'operationId': self.operation_id,
@@ -236,18 +422,26 @@ class Endpoint:
                     }
                 }
             },
-            'parameters': _reduce_to_primitives(self.parameters),
         }
 
+        header_params: List[RawParameter] = []
+        query_params: Sequence[
+            RawParameter] = self.query_params if self.query_params is not None else []
+        path_params: Sequence[
+            RawParameter] = self.path_params if self.path_params is not None else []
+
         if self.etag in ('input', 'both'):
-            operation_spec['parameters'].append(ETAG_IF_MATCH_HEADER.to_dict())
+            header_params.append(ETAG_IF_MATCH_HEADER)
+
+        operation_spec['parameters'] = coalesce_schemas([
+            ('header', header_params),
+            ('query', query_params),
+            ('path', path_params),
+        ])
 
         operation_spec['responses'].update(responses)
 
         if self.request_schema is not None:
-            tag = _tag_from_schema(self.request_schema)
-            _add_tag(tag, tag_group='Request Schemas')
-
             operation_spec['requestBody'] = {
                 'required': self.request_body_required,
                 'content': {
@@ -257,12 +451,7 @@ class Endpoint:
                 }
             }
 
-        operation_spec['x-codeSamples'] = code_samples(
-            self.path,
-            self.method,
-            self.request_schema,
-            operation_spec,
-        )
+        operation_spec['x-codeSamples'] = code_samples(self)
 
         # If we don't have any parameters we remove the empty list, so the spec will not have it.
         if not operation_spec['parameters']:
@@ -271,22 +460,90 @@ class Endpoint:
         docstring_name = _docstring_name(self.func.__doc__)
         if docstring_name:
             operation_spec['summary'] = docstring_name
+        else:
+            raise RuntimeError(f"Please put a docstring onto {self.operation_id}")
         docstring_desc = _docstring_description(self.func.__doc__)
         if docstring_desc:
             operation_spec['description'] = docstring_desc
 
         apispec.utils.deepupdate(operation_spec, self.options)
 
-        return operation_spec
+        return {self.method: operation_spec}  # type: ignore[misc]
 
 
 # Compat
 endpoint_schema = Endpoint
 
 
+def _verify_parameters2(
+    path: str,
+    path_schema: Optional[Type[Schema]],
+):
+    """Verifies matching of parameters to the placeholders used in an URL-Template
+
+    This works both ways, ensuring that no parameter is supplied which is then not used and that
+    each template-variable in the URL-template has a corresponding parameter supplied,
+    either globally or locally.
+
+    Args:
+        path:
+            The URL-Template, for eample: '/user/{username}'
+
+        path_schema:
+            A marshmallow schema which is used for path parameter validation.
+
+    Examples:
+
+        In case of success, this function will return nothing.
+
+          >>> class Params(Schema):
+          ...      bar = fields.String()
+
+          >>> _verify_parameters2('/foo/{bar}', Params)
+          >>> _verify_parameters2('/foo', None)
+
+        Yet, when problems are found, ValueErrors are raised.
+
+          >>> _verify_parameters2('/foo', Params)
+          Traceback (most recent call last):
+          ...
+          ValueError: Params {'bar'} not used in path /foo. Found params: set()
+
+          >>> _verify_parameters2('/foo/{bar}', None)
+          Traceback (most recent call last):
+          ...
+          ValueError: Params {'bar'} of path /foo/{bar} were not given in schema parameters set()
+
+    Returns:
+        Nothing.
+
+    Raises:
+        ValueError in case of a mismatch.
+
+    """
+    if path_schema is None:
+        schema_params = set()
+    else:
+        schema = path_schema()
+        schema_params = set(schema.declared_fields.keys())
+
+    path_params = set(path_parameters(path))
+    missing_in_schema = path_params - schema_params
+    missing_in_path = schema_params - path_params
+
+    if missing_in_schema:
+        raise ValueError(
+            f"Params {missing_in_schema!r} of path {path} were not given in schema parameters "
+            f"{schema_params!r}")
+
+    if missing_in_path:
+        raise ValueError(f"Params {missing_in_path!r} not used in path {path}. "
+                         f"Found params: {path_params!r}")
+
+
 def _verify_parameters(
     path: str,
-    parameters: List[Union[PrimitiveParameter, ParameterReference]],
+    parameters: Sequence[OpenAPIParameter],
 ):
     """Verifies matching of parameters to the placeholders used in an URL-Template
 
@@ -318,12 +575,7 @@ def _verify_parameters(
           >>> _verify_parameters('/foo/{bar}', [])
           Traceback (most recent call last):
           ...
-          ValueError: Param 'bar', which is used in the HTTP path, was not specified.
-
-          >>> _verify_parameters('/foo/{foobazbar}', ['foobazbar'])
-          Traceback (most recent call last):
-          ...
-          ValueError: Param 'foobazbar', assumed globally defined, was not found.
+          ValueError: Param 'bar', which is used in the HTTP path, was not specified in []
 
     Returns:
         Nothing.
@@ -337,7 +589,8 @@ def _verify_parameters(
     for path_param in path_params:
         if path_param not in param_names:
             raise ValueError(
-                f"Param {repr(path_param)}, which is used in the HTTP path, was not specified.")
+                f"Param {path_param!r}, which is used in the HTTP path, was not specified in "
+                f"{parameters!r}")
 
     for param in parameters:
         if isinstance(param, dict) and param['in'] == 'path' and param['name'] not in path_params:
@@ -365,68 +618,6 @@ def _add_tag(tag: OpenAPITag, tag_group: Optional[str] = None) -> None:
     SPEC.tag(tag)
     if tag_group is not None:
         _assign_to_tag_group(tag_group, name)
-
-
-def wrap_with_validation(
-    func,
-    request_schema: Optional[Type[Schema]],
-    response_schema: Optional[Type[Schema]],
-):
-    """Wrap a function with schema validation logic.
-
-    Args:
-        func: The function to wrap
-
-        request_schema:
-            Optionally, a request-schema which actually won't get used, as long as the `connexion`
-            library still does the input-validation.
-
-        response_schema:
-            Optionally, a response-schema, which *will* get validated if passed.
-
-    Returns:
-        The wrapping function.
-    """
-    if response_schema is None and request_schema is None:
-        return func
-
-    validate_response: ValidatorType
-
-    if response_schema:
-        validate_response = response_schema().validate
-    else:
-        validate_response = _constantly(None)
-
-    @functools.wraps(func)
-    def _validating_wrapper(param):
-        body = schema_loads(request_schema, param.get('body', {}))
-        if body is not None:
-            param['body'] = body
-
-        # FIXME ARGH
-        response = func(param)
-        if not hasattr(response, 'original_data'):
-            return response
-
-        # FIXME
-        # We need to get the "original data" somewhere and are currently "piggy-backing"
-        # it on the response instance. This is somewhat problematic because it's not
-        # expected behaviour and not a valid interface of Response. Needs refactoring.
-        errors = validate_response(response.original_data)
-        if errors:
-            # Hope we never get here in production.
-            return problem(
-                status=500,
-                title="Server was about to send an invalid response.",
-                detail="This is an error of the implementation.",
-                ext={
-                    'errors': errors,
-                    'orig': response.original_data
-                },
-            )
-        return response
-
-    return _validating_wrapper
 
 
 def _schema_name(schema_name: str):
@@ -548,7 +739,7 @@ def _docstring_description(docstring: Union[Any, str, None]) -> Optional[str]:
     return None
 
 
-def _names_of(params: Sequence[AnyParameterAndReference]) -> Sequence[ParameterReference]:
+def _names_of(params: Sequence[OpenAPIParameter]) -> Sequence[str]:
     """Give a list of parameter names
 
     Both dictionary and string form are supported. See examples.
@@ -571,67 +762,22 @@ def _names_of(params: Sequence[AnyParameterAndReference]) -> Sequence[ParameterR
         >>> _names_of(['a', 'b', 'c'])
         ['a', 'b', 'c']
 
-        >>> _names_of(['a', {'name': 'b'}, ParamDict.create('c', 'query')])
-        ['a', 'b', 'c']
+        >>> _names_of(['a', {'name': 'b'}])
+        ['a', 'b']
 
     """
-    return [p['name'] if isinstance(p, (dict, ParamDict)) else p for p in params]
+    res = []
+    for p in params:
+        if isinstance(p, dict):
+            if 'name' in p and isinstance(p['name'], str):
+                res.append(p['name'])
+            else:
+                for key, value in p.items():
+                    if isinstance(value, fields.Field):
+                        res.append(key)
+        elif isinstance(p, str):
+            res.append(p)
+        else:
+            raise ValueError(f"Unknown type: {type(p)}")
 
-
-def schema_loads(schema, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    """Validate a schema and populate it with the defaults.
-
-    Examples:
-
-        >>> from marshmallow import Schema
-        >>> from cmk.gui.plugins.openapi import fields
-        >>> class Foo(Schema):
-        ...      integer = fields.Integer(required=True)
-        ...      hello = fields.String(enum=['World'], required=True)
-        ...      default_value = fields.String(missing='was populated')
-
-        If not all required fields are passed, a ProblemException is being raised.
-
-            >>> schema_loads(Foo, {})
-            Traceback (most recent call last):
-            ...
-            connexion.exceptions.ProblemException
-
-            >>> schema_loads(Foo, {'hello': 'Bob', 'integer': 10})
-            Traceback (most recent call last):
-            ...
-            connexion.exceptions.ProblemException
-
-        If validation passes, missing keys are populated with default values as well.
-
-            >>> expected = {
-            ...     'default_value': 'was populated',
-            ...     'hello': 'World',
-            ...     'integer': 10,
-            ... }
-            >>> res = schema_loads(Foo, {'hello': 'World', 'integer': "10"})
-            >>> assert res == expected, res
-
-    Args:
-        schema:
-            A marshmallow schema class, schema instance or name of a schema.
-        data:
-            A dictionary with data that should be checked against the schema.
-
-    Returns:
-        A new dictionary with the values converted and the defaults populated.
-
-    """
-    if schema is None:
-        return None
-    schema_ = resolve_schema_instance(schema)
-    try:
-        result = schema_.load(data)
-    except ValidationError as exc:
-        raise ProblemException(
-            status=400,
-            title="The request could not be validated.",
-            detail="There is an error in your submitted data.",
-            ext={'errors': exc.messages},
-        )
-    return result
+    return res

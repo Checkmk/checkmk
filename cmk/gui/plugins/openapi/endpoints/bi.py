@@ -8,22 +8,27 @@
 import http
 from connexion import ProblemException  # type: ignore
 
+from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     endpoint_schema,
     response_schemas,
 )
-from cmk.gui.plugins.openapi.restful_objects.type_defs import (
-    ParamDict,)
 
 from cmk.utils.bi.bi_lib import ReqString
 from cmk.utils.bi.bi_rule import BIRule, BIRuleSchema
 from cmk.utils.bi.bi_aggregation import BIAggregation, BIAggregationSchema
 from cmk.gui.bi import get_cached_bi_packs
 
-BI_RULE_ID = ParamDict.create("rule_id", "query")
-BI_AGGR_ID = ParamDict.create("aggregation_id", "query")
-BI_PACK_ID = ParamDict.create("pack_id", "query")
+BI_RULE_ID = {
+    'rule_id': fields.String(example='rule1'),
+}
+BI_AGGR_ID = {
+    'aggregation_id': fields.String(example="aggregation1"),
+}
+BI_PACK_ID = {
+    'pack_id': fields.String(example="pack1"),
+}
 
 #   .--Rules---------------------------------------------------------------.
 #   |                       ____        _                                  |
@@ -42,7 +47,7 @@ class BIRuleEndpointSchema(BIRuleSchema):
 @endpoint_schema(constructors.object_href("bi_rule", "{rule_id}"),
                  'cmk/get_bi_rule',
                  method='get',
-                 parameters=[BI_RULE_ID(location="path", example="rule1")],
+                 path_params=[BI_RULE_ID],
                  request_body_required=False,
                  response_schema=BIRuleEndpointSchema)
 def get_bi_rule(params):
@@ -62,7 +67,7 @@ def get_bi_rule(params):
 @endpoint_schema(constructors.object_href("bi_rule", "{rule_id}"),
                  'cmk/put_bi_rule',
                  method='put',
-                 parameters=[BI_RULE_ID(location="path", example="rule1")],
+                 path_params=[BI_RULE_ID],
                  request_body_required=True,
                  request_schema=BIRuleEndpointSchema,
                  response_schema=BIRuleEndpointSchema)
@@ -105,7 +110,7 @@ class BIAggregationEndpointSchema(BIAggregationSchema):
 @endpoint_schema(constructors.object_href("bi_aggregation", "{aggregation_id}"),
                  'cmk/get_bi_aggregation',
                  method='get',
-                 parameters=[BI_AGGR_ID(location="path", example="aggregation1")],
+                 path_params=[BI_AGGR_ID],
                  request_body_required=False,
                  response_schema=BIAggregationEndpointSchema)
 def get_bi_aggregation(params):
@@ -125,7 +130,7 @@ def get_bi_aggregation(params):
 @endpoint_schema(constructors.object_href("bi_aggregation", "{aggregation_id}"),
                  'cmk/put_bi_aggregation',
                  method='put',
-                 parameters=[BI_AGGR_ID(location="path", example="aggregation1")],
+                 path_params=[BI_AGGR_ID],
                  request_body_required=True,
                  request_schema=BIAggregationEndpointSchema,
                  response_schema=BIAggregationEndpointSchema)
@@ -189,7 +194,7 @@ def get_bi_packs(params):
 @endpoint_schema(constructors.object_href("bi_pack", "{pack_id}"),
                  'cmk/get_bi_pack',
                  method='get',
-                 parameters=[BI_PACK_ID(location="path", example="pack1")],
+                 path_params=[BI_PACK_ID],
                  request_body_required=False,
                  response_schema=response_schemas.DomainObject)
 def get_bi_pack(params):

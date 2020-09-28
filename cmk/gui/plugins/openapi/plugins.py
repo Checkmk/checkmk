@@ -67,9 +67,8 @@ class ValueTypedDictSchema(Schema):
         return result
 
     def load(self, data, *, many=None, partial=None, unknown=None):
-
         if not isinstance(data, dict):
-            raise ValidationError({'_schema': f'Invalid data type: {data}'})
+            raise ValidationError({'_schema': f'Data type is invalid: {data}'})
 
         schema = common.resolve_schema_instance(self.value_type)
         res = []

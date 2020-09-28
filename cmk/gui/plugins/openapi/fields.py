@@ -5,10 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """A few upgraded Fields which handle some OpenAPI validation internally."""
 import collections.abc
+import json
 import re
 from typing import Any, Optional, Tuple, Callable
 
-from marshmallow import fields as _fields  # type: ignore[import]
+from marshmallow import fields as _fields, ValidationError
+from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
+
+from cmk.gui.plugins.openapi.utils import BaseSchema
 
 
 class String(_fields.String):
@@ -407,6 +411,142 @@ class Nested(_fields.Nested, UniqueFields):
         return value
 
 
+class BinaryExprSchema(BaseSchema):
+    """
+
+    >>> q = {'left': 'foo.bar', 'op': '=', 'right': 'foo'}
+    >>> result = BinaryExprSchema().load(q)
+    >>> assert result == q
+
+    """
+    op = String(description="The operator.")
+    left = String(description="The LiveStatus table and column in the form "
+                  "`$TABLE_NAME.$COLUMN_NAME`, e.g. `hosts.name`.",
+                  pattern=r"[a-z]+\.[_a-z]+",
+                  example="hosts.name")
+    right = String(
+        description="The value to compare the column to.")  # should be AnyOf(all openapi types)
+
+
+class NotExprSchema(BaseSchema):
+    """Expression negating another query expression.
+
+    Examples:
+
+        >>> input_expr = {'op': '=', 'left': 'foo.bar', 'right': 'foo'}
+        >>> q = {'op': 'not', 'expr': input_expr}
+        >>> result = NotExprSchema().load(q)
+        >>> assert result == q
+
+    """
+
+    op = String(description="The operator. In this case `not`.")
+    expr = Nested(
+        lambda: ExprSchema(),  # pylint: disable=unnecessary-lambda
+        description="The query expression to negate.",
+    )
+
+
+class LogicalExprSchema(BaseSchema):
+    """Expression combining multiple other query expressions.
+    """
+    op = String(description="The operator.")
+    # many=True does not work here for some reason.
+    expr = List(
+        Nested(
+            lambda: ExprSchema(),  # pylint: disable=unnecessary-lambda
+            description="A list of query expressions to combine.",
+        ))
+
+
+class ExprSchema(OneOfSchema):
+    """
+
+    Operators can be one of: AND, OR
+
+    Examples:
+
+        >>> q = {'op': 'and', 'expr': [
+        ...         {'op': 'not', 'expr':
+        ...             {'op': 'or', 'expr': [
+        ...                 {'op': '=', 'left': 'foo.bar', 'right': 'foo'},
+        ...                 {'op': '=', 'left': 'foo.bar', 'right': 'foo'},
+        ...             ]},
+        ...         },
+        ...     ]}
+        >>> result = ExprSchema().load(q)
+        >>> assert result == q
+
+    """
+    type_field = 'op'
+    type_field_remove = False
+    type_schemas = {
+        'and': LogicalExprSchema,
+        'or': LogicalExprSchema,
+        'not': NotExprSchema,
+        '=': BinaryExprSchema,
+        '!=': BinaryExprSchema,
+        '~': BinaryExprSchema,
+        '<': BinaryExprSchema,
+        '>': BinaryExprSchema,
+        '>=': BinaryExprSchema,
+        '<=': BinaryExprSchema,
+    }
+
+    def load(self, data, *, many=None, partial=None, unknown=None):
+        # When being passed in via the query string, we may get the raw JSON string instead of
+        # the deserialized dictionary. We need to unpack it ourselves.
+        if isinstance(data, str):
+            try:
+                data = json.loads(data)
+            except json.decoder.JSONDecodeError as exc:
+                raise ValidationError({
+                    '_schema': [
+                        f"Invalid JSON value: '{data}'",
+                        str(exc),
+                    ],
+                })
+
+        return super().load(data, many=many, partial=partial, unknown=unknown)
+
+
+class LiveStatusColumn(String):
+    """Represents a LiveStatus column.
+
+    >>> class Hosts:
+    ...      __tablename__ = 'hosts'
+    ...      @classmethod
+    ...      def __columns__(cls):
+    ...          return ['foo']
+
+    >>> LiveStatusColumn(table=Hosts).deserialize('foo')
+    'foo'
+
+    >>> import pytest
+    >>> with pytest.raises(ValidationError) as exc:
+    ...     LiveStatusColumn(table=Hosts).deserialize('bar')
+    >>> exc.value.messages
+    ['Unknown column: hosts.bar']
+
+    """
+    default_error_messages = {
+        'unknown_column': "Unknown column: {table_name}.{column_name}",
+    }
+
+    def _deserialize(self, value, attr, data, **kwargs):
+        table = self.metadata['table']
+        if value not in table.__columns__():
+            self.fail(
+                "unknown_column",
+                table_name=table.__tablename__,
+                column_name=value,
+            )
+        for column in self.metadata.get('mandatory', []):
+            if column not in value:
+                value.append(column)
+        return value
+
+
 Boolean = _fields.Boolean
 Decimal = _fields.Decimal
 DateTime = _fields.DateTime
@@ -437,4 +577,5 @@ __all__ = [
     'String',
     'Time',
     'Field',
+    'ExprSchema',
 ]

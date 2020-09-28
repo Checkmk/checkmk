@@ -13,6 +13,7 @@ from typing import List, Dict, Any, Tuple
 
 from connexion import ProblemException  # type: ignore[import]
 
+from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
 from cmk.utils.type_defs import TimeperiodSpec
 from cmk.gui.http import Response
 
@@ -50,7 +51,7 @@ def create_timeperiod(params):
 @endpoint_schema(constructors.object_href('time_period', '{name}'),
                  '.../update',
                  method='put',
-                 parameters=['name'],
+                 path_params=[NAME_FIELD],
                  request_schema=request_schemas.UpdateTimePeriod,
                  output_empty=True)
 def update_timeperiod(params):
@@ -84,7 +85,7 @@ def update_timeperiod(params):
 @endpoint_schema(constructors.object_href('time_period', '{name}'),
                  '.../delete',
                  method='delete',
-                 parameters=['name'],
+                 path_params=[NAME_FIELD],
                  request_body_required=False,
                  output_empty=True)
 def delete(params):
@@ -101,7 +102,7 @@ def delete(params):
 @endpoint_schema(constructors.object_href('time_period', '{name}'),
                  'cmk/show',
                  method='get',
-                 parameters=['name'],
+                 path_params=[NAME_FIELD],
                  response_schema=response_schemas.ConcreteTimePeriod)
 def show_time_period(params):
     """Show a time period"""

@@ -7,37 +7,6 @@
 from cmk.gui.plugins.openapi.restful_objects import response_schemas
 
 
-def test_host_collection():
-    errors = response_schemas.HostCollection().validate({
-        'id': 'host',
-        'domainType': 'host_config',
-        'value': [{
-            'rel': 'urn:org.restfulobjects:rels/value;collection="all"',
-            'href': '/objects/host_config/foobar',
-            'method': 'GET',
-            'type': 'application/json;profile="urn:org.restfulobjects:rels/object"',
-            'domainType': 'link',
-            'title': 'foobar'
-        }, {
-            'rel': 'urn:org.restfulobjects:rels/value;collection="all"',
-            'href': '/objects/host_config/sample',
-            'method': 'GET',
-            'type': 'application/json;profile="urn:org.restfulobjects:rels/object"',
-            'domainType': 'link',
-            'title': 'sample'
-        }],
-        'links': [{
-            'rel': 'self',
-            'href': '/domain-types/host_config/collections/all',
-            'method': 'GET',
-            'type': 'application/json',
-            'domainType': 'link'
-        }]
-    })
-    if errors:
-        raise Exception(errors)
-
-
 def test_domain_object():
     errors = response_schemas.DomainObject().validate({
         'domainType': 'folder',

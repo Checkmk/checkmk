@@ -6,49 +6,28 @@
 from werkzeug.exceptions import HTTPException
 from werkzeug.routing import Map, Submount, Rule
 
-import cmk.utils.version as cmk_version
-from cmk.gui.wsgi.applications import CheckmkApp, CheckmkApiApp, openapi_spec_dir
+from cmk.gui.wsgi.applications import CheckmkApp, CheckmkRESTAPI
 from cmk.gui.wsgi.applications.helper_apps import dump_environ_app, test_formdata
-from cmk.gui.wsgi.middleware import OverrideRequestMethod, with_context_middleware
 
 WSGI_ENV_ARGS_NAME = 'x-checkmk.args'
 
 
 def create_url_map(debug=False):
     """Instantiate all WSGI Apps and put them into the URL-Map."""
-    _api_app = CheckmkApiApp(
-        __name__,
-        debug=debug,
-        specification_dir=openapi_spec_dir(),
-    )
-    # NOTE
-    # The URL will always contain the most up to date major version number, so that clients
-    # exploring the API (browsers, etc.) will have a structural stability guarantee. Within major
-    # versions only additions of fields or endpoints are allowed, never field changes or removals.
-    # If a new major version is created it should be ADDED here and not replace the older version.
-    # NOTE: v0 means totally unstable until we hit v1.
-    _api_app.add_api_blueprint(
-        'checkmk.yaml',
-        base_path='/%s/check_mk/api/v0/' % cmk_version.omd_site(),
-    )
-
-    wrapped_api_app = with_context_middleware(OverrideRequestMethod(_api_app).wsgi_app)
-    cmk_app = CheckmkApp()
-
     debug_rules = [
         Rule("/dump.py", endpoint=dump_environ_app),
         Rule("/form.py", endpoint=test_formdata),
     ]
+
+    cmk_app = CheckmkApp()
+    api_app = CheckmkRESTAPI(debug=debug).wsgi_app
 
     return Map([
         Submount('/<string:site>', [
             Submount("/check_mk", [
                 Rule("/", endpoint=cmk_app),
                 *(debug_rules if debug else []),
-                Submount('/api', [
-                    Rule("/", endpoint=wrapped_api_app),
-                    Rule("/<path:path>", endpoint=wrapped_api_app),
-                ]),
+                Rule("/api/<string:version>/<path:path>", endpoint=api_app),
                 Rule("/<string:script>", endpoint=cmk_app),
             ]),
         ])
@@ -73,6 +52,9 @@ def make_router(debug=False):
             # HTTPExceptions are WSGI apps
             endpoint = e
             args = ()
+
+        if endpoint is None:
+            raise Exception(endpoint, args, environ)
 
         environ[WSGI_ENV_ARGS_NAME] = args
         return endpoint(environ, start_response)

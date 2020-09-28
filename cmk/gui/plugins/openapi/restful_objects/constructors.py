@@ -14,13 +14,13 @@ from werkzeug.datastructures import ETags
 
 from cmk.gui.globals import request
 from cmk.gui.http import Response
+from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
 from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     CollectionItem,
     CollectionObject,
     DomainObject,
     DomainType,
     EndpointName,
-    ENDPOINT_REGISTRY,
     HTTPMethod,
     LinkType,
     PropertyFormat,
@@ -246,12 +246,14 @@ def object_collection(
 def action_result(
     action_links: List[LinkType],
     result_type: ResultType,
-    result_links: List[LinkType],
-    result_value: Optional[Any],
+    result_value: Optional[Any] = None,
+    result_links: Optional[List[LinkType]] = None,
 ) -> Dict:
     """Construct an Action Result resource
 
     Described in Restful Objects, chapter 19.1-4 """
+    if result_links is None:
+        result_links = []
     return {
         'links': action_links,
         'resultType': result_type,
@@ -632,7 +634,7 @@ def link_endpoint(
     """
     endpoint = ENDPOINT_REGISTRY.lookup(module_name, rel, parameters)
     return link_rel(
-        href=endpoint['href'],
+        href=endpoint['endpoint'].make_url(parameters),
         rel=endpoint['rel'],
         method=endpoint['method'],
     )

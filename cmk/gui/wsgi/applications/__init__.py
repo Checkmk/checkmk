@@ -6,12 +6,12 @@
 
 from cmk.gui.wsgi.applications.checkmk import CheckmkApp
 from cmk.gui.wsgi.applications.rest_api import (
-    CheckmkApiApp,
+    CheckmkRESTAPI,
     openapi_spec_dir,
 )
 
 __all__ = [
     'CheckmkApp',
-    'CheckmkApiApp',
+    'CheckmkRESTAPI',
     'openapi_spec_dir',
 ]

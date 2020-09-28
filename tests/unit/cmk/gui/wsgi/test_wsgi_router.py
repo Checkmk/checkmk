@@ -55,7 +55,9 @@ def test_openapi_app_exception(wsgi_app_debug_off, with_automation_user):
     resp = wsgi_app.get("/NO_SITE/check_mk/api/v0/version?fail=1", status=500)
     assert 'detail' in resp.json
     assert 'title' in resp.json
-    # TODO: Check CrashReport storage
+    assert 'crash_report' in resp.json
+    assert 'check_mk' in resp.json['crash_report']['href']
+    assert 'crash_id' in resp.json
 
 
 @pytest.mark.skip

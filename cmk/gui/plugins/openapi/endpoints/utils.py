@@ -11,10 +11,9 @@ from typing import Any, Dict, Literal, Sequence, List, Optional, Type
 from connexion import ProblemException  # type: ignore[import]
 
 from cmk.gui.http import Response
+from cmk.gui.groups import load_group_information, GroupSpecs, GroupSpec
 from cmk.gui.plugins.openapi.livestatus_helpers.types import Column, Table
 from cmk.gui.plugins.openapi.restful_objects import constructors
-
-from cmk.gui.groups import load_group_information, GroupSpecs, GroupSpec
 from cmk.gui.watolib.groups import edit_group, GroupType
 
 
@@ -128,7 +127,7 @@ def load_groups(group_type: str, entries: List[Dict[str, Any]]) -> Dict[str, Opt
 
 
 def verify_columns(table: Type[Table], column_names: List[str]) -> List[Column]:
-    """Check for any wrong column spellings on the Table classes."""
+    """Check for any wrong column spellings on the Table classes"""
     missing = set(column_names) - set(table.__columns__())
     if missing:
         raise ProblemException(

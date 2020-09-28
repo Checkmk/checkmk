@@ -7,13 +7,19 @@
 import json
 
 from cmk.gui import watolib
-from cmk.gui.watolib.services import (Discovery, StartDiscoveryRequest, DiscoveryOptions,
-                                      get_check_table, checkbox_id)
+from cmk.gui.plugins.openapi import fields
+from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
+from cmk.gui.watolib.services import (
+    Discovery,
+    StartDiscoveryRequest,
+    DiscoveryOptions,
+    get_check_table,
+    checkbox_id,
+)
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects import (
     endpoint_schema,
     response_schemas,
-    ParamDict,
 )
 from cmk.gui.plugins.openapi.restful_objects.constructors import (domain_object, object_property,
                                                                   link_rel, collection_href)
@@ -37,62 +43,35 @@ SERVICE_DISCOVERY_STATES = {
     "legacy_ignored": "legacy_ignored"
 }
 
-DISCOVERY_ACTION = {"tabula-rasa": "refresh", "full-scan": "refresh"}
-
-DISCOVERY_HOST = ParamDict.create(
-    'host',
-    'query',
-    schema_string_pattern="[a-zA-Z][a-zA-Z0-9_-]+",
-    description=('Optionally the hostname for which a certain agent has '
-                 'been configured. If omitted you may only download this agent if you '
-                 'have the rights for all agents.'),
-    example='example.com',
-    required=True)
-
-DISCOVERY_SOURCE_STATE = ParamDict.create(
-    'discovery_state',
-    'query',
-    description=('The discovery state of the services. May be one of the following: ' +
-                 ', '.join(sorted(SERVICE_DISCOVERY_STATES.keys()))),
-    schema_string_pattern='|'.join(sorted(SERVICE_DISCOVERY_STATES.keys())),
-    example='monitored',
-    required=True)
-
-DISCOVERY_SERVICE_HASH = ParamDict.create(
-    "service_hash",
-    'path',
-    description='A name used as an identifier. Can be of arbitrary length',
-    schema_string_pattern="[a-zA-Z][a-zA-Z0-9_-]+",
-    example='asoidjfo2jifa09',
-    required=True)
-
-DISCOVERY_TARGET_STATE = ParamDict.create(
-    'target_state',
-    'path',
-    description=('The discovery state of the services. May be one of the following: ' +
-                 ', '.join(sorted(SERVICE_DISCOVERY_STATES.keys()))),
-    schema_string_pattern='|'.join(sorted(SERVICE_DISCOVERY_STATES.keys())),
-    example='monitored',
-    required=True)
-
-DISCOVERY_MODE = ParamDict.create(
-    'discover_mode',
-    'path',
-    description=('The mode of the discovery action. May be one of the following: ' +
-                 ', '.join(sorted(DISCOVERY_ACTION.keys()))),
-    schema_string_pattern='|'.join(sorted(DISCOVERY_ACTION.keys())),
-    example='tabula-rasa',
-    required=True)
+DISCOVERY_ACTION = {"tabula-rasa": "refresh"}
 
 
-@endpoint_schema(collection_href("service", "services"),
-                 '.../collection',
-                 method='get',
-                 response_schema=response_schemas.DomainObject,
-                 parameters=[DISCOVERY_HOST, DISCOVERY_SOURCE_STATE])
+@endpoint_schema(
+    collection_href("service", "services"),
+    '.../collection',
+    method='get',
+    response_schema=response_schemas.DomainObject,
+    tag_group='Setup',
+    query_params=[{
+        'host_name': fields.String(
+            pattern="[a-zA-Z][a-zA-Z0-9_-]+",
+            description=('Optionally the hostname for which a certain agent has '
+                         'been configured. If omitted you may only download this agent if you '
+                         'have the rights for all agents.'),
+            example='example.com',
+            required=True,
+        ),
+        'discovery_state': fields.String(
+            description=('The discovery state of the services. May be one of the following: ' +
+                         ', '.join(sorted(SERVICE_DISCOVERY_STATES.keys()))),
+            pattern='|'.join(sorted(SERVICE_DISCOVERY_STATES.keys())),
+            example='monitored',
+            required=True,
+        )
+    }])
 def show_services(params):
-    """Show services of specific state"""
-    host = watolib.Host.host(params["host"])
+    """Show all services of specific state"""
+    host = watolib.Host.host(params["host_name"])
     discovery_request = StartDiscoveryRequest(
         host=host,
         folder=host.folder(),
@@ -107,13 +86,30 @@ def show_services(params):
     return _serve_services(host, discovery_result.check_table, params["discovery_state"])
 
 
-@endpoint_schema('/objects/host/{host_name}/service/{service_hash}/action/move/{target_state}',
-                 '.../modify',
-                 method='put',
-                 output_empty=True,
-                 parameters=["host_name", DISCOVERY_SERVICE_HASH, DISCOVERY_TARGET_STATE])
+@endpoint_schema(
+    '/objects/host/{host_name}/service/{service_hash}/action/move/{target_state}',
+    '.../modify',
+    method='put',
+    output_empty=True,
+    tag_group='Setup',
+    path_params=[{
+        "service_hash": fields.String(
+            description='A name used as an identifier. Can be of arbitrary length',
+            pattern="[a-zA-Z][a-zA-Z0-9_-]+",
+            example='asoidjfo2jifa09',
+            required=True,
+        ),
+        'target_state': fields.String(
+            description=('The discovery state of the services. May be one of the following: ' +
+                         ', '.join(sorted(SERVICE_DISCOVERY_STATES.keys()))),
+            pattern='|'.join(sorted(SERVICE_DISCOVERY_STATES.keys())),
+            example='monitored',
+            required=True,
+        ),
+        **HOST_NAME,
+    }])
 def move_service(params):
-    """Update the state of a service"""
+    """Update the phase of a service"""
     host = watolib.Host.host(params["host_name"])
     discovery_request = {
         "update_target": params["target_state"],
@@ -133,11 +129,22 @@ def move_service(params):
     return Response(status=204)
 
 
-@endpoint_schema('/objects/host/{host_name}/actions/discover-services/mode/{discover_mode}',
-                 '.../update',
-                 method='post',
-                 output_empty=True,
-                 parameters=["host_name", DISCOVERY_MODE])
+@endpoint_schema(
+    '/objects/host/{host_name}/actions/discover-services/mode/{discover_mode}',
+    '.../update',
+    method='post',
+    output_empty=True,
+    tag_group='Setup',
+    path_params=[{
+        'discover_mode': fields.String(
+            description=('The mode of the discovery action. May be one of the following: ' +
+                         ', '.join(sorted(DISCOVERY_ACTION.keys()))),
+            pattern='|'.join(sorted(DISCOVERY_ACTION.keys())),
+            example='tabula-rasa',
+            required=True,
+        ),
+        **HOST_NAME,
+    }])
 def execute(params):
     """Execute a service discovery of a host"""
     host = watolib.Host.host(params["host_name"])

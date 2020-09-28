@@ -6,6 +6,7 @@
 
 import datetime as dt
 
+from marshmallow import Schema
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from cmk.utils.defines import weekday_ids
@@ -171,18 +172,18 @@ class ObjectMemberBase(Linkable):
 class ObjectCollectionMember(ObjectMemberBase):
     memberType = fields.Constant('collection')
     value = fields.List(fields.Nested(LinkSchema()))
-    name = fields.String()
+    name = fields.String(example="important_values")
 
 
 class ObjectPropertyMember(ObjectMemberBase):
     memberType = fields.Constant('property')
-    name = fields.String()
+    name = fields.String(example="important_value")
 
 
 class ObjectActionMember(ObjectMemberBase):
     memberType = fields.Constant('action')
     parameters = fields.Dict()
-    name = fields.String()
+    name = fields.String(example="frobnicate_foo")
 
 
 class ObjectMember(OneOfSchema):
@@ -199,30 +200,51 @@ class ObjectMemberDict(plugins.ValueTypedDictSchema):
 
 
 class ActionResultBase(Linkable):
-    resultType = fields.Constant(None, required=True, example='object')
-    result = fields.Dict()
+    resultType: fields.Field = fields.String()
+    extensions = fields.Dict(example={'some': 'values'})
 
 
 class ActionResultObject(ActionResultBase):
     resultType = fields.Constant('object')
-    value = fields.Dict(required=True,
-                        allow_none=True,
-                        example={'foo': 'bar'},
-                        description="The return value of this action.")
+    result = fields.Nested(
+        Schema.from_dict(
+            {
+                'links': fields.List(
+                    fields.Nested(LinkSchema),
+                    required=True,
+                ),
+                'value': fields.Dict(
+                    required=True,
+                    example={'duration': '5 seconds.'},
+                )
+            },
+            name='ActionResultObjectValue',
+        ))
 
 
 class ActionResultScalar(ActionResultBase):
     resultType = fields.Constant('scalar')
-    value = fields.String(required=True,
-                          allow_none=True,
-                          example="Done.",
-                          description="The return value of this action.")
+    result = fields.Nested(
+        Schema.from_dict(
+            {
+                'links': fields.List(
+                    fields.Nested(LinkSchema),
+                    required=True,
+                ),
+                'value': fields.String(
+                    required=True,
+                    example="Done.",
+                )
+            },
+            name='ActionResultScalarValue',
+        ))
 
 
 class ActionResult(OneOfSchema):
     type_field = 'resultType'
     type_schemas = {
         'object': ActionResultObject,
+        'scalar': ActionResultScalar,
     }
 
 
@@ -231,7 +253,7 @@ class AttributeDict(plugins.ValueTypedDictSchema):
 
 
 class DomainObject(Linkable):
-    domainType = fields.Constant(None, required=True)
+    domainType: fields.Field = fields.String(required=True)
     # Generic things to ease development. Should be changed for more concrete schemas.
     id = fields.String()
     title = fields.String()
@@ -319,37 +341,36 @@ class HostMembers(BaseSchema):
         "`self`-link provided in the links array.")
 
 
-class HostSchema(Linkable):
+class HostConfigSchema(Linkable):
     domainType = fields.Constant("host_config", required=True)
     id = fields.String()
     title = fields.String()
     members = fields.Nested(HostMembers, description="All the members of the host object.")
 
 
-class ConcreteHost(OneOfSchema):
-    type_schemas = {
-        'host_config': HostSchema,
-        'link': LinkSchema,
-    }
-    type_field = 'domainType'
-    type_field_remove = False
-
-
-class HostCollection(Linkable):
-    domainType = fields.Constant("host_config", required=True)
-    id = fields.String()
-    title = fields.String()
-    value = fields.Nested(ConcreteHost, many=True)
-
-
 class ObjectAction(Linkable):
     parameters = fields.Nested(Parameter)
+
+
+class TypeSchemas(dict):
+    """This automatically creates entries with the default value."""
+    def get(self, key, default=None):
+        return self[key]
+
+    def __missing__(self, key):
+        return DomainObject
+
+
+class CollectionItem(OneOfSchema):
+    type_schemas = TypeSchemas({'link': LinkSchema})
+    type_field = 'domainType'
+    type_field_remove = False
 
 
 class DomainObjectCollection(Linkable):
     id = fields.String()
     domainType: fields.Field = fields.String()
-    value = fields.List(fields.Nested(LinkSchema))
+    value: fields.Field = fields.Nested(CollectionItem, many=True)
     extensions = fields.Dict()
 
 
@@ -475,6 +496,7 @@ class InstalledVersions(BaseSchema):
                          example="production")
     group = fields.String(description="The Apache WSGI application group this call was made on.",
                           example="de")
+    rest_api = fields.Dict(description="The REST-API version", example={'revision': '1.0.0'})
     versions = fields.Dict(description="Some version numbers", example={"checkmk": "1.8.0p1"})
     edition = fields.String(description="The Checkmk edition.", example="raw")
     demo = fields.Bool(description="Whether this is a demo version or not.", example=False)

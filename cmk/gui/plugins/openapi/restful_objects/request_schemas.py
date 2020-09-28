@@ -3,7 +3,6 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 from marshmallow import ValidationError  # type: ignore[import]
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
@@ -139,7 +138,7 @@ EXISTING_FOLDER = FolderField(
     required=True,
 )
 
-NAME_FIELD = fields.String(
+GROUP_NAME_FIELD = fields.String(
     required=True,
     description="A name used as identifier",
     example='windows',
@@ -327,7 +326,7 @@ EXISTING_SERVICE_GROUP_NAME = Group(
 
 class InputHostGroup(BaseSchema):
     """Creating a host group"""
-    name = NAME_FIELD
+    name = GROUP_NAME_FIELD
     alias = fields.String(example="Windows Servers")
 
 
@@ -406,7 +405,7 @@ class BulkUpdateContactGroup(BaseSchema):
 
 class InputServiceGroup(BaseSchema):
     """Creating a service group"""
-    name = NAME_FIELD
+    name = GROUP_NAME_FIELD
     alias = fields.String(example="Environment Sensors")
 
 
@@ -457,9 +456,12 @@ class CreateFolder(BaseSchema):
         folder. For more information please have a look at the
         [Host Administration chapter of the handbook](https://checkmk.com/cms_wato_hosts.html#Introduction).
     """
-    name = fields.String(description="The name of the folder.", required=True, example="production")
+    name = fields.String(description="The filesystem directory name of the folder.",
+                         required=True,
+                         example="production")
     title = fields.String(
         required=True,
+        description="The folder title as displayed in the user interface.",
         example="Production Hosts",
     )
     parent = FolderField(
@@ -735,7 +737,7 @@ class InputTimePeriod(BaseSchema):
             required=True,
             should_exist=True,
         ),
-        example="['alias']",
+        example=["alias"],
         description="The collection of time period aliases whose periods are excluded",
         required=False,
     )
@@ -783,12 +785,6 @@ HOST_DURATION = fields.Integer(
 class CreateHostDowntime(CreateDowntimeBase):
     host_name = MONITORED_HOST
     duration = HOST_DURATION
-    include_all_services = fields.Boolean(
-        required=False,
-        description=param_description(schedule_host_downtime.__doc__, 'include_all_services'),
-        example=False,
-        missing=False,
-    )
 
 
 class CreateServiceDowntime(CreateDowntimeBase):
@@ -810,13 +806,6 @@ class CreateServiceDowntime(CreateDowntimeBase):
 
 class CreateServiceGroupDowntime(CreateDowntimeBase):
     servicegroup_name = SERVICEGROUP_NAME
-    include_hosts = fields.Boolean(
-        required=False,
-        description=param_description(schedule_servicegroup_service_downtime.__doc__,
-                                      'include_hosts'),
-        example=False,
-        missing=False,
-    )
     duration = HOST_DURATION
 
 
@@ -825,13 +814,6 @@ class CreateHostGroupDowntime(CreateDowntimeBase):
         required=True,
         description=param_description(schedule_hostgroup_host_downtime.__doc__, 'hostgroup_name'),
         example='Servers',
-    )
-    include_all_services = fields.Boolean(
-        required=False,
-        description=param_description(schedule_hostgroup_host_downtime.__doc__,
-                                      'include_all_services'),
-        example=False,
-        missing=False,
     )
     duration = HOST_DURATION
 

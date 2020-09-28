@@ -113,6 +113,10 @@ class Column:
 
         self.__doc__ = description
 
+    def __repr__(self):
+        class_name = self.__class__.__name__
+        return f"{class_name}({self.table.__tablename__}.{self.name}: {self.type})"
+
     @property
     def query_name(self) -> str:
         """This represents the name to be used in the Response.

@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Service-groups"""
+"""Service groups"""
 from cmk.gui import watolib
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.utils import (
@@ -22,6 +22,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     request_schemas,
 )
 from cmk.gui.groups import load_service_group_information
+from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
 from cmk.gui.watolib.groups import edit_group, add_group
 
 
@@ -33,7 +34,7 @@ from cmk.gui.watolib.groups import edit_group, add_group
                  request_schema=request_schemas.InputServiceGroup,
                  response_schema=response_schemas.DomainObject)
 def create(params):
-    """Create a service-group"""
+    """Create a service group"""
     body = params['body']
     name = body['name']
     alias = body.get('alias')
@@ -67,20 +68,22 @@ def bulk_create(params):
                  method='get',
                  response_schema=response_schemas.DomainObjectCollection)
 def list_groups(params):
-    """List service-groups"""
+    """Show all service groups"""
     return constructors.serve_json(
         serialize_group_list('service_group_config',
                              list(load_service_group_information().values())))
 
 
-@endpoint_schema(constructors.object_href('service_group_config', '{name}'),
-                 'cmk/show',
-                 method='get',
-                 response_schema=response_schemas.ServiceGroup,
-                 etag='output',
-                 parameters=['name'])
+@endpoint_schema(
+    constructors.object_href('service_group_config', '{name}'),
+    'cmk/show',
+    method='get',
+    response_schema=response_schemas.ServiceGroup,
+    etag='output',
+    path_params=[NAME_FIELD],
+)
 def show_group(params):
-    """Show a service-group"""
+    """Show a service group"""
     name = params['name']
     group = fetch_group(name, "service")
     return serve_group(group, serialize_group('service_group_config'))
@@ -89,11 +92,11 @@ def show_group(params):
 @endpoint_schema(constructors.object_href('service_group_config', '{name}'),
                  '.../delete',
                  method='delete',
-                 parameters=['name'],
+                 path_params=[NAME_FIELD],
                  output_empty=True,
                  etag='input')
 def delete(params):
-    """Delete a service-group"""
+    """Delete a service group"""
     name = params['name']
     group = fetch_group(name, "service")
     constructors.require_etag(constructors.etag_of_dict(group))
@@ -122,13 +125,13 @@ def bulk_delete(params):
 @endpoint_schema(constructors.object_href('service_group_config', '{name}'),
                  '.../update',
                  method='put',
-                 parameters=['name'],
+                 path_params=[NAME_FIELD],
                  response_schema=response_schemas.ServiceGroup,
                  etag='both',
                  request_body_required=True,
                  request_schema=request_schemas.InputServiceGroup)
 def update(params):
-    """Update a service-group"""
+    """Update a service group"""
     name = params['name']
     group = fetch_group(name, "service")
     constructors.require_etag(constructors.etag_of_dict(group))
@@ -143,7 +146,7 @@ def update(params):
                  request_schema=request_schemas.BulkUpdateServiceGroup,
                  response_schema=response_schemas.DomainObjectCollection)
 def bulk_update(params):
-    """Bulk update service-groups"""
+    """Bulk update service groups"""
     body = params['body']
     entries = body['entries']
     updated_service_groups = update_groups("service", entries)

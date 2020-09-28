@@ -3,12 +3,42 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import json
+from typing import Literal, Optional, Dict, Any
 
-from typing import Literal, Optional
-
-from marshmallow import Schema  # type: ignore[import]
+from marshmallow import Schema
 
 import docstring_parser  # type: ignore[import]
+
+from cmk.gui.http import Response
+
+
+def problem(
+    status: int = 400,
+    title: str = "A problem occured.",
+    detail: Optional[str] = None,
+    type_: Optional[str] = None,
+    ext: Optional[Dict[str, Any]] = None,
+):
+    problem_dict = {
+        'title': title,
+        'status': status,
+    }
+    if detail is not None:
+        problem_dict['detail'] = detail
+    if type_ is not None:
+        problem_dict['type'] = type_
+
+    if isinstance(ext, dict):
+        problem_dict.update(ext)
+    else:
+        problem_dict['ext'] = ext
+
+    response = Response()
+    response.status_code = status
+    response.set_content_type("application/problem+json")
+    response.set_data(json.dumps(problem_dict))
+    return response
 
 
 class BaseSchema(Schema):

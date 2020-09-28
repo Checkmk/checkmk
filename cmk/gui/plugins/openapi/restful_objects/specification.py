@@ -54,8 +54,15 @@ If you have a client which can't do the HTTP PUT or DELETE methods, then you can
 `X-HTTP-Method-Override` HTTP Header to force the server into believing the client actually sent
 such a method. In these cases the HTTP method to use has to be POST. You can't override from GET.
 
+## Backwards compatibility
+
+Future versions of this API may add additional fields in the responses. Clients must be written
+in a way to NOT expect the absence of a field, as we don't guarantee that.
+For backwards compatibility reasons we only keep the fields that have already been there in older
+versions. You can consult the documentation to see what changed in each API revision.
+
 """
-from typing import List, Literal, Sequence, Union
+from typing import List, Literal, Sequence, Dict, TypedDict
 
 import apispec.utils  # type: ignore[import]
 import apispec.ext.marshmallow as marshmallow  # type: ignore[import]
@@ -63,19 +70,48 @@ import apispec_oneofschema  # type: ignore[import]
 
 from cmk.gui.plugins.openapi import plugins
 from cmk.gui.plugins.openapi.restful_objects.parameters import (
-    ACCEPT_HEADER,
-    HOST_NAME,
-    IDENT,
-    NAME,
-    SERVICE_DESCRIPTION,
-)
-from cmk.gui.plugins.openapi.restful_objects.type_defs import ParameterReference, PrimitiveParameter
+    ACCEPT_HEADER,)
+
+from cmk.gui.plugins.openapi.restful_objects.params import to_openapi
+from cmk.gui.plugins.openapi.restful_objects.type_defs import OpenAPIParameter
 
 DEFAULT_HEADERS = [
     ('Accept', 'Media type(s) that is/are acceptable for the response.', 'application/json'),
 ]
 
-OPTIONS = {
+OpenAPIInfoDict = TypedDict(
+    'OpenAPIInfoDict',
+    {
+        'description': str,
+        'license': Dict[str, str],
+        'contact': Dict[str, str],
+    },
+    total=True,
+)
+
+TagGroup = TypedDict(
+    'TagGroup',
+    {
+        'name': str,
+        'tags': List[str],
+    },
+    total=True,
+)
+
+ReDocSpec = TypedDict(
+    "ReDocSpec",
+    {
+        'info': OpenAPIInfoDict,
+        'externalDocs': Dict[str, str],
+        'security': List[Dict[str, List[str]]],
+        'x-logo': Dict[str, str],
+        'x-tagGroups': List[TagGroup],
+        'x-ignoredHeaderParameters': List[str],
+    },
+    total=True,
+)
+
+OPTIONS: ReDocSpec = {
     'info': {
         'description': apispec.utils.dedent(__doc__).strip(),
         'license': {
@@ -98,15 +134,16 @@ OPTIONS = {
     },
     'x-tagGroups': [
         {
+            'name': 'Monitoring',
+            'tags': []
+        },
+        {
+            'name': 'Setup',
+            'tags': []
+        },
+        # TODO: remove
+        {
             'name': 'Endpoints',
-            'tags': []
-        },
-        {
-            'name': 'Response Schemas',
-            'tags': []
-        },
-        {
-            'name': 'Request Schemas',
             'tags': []
         },
     ],
@@ -119,15 +156,24 @@ OPTIONS = {
     }]
 }
 
-SPEC = apispec.APISpec("Checkmk REST API",
-                       "0.3.2",
-                       apispec.utils.OpenAPIVersion("3.0.2"),
-                       plugins=[
-                           marshmallow.MarshmallowPlugin(),
-                           plugins.ValueTypedDictMarshmallowPlugin(),
-                           apispec_oneofschema.MarshmallowPlugin(),
-                       ],
-                       **OPTIONS)
+__version__ = "0.3.2"
+
+
+def make_spec(options: ReDocSpec):
+    return apispec.APISpec(
+        "Checkmk REST-API",
+        __version__,
+        apispec.utils.OpenAPIVersion("3.0.2"),
+        plugins=[
+            marshmallow.MarshmallowPlugin(),
+            plugins.ValueTypedDictMarshmallowPlugin(),
+            apispec_oneofschema.MarshmallowPlugin(),
+        ],
+        **options,
+    )
+
+
+SPEC = make_spec(options=OPTIONS)
 SPEC.components.security_scheme(
     'BearerAuth',
     {
@@ -150,19 +196,22 @@ SPEC.components.security_scheme(
 #     'Warning',
 #     'Content-Type',
 # }
-SPEC.components.parameter(*ACCEPT_HEADER.spec_tuple())
-SPEC.components.parameter(*IDENT.spec_tuple())
-SPEC.components.parameter(*HOST_NAME.spec_tuple())
-SPEC.components.parameter(*NAME.spec_tuple())
-SPEC.components.parameter(*SERVICE_DESCRIPTION.spec_tuple())
+for header_name, field in ACCEPT_HEADER.items():
+    SPEC.components.parameter(
+        header_name,
+        'header',
+        to_openapi([{
+            header_name: field
+        }], 'header')[0],
+    )
 
 ErrorType = Literal['ignore', 'raise']
 
 
 def find_all_parameters(
-    params: Sequence[Union[PrimitiveParameter, ParameterReference]],
+    params: Sequence[OpenAPIParameter],
     errors: ErrorType = 'ignore',
-) -> List[PrimitiveParameter]:
+) -> List[OpenAPIParameter]:
     """Find all parameters, while de-referencing string based parameters.
 
     Parameters can come in dictionary, or string form. If they are a dictionary they are supposed
@@ -190,7 +239,7 @@ def find_all_parameters(
 
     Args:
         params:
-            Either as a dict or ParamDict or as a string. If it is a string it will be replaced
+            Either as a dict or as a string. If it is a string it will be replaced
             by it's globally defined parameter (if found).
 
         errors:

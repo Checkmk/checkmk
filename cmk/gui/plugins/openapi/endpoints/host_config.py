@@ -12,8 +12,6 @@ import itertools
 import json
 import operator
 
-from connexion import problem  # type: ignore[import]
-
 from cmk.gui import watolib
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.folder_config import load_folder
@@ -23,6 +21,8 @@ from cmk.gui.plugins.openapi.restful_objects import (
     request_schemas,
     response_schemas,
 )
+from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
+from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.plugins.webapi import check_hostname
 
 
@@ -32,7 +32,7 @@ from cmk.gui.plugins.webapi import check_hostname
                  etag='output',
                  request_body_required=True,
                  request_schema=request_schemas.CreateHost,
-                 response_schema=response_schemas.ConcreteHost)
+                 response_schema=response_schemas.DomainObject)
 def create_host(params):
     """Create a host"""
     body = params['body']
@@ -56,7 +56,7 @@ def _host_folder(folder_id):
                  'cmk/bulk_create',
                  method='post',
                  request_schema=request_schemas.BulkCreateHost,
-                 response_schema=response_schemas.HostCollection)
+                 response_schema=response_schemas.DomainObjectCollection)
 def bulk_create_hosts(params):
     """Bulk create hosts"""
     # TODO: addition of etag mechanism
@@ -75,9 +75,9 @@ def bulk_create_hosts(params):
 @endpoint_schema(constructors.collection_href('host_config'),
                  '.../collection',
                  method='get',
-                 response_schema=response_schemas.HostCollection)
+                 response_schema=response_schemas.DomainObjectCollection)
 def list_hosts(param):
-    """List all hosts"""
+    """Show all hosts"""
     return _host_collection(watolib.Folder.root_folder().all_hosts_recursively().values())
 
 
@@ -102,11 +102,11 @@ def _host_collection(hosts) -> Response:
 @endpoint_schema(constructors.object_href('host_config', '{host_name}'),
                  '.../update',
                  method='put',
-                 parameters=['host_name'],
+                 path_params=[HOST_NAME],
                  etag='both',
                  request_body_required=True,
                  request_schema=request_schemas.UpdateHost,
-                 response_schema=response_schemas.ConcreteHost)
+                 response_schema=response_schemas.DomainObject)
 def update_host(params):
     """Update a host"""
     host_name = params['host_name']
@@ -131,7 +131,7 @@ def update_host(params):
                  'cmk/bulk_update',
                  method='put',
                  request_schema=request_schemas.BulkUpdateHost,
-                 response_schema=response_schemas.HostCollection)
+                 response_schema=response_schemas.DomainObjectCollection)
 def bulk_update_hosts(params):
     """Bulk update hosts"""
     body = params['body']
@@ -158,7 +158,7 @@ def bulk_update_hosts(params):
 @endpoint_schema(constructors.object_href('host_config', '{host_name}'),
                  '.../delete',
                  method='delete',
-                 parameters=['host_name'],
+                 path_params=[HOST_NAME],
                  etag='input',
                  request_body_required=False,
                  output_empty=True)
@@ -179,7 +179,7 @@ def delete(params):
                  request_schema=request_schemas.BulkDeleteHost,
                  output_empty=True)
 def bulk_delete(params):
-    """Bulk delete hosts based upon host names"""
+    """Bulk delete hosts"""
     # TODO: require etag checking (409 Response)
     for host_name in params['entries']:
         host = watolib.Host.host(host_name)
@@ -190,9 +190,9 @@ def bulk_delete(params):
 @endpoint_schema(constructors.object_href('host_config', '{host_name}'),
                  'cmk/show',
                  method='get',
-                 parameters=['host_name'],
+                 path_params=[HOST_NAME],
                  etag='output',
-                 response_schema=response_schemas.ConcreteHost)
+                 response_schema=response_schemas.DomainObject)
 def show_host(params):
     """Show a host"""
     host_name = params['host_name']

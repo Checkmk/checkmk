@@ -42,10 +42,7 @@ SNMPSections = Dict[_SectionName, SNMPSectionContent]
 SNMPPersistedSection = Tuple[int, int, SNMPSectionContent]
 SNMPPersistedSections = Dict[_SectionName, SNMPPersistedSection]
 SNMPRawData = SNMPSections
-SNMPColumn = Union[str, int, Tuple[SNMPValueEncoding, str]]
-SNMPColumns = List[SNMPColumn]
 OID = str
-OIDWithColumns = Tuple[OID, SNMPColumns]
 OIDFunction = Callable[[OID, Optional[SNMPDecodedString], Optional[_CheckPluginName]],
                        Optional[SNMPDecodedString]]
 SNMPScanFunction = Callable[[OIDFunction], bool]

@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from typing import Callable, cast, List, Optional, Set, Tuple
+from typing import Callable, List, Optional, Set, Tuple, Union
 
 from six import ensure_binary
 
@@ -26,8 +26,6 @@ from .type_defs import (
     OIDBytes,
     OIDCached,
     OIDSpec,
-    OIDWithColumns,
-    SNMPColumn,
     SNMPDecodedValues,
     SNMPHostConfig,
     SNMPRawValue,
@@ -64,8 +62,6 @@ SPECIAL_COLUMNS = [
 # TODO: OID_END_OCTET_STRING is not used at all. Drop it.
 def _get_snmp_table(section_name: Optional[SectionName], tree: SNMPTree, use_snmpwalk_cache: bool,
                     *, backend: ABCSNMPBackend) -> SNMPTable:
-    # TODO (mo) clean this up further!
-    _oid, targetcolumns = cast(OIDWithColumns, (str(tree.base), tree.oids))
 
     index_column = -1
     index_format = None
@@ -74,7 +70,7 @@ def _get_snmp_table(section_name: Optional[SectionName], tree: SNMPTree, use_snm
     max_len = 0
     max_len_col = -1
 
-    for column in targetcolumns:
+    for column in tree.oids:
         fetchoid: OID = "%s.%s" % (tree.base, column)
         value_encoding = _value_encoding(column)
         # column may be integer or string like "1.5.4.2.3"
@@ -98,8 +94,8 @@ def _get_snmp_table(section_name: Optional[SectionName], tree: SNMPTree, use_snm
                 section_name,
                 tree.base,
                 fetchoid,
-                column,
                 use_snmpwalk_cache,
+                save_to_cache=isinstance(column, OIDCached),
                 backend=backend,
             )
             if len(rowinfo) > max_len:
@@ -119,12 +115,15 @@ def _get_snmp_table(section_name: Optional[SectionName], tree: SNMPTree, use_snm
     return _make_table(columns, backend.config)
 
 
-def _value_encoding(column: SNMPColumn) -> SNMPValueEncoding:
+def _value_encoding(column: Union[OIDSpec, int]) -> SNMPValueEncoding:
     return "binary" if isinstance(column, OIDBytes) else "string"
 
 
-def _make_index_rows(max_column: SNMPRowInfo, index_format: Optional[SNMPColumn],
-                     fetchoid: OID) -> SNMPRowInfo:
+def _make_index_rows(
+    max_column: SNMPRowInfo,
+    index_format: Optional[Union[OIDSpec, int]],
+    fetchoid: OID,
+) -> SNMPRowInfo:
     index_rows = []
     for o, _unused_value in max_column:
         if index_format == OID_END:
@@ -189,12 +188,11 @@ def _get_snmpwalk(
     section_name: Optional[SectionName],
     base: OIDSpec,
     fetchoid: OID,
-    column: SNMPColumn,
     use_snmpwalk_cache: bool,
     *,
+    save_to_cache: bool,
     backend: ABCSNMPBackend,
 ) -> SNMPRowInfo:
-    save_to_cache = isinstance(column, OIDCached)
     get_from_cache = save_to_cache and use_snmpwalk_cache
     cached = _get_cached_snmpwalk(backend.hostname, fetchoid) if get_from_cache else None
     if cached is not None:

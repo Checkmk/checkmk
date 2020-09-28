@@ -301,19 +301,10 @@ div.floatfilter {
   }
 }
 
-/* Improving styling of floatfilters that are contained in a ListOf() */
-table.valuespec_listof.filter {
-  *.filter {
-    width: 300px;
-    border-spacing: 0;
-  }
-
-  td {
-    &.vlof_content {
-      position: relative;
-      width: 1px;
-      border-style: none;
-    }
+/* Specific styling for side popup floatfilters that are contained in a ListOf() */
+div.side_popup_content table.valuespec_listof.filter {
+  td.vlof_buttons {
+    width: 0;
 
     a.delete_button img {
       position: absolute;
@@ -324,6 +315,13 @@ table.valuespec_listof.filter {
       height: 16px;
     }
   }
+
+  td.vlof_content {
+    position: relative;
+    left: -4px;
+  }
+
+  > tbody > tr { position: relative; }
 }
 
 select.vlof_filter {
@@ -356,10 +354,18 @@ table.nform table.valuespec_listof {
   }
 
   .vlof_buttons {
-    width: 1px;
-    padding-top: 14px;
-    padding-bottom: 26px;
+    min-width: 44px;
+    width: 44px;
+    padding-right: 8px;
     vertical-align: middle;
+    text-align: center;
+
+    img {
+      width: 16px;
+      height: 16px;
+    }
+
+    a:not(:last-child) { margin-right: 4px; }
   }
 }
 

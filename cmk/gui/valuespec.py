@@ -1968,7 +1968,7 @@ class ListOf(ValueSpec):
 
     def _del_button(self, vp: str, nr: str) -> None:
         js = "cmk.valuespecs.listof_delete(%s, %s)" % (json.dumps(vp), json.dumps(nr))
-        html.icon_button("#", self._del_label, "delete", onclick=js)
+        html.icon_button("#", self._del_label, "close", onclick=js)
 
     def canonical_value(self) -> List[Any]:
         return []
@@ -2138,14 +2138,19 @@ class ListOfMultiple(ValueSpec):
     def show_choice_row(self, varprefix: str, ident: str, value: Dict[str, Any]) -> None:
         prefix = varprefix + '_' + ident
         html.open_tr(id_="%s_row" % prefix)
+        self._show_del_button(varprefix, ident)
         self._show_content(varprefix, ident, value)
         html.close_tr()
 
     def _show_content(self, varprefix: str, ident: str, value: Dict[str, Any]) -> None:
         prefix = varprefix + '_' + ident
         html.open_td(class_=["vlof_content"])
-        self.del_button(varprefix, ident)
         self._choice_dict[ident].render_input(prefix, value.get(ident))
+        html.close_td()
+
+    def _show_del_button(self, varprefix: str, ident: str) -> None:
+        html.open_td(class_=["vlof_buttons"])
+        self.del_button(varprefix, ident)
         html.close_td()
 
     def canonical_value(self) -> Dict[str, Any]:

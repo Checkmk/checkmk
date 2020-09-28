@@ -172,6 +172,10 @@ def _create_snmp_parse_function(
 
     Additionally we undo the change of the data layout induced by the new
     spec for SNMPTrees.
+
+    The old API would stop processing if the parse function returned something falsey,
+    while the new API will consider *everything but* None a valid parse result,
+    so we add `or None` to the returned expression.
     """
 
     # do not use functools.wraps, the point is the new argument name!
@@ -180,9 +184,9 @@ def _create_snmp_parse_function(
         relayouted_string_table = recover_layout_function(string_table)
 
         if original_parse_function is None:
-            return relayouted_string_table
+            return relayouted_string_table or None
 
-        return original_parse_function(relayouted_string_table)
+        return original_parse_function(relayouted_string_table) or None
 
     if original_parse_function is not None:
         parse_function.__name__ = original_parse_function.__name__

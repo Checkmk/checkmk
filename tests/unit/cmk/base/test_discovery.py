@@ -16,6 +16,7 @@ from cmk.utils.type_defs import CheckPluginName, SectionName, SourceType
 from cmk.utils.labels import DiscoveredHostLabelsStore
 
 from cmk.base.checkers.agent import AgentHostSections
+from cmk.base.checkers.snmp import SNMPHostSections
 from cmk.base.checkers.host_sections import HostKey, MultiHostSections
 from cmk.base.discovered_labels import ServiceLabel, DiscoveredServiceLabels
 
@@ -781,18 +782,21 @@ def test__get_service_filters_lists(parameters, new_whitelist, new_blacklist, va
 @pytest.mark.usefixtures("config_load_all_checks")
 def test__find_candidates():
     mhs = MultiHostSections()
+
     mhs._data = {
-        # we just care about the keys here, content set to [] for simplicity
+        # we just care about the keys here, content set to arbitrary values that can be parsed.
         # section names have been are chosen arbitrarily.
-        # any HostSections type is fine.
         HostKey("test_node", "1.2.3.4", SourceType.HOST): AgentHostSections({
             SectionName("kernel"): [],  # host only
             SectionName("uptime"): [['123']],  # host & mgmt
         }),
-        HostKey("test_node", "1.2.3.4", SourceType.MANAGEMENT): AgentHostSections({
-            SectionName("uptime"): [['123']],  # host & mgmt
-            SectionName("liebert_fans"): [[]],  # mgmt only
-            SectionName("mgmt_snmp_info"): [[]],  # is already mgmt_ prefixed
+        HostKey("test_node", "1.2.3.4", SourceType.MANAGEMENT): SNMPHostSections({
+            # host & mgmt:
+            SectionName("uptime"): [['123']],  # type: ignore[dict-item]
+            # mgmt only:
+            SectionName("liebert_fans"): [[['Fan', '67', 'umin']]],  # type: ignore[dict-item]
+            # is already mgmt_ prefixed:
+            SectionName("mgmt_snmp_info"): [[['a', 'b', 'c', 'd']]],  # type: ignore[dict-item]
         }),
     }
 

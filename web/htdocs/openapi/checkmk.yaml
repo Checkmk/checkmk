@@ -6337,6 +6337,7 @@ paths:
         '204':
           description: Operation done successfully. No further output.
           headers: {}
+      summary: Update the state of a service
       tags:
       - cmk.gui.plugins.openapi.endpoints.service_discovery
       x-codeSamples:
@@ -6397,6 +6398,7 @@ paths:
         '204':
           description: Operation done successfully. No further output.
           headers: {}
+      summary: Execute a service discovery of a host
       tags:
       - cmk.gui.plugins.openapi.endpoints.service_discovery
       x-codeSamples:
@@ -7321,7 +7323,7 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/agent/actions/sign\"\
-          ,\n    json={'key_id': 42, 'passphrase': 'sw0rdfish'},\n)\nresp.raise_for_status()\n\
+          ,\n    json={'passphrase': 'sw0rdfish', 'key_id': 42},\n)\nresp.raise_for_status()\n\
           data = resp.json()"
       - label: urllib
         lang: python
@@ -7330,8 +7332,8 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
           \    f\"{API_URL}/domain-types/agent/actions/sign\",\n    method=\"POST\"\
           ,\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
-          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({'key_id':\
-          \ 42, 'passphrase': 'sw0rdfish'}).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({'passphrase':\
+          \ 'sw0rdfish', 'key_id': 42}).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
           data = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -7490,7 +7492,7 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/agent/actions/bake_and_sign\"\
-          ,\n    json={'key_id': 42, 'passphrase': 'sw0rdfish'},\n)\nresp.raise_for_status()\n\
+          ,\n    json={'passphrase': 'sw0rdfish', 'key_id': 42},\n)\nresp.raise_for_status()\n\
           data = resp.json()"
       - label: urllib
         lang: python
@@ -7500,7 +7502,7 @@ paths:
           \    f\"{API_URL}/domain-types/agent/actions/bake_and_sign\",\n    method=\"\
           POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
           \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
-          \ data=json.dumps({'key_id': 42, 'passphrase': 'sw0rdfish'}).encode('utf-8'),\n\
+          \ data=json.dumps({'passphrase': 'sw0rdfish', 'key_id': 42}).encode('utf-8'),\n\
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -7841,7 +7843,7 @@ tags:
 - name: cmk.gui.plugins.openapi.endpoints.service
   x-displayName: Service status endpoints
 - name: cmk.gui.plugins.openapi.endpoints.service_discovery
-  x-displayName: Service discovery endpoints.
+  x-displayName: Service discovery
 - name: cmk.gui.plugins.openapi.endpoints.service_group_config
   x-displayName: Service-groups
 - description: <SchemaDefinition schemaRef="#/components/schemas/InputServiceGroup"

@@ -3,7 +3,7 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Service discovery endpoints."""
+"""Service discovery"""
 import json
 
 from cmk.gui import watolib
@@ -113,6 +113,7 @@ def show_services(params):
                  output_empty=True,
                  parameters=["host_name", DISCOVERY_SERVICE_HASH, DISCOVERY_TARGET_STATE])
 def move_service(params):
+    """Update the state of a service"""
     host = watolib.Host.host(params["host_name"])
     discovery_request = {
         "update_target": params["target_state"],
@@ -138,6 +139,7 @@ def move_service(params):
                  output_empty=True,
                  parameters=["host_name", DISCOVERY_MODE])
 def execute(params):
+    """Execute a service discovery of a host"""
     host = watolib.Host.host(params["host_name"])
     discovery_request = StartDiscoveryRequest(host=host,
                                               folder=host.folder(),

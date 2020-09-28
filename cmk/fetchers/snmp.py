@@ -160,5 +160,8 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
             fetched_section_data: List[SNMPTable] = []
             for entry in oid_info:
                 fetched_section_data.append(get_snmp(section_name, entry))
-            fetched_data[section_name] = fetched_section_data
+
+            if any(fetched_section_data):
+                fetched_data[section_name] = fetched_section_data
+
         return fetched_data

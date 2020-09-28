@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from abc import ABC, abstractmethod
 import json
 import os
 import socket
@@ -16,9 +17,10 @@ import pytest  # type: ignore[import]
 import cmk.utils.store as store
 from cmk.utils.type_defs import AgentRawData, OKResult, SectionName
 
+from cmk.snmplib import snmp_table
 from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPHostConfig, SNMPRawData, SNMPTable, SNMPTree
 
-from cmk.fetchers import FetcherType, MKFetcherError
+from cmk.fetchers import FetcherType, MKFetcherError, snmp
 from cmk.fetchers.agent import DefaultAgentFileCache, NoCache
 from cmk.fetchers.ipmi import IpmiException, IPMIFetcher
 from cmk.fetchers.piggyback import PiggybackFetcher
@@ -229,16 +231,11 @@ class TestProgramFetcher:
         assert other.is_cmc == fetcher.is_cmc
 
 
-class TestSNMPFetcher:
+class ABCTestSNMPFetcher(ABC):
+    @abstractmethod
     @pytest.fixture
     def file_cache(self):
-        return SNMPFileCache(
-            path=Path(os.devnull),
-            max_age=0,
-            disabled=True,
-            use_outdated=True,
-            simulation=True,
-        )
+        raise NotImplementedError()
 
     @pytest.fixture(name="fetcher")
     def fetcher_fixture(self, file_cache):
@@ -279,6 +276,18 @@ class TestSNMPFetcher:
             ),
         )
 
+
+class TestSNMPFetcherDeserialization(ABCTestSNMPFetcher):
+    @pytest.fixture
+    def file_cache(self):
+        return SNMPFileCache(
+            path=Path(os.devnull),
+            max_age=0,
+            disabled=True,
+            use_outdated=True,
+            simulation=True,
+        )
+
     def test_file_cache_deserialization(self, file_cache):
         assert file_cache == type(file_cache).from_json(json_identity(file_cache.to_json()))
 
@@ -298,6 +307,54 @@ class TestSNMPFetcher:
                                                                         "abc"))
         other = type(fetcher).from_json(json_identity(fetcher.to_json()))
         assert other.snmp_config.credentials == fetcher.snmp_config.credentials
+
+
+class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
+    @pytest.fixture
+    def file_cache(self):
+        return SNMPFileCache(
+            path=Path(os.devnull),
+            max_age=0,
+            disabled=True,
+            use_outdated=True,
+            simulation=False,
+        )
+
+    def test_fetch_from_io_non_empty(self, monkeypatch, fetcher):
+        table = [['1']]
+        monkeypatch.setattr(
+            snmp_table,
+            "get_snmp_table",
+            lambda *_, **__: table,
+        )
+        section_name = SectionName('pim')
+        fetcher.configured_snmp_sections = {section_name}
+        assert fetcher.fetch(Mode.INVENTORY) == OKResult({section_name: [table]})
+
+    def test_fetch_from_io_partially_empty(self, monkeypatch, fetcher):
+        section_name = SectionName('pum')
+        table = [['1']]
+        monkeypatch.setattr(
+            snmp_table,
+            "get_snmp_table",
+            lambda _, oid_info, **__: table
+            if oid_info.base == fetcher.snmp_section_trees[section_name][0].base else [],
+        )
+        fetcher.configured_snmp_sections = {section_name}
+        assert fetcher.fetch(Mode.CHECKING) == OKResult({section_name: [table, []]})
+
+    def test_fetch_from_io_empty(self, monkeypatch, fetcher):
+        monkeypatch.setattr(
+            snmp_table,
+            "get_snmp_table",
+            lambda *_, **__: [],
+        )
+        monkeypatch.setattr(
+            snmp,
+            "gather_available_raw_section_names",
+            lambda *_, **__: {SectionName('pam')},
+        )
+        assert fetcher.fetch(Mode.DISCOVERY) == OKResult({})
 
 
 class TestTCPFetcher:

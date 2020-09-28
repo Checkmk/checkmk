@@ -350,8 +350,11 @@ class ABCSource(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
 
     @final
     def fetch(self) -> Result[TRawData, Exception]:
-        with self._make_fetcher() as fetcher:
-            return fetcher.fetch(self.mode)
+        try:
+            with self._make_fetcher() as fetcher:
+                return fetcher.fetch(self.mode)
+        except Exception as exc:
+            return ErrorResult(exc)
 
     @final
     @cpu_tracking.track

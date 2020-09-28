@@ -162,6 +162,7 @@ def _test_limits(wafv2_sections):
     wafv2_limits_results = wafv2_limits.run().results
 
     assert wafv2_limits.cache_interval == 300
+    assert wafv2_limits.period == 600
     assert wafv2_limits.name == "wafv2_limits"
 
     for result in wafv2_limits_results:
@@ -182,6 +183,7 @@ def _test_summary(wafv2_summary, found_instances):
     wafv2_summary_results = wafv2_summary.run().results
 
     assert wafv2_summary.cache_interval == 300
+    assert wafv2_summary.period == 600
     assert wafv2_summary.name == "wafv2_summary"
 
     if found_instances:
@@ -214,6 +216,7 @@ def _test_web_acl(wafv2_sections, found_instances):
     wafv2_web_acl_results = wafv2_web_acl.run().results
 
     assert wafv2_web_acl.cache_interval == 300
+    assert wafv2_web_acl.period == 600
     assert wafv2_web_acl.name == "wafv2_web_acl"
     assert len(wafv2_web_acl_results) == len(found_instances)
 

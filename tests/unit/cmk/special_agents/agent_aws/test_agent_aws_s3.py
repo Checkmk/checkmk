@@ -8,6 +8,7 @@
 
 import pytest  # type: ignore[import]
 
+from datetime import datetime as dt
 from agent_aws_fake_clients import (
     FakeCloudwatchClient,
     S3ListBucketsIB,
@@ -22,6 +23,9 @@ from cmk.special_agents.agent_aws import (
     S3,
     S3Requests,
 )
+
+# Needed to monkeypatch agent_aws.NOW
+from cmk.special_agents import agent_aws
 
 
 class FakeS3Client:
@@ -54,8 +58,12 @@ class FakeS3Client:
 
 
 @pytest.fixture()
-def get_s3_sections():
+def get_s3_sections(monkeypatch):
     def _create_s3_sections(names, tags):
+        # on_time is somehow not feeded from here to S3Limits, so use monkey patch...
+        monkeypatch.setattr(agent_aws, "NOW",
+                            dt.strptime('2020-09-28 15:30 UTC', '%Y-%m-%d %H:%M %Z'))
+
         region = 'region'
         config = AWSConfig('hostname', [], (None, None))
         config.add_single_service_config('s3_names', names)
@@ -201,6 +209,7 @@ def test_agent_aws_s3_requests(get_s3_sections, names, tags, amount_buckets):
     s3_requests_results = s3_requests.run().results
 
     assert s3_requests.cache_interval == 300
+    assert s3_requests.period == 600
     assert s3_requests.name == "s3_requests"
 
     if amount_buckets:
@@ -249,12 +258,16 @@ def test_agent_aws_s3_without_limits(get_s3_sections, names, tags, amount_bucket
 
 @pytest.mark.parametrize("names,tags,amount_buckets", s3_params)
 def test_agent_aws_s3_requests_without_limits(get_s3_sections, names, tags, amount_buckets):
-    _s3_limits, s3_summary, _s3, s3_requests = get_s3_sections(names, tags)
+    s3_limits, s3_summary, _s3, s3_requests = get_s3_sections(names, tags)
     _s3_summary_results = s3_summary.run().results
     s3_requests_results = s3_requests.run().results
 
     assert s3_requests.cache_interval == 300
+    assert s3_requests.period == 600
     assert s3_requests.name == "s3_requests"
+
+    assert s3_limits.cache_interval == 55800
+    assert s3_limits.period == 111600
 
     if amount_buckets:
         assert len(s3_requests_results) == 1

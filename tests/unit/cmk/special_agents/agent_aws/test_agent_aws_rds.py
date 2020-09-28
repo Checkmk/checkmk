@@ -143,6 +143,7 @@ def test_agent_aws_rds_limits(get_rds_sections, names, tags, found_instances):
     rds_limits_results = rds_limits.run().results
 
     assert rds_limits.cache_interval == 300
+    assert rds_limits.period == 600
     assert rds_limits.name == "rds_limits"
 
     assert len(rds_limits_results) == 1
@@ -158,6 +159,7 @@ def test_agent_aws_rds_summary(get_rds_sections, names, tags, found_instances):
     rds_summary_results = rds_summary.run().results
 
     assert rds_summary.cache_interval == 300
+    assert rds_summary.period == 600
     assert rds_summary.name == "rds_summary"
 
     if found_instances:
@@ -176,6 +178,7 @@ def test_agent_aws_rds(get_rds_sections, names, tags, found_instances):
     rds_results = rds.run().results
 
     assert rds.cache_interval == 300
+    assert rds.period == 600
     assert rds.name == "rds"
 
     if found_instances:

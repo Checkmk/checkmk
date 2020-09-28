@@ -408,7 +408,61 @@ class AWSSection(DataCache):
 
     @property
     def period(self):
-        return 2 * self.cache_interval
+        return self.validate_period(2 * self.cache_interval)
+
+    def _floor_to_minutes_since_midnight(self) -> int:
+        return self._floor_to_multiple_minutes(get_seconds_since_midnight(NOW))
+
+    @staticmethod
+    def _floor_to_multiple_minutes(seconds: Union[int, float]) -> int:
+        """
+        >>> AWSSection._floor_to_multiple_minutes(40)
+        0
+        >>> AWSSection._floor_to_multiple_minutes(110)
+        60
+        >>> AWSSection._floor_to_multiple_minutes(143)
+        120
+        >>> AWSSection._floor_to_multiple_minutes(143.6)
+        120
+        """
+        # AWS expects "period" to be an integer and a multiple of 60 for metrics with regular resolution
+        return int(seconds // 60) * 60
+
+    @staticmethod
+    def validate_period(period: int, resolution_type: str = "low") -> int:
+        """
+        What this is all about:
+        https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_MetricStat.html
+        >>> import pytest
+        >>> with pytest.raises(AssertionError):
+        ...     [AWSSection.validate_period(p, r) for p, r in [(34, "low"), (45, "high"), (120.0, "low")]]
+        >>> AWSSection.validate_period(1234, resolution_type="foo bar")
+        Traceback (most recent call last):
+            ...
+        ValueError: Unknown resolution type: 'foo bar'
+        >>> AWSSection.validate_period(120)
+        120
+        >>> AWSSection.validate_period(30, "high")
+        30
+        >>> AWSSection.validate_period(180, "high")
+        180
+        """
+        if not isinstance(period, int):
+            raise AssertionError(f"Period must be an integer, got {type(period)}.")
+
+        allowed_multiples = 60
+        additional_allowed = []
+
+        if resolution_type == "high":
+            additional_allowed.extend([1, 5, 10, 30, 60])
+        elif resolution_type != "low":
+            raise ValueError("Unknown resolution type: '%s'" % resolution_type)
+
+        if not (not period % allowed_multiples or period in additional_allowed):
+            raise AssertionError(
+                f"Period must be a multiple of {allowed_multiples} or equal to 1, 5, "
+                f"10, 30, 60 in case of high resolution.")
+        return period
 
     def _send(self, content):
         self._distributor.distribute(self, content)
@@ -681,7 +735,7 @@ class CostsAndUsage(AWSSectionGeneric):
 
         Data is updated at midnight, so the cache should not be older than the day.
         """
-        cache_interval = get_seconds_since_midnight(NOW)
+        cache_interval = self._floor_to_minutes_since_midnight()
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
@@ -1587,7 +1641,7 @@ class S3Limits(AWSSectionLimits):
 
         Data is updated at midnight, so the cache should not be older than the day.
         """
-        cache_interval = get_seconds_since_midnight(NOW)
+        cache_interval = self._floor_to_minutes_since_midnight()
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
 
         return cache_interval
@@ -1626,7 +1680,7 @@ class S3Summary(AWSSectionGeneric):
 
         Data is updated at midnight, so the cache should not be older than the day.
         """
-        cache_interval = get_seconds_since_midnight(NOW)
+        cache_interval = self._floor_to_minutes_since_midnight()
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
@@ -1706,7 +1760,7 @@ class S3(AWSSectionCloudwatch):
 
         Data is updated at midnight, so the cache should not be older than the day.
         """
-        cache_interval = get_seconds_since_midnight(NOW)
+        cache_interval = self._floor_to_minutes_since_midnight()
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
@@ -1855,7 +1909,7 @@ class GlacierLimits(AWSSectionLimits):
 
         Data is updated at midnight, so the cache should not be older than the day.
         """
-        cache_interval = get_seconds_since_midnight(NOW)
+        cache_interval = self._floor_to_minutes_since_midnight()
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
@@ -1897,7 +1951,7 @@ class GlacierSummary(AWSSectionGeneric):
 
         Data is updated at midnight, so the cache should not be older than the day.
         """
-        cache_interval = get_seconds_since_midnight(NOW)
+        cache_interval = self._floor_to_minutes_since_midnight()
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
@@ -1982,7 +2036,7 @@ class Glacier(AWSSectionGeneric):
 
         Data is updated at midnight, so the cache should not be older than the day.
         """
-        cache_interval = get_seconds_since_midnight(NOW)
+        cache_interval = self._floor_to_minutes_since_midnight()
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 

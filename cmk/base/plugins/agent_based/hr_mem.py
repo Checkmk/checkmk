@@ -40,7 +40,10 @@ def pre_parse_hr_mem(string_table: SNMPStringTable) -> PreParsed:
         units = to_bytes(hrunits)
         size = int(hrsize) * units
         used = int(hrused) * units
-        parsed.setdefault(map_types[hrtype], []).append((hrdescr.lower(), size, used))
+        map_type = map_types.get(hrtype)
+        # string table may contain other hr_types, e.g. .1.3.6.1.2.1.25.3.9.3
+        if map_type:
+            parsed.setdefault(map_type, []).append((hrdescr.lower(), size, used))
 
     return parsed
 

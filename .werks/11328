@@ -1,0 +1,13 @@
+Title: hr_mem: avoid crash when evaluating irrelevant OIDs
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1601276767
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+The hr_mem plugin used to crash when trying to evaluate OIDs that are not
+relevant for the check. This has been fixed so that these OIDs are ignored and
+the check continues to run normally.

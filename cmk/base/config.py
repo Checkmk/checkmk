@@ -294,6 +294,10 @@ def _perform_post_config_loading_actions() -> None:
     # First cleanup things (needed for e.g. reloading the config)
     _config_cache.clear_all()
 
+    global_dict = globals()
+    _collect_discovery_parameter_rulesets_from_globals(global_dict)
+    _transform_plugin_names_from_160_to_170(global_dict)
+
     get_config_cache().initialize()
 
     # In case the checks are not loaded yet it seems the current mode
@@ -420,9 +424,6 @@ def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> None:
     # Cleanup global helper vars
     for helper_var in helper_vars:
         del global_dict[helper_var]
-
-    _collect_discovery_parameter_rulesets_from_globals(global_dict)
-    _transform_plugin_names_from_160_to_170(global_dict)
 
     # Revert specialised SetFolderPath classes back to normal, because it improves
     # the lookup performance and the helper_vars are no longer available anyway..

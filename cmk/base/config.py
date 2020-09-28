@@ -693,6 +693,20 @@ class PackedConfigGenerator:
             helper_config += "\n%s = %r\n" % (varname, val)
 
         #
+        # Add discovery rules
+        #
+
+        for ruleset_name in agent_based_register.iter_all_discovery_rulesets():
+            value = agent_based_register.get_discovery_ruleset(ruleset_name)
+            if not value:
+                continue
+
+            if not self._packable(str(ruleset_name), value):
+                continue
+
+            helper_config += "\n%s = %r\n" % (ruleset_name, value)
+
+        #
         # Add modified check specific Checkmk base settings
         #
 

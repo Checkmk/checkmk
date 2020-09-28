@@ -2561,9 +2561,11 @@ def HostState(**kwargs):
     ], **kwargs)
 
 
-CascadingDropdownChoiceElementValue = Union[None, str, bool, int]
-CascadingDropdownChoiceValue = Union[CascadingDropdownChoiceElementValue,
-                                     _Tuple[CascadingDropdownChoiceElementValue, Any]]
+CascadingDropdownChoiceIdent = Union[None, str, bool, int]
+CascadingDropdownChoiceValue = Union[CascadingDropdownChoiceIdent,
+                                     _Tuple[CascadingDropdownChoiceIdent, Any]]
+# These should use CascadingDropdownChoiceIdent, yet because of Werk 4477,
+# that casts default values into the choices we use CascadingDropdownChoiceValue
 CascadingDropdownCleanChoice = _Tuple[CascadingDropdownChoiceValue, str, _Optional[ValueSpec]]
 CascadingDropdownShortChoice = _Tuple[CascadingDropdownChoiceValue, str]
 CascadingDropdownChoice = Union[CascadingDropdownShortChoice, CascadingDropdownCleanChoice]
@@ -2785,8 +2787,7 @@ class CascadingDropdown(ValueSpec):
         html.help(vs.help())
         vs.render_input(varprefix, value)
 
-    def _show_sub_valuespec_container(self, varprefix: str,
-                                      choice_id: CascadingDropdownChoiceElementValue,
+    def _show_sub_valuespec_container(self, varprefix: str, choice_id: CascadingDropdownChoiceIdent,
                                       value: Any) -> None:
         html.span("", id_="%s_sub" % varprefix)
 
@@ -2805,24 +2806,16 @@ class CascadingDropdown(ValueSpec):
                          })))
 
     def value_to_text(self, value: CascadingDropdownChoiceValue) -> str:
-        # We need a name - it's the first element in a tuple or the whole (str-)value
-        value_name = value[0] if isinstance(value, tuple) else value
+        value_ident: CascadingDropdownChoiceIdent = value[0] if isinstance(value, tuple) else value
 
-        # choices are organized like a dict - pick the one we need
-        # the first elements of choices can be `str` or `(str, str)` so eighter
-        # @value_name or @value might match
         try:
-            val, title, vs = next(elem for elem in self.choices() if elem[0] in {value_name, value})
+            ident, title, vs = next(elem for elem in self.choices() if elem[0] == value_ident)
         except StopIteration:
             return "Could not render: %r" % (value,)
 
-        if vs is None and val == value:
+        if vs is None and ident == value:
             return title
 
-        # This assertion seems to be valid in all encountered cases but in case
-        # elem ∈ (str, str, ValueSpec) and
-        # value ∈ str
-        # this will fail - expect the bug happening here
         assert isinstance(value, tuple), "value is %r (not a tuple) and vs not None" % (value,)
 
         rendered_value = vs and vs.value_to_text(value[1])
@@ -3915,7 +3908,8 @@ class Timerange(CascadingDropdown):
         if self._allow_empty:
             choices += [(None, '', None)]
 
-        choices += self._get_graph_timeranges() + [
+        choices.extend(self._get_graph_timeranges())
+        choices.extend([
             ("d0", _("Today")),
             ("d1", _("Yesterday")),
             ("d7", _("7 days back (this day last week)")),
@@ -3935,7 +3929,7 @@ class Timerange(CascadingDropdown):
                        AbsoluteDate(title=_("From:")),
                        AbsoluteDate(title=_("To:")),
                    ])),
-        ]
+        ])
 
         if self._include_time:
             choices += [("time", _("Date & time range"),
@@ -3953,19 +3947,34 @@ class Timerange(CascadingDropdown):
                                ]))]
         return choices
 
-    def _get_graph_timeranges(self):
+    def _get_graph_timeranges(self) -> List[CascadingDropdownCleanChoice]:
         try:
-            return [(('age', timerange_attrs["duration"]), timerange_attrs['title'])
-                    for timerange_attrs in config.graph_timeranges]
+            # Werk 4477, the only reason why CascadingDropdownChoice uses value instead of ident
+            # is because a default is casted into the choice, misusing the valuespec.
+            # TODO: this list elements should be (duration: int, title: str, None)
+            # and let the function compute_range understand the mapping
+            # from ident to value, as a default instead of a configured
+            # value on the valuespec
+            return _normalize_choices([(('age', timerange_attrs["duration"]),
+                                        timerange_attrs['title'])
+                                       for timerange_attrs in config.graph_timeranges])
 
         except AttributeError:  # only available in cee
-            return [
+            return _normalize_choices([
                 ("4h", _("The last 4 hours")),
                 ("25h", _("The last 25 hours")),
                 ("8d", _("The last 8 days")),
                 ("35d", _("The last 35 days")),
                 ("400d", _("The last 400 days")),
-            ]
+            ])
+
+    def value_to_text(self, value: CascadingDropdownChoiceValue):
+        # Cleanup on Werk 4477, treat casted defaults earlier
+        for choice, title, _vs in self._get_graph_timeranges():
+            if value == choice:
+                return title
+
+        return super().value_to_text(value)
 
     def compute_range(self, rangespec):
         def _date_span(from_time, until_time):

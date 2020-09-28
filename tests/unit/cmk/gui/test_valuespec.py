@@ -128,15 +128,18 @@ def test_dropdownchoice_value_to_json_conversion(choices, value, result):
 
 def test_timerange_value_to_json_conversion():
     with on_time("2020-03-02", "UTC"):
-        for choice in vs.Timerange().choices():
-            if choice[0] == "age":
-                choice = (("age", 12345), "The last..., 3 hours 25 minutes 45 seconds", None)
-            elif choice[0] == "date":
-                choice = (("date", (1582671600.0, 1582844400.0)),
-                          "Date range, 2020-02-25, 2020-02-27", None)
-            assert vs.Timerange().value_to_text(choice[0]) == choice[1]
-            json_value = vs.Timerange().value_to_json(choice[0])
-            assert vs.Timerange().value_from_json(json_value) == choice[0]
+        for ident, title, _vs in vs.Timerange().choices():
+            choice_value: vs.CascadingDropdownChoiceValue = ident
+            if ident == "age":
+                choice_value = ("age", 12345)
+                title = "The last..., 3 hours 25 minutes 45 seconds"
+            elif ident == "date":
+                choice_value = ("date", (1582671600.0, 1582844400.0))
+                title = "Date range, 2020-02-25, 2020-02-27"
+
+            assert vs.Timerange().value_to_text(choice_value) == title
+            json_value = vs.Timerange().value_to_json(choice_value)
+            assert vs.Timerange().value_from_json(json_value) == choice_value
 
 
 @pytest.mark.parametrize("value, result", [

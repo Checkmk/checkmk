@@ -473,29 +473,6 @@ def _do_discovery_for(
     section.section_success(", ".join(messages))
 
 
-def _perform_host_label_discovery(
-    hostname: HostName,
-    discovered_host_labels: DiscoveredHostLabels,
-    only_new: bool,
-) -> Tuple[DiscoveredHostLabels, Counter[CheckPluginName]]:
-
-    # Take over old items if -I is selected
-    if only_new:
-        return_host_labels = DiscoveredHostLabels.from_dict(
-            DiscoveredHostLabelsStore(hostname).load())
-    else:
-        return_host_labels = DiscoveredHostLabels()
-
-    new_host_labels_per_plugin: Counter[CheckPluginName] = Counter()
-    for discovered_label in discovered_host_labels.values():
-        if discovered_label.name in return_host_labels:
-            continue
-        return_host_labels.add_label(discovered_label)
-        new_host_labels_per_plugin[discovered_label.plugin_name] += 1
-
-    return return_host_labels, new_host_labels_per_plugin
-
-
 # determine changed services on host.
 # param mode: can be one of "new", "remove", "fixall", "refresh"
 # param servic_filter: if a filter is set, it controls whether items are touched by the discovery.
@@ -1085,16 +1062,39 @@ def _may_rediscover(params: config.DiscoveryCheckParameters, now_ts: float,
 
 
 #.
-#   .--Discovery-----------------------------------------------------------.
-#   |              ____  _                                                 |
-#   |             |  _ \(_)___  ___ _____   _____ _ __ _   _               |
-#   |             | | | | / __|/ __/ _ \ \ / / _ \ '__| | | |              |
-#   |             | |_| | \__ \ (_| (_) \ V /  __/ |  | |_| |              |
-#   |             |____/|_|___/\___\___/ \_/ \___|_|   \__, |              |
-#   |                                                  |___/               |
+#   .--Host labels---------------------------------------------------------.
+#   |           _   _           _     _       _          _                 |
+#   |          | | | | ___  ___| |_  | | __ _| |__   ___| |___             |
+#   |          | |_| |/ _ \/ __| __| | |/ _` | '_ \ / _ \ / __|            |
+#   |          |  _  | (_) \__ \ |_  | | (_| | |_) |  __/ \__ \            |
+#   |          |_| |_|\___/|___/\__| |_|\__,_|_.__/ \___|_|___/            |
+#   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   |  Core code of actual service discovery                               |
+#   |                                                                      |
 #   '----------------------------------------------------------------------'
+
+
+def _perform_host_label_discovery(
+    hostname: HostName,
+    discovered_host_labels: DiscoveredHostLabels,
+    only_new: bool,
+) -> Tuple[DiscoveredHostLabels, Counter[CheckPluginName]]:
+
+    # Take over old items if -I is selected
+    if only_new:
+        return_host_labels = DiscoveredHostLabels.from_dict(
+            DiscoveredHostLabelsStore(hostname).load())
+    else:
+        return_host_labels = DiscoveredHostLabels()
+
+    new_host_labels_per_plugin: Counter[CheckPluginName] = Counter()
+    for discovered_label in discovered_host_labels.values():
+        if discovered_label.name in return_host_labels:
+            continue
+        return_host_labels.add_label(discovered_label)
+        new_host_labels_per_plugin[discovered_label.plugin_name] += 1
+
+    return return_host_labels, new_host_labels_per_plugin
 
 
 def _discover_host_labels(
@@ -1181,6 +1181,19 @@ def _discover_host_labels_for_source_type(
         raise MKGeneralException("Interrupted by Ctrl-C.")
 
     return discovered_host_labels
+
+
+#.
+#   .--Discovery-----------------------------------------------------------.
+#   |              ____  _                                                 |
+#   |             |  _ \(_)___  ___ _____   _____ _ __ _   _               |
+#   |             | | | | / __|/ __/ _ \ \ / / _ \ '__| | | |              |
+#   |             | |_| | \__ \ (_| (_) \ V /  __/ |  | |_| |              |
+#   |             |____/|_|___/\___\___/ \_/ \___|_|   \__, |              |
+#   |                                                  |___/               |
+#   +----------------------------------------------------------------------+
+#   |  Core code of actual service discovery                               |
+#   '----------------------------------------------------------------------'
 
 
 def _find_candidates(

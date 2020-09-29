@@ -351,7 +351,7 @@ def _aggregate_best(
         if node != best_node and details_result is not None:
             yield Result(
                 state=state.OK,
-                details=details_result.details,
+                notice=details_result.details,
             )
 
 

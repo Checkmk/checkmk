@@ -122,11 +122,11 @@ def test_cluster_check_bluecat_all_ok():
         )) == [
             Result(
                 state=state.OK,
-                details='[node1]: DHCP is running normally\n[node1]: 11 leases per second',
+                notice='[node1]: DHCP is running normally\n[node1]: 11 leases per second',
             ),
             Result(
                 state=state.OK,
-                details='[node2]: DHCP is running normally\n[node2]: 11 leases per second',
+                notice='[node2]: DHCP is running normally\n[node2]: 11 leases per second',
             ),
             Result(
                 state=state.OK,

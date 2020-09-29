@@ -72,11 +72,11 @@ def test_cluster_check_bluecat_all_ok():
         )) == [
             Result(
                 state=state.OK,
-                details='[node1]: DNS is running normally',
+                notice='[node1]: DNS is running normally',
             ),
             Result(
                 state=state.OK,
-                details='[node2]: DNS is running normally',
+                notice='[node2]: DNS is running normally',
             ),
             Result(
                 state=state.OK,

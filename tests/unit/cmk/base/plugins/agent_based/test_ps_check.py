@@ -357,7 +357,7 @@ check_results = [
         ),
         Result(
             state=state.OK,
-            details=(
+            notice=(
                 "<table><tr><th>name</th><th>user</th><th>virtual size</th>"
                 "<th>resident size</th><th>creation time</th><th>pid</th><th>cpu usage</th></tr>"
                 "<tr><td>emacs</td><td>on</td><td>1050360kB</td><td>303252kB</td>"
@@ -386,7 +386,7 @@ check_results = [
         Result(state=state.OK, summary="Running for: 7 hours 24 minutes"),
         Result(
             state=state.OK,
-            details=(
+            notice=(
                 "name /usr/lib/firefox/firefox, user on, virtual size 2924232kB,"
                 " resident size 472252kB, creation time Oct 24 2018 04:38:07, pid 7912,"
                 " cpu usage 0.0%\r\n"
@@ -405,7 +405,7 @@ check_results = [
         Result(state=state.OK, summary="Running for: 3 hours 54 minutes"),
         Result(
             state=state.OK,
-            details=(
+            notice=(
                 "name /omd/sites/heute/lib/cmc/checkhelper, user heute, virtual size 11180kB,"
                 " resident size 1144kB, creation time Oct 24 2018 08:08:12, pid 10884,"
                 " cpu usage 0.0%\r\n"
@@ -425,7 +425,7 @@ check_results = [
         Result(state=state.OK, summary="Oldest running for: 3 hours 54 minutes"),
         Result(
             state=state.OK,
-            details=(
+            notice=(
                 "name /omd/sites/heute/lib/cmc/checkhelper, user heute, virtual size 11180kB,"
                 " resident size 1144kB, creation time Oct 24 2018 08:08:12, pid 10884,"
                 " cpu usage 0.0%\r\nname /omd/sites/twelve/lib/cmc/checkhelper, user twelve,"
@@ -446,7 +446,7 @@ check_results = [
         Result(state=state.OK, summary="Running for: 2 hours 37 minutes"),
         Result(
             state=state.OK,
-            details=(
+            notice=(
                 "name /omd/sites/twelve/lib/cmc/checkhelper, user twelve, virtual size 11180kB,"
                 " resident size 1244kB, creation time Oct 24 2018 09:24:43, pid 30136,"
                 " cpu usage 0.0%\r\n"
@@ -486,15 +486,15 @@ check_results = [
         Result(state=state.OK, summary="CPU: 0%"),
         Result(
             state=state.OK,
-            details='svchost.exe with PID 600 CPU: 0%',
+            notice='svchost.exe with PID 600 CPU: 0%',
         ),
         Result(
             state=state.OK,
-            details='svchost.exe with PID 676 CPU: 0%',
+            notice='svchost.exe with PID 676 CPU: 0%',
         ),
         Result(
             state=state.OK,
-            details='svchost.exe with PID 764 CPU: 0%',
+            notice='svchost.exe with PID 764 CPU: 0%',
         ),
         Result(
             state=state.WARN,
@@ -783,13 +783,13 @@ def test_cpu_util_single_process_levels(cpu_cores):
         Metric("rss", 1106568),
         Metric('pcpu', cpu_util),
         Result(state=state.OK, summary="CPU: %s" % cpu_util_s),
-        Result(state=state.OK, details='firefox with PID 25576 CPU: 0%'),
-        Result(state=state.OK, details='firefox with PID 25664 CPU: 0%'),
-        Result(state=state.OK, details='firefox with PID 25758 CPU: 0%'),
-        Result(state=state.OK, details='firefox with PID 25898 CPU: 40.0%'),
+        Result(state=state.OK, notice='firefox with PID 25576 CPU: 0%'),
+        Result(state=state.OK, notice='firefox with PID 25664 CPU: 0%'),
+        Result(state=state.OK, notice='firefox with PID 25758 CPU: 0%'),
+        Result(state=state.OK, notice='firefox with PID 25898 CPU: 40.0%'),
         Result(state=state.OK, summary='Youngest running for: 6 minutes 57 seconds'),
         Result(state=state.OK, summary='Oldest running for: 26 minutes 58 seconds'),
-        Result(state=state.OK, details="\r\n".join([
+        Result(state=state.OK, notice="\r\n".join([
             'name firefox, user on, virtual size 2275004kB, resident size 434008kB,'
             ' creation time Jan 01 1970 00:34:02, pid 25576, cpu usage 0.0%',
             'name firefox, user on, virtual size 1869920kB, resident size 359836kB,'

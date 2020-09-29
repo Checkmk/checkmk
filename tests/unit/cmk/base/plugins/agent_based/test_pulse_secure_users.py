@@ -61,11 +61,11 @@ def test_cluster_check_pulse_secure_users():
         )) == [
             Result(
                 state=state.OK,
-                details='[node1]: Pulse Secure users: 20',
+                notice='[node1]: Pulse Secure users: 20',
             ),
             Result(
                 state=state.OK,
-                details='[node2]: Pulse Secure users: 30',
+                notice='[node2]: Pulse Secure users: 30',
             ),
             Result(
                 state=state.OK,

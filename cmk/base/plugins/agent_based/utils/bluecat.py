@@ -132,7 +132,7 @@ def cluster_check_bluecat_operational_state(
         if ok_node_results:
             agg_node_result = Result(
                 state=state.OK,
-                details=agg_node_result.details,
+                notice=agg_node_result.details,
             )
         yield agg_node_result
 

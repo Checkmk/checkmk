@@ -270,7 +270,7 @@ def cluster_check_job(
 
         states.append(node_result.state)
         if best_outcome:
-            yield Result(state=state.OK, details=node_result.details)
+            yield Result(state=state.OK, notice=node_result.details)
         else:
             yield node_result
 

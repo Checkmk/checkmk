@@ -371,13 +371,13 @@ def check_temperature(
     if device_levels_handling == 'usr':
         yield usr_metric
         yield from usr_results
-        yield Result(state=state.OK, details='Configuration: only use user levels')
+        yield Result(state=state.OK, notice='Configuration: only use user levels')
         return
 
     if device_levels_handling == 'dev':
         yield dev_metric
         yield from dev_results
-        yield Result(state=state.OK, details='Configuration: only use device levels')
+        yield Result(state=state.OK, notice='Configuration: only use device levels')
         return
 
     if device_levels_handling == 'usrdefault':
@@ -398,7 +398,7 @@ def check_temperature(
 
         yield Result(
             state=state.OK,
-            details='Configuration: prefer user levels over device levels %s' % suffix,
+            notice='Configuration: prefer user levels over device levels %s' % suffix,
         )
 
         return
@@ -421,7 +421,7 @@ def check_temperature(
 
         yield Result(
             state=state.OK,
-            details='Configuration: prefer device levels over user levels %s' % suffix,
+            notice='Configuration: prefer device levels over user levels %s' % suffix,
         )
 
         return
@@ -438,7 +438,7 @@ def check_temperature(
             yield dev_metric
             yield from dev_results
 
-        yield Result(state=state.OK, details='Configuration: show most critical state')
+        yield Result(state=state.OK, notice='Configuration: show most critical state')
 
         return
 
@@ -454,6 +454,6 @@ def check_temperature(
             yield dev_metric
             yield from dev_results
 
-        yield Result(state=state.OK, details='Configuration: show least critical state')
+        yield Result(state=state.OK, notice='Configuration: show least critical state')
 
         return

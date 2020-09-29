@@ -266,13 +266,13 @@ def test_cluster():
 
     assert list(worst) == [
         Result(state=state.CRIT, summary="[node2]: Service is CRIT"),
-        Result(state=state.OK, details="[node0]: Service is OK"),
+        Result(state=state.OK, notice="[node0]: Service is OK"),
         Result(state=state.WARN, details="[node1]: Service is WARN(!)"),
     ]
     assert list(best) == [
         Result(state=state.OK, summary="[node0]: Service is OK"),
-        Result(state=state.OK, details="[node1]: Service is WARN(!)"),
-        Result(state=state.OK, details="[node2]: Service is CRIT(!!)"),
+        Result(state=state.OK, notice="[node1]: Service is WARN(!)"),
+        Result(state=state.OK, notice="[node2]: Service is CRIT(!!)"),
     ]
 
 

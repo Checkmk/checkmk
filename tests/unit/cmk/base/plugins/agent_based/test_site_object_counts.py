@@ -48,11 +48,10 @@ def test_parse_site_object_counts():
 def test_check_site_object_counts():
     assert list(site_object_counts.check_site_object_counts(SECTION)) == [
         Result(state=state.OK,
-               details='[heute] Service Check Commands: 3 lnx_if, 2 omd_apache, Tags: 1 snmp'),
+               notice='[heute] Service Check Commands: 3 lnx_if, 2 omd_apache, Tags: 1 snmp'),
         Result(
             state=state.OK,
-            details='[stable] Service Check Commands: 1 hr_cpu, 2 omd_apache, Tags: 2 prod, 2 snmp'
-        ),
+            notice='[stable] Service Check Commands: 1 hr_cpu, 2 omd_apache, Tags: 2 prod, 2 snmp'),
         Metric('service_check_commands_lnx_if', 3.0, levels=(None, None), boundaries=(None, None)),
         Metric('service_check_commands_omd_apache',
                4.0,
@@ -87,16 +86,15 @@ def test_cluster_check_site_object_counts():
             },
         })
     ) == [
+        Result(state=state.OK,
+               notice='[heute/node1] Service Check Commands: 3 lnx_if, 2 omd_apache, Tags: 1 snmp'),
         Result(
             state=state.OK,
-            details='[heute/node1] Service Check Commands: 3 lnx_if, 2 omd_apache, Tags: 1 snmp'),
-        Result(
-            state=state.OK,
-            details=
+            notice=
             '[stable/node1] Service Check Commands: 1 hr_cpu, 2 omd_apache, Tags: 2 prod, 2 snmp'),
         Result(
             state=state.OK,
-            details='[stable/node2:] Service Check Commands: 3 hr_cpu, 2 lnx_if, Tags: 2 prod, 5 tcp'
+            notice='[stable/node2:] Service Check Commands: 3 hr_cpu, 2 lnx_if, Tags: 2 prod, 5 tcp'
         ),
         Metric('service_check_commands_lnx_if', 5.0, levels=(None, None), boundaries=(None, None)),
         Metric('service_check_commands_omd_apache',

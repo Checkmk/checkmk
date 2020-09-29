@@ -581,7 +581,7 @@ def check_ps_common(
     if params.get("process_info"):
         yield Result(
             state=state.OK,
-            details=format_process_list(processes, params["process_info"] == "html"),
+            notice=format_process_list(processes, params["process_info"] == "html"),
         )
 
 

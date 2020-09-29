@@ -76,12 +76,10 @@ def test_discover_liebert_temp_air(section, extra_section, result):
             PARSED_EXTRA_SECTION,
             [
                 Metric(name='temp', value=42.0, levels=(50.0, 55.0), boundaries=(None, None)),
-                Result(state=state.OK, summary='Temperature: 42.0°C',
-                       details='Temperature: 42.0°C'),
+                Result(state=state.OK, summary='Temperature: 42.0°C'),
                 Result(
                     state=state.OK,
-                    details=
-                    'Configuration: prefer user levels over device levels (used user levels)',
+                    notice='Configuration: prefer user levels over device levels (used user levels)',
                 ),
             ],
         ),
@@ -94,9 +92,7 @@ def test_discover_liebert_temp_air(section, extra_section, result):
             PARSED_SECTION,
             PARSED_EXTRA_SECTION,
             [
-                Result(state=state.OK,
-                       summary='Unit is in standby (unavailable)',
-                       details='Unit is in standby (unavailable)'),
+                Result(state=state.OK, summary='Unit is in standby (unavailable)'),
             ],
         ),
     ])

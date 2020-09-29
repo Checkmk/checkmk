@@ -75,7 +75,7 @@ def check_site_object_counts(section: Section) -> type_defs.CheckResult:
             site_info.append("%s: %s" % (cmds_or_tags.title(), ", ".join(site_counts)))
         yield Result(
             state=state.OK,
-            details="[%s] %s" % (site, ", ".join(site_info)),
+            notice="[%s] %s" % (site, ", ".join(site_info)),
         )
 
     global_info = []

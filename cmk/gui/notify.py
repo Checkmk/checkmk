@@ -188,10 +188,8 @@ def _vs_notify():
              allow_empty=False,
          )),
         #('contactgroup', _('All members of a contact group')),
+        ('online', _('All online users')),
     ]
-
-    if config.save_user_access_times:
-        dest_choices.append(('online', _('All online users')))
 
     return Dictionary(
         elements=[

@@ -145,7 +145,6 @@ def test_registered_configvars():
         'retention_interval',
         'rrdcached_tuning',
         'rule_optimizer',
-        'save_user_access_times',
         'selection_livetime',
         'service_view_grouping',
         'show_livestatus_errors',

@@ -884,6 +884,15 @@ permission_registry.register(
 permission_registry.register(
     Permission(
         section=cmk.gui.plugins.wato.utils.PermissionSectionWATO,
+        name="show_last_user_activity",
+        title=_l("Show last user activity"),
+        description=_l("Show the online state and last user activity on the users page"),
+        defaults=["admin"],
+    ))
+
+permission_registry.register(
+    Permission(
+        section=cmk.gui.plugins.wato.utils.PermissionSectionWATO,
         name="notifications",
         title=_l("Notification configuration"),
         description=_l(

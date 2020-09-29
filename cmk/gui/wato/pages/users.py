@@ -335,8 +335,9 @@ class ModeUsers(WatoMode):
                 table.cell(_("ID"), uid)
 
                 # Online/Offline
-                if config.save_user_access_times:
-                    last_seen = user.get('last_seen', 0)
+                if config.user.may("wato.show_last_user_activity"):
+                    last_seen = userdb.get_last_activity(uid, user)
+                    user.get('last_seen', 0)
                     if last_seen >= online_threshold:
                         title = _('Online')
                         img_txt = 'online'

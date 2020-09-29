@@ -35,7 +35,6 @@ users: _List[str] = []
 admin_users: _List[str] = ["omdadmin", "cmkadmin"]
 guest_users: _List[str] = []
 default_user_role = "user"
-save_user_access_times = False
 user_online_maxage = 30  # seconds
 
 log_levels = {

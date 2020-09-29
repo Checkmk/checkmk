@@ -2107,26 +2107,6 @@ class ConfigVariableDefaultUserProfile(ConfigVariable):
         return sorted(entries)
 
 
-@config_variable_registry.register
-class ConfigVariableSaveUserAccessTimes(ConfigVariable):
-    def group(self):
-        return ConfigVariableGroupUserManagement
-
-    def domain(self):
-        return ConfigDomainGUI
-
-    def ident(self):
-        return "save_user_access_times"
-
-    def valuespec(self):
-        return Checkbox(
-            title=_("Save last access times of users"),
-            label=_("Save the time of the latest user activity"),
-            help=_("When enabled, the time of the last access is stored for each user. The last "
-                   "activity is shown on the users page."),
-        )
-
-
 #.
 #   .--Check_MK------------------------------------------------------------.
 #   |              ____ _               _        __  __ _  __              |

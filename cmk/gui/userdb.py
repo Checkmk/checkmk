@@ -192,19 +192,6 @@ def login_timed_out(username: UserId, last_activity: int) -> bool:
     return timed_out
 
 
-def _update_user_access_time(username: UserId) -> None:
-    """Remember the time the user was seen for the last time"""
-    if not config.save_user_access_times:
-        return
-    save_custom_attr(username, 'last_seen', repr(time.time()))
-
-
-def get_user_access_time(username: UserId) -> Optional[float]:
-    if not config.save_user_access_times:
-        return None
-    return load_custom_attr(username, 'last_seen', utils.savefloat)
-
-
 def _reset_failed_logins(username: UserId) -> None:
     """Login succeeded: Set failed login counter to 0"""
     num_failed_logins = _load_failed_logins(username)
@@ -313,7 +300,6 @@ class UserSelection(DropdownChoice):
 def on_succeeded_login(username: UserId) -> str:
     _ensure_user_can_init_session(username)
     _reset_failed_logins(username)
-    _update_user_access_time(username)
 
     return _initialize_session(username)
 
@@ -350,9 +336,6 @@ def on_access(username: UserId, session_id: str) -> None:
                               (username, config.user_idle_timeout))
 
     _refresh_session(username, session_id)
-
-    # Update online state of the user (if enabled)
-    _update_user_access_time(username)
 
 
 #.
@@ -702,10 +685,9 @@ def load_users(lock: bool = False) -> Users:
                 for attr, conv_func in [
                     ('num_failed_logins', utils.saveint),
                     ('last_pw_change', utils.saveint),
-                    ('last_seen', utils.savefloat),
                     ('enforce_pw_change', lambda x: bool(utils.saveint(x))),
                     ('idle_timeout', _convert_idle_timeout),
-                    ('session_id', _convert_session_info),
+                    ('session_info', _convert_session_info),
                 ]:
                     val = load_custom_attr(uid, attr, conv_func)
                     if val is not None:
@@ -768,9 +750,13 @@ def get_online_user_ids() -> List[UserId]:
     online_threshold = time.time() - config.user_online_maxage
     users = []
     for user_id, user in load_users(lock=False).items():
-        if user.get('last_seen', 0) >= online_threshold:
+        if get_last_activity(user_id, user) >= online_threshold:
             users.append(user_id)
     return users
+
+
+def get_last_activity(user_id: UserId, user: UserSpec) -> int:
+    return max([s.last_activity for s in user.get("session_info", {}).values()] + [0])
 
 
 def split_dict(d: Dict[str, Any], keylist: List[str], positive: bool) -> Dict[str, Any]:
@@ -848,10 +834,6 @@ def _save_user_profiles(updated_profiles: Users) -> None:
             save_custom_attr(user_id, "idle_timeout", user["idle_timeout"])
         else:
             remove_custom_attr(user_id, "idle_timeout")
-
-        # Write out the last seent time
-        if 'last_seen' in user:
-            save_custom_attr(user_id, 'last_seen', repr(user['last_seen']))
 
         _save_cached_profile(user_id, user, multisite_keys, non_contact_keys)
 
@@ -947,7 +929,7 @@ def _non_contact_keys() -> List[str]:
         "num_failed_logins",
         "enforce_pw_change",
         "last_pw_change",
-        "last_seen",
+        "session_info",
         "idle_timeout",
     ] + _get_multisite_custom_variable_names()
 

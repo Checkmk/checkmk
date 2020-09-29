@@ -43,12 +43,12 @@ def single_user_session_enabled(monkeypatch, user_id):
     assert config.single_user_session == 10
 
 
-# user_id needs to be used here because it executes a reload of the config and the monkeypatch of
-# the config needs to be done after loading the config
-@pytest.fixture()
-def save_user_access_times_enabled(monkeypatch, user_id):
-    monkeypatch.setattr(config, "save_user_access_times", True)
-    assert config.save_user_access_times is True
+def _load_users_uncached(*, lock):
+    try:
+        return userdb.load_users(lock=lock)
+    finally:
+        # TODO: It's bad that we have to do this here (after each load_users)
+        del g.users
 
 
 # user_id needs to be used here because it executes a reload of the config and the monkeypatch of
@@ -107,14 +107,11 @@ def test_load_pre_20_session(user_id, session_pre_20):
     assert old_session["sess2"].last_activity == int(time.time()) - 5
 
 
-@pytest.mark.usefixtures("save_user_access_times_enabled")
 def test_on_succeeded_login(user_id):
     assert config.single_user_session is None
-    assert config.save_user_access_times is True
 
     # Never logged in before
     assert not userdb._load_session_infos(user_id)
-    assert userdb.get_user_access_time(user_id) is None
     assert userdb._load_failed_logins(user_id) == 0
 
     session_id = userdb.on_succeeded_login(user_id)
@@ -132,14 +129,6 @@ def test_on_succeeded_login(user_id):
 
     # Ensure the failed login count is 0
     assert userdb._load_failed_logins(user_id) == 0
-
-    # Was the user access time updated?
-    assert userdb.get_user_access_time(user_id) == time.time()
-
-
-def test_on_succeeded_login_without_user_access_time_enabled(user_id):
-    userdb.on_succeeded_login(user_id)
-    assert userdb.get_user_access_time(user_id) is None
 
 
 @pytest.mark.usefixtures("register_builtin_html")
@@ -224,13 +213,9 @@ def test_access_denied_with_invalidated_session(user_id):
         userdb.on_access(user_id, session_id)
 
 
-@pytest.mark.usefixtures("save_user_access_times_enabled")
 def test_on_access_update_valid_session(user_id, session_valid):
     old_session_infos = userdb._load_session_infos(user_id)
     old_session = old_session_infos[session_valid]
-
-    old_access_time = userdb.get_user_access_time(user_id)
-    assert old_access_time is None
 
     userdb.on_access(user_id, session_valid)
 
@@ -241,8 +226,6 @@ def test_on_access_update_valid_session(user_id, session_valid):
     assert new_session.started_at == old_session.started_at
     assert new_session.last_activity == time.time()
     assert new_session.last_activity > old_session.last_activity
-
-    assert userdb.get_user_access_time(user_id) == time.time()
 
 
 def test_on_access_update_idle_session(user_id, session_timed_out):
@@ -399,6 +382,19 @@ def test_invalidate_session(user_id, session_valid):
     assert not userdb._load_session_infos(user_id)
 
 
+def test_get_last_activity(with_user, session_valid):
+    user_id = with_user[0]
+    user = _load_users_uncached(lock=False)[user_id]
+    assert "session_info" not in user
+    assert userdb.get_last_activity(user_id, user) == 0
+
+    userdb.on_access(user_id, session_valid)
+
+    user = _load_users_uncached(lock=False)[user_id]
+    assert "session_info" in user
+    assert userdb.get_last_activity(user_id, user) == time.time()
+
+
 def test_user_attribute_sync_plugins(monkeypatch):
     monkeypatch.setattr(config, "wato_user_attrs", [{
         'add_custom_macro': False,
@@ -457,9 +453,7 @@ def test_check_credentials_local_user_create_htpasswd_user_ad_hoc():
     user_id = UserId("sha256user")
     assert userdb.user_exists(user_id) is False
     assert userdb._user_exists_according_to_profile(user_id) is False
-    assert user_id not in userdb.load_users(lock=False)
-    # TODO: It's bad that we have to do this here (after each load_users)
-    del g.users
+    assert user_id not in _load_users_uncached(lock=False)
 
     htpasswd.Htpasswd(Path(cmk.utils.paths.htpasswd_file)).save(
         {"sha256user": htpasswd.hash_password("cmk")})
@@ -467,23 +461,22 @@ def test_check_credentials_local_user_create_htpasswd_user_ad_hoc():
     # automatically initialize the missing data structures
     assert userdb.user_exists(user_id) is True
     assert userdb._user_exists_according_to_profile(user_id) is False
-    assert str(user_id) in userdb.load_users(lock=True)
-    # TODO: It's bad that we have to do this here (after each load_users)
-    del g.users
+    assert str(user_id) in _load_users_uncached(lock=False)
 
     assert userdb.check_credentials(user_id, "cmk") == user_id
 
     # Nothing changes during regular access
     assert userdb.user_exists(user_id) is True
     assert userdb._user_exists_according_to_profile(user_id) is False
-    assert str(user_id) in userdb.load_users(lock=False)
+    assert str(user_id) in _load_users_uncached(lock=False)
 
 
 def test_check_credentials_local_user_disallow_locked(with_user):
     user_id, password = with_user
     assert userdb.check_credentials(user_id, password) == user_id
 
-    users = userdb.load_users(lock=True)
+    users = _load_users_uncached(lock=True)
+
     users[user_id]["locked"] = True
     userdb.save_users(users)
 
@@ -511,7 +504,8 @@ def make_cme_global_user(user_id):
         pytest.skip("not relevant")
 
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-    users = userdb.load_users(lock=True)
+    users = _load_users_uncached(lock=True)
+
     users[user_id]["customer"] = managed.SCOPE_GLOBAL
     userdb.save_users(users)
 
@@ -521,7 +515,8 @@ def make_cme_customer_user(user_id):
     if not is_managed_repo():
         pytest.skip("not relevant")
 
-    users = userdb.load_users(lock=True)
+    users = _load_users_uncached(lock=True)
+
     users[user_id]["customer"] = "test-customer"
     userdb.save_users(users)
 
@@ -531,7 +526,8 @@ def make_cme_wrong_customer_user(user_id):
     if not is_managed_repo():
         pytest.skip("not relevant")
 
-    users = userdb.load_users(lock=True)
+    users = _load_users_uncached(lock=True)
+
     users[user_id]["customer"] = "wrong-customer"
     userdb.save_users(users)
 

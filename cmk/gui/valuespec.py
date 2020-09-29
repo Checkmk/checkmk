@@ -2836,45 +2836,43 @@ class CascadingDropdown(ValueSpec):
         return title + self._separator + rendered_value
 
     def value_to_json(self, value: CascadingDropdownChoiceValue):
-        choices = self.choices()
+        value_ident: CascadingDropdownChoiceIdent = value[0] if isinstance(value, tuple) else value
+        try:
+            ident, _title, vs = next(elem for elem in self.choices() if elem[0] == value_ident)
+        except StopIteration:
+            # just by passes should be considered a bug, value_to_json is not guarantied to return a value
+            return
 
-        for ident, _title, vs in choices:
-            # Determine the default value for the select, so the
-            # the dropdown pre-selects the line corresponding with value.
-            # Note: the html.dropdown() with automatically show the modified
-            # selection, if the HTML variable varprefix_sel aleady
-            # exists.
+        if vs is None and ident == value:
+            return value
 
-            # Simple text match
-            if isinstance(value, str) and value == ident:
-                return value
+        assert isinstance(value, tuple) and vs is not None
 
-            if not vs:
-                continue
+        try:
+            vs.validate_datatype(value[1], "")
+            return [ident, vs.value_to_json(value[1])]
+        except Exception:  # TODO: fix exc
+            return
 
-            assert isinstance(value, tuple) and vs is not None
-            try:
-                vs.validate_datatype(value[1], "")
-                return [ident, vs.value_to_json(value[1])]
-            except Exception:  # TODO: fix exc
-                continue
+    def value_from_json(self, json_value) -> CascadingDropdownChoiceValue:
+        value_ident = json_value[0] if isinstance(json_value, list) else json_value
+        try:
+            ident, _title, vs = next(elem for elem in self.choices() if elem[0] == value_ident)
+        except StopIteration:
+            # just by passes should be considered a bug, value_from_json is not guarantied to return a value
+            return None
 
-    def value_from_json(self, json_value):
-        choices = self.choices()
+        if vs is None and ident == json_value:
+            return json_value
 
-        for ident, _title, vs in choices:
-            if json_value == ident:
-                return json_value
+        assert isinstance(json_value, list) and vs is not None
 
-            if not vs:
-                continue
-
-            try:
-                value = vs.value_from_json(json_value[1])
-                vs.validate_datatype(value, "")
-                return (ident, value)
-            except Exception:  # TODO: fix exc
-                continue
+        try:
+            value = vs.value_from_json(json_value[1])
+            vs.validate_datatype(value, "")
+            return (ident, value)
+        except Exception:  # TODO: fix exc
+            return None
 
     def from_html_vars(self, varprefix: str) -> CascadingDropdownChoiceValue:
         choices = self.choices()

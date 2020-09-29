@@ -84,8 +84,9 @@ def check_filestats_count(count, params):
                         human_readable_func=lambda i: "%d" % i)
 
 
-def check_filestats_extremes(files, params):
+def check_filestats_extremes(files, params, show_all_files=False):
     '''common check result - used by main and extremes_only check'''
+    long_output = {}
     for key, hr_function, minlabel, maxlabel in (
         ('size', get_bytes_human_readable, 'smallest', 'largest'),
         ('age', get_age_human_readable, 'newest', 'oldest'),
@@ -95,14 +96,56 @@ def check_filestats_extremes(files, params):
             levels = (params.get("max%s_%s" % (key, label),
                                  (None, None)) + params.get("min%s_%s" % (key, label),
                                                             (None, None)))
-            state, text, _no_perf = check_levels(efile[key],
-                                                 None,
-                                                 levels,
-                                                 infoname=label.title(),
-                                                 human_readable_func=hr_function)
-            if state:
-                text = "%s: %s" % (text, efile.get('path', "<path info missing>"))
-            yield state, text
+            yield check_levels(
+                efile[key],
+                None,
+                levels,
+                infoname=label.title(),
+                human_readable_func=hr_function,
+            )
+
+        if not show_all_files:
+            continue
+
+        min_label_levels = (params.get("max%s_%s" % (key, minlabel),
+                                       (None, None)) + params.get("min%s_%s" % (key, minlabel),
+                                                                  (None, None)))
+        for efile in files:
+            state, _text, _no_perf = check_levels(
+                efile[key],
+                None,
+                min_label_levels,
+            )
+            if state == 0:
+                break
+            if efile['path'] not in long_output:
+                text = 'Age: %s, Size: %s%s' % (
+                    get_age_human_readable(efile['age']),
+                    get_bytes_human_readable(efile['size']),
+                    state_markers[state],
+                )
+                long_output[efile['path']] = text
+
+        max_label_levels = (params.get("max%s_%s" % (key, maxlabel),
+                                       (None, None)) + params.get("min%s_%s" % (key, maxlabel),
+                                                                  (None, None)))
+        for efile in reversed(files):
+            state, _text, _no_perf = check_levels(
+                efile[key],
+                None,
+                max_label_levels,
+            )
+            if state == 0:
+                break
+            if efile['path'] not in long_output:
+                text = 'Age: %s, Size: %s%s' % (
+                    get_age_human_readable(efile['age']),
+                    get_bytes_human_readable(efile['size']),
+                    state_markers[state],
+                )
+                long_output[efile['path']] = text
+
+    return ['[%s] %s' % key_text for key_text in sorted(long_output.items())]
 
 
 #.
@@ -129,8 +172,14 @@ def check_filestats(_item, params, data):
 
     files = [i for i in reported_lines if i.get("type") == "file"]
     if files:
-        for subresult in check_filestats_extremes(files, params):
-            yield subresult
+        long_output = yield from check_filestats_extremes(
+            files,
+            params,
+            params.get('show_all_files', False),
+        )
+
+        if long_output:
+            yield 0, '\nFile details\n' + '\n'.join(long_output)
 
 
 @get_parsed_item_data

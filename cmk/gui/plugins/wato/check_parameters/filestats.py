@@ -6,6 +6,7 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
+    Checkbox,
     Dictionary,
     Tuple,
     Integer,
@@ -114,6 +115,8 @@ def _parameter_valuespec_filestats():
                      Integer(title=_("Critical if above")),
                  ],
              )),
+            ("show_all_files",
+             Checkbox(title=_("Show all files in long output"), label=("Show files"))),
             (additional_rules(maxage_name='max_age',
                               minage_name='min_age',
                               maxsize_name='max_size',

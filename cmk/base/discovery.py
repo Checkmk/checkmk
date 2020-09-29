@@ -677,6 +677,7 @@ def check_discovery(
 
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
+    on_error = "raise"
 
     params = host_config.discovery_check_parameters
     if params is None:
@@ -695,7 +696,7 @@ def check_discovery(
     for source in sources:
         _configure_sources(
             source,
-            on_error="raise",
+            on_error=on_error,
             disable_snmp_caches=params['inventory_check_do_scan'],
         )
 
@@ -720,7 +721,7 @@ def check_discovery(
         host_config,
         ipaddress,
         multi_host_sections,
-        on_error="raise",
+        on_error,
     )
 
     status, infotexts, long_infotexts, perfdata, need_rediscovery = _check_service_lists(
@@ -1079,6 +1080,8 @@ def _perform_host_label_discovery(
     discovered_host_labels: DiscoveredHostLabels,
     only_new: bool,
 ) -> Tuple[DiscoveredHostLabels, Counter[CheckPluginName]]:
+
+    section.section_step("Perform host label discovery")
 
     # Take over old items if -I is selected
     if only_new:
@@ -1507,8 +1510,11 @@ def _get_discovered_services(
 
 
 # TODO: Rename or extract disabled services handling
-def _merge_manual_services(host_config: config.HostConfig, services: ServicesTable,
-                           on_error: str) -> ServicesByTransition:
+def _merge_manual_services(
+    host_config: config.HostConfig,
+    services: ServicesTable,
+    on_error: str,
+) -> ServicesByTransition:
     """Add/replace manual and active checks and handle ignoration"""
     hostname = host_config.hostname
 
@@ -1621,8 +1627,11 @@ def _get_cluster_services(
     return cluster_items, cluster_host_labels
 
 
-def get_check_preview(host_name: HostName, use_caches: bool,
-                      on_error: str) -> Tuple[CheckPreviewTable, DiscoveredHostLabels]:
+def get_check_preview(
+    host_name: HostName,
+    use_caches: bool,
+    on_error: str,
+) -> Tuple[CheckPreviewTable, DiscoveredHostLabels]:
     """Get the list of service of a host or cluster and guess the current state of
     all services if possible"""
     config_cache = config.get_config_cache()

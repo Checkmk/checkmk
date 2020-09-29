@@ -279,14 +279,11 @@ class Result(
         if summary and '\n' in summary:
             raise ValueError("'\\n' not allowed in 'summary'")
 
-        if notice and '\n' in notice:
-            raise ValueError("'\\n' not allowed in 'notice'")
-
         if not details:
             details = summary or notice
 
         if not summary:
-            summary = notice if notice and state != State.OK else ""
+            summary = notice.replace('\n', ', ') if notice and state != State.OK else ""
 
         assert details is not None  # makes mypy happy
 

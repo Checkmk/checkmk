@@ -178,7 +178,6 @@ def test_metric():
         (8, "foo", None, None),
         (state.OK, b"foo", None, None),
         (state.OK, "newline is a \no-no", None, None),
-        (state.OK, None, "newline is a \no-no", None),
         (state.OK, "", "", ""),  # either is required
         (state.OK, None, None, None),  # either is required
         (state.OK, "these are", "mutually exclusive", None),

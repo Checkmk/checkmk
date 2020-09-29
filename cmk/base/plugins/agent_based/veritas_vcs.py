@@ -240,22 +240,22 @@ def cluster_check_veritas_vcs_subsection(
             last_cluster_result = node_results[-1]
             node_results = node_results[:-1]
 
-        agg_node_results = aggregate_node_details(
+        agg_node_state, agg_node_text = aggregate_node_details(
             node_name,
             node_results,
         )
-        if agg_node_results:
+        if agg_node_text:
             details_prefix = "[%s]: " % node_name
-            details_split = agg_node_results.details.split('\n')
+            details_split = agg_node_text.split('\n')
             details_split = [details_split[0]] + [
                 detail_split[len(details_prefix):] for detail_split in details_split[1:]
             ]
             yield Result(
-                state=agg_node_results.state,
+                state=agg_node_state,
                 notice=', '.join(details_split),
-                details=agg_node_results.details,
+                details=agg_node_text,
             )
-            all_nodes_ok &= agg_node_results.state is state.OK
+            all_nodes_ok &= agg_node_state is state.OK
 
     if all_nodes_ok:
         yield Result(

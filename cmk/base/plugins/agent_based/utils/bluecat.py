@@ -127,14 +127,12 @@ def cluster_check_bluecat_operational_state(
             monitoring_state_result.state,
         )
 
-    for node_name, agg_node_result in results.items():
-        assert agg_node_result
-        if ok_node_results:
-            agg_node_result = Result(
-                state=state.OK,
-                notice=agg_node_result.details,
-            )
-        yield agg_node_result
+    for node_name, (node_state, node_text) in results.items():
+        assert node_text
+        yield Result(
+            state=state.OK if ok_node_results else node_state,
+            notice=node_text,
+        )
 
     if ok_node_results:
         for result in ok_node_results.results:

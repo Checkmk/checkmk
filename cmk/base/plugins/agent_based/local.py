@@ -27,7 +27,7 @@ from .agent_based_api.v1 import (
     render,
     Result,
     Service,
-    State as state,
+    State,
 )
 from .agent_based_api.v1.clusterize import aggregate_node_details
 from .agent_based_api.v1.type_defs import Parameters
@@ -192,25 +192,11 @@ register.agent_section(
     parse_function=parse_local,
 )
 
-_STATE_FROM_INT = {
-    0: state.OK,
-    1: state.WARN,
-    2: state.CRIT,
-    3: state.UNKNOWN,
-}
-
-_SORT_FOR_BEST = {
-    state.OK: 0,
-    state.WARN: 1,
-    state.UNKNOWN: 2,
-    state.CRIT: 3,
-}
-
 _STATE_MARKERS = {
-    state.OK: "",
-    state.WARN: "(!)",
-    state.UNKNOWN: "(?)",
-    state.CRIT: "(!!)",
+    State.OK: "",
+    State.WARN: "(!)",
+    State.UNKNOWN: "(?)",
+    State.CRIT: "(!!)",
 }
 
 
@@ -248,7 +234,7 @@ def check_local(item, params, section):
         summary, details = local_result.text, ""
     if local_result.state != 'P':
         yield Result(
-            state=_STATE_FROM_INT[local_result.state],
+            state=State(local_result.state),
             summary=summary,
             details=details if details else None,
         )
@@ -258,7 +244,7 @@ def check_local(item, params, section):
     else:
         if local_result.text:
             yield Result(
-                state=state.OK,
+                state=State.OK,
                 summary=summary,
                 details=details if details else None,
             )
@@ -273,7 +259,7 @@ def check_local(item, params, section):
             render.timespan(local_result.cached[2]),
             render.percent(local_result.cached[1]),
         )
-        yield Result(state=state.OK, summary=infotext)
+        yield Result(state=State.OK, summary=infotext)
 
 
 def cluster_check_local(
@@ -299,14 +285,14 @@ def cluster_check_local(
 
 def _aggregate_worst(
     results_by_node: Dict[str, List[Union[Result, Metric]]],
-    aggregated_results: Dict[str, Optional[Result]],
+    aggregated_results: Dict[str, Tuple[State, Optional[str]]],
 ) -> Generator[Union[Result, Metric], None, None]:
 
-    states = (r.state for r in aggregated_results.values() if r is not None)
-    global_worst_state = state.worst(*states)
+    states = (state for state, text in aggregated_results.values() if text is not None)
+    global_worst_state = State.worst(*states)
 
-    worst_node = sorted(node for node, result in aggregated_results.items()
-                        if result is not None and result.state == global_worst_state)[0]
+    worst_node = sorted(node for node, (state, text) in aggregated_results.items()
+                        if text is not None and state == global_worst_state)[0]
 
     for node_result in results_by_node[worst_node]:
         if isinstance(node_result, Result):
@@ -318,24 +304,21 @@ def _aggregate_worst(
         else:  # Metric
             yield node_result
 
-    for node, details_result in aggregated_results.items():
-        if node != worst_node and details_result is not None:
-            yield details_result
+    for node, (state, text) in aggregated_results.items():
+        if node != worst_node and text is not None:
+            yield Result(state=state, notice=text)
 
 
 def _aggregate_best(
     results_by_node: Dict[str, List[Union[Result, Metric]]],
-    aggregated_results: Dict[str, Optional[Result]],
+    aggregated_results: Dict[str, Tuple[State, Optional[str]]],
 ) -> Generator[Union[Result, Metric], None, None]:
 
-    # TODO: use state.best
-    global_best_state = min(
-        (r.state for r in aggregated_results.values() if r is not None),
-        key=_SORT_FOR_BEST.get,
-    )
+    states = (state for (state, text) in aggregated_results.values() if text is not None)
+    global_best_state = State.best(*states)
 
-    best_node = sorted(node for node, result in aggregated_results.items()
-                       if result is not None and result.state == global_best_state)[0]
+    best_node = sorted(node for node, (state, text) in aggregated_results.items()
+                       if text is not None and state == global_best_state)[0]
 
     for node_result in results_by_node[best_node]:
         if isinstance(node_result, Result):
@@ -347,11 +330,11 @@ def _aggregate_best(
         else:  # Metric
             yield node_result
 
-    for node, details_result in aggregated_results.items():
-        if node != best_node and details_result is not None:
+    for node, (_state, text) in aggregated_results.items():
+        if node != best_node and text is not None:
             yield Result(
-                state=state.OK,
-                notice=details_result.details,
+                state=State.OK,
+                notice=text,
             )
 
 

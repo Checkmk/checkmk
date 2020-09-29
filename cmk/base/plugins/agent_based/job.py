@@ -261,18 +261,15 @@ def cluster_check_job(
     best_outcome = params.get("outcome_on_cluster") == "best"
 
     for node, node_section in section.items():
-        node_result = aggregate_node_details(
+        node_state, node_text = aggregate_node_details(
             node,
             check_job(item, params, node_section),
         )
-        if not node_result:
+        if not node_text:
             continue
 
-        states.append(node_result.state)
-        if best_outcome:
-            yield Result(state=state.OK, notice=node_result.details)
-        else:
-            yield node_result
+        states.append(node_state)
+        yield Result(state=state.OK if best_outcome else node_state, notice=node_text)
 
     if states:
         summary = []

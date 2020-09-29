@@ -105,11 +105,11 @@ def test_cluster_check_bluecat_one_ok():
         )) == [
             Result(
                 state=state.OK,
-                details='[node1]: DNS is running normally',
+                notice='[node1]: DNS is running normally',
             ),
             Result(
                 state=state.OK,
-                details='[node2]: DNS is currently stopping(!)',
+                notice='[node2]: DNS is currently stopping(!)',
             ),
             Result(
                 state=state.OK,
@@ -138,11 +138,11 @@ def test_cluster_check_bluecat_none_ok():
         )) == [
             Result(
                 state=state.WARN,
-                details='[node1]: DNS is running normally(!)',
+                summary='[node1]: DNS is running normally(!)',
             ),
             Result(
                 state=state.CRIT,
-                details='[node2]: DNS is currently starting(!!)',
+                summary='[node2]: DNS is currently starting(!!)',
             ),
             Result(
                 state=state.CRIT,

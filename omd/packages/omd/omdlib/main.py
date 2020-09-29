@@ -765,6 +765,19 @@ def update_file(relpath: str, site: SiteContext, conflict_mode: str, old_version
     old_skel = site.version_skel_dir
     new_skel = "/omd/versions/%s/skel" % new_version
 
+    ignored_prefixes = [
+        # We removed dokuwiki from the OMD packages with 2.0.0i1. To prevent users from
+        # accidentally removing configs or their dokuwiki content, we skip the questions to
+        # remove the dokuwiki files here.
+        "etc/dokuwiki",
+        "var/dokuwiki",
+        "local/share/dokuwiki",
+    ]
+    for prefix in ignored_prefixes:
+        if relpath.startswith(prefix):
+            sys.stdout.write(f"{StateMarkers.good} Keeping your   {relpath}\n")
+            return
+
     replacements = site.replacements
 
     old_path = old_skel + "/" + relpath

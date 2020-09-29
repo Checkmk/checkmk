@@ -270,7 +270,6 @@ def test_registered_permissions():
         'sidesnap.views',
         'sidesnap.wato_folders',
         'sidesnap.wato_foldertree',
-        'sidesnap.wiki',
         'view.aggr_all',
         'view.aggr_all_api',
         'view.aggr_group',

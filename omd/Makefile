@@ -37,7 +37,6 @@ PACKAGES := \
     check_mysql_health \
     check_oracle_health \
     Webinject \
-    dokuwiki \
     jmx4perl \
     mk-livestatus \
     stunnel \

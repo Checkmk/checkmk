@@ -518,7 +518,10 @@ def check_logwatch_generic(item, patterns, loglines, found) -> CheckResult:
     if LOGWATCH_SERVICE_OUTPUT == 'default':
         info += ' (Last worst: "%s")' % block_collector.last_worst_line
 
-    summary, details = info.split('\n', 1) if '\n' in info.strip() else (info, None)
+    summary, details = info, None
+    if '\n' in info.strip():
+        summary, details = info.split('\n', 1)
+
     yield Result(
         state=state(block_collector.worst),
         summary=summary,

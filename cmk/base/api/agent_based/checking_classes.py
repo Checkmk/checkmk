@@ -6,7 +6,19 @@
 """Classes used by the API for check plugins
 """
 import enum
-from typing import Any, Callable, Dict, Iterable, List, Literal, NamedTuple, Optional, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Literal,
+    NamedTuple,
+    Optional,
+    overload,
+    Tuple,
+    Union,
+)
 
 from cmk.utils import pnp_cleanup as quote_pnp_string
 from cmk.utils.type_defs import CheckPluginName, EvalableFloat, ParsedSectionName, RuleSetName
@@ -249,50 +261,73 @@ class Result(
             ("summary", str),
             ("details", str),
         ]),):
+    @overload
     def __new__(
         cls,
         *,
         state: State,
-        summary: Optional[str] = None,
-        notice: Optional[str] = None,
+        summary: str,
         details: Optional[str] = None,
     ) -> 'Result':
-        if not isinstance(state, State):
-            raise TypeError("'state' must be a checkmk State constant, got %r" % (state,))
+        pass
 
-        for var, name in (
-            (summary, "summary"),
-            (notice, "notice"),
-            (details, "details"),
-        ):
-            if var is not None and not isinstance(var, str):
-                raise TypeError("%r must be non-empty str or None, got %r" % (name, var))
-            if var == "":
-                raise ValueError("%r must be non-empty str or None, got %r" % (name, var))
+    @overload
+    def __new__(
+        cls,
+        *,
+        state: State,
+        notice: str,
+        details: Optional[str] = None,
+    ) -> 'Result':
+        pass
 
-        if summary and notice:
-            raise TypeError("'summary' and 'notice' are mutually exclusive arguments")
-
-        if not any((summary, notice, details)):
-            raise TypeError("at least 'summary', 'notice' or 'details' is required")
-
-        if summary and '\n' in summary:
-            raise ValueError("'\\n' not allowed in 'summary'")
-
-        if not details:
-            details = summary or notice
-
-        if not summary:
-            summary = notice.replace('\n', ', ') if notice and state != State.OK else ""
-
-        assert details is not None  # makes mypy happy
-
+    def __new__(
+        cls,
+        **kwargs,
+    ) -> 'Result':
+        state, summary, details = _create_result_fields(**kwargs)
         return super(Result, cls).__new__(
             cls,
             state=state,
             summary=summary,
             details=details,
         )
+
+
+def _create_result_fields(
+    *,
+    state: State,
+    summary: Optional[str] = None,
+    notice: Optional[str] = None,
+    details: Optional[str] = None,
+) -> Tuple[State, str, str]:
+    if not isinstance(state, State):
+        raise TypeError(f"'state' must be a checkmk State constant, got {state}")
+
+    for var, name in (
+        (summary, "summary"),
+        (notice, "notice"),
+        (details, "details"),
+    ):
+        if var is None:
+            continue
+        if not isinstance(var, str):
+            raise TypeError(f"'{name}' must be non-empty str or None, got {var}")
+        if not var:
+            raise ValueError(f"'{name}' must be non-empty str or None, got {var}")
+
+    if summary:
+        if notice:
+            raise TypeError("'summary' and 'notice' are mutually exclusive arguments")
+        if '\n' in summary:
+            raise ValueError("'\\n' not allowed in 'summary'")
+        return state, summary, details or summary
+
+    if notice:
+        summary = notice.replace('\n', ', ') if state != State.OK else ""
+        return state, summary, details or notice
+
+    raise TypeError("at least 'summary' or 'notice' is required")
 
 
 class IgnoreResultsError(RuntimeError):

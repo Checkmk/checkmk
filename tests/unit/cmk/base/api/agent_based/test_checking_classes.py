@@ -3,6 +3,8 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Optional, Tuple
+
 import pytest  # type: ignore[import]
 
 from cmk.base.api.agent_based.type_defs import Parameters
@@ -178,8 +180,8 @@ def test_metric():
         (8, "foo", None, None),
         (state.OK, b"foo", None, None),
         (state.OK, "newline is a \no-no", None, None),
-        (state.OK, "", "", ""),  # either is required
-        (state.OK, None, None, None),  # either is required
+        (state.OK, "", "", "details"),  # either is required
+        (state.OK, None, None, "details"),  # either is required
         (state.OK, "these are", "mutually exclusive", None),
         (state.OK, "summary", None, {
             "at the moment": "impossible",
@@ -188,25 +190,39 @@ def test_metric():
     ])
 def test_result_invalid(state_, summary, notice, details):
     with pytest.raises((TypeError, ValueError)):
-        _ = Result(state=state_, summary=summary, notice=notice, details=details)
+        _ = Result(
+            state=state_,
+            summary=summary,
+            notice=notice,
+            details=details,
+        )  # type: ignore[call-overload]
 
 
 @pytest.mark.parametrize("state_, summary, notice, details, expected_triple", [
-    (state.OK, None, None, "details", (state.OK, "", "details")),
     (state.OK, "summary", None, "details", (state.OK, "summary", "details")),
     (state.OK, "summary", None, None, (state.OK, "summary", "summary")),
     (state.OK, None, "notice", "details", (state.OK, "", "details")),
     (state.OK, None, "notice", None, (state.OK, "", "notice")),
-    (state.WARN, None, None, "details", (state.WARN, "", "details")),
     (state.WARN, "summary", None, "details", (state.WARN, "summary", "details")),
     (state.WARN, "summary", None, None, (state.WARN, "summary", "summary")),
     (state.WARN, None, "notice", "details", (state.WARN, "notice", "details")),
     (state.WARN, None, "notice", None, (state.WARN, "notice", "notice")),
 ])
-def test_result(state_, summary, notice, details, expected_triple):
-    result = Result(state=state_, summary=summary, notice=notice, details=details)
+def test_result(
+    state_: state,
+    summary: Optional[str],
+    notice: Optional[str],
+    details: Optional[str],
+    expected_triple: Tuple[state, str, str],
+) -> None:
+    result = Result(
+        state=state_,
+        summary=summary,
+        notice=notice,
+        details=details,
+    )  # type: ignore[call-overload]
     assert (result.state, result.summary, result.details) == expected_triple
-    assert result != Result(state=state.OK, summary="a total different summary")
+    assert result != Result(state=state_, summary="a different summary")
 
 
 def test_ignore_results():

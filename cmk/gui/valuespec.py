@@ -2564,10 +2564,8 @@ def HostState(**kwargs):
 CascadingDropdownChoiceIdent = Union[None, str, bool, int]
 CascadingDropdownChoiceValue = Union[CascadingDropdownChoiceIdent,
                                      _Tuple[CascadingDropdownChoiceIdent, Any]]
-# These should use CascadingDropdownChoiceIdent, yet because of Werk 4477,
-# that casts default values into the choices we use CascadingDropdownChoiceValue
-CascadingDropdownCleanChoice = _Tuple[CascadingDropdownChoiceValue, str, _Optional[ValueSpec]]
-CascadingDropdownShortChoice = _Tuple[CascadingDropdownChoiceValue, str]
+CascadingDropdownCleanChoice = _Tuple[CascadingDropdownChoiceIdent, str, _Optional[ValueSpec]]
+CascadingDropdownShortChoice = _Tuple[CascadingDropdownChoiceIdent, str]
 CascadingDropdownChoice = Union[CascadingDropdownShortChoice, CascadingDropdownCleanChoice]
 CascadingDropdownChoices = Union[List[CascadingDropdownChoice],
                                  Callable[[], List[CascadingDropdownChoice]]]
@@ -2837,7 +2835,7 @@ class CascadingDropdown(ValueSpec):
 
         return title + self._separator + rendered_value
 
-    def value_to_json(self, value):
+    def value_to_json(self, value: CascadingDropdownChoiceValue):
         choices = self.choices()
 
         for ident, _title, vs in choices:
@@ -2854,6 +2852,7 @@ class CascadingDropdown(ValueSpec):
             if not vs:
                 continue
 
+            assert isinstance(value, tuple) and vs is not None
             try:
                 vs.validate_datatype(value[1], "")
                 return [ident, vs.value_to_json(value[1])]
@@ -3949,14 +3948,7 @@ class Timerange(CascadingDropdown):
 
     def _get_graph_timeranges(self) -> List[CascadingDropdownCleanChoice]:
         try:
-            # Werk 4477, the only reason why CascadingDropdownChoice uses value instead of ident
-            # is because a default is casted into the choice, misusing the valuespec.
-            # TODO: this list elements should be (duration: int, title: str, None)
-            # and let the function compute_range understand the mapping
-            # from ident to value, as a default instead of a configured
-            # value on the valuespec
-            return _normalize_choices([(('age', timerange_attrs["duration"]),
-                                        timerange_attrs['title'])
+            return _normalize_choices([(timerange_attrs["duration"], timerange_attrs['title'])
                                        for timerange_attrs in config.graph_timeranges])
 
         except AttributeError:  # only available in cee
@@ -3969,12 +3961,27 @@ class Timerange(CascadingDropdown):
             ])
 
     def value_to_text(self, value: CascadingDropdownChoiceValue):
-        # Cleanup on Werk 4477, treat casted defaults earlier
-        for choice, title, _vs in self._get_graph_timeranges():
-            if value == choice:
+        for ident, title, _vs in self._get_graph_timeranges():
+            if value == ident:
+                return title
+            # Cleanup on Werk 4477, treat old(pre 2.0) casted defaults earlier
+            if isinstance(value, tuple) and value == ("age", ident):
                 return title
 
         return super().value_to_text(value)
+
+    def value_to_json(self, value: CascadingDropdownChoiceValue):
+        if isinstance(value, int):  # Handle default graph_timeranges
+            value = ("age", value)
+        return super().value_to_json(value)
+
+    def value_from_json(self, json_value):
+        value = super().value_from_json(json_value)
+        # Handle default graph_timeranges
+        for ident, _title, _vs in self._get_graph_timeranges():
+            if value == ("age", ident):
+                return ident
+        return value
 
     def compute_range(self, rangespec):
         def _date_span(from_time, until_time):

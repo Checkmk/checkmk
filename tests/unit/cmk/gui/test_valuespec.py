@@ -6,6 +6,7 @@
 
 import pytest  # type: ignore[import]
 
+import cmk.gui.config
 from cmk.gui.exceptions import MKUserError
 import cmk.gui.valuespec as vs
 from testlib import on_time
@@ -124,6 +125,31 @@ def test_dropdownchoice_value_to_json_conversion(choices, value, result):
     assert vs.DropdownChoice(choices).value_to_text(value) == result
     json_value = vs.DropdownChoice(choices).value_to_json(value)
     assert vs.DropdownChoice(choices).value_from_json(json_value) == value
+
+
+@pytest.mark.parametrize(
+    "value, result_title",
+    [
+        (("age", 4 * 60 * 60), "The last 4 fun hours"),  # Werk 4477, deprecated input on cmk2.0
+        (("age", 25 * 60 * 60), "The last 25 hard hours"),  # Werk 4477, deprecated input on cmk2.0
+        (4 * 60 * 60, "The last 4 fun hours"),  # defaults are idents
+        (25 * 60 * 60, "The last 25 hard hours"),  # defaults are idents
+        (3600 * 24 * 7 * 1.5, "Since a sesquiweek"),  # defaults are idents
+    ])
+def test_timerange_value_to_text_conversion(monkeypatch, value, result_title):
+
+    monkeypatch.setattr(cmk.gui.config, "graph_timeranges", [{
+        'title': "The last 4 fun hours",
+        "duration": 4 * 60 * 60
+    }, {
+        'title': "The last 25 hard hours",
+        "duration": 25 * 60 * 60
+    }, {
+        "title": "Since a sesquiweek",
+        "duration": 3600 * 24 * 7 * 1.5
+    }])
+
+    assert vs.Timerange().value_to_text(value) == result_title
 
 
 def test_timerange_value_to_json_conversion():

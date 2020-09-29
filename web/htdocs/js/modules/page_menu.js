@@ -118,13 +118,13 @@ export function close_popup(a) {
 }
 
 export function toggle_suggestions() {
-    var oBody = document.body;
+    var oPageMenuBar = document.getElementById("page_menu_bar");
     var open;
-    if (utils.has_class(oBody, "hide_suggestions")) {
-        utils.remove_class(oBody, "hide_suggestions");
+    if (utils.has_class(oPageMenuBar, "hide_suggestions")) {
+        utils.remove_class(oPageMenuBar, "hide_suggestions");
         open = "on";
     } else {
-        utils.add_class(oBody, "hide_suggestions");
+        utils.add_class(oPageMenuBar, "hide_suggestions");
         open = "off";
     }
     foldable_container.persist_tree_state("suggestions", "all", open);

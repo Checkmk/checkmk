@@ -13,24 +13,6 @@ body.main {
       display: none;
     }
   }
-
-  &.hide_suggestions {
-    td.shortcuts {
-      a.suggested {
-        display: inline-block;
-      }
-    }
-
-    tr#suggestions {
-      display: none;
-    }
-  }
-
-  &.hide_suggestions {
-    a#menu_shortcut_toggle_suggestions {
-      transform: rotate(180deg);
-    }
-  }
 }
 
 div#top_heading {
@@ -299,6 +281,12 @@ div#top_heading {
           }
         }
       }
+    }
+
+    &#page_menu_bar.hide_suggestions {
+      td.shortcuts a.suggested { display: inline-block; }
+      tr#suggestions { display: none; }
+      a#menu_shortcut_toggle_suggestions { transform: rotate(180deg); }
     }
   }
 

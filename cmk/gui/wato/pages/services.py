@@ -265,7 +265,9 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         """
         page_menu = service_page_menu(self._get_discovery_breadcrumb(), self._host, self._options)
         with html.plugged():
-            PageMenuRenderer().show(page_menu)
+            PageMenuRenderer().show(
+                page_menu,
+                hide_suggestions=not html.foldable_container_is_open("suggestions", "all", True))
             return html.drain()
 
     def _get_discovery_breadcrumb(self) -> Breadcrumb:

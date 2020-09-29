@@ -440,8 +440,9 @@ def _make_form_abort_link(breadcrumb: Breadcrumb, abort_url: Optional[str]) -> P
 
 class PageMenuRenderer:
     """Renders the given page menu to the page header"""
-    def show(self, menu: PageMenu) -> None:
-        html.open_table(id_="page_menu_bar", class_="menubar")
+    def show(self, menu: PageMenu, hide_suggestions: bool = False) -> None:
+        html.open_table(id_="page_menu_bar",
+                        class_=["menubar", "" if not hide_suggestions else "hide_suggestions"])
 
         html.open_tr()
         self._show_dropdowns(menu)

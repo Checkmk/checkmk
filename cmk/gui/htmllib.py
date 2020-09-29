@@ -1677,8 +1677,6 @@ class html(ABCHTMLGenerator):
         classes = self._body_classes[:]
         if self.screenshotmode:
             classes += ["screenshotmode"]
-        if not self.foldable_container_is_open("suggestions", "all", True):
-            classes += ["hide_suggestions"]
         return classes
 
     def html_foot(self) -> None:
@@ -1714,7 +1712,9 @@ class html(ABCHTMLGenerator):
         self.close_div()  # titlebar
 
         if page_menu:
-            PageMenuRenderer().show(page_menu)
+            PageMenuRenderer().show(
+                page_menu,
+                hide_suggestions=not self.foldable_container_is_open("suggestions", "all", True))
 
         self.close_div()  # top_heading
 

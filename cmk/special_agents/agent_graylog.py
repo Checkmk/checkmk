@@ -43,7 +43,7 @@ def main(argv=None):
         GraylogSection(name="license", uri="/plugins/org.graylog.plugins.license/licenses/status"),
         GraylogSection(name="messages", uri="/count/total"),
         GraylogSection(name="nodes", uri="/cluster"),
-        GraylogSection(name="sidecars", uri="/sidecars"),
+        GraylogSection(name="sidecars", uri="/sidecars/all"),
         GraylogSection(name="sources", uri="/sources"),
         GraylogSection(name="streams", uri="/streams"),
     ]

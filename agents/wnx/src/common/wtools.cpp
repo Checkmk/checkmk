@@ -2541,7 +2541,7 @@ bool RemoveCmaUser(const std::wstring& user_name) noexcept {
     return primary_dc.userDel(user_name) != uc::Status::error;
 }
 
-bool ProtectFolderFromUserWrite(const std::filesystem::path& folder) {
+bool ProtectPathFromUserWrite(const std::filesystem::path& path) {
     // CONTEXT: to prevent malicious file creation or modification  in folder
     // "programdata/checkmk" we must remove inherited write rights for
     // Users in checkmk root data folder.
@@ -2552,13 +2552,37 @@ bool ProtectFolderFromUserWrite(const std::filesystem::path& folder) {
         L"icacls \"{}\" /grant:r *S-1-5-32-545:(OI)(CI)(RX) /c"};  // read/exec
 
     for (auto const t : command_templates) {
-        auto cmd = fmt::format(t.data(), folder.wstring());
+        auto cmd = fmt::format(t.data(), path.wstring());
         if (!cma::tools::RunCommandAndWait(cmd)) {
             // logging is almost useless: at this phase logfile is absent
             XLOG::l.e("Failed command '{}'", wtools::ConvertToUTF8(cmd));
             return false;
         }
     }
+    XLOG::l.i("User Write Protected '{}'", path.u8string());
+
+    return true;
+}
+
+bool ProtectFileFromUserWrite(const std::filesystem::path& path) {
+    // CONTEXT: to prevent malicious file creation or modification  in folder
+    // "programdata/checkmk" we must remove inherited write rights for
+    // Users in checkmk root data folder.
+
+    constexpr std::wstring_view command_templates[] = {
+        L"icacls \"{}\" /inheritance:d /c",           // disable inheritance
+        L"icacls \"{}\" /remove:g *S-1-5-32-545 /c",  // remove all user rights
+        L"icacls \"{}\" /grant:r *S-1-5-32-545:(RX) /c"};  // read/exec
+
+    for (auto const t : command_templates) {
+        auto cmd = fmt::format(t.data(), path.wstring());
+        if (!cma::tools::RunCommandAndWait(cmd)) {
+            // logging is almost useless: at this phase logfile is absent
+            XLOG::l.e("Failed command '{}'", wtools::ConvertToUTF8(cmd));
+            return false;
+        }
+    }
+    XLOG::l.i("User Write Protected '{}'", path.u8string());
 
     return true;
 }
@@ -2579,6 +2603,7 @@ bool ProtectPathFromUserAccess(const std::filesystem::path& entry) {
             return false;
         }
     }
+    XLOG::l.i("User Access Protected '{}'", entry.u8string());
 
     return true;
 }

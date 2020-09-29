@@ -1320,6 +1320,8 @@ void ConfigInfo::initFolders(
     auto root = folders_.getRoot();
 
     if (!ServiceValidName.empty()) {
+        auto exe_path = FindServiceImagePath(ServiceValidName);
+        wtools::ProtectFileFromUserWrite(exe_path);
         wtools::ProtectPathFromUserAccess(root);
     }
 

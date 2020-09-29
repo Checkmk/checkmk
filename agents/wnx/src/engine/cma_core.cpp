@@ -42,7 +42,7 @@ void ProtectFiles(const std::filesystem::path& root) {
 }
 
 void ProtectAll(const std::filesystem::path& root) {
-    if (!wtools::ProtectFolderFromUserWrite(root)) {
+    if (!wtools::ProtectPathFromUserWrite(root)) {
         XLOG::l.crit("Protection of the folder '{}' failed!", root.u8string());
         return;
     }

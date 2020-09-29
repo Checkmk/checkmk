@@ -7,8 +7,7 @@
 import logging
 import socket
 from hashlib import md5, sha256
-from types import TracebackType
-from typing import Any, Dict, Final, List, Mapping, Optional, Tuple, Type
+from typing import Any, Dict, Final, List, Mapping, Optional, Tuple
 
 from Cryptodome.Cipher import AES
 
@@ -62,7 +61,7 @@ class TCPFetcher(AgentFetcher):
             "use_only_cache": self.use_only_cache,
         }
 
-    def __enter__(self) -> 'TCPFetcher':
+    def open(self) -> None:
         self._logger.debug(
             "Connecting via TCP to %s:%d (%ss timeout)",
             self.address[0],
@@ -77,10 +76,9 @@ class TCPFetcher(AgentFetcher):
         except socket.error:
             self._socket.close()
             self._socket = None
-        return self
+            raise
 
-    def __exit__(self, exc_type: Optional[Type[BaseException]], exc_value: Optional[BaseException],
-                 traceback: Optional[TracebackType]) -> None:
+    def close(self) -> None:
         self._logger.debug("Closing TCP connection to %s:%d", self.address[0], self.address[1])
         if self._socket is not None:
             self._socket.close()

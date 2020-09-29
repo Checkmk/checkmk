@@ -8,12 +8,11 @@ import logging
 import os
 import signal
 import subprocess
-from types import TracebackType
-from typing import Any, Dict, Final, Optional, Type, Union
+from contextlib import suppress
+from typing import Any, Dict, Final, Optional, Union
 
 from six import ensure_binary, ensure_str
 
-from cmk.utils.exceptions import MKTimeout
 from cmk.utils.type_defs import AgentRawData
 
 from . import MKFetcherError
@@ -51,7 +50,7 @@ class ProgramFetcher(AgentFetcher):
             "is_cmc": self.is_cmc,
         }
 
-    def __enter__(self) -> 'ProgramFetcher':
+    def open(self) -> None:
         self._logger.debug("Calling: %s", self.cmdline)
         if self.stdin:
             self._logger.debug(
@@ -92,21 +91,32 @@ class ProgramFetcher(AgentFetcher):
                 stderr=subprocess.PIPE,
                 close_fds=True,
             )
-        return self
 
-    def __exit__(self, exc_type: Optional[Type[BaseException]], exc_value: Optional[BaseException],
-                 traceback: Optional[TracebackType]) -> None:
+    def close(self):
         if self._process is None:
             return
-        if exc_type is MKTimeout:
-            # On timeout exception try to stop the process to prevent child process "leakage"
-            os.killpg(os.getpgid(self._process.pid), signal.SIGTERM)
-            self._process.wait()
+
+        # Try to kill the process to prevent process "leakage".
+        #
+        # Please note that we have two different situations here:
+        #
+        # CMC: self._process is in a dedicated process group. By killing the process group we
+        # can terminate self._process and all it's child processes.
+        #
+        # Nagios: self._process is in the same process group as we are (See comment of
+        # subprocess.Popen) for the reason). In this situation killing the process group would
+        # also kill our own process. This must not be done.
+        if self.is_cmc:
+            with suppress(OSError):
+                os.killpg(os.getpgid(self._process.pid), signal.SIGTERM)
+                self._process.wait()
+
         # The stdout and stderr pipe are not closed correctly on a MKTimeout
         # Normally these pipes getting closed after p.communicate finishes
         # Closing them a second time in a OK scenario won't hurt neither..
         if self._process.stdout is None or self._process.stderr is None:
             raise Exception("stdout needs to be set")
+
         self._process.stdout.close()
         self._process.stderr.close()
         self._process = None

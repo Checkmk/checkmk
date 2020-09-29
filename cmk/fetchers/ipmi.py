@@ -5,16 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from types import TracebackType
-from typing import Any, Dict, Final, List, Optional, Type
+from typing import Any, Dict, Final, List, Optional
 
 import pyghmi.constants as ipmi_const  # type: ignore[import]
 import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import]
 import pyghmi.ipmi.sdr as ipmi_sdr  # type: ignore[import]
-from pyghmi.exceptions import IpmiException  # type: ignore[import]
 from six import ensure_binary
 
-import cmk.utils.debug
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import AgentRawData, HostAddress
 
@@ -52,20 +49,6 @@ class IPMIFetcher(AgentFetcher):
             "username": self.username,
             "password": self.password,
         }
-
-    def __enter__(self) -> 'IPMIFetcher':
-        self.open()
-        return self
-
-    def __exit__(self, exc_type: Optional[Type[BaseException]], exc_value: Optional[BaseException],
-                 traceback: Optional[TracebackType]) -> bool:
-        self.close()
-        if exc_type is IpmiException and not str(exc_value):
-            # Raise a more specific exception
-            raise MKFetcherError("IPMI communication failed: %r" % exc_type)
-        if not cmk.utils.debug.enabled():
-            return False
-        return True
 
     def _is_cache_enabled(self, mode: Mode) -> bool:
         return mode is not Mode.CHECKING

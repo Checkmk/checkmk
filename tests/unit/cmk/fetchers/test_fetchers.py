@@ -14,6 +14,8 @@ from typing import Optional
 
 import pytest  # type: ignore[import]
 
+from pyghmi.exceptions import IpmiException  # type: ignore[import]
+
 import cmk.utils.store as store
 from cmk.utils.type_defs import AgentRawData, OKResult, SectionName
 
@@ -22,7 +24,7 @@ from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPHostConfig, SNMPRawData, S
 
 from cmk.fetchers import FetcherType, MKFetcherError, snmp
 from cmk.fetchers.agent import DefaultAgentFileCache, NoCache
-from cmk.fetchers.ipmi import IpmiException, IPMIFetcher
+from cmk.fetchers.ipmi import IPMIFetcher
 from cmk.fetchers.piggyback import PiggybackFetcher
 from cmk.fetchers.program import ProgramFetcher
 from cmk.fetchers.snmp import SNMPFetcher, SNMPFileCache
@@ -145,7 +147,10 @@ class TestIPMIFetcher:
         assert other.password == fetcher.password
 
     def test_command_raises_IpmiException_handling(self, file_cache, monkeypatch):
-        monkeypatch.setattr(IPMIFetcher, "open", lambda self: None)
+        def open(*args):
+            raise IpmiException()
+
+        monkeypatch.setattr(IPMIFetcher, "open", open)
 
         with pytest.raises(MKFetcherError):
             with IPMIFetcher(
@@ -154,7 +159,7 @@ class TestIPMIFetcher:
                     username="",
                     password="",
             ):
-                raise IpmiException()
+                pass
 
     def test_parse_sensor_reading_standard_case(self):
         reading = SensorReading(  #

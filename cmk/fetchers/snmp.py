@@ -7,8 +7,7 @@
 import ast
 import logging
 from functools import partial
-from types import TracebackType
-from typing import Any, cast, Collection, Dict, Final, List, Mapping, Optional, Sequence, Tuple, Type
+from typing import Any, cast, Collection, Dict, Final, List, Mapping, Sequence, Tuple
 
 from cmk.utils.type_defs import SectionName
 
@@ -114,12 +113,10 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
             "snmp_config": self.snmp_config._asdict(),
         }
 
-    def __enter__(self) -> 'SNMPFetcher':
+    def open(self) -> None:
         verify_ipaddress(self.snmp_config.ipaddress)
-        return self
 
-    def __exit__(self, exc_type: Optional[Type[BaseException]], exc_value: Optional[BaseException],
-                 traceback: Optional[TracebackType]) -> None:
+    def close(self) -> None:
         pass
 
     def _detect(self) -> Collection[SectionName]:

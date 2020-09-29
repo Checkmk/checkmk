@@ -57,6 +57,8 @@ def scenario_fixture(monkeypatch):
 
     ts = Scenario()
 
+    ts.set_option("monitoring_core", "cmc")
+
     for h in test_hosts:
         ts.add_host(h)
 

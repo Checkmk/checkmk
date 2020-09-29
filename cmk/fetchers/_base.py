@@ -9,7 +9,7 @@ import itertools
 import logging
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Dict, final, Final, Generic, Optional, Type, TypeVar, Union
+from typing import Any, Literal, Dict, final, Final, Generic, Optional, Type, TypeVar, Union
 
 import cmk.utils
 import cmk.utils.store as store
@@ -165,15 +165,34 @@ class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
         """Serialize to JSON."""
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @final
     def __enter__(self) -> 'ABCFetcher':
         """Prepare the data source."""
+        try:
+            self.open()
+        except MKFetcherError:
+            raise
+        except Exception as exc:
+            raise MKFetcherError(repr(exc) if any(exc.args) else type(exc).__name__) from exc
+        return self
+
+    @final
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> Literal[False]:
+        """Destroy the data source."""
+        self.close()
+        return False
+
+    @abc.abstractmethod
+    def open(self) -> None:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def __exit__(self, exc_type: Optional[Type[BaseException]], exc_value: Optional[BaseException],
-                 traceback: Optional[TracebackType]) -> Optional[bool]:
-        """Destroy the data source."""
+    def close(self) -> None:
         raise NotImplementedError()
 
     @final

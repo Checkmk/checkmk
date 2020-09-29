@@ -6,8 +6,7 @@
 
 import json
 import logging
-from types import TracebackType
-from typing import Any, Dict, Final, List, Optional, Tuple, Type
+from typing import Any, Dict, Final, List, Optional, Tuple
 
 from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo, PiggybackTimeSettings
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
@@ -46,13 +45,11 @@ class PiggybackFetcher(AgentFetcher):
             "time_settings": self.time_settings,
         }
 
-    def __enter__(self) -> 'PiggybackFetcher':
+    def open(self) -> None:
         for origin in (self.hostname, self.address):
             self._sources.extend(PiggybackFetcher._raw_data(origin, self.time_settings))
-        return self
 
-    def __exit__(self, exc_type: Optional[Type[BaseException]], exc_value: Optional[BaseException],
-                 traceback: Optional[TracebackType]) -> None:
+    def close(self) -> None:
         self._sources.clear()
 
     def _is_cache_enabled(self, mode: Mode) -> bool:

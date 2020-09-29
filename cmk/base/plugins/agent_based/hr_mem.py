@@ -26,6 +26,7 @@ def pre_parse_hr_mem(string_table: SNMPStringTable) -> PreParsed:
         '.1.3.6.1.2.1.25.2.1.8': 'RAM disk',
         '.1.3.6.1.2.1.25.2.1.9': 'flash memory',
         '.1.3.6.1.2.1.25.2.1.10': 'network disk',
+        '.1.3.6.1.2.1.25.3.9.3': None,  # not relevant, contains info about file systems
     }
 
     def to_bytes(units: str) -> int:
@@ -37,12 +38,14 @@ def pre_parse_hr_mem(string_table: SNMPStringTable) -> PreParsed:
 
     parsed: PreParsed = {}
     for hrtype, hrdescr, hrunits, hrsize, hrused in info:
-        units = to_bytes(hrunits)
-        size = int(hrsize) * units
-        used = int(hrused) * units
-        map_type = map_types.get(hrtype)
-        # string table may contain other hr_types, e.g. .1.3.6.1.2.1.25.3.9.3
+        # should crash when the hrtype is not defined in the mapping table:
+        # it may mean there was an important change in the way the OIDs are
+        # mapped that we should know about
+        map_type = map_types[hrtype]
         if map_type:
+            units = to_bytes(hrunits)
+            size = int(hrsize) * units
+            used = int(hrused) * units
             parsed.setdefault(map_type, []).append((hrdescr.lower(), size, used))
 
     return parsed

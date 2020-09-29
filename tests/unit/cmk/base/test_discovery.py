@@ -826,7 +826,6 @@ def test__find_candidates():
         CheckPluginName('mgmt_docker_container_status_uptime'),
         CheckPluginName("mgmt_liebert_fans"),
         CheckPluginName("mgmt_uptime"),
-        CheckPluginName("mgmt_snmp_info"),  # not mgmt_mgmt_...
     }
 
     assert discovery._find_candidates(
@@ -840,7 +839,6 @@ def test__find_candidates():
         CheckPluginName('mgmt_docker_container_status_uptime'),
         CheckPluginName("mgmt_liebert_fans"),
         CheckPluginName("mgmt_uptime"),
-        CheckPluginName("mgmt_snmp_info"),  # not mgmt_mgmt_...
         CheckPluginName("uptime"),
     }
 

@@ -614,6 +614,11 @@ TEST_F(ModuleCommanderTest, InstallModules) {
     ASSERT_TRUE(fs::exists(target_folder) && fs::is_directory(target_folder));
     ASSERT_TRUE(fs::exists(backup_file) && fs::is_regular_file(backup_file));
 
+    auto target_postinstall_folder =
+        user / dirs::kUserModules / "unzip_test" / "DLLS";
+    EXPECT_TRUE(fs::exists(target_postinstall_folder) &&
+                fs::is_directory(target_postinstall_folder));
+
     // check duplicated install
     ASSERT_FALSE(
         mc.InstallModule(mc.modules_[0], root, user, InstallMode::normal));

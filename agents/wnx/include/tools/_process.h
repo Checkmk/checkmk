@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // Assorted process management routines
 #pragma once
@@ -18,32 +19,39 @@
 #include "tools/_xlog.h"
 
 namespace cma::tools {
-inline bool RunCommandAndWait(const std::wstring& Command) {
+inline bool RunCommandAndWait(const std::wstring& command,
+                              const std::wstring& work_dir) {
     STARTUPINFOW si{0};
-    memset(&si, 0, sizeof(si));
+    ::memset(&si, 0, sizeof(si));
     si.cb = sizeof(STARTUPINFO);
     si.dwFlags |= STARTF_USESTDHANDLES;  // SK: not sure with this flag
 
     PROCESS_INFORMATION pi{nullptr};
-    memset(&pi, 0, sizeof(pi));
+    ::memset(&pi, 0, sizeof(pi));
     // CREATE_NEW_CONSOLE
 
-    if (::CreateProcessW(nullptr,  // stupid windows want null here
-                         const_cast<wchar_t*>(Command.c_str()),  // win32!
-                         nullptr,  // security attribute
-                         nullptr,  // thread attribute
-                         FALSE,    // no handle inheritance
-                         0,        // Creation Flags
-                         nullptr,  // environment
-                         nullptr,  // current directory
-                         &si, &pi)) {
-        WaitForSingleObject(pi.hProcess, INFINITE);
-        CloseHandle(pi.hProcess);
-        CloseHandle(pi.hThread);
+    auto working_folder = work_dir.empty() ? nullptr : work_dir.data();
 
+    if (::CreateProcessW(nullptr,  // stupid windows want null here
+                         const_cast<wchar_t*>(command.c_str()),  // win32!
+                         nullptr,         // security attribute
+                         nullptr,         // thread attribute
+                         FALSE,           // no handle inheritance
+                         0,               // Creation Flags
+                         nullptr,         // environment
+                         working_folder,  // current directory
+                         &si, &pi)) {
+        ::WaitForSingleObject(pi.hProcess, INFINITE);
+        ::CloseHandle(pi.hProcess);
+        ::CloseHandle(pi.hThread);
         return true;
     }
     return false;
+}
+
+inline bool RunCommandAndWait(const std::wstring& command) {
+    std::wstring path{L""};
+    return RunCommandAndWait(command, path);
 }
 
 inline bool RunDetachedCommand(const std::string& Command) {

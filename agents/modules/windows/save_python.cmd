@@ -24,5 +24,5 @@ if x%str1:to_save=%==x%str1% powershell Write-Host "`'%save_dir%`' Looks as bad 
 if not %cd%== %save_dir% powershell Write-Host "`'%save_dir%`' can enter dir" -Foreground red && exit /b 7
 del * /S /Q >nul
 cd %last_dir%
-xcopy %install_dir% %save_dir% /E >nul || powershell Write-Host "`'%save_dir%`' xcopy faile" -Foreground red && exit /b 8
+xcopy %install_dir% %save_dir% /E >nul || powershell Write-Host "`'%save_dir%`' xcopy failed" -Foreground red && exit /b 8
 

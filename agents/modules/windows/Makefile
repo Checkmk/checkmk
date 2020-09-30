@@ -96,6 +96,7 @@ venv: python_install $(PYTHON_PIPFILE_LOCK) ## venv building
 	@powershell Write-Host "Target '$@'" -foreground white
 	@call exec_cmd.bat build_environment.cmd
 	@call exec_cmd.bat clean_environment.cmd
+	@call exec_cmd.bat patch_environment.cmd
 	
 	
 $(PYTHON_MODULE): venv ## zipping venv

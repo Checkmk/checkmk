@@ -1786,6 +1786,23 @@ def _plugin_pathnames_in_directory(path: str) -> List[str]:
     return []
 
 
+class _PYCHeader():
+    """ A pyc header according to https://www.python.org/dev/peps/pep-0552/"""
+    SIZE = 16
+
+    def __init__(self, magic: bytes, hash_: int, origin_mtime: int, f_size: int) -> None:
+        self.magic = magic
+        self.hash = hash_
+        self.origin_mtime = origin_mtime
+        self.f_size = f_size
+
+    @classmethod
+    def from_file(cls, path: Path) -> "_PYCHeader":
+        with path.open("rb") as handle:
+            raw_bytes = handle.read(cls.SIZE)
+        return cls(*struct.unpack("4s3I", raw_bytes))
+
+
 # TODO: Check if this totally non-portable Kung Fu still works with Python 3!
 def load_precompiled_plugin(path: str, check_context: CheckContext) -> None:
     """Loads the given check or check include plugin into the given
@@ -1797,9 +1814,7 @@ def load_precompiled_plugin(path: str, check_context: CheckContext) -> None:
     then the precompiled file is loaded."""
 
     # https://docs.python.org/3/library/py_compile.html
-    # https://www.python.org/dev/peps/pep-0552/
     # HACK:
-    header_size = 16
     precompiled_path = _precompiled_plugin_path(path)
 
     if not _is_plugin_precompiled(path, precompiled_path):
@@ -1807,34 +1822,24 @@ def load_precompiled_plugin(path: str, check_context: CheckContext) -> None:
         store.makedirs(os.path.dirname(precompiled_path))
         py_compile.compile(path, precompiled_path, doraise=True)
 
-    exec(marshal.loads(open(precompiled_path, "rb").read()[header_size:]), check_context)
+    exec(marshal.loads(open(precompiled_path, "rb").read()[_PYCHeader.SIZE:]), check_context)
 
 
 def _is_plugin_precompiled(path: str, precompiled_path: str) -> bool:
-    if not os.path.exists(precompiled_path):
+    # Check precompiled file header
+    try:
+        header = _PYCHeader.from_file(Path(precompiled_path))
+    except (FileNotFoundError, struct.error):
         return False
 
-    # Check precompiled file header
-    f = open(precompiled_path, "rb")
-
-    file_magic = f.read(4)
-    if file_magic != _MAGIC_NUMBER:
+    if header.magic != _MAGIC_NUMBER:
         return False
 
     # Skip the hash and assure that the timestamp format is used, i.e. the hash is 0.
     # For further details see: https://www.python.org/dev/peps/pep-0552/#id15
-    file_hash = int(struct.unpack("I", f.read(4))[0])
-    assert file_hash == 0
+    assert header.hash == 0
 
-    try:
-        origin_file_mtime = struct.unpack("I", f.read(4))[0]
-    except struct.error:
-        return False
-
-    if int(os.stat(path).st_mtime) != origin_file_mtime:
-        return False
-
-    return True
+    return int(os.stat(path).st_mtime) == header.origin_mtime
 
 
 def _precompiled_plugin_path(path: str) -> str:

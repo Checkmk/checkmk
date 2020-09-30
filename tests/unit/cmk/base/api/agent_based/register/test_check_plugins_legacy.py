@@ -96,24 +96,16 @@ def test_create_check_function():
     assert list(fixed_params) == ["item", "section"]
     assert inspect.isgeneratorfunction(new_function)
 
-    result = new_function(item="Test Item", section=["info"])
-    assert list(result) == [
-        checking_classes.Result(
-            state=checking_classes.State.OK,
-            summary="Main info",
-        ),
-        checking_classes.Metric("metric1", 23.0, levels=(2.0, 3.0)),
-        checking_classes.Result(
-            state=checking_classes.State.WARN,
-            summary="still main, but very long",
-            details="additional1",
-        ),
-        checking_classes.Metric("metric2", 23.0, boundaries=(0.0, None)),
-        checking_classes.Result(
-            state=checking_classes.State.CRIT,
-            details="additional2\nadditional3",
-        ),
-        checking_classes.Metric("metric3", 23.0),
+    results = new_function(item="Test Item", section=["info"])
+    # we cannot compare the actual Result objects because of
+    # the nasty bypassing of validation in the legacy conversion
+    assert [tuple(r) for r in results] == [
+        (checking_classes.State.OK, "Main info", ""),  # Result
+        ("metric1", 23.0, (2.0, 3.0), (None, None)),  # Metric
+        (checking_classes.State.WARN, "still main, but very long", "additional1"),
+        ("metric2", 23.0, (None, None), (0.0, None)),
+        (checking_classes.State.CRIT, "", "additional2\nadditional3"),
+        ("metric3", 23.0, (None, None), (None, None)),
     ]
 
 

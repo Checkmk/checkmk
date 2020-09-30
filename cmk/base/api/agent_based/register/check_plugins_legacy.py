@@ -7,6 +7,7 @@
 """
 from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 import copy
+from contextlib import suppress
 import functools
 import itertools
 
@@ -169,10 +170,23 @@ def _create_check_function(name: str, check_info_dict: Dict[str, Any],
 
 
 def _get_float(raw_value: Any) -> Optional[float]:
-    try:
+    """Try to convert to float
+
+        >>> _get_float("12.3s")
+        12.3
+
+    """
+    with suppress(TypeError, ValueError):
         return float(raw_value)
-    except (TypeError, ValueError):
+
+    if not isinstance(raw_value, str):
         return None
+    # try to cut of units:
+    for i in range(len(raw_value) - 1, 0, -1):
+        with suppress(TypeError, ValueError):
+            return float(raw_value[:i])
+
+    return None
 
 
 def _create_new_result(
@@ -185,27 +199,33 @@ def _create_new_result(
 
     if legacy_state or legacy_text:  # skip "Null"-Result
         if is_details:
-            summary: Optional[str] = None
-            details: Optional[str] = legacy_text
+            summary = ""
+            details = legacy_text
         else:
             is_details = "\n" in legacy_text
-            summary, details = legacy_text.split("\n", 1) if is_details else (legacy_text, None)
-        yield Result(
-            state=result_state,
-            summary=summary or None,
-            details=details or None,
+            summary, details = legacy_text.split("\n", 1) if is_details else (legacy_text, "")
+        # Bypass the validation of the Result class:
+        # Legacy plugins may relie on the fact that once a newline
+        # as been in the output, *all* following ouput is sent to
+        # the details. That means we have to create Results with
+        # details only, which is prohibited by the original Result
+        # class.
+        yield Result(state=result_state, summary="Fake")._replace(
+            summary=summary,
+            details=details,
         )
 
     for metric in legacy_metrics:
+        if len(metric) < 2:
+            continue
+        name = str(metric[0])
+        value = _get_float(metric[1])
+        if value is None:  # skip bogus metrics
+            continue
         # fill up with None:
-        name, value, warn, crit, min_, max_ = (
-            v for v, _ in itertools.zip_longest(metric, range(6)))
-        yield Metric(
-            str(name),
-            float(value),
-            levels=(_get_float(warn), _get_float(crit)),
-            boundaries=(_get_float(min_), _get_float(max_)),
-        )
+        warn, crit, min_, max_ = (
+            _get_float(v) for v, _ in itertools.zip_longest(metric[2:], range(4)))
+        yield Metric(name, value, levels=(warn, crit), boundaries=(min_, max_))
 
     return is_details
 

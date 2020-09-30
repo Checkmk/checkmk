@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
+import re
 
 # params = {
 #     "mincount": (tuple, integer),
@@ -18,6 +19,8 @@ import ast
 #     "minsize_largest": -"-,
 #     "maxsize_...
 # }
+
+# 'additional_rules': [('/var/log/sys*', {'maxsize_largest': (1, 2)})]
 
 #.
 #   .--Parsing-------------------------------------------------------------.
@@ -177,14 +180,37 @@ def check_filestats(_item, params, data):
 
     show_all_files = bool(params.get('show_all_files', False))
 
-    long_output = yield from check_filestats_extremes(
-        files,
+    additional_rules = params.get('additional_rules', {})
+
+    matching_files = {}
+    remaining_files = []
+    for efile in files:
+        for file_expression, rules in additional_rules:
+            if re.match(file_expression, efile['path']):
+                matching_files.setdefault(file_expression, (rules, []))[1].append(efile)
+                break
+        else:
+            remaining_files.append(efile)
+
+    remaining_files_output = yield from check_filestats_extremes(
+        remaining_files,
         params,
         show_all_files,
     )
 
-    if long_output:
-        yield 0, '\nFile details\n' + '\n'.join(long_output)
+    for file_expression, (rules, files) in matching_files.items():
+        yield 0, 'Files matching %r: %d' % (file_expression, len(files))
+        additional_rules_output = yield from check_filestats_extremes(
+            files,
+            rules,
+            show_all_files,
+        )
+        if additional_rules_output:
+            yield 0, '\nFiles matching %r:\n' % file_expression
+            yield 0, '\n'.join(additional_rules_output)
+
+    if remaining_files_output:
+        yield 0, '\n(Remaining) files in file group:\n' + '\n'.join(remaining_files_output)
 
 
 @get_parsed_item_data

@@ -598,8 +598,8 @@ class NotificationParameterServiceNow(NotificationParameter):
             elements=[
                 ("url",
                  HTTPUrl(
-                     title=_("Servicenow URL"),
-                     help=_("Configure your servicenow URL here (eg. https://myservicenow.com)."),
+                     title=_("ServiceNow URL"),
+                     help=_("Configure your ServiceNow URL here (eg. https://myservicenow.com)."),
                      allow_empty=False,
                  )),
                 ("proxy_url", HTTPProxyReference()),
@@ -607,7 +607,7 @@ class NotificationParameterServiceNow(NotificationParameter):
                  TextAscii(
                      title=_("Username"),
                      help=_("The user, used for login, has to have at least the "
-                            "role 'itil' in servicenow."),
+                            "role 'itil' in ServiceNow."),
                      size=40,
                      allow_empty=False,
                  )),
@@ -619,12 +619,12 @@ class NotificationParameterServiceNow(NotificationParameter):
                  TextAscii(
                      title=_("Caller ID"),
                      help=_("Caller is the user on behalf of whom the incident is being reported "
-                            "within servicenow. Please enter the name of the caller here. "
-                            "It is recommended to user the same user as used for login. "
-                            "Otherwise, your ACL rules in servicenow must be "
+                            "within ServiceNow. Please enter the name of the caller here. "
+                            "It is recommended to use the same user as used for login. "
+                            "Otherwise, your ACL rules in ServiceNow must be "
                             "adjusted, so that the user who is used for login "
                             "can create/edit/resolve incidents on behalf of the "
-                            "caller. Please have a look at servicenow "
+                            "caller. Please have a look at ServiceNow "
                             "documentation for details."),
                  )),
                 ("host_short_desc",
@@ -855,7 +855,7 @@ $LONGSERVICEOUTPUT$
                      ],
                  )),
                 ("timeout",
-                 TextAscii(title=_("Set optional timeout for connections to servicenow"),
+                 TextAscii(title=_("Set optional timeout for connections to ServiceNow"),
                            help=_("Here you can configure timeout settings in seconds."),
                            default_value=10,
                            size=3)),

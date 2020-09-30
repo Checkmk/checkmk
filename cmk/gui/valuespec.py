@@ -4011,6 +4011,8 @@ class Timerange(CascadingDropdown):
 
         if rangespec is None:
             rangespec = "4h"
+        elif isinstance(rangespec, int):
+            rangespec = ("age", rangespec)
 
         # Compatibility with previous versions
         elif rangespec[0] == "pnp_view":

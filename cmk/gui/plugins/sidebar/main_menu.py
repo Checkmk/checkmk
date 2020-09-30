@@ -54,15 +54,6 @@ class MainMenuRenderer:
         html.close_ul()
 
     def _show_main_menu_content(self) -> None:
-        html.open_li()
-        html.popup_trigger(
-            html.render_icon("main_search") + html.render_div(_("Search")),
-            "mega_menu_search",
-            method=MethodInline(self._get_search_menu_content()),
-            popup_group="main_menu_popup",
-        )
-        html.close_li()
-
         for menu_item in self._get_main_menu_items():
             html.open_li()
             html.popup_trigger(
@@ -114,7 +105,13 @@ class MegaMenuRenderer:
         hide_entries_js = "cmk.popup_menu.mega_menu_hide_entries('%s')" % more_id
 
         html.open_div(class_="navigation_bar")
-        html.div("", class_="search_bar")
+        # Currently we only want the search in setup and monitoring
+        if menu.name in ["setup", "monitoring"]:
+            html.open_div(class_="search_bar")
+            QuicksearchSnapin(menu.name).show()
+            html.close_div()
+        else:
+            html.div("", class_="search_bar")
         topics = menu.topics()
         if any_advanced_items(topics):
             html.open_div()

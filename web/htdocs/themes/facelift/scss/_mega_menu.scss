@@ -34,7 +34,7 @@
   margin: 0 0 $spacing;
 
   #mk_side_search {
-    width: 250px;
+    width: auto;
     padding: (2 * $spacing) $spacing;
     box-sizing: border-box;
   }
@@ -110,7 +110,11 @@
         height: $megamenu-navbar-height;
 
         div.search_bar {
+          display: flex;
+          align-items: center;
           flex-grow: 1;
+          justify-content: center;
+
 
           + div {
             position: relative;

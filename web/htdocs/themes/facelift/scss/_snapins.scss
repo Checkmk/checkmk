@@ -539,6 +539,13 @@ div.spacertop {
     background-size: 15px;
   }
 
+  input::placeholder {
+    font-size: $font-size-global;
+    line-height: 16px;
+    letter-spacing: 0;
+    color: #fff;
+  }
+
   div.topic {
     margin: 3px 0 3px 2px;
     font-size: 125%;

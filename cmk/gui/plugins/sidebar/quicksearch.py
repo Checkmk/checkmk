@@ -64,6 +64,12 @@ class FilterBehaviour(Enum):
 
 @snapin_registry.register
 class QuicksearchSnapin(SidebarSnapin):
+    def __init__(self, name=""):
+        self._name = name
+        self._placeholder = f'{_("Search in")} {_(self._name.capitalize())}'
+        self._input_id = f"mk_side_search_field_{self._name}"
+        super().__init__()
+
     @classmethod
     def type_name(cls):
         return "search"
@@ -84,14 +90,18 @@ class QuicksearchSnapin(SidebarSnapin):
         html.open_div(id_="mk_side_search",
                       class_="content_center",
                       onclick="cmk.quicksearch.close_popup();")
-        html.input(id_="mk_side_search_field", type_="text", name="search", autocomplete="off")
+        html.input(id_=self._input_id,
+                   type_="text",
+                   name="search",
+                   autocomplete="off",
+                   placeholder=self._placeholder)
         html.icon_button("#",
                          _("Search"),
                          "quicksearch",
                          onclick="cmk.quicksearch.on_search_click();")
         html.close_div()
         html.div('', id_="mk_side_clear")
-        html.javascript("cmk.quicksearch.register_search_field('mk_side_search_field');")
+        html.javascript(f"cmk.quicksearch.register_search_field('{self._input_id}');")
 
     @classmethod
     def allowed_roles(cls):
@@ -110,6 +120,7 @@ class QuicksearchSnapin(SidebarSnapin):
             return
 
         try:
+            # TODO: Integrate here the interface to the index search
             results = QuicksearchManager(query).generate_results()
             ResultRenderer().show(results, query)
 

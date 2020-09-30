@@ -24,13 +24,13 @@ def _update_remaining_reads(parsed, value):
      * present, but never an integer -> 'unknown'
      * at least one integer value -> minimum of all values
     '''
-    parsed.setdefault('remaining-reads', 'unknown')
     try:
-        value = int(value)
+        if isinstance(parsed.setdefault('remaining-reads', 'unknown'), int):
+            parsed['remaining-reads'] = min(int(value), parsed['remaining-reads'])
+        else:
+            parsed['remaining-reads'] = int(value)
     except ValueError:
-        return
-    # integer wins over string!
-    parsed['remaining-reads'] = min(value, parsed['remaining-reads'])
+        pass
 
 
 def parse_azure_agent_info(info):

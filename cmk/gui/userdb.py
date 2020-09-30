@@ -368,6 +368,9 @@ class SessionInfo:
     started_at: int
     last_activity: int
 
+    def to_json(self):
+        return asdict(self)
+
 
 def _is_valid_user_session(username: UserId, session_id: str) -> bool:
     """Return True in case this request is done with a currently valid user session"""

@@ -20,8 +20,8 @@ pytestmark = pytest.mark.checks
         'user': 'username',
         'infos': ['hostsystem', 'virtualmachine', 'datastore', 'counters']
     }, [
-        "-p", "443", "-u", "username", "-s", "secret",
-        "-i hostsystem,virtualmachine,datastore,counters", "--direct", "--hostname", "host", "-P",
+        "-p", "443", "-u", "username", "-s", "secret", "-i",
+        "hostsystem,virtualmachine,datastore,counters", "--direct", "--hostname", "host", "-P",
         "--spaces", "cut", "--no-cert-check", "address"
     ]),
     ({
@@ -37,8 +37,8 @@ pytestmark = pytest.mark.checks
         'user': 'username',
         'infos': ['hostsystem', 'virtualmachine', 'datastore', 'counters']
     }, [
-        "-p", "443", "-u", "username", "-s", "secret",
-        "-i hostsystem,virtualmachine,datastore,counters", "--direct", "--hostname", "host", "-P",
+        "-p", "443", "-u", "username", "-s", "secret", "-i",
+        "hostsystem,virtualmachine,datastore,counters", "--direct", "--hostname", "host", "-P",
         "--spaces", "cut", "--vm_piggyname", "alias", "--no-cert-check", "address"
     ]),
 ])

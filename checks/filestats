@@ -171,15 +171,20 @@ def check_filestats(_item, params, data):
         yield check_filestats_count(count, params)
 
     files = [i for i in reported_lines if i.get("type") == "file"]
-    if files:
-        long_output = yield from check_filestats_extremes(
-            files,
-            params,
-            params.get('show_all_files', False),
-        )
 
-        if long_output:
-            yield 0, '\nFile details\n' + '\n'.join(long_output)
+    if not files:
+        return
+
+    show_all_files = bool(params.get('show_all_files', False))
+
+    long_output = yield from check_filestats_extremes(
+        files,
+        params,
+        show_all_files,
+    )
+
+    if long_output:
+        yield 0, '\nFile details\n' + '\n'.join(long_output)
 
 
 @get_parsed_item_data

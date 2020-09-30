@@ -13,9 +13,9 @@ from functools import partial
 
 import pytest  # type: ignore[import]
 
-# No stub files
-from testlib.base import Scenario  # type: ignore[import]
-from testlib.debug_utils import cmk_debug_enabled  # type: ignore[import]
+from testlib.utils import is_enterprise_repo
+from testlib.base import Scenario
+from testlib.debug_utils import cmk_debug_enabled
 
 import cmk.utils.paths
 from cmk.utils.log import logger
@@ -57,7 +57,10 @@ def scenario_fixture(monkeypatch):
 
     ts = Scenario()
 
-    ts.set_option("monitoring_core", "cmc")
+    if is_enterprise_repo():
+        ts.set_option("monitoring_core", "cmc")
+    else:
+        ts.set_option("monitoring_core", "nagios")
 
     for h in test_hosts:
         ts.add_host(h)

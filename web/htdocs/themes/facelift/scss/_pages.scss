@@ -982,10 +982,9 @@ table.nform {
     a.more {
       float: right;
 
-      img {
-        top: 3px;
-        width: 16px;
-        height: 16px;
+      div::after {
+        position: relative;
+        top: 2px;
       }
     }
   }

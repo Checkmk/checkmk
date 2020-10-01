@@ -45,35 +45,36 @@ a.more {
   }
 }
 
-div.more_container {
-  position: relative;
-  width: 100%;
-
-  a.more {
-    position: absolute;
-    top: -7px;
-    right: -5px;
-  }
-}
-
-.more a.more {
-  img.show_more {
-    z-index: 0;
-    opacity: 0;
-  }
-
-  img.show_less {
-    opacity: 1;
-  }
-}
-
 a.more {
-  img.show_more {
-    z-index: 1;
-    opacity: 1;
+  div.show_less { display: none; }
+  div.show_more {
+    display: block;
+    &:after { content: url("images/icon_show_more.svg"); }
   }
 
-  img.show_less {
-    opacity: 0;
+  .more & {
+    div.show_more { display: none; }
+    div.show_less {
+      display: block;
+      &:after { content: url("images/icon_show_less.svg"); }
+    }
+  }
+
+  &.has_text {
+    width: auto;
+    padding-right: 15px;
+    font-size: $font-size-small;
+
+    &:hover { font-weight: $font-weight-bold; }
+
+    div.show_more, div.show_less {
+      float: right;
+
+      &:after {
+        position: relative;
+        top: 4px;
+        margin-left: 6px;
+      }
+    }
   }
 }

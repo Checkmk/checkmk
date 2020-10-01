@@ -33,11 +33,6 @@
   padding: 0;
   margin: 0 0 $spacing;
 
-  a.more {
-    position: absolute;
-    right: 0;
-  }
-
   #mk_side_search {
     width: 250px;
     padding: (2 * $spacing) $spacing;
@@ -114,12 +109,26 @@
         background-color: #383838;
       }
 
+      div.navigation_bar {
+        display: flex;
+        height: $megamenu-navbar-height;
+
+        div.search_bar { flex-grow: 1; }
+
+        a.more {
+          position: relative;
+          padding: 21px 15px 0;
+          flex-basis: 75px;
+        }
+      }
+
       div.content.inner {
         display: flex;
         flex-flow: column wrap;
-        height: calc(100vh - #{$page-header-height});
+        height: calc(100vh - #{$page-header-height} - #{$megamenu-navbar-height});
         padding: 0;
         overflow-y: auto;
+        border-top: 1px solid $headline-color;
 
         div.topic {
           flex-grow: 1;

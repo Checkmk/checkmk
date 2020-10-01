@@ -113,9 +113,15 @@ class MegaMenuRenderer:
         html.open_div(id_=more_id, class_=["main_menu", "more" if show_more else "less"])
         hide_entries_js = "cmk.popup_menu.mega_menu_hide_entries('%s')" % more_id
 
+        html.open_div(class_="navigation_bar")
+        html.div("", class_="search_bar")
         topics = menu.topics()
         if any_advanced_items(topics):
-            html.more_button(id_=more_id, dom_levels_up=1, additional_js=hide_entries_js)
+            html.more_button(id_=more_id,
+                             dom_levels_up=2,
+                             additional_js=hide_entries_js,
+                             with_text=True)
+        html.close_div()
         html.open_div(class_="content inner")
         for topic in topics:
             self._show_topic(topic, menu.name)

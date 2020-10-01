@@ -215,11 +215,6 @@ div#top_heading {
           margin-right: 7px;
         }
 
-        a.more img {
-          width: auto;
-          height: 20px;
-        }
-
         div.topic {
           margin-top: $spacing;
 
@@ -278,6 +273,17 @@ div#top_heading {
             input.button {
               display: none;
             }
+          }
+        }
+
+        div.more_container {
+          position: relative;
+          width: 100%;
+
+          a.more {
+            position: absolute;
+            top: -2px;
+            right: -5px;
           }
         }
       }
@@ -591,6 +597,7 @@ div#page_menu_popups div.side_popup {
 
     a.more {
       position: absolute;
+      top: 6px;
       right: 4px;
     }
 

@@ -2682,18 +2682,28 @@ class html(ABCHTMLGenerator):
             self.render_icon_button(url, title, icon, id_, onclick, style, target, cssclass, class_,
                                     emblem))
 
-    def more_button(self, id_: str, dom_levels_up: int, additional_js: str = "") -> None:
+    def more_button(self,
+                    id_: str,
+                    dom_levels_up: int,
+                    additional_js: str = "",
+                    with_text: bool = False) -> None:
         if config.user.get_attribute("ui_basic_advanced_mode") in ("enforce_basic",
                                                                    "enforce_advanced"):
             return
 
         self.open_a(href="javascript:void(0)",
-                    class_="more",
+                    class_=["more", "has_text" if with_text else ""],
                     onfocus="if (this.blur) this.blur();",
                     onclick="cmk.utils.toggle_more(this, %s, %d);%s" %
                     (json.dumps(id_), dom_levels_up, additional_js))
-        self.icon("show_more", title=_("Show more items"), class_="show_more")
-        self.icon("show_less", title=_("Show less items"), class_="show_less")
+        self.open_div(title="Show more items" if not with_text else "", class_="show_more")
+        if with_text:
+            self.span(_("show more"))
+        self.close_div()
+        self.open_div(title="Show less items" if not with_text else "", class_="show_less")
+        if with_text:
+            self.span(_("show less"))
+        self.close_div()
         self.close_a()
 
     def popup_trigger(self,

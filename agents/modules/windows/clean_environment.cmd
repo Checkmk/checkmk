@@ -13,7 +13,10 @@ cd %save_dir% || Powershell Write-Host "`'%save_dir%`' absent" -Foreground red &
 @7z x -y ar.zip
 @del /Q ar.zip
 @rem root files 
+
+@powershell Write-Host "Cleaning environment phase 1" -foreground Cyan
 @echo off
+del /Q python-3.8.zip
 del /Q *.*
 rd /q /s libs
 rd /q /s tools
@@ -29,3 +32,15 @@ for /f %%i in ('dir /a:d /s /b pipenv*') do rd /s /q %%i
 for /f %%i in ('dir /a:d /s /b virtualenv*') do rd /s /q %%i
 for /f %%i in ('dir /a:d /s /b pip*') do rd /s /q %%i
 
+@powershell Write-Host "Cleaning environment phase 2" -foreground Cyan
+@rem Agressive cleaning phase
+@rem __pycache__ as not required
+for /f %%i in ('dir /a:d /s /b __pycache__') do del /Q "%%i\*.*"
+@rem lib2to3 as not required
+rd /Q /S Lib\lib2to3
+@rem ensurepip as not required
+rd /Q /S Lib\ensurepip
+@rem Lib\site-packages\setuptools as duplicated in .venv
+cd Lib
+for /f %%i in ('dir /a:d /s /b setuptools*') do rd /s /q %%i
+cd ..

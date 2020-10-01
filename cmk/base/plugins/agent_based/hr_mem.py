@@ -43,9 +43,15 @@ def pre_parse_hr_mem(string_table: SNMPStringTable) -> PreParsed:
         # mapped that we should know about
         map_type = map_types[hrtype]
         if map_type:
-            units = to_bytes(hrunits)
-            size = int(hrsize) * units
-            used = int(hrused) * units
+            # Sometimes one of the values that is being converted is an empty
+            # string. This means that SNMP delivers invalid data, and the service
+            # should not be discovered.
+            try:
+                units = to_bytes(hrunits)
+                size = int(hrsize) * units
+                used = int(hrused) * units
+            except ValueError:
+                return {}
             parsed.setdefault(map_type, []).append((hrdescr.lower(), size, used))
 
     return parsed

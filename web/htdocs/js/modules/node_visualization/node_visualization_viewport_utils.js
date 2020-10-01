@@ -546,7 +546,7 @@ export class TopologyNode extends AbstractGUINode {
         if (this.node.data.growth_possible) {
             growth_possible_selection.enter().append("svg:image")
                 .classed("growth_possible", true)
-                .attr("xlink:href", this.viewport.main_instance.get_theme_prefix() + "/images/icons/icons8-hierarchy.svg")
+                .attr("xlink:href", this.viewport.main_instance.get_theme_prefix() + "/images/icon_hierarchy.svg")
                 .attr("width", 16)
                 .attr("height", 16)
                 .attr("x", -8)
@@ -561,7 +561,7 @@ export class TopologyNode extends AbstractGUINode {
         if (this.node.data.growth_forbidden) {
             growth_forbidden_selection.enter().append("svg:image")
                 .classed("growth_forbidden", true)
-                .attr("xlink:href", this.viewport.main_instance.get_theme_prefix() + "/images/icons/icons8-no-entry.svg")
+                .attr("xlink:href", this.viewport.main_instance.get_theme_prefix() + "/images/icon_no_entry.svg")
                 .attr("width", 16)
                 .attr("height", 16)
                 .attr("x", -28)

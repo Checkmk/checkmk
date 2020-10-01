@@ -535,7 +535,7 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
     render_togglebutton(selection) {
         selection.style("cursor", "pointer");
         selection.append("img")
-                        .attr("src", this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icon_aggr.png")
+                        .attr("src", this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icon_aggr.svg")
                         .attr("title", "Layout Designer")
                         .style("opacity", 1);
     }
@@ -712,8 +712,8 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
     }
 
     _render_layout_history(history_selection) {
-        let icons = [{"icon": "icons8-undo.svg", "id": "undo", "title": "Undo", "handler": ()=>this._move_in_history(1)},
-                     {"icon": "icons8-redo.svg", "id": "redo", "title": "Redo", "handler": ()=>this._move_in_history(-1)}]
+        let icons = [{"icon": "icon_undo.svg", "id": "undo", "title": "Undo", "handler": ()=>this._move_in_history(1)},
+                     {"icon": "icon_redo.svg", "id": "redo", "title": "Redo", "handler": ()=>this._move_in_history(-1)}]
 
 
         let icon_selection = history_selection.selectAll("img.icon").data(icons)
@@ -723,7 +723,7 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
                 .classed("box", true)
                 .attr("id", d=>d.id)
                 .attr("title", d=>d.title)
-                .attr("src", d=>this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icons/" + d.icon)
+                .attr("src", d=>this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/" + d.icon)
                 .on("click", d=>d.handler())
             .merge(icon_selection)
 
@@ -1129,19 +1129,19 @@ class LayoutApplier{
                 elements.push({text: "Convert to " + style.prototype.description(),
                                on: ()=> this._convert_node(node, style),
                                href: "",
-                               img: this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icon_aggr.png"})
+                               img: this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icon_aggr.svg"})
             } else {
                 elements.push({text: "Convert all nodes to " + style.prototype.description(),
                            on: ()=> this._convert_all(style),
                            href: "",
-                           img: this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icon_aggr.png"})
+                           img: this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icon_aggr.svg"})
             }
         }
         if (node && node.data.use_style) {
             elements.push({text: "Remove style",
                            on: ()=> this._convert_node(node, null),
                            href: "",
-                           img: this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icon_aggr.png"})
+                           img: this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icon_aggr.svg"})
         }
 
         return elements

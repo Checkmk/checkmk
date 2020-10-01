@@ -24,7 +24,7 @@ from cmk.base.api.agent_based.utils import (
     not_equals,
 )
 from cmk.base.api.agent_based.register.section_plugins import _validate_detect_spec
-from cmk.base.plugins.agent_based.utils import checkpoint, ucd_hr_detection, printer
+from cmk.base.plugins.agent_based.utils import checkpoint, ucd_hr_detection, printer, pulse_secure
 
 MIGRATED_SCAN_FUNCTIONS: Dict[str, SNMPDetectSpec] = {
     # I am not sure why the following suppressions are needed.
@@ -32,6 +32,7 @@ MIGRATED_SCAN_FUNCTIONS: Dict[str, SNMPDetectSpec] = {
     # If I add an explicit typehint to 'DETECT' in checkpoint, these suppressions are not needed.
     "scan_checkpoint": checkpoint.DETECT,  # type: ignore[has-type]
     "scan_ricoh_printer": printer.DETECT_RICOH,  # type: ignore[has-type]
+    "scan_pulse_secure": pulse_secure.DETECT_PULSE_SECURE,  # type: ignore[has-type]
     "_is_ucd": ucd_hr_detection.UCD,  # type: ignore[has-type]
     "is_ucd": ucd_hr_detection.UCD,  # type: ignore[has-type]
     "is_hr": ucd_hr_detection.HR,  # type: ignore[has-type]

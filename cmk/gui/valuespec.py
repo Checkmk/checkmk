@@ -5489,21 +5489,22 @@ class IconSelector(ValueSpec):
         if not self._show_builtin_icons:
             return {}
 
-        dirs = [
-            os.path.join(cmk.utils.paths.omd_root,
-                         "local/share/check_mk/web/htdocs/themes/%s/images" % html.get_theme()),
-        ]
-        if not only_local:
-            dirs.append(
+        icons = {}
+        for theme in html.icon_themes():
+            dirs = [
                 os.path.join(cmk.utils.paths.omd_root,
-                             "share/check_mk/web/htdocs/themes/%s/images" % html.get_theme()))
+                             "local/share/check_mk/web/htdocs/themes/%s/images" % theme),
+            ]
+            if not only_local:
+                dirs.append(
+                    os.path.join(cmk.utils.paths.omd_root,
+                                 "share/check_mk/web/htdocs/themes/%s/images" % theme))
 
-        # Only include icon_*.png, but strip the icon prefix
-        return {
-            i[0][5:]: i[1]
-            for i in self._get_icons_from_directories(dirs, default_topic="builtin").items()
-            if i[0].startswith("icon_")
-        }
+            for file_stem, category in self._get_icons_from_directories(
+                    dirs, default_topic="builtin").items():
+                if file_stem.startswith("icon_"):
+                    icons[file_stem[5:]] = category
+        return icons
 
     def _available_user_icons(self, only_local=False) -> Dict[str, str]:
         dirs = [

@@ -1163,7 +1163,7 @@ def load_plugins(force: bool) -> None:
         roles.setdefault(br, {})
 
 
-def theme_choices() -> List[Tuple[str, Any]]:
+def theme_choices() -> List[Tuple[str, str]]:
     themes = {}
 
     for base_dir in [Path(cmk.utils.paths.web_dir), cmk.utils.paths.local_web_dir]:
@@ -1187,6 +1187,7 @@ def theme_choices() -> List[Tuple[str, Any]]:
                     "title": theme_dir.name,
                 }
 
+            assert isinstance(theme_meta["title"], str)
             themes[theme_dir.name] = theme_meta["title"]
 
     return sorted(themes.items())

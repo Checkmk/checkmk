@@ -1069,6 +1069,14 @@ class html(ABCHTMLGenerator):
     def get_theme(self) -> str:
         return self._theme
 
+    def icon_themes(self) -> List[str]:
+        """Returns the themes where icons of a theme can be found in increasing order of importance.
+        By default the facelift theme provides all icons. If a theme wants to use different icons it
+        only needs to add those icons under the same name. See _detect_icon_path for a detailed list
+        of paths.
+        """
+        return ["facelift"] if self._theme == "facelift" else ["facelift", self._theme]
+
     def theme_url(self, rel_url: str) -> str:
         return "themes/%s/%s" % (self._theme, rel_url)
 
@@ -2605,8 +2613,7 @@ class html(ABCHTMLGenerator):
         return icon
 
     def _detect_icon_path(self, icon_name: str) -> str:
-        """Detect from which place an icon shall be used and return it's path relative to
- htdocs/
+        """Detect from which place an icon shall be used and return it's path relative to htdocs/
 
         Priority:
         1. In case the modern-dark theme is active: <theme> = modern-dark -> priorities 3-6
@@ -2618,13 +2625,7 @@ class html(ABCHTMLGenerator):
         7. images/icons/[name].png in site local hierarchy
         8. images/icons/[name].png in standard hierarchy
         """
-
-        if self._theme == "modern-dark":
-            # in the modern-dark theme facelift images act as fallbacks
-            themes = [self._theme, "facelift"]
-        else:
-            themes = [self._theme]
-        for theme in themes:
+        for theme in self.icon_themes():
             rel_path = "share/check_mk/web/htdocs/themes/%s/images/icon_%s" % (theme, icon_name)
             for file_type in ["svg", "png"]:
                 for base_dir in [cmk.utils.paths.omd_root, cmk.utils.paths.omd_root + "/local"]:

@@ -1,0 +1,24 @@
+Title: mssql_jobs: new plugin to monitor scheduled jobs on MSSQL Server
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1598017606
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+mssql_jobs is a new plugin that enables the monitoring of scheduled jobs on
+Microsoft SQL Server. Each job is listed as a seperate service, for which the
+following information is shown:
+
+-job duration
+-MSSQL job status
+-outcome message
+-step name at which the job failed (if applicable)
+-last run
+-next run
+
+It is possible to set warn/crit levels for the job duration, in case the job or
+schedule is inactive, and/or corresponding to the MSSQL job status.
+Performance data is tracked in terms of job duration.

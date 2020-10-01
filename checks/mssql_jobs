@@ -1,0 +1,202 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# Sample output:
+
+# <<<mssql_jobs:sep(09)>>>
+# MSSQLSERVER	{E86617B1-A9B2-4443-8916-312AB1F526DE}	syspolicy_purge_history	1	20200821	20000	5		0	0	0	1	2020-08-21 07:54:34
+
+# Sample error:
+# MSSQLSERVER ERROR: Incorrect syntax near the keyword 'LEFT'. (SQLState: 42000/NativeError: 156). Incorrect syntax near 'sjh'. (SQLState: 42000/NativeError: 102).
+
+# Database documentation:
+# https://docs.microsoft.com/en-us/sql/relational-databases/system-tables/dbo-sysjobs-transact-sql?view=sql-server-ver15
+
+import datetime
+
+factory_settings['mssql_jobs_defaults'] = {
+    'ignore_db_status': True,
+    'status_disabled_jobs': 0,
+    'status_missing_jobs': 2,
+    'run_duration': None,
+}
+
+DATETIME_FMT = '%Y-%m-%d %H:%M:%S'
+
+
+def _calculate_seconds(raw_duration):
+    '''Return the number of seconds from a string in HHMMSS format.
+    The strings are of variable length, e.g. 124 = 1 minute 24 seconds.
+
+    >>> _calculate_seconds('0')
+    0.0
+
+    >>> _caluclate_seconds('3'):
+    3.0
+
+    >>> _caluclate_seconds('124'):
+    84.0
+
+    >>> _calculate_seconds('12314'):
+    4994.0
+
+    '''
+
+    length = len(raw_duration)
+
+    if length <= 2:
+        return float(raw_duration)
+
+    if length <= 4:
+        raw_seconds = float(raw_duration[-2:])
+        raw_minutes = float(raw_duration[:-2])
+        return raw_seconds + raw_minutes * 60
+
+    raw_seconds = float(raw_duration[-2:])
+    raw_minutes = float(raw_duration[-4:-2])
+    raw_hours = float(raw_duration[:-4])
+
+    return raw_seconds + raw_minutes * 60 + raw_hours * 3600
+
+
+def _format_to_datetime(raw_date, raw_time):
+    '''Return a valid datetime from date and time strings in YYYYMMDD and HHMMSS formats respectively.
+    The date and/or time may be set to '0'. The time may be of variable length, e.g. 300 = 00:03:00.
+
+    >>> _format_to_datetime('20200821', '132400')
+    '2020-08-21 13:24:00'
+
+    >>> _format_to_datetime('20200821', '300')
+    '2020-08-21 00:03:00'
+
+    >>> _format_to_datetime('20200821', '0')
+    '2020-08-21 00:00:00'
+
+    >>> _format_to_datetime('0', '0')
+    'N/A'
+
+    '''
+    if raw_date == '0':
+        return 'N/A'
+
+    source_datetime = datetime.datetime.strptime(
+        raw_date + ' ' + raw_time.zfill(6),
+        '%Y%m%d %H%M%S',
+    )
+
+    return datetime.datetime.strftime(source_datetime, DATETIME_FMT)
+
+
+def parse_mssql_jobs(info):
+
+    col_headers = [
+        'job_id',
+        'job_name',
+        'job_enabled',
+        'next_run_date',
+        'next_run_time',
+        'last_run_outcome',
+        'last_outcome_message',
+        'last_run_date',
+        'last_run_time',
+        'last_run_duration',
+        'schedule_enabled',
+        'server_current_time',
+    ]
+    outcome_translation = {
+        '0': 'Fail',
+        '1': 'Succeed',
+        '2': 'Retry',
+        '3': 'Cancel',
+        '4': 'In progress',
+        '5': 'Unknown',
+    }
+    parsed = {}
+
+    for line in iter(info):
+        if len(line) == 1:
+            continue
+        # the job output may contain more than one line per job, depending on how often
+        # it is scheduled. the user is only interested in the most immediate next run time
+        if line[1] in parsed:
+            continue
+        job_details = dict(zip(col_headers, line))
+        job_details['last_run_outcome'] = outcome_translation[job_details['last_run_outcome']]
+
+        job_details['last_run_duration'] = _calculate_seconds(job_details['last_run_duration'],)
+
+        job_details['last_run_datetime'] = _format_to_datetime(
+            job_details['last_run_date'],
+            job_details['last_run_time'],
+        )
+        job_details['next_run_datetime'] = _format_to_datetime(
+            job_details['next_run_date'],
+            job_details['next_run_time'],
+        )
+        parsed[job_details['job_name']] = job_details
+
+    return parsed
+
+
+def discover_mssql_jobs(parsed):
+
+    for job_name in parsed:
+        yield job_name, {}
+
+
+def check_mssql_jobs(item, params, parsed):
+
+    job_specs = parsed.get(item)
+
+    # status to be returned when jobs disappear
+    status_missing_jobs = params['status_missing_jobs']
+    if job_specs is None:
+        return status_missing_jobs, 'Job not found'
+
+    status_mapping = {
+        'Fail': 2,
+        'Succeed': 0,
+        'Retry': 0,
+        'Cancel': 0,
+        'In progress': 0,
+        'Unknown': 3,
+    }
+
+    yield check_levels(
+        value=job_specs['last_run_duration'],
+        dsname='database_job_duration',
+        params=params.get('run_duration'),
+        human_readable_func=get_age_human_readable,
+        infoname='Last duration',
+    )
+
+    db_status = 0
+    if not params['ignore_db_status']:
+        db_status = status_mapping[job_specs['last_run_outcome']]
+    yield db_status, 'MSSQL status: %s' % job_specs['last_run_outcome']
+
+    yield 0, 'Last run: %s' % job_specs['last_run_datetime']
+
+    status_disabled_jobs = params['status_disabled_jobs']
+    if job_specs['job_enabled'] == '0':
+        yield status_disabled_jobs, 'Job is disabled'
+    elif job_specs['schedule_enabled'] == '0':
+        yield status_disabled_jobs, 'Schedule is disabled'
+    else:
+        yield 0, 'Next run: %s' % job_specs['next_run_datetime']
+
+    yield 0, '\nOutcome message: %s' % job_specs['last_outcome_message']
+
+
+check_info['mssql_jobs'] = {
+    'parse_function': parse_mssql_jobs,
+    'inventory_function': discover_mssql_jobs,
+    'check_function': check_mssql_jobs,
+    'service_description': 'MSSQL Job: %s',
+    'group': 'mssql_jobs',
+    'has_perfdata': True,
+    'default_levels_variable': 'mssql_jobs_defaults',
+}

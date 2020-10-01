@@ -401,9 +401,8 @@ def _do_discovery_for(
     only_new: bool,
     on_error: str,
 ) -> None:
-    check_api_utils.set_hostname(hostname)
 
-    discovered_services = _discover_services(
+    discovered_services, discovered_host_labels = _discover_host_labels_and_services(
         hostname,
         ipaddress,
         multi_host_sections,
@@ -443,12 +442,6 @@ def _do_discovery_for(
 
     autochecks.save_autochecks_file(hostname, new_services)
 
-    discovered_host_labels = _discover_host_labels(
-        hostname,
-        ipaddress,
-        multi_host_sections,
-        on_error=on_error,
-    )
     new_host_labels, host_labels_per_plugin = _perform_host_label_discovery(
         hostname,
         discovered_host_labels,
@@ -1288,6 +1281,35 @@ def _find_mgmt_candidates(
     }
 
 
+def _discover_host_labels_and_services(
+    hostname: HostName,
+    ipaddress: Optional[HostAddress],
+    multi_host_sections: MultiHostSections,
+    on_error: str,
+    check_plugin_whitelist: Optional[Set[CheckPluginName]],
+) -> Tuple[List[Service], DiscoveredHostLabels]:
+
+    # Discovers host labels and services per real host or node
+
+    check_api_utils.set_hostname(hostname)
+
+    discovered_host_labels = _discover_host_labels(
+        hostname,
+        ipaddress,
+        multi_host_sections,
+        on_error,
+    )
+
+    discovered_services = _discover_services(
+        hostname,
+        ipaddress,
+        multi_host_sections,
+        on_error,
+        check_plugin_whitelist,
+    )
+    return discovered_services, discovered_host_labels
+
+
 # Create a table of autodiscovered services of a host. Do not save
 # this table anywhere. Do not read any previously discovered
 # services. The table has the following columns:
@@ -1488,19 +1510,18 @@ def _get_discovered_services(
     multi_host_sections: MultiHostSections,
     on_error: str,
 ) -> Tuple[ServicesTable, DiscoveredHostLabels]:
-    check_api_utils.set_hostname(hostname)
-
-    # Create a dict from check_plugin_name/item to check_source/paramstring
-    services: ServicesTable = {}
 
     # Handle discovered services -> "new"
-    discovered_services = _discover_services(
+    discovered_services, discovered_host_labels = _discover_host_labels_and_services(
         hostname,
         ipaddress,
         multi_host_sections,
         on_error,
         check_plugin_whitelist=None,
     )
+
+    # Create a dict from check_plugin_name/item to check_source/paramstring
+    services: ServicesTable = {}
     for discovered_service in discovered_services:
         services.setdefault(discovered_service.id(), ("new", discovered_service))
 
@@ -1508,13 +1529,6 @@ def _get_discovered_services(
     for existing_service in autochecks.parse_autochecks_file(hostname, config.service_description):
         check_source = "vanished" if existing_service.id() not in services else "old"
         services[existing_service.id()] = check_source, existing_service
-
-    discovered_host_labels = _discover_host_labels(
-        hostname,
-        ipaddress,
-        multi_host_sections,
-        on_error,
-    )
 
     return services, discovered_host_labels
 

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Tuple
+from typing import Dict
 from pathlib import Path
 
 from testlib.utils import get_standard_linux_agent_output
@@ -139,11 +139,16 @@ class Scenario:
         self._autochecks[hostname] = services
 
     def apply(self, monkeypatch):
+        check_vars: Dict = {}
         for key, value in self.config.items():
+            if key in config._check_variables:
+                check_vars.setdefault(key, value)
+                continue
             monkeypatch.setattr(config, key, value)
 
         self.config_cache = config.get_config_cache()
         self.config_cache.initialize()
+        config.set_check_variables(check_vars)
 
         if self._autochecks:
             # TODO: This monkeypatching is horrible, it totally breaks any abstraction!

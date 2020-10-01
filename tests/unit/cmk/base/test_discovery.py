@@ -7,18 +7,25 @@
 # pylint: disable=redefined-outer-name,protected-access
 
 import pytest  # type: ignore[import]
-from typing import Dict
+from typing import Dict, Set, NamedTuple
 
-from testlib.base import Scenario
-from testlib.debug_utils import cmk_debug_enabled
+# No stub files
+from testlib.base import Scenario  # type: ignore[import]
+from testlib.debug_utils import cmk_debug_enabled  # type: ignore[import]
 
 from cmk.utils.type_defs import CheckPluginName, SectionName, SourceType
 from cmk.utils.labels import DiscoveredHostLabelsStore
 
+import cmk.base.ip_lookup as ip_lookup
 from cmk.base.checkers.agent import AgentHostSections
 from cmk.base.checkers.snmp import SNMPHostSections
 from cmk.base.checkers.host_sections import HostKey, MultiHostSections
-from cmk.base.discovered_labels import ServiceLabel, DiscoveredServiceLabels
+from cmk.base.discovered_labels import (
+    ServiceLabel,
+    DiscoveredServiceLabels,
+    DiscoveredHostLabels,
+    HostLabel,
+)
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
@@ -934,3 +941,224 @@ def test_do_discovery(monkeypatch):
 
     store = DiscoveredHostLabelsStore("test-host")
     assert store.load() == _expected_host_labels
+
+
+RealHostScenario = NamedTuple("RealHostScenario", [
+    ("hostname", str),
+    ("ipaddress", str),
+    ("multi_host_sections", MultiHostSections),
+])
+
+
+@pytest.fixture(name="realhost_scenario")
+def _realhost_scenario(monkeypatch):
+    hostname = "test-host"
+    ipaddress = "127.0.0.1"
+    ts = Scenario().add_host(hostname, ipaddress=ipaddress)
+    ts.set_ruleset("inventory_df_rules", [{
+        'value': {
+            'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'],
+            'never_ignore_mountpoints': ['~.*/omd/sites/[^/]+/tmp$']
+        },
+        'condition': {
+            'host_labels': {
+                'cmk/check_mk_server': 'yes'
+            }
+        }
+    }])
+    ts.apply(monkeypatch)
+
+    return RealHostScenario(
+        hostname,
+        ipaddress,
+        MultiHostSections(
+            data={
+                HostKey(hostname=hostname, ipaddress=ipaddress, source_type=SourceType.HOST):
+                    AgentHostSections(
+                        sections={
+                            SectionName("labels"): [[
+                                '{"cmk/check_mk_server":"yes"}',
+                            ],],
+                            SectionName("df"): [
+                                [
+                                    '/dev/sda1',
+                                    'vfat',
+                                    '523248',
+                                    '3668',
+                                    '519580',
+                                    '1%',
+                                    '/boot/efi',
+                                ],
+                                [
+                                    'tmpfs',
+                                    'tmpfs',
+                                    '8152916',
+                                    '244',
+                                    '8152672',
+                                    '1%',
+                                    '/opt/omd/sites/heute/tmp',
+                                ],
+                            ],
+                        })
+            }),
+    )
+
+
+@pytest.mark.usefixtures("config_load_all_checks")
+def test__discover_host_labels_and_services_on_realhost(realhost_scenario):
+    scenario = realhost_scenario
+
+    with cmk_debug_enabled():
+        discovered_services, discovered_host_labels = discovery._discover_host_labels_and_services(
+            scenario.hostname,
+            scenario.ipaddress,
+            scenario.multi_host_sections,
+            on_error="raise",
+            check_plugin_whitelist={CheckPluginName('df')},
+        )
+
+    assert discovered_host_labels == DiscoveredHostLabels(
+        HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'))
+
+    services = {(s.check_plugin_name, s.item) for s in discovered_services}
+    expected_services: Set = {
+        (CheckPluginName('df'), '/boot/efi'),
+    }
+
+    assert services == expected_services
+
+
+ClusterScenario = NamedTuple("ClusterScenario", [
+    ("host_config", config.HostConfig),
+    ("ipaddress", str),
+    ("multi_host_sections", MultiHostSections),
+])
+
+
+@pytest.fixture(name="cluster_scenario")
+def _cluster_scenario(monkeypatch):
+    hostname = "test-cluster"
+    ipaddress = "127.0.0.1"
+    node1_hostname = 'test-node1'
+    node1_ipaddress = "127.0.0.2"
+    node2_hostname = 'test-node2'
+    node2_ipaddress = "127.0.0.3"
+
+    ipaddresses = {
+        hostname: ipaddress,
+        node1_hostname: node1_ipaddress,
+        node2_hostname: node2_ipaddress,
+    }
+
+    def fake_lookup_ip_address(host_config, family=None, for_mgmt_board=True):
+        return ipaddresses.get(host_config.hostname)
+
+    monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
+
+    ts = Scenario()
+    ts.add_host(node1_hostname)
+    ts.add_host(node2_hostname)
+    ts.add_cluster(hostname, nodes=[node1_hostname, node2_hostname])
+    ts.set_ruleset("inventory_df_rules", [{
+        'value': {
+            'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'],
+            'never_ignore_mountpoints': ['~.*/omd/sites/[^/]+/tmp$']
+        },
+        'condition': {
+            'host_labels': {
+                'cmk/check_mk_server': 'yes'
+            }
+        }
+    }])
+    ts.set_ruleset("clustered_services", [([], [node1_hostname], ['fs_'])])
+    config_cache = ts.apply(monkeypatch)
+    host_config = config_cache.get_host_config(hostname)
+
+    return ClusterScenario(
+        host_config,
+        ipaddress,
+        MultiHostSections(
+            data={
+                HostKey(hostname=node1_hostname,
+                        ipaddress=node1_ipaddress,
+                        source_type=SourceType.HOST): AgentHostSections(
+                    sections={
+                        SectionName("labels"): [[
+                            '{"cmk/check_mk_server":"yes"}',
+                        ],],
+                        SectionName("df"): [
+                            [
+                                '/dev/sda1',
+                                'vfat',
+                                '523248',
+                                '3668',
+                                '519580',
+                                '1%',
+                                '/boot/efi',
+                            ],
+                            [
+                                'tmpfs',
+                                'tmpfs',
+                                '8152916',
+                                '244',
+                                '8152672',
+                                '1%',
+                                '/opt/omd/sites/heute1/tmp',
+                            ],
+                        ],
+                    }),
+                HostKey(hostname=node2_hostname,
+                        ipaddress=node2_ipaddress,
+                        source_type=SourceType.HOST): AgentHostSections(
+                    sections={
+                        SectionName("labels"): [[
+                            '{"mylabel":"true"}',
+                        ],],
+                        SectionName("df"): [
+                            [
+                                '/dev/sda1',
+                                'vfat',
+                                '523248',
+                                '3668',
+                                '519580',
+                                '1%',
+                                '/boot/efi',
+                            ],
+                            [
+                                'tmpfs',
+                                'tmpfs',
+                                '8152916',
+                                '244',
+                                '8152672',
+                                '1%',
+                                '/opt/omd/sites/heute2/tmp',
+                            ],
+                        ],
+                    }),
+            }),
+    )
+
+
+@pytest.mark.usefixtures("config_load_all_checks")
+def test__discover_host_labels_and_services_on_cluster(cluster_scenario):
+    scenario = cluster_scenario
+
+    with cmk_debug_enabled():
+        discovered_services, discovered_host_labels = discovery._get_cluster_services(
+            scenario.host_config,
+            scenario.ipaddress,
+            scenario.multi_host_sections,
+            on_error="raise",
+        )
+
+    assert discovered_host_labels == DiscoveredHostLabels(
+        HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),
+        HostLabel('mylabel', 'true', plugin_name='labels'),
+    )
+
+    services = set(discovered_services)
+    expected_services: Set = {
+        (CheckPluginName('df'), '/boot/efi'),
+    }
+
+    assert services == expected_services

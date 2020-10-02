@@ -261,20 +261,27 @@ def _filename_matches(filename, reftime, inclusion, exclusion):
     return incl_match and not excl_match, date_inclusion
 
 
+def _update_minmax(new_value: float, current_minmax: typing.Optional[typing.Tuple[float, float]]):
+
+    if not current_minmax:
+        return new_value, new_value
+
+    current_min, current_max = current_minmax
+
+    return min(new_value, current_min), max(new_value, current_max)
+
+
 def check_fileinfo_groups(_item, params, parsed):
 
     outof_range_txt = fileinfo_check_timeranges(params)
     count_all = 0
-    age_oldest = None
-    age_newest = 0
     size_all = 0
-    size_smallest = None
-    size_largest = 0
-    date_inclusion = ""
-    include_patterns = set()
-    exclude_patterns = set()
+    size_minmax = None
+    age_minmax = None
     files_stat_failed = set()
     files_matching = {}
+
+    skip_ok_files = params.get('shorten_multiline_output', False)
 
     reftime = parsed.get('reftime')
     if reftime is None:
@@ -282,7 +289,7 @@ def check_fileinfo_groups(_item, params, parsed):
         return
 
     try:
-        group_patterns = set(params['group_patterns'])
+        group_patterns = set((p, '') if isinstance(p, str) else p for p in params['group_patterns'])
     except KeyError:
         yield 3, ("No group pattern found in autocheck. Please rediscover the services "
                   "of this host to get this fixed automatically")
@@ -290,39 +297,26 @@ def check_fileinfo_groups(_item, params, parsed):
 
     # Start counting values on all files
     for file_stat in parsed['files'].values():
+        if file_stat.missing:
+            continue
 
-        for pattern in group_patterns:
-            if isinstance(pattern, str):  # support old format
-                pattern = (pattern, '')
-            inclusion, exclusion = pattern
-            include_patterns.add(inclusion)
-            exclude_patterns.add(exclusion)
+        for inclusion, exclusion in group_patterns:
 
             filename_matches, date_inclusion = _filename_matches(file_stat.name, reftime, inclusion,
                                                                  exclusion)
             if not filename_matches:
                 continue
-            if file_stat.missing:
-                continue
             if file_stat.failed:
                 files_stat_failed.add(file_stat.name)
-                continue
+                break
 
             size_all += file_stat.size
-            if size_smallest is None:
-                size_smallest = file_stat.size
-            else:
-                size_smallest = min(size_smallest, file_stat.size)
-            size_largest = max(size_largest, file_stat.size)
+            count_all += 1
+
+            size_minmax = _update_minmax(file_stat.size, size_minmax)
 
             age = reftime - file_stat.time
-            if age_oldest is None:  # very first match
-                age_oldest = age
-                age_newest = age
-            else:
-                age_oldest = max(age_oldest, age)
-                age_newest = min(age_newest, age)
-            count_all += 1
+            age_minmax = _update_minmax(age, age_minmax)
 
             # Used for long ouput information
             for key, value in [
@@ -332,7 +326,6 @@ def check_fileinfo_groups(_item, params, parsed):
                 ("size_largest", file_stat.size),
                 ("size", file_stat.size),
             ]:
-                skip_ok_files = params.get('shorten_multiline_output', False)
                 levels = params.get("max" + key,
                                     (None, None)) + params.get("min" + key, (None, None))
                 state, _, _ = check_levels(value, key, levels)
@@ -344,10 +337,9 @@ def check_fileinfo_groups(_item, params, parsed):
                     "states": [],
                 })["states"].append(state)
 
-    if age_oldest is None:
-        age_oldest = 0
-
     # Start Checking
+    size_smallest, size_largest = size_minmax
+    age_newest, age_oldest = age_minmax
     check_definition = [
         ("Count", "count", count_all, saveint),
         ("Size", "size", size_all, get_filesize_human_readable),
@@ -361,24 +353,26 @@ def check_fileinfo_groups(_item, params, parsed):
     if files_stat_failed:
         yield 1, "Files with unknown stat: %s" % ", ".join(files_stat_failed)
 
-    for res in _fileinfo_check_function(check_definition, params, outof_range_txt):
-        yield res
+    yield from _fileinfo_check_function(check_definition, params, outof_range_txt)
 
-    for res in _fileinfo_check_conjunctions(check_definition, params):
-        yield res
+    yield from _fileinfo_check_conjunctions(check_definition, params)
 
     long_output = []
-    if any(include_patterns):
-        long_output.append("Include patterns: %s" % ", ".join(include_patterns))
+    include_patterns = [i for i, _e in group_patterns]
+    exclude_patterns = [e for _i, e in group_patterns if e != '']
 
-    if any(exclude_patterns):
+    long_output.append("Include patterns: %s" % ", ".join(include_patterns))
+
+    if exclude_patterns:
         long_output.append("Exclude patterns: %s" % ", ".join(exclude_patterns))
 
-    for filename, attrs in sorted(iter(files_matching.items()), key=lambda x: x[0]):
-        long_output.append("[%s] Age: %s, Size: %s%s" % \
-                          (filename, get_age_human_readable(attrs["age"]),
-                           get_filesize_human_readable(attrs["size"]),
-                           state_markers[max(attrs["states"])]))
+    for filename, attrs in sorted(files_matching.items(), key=lambda x: x[0]):
+        long_output.append("[%s] Age: %s, Size: %s%s" % (
+            filename,
+            get_age_human_readable(attrs["age"]),
+            get_filesize_human_readable(attrs["size"]),
+            state_markers[max(attrs["states"])],
+        ))
 
     if long_output:
         yield 0, "\n%s" % "\n".join(long_output)

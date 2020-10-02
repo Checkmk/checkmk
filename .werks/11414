@@ -1,0 +1,12 @@
+Title: liveproxyd: fixed bug causing client requests hang for up to 110 seconds
+Class: fix
+Compatible: compat
+Component: liveproxy
+Date: 1601640881
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 1.6.0p18
+
+If the liveproxyd received an livestatus error from the remote site, the client waiting for the answer got stuck while waiting for the response.
+This brought the GUI to a standstill in certain instances.

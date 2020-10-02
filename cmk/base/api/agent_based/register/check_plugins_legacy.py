@@ -294,6 +294,8 @@ def create_check_plugin_from_legacy(
     extra_sections: List[str],
     factory_settings: Dict[str, Dict],
     get_check_context: Callable,
+    *,
+    validate_creation_kwargs: bool = True,
 ) -> CheckPlugin:
 
     if extra_sections:
@@ -352,4 +354,5 @@ def create_check_plugin_from_legacy(
         # trailing '%s'. Therefore, we disable this validation for legacy check plugins.
         # Once all check plugins are migrated to the new API this flag can be removed.
         validate_item=False,
+        validate_kwargs=validate_creation_kwargs,
     )

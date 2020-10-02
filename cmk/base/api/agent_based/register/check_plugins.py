@@ -8,7 +8,7 @@
 import functools
 from typing import Any, Callable, Dict, Generator, get_args, List, Optional
 
-from cmk.utils.type_defs import CheckPluginName, RuleSetName
+from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, RuleSetName
 
 from cmk.base.api.agent_based.checking_classes import (
     CheckFunction,
@@ -123,47 +123,21 @@ def _validate_check_ruleset(ruleset_name: Optional[str],
     return
 
 
-def unfit_for_clustering_wrapper(check_function):
-    """Return a cluster_check_function that displays a generic warning"""
-    # copy signature of check_function
-    @functools.wraps(check_function, ("__attributes__",))
-    def unfit_for_clustering(*args, **kwargs):
-        yield Result(
-            state=State.UNKNOWN,
-            summary=("This service is not ready to handle clustered data. "
-                     "Please change your configuration."),
-        )
-
-    return unfit_for_clustering
-
-
-def create_check_plugin(
+def _validate_kwargs(
     *,
-    name: str,
-    sections: Optional[List[str]] = None,
+    plugin_name: CheckPluginName,
+    subscribed_sections: List[ParsedSectionName],
     service_name: str,
+    requires_item: bool,
     discovery_function: Callable,
-    discovery_default_parameters: Optional[Dict] = None,
-    discovery_ruleset_name: Optional[str] = None,
-    discovery_ruleset_type: DiscoveryRuleSetType = "merged",
+    discovery_default_parameters: Optional[Dict],
+    discovery_ruleset_name: Optional[str],
+    discovery_ruleset_type: DiscoveryRuleSetType,
     check_function: Callable,
-    check_default_parameters: Optional[Dict] = None,
-    check_ruleset_name: Optional[str] = None,
-    cluster_check_function: Optional[Callable] = None,
-    module: Optional[str] = None,
-    validate_item: bool = True,
-) -> CheckPlugin:
-    """Return an CheckPlugin object after validating and converting the arguments one by one
-
-    For a detailed description of the parameters please refer to the exposed function in the
-    'register' namespace of the API.
-    """
-    plugin_name = CheckPluginName(name)
-
-    subscribed_sections = create_subscribed_sections(sections, plugin_name)
-
-    requires_item = _requires_item(service_name)
-
+    check_default_parameters: Optional[Dict],
+    check_ruleset_name: Optional[str],
+    cluster_check_function: Optional[Callable],
+) -> None:
     _validate_service_name(plugin_name, service_name)
 
     # validate discovery arguments
@@ -202,13 +176,74 @@ def create_check_plugin(
         sections=subscribed_sections,
     )
 
-    if cluster_check_function is not None:
-        validate_function_arguments(
-            type_label="cluster_check",
-            function=cluster_check_function,
-            has_item=requires_item,
-            default_params=check_default_parameters,
-            sections=subscribed_sections,
+    if cluster_check_function is None:
+        return
+
+    validate_function_arguments(
+        type_label="cluster_check",
+        function=cluster_check_function,
+        has_item=requires_item,
+        default_params=check_default_parameters,
+        sections=subscribed_sections,
+    )
+
+
+def unfit_for_clustering_wrapper(check_function):
+    """Return a cluster_check_function that displays a generic warning"""
+    # copy signature of check_function
+    @functools.wraps(check_function, ("__attributes__",))
+    def unfit_for_clustering(*args, **kwargs):
+        yield Result(
+            state=State.UNKNOWN,
+            summary=("This service is not ready to handle clustered data. "
+                     "Please change your configuration."),
+        )
+
+    return unfit_for_clustering
+
+
+def create_check_plugin(
+    *,
+    name: str,
+    sections: Optional[List[str]] = None,
+    service_name: str,
+    discovery_function: Callable,
+    discovery_default_parameters: Optional[Dict] = None,
+    discovery_ruleset_name: Optional[str] = None,
+    discovery_ruleset_type: DiscoveryRuleSetType = "merged",
+    check_function: Callable,
+    check_default_parameters: Optional[Dict] = None,
+    check_ruleset_name: Optional[str] = None,
+    cluster_check_function: Optional[Callable] = None,
+    module: Optional[str] = None,
+    validate_item: bool = True,
+    validate_kwargs: bool = True,
+) -> CheckPlugin:
+    """Return an CheckPlugin object after validating and converting the arguments one by one
+
+    For a detailed description of the parameters please refer to the exposed function in the
+    'register' namespace of the API.
+    """
+    plugin_name = CheckPluginName(name)
+
+    subscribed_sections = create_subscribed_sections(sections, plugin_name)
+
+    requires_item = _requires_item(service_name)
+
+    if validate_kwargs:
+        _validate_kwargs(
+            plugin_name=plugin_name,
+            subscribed_sections=subscribed_sections,
+            service_name=service_name,
+            requires_item=requires_item,
+            discovery_function=discovery_function,
+            discovery_default_parameters=discovery_default_parameters,
+            discovery_ruleset_name=discovery_ruleset_name,
+            discovery_ruleset_type=discovery_ruleset_type,
+            check_function=check_function,
+            check_default_parameters=check_default_parameters,
+            check_ruleset_name=check_ruleset_name,
+            cluster_check_function=cluster_check_function,
         )
 
     disco_func = _filter_discovery(discovery_function, requires_item, validate_item)

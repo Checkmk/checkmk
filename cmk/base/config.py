@@ -1532,6 +1532,7 @@ def load_checks(get_check_api_context: GetCheckApiContext, filelist: List[str]) 
 
     loaded_files: Set[str] = set()
 
+    did_compile = False
     for f in filelist:
         if f[0] == "." or f[-1] == "~":
             continue  # ignore editor backup / temp files
@@ -1548,9 +1549,9 @@ def load_checks(get_check_api_context: GetCheckApiContext, filelist: List[str]) 
             known_checks = set(check_info)
             known_active_checks = set(active_check_info)
 
-            load_check_includes(f, check_context)
+            did_compile |= load_check_includes(f, check_context)
+            did_compile |= load_precompiled_plugin(f, check_context)
 
-            load_precompiled_plugin(f, check_context)
             loaded_files.add(file_name)
 
         except MKTerminate:
@@ -1617,7 +1618,7 @@ def load_checks(get_check_api_context: GetCheckApiContext, filelist: List[str]) 
     # Now convert check_info to new format.
     convert_check_info()
     _extract_agent_and_snmp_sections()
-    _extract_check_plugins()
+    _extract_check_plugins(validate_creation_kwargs=did_compile)
     initialize_check_type_caches()
 
 
@@ -1655,11 +1656,13 @@ def new_check_context(get_check_api_context: GetCheckApiContext) -> CheckContext
 # Load the definitions of the required include files for this check
 # Working with imports when specifying the includes would be much cleaner,
 # sure. But we need to deal with the current check API.
-def load_check_includes(check_file_path: str, check_context: CheckContext) -> None:
+def load_check_includes(check_file_path: str, check_context: CheckContext) -> bool:
+    """Returns `True` if something has been compiled, else `False`."""
+    did_compile = False
     for include_file_name in cached_includes_of_plugin(check_file_path):
         include_file_path = check_include_file_path(include_file_name)
         try:
-            load_precompiled_plugin(include_file_path, check_context)
+            did_compile |= load_precompiled_plugin(include_file_path, check_context)
         except MKTerminate:
             raise
 
@@ -1668,6 +1671,8 @@ def load_check_includes(check_file_path: str, check_context: CheckContext) -> No
             if cmk.utils.debug.enabled():
                 raise
             continue
+
+    return did_compile
 
 
 def check_include_file_path(include_file_name: str) -> str:
@@ -1804,25 +1809,31 @@ class _PYCHeader():
 
 
 # TODO: Check if this totally non-portable Kung Fu still works with Python 3!
-def load_precompiled_plugin(path: str, check_context: CheckContext) -> None:
+def load_precompiled_plugin(path: str, check_context: CheckContext) -> bool:
     """Loads the given check or check include plugin into the given
     check context.
 
     To improve loading speed the files are not read directly. The files are
     python byte-code compiled before in case it has not been done before. In
     case there is already a compiled file that is newer than the current one,
-    then the precompiled file is loaded."""
+    then the precompiled file is loaded.
+
+    Returns `True` if something has been compiled, else `False`.
+    """
 
     # https://docs.python.org/3/library/py_compile.html
     # HACK:
     precompiled_path = _precompiled_plugin_path(path)
 
-    if not _is_plugin_precompiled(path, precompiled_path):
+    do_compile = not _is_plugin_precompiled(path, precompiled_path)
+    if do_compile:
         console.vverbose("Precompile %s to %s\n" % (path, precompiled_path))
         store.makedirs(os.path.dirname(precompiled_path))
         py_compile.compile(path, precompiled_path, doraise=True)
 
     exec(marshal.loads(open(precompiled_path, "rb").read()[_PYCHeader.SIZE:]), check_context)
+
+    return do_compile
 
 
 def _is_plugin_precompiled(path: str, precompiled_path: str) -> bool:
@@ -2044,7 +2055,10 @@ def _extract_agent_and_snmp_sections() -> None:
             console.error(AUTO_MIGRATION_ERR_MSG % ("section", check_plugin_name))
 
 
-def _extract_check_plugins() -> None:
+def _extract_check_plugins(
+    *,
+    validate_creation_kwargs: bool,
+) -> None:
     """Here comes the next layer of converting-to-"new"-api.
 
     For the new check-API in cmk/base/api/agent_based, we use the accumulated information
@@ -2062,6 +2076,7 @@ def _extract_check_plugins() -> None:
                     check_info.get(check_plugin_name.split('.')[0], {}).get('extra_sections', []),
                     factory_settings,
                     get_check_context,
+                    validate_creation_kwargs=validate_creation_kwargs,
                 ))
         except (NotImplementedError, KeyError, AssertionError, ValueError) as exc:
             if cmk.utils.debug.enabled():

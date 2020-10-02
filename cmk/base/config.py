@@ -1802,8 +1802,8 @@ class _PYCHeader():
         self.f_size = f_size
 
     @classmethod
-    def from_file(cls, path: Path) -> "_PYCHeader":
-        with path.open("rb") as handle:
+    def from_file(cls, path: str) -> "_PYCHeader":
+        with open(path, "rb") as handle:
             raw_bytes = handle.read(cls.SIZE)
         return cls(*struct.unpack("4s3I", raw_bytes))
 
@@ -1839,7 +1839,7 @@ def load_precompiled_plugin(path: str, check_context: CheckContext) -> bool:
 def _is_plugin_precompiled(path: str, precompiled_path: str) -> bool:
     # Check precompiled file header
     try:
-        header = _PYCHeader.from_file(Path(precompiled_path))
+        header = _PYCHeader.from_file(precompiled_path)
     except (FileNotFoundError, struct.error):
         return False
 

@@ -1055,7 +1055,7 @@ class SingleValuePlot extends SubPlot {
 
     render() {
         let plot_size = this._renderer.plot_size;
-        let value = this.transformed_data[this.transformed_data.length-1];
+        let value = this.transformed_data[0];
         let value_text = this.svg.selectAll("a.single_value text").data([value]);
         value_text.exit().remove();
         let font_size = Math.min(plot_size.width/5, plot_size.height*2/3);

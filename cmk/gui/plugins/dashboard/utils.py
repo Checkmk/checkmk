@@ -679,25 +679,24 @@ def create_data_for_single_metric(cls, properties, context):
 
         row_id = "row_%d" % idx
 
-        # Live value
-        if properties["time_range"] == "current":
-            data.append({
-                "tag": row_id,
-                "timestamp": int(time.time()),
-                "value": metric['value'],
-                "url": svc_url,
-                "label": host,
-            })
         # Historic values
-        else:
-            for ts, elem in series.time_data_pairs():
-                if elem:
-                    data.append({
-                        "tag": row_id,
-                        "timestamp": ts,
-                        "value": elem,
-                        "label": host,
-                    })
+        for ts, elem in series.time_data_pairs():
+            if elem:
+                data.append({
+                    "tag": row_id,
+                    "timestamp": ts,
+                    "value": elem,
+                    "label": host,
+                })
+
+        # Live value
+        data.append({
+            "tag": row_id,
+            "timestamp": int(time.time()),
+            "value": metric['value'],
+            "url": svc_url,
+            "label": host,
+        })
 
         used_metrics.append((row_id, host, metric))
 

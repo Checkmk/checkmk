@@ -59,6 +59,7 @@ def cluster_check_logwatch_ec(params: Parameters, section: ClusterSection) -> Ch
 register.check_plugin(
     name="logwatch_ec",
     service_name="Log Forwarding",
+    sections=["logwatch"],
     discovery_function=discover_group,
     discovery_default_parameters={},
     discovery_ruleset_name="logwatch_ec",
@@ -98,6 +99,7 @@ def cluster_check_logwatch_ec_single(
 register.check_plugin(
     name="logwatch_ec_single",
     service_name="Log %s",
+    sections=["logwatch"],
     discovery_function=discover_single,
     discovery_default_parameters={},
     discovery_ruleset_name="logwatch_ec",

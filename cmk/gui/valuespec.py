@@ -5501,7 +5501,7 @@ class IconSelector(ValueSpec):
                                  "share/check_mk/web/htdocs/themes/%s/images" % theme))
 
             for file_stem, category in self._get_icons_from_directories(
-                    dirs, default_topic="builtin").items():
+                    dirs, default_category="builtin").items():
                 if file_stem.startswith("icon_"):
                     icons[file_stem[5:]] = category
         return icons
@@ -5514,11 +5514,9 @@ class IconSelector(ValueSpec):
             dirs.append(
                 os.path.join(cmk.utils.paths.omd_root, "share/check_mk/web/htdocs/images/icons"))
 
-        return self._get_icons_from_directories(dirs, default_topic="misc")
+        return self._get_icons_from_directories(dirs, default_category="misc")
 
-    def _get_icons_from_directories(self, dirs: List[str], default_topic: str) -> Dict[str, str]:
-        valid_categories = set(k for k, _v in self.categories())
-
+    def _get_icons_from_directories(self, dirs: List[str], default_category: str) -> Dict[str, str]:
         icons: Dict[str, str] = {}
         for directory in dirs:
             try:
@@ -5528,30 +5526,37 @@ class IconSelector(ValueSpec):
 
             for file_name in files:
                 file_path = directory + "/" + file_name
-                if file_name[-4:] == '.png' and os.path.isfile(file_path):
+                if not os.path.isfile(file_path):
+                    continue
 
-                    # extract the category from the meta data
+                icon_name, extension = os.path.splitext(file_name)
+                if extension == '.png':
                     try:
-                        im = Image.open(file_path)
+                        category = self._extract_category_from_png(file_path, default_category)
                     except IOError as e:
                         if "%s" % e == "cannot identify image file":
-                            continue  # Silently skip invalid files
+                            continue  # silently skip invalid files
                         raise
+                elif extension == '.svg':
+                    # users are not able to add SVGs and our builtin SVGs don't have a category
+                    category = default_category
+                else:
+                    continue
 
-                    category = im.info.get('Comment')
-                    if category not in valid_categories:
-                        category = default_topic
-
-                    icon_name = file_name[:-4]
-                    icons[icon_name] = category
+                icons[icon_name] = category
 
         for exclude in self._exclude:
-            try:
-                del icons[exclude]
-            except KeyError:
-                pass
+            icons.pop(exclude, None)
 
         return icons
+
+    def _extract_category_from_png(self, file_path: str, default: str) -> str:
+        # extract the category from the meta data
+        category = Image.open(file_path).info.get('Comment')
+        valid_categories = {k for k, _v in self.categories()}
+        if category not in valid_categories:
+            return default
+        return category
 
     def available_icons_by_category(self, icons):
         by_cat: Dict[str, List[str]] = {}

@@ -64,7 +64,7 @@ from cmk.gui.plugins.wato import (
     MenuItem,
     main_module_registry,
     MainModule,
-    MainModuleTopicServices,
+    MainModuleTopicBI,
     add_change,
     wato_confirm,
     HostTagCondition,
@@ -2563,7 +2563,7 @@ class MainModuleBI(MainModule):
 
     @property
     def topic(self):
-        return MainModuleTopicServices
+        return MainModuleTopicBI
 
     @property
     def title(self):

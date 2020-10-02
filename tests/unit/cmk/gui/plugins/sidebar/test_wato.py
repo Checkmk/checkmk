@@ -104,8 +104,8 @@ def expected_items() -> Dict[str, List[str]]:
             'static_checks',
             'service_groups',
             'check_plugins',
-            'bi_packs',
         ],
+        'bi': ['bi_packs'],
         'users': users_items,
     }
 

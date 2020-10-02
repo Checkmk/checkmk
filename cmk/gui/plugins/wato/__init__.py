@@ -87,6 +87,7 @@ from cmk.gui.plugins.wato.utils import (
     MainModuleTopic,
     MainModuleTopicHosts,
     MainModuleTopicServices,
+    MainModuleTopicBI,
     MainModuleTopicAgents,
     MainModuleTopicEvents,
     MainModuleTopicUsers,

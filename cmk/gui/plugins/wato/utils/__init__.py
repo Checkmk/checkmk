@@ -49,9 +49,9 @@ from cmk.gui.plugins.wato.utils.html_elements import (  # noqa: F401 # pylint: d
 )
 from cmk.gui.plugins.wato.utils.main_menu import (  # noqa: F401 # pylint: disable=unused-import
     MainMenu, MainModule, MenuItem, WatoModule, main_module_registry, register_modules,
-    MainModuleTopic, MainModuleTopicHosts, MainModuleTopicServices, MainModuleTopicAgents,
-    MainModuleTopicEvents, MainModuleTopicUsers, MainModuleTopicGeneral, MainModuleTopicMaintenance,
-    MainModuleTopicCustom,
+    MainModuleTopic, MainModuleTopicHosts, MainModuleTopicServices, MainModuleTopicBI,
+    MainModuleTopicAgents, MainModuleTopicEvents, MainModuleTopicUsers, MainModuleTopicGeneral,
+    MainModuleTopicMaintenance, MainModuleTopicCustom,
 )
 import cmk.gui.watolib as watolib
 from cmk.gui.watolib.password_store import PasswordStore

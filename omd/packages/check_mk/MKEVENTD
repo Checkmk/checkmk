@@ -9,25 +9,25 @@
 #  rules.
 
 case "$1" in
-    default)
-        echo "on"
+default)
+    echo "on"
     ;;
-    choices)
-        echo "on: enable"
-        echo "off: disable"
+choices)
+    echo "on: enable"
+    echo "off: disable"
     ;;
-    set)
-        if [ "$2" = on ] ; then
-            enabled=True
-        else
-            enabled=False
-        fi
-        echo -e "# Set by OMD hook MKEVENTD, do not change here!\nmkeventd_enabled = $enabled" \
-            > $OMD_ROOT/etc/check_mk/multisite.d/mkeventd.mk
-        echo -e "# Set by OMD hook MKEVENTD, do not change here!\nmkeventd_enabled = $enabled" \
-            > $OMD_ROOT/etc/check_mk/conf.d/mkeventd.mk
-        # Try to update the core config to make the Microcore/Livestatus know whether or not the
-        # Event Console is enabled. Totally ignore configuration validation errors here. Be silent.
-        cmk -U >/dev/null 2>&1 || true
+set)
+    if [ "$2" = on ]; then
+        enabled=True
+    else
+        enabled=False
+    fi
+    echo -e "# Set by OMD hook MKEVENTD, do not change here!\nmkeventd_enabled = $enabled" \
+        >$OMD_ROOT/etc/check_mk/multisite.d/mkeventd.mk
+    echo -e "# Set by OMD hook MKEVENTD, do not change here!\nmkeventd_enabled = $enabled" \
+        >$OMD_ROOT/etc/check_mk/conf.d/mkeventd.mk
+    # Try to update the core config to make the Microcore/Livestatus know whether or not the
+    # Event Console is enabled. Totally ignore configuration validation errors here. Be silent.
+    cmk -U >/dev/null 2>&1 || true
     ;;
 esac

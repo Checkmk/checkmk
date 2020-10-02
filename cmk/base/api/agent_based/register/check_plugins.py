@@ -50,7 +50,11 @@ def _validate_service_name(plugin_name: CheckPluginName, service_name: str) -> N
 
 def _requires_item(service_name: str) -> bool:
     """See if this check requires an item"""
-    return ITEM_VARIABLE in service_name
+    try:
+        return ITEM_VARIABLE in service_name
+    except TypeError:
+        # _validate_service_name will fail with a better message
+        return False
 
 
 def _filter_discovery(
@@ -158,8 +162,9 @@ def create_check_plugin(
 
     subscribed_sections = create_subscribed_sections(sections, plugin_name)
 
-    _validate_service_name(plugin_name, service_name)
     requires_item = _requires_item(service_name)
+
+    _validate_service_name(plugin_name, service_name)
 
     # validate discovery arguments
     validate_default_parameters(
@@ -167,10 +172,10 @@ def create_check_plugin(
         discovery_ruleset_name,
         discovery_default_parameters,
     )
-    _validate_discovery_ruleset(
-        discovery_ruleset_name,
-        discovery_default_parameters,
-    )
+    # _validate_discovery_ruleset(
+    #     discovery_ruleset_name,
+    #     discovery_default_parameters,
+    # )
     _validate_discovery_ruleset_type(discovery_ruleset_type,)
     validate_function_arguments(
         type_label="discovery",
@@ -179,19 +184,16 @@ def create_check_plugin(
         default_params=discovery_default_parameters,
         sections=subscribed_sections,
     )
-    disco_func = _filter_discovery(discovery_function, requires_item, validate_item)
-    disco_ruleset_name = RuleSetName(discovery_ruleset_name) if discovery_ruleset_name else None
-
     # validate check arguments
     validate_default_parameters(
         "check",
         check_ruleset_name,
         check_default_parameters,
     )
-    _validate_check_ruleset(
-        check_ruleset_name,
-        check_default_parameters,
-    )
+    # _validate_check_ruleset(
+    #     check_ruleset_name,
+    #     check_default_parameters,
+    # )
     validate_function_arguments(
         type_label="check",
         function=check_function,
@@ -200,9 +202,7 @@ def create_check_plugin(
         sections=subscribed_sections,
     )
 
-    if cluster_check_function is None:
-        cluster_check_function = unfit_for_clustering_wrapper(check_function)
-    else:
+    if cluster_check_function is not None:
         validate_function_arguments(
             type_label="cluster_check",
             function=cluster_check_function,
@@ -210,7 +210,13 @@ def create_check_plugin(
             default_params=check_default_parameters,
             sections=subscribed_sections,
         )
-        cluster_check_function = _filter_check(cluster_check_function)
+
+    disco_func = _filter_discovery(discovery_function, requires_item, validate_item)
+    disco_ruleset_name = RuleSetName(discovery_ruleset_name) if discovery_ruleset_name else None
+
+    cluster_check_function = (unfit_for_clustering_wrapper(check_function)
+                              if cluster_check_function is None else
+                              _filter_check(cluster_check_function))
 
     return CheckPlugin(
         name=plugin_name,

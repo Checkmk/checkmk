@@ -26,7 +26,7 @@ def pre_parse_hr_mem(string_table: SNMPStringTable) -> PreParsed:
         '.1.3.6.1.2.1.25.2.1.8': 'RAM disk',
         '.1.3.6.1.2.1.25.2.1.9': 'flash memory',
         '.1.3.6.1.2.1.25.2.1.10': 'network disk',
-        '.1.3.6.1.2.1.25.3.9.3': None,  # not relevant, contains info about file systems
+        '.1.3.6.1.2.1.25.3.9': None,  # not relevant, contains info about file systems
     }
 
     def to_bytes(units: str) -> int:
@@ -41,7 +41,12 @@ def pre_parse_hr_mem(string_table: SNMPStringTable) -> PreParsed:
         # should crash when the hrtype is not defined in the mapping table:
         # it may mean there was an important change in the way the OIDs are
         # mapped that we should know about
-        map_type = map_types[hrtype]
+        try:
+            map_type = map_types[hrtype]
+        except KeyError:
+            oid_base = '.'.join(hrtype.split('.')[:-1])
+            map_type = map_types[oid_base]
+
         if map_type:
             # Sometimes one of the values that is being converted is an empty
             # string. This means that SNMP delivers invalid data, and the service

@@ -97,18 +97,22 @@ class IPMIFetcher(AgentFetcher):
 
         sensors = []
         has_no_gpu = not self._has_gpu()
-        for number in sdr.get_sensor_numbers():
-            rsp = self._command.raw_command(command=0x2d, netfn=4, data=(number,))
+        for ident in sdr.get_sensor_numbers():
+            sensor = sdr.sensors[ident]
+            rsp = self._command.raw_command(command=0x2d,
+                                            netfn=4,
+                                            rslun=sensor.sensor_lun,
+                                            data=(sensor.sensor_number,))
             if 'error' in rsp:
                 continue
 
-            reading = sdr.sensors[number].decode_sensor_reading(rsp['data'])
+            reading = sensor.decode_sensor_reading(rsp['data'])
             if reading is not None:
                 # sometimes (wrong) data for GPU sensors is reported, even if
                 # not installed
                 if "GPU" in reading.name and has_no_gpu:
                     continue
-                sensors.append(IPMIFetcher._parse_sensor_reading(number, reading))
+                sensors.append(IPMIFetcher._parse_sensor_reading(sensor.sensor_number, reading))
 
         return b"<<<mgmt_ipmi_sensors:sep(124)>>>\n" + b"".join(
             [b"|".join(sensor) + b"\n" for sensor in sensors])

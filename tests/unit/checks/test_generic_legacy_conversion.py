@@ -15,7 +15,7 @@ import cmk.base.check_api as check_api
 import cmk.base.config as config
 
 from cmk.base.api.agent_based.register.section_plugins_legacy import _create_snmp_trees
-from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function import (
+from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_functions import (
     _explicit_conversions,
     create_detect_spec,
 )

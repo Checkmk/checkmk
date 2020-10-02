@@ -13,8 +13,6 @@ from cmk.base.api.agent_based.register.section_plugins import (
     create_agent_section_plugin,
     create_snmp_section_plugin,
 )
-from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function import (
-    create_detect_spec,)
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
     AgentSectionPlugin,
@@ -25,6 +23,8 @@ from cmk.base.api.agent_based.type_defs import (
 from cmk.base.api.agent_based.type_defs import AgentStringTable
 from cmk.base.check_api_utils import Service
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
+
+from .convert_scan_functions import create_detect_spec
 
 LayoutRecoverSuboids = List[Tuple[str]]
 

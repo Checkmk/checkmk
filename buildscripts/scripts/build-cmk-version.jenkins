@@ -204,6 +204,12 @@ try {
     parallel PACKAGE_BUILDS
 }catch(Exception e) {
     notify.notify_error(e)
+}finally {
+    node(NODE) {
+        stage("Remove Stashed package") {
+            delete_stashed_package(DOCKER_REGISTRY_NO_HTTP, WS_ARCHIVE)
+        }
+    }
 }
 //
 // FUNCTIONS
@@ -534,5 +540,16 @@ def unstash_package(FILE_NAME) {
                 curl -1 -sSf -o "${FILE_NAME}" "${NEXUS_ARCHIVES_URL}${FILE_NAME}"
             """
         }
+    }
+}
+
+def delete_stashed_package(DOCKER_REG, FILE_NAME) {
+    def DOCKER_REPO = NEXUS_ARCHIVES_URL
+    def CONTAINER = "nexus3-cli"
+    def URL_ELEMENTS = NEXUS_ARCHIVES_URL.split('/')
+    def NEXUS_URL = URL_ELEMENTS[0] + '//' + URL_ELEMENTS[2]
+    def REPO = URL_ELEMENTS[URL_ELEMENTS.length -1] 
+    withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
+        sh("docker run -t -a stdout -a stderr ${DOCKER_REG}/${CONTAINER} nexus3-del-artifacts.py $NEXUS_URL $NEXUS_USERNAME $NEXUS_PASSWORD --repo $REPO --pattern ${FILE_NAME}")
     }
 }

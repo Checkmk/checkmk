@@ -224,6 +224,8 @@ class ABCParser(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         try:
             return OKResult(self._parse(raw_data.ok))
         except Exception as exc:
+            if cmk.utils.debug.enabled():
+                raise
             return ErrorResult(exc)
 
     @abc.abstractmethod
@@ -354,6 +356,8 @@ class ABCSource(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
             with self._make_fetcher() as fetcher:
                 return fetcher.fetch(self.mode)
         except Exception as exc:
+            if cmk.utils.debug.enabled():
+                raise
             return ErrorResult(exc)
 
     @final

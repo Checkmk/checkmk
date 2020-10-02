@@ -173,6 +173,8 @@ class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
         except MKFetcherError:
             raise
         except Exception as exc:
+            if cmk.utils.debug.enabled():
+                raise
             raise MKFetcherError(repr(exc) if any(exc.args) else type(exc).__name__) from exc
         return self
 
@@ -201,6 +203,8 @@ class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
         try:
             return OKResult(self._fetch(mode))
         except Exception as exc:
+            if cmk.utils.debug.enabled():
+                raise
             return ErrorResult(exc)
 
     @abc.abstractmethod

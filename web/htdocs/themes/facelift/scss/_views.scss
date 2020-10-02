@@ -450,10 +450,6 @@ table.data tr > th.last_col {
 
 td.gap, table.data .checkbox_hover.gap {
   width: 5px;
-  /* #TODO: Check whether these background styles are needed */
-  background-attachment: fixed;
-  background-image: url("images/contentframe_background.jpg");
-  background-repeat: repeat;
 }
 
 /* boxed layout */

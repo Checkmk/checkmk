@@ -27,7 +27,7 @@ import json
 import logging
 import math
 import numbers
-import os
+from pathlib import Path
 import re
 import socket
 import time
@@ -1602,8 +1602,8 @@ class Filename(TextAscii):
         if value[-1] == "/":
             raise MKUserError(varprefix, _("Your filename must not end with a slash."))
 
-        directory = value.rsplit("/", 1)[0]
-        if not os.path.isdir(directory):
+        directory = Path(value).parent
+        if not directory.is_dir():
             raise MKUserError(
                 varprefix,
                 _("The directory %s does not exist or is not a directory.") % directory)
@@ -5491,14 +5491,9 @@ class IconSelector(ValueSpec):
 
         icons = {}
         for theme in html.icon_themes():
-            dirs = [
-                os.path.join(cmk.utils.paths.omd_root,
-                             "local/share/check_mk/web/htdocs/themes/%s/images" % theme),
-            ]
+            dirs = [Path(cmk.utils.paths.local_web_dir) / "htdocs/themes" / theme / "images"]
             if not only_local:
-                dirs.append(
-                    os.path.join(cmk.utils.paths.omd_root,
-                                 "share/check_mk/web/htdocs/themes/%s/images" % theme))
+                dirs.append(Path(cmk.utils.paths.web_dir) / "htdocs/themes" / theme / "images")
 
             for file_stem, category in self._get_icons_from_directories(
                     dirs, default_category="builtin").items():
@@ -5507,50 +5502,43 @@ class IconSelector(ValueSpec):
         return icons
 
     def _available_user_icons(self, only_local=False) -> Dict[str, str]:
-        dirs = [
-            os.path.join(cmk.utils.paths.omd_root, "local/share/check_mk/web/htdocs/images/icons"),
-        ]
+        dirs = [Path(cmk.utils.paths.local_web_dir) / "htdocs/images/icons"]
         if not only_local:
-            dirs.append(
-                os.path.join(cmk.utils.paths.omd_root, "share/check_mk/web/htdocs/images/icons"))
+            dirs.append(Path(cmk.utils.paths.web_dir) / "htdocs/images/icons")
 
         return self._get_icons_from_directories(dirs, default_category="misc")
 
-    def _get_icons_from_directories(self, dirs: List[str], default_category: str) -> Dict[str, str]:
+    def _get_icons_from_directories(self, dirs: List[Path],
+                                    default_category: str) -> Dict[str, str]:
         icons: Dict[str, str] = {}
         for directory in dirs:
             try:
-                files = os.listdir(directory)
+                files = [f for f in directory.iterdir() if f.is_file()]
             except OSError:
                 continue
 
-            for file_name in files:
-                file_path = directory + "/" + file_name
-                if not os.path.isfile(file_path):
-                    continue
-
-                icon_name, extension = os.path.splitext(file_name)
-                if extension == '.png':
+            for file_ in files:
+                if file_.suffix == '.png':
                     try:
-                        category = self._extract_category_from_png(file_path, default_category)
+                        category = self._extract_category_from_png(file_, default_category)
                     except IOError as e:
                         if "%s" % e == "cannot identify image file":
                             continue  # silently skip invalid files
                         raise
-                elif extension == '.svg':
+                elif file_.suffix == '.svg':
                     # users are not able to add SVGs and our builtin SVGs don't have a category
                     category = default_category
                 else:
                     continue
 
-                icons[icon_name] = category
+                icons[file_.stem] = category
 
         for exclude in self._exclude:
             icons.pop(exclude, None)
 
         return icons
 
-    def _extract_category_from_png(self, file_path: str, default: str) -> str:
+    def _extract_category_from_png(self, file_path: Path, default: str) -> str:
         # extract the category from the meta data
         category = Image.open(file_path).info.get('Comment')
         valid_categories = {k for k, _v in self.categories()}

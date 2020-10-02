@@ -61,10 +61,6 @@ set)
     # now setup the new selection
     if [ "$2" == "nagios" ]; then
         make_link nagios $OMD_ROOT/etc/init.d/core
-        # Refresh Checkmk Configuration after changing back from CMC
-        if [ -e $OMD_ROOT/var/check_mk/core/config ]; then
-            cmk -U >/dev/null
-        fi
     elif [ "$2" == "cmc" ]; then
         make_link cmc $OMD_ROOT/etc/init.d/core
         echo "# Created by OMD hook CORE. Change with 'omd config'." >$OMD_ROOT/etc/check_mk/conf.d/microcore.mk
@@ -73,7 +69,6 @@ set)
         # in advance to prevent problems with old configs during update when new config
         # creation fails
         [ -f $OMD_ROOT/var/check_mk/core/config ] && rm -f $OMD_ROOT/var/check_mk/core/config
-        cmk -U >/dev/null
         # Remove non relevant links to logs
         [ -L $OMD_ROOT/var/log/livestatus.log ] && rm -f $OMD_ROOT/var/log/livestatus.log
         [ -L $OMD_ROOT/var/log/nagios.log ] && rm -f $OMD_ROOT/var/log/nagios.log

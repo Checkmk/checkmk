@@ -57,9 +57,6 @@ set)
 # Set by OMD hook PNP4NAGIOS, do not change here!
 pnp4nagios_enabled = $pnp4nagios_enabled
 EOF
-    # Try to update the core config to make the Microcore/Livestatus know whether or not the
-    # pnp4nagios is enabled. Totally ignore configuration validation errors here. Be silent.
-    cmk -U >/dev/null 2>&1 || true
     ;;
 depends)
     [ "$CONFIG_CORE" != cmc -a "$CONFIG_CORE" != none ]

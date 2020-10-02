@@ -1535,6 +1535,14 @@ def show_filter_form(info_list: List[InfoName], mandatory_filters: List[Tuple[st
     html.end_form()
     html.javascript("cmk.utils.add_simplebar_scrollbar(%s);" % json.dumps(filter_list_selected_id))
 
+    # The filter popup is shown automatically when it has been submitted before on page reload. To
+    # know that the user closed the popup after filtering, we have to hook into the close_popup
+    # function.
+    html.final_javascript(
+        "cmk.page_menu.register_on_open_handler('popup_filters', cmk.page_menu.on_filter_popup_open);"
+        "cmk.page_menu.register_on_close_handler('popup_filters', cmk.page_menu.on_filter_popup_close);"
+    )
+
 
 def _show_filter_form_buttons(varprefix: str, filter_list_id: str,
                               page_request_vars: Optional[Dict[str, Any]], view_name: str,

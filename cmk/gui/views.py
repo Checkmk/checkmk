@@ -591,11 +591,7 @@ class GUIViewRenderer(ABCViewRenderer):
         layout = self.view.layout
 
         # Display the filter form on page rendering in some cases
-        # a) The view is a "mustsearch" view (User needs to submit the filter form before data is
-        # shown).
-        # b) After submitting the filter form. The user probably wants to update the filters after
-        # first filtering
-        if (view_spec.get("mustsearch") or html.request.get_ascii_input("filled_in") == "filter"):
+        if self._should_show_filter_form(view_spec):
             html.final_javascript("cmk.page_menu.open_popup('popup_filters');")
 
         # Actions
@@ -696,6 +692,29 @@ class GUIViewRenderer(ABCViewRenderer):
 
         if display_options.enabled(display_options.H):
             html.body_end()
+
+    def _should_show_filter_form(self, view_spec: ViewSpec) -> bool:
+        """Whether or not the filter form should be displayed on page load
+
+        a) In case the user toggled the popup in the frontend, always enforce that property
+
+        b) Show in case the view is a "mustsearch" view (User needs to submit the filter form before
+        data is shown).
+
+        c) Show after submitting the filter form. The user probably wants to update the filters
+        after first filtering.
+        """
+        show_form = html.request.get_integer_input("_show_filter_form")
+        if show_form is not None:
+            return show_form == 1
+
+        if view_spec.get("mustsearch"):
+            return True
+
+        if html.request.get_ascii_input("filled_in") == "filter":
+            return True
+
+        return False
 
     def _page_menu(self, breadcrumb: Breadcrumb, rows: Rows,
                    show_filters: List[Filter]) -> PageMenu:

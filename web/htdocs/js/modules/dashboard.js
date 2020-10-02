@@ -406,29 +406,7 @@ export function toggle_dashboard_edit() {
         dashlet_toggle_edit(dashlet_divs[i]);
 
     // Remove/Add edit=1 parameter from URL to make page reload handling correct
-    // Only a solution for browsers with history.replaceState support. Sadly
-    // we have no F5/reload fix for others...
-    //
-    // window.parent is either a reference to the current window (when opened as dedicated page)
-    // or the whole browser window if opened within a frame. The URL is either directly:
-    // http://[HOST]/[SITE]/check_mk/dashboard.py?name=main&edit=1
-    // or when opened within a frame it is:
-    // http://[HOST]/[SITE]/check_mk/index.py?start_url=%2F[SITE]%2Fcheck_mk%2Fdashboard.py%3Fname%3Dmain&edit=1
-    // The new URL computation needs to deal with it.
-    if (window.parent.history.replaceState) {
-        var url = window.parent.location.href;
-        var new_url;
-        if (url.indexOf("start_url") !== -1) {
-            var frame_url = decodeURIComponent(utils.get_url_param("start_url", url));
-            frame_url = utils.makeuri({"edit": g_editing ? "1" : "0"}, frame_url);
-            new_url = utils.makeuri({"start_url": frame_url}, url);
-        }
-        else {
-            new_url = utils.makeuri({"edit": g_editing ? "1" : "0"}, url);
-        }
-
-        window.parent.history.replaceState({}, document.title, new_url);
-    }
+    utils.update_url_parameter("edit", g_editing ? "1" : "0");
 
     toggle_grid();
 }

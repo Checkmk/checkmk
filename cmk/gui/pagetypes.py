@@ -1899,7 +1899,7 @@ def _customize_menu_topics() -> List[TopicMenuTopic]:
         TopicMenuTopic(
             name="business_reporting",
             title=_("Business reporting"),
-            icon_name=None,
+            icon_name="topic_reporting",
             items=business_reporting_items,
         )
     ]

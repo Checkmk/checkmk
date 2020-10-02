@@ -5,7 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper to register a new-sytyle section based on config.check_info
 """
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional, Tuple
+from types import CodeType
 import os.path
 import ast
 import inspect
@@ -26,6 +27,8 @@ from cmk.base.api.agent_based.utils import (
 from cmk.base.api.agent_based.register.section_plugins import _validate_detect_spec
 from cmk.base.plugins.agent_based.utils import checkpoint, ucd_hr_detection, printer, pulse_secure
 
+DetectSpecKey = Tuple[bytes, Tuple, Tuple]
+
 MIGRATED_SCAN_FUNCTIONS: Dict[str, SNMPDetectSpec] = {
     # I am not sure why the following suppressions are needed.
     # 'reveal_type(DETECT)' in checkpoint shows that mypy does know the type in principle
@@ -41,6 +44,8 @@ MIGRATED_SCAN_FUNCTIONS: Dict[str, SNMPDetectSpec] = {
     "is_hr_mem": ucd_hr_detection.USE_HR_MEM,  # type: ignore[has-type]
     "_is_ucd_mem": ucd_hr_detection._UCD_MEM,  # type: ignore[has-type]
 }
+
+PRECONVERTED_DETECT_SPECS: Dict[DetectSpecKey, SNMPDetectSpec] = {}
 
 
 def _is_none(expr: ast.AST) -> bool:
@@ -343,6 +348,14 @@ def _lookup_migrated(snmp_scan_function: Callable) -> Optional[SNMPDetectSpec]:
     raise NotImplementedError("please remove migrated code entirely")
 
 
+def _lookup_key_from_code(code: CodeType) -> DetectSpecKey:
+    return (
+        code.co_code,
+        code.co_consts,
+        code.co_names,
+    )
+
+
 def _compute_detect_spec(
     *,
     section_name: str,
@@ -370,8 +383,15 @@ def create_detect_spec(
     if migrated is not None:
         return migrated
 
-    return _compute_detect_spec(
-        section_name=name,
-        scan_function=snmp_scan_function,
-        fallback_files=fallback_files,
-    )
+    key = _lookup_key_from_code(snmp_scan_function.__code__)
+    preconverted = PRECONVERTED_DETECT_SPECS.get(key)
+    if preconverted is not None:
+        return preconverted
+
+    return PRECONVERTED_DETECT_SPECS.setdefault(
+        key,
+        _compute_detect_spec(
+            section_name=name,
+            scan_function=snmp_scan_function,
+            fallback_files=fallback_files,
+        ))

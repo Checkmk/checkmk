@@ -1249,22 +1249,8 @@ def config_set_value(site: SiteContext,
                      hook_name: str,
                      value: str,
                      save: bool = True) -> None:
-    # TODO: Warum wird hier nicht call_hook() aufgerufen!!
-
-    # Call hook with 'set'. If it outputs something, that will
-    # be our new value (i.e. hook disagrees with the new setting!)
-    commandline = "%s/lib/omd/hooks/%s set '%s'" % (site.dir, hook_name, value)
-    if is_root():
-        sys.stderr.write("I am root. This should never happen!\n")
-        sys.exit(1)
-
-        # commandline = 'su -p -l %s -c "%s"' % (site.name, commandline)
-    answer = os.popen(commandline).read()  # nosec
-    if len(answer) > 0:
-        value = answer.strip()
-
     site.conf[hook_name] = value
-    putenv("CONFIG_" + hook_name, value)
+    _config_set(site, hook_name)
 
     if save:
         save_site_conf(site)

@@ -343,20 +343,35 @@ def _lookup_migrated(snmp_scan_function: Callable) -> Optional[SNMPDetectSpec]:
     raise NotImplementedError("please remove migrated code entirely")
 
 
-def create_detect_spec(name: str, snmp_scan_function: Callable,
-                       fallback_files: List[str]) -> SNMPDetectSpec:
+def _compute_detect_spec(
+    *,
+    section_name: str,
+    scan_function: Callable,
+    fallback_files: List[str],
+) -> SNMPDetectSpec:
+
+    scan_func_ast = _get_scan_function_ast(section_name, scan_function, fallback_files)
+
+    expression_ast = _get_expression_from_function(section_name, scan_func_ast)
+
+    if _is_false(expression_ast):
+        return SNMPDetectSpec()
+
+    return _ast_convert_dispatcher(expression_ast)
+
+
+def create_detect_spec(
+    name: str,
+    snmp_scan_function: Callable,
+    fallback_files: List[str],
+) -> SNMPDetectSpec:
 
     migrated = _lookup_migrated(snmp_scan_function)
     if migrated is not None:
         return migrated
 
-    scan_func_ast = _get_scan_function_ast(name, snmp_scan_function, fallback_files)
-
-    expression_ast = _get_expression_from_function(name, scan_func_ast)
-
-    if _is_false(expression_ast):
-        spec = SNMPDetectSpec()
-    else:
-        spec = _ast_convert_dispatcher(expression_ast)
-
-    return spec
+    return _compute_detect_spec(
+        section_name=name,
+        scan_function=snmp_scan_function,
+        fallback_files=fallback_files,
+    )

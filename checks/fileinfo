@@ -271,6 +271,26 @@ def _update_minmax(new_value: float, current_minmax: typing.Optional[typing.Tupl
     return min(new_value, current_min), max(new_value, current_max)
 
 
+def _check_individual_files(params, file_size, file_age):
+    '''This function checks individual files against levels defined for the file group.
+    This is done to generate information for the long output.'''
+    states = []
+    for key, value in [
+        ("age_oldest", file_age),
+        ("age_newest", file_age),
+        ("size_smallest", file_size),
+        ("size_largest", file_size),
+    ]:
+        levels = params.get("max" + key, (None, None)) + params.get("min" + key, (None, None))
+        state, _text, _no_perf = check_levels(value, key, levels)
+        states.append(state)
+
+    overall_state = max(states)
+    return overall_state, 'Age: %s, Size: %s%s' % (get_age_human_readable(file_age),
+                                                   get_filesize_human_readable(file_size),
+                                                   state_markers[overall_state])
+
+
 def check_fileinfo_groups(_item, params, parsed):
 
     outof_range_txt = fileinfo_check_timeranges(params)
@@ -319,23 +339,10 @@ def check_fileinfo_groups(_item, params, parsed):
             age_minmax = _update_minmax(age, age_minmax)
 
             # Used for long ouput information
-            for key, value in [
-                ("age_oldest", age),
-                ("age_newest", age),
-                ("size_smallest", file_stat.size),
-                ("size_largest", file_stat.size),
-                ("size", file_stat.size),
-            ]:
-                levels = params.get("max" + key,
-                                    (None, None)) + params.get("min" + key, (None, None))
-                state, _, _ = check_levels(value, key, levels)
-                if skip_ok_files and not state:
-                    continue
-                files_matching.setdefault(file_stat.name, {
-                    "size": file_stat.size,
-                    "age": age,
-                    "states": [],
-                })["states"].append(state)
+            state, text = _check_individual_files(params, file_stat.size, age)
+            if not skip_ok_files or state:
+                files_matching[file_stat.name] = text
+            break
 
     # Start Checking
     size_smallest, size_largest = size_minmax
@@ -366,13 +373,7 @@ def check_fileinfo_groups(_item, params, parsed):
     if exclude_patterns:
         long_output.append("Exclude patterns: %s" % ", ".join(exclude_patterns))
 
-    for filename, attrs in sorted(files_matching.items(), key=lambda x: x[0]):
-        long_output.append("[%s] Age: %s, Size: %s%s" % (
-            filename,
-            get_age_human_readable(attrs["age"]),
-            get_filesize_human_readable(attrs["size"]),
-            state_markers[max(attrs["states"])],
-        ))
+    long_output.extend(['[%s] %s' % key_text for key_text in sorted(files_matching.items())])
 
     if long_output:
         yield 0, "\n%s" % "\n".join(long_output)

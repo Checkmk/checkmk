@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper to register a new-sytyle section based on config.check_info
 """
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Optional
 import os.path
 import ast
 import inspect
@@ -324,15 +324,31 @@ def _ast_convert_dispatcher(arg: ast.AST) -> SNMPDetectSpec:
     raise ValueError(ast.dump(arg))
 
 
+def _lookup_migrated(snmp_scan_function: Callable) -> Optional[SNMPDetectSpec]:
+    """Look in the dict of functions that have been migrated
+
+      * a spec is explicitily listed
+      * the left over scan function stub only raises NotImplementedError
+    """
+    migrated = MIGRATED_SCAN_FUNCTIONS.get(snmp_scan_function.__name__)
+    if migrated is None:
+        return None
+
+    try:
+        _ = snmp_scan_function(lambda x, default=None: "")
+    except NotImplementedError as exc:
+        # this is what we expected.
+        if str(exc) == "already migrated":
+            return migrated
+    raise NotImplementedError("please remove migrated code entirely")
+
+
 def create_detect_spec(name: str, snmp_scan_function: Callable,
                        fallback_files: List[str]) -> SNMPDetectSpec:
-    if snmp_scan_function.__name__ in MIGRATED_SCAN_FUNCTIONS:
-        try:
-            _ = snmp_scan_function(lambda x, default=None: "")
-        except NotImplementedError as exc:
-            if str(exc) == "already migrated":
-                return MIGRATED_SCAN_FUNCTIONS[snmp_scan_function.__name__]
-        raise NotImplementedError("please remove migrated code entirely")
+
+    migrated = _lookup_migrated(snmp_scan_function)
+    if migrated is not None:
+        return migrated
 
     scan_func_ast = _get_scan_function_ast(name, snmp_scan_function, fallback_files)
 

@@ -27,6 +27,8 @@ from cmk.base.api.agent_based.utils import (
 from cmk.base.api.agent_based.register.section_plugins import _validate_detect_spec
 from cmk.base.plugins.agent_based.utils import checkpoint, ucd_hr_detection, printer, pulse_secure
 
+from .detect_specs import PRECONVERTED_DETECT_SPECS
+
 DetectSpecKey = Tuple[bytes, Tuple, Tuple]
 
 MIGRATED_SCAN_FUNCTIONS: Dict[str, SNMPDetectSpec] = {
@@ -44,8 +46,6 @@ MIGRATED_SCAN_FUNCTIONS: Dict[str, SNMPDetectSpec] = {
     "is_hr_mem": ucd_hr_detection.USE_HR_MEM,  # type: ignore[has-type]
     "_is_ucd_mem": ucd_hr_detection._UCD_MEM,  # type: ignore[has-type]
 }
-
-PRECONVERTED_DETECT_SPECS: Dict[DetectSpecKey, SNMPDetectSpec] = {}
 
 
 def _is_none(expr: ast.AST) -> bool:
@@ -386,12 +386,13 @@ def create_detect_spec(
     key = _lookup_key_from_code(snmp_scan_function.__code__)
     preconverted = PRECONVERTED_DETECT_SPECS.get(key)
     if preconverted is not None:
-        return preconverted
+        return SNMPDetectSpec(preconverted)
 
-    return PRECONVERTED_DETECT_SPECS.setdefault(
-        key,
-        _compute_detect_spec(
-            section_name=name,
-            scan_function=snmp_scan_function,
-            fallback_files=fallback_files,
-        ))
+    return SNMPDetectSpec(
+        PRECONVERTED_DETECT_SPECS.setdefault(
+            key,
+            _compute_detect_spec(
+                section_name=name,
+                scan_function=snmp_scan_function,
+                fallback_files=fallback_files,
+            )))

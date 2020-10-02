@@ -5457,7 +5457,7 @@ def _encode_labels_for_tagify(labels):
 
 
 class IconSelector(ValueSpec):
-    def __init__(self, allow_empty=True, empty_img="empty", show_builtin_icons=False, **kwargs):
+    def __init__(self, allow_empty=True, empty_img="empty", show_builtin_icons=True, **kwargs):
         super().__init__(**kwargs)
         self._allow_empty = allow_empty
         self._empty_img = empty_img

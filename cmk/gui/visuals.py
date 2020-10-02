@@ -933,7 +933,7 @@ def page_edit_visual(what,
                                 'context buttons linking to the %s instead of the regular title.') %
                          visual_type.title,
                          size=26)),
-            ('icon', IconSelector(title=_('Button Icon'),)),
+            ('icon', IconSelector(title=_('Button Icon'))),
             ('visibility', Dictionary(
                 title=_('Visibility'),
                 elements=visibility_elements,

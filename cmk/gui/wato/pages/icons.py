@@ -59,7 +59,7 @@ class ModeIcons(WatoMode):
                                           add_abort_link=False)
 
     def _load_custom_icons(self):
-        s = IconSelector()
+        s = IconSelector(show_builtin_icons=False)
         return s.available_icons(only_local=True)
 
     def _vs_upload(self):

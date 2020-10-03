@@ -126,6 +126,7 @@ class RediscoveryMode(Enum):
 
 DiscoveryParameters = NamedTuple("DiscoveryParameters", [
     ("on_error", str),
+    ("load_labels", bool),
 ])
 
 HostLabelDiscoveryResult = NamedTuple("HostLabelDiscoveryResult", [
@@ -320,7 +321,10 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
     use_caches = not arg_hostnames or checkers.FileCacheFactory.maybe
     on_error = "raise" if cmk.utils.debug.enabled() else "warn"
 
-    discovery_parameters = DiscoveryParameters(on_error=on_error)
+    discovery_parameters = DiscoveryParameters(
+        on_error=on_error,
+        load_labels=arg_only_new,
+    )
 
     host_names = _preprocess_hostnames(arg_hostnames, config_cache)
 
@@ -455,7 +459,7 @@ def _do_discovery_for(
     new_host_labels, host_labels_per_plugin = _perform_host_label_discovery(
         hostname,
         host_label_discovery_result.labels,
-        only_new,
+        discovery_parameters,
     )
     DiscoveredHostLabelsStore(hostname).save(new_host_labels.to_dict())
 
@@ -495,7 +499,10 @@ def discover_on_host(
 
     hostname = host_config.hostname
     counts = _empty_counts()  # TODO: see if this can be replaced by counts = Counter()
-    discovery_parameters = DiscoveryParameters(on_error=on_error)
+    discovery_parameters = DiscoveryParameters(
+        on_error=on_error,
+        load_labels=(mode != "remove"),
+    )
 
     if hostname not in config_cache.all_active_hosts():
         return counts, ""
@@ -563,7 +570,7 @@ def discover_on_host(
         new_host_labels, host_labels_per_plugin = _perform_host_label_discovery(
             hostname,
             host_label_discovery_result.labels,
-            only_new=True,
+            discovery_parameters,
         )
         DiscoveredHostLabelsStore(hostname).save(new_host_labels.to_dict())
         counts["self_new_host_labels"] = sum(host_labels_per_plugin.values())
@@ -682,7 +689,10 @@ def check_discovery(
 
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
-    discovery_parameters = DiscoveryParameters(on_error="raise")
+    discovery_parameters = DiscoveryParameters(
+        on_error="raise",
+        load_labels=True,
+    )
 
     params = host_config.discovery_check_parameters
     if params is None:
@@ -738,7 +748,7 @@ def check_discovery(
     _new_host_labels, host_labels_per_plugin = _perform_host_label_discovery(
         hostname,
         host_label_discovery_result.labels,
-        only_new=True,
+        discovery_parameters,
     )
 
     if host_labels_per_plugin:
@@ -1083,13 +1093,13 @@ def _may_rediscover(params: config.DiscoveryCheckParameters, now_ts: float,
 def _perform_host_label_discovery(
     hostname: HostName,
     discovered_host_labels: DiscoveredHostLabels,
-    only_new: bool,
+    discovery_parameters: DiscoveryParameters,
 ) -> Tuple[DiscoveredHostLabels, Counter[str]]:
 
     section.section_step("Perform host label discovery")
 
     # Take over old items if -I is selected
-    if only_new:
+    if discovery_parameters.load_labels:
         return_host_labels = DiscoveredHostLabels.from_dict(
             DiscoveredHostLabelsStore(hostname).load())
     else:
@@ -1679,7 +1689,10 @@ def get_check_preview(
     host_config = config_cache.get_host_config(host_name)
 
     ip_address = None if host_config.is_cluster else ip_lookup.lookup_ip_address(host_config)
-    discovery_parameters = DiscoveryParameters(on_error=on_error)
+    discovery_parameters = DiscoveryParameters(
+        on_error=on_error,
+        load_labels=False,
+    )
 
     sources = checkers.make_sources(
         host_config,

@@ -1015,11 +1015,22 @@ def _realhost_scenario(monkeypatch):
     )
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
-def test__discover_host_labels_and_services_on_realhost(realhost_scenario):
-    scenario = realhost_scenario
+_discovery_parameters = [
+    discovery.DiscoveryParameters(
+        on_error="raise",
+        load_labels=True,
+    ),
+    discovery.DiscoveryParameters(
+        on_error="raise",
+        load_labels=False,
+    ),
+]
 
-    discovery_parameters = discovery.DiscoveryParameters(on_error="raise")
+
+@pytest.mark.usefixtures("config_load_all_checks")
+@pytest.mark.parametrize("discovery_parameters", _discovery_parameters)
+def test__discover_host_labels_and_services_on_realhost(realhost_scenario, discovery_parameters):
+    scenario = realhost_scenario
 
     with cmk_debug_enabled():
         discovered_services, host_label_discovery_result = discovery._discover_host_labels_and_services(
@@ -1042,11 +1053,9 @@ def test__discover_host_labels_and_services_on_realhost(realhost_scenario):
 
 
 @pytest.mark.usefixtures("config_load_all_checks")
-@pytest.mark.parametrize("only_new", [False, True])
-def test__perform_host_label_discovery_on_realhost(realhost_scenario, only_new):
+@pytest.mark.parametrize("discovery_parameters", _discovery_parameters)
+def test__perform_host_label_discovery_on_realhost(realhost_scenario, discovery_parameters):
     scenario = realhost_scenario
-
-    discovery_parameters = discovery.DiscoveryParameters(on_error="raise")
 
     with cmk_debug_enabled():
         _discovered_services, host_label_discovery_result = discovery._discover_host_labels_and_services(
@@ -1060,12 +1069,12 @@ def test__perform_host_label_discovery_on_realhost(realhost_scenario, only_new):
         return_host_labels, new_host_labels_per_plugin = discovery._perform_host_label_discovery(
             scenario.hostname,
             host_label_discovery_result.labels,
-            only_new,
+            discovery_parameters,
         )
 
     assert new_host_labels_per_plugin == Counter({"labels": 1})
 
-    if only_new:
+    if discovery_parameters.load_labels:
         assert return_host_labels == DiscoveredHostLabels(
             HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),
             HostLabel('another_label', 'true', plugin_name='labels'),
@@ -1220,10 +1229,9 @@ def _cluster_scenario(monkeypatch):
 
 
 @pytest.mark.usefixtures("config_load_all_checks")
-def test__discover_host_labels_and_services_on_cluster(cluster_scenario):
+@pytest.mark.parametrize("discovery_parameters", _discovery_parameters)
+def test__discover_host_labels_and_services_on_cluster(cluster_scenario, discovery_parameters):
     scenario = cluster_scenario
-
-    discovery_parameters = discovery.DiscoveryParameters(on_error="raise")
 
     with cmk_debug_enabled():
         discovered_services, host_label_discovery_result = discovery._get_cluster_services(
@@ -1247,11 +1255,9 @@ def test__discover_host_labels_and_services_on_cluster(cluster_scenario):
 
 
 @pytest.mark.usefixtures("config_load_all_checks")
-@pytest.mark.parametrize("only_new", [False, True])
-def test__perform_host_label_discovery_on_cluster(cluster_scenario, only_new):
+@pytest.mark.parametrize("discovery_parameters", _discovery_parameters)
+def test__perform_host_label_discovery_on_cluster(cluster_scenario, discovery_parameters):
     scenario = cluster_scenario
-
-    discovery_parameters = discovery.DiscoveryParameters(on_error="raise")
 
     with cmk_debug_enabled():
         _discovered_services, host_label_discovery_result = discovery._get_cluster_services(
@@ -1264,12 +1270,12 @@ def test__perform_host_label_discovery_on_cluster(cluster_scenario, only_new):
         return_host_labels, new_host_labels_per_plugin = discovery._perform_host_label_discovery(
             scenario.host_config.hostname,
             host_label_discovery_result.labels,
-            only_new,
+            discovery_parameters,
         )
 
     assert new_host_labels_per_plugin == Counter({"labels": 2})
 
-    if only_new:
+    if discovery_parameters.load_labels:
         assert return_host_labels == DiscoveredHostLabels(
             HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),
             HostLabel('existing_label', 'bar', plugin_name='foo'),

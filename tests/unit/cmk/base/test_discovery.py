@@ -7,7 +7,7 @@
 # pylint: disable=redefined-outer-name,protected-access
 
 import pytest  # type: ignore[import]
-from typing import Dict, Set, NamedTuple
+from typing import Dict, Set, NamedTuple, Counter
 
 # No stub files
 from testlib.base import Scenario  # type: ignore[import]
@@ -968,6 +968,17 @@ def _realhost_scenario(monkeypatch):
     }])
     ts.apply(monkeypatch)
 
+    DiscoveredHostLabelsStore(hostname).save({
+        'existing_label': {
+            'plugin_name': 'foo',
+            'value': 'bar',
+        },
+        'another_label': {
+            'plugin_name': 'labels',
+            'value': 'true',
+        }
+    })
+
     return RealHostScenario(
         hostname,
         ipaddress,
@@ -1008,12 +1019,14 @@ def _realhost_scenario(monkeypatch):
 def test__discover_host_labels_and_services_on_realhost(realhost_scenario):
     scenario = realhost_scenario
 
+    discovery_parameters = discovery.DiscoveryParameters(on_error="raise")
+
     with cmk_debug_enabled():
         discovered_services, discovered_host_labels = discovery._discover_host_labels_and_services(
             scenario.hostname,
             scenario.ipaddress,
             scenario.multi_host_sections,
-            on_error="raise",
+            discovery_parameters,
             check_plugin_whitelist={CheckPluginName('df')},
         )
 
@@ -1028,10 +1041,58 @@ def test__discover_host_labels_and_services_on_realhost(realhost_scenario):
     assert services == expected_services
 
 
+@pytest.mark.usefixtures("config_load_all_checks")
+@pytest.mark.parametrize("only_new", [False, True])
+def test__perform_host_label_discovery_on_realhost(realhost_scenario, only_new):
+    scenario = realhost_scenario
+
+    discovery_parameters = discovery.DiscoveryParameters(on_error="raise")
+
+    with cmk_debug_enabled():
+        _discovered_services, discovered_host_labels = discovery._discover_host_labels_and_services(
+            scenario.hostname,
+            scenario.ipaddress,
+            scenario.multi_host_sections,
+            discovery_parameters,
+            check_plugin_whitelist={CheckPluginName('df')},
+        )
+
+        return_host_labels, new_host_labels_per_plugin = discovery._perform_host_label_discovery(
+            scenario.hostname,
+            discovered_host_labels,
+            only_new,
+        )
+
+    assert new_host_labels_per_plugin == Counter({"labels": 1})
+
+    if only_new:
+        assert return_host_labels == DiscoveredHostLabels(
+            HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),
+            HostLabel('another_label', 'true', plugin_name='labels'),
+            HostLabel('existing_label', 'bar', plugin_name='foo'),
+        )
+    else:
+        assert return_host_labels == DiscoveredHostLabels(
+            HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'))
+
+    assert DiscoveredHostLabelsStore(scenario.hostname).load() == {
+        'another_label': {
+            'plugin_name': 'labels',
+            'value': 'true',
+        },
+        'existing_label': {
+            'plugin_name': 'foo',
+            'value': 'bar',
+        },
+    }
+
+
 ClusterScenario = NamedTuple("ClusterScenario", [
     ("host_config", config.HostConfig),
     ("ipaddress", str),
     ("multi_host_sections", MultiHostSections),
+    ("node1_hostname", str),
+    ("node2_hostname", str),
 ])
 
 
@@ -1074,6 +1135,23 @@ def _cluster_scenario(monkeypatch):
     config_cache = ts.apply(monkeypatch)
     host_config = config_cache.get_host_config(hostname)
 
+    DiscoveredHostLabelsStore(node1_hostname).save(
+        {'node1_existing_label': {
+            'plugin_name': 'node1_plugin',
+            'value': 'true',
+        }})
+
+    DiscoveredHostLabelsStore(hostname).save({
+        'existing_label': {
+            'plugin_name': 'foo',
+            'value': 'bar',
+        },
+        'another_label': {
+            'plugin_name': 'labels',
+            'value': 'true',
+        }
+    })
+
     return ClusterScenario(
         host_config,
         ipaddress,
@@ -1112,7 +1190,7 @@ def _cluster_scenario(monkeypatch):
                         source_type=SourceType.HOST): AgentHostSections(
                     sections={
                         SectionName("labels"): [[
-                            '{"mylabel":"true"}',
+                            '{"node2_live_label":"true"}',
                         ],],
                         SectionName("df"): [
                             [
@@ -1136,6 +1214,8 @@ def _cluster_scenario(monkeypatch):
                         ],
                     }),
             }),
+        node1_hostname,
+        node2_hostname,
     )
 
 
@@ -1143,17 +1223,19 @@ def _cluster_scenario(monkeypatch):
 def test__discover_host_labels_and_services_on_cluster(cluster_scenario):
     scenario = cluster_scenario
 
+    discovery_parameters = discovery.DiscoveryParameters(on_error="raise")
+
     with cmk_debug_enabled():
         discovered_services, discovered_host_labels = discovery._get_cluster_services(
             scenario.host_config,
             scenario.ipaddress,
             scenario.multi_host_sections,
-            on_error="raise",
+            discovery_parameters,
         )
 
     assert discovered_host_labels == DiscoveredHostLabels(
         HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),
-        HostLabel('mylabel', 'true', plugin_name='labels'),
+        HostLabel('node2_live_label', 'true', plugin_name='labels'),
     )
 
     services = set(discovered_services)
@@ -1162,3 +1244,60 @@ def test__discover_host_labels_and_services_on_cluster(cluster_scenario):
     }
 
     assert services == expected_services
+
+
+@pytest.mark.usefixtures("config_load_all_checks")
+@pytest.mark.parametrize("only_new", [False, True])
+def test__perform_host_label_discovery_on_cluster(cluster_scenario, only_new):
+    scenario = cluster_scenario
+
+    discovery_parameters = discovery.DiscoveryParameters(on_error="raise")
+
+    with cmk_debug_enabled():
+        _discovered_services, discovered_host_labels = discovery._get_cluster_services(
+            scenario.host_config,
+            scenario.ipaddress,
+            scenario.multi_host_sections,
+            discovery_parameters,
+        )
+
+        return_host_labels, new_host_labels_per_plugin = discovery._perform_host_label_discovery(
+            scenario.host_config.hostname,
+            discovered_host_labels,
+            only_new,
+        )
+
+    assert new_host_labels_per_plugin == Counter({"labels": 2})
+
+    if only_new:
+        assert return_host_labels == DiscoveredHostLabels(
+            HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),
+            HostLabel('existing_label', 'bar', plugin_name='foo'),
+            HostLabel('another_label', 'true', plugin_name='labels'),
+            HostLabel('node2_live_label', 'true', plugin_name='labels'),
+        )
+    else:
+        assert return_host_labels == DiscoveredHostLabels(
+            HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),
+            HostLabel('node2_live_label', 'true', plugin_name='labels'),
+        )
+
+    assert DiscoveredHostLabelsStore(scenario.host_config.hostname).load() == {
+        'another_label': {
+            'plugin_name': 'labels',
+            'value': 'true',
+        },
+        'existing_label': {
+            'plugin_name': 'foo',
+            'value': 'bar',
+        },
+    }
+
+    assert DiscoveredHostLabelsStore(scenario.node1_hostname).load() == {
+        'node1_existing_label': {
+            'plugin_name': 'node1_plugin',
+            'value': 'true',
+        },
+    }
+
+    assert DiscoveredHostLabelsStore(scenario.node2_hostname).load() == {}

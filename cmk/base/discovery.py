@@ -128,6 +128,10 @@ DiscoveryParameters = NamedTuple("DiscoveryParameters", [
     ("on_error", str),
 ])
 
+HostLabelDiscoveryResult = NamedTuple("HostLabelDiscoveryResult", [
+    ("labels", DiscoveredHostLabels),
+])
+
 #   .--Helpers-------------------------------------------------------------.
 #   |                  _   _      _                                        |
 #   |                 | | | | ___| |_ __   ___ _ __ ___                    |
@@ -408,7 +412,7 @@ def _do_discovery_for(
     discovery_parameters: DiscoveryParameters,
 ) -> None:
 
-    discovered_services, discovered_host_labels = _discover_host_labels_and_services(
+    discovered_services, host_label_discovery_result = _discover_host_labels_and_services(
         hostname,
         ipaddress,
         multi_host_sections,
@@ -450,7 +454,7 @@ def _do_discovery_for(
 
     new_host_labels, host_labels_per_plugin = _perform_host_label_discovery(
         hostname,
-        discovered_host_labels,
+        host_label_discovery_result.labels,
         only_new,
     )
     DiscoveredHostLabelsStore(hostname).save(new_host_labels.to_dict())
@@ -497,7 +501,7 @@ def discover_on_host(
         return counts, ""
 
     err = None
-    discovered_host_labels = DiscoveredHostLabels()
+    host_label_discovery_result = HostLabelDiscoveryResult(labels=DiscoveredHostLabels())
 
     try:
         # in "refresh" mode we first need to remove all previously discovered
@@ -535,7 +539,7 @@ def discover_on_host(
         )
 
         # Compute current state of new and existing checks
-        services, discovered_host_labels = _get_host_services(
+        services, host_label_discovery_result = _get_host_services(
             host_config,
             ipaddress,
             multi_host_sections,
@@ -558,7 +562,7 @@ def discover_on_host(
     if mode != "remove":
         new_host_labels, host_labels_per_plugin = _perform_host_label_discovery(
             hostname,
-            discovered_host_labels,
+            host_label_discovery_result.labels,
             only_new=True,
         )
         DiscoveredHostLabelsStore(hostname).save(new_host_labels.to_dict())
@@ -718,7 +722,7 @@ def check_discovery(
         fetcher_messages=fetcher_messages,
     )
 
-    services, discovered_host_labels = _get_host_services(
+    services, host_label_discovery_result = _get_host_services(
         host_config,
         ipaddress,
         multi_host_sections,
@@ -733,7 +737,7 @@ def check_discovery(
 
     _new_host_labels, host_labels_per_plugin = _perform_host_label_discovery(
         hostname,
-        discovered_host_labels,
+        host_label_discovery_result.labels,
         only_new=True,
     )
 
@@ -1106,7 +1110,7 @@ def _discover_host_labels(
     ipaddress: Optional[HostAddress],
     multi_host_sections: MultiHostSections,
     discovery_parameters: DiscoveryParameters,
-) -> DiscoveredHostLabels:
+) -> HostLabelDiscoveryResult:
 
     section.section_step("Executing host label discovery")
 
@@ -1121,7 +1125,7 @@ def _discover_host_labels(
         discovery_parameters,
     )
 
-    return discovered_host_labels
+    return HostLabelDiscoveryResult(labels=discovered_host_labels)
 
 
 def _discover_host_labels_for_source_type(
@@ -1294,13 +1298,13 @@ def _discover_host_labels_and_services(
     multi_host_sections: MultiHostSections,
     discovery_parameters: DiscoveryParameters,
     check_plugin_whitelist: Optional[Set[CheckPluginName]],
-) -> Tuple[List[Service], DiscoveredHostLabels]:
+) -> Tuple[List[Service], HostLabelDiscoveryResult]:
 
     # Discovers host labels and services per real host or node
 
     check_api_utils.set_hostname(hostname)
 
-    discovered_host_labels = _discover_host_labels(
+    host_label_discovery_result = _discover_host_labels(
         hostname,
         ipaddress,
         multi_host_sections,
@@ -1314,7 +1318,7 @@ def _discover_host_labels_and_services(
         discovery_parameters,
         check_plugin_whitelist,
     )
-    return discovered_services, discovered_host_labels
+    return discovered_services, host_label_discovery_result
 
 
 # Create a table of autodiscovered services of a host. Do not save
@@ -1475,20 +1479,20 @@ def _get_host_services(
     ipaddress: Optional[HostAddress],
     multi_host_sections: MultiHostSections,
     discovery_parameters: DiscoveryParameters,
-) -> Tuple[ServicesByTransition, DiscoveredHostLabels]:
+) -> Tuple[ServicesByTransition, HostLabelDiscoveryResult]:
 
     if host_config.is_cluster:
-        services, discovered_host_labels = _get_cluster_services(host_config, ipaddress,
-                                                                 multi_host_sections,
-                                                                 discovery_parameters)
+        services, host_label_discovery_result = _get_cluster_services(host_config, ipaddress,
+                                                                      multi_host_sections,
+                                                                      discovery_parameters)
     else:
-        services, discovered_host_labels = _get_node_services(host_config, ipaddress,
-                                                              multi_host_sections,
-                                                              discovery_parameters)
+        services, host_label_discovery_result = _get_node_services(host_config, ipaddress,
+                                                                   multi_host_sections,
+                                                                   discovery_parameters)
 
     # Now add manual and active service and handle ignored services
     return _merge_manual_services(host_config, services,
-                                  discovery_parameters), discovered_host_labels
+                                  discovery_parameters), host_label_discovery_result
 
 
 # Do the actual work for a non-cluster host or node
@@ -1497,12 +1501,12 @@ def _get_node_services(
     ipaddress: Optional[HostAddress],
     multi_host_sections: MultiHostSections,
     discovery_parameters: DiscoveryParameters,
-) -> Tuple[ServicesTable, DiscoveredHostLabels]:
+) -> Tuple[ServicesTable, HostLabelDiscoveryResult]:
 
     hostname = host_config.hostname
-    services, discovered_host_labels = _get_discovered_services(hostname, ipaddress,
-                                                                multi_host_sections,
-                                                                discovery_parameters)
+    services, host_label_discovery_result = _get_discovered_services(hostname, ipaddress,
+                                                                     multi_host_sections,
+                                                                     discovery_parameters)
 
     config_cache = config.get_config_cache()
     # Identify clustered services
@@ -1513,7 +1517,7 @@ def _get_node_services(
                 check_source = "ignored"
             services[service.id()] = ("clustered_" + check_source, service)
 
-    return services, discovered_host_labels
+    return services, host_label_discovery_result
 
 
 # Part of _get_node_services that deals with discovered services
@@ -1522,10 +1526,10 @@ def _get_discovered_services(
     ipaddress: Optional[HostAddress],
     multi_host_sections: MultiHostSections,
     discovery_parameters: DiscoveryParameters,
-) -> Tuple[ServicesTable, DiscoveredHostLabels]:
+) -> Tuple[ServicesTable, HostLabelDiscoveryResult]:
 
     # Handle discovered services -> "new"
-    discovered_services, discovered_host_labels = _discover_host_labels_and_services(
+    discovered_services, host_label_discovery_result = _discover_host_labels_and_services(
         hostname,
         ipaddress,
         multi_host_sections,
@@ -1543,7 +1547,7 @@ def _get_discovered_services(
         check_source = "vanished" if existing_service.id() not in services else "old"
         services[existing_service.id()] = check_source, existing_service
 
-    return services, discovered_host_labels
+    return services, host_label_discovery_result
 
 
 # TODO: Rename or extract disabled services handling
@@ -1615,9 +1619,9 @@ def _get_cluster_services(
     ipaddress: Optional[str],
     multi_host_sections: MultiHostSections,
     discovery_parameters: DiscoveryParameters,
-) -> Tuple[ServicesTable, DiscoveredHostLabels]:
+) -> Tuple[ServicesTable, HostLabelDiscoveryResult]:
     if not host_config.nodes:
-        return {}, DiscoveredHostLabels()
+        return {}, HostLabelDiscoveryResult(labels=DiscoveredHostLabels())
 
     cluster_items: ServicesTable = {}
     cluster_host_labels = DiscoveredHostLabels()
@@ -1627,13 +1631,13 @@ def _get_cluster_services(
     # From the states and parameters of these we construct the final state per service.
     for node in host_config.nodes:
         node_config = config_cache.get_host_config(node)
-        services, discovered_host_labels = _get_discovered_services(
+        services, host_label_discovery_result = _get_discovered_services(
             node,
             ip_lookup.lookup_ip_address(node_config),
             multi_host_sections,
             discovery_parameters,
         )
-        cluster_host_labels.update(discovered_host_labels)
+        cluster_host_labels.update(host_label_discovery_result.labels)
         for check_source, discovered_service in services.values():
             if host_config.hostname != config_cache.host_of_clustered_service(
                     node, discovered_service.description):
@@ -1661,7 +1665,7 @@ def _get_cluster_services(
 
             # In all other cases either both must be "new" or "vanished" -> let it be
 
-    return cluster_items, cluster_host_labels
+    return cluster_items, HostLabelDiscoveryResult(labels=cluster_host_labels)
 
 
 def get_check_preview(
@@ -1700,7 +1704,7 @@ def get_check_preview(
         host_config=host_config,
     )
 
-    grouped_services, discovered_host_labels = _get_host_services(
+    grouped_services, host_label_discovery_result = _get_host_services(
         host_config,
         ip_address,
         multi_host_sections,
@@ -1750,7 +1754,7 @@ def get_check_preview(
                 service.service_labels.to_dict(),
             ))
 
-    return table, discovered_host_labels
+    return table, host_label_discovery_result.labels
 
 
 def _preview_check_source(

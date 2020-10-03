@@ -1022,7 +1022,7 @@ def test__discover_host_labels_and_services_on_realhost(realhost_scenario):
     discovery_parameters = discovery.DiscoveryParameters(on_error="raise")
 
     with cmk_debug_enabled():
-        discovered_services, discovered_host_labels = discovery._discover_host_labels_and_services(
+        discovered_services, host_label_discovery_result = discovery._discover_host_labels_and_services(
             scenario.hostname,
             scenario.ipaddress,
             scenario.multi_host_sections,
@@ -1030,7 +1030,7 @@ def test__discover_host_labels_and_services_on_realhost(realhost_scenario):
             check_plugin_whitelist={CheckPluginName('df')},
         )
 
-    assert discovered_host_labels == DiscoveredHostLabels(
+    assert host_label_discovery_result.labels == DiscoveredHostLabels(
         HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'))
 
     services = {(s.check_plugin_name, s.item) for s in discovered_services}
@@ -1049,7 +1049,7 @@ def test__perform_host_label_discovery_on_realhost(realhost_scenario, only_new):
     discovery_parameters = discovery.DiscoveryParameters(on_error="raise")
 
     with cmk_debug_enabled():
-        _discovered_services, discovered_host_labels = discovery._discover_host_labels_and_services(
+        _discovered_services, host_label_discovery_result = discovery._discover_host_labels_and_services(
             scenario.hostname,
             scenario.ipaddress,
             scenario.multi_host_sections,
@@ -1059,7 +1059,7 @@ def test__perform_host_label_discovery_on_realhost(realhost_scenario, only_new):
 
         return_host_labels, new_host_labels_per_plugin = discovery._perform_host_label_discovery(
             scenario.hostname,
-            discovered_host_labels,
+            host_label_discovery_result.labels,
             only_new,
         )
 
@@ -1226,14 +1226,14 @@ def test__discover_host_labels_and_services_on_cluster(cluster_scenario):
     discovery_parameters = discovery.DiscoveryParameters(on_error="raise")
 
     with cmk_debug_enabled():
-        discovered_services, discovered_host_labels = discovery._get_cluster_services(
+        discovered_services, host_label_discovery_result = discovery._get_cluster_services(
             scenario.host_config,
             scenario.ipaddress,
             scenario.multi_host_sections,
             discovery_parameters,
         )
 
-    assert discovered_host_labels == DiscoveredHostLabels(
+    assert host_label_discovery_result.labels == DiscoveredHostLabels(
         HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),
         HostLabel('node2_live_label', 'true', plugin_name='labels'),
     )
@@ -1254,7 +1254,7 @@ def test__perform_host_label_discovery_on_cluster(cluster_scenario, only_new):
     discovery_parameters = discovery.DiscoveryParameters(on_error="raise")
 
     with cmk_debug_enabled():
-        _discovered_services, discovered_host_labels = discovery._get_cluster_services(
+        _discovered_services, host_label_discovery_result = discovery._get_cluster_services(
             scenario.host_config,
             scenario.ipaddress,
             scenario.multi_host_sections,
@@ -1263,7 +1263,7 @@ def test__perform_host_label_discovery_on_cluster(cluster_scenario, only_new):
 
         return_host_labels, new_host_labels_per_plugin = discovery._perform_host_label_discovery(
             scenario.host_config.hostname,
-            discovered_host_labels,
+            host_label_discovery_result.labels,
             only_new,
         )
 

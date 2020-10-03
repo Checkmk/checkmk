@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import List, Tuple as _Tuple
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Age,
@@ -14,9 +15,11 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfTimeRanges,
     MonitoringState,
+    RegExpUnicode,
     TextAscii,
     Transform,
     Tuple,
+    ValueSpec,
 )
 
 from cmk.gui.plugins.wato import (
@@ -26,8 +29,72 @@ from cmk.gui.plugins.wato import (
     HostRulespec,
 )
 
-from cmk.gui.plugins.wato.check_parameters.file_attributes_utils import (
-    additional_rules,)
+file_size_age_elements: List[_Tuple[str, ValueSpec]] = [
+    ("minage_oldest",
+     Tuple(
+         title=_("Minimal age of oldest file"),
+         elements=[
+             Age(title=_("Warning if younger than")),
+             Age(title=_("Critical if younger than")),
+         ],
+     )),
+    ("maxage_oldest",
+     Tuple(
+         title=_("Maximal age of oldest file"),
+         elements=[
+             Age(title=_("Warning if older than")),
+             Age(title=_("Critical if older than")),
+         ],
+     )),
+    ("minage_newest",
+     Tuple(
+         title=_("Minimal age of newest file"),
+         elements=[
+             Age(title=_("Warning if younger than")),
+             Age(title=_("Critical if younger than")),
+         ],
+     )),
+    ("maxage_newest",
+     Tuple(
+         title=_("Maximal age of newest file"),
+         elements=[
+             Age(title=_("Warning if older than")),
+             Age(title=_("Critical if older than")),
+         ],
+     )),
+    ("minsize_smallest",
+     Tuple(
+         title=_("Minimal size of smallest file"),
+         elements=[
+             Filesize(title=_("Warning if below")),
+             Filesize(title=_("Critical if below")),
+         ],
+     )),
+    ("maxsize_smallest",
+     Tuple(
+         title=_("Maximal size of smallest file"),
+         elements=[
+             Filesize(title=_("Warning if above")),
+             Filesize(title=_("Critical if above")),
+         ],
+     )),
+    ("minsize_largest",
+     Tuple(
+         title=_("Minimal size of largest file"),
+         elements=[
+             Filesize(title=_("Warning if below")),
+             Filesize(title=_("Critical if below")),
+         ],
+     )),
+    ("maxsize_largest",
+     Tuple(
+         title=_("Maximal size of largest file"),
+         elements=[
+             Filesize(title=_("Warning if above")),
+             Filesize(title=_("Critical if above")),
+         ],
+     )),
+]
 
 
 def _valuespec_fileinfo_groups():
@@ -103,71 +170,7 @@ def _item_spec_fileinfo_groups():
 
 def _parameter_valuespec_fileinfo_groups():
     return Dictionary(
-        elements=[
-            ("minage_oldest",
-             Tuple(
-                 title=_("Minimal age of oldest file"),
-                 elements=[
-                     Age(title=_("Warning if younger than")),
-                     Age(title=_("Critical if younger than")),
-                 ],
-             )),
-            ("maxage_oldest",
-             Tuple(
-                 title=_("Maximal age of oldest file"),
-                 elements=[
-                     Age(title=_("Warning if older than")),
-                     Age(title=_("Critical if older than")),
-                 ],
-             )),
-            ("minage_newest",
-             Tuple(
-                 title=_("Minimal age of newest file"),
-                 elements=[
-                     Age(title=_("Warning if younger than")),
-                     Age(title=_("Critical if younger than")),
-                 ],
-             )),
-            ("maxage_newest",
-             Tuple(
-                 title=_("Maximal age of newest file"),
-                 elements=[
-                     Age(title=_("Warning if older than")),
-                     Age(title=_("Critical if older than")),
-                 ],
-             )),
-            ("minsize_smallest",
-             Tuple(
-                 title=_("Minimal size of smallest file"),
-                 elements=[
-                     Filesize(title=_("Warning if below")),
-                     Filesize(title=_("Critical if below")),
-                 ],
-             )),
-            ("maxsize_smallest",
-             Tuple(
-                 title=_("Maximal size of smallest file"),
-                 elements=[
-                     Filesize(title=_("Warning if above")),
-                     Filesize(title=_("Critical if above")),
-                 ],
-             )),
-            ("minsize_largest",
-             Tuple(
-                 title=_("Minimal size of largest file"),
-                 elements=[
-                     Filesize(title=_("Warning if below")),
-                     Filesize(title=_("Critical if below")),
-                 ],
-             )),
-            ("maxsize_largest",
-             Tuple(
-                 title=_("Maximal size of largest file"),
-                 elements=[
-                     Filesize(title=_("Warning if above")),
-                     Filesize(title=_("Critical if above")),
-                 ],
-             )),
+        elements=file_size_age_elements + [
             ("minsize",
              Tuple(
                  title=_("Minimal size"),
@@ -237,10 +240,20 @@ def _parameter_valuespec_fileinfo_groups():
                    "and any number of upper or lower levels. If all of the configured levels within "
                    "a conjunction are reached then the related state is reported."),
              )),
-            (additional_rules(maxage_name='maxage',
-                              minage_name='minage',
-                              maxsize_name='maxsize',
-                              minsize_name='minsize')),
+            ("additional_rules",
+             ListOf(
+                 Tuple(elements=[
+                     RegExpUnicode(title=_("Filename/- expression"), mode="case_sensitive"),
+                     Dictionary(elements=file_size_age_elements),
+                 ],),
+                 title=_("Additional rules for files"),
+                 help=_("You can specify a filename or a regular expresion, and additional "
+                        "rules that are applied to the matching files. This means that the "
+                        "rules set for the whole file group are overwritten for those files. "
+                        "Note that the order in which you specify the rules matters: "
+                        "in case of multiple matching rules, the first matching rule is "
+                        "applied."),
+             )),
         ],
         ignored_keys=["precompiled_patterns", "group_patterns"],
     )

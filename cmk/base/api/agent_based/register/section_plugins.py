@@ -170,6 +170,7 @@ def create_agent_section_plugin(
     host_label_function: Optional[HostLabelFunction] = None,
     supersedes: Optional[List[str]] = None,
     module: Optional[str] = None,
+    validate_creation_kwargs: bool = True,
 ) -> AgentSectionPlugin:
     """Return an AgentSectionPlugin object after validating and converting the arguments one by one
 
@@ -178,24 +179,25 @@ def create_agent_section_plugin(
     """
     section_name = SectionName(name)
 
-    if parse_function is not None:
-        _validate_parse_function(
-            parse_function,
-            expected_annotation=(AgentStringTable, "AgentStringTable"),
-        )
+    if validate_creation_kwargs:
+        if parse_function is not None:
+            _validate_parse_function(
+                parse_function,
+                expected_annotation=(AgentStringTable, "AgentStringTable"),
+            )
 
-    if host_label_function is not None:
-        validate_function_arguments(
-            type_label="host_label",
-            function=host_label_function,
-            has_item=False,
-            # TODO:
-            # The following is a special case for the ps plugin. This should be done
-            # in a more general sense when CMK-5158 is addressed. Make sure to grep for
-            # "CMK-5158" in the code base.
-            default_params={} if name in ("ps", "ps_lnx") else None,
-            sections=[ParsedSectionName("__always_just_one_section__")],
-        )
+        if host_label_function is not None:
+            validate_function_arguments(
+                type_label="host_label",
+                function=host_label_function,
+                has_item=False,
+                # TODO:
+                # The following is a special case for the ps plugin. This should be done
+                # in a more general sense when CMK-5158 is addressed. Make sure to grep for
+                # "CMK-5158" in the code base.
+                default_params={} if name in ("ps", "ps_lnx") else None,
+                sections=[ParsedSectionName("__always_just_one_section__")],
+            )
 
     return AgentSectionPlugin(
         section_name,
@@ -217,6 +219,7 @@ def create_snmp_section_plugin(
     host_label_function: Optional[HostLabelFunction] = None,
     supersedes: Optional[List[str]] = None,
     module: Optional[str] = None,
+    validate_creation_kwargs: bool = True,
 ) -> SNMPSectionPlugin:
     """Return an SNMPSectionPlugin object after validating and converting the arguments one by one
 
@@ -225,26 +228,27 @@ def create_snmp_section_plugin(
     """
     section_name = SectionName(name)
 
-    _validate_detect_spec(detect_spec)
-    _validate_snmp_trees(trees)
+    if validate_creation_kwargs:
+        _validate_detect_spec(detect_spec)
+        _validate_snmp_trees(trees)
 
-    if parse_function is not None:
-        needs_bytes = any(isinstance(oid, OIDBytes) for tree in trees for oid in tree.oids)
-        _validate_parse_function(
-            parse_function,
-            expected_annotation=(  #
-                (SNMPStringByteTable, "SNMPStringByteTable") if needs_bytes else
-                (SNMPStringTable, "SNMPStringTable")),
-        )
+        if parse_function is not None:
+            needs_bytes = any(isinstance(oid, OIDBytes) for tree in trees for oid in tree.oids)
+            _validate_parse_function(
+                parse_function,
+                expected_annotation=(  #
+                    (SNMPStringByteTable, "SNMPStringByteTable") if needs_bytes else
+                    (SNMPStringTable, "SNMPStringTable")),
+            )
 
-    if host_label_function is not None:
-        validate_function_arguments(
-            type_label="host_label",
-            function=host_label_function,
-            has_item=False,
-            default_params=None,  # CMK-5181
-            sections=[ParsedSectionName("__always_just_one_section__")],
-        )
+        if host_label_function is not None:
+            validate_function_arguments(
+                type_label="host_label",
+                function=host_label_function,
+                has_item=False,
+                default_params=None,  # CMK-5181
+                sections=[ParsedSectionName("__always_just_one_section__")],
+            )
 
     return SNMPSectionPlugin(
         section_name,

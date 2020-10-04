@@ -110,6 +110,9 @@ def _extract_snmp_sections(
                     plugin_info['snmp_scan_function'],
                     plugin_info['snmp_info'],
                     scan_function_fallback_files=fallback_files,
+                    # We have to validate, because we read inventory plugin files
+                    # directly, and do not know whether they changed.
+                    validate_creation_kwargs=True,
                 ))
         except (NotImplementedError, KeyError, AssertionError, ValueError):
             msg = config.AUTO_MIGRATION_ERR_MSG % ('section', plugin_name)

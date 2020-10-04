@@ -125,6 +125,7 @@ def test_create_snmp_section_plugin_from_legacy():
         },
         old_school_scan_function,
         (".1.2.3.4.5", ["2", 3]),
+        validate_creation_kwargs=True,
     )
 
     assert plugin.name == SectionName("norris")

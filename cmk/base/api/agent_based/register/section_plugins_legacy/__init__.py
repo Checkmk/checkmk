@@ -228,6 +228,8 @@ def _create_host_label_function(discover_function: Optional[Callable],
 def create_agent_section_plugin_from_legacy(
     check_plugin_name: str,
     check_info_dict: Dict[str, Any],
+    *,
+    validate_creation_kwargs: bool,
 ) -> AgentSectionPlugin:
     if check_info_dict.get("node_info"):
         # We refuse to tranform these. The requirement of adding the node info
@@ -246,6 +248,7 @@ def create_agent_section_plugin_from_legacy(
         name=get_section_name(check_plugin_name),
         parse_function=parse_function,
         host_label_function=host_label_function,
+        validate_creation_kwargs=validate_creation_kwargs,
     )
 
 
@@ -255,6 +258,8 @@ def create_snmp_section_plugin_from_legacy(
     snmp_scan_function: Callable,
     snmp_info: Any,
     scan_function_fallback_files: Optional[List[str]] = None,
+    *,
+    validate_creation_kwargs: bool,
 ) -> SNMPSectionPlugin:
     if check_info_dict.get("node_info"):
         # We refuse to tranform these. There's no way we get the data layout recovery right.
@@ -285,4 +290,5 @@ def create_snmp_section_plugin_from_legacy(
         host_label_function=host_label_function,
         trees=trees,
         detect_spec=detect_spec,
+        validate_creation_kwargs=validate_creation_kwargs,
     )

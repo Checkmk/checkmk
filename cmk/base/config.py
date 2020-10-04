@@ -1617,7 +1617,7 @@ def load_checks(get_check_api_context: GetCheckApiContext, filelist: List[str]) 
 
     # Now convert check_info to new format.
     convert_check_info()
-    _extract_agent_and_snmp_sections()
+    _extract_agent_and_snmp_sections(validate_creation_kwargs=did_compile)
     _extract_check_plugins(validate_creation_kwargs=did_compile)
     initialize_check_type_caches()
 
@@ -2020,7 +2020,10 @@ AUTO_MIGRATION_ERR_MSG = ("Failed to auto-migrate legacy plugin to %s: %s\n"
                           "Please refer to Werk 10601 for more information.\n")
 
 
-def _extract_agent_and_snmp_sections() -> None:
+def _extract_agent_and_snmp_sections(
+    *,
+    validate_creation_kwargs: bool,
+) -> None:
     """Here comes the next layer of converting-to-"new"-api.
 
     For the new check-API in cmk/base/api/agent_based, we use the accumulated information
@@ -2042,12 +2045,14 @@ def _extract_agent_and_snmp_sections() -> None:
                         check_info_dict,
                         snmp_scan_functions[section_name],
                         snmp_info[section_name],
+                        validate_creation_kwargs=validate_creation_kwargs,
                     ))
             else:
                 agent_based_register.add_section_plugin(
                     create_agent_section_plugin_from_legacy(
                         section_name,
                         check_info_dict,
+                        validate_creation_kwargs=validate_creation_kwargs,
                     ))
         except (NotImplementedError, KeyError, AssertionError, ValueError) as exc:
             if cmk.utils.debug.enabled():

@@ -37697,7 +37697,7 @@ msgstr "Signaturen, die der Agent akzeptieren soll"
 
 msgid ""
 "Signatures are required for cryptographically signing your agents. That makes "
-"sure that the nobody can inject faked agents. Sigantures are mandatory and "
+"sure that the nobody can inject faked agents. Signatures are mandatory and "
 "need to be created as a first step"
 msgstr ""
 "Die Signaturen werden für das kryptografische Signieren der Agenten benötigt. "

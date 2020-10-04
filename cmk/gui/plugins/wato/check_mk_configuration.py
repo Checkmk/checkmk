@@ -1532,7 +1532,7 @@ class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
                      help=_("All supported linux distributions provide a mechanism of managing "
                             "trusted CAs. Depending on your linux distributions the paths where "
                             "these CAs are stored and the commands to manage the CAs differ. "
-                            "Please checko out the documentation of your linux distribution "
+                            "Please check out the documentation of your linux distribution "
                             "in case you want to customize trusted CAs system wide. You can "
                             "choose here to trust the system wide CAs here. Check_MK will search "
                             "these directories for system wide CAs: %s") %

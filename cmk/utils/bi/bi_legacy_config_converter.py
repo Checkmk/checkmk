@@ -22,7 +22,8 @@ from cmk.utils.rulesets.ruleset_matcher import (RulesetToDictTransformer, get_ta
 import cmk.gui.config as config  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-import cmk.gui.cme.managed as managed  # pylint: disable=cmk-module-layer-violation
+if cmk_version.is_managed_edition():
+    import cmk.gui.cme.managed as managed  # pylint: disable=cmk-module-layer-violation
 from cmk.utils.log import logger
 
 BIAggrOptions = Dict[str, Any]

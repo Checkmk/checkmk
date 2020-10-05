@@ -250,7 +250,7 @@ class ModeBIEditPack(ABCBIMode):
         return ["bi_rules", "bi_admin"]
 
     def title(self):
-        if self.bi_pack:
+        if self._bi_pack:
             return super().title() + " - " + _("Edit BI Pack %s") % self.bi_pack.title
         return super().title() + " - " + _("Add BI Pack")
 
@@ -258,7 +258,7 @@ class ModeBIEditPack(ABCBIMode):
         if html.check_transaction():
             vs_config = self._vs_pack().from_html_vars("bi_pack")
             self._vs_pack().validate_value(vs_config, 'bi_pack')
-            if self.bi_pack:
+            if self._bi_pack:
                 self.bi_pack.title = vs_config["title"]
                 self.bi_pack.contact_groups = vs_config["contact_groups"]
                 self.bi_pack.public = vs_config["public"]
@@ -278,12 +278,12 @@ class ModeBIEditPack(ABCBIMode):
         return make_simple_form_page_menu(breadcrumb,
                                           form_name="bi_pack",
                                           button_name="_save",
-                                          save_title=_("Save") if self.bi_pack else _("Create"))
+                                          save_title=_("Save") if self._bi_pack else _("Create"))
 
     def page(self):
         html.begin_form("bi_pack", method="POST")
 
-        if self.bi_pack is None:
+        if self._bi_pack is None:
             vs_config = self._vs_pack().from_html_vars("bi_pack")
         else:
             vs_config = {
@@ -295,14 +295,14 @@ class ModeBIEditPack(ABCBIMode):
         self._vs_pack().render_input("bi_pack", vs_config)
         forms.end()
         html.hidden_fields()
-        if self.bi_pack:
+        if self._bi_pack:
             html.set_focus("bi_pack_p_title")
         else:
             html.set_focus("bi_pack_p_id")
         html.end_form()
 
     def _vs_pack(self):
-        if self.bi_pack:
+        if self._bi_pack:
             id_element = FixedValue(title=_("Pack ID"), value=self.bi_pack.id)
         else:
             id_element = ID(
@@ -428,7 +428,7 @@ class ModeBIPacks(ABCBIMode):
         )
 
     def action(self):
-        if html.request.has_var("_delete"):
+        if not html.request.has_var("_delete"):
             return
 
         config.user.need_permission("wato.bi_admin")

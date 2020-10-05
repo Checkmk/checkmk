@@ -22,13 +22,13 @@ def check_snmp_info(checktype, params, info):
 def _check_device_type(sysdescr):
     for device_type in [
             "appliance",
-            "controller",
             "firewall",
             "printer",
             "router",
             "sensor",
             "switch",
             "ups",
+            "wlc",
     ]:
         if device_type in sysdescr:
             return device_type

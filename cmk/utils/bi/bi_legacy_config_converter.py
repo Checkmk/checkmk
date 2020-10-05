@@ -23,7 +23,7 @@ import cmk.gui.config as config  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 if cmk_version.is_managed_edition():
-    import cmk.gui.cme.managed as managed  # pylint: disable=cmk-module-layer-violation
+    import cmk.gui.cme.managed as managed  # pylint: disable=cmk-module-layer-violation,no-name-in-module
 from cmk.utils.log import logger
 
 BIAggrOptions = Dict[str, Any]

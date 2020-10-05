@@ -72,7 +72,7 @@ itsdangerous = "==1.1.0" # needed by Flask
 Jinja2 = "==2.10.3" # needed by Flask
 more-itertools = "==8.0.2"  # needed by connexion through zipp, pytest
 zipp = "==0.6.0" # needed by importlib_metadata
-attrs = "==19.3.0" # needed by jsonschema
+attrs = "==20.2.0" # needed by jsonschema
 importlib_metadata = "==1.2.0" # needed by jsonschema
 pyrsistent = "==0.15.6" # needed by jsonschema
 Click = "==7.0" # needed by clickclick
@@ -105,9 +105,9 @@ numpy = "==1.18.4" # needed by GUI (metrics)
 reportlab = "==3.5.34" # needed by GUI (reporting)
 PyPDF2 = "==1.26.0" # needed by GUI (reporting)
 roman = "==3.2" # needed by GUI (reporting)
-cachetools = "==4.0.0" # needed by kubernetes
-google-auth = "==1.11.0" # needed by kubernetes
-rsa = "==4.0" # needed by kubernetes
+cachetools = "==4.1.1" # needed by kubernetes
+google-auth = "==1.21.3" # needed by kubernetes
+rsa = "==4.6" # needed by kubernetes
 websocket_client = "==0.57.0" # needed by kubernetes
 kubernetes = "==10.0.1" # needed by kubernetes
 docutils = "==0.15.2" # needed by boto3 (aws)

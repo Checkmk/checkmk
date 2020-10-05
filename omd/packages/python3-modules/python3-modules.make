@@ -58,7 +58,7 @@ PYTHON3_MODULES_LIST += itsdangerous-1.1.0.tar.gz # needed by Flask
 PYTHON3_MODULES_LIST += Jinja2-2.10.3.tar.gz # needed by Flask
 PYTHON3_MODULES_LIST += more-itertools-8.0.2.tar.gz # needed by zipp
 PYTHON3_MODULES_LIST += zipp-0.6.0.tar.gz # needed by importlib_metadata
-PYTHON3_MODULES_LIST += attrs-19.3.0.tar.gz # needed by jsonschema
+PYTHON3_MODULES_LIST += attrs-20.2.0.tar.gz # needed by jsonschema
 PYTHON3_MODULES_LIST += importlib_metadata-1.2.0.tar.gz # needed by jsonschema
 PYTHON3_MODULES_LIST += pyrsistent-0.15.6.tar.gz # needed by jsonschema
 PYTHON3_MODULES_LIST += Click-7.0.tar.gz # needed by clickclick
@@ -96,9 +96,9 @@ PYTHON3_MODULES_LIST += reportlab-3.5.34.tar.gz # needed by GUI (reporting)
 PYTHON3_MODULES_LIST += PyPDF2-1.26.0.tar.gz # needed by GUI (reporting)
 PYTHON3_MODULES_LIST += roman-3.2.tar.gz # needed by reporting frontmatter
 
-PYTHON3_MODULES_LIST += cachetools-4.0.0.tar.gz # needed by kubernetes
-PYTHON3_MODULES_LIST += google-auth-1.11.0.tar.gz # needed by kubernetes
-PYTHON3_MODULES_LIST += rsa-4.0.tar.gz # needed by kubernetes
+PYTHON3_MODULES_LIST += cachetools-4.1.1.tar.gz # needed by kubernetes
+PYTHON3_MODULES_LIST += google-auth-1.21.3.tar.gz # needed by kubernetes
+PYTHON3_MODULES_LIST += rsa-4.6.tar.gz # needed by kubernetes
 PYTHON3_MODULES_LIST += websocket_client-0.57.0.tar.gz # needed by kubernetes
 PYTHON3_MODULES_LIST += kubernetes-10.0.1.tar.gz # needed by kubernetes
 

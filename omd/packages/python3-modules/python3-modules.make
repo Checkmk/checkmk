@@ -224,6 +224,7 @@ python3-modules-dump-Pipfile:
 	@echo 'pytest = "*"  # used by various test/Makefile targets'
 	@echo 'pytest-cov = "*"  # used (indirectly) by test/Makefile'"'"'s test-unit-coverage-html target, see comment there'
 	@echo 'pytest-mock = "*"  # used by quite a few unit/integration tests via the mocker fixture'
+	@echo 'pytest-testmon = "*"  # used for pre-commit checking via .pre-commit-config.yaml'
 	@echo 'responses = "*" # used for unit tests'
 	@echo 'polib = "*"  # used by locale/add-authors for working with .po files'
 	@echo 'webtest = "*"  # used by WSGI based tests'

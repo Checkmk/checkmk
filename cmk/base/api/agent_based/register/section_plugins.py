@@ -137,19 +137,9 @@ def _noop_host_label_function(section: Any) -> Generator[HostLabel, None, None]:
 
 
 def _create_host_label_function(
-    host_label_function: Optional[HostLabelFunction],
-    default_params: Optional[Dict],
-) -> HostLabelFunction:
+    host_label_function: Optional[HostLabelFunction],) -> HostLabelFunction:
     if host_label_function is None:
         return _noop_host_label_function
-
-    validate_function_arguments(
-        type_label="host_label",
-        function=host_label_function,
-        has_item=False,
-        default_params=default_params,
-        sections=[ParsedSectionName("__always_just_one_section__")],
-    )
 
     @functools.wraps(host_label_function)
     def filtered_generator(*args, **kwargs):
@@ -197,18 +187,24 @@ def create_agent_section_plugin(
     """
     section_name = SectionName(name)
 
-    return AgentSectionPlugin(
-        section_name,
-        ParsedSectionName(parsed_section_name if parsed_section_name else str(section_name)),
-        _create_agent_parse_function(parse_function),
-        _create_host_label_function(
-            host_label_function,
+    if host_label_function is not None:
+        validate_function_arguments(
+            type_label="host_label",
+            function=host_label_function,
+            has_item=False,
             # TODO:
             # The following is a special case for the ps plugin. This should be done
             # in a more general sense when CMK-5158 is addressed. Make sure to grep for
             # "CMK-5158" in the code base.
-            {} if name in ("ps", "ps_lnx") else None,
-        ),
+            default_params={} if name in ("ps", "ps_lnx") else None,
+            sections=[ParsedSectionName("__always_just_one_section__")],
+        )
+
+    return AgentSectionPlugin(
+        section_name,
+        ParsedSectionName(parsed_section_name if parsed_section_name else str(section_name)),
+        _create_agent_parse_function(parse_function),
+        _create_host_label_function(host_label_function),
         _create_supersedes(section_name, supersedes),
         module,
     )
@@ -235,14 +231,20 @@ def create_snmp_section_plugin(
     _validate_detect_spec(detect_spec)
     _validate_snmp_trees(trees)
 
+    if host_label_function is not None:
+        validate_function_arguments(
+            type_label="host_label",
+            function=host_label_function,
+            has_item=False,
+            default_params=None,  # CMK-5181
+            sections=[ParsedSectionName("__always_just_one_section__")],
+        )
+
     return SNMPSectionPlugin(
         section_name,
         ParsedSectionName(parsed_section_name if parsed_section_name else str(section_name)),
         _create_snmp_parse_function(parse_function, trees),
-        _create_host_label_function(
-            host_label_function,
-            default_params=None,
-        ),
+        _create_host_label_function(host_label_function),
         _create_supersedes(section_name, supersedes),
         detect_spec,
         trees,

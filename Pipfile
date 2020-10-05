@@ -61,7 +61,7 @@ pysnmp = "==4.4.12"  # needed by Event Console
 snmpsim = "==0.4.7"  # needed by SNMP integration tests
 certifi = "==2019.11.28"  # needed by requests
 chardet = "==3.0.4"  # needed by requests
-urllib3 = "==1.25.8"  # needed by requests
+urllib3 = "==1.25.10"  # needed by requests
 pyOpenSSL = "==19.1.0"  # needed by requests with extras = ["security"]
 pyghmi = "==1.5.13" # needed by base for IPMI
 requests = {version = "==2.22.0",extras = ["security"]}  # needed by DCD, connexion
@@ -97,7 +97,7 @@ requests-toolbelt = "==0.9.1" # needed by jira
 PyJWT = "==1.7.1" # needed by jira
 jira = "==2.0.0" # needed by jira
 adal = "==1.2.0" # needed by agent_azure
-Pillow = "==7.0.0" # needed by GUI
+Pillow = "==7.2.0" # needed by GUI
 python-ldap = "==3.3.1" # needed by GUI (User sync), python-active-directory
 dicttoxml = "==1.7.4" # needed by GUI (API XML format)
 Cython = "==0.29.19" # needed by numpy
@@ -130,7 +130,7 @@ rrdtool = "==0.1.15"  # Actually we ship the binding which comes with rrdtool it
 docstring_parser = "==0.7.2"  # direct dependency
 yapf = "==0.30.0"  # formatter for REST-API documentation code examples
 pyprof2calltree = "==1.4.5"  # used for GUI/API profiling
-repoze-profile = "==2.3"  # used for GUI/API profiling
+repoze.profile = "==2.3"  # used for GUI/API profiling
 
 [requires]
 python_version = "3.8"

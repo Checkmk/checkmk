@@ -47,7 +47,7 @@ PYTHON3_MODULES_LIST += snmpsim-0.4.7.tar.gz # needed by SNMP integration tests
 
 PYTHON3_MODULES_LIST += certifi-2019.11.28.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += chardet-3.0.4.tar.gz # needed by requests
-PYTHON3_MODULES_LIST += urllib3-1.25.8.tar.gz # needed by requests
+PYTHON3_MODULES_LIST += urllib3-1.25.10.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += pyOpenSSL-19.1.0.tar.gz # needed by requests with extras = ["security"]
 PYTHON3_MODULES_LIST += pyghmi-1.5.13.tar.gz # needed by base for IPMI
 PYTHON3_MODULES_LIST += requests-2.22.0.tar.gz # needed by DCD, connexion
@@ -87,7 +87,7 @@ PYTHON3_MODULES_LIST += jira-2.0.0.tar.gz # needed for jira
 
 PYTHON3_MODULES_LIST += adal-1.2.0.tar.gz # needed for agent_azure
 
-PYTHON3_MODULES_LIST += Pillow-7.0.0.tar.gz # needed by GUI, reportlab
+PYTHON3_MODULES_LIST += Pillow-7.2.0.tar.gz # needed by GUI, reportlab
 PYTHON3_MODULES_LIST += python-ldap-3.3.1.tar.gz # needed by GUI (User sync), python-active-directory
 PYTHON3_MODULES_LIST += dicttoxml-1.7.4.tar.gz # needed by GUI (API XML format)
 PYTHON3_MODULES_LIST += Cython-0.29.19.tar.gz # needed by numpy

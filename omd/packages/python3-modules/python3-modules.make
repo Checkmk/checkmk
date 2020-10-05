@@ -18,20 +18,20 @@ PACKAGE_PYTHON3_MODULES_PYTHONPATH := $(PACKAGE_PYTHON3_MODULES_DESTDIR)/lib/pyt
 
 PYTHON3_MODULES_LIST :=
 
-PYTHON3_MODULES_LIST += setuptools_scm-3.3.3.tar.gz # needed by various setup.py
+PYTHON3_MODULES_LIST += setuptools_scm-4.1.2.tar.gz # needed by various setup.py
 PYTHON3_MODULES_LIST += setuptools-git-1.2.tar.gz # needed by various setup.py
 PYTHON3_MODULES_LIST += six-1.15.0.tar.gz # direct dependency + needed by bcrypt, cryptography, PyNaCl, python-dateutil, vcrpy, pyOpenSSL, python-active-directory
 PYTHON3_MODULES_LIST += python-dateutil-2.8.1.tar.gz # direct dependency
 
 PYTHON3_MODULES_LIST += PyYAML-5.3.1.tar.gz # needed by vcrpy
-PYTHON3_MODULES_LIST += wrapt-1.11.2.tar.gz # needed by vcrpy
-PYTHON3_MODULES_LIST += yarl-1.3.0.tar.gz # needed by vcrpy
-PYTHON3_MODULES_LIST += multidict-4.5.2.tar.gz # needed by yarl
+PYTHON3_MODULES_LIST += wrapt-1.12.1.tar.gz # needed by vcrpy
+PYTHON3_MODULES_LIST += yarl-1.6.0.tar.gz # needed by vcrpy
+PYTHON3_MODULES_LIST += multidict-4.7.6.tar.gz # needed by yarl
 PYTHON3_MODULES_LIST += idna-2.8.tar.gz # needed by yarl, requests
-PYTHON3_MODULES_LIST += vcrpy-2.1.0.tar.gz # used by various unit tests to mock HTTP transactions
+PYTHON3_MODULES_LIST += vcrpy-4.1.0.tar.gz # used by various unit tests to mock HTTP transactions
 
-PYTHON3_MODULES_LIST += pycparser-2.19.tar.gz # needed by cffi
-PYTHON3_MODULES_LIST += cffi-1.13.1.tar.gz # needed by PyNaCl, cryptography, bcrypt
+PYTHON3_MODULES_LIST += pycparser-2.20.tar.gz # needed by cffi
+PYTHON3_MODULES_LIST += cffi-1.14.3.tar.gz # needed by PyNaCl, cryptography, bcrypt
 PYTHON3_MODULES_LIST += PyNaCl-1.3.0.tar.gz # needed by paramiko
 PYTHON3_MODULES_LIST += cryptography-2.8.tar.gz # needed by paramiko, pyOpenSSL
 PYTHON3_MODULES_LIST += bcrypt-3.1.7.tar.gz # needed by paramiko

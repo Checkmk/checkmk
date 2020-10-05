@@ -132,6 +132,7 @@ DiscoveryParameters = NamedTuple("DiscoveryParameters", [
 
 HostLabelDiscoveryResult = NamedTuple("HostLabelDiscoveryResult", [
     ("labels", DiscoveredHostLabels),
+    ("per_plugin", Counter[str]),
 ])
 
 #   .--Helpers-------------------------------------------------------------.
@@ -458,12 +459,6 @@ def _do_discovery_for(
 
     autochecks.save_autochecks_file(hostname, new_services)
 
-    _new_host_labels, host_labels_per_plugin = _perform_host_label_discovery(
-        hostname,
-        host_label_discovery_result.labels,
-        discovery_parameters,
-    )
-
     messages = []
 
     if services_per_plugin:
@@ -474,8 +469,8 @@ def _do_discovery_for(
     else:
         messages.append("Found no%s services" % (only_new and " new" or ""))
 
-    if host_labels_per_plugin:
-        messages.append("%d host labels" % sum(host_labels_per_plugin.values()))
+    if host_label_discovery_result.per_plugin:
+        messages.append("%d host labels" % sum(host_label_discovery_result.per_plugin.values()))
     else:
         messages.append("no%s host labels" % (only_new and " new" or ""))
 
@@ -510,7 +505,10 @@ def discover_on_host(
         return counts, ""
 
     err = None
-    host_label_discovery_result = HostLabelDiscoveryResult(labels=DiscoveredHostLabels())
+    host_label_discovery_result = HostLabelDiscoveryResult(
+        labels=DiscoveredHostLabels(),
+        per_plugin=Counter(),
+    )
 
     try:
         # in "refresh" mode we first need to remove all previously discovered
@@ -569,13 +567,8 @@ def discover_on_host(
         err = str(e)
 
     if mode != "remove":
-        new_host_labels, host_labels_per_plugin = _perform_host_label_discovery(
-            hostname,
-            host_label_discovery_result.labels,
-            discovery_parameters,
-        )
-        counts["self_new_host_labels"] = sum(host_labels_per_plugin.values())
-        counts["self_total_host_labels"] = len(new_host_labels)
+        counts["self_new_host_labels"] = sum(host_label_discovery_result.per_plugin.values())
+        counts["self_total_host_labels"] = len(host_label_discovery_result.labels)
 
     counts["self_total"] = counts["self_new"] + counts["self_kept"]
     return counts, err
@@ -747,14 +740,9 @@ def check_discovery(
         params,
     )
 
-    _new_host_labels, host_labels_per_plugin = _perform_host_label_discovery(
-        hostname,
-        host_label_discovery_result.labels,
-        discovery_parameters,
-    )
-
-    if host_labels_per_plugin:
-        infotexts.append("%d new host labels" % sum(host_labels_per_plugin.values()))
+    if host_label_discovery_result.per_plugin:
+        infotexts.append("%d new host labels" %
+                         sum(host_label_discovery_result.per_plugin.values()))
         status = cmk.base.utils.worst_service_state(status,
                                                     params.get("severity_new_host_label", 1))
 
@@ -1125,7 +1113,7 @@ def _discover_host_labels(
     ipaddress: Optional[HostAddress],
     multi_host_sections: MultiHostSections,
     discovery_parameters: DiscoveryParameters,
-) -> HostLabelDiscoveryResult:
+) -> DiscoveredHostLabels:
 
     section.section_step("Executing host label discovery")
 
@@ -1140,7 +1128,7 @@ def _discover_host_labels(
         discovery_parameters,
     )
 
-    return HostLabelDiscoveryResult(labels=discovered_host_labels)
+    return discovered_host_labels
 
 
 def _discover_host_labels_for_source_type(
@@ -1319,10 +1307,16 @@ def _discover_host_labels_and_services(
 
     check_api_utils.set_hostname(hostname)
 
-    host_label_discovery_result = _discover_host_labels(
+    discovered_host_labels = _discover_host_labels(
         hostname,
         ipaddress,
         multi_host_sections,
+        discovery_parameters,
+    )
+
+    new_host_labels, host_labels_per_plugin = _perform_host_label_discovery(
+        hostname,
+        discovered_host_labels,
         discovery_parameters,
     )
 
@@ -1333,7 +1327,10 @@ def _discover_host_labels_and_services(
         discovery_parameters,
         check_plugin_whitelist,
     )
-    return discovered_services, host_label_discovery_result
+    return discovered_services, HostLabelDiscoveryResult(
+        labels=new_host_labels,
+        per_plugin=host_labels_per_plugin,
+    )
 
 
 # Create a table of autodiscovered services of a host. Do not save
@@ -1636,7 +1633,10 @@ def _get_cluster_services(
     discovery_parameters: DiscoveryParameters,
 ) -> Tuple[ServicesTable, HostLabelDiscoveryResult]:
     if not host_config.nodes:
-        return {}, HostLabelDiscoveryResult(labels=DiscoveredHostLabels())
+        return {}, HostLabelDiscoveryResult(
+            labels=DiscoveredHostLabels(),
+            per_plugin=Counter(),
+        )
 
     cluster_items: ServicesTable = {}
     cluster_host_labels = DiscoveredHostLabels()
@@ -1680,7 +1680,15 @@ def _get_cluster_services(
 
             # In all other cases either both must be "new" or "vanished" -> let it be
 
-    return cluster_items, HostLabelDiscoveryResult(labels=cluster_host_labels)
+    cluster_host_labels, cluster_labels_per_plugin = _perform_host_label_discovery(
+        host_config.hostname,
+        cluster_host_labels,
+        discovery_parameters,
+    )
+    return cluster_items, HostLabelDiscoveryResult(
+        labels=cluster_host_labels,
+        per_plugin=cluster_labels_per_plugin,
+    )
 
 
 def get_check_preview(

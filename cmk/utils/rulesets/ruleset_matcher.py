@@ -301,6 +301,10 @@ class RulesetOptimizer:
     def clear_host_ruleset_cache(self) -> None:
         self._host_ruleset_cache.clear()
 
+    def clear_caches(self) -> None:
+        self._host_ruleset_cache.clear()
+        self._all_matching_hosts_match_cache.clear()
+
     def all_processed_hosts(self) -> Set[HostName]:
         """Returns a set of all processed hosts"""
         return self._all_processed_hosts

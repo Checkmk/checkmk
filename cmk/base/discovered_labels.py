@@ -87,6 +87,13 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):  # pylint: disable=too-many-anc
         data.update(other.to_dict())
         return DiscoveredHostLabels.from_dict(data)
 
+    def __sub__(self, other: 'DiscoveredHostLabels') -> 'DiscoveredHostLabels':
+        if not isinstance(other, DiscoveredHostLabels):
+            raise TypeError('%s not type DiscoveredHostLabels' % other)
+        data = self.to_dict()
+        return DiscoveredHostLabels.from_dict(
+            {k: data[k] for k in data.keys() - other.to_dict().keys()})
+
 
 class ABCLabel:
     """Representing a label in Checkmk

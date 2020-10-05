@@ -178,6 +178,24 @@ def test_discovered_host_labels_add():
     }
 
 
+def test_discovered_host_labels_sub():
+    labels_1 = DiscoveredHostLabels()
+    labels_1.add_label(HostLabel("foo", "bär", "plugin_1"))
+    labels_1.add_label(HostLabel("foo2", "bär2", "plugin_2"))
+
+    labels_2 = DiscoveredHostLabels()
+    labels_2.add_label(HostLabel("foo", "bär", "plugin_1"))
+
+    assert (labels_1 - labels_2).to_dict() == {
+        "foo2": {
+            "value": "bär2",
+            "plugin_name": "plugin_2",
+        },
+    }
+
+    assert (labels_2 - labels_1).to_dict() == {}
+
+
 def test_discovered_host_labels_repr():
     labels = DiscoveredHostLabels()
     labels.add_label(HostLabel(u"äbc", u"123", "plugin_1"))

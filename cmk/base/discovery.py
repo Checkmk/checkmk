@@ -1095,15 +1095,18 @@ def _perform_host_label_discovery(
     else:
         return_host_labels = DiscoveredHostLabels()
 
+    new_host_labels = discovered_host_labels - return_host_labels
+
     new_host_labels_per_plugin: Counter[str] = Counter()
-    for discovered_label in discovered_host_labels.values():
-        if discovered_label.name in return_host_labels:
-            continue
-        return_host_labels.add_label(discovered_label)
-        new_host_labels_per_plugin[discovered_label.plugin_name] += 1
+    for label in new_host_labels.values():
+        return_host_labels.add_label(label)
+        new_host_labels_per_plugin[label.plugin_name] += 1
 
     if discovery_parameters.save_labels:
         DiscoveredHostLabelsStore(hostname).save(return_host_labels.to_dict())
+
+    if new_host_labels:
+        config.get_config_cache().ruleset_matcher.ruleset_optimizer.clear_caches()
 
     return return_host_labels, new_host_labels_per_plugin
 
@@ -1314,7 +1317,7 @@ def _discover_host_labels_and_services(
         discovery_parameters,
     )
 
-    new_host_labels, host_labels_per_plugin = _perform_host_label_discovery(
+    host_labels, host_labels_per_plugin = _perform_host_label_discovery(
         hostname,
         discovered_host_labels,
         discovery_parameters,
@@ -1328,7 +1331,7 @@ def _discover_host_labels_and_services(
         check_plugin_whitelist,
     )
     return discovered_services, HostLabelDiscoveryResult(
-        labels=new_host_labels,
+        labels=host_labels,
         per_plugin=host_labels_per_plugin,
     )
 

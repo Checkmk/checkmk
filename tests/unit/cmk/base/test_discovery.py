@@ -1173,6 +1173,7 @@ _discovery_test_cases = [
         ),
         expected_services={
             (CheckPluginName('df'), '/boot/test-efi'),
+            (CheckPluginName('df'), '/opt/omd/sites/test-heute/tmp'),
         },
         on_realhost=ExpectedDiscoveryResultRealHost(
             expected_per_plugin=Counter({"labels": 1}),
@@ -1316,6 +1317,7 @@ _discovery_test_cases = [
         ),
         expected_services={
             (CheckPluginName('df'), '/boot/test-efi'),
+            (CheckPluginName('df'), '/opt/omd/sites/test-heute/tmp'),
         },
         on_realhost=ExpectedDiscoveryResultRealHost(
             expected_per_plugin=Counter({"labels": 1}),

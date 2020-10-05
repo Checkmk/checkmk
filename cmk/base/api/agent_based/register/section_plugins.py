@@ -63,20 +63,15 @@ def _create_agent_parse_function(
 
 
 def _create_snmp_parse_function(
-    parse_function: Optional[SNMPParseFunction],
-    trees: List[SNMPTree],
+        parse_function: Optional[SNMPParseFunction],
+        # NOTE: `trees` is not needed at the moment, and this function is identical
+        # to _create_agent_parse_function. If this hasn't changed before 2.0 is released,
+        # we can simplify this.
+        trees: List[SNMPTree],  # not needed
 ) -> SNMPParseFunction:
     if parse_function is None:
         return lambda string_table: string_table
 
-    needs_bytes = any(isinstance(oid, OIDBytes) for tree in trees for oid in tree.oids)
-
-    _validate_parse_function(
-        parse_function,
-        expected_annotation=(  #
-            (SNMPStringByteTable, "SNMPStringByteTable") if needs_bytes else
-            (SNMPStringTable, "SNMPStringTable")),
-    )
     return parse_function
 
 
@@ -232,6 +227,15 @@ def create_snmp_section_plugin(
 
     _validate_detect_spec(detect_spec)
     _validate_snmp_trees(trees)
+
+    if parse_function is not None:
+        needs_bytes = any(isinstance(oid, OIDBytes) for tree in trees for oid in tree.oids)
+        _validate_parse_function(
+            parse_function,
+            expected_annotation=(  #
+                (SNMPStringByteTable, "SNMPStringByteTable") if needs_bytes else
+                (SNMPStringTable, "SNMPStringTable")),
+        )
 
     if host_label_function is not None:
         validate_function_arguments(

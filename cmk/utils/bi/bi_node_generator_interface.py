@@ -19,19 +19,19 @@ from typing import List, Dict, Any, Optional
 from cmk.utils.bi.bi_lib import (
     bi_search_registry,
     bi_action_registry,
-    AbstractBICompiledNode,
-    AbstractBIAction,
-    AbstractBISearch,
+    ABCBICompiledNode,
+    ABCBIAction,
+    ABCBISearch,
     MacroMappings,
-    AbstractWithSchema,
+    ABCWithSchema,
 )
 
 
-class AbstractBINodeGenerator(AbstractWithSchema):
+class ABCBINodeGenerator(ABCWithSchema):
     def __init__(self, node_config: Dict[str, Any]):
         super().__init__()
-        self.search: AbstractBISearch = bi_search_registry.instantiate(node_config["search"])
-        self.action: AbstractBIAction = bi_action_registry.instantiate(node_config["action"])
+        self.search: ABCBISearch = bi_search_registry.instantiate(node_config["search"])
+        self.action: ABCBIAction = bi_action_registry.instantiate(node_config["action"])
 
         # Enables the generator only to process rules with the given title
         # Can be used to limit the compilation to a specific branch, e.g. "Aggr HostA"
@@ -41,5 +41,5 @@ class AbstractBINodeGenerator(AbstractWithSchema):
     def compile(
         self,
         macros: MacroMappings,
-    ) -> List[AbstractBICompiledNode]:
+    ) -> List[ABCBICompiledNode]:
         raise NotImplementedError()

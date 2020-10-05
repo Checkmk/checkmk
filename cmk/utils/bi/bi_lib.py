@@ -57,7 +57,7 @@ NodeResultBundle = NamedTuple("NodeResultBundle", [
 ])
 
 
-class AbstractWithSchema(metaclass=abc.ABCMeta):
+class ABCWithSchema(metaclass=abc.ABCMeta):
     @classmethod
     @abc.abstractmethod
     def schema(cls):
@@ -65,7 +65,7 @@ class AbstractWithSchema(metaclass=abc.ABCMeta):
 
 
 def create_nested_schema_for_class(
-        class_template: Type[AbstractWithSchema],
+        class_template: Type[ABCWithSchema],
         default_schema: Optional[Schema] = None,
         example_config: Optional[Union[list, TDict[str, Any]]] = None) -> Nested:
     class_schema = class_template.schema()
@@ -94,7 +94,7 @@ class RequiredBIElement(NamedTuple):
     service_description: Optional[ServiceName]
 
 
-class BIAggregationComputationOptions(AbstractWithSchema):
+class BIAggregationComputationOptions(ABCWithSchema):
     def __init__(self, computation_config):
         super().__init__()
         self.disabled = computation_config["disabled"]
@@ -112,7 +112,7 @@ class BIAggregationComputationOptionsSchema(Schema):
     escalate_downtimes_as_warn = ReqBoolean(default=False, example=False)
 
 
-class BIAggregationGroups(AbstractWithSchema):
+class BIAggregationGroups(ABCWithSchema):
     def __init__(self, group_config: TDict[str, Union[TList[str], TList[TList[str]]]]):
         super().__init__()
         self.names: List[str] = group_config["names"]
@@ -131,7 +131,7 @@ class BIAggregationGroupsSchema(Schema):
     paths = List(List(ReqString()), default=[], example=[["path", "of", "group1"]])
 
 
-class BIParams(AbstractWithSchema):
+class BIParams(ABCWithSchema):
     def __init__(self, params_config: TDict[str, TList[str]]):
         super().__init__()
         self.arguments = params_config["arguments"]
@@ -189,7 +189,7 @@ def replace_macros_in_string(pattern: str, macros: MacroMappings) -> str:
 #   +----------------------------------------------------------------------+
 
 
-class AbstractBICompiledNode(metaclass=abc.ABCMeta):
+class ABCBICompiledNode(metaclass=abc.ABCMeta):
     def __init__(self):
         super().__init__()
         self.required_hosts = []
@@ -204,8 +204,8 @@ class AbstractBICompiledNode(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def compile_postprocess(
-            self, bi_branch_root: "AbstractBICompiledNode") -> TList["AbstractBICompiledNode"]:
+    def compile_postprocess(self,
+                            bi_branch_root: "ABCBICompiledNode") -> TList["ABCBICompiledNode"]:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -229,7 +229,7 @@ class AbstractBICompiledNode(metaclass=abc.ABCMeta):
 #   +----------------------------------------------------------------------+
 
 
-class AbstractBIAction(metaclass=abc.ABCMeta):
+class ABCBIAction(metaclass=abc.ABCMeta):
     def __init__(self, action_config: TDict[str, Any]):
         super().__init__()
 
@@ -244,15 +244,15 @@ class AbstractBIAction(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def execute(self, search_result: TDict[str, str]) -> TList[AbstractBICompiledNode]:
+    def execute(self, search_result: TDict[str, str]) -> TList[ABCBICompiledNode]:
         raise NotImplementedError()
 
 
-class BIActionRegistry(plugin_registry.Registry[Type[AbstractBIAction]]):
-    def plugin_name(self, instance: Type[AbstractBIAction]) -> str:
+class BIActionRegistry(plugin_registry.Registry[Type[ABCBIAction]]):
+    def plugin_name(self, instance: Type[ABCBIAction]) -> str:
         return instance.type()
 
-    def instantiate(self, action_config: TDict[str, Any]) -> AbstractBIAction:
+    def instantiate(self, action_config: TDict[str, Any]) -> ABCBIAction:
         return self._entries[action_config["type"]](action_config)
 
 
@@ -268,7 +268,7 @@ bi_action_registry = BIActionRegistry()
 #   +----------------------------------------------------------------------+
 
 
-class AbstractBISearch(metaclass=abc.ABCMeta):
+class ABCBISearch(metaclass=abc.ABCMeta):
     def __init__(self, search_config: TDict[str, Any]):
         super().__init__()
 
@@ -287,11 +287,11 @@ class AbstractBISearch(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
 
-class BISearchRegistry(plugin_registry.Registry[Type[AbstractBISearch]]):
-    def plugin_name(self, instance: Type[AbstractBISearch]) -> str:
+class BISearchRegistry(plugin_registry.Registry[Type[ABCBISearch]]):
+    def plugin_name(self, instance: Type[ABCBISearch]) -> str:
         return instance.type()
 
-    def instantiate(self, search_config: TDict[str, Any]) -> AbstractBISearch:
+    def instantiate(self, search_config: TDict[str, Any]) -> ABCBISearch:
         return self._entries[search_config["type"]](search_config)
 
 
@@ -307,7 +307,7 @@ bi_search_registry = BISearchRegistry()
 #   +----------------------------------------------------------------------+
 
 
-class AbstractBIAggregationFunction(metaclass=abc.ABCMeta):
+class ABCBIAggregationFunction(metaclass=abc.ABCMeta):
     def __init__(self, aggr_function_config: TDict[str, Any]):
         super().__init__()
 
@@ -326,11 +326,11 @@ class AbstractBIAggregationFunction(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
 
-class BIAggregationFunctionRegistry(plugin_registry.Registry[Type[AbstractBIAggregationFunction]]):
-    def plugin_name(self, instance: Type[AbstractBIAggregationFunction]) -> str:
+class BIAggregationFunctionRegistry(plugin_registry.Registry[Type[ABCBIAggregationFunction]]):
+    def plugin_name(self, instance: Type[ABCBIAggregationFunction]) -> str:
         return instance.type()
 
-    def instantiate(self, aggr_func_config: TDict[str, Any]) -> AbstractBIAggregationFunction:
+    def instantiate(self, aggr_func_config: TDict[str, Any]) -> ABCBIAggregationFunction:
         return self._entries[aggr_func_config["type"]](aggr_func_config)
 
 

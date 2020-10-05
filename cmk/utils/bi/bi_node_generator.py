@@ -17,7 +17,7 @@ from marshmallow import Schema  # type: ignore[import]
 from typing import List, Type
 
 from cmk.utils.bi.bi_lib import (
-    AbstractBICompiledNode,
+    ABCBICompiledNode,
     ReqNested,
     MacroMappings,
 )
@@ -28,16 +28,16 @@ from cmk.utils.bi.bi_actions import (
     BIStateOfHostActionSchema,
 )
 
-from cmk.utils.bi.bi_node_generator_interface import AbstractBINodeGenerator
+from cmk.utils.bi.bi_node_generator_interface import ABCBINodeGenerator
 from cmk.utils.bi.bi_search import BISearchSchema
 
 
-class BINodeGenerator(AbstractBINodeGenerator):
+class BINodeGenerator(ABCBINodeGenerator):
     @classmethod
     def schema(cls) -> Type["BINodeGeneratorSchema"]:
         return BINodeGeneratorSchema
 
-    def compile(self, macros: MacroMappings) -> List[AbstractBICompiledNode]:
+    def compile(self, macros: MacroMappings) -> List[ABCBICompiledNode]:
         action_results = []
         search_results = self.search.execute(macros)
         for search_result in search_results:

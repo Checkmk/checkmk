@@ -9,15 +9,15 @@ from marshmallow import Schema  # type: ignore[import]
 from typing import List, Dict, Any, Type, Sequence
 import cmk.utils.plugin_registry
 from cmk.utils.bi.bi_lib import (
-    AbstractBICompiledNode,
+    ABCBICompiledNode,
     BIParams,
     ReqString,
     ReqBoolean,
     ReqDict,
-    AbstractWithSchema,
+    ABCWithSchema,
 )
 
-from cmk.utils.bi.bi_node_generator_interface import AbstractBINodeGenerator
+from cmk.utils.bi.bi_node_generator_interface import ABCBINodeGenerator
 
 
 class BIRulePropertiesSchema(Schema):
@@ -28,7 +28,7 @@ class BIRulePropertiesSchema(Schema):
     state_messages = ReqDict(default={}, example={})
 
 
-class BIRuleProperties(AbstractWithSchema):
+class BIRuleProperties(ABCWithSchema):
     def __init__(self, properties_config: Dict[str, Any]):
         super().__init__()
         self.title = properties_config["title"]
@@ -46,7 +46,7 @@ class BIRuleComputationOptionsSchema(Schema):
     disabled = ReqBoolean(default=False, example=False)
 
 
-class BIRuleComputationOptions(AbstractWithSchema):
+class BIRuleComputationOptions(ABCWithSchema):
     def __init__(self, computation_config: Dict[str, Any]):
         super().__init__()
         self.disabled = computation_config["disabled"]
@@ -56,7 +56,7 @@ class BIRuleComputationOptions(AbstractWithSchema):
         return BIRuleComputationOptionsSchema
 
 
-class AbstractBIRule(AbstractWithSchema):
+class ABCBIRule(ABCWithSchema):
     def __init__(self):
         self.id = ""
 
@@ -78,11 +78,11 @@ class AbstractBIRule(AbstractWithSchema):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def clone(self) -> "AbstractBIRule":
+    def clone(self) -> "ABCBIRule":
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_nodes(self) -> Sequence[AbstractBINodeGenerator]:
+    def get_nodes(self) -> Sequence[ABCBINodeGenerator]:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -90,7 +90,7 @@ class AbstractBIRule(AbstractWithSchema):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def compile(self, extern_arguments: List[str]) -> List[AbstractBICompiledNode]:
+    def compile(self, extern_arguments: List[str]) -> List[ABCBICompiledNode]:
         raise NotImplementedError()
 
     @classmethod
@@ -99,8 +99,8 @@ class AbstractBIRule(AbstractWithSchema):
         raise NotImplementedError()
 
 
-class BIRuleIDRegistry(cmk.utils.plugin_registry.Registry[AbstractBIRule]):
-    def plugin_name(self, instance: AbstractBIRule) -> str:
+class BIRuleIDRegistry(cmk.utils.plugin_registry.Registry[ABCBIRule]):
+    def plugin_name(self, instance: ABCBIRule) -> str:
         return instance.id
 
     def clear(self):

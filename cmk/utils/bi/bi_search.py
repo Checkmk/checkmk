@@ -13,7 +13,7 @@ from cmk.utils.bi.bi_lib import (
     MacroMappings,
     replace_macros,
     bi_search_registry,
-    AbstractBISearch,
+    ABCBISearch,
     Nested,
     String,
     ReqConstant,
@@ -77,7 +77,7 @@ class ServiceConditionsSchema(HostConditionsSchema):
 
 
 @bi_search_registry.register
-class BIEmptySearch(AbstractBISearch):
+class BIEmptySearch(ABCBISearch):
     @classmethod
     def type(cls) -> str:
         return "empty"
@@ -108,7 +108,7 @@ class BIEmptySearchSchema(Schema):
 
 
 @bi_search_registry.register
-class BIHostSearch(AbstractBISearch):
+class BIHostSearch(ABCBISearch):
     @classmethod
     def type(cls) -> str:
         return "host_search"
@@ -198,7 +198,7 @@ class BIHostSearchSchema(Schema):
 
 
 @bi_search_registry.register
-class BIServiceSearch(AbstractBISearch):
+class BIServiceSearch(ABCBISearch):
     @classmethod
     def type(cls) -> str:
         return "service_search"
@@ -242,7 +242,7 @@ class BIServiceSearchSchema(Schema):
 
 
 @bi_search_registry.register
-class BIFixedArgumentsSearch(AbstractBISearch):
+class BIFixedArgumentsSearch(ABCBISearch):
     @classmethod
     def type(cls) -> str:
         return "fixed_arguments"
@@ -293,5 +293,5 @@ class BISearchSchema(OneOfSchema):
     type_field_remove = False
     type_schemas = dict((k, v.schema()) for k, v in bi_search_registry.items())
 
-    def get_obj_type(self, obj: AbstractBISearch) -> str:
+    def get_obj_type(self, obj: ABCBISearch) -> str:
         return obj.type()

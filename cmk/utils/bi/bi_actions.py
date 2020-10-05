@@ -11,8 +11,8 @@ from cmk.utils.bi.bi_lib import (
     BIParams,
     BIParamsSchema,
     bi_action_registry,
-    AbstractBIAction,
-    AbstractBICompiledNode,
+    ABCBIAction,
+    ABCBICompiledNode,
     replace_macros,
     SearchResult,
     ReqConstant,
@@ -38,7 +38,7 @@ from cmk.utils.bi.bi_trees import (
 
 
 @bi_action_registry.register
-class BICallARuleAction(AbstractBIAction):
+class BICallARuleAction(ABCBIAction):
     @classmethod
     def type(cls) -> str:
         return "call_a_rule"
@@ -52,7 +52,7 @@ class BICallARuleAction(AbstractBIAction):
         self.rule_id = action_config["rule_id"]
         self.params = BIParams(action_config["params"])
 
-    def execute(self, search_result: SearchResult) -> List[AbstractBICompiledNode]:
+    def execute(self, search_result: SearchResult) -> List[ABCBICompiledNode]:
         rule_arguments = replace_macros(self.params.arguments, search_result)
         return bi_rule_id_registry[self.rule_id].compile(rule_arguments)
 
@@ -84,7 +84,7 @@ class BICallARuleActionSchema(Schema):
 
 
 @bi_action_registry.register
-class BIStateOfHostAction(AbstractBIAction):
+class BIStateOfHostAction(ABCBIAction):
     @classmethod
     def type(cls) -> str:
         return "state_of_host"
@@ -97,13 +97,13 @@ class BIStateOfHostAction(AbstractBIAction):
         super().__init__(action_config)
         self.host_regex = action_config["host_regex"]
 
-    def execute(self, search_result: SearchResult) -> List[AbstractBICompiledNode]:
+    def execute(self, search_result: SearchResult) -> List[ABCBICompiledNode]:
         host_re = replace_macros(self.host_regex, search_result)
         # TODO: check performance!
         host_matches, _match_groups = bi_searcher.get_host_name_matches(
             list(bi_searcher.hosts.values()), host_re)
 
-        action_results: List[AbstractBICompiledNode] = []
+        action_results: List[ABCBICompiledNode] = []
         for host_match in host_matches:
             action_results.append(
                 BICompiledLeaf(host_name=host_match.name, site_id=host_match.site_id))
@@ -126,7 +126,7 @@ class BIStateOfHostActionSchema(Schema):
 
 
 @bi_action_registry.register
-class BIStateOfServiceAction(AbstractBIAction):
+class BIStateOfServiceAction(ABCBIAction):
     @classmethod
     def type(cls) -> str:
         return "state_of_service"
@@ -140,13 +140,13 @@ class BIStateOfServiceAction(AbstractBIAction):
         self.host_regex = action_config["host_regex"]
         self.service_regex = action_config["service_regex"]
 
-    def execute(self, search_result: SearchResult) -> List[AbstractBICompiledNode]:
+    def execute(self, search_result: SearchResult) -> List[ABCBICompiledNode]:
         host_re = replace_macros(self.host_regex, search_result)
         service_re = replace_macros(self.service_regex, search_result)
         host_matches, _match_groups = bi_searcher.get_host_name_matches(
             list(bi_searcher.hosts.values()), host_re)
 
-        action_results: List[AbstractBICompiledNode] = []
+        action_results: List[ABCBICompiledNode] = []
         service_matches = bi_searcher.get_service_description_matches(host_matches, service_re)
         for service_match in service_matches:
             action_results.append(
@@ -176,7 +176,7 @@ class BIStateOfServiceActionSchema(Schema):
 
 
 @bi_action_registry.register
-class BIStateOfRemainingServicesAction(AbstractBIAction):
+class BIStateOfRemainingServicesAction(ABCBIAction):
     @classmethod
     def type(cls) -> str:
         return "state_of_remaining_services"
@@ -189,7 +189,7 @@ class BIStateOfRemainingServicesAction(AbstractBIAction):
         super().__init__(action_config)
         self.host_regex = action_config["host_regex"]
 
-    def execute(self, search_result: SearchResult) -> List[AbstractBICompiledNode]:
+    def execute(self, search_result: SearchResult) -> List[ABCBICompiledNode]:
         host_re = replace_macros(self.host_regex, search_result)
         host_matches, _match_groups = bi_searcher.get_host_name_matches(
             list(bi_searcher.hosts.values()), host_re)
@@ -223,5 +223,5 @@ class BIActionSchema(OneOfSchema):
     #    "state_of_remaining_services": BIStateOfRemainingServicesActionSchema,
     #}
 
-    def get_obj_type(self, obj: AbstractBIAction) -> str:
+    def get_obj_type(self, obj: ABCBIAction) -> str:
         return obj.type()

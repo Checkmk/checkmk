@@ -46,9 +46,9 @@ from cmk.gui.exceptions import MKUserError
 from cmk.utils.bi.bi_packs import bi_packs
 
 from cmk.utils.bi.bi_lib import (
-    AbstractBISearch,
-    AbstractBIAction,
-    AbstractBIAggregationFunction,
+    ABCBISearch,
+    ABCBIAction,
+    ABCBIAggregationFunction,
 )
 
 import cmk.gui.userdb as userdb
@@ -149,14 +149,14 @@ def _get_search_cascading_dropdown_choices():
     #   +----------------------------------------------------------------------+
 
 
-class AbstractBIConfigSearch(AbstractBISearch):
+class ABCBIConfigSearch(ABCBISearch):
     @classmethod
     @abc.abstractmethod
     def cascading_dropdown_choice_element(cls):
         raise NotImplementedError()
 
 
-class BIConfigSearchRegistry(plugin_registry.Registry[Type[AbstractBIConfigSearch]]):
+class BIConfigSearchRegistry(plugin_registry.Registry[Type[ABCBIConfigSearch]]):
     def plugin_name(self, instance) -> str:
         return instance.type()
 
@@ -192,7 +192,7 @@ def _bi_host_choice_vs(title):
 
 
 @bi_config_search_registry.register
-class BIConfigEmptySearch(BIEmptySearch, AbstractBIConfigSearch):
+class BIConfigEmptySearch(BIEmptySearch, ABCBIConfigSearch):
     @classmethod
     def cascading_dropdown_choice_element(cls):
         return (cls.type(), _("No search"),
@@ -200,7 +200,7 @@ class BIConfigEmptySearch(BIEmptySearch, AbstractBIConfigSearch):
 
 
 @bi_config_search_registry.register
-class BIConfigHostSearch(BIHostSearch, AbstractBIConfigSearch):
+class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
     @classmethod
     def cascading_dropdown_choice_element(cls):
         return (cls.type(), _("Search hosts"), cls.valuespec())
@@ -259,7 +259,7 @@ class BIConfigHostSearch(BIHostSearch, AbstractBIConfigSearch):
 
 
 @bi_config_search_registry.register
-class BIConfigServiceSearch(BIServiceSearch, AbstractBIConfigSearch):
+class BIConfigServiceSearch(BIServiceSearch, ABCBIConfigSearch):
     @classmethod
     def cascading_dropdown_choice_element(cls):
         return (cls.type(), _("Search services"), cls.valuespec())
@@ -293,7 +293,7 @@ class BIConfigServiceSearch(BIServiceSearch, AbstractBIConfigSearch):
 
 
 @bi_config_search_registry.register
-class BIConfigFixedArgumentsSearch(BIFixedArgumentsSearch, AbstractBIConfigSearch):
+class BIConfigFixedArgumentsSearch(BIFixedArgumentsSearch, ABCBIConfigSearch):
     @classmethod
     def cascading_dropdown_choice_element(cls):
         return (cls.type(), _("No search, specify list of arguments"), cls.valuespec())
@@ -338,14 +338,14 @@ class BIConfigFixedArgumentsSearch(BIFixedArgumentsSearch, AbstractBIConfigSearc
 #   +----------------------------------------------------------------------+
 
 
-class AbstractBIConfigAction(AbstractBIAction):
+class ABCBIConfigAction(ABCBIAction):
     @classmethod
     @abc.abstractmethod
     def cascading_dropdown_choice_element(cls):
         raise NotImplementedError()
 
 
-class BIConfigActionRegistry(plugin_registry.Registry[Type[AbstractBIConfigAction]]):
+class BIConfigActionRegistry(plugin_registry.Registry[Type[ABCBIConfigAction]]):
     def plugin_name(self, instance) -> str:
         return instance.type()
 
@@ -354,7 +354,7 @@ bi_config_action_registry = BIConfigActionRegistry()
 
 
 @bi_config_action_registry.register
-class BIConfigCallARuleAction(bi_actions.BICallARuleAction, AbstractBIConfigAction):
+class BIConfigCallARuleAction(bi_actions.BICallARuleAction, ABCBIConfigAction):
     @classmethod
     def cascading_dropdown_choice_element(cls):
         return (cls.type(), _("Call a Rule"), cls.valuespec())
@@ -448,7 +448,7 @@ def is_contact_for_pack(bi_pack):
 
 
 @bi_config_action_registry.register
-class BIConfigStateOfHostAction(bi_actions.BIStateOfHostAction, AbstractBIConfigAction):
+class BIConfigStateOfHostAction(bi_actions.BIStateOfHostAction, ABCBIConfigAction):
     @classmethod
     def cascading_dropdown_choice_element(cls):
         return (cls.type(), _("State of a host"), cls.valuespec())
@@ -477,7 +477,7 @@ class BIConfigStateOfHostAction(bi_actions.BIStateOfHostAction, AbstractBIConfig
 
 
 @bi_config_action_registry.register
-class BIConfigStateOfServiceAction(bi_actions.BIStateOfServiceAction, AbstractBIConfigAction):
+class BIConfigStateOfServiceAction(bi_actions.BIStateOfServiceAction, ABCBIConfigAction):
     @classmethod
     def cascading_dropdown_choice_element(cls):
         return (cls.type(), _("State of a service"), cls.valuespec())
@@ -509,7 +509,7 @@ class BIConfigStateOfServiceAction(bi_actions.BIStateOfServiceAction, AbstractBI
 
 @bi_config_action_registry.register
 class BIConfigStateOfRemainingServicesAction(bi_actions.BIStateOfRemainingServicesAction,
-                                             AbstractBIConfigAction):
+                                             ABCBIConfigAction):
     @classmethod
     def cascading_dropdown_choice_element(cls):
         return (cls.type(), _("State of remaining services"), cls.valuespec())
@@ -550,7 +550,7 @@ def get_aggregation_function_choices():
     )
 
 
-class AbstractBIConfigAggregationFunction(AbstractBIAggregationFunction):
+class ABCBIConfigAggregationFunction(ABCBIAggregationFunction):
     @classmethod
     def title(cls):
         raise NotImplementedError()
@@ -561,7 +561,7 @@ class AbstractBIConfigAggregationFunction(AbstractBIAggregationFunction):
 
 
 class BIConfigAggregationFunctionRegistry(
-        plugin_registry.Registry[Type[AbstractBIConfigAggregationFunction]]):
+        plugin_registry.Registry[Type[ABCBIConfigAggregationFunction]]):
     def plugin_name(self, instance) -> str:
         return instance.type()
 
@@ -570,8 +570,7 @@ bi_config_aggregation_function_registry = BIConfigAggregationFunctionRegistry()
 
 
 @bi_config_aggregation_function_registry.register
-class BIConfigAggregationFunctionBest(BIAggregationFunctionBest,
-                                      AbstractBIConfigAggregationFunction):
+class BIConfigAggregationFunctionBest(BIAggregationFunctionBest, ABCBIConfigAggregationFunction):
     def __str__(self):
         return _("Best state, %d nodes, restrict to %d") % (self.count, self.restrict_state)
 
@@ -618,8 +617,7 @@ class BIConfigAggregationFunctionBest(BIAggregationFunctionBest,
 
 
 @bi_config_aggregation_function_registry.register
-class BIConfigAggregationFunctionWorst(BIAggregationFunctionWorst,
-                                       AbstractBIConfigAggregationFunction):
+class BIConfigAggregationFunctionWorst(BIAggregationFunctionWorst, ABCBIConfigAggregationFunction):
     def __str__(self):
         return _("Worst state, %d nodes, restrict to %d") % (self.count, self.restrict_state)
 
@@ -669,7 +667,7 @@ class BIConfigAggregationFunctionWorst(BIAggregationFunctionWorst,
 
 @bi_config_aggregation_function_registry.register
 class BIConfigAggregationFunctionCountOK(BIAggregationFunctionCountOK,
-                                         AbstractBIConfigAggregationFunction):
+                                         ABCBIConfigAggregationFunction):
     def __str__(self):
         info = []
         for state, settings in [(_("OK"), self.levels_ok), (_("WARN"), self.levels_warn)]:

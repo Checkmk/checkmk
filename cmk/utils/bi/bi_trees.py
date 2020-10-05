@@ -32,8 +32,8 @@ from cmk.utils.bi.bi_lib import (
     ReqString,
     ReqList,
     create_nested_schema_for_class,
-    AbstractBICompiledNode,
-    AbstractBIAggregationFunction,
+    ABCBICompiledNode,
+    ABCBIAggregationFunction,
     BIAggregationGroups,
     BIAggregationComputationOptions,
     RequiredBIElement,
@@ -59,7 +59,7 @@ from cmk.utils.bi.bi_node_vis import (
 #   +----------------------------------------------------------------------+
 
 
-class BICompiledLeaf(AbstractBICompiledNode):
+class BICompiledLeaf(ABCBICompiledNode):
     @classmethod
     def type(cls) -> str:
         return "leaf"
@@ -87,8 +87,8 @@ class BICompiledLeaf(AbstractBICompiledNode):
 
     def compile_postprocess(
         self,
-        bi_branch_root: AbstractBICompiledNode,
-    ) -> List[AbstractBICompiledNode]:
+        bi_branch_root: ABCBICompiledNode,
+    ) -> List[ABCBICompiledNode]:
         return [self]
 
     def required_elements(self) -> Set[RequiredBIElement]:
@@ -179,7 +179,7 @@ class BICompiledLeafSchema(Schema):
 #   +----------------------------------------------------------------------+
 
 
-class BICompiledRule(AbstractBICompiledNode):
+class BICompiledRule(ABCBICompiledNode):
     @classmethod
     def type(cls) -> str:
         return "rule"
@@ -187,10 +187,10 @@ class BICompiledRule(AbstractBICompiledNode):
     def __init__(
         self,
         rule_id: str,
-        nodes: List[AbstractBICompiledNode],
+        nodes: List[ABCBICompiledNode],
         required_hosts: List[Tuple[SiteId, HostName]],
         properties: BIRuleProperties,
-        aggregation_function: AbstractBIAggregationFunction,
+        aggregation_function: ABCBIAggregationFunction,
         node_visualization: Dict[str, Any],
     ):
         super().__init__()
@@ -209,8 +209,7 @@ class BICompiledRule(AbstractBICompiledNode):
             len([x for x in self.nodes if x.type() == "remaining"]),
         )
 
-    def compile_postprocess(self,
-                            bi_branch_root: AbstractBICompiledNode) -> List[AbstractBICompiledNode]:
+    def compile_postprocess(self, bi_branch_root: ABCBICompiledNode) -> List[ABCBICompiledNode]:
         self.nodes = [
             res for node in self.nodes for res in node.compile_postprocess(bi_branch_root)
         ]
@@ -308,7 +307,7 @@ class BICompiledRuleSchema(Schema):
 #   +----------------------------------------------------------------------+
 
 
-class BIRemainingResult(AbstractBICompiledNode):
+class BIRemainingResult(ABCBICompiledNode):
     # The BIRemainingResult lacks a serializable schema, since it is resolved into
     # BICompiledLeaf(s) during the compilation
     @classmethod
@@ -319,9 +318,8 @@ class BIRemainingResult(AbstractBICompiledNode):
         super().__init__()
         self.host_names = host_names
 
-    def compile_postprocess(self,
-                            bi_branch_root: AbstractBICompiledNode) -> List[AbstractBICompiledNode]:
-        postprocessed_nodes: List[AbstractBICompiledNode] = []
+    def compile_postprocess(self, bi_branch_root: ABCBICompiledNode) -> List[ABCBICompiledNode]:
+        postprocessed_nodes: List[ABCBICompiledNode] = []
         for host_name in self.host_names:
             site_id = bi_searcher.hosts[host_name].site_id
             for service_description in self._remaining_services_for(host_name, bi_branch_root):
@@ -332,7 +330,7 @@ class BIRemainingResult(AbstractBICompiledNode):
         return postprocessed_nodes
 
     def _remaining_services_for(self, host_name: HostName,
-                                node: AbstractBICompiledNode) -> Set[ServiceName]:
+                                node: ABCBICompiledNode) -> Set[ServiceName]:
         used_services = node.services_of_host(host_name)
         return set(bi_searcher.hosts[host_name].services) - used_services
 
@@ -446,7 +444,7 @@ class BICompiledAggregation:
         response["node_visualization"] = self.aggregation_visualization
         return response
 
-    def eval_result_node(self, node: AbstractBICompiledNode) -> Dict[str, Any]:
+    def eval_result_node(self, node: ABCBICompiledNode) -> Dict[str, Any]:
         result: Dict[str, Any] = {}
         if isinstance(node, BICompiledLeaf):
             result["type"] = 1
@@ -497,5 +495,5 @@ class BIResultSchema(OneOfSchema):
         "rule": BICompiledRuleSchema,
     }
 
-    def get_obj_type(self, obj: AbstractBICompiledNode) -> str:
+    def get_obj_type(self, obj: ABCBICompiledNode) -> str:
         return obj.type()

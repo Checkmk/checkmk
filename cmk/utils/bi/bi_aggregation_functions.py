@@ -10,7 +10,7 @@ from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from cmk.utils.bi.bi_lib import (
     bi_aggregation_function_registry,
-    AbstractBIAggregationFunction,
+    ABCBIAggregationFunction,
     ReqConstant,
     ReqString,
     ReqInteger,
@@ -56,7 +56,7 @@ def mapped_states(func):
 
 
 @bi_aggregation_function_registry.register
-class BIAggregationFunctionBest(AbstractBIAggregationFunction):
+class BIAggregationFunctionBest(ABCBIAggregationFunction):
     @classmethod
     def type(cls) -> str:
         return "best"
@@ -96,7 +96,7 @@ class BIAggregationFunctionBestSchema(Schema):
 
 
 @bi_aggregation_function_registry.register
-class BIAggregationFunctionWorst(AbstractBIAggregationFunction):
+class BIAggregationFunctionWorst(ABCBIAggregationFunction):
     @classmethod
     def type(cls) -> str:
         return "worst"
@@ -136,7 +136,7 @@ class BIAggregationFunctionWorstSchema(Schema):
 
 
 @bi_aggregation_function_registry.register
-class BIAggregationFunctionCountOK(AbstractBIAggregationFunction):
+class BIAggregationFunctionCountOK(ABCBIAggregationFunction):
     @classmethod
     def type(cls) -> str:
         return "count_ok"
@@ -197,5 +197,5 @@ class BIAggregationFunctionSchema(OneOfSchema):
     #    "count_ok": BIAggregationFunctionCountOKSchema,
     #}
 
-    def get_obj_type(self, obj: AbstractBIAggregationFunction) -> str:
+    def get_obj_type(self, obj: ABCBIAggregationFunction) -> str:
         return obj.type()

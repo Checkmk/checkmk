@@ -18,10 +18,10 @@ from cmk.utils.plugin_loader import load_plugins
 
 from cmk.utils.bi.bi_lib import (
     replace_macros,
-    AbstractBIAction,
-    AbstractBISearch,
-    AbstractBIAggregationFunction,
-    AbstractBICompiledNode,
+    ABCBIAction,
+    ABCBISearch,
+    ABCBIAggregationFunction,
+    ABCBICompiledNode,
     bi_action_registry,
     bi_search_registry,
     bi_aggregation_function_registry,

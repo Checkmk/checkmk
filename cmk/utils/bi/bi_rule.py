@@ -23,16 +23,16 @@ from cmk.utils.bi.bi_lib import (
     replace_macros,
     ReqList,
     ReqString,
-    AbstractBICompiledNode,
+    ABCBICompiledNode,
     get_schema_default_config,
     MacroMappings,
     create_nested_schema,
     create_nested_schema_for_class,
-    AbstractWithSchema,
+    ABCWithSchema,
 )
 
 from cmk.utils.bi.bi_rule_interface import (
-    AbstractBIRule,
+    ABCBIRule,
     bi_rule_id_registry,
     BIRuleComputationOptions,
     BIRuleProperties,
@@ -46,7 +46,7 @@ from cmk.utils.bi.bi_trees import (
 )
 
 
-class BIRule(AbstractBIRule, AbstractWithSchema):
+class BIRule(ABCBIRule, ABCWithSchema):
     def __init__(self, rule_config: Optional[Dict[str, Any]] = None, pack_id: str = ""):
         super().__init__()
         if rule_config is None:
@@ -94,7 +94,7 @@ class BIRule(AbstractBIRule, AbstractWithSchema):
     def num_nodes(self) -> int:
         return len(self.nodes)
 
-    def compile(self, extern_arguments: List[str]) -> List[AbstractBICompiledNode]:
+    def compile(self, extern_arguments: List[str]) -> List[ABCBICompiledNode]:
         mapped_rule_arguments: MacroMappings = dict(
             zip(["$%s$" % x for x in self._params.arguments], extern_arguments))
 
@@ -107,8 +107,8 @@ class BIRule(AbstractBIRule, AbstractWithSchema):
 
         return [self._generate_rule_branch(action_results, mapped_rule_arguments)]
 
-    def _generate_rule_branch(self, nodes: List[AbstractBICompiledNode],
-                              macros: MacroMappings) -> AbstractBICompiledNode:
+    def _generate_rule_branch(self, nodes: List[ABCBICompiledNode],
+                              macros: MacroMappings) -> ABCBICompiledNode:
         required_hosts = set()
         for node in nodes:
             required_hosts.update(node.required_hosts)
@@ -145,7 +145,7 @@ class BIRule(AbstractBIRule, AbstractWithSchema):
         )
 
     @classmethod
-    def _create_node(cls, node_config: Dict[str, Any]) -> AbstractBICompiledNode:
+    def _create_node(cls, node_config: Dict[str, Any]) -> ABCBICompiledNode:
         if node_config["type"] == BICompiledRule.type():
             return cls.create_tree_from_schema(node_config)
         if node_config["type"] == BICompiledLeaf.type():

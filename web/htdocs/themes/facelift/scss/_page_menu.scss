@@ -210,18 +210,12 @@ div#top_heading {
         scrollbar-width: none; /* Firefox */
 
         img {
-          width: 16px;
-          height: auto;
-          margin-right: 7px;
+          width: 14px;
+          height: 14px;
+          margin-right: 5px;
         }
 
         div.topic {
-          margin-top: $spacing;
-
-          &:nth-child(2) {
-            margin: 0;
-          }
-
           &:first-child {
             margin-top: 0;
           }
@@ -229,7 +223,7 @@ div#top_heading {
           div.topic_title {
             display: inline-block;
             padding-bottom: 2px;
-            margin-bottom: $spacing;
+            margin: $spacing 0;
             font-weight: normal;
             color: rgba($font-color, .5);
             cursor: default;
@@ -237,8 +231,8 @@ div#top_heading {
           }
 
           div.entry {
-            padding-left: 0;
-            margin: 0 0 $spacing $spacing;
+            padding-left: $spacing;
+            line-height: (2.2 * $spacing);
 
             a {
               display: flex;

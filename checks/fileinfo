@@ -291,6 +291,20 @@ def _check_individual_files(params, file_size, file_age):
                                                    state_markers[overall_state])
 
 
+def _define_fileinfo_group_check(files_matching, date_inclusion):
+    size_smallest, size_largest = files_matching['size_minmax'] or (None, None)
+    age_newest, age_oldest = files_matching['age_minmax'] or (None, None)
+    return [
+        ("Count", "count", files_matching['count_all'], saveint),
+        ("Size", "size", files_matching['size_all'], get_filesize_human_readable),
+        ("Largest size", "size_largest", size_largest, get_filesize_human_readable),
+        ("Smallest size", "size_smallest", size_smallest, get_filesize_human_readable),
+        ("Oldest age", "age_oldest", age_oldest, get_age_human_readable),
+        ("Newest age", "age_newest", age_newest, get_age_human_readable),
+        ("Date pattern", "date pattern", date_inclusion, str),
+    ]
+
+
 def check_fileinfo_groups(_item, params, parsed):
 
     outof_range_txt = fileinfo_check_timeranges(params)
@@ -348,17 +362,7 @@ def check_fileinfo_groups(_item, params, parsed):
             break
 
     # Start Checking
-    size_smallest, size_largest = files_matching['size_minmax'] or (None, None)
-    age_newest, age_oldest = files_matching['age_minmax'] or (None, None)
-    check_definition = [
-        ("Count", "count", files_matching['count_all'], saveint),
-        ("Size", "size", files_matching['size_all'], get_filesize_human_readable),
-        ("Largest size", "size_largest", size_largest, get_filesize_human_readable),
-        ("Smallest size", "size_smallest", size_smallest, get_filesize_human_readable),
-        ("Oldest age", "age_oldest", age_oldest, get_age_human_readable),
-        ("Newest age", "age_newest", age_newest, get_age_human_readable),
-        ("Date pattern", "date pattern", date_inclusion, str),
-    ]
+    check_definition = _define_fileinfo_group_check(files_matching, date_inclusion)
 
     if files_stat_failed:
         yield 1, "Files with unknown stat: %s" % ", ".join(files_stat_failed)

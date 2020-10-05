@@ -26,6 +26,9 @@ We must set registry value MsiDisable = 0 as in Windows 10
 3. You must switch jenkins slave to real user-admin account(use services.msc), otherwise 
 installation is not possible. The error is "cannot install" or similar
 
+4. You must increase value in file BUILD_NUM to rebuild in master(master can't use git and 
+must be informed about changes)
+
 ### PROCESS
 
 #### Execution

@@ -59,10 +59,6 @@ def _create_agent_parse_function(
     if parse_function is None:
         return lambda string_table: string_table
 
-    _validate_parse_function(
-        parse_function,
-        expected_annotation=(AgentStringTable, "AgentStringTable"),
-    )
     return parse_function
 
 
@@ -186,6 +182,12 @@ def create_agent_section_plugin(
     'register' namespace of the API.
     """
     section_name = SectionName(name)
+
+    if parse_function is not None:
+        _validate_parse_function(
+            parse_function,
+            expected_annotation=(AgentStringTable, "AgentStringTable"),
+        )
 
     if host_label_function is not None:
         validate_function_arguments(

@@ -10,6 +10,3 @@ Version: 2.0.0i1
 
 You can now configure conditions for host and service labels in notification
 rules.
-
-Label conditions can be added the same way like in ruleset conditions
-("has"/"has not").

@@ -39,7 +39,6 @@ def test_registered_pages():
         'ajax_service_discovery',
         'ajax_set_foldertree',
         'ajax_set_rowselection',
-        'ajax_single_graph_metric_data',
         'ajax_start_activation',
         'ajax_switch_help',
         'ajax_userdb_sync',

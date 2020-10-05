@@ -126,20 +126,20 @@ class CMKModuleLayerChecker(BaseChecker):
             if not self._is_part_of_component(importing, importing_path, component):
                 continue
 
-            if self._is_disallowed_snmplib_import(importing, component):
+            if self._is_snmplib_import(imported):
                 return True
 
-            if self._is_disallowed_fetchers_import(importing, component):
+            if self._is_fetchers_import(imported):
                 return True
 
-            if self._is_import_in_component(imported, component):
+            if self._in_component(imported, component):
                 return True
 
         return self._is_utility_import(imported)
 
     def _is_part_of_component(self, importing: ModuleName, importing_path: ModulePath,
                               component: Component) -> bool:
-        if self._is_import_in_component(importing, component):
+        if self._in_component(importing, component):
             return True
 
         explicit_component = _EXPLICIT_FILE_TO_COMPONENT.get(importing_path)
@@ -161,21 +161,23 @@ class CMKModuleLayerChecker(BaseChecker):
 
         return False
 
-    def _is_disallowed_fetchers_import(self, importing: ModuleName, component: Component) -> bool:
-        """Disallow import of `fetchers` in `cmk.utils`.
+    def _is_fetchers_import(self, imported: ModuleName) -> bool:
+        """
+        TODO:
+        Disallow import of `fetchers` in `cmk.utils`.
 
         The layering is such that `fetchers` is between `utils` and
         `base` so that importing `fetchers` in `utils` is wrong but
         anywhere else is OK.
-
         """
-        return not (component.startswith("cmk.fetchers") and importing.startswith("cmk.utils"))
+        return self._in_component(imported, Component("cmk.fetchers"))
 
-    def _is_disallowed_snmplib_import(self, importing: ModuleName, component: Component) -> bool:
-        """Disallow import of `snmplib` in `cmk.utils`."""
-        return not component.startswith("cmk.snmplib") and importing.startswith("cmk.utils")
+    def _is_snmplib_import(self, imported: ModuleName) -> bool:
+        """TODO: Disallow import of `snmplib` in `cmk.utils`."""
+        return self._in_component(imported, Component("cmk.snmplib"))
 
-    def _is_import_in_component(self, imported: ModuleName, component: Component) -> bool:
+    @staticmethod
+    def _in_component(imported: ModuleName, component: Component) -> bool:
         return imported == ModuleName(component) or imported.startswith(component + ".")
 
     def _is_utility_import(self, imported: ModuleName) -> bool:

@@ -43,7 +43,7 @@ from cmk.gui.watolib.utils import (
 
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place
-import cmk.base.export
+import cmk.base.export  # pylint: disable=cmk-module-layer-violation
 # Make the GUI config module reset the base config to always get the latest state of the config
 config.register_post_config_load_hook(cmk.base.export.reset_config)
 

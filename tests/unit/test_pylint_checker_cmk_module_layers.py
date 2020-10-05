@@ -32,8 +32,7 @@ def test_utils_import_ok(component):
 
 @pytest.mark.parametrize("importer, importee", list(itertools.product(_COMPONENTS, _COMPONENTS)))
 def test_cross_component_not_ok(importer, importee):
-    is_ok = (importee in {"cmk.fetchers", "cmk.snmplib"} or importer == importee)
-    is_ok = True  # FIXME !!
+    is_ok = importee in {"cmk.fetchers", "cmk.snmplib"} or importer == importee
     assert is_ok is CHECKER._is_import_allowed(
         ModulePath("_not/relevant_"),
         ModuleName(f"{importer}.foo"),
@@ -54,7 +53,7 @@ def test_cross_component_not_ok(importer, importee):
         ("cmk/utils", "cmk.utils.foo", "cmk.snmplib", False),
         ("cmk/base", "cmk.base.data_sources", "cmk.snmplib", True),
         # another broken one:
-        ("cmk/base", "cmk.base.config", "cmk.gui.plugins", True),  # FIXME
+        ("cmk/base", "cmk.base.config", "cmk.gui.plugins", False),
     ])
 def test__is_import_allowed(module_path, importer, importee, allowed):
     assert allowed is CHECKER._is_import_allowed(

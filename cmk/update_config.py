@@ -25,7 +25,7 @@ from werkzeug.test import create_environ
 # with it.
 import cmk.base.autochecks  # pylint: disable=cmk-module-layer-violation
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
-import cmk.base.check_api
+import cmk.base.check_api  # pylint: disable=cmk-module-layer-violation
 from cmk.base.check_utils import Service  # pylint: disable=cmk-module-layer-violation
 
 import cmk.utils.log as log
@@ -36,11 +36,11 @@ import cmk.utils.paths
 import cmk.utils
 from cmk.utils.type_defs import CheckPluginName, UserId
 
-import cmk.gui.pagetypes as pagetypes
-import cmk.gui.visuals as visuals
-from cmk.gui.plugins.views.utils import get_all_views
-from cmk.gui.plugins.dashboard.utils import get_all_dashboards
-from cmk.gui.plugins.userdb.utils import save_connection_config, load_connection_config
+import cmk.gui.pagetypes as pagetypes  # pylint: disable=cmk-module-layer-violation
+import cmk.gui.visuals as visuals  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.plugins.views.utils import get_all_views  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.plugins.dashboard.utils import get_all_dashboards  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.plugins.userdb.utils import save_connection_config, load_connection_config  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.tags  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.hosts_and_folders  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.rulesets  # pylint: disable=cmk-module-layer-violation
@@ -51,9 +51,9 @@ import cmk.gui.htmllib as htmllib  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.globals import AppContext, RequestContext  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.http import Request  # pylint: disable=cmk-module-layer-violation
 
-import cmk.update_rrd_fs_names
+import cmk.update_rrd_fs_names  # pylint: disable=cmk-module-layer-violation  # TODO: this should be fine
 
-from cmk.gui.plugins.wato.check_parameters.diskstat import transform_diskstat
+from cmk.gui.plugins.wato.check_parameters.diskstat import transform_diskstat  # pylint: disable=cmk-module-layer-violation
 
 # mapping removed check plugins to their replacement:
 REMOVED_CHECK_PLUGIN_MAP = {
@@ -311,7 +311,7 @@ class UpdateConfig:
 
         # Reports
         try:
-            import cmk.gui.cee.reporting as reporting
+            import cmk.gui.cee.reporting as reporting  # pylint: disable=cmk-module-layer-violation
         except ImportError:
             reporting = None  # type: ignore[assignment]
 

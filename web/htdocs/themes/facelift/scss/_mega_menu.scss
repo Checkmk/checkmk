@@ -84,6 +84,7 @@
       height: 150px;
       margin-top: -150px;
 
+      div.navigation_bar { height: 0; }
       div.content.inner { height: inherit; }
     }
 
@@ -113,12 +114,16 @@
         display: flex;
         height: $megamenu-navbar-height;
 
-        div.search_bar { flex-grow: 1; }
+        div.search_bar {
+          flex-grow: 1;
 
-        a.more {
-          position: relative;
-          padding: 21px 15px 0;
-          flex-basis: 75px;
+          + div {
+            position: relative;
+            padding: 21px 15px 0;
+            flex-basis: 78px;
+
+            a.more { float: right; }
+          }
         }
       }
 
@@ -167,7 +172,7 @@
           }
 
           ul a:hover {
-            color: #13d288;
+            color: $success;
             text-decoration: none;
           }
 

@@ -117,10 +117,12 @@ class MegaMenuRenderer:
         html.div("", class_="search_bar")
         topics = menu.topics()
         if any_advanced_items(topics):
+            html.open_div()
             html.more_button(id_=more_id,
-                             dom_levels_up=2,
+                             dom_levels_up=3,
                              additional_js=hide_entries_js,
                              with_text=True)
+            html.close_div()
         html.close_div()
         html.open_div(class_="content inner")
         for topic in topics:

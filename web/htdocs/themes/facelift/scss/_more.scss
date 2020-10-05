@@ -62,14 +62,15 @@ a.more {
 
   &.has_text {
     width: auto;
-    padding-right: 15px;
     font-size: $font-size-small;
 
-    &:hover { font-weight: $font-weight-bold; }
+    &:hover {
+      color: $success;
+      div.show_more::after { content: url("images/icon_show_more_green.svg"); }
+      div.show_less::after { content: url("images/icon_show_less_green.svg"); }
+    }
 
     div.show_more, div.show_less {
-      float: right;
-
       &:after {
         position: relative;
         top: 4px;

@@ -362,7 +362,7 @@ class BIConfigCallARuleAction(bi_actions.BICallARuleAction, AbstractBIConfigActi
     @classmethod
     def valuespec(cls):
         def convert_to_vs(value):
-            if value["rule_id"] is None:
+            if value.get("rule_id") is None:
                 return None
             bi_pack = bi_packs.get_pack_of_rule(value["rule_id"])
             if bi_pack is None:

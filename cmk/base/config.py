@@ -2523,7 +2523,7 @@ class HostConfig:
             snmpv3_contexts=self._config_cache.host_extra_conf(self.hostname, snmpv3_contexts),
             character_encoding=self._snmp_character_encoding(),
             is_usewalk_host=self.is_usewalk_host,
-            is_inline_snmp_host=self._is_inline_snmp_host(),
+            snmp_backend=self._get_snmp_backend(),
             record_stats=record_inline_snmp_stats,
         )
 
@@ -2582,11 +2582,28 @@ class HostConfig:
             return None
         return entries[0]
 
-    def _is_inline_snmp_host(self) -> bool:
-        # TODO: Better use "inline_snmp" once we have moved the code to an own module
+    def _get_snmp_backend(self) -> str:
         has_inline_snmp = "netsnmp" in sys.modules
-        return has_inline_snmp and use_inline_snmp \
-               and not self._config_cache.in_binary_hostlist(self.hostname, non_inline_snmp_hosts)
+        has_pysnmp = "pysnmp" in sys.modules
+        host_backend_config = self._config_cache.host_extra_conf(self.hostname,
+                                                                 non_inline_snmp_hosts)
+
+        if host_backend_config:
+            # If more backends are configured for this host take the first one
+            host_backend = host_backend_config[0]
+            if has_inline_snmp and host_backend in ["inline", False]:
+                return "inline"
+            if has_pysnmp and host_backend == "pysnmp":
+                return "pysnmp"
+            if host_backend in ["classic", True]:
+                return "classic"
+            raise MKGeneralException("Bad Host SNMP Backend configuration: %s" % host_backend)
+
+        if has_inline_snmp and use_inline_snmp in ["inline", True]:
+            return "inline"
+        if has_pysnmp and use_inline_snmp == "pysnmp":
+            return "pysnmp"
+        return "classic"
 
     def _is_cluster(self) -> bool:
         """Checks whether or not the given host is a cluster host
@@ -3002,7 +3019,7 @@ class HostConfig:
             snmpv3_contexts=self._config_cache.host_extra_conf(self.hostname, snmpv3_contexts),
             character_encoding=self._snmp_character_encoding(),
             is_usewalk_host=self.is_usewalk_host,
-            is_inline_snmp_host=self._is_inline_snmp_host(),
+            snmp_backend=self._get_snmp_backend(),
             record_stats=record_inline_snmp_stats,
         )
 

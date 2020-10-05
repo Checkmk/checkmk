@@ -1294,7 +1294,7 @@ class AutomationDiagHost(Automation):
             snmpv3_contexts=snmp_config.snmpv3_contexts,
             character_encoding=snmp_config.character_encoding,
             is_usewalk_host=snmp_config.is_usewalk_host,
-            is_inline_snmp_host=snmp_config.is_inline_snmp_host,
+            snmp_backend=snmp_config.snmp_backend,
             record_stats=config.record_inline_snmp_stats,
         )
 

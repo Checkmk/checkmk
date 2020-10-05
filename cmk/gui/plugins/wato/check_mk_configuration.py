@@ -2456,7 +2456,7 @@ class ConfigVariableUseDNSCache(ConfigVariable):
 
 
 @config_variable_registry.register
-class ConfigVariableUseInlineSNMP(ConfigVariable):
+class ConfigVariableChooseSNMPBackend(ConfigVariable):
     def group(self):
         return ConfigVariableGroupCheckExecution
 
@@ -2467,17 +2467,24 @@ class ConfigVariableUseInlineSNMP(ConfigVariable):
         return "use_inline_snmp"
 
     def valuespec(self):
-        return Checkbox(
-            title=_("Use Inline SNMP"),
-            label=_("Enable inline SNMP (directly use net-snmp libraries)"),
-            help=_(
-                "By default Check_MK uses command line calls of Net-SNMP tools like snmpget or "
-                "snmpwalk to gather SNMP information. For each request a new command line "
-                "program is being executed. It is now possible to use the inline SNMP implementation "
-                "which calls the net-snmp libraries directly via its python bindings. This "
-                "should increase the performance of SNMP checks in a significant way. The inline "
-                "SNMP mode is a feature which improves the performance for large installations and "
-                "only available via our subscription."),
+        return Transform(
+            DropdownChoice(
+                title=_("Choose SNMP Backend"),
+                choices=[
+                    ("classic", _("Use Classic SNMP Backend")),
+                    ("inline", _("Use Inline SNMP Backend")),
+                    ("pysnmp", _("Use PySNMP Backend")),
+                ],
+                help=
+                _("By default Checkmk uses command line calls of Net-SNMP tools like snmpget or "
+                  "snmpwalk to gather SNMP information. For each request a new command line "
+                  "program is being executed. It is now possible to use the Inline SNMP or PySNMP implementation "
+                  "which calls the respective libraries directly via its python bindings. This "
+                  "should increase the performance of SNMP checks in a significant way. Both "
+                  "SNMP modes are featurse which improve the performance for large installations and are "
+                  "only available via our subscription."),
+            ),
+            forth=lambda x: "inline" if x is True else ("classic" if x is False else x),
         )
 
 
@@ -4395,21 +4402,36 @@ rulespec_registry.register(
     ))
 
 
-def _help_non_inline_snmp_hosts():
-    return _("Check_MK has an efficient SNMP implementation called Inline SNMP which reduces "
-             "the load produced by SNMP monitoring on the monitoring host significantly. This "
-             "option is enabled by default for all SNMP hosts and it is a good idea to keep "
-             "this default setting. However, there are SNMP devices which have problems with "
-             "this SNMP implementation. You can use this rule to disable Inline SNMP for these "
-             "hosts.")
+def _help_snmp_backend():
+    return _(
+        "Checkmk has an efficient SNMP implementations called Inline SNMP and PySNMP which reduce "
+        "the load produced by SNMP monitoring on the monitoring host significantly. Inline SNMP "
+        "is enabled by default for all SNMP hosts and it is a good idea to keep this default setting. "
+        "However, there are SNMP devices which have problems with some SNMP implementations. "
+        "You can use this rule to select the SNMP Backend for these hosts.")
+
+
+def _valuespec_snmp_backend():
+    return Transform(
+        DropdownChoice(
+            title=_("Choose SNMP Backend"),
+            choices=[
+                ("inline", _("Use Inline SNMP Backend")),
+                ("pysnmp", _("Use PySNMP Backend")),
+                ("classic", _("Use Classic Backend")),
+            ],
+        ),
+        forth=lambda x: "classic" if x is True else ("inline" if x is False else x),
+    )
 
 
 rulespec_registry.register(
-    BinaryHostRulespec(
+    HostRulespec(
+        valuespec=_valuespec_snmp_backend,
         group=RulespecGroupAgentSNMP,
-        help_func=_help_non_inline_snmp_hosts,
+        help_func=_help_snmp_backend,
         name="non_inline_snmp_hosts",
-        title=lambda: _("Hosts not using Inline-SNMP"),
+        title=lambda: _("Hosts using a specific SNMP Backend"),
     ))
 
 

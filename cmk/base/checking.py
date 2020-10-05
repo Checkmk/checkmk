@@ -264,7 +264,7 @@ def do_check(
         # postponed now.
         if config.record_inline_snmp_stats \
            and ipaddress is not None \
-           and host_config.snmp_config(ipaddress).is_inline_snmp_host:
+           and host_config.snmp_config(ipaddress).snmp_backend == "inline":
             inline.snmp_stats_save()
 
 

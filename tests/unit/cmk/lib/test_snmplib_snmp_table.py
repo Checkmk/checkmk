@@ -31,7 +31,7 @@ SNMPConfig = SNMPHostConfig(
     snmpv3_contexts=[],
     character_encoding="ascii",
     is_usewalk_host=False,
-    is_inline_snmp_host=False,
+    snmp_backend="classic",
     record_stats=False,
 )
 

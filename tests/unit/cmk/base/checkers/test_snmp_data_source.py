@@ -73,7 +73,7 @@ def test_attribute_defaults(source, hostname, ipaddress, monkeypatch):
 
 
 def test_description_with_ipaddress(source, monkeypatch):
-    default = "SNMP (Community: 'public', Bulk walk: no, Port: 161, Inline: no)"
+    default = "SNMP (Community: 'public', Bulk walk: no, Port: 161, Backend: Classic)"
     assert source.description == default
 
 
@@ -86,7 +86,7 @@ class TestSNMPSource_SNMP:
 
         source = SNMPSource.snmp(hostname, ipaddress, mode=mode)
         assert source.description == (
-            "SNMP (Community: 'public', Bulk walk: no, Port: 161, Inline: no)")
+            "SNMP (Community: 'public', Bulk walk: no, Port: 161, Backend: Classic)")
 
 
 class TestSNMPSource_MGMT:
@@ -112,8 +112,9 @@ class TestSNMPSource_MGMT:
             ipaddress,
             mode=mode,
         )
-        assert source.description == ("Management board - SNMP "
-                                      "(Community: 'public', Bulk walk: no, Port: 161, Inline: no)")
+        assert source.description == (
+            "Management board - SNMP "
+            "(Community: 'public', Bulk walk: no, Port: 161, Backend: Classic)")
 
 
 class TestSNMPSummaryResult:

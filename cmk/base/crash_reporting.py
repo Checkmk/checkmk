@@ -106,7 +106,7 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
                 "is_cluster": host_config.is_cluster,
                 "description": description,
                 "check_type": check_plugin_name,
-                "inline_snmp": host_config.snmp_config(hostname).is_inline_snmp_host,
+                "inline_snmp": host_config.snmp_config(hostname).snmp_backend == "inline",
                 "manual_check": is_manual_check,
                 **check_plugin_kwargs,
             },

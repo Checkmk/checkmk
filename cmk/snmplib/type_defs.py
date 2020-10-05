@@ -102,7 +102,7 @@ class SNMPHostConfig(
             ("snmpv3_contexts", list),
             ("character_encoding", Optional[str]),
             ("is_usewalk_host", bool),
-            ("is_inline_snmp_host", bool),
+            ("snmp_backend", str),
             ("record_stats", bool),
         ])):
     @property

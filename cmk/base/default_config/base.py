@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict as _Dict, List as _List, Optional as _Optional
+from typing import Dict as _Dict, List as _List, Optional as _Optional, Union as _Union
 
 # This file contains the defaults settings for almost all configuration
 # variables that can be overridden in main.mk. Some configuration
@@ -59,8 +59,12 @@ predefined_conditions: _Dict = {}
 http_proxies: _Dict = {}
 
 # SNMP communities and encoding
-use_inline_snmp = True
-# Ruleset to disable Inline-SNMP per host when use_inline_snmp is enabled.
+# TODO: Rename use_inline_snmp and non_inline_snmp_hosts (different purpose now)
+# the names of the rules are kept because of backwards compatibility.
+# Old value is True or False and new value is a string for the respective backend.
+# From version 2.0.0i1 upwards old values are no longer configurable.
+use_inline_snmp: _Union[bool, str] = True
+# Ruleset to enable specific SNMP Backend for each host.
 non_inline_snmp_hosts: _List = []
 
 # Ruleset to recduce fetched OIDs of a check, only inline SNMP

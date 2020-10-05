@@ -294,12 +294,14 @@ def _check_individual_files(params, file_size, file_age):
 def check_fileinfo_groups(_item, params, parsed):
 
     outof_range_txt = fileinfo_check_timeranges(params)
-    count_all = 0
-    size_all = 0
-    size_minmax = None
-    age_minmax = None
     files_stat_failed = set()
-    files_matching = {}
+    files_matching = {
+        'count_all': 0,
+        'size_all': 0,
+        'size_minmax': None,
+        'age_minmax': None,
+        'file_text': {},
+    }
 
     skip_ok_files = params.get('shorten_multiline_output', False)
 
@@ -330,26 +332,27 @@ def check_fileinfo_groups(_item, params, parsed):
                 files_stat_failed.add(file_stat.name)
                 break
 
-            size_all += file_stat.size
-            count_all += 1
+            files_matching['size_all'] += file_stat.size
+            files_matching['count_all'] += 1
 
-            size_minmax = _update_minmax(file_stat.size, size_minmax)
+            files_matching['size_minmax'] = _update_minmax(file_stat.size,
+                                                           files_matching['size_minmax'])
 
             age = reftime - file_stat.time
-            age_minmax = _update_minmax(age, age_minmax)
+            files_matching['age_minmax'] = _update_minmax(age, files_matching['age_minmax'])
 
             # Used for long ouput information
             state, text = _check_individual_files(params, file_stat.size, age)
             if not skip_ok_files or state:
-                files_matching[file_stat.name] = text
+                files_matching['file_text'][file_stat.name] = text
             break
 
     # Start Checking
-    size_smallest, size_largest = size_minmax
-    age_newest, age_oldest = age_minmax
+    size_smallest, size_largest = files_matching['size_minmax'] or (None, None)
+    age_newest, age_oldest = files_matching['age_minmax'] or (None, None)
     check_definition = [
-        ("Count", "count", count_all, saveint),
-        ("Size", "size", size_all, get_filesize_human_readable),
+        ("Count", "count", files_matching['count_all'], saveint),
+        ("Size", "size", files_matching['size_all'], get_filesize_human_readable),
         ("Largest size", "size_largest", size_largest, get_filesize_human_readable),
         ("Smallest size", "size_smallest", size_smallest, get_filesize_human_readable),
         ("Oldest age", "age_oldest", age_oldest, get_age_human_readable),
@@ -373,7 +376,8 @@ def check_fileinfo_groups(_item, params, parsed):
     if exclude_patterns:
         long_output.append("Exclude patterns: %s" % ", ".join(exclude_patterns))
 
-    long_output.extend(['[%s] %s' % key_text for key_text in sorted(files_matching.items())])
+    long_output.extend(
+        ['[%s] %s' % file_text for file_text in sorted(files_matching['file_text'].items())])
 
     if long_output:
         yield 0, "\n%s" % "\n".join(long_output)

@@ -1823,7 +1823,11 @@ class html(ABCHTMLGenerator):
                        enctype="multipart/form-data" if method.lower() == "post" else None)
         self.hidden_field("filled_in", name, add_var=True)
         if add_transid:
-            self.hidden_field("_transid", str(self.transaction_manager.get()))
+            self.hidden_field(
+                "_transid",
+                str(self.transaction_manager.get()),
+                add_var=True,
+            )
         self.form_name = name
 
     def end_form(self) -> None:

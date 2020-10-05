@@ -33,20 +33,60 @@ def removeprefix(text: str, prefix: str) -> str:
 def removesuffix(text: str, suffix: str, /) -> str:
     return text[:-len(suffix)] if suffix and text.endswith(suffix) else text
 
+
+def _in_component(
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return imported == ModuleName(component) or imported.startswith(component + ".")
+
+
+def _is_utility_import(imported: ModuleName) -> bool:
+    """cmk and cmk.utils are allowed to be imported from all over the place"""
+    return imported == "cmk" or _in_component(imported, Component("cmk.utils"))
+
+
+def _is_default_allowed_import(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return _is_utility_import(imported) or _in_component(imported, component)
+
+
+def _allow_default_plus_fetchers_and_snmplib(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    """
+    Allow import of `cmk.fetchers` and `cmk.snmplib`.
+
+    The layering is such that `fetchers` and `snmplib` is between
+    `utils` and `base` so that importing `fetchers` in `utils` is
+    wrong but anywhere else is OK.
+    """
+    return (
+        _is_default_allowed_import(imported=imported, component=component) or
+        _in_component(imported, Component("cmk.fetchers")) or
+        _in_component(imported, Component("cmk.snmplib"))
+    )
+
+
 _COMPONENTS = (
-    Component("cmk.base"),
-    Component("cmk.fetchers"),
-    Component("cmk.snmplib"),
-    Component("cmk.gui"),
-    Component("cmk.ec"),
-    Component("cmk.notification_plugins"),
-    Component("cmk.special_agents"),
-    Component("cmk.update_config"),
-    Component("cmk.cee.dcd"),
-    Component("cmk.cee.mknotifyd"),
-    Component("cmk.cee.snmp_backend"),
-    Component("cmk.cee.liveproxy"),
-    Component("cmk.cee.notification_plugins"),
+    (Component("cmk.base"), _allow_default_plus_fetchers_and_snmplib),
+    (Component("cmk.fetchers"), _allow_default_plus_fetchers_and_snmplib),
+    (Component("cmk.snmplib"), _is_default_allowed_import),
+    (Component("cmk.gui"), _is_default_allowed_import),
+    (Component("cmk.ec"), _is_default_allowed_import),
+    (Component("cmk.notification_plugins"), _is_default_allowed_import),
+    (Component("cmk.special_agents"), _is_default_allowed_import),
+    (Component("cmk.update_config"), _is_default_allowed_import),
+    (Component("cmk.cee.dcd"), _is_default_allowed_import),
+    (Component("cmk.cee.mknotifyd"), _is_default_allowed_import),
+    (Component("cmk.cee.snmp_backend"), _is_default_allowed_import),
+    (Component("cmk.cee.liveproxy"), _is_default_allowed_import),
+    (Component("cmk.cee.notification_plugins"), _is_default_allowed_import),
 )
 
 _EXPLICIT_FILE_TO_COMPONENT = {
@@ -95,14 +135,15 @@ class CMKModuleLayerChecker(BaseChecker):
         importing_path = ModulePath(removeprefix(absolute_path, self.cmk_path_cached))
 
         # Tests are allowed to import anyting.
-        if importing_path.startswith("tests/"):
+        if str(importing_path).startswith("tests/"):
             return
 
         importing = self._get_module_name_of_files(importing_path)
         if not self._is_import_allowed(importing_path, importing, imported):
             self.add_message("cmk-module-layer-violation", node=node, args=(imported, importing))
 
-    def _get_module_name_of_files(self, importing_path: ModulePath) -> ModuleName:
+    @staticmethod
+    def _get_module_name_of_files(importing_path: ModulePath) -> ModuleName:
         # Due to our symlinks and pasting magic, astroid gets confused, so we need to compute the
         # real module name from the file path of the module.
         parts = importing_path.split("/")
@@ -122,24 +163,22 @@ class CMKModuleLayerChecker(BaseChecker):
 
     def _is_import_allowed(self, importing_path: ModulePath, importing: ModuleName,
                            imported: ModuleName) -> bool:
-        for component in _COMPONENTS:
+        for component, component_specific_checker in _COMPONENTS:
             if not self._is_part_of_component(importing, importing_path, component):
                 continue
 
-            if self._is_snmplib_import(imported):
-                return True
+            return component_specific_checker(
+                imported=imported,
+                component=component,
+            )
 
-            if self._is_fetchers_import(imported):
-                return True
+        # the rest (matched no component)
+        return _is_utility_import(imported)
 
-            if self._in_component(imported, component):
-                return True
-
-        return self._is_utility_import(imported)
-
-    def _is_part_of_component(self, importing: ModuleName, importing_path: ModulePath,
+    @staticmethod
+    def _is_part_of_component(importing: ModuleName, importing_path: ModulePath,
                               component: Component) -> bool:
-        if self._in_component(importing, component):
+        if _in_component(importing, component):
             return True
 
         explicit_component = _EXPLICIT_FILE_TO_COMPONENT.get(importing_path)
@@ -160,26 +199,3 @@ class CMKModuleLayerChecker(BaseChecker):
             return True
 
         return False
-
-    def _is_fetchers_import(self, imported: ModuleName) -> bool:
-        """
-        TODO:
-        Disallow import of `fetchers` in `cmk.utils`.
-
-        The layering is such that `fetchers` is between `utils` and
-        `base` so that importing `fetchers` in `utils` is wrong but
-        anywhere else is OK.
-        """
-        return self._in_component(imported, Component("cmk.fetchers"))
-
-    def _is_snmplib_import(self, imported: ModuleName) -> bool:
-        """TODO: Disallow import of `snmplib` in `cmk.utils`."""
-        return self._in_component(imported, Component("cmk.snmplib"))
-
-    @staticmethod
-    def _in_component(imported: ModuleName, component: Component) -> bool:
-        return imported == ModuleName(component) or imported.startswith(component + ".")
-
-    def _is_utility_import(self, imported: ModuleName) -> bool:
-        """cmk and cmk.utils are allowed to be imported from all over the place"""
-        return imported in {"cmk", "cmk.utils"} or imported.startswith("cmk.utils.")

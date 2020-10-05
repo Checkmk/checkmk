@@ -448,20 +448,6 @@ div.snapin div.content div.foldable ul.treeangle a.iconlink {
   padding: 0;
 }
 
-div.snapin div.content div.foldable a.iconlink,
-/* TODO: Reproduce these two html elements */
-div.snapin div.content div.foldable body.main .popup_menu span.iconlink,
-body.main .popup_menu div.snapin div.content div.foldable span.iconlink {
-  padding: 4px 0;
-}
-
-div.snapin div.content div.foldable a.iconlink:last-of-type,
-/* TODO: Reproduce these two html elements */
-div.snapin div.content div.foldable body.main .popup_menu span.iconlink:last-of-type,
-body.main .popup_menu div.snapin div.content div.foldable span.iconlink:last-of-type {
-  padding-bottom: 12px;
-}
-
 div.snapin table.allhosts td a.link,
 /* TODO: Reproduce these two html elements */
 div.snapin table.allhosts td body.main .popup_menu span.link,

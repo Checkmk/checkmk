@@ -1168,11 +1168,73 @@ DiscoveryTestCase = NamedTuple("DiscoveryTestCase", [
 _discovery_test_cases = [
     # do discovery: only_new == True
     # discover on host: mode != "remove"
+    DiscoveryTestCase(
+        parameters=discovery.DiscoveryParameters(
+            on_error="raise",
+            load_labels=True,
+            save_labels=True,
+        ),
+        on_realhost=ExpectedDiscoveryResultRealHost(
+            expected_return_labels=DiscoveredHostLabels(
+                HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),
+                HostLabel('another_label', 'true', plugin_name='labels'),
+                HostLabel('existing_label', 'bar', plugin_name='foo'),
+            ),
+            expected_stored_labels={
+                'another_label': {
+                    'plugin_name': 'labels',
+                    'value': 'true',
+                },
+                'existing_label': {
+                    'plugin_name': 'foo',
+                    'value': 'bar',
+                },
+                'cmk/check_mk_server': {
+                    'plugin_name': 'labels',
+                    'value': 'yes',
+                },
+            },
+        ),
+        on_cluster=ExpectedDiscoveryResultCluster(
+            expected_return_labels=DiscoveredHostLabels(
+                HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),
+                HostLabel('existing_label', 'bar', plugin_name='foo'),
+                HostLabel('another_label', 'true', plugin_name='labels'),
+                HostLabel('node2_live_label', 'true', plugin_name='labels'),
+            ),
+            expected_stored_labels_cluster={
+                'another_label': {
+                    'plugin_name': 'labels',
+                    'value': 'true',
+                },
+                'existing_label': {
+                    'plugin_name': 'foo',
+                    'value': 'bar',
+                },
+                'cmk/check_mk_server': {
+                    'plugin_name': 'labels',
+                    'value': 'yes',
+                },
+                'node2_live_label': {
+                    'plugin_name': 'labels',
+                    'value': 'true',
+                },
+            },
+            expected_stored_labels_node1={
+                'node1_existing_label': {
+                    'plugin_name': 'node1_plugin',
+                    'value': 'true',
+                },
+            },
+            expected_stored_labels_node2={},
+        ),
+    ),
     # check discovery
     DiscoveryTestCase(
         parameters=discovery.DiscoveryParameters(
             on_error="raise",
             load_labels=True,
+            save_labels=False,
         ),
         on_realhost=ExpectedDiscoveryResultRealHost(
             expected_return_labels=DiscoveredHostLabels(
@@ -1217,13 +1279,55 @@ _discovery_test_cases = [
             expected_stored_labels_node2={},
         ),
     ),
-    # preview
-    # discover on host: mode == "remove"
     # do discovery: only_new == False
     DiscoveryTestCase(
         parameters=discovery.DiscoveryParameters(
             on_error="raise",
             load_labels=False,
+            save_labels=True,
+        ),
+        on_realhost=ExpectedDiscoveryResultRealHost(
+            expected_return_labels=DiscoveredHostLabels(
+                HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),),
+            expected_stored_labels={
+                'cmk/check_mk_server': {
+                    'plugin_name': 'labels',
+                    'value': 'yes',
+                },
+            },
+        ),
+        on_cluster=ExpectedDiscoveryResultCluster(
+            expected_return_labels=DiscoveredHostLabels(
+                HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),
+                HostLabel('node2_live_label', 'true', plugin_name='labels'),
+            ),
+            expected_stored_labels_cluster={
+                'cmk/check_mk_server': {
+                    'plugin_name': 'labels',
+                    'value': 'yes',
+                },
+                'node2_live_label': {
+                    'plugin_name': 'labels',
+                    'value': 'true',
+                },
+            },
+            expected_stored_labels_node1={
+                'node1_existing_label': {
+                    'plugin_name': 'node1_plugin',
+                    'value': 'true',
+                },
+            },
+            expected_stored_labels_node2={},
+        ),
+    ),
+    # discover on host: mode == "remove"
+    # do discovery: only_new == False
+    # preview
+    DiscoveryTestCase(
+        parameters=discovery.DiscoveryParameters(
+            on_error="raise",
+            load_labels=False,
+            save_labels=False,
         ),
         on_realhost=ExpectedDiscoveryResultRealHost(
             expected_return_labels=DiscoveredHostLabels(

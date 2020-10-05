@@ -127,6 +127,7 @@ class RediscoveryMode(Enum):
 DiscoveryParameters = NamedTuple("DiscoveryParameters", [
     ("on_error", str),
     ("load_labels", bool),
+    ("save_labels", bool),
 ])
 
 HostLabelDiscoveryResult = NamedTuple("HostLabelDiscoveryResult", [
@@ -324,6 +325,7 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
     discovery_parameters = DiscoveryParameters(
         on_error=on_error,
         load_labels=arg_only_new,
+        save_labels=True,
     )
 
     host_names = _preprocess_hostnames(arg_hostnames, config_cache)
@@ -456,12 +458,11 @@ def _do_discovery_for(
 
     autochecks.save_autochecks_file(hostname, new_services)
 
-    new_host_labels, host_labels_per_plugin = _perform_host_label_discovery(
+    _new_host_labels, host_labels_per_plugin = _perform_host_label_discovery(
         hostname,
         host_label_discovery_result.labels,
         discovery_parameters,
     )
-    DiscoveredHostLabelsStore(hostname).save(new_host_labels.to_dict())
 
     messages = []
 
@@ -502,6 +503,7 @@ def discover_on_host(
     discovery_parameters = DiscoveryParameters(
         on_error=on_error,
         load_labels=(mode != "remove"),
+        save_labels=(mode != "remove"),
     )
 
     if hostname not in config_cache.all_active_hosts():
@@ -572,7 +574,6 @@ def discover_on_host(
             host_label_discovery_result.labels,
             discovery_parameters,
         )
-        DiscoveredHostLabelsStore(hostname).save(new_host_labels.to_dict())
         counts["self_new_host_labels"] = sum(host_labels_per_plugin.values())
         counts["self_total_host_labels"] = len(new_host_labels)
 
@@ -692,6 +693,7 @@ def check_discovery(
     discovery_parameters = DiscoveryParameters(
         on_error="raise",
         load_labels=True,
+        save_labels=False,
     )
 
     params = host_config.discovery_check_parameters
@@ -1111,6 +1113,9 @@ def _perform_host_label_discovery(
             continue
         return_host_labels.add_label(discovered_label)
         new_host_labels_per_plugin[discovered_label.plugin_name] += 1
+
+    if discovery_parameters.save_labels:
+        DiscoveredHostLabelsStore(hostname).save(return_host_labels.to_dict())
 
     return return_host_labels, new_host_labels_per_plugin
 
@@ -1692,6 +1697,7 @@ def get_check_preview(
     discovery_parameters = DiscoveryParameters(
         on_error=on_error,
         load_labels=False,
+        save_labels=False,
     )
 
     sources = checkers.make_sources(

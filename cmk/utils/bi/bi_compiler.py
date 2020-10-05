@@ -10,7 +10,7 @@ import cmk
 import pprint
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Dict, Set, Optional, TypedDict
+from typing import Dict, Set, Optional, TypedDict, List, Tuple
 
 from cmk.utils.log import logger
 from cmk.utils.bi.bi_packs import bi_packs
@@ -24,6 +24,7 @@ from cmk.utils.bi.bi_data_fetcher import (
 from cmk.utils.bi.bi_trees import BICompiledAggregation, BICompiledAggregationSchema
 from cmk.utils.bi.bi_aggregation import BIAggregation
 import cmk.utils.store as store
+from cmk.utils.type_defs import HostName, ServiceName
 
 
 class ConfigStatus(TypedDict):
@@ -36,11 +37,13 @@ class BICompiler:
     def __init__(self):
         self._logger = logger.getChild("bi.compiler")
         self._compiled_with_sitestatus = None
-        self._compiled_aggregations = {}
+        self._compiled_aggregations: Dict[str, BICompiledAggregation] = {}
         self._path_compilation_lock = Path(get_cache_dir(), "compilation.LOCK")
         self._path_compilation_timestamp = Path(get_cache_dir(), "last_compilation")
         self._path_compiled_aggregations = Path(get_cache_dir(), "compiled_aggregations")
         self._path_compiled_aggregations.mkdir(parents=True, exist_ok=True)
+        self._part_of_aggregation_map: Dict[Tuple[HostName, Optional[ServiceName]],
+                                            List[Tuple[str, str]]] = {}
 
     @property
     def compiled_aggregations(self) -> Dict[str, BICompiledAggregation]:
@@ -63,6 +66,20 @@ class BICompiler:
             self._logger.debug("Loading cached aggregation results %s" % aggr_id)
             aggr_data = ast.literal_eval(path_object.read_text())
             self._compiled_aggregations[aggr_id] = BIAggregation.create_trees_from_schema(aggr_data)
+
+        self._update_part_of_aggregation_map()
+
+    def used_in_aggregation(self, host_name: HostName, service_description: ServiceName) -> bool:
+        return (host_name, service_description) in self._part_of_aggregation_map
+
+    def _update_part_of_aggregation_map(self) -> None:
+        self._part_of_aggregation_map = {}
+        for aggr_id, compiled_aggregation in self._compiled_aggregations.items():
+            for branch in compiled_aggregation.branches:
+                for _site, host_name, service_description in branch.required_elements():
+                    key = (host_name, service_description)
+                    self._part_of_aggregation_map.setdefault(key, [])
+                    self._part_of_aggregation_map[key].append((aggr_id, branch.properties.title))
 
     def _check_compilation_status(self) -> None:
         current_configstatus = self.compute_current_configstatus()

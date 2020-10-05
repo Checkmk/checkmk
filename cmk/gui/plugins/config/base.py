@@ -510,11 +510,11 @@ aggregation_rules: _Dict = {}
 aggregations: _List = []
 host_aggregations: _List = []
 bi_packs: _Dict = {}
-bi_precompile_on_demand = True
-bi_use_legacy_compilation = False
 
 default_bi_layout = {"node_style": "builtin_hierarchy", "line_style": "straight"}
 bi_layouts: _Dict[str, _Dict] = {"templates": {}, "aggregations": {}}
 
 # Deprecated. Kept for compatibility.
 bi_compile_log = None
+bi_precompile_on_demand = False
+bi_use_legacy_compilation = False

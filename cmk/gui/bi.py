@@ -27,7 +27,7 @@ from cmk.gui.permissions import (
 
 from cmk.utils.bi.bi_data_fetcher import bi_status_fetcher
 from cmk.utils.bi.bi_packs import bi_packs
-from cmk.utils.bi.bi_compiler import bi_compiler_auto_cleanup
+from cmk.utils.bi.bi_compiler import bi_compiler_auto_cleanup, bi_compiler
 from cmk.utils.bi.bi_computer import bi_computer, bi_computer_auto_cleanup, BIAggregationFilter
 from cmk.gui.exceptions import MKConfigError
 
@@ -60,8 +60,7 @@ permission_registry.register(
 
 
 def is_part_of_aggregation(what, site, host, service):
-    # TODO:
-    return True
+    return bi_compiler.used_in_aggregation(host, service)
 
 
 def get_aggregation_group_trees():
@@ -883,7 +882,7 @@ def singlehost_table(view, columns, query, only_sites, limit, all_active_filters
 
 @contextmanager
 def aggregation_compute_auto_cleanup():
-    with bi_compiler_auto_cleanup() as bi_compiler:
-        bi_compiler.load_compiled_aggregations()
+    with bi_compiler_auto_cleanup() as bi_compiler_handle:
+        bi_compiler_handle.load_compiled_aggregations()
         with bi_computer_auto_cleanup():
             yield

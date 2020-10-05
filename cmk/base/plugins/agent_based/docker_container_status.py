@@ -10,9 +10,8 @@ from typing import (
     Dict,
     Optional,
 )
-from .utils import docker
+from .utils import docker, uptime
 from .utils.legacy_docker import DeprecatedDict
-from .snmp_uptime import check_snmp_uptime
 from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
     AgentStringTable,
@@ -229,12 +228,14 @@ register.check_plugin(
 
 
 def discover_docker_container_status_uptime(
-        section_docker_container_status: Optional[Dict[str, Any]],
-        section_uptime: Optional[Dict[str, Any]]) -> DiscoveryResult:
+    section_docker_container_status: Optional[Dict[str, Any]],
+    section_uptime: Optional[uptime.Section],
+) -> DiscoveryResult:
     if section_uptime:
-        # if the uptime section of the checkmk agent is
-        # present, we don't need this service.
-        return
+        for _service in uptime.discover(section_uptime):
+            # if the uptime service of the checkmk agent is
+            # present, we don't need this service.
+            return
     if not section_docker_container_status:
         return
     if _is_active_container(
@@ -242,9 +243,13 @@ def discover_docker_container_status_uptime(
         yield Service()
 
 
-def check_docker_container_status_uptime(params: Parameters,
-                                         section_docker_container_status: Dict[str, Any],
-                                         section_uptime: Dict[str, Any]):
+def check_docker_container_status_uptime(
+    params: Parameters,
+    section_docker_container_status: Optional[Dict[str, Any]],
+    section_uptime: Optional[uptime.Section],
+) -> CheckResult:
+    if not section_docker_container_status:
+        return
     started_str = section_docker_container_status.get("StartedAt")
     if not started_str:
         return
@@ -255,9 +260,9 @@ def check_docker_container_status_uptime(params: Parameters,
     op_status = section_docker_container_status["Status"]
     if op_status == "running":
         uptime_sec = (datetime.datetime.utcnow() - utc_start).total_seconds()
-        yield from check_snmp_uptime(params, int(uptime_sec))
+        yield from uptime.check(params, uptime.Section(int(uptime_sec), None))
     else:
-        yield from check_snmp_uptime(params, 0)
+        yield from uptime.check(params, uptime.Section(0, None))
         yield Result(state=state.OK, summary="Operation State: %s" % op_status)
 
 

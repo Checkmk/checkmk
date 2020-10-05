@@ -3,44 +3,46 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import time
 
-from .agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    Parameters,
-    SNMPStringTable,
+from .agent_based_api.v1.type_defs import SNMPStringTable
+from .agent_based_api.v1 import (
+    exists,
+    register,
+    SNMPTree,
 )
-from .agent_based_api.v1 import check_levels, exists, register, render, Service, SNMPTree
+from .utils import uptime
 
 
-def parse_snmp_uptime(string_table: SNMPStringTable) -> int:
+def parse_snmp_uptime(string_table: SNMPStringTable) -> uptime.Section:
     """
         >>> parse_snmp_uptime([[['2297331594', '']]])
-        22973315
+        Section(uptime_sec=22973315, message=None)
         >>> parse_snmp_uptime([[['124:21:26:42.03', '124:21:29:01.14']]])
-        10790941
+        Section(uptime_sec=10790941, message=None)
         >>> parse_snmp_uptime([[[u'', u'Fortigate 80C']]])  # nonsense
-        0
+        Section(uptime_sec=None, message=None)
 
     """
     ticks = string_table[0][0][1] or string_table[0][0][0]
 
     if len(ticks) < 3:
-        return 0
+        return uptime.Section(None, None)
 
     try:
-        return int(ticks[:-2])
+        return uptime.Section(int(ticks[:-2]), None)
     except Exception:
         pass
 
     try:
         days, h, m, s = ticks.split(":")
-        return (int(days) * 86400) + (int(h) * 3600) + (int(m) * 60) + int(float(s))
+        return uptime.Section(
+            (int(days) * 86400) + (int(h) * 3600) + (int(m) * 60) + int(float(s)),
+            None,
+        )
     except Exception:
         pass
 
-    return 0
+    return uptime.Section(None, None)
 
 
 register.snmp_section(
@@ -60,32 +62,11 @@ register.snmp_section(
     detect=exists(".1.3.6.1.2.1.1.1.0"),
 )
 
-
-def discover_snmp_uptime(section: int) -> DiscoveryResult:
-    if section:
-        yield Service()
-
-
-def check_snmp_uptime(params: Parameters, section: int) -> CheckResult:
-    if params is None:  # legacy: support older versions of parameters
-        params = {}
-
-    up_since = render.datetime(time.time() - section)
-    yield from check_levels(
-        section,
-        levels_upper=params.get("max"),
-        levels_lower=params.get("min"),
-        metric_name="uptime",
-        render_func=render.timespan,
-        label="Up since %s, Uptime:" % up_since,
-    )
-
-
 register.check_plugin(
     name="snmp_uptime",
     service_name="Uptime",
-    discovery_function=discover_snmp_uptime,
-    check_function=check_snmp_uptime,
+    discovery_function=uptime.discover,
+    check_function=uptime.check,
     check_default_parameters={},
     check_ruleset_name="uptime",
 )

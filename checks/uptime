@@ -10,6 +10,7 @@
 
 import re
 import datetime
+import cmk.base.plugins.agent_based.utils.uptime as uptime
 
 
 def parse_human_read_uptime(string: str) -> int:
@@ -35,7 +36,7 @@ def parse_human_read_uptime(string: str) -> int:
     return 86400 * days + 3600 * hrs + 60 * mins
 
 
-def parse_solaris_uptime(info, from_boot_time):
+def parse_solaris_uptime(info, from_boot_time) -> uptime.Section:
     """Solaris agent Version>= 1.5.0p15 delivers a lot of context information
 
     This was necesary because Solaris returns very inconsistent output for
@@ -90,7 +91,10 @@ unix:0:system_misc:snaptime     1131.467157594                     # snaptime
         uptime_struct['message'] = ("Your Solaris system gives inconsistent uptime information. "
                                     "Please get it fixed. ") + uptimes_summary
 
-    return uptime_struct
+    return uptime.Section(
+        uptime_struct.get('uptime_sec'),
+        uptime_struct.get('message'),
+    )
 
 
 def uptime_parse(info):
@@ -116,16 +120,15 @@ def uptime_parse(info):
         if solaris_info:
             return parse_solaris_uptime(solaris_info, from_boot_time)
 
-        return {'uptime_sec': from_boot_time}
+        return uptime.Section(from_boot_time, None)
 
 
 def check_uptime(_no_item, params, parsed):
 
-    uptime_sec = parsed.get('uptime_sec')
-    if uptime_sec is not None:
-        yield check_uptime_seconds(params, uptime_sec)
-    if 'message' in parsed:
-        yield 3, parsed['message']
+    if parsed.uptime_sec is not None:
+        yield check_uptime_seconds(params, parsed.uptime_sec)
+    if parsed.message is not None:
+        yield 3, parsed.message
 
 
 check_info["uptime"] = {

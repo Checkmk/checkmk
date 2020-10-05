@@ -8,6 +8,7 @@ from testlib import on_time
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters
 from cmk.base.plugins.agent_based.inv_if import Interface, inventory_if, parse_inv_if, SectionInvIf
+from cmk.base.plugins.agent_based.utils import uptime
 
 SECTION_INV_IF = SectionInvIf(
     interfaces=[
@@ -428,7 +429,7 @@ def test_inventory_if():
         assert list(inventory_if(
             Parameters({}),
             SECTION_INV_IF,
-            7612999,
+            uptime.Section(7612999, None),
         )) == [
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 1},

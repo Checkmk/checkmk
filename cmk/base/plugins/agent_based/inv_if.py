@@ -17,6 +17,7 @@ from .agent_based_api.v1 import (
     SNMPTree,
     TableRow,
 )
+from .utils import uptime
 from .utils.interfaces import render_mac_address
 
 
@@ -143,9 +144,10 @@ def round_to_day(ts):
 def inventory_if(
     params: Parameters,
     section_inv_if: Optional[SectionInvIf],
-    section_snmp_uptime: Optional[int],
+    section_snmp_uptime: Optional[uptime.Section],
 ) -> InventoryResult:
-    if section_inv_if is None or section_snmp_uptime is None:
+    if (section_inv_if is None or section_snmp_uptime is None or
+            section_snmp_uptime.uptime_sec is None):
         return
 
     now = time.time()
@@ -161,7 +163,7 @@ def inventory_if(
     for interface in section_inv_if.interfaces:
 
         if interface.last_change > 0:
-            state_age = section_snmp_uptime - interface.last_change
+            state_age = section_snmp_uptime.uptime_sec - interface.last_change
 
             # Assume counter rollover in case uptime is less than last_change and
             # add 497 days (counter maximum).
@@ -170,11 +172,11 @@ def inventory_if(
             # get the count of rollovers since change (or since uptime) and it's better the
             # wrong negative state change is not shown anymore...
             if state_age < 0:
-                state_age = 42949672 - interface.last_change + section_snmp_uptime
+                state_age = 42949672 - interface.last_change + section_snmp_uptime.uptime_sec
 
         else:
             # Assume point of time of boot as last state change.
-            state_age = section_snmp_uptime
+            state_age = section_snmp_uptime.uptime_sec
 
         last_change_timestamp = round_to_day(now - state_age)
 

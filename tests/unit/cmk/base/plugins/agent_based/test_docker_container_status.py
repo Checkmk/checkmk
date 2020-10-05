@@ -16,6 +16,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 import cmk.base.plugins.agent_based.docker_container_status as docker
 from cmk.base.plugins.agent_based.utils.legacy_docker import DeprecatedDict
+from cmk.base.plugins.agent_based.utils import uptime
 NOW_SIMULATED = 1559728800, "UTC"
 STRING_TABLE_WITH_VERSION = [
     [
@@ -109,9 +110,7 @@ def test_check_docker_container_status():
 
 @pytest.mark.parametrize("section_uptime, expected_services", [
     (
-        {
-            "an uptime section": 123456789
-        },
+        uptime.Section(123456789, None),
         [],
     ),
     (
@@ -128,35 +127,32 @@ def test_discovery_docker_container_status_uptime(section_uptime, expected_servi
 
 @pytest.mark.parametrize("params, expected_results", [
     ({}, [
-        Result(state=state.OK,
-               summary='Up since Jun 05 2019 08:58:07, Uptime:: 1 hour 1 minute',
-               details='Up since Jun 05 2019 08:58:07, Uptime:: 1 hour 1 minute'),
+        Result(state=state.OK, summary='Up since Jun 05 2019 08:58:07'),
+        Result(state=state.OK, summary='Uptime: 1 hour 1 minute'),
         Metric('uptime', 3713.0, levels=(None, None), boundaries=(None, None)),
     ]),
     ({
         "min": (1000, 2000)
     }, [
-        Result(state=state.OK,
-               summary='Up since Jun 05 2019 08:58:07, Uptime:: 1 hour 1 minute',
-               details='Up since Jun 05 2019 08:58:07, Uptime:: 1 hour 1 minute'),
+        Result(state=state.OK, summary='Up since Jun 05 2019 08:58:07'),
+        Result(state=state.OK, summary='Uptime: 1 hour 1 minute'),
         Metric('uptime', 3713.0, levels=(None, None), boundaries=(None, None)),
     ]),
     ({
         "max": (1000, 2000)
     }, [
+        Result(state=state.OK, summary='Up since Jun 05 2019 08:58:07'),
         Result(
             state=state.CRIT,
             summary=
-            'Up since Jun 05 2019 08:58:07, Uptime:: 1 hour 1 minute (warn/crit at 16 minutes 40 seconds/33 minutes 20 seconds)',
-            details=
-            'Up since Jun 05 2019 08:58:07, Uptime:: 1 hour 1 minute (warn/crit at 16 minutes 40 seconds/33 minutes 20 seconds)'
+            'Uptime: 1 hour 1 minute (warn/crit at 16 minutes 40 seconds/33 minutes 20 seconds)',
         ),
         Metric('uptime', 3713.0, levels=(1000.0, 2000.0), boundaries=(None, None)),
     ]),
 ])
 def test_check_docker_container_status_uptime(params, expected_results):
     with on_time(*NOW_SIMULATED):
-        yielded_results = list(docker.check_docker_container_status_uptime(params, PARSED, {}))
+        yielded_results = list(docker.check_docker_container_status_uptime(params, PARSED, None))
         assert expected_results == yielded_results
 
 

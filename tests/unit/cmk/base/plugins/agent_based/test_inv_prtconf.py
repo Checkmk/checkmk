@@ -67,26 +67,23 @@ INFO = [
 ]
 
 EXPECTED = [
-    Attributes(
-        path=['hardware', 'cpu'],
+    Attributes(path=['hardware', 'cpu'])._replace(
         inventory_attributes={
             'arch': 'ppc64',
             'model': 'PowerPC_POWER7',
             'implementation_mode': 'POWER 7',
-            'max_speed': '4284000000.0',
-            'cpus': '8',
+            'max_speed': 4284000000.0,  # type: ignore[dict-item]
+            'cpus': 8,  # type: ignore[dict-item]
         },
         status_attributes={},
     ),
-    Attributes(
-        path=['hardware', 'memory'],
+    Attributes(path=['hardware', 'memory'])._replace(
         inventory_attributes={
-            'total_ram_usable': '270314504192',
+            'total_ram_usable': 270314504192,  # type: ignore[dict-item]
         },
         status_attributes={},
     ),
-    Attributes(
-        path=['hardware', 'system'],
+    Attributes(path=['hardware', 'system'])._replace(
         inventory_attributes={
             'serial': '06AAB2T',
             'product': '8231-E2D',
@@ -149,8 +146,7 @@ EXPECTED = [
         },
         status_attributes={},
     ),
-    Attributes(
-        path=['networking'],
+    Attributes(path=['networking'])._replace(
         inventory_attributes={
             'domain_name': 'example1.example.com',
             'gateway': '192.168.0.2',
@@ -160,8 +156,7 @@ EXPECTED = [
         },
         status_attributes={},
     ),
-    Attributes(
-        path=['software', 'firmware'],
+    Attributes(path=['software', 'firmware'])._replace(
         inventory_attributes={
             'version': 'AL770_076',
             'vendor': 'IBM',
@@ -169,8 +164,7 @@ EXPECTED = [
         },
         status_attributes={},
     ),
-    Attributes(
-        path=['software', 'os'],
+    Attributes(path=['software', 'os'])._replace(
         inventory_attributes={'arch': 'ppc64'},
         status_attributes={},
     ),

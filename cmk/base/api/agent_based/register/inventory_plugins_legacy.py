@@ -105,15 +105,19 @@ def _generate_attributes(
     for path in sorted(
             set(local_status_data_tree.attributes) | set(local_inventory_tree.attributes)):
         status_attributes = {
-            str(k): str(v) for k, v in local_status_data_tree.attributes.get(path, {}).items()
+            str(k): v for k, v in local_status_data_tree.attributes.get(path, {}).items()
         }
         inventory_attributes = {
-            str(k): str(v)
+            str(k): v
             for k, v in local_inventory_tree.attributes.get(path, {}).items()
             if str(k) not in status_attributes
         }
-        yield Attributes(
-            path=list(path),
+        # Bypass the validation of the Attributes class:
+        # Legacy plugins may put other types than strings in the attributes,
+        # and we keep it that way, as this will trigger painter functions
+        # in the inventory view.
+        attr = Attributes(path=list(path))
+        yield attr._replace(
             inventory_attributes=inventory_attributes,
             status_attributes=status_attributes,
         )

@@ -329,9 +329,7 @@ div.snapin {
 
     &:hover { text-decoration: underline; }
 
-    &.iconlink img {
-      margin-right: 8px;
-    }
+    &.iconlink img:not(.emblem) { margin-right: 5px; }
   }
 
   ul {
@@ -342,7 +340,7 @@ div.snapin {
   }
 
   li {
-    padding-left: 1px;
+    padding-left: 0;
     color: $snapin-list-color;
 
     &.sidebar {

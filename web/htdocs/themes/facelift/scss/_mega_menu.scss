@@ -74,11 +74,6 @@
       }
     }
 
-    img {
-      width: 19px;
-      margin-bottom: 6px;
-    }
-
     &.user > div.popup_menu {
       top: unset;
       height: 150px;
@@ -119,8 +114,8 @@
 
           + div {
             position: relative;
-            padding: 21px 15px 0;
             flex-basis: 78px;
+            padding: 21px 15px 0;
 
             a.more { float: right; }
           }
@@ -148,7 +143,6 @@
             font-size: 14px;
             font-weight: bold;
             color: $font-color;
-            text-transform: uppercase;
 
             a.show_all_topics {
               img {
@@ -168,7 +162,7 @@
           ul {
             padding-left: 0;
             font-size: 12px;
-            line-height: (2 * $spacing);
+            line-height: (2.2 * $spacing);
           }
 
           ul a:hover {
@@ -177,7 +171,11 @@
           }
 
           li {
-            padding-left: 5px;
+            img.icon {
+              width: 14px;
+              height: 14px;
+              margin-right: 5px;
+            }
 
             &.show_all_items {
               display: none;
@@ -272,6 +270,8 @@
       text-align: center;
       text-decoration: none;
       outline: none;
+
+      img { margin-bottom: 6px; }
     }
   }
 }

@@ -24,13 +24,9 @@ div.bookmark {
     padding-left: 10px;
   }
 
-  img {
-    margin-right: 5px;
-
-    &.icon {
-      width: 16px;
-      height: 16px;
-    }
+  img.icon {
+    width: 14px;
+    height: 14px;
   }
 }
 
@@ -439,17 +435,14 @@ div.spacertop {
   clear: right;
 
   img.icon {
-    width: 18px;
-    height: 18px;
+    width: 14px;
+    height: 14px;
     padding: 0;
-    margin-right: 6px;
-    margin-bottom: 6px;
+    margin-right: 5px;
+    margin-bottom: 10px;
   }
 
-  img.emblem {
-    right: 3px;
-    bottom: -3px;
-  }
+  img.emblem { bottom: 3px; }
 
   div.footnotelink {
     float: right;
@@ -462,13 +455,12 @@ div.spacertop {
 
 #snapin_admin {
   li {
-    margin-bottom: 4px;
-    line-height: $font-size-default;
-  }
+    line-height: (2.2 * $spacing);
 
-  img.emblem {
-    right: 0;
-    bottom: -7px;
+    img.icon {
+      width: 14px;
+      height: 14px;
+    }
   }
 }
 

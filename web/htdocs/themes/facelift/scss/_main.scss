@@ -310,8 +310,8 @@ span.emblem {
 
 img.emblem {
   position: absolute;
-  right: -5px;
-  bottom: -12px;
+  right: 3px;
+  bottom: -3px;
   width: 10px;
   height: 10px;
 }
@@ -1199,7 +1199,7 @@ html {
   transition: color .15s ease-in-out;
 }
 
-a.iconlink img, body.main .popup_menu span.iconlink img {
+body.main .popup_menu span.iconlink img {
   display: block;
   float: left;
 }

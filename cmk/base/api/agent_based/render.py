@@ -90,7 +90,7 @@ def _digits_left(value: float) -> int:
         return 1
 
 
-def _auto_scale(value: float, use_si_units: bool) -> Tuple[str, str]:
+def _auto_scale(value: float, use_si_units: bool, add_bytes_prefix: bool = True) -> Tuple[str, str]:
     if use_si_units:
         base = 1000
         size_prefixes = _SIZE_PREFIXES_SI
@@ -104,10 +104,17 @@ def _auto_scale(value: float, use_si_units: bool) -> Tuple[str, str]:
         log_value = 0
 
     exponent = min(max(log_value, 0), len(size_prefixes) - 1)
-    unit = (size_prefixes[exponent] + ("B" if use_si_units else "iB")).lstrip('i')
+    unit = size_prefixes[exponent]
+    if add_bytes_prefix:
+        unit = (unit + ("B" if use_si_units else "iB")).lstrip('i')
     scaled_value = float(value) / base**exponent
     fmt = "%%.%df" % max(3 - _digits_left(scaled_value), 0)
     return fmt % scaled_value, unit
+
+
+def frequency(hertz: float) -> str:
+    """Render a frequency in hertz using an appropriate SI prefix"""
+    return "%s %sHz" % _auto_scale(float(hertz), use_si_units=True, add_bytes_prefix=False)
 
 
 def disksize(bytes_: float) -> str:

@@ -183,3 +183,14 @@ def test_iobandwidth(bytes_, output):
 ])
 def test_percent(percentage, output):
     assert output == render.percent(percentage)
+
+
+@pytest.mark.parametrize("hz, output", [
+    (111, "111 Hz"),
+    (1112, "1.11 kHz"),
+    (111222, "111 kHz"),
+    (111222333, "111 MHz"),
+    (111222333444, "111 GHz"),
+])
+def test_frequency(hz, output):
+    assert output == render.frequency(hz)

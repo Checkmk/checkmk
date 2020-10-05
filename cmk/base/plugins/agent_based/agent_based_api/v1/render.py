@@ -9,8 +9,8 @@ All of the render functions take a single numerical value as an argument, and re
 a string.
 """
 from cmk.base.api.agent_based.render import (  # pylint: disable=redefined-builtin
-    date, datetime, timespan, disksize, bytes, filesize, networkbandwidth, nicspeed, iobandwidth,
-    percent,
+    date, datetime, timespan, disksize, bytes, filesize, frequency, networkbandwidth, nicspeed,
+    iobandwidth, percent,
 )
 
 __all__ = [
@@ -20,6 +20,7 @@ __all__ = [
     'disksize',
     'bytes',
     'filesize',
+    'frequency',
     'networkbandwidth',
     'nicspeed',
     'iobandwidth',

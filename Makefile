@@ -579,7 +579,7 @@ Pipfile.lock: Pipfile
 	@( \
 	    echo "Locking Python requirements..." ; \
 	    flock $(LOCK_FD); \
-	    $(PIPENV) lock; \
+	    SKIP_MAKEFILE_CALL=1 $(PIPENV) lock; \
 	    sed -i "/\"markers\": \"extra == /d" Pipfile.lock; \
 	    rm -rf .venv \
 	) $(LOCK_FD)>$(LOCK_PATH)

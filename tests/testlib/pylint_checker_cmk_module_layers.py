@@ -135,9 +135,6 @@ class CMKModuleLayerChecker(BaseChecker):
             if self._is_import_in_component(imported, component):
                 return True
 
-            if self._is_import_in_cee_component_part(importing, imported, component):
-                return True
-
         return self._is_utility_import(imported)
 
     def _is_part_of_component(self, importing: ModuleName, importing_path: ModulePath,
@@ -180,13 +177,6 @@ class CMKModuleLayerChecker(BaseChecker):
 
     def _is_import_in_component(self, imported: ModuleName, component: Component) -> bool:
         return imported == ModuleName(component) or imported.startswith(component + ".")
-
-    def _is_import_in_cee_component_part(self, importing: ModuleName, imported: ModuleName,
-                                         component: Component) -> bool:
-        """If a module is split into cmk.cee.[mod] and cmk.[mod] it's allowed
-        to import non-cee parts in the cee part."""
-        return importing.startswith("cmk.cee.") and self._is_import_in_component(
-            imported, component)
 
     def _is_utility_import(self, imported: ModuleName) -> bool:
         """cmk and cmk.utils are allowed to be imported from all over the place"""

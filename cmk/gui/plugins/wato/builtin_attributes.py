@@ -689,9 +689,6 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
 
 @host_attribute_registry.register
 class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
-    def is_advanced(self) -> bool:
-        return True
-
     def name(self):
         return "management_snmp_community"
 
@@ -739,9 +736,6 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
     @classmethod
     def sort_index(cls):
         return 140
-
-    def is_advanced(self) -> bool:
-        return True
 
     def show_in_table(self):
         return False

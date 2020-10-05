@@ -622,6 +622,8 @@ int ExecCmkUpdateAgent(const std::vector<std::wstring>& params) {
     // run cmk-agent-updater
     for (auto& p : params) to_run += L" " + p;
 
+    cma::cfg::SetupPluginEnvironment();
+
     auto proc_id = cma::tools::RunStdCommand(to_run, true);
     if (proc_id > 0) {
         XLOG::l.i("Agent Updater process [{}] started\n", proc_id);

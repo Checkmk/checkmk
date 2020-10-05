@@ -57,12 +57,11 @@ void PrintAgentUpdater() {
     PrintBlock("Agent Updater Usage:\n", Colors::green, []() {
         return fmt::format(
             "\t{1} <{2}|{3}> [args]\n"
-            "\t{2:<{0}} - register Agent using Updater plugin\n"
-            "\t{3:<{0}} - update Agent using Updater plugin\n",
+            "\t{2}|{3:<{0}} - register Agent using plugins\\cmk_update_agent.checmk.py\n",
             kParamShift,
-            kServiceExeName,  // service name from th project definitions
+            kServiceExeName,  // service name from the project definitions
             // first Row
-            kAgentRegisterParam, kAgentUpdateParam);
+            kUpdaterParam, kCmkUpdaterParam);
     });
 }
 
@@ -508,8 +507,8 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
         return cma::srv::ExecVersion();
     }
 
-    if (param == wtools::ConvertToUTF16(kAgentRegisterParam) ||
-        param == wtools::ConvertToUTF16(kAgentUpdateParam)) {
+    if (param == wtools::ConvertToUTF16(kUpdaterParam) ||
+        param == wtools::ConvertToUTF16(kCmkUpdaterParam)) {
         std::vector<std::wstring> params;
         for (int k = 1; k < argc; k++) {
             params.emplace_back(Argv[k]);

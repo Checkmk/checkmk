@@ -17,8 +17,8 @@ namespace cma::cmdline {
 
 constexpr int kParamShift = 10;
 
-constexpr std::string_view kAgentUpdateParam = "update";
-constexpr std::string_view kAgentRegisterParam = "register";
+constexpr std::string_view kUpdaterParam = "updater";  // run cmk_update_plugin
+constexpr std::string_view kCmkUpdaterParam = "cmk_update_agent";  // -/-/-/-/-
 
 constexpr std::string_view kRestoreParam = "restore";
 

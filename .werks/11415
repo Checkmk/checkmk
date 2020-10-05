@@ -1,0 +1,13 @@
+Title: liveproxyd logging: fixed incorrect logrotate behaviour
+Class: fix
+Compatible: compat
+Component: liveproxy
+Date: 1601883445
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.6.0p18
+
+
+The liveproxyd always wrote into the intially opened logfile, even if it was renamed/moved by logrotate.
+

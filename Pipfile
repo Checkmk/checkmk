@@ -130,7 +130,7 @@ rrdtool = "==0.1.15"  # Actually we ship the binding which comes with rrdtool it
 docstring_parser = "==0.7.2"  # direct dependency
 yapf = "==0.30.0"  # formatter for REST-API documentation code examples
 pyprof2calltree = "==1.4.5"  # used for GUI/API profiling
-repoze.profile = "==2.3"  # used for GUI/API profiling
+repoze-profile = "==2.3"  # used for GUI/API profiling
 
 [requires]
 python_version = "3.8"

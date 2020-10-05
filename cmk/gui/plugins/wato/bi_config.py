@@ -809,8 +809,8 @@ class ModeBIRules(ABCBIMode):
 
                     table.cell("", css="narrow")
                     if bi_rule.computation_options.disabled:
-                        html.icon(_("This rule is currently disabled and will not be applied"),
-                                  "disabled")
+                        html.icon("disabled",
+                                  _("This rule is currently disabled and will not be applied"))
                     else:
                         html.empty_icon_button()
 
@@ -1868,19 +1868,19 @@ class BIModeAggregations(ABCBIMode):
                 table.text_cell(_("Options"), css="buttons")
 
                 if bi_aggregation.computation_options.disabled:
-                    html.icon(_("This aggregation is currently disabled."), "disabled")
+                    html.icon("disabled", _("This aggregation is currently disabled."))
                 else:
-                    html.icon(_("This aggregation is currently enabled."), "enabled")
+                    html.icon("enabled", _("This aggregation is currently enabled."))
 
                 if bi_aggregation.computation_options.use_hard_states:
-                    html.icon(_("Base state computation on hard states"), "hard_states")
+                    html.icon("hard_states", _("Base state computation on hard states"))
                 else:
-                    html.icon(_("Base state computation on soft and hard states"), "all_states")
+                    html.icon("all_states", _("Base state computation on soft and hard states"))
 
                 if bi_aggregation.computation_options.escalate_downtimes_as_warn:
-                    html.icon(_("Escalate downtimes based on aggregated WARN state"), "warning")
+                    html.icon("warning", _("Escalate downtimes based on aggregated WARN state"))
                 else:
-                    html.icon(_("Escalate downtimes based on aggregated CRIT state"), "critical")
+                    html.icon("critical", _("Escalate downtimes based on aggregated CRIT state"))
 
                 table.text_cell(_("Groups"), ", ".join(bi_aggregation.groups.names))
                 table.text_cell(_("Paths"),

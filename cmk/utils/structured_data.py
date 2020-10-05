@@ -114,7 +114,7 @@ class StructuredDataTree:
         buf = io.BytesIO()
         with gzip.GzipFile(fileobj=buf, mode="wb") as f:
             f.write((repr(output) + "\n").encode("utf-8"))
-        store.save_file(filepath + ".gz", buf.getvalue())
+        store.save_bytes_to_file(filepath + ".gz", buf.getvalue())
 
         # Inform Livestatus about the latest inventory update
         store.save_text_to_file("%s/.last" % path, u"")

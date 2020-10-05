@@ -1,3 +1,4 @@
+VERSION="2.0.0i1"
 '----------------------------------------------------------------------------
 ' Script to generate TS Per-Device license usage report.
 ' Requires Administrator privilege on the license server.

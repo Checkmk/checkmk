@@ -1,3 +1,4 @@
+VERSION="2.0.0i1"
 ' MPIO_PATH_INFORMATION.vbs
 ' VBS WMI MPIO
 ' Author: Torsten Haake

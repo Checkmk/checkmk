@@ -1,3 +1,4 @@
+VERSION="2.0.0i1"
 ' Check for citrix licenses
 ' This is an almost unmodified version of ctx_licensecheck.vbs from Stefan Senftleben.
 On Error Resume Next

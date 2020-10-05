@@ -1,3 +1,4 @@
+VERSION="2.0.0i1"
 ' -----------------------------------------------------------------------------
 ' Check_MK windows agent plugin to gather information from local MSSQL servers
 '

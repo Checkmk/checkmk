@@ -1,3 +1,4 @@
+set VERSION="2.0.0i1"
 @echo off
 cd C:\Progra~1\Tivoli\TSM\baclient\
 SET COMMAND=dsmadmc -dataonly=YES -id=admin -password=password -displaymode=table

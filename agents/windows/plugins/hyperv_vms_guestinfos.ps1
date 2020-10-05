@@ -1,4 +1,5 @@
-﻿####
+﻿$VERSION = "2.0.0i1"
+####
 ## Hyper-V VM state
 ####
 ## Script must executed with local administrator credentials!

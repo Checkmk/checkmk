@@ -1,3 +1,4 @@
+VERSION="2.0.0i1"
 ' Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 ' This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 ' conditions defined in the file COPYING, which is part of this source code package.
@@ -94,7 +95,7 @@ For Each instance In instances.Keys
     cmd = Replace(cmd, "mysqld""", "mysql""")
     cmd = Replace(cmd, "mysqld-nt""", "mysql""")
     cmd = Replace(cmd, "mysql""", "mysql.exe""")
-    cmd = Replace(cmd, "mysqld.exe""", "mysql.exe""")    
+    cmd = Replace(cmd, "mysqld.exe""", "mysql.exe""")
     If InStr(cmd, "mysql.exe""") = 0 Then
         ' replace failed, probably we have no double quotes in the string
         cmd = Replace(cmd, "mysqld.exe", "mysql.exe")

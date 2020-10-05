@@ -1,3 +1,4 @@
+VERSION="2.0.0i1"
 ' Check, if we are executed with cscript.exe
 If UCase(Right(Wscript.FullName, 11)) = "WSCRIPT.EXE" Then
     WScript.Echo "This script must be run under CScript."

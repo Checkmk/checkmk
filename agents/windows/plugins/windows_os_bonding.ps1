@@ -1,4 +1,5 @@
-﻿## Windows Bonding interfaces
+﻿$VERSION = "2.0.0i1"
+## Windows Bonding interfaces
 ## you need this agent plugin if you want to monitor bonding interfaces
 ## on windows configured on operating system level
 

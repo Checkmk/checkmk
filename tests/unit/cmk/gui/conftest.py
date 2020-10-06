@@ -35,6 +35,7 @@ from cmk.gui.http import Request
 from cmk.gui.plugins.userdb import htpasswd
 from cmk.gui.utils import get_random_string
 from cmk.gui.watolib.users import delete_users, edit_users
+from cmk.gui.watolib import changes
 from cmk.gui.wsgi import make_app
 
 SPEC_LOCK = threading.Lock()
@@ -358,3 +359,12 @@ def wsgi_app(monkeypatch):
 @pytest.fixture(scope='function')
 def wsgi_app_debug_off(monkeypatch):
     return _make_webtest(debug=False)
+
+
+@pytest.fixture(autouse=True)
+def deactivate_search_index_creation_on_change(monkeypatch):
+    monkeypatch.setattr(
+        changes,
+        "_update_and_store_search_index",
+        lambda *_, **__: None,
+    )

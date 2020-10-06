@@ -8,7 +8,7 @@ import abc
 import re
 import traceback
 from dataclasses import dataclass
-from typing import Dict, List, Set, Optional, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 from enum import Enum, unique
 
 import livestatus
@@ -28,17 +28,15 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry, PageHandlers
-from cmk.gui.type_defs import ViewName, Row, Rows, HTTPVariables
-
-SearchQuery = str
-
-
-@dataclass
-class Result:
-    """Intermediate representation of a search result"""
-    title: str
-    url: str
-
+from cmk.gui.type_defs import (
+    HTTPVariables,
+    SearchQuery,
+    SearchResult,
+    SearchResultsByTopic,
+    Row,
+    Rows,
+    ViewName,
+)
 
 #   .--Quicksearch---------------------------------------------------------.
 #   |         ___        _      _                            _             |
@@ -130,7 +128,7 @@ class ABCQuicksearchConductor(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def create_results(self) -> List[Result]:
+    def create_results(self) -> List[SearchResult]:
         """Returns the results for the given query"""
         raise NotImplementedError()
 
@@ -153,7 +151,7 @@ class BasicPluginQuicksearchConductor(ABCQuicksearchConductor):
     There is no aggregation done by this conductor. It deals with a single search plugin.  """
     def __init__(self, used_filters: UsedFilters, filter_behaviour: FilterBehaviour) -> None:
         super().__init__(used_filters, filter_behaviour)
-        self._results: List[Result] = []
+        self._results: List[SearchResult] = []
 
     def do_query(self) -> None:
         """Execute the lookup of the data using the given query"""
@@ -182,7 +180,7 @@ class BasicPluginQuicksearchConductor(ABCQuicksearchConductor):
         """Returns the HTTP variables to link to to show the results on a content page"""
         raise NotImplementedError()  # TODO: Implement this
 
-    def create_results(self) -> List[Result]:
+    def create_results(self) -> List[SearchResult]:
         return self._results[:config.quicksearch_dropdown_limit]
 
 
@@ -352,7 +350,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
 
         return url_params
 
-    def create_results(self) -> List[Result]:
+    def create_results(self) -> List[SearchResult]:
         elements: List[LivestatusResult] = []
 
         if not self._rows:
@@ -419,7 +417,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
 
         raise NotImplementedError()
 
-    def _generate_display_texts(self, elements: List[LivestatusResult]) -> List[Result]:
+    def _generate_display_texts(self, elements: List[LivestatusResult]) -> List[SearchResult]:
         """Creates the text displayed to the user
 
         Analyzes all display texts and ensures that we have unique ones"""
@@ -430,19 +428,19 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
                 element.display_text = element.text_tokens[0][1]
 
         if self._element_texts_unique(elements):
-            return [Result(title=e.display_text, url=e.url) for e in elements]
+            return [SearchResult(title=e.display_text, url=e.url) for e in elements]
 
         # Some (ugly) special handling when the results are not unique
         # Whenever this happens we try to find a fitting second value
 
         if self.livestatus_table in ["hostgroups", "servicegroups"]:
             # Discard redundant hostgroups
-            results: List[Result] = []
+            results: List[SearchResult] = []
             used_groups: Set[str] = set()
             for element in elements:
                 if element.display_text in used_groups:
                     continue
-                results.append(Result(title=element.display_text, url=element.url))
+                results.append(SearchResult(title=element.display_text, url=element.url))
                 used_groups.add(element.display_text)
             return results
 
@@ -459,7 +457,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
             else:
                 element.display_text += " <b>%s</b>" % hostname
 
-        return [Result(title=e.display_text, url=e.url) for e in elements]
+        return [SearchResult(title=e.display_text, url=e.url) for e in elements]
 
     def _element_texts_unique(self, elements: List[LivestatusResult]) -> bool:
         used_texts: Set[str] = set()
@@ -472,7 +470,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
 
 class QuicksearchManager:
     """Producing the results for the given search query"""
-    def generate_results(self, query: SearchQuery) -> Dict[str, List[Result]]:
+    def generate_results(self, query: SearchQuery) -> SearchResultsByTopic:
         search_objects = self._determine_search_objects(query)
         self._conduct_search(search_objects)
         return self._evaluate_results(search_objects)
@@ -533,7 +531,7 @@ class QuicksearchManager:
         return search_objects
 
     @staticmethod
-    def _find_search_object_expressions(query: str) -> List[Tuple[str, int]]:
+    def _find_search_object_expressions(query: SearchQuery) -> List[Tuple[str, int]]:
         """Extract a list of search plugin expressions from the search query
 
         The returned list contains the name of the search plugin and the character
@@ -552,8 +550,10 @@ class QuicksearchManager:
         return found_filters
 
     @staticmethod
-    def _get_used_filters_from_query(query: str, found_filters: List[Tuple[str,
-                                                                           int]]) -> UsedFilters:
+    def _get_used_filters_from_query(
+        query: SearchQuery,
+        found_filters: List[Tuple[str, int]],
+    ) -> UsedFilters:
         """Extract the expressions for each search plugin
 
         Create a structure like this: {'h': ['heute'], 's': ['Check_MK']}
@@ -611,9 +611,9 @@ class QuicksearchManager:
     def _evaluate_results(
         self,
         search_objects: List[ABCQuicksearchConductor],
-    ) -> Dict[str, List[Result]]:
+    ) -> SearchResultsByTopic:
         """Generates elements out of the raw data"""
-        results_by_topic: Dict[str, List[Result]] = {}
+        results_by_topic: Dict[str, List[SearchResult]] = {}
         for search_object in search_objects:
             results = search_object.create_results()
             if results:
@@ -706,7 +706,7 @@ class QuicksearchSnapin(SidebarSnapin):
 
 class QuicksearchResultRenderer:
     """HTML rendering the matched results"""
-    def show(self, results_by_topic: Dict[str, List[Result]], query: SearchQuery) -> None:
+    def show(self, results_by_topic: SearchResultsByTopic, query: SearchQuery) -> None:
         """Renders the elements
 
         Show search topic if at least two search objects provide elements
@@ -757,7 +757,7 @@ class ABCMatchPlugin(metaclass=abc.ABCMeta):
 class ABCBasicMatchPlugin(ABCMatchPlugin):
     """Base class for all non livestatus based match plugins"""
     @abc.abstractmethod
-    def get_results(self, query: str) -> List[Result]:
+    def get_results(self, query: str) -> List[SearchResult]:
         raise NotImplementedError()
 
 

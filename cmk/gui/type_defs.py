@@ -5,7 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from abc import ABC, abstractmethod
-from typing import Dict, Union, List, Tuple, Any, Optional, Callable, NamedTuple
+from dataclasses import dataclass
+from typing import Any, Callable, Dict, Iterable, List, Mapping, NamedTuple, Optional, Tuple, Union
 from cmk.utils.type_defs import UserId
 from cmk.gui.htmllib import HTML
 
@@ -133,3 +134,15 @@ MegaMenu = NamedTuple("MegaMenu", [
     ("topics", Callable[[], List[TopicMenuTopic]]),
     ("search", Optional[ABCMegaMenuSearch]),
 ])
+
+SearchQuery = str
+
+
+@dataclass
+class SearchResult:
+    """Representation of a single result"""
+    title: str
+    url: str
+
+
+SearchResultsByTopic = Mapping[str, Iterable[SearchResult]]

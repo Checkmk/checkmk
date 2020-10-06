@@ -27,6 +27,12 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.automations import check_mk_local_automation
+from cmk.gui.watolib.search import (
+    ABCMatchItemGenerator,
+    MatchItem,
+    MatchItems,
+    match_item_generator_registry,
+)
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 
@@ -1218,4 +1224,27 @@ class TimeperiodValuespec(ValueSpec):
         return value
 
 
+class MatchItemGeneratorRules(ABCMatchItemGenerator):
+    def __init__(
+        self,
+        name: str,
+        rulespec_reg: RulespecRegistry,
+    ) -> None:
+        super().__init__(name)
+        self._rulespec_registry = rulespec_reg
+
+    def generate_match_items(self) -> MatchItems:
+        yield from (MatchItem(
+            title=rulespec.title,
+            topic="Rules",
+            url="wato.py?mode=edit_ruleset&varname=%s" % rulespec.name,
+            match_texts=[rulespec.title, rulespec.name],
+        )
+                    for group in self._rulespec_registry.get_all_groups()
+                    for rulespec in self._rulespec_registry.get_by_group(group)
+                    if rulespec.title)
+
+
 rulespec_registry = RulespecRegistry(rulespec_group_registry)
+
+match_item_generator_registry.register(MatchItemGeneratorRules('rules', rulespec_registry))

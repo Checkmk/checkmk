@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import abc
-from collections.abc import Mapping
+from collections.abc import Mapping as ABCMapping
 import io
 import operator
 import os
@@ -12,7 +12,7 @@ import time
 import re
 import shutil
 import uuid
-from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
+from typing import Any, Callable, Dict, List, Mapping, Optional, Set, Tuple, Type, Union
 
 from livestatus import SiteId
 
@@ -49,6 +49,12 @@ from cmk.gui.watolib.host_attributes import (
     collect_attributes,
 )
 from cmk.gui.plugins.watolib.utils import wato_fileheader
+from cmk.gui.watolib.search import (
+    ABCMatchItemGenerator,
+    MatchItem,
+    MatchItems,
+    match_item_generator_registry,
+)
 from cmk.gui.background_job import BackgroundJobAlreadyRunning
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 
@@ -394,7 +400,7 @@ def deep_update(original, update, overwrite=True):
     """
     # Adapted from https://stackoverflow.com/a/3233356
     for k, v in update.items():
-        if isinstance(v, Mapping):
+        if isinstance(v, ABCMapping):
             original[k] = deep_update(original.get(k, {}), v, overwrite=overwrite)
         else:
             if overwrite or k not in original or original[k] is None:
@@ -2771,6 +2777,7 @@ def collect_hosts(folder):
     for host_name, host in Host.all().items():
         hosts_attributes[host_name] = host.effective_attributes()
         hosts_attributes[host_name]["path"] = host.folder().path()
+        hosts_attributes[host_name]["edit_url"] = host.edit_url()
     return hosts_attributes
 
 
@@ -2836,3 +2843,49 @@ def _ensure_trailing_slash(path: str) -> str:
 
     """
     return path.rstrip("/") + "/"
+
+
+class MatchItemGeneratorHosts(ABCMatchItemGenerator):
+    def __init__(
+        self,
+        name: str,
+        host_collector: Callable[[], Mapping[str, Mapping[str, str]]],
+    ) -> None:
+        super().__init__(name)
+        self._host_collector = host_collector
+
+    def generate_match_items(self) -> MatchItems:
+        yield from (MatchItem(
+            title=host_name,
+            topic='Hosts',
+            url=host_attributes["edit_url"],
+            match_texts=[host_name],
+        ) for host_name, host_attributes in self._host_collector().items())
+
+
+class MatchItemGeneratorFolders(ABCMatchItemGenerator):
+    def __init__(
+        self,
+        name: str,
+        folder_collector: Callable[[], Mapping[str, CREFolder]],
+    ) -> None:
+        super().__init__(name)
+        self._folder_collector = folder_collector
+
+    def generate_match_items(self) -> MatchItems:
+        yield from (MatchItem(
+            title=folder.title(),
+            topic="Folders",
+            url=folder.url(),
+            match_texts=[folder.title()],
+        ) for folder in self._folder_collector().values())
+
+
+match_item_generator_registry.register(MatchItemGeneratorHosts(
+    'hosts',
+    collect_all_hosts,
+))
+match_item_generator_registry.register(MatchItemGeneratorFolders(
+    'folders',
+    Folder.all_folders,
+))

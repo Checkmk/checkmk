@@ -341,6 +341,10 @@ def _do_inv_for_realhost(
                 #           Can the fetcher handle that on its own?
                 source.prefetched_sections = host_sections.sections
 
+                assert source.prefetched_sections is not None
+                console.vverbose("Prefetched sections: %s\n" %
+                                 sorted([str(s) for s in source.prefetched_sections.keys()]))
+
                 # When executing the structured status inventory, we are in the Mode.CHECKING
                 assert source.mode is Mode.INVENTORY or source.mode is Mode.CHECKING
 

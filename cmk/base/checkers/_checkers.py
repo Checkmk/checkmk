@@ -237,6 +237,7 @@ def update_host_sections(
     result: List[Tuple[ABCSource, Result[ABCHostSections, Exception]]] = []
     for hostname, ipaddress, sources in nodes:
         for source_index, source in enumerate(sources):
+            console.vverbose("  Source: %s/%s\n" % (source.source_type, source.fetcher_type))
             if host_config.nodes is None:
                 source.selected_raw_sections = selected_raw_sections
             else:
@@ -262,10 +263,14 @@ def update_host_sections(
                 #    raise LookupError("Checker and fetcher missmatch")
                 raw_data = fetcher_message.raw_data
 
-            host_section = source.parse(raw_data)
-            result.append((source, host_section))
-            if host_section.is_ok():
-                host_sections.update(host_section.ok)
+            source_result = source.parse(raw_data)
+            result.append((source, source_result))
+            if source_result.is_ok():
+                console.vverbose("  -> Add sections: %s\n" %
+                                 sorted([str(s) for s in source_result.ok.sections.keys()]))
+                host_sections.update(source_result.ok)
+            else:
+                console.vverbose("  -> Not adding sections: %s\n" % source_result.error)
 
         # Store piggyback information received from all sources of this host. This
         # also implies a removal of piggyback files received during previous calls.

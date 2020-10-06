@@ -321,8 +321,6 @@ def mode_list_checks() -> None:
     import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
     all_check_manuals = {maincheckify(n): k for n, k in man_pages.all_man_pages().items()}
 
-    legacy_check_plugins = {maincheckify(name) for name in config.check_info}
-
     registered_checks = [(p.name, p) for p in agent_based_register.iter_all_check_plugins()]
     active_checks = [("check_%s" % name, entry) for name, entry in config.active_check_info.items()]
     # TODO clean mixed typed list up:
@@ -333,7 +331,7 @@ def mode_list_checks() -> None:
             what = 'active'
             ty_color = tty.blue
         else:
-            if str(plugin_name) in legacy_check_plugins:
+            if plugin_name in config.legacy_check_plugin_names:
                 what = 'auto migrated'
                 ty_color = tty.magenta
             else:

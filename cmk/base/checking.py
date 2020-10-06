@@ -34,7 +34,6 @@ import cmk.utils.debug
 import cmk.utils.defines as defines
 import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
-from cmk.utils.check_utils import maincheckify
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.log import console
 from cmk.utils.regex import regex
@@ -531,10 +530,7 @@ def get_aggregated_result(
 
 def _execute_check_legacy_mode(multi_host_sections: MultiHostSections, hostname: HostName,
                                ipaddress: Optional[HostAddress], service: Service) -> bool:
-    legacy_check_plugin_name = _find_legacy_check_name(
-        str(service.check_plugin_name),
-        config.check_info,
-    )
+    legacy_check_plugin_name = config.legacy_check_plugin_names.get(service.check_plugin_name)
     if legacy_check_plugin_name is None:
         _submit_check_result(hostname, service.description, CHECK_NOT_IMPLEMENTED, None)
         return True
@@ -615,16 +611,6 @@ def _execute_check_legacy_mode(multi_host_sections: MultiHostSections, hostname:
         _legacy_determine_cache_info(multi_host_sections, SectionName(section_name)),
     )
     return True
-
-
-def _find_legacy_check_name(
-    new_check_plugin_name_str: str,
-    potential_legacy_names: Iterable[str],
-) -> Optional[str]:
-    for pot_legacy_name in potential_legacy_names:
-        if maincheckify(pot_legacy_name) == new_check_plugin_name_str:
-            return pot_legacy_name
-    return None
 
 
 def _legacy_determine_cache_info(multi_host_sections: MultiHostSections,

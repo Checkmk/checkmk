@@ -18,7 +18,7 @@ from six import ensure_binary, ensure_str
 import cmk.utils.paths
 import cmk.utils.tty as tty
 import cmk.utils.store as store
-from cmk.utils.check_utils import maincheckify, section_name_of
+from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
@@ -53,6 +53,10 @@ ObjectSpec = Dict[str, Any]
 ActiveServiceID = Tuple[str, Item]  # TODO: I hope the str someday (tm) becomes "CheckPluginName",
 CustomServiceID = Tuple[str, Item]  # #     at which point these will be the same as "ServiceID"
 AbstractServiceID = Union[ActiveServiceID, CustomServiceID, ServiceID]
+
+CHECK_INFO_BY_MIGRATED_NAME = {
+    k: config.check_info[v] for k, v in config.legacy_check_plugin_names.items()
+}
 
 
 class NagiosCore(core_config.MonitoringCore):
@@ -302,11 +306,6 @@ def _create_nagios_servicedefs(cfg: NagiosConfig, config_cache: ConfigCache, hos
 
         return result
 
-    check_info_by_migrated_name = {
-        # TODO (mo): centralize maincheckify: CMK-4295
-        CheckPluginName(maincheckify(k)): v for k, v in config.check_info.items()
-    }
-
     host_check_table = get_check_table(hostname)
     have_at_least_one_service = False
     used_descriptions: Dict[ServiceName, AbstractServiceID] = {}
@@ -333,7 +332,7 @@ def _create_nagios_servicedefs(cfg: NagiosConfig, config_cache: ConfigCache, hos
         # For now, for every check plugin developed against the new check API
         # we just assume that it may have metrics. The careful review of this
         # mechanism is subject of issue CMK-1125
-        check_info_value = check_info_by_migrated_name.get(service.check_plugin_name,
+        check_info_value = CHECK_INFO_BY_MIGRATED_NAME.get(service.check_plugin_name,
                                                            {"has_perfdata": True})
         if check_info_value.get("has_perfdata", False):
             template = config.passive_service_template_perf
@@ -1154,7 +1153,6 @@ def _get_needed_plugin_names(
     from cmk.base.check_table import get_needed_check_names  # pylint: disable=import-outside-toplevel
     needed_legacy_check_plugin_names: Set[CheckPluginNameStr] = set([])
     needed_agent_based_check_plugin_names: Set[CheckPluginName] = set([])
-    legacy_plugin_name_lookup = {maincheckify(k): k for k in config.check_info}
 
     # In case the host is monitored as special agent, the check plugin for the special agent needs
     # to be loaded
@@ -1176,11 +1174,11 @@ def _get_needed_plugin_names(
                                                   skip_ignored=False)
 
     for check_plugin_name in needed_check_plugins:
-        if str(check_plugin_name) not in legacy_plugin_name_lookup:
+        if check_plugin_name not in config.legacy_check_plugin_names:
             needed_agent_based_check_plugin_names.add(check_plugin_name)
             continue
 
-        legacy_name = legacy_plugin_name_lookup[str(check_plugin_name)]
+        legacy_name = config.legacy_check_plugin_names[check_plugin_name]
         if config.check_info[legacy_name].get("extra_sections"):
             for section_name in config.check_info[legacy_name]["extra_sections"]:
                 if section_name in config.check_info:
@@ -1198,7 +1196,7 @@ def _get_needed_plugin_names(
             raise MKGeneralException("Invalid cluster configuration")
         for node in nodes:
             for check_plugin_name in get_needed_check_names(node, skip_ignored=False):
-                opt_legacy_name = legacy_plugin_name_lookup.get(str(check_plugin_name))
+                opt_legacy_name = config.legacy_check_plugin_names.get(check_plugin_name)
                 if opt_legacy_name is not None:
                     needed_legacy_check_plugin_names.add(opt_legacy_name)
                 else:
@@ -1212,7 +1210,7 @@ def _get_needed_plugin_names(
             needed_agent_based_inventory_plugin_names.add(inventory_plugin.name)
             for section_name in inventory_plugin.sections:
                 # check if we must add the legacy check plugin:
-                legacy_check_name = legacy_plugin_name_lookup.get(str(section_name))
+                legacy_check_name = config.legacy_check_plugin_names.get(section_name)
                 if legacy_check_name is not None:
                     needed_legacy_check_plugin_names.add(legacy_check_name)
 

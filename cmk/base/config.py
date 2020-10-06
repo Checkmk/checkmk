@@ -1412,6 +1412,8 @@ _check_contexts: Dict[str, Any] = {}
 # The following data structures will be filled by the checks
 # all known checks
 check_info: Dict[str, Dict[str, Any]] = {}
+# Lookup for legacy names
+legacy_check_plugin_names: Dict[CheckPluginName, str] = {}
 # library files needed by checks
 check_includes: Dict[str, List[Any]] = {}
 # optional functions for parameter precompilation
@@ -1501,6 +1503,7 @@ def _initialize_data_structures() -> None:
 
     _check_contexts.clear()
     check_info.clear()
+    legacy_check_plugin_names.clear()
     check_includes.clear()
     precompile_params.clear()
     check_default_levels.clear()
@@ -1617,6 +1620,7 @@ def load_checks(get_check_api_context: GetCheckApiContext, filelist: List[str]) 
 
     # Now convert check_info to new format.
     convert_check_info()
+    legacy_check_plugin_names.update({CheckPluginName(maincheckify(n)): n for n in check_info})
     _extract_agent_and_snmp_sections(validate_creation_kwargs=did_compile)
     _extract_check_plugins(validate_creation_kwargs=did_compile)
     initialize_check_type_caches()

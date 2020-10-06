@@ -64,7 +64,7 @@ def test_get_simple_snmp_table_not_resolvable(backend):
     )
 
     # TODO: Unify different error messages
-    if backend.config.is_inline_snmp_host:
+    if backend.config.snmp_backend == "inline":
         exc_match = "Failed to initiate SNMP"
     else:
         exc_match = "Unknown host"
@@ -88,7 +88,7 @@ def test_get_simple_snmp_table_wrong_credentials(backend):
     )
 
     # TODO: Unify different error messages
-    if backend.config.is_inline_snmp_host:
+    if backend.config.snmp_backend == "inline":
         exc_match = "SNMP query timed out"
     else:
         exc_match = "Timeout: No Response from"

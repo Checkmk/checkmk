@@ -62,89 +62,6 @@ class FilterBehaviour(Enum):
     FINISHED = "finished"
 
 
-@snapin_registry.register
-class QuicksearchSnapin(SidebarSnapin):
-    def __init__(self, name=""):
-        self._name = name
-        self._placeholder = f'{_("Search in")} {_(self._name.capitalize())}'
-        self._input_id = f"mk_side_search_field_{self._name}"
-        super().__init__()
-
-    @classmethod
-    def type_name(cls):
-        return "search"
-
-    @classmethod
-    def title(cls):
-        return _("Quicksearch")
-
-    @classmethod
-    def description(cls):
-        return _(
-            "Interactive search field for direct access to hosts, services, host- and "
-            "servicegroups.<br>You can use the following filters:<br> <i>h:</i> Host, <i>s:</i> Service<br> "
-            "<i>hg:</i> Hostgroup, <i>sg:</i> Servicegroup<br><i>ad:</i> Address, <i>al:</i> Alias, <i>tg:</i> Hosttag"
-        )
-
-    def show(self):
-        html.open_div(id_="mk_side_search",
-                      class_="content_center",
-                      onclick="cmk.quicksearch.close_popup();")
-        html.input(id_=self._input_id,
-                   type_="text",
-                   name="search",
-                   autocomplete="off",
-                   placeholder=self._placeholder)
-        html.icon_button("#",
-                         _("Search"),
-                         "quicksearch",
-                         onclick="cmk.quicksearch.on_search_click();")
-        html.close_div()
-        html.div('', id_="mk_side_clear")
-        html.javascript(f"cmk.quicksearch.register_search_field('{self._input_id}');")
-
-    @classmethod
-    def allowed_roles(cls):
-        return ["user", "admin", "guest"]
-
-    def page_handlers(self) -> PageHandlers:
-        return {
-            "ajax_search": self._ajax_search,
-            "search_open": self._page_search_open,
-        }
-
-    def _ajax_search(self) -> None:
-        """Generate the search result list"""
-        query = _maybe_strip(html.request.get_unicode_input('q'))
-        if not query:
-            return
-
-        try:
-            # TODO: Integrate here the interface to the index search
-            results = QuicksearchManager(query).generate_results()
-            ResultRenderer().show(results, query)
-
-        except TooManyRowsError as e:
-            html.show_warning(str(e))
-
-        except MKException as e:
-            html.show_error("%s" % e)
-
-        except Exception:
-            logger.exception("error generating quicksearch results")
-            if config.debug:
-                raise
-            html.show_error(traceback.format_exc())
-
-    def _page_search_open(self) -> None:
-        """Generate the URL to the view that is opened when confirming the search field"""
-        query = _maybe_strip(html.request.var('q'))
-        if not query:
-            return
-
-        raise HTTPRedirect(QuicksearchManager(query).generate_search_url())
-
-
 def _to_regex(s):
     """Ensures the provided search string is a regex, does some basic conversion
     and then tries to verify it is a regex"""
@@ -681,6 +598,89 @@ def _maybe_strip(param: Optional[str]) -> Optional[str]:
     if param is None:
         return None
     return param.strip()
+
+
+@snapin_registry.register
+class QuicksearchSnapin(SidebarSnapin):
+    def __init__(self, name=""):
+        self._name = name
+        self._placeholder = f'{_("Search in")} {_(self._name.capitalize())}'
+        self._input_id = f"mk_side_search_field_{self._name}"
+        super().__init__()
+
+    @classmethod
+    def type_name(cls):
+        return "search"
+
+    @classmethod
+    def title(cls):
+        return _("Quicksearch")
+
+    @classmethod
+    def description(cls):
+        return _(
+            "Interactive search field for direct access to hosts, services, host- and "
+            "servicegroups.<br>You can use the following filters:<br> <i>h:</i> Host, <i>s:</i> Service<br> "
+            "<i>hg:</i> Hostgroup, <i>sg:</i> Servicegroup<br><i>ad:</i> Address, <i>al:</i> Alias, <i>tg:</i> Hosttag"
+        )
+
+    def show(self):
+        html.open_div(id_="mk_side_search",
+                      class_="content_center",
+                      onclick="cmk.quicksearch.close_popup();")
+        html.input(id_=self._input_id,
+                   type_="text",
+                   name="search",
+                   autocomplete="off",
+                   placeholder=self._placeholder)
+        html.icon_button("#",
+                         _("Search"),
+                         "quicksearch",
+                         onclick="cmk.quicksearch.on_search_click();")
+        html.close_div()
+        html.div('', id_="mk_side_clear")
+        html.javascript(f"cmk.quicksearch.register_search_field('{self._input_id}');")
+
+    @classmethod
+    def allowed_roles(cls):
+        return ["user", "admin", "guest"]
+
+    def page_handlers(self) -> PageHandlers:
+        return {
+            "ajax_search": self._ajax_search,
+            "search_open": self._page_search_open,
+        }
+
+    def _ajax_search(self) -> None:
+        """Generate the search result list"""
+        query = _maybe_strip(html.request.get_unicode_input('q'))
+        if not query:
+            return
+
+        try:
+            # TODO: Integrate here the interface to the index search
+            results = QuicksearchManager(query).generate_results()
+            ResultRenderer().show(results, query)
+
+        except TooManyRowsError as e:
+            html.show_warning(str(e))
+
+        except MKException as e:
+            html.show_error("%s" % e)
+
+        except Exception:
+            logger.exception("error generating quicksearch results")
+            if config.debug:
+                raise
+            html.show_error(traceback.format_exc())
+
+    def _page_search_open(self) -> None:
+        """Generate the URL to the view that is opened when confirming the search field"""
+        query = _maybe_strip(html.request.var('q'))
+        if not query:
+            return
+
+        raise HTTPRedirect(QuicksearchManager(query).generate_search_url())
 
 
 class ResultRenderer:

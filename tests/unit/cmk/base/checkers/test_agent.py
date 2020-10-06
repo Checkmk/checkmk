@@ -52,9 +52,11 @@ class TestParser:
             b"<<<a_section>>>",
             b"first line",
             b"second line",
+            b"<<<>>>",  # to be skipped
             b"<<<another_section>>>",
             b"first line",
             b"second line",
+            b"<<<>>>",  # to be skipped
         ))
 
         ahs = AgentParser(hostname, Path(""), logger).parse(OKResult(raw_data)).ok
@@ -155,6 +157,7 @@ class TestParser:
                 {"sep": "0", "cached": "23,42"},
             ),
             (b"my.section:sep(0):cached(23,42)", None, {}),  # invalid section name
+            (b"", None, {}),  # invalid section name
         ],
     )  # yapf: disable
     def test_section_header_options(self, headerline, section_name, section_options):

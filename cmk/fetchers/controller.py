@@ -21,6 +21,7 @@ from types import FrameType
 from typing import Any, Dict, Final, Iterator, List, Optional, Type, Union, NamedTuple
 
 import cmk.utils.log as log
+import cmk.utils.cleanup
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.paths import core_helper_config_dir
 from cmk.utils.type_defs import (
@@ -515,6 +516,9 @@ def run_fetchers(serial: ConfigSerial, host_name: HostName, mode: Mode, timeout:
 
     # Usually OMD_SITE/var/check_mk/core/fetcher-config/[config-serial]/[host].json
     _run_fetchers_from_file(file_name=json_file, mode=mode, timeout=timeout)
+
+    # Cleanup different things (like object specific caches)
+    cmk.utils.cleanup.cleanup_globals()
 
 
 def load_global_config(serial: ConfigSerial) -> None:

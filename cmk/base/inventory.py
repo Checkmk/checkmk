@@ -73,17 +73,16 @@ def do_inv(hostnames: List[HostName]) -> None:
             else:
                 ipaddress = ip_lookup.lookup_ip_address(host_config)
 
+            # TODO: Results are completely ignored here. We should process the results to make error
+            # visible on the console
+            multi_host_sections, _results = _get_multi_host_sections_for_inv(
+                config_cache, host_config, ipaddress)
+
             inventory_tree, status_data_tree = _do_inv_for(
-                config_cache,
                 host_config,
                 ipaddress,
-                sources=checkers.make_sources(
-                    host_config,
-                    ipaddress,
-                    mode=checkers.Mode.INVENTORY,
-                ),
-                multi_host_sections=None,
-            )[:2]
+                multi_host_sections=multi_host_sections,
+            )
             _run_inventory_export_hooks(host_config, inventory_tree)
             _show_inventory_results_on_console(inventory_tree, status_data_tree)
 
@@ -125,17 +124,13 @@ def do_inv_check(
     infotexts: List[str] = []
     long_infotexts: List[str] = []
 
-    sources = checkers.make_sources(
+    multi_host_sections, results = _get_multi_host_sections_for_inv(config_cache, host_config,
+                                                                    ipaddress)
+
+    inventory_tree, status_data_tree = _do_inv_for(
         host_config,
         ipaddress,
-        mode=checkers.Mode.INVENTORY,
-    )
-    inventory_tree, status_data_tree, results = _do_inv_for(
-        config_cache,
-        host_config,
-        ipaddress,
-        sources=sources,
-        multi_host_sections=None,
+        multi_host_sections=multi_host_sections,
     )
 
     #TODO add cluster if and only if all sources do not fail?
@@ -193,6 +188,38 @@ def do_inv_check(
     return status, infotexts, long_infotexts, []
 
 
+def _get_multi_host_sections_for_inv(
+    config_cache: config.ConfigCache,
+    host_config: config.HostConfig,
+    ipaddress: Optional[HostAddress],
+) -> Tuple[MultiHostSections, Sequence[Tuple[ABCSource, Result[ABCHostSections, Exception]]]]:
+    if host_config.is_cluster:
+        return MultiHostSections(), []
+
+    sources = checkers.make_sources(
+        host_config,
+        ipaddress,
+        mode=checkers.Mode.INVENTORY,
+    )
+
+    multi_host_sections = MultiHostSections()
+    results = checkers.update_host_sections(
+        multi_host_sections,
+        checkers.make_nodes(
+            config_cache,
+            host_config,
+            ipaddress,
+            checkers.Mode.INVENTORY,
+            sources,
+        ),
+        max_cachefile_age=host_config.max_cachefile_age,
+        selected_raw_sections=None,
+        host_config=host_config,
+    )
+
+    return multi_host_sections, results
+
+
 def _all_sources_fail(
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
@@ -237,10 +264,8 @@ def do_inventory_actions_during_checking_for(
         return  # nothing to do here
 
     _inventory_tree, status_data_tree = _do_inv_for(
-        config_cache,
         config.HostConfig.make_host_config(hostname),
         ipaddress,
-        sources=sources,
         multi_host_sections=multi_host_sections,
     )[:2]
     _save_status_data_tree(hostname, status_data_tree)
@@ -256,14 +281,11 @@ def _cleanup_status_data(hostname: HostName) -> None:
 
 
 def _do_inv_for(
-    config_cache: config.ConfigCache,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
     *,
-    sources: Sequence[ABCSource],
-    multi_host_sections: Optional[MultiHostSections],
-) -> Tuple[StructuredDataTree, StructuredDataTree, Sequence[Tuple[ABCSource, Result[ABCHostSections,
-                                                                                    Exception]]]]:
+    multi_host_sections: MultiHostSections,
+) -> Tuple[StructuredDataTree, StructuredDataTree]:
     hostname = host_config.hostname
 
     initialize_inventory_tree()
@@ -271,16 +293,13 @@ def _do_inv_for(
     status_data_tree = StructuredDataTree()
 
     node = inventory_tree.get_dict("software.applications.check_mk.cluster.")
-    results: Sequence[Tuple[ABCSource, Result[ABCHostSections, Exception]]] = []
     if host_config.is_cluster:
         node["is_cluster"] = True
         _do_inv_for_cluster(host_config, inventory_tree)
     else:
         node["is_cluster"] = False
-        results = _do_inv_for_realhost(
-            config_cache,
+        _do_inv_for_realhost(
             host_config,
-            sources,
             multi_host_sections,
             hostname,
             ipaddress,
@@ -290,7 +309,7 @@ def _do_inv_for(
 
     inventory_tree.normalize_nodes()
     status_data_tree.normalize_nodes()
-    return inventory_tree, status_data_tree, results
+    return inventory_tree, status_data_tree
 
 
 def _do_inv_for_cluster(host_config: config.HostConfig, inventory_tree: StructuredDataTree) -> None:
@@ -305,34 +324,13 @@ def _do_inv_for_cluster(host_config: config.HostConfig, inventory_tree: Structur
 
 
 def _do_inv_for_realhost(
-    config_cache: config.ConfigCache,
     host_config: config.HostConfig,
-    sources: Sequence[ABCSource],
-    multi_host_sections: Optional[MultiHostSections],
+    multi_host_sections: MultiHostSections,
     hostname: HostName,
     ipaddress: Optional[HostAddress],
     inventory_tree: StructuredDataTree,
     status_data_tree: StructuredDataTree,
-) -> Sequence[Tuple[ABCSource, Result[ABCHostSections, Exception]]]:
-    results: List[Tuple[ABCSource, Result[ABCHostSections, Exception]]] = []
-
-    if multi_host_sections is None:
-        multi_host_sections = MultiHostSections()
-        hs = checkers.update_host_sections(
-            multi_host_sections,
-            checkers.make_nodes(
-                config_cache,
-                host_config,
-                ipaddress,
-                checkers.Mode.INVENTORY,
-                sources,
-            ),
-            max_cachefile_age=host_config.max_cachefile_age,
-            selected_raw_sections=None,
-            host_config=host_config,
-        )
-        results.extend(hs)
-
+):
     section.section_step("Executing inventory plugins")
     console.verbose("Plugins:")
     for inventory_plugin in agent_based_register.iter_all_inventory_plugins():
@@ -359,7 +357,6 @@ def _do_inv_for_realhost(
         )
 
     console.verbose("\n")
-    return results
 
 
 def _aggregate_inventory_results(

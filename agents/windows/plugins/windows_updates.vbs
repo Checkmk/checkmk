@@ -1,4 +1,3 @@
-VERSION="2.0.0i1"
 ' -----------------------------------------------------------------------------------------
 ' windows_updates.vbs - check_mk agent plugin to monitor pending windows updates indirectly
 '
@@ -22,6 +21,7 @@ VERSION="2.0.0i1"
 ' -----------------------------------------------------------------------------------------
 
 Option Explicit
+Const CMK_VERSION = "2.0.0i1"
 
 Dim fso
 Dim objStdout

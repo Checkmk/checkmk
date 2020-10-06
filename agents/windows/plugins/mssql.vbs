@@ -1,4 +1,3 @@
-VERSION="2.0.0i1"
 ' -----------------------------------------------------------------------------
 ' Check_MK windows agent plugin to gather information from local MSSQL servers
 '
@@ -35,6 +34,7 @@ VERSION="2.0.0i1"
 ' -----------------------------------------------------------------------------
 
 Option Explicit
+Const CMK_VERSION = "2.0.0i1"
 
 Dim WMI, FSO, SHO, items, objItem, prop, instVersion, registry
 Dim sources, instances, instance, instance_id, instance_name, instance_excluded

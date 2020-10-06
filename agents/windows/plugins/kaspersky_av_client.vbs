@@ -1,4 +1,3 @@
-VERSION="2.0.0i1"
 ' -----------------------------------------------------------------------------
 ' Check_MK windows agent plugin to gather information abount fullscan age and
 ' signature date and connection date to Kaspersky Management Server of
@@ -7,6 +6,7 @@ VERSION="2.0.0i1"
 ' -----------------------------------------------------------------------------
 
 Option Explicit
+Const CMK_VERSION = "2.0.0i1"
 dim strStatisticsLoc, strProtection_BasesDate, strProtection_LastFscan, strProtection_LastConnected
 dim strBIASLoc, strBIAS
 dim objShell

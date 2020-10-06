@@ -12,8 +12,6 @@ from typing import Dict, List
 
 import pytest  # type: ignore[import]
 # No stub file
-from testlib import CheckManager  # type: ignore[import]
-# No stub file
 from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.utils.exceptions import MKGeneralException
@@ -29,6 +27,7 @@ from cmk.base.check_utils import Service
 
 # TODO: This misses a lot of cases
 # - different get_check_table arguments
+@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.parametrize(
     "hostname,expected_result",
     [
@@ -183,10 +182,10 @@ def test_get_check_table(monkeypatch, hostname, expected_result):
     config_cache = ts.apply(monkeypatch)
     monkeypatch.setattr(config_cache, "get_autochecks_of", lambda h: autochecks.get(h, []))
 
-    CheckManager().load(["smart"])
     assert check_table.get_check_table(hostname) == expected_result
 
 
+@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.parametrize("hostname, expected_result", [
     ("mgmt-board-ipmi", [(CheckPluginName("mgmt_ipmi_sensors"), "TEMP X")]),
     ("ipmi-host", [(CheckPluginName("ipmi_sensors"), "TEMP Y")]),
@@ -227,11 +226,11 @@ def test_get_check_table_of_mgmt_boards(monkeypatch, hostname, expected_result):
     config_cache = ts.apply(monkeypatch)
     monkeypatch.setattr(config_cache, "get_autochecks_of", lambda h: autochecks.get(h, []))
 
-    CheckManager().load(["mgmt_ipmi_sensors", "ipmi_sensors"])
     assert list(check_table.get_check_table(hostname).keys()) == expected_result
 
 
 # verify static check outcome, including timespecific params
+@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.parametrize(
     "hostname,expected_result",
     [
@@ -333,7 +332,6 @@ def test_get_check_table_of_static_check(monkeypatch, hostname, expected_result)
     config_cache = ts.apply(monkeypatch)
     monkeypatch.setattr(config_cache, "get_autochecks_of", lambda h: static_checks.get(h, []))
 
-    CheckManager().load(["df"])
     assert list(check_table.get_check_table(hostname).keys()) == expected_result
 
 

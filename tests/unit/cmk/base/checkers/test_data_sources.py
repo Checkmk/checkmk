@@ -43,6 +43,7 @@ def make_scenario(hostname, tags):
     return ts
 
 
+@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.parametrize("hostname, tags, sources", [
     ("agent-host", {}, [TCPSource, PiggybackSource]),
     (

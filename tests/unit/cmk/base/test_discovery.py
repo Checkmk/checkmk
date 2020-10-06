@@ -7,7 +7,7 @@
 # pylint: disable=redefined-outer-name,protected-access
 
 import pytest  # type: ignore[import]
-from typing import Dict, Set, NamedTuple, Counter
+from typing import Dict, Set, NamedTuple, Counter, Tuple
 
 # No stub files
 from testlib.base import Scenario  # type: ignore[import]
@@ -952,8 +952,8 @@ RealHostScenario = NamedTuple("RealHostScenario", [
 
 @pytest.fixture(name="realhost_scenario")
 def _realhost_scenario(monkeypatch):
-    hostname = "test-host"
-    ipaddress = "127.0.0.1"
+    hostname = "test-realhost"
+    ipaddress = "1.2.3.4"
     ts = Scenario().add_host(hostname, ipaddress=ipaddress)
     ts.set_ruleset("inventory_df_rules", [{
         'value': {
@@ -967,6 +967,11 @@ def _realhost_scenario(monkeypatch):
         }
     }])
     ts.apply(monkeypatch)
+
+    def fake_lookup_ip_address(host_config, family=None, for_mgmt_board=True):
+        return ipaddress
+
+    monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
 
     DiscoveredHostLabelsStore(hostname).save({
         'existing_label': {
@@ -998,7 +1003,7 @@ def _realhost_scenario(monkeypatch):
                                     '3668',
                                     '519580',
                                     '1%',
-                                    '/boot/efi',
+                                    '/boot/test-efi',
                                 ],
                                 [
                                     'tmpfs',
@@ -1007,7 +1012,7 @@ def _realhost_scenario(monkeypatch):
                                     '244',
                                     '8152672',
                                     '1%',
-                                    '/opt/omd/sites/heute/tmp',
+                                    '/opt/omd/sites/test-heute/tmp',
                                 ],
                             ],
                         })
@@ -1026,21 +1031,13 @@ ClusterScenario = NamedTuple("ClusterScenario", [
 
 @pytest.fixture(name="cluster_scenario")
 def _cluster_scenario(monkeypatch):
-    hostname = "test-cluster"
-    ipaddress = "127.0.0.1"
+    hostname = "test-clusterhost"
+    ipaddress = "1.2.3.4"
     node1_hostname = 'test-node1'
-    node1_ipaddress = "127.0.0.2"
     node2_hostname = 'test-node2'
-    node2_ipaddress = "127.0.0.3"
-
-    ipaddresses = {
-        hostname: ipaddress,
-        node1_hostname: node1_ipaddress,
-        node2_hostname: node2_ipaddress,
-    }
 
     def fake_lookup_ip_address(host_config, family=None, for_mgmt_board=True):
-        return ipaddresses.get(host_config.hostname)
+        return ipaddress
 
     monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
 
@@ -1060,8 +1057,7 @@ def _cluster_scenario(monkeypatch):
         }
     }])
     ts.set_ruleset("clustered_services", [([], [node1_hostname], ['fs_'])])
-    config_cache = ts.apply(monkeypatch)
-    host_config = config_cache.get_host_config(hostname)
+    host_config = ts.apply(monkeypatch).get_host_config(hostname)
 
     DiscoveredHostLabelsStore(node1_hostname).save(
         {'node1_existing_label': {
@@ -1085,62 +1081,60 @@ def _cluster_scenario(monkeypatch):
         ipaddress,
         MultiHostSections(
             data={
-                HostKey(hostname=node1_hostname,
-                        ipaddress=node1_ipaddress,
-                        source_type=SourceType.HOST): AgentHostSections(
-                    sections={
-                        SectionName("labels"): [[
-                            '{"cmk/check_mk_server":"yes"}',
-                        ],],
-                        SectionName("df"): [
-                            [
-                                '/dev/sda1',
-                                'vfat',
-                                '523248',
-                                '3668',
-                                '519580',
-                                '1%',
-                                '/boot/efi',
+                HostKey(hostname=node1_hostname, ipaddress=ipaddress, source_type=SourceType.HOST):
+                    AgentHostSections(
+                        sections={
+                            SectionName("labels"): [[
+                                '{"cmk/check_mk_server":"yes"}',
+                            ],],
+                            SectionName("df"): [
+                                [
+                                    '/dev/sda1',
+                                    'vfat',
+                                    '523248',
+                                    '3668',
+                                    '519580',
+                                    '1%',
+                                    '/boot/test-efi',
+                                ],
+                                [
+                                    'tmpfs',
+                                    'tmpfs',
+                                    '8152916',
+                                    '244',
+                                    '8152672',
+                                    '1%',
+                                    '/opt/omd/sites/test-heute/tmp',
+                                ],
                             ],
-                            [
-                                'tmpfs',
-                                'tmpfs',
-                                '8152916',
-                                '244',
-                                '8152672',
-                                '1%',
-                                '/opt/omd/sites/heute1/tmp',
+                        }),
+                HostKey(hostname=node2_hostname, ipaddress=ipaddress, source_type=SourceType.HOST):
+                    AgentHostSections(
+                        sections={
+                            SectionName("labels"): [[
+                                '{"node2_live_label":"true"}',
+                            ],],
+                            SectionName("df"): [
+                                [
+                                    '/dev/sda1',
+                                    'vfat',
+                                    '523248',
+                                    '3668',
+                                    '519580',
+                                    '1%',
+                                    '/boot/test-efi',
+                                ],
+                                [
+                                    'tmpfs',
+                                    'tmpfs',
+                                    '8152916',
+                                    '244',
+                                    '8152672',
+                                    '1%',
+                                    '/opt/omd/sites/test-heute2/tmp',
+                                ],
                             ],
-                        ],
-                    }),
-                HostKey(hostname=node2_hostname,
-                        ipaddress=node2_ipaddress,
-                        source_type=SourceType.HOST): AgentHostSections(
-                    sections={
-                        SectionName("labels"): [[
-                            '{"node2_live_label":"true"}',
-                        ],],
-                        SectionName("df"): [
-                            [
-                                '/dev/sda1',
-                                'vfat',
-                                '523248',
-                                '3668',
-                                '519580',
-                                '1%',
-                                '/boot/efi',
-                            ],
-                            [
-                                'tmpfs',
-                                'tmpfs',
-                                '8152916',
-                                '244',
-                                '8152672',
-                                '1%',
-                                '/opt/omd/sites/heute2/tmp',
-                            ],
-                        ],
-                    }),
+                        }),
             }),
         node1_hostname,
         node2_hostname,
@@ -1148,11 +1142,13 @@ def _cluster_scenario(monkeypatch):
 
 
 ExpectedDiscoveryResultRealHost = NamedTuple("ExpectedDiscoveryResultRealHost", [
+    ("expected_per_plugin", Counter[str]),
     ("expected_return_labels", DiscoveredHostLabels),
     ("expected_stored_labels", Dict),
 ])
 
 ExpectedDiscoveryResultCluster = NamedTuple("ExpectedDiscoveryResultCluster", [
+    ("expected_per_plugin", Counter[str]),
     ("expected_return_labels", DiscoveredHostLabels),
     ("expected_stored_labels_cluster", Dict),
     ("expected_stored_labels_node1", Dict),
@@ -1161,6 +1157,7 @@ ExpectedDiscoveryResultCluster = NamedTuple("ExpectedDiscoveryResultCluster", [
 
 DiscoveryTestCase = NamedTuple("DiscoveryTestCase", [
     ("parameters", discovery.DiscoveryParameters),
+    ("expected_services", Set[Tuple[CheckPluginName, str]]),
     ("on_realhost", ExpectedDiscoveryResultRealHost),
     ("on_cluster", ExpectedDiscoveryResultCluster),
 ])
@@ -1174,7 +1171,11 @@ _discovery_test_cases = [
             load_labels=True,
             save_labels=True,
         ),
+        expected_services={
+            (CheckPluginName('df'), '/boot/test-efi'),
+        },
         on_realhost=ExpectedDiscoveryResultRealHost(
+            expected_per_plugin=Counter({"labels": 1}),
             expected_return_labels=DiscoveredHostLabels(
                 HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),
                 HostLabel('another_label', 'true', plugin_name='labels'),
@@ -1196,6 +1197,7 @@ _discovery_test_cases = [
             },
         ),
         on_cluster=ExpectedDiscoveryResultCluster(
+            expected_per_plugin=Counter({"labels": 2}),
             expected_return_labels=DiscoveredHostLabels(
                 HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),
                 HostLabel('existing_label', 'bar', plugin_name='foo'),
@@ -1236,7 +1238,11 @@ _discovery_test_cases = [
             load_labels=True,
             save_labels=False,
         ),
+        expected_services={
+            (CheckPluginName('df'), '/boot/test-efi'),
+        },
         on_realhost=ExpectedDiscoveryResultRealHost(
+            expected_per_plugin=Counter({"labels": 1}),
             expected_return_labels=DiscoveredHostLabels(
                 HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),
                 HostLabel('another_label', 'true', plugin_name='labels'),
@@ -1254,6 +1260,7 @@ _discovery_test_cases = [
             },
         ),
         on_cluster=ExpectedDiscoveryResultCluster(
+            expected_per_plugin=Counter({"labels": 2}),
             expected_return_labels=DiscoveredHostLabels(
                 HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),
                 HostLabel('existing_label', 'bar', plugin_name='foo'),
@@ -1286,7 +1293,11 @@ _discovery_test_cases = [
             load_labels=False,
             save_labels=True,
         ),
+        expected_services={
+            (CheckPluginName('df'), '/boot/test-efi'),
+        },
         on_realhost=ExpectedDiscoveryResultRealHost(
+            expected_per_plugin=Counter({"labels": 1}),
             expected_return_labels=DiscoveredHostLabels(
                 HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),),
             expected_stored_labels={
@@ -1297,6 +1308,7 @@ _discovery_test_cases = [
             },
         ),
         on_cluster=ExpectedDiscoveryResultCluster(
+            expected_per_plugin=Counter({"labels": 2}),
             expected_return_labels=DiscoveredHostLabels(
                 HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),
                 HostLabel('node2_live_label', 'true', plugin_name='labels'),
@@ -1329,7 +1341,11 @@ _discovery_test_cases = [
             load_labels=False,
             save_labels=False,
         ),
+        expected_services={
+            (CheckPluginName('df'), '/boot/test-efi'),
+        },
         on_realhost=ExpectedDiscoveryResultRealHost(
+            expected_per_plugin=Counter({"labels": 1}),
             expected_return_labels=DiscoveredHostLabels(
                 HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),),
             expected_stored_labels={
@@ -1344,6 +1360,7 @@ _discovery_test_cases = [
             },
         ),
         on_cluster=ExpectedDiscoveryResultCluster(
+            expected_per_plugin=Counter({"labels": 2}),
             expected_return_labels=DiscoveredHostLabels(
                 HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),
                 HostLabel('node2_live_label', 'true', plugin_name='labels'),
@@ -1383,18 +1400,15 @@ def test__discover_host_labels_and_services_on_realhost(realhost_scenario, disco
             scenario.ipaddress,
             scenario.multi_host_sections,
             discovery_parameters,
-            check_plugin_whitelist={CheckPluginName('df')},
+            check_plugin_whitelist=None,
         )
 
     assert host_label_discovery_result.labels == DiscoveredHostLabels(
         HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'))
 
     services = {(s.check_plugin_name, s.item) for s in discovered_services}
-    expected_services: Set = {
-        (CheckPluginName('df'), '/boot/efi'),
-    }
 
-    assert services == expected_services
+    assert services == discovery_test_case.expected_services
 
 
 @pytest.mark.usefixtures("config_load_all_checks")
@@ -1419,7 +1433,7 @@ def test__perform_host_label_discovery_on_realhost(realhost_scenario, discovery_
             discovery_parameters,
         )
 
-    assert new_host_labels_per_plugin == Counter({"labels": 1})
+    assert new_host_labels_per_plugin == discovery_test_case.on_realhost.expected_per_plugin
 
     assert return_host_labels == discovery_test_case.on_realhost.expected_return_labels
 
@@ -1448,11 +1462,8 @@ def test__discover_host_labels_and_services_on_cluster(cluster_scenario, discove
     )
 
     services = set(discovered_services)
-    expected_services: Set = {
-        (CheckPluginName('df'), '/boot/efi'),
-    }
 
-    assert services == expected_services
+    assert services == discovery_test_case.expected_services
 
 
 @pytest.mark.usefixtures("config_load_all_checks")
@@ -1476,12 +1487,12 @@ def test__perform_host_label_discovery_on_cluster(cluster_scenario, discovery_te
             discovery_parameters,
         )
 
-    assert new_host_labels_per_plugin == Counter({"labels": 2})
+    assert new_host_labels_per_plugin == discovery_test_case.on_cluster.expected_per_plugin
 
     assert return_host_labels == discovery_test_case.on_cluster.expected_return_labels
 
-    assert (DiscoveredHostLabelsStore(scenario.host_config.hostname).load() ==
-            discovery_test_case.on_cluster.expected_stored_labels_cluster)
+    assert DiscoveredHostLabelsStore(scenario.host_config.hostname).load(
+    ) == discovery_test_case.on_cluster.expected_stored_labels_cluster
 
     assert (DiscoveredHostLabelsStore(scenario.node1_hostname).load() ==
             discovery_test_case.on_cluster.expected_stored_labels_node1)

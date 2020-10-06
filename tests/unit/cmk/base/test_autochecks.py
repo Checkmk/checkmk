@@ -9,7 +9,6 @@ from pathlib import Path
 
 import pytest  # type: ignore[import]
 
-from testlib import CheckManager
 from testlib.base import Scenario
 
 import cmk.utils.paths
@@ -33,11 +32,11 @@ def autochecks_dir(monkeypatch, tmp_path):
 
 @pytest.fixture()
 def test_config(monkeypatch):
-    CheckManager().load(["df", "cpu", "chrony", "lnx_if"])
     ts = Scenario().add_host("host")
     return ts.apply(monkeypatch)
 
 
+@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.parametrize(
     "autochecks_content,expected_result",
     [
@@ -138,6 +137,7 @@ def test_parse_autochecks_file_not_existing():
     assert autochecks.parse_autochecks_file("host", config.service_description) == []
 
 
+@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.parametrize(
     "autochecks_content,expected_result",
     [

@@ -9,7 +9,6 @@ from contextlib import suppress
 from pathlib import Path
 import shutil
 
-from testlib import CheckManager
 from testlib.base import Scenario
 
 import cmk.utils.paths
@@ -79,6 +78,7 @@ def test_get_host_attributes(fixup_ip_lookup, monkeypatch):
     assert attrs == expected_attrs
 
 
+@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.parametrize("hostname,result", [
     ("localhost", {
         'check_interval': 1.0,
@@ -89,8 +89,6 @@ def test_get_host_attributes(fixup_ip_lookup, monkeypatch):
     }),
 ])
 def test_get_cmk_passive_service_attributes(monkeypatch, hostname, result):
-    CheckManager().load(["cpu"])
-
     ts = Scenario().add_host("localhost")
     ts.add_host("blub")
     ts.set_option(

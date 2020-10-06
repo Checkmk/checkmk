@@ -10,8 +10,6 @@ import pytest  # type: ignore[import]
 from six import ensure_str
 
 # No stub file
-from testlib import CheckManager  # type: ignore[import]
-# No stub file
 from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
@@ -1163,6 +1161,7 @@ def test_host_config_snmp_credentials_of_version(monkeypatch, hostname, version,
     assert config_cache.get_host_config(hostname).snmp_credentials_of_version(version) == result
 
 
+@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.parametrize("hostname,section_name,result", [
     ("testhost1", "uptime", None),
     ("testhost2", "uptime", None),
@@ -1170,7 +1169,6 @@ def test_host_config_snmp_credentials_of_version(monkeypatch, hostname, version,
     ("testhost2", "snmp_uptime", 4),
 ])
 def test_host_config_snmp_check_interval(monkeypatch, hostname, section_name, result):
-    CheckManager().load(["uptime", "snmp_uptime"])
     ts = Scenario().add_host(hostname)
     ts.set_ruleset("snmp_check_interval", [
         (("snmp_uptime", 4), [], ["testhost2"], {}),
@@ -1452,8 +1450,8 @@ def test_labels_of_service(monkeypatch):
     }
 
 
+@pytest.mark.usefixtures("config_load_all_checks")
 def test_labels_of_service_discovered_labels(monkeypatch, tmp_path):
-    CheckManager().load(["cpu"])
     ts = Scenario().add_host("test-host")
 
     monkeypatch.setattr(cmk.utils.paths, "autochecks_dir", str(tmp_path))
@@ -1513,12 +1511,12 @@ def test_config_cache_extra_attributes_of_service(monkeypatch, hostname, result)
     assert config_cache.extra_attributes_of_service(hostname, "CPU load") == result
 
 
+@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.parametrize("hostname,result", [
     ("testhost1", []),
     ("testhost2", ["icon1", "icon2"]),
 ])
 def test_config_cache_icons_and_actions(monkeypatch, hostname, result):
-    CheckManager().load(["ps"])
     ts = Scenario().add_host(hostname)
     ts.set_ruleset("service_icons_and_actions", [
         ("icon1", [], ["testhost2"], "CPU load$", {}),

@@ -1079,8 +1079,10 @@ if '-d' in sys.argv:
 """)
 
     file_list = sorted(_get_legacy_check_file_names_to_load(needed_legacy_check_plugin_names))
-    output.write("config.load_checks(check_api.get_check_api_context, [\n    %s,\n])\n" %
-                 ",\n    ".join("%r" % n for n in file_list))
+    formatted_file_list = ("\n    %s,\n" %
+                           ",\n    ".join("%r" % n for n in file_list) if file_list else "")
+    output.write("config.load_checks(check_api.get_check_api_context, [%s])\n" %
+                 formatted_file_list)
 
     for check_plugin_name in sorted(needed_legacy_check_plugin_names):
         console.verbose(" %s%s%s", tty.green, check_plugin_name, tty.normal, stream=sys.stderr)

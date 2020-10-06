@@ -144,6 +144,9 @@
             font-weight: bold;
             color: $font-color;
 
+            span { margin-left: 22px; }
+            img + span { margin-left: 0; } /* No spacing if icons per entry are used */
+
             a.show_all_topics {
               img {
                 display: none;
@@ -171,6 +174,13 @@
           }
 
           li {
+            a {
+              display: block;
+              margin-left: 28px;
+
+              & > img, & > span { margin-left: -28px; } /* No spacing if icons per entry are used */
+            }
+
             img.icon {
               width: 14px;
               height: 14px;
@@ -179,16 +189,9 @@
 
             &.show_all_items {
               display: none;
+              margin-top: $spacing;
               a { font-weight: 700; }
             }
-          }
-
-          hr {
-            width: 50px;
-            margin-bottom: 2px;
-            margin-left: 0;
-            color: transparent;
-            border-bottom: 1px solid rgba($font-color, .6);
           }
 
           &:not(.extended) li.extended { display: none; }
@@ -201,6 +204,8 @@
               position: fixed;
               z-index: 5;
               padding-top: 22px;
+
+              span { margin-left: 0; }
 
               a.show_all_topics img { display: block; }
             }

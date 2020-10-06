@@ -161,10 +161,11 @@ class MegaMenuRenderer:
         for item in topic.items:
             self._show_item(item)
         html.open_li(class_="show_all_items")
-        html.hr()
-        html.a(content=_("Show all"),
-               href="",
-               onclick="cmk.popup_menu.mega_menu_show_all_items('%s')" % topic_id)
+        html.open_a(href="", onclick="cmk.popup_menu.mega_menu_show_all_items('%s')" % topic_id)
+        if config.user.get_attribute("icons_per_item"):
+            html.icon("trans")
+        html.write_text(_("Show all"))
+        html.close_a()
         html.close_li()
         html.close_ul()
 
@@ -175,8 +176,8 @@ class MegaMenuRenderer:
             target="main",
             onclick="cmk.popup_menu.close_popup()",
         )
-        if config.user.get_attribute("icons_per_item") and item.icon_name:
-            html.icon(item.icon_name, emblem=item.emblem)
+        if config.user.get_attribute("icons_per_item"):
+            html.icon(item.icon_name or "trans", emblem=item.emblem)
         html.write_text(item.title)
         html.close_a()
         html.close_li()

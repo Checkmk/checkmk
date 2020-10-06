@@ -390,50 +390,39 @@ class FilterAddressFamilies(Filter):
 
 
 class FilterMultigroup(Filter):
-    # TODO: rename "what"
     def __init__(self,
                  *,
                  ident: str,
                  title: str,
                  sort_index: int,
-                 what: str,
+                 group_type: str,
                  description: Optional[str] = None):
-
-        self.htmlvar = what + "groups"
-        htmlvars = [self.htmlvar]
-
-        # TODO: Is always negateable. Cleanup the class.
-        self.negateable = True
-        if self.negateable:
-            htmlvars.append("neg_" + self.htmlvar)
-
+        htmlvar = group_type + "groups"
         super().__init__(ident=ident,
                          title=title,
                          sort_index=sort_index,
-                         info=what,
-                         htmlvars=htmlvars,
+                         info=group_type,
+                         htmlvars=[htmlvar, "neg_" + htmlvar],
                          link_columns=[],
                          description=description)
-        self.what = what
+        self.group_type = group_type
 
     def valuespec(self):
-        return DualListChoice(choices=self._get_choices(),
-                              rows=3 if self.negateable else 4,
-                              enlarge_active=True)
+        return DualListChoice(choices=self._get_choices(), rows=4, enlarge_active=True)
 
     def _get_choices(self):
-        return sites.all_groups(self.what)
+        return sites.all_groups(self.group_type)
 
     def selection(self):
-        current = html.request.get_str_input_mandatory(self.htmlvar, "").strip().split("|")
+        current = html.request.get_str_input_mandatory(self.htmlvars[0], "").strip().split("|")
         if current == ['']:
             return []
         return current
 
     def display(self) -> None:
         html.open_div(class_="multigroup")
-        self.valuespec().render_input(self.htmlvar, self.selection())
-        if self._get_choices() and self.negateable:
+        self.valuespec().render_input(self.htmlvars[0], self.selection())
+        if self._get_choices():
             html.open_nobr()
             html.checkbox(self.htmlvars[1], False, label=_("negate"))
             html.close_nobr()
@@ -441,7 +430,7 @@ class FilterMultigroup(Filter):
 
     def filter(self, infoname):
         # not (A or B) => (not A) and (not B)
-        if self.negateable and html.get_checkbox(self.htmlvars[1]):
+        if html.get_checkbox(self.htmlvars[1]):
             negate = "!"
             op = "And"
         else:
@@ -449,7 +438,7 @@ class FilterMultigroup(Filter):
             op = "Or"
 
         current = self.selection()
-        return lq_logic("Filter: %s_groups %s>=" % (self.what, negate), current, op)
+        return lq_logic("Filter: %s_groups %s>=" % (self.group_type, negate), current, op)
 
 
 filter_registry.register(
@@ -458,7 +447,7 @@ filter_registry.register(
         title=_l("Several Host Groups"),
         sort_index=105,
         description=_l("Selection of multiple host groups"),
-        what="host",
+        group_type="host",
     ))
 
 filter_registry.register(
@@ -467,7 +456,7 @@ filter_registry.register(
         title=_l("Several Service Groups"),
         sort_index=205,
         description=_l("Selection of multiple service groups"),
-        what="service",
+        group_type="service",
     ))
 
 

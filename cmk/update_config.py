@@ -57,6 +57,7 @@ from cmk.gui.plugins.wato.check_parameters.diskstat import transform_diskstat  #
 
 # mapping removed check plugins to their replacement:
 REMOVED_CHECK_PLUGIN_MAP = {
+    CheckPluginName("snmp_uptime"): CheckPluginName("uptime"),
     CheckPluginName("ps_perf"): CheckPluginName("ps"),
     CheckPluginName("aix_memory"): CheckPluginName("mem_used"),
     CheckPluginName("docker_container_mem"): CheckPluginName("mem_used"),

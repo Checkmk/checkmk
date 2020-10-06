@@ -8,9 +8,13 @@
 # <<<uptime>>>
 # 15876.96 187476.72
 
+from typing import Optional
 import re
 import datetime
-import cmk.base.plugins.agent_based.utils.uptime as uptime
+
+from .agent_based_api.v1.type_defs import AgentStringTable
+from .agent_based_api.v1 import register
+from .utils import uptime
 
 
 def parse_human_read_uptime(string: str) -> int:
@@ -97,7 +101,10 @@ unix:0:system_misc:snaptime     1131.467157594                     # snaptime
     )
 
 
-def uptime_parse(info):
+def parse_uptime(string_table: AgentStringTable) -> Optional[uptime.Section]:
+    if not string_table:
+        return None
+
     def extract_solaris_subsection(info):
         is_solaris = False
         solaris_info = []
@@ -113,30 +120,26 @@ def uptime_parse(info):
                 solaris_info.append(line)
         return solaris_info
 
-    if info:
-        from_boot_time = float(info[0][0])
-        solaris_info = extract_solaris_subsection(info)
+    from_boot_time = float(string_table[0][0])
+    solaris_info = extract_solaris_subsection(string_table)
 
-        if solaris_info:
-            return parse_solaris_uptime(solaris_info, from_boot_time)
+    if solaris_info:
+        return parse_solaris_uptime(solaris_info, from_boot_time)
 
-        return uptime.Section(from_boot_time, None)
-
-
-def check_uptime(_no_item, params, parsed):
-
-    if parsed.uptime_sec is not None:
-        yield check_uptime_seconds(params, parsed.uptime_sec)
-    if parsed.message is not None:
-        yield 3, parsed.message
+    return uptime.Section(from_boot_time, None)
 
 
-check_info["uptime"] = {
-    'parse_function': uptime_parse,
-    'check_function': check_uptime,
-    'inventory_function': discover_single,
-    'service_description': 'Uptime',
-    'has_perfdata': True,
-    'includes': ['uptime.include'],
-    'group': 'uptime',
-}
+register.agent_section(
+    name="uptime",
+    supersedes=["snmp_uptime"],
+    parse_function=parse_uptime,
+)
+
+register.check_plugin(
+    name="uptime",
+    service_name="Uptime",
+    discovery_function=uptime.discover,
+    check_function=uptime.check,
+    check_default_parameters={},
+    check_ruleset_name="uptime",
+)

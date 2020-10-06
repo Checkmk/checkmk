@@ -17,7 +17,7 @@ import pytest  # type: ignore[import]
 from testlib.base import Scenario
 
 import cmk.utils.version as cmk_version
-from cmk.utils.type_defs import ConfigSerial
+from cmk.utils.type_defs import CheckPluginName, ConfigSerial
 
 import cmk.base.core_config as core_config
 import cmk.base.core_nagios as core_nagios
@@ -249,7 +249,11 @@ def test_dump_precompiled_hostcheck(monkeypatch, serial):
     config_cache = ts.apply(monkeypatch)
 
     # Ensure a host check is created
-    monkeypatch.setattr(core_nagios, "_get_needed_plugin_names", lambda c: (["uptime"], [], []))
+    monkeypatch.setattr(
+        core_nagios,
+        "_get_needed_plugin_names",
+        lambda c: ([], [CheckPluginName("uptime")], []),
+    )
 
     host_check = core_nagios._dump_precompiled_hostcheck(config_cache, serial, "localhost")
     assert host_check is not None
@@ -276,7 +280,11 @@ def test_compile_delayed_host_check(monkeypatch, serial):
     config_cache = ts.apply(monkeypatch)
 
     # Ensure a host check is created
-    monkeypatch.setattr(core_nagios, "_get_needed_plugin_names", lambda c: (["uptime"], [], []))
+    monkeypatch.setattr(
+        core_nagios,
+        "_get_needed_plugin_names",
+        lambda c: ([], [CheckPluginName("uptime")], []),
+    )
 
     source_file = core_nagios.HostCheckStore.host_check_source_file_path(serial, hostname)
     compiled_file = core_nagios.HostCheckStore.host_check_file_path(serial, hostname)

@@ -144,10 +144,9 @@ def round_to_day(ts):
 def inventory_if(
     params: Parameters,
     section_inv_if: Optional[SectionInvIf],
-    section_snmp_uptime: Optional[uptime.Section],
+    section_uptime: Optional[uptime.Section],
 ) -> InventoryResult:
-    if (section_inv_if is None or section_snmp_uptime is None or
-            section_snmp_uptime.uptime_sec is None):
+    if (section_inv_if is None or section_uptime is None or section_uptime.uptime_sec is None):
         return
 
     now = time.time()
@@ -163,7 +162,7 @@ def inventory_if(
     for interface in section_inv_if.interfaces:
 
         if interface.last_change > 0:
-            state_age = section_snmp_uptime.uptime_sec - interface.last_change
+            state_age = section_uptime.uptime_sec - interface.last_change
 
             # Assume counter rollover in case uptime is less than last_change and
             # add 497 days (counter maximum).
@@ -172,11 +171,11 @@ def inventory_if(
             # get the count of rollovers since change (or since uptime) and it's better the
             # wrong negative state change is not shown anymore...
             if state_age < 0:
-                state_age = 42949672 - interface.last_change + section_snmp_uptime.uptime_sec
+                state_age = 42949672 - interface.last_change + section_uptime.uptime_sec
 
         else:
             # Assume point of time of boot as last state change.
-            state_age = section_snmp_uptime.uptime_sec
+            state_age = section_uptime.uptime_sec
 
         last_change_timestamp = round_to_day(now - state_age)
 
@@ -225,5 +224,5 @@ register.inventory_plugin(
     inventory_function=inventory_if,
     inventory_default_parameters={},
     inventory_ruleset_name="inv_if",
-    sections=["inv_if", "snmp_uptime"],
+    sections=["inv_if", "uptime"],
 )

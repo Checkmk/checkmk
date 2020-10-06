@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Optional
+
 from .agent_based_api.v1.type_defs import SNMPStringTable
 from .agent_based_api.v1 import (
     exists,
@@ -13,20 +15,20 @@ from .agent_based_api.v1 import (
 from .utils import uptime
 
 
-def parse_snmp_uptime(string_table: SNMPStringTable) -> uptime.Section:
+def parse_snmp_uptime(string_table: SNMPStringTable) -> Optional[uptime.Section]:
     """
         >>> parse_snmp_uptime([[['2297331594', '']]])
         Section(uptime_sec=22973315, message=None)
         >>> parse_snmp_uptime([[['124:21:26:42.03', '124:21:29:01.14']]])
         Section(uptime_sec=10790941, message=None)
-        >>> parse_snmp_uptime([[[u'', u'Fortigate 80C']]])  # nonsense
-        Section(uptime_sec=None, message=None)
+        >>> None is parse_snmp_uptime([[[u'', u'Fortigate 80C']]])  # nonsense
+        True
 
     """
     ticks = string_table[0][0][1] or string_table[0][0][0]
 
     if len(ticks) < 3:
-        return uptime.Section(None, None)
+        return None
 
     try:
         return uptime.Section(int(ticks[:-2]), None)
@@ -42,11 +44,12 @@ def parse_snmp_uptime(string_table: SNMPStringTable) -> uptime.Section:
     except Exception:
         pass
 
-    return uptime.Section(None, None)
+    return None
 
 
 register.snmp_section(
     name="snmp_uptime",
+    parsed_section_name="uptime",
     parse_function=parse_snmp_uptime,
     trees=[
         SNMPTree(
@@ -60,13 +63,4 @@ register.snmp_section(
         ),
     ],
     detect=exists(".1.3.6.1.2.1.1.1.0"),
-)
-
-register.check_plugin(
-    name="snmp_uptime",
-    service_name="Uptime",
-    discovery_function=uptime.discover,
-    check_function=uptime.check,
-    check_default_parameters={},
-    check_ruleset_name="uptime",
 )

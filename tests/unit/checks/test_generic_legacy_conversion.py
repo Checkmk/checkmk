@@ -2777,7 +2777,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'ups_socomec_out_voltage',
         'ups_socomec_outphase',
         'ups_test',
-        'uptime',
         'varnish',
         'varnish.cache',
         'varnish.client',

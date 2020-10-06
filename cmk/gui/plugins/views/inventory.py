@@ -351,16 +351,21 @@ class ABCRowTable(RowTable):
 #   '----------------------------------------------------------------------'
 
 
-def decorate_inv_paint(f):
-    def wrapper(v):
-        if v in ["", None]:
-            return "", ""
-        return f(v)
+def decorate_inv_paint(skip_painting_if_string=False):
+    def decorator(f):
+        def wrapper(v):
+            if v in ["", None]:
+                return "", ""
+            if skip_painting_if_string and isinstance(v, str):
+                return "number", v
+            return f(v)
 
-    return wrapper
+        return wrapper
+
+    return decorator
 
 
-@decorate_inv_paint
+@decorate_inv_paint()
 def inv_paint_generic(v):
     if isinstance(v, float):
         return "number", "%.2f" % v
@@ -369,31 +374,31 @@ def inv_paint_generic(v):
     return "", escape_text("%s" % v)
 
 
-@decorate_inv_paint
+@decorate_inv_paint(skip_painting_if_string=True)
 def inv_paint_hz(hz):
     return "number", cmk.utils.render.fmt_number_with_precision(hz, drop_zeroes=False, unit="Hz")
 
 
-@decorate_inv_paint
+@decorate_inv_paint(skip_painting_if_string=True)
 def inv_paint_bytes(b):
     if b == 0:
         return "number", "0"
     return "number", cmk.utils.render.fmt_bytes(b, precision=0)
 
 
-@decorate_inv_paint
+@decorate_inv_paint(skip_painting_if_string=True)
 def inv_paint_size(b):
     return "number", cmk.utils.render.fmt_bytes(b)
 
 
-@decorate_inv_paint
+@decorate_inv_paint(skip_painting_if_string=True)
 def inv_paint_bytes_rounded(b):
     if b == 0:
         return "number", "0"
     return "number", cmk.utils.render.fmt_bytes(b)
 
 
-@decorate_inv_paint
+@decorate_inv_paint()
 def inv_paint_number(b):
     return "number", str(b)
 
@@ -401,17 +406,17 @@ def inv_paint_number(b):
 # Similar to paint_number, but is allowed to
 # abbreviate things if numbers are very large
 # (though it doesn't do so yet)
-@decorate_inv_paint
+@decorate_inv_paint()
 def inv_paint_count(b):
     return "number", str(b)
 
 
-@decorate_inv_paint
+@decorate_inv_paint()
 def inv_paint_nic_speed(bits_per_second):
     return "number", cmk.utils.render.fmt_nic_speed(bits_per_second)
 
 
-@decorate_inv_paint
+@decorate_inv_paint()
 def inv_paint_if_oper_status(oper_status):
     if oper_status == 1:
         css_class = "if_state_up"
@@ -425,42 +430,42 @@ def inv_paint_if_oper_status(oper_status):
 
 
 # admin status can only be 1 or 2, matches oper status :-)
-@decorate_inv_paint
+@decorate_inv_paint()
 def inv_paint_if_admin_status(admin_status):
     return inv_paint_if_oper_status(admin_status)
 
 
-@decorate_inv_paint
+@decorate_inv_paint()
 def inv_paint_if_port_type(port_type):
     type_name = defines.interface_port_types().get(port_type, _("unknown"))
     return "", "%d - %s" % (port_type, type_name)
 
 
-@decorate_inv_paint
+@decorate_inv_paint()
 def inv_paint_if_available(available):
     return "if_state " + (available and "if_available" or "if_not_available"), \
                          (available and _("free") or _("used"))
 
 
-@decorate_inv_paint
+@decorate_inv_paint()
 def inv_paint_mssql_is_clustered(clustered):
     return "mssql_" + (clustered and "is_clustered" or "is_not_clustered"), \
                       (clustered and _("is clustered") or _("is not clustered"))
 
 
-@decorate_inv_paint
+@decorate_inv_paint()
 def inv_paint_mssql_node_names(node_names):
     return "", node_names
 
 
-@decorate_inv_paint
+@decorate_inv_paint()
 def inv_paint_ipv4_network(nw):
     if nw == "0.0.0.0/0":
         return "", _("Default")
     return "", nw
 
 
-@decorate_inv_paint
+@decorate_inv_paint()
 def inv_paint_ip_address_type(t):
     if t == "ipv4":
         return "", _("IPv4")
@@ -469,47 +474,47 @@ def inv_paint_ip_address_type(t):
     return "", t
 
 
-@decorate_inv_paint
+@decorate_inv_paint()
 def inv_paint_route_type(rt):
     if rt == "local":
         return "", _("Local route")
     return "", _("Gateway route")
 
 
-@decorate_inv_paint
+@decorate_inv_paint(skip_painting_if_string=True)
 def inv_paint_volt(volt):
     return "number", "%.1f V" % volt
 
 
-@decorate_inv_paint
+@decorate_inv_paint(skip_painting_if_string=True)
 def inv_paint_date(timestamp):
     date_painted = time.strftime("%Y-%m-%d", time.localtime(timestamp))
     return "number", "%s" % date_painted
 
 
-@decorate_inv_paint
+@decorate_inv_paint(skip_painting_if_string=True)
 def inv_paint_date_and_time(timestamp):
     date_painted = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
     return "number", "%s" % date_painted
 
 
-@decorate_inv_paint
+@decorate_inv_paint(skip_painting_if_string=True)
 def inv_paint_age(age):
     return "number", cmk.utils.render.approx_age(age)
 
 
-@decorate_inv_paint
+@decorate_inv_paint()
 def inv_paint_bool(value):
     return "", (_("Yes") if value else _("No"))
 
 
-@decorate_inv_paint
+@decorate_inv_paint(skip_painting_if_string=True)
 def inv_paint_timestamp_as_age(timestamp):
     age = time.time() - timestamp
     return inv_paint_age(age)
 
 
-@decorate_inv_paint
+@decorate_inv_paint(skip_painting_if_string=True)
 def inv_paint_timestamp_as_age_days(timestamp):
     def round_to_day(ts):
         broken = time.localtime(ts)
@@ -538,12 +543,12 @@ def inv_paint_timestamp_as_age_days(timestamp):
     return css_class, "%d %s ago" % (int(age_days), _("days"))
 
 
-@decorate_inv_paint
+@decorate_inv_paint()
 def inv_paint_csv_labels(csv_list):
     return "labels", html.render_br().join(csv_list.split(","))
 
 
-@decorate_inv_paint
+@decorate_inv_paint()
 def inv_paint_cmk_label(label):
     return "labels", render_labels({label[0]: label[1]},
                                    object_type="host",
@@ -551,7 +556,7 @@ def inv_paint_cmk_label(label):
                                    label_sources={label[0]: "discovered"})
 
 
-@decorate_inv_paint
+@decorate_inv_paint()
 def inv_paint_container_ready(ready):
     if ready == 'yes':
         css_class = "if_state_up"
@@ -563,7 +568,7 @@ def inv_paint_container_ready(ready):
     return "if_state " + css_class, ready
 
 
-@decorate_inv_paint
+@decorate_inv_paint()
 def inv_paint_service_status(status):
     if status == 'running':
         css_class = "if_state_up"

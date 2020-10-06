@@ -465,13 +465,7 @@ class ModeRulesetGroup(ABCRulesetMode):
                 item=make_simple_link(watolib.folder_preserving_link([("mode", "agents")])),
             )
 
-        yield PageMenuEntry(
-            title=_("Rule search"),
-            icon_name="search",
-            item=make_simple_link(html.makeuri_contextless([
-                ("mode", "rule_search"),
-            ])),
-        )
+        yield _page_menu_entry_rule_search()
 
         yield from _page_menu_entries_predefined_searches()
 
@@ -518,6 +512,16 @@ def _page_menu_entry_predefined_conditions() -> PageMenuEntry:
         icon_name="condition",
         item=make_simple_link(watolib.folder_preserving_link([
             ("mode", "predefined_conditions"),
+        ])),
+    )
+
+
+def _page_menu_entry_rule_search() -> PageMenuEntry:
+    return PageMenuEntry(
+        title=_("Rule search"),
+        icon_name="search",
+        item=make_simple_link(html.makeuri_contextless([
+            ("mode", "rule_search"),
         ])),
     )
 
@@ -716,6 +720,7 @@ class ModeEditRuleset(WatoMode):
 
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
         yield _page_menu_entry_predefined_conditions()
+        yield _page_menu_entry_rule_search()
 
         if self._hostname:
             yield PageMenuEntry(
@@ -1388,6 +1393,7 @@ class EditRuleMode(WatoMode):
 
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
         yield _page_menu_entry_predefined_conditions()
+        yield _page_menu_entry_rule_search()
 
     def breadcrumb(self) -> Breadcrumb:
         # Let the ModeRulesetGroup know the group we are currently editing

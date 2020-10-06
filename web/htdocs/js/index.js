@@ -57,31 +57,30 @@ import {fetch} from "whatwg-fetch";
 var graphs;
 try {
     graphs = require("graphs");
-} catch(e) {
+} catch (e) {
     graphs = null;
 }
 
 var ntop_host_details;
 try {
     ntop_host_details = require("ntop_host_details");
-} catch(e) {
+} catch (e) {
     ntop_host_details = null;
 }
 
 var ntop_alerts;
 try {
     ntop_alerts = require("ntop_alerts");
-} catch(e) {
+} catch (e) {
     ntop_alerts = null;
 }
 
 var ntop_flows;
 try {
     ntop_flows = require("ntop_flows");
-} catch(e) {
+} catch (e) {
     ntop_flows = null;
 }
-
 
 $(() => {
     utils.update_header_timer();
@@ -115,7 +114,7 @@ export const cmk_export = {
         hover: hover,
         service_discovery: service_discovery,
         sites: sites,
-        sidebar: sidebar, /* needed for add snapin page */
+        sidebar: sidebar /* needed for add snapin page */,
         host_diagnose: host_diagnose,
         profile_replication: profile_replication,
         wato: wato,
@@ -138,8 +137,7 @@ export const cmk_export = {
         ntop: {
             host_details: ntop_host_details,
             alerts: ntop_alerts,
-            flows: ntop_flows
+            flows: ntop_flows,
         },
-
-    }
+    },
 };

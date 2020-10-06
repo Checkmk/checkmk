@@ -16,8 +16,7 @@ import * as ajax from "ajax";
 
 let is_help_active = false;
 
-export function toggle()
-{
+export function toggle() {
     if (is_help_active) {
         switch_help(false);
     } else {
@@ -25,14 +24,13 @@ export function toggle()
     }
 }
 
-function switch_help(how)
-{
+function switch_help(how) {
     is_help_active = how;
 
     // recursive scan for all div class=help elements
     var helpdivs = document.getElementsByClassName("help");
     var i;
-    for (i=0; i<helpdivs.length; i++) {
+    for (i = 0; i < helpdivs.length; i++) {
         helpdivs[i].style.display = how ? "block" : "none";
     }
 

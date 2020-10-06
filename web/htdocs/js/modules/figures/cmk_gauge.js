@@ -14,16 +14,16 @@ class GaugeFigure extends cmk_figures.FigureBase {
 
     constructor(div_selector, fixed_size = null) {
         super(div_selector, fixed_size);
-        this._tag_dimension = this._crossfilter.dimension(d=>d.tag);
-        this.margin = { top: 20, right: 10, bottom: 10, left: 10 };
+        this._tag_dimension = this._crossfilter.dimension(d => d.tag);
+        this.margin = {top: 20, right: 10, bottom: 10, left: 10};
         this._levels = [];
     }
 
     initialize(debug) {
-        if (debug)
-            this._add_scheduler_debugging();
+        if (debug) this._add_scheduler_debugging();
         this.svg = this._div_selection.append("svg");
-        this.plot = this.svg.append("g")
+        this.plot = this.svg
+            .append("g")
             .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")");
     }
 
@@ -36,13 +36,11 @@ class GaugeFigure extends cmk_figures.FigureBase {
     update_data(data) {
         cmk_figures.FigureBase.prototype.update_data.call(this, data);
         this._levels = [];
-        let plot = this._data.plot_definitions.filter(d=>d.plot_type == "single_value")[0];
-        if (!plot)
-            return;
+        let plot = this._data.plot_definitions.filter(d => d.plot_type == "single_value")[0];
+        if (!plot) return;
 
         let metrics = plot.metrics;
-        if (!metrics)
-            return;
+        if (!metrics) return;
 
         this._levels = [
             {from: metrics.min || 0, to: metrics.warn, color: "green"},
@@ -52,19 +50,20 @@ class GaugeFigure extends cmk_figures.FigureBase {
     }
 
     update_gui() {
-        this._crossfilter.remove(()=>true);
+        this._crossfilter.remove(() => true);
         this._crossfilter.add(this._data.data);
 
         let filter_tag = null;
         if (this._data.plot_definitions && this._data.plot_definitions.length > 0)
-            filter_tag = this._data.plot_definitions[this._data.plot_definitions.length - 1].use_tags[0];
-        this._tag_dimension.filter(d=>d == filter_tag);
+            filter_tag = this._data.plot_definitions[this._data.plot_definitions.length - 1]
+                .use_tags[0];
+        this._tag_dimension.filter(d => d == filter_tag);
 
         this.resize();
         this.render();
     }
 
-    render () {
+    render() {
         this._update_domain();
         this._render_fixed_elements();
         this._render_levels();
@@ -75,7 +74,7 @@ class GaugeFigure extends cmk_figures.FigureBase {
     }
 
     _update_domain() {
-        this._domain = d3.extent(this._crossfilter.allFiltered(), d=>d.value);
+        this._domain = d3.extent(this._crossfilter.allFiltered(), d => d.value);
         let domain_max = this._domain[1];
         // TODO: discuss visible domain of gauge
         //this._levels.forEach(level=>{
@@ -88,66 +87,104 @@ class GaugeFigure extends cmk_figures.FigureBase {
     }
 
     _render_fixed_elements() {
-        this.plot.selectAll("path.background").data([null])
-            .join(enter=>enter.append("path").classed("background", true))
-            .attr("transform", "translate("+(this.plot_size.width/2)+","+(this.plot_size.height-30)+")")
+        this.plot
+            .selectAll("path.background")
+            .data([null])
+            .join(enter => enter.append("path").classed("background", true))
+            .attr(
+                "transform",
+                "translate(" + this.plot_size.width / 2 + "," + (this.plot_size.height - 30) + ")"
+            )
             .attr("fill", "grey")
             .attr("opacity", 0.1)
-            .attr("d", d3.arc()
-                .innerRadius(this._radius*0.9)
-                .outerRadius(this._radius*1.35)
-                .startAngle(-Math.PI/2)
-                .endAngle(Math.PI/2));
+            .attr(
+                "d",
+                d3
+                    .arc()
+                    .innerRadius(this._radius * 0.9)
+                    .outerRadius(this._radius * 1.35)
+                    .startAngle(-Math.PI / 2)
+                    .endAngle(Math.PI / 2)
+            );
     }
 
     _render_levels() {
-        const scale_x = d3.scaleLinear().domain(this._domain).range([-Math.PI/2, Math.PI/2]);
-        this.plot.selectAll("path.level").data(this._levels)
-            .join(enter=>enter.append("path").classed("level", true))
-            .attr("transform", "translate("+(this.plot_size.width/2)+","+(this.plot_size.height-30)+")")
-            .attr("fill", d=>d.color)
-            .attr("opacity", 0.9)
-            .attr("d", d3.arc()
-                .innerRadius(this._radius)
-                .outerRadius(this._radius * 1.08)
-                .startAngle(d=>Math.min(Math.PI/2, scale_x(d.from)))
-                .endAngle(d=>{
-                    if (d.to == Infinity)
-                        return Math.PI/2;
-                    else
-                        return Math.min(Math.PI/2, scale_x(d.to));
-                })
+        const scale_x = d3
+            .scaleLinear()
+            .domain(this._domain)
+            .range([-Math.PI / 2, Math.PI / 2]);
+        this.plot
+            .selectAll("path.level")
+            .data(this._levels)
+            .join(enter => enter.append("path").classed("level", true))
+            .attr(
+                "transform",
+                "translate(" + this.plot_size.width / 2 + "," + (this.plot_size.height - 30) + ")"
             )
-            .selectAll("title").data(d=>[d]).join("title").text(d=>d.from + " -> " + d.to);
+            .attr("fill", d => d.color)
+            .attr("opacity", 0.9)
+            .attr(
+                "d",
+                d3
+                    .arc()
+                    .innerRadius(this._radius)
+                    .outerRadius(this._radius * 1.08)
+                    .startAngle(d => Math.min(Math.PI / 2, scale_x(d.from)))
+                    .endAngle(d => {
+                        if (d.to == Infinity) return Math.PI / 2;
+                        else return Math.min(Math.PI / 2, scale_x(d.to));
+                    })
+            )
+            .selectAll("title")
+            .data(d => [d])
+            .join("title")
+            .text(d => d.from + " -> " + d.to);
     }
 
     _render_histogram() {
         let data = this._crossfilter.allFiltered();
         let num_bins = 20;
         const x = d3.scaleLinear().domain([0, num_bins]).range(this._domain);
-        const bins = d3.histogram()
-            .value(d=>d.value)
+        const bins = d3
+            .histogram()
+            .value(d => d.value)
             .thresholds(d3.range(num_bins).map(x))
             .domain(x.range())(data);
 
         let record_count = data.length;
-        const bin_scale = d3.scaleLinear().domain([0, d3.max(bins, d=>d.length)]).range([0, this._radius * 0.2]);
+        const bin_scale = d3
+            .scaleLinear()
+            .domain([0, d3.max(bins, d => d.length)])
+            .range([0, this._radius * 0.2]);
         const angle_between_bins = Math.PI / bins.length;
-        this.plot.selectAll("path.bin").data(bins)
-            .join(enter=>enter.append("path").classed("bin", true))
-            .attr("transform", "translate("+(this.plot_size.width/2)+","+(this.plot_size.height-30)+")")
+        this.plot
+            .selectAll("path.bin")
+            .data(bins)
+            .join(enter => enter.append("path").classed("bin", true))
+            .attr(
+                "transform",
+                "translate(" + this.plot_size.width / 2 + "," + (this.plot_size.height - 30) + ")"
+            )
             .attr("fill", "steelblue")
-            .attr("stroke", d=>d.length > 0 ? "black": null)
-            .attr("d", d3.arc()
-                .innerRadius(this._radius * 1.1)
-                .outerRadius(d=>this._radius*1.1 + bin_scale(d.length) + (d.length > 0 ? 2 : 0))
-                .startAngle((d,idx)=>-Math.PI/2  + idx * angle_between_bins)
-                .endAngle((d,idx)=>-Math.PI/2 + (idx+1) * angle_between_bins))
-            .selectAll("title").data(d=>[d]).join("title").text(d=>{
+            .attr("stroke", d => (d.length > 0 ? "black" : null))
+            .attr(
+                "d",
+                d3
+                    .arc()
+                    .innerRadius(this._radius * 1.1)
+                    .outerRadius(
+                        d => this._radius * 1.1 + bin_scale(d.length) + (d.length > 0 ? 2 : 0)
+                    )
+                    .startAngle((d, idx) => -Math.PI / 2 + idx * angle_between_bins)
+                    .endAngle((d, idx) => -Math.PI / 2 + (idx + 1) * angle_between_bins)
+            )
+            .selectAll("title")
+            .data(d => [d])
+            .join("title")
+            .text(d => {
                 let title = "";
-                if (d.length == 0)
-                    return title;
-                title += (100.0 * d.length / record_count).toPrecision(3);
+                if (d.length == 0) return title;
+                title += ((100.0 * d.length) / record_count).toPrecision(3);
                 title += "%: " + d.x0.toPrecision(3);
                 title += " -> " + d.x1.toPrecision(3);
                 return title;
@@ -159,27 +196,45 @@ class GaugeFigure extends cmk_figures.FigureBase {
         let pointer_perc = 0;
 
         if (data.length > 0) {
-            pointer_perc = data[data.length-1].value / this._domain[1];
+            pointer_perc = data[data.length - 1].value / this._domain[1];
         }
         const rotation = -90 + pointer_perc * 180;
-        const pointer_scale = this._radius / 1.2  / 14; // The svg path below has a height of 14px
-        this.plot.selectAll("path.pointer").data([pointer_perc])
-            .join(enter=>enter.append("path").classed("pointer", true))
+        const pointer_scale = this._radius / 1.2 / 14; // The svg path below has a height of 14px
+        this.plot
+            .selectAll("path.pointer")
+            .data([pointer_perc])
+            .join(enter => enter.append("path").classed("pointer", true))
             .transition()
             .attr("fill", "#bb6a6a")
-            .attr("transform", "translate("+(this.plot_size.width/2)+","+(this.plot_size.height-30)+") scale("+ pointer_scale +") rotate("+rotation+")")
+            .attr(
+                "transform",
+                "translate(" +
+                    this.plot_size.width / 2 +
+                    "," +
+                    (this.plot_size.height - 30) +
+                    ") scale(" +
+                    pointer_scale +
+                    ") rotate(" +
+                    rotation +
+                    ")"
+            )
             .attr("d", "m 0 -4 l 1 -3 l -1 -6 l -1 6");
     }
 
     _render_text() {
         let data = this._crossfilter.allFiltered();
         let value = "-";
-        if (data.length)
-            value = Math.round(data[data.length-1].value);
-        this.plot.selectAll("text.value").data([value]).join(enter=>enter.append("text").classed("value", true))
-            .attr("transform", "translate("+(this.plot_size.width/2)+","+(this.plot_size.height-30)+")")
+        if (data.length) value = Math.round(data[data.length - 1].value);
+        this.plot
+            .selectAll("text.value")
+            .data([value])
+            .join(enter => enter.append("text").classed("value", true))
+            .attr(
+                "transform",
+                "translate(" + this.plot_size.width / 2 + "," + (this.plot_size.height - 30) + ")"
+            )
             .attr("text-anchor", "middle")
-            .style("font-size", (this._radius / 5) + "px")
+            .style("font-size", this._radius / 5 + "px")
             .text(value);
     }
 }

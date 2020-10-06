@@ -19,8 +19,7 @@ export function set_checkbox_entry(id_stem, checked) {
     if (checked) {
         utils.change_class(oEntryChecked, "invisible", "visible");
         utils.change_class(oEntryUnhecked, "visible", "invisible");
-    }
-    else {
+    } else {
         utils.change_class(oEntryChecked, "visible", "invisible");
         utils.change_class(oEntryUnhecked, "invisible", "visible");
     }
@@ -40,8 +39,7 @@ function toggle_dropdown_enabled(id, enabled) {
     var dropdown = document.getElementById("page_menu_dropdown_" + id);
     if (enabled) {
         utils.remove_class(dropdown, "disabled");
-    }
-    else {
+    } else {
         utils.add_class(dropdown, "disabled");
     }
 }
@@ -51,8 +49,7 @@ export function enable_menu_entry(id, enabled) {
     if (enabled) {
         from = "disabled";
         to = "enabled";
-    }
-    else {
+    } else {
         from = "enabled";
         to = "disabled";
     }
@@ -60,12 +57,10 @@ export function enable_menu_entry(id, enabled) {
     utils.change_class(oEntry, from, to);
 
     var oShortCut = document.getElementById("menu_shortcut_" + id);
-    if (oShortCut)
-        utils.change_class(oShortCut, from, to);
+    if (oShortCut) utils.change_class(oShortCut, from, to);
 
     var oSuggestion = document.getElementById("menu_suggestion_" + id);
-    if (oSuggestion)
-        utils.change_class(oSuggestion.parentElement, from, to);
+    if (oSuggestion) utils.change_class(oSuggestion.parentElement, from, to);
 }
 
 export function enable_menu_entries(css_class, enabled) {
@@ -73,13 +68,14 @@ export function enable_menu_entries(css_class, enabled) {
     if (enabled) {
         from = "disabled";
         to = "enabled";
-    }
-    else {
+    } else {
         from = "enabled";
         to = "disabled";
     }
 
-    const elements = document.getElementById("page_menu_bar").querySelectorAll(".entry." + css_class);
+    const elements = document
+        .getElementById("page_menu_bar")
+        .querySelectorAll(".entry." + css_class);
     for (const element of elements) {
         utils.change_class(element, from, to);
     }
@@ -93,10 +89,8 @@ export function toggle_popup(popup_id) {
     close_active_dropdown();
     close_active_popups();
 
-    if (was_open)
-        do_close_popup(popup);
-    else
-        do_open_popup(popup);
+    if (was_open) do_close_popup(popup);
+    else do_open_popup(popup);
 }
 
 // Opens a PageMenuEntryPopup from a page menu entry
@@ -118,7 +112,7 @@ function do_open_popup(popup) {
 
 // Closes all open PageMenuEntryPopup
 function close_active_popups() {
-    document.querySelectorAll(".page_menu_popup").forEach((popup) => {
+    document.querySelectorAll(".page_menu_popup").forEach(popup => {
         do_close_popup(popup);
     });
 }
@@ -161,8 +155,7 @@ export function toggle_suggestions() {
     foldable_container.persist_tree_state("suggestions", "all", open);
 }
 
-export function form_submit(form_name, button_name)
-{
+export function form_submit(form_name, button_name) {
     var oForm = document.getElementById("form_" + form_name);
     var field = document.createElement("input");
     field.type = "hidden";
@@ -173,48 +166,43 @@ export function form_submit(form_name, button_name)
 }
 
 // Show / hide all entries of this group
-export function toggle_popup_filter_list(trigger, filter_list_id)
-{
+export function toggle_popup_filter_list(trigger, filter_list_id) {
     utils.toggle_class(trigger, "active", "inactive");
     utils.toggle_class(document.getElementById(filter_list_id), "active", "inactive");
 }
 
-export function toggle_filter_group_display(filter_group)
-{
+export function toggle_filter_group_display(filter_group) {
     utils.toggle_class(filter_group, "active", "inactive");
 }
 
-export function on_filter_popup_open()
-{
+export function on_filter_popup_open() {
     utils.update_url_parameter("_show_filter_form", "1");
 }
 
-export function on_filter_popup_close()
-{
+export function on_filter_popup_close() {
     utils.update_url_parameter("_show_filter_form", "0");
 }
 
 // Scroll to the top after adding new filters
-export function update_filter_list_scroll(filter_list_id)
-{
+export function update_filter_list_scroll(filter_list_id) {
     let filter_list = document.getElementById(filter_list_id);
     let scrollable = filter_list.getElementsByClassName("simplebar-content-wrapper")[0];
-    try { // scrollTo() is not supported in IE
-        setTimeout(() => { scrollable.scrollTo({top: 0, left: 0, behavior: "smooth"}); }, 200);
-    }
-    catch (e) {
+    try {
+        // scrollTo() is not supported in IE
+        setTimeout(() => {
+            scrollable.scrollTo({top: 0, left: 0, behavior: "smooth"});
+        }, 200);
+    } catch (e) {
         scrollable.scrollTop = 0;
     }
 }
 
-export function update_page_state_top_line(text)
-{
+export function update_page_state_top_line(text) {
     let container = document.getElementById("page_state_top_line");
     container.innerHTML = text;
 }
 
-export function side_popup_add_simplebar_scrollbar(popup_id)
-{
+export function side_popup_add_simplebar_scrollbar(popup_id) {
     let popup = document.getElementById(popup_id);
     let content = popup.getElementsByClassName("side_popup_content")[0];
     utils.add_simplebar_scrollbar_to_object(content);

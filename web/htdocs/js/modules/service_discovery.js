@@ -18,35 +18,33 @@ import * as page_menu from "page_menu";
 var g_service_discovery_result = null;
 var g_show_updating_timer = null;
 
-export function start(host_name, folder_path, discovery_options, transid, request_vars)
-{
+export function start(host_name, folder_path, discovery_options, transid, request_vars) {
     // When we receive no response for 2 seconds, then show the updating message
-    g_show_updating_timer = setTimeout(function() {
+    g_show_updating_timer = setTimeout(function () {
         async_progress.show_info("Updating...");
     }, 2000);
 
     lock_controls(true, get_state_independent_controls().concat(get_page_menu_controls()));
     async_progress.monitor({
-        "update_url" : "ajax_service_discovery.py",
-        "host_name": host_name,
-        "folder_path": folder_path,
-        "transid": transid,
-        "start_time" : utils.time(),
-        "is_finished_function": is_finished,
-        "update_function": update,
-        "finish_function": finish,
-        "error_function": error,
-        "post_data": get_post_data(host_name, folder_path, discovery_options, transid, request_vars)
+        update_url: "ajax_service_discovery.py",
+        host_name: host_name,
+        folder_path: folder_path,
+        transid: transid,
+        start_time: utils.time(),
+        is_finished_function: is_finished,
+        update_function: update,
+        finish_function: finish,
+        error_function: error,
+        post_data: get_post_data(host_name, folder_path, discovery_options, transid, request_vars),
     });
 }
 
-function get_post_data(host_name, folder_path, discovery_options, transid, request_vars)
-{
+function get_post_data(host_name, folder_path, discovery_options, transid, request_vars) {
     var request = {
-        "host_name": host_name,
-        "folder_path": folder_path,
-        "discovery_options": discovery_options,
-        "discovery_result": g_service_discovery_result
+        host_name: host_name,
+        folder_path: folder_path,
+        discovery_options: discovery_options,
+        discovery_result: g_service_discovery_result,
     };
 
     if (request_vars !== undefined && request_vars !== null) {
@@ -68,8 +66,7 @@ function get_post_data(host_name, folder_path, discovery_options, transid, reque
 
     // Can currently not be put into "request" because the generic transaction
     // manager relies on the HTTP var _transid.
-    if (transid !== undefined)
-        post_data += "&_transid=" + encodeURIComponent(transid);
+    if (transid !== undefined) post_data += "&_transid=" + encodeURIComponent(transid);
 
     return post_data;
 }
@@ -78,10 +75,8 @@ function is_finished(response) {
     return response.is_finished;
 }
 
-function finish(response)
-{
-    if (response.job_state == "exception"
-        || response.job_state == "stopped") {
+function finish(response) {
+    if (response.job_state == "exception" || response.job_state == "stopped") {
         async_progress.show_error(response.message);
     } else {
         //async_progress.hide_msg();
@@ -92,14 +87,12 @@ function finish(response)
     lock_controls(false, get_state_independent_controls());
 }
 
-function error(response)
-{
+function error(response) {
     if (g_show_updating_timer) {
         clearTimeout(g_show_updating_timer);
     }
     async_progress.show_error(response);
 }
-
 
 function update(handler_data, response) {
     if (g_show_updating_timer) {
@@ -113,7 +106,12 @@ function update(handler_data, response) {
     }
 
     g_service_discovery_result = response.discovery_result;
-    handler_data.post_data = get_post_data(handler_data.host_name, handler_data.folder_path, response.discovery_options, handler_data.transid);
+    handler_data.post_data = get_post_data(
+        handler_data.host_name,
+        handler_data.folder_path,
+        response.discovery_options,
+        handler_data.transid
+    );
 
     // Update the page menu
     var page_menu_bar = document.getElementById("page_menu_bar");
@@ -131,9 +129,15 @@ function update(handler_data, response) {
 
 function get_state_independent_controls() {
     var elements = [];
-    elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("service_checkbox"), 0));
-    elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("service_button"), 0));
-    elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("toggle"), 0));
+    elements = elements.concat(
+        Array.prototype.slice.call(document.getElementsByClassName("service_checkbox"), 0)
+    );
+    elements = elements.concat(
+        Array.prototype.slice.call(document.getElementsByClassName("service_button"), 0)
+    );
+    elements = elements.concat(
+        Array.prototype.slice.call(document.getElementsByClassName("toggle"), 0)
+    );
     return elements;
 }
 
@@ -141,38 +145,37 @@ function get_page_menu_controls() {
     return Array.prototype.slice.call(document.getElementsByClassName("action"), 0);
 }
 
-function lock_controls(lock, elements)
-{
+function lock_controls(lock, elements) {
     let element;
     for (var i = 0; i < elements.length; i++) {
         element = elements[i];
-        if (!element)
-            continue;
+        if (!element) continue;
 
-        if (lock)
-            utils.add_class(element, "disabled");
-        else
-            utils.remove_class(element, "disabled");
+        if (lock) utils.add_class(element, "disabled");
+        else utils.remove_class(element, "disabled");
 
         element.disabled = lock;
     }
 }
 
-export function execute_active_check(site, folder_path, hostname, checktype, item, divid)
-{
+export function execute_active_check(site, folder_path, hostname, checktype, item, divid) {
     var oDiv = document.getElementById(divid);
-    var url = "wato_ajax_execute_check.py?" +
-           "site="       + encodeURIComponent(site) +
-           "&folder="    + encodeURIComponent(folder_path) +
-           "&host="      + encodeURIComponent(hostname)  +
-           "&checktype=" + encodeURIComponent(checktype) +
-           "&item="      + encodeURIComponent(item);
+    var url =
+        "wato_ajax_execute_check.py?" +
+        "site=" +
+        encodeURIComponent(site) +
+        "&folder=" +
+        encodeURIComponent(folder_path) +
+        "&host=" +
+        encodeURIComponent(hostname) +
+        "&checktype=" +
+        encodeURIComponent(checktype) +
+        "&item=" +
+        encodeURIComponent(item);
     ajax.get_url(url, handle_execute_active_check, oDiv);
 }
 
-
-function handle_execute_active_check(oDiv, response_json)
-{
+function handle_execute_active_check(oDiv, response_json) {
     var response = JSON.parse(response_json);
 
     var state, statename, output;
@@ -182,20 +185,17 @@ function handle_execute_active_check(oDiv, response_json)
         output = response.result;
     } else {
         state = response.result.state;
-        if (state == -1)
-            state = "p"; // Pending
+        if (state == -1) state = "p"; // Pending
         statename = response.result.state_name;
-        output    = response.result.output;
+        output = response.result.output;
     }
 
     oDiv.innerHTML = output;
 
     // Change name and class of status columns
     var oTr = oDiv.parentNode.parentNode;
-    if (utils.has_class(oTr, "even0"))
-        utils.add_class(oTr, "even" + state);
-    else
-        utils.add_class(oTr, "odd" + state);
+    if (utils.has_class(oTr, "even0")) utils.add_class(oTr, "even" + state);
+    else utils.add_class(oTr, "odd" + state);
 
     var oTdState = oTr.getElementsByClassName("state")[0];
     utils.remove_class(oTdState, "statep");

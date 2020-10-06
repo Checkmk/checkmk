@@ -10,8 +10,7 @@ import * as utils from "utils";
 
 var g_hover_menu = null;
 
-export function hide()
-{
+export function hide() {
     if (!g_hover_menu) {
         return;
     }
@@ -21,16 +20,14 @@ export function hide()
     hover_menu.parentNode.removeChild(hover_menu);
 }
 
-export function show(event, code)
-{
+export function show(event, code) {
     event = event || window.event;
     add();
     update_content(code);
     update_position(event);
 }
 
-export function add()
-{
+export function add() {
     if (g_hover_menu) {
         return;
     }
@@ -40,8 +37,7 @@ export function add()
     document.body.appendChild(g_hover_menu);
 }
 
-export function update_content(code)
-{
+export function update_content(code) {
     if (!g_hover_menu) {
         return;
     }
@@ -50,8 +46,7 @@ export function update_content(code)
     utils.execute_javascript_by_object(g_hover_menu);
 }
 
-export function update_position(event)
-{
+export function update_position(event) {
     if (!g_hover_menu) {
         return;
     }
@@ -59,18 +54,20 @@ export function update_position(event)
     var hoverSpacer = 5;
 
     // document.body.scrollTop does not work in IE
-    var scrollTop = document.body.scrollTop ? document.body.scrollTop :
-        document.documentElement.scrollTop;
-    var scrollLeft = document.body.scrollLeft ? document.body.scrollLeft :
-        document.documentElement.scrollLeft;
+    var scrollTop = document.body.scrollTop
+        ? document.body.scrollTop
+        : document.documentElement.scrollTop;
+    var scrollLeft = document.body.scrollLeft
+        ? document.body.scrollLeft
+        : document.documentElement.scrollLeft;
 
     var x = event.clientX;
     var y = event.clientY;
 
     // hide the menu first to avoid an "up-then-over" visual effect
     g_hover_menu.style.display = "block";
-    g_hover_menu.style.left = (x + hoverSpacer + scrollLeft) + "px";
-    g_hover_menu.style.top = (y + hoverSpacer + scrollTop) + "px";
+    g_hover_menu.style.left = x + hoverSpacer + scrollLeft + "px";
+    g_hover_menu.style.top = y + hoverSpacer + scrollTop + "px";
 
     /**
      * Check if the menu is "in screen" or too large.
@@ -83,7 +80,7 @@ export function update_position(event)
     }
 
     if (!hoverPosAndSizeOk) {
-        g_hover_menu.style.left = (x - hoverSpacer - g_hover_menu.clientWidth) + "px";
+        g_hover_menu.style.left = x - hoverSpacer - g_hover_menu.clientWidth + "px";
 
         if (is_on_screen(g_hover_menu, hoverSpacer)) {
             hoverPosAndSizeOk = true;
@@ -94,22 +91,25 @@ export function update_position(event)
     // and fill the whole screen width
     if (!is_on_screen(g_hover_menu, hoverSpacer)) {
         g_hover_menu.style.left = hoverSpacer + scrollLeft + "px";
-        g_hover_menu.style.width = utils.page_width() - (2*hoverSpacer) + "px";
+        g_hover_menu.style.width = utils.page_width() - 2 * hoverSpacer + "px";
     }
 
     var hoverTop = parseInt(g_hover_menu.style.top.replace("px", ""));
     // Only move the menu to the top when the new top will not be
     // out of sight
-    if (hoverTop +g_hover_menu.clientHeight > utils.page_height() && hoverTop -g_hover_menu.clientHeight >= 0) {
-        g_hover_menu.style.top = hoverTop -g_hover_menu.clientHeight - hoverSpacer + "px";
+    if (
+        hoverTop + g_hover_menu.clientHeight > utils.page_height() &&
+        hoverTop - g_hover_menu.clientHeight >= 0
+    ) {
+        g_hover_menu.style.top = hoverTop - g_hover_menu.clientHeight - hoverSpacer + "px";
     }
 }
 
-function is_on_screen(hoverMenu, hoverSpacer)
-{
+function is_on_screen(hoverMenu, hoverSpacer) {
     var hoverLeft = parseInt(hoverMenu.style.left.replace("px", ""));
-    var scrollLeft = document.body.scrollLeft ? document.body.scrollLeft :
-        document.documentElement.scrollLeft;
+    var scrollLeft = document.body.scrollLeft
+        ? document.body.scrollLeft
+        : document.documentElement.scrollLeft;
 
     if (hoverLeft + hoverMenu.clientWidth >= utils.page_width() - scrollLeft) {
         return false;

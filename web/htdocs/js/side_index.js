@@ -24,6 +24,6 @@ export const cmk_export = {
         quicksearch: quicksearch,
         visibility_detection: visibility_detection,
         valuespecs: valuespecs,
-        popup_menu: popup_menu
-    }
+        popup_menu: popup_menu,
+    },
 };

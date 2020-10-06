@@ -81,6 +81,15 @@ class IPMIFetcher(AgentFetcher):
 
         self._logger.debug("Closing connection to %s:623", self._command.bmc)
         self._command.ipmi_session.logout()
+        # This should not be our task, but seems pyghmi is not cleaning up good
+        # enough. There are some class level caches in
+        # pyghmi.ipmi.private.session.Session that are kept after logout which
+        # should not be kept.
+        # These session objects and sockets lead to problems in our keepalive
+        # helper processes because they make the process reuse invalid sessions.
+        # Instead of reusing, we want to initialize a new session every cycle.
+        self._command.ipmi_session.__class__.socketpool.clear()
+        self._command.ipmi_session.__class__.initting_sessions.clear()
 
     def _sensors_section(self) -> AgentRawData:
         if self._command is None:

@@ -270,7 +270,7 @@ class PageMenu:
 def make_display_options_dropdown() -> PageMenuDropdown:
     return PageMenuDropdown(
         name="display",
-        title=_("Display"),
+        title=_("View"),
         topics=[
             PageMenuTopic(
                 title=_("General display options"),
@@ -310,7 +310,7 @@ def make_help_dropdown() -> PageMenuDropdown:
                 title=_("Context sensitive help"),
                 entries=[
                     PageMenuEntry(
-                        title=_("Toggle inline help on this page"),
+                        title=_("Toggle inline help"),
                         icon_name="help",
                         item=make_javascript_link("cmk.help.toggle()"),
                         name="inline_help",

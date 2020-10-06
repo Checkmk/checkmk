@@ -97,7 +97,6 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
         # Attributes below are wrong
         self.use_snmpwalk_cache = True
         self.ignore_check_interval = False
-        self.prefetched_sections: Optional[SNMPSections] = None
 
     @classmethod
     def snmp(

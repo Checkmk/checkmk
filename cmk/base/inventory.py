@@ -32,8 +32,6 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
-from cmk.fetchers.type_defs import Mode
-
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
@@ -45,7 +43,6 @@ import cmk.base.section as section
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow, InventoryResult
 from cmk.base.checkers import ABCSource, ABCHostSections
 from cmk.base.checkers.host_sections import HostKey, MultiHostSections
-from cmk.base.checkers.snmp import SNMPHostSections
 from cmk.base.discovered_labels import HostLabel
 
 #.
@@ -318,41 +315,6 @@ def _do_inv_for_realhost(
     status_data_tree: StructuredDataTree,
 ) -> Sequence[Tuple[ABCSource, Result[ABCHostSections, Exception]]]:
     results: List[Tuple[ABCSource, Result[ABCHostSections, Exception]]] = []
-    for source in sources:
-        if isinstance(source, checkers.snmp.SNMPSource):
-            # TODO(ml): This modifies the SNMP fetcher config dynamically.
-            source.on_snmp_scan_error = "raise"  # default
-            checkers.FileCacheFactory.snmp_disabled = True
-            source.use_snmpwalk_cache = False
-            source.ignore_check_interval = True
-            if multi_host_sections is not None:
-                # Status data inventory already provides filled multi_host_sections object.
-                # SNMP data source: If 'do_status_data_inv' is enabled there may be
-                # sections for inventory plugins which were not fetched yet.
-                host_sections = multi_host_sections.setdefault(
-                    # TODO(ml): are
-                    #    hostname == source.hostname
-                    #    ipaddress == source.ipaddress
-                    # ?
-                    HostKey(hostname, ipaddress, source.source_type),
-                    SNMPHostSections(),
-                )
-                # TODO(ml): This modifies the SNMP fetcher config dynamically.
-                #           Can the fetcher handle that on its own?
-                source.prefetched_sections = host_sections.sections
-
-                assert source.prefetched_sections is not None
-                console.vverbose("Prefetched sections: %s\n" %
-                                 sorted([str(s) for s in source.prefetched_sections.keys()]))
-
-                # When executing the structured status inventory, we are in the Mode.CHECKING
-                assert source.mode is Mode.INVENTORY or source.mode is Mode.CHECKING
-
-                host_section = source.parse(source.fetch())
-                results.append((source, host_section))
-                if host_section.is_ok():
-                    assert host_section.ok is not None
-                    host_sections.update(host_section.ok)
 
     if multi_host_sections is None:
         multi_host_sections = MultiHostSections()

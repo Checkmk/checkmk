@@ -20,10 +20,10 @@ from .utils import ipmi
 # This is needed because inventory_ipmi_rules was once not a dict, which is not allowed by the API
 # for discovery rulesets
 # ==================================================================================================
-from cmk.utils.type_defs import RuleSetName
-from cmk.base.config import get_config_cache
-from cmk.base.check_api import host_name
-from cmk.base.api.agent_based.register import add_discovery_ruleset, get_discovery_ruleset
+from cmk.utils.type_defs import RuleSetName  # pylint: disable=cmk-module-layer-violation
+from cmk.base.config import get_config_cache  # pylint: disable=cmk-module-layer-violation
+from cmk.base.check_api import host_name  # pylint: disable=cmk-module-layer-violation
+from cmk.base.api.agent_based.register import add_discovery_ruleset, get_discovery_ruleset  # pylint: disable=cmk-module-layer-violation
 # ==================================================================================================
 
 # Example of output from ipmi:

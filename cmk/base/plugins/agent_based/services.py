@@ -11,9 +11,9 @@ from typing import (
     Mapping,
     Generator,
 )
-from cmk.utils.regex import regex
 from .agent_based_api.v1 import (
     Service,
+    regex,
     Result,
     register,
     State as state,

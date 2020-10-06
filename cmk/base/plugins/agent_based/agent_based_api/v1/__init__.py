@@ -17,8 +17,8 @@ Version 1
 """
 # For an explanation of what is what see comments in __all__definition at the end
 
-from cmk.utils.regex import regex
-from cmk.snmplib.type_defs import OIDBytes, OIDCached, OIDEnd
+from cmk.utils.regex import regex  # pylint: disable=cmk-module-layer-violation
+from cmk.snmplib.type_defs import OIDBytes, OIDCached, OIDEnd  # pylint: disable=cmk-module-layer-violation
 
 from cmk.base.api.agent_based.checking_classes import (
     IgnoreResults,
@@ -53,7 +53,7 @@ from cmk.base.api.agent_based.utils import (
     GetRateError,
 )
 from cmk.base.api.agent_based.value_store import get_value_store
-from cmk.base.discovered_labels import HostLabel
+from cmk.base.discovered_labels import HostLabel  # pylint: disable=cmk-module-layer-violation
 
 from . import register, render, clusterize, type_defs
 

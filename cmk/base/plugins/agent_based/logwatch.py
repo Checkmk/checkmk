@@ -25,10 +25,11 @@ import six
 import time
 
 # for now, we shamelessly violate the API:
-import cmk.utils.debug
-import cmk.utils.paths
-from cmk.base.check_api import get_checkgroup_parameters, host_extra_conf, host_name
-import cmk.base.config  # from cmk.base.config import logwatch_rule will NOT work!
+import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
+import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
+from cmk.base.check_api import get_checkgroup_parameters, host_extra_conf, host_name  # pylint: disable=cmk-module-layer-violation
+# from cmk.base.config import logwatch_rule will NOT work!
+import cmk.base.config  # pylint: disable=cmk-module-layer-violation
 
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, Parameters
 from .agent_based_api.v1 import (

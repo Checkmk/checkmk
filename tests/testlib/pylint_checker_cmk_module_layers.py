@@ -30,7 +30,7 @@ def removeprefix(text: str, prefix: str) -> str:
     return text[len(prefix):] if text.startswith(prefix) else text
 
 
-def removesuffix(text: str, suffix: str, /) -> str:
+def removesuffix(text: str, suffix: str) -> str:
     return text[:-len(suffix)] if suffix and text.endswith(suffix) else text
 
 
@@ -66,14 +66,35 @@ def _allow_default_plus_fetchers_and_snmplib(
     `utils` and `base` so that importing `fetchers` in `utils` is
     wrong but anywhere else is OK.
     """
-    return (
-        _is_default_allowed_import(imported=imported, component=component) or
-        _in_component(imported, Component("cmk.fetchers")) or
-        _in_component(imported, Component("cmk.snmplib"))
-    )
+    return any((
+        _is_default_allowed_import(imported=imported, component=component),
+        _in_component(imported, Component("cmk.fetchers")),
+        _in_component(imported, Component("cmk.snmplib")),
+    ))
+
+
+def _is_allowed_for_agent_based_api(
+        *,
+        imported: ModuleName,
+        component: Component,  # pylint: disable=unused-argument
+) -> bool:
+    return _in_component(imported, Component("cmk.base.api.agent_based"))
+
+
+def _is_allowed_for_agent_based_plugin(
+        *,
+        imported: ModuleName,
+        component: Component,  # pylint: disable=unused-argument
+) -> bool:
+    return any((
+        _in_component(imported, Component("cmk.base.plugins.agent_based.agent_based_api")),
+        _in_component(imported, Component("cmk.base.plugins.agent_based.utils")),
+    ))
 
 
 _COMPONENTS = (
+    (Component("cmk.base.plugins.agent_based.agent_based_api"), _is_allowed_for_agent_based_api),
+    (Component("cmk.base.plugins.agent_based"), _is_allowed_for_agent_based_plugin),
     (Component("cmk.base"), _allow_default_plus_fetchers_and_snmplib),
     (Component("cmk.fetchers"), _allow_default_plus_fetchers_and_snmplib),
     (Component("cmk.snmplib"), _is_default_allowed_import),
@@ -82,6 +103,7 @@ _COMPONENTS = (
     (Component("cmk.notification_plugins"), _is_default_allowed_import),
     (Component("cmk.special_agents"), _is_default_allowed_import),
     (Component("cmk.update_config"), _is_default_allowed_import),
+    (Component("cmk.utils"), _is_default_allowed_import),
     (Component("cmk.cee.dcd"), _is_default_allowed_import),
     (Component("cmk.cee.mknotifyd"), _is_default_allowed_import),
     (Component("cmk.cee.snmp_backend"), _is_default_allowed_import),

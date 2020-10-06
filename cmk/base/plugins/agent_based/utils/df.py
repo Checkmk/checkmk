@@ -12,8 +12,7 @@ from typing import (
     Optional,
 )
 import fnmatch
-from cmk.base.check_api import savefloat
-from cmk.utils.render import fmt_number_with_precision
+from cmk.utils.render import fmt_number_with_precision  # pylint: disable=cmk-module-layer-violation
 from .size_trend import size_trend
 from ..agent_based_api.v1 import (
     render,
@@ -38,6 +37,13 @@ FILESYSTEM_DEFAULT_LEVELS = {
     "show_inodes": "onlow",
     "show_reserved": False,
 }
+
+
+def savefloat(raw: Any) -> float:
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return 0.
 
 
 def get_filesystem_levels(size_gb: float, params):

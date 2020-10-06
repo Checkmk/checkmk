@@ -23,14 +23,14 @@ import time
 
 from typing import Any, Counter, Dict, Iterable, List, Optional, Tuple, Union
 
-import cmk.utils.debug
-import cmk.utils.paths
-from cmk.utils.type_defs import CheckPluginName
-import cmk.base.config  # from cmk.base.config import logwatch_rules will NOT work!
+import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
+import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
+from cmk.utils.type_defs import CheckPluginName  # pylint: disable=cmk-module-layer-violation
+# from cmk.base.config import logwatch_rules will NOT work!
+import cmk.base.config  # pylint: disable=cmk-module-layer-violation
 # import from legacy API until we come up with something better
-from cmk.base.check_api import (
-    host_name,
-    service_extra_conf,
+from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation
+    host_name, service_extra_conf,
 )
 
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, Parameters

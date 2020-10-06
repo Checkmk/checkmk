@@ -11,7 +11,7 @@
 
 from typing import Dict, List, Any
 
-import cmk.utils.version as cmk_version
+import cmk.utils.version as cmk_version  # pylint: disable=cmk-module-layer-violation
 from .agent_based_api.v1.type_defs import InventoryResult
 from .agent_based_api.v1 import Attributes, register, TableRow
 

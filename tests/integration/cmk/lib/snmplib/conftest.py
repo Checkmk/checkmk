@@ -179,7 +179,7 @@ def backend_fixture(request, snmp_data_dir):
         snmpv3_contexts=[],
         character_encoding=None,
         is_usewalk_host=backend is StoredWalkSNMPBackend,
-        snmp_backend=lambda: "inline" if backend is InlineSNMPBackend else "classic",
+        snmp_backend="inline" if backend is InlineSNMPBackend else "classic",
         record_stats=False,
     )
 

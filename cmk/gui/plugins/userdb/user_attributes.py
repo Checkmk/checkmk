@@ -216,18 +216,17 @@ class UIBasicAdvancedToggle(UserAttribute):
 
     def valuespec(self):
         return DropdownChoice(
-            title=_("Basic / advanced mode"),
-            help=_(
-                "In some places like e.g. the main menu Checkmk divides features, "
-                "filters, input fields etc. in two categories - basic and advanced. With this"
-                "option you can set a default mode for unvisited menus. Alternatively, you can "
-                "enforce one mode so that the round button with the three dots is not shown at all."
-            ),
+            title=_("Show more / Show less"),
+            help=_("In some places like e.g. the main menu Checkmk divides "
+                   "features, filters, input fields etc. in two categories, showing "
+                   "more or less entries. With this option you can set a default "
+                   "mode for unvisited menus. Alternatively, you can enforce to "
+                   "show more, so that the round button with the three dots is not "
+                   "shown at all."),
             choices=[
-                (None, _("Default to basic mode")),
-                ("default_advanced", _("Default to advanced mode")),
-                ("enforce_basic", _("Enforce basic mode")),
-                ("enforce_advanced", _("Enforce advanced mode")),
+                (None, _("Default to show less")),
+                ("default_advanced", _("Default to show more")),
+                ("enforce_advanced", _("Enforce show more")),
             ],
         )
 

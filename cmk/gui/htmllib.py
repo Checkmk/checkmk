@@ -2692,8 +2692,7 @@ class html(ABCHTMLGenerator):
                     dom_levels_up: int,
                     additional_js: str = "",
                     with_text: bool = False) -> None:
-        if config.user.get_attribute("ui_basic_advanced_mode") in ("enforce_basic",
-                                                                   "enforce_advanced"):
+        if config.user.get_attribute("ui_basic_advanced_mode") == "enforce_advanced":
             return
 
         self.open_a(href="javascript:void(0)",

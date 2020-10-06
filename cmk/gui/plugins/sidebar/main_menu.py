@@ -37,9 +37,6 @@ def get_show_more_setting(more_id: str) -> bool:
     if config.user.get_attribute("ui_basic_advanced_mode") == "enforce_advanced":
         return True
 
-    if config.user.get_attribute("ui_basic_advanced_mode") == "enforce_basic":
-        return False
-
     return html.foldable_container_is_open(
         treename="more_buttons",
         id_=more_id,

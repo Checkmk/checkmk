@@ -6,7 +6,13 @@
 
 import logging
 import pytest  # type: ignore[import]
-from cmk.snmplib.type_defs import ABCSNMPBackend, OID, SNMPHostConfig, SNMPRawValue
+from cmk.snmplib.type_defs import (
+    ABCSNMPBackend,
+    OID,
+    SNMPHostConfig,
+    SNMPRawValue,
+    SNMPRowInfo,
+)
 from typing import List, Tuple, Optional, Type
 
 try:
@@ -70,6 +76,60 @@ def test_get_auth(oid: OID):
     assert result_pysnmp == result_inline == result_classic
 
 
+@pytest.mark.parametrize(
+    "oid",
+    [
+        (".1.3.6.1.2.1.4.12.0"),
+        (".1.3.6.1.2.1.2.2.1.6.1"),
+        (".1.3.6"),
+        #(".1.3.6.1.2.1.4.31.1.1.4"), # TODO: Fix for this OID(Inline and Classic not matching)
+        (".1.3.6.1.2.1.1"),
+        (".1.3.6.1.4.1"),
+    ])
+def test_walk_ipv4(oid):
+    configs = _create_configs_ipv4()
+    result_pysnmp, result_inline, result_classic = _create_results_snmpbackend_walk(oid, configs)
+
+    assert result_pysnmp == result_inline == result_classic
+
+
+@pytest.mark.parametrize("oid", [
+    (".1.3.6.1.2.1.4.12.0"),
+    (".1.3.6.1.2.1.2.2.1.6.1"),
+    (".1.3.6"),
+    (".1.3.6.1.4.1"),
+])
+def test_walk_ipv6(oid):
+    configs = _create_configs_ipv6()
+    result_pysnmp, result_inline, result_classic = _create_results_snmpbackend_walk(oid, configs)
+
+    assert result_pysnmp == result_inline == result_classic
+
+
+@pytest.mark.parametrize("oid", [
+    (".1.3.6.1.2.1.4.12.0"),
+    (".1.3.6.1.2.1.2.2.1.6.1"),
+    (".1.3.6"),
+])
+def test_walk_auth(oid):
+    configs = _create_configs_special_auth()
+    result_pysnmp, result_inline, result_classic = _create_results_snmpbackend_walk(oid, configs)
+
+    assert result_pysnmp == result_inline == result_classic
+
+
+# CEE Feature only (not implemented in Classic SNMP)
+@pytest.mark.parametrize(("oid", "check_plugin_name", "table_base_oid"), [
+    (".1.3.6.1.2.1.1.9.1.2", "if64", ".1.3.6.1.2.1.1.9.1.2"),
+])
+def test_bulkwalk_with_ranges(oid, check_plugin_name, table_base_oid):
+    configs = _create_configs_oidranges()
+    result_pysnmp, result_inline, _result_classic = _create_results_snmpbackend_walk(
+        oid, configs, check_plugin_name, table_base_oid)
+
+    assert result_pysnmp == result_inline
+
+
 #.
 #   .--Helpers-------------------------------------------------------------.
 #   |                    _   _      _                                      |
@@ -90,17 +150,43 @@ def _create_results_snmpbackend_get(
            List[Optional[SNMPRawValue]]]:
 
     return (
-        [_create_result_for_backend(PySNMPBackend, oid, c) for c in configs],
-        [_create_result_for_backend(InlineSNMPBackend, oid, c) for c in configs],
-        [_create_result_for_backend(ClassicSNMPBackend, oid, c) for c in configs],
+        [_create_result_for_backend_get(PySNMPBackend, oid, c) for c in configs],
+        [_create_result_for_backend_get(InlineSNMPBackend, oid, c) for c in configs],
+        [_create_result_for_backend_get(ClassicSNMPBackend, oid, c) for c in configs],
     )
 
 
-def _create_result_for_backend(backend: Type[ABCSNMPBackend], oid: OID,
-                               config: SNMPHostConfig) -> Optional[SNMPRawValue]:
+def _create_result_for_backend_get(backend: Type[ABCSNMPBackend], oid: OID,
+                                   config: SNMPHostConfig) -> Optional[SNMPRawValue]:
     return backend(config, logger).get(oid,
                                        context_name="public" if config.is_ipv6_primary and
                                        not isinstance(config.credentials, str) else "")
+
+
+def _create_results_snmpbackend_walk(oid, configs, check_plugin_name=None, table_base_oid=None):
+    return (
+        [
+            _create_result_for_backend_walk(PySNMPBackend, oid, c, check_plugin_name,
+                                            table_base_oid) for c in configs
+        ],
+        [
+            _create_result_for_backend_walk(InlineSNMPBackend, oid, c, check_plugin_name,
+                                            table_base_oid) for c in configs
+        ],
+        [
+            _create_result_for_backend_walk(ClassicSNMPBackend, oid, c, check_plugin_name,
+                                            table_base_oid) for c in configs
+        ],
+    )
+
+
+def _create_result_for_backend_walk(backend: Type[ABCSNMPBackend], oid: OID, config: SNMPHostConfig,
+                                    check_plugin_name, table_base_oid) -> SNMPRowInfo:
+    return backend(config, logger).walk(oid,
+                                        check_plugin_name,
+                                        table_base_oid,
+                                        context_name="public" if config.is_ipv6_primary and
+                                        not isinstance(config.credentials, str) else "")
 
 
 #.
@@ -281,6 +367,79 @@ def _create_configs_special_auth() -> List[SNMPHostConfig]:
             bulk_walk_size_of=10,
             timing={},
             oid_range_limits=[],
+            snmpv3_contexts=[],
+            character_encoding=None,
+            is_usewalk_host=False,
+            snmp_backend="classic",
+            record_stats=False,
+        ),
+    ]
+
+
+def _create_configs_oidranges():
+    return [
+        SNMPHostConfig(
+            is_ipv6_primary=False,
+            hostname="oidranges/first",
+            ipaddress="127.0.0.1",
+            credentials="public",
+            port=1337,
+            is_bulkwalk_host=True,
+            is_snmpv2or3_without_bulkwalk_host=False,
+            bulk_walk_size_of=10,
+            timing={},
+            oid_range_limits=[('if64', [('first', 3)])],
+            snmpv3_contexts=[],
+            character_encoding=None,
+            is_usewalk_host=False,
+            snmp_backend="classic",
+            record_stats=False,
+        ),
+        SNMPHostConfig(
+            is_ipv6_primary=False,
+            hostname="oidranges/mid",
+            ipaddress="127.0.0.1",
+            credentials="public",
+            port=1337,
+            is_bulkwalk_host=True,
+            is_snmpv2or3_without_bulkwalk_host=False,
+            bulk_walk_size_of=10,
+            timing={},
+            oid_range_limits=[('if64', [('mid', (4, 2))])],
+            snmpv3_contexts=[],
+            character_encoding=None,
+            is_usewalk_host=False,
+            snmp_backend="classic",
+            record_stats=False,
+        ),
+        SNMPHostConfig(
+            is_ipv6_primary=False,
+            hostname="oidranges/last",
+            ipaddress="127.0.0.1",
+            credentials="public",
+            port=1337,
+            is_bulkwalk_host=True,
+            is_snmpv2or3_without_bulkwalk_host=False,
+            bulk_walk_size_of=10,
+            timing={},
+            oid_range_limits=[('if64', [('last', 3)])],
+            snmpv3_contexts=[],
+            character_encoding=None,
+            is_usewalk_host=False,
+            snmp_backend="classic",
+            record_stats=False,
+        ),
+        SNMPHostConfig(
+            is_ipv6_primary=False,
+            hostname="oidranges",
+            ipaddress="127.0.0.1",
+            credentials="public",
+            port=1337,
+            is_bulkwalk_host=True,
+            is_snmpv2or3_without_bulkwalk_host=False,
+            bulk_walk_size_of=10,
+            timing={},
+            oid_range_limits=[('if64', [('first', 1), ('mid', (3, 1)), ('last', 2)])],
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,

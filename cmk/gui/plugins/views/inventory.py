@@ -20,6 +20,7 @@ import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.inventory as inventory
+from cmk.gui.type_defs import PaintResult
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
@@ -366,7 +367,7 @@ def decorate_inv_paint(skip_painting_if_string=False):
 
 
 @decorate_inv_paint()
-def inv_paint_generic(v):
+def inv_paint_generic(v: Union[str, float, int]) -> PaintResult:
     if isinstance(v, float):
         return "number", "%.2f" % v
     if isinstance(v, int):
@@ -375,31 +376,31 @@ def inv_paint_generic(v):
 
 
 @decorate_inv_paint(skip_painting_if_string=True)
-def inv_paint_hz(hz):
+def inv_paint_hz(hz: float) -> PaintResult:
     return "number", cmk.utils.render.fmt_number_with_precision(hz, drop_zeroes=False, unit="Hz")
 
 
 @decorate_inv_paint(skip_painting_if_string=True)
-def inv_paint_bytes(b):
+def inv_paint_bytes(b: int) -> PaintResult:
     if b == 0:
         return "number", "0"
     return "number", cmk.utils.render.fmt_bytes(b, precision=0)
 
 
 @decorate_inv_paint(skip_painting_if_string=True)
-def inv_paint_size(b):
+def inv_paint_size(b: int) -> PaintResult:
     return "number", cmk.utils.render.fmt_bytes(b)
 
 
 @decorate_inv_paint(skip_painting_if_string=True)
-def inv_paint_bytes_rounded(b):
+def inv_paint_bytes_rounded(b: int) -> PaintResult:
     if b == 0:
         return "number", "0"
     return "number", cmk.utils.render.fmt_bytes(b)
 
 
 @decorate_inv_paint()
-def inv_paint_number(b):
+def inv_paint_number(b: Union[str, int, float]) -> PaintResult:
     return "number", str(b)
 
 
@@ -407,17 +408,17 @@ def inv_paint_number(b):
 # abbreviate things if numbers are very large
 # (though it doesn't do so yet)
 @decorate_inv_paint()
-def inv_paint_count(b):
+def inv_paint_count(b: Union[str, int, float]) -> PaintResult:
     return "number", str(b)
 
 
 @decorate_inv_paint()
-def inv_paint_nic_speed(bits_per_second):
+def inv_paint_nic_speed(bits_per_second: str) -> PaintResult:
     return "number", cmk.utils.render.fmt_nic_speed(bits_per_second)
 
 
 @decorate_inv_paint()
-def inv_paint_if_oper_status(oper_status):
+def inv_paint_if_oper_status(oper_status: int) -> PaintResult:
     if oper_status == 1:
         css_class = "if_state_up"
     elif oper_status == 2:
@@ -431,42 +432,42 @@ def inv_paint_if_oper_status(oper_status):
 
 # admin status can only be 1 or 2, matches oper status :-)
 @decorate_inv_paint()
-def inv_paint_if_admin_status(admin_status):
+def inv_paint_if_admin_status(admin_status: int) -> PaintResult:
     return inv_paint_if_oper_status(admin_status)
 
 
 @decorate_inv_paint()
-def inv_paint_if_port_type(port_type):
+def inv_paint_if_port_type(port_type: int) -> PaintResult:
     type_name = defines.interface_port_types().get(port_type, _("unknown"))
     return "", "%d - %s" % (port_type, type_name)
 
 
 @decorate_inv_paint()
-def inv_paint_if_available(available):
+def inv_paint_if_available(available: bool) -> PaintResult:
     return "if_state " + (available and "if_available" or "if_not_available"), \
                          (available and _("free") or _("used"))
 
 
 @decorate_inv_paint()
-def inv_paint_mssql_is_clustered(clustered):
+def inv_paint_mssql_is_clustered(clustered: bool) -> PaintResult:
     return "mssql_" + (clustered and "is_clustered" or "is_not_clustered"), \
                       (clustered and _("is clustered") or _("is not clustered"))
 
 
 @decorate_inv_paint()
-def inv_paint_mssql_node_names(node_names):
+def inv_paint_mssql_node_names(node_names: str) -> PaintResult:
     return "", node_names
 
 
 @decorate_inv_paint()
-def inv_paint_ipv4_network(nw):
+def inv_paint_ipv4_network(nw: str) -> PaintResult:
     if nw == "0.0.0.0/0":
         return "", _("Default")
     return "", nw
 
 
 @decorate_inv_paint()
-def inv_paint_ip_address_type(t):
+def inv_paint_ip_address_type(t: str) -> PaintResult:
     if t == "ipv4":
         return "", _("IPv4")
     if t == "ipv6":
@@ -475,47 +476,47 @@ def inv_paint_ip_address_type(t):
 
 
 @decorate_inv_paint()
-def inv_paint_route_type(rt):
+def inv_paint_route_type(rt: str) -> PaintResult:
     if rt == "local":
         return "", _("Local route")
     return "", _("Gateway route")
 
 
 @decorate_inv_paint(skip_painting_if_string=True)
-def inv_paint_volt(volt):
+def inv_paint_volt(volt: float) -> PaintResult:
     return "number", "%.1f V" % volt
 
 
 @decorate_inv_paint(skip_painting_if_string=True)
-def inv_paint_date(timestamp):
+def inv_paint_date(timestamp: int) -> PaintResult:
     date_painted = time.strftime("%Y-%m-%d", time.localtime(timestamp))
     return "number", "%s" % date_painted
 
 
 @decorate_inv_paint(skip_painting_if_string=True)
-def inv_paint_date_and_time(timestamp):
+def inv_paint_date_and_time(timestamp: int) -> PaintResult:
     date_painted = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
     return "number", "%s" % date_painted
 
 
 @decorate_inv_paint(skip_painting_if_string=True)
-def inv_paint_age(age):
+def inv_paint_age(age: float) -> PaintResult:
     return "number", cmk.utils.render.approx_age(age)
 
 
 @decorate_inv_paint()
-def inv_paint_bool(value):
+def inv_paint_bool(value: bool) -> PaintResult:
     return "", (_("Yes") if value else _("No"))
 
 
 @decorate_inv_paint(skip_painting_if_string=True)
-def inv_paint_timestamp_as_age(timestamp):
+def inv_paint_timestamp_as_age(timestamp: int) -> PaintResult:
     age = time.time() - timestamp
     return inv_paint_age(age)
 
 
 @decorate_inv_paint(skip_painting_if_string=True)
-def inv_paint_timestamp_as_age_days(timestamp):
+def inv_paint_timestamp_as_age_days(timestamp: int) -> PaintResult:
     def round_to_day(ts):
         broken = time.localtime(ts)
         return int(
@@ -544,12 +545,12 @@ def inv_paint_timestamp_as_age_days(timestamp):
 
 
 @decorate_inv_paint()
-def inv_paint_csv_labels(csv_list):
+def inv_paint_csv_labels(csv_list: str) -> PaintResult:
     return "labels", html.render_br().join(csv_list.split(","))
 
 
 @decorate_inv_paint()
-def inv_paint_cmk_label(label):
+def inv_paint_cmk_label(label: List[str]) -> PaintResult:
     return "labels", render_labels({label[0]: label[1]},
                                    object_type="host",
                                    with_links=True,
@@ -557,7 +558,7 @@ def inv_paint_cmk_label(label):
 
 
 @decorate_inv_paint()
-def inv_paint_container_ready(ready):
+def inv_paint_container_ready(ready: str) -> PaintResult:
     if ready == 'yes':
         css_class = "if_state_up"
     elif ready == 'no':
@@ -569,7 +570,7 @@ def inv_paint_container_ready(ready):
 
 
 @decorate_inv_paint()
-def inv_paint_service_status(status):
+def inv_paint_service_status(status: str) -> PaintResult:
     if status == 'running':
         css_class = "if_state_up"
     elif status == 'stopped':

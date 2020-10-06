@@ -39,7 +39,7 @@ endif
 .PHONY: clean format-shell help prepare-node-modules \
 	$(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-composition test-composition-docker test-composition-docker-debug \
-	test-docker test-format-python test-format-python-docker test-format-shell \
+	test-docker test-format-python test-format-python-docker test-format-shell test-format-js \
         test-gui-crawl test-gui-crawl-docker test-integration test-integration-docker \
         test-integration-docker-debug test-mypy test-mypy-raw itest-mypy-docker \
         test-packaging test-pipenv-deps test-pylint test-pylint-docker test-shellcheck \
@@ -64,6 +64,7 @@ help:
 	@echo "test-format-python                  - Run formatting tests"
 	@echo "test-format-python-docker           - Run formatting tests in docker"
 	@echo "test-format-shell                   - Run the shell formatting"
+	@echo "test-format-prettier                - Run the JavaScript formatting"
 	@echo "test-gui-crawl                      - Run GUI crawl locally"
 	@echo "test-gui-crawl-docker               - Run GUI crawl in container"
 	@echo "test-integration                    - Run integration tests locally"
@@ -172,6 +173,9 @@ test-format-python-docker:
 
 test-format-shell:
 	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES)
+
+test-format-js:
+	cd ..; scripts/run-prettier --check "web/htdocs/js/**/*.js"
 
 test-gui-crawl: prepare-node-modules
 	$(PYTEST) -T gui_crawl $(realpath gui_crawl/test_gui_crawl.py)

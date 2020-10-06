@@ -8,31 +8,31 @@
 # <<<uptime>>>
 # 15876.96 187476.72
 
+import re
 import datetime
 
 
-def parse_human_read_uptime(string):
+def parse_human_read_uptime(string: str) -> int:
     """Human readable string as given by solaris uptime into seconds"""
-    to_secs = {'day': 3600 * 24, 'min': 60, 'hour': 3600}
-    uptime = {}
+    days, hrs, mins = 0, 0, 0
     mmin = re.search(r"(\d+) min\(s\)", string)
     if mmin:
-        uptime['min'] = int(mmin.group(1))
+        mins = int(mmin.group(1))
 
     mday = re.search(r"(\d+) day\(s\)", string)
     if mday:
-        uptime['day'] = int(mday.group(1))
+        days = int(mday.group(1))
 
     mhrs = re.search(r"(\d+) hr\(s\)", string)
     if mhrs:
-        uptime['hour'] = int(mhrs.group(1))
+        hrs = int(mhrs.group(1))
 
     mhm = re.search(r"(\d+):(\d+)", string)
     if mhm:
-        uptime['hour'] = int(mhm.group(1))
-        uptime['min'] = int(mhm.group(2))
+        hrs = int(mhm.group(1))
+        mins = int(mhm.group(2))
 
-    return sum(to_secs[unit] * value for unit, value in uptime.items())
+    return 86400 * days + 3600 * hrs + 60 * mins
 
 
 def parse_solaris_uptime(info, from_boot_time):
@@ -67,8 +67,9 @@ unix:0:system_misc:snaptime     1131.467157594                     # snaptime
     uptime_struct['from_boot_time'] = from_boot_time
     uptime_struct['uname'] = " ".join(info[0])
     uptime_struct['zonename'] = info[1][0]
-    uptime_str = re.match(r'.*up (.*), +\d+ user.*', " ".join(info[2])).group(1)
-    uptime_struct['uptime_parsed'] = parse_human_read_uptime(uptime_str)
+    uptime_match = re.match(r'.*up (.*), +\d+ user.*', " ".join(info[2]))
+    assert uptime_match
+    uptime_struct['uptime_parsed'] = parse_human_read_uptime(uptime_match.group(1))
     uptime_struct['snaptime'] = float(info[3][1])
 
     if abs(uptime_struct['uptime_parsed'] - uptime_struct['from_boot_time']) < 600:
@@ -100,7 +101,7 @@ def uptime_parse(info):
             if line[-1] == u'[uptime_solaris_start]':
                 is_solaris = True
                 continue
-            elif line[-1] == u'[uptime_solaris_end]':
+            if line[-1] == u'[uptime_solaris_end]':
                 is_solaris = False
                 continue
 

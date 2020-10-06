@@ -14,10 +14,10 @@ from typing import Any, Callable, Dict, Generator, Optional, overload, Tuple, Un
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
 
-from cmk.snmplib.type_defs import SNMPDetectSpec
+from cmk.snmplib.type_defs import SNMPDetectSpec  # pylint: disable=cmk-module-layer-violation
 
-import cmk.base.check_api_utils as check_api_utils
-import cmk.base.prediction
+import cmk.base.check_api_utils as check_api_utils  # pylint: disable=cmk-module-layer-violation
+import cmk.base.prediction  # pylint: disable=cmk-module-layer-violation
 from cmk.base.api.agent_based.checking_classes import IgnoreResultsError, Metric, Result, State
 from cmk.base.api.agent_based.type_defs import ValueStore
 

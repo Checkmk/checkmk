@@ -25,9 +25,9 @@ from cmk.utils.type_defs import (
     ParsedSectionName,
     SectionName,
 )
-from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree
+from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree  # pylint: disable=cmk-module-layer-violation
 
-from cmk.base.discovered_labels import HostLabel
+from cmk.base.discovered_labels import HostLabel  # pylint: disable=cmk-module-layer-violation
 
 
 class Parameters(Mapping):

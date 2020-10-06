@@ -93,6 +93,9 @@ def _is_allowed_for_agent_based_plugin(
 
 
 _COMPONENTS = (
+    # cmk.base.api.agent_based is not really a component, but it (almost) adheres to
+    # the same import restrictictions, and we want to encourage that
+    (Component("cmk.base.api.agent_based"), _is_default_allowed_import),
     (Component("cmk.base.plugins.agent_based.agent_based_api"), _is_allowed_for_agent_based_api),
     (Component("cmk.base.plugins.agent_based"), _is_allowed_for_agent_based_plugin),
     (Component("cmk.base"), _allow_default_plus_fetchers_and_snmplib),

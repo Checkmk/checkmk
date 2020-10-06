@@ -13,7 +13,7 @@ import itertools
 
 from cmk.utils.check_utils import maincheckify, wrap_parameters, unwrap_parameters
 
-from cmk.base import item_state
+from cmk.base import item_state  # pylint: disable=cmk-module-layer-violation
 from cmk.base.api.agent_based.checking_classes import (
     Metric,
     Result,
@@ -25,9 +25,9 @@ from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
 from cmk.base.api.agent_based.register.utils import DUMMY_RULESET_NAME
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import Parameters
-from cmk.base.check_api_utils import Service as LegacyService
-from cmk.base.check_utils import get_default_parameters
-from cmk.base.discovered_labels import HostLabel, DiscoveredHostLabels
+from cmk.base.check_api_utils import Service as LegacyService  # pylint: disable=cmk-module-layer-violation
+from cmk.base.check_utils import get_default_parameters  # pylint: disable=cmk-module-layer-violation
+from cmk.base.discovered_labels import HostLabel, DiscoveredHostLabels  # pylint: disable=cmk-module-layer-violation
 
 # There are so many check_info keys, make sure we didn't miss one.
 CONSIDERED_KEYS = {

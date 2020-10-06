@@ -12,7 +12,9 @@ from cmk.base.api.agent_based.checking_classes import (
     Result,
     State,
 )
-from cmk.base.check_api_utils import state_markers
+
+# TODO: move state_markers?
+from cmk.base.check_api_utils import state_markers  # pylint: disable=cmk-module-layer-violation
 
 
 def aggregate_node_details(

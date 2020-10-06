@@ -14,7 +14,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import ParsedSectionName, SectionName
 
-from cmk.snmplib.type_defs import OIDBytes, OIDSpec, SNMPDetectSpec, SNMPTree
+from cmk.snmplib.type_defs import OIDBytes, OIDSpec, SNMPDetectSpec, SNMPTree  # pylint: disable=cmk-module-layer-violation
 
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
@@ -28,7 +28,7 @@ from cmk.base.api.agent_based.type_defs import (
 )
 from cmk.base.api.agent_based.register.utils import validate_function_arguments
 
-from cmk.base.discovered_labels import HostLabel
+from cmk.base.discovered_labels import HostLabel  # pylint: disable=cmk-module-layer-violation
 
 
 def _validate_parse_function(parse_function: Union[AgentParseFunction, SNMPParseFunction], *,

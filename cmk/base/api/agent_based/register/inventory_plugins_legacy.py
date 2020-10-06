@@ -20,7 +20,9 @@ from cmk.base.api.agent_based.inventory_classes import (
 )
 from cmk.base.api.agent_based.register.inventory_plugins import create_inventory_plugin
 from cmk.base.api.agent_based.type_defs import Parameters
-from cmk.base.inventory import initialize_inventory_tree  # TODO (mo): move this here.
+
+# TODO (mo): move this here.
+from cmk.base.inventory import initialize_inventory_tree  # pylint: disable=cmk-module-layer-violation
 
 
 class MockStructuredDataTree:

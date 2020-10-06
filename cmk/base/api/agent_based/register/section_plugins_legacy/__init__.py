@@ -7,7 +7,7 @@
 """
 from typing import Any, Callable, Dict, Generator, List, Optional, Tuple
 
-from cmk.snmplib.type_defs import SNMPTree
+from cmk.snmplib.type_defs import SNMPTree  # pylint: disable=cmk-module-layer-violation
 
 from cmk.base.api.agent_based.register.section_plugins import (
     create_agent_section_plugin,
@@ -21,8 +21,8 @@ from cmk.base.api.agent_based.type_defs import (
     SNMPSectionPlugin,
 )
 from cmk.base.api.agent_based.type_defs import AgentStringTable
-from cmk.base.check_api_utils import Service
-from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
+from cmk.base.check_api_utils import Service  # pylint: disable=cmk-module-layer-violation
+from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel  # pylint: disable=cmk-module-layer-violation
 
 from .convert_scan_functions import create_detect_spec
 

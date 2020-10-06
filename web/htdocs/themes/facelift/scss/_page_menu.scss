@@ -232,7 +232,7 @@ div#top_heading {
 
           div.entry {
             padding-left: $spacing;
-            line-height: (2.2 * $spacing);
+            line-height: $menu-item-spacing;
 
             a {
               display: flex;

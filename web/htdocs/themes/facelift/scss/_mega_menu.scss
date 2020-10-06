@@ -162,7 +162,7 @@
           ul {
             padding-left: 0;
             font-size: 12px;
-            line-height: (2.2 * $spacing);
+            line-height: $menu-item-spacing;
           }
 
           ul a:hover {

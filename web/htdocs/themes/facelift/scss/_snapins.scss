@@ -455,7 +455,7 @@ div.spacertop {
 
 #snapin_admin {
   li {
-    line-height: (2.2 * $spacing);
+    line-height: $menu-item-spacing;
 
     img.icon {
       width: 14px;

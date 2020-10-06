@@ -25,10 +25,10 @@ from typing import Any, Counter, Dict, Iterable, List, Optional, Tuple, Union
 
 import cmk.utils.debug
 import cmk.utils.paths
+from cmk.utils.type_defs import CheckPluginName
 import cmk.base.config  # from cmk.base.config import logwatch_rules will NOT work!
 # import from legacy API until we come up with something better
 from cmk.base.check_api import (
-    get_effective_service_level,
     host_name,
     service_extra_conf,
 )
@@ -49,11 +49,21 @@ def discover_group(
 
 def check_logwatch_ec(params: Parameters, section: logwatch.Section) -> CheckResult:
     # fall back to the cluster case with None as node name.
-    yield from check_logwatch_ec_common(None, params, {None: section})
+    yield from check_logwatch_ec_common(
+        None,
+        params,
+        {None: section},
+        service_level=_get_effective_service_level(CheckPluginName("logwatch_ec"), None),
+    )
 
 
 def cluster_check_logwatch_ec(params: Parameters, section: ClusterSection) -> CheckResult:
-    yield from check_logwatch_ec_common(None, params, section)
+    yield from check_logwatch_ec_common(
+        None,
+        params,
+        section,
+        service_level=_get_effective_service_level(CheckPluginName("logwatch_ec"), None),
+    )
 
 
 register.check_plugin(
@@ -84,7 +94,12 @@ def check_logwatch_ec_single(
     section: logwatch.Section,
 ) -> CheckResult:
     # fall back to the cluster case with None as node name.
-    yield from check_logwatch_ec_common(item, params, {None: section})
+    yield from check_logwatch_ec_common(
+        item,
+        params,
+        {None: section},
+        service_level=_get_effective_service_level(CheckPluginName("logwatch_ec_single"), item),
+    )
 
 
 def cluster_check_logwatch_ec_single(
@@ -93,7 +108,12 @@ def cluster_check_logwatch_ec_single(
     section: ClusterSection,
 ) -> CheckResult:
     # fall back to the cluster case with None as node name.
-    yield from check_logwatch_ec_common(item, params, section)
+    yield from check_logwatch_ec_common(
+        item,
+        params,
+        section,
+        service_level=_get_effective_service_level(CheckPluginName("logwatch_ec_single"), item),
+    )
 
 
 register.check_plugin(
@@ -108,6 +128,23 @@ register.check_plugin(
     check_default_parameters={},
     cluster_check_function=cluster_check_logwatch_ec_single,
 )
+
+
+# Yet another unbelievable API violation:
+def _get_effective_service_level(
+    plugin_name: CheckPluginName,
+    item: Optional[str],
+) -> int:
+    """Get the service level that applies to the current service."""
+
+    host = host_name()
+    service_description = cmk.base.config.service_description(host, plugin_name, item)
+    config_cache = cmk.base.config.get_config_cache()
+    service_level = config_cache.service_level_of_service(host, service_description)
+    if service_level is not None:
+        return service_level
+
+    return config_cache.get_host_config(host).service_level or 0
 
 
 # OK      -> priority 5 (notice)
@@ -182,6 +219,8 @@ def check_logwatch_ec_common(
     item: Optional[str],
     params: Parameters,
     parsed: ClusterSection,
+    *,
+    service_level: int,
 ) -> CheckResult:
     yield from logwatch.errors(parsed)
 
@@ -236,7 +275,6 @@ def check_logwatch_ec_common(
     rclfd_to_ignore = 0
 
     logfile_reclassify_settings: Dict[str, Any] = {}
-    service_level = get_effective_service_level()
 
     def add_reclassify_settings(settings):
         if isinstance(settings, dict):

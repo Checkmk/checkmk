@@ -58,8 +58,6 @@ def test_cross_component_not_ok(importer, importee):
         # disallow import of `snmplib` in `utils`
         ("cmk/utils", "cmk.utils.foo", "cmk.snmplib", False),
         ("cmk/base", "cmk.base.data_sources", "cmk.snmplib", True),
-        # another broken one:
-        ("cmk/base", "cmk.base.config", "cmk.gui.plugins", False),
     ])
 def test__is_import_allowed(module_path, importer, importee, allowed):
     assert allowed is CHECKER._is_import_allowed(

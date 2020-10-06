@@ -62,6 +62,10 @@ export function enable_menu_entry(id, enabled) {
     var oShortCut = document.getElementById("menu_shortcut_" + id);
     if (oShortCut)
         utils.change_class(oShortCut, from, to);
+
+    var oSuggestion = document.getElementById("menu_suggestion_" + id);
+    if (oSuggestion)
+        utils.change_class(oSuggestion.parentElement, from, to);
 }
 
 export function enable_menu_entries(css_class, enabled) {

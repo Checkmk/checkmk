@@ -157,9 +157,11 @@ export function toggle_popup(event, trigger_obj, ident, method, data, onclose, r
     });
 }
 
+var switch_popup_timeout = null;
+
 // When one of the popups of a group is open, open other popups once hovering over another popups
 // trigger. This currently only works on PopupMethodInline based popups.
-export function switch_popup_menu_group(trigger, group_cls) {
+export function switch_popup_menu_group(trigger, group_cls, delay) {
     const popup = trigger.nextSibling;
     // When the new focucssed dropdown is already open, leave it open
     if (utils.has_class(popup.parentNode, "active")) {
@@ -172,8 +174,19 @@ export function switch_popup_menu_group(trigger, group_cls) {
         return;
     }
 
-    // Now open the popup menu by triggering the onclick event
-    trigger.click();
+    if (!delay) {
+        trigger.click();
+        return;
+    }
+
+    stop_popup_menu_group_switch();
+    switch_popup_timeout = setTimeout(() => switch_popup_menu_group(trigger, group_cls, null), delay);
+}
+
+export function stop_popup_menu_group_switch() {
+    if (switch_popup_timeout !== null) {
+        clearTimeout(switch_popup_timeout);
+    }
 }
 
 function generate_menu(container, resizable) {

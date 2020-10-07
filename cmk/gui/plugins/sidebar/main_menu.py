@@ -61,6 +61,7 @@ class MainMenuRenderer:
                 method=MethodInline(self._get_mega_menu_content(menu_item)),
                 cssclass=menu_item.name,
                 popup_group="main_menu_popup",
+                hover_switch_delay=150,  # ms
             )
             html.close_li()
 

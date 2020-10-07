@@ -2719,10 +2719,11 @@ class html(ABCHTMLGenerator):
                       cssclass: CSSSpec = None,
                       onclose: Optional[str] = None,
                       resizable: bool = False,
-                      popup_group: Optional[str] = None) -> None:
+                      popup_group: Optional[str] = None,
+                      hover_switch_delay: Optional[int] = None) -> None:
         self.write_html(
             self.render_popup_trigger(content, ident, method, data, style, cssclass, onclose,
-                                      resizable, popup_group))
+                                      resizable, popup_group, hover_switch_delay))
 
     def render_popup_trigger(self,
                              content: HTML,
@@ -2733,7 +2734,8 @@ class html(ABCHTMLGenerator):
                              cssclass: CSSSpec = None,
                              onclose: Optional[str] = None,
                              resizable: bool = False,
-                             popup_group: Optional[str] = None) -> HTML:
+                             popup_group: Optional[str] = None,
+                             hover_switch_delay: Optional[int] = None) -> HTML:
 
         onclick = 'cmk.popup_menu.toggle_popup(event, this, %s, %s, %s, %s, %s);' % \
                     (json.dumps(ident),
@@ -2743,10 +2745,13 @@ class html(ABCHTMLGenerator):
                      json.dumps(resizable))
 
         if popup_group:
-            onmouseenter: Optional[
-                str] = "cmk.popup_menu.switch_popup_menu_group(this, %s)" % json.dumps(popup_group)
+            onmouseenter: Optional[str] = (
+                "cmk.popup_menu.switch_popup_menu_group(this, %s, %s)" %
+                (json.dumps(popup_group), json.dumps(hover_switch_delay)))
+            onmouseleave: Optional[str] = "cmk.popup_menu.stop_popup_menu_group_switch()"
         else:
             onmouseenter = None
+            onmouseleave = None
 
         atag = self.render_a(
             content,
@@ -2756,6 +2761,7 @@ class html(ABCHTMLGenerator):
             target="_self",
             onclick=onclick,
             onmouseenter=onmouseenter,
+            onmouseleave=onmouseleave,
         )
 
         classes: List[Optional[str]] = ["popup_trigger"]

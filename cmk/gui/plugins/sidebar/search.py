@@ -30,11 +30,6 @@ from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry, PageHandlers
 from cmk.gui.type_defs import ViewName, Row, Rows, HTTPVariables
 
 SearchQuery = str
-LivestatusTable = str
-LivestatusColumn = str
-LivestatusFilterHeaders = str
-UsedFilters = Dict[str, List[str]]
-Matches = Optional[Tuple[str, HTTPVariables]]
 
 
 @dataclass
@@ -42,6 +37,24 @@ class Result:
     """Intermediate representation of a search result"""
     title: str
     url: str
+
+
+#   .--Quicksearch---------------------------------------------------------.
+#   |         ___        _      _                            _             |
+#   |        / _ \ _   _(_) ___| | _____  ___  __ _ _ __ ___| |__          |
+#   |       | | | | | | | |/ __| |/ / __|/ _ \/ _` | '__/ __| '_ \         |
+#   |       | |_| | |_| | | (__|   <\__ \  __/ (_| | | | (__| | | |        |
+#   |        \__\_\\__,_|_|\___|_|\_\___/\___|\__,_|_|  \___|_| |_|        |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Quicksearch basics                                                   |
+#   '----------------------------------------------------------------------'
+
+LivestatusTable = str
+LivestatusColumn = str
+LivestatusFilterHeaders = str
+UsedFilters = Dict[str, List[str]]
+Matches = Optional[Tuple[str, HTTPVariables]]
 
 
 @dataclass
@@ -80,7 +93,7 @@ def _build_url(url_params: HTTPVariables) -> str:
     return html.makeuri(new_params, delvars=["q"], filename="view.py")
 
 
-class ABCSearchConductor(metaclass=abc.ABCMeta):
+class ABCQuicksearchConductor(metaclass=abc.ABCMeta):
     def __init__(self, used_filters: UsedFilters, filter_behaviour: FilterBehaviour) -> None:
         # used_filters:     {u'h': [u'heute'], u's': [u'Check_MK']}
         self._used_filters = used_filters
@@ -133,7 +146,7 @@ class ABCSearchConductor(metaclass=abc.ABCMeta):
             raise NotImplementedError()
 
 
-class BasicPluginSearchConductor(ABCSearchConductor):
+class BasicPluginQuicksearchConductor(ABCQuicksearchConductor):
     """Passes queries through to a non livestatus plugin
 
     There is no aggregation done by this conductor. It deals with a single search plugin.  """
@@ -172,7 +185,7 @@ class BasicPluginSearchConductor(ABCSearchConductor):
         return self._results[:config.quicksearch_dropdown_limit]
 
 
-class LivestatusSearchConductor(ABCSearchConductor):
+class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
     """Executes the livestatus search plugins and collects results
 
     It cares about aggregating the queries of different filters together to a single livestatus
@@ -481,7 +494,7 @@ class QuicksearchManager:
 
         return _build_url(url_params)
 
-    def _determine_search_objects(self, query: SearchQuery) -> List[ABCSearchConductor]:
+    def _determine_search_objects(self, query: SearchQuery) -> List[ABCQuicksearchConductor]:
         """Construct search objects from the query
 
         Try to find search object expressions and construct objects or
@@ -493,11 +506,15 @@ class QuicksearchManager:
 
         found_filters = self._find_search_object_expressions(query)
 
-        search_objects: List[ABCSearchConductor] = []
+        search_objects: List[ABCQuicksearchConductor] = []
         if found_filters:
             # The query contains at least one search expression to search a specific search plugin.
             used_filters = self._get_used_filters_from_query(query, found_filters)
-            search_objects.append(LivestatusSearchConductor(used_filters, FilterBehaviour.CONTINUE))
+            search_objects.append(
+                LivestatusQuicksearchConductor(
+                    used_filters,
+                    FilterBehaviour.CONTINUE,
+                ))
         else:
             # No explicit filters specified by search expression. Execute the quicksearch plugins in
             # the order they are configured to let them answer the query.
@@ -543,15 +560,19 @@ class QuicksearchManager:
             current_string = current_string[:offset]
         return used_filters
 
-    def _make_conductor(self, filter_name: str, used_filters: UsedFilters,
-                        filter_behaviour: FilterBehaviour) -> ABCSearchConductor:
+    def _make_conductor(
+        self,
+        filter_name: str,
+        used_filters: UsedFilters,
+        filter_behaviour: FilterBehaviour,
+    ) -> ABCQuicksearchConductor:
         plugin = match_plugin_registry[filter_name]
         if isinstance(plugin, ABCLivestatusMatchPlugin):
-            return LivestatusSearchConductor(used_filters, filter_behaviour)
+            return LivestatusQuicksearchConductor(used_filters, filter_behaviour)
 
-        return BasicPluginSearchConductor(used_filters, filter_behaviour)
+        return BasicPluginQuicksearchConductor(used_filters, filter_behaviour)
 
-    def _conduct_search(self, search_objects: List[ABCSearchConductor]) -> None:
+    def _conduct_search(self, search_objects: List[ABCQuicksearchConductor]) -> None:
         """Collect the raw data from livestatus
 
         1. The single search objects execute the query.
@@ -580,8 +601,10 @@ class QuicksearchManager:
                         search_objects[i].remove_rows_from_end(config.quicksearch_dropdown_limit)
                 break
 
-    def _evaluate_results(self,
-                          search_objects: List[ABCSearchConductor]) -> Dict[str, List[Result]]:
+    def _evaluate_results(
+        self,
+        search_objects: List[ABCQuicksearchConductor],
+    ) -> Dict[str, List[Result]]:
         """Generates elements out of the raw data"""
         results_by_topic: Dict[str, List[Result]] = {}
         for search_object in search_objects:
@@ -652,7 +675,7 @@ class QuicksearchSnapin(SidebarSnapin):
         try:
             # TODO: Integrate here the interface to the index search
             results = self._quicksearch_manager.generate_results(query)
-            ResultRenderer().show(results, query)
+            QuicksearchResultRenderer().show(results, query)
 
         except TooManyRowsError as e:
             html.show_warning(str(e))
@@ -675,7 +698,7 @@ class QuicksearchSnapin(SidebarSnapin):
         raise HTTPRedirect(self._quicksearch_manager.generate_search_url(query))
 
 
-class ResultRenderer:
+class QuicksearchResultRenderer:
     """HTML rendering the matched results"""
     def show(self, results_by_topic: Dict[str, List[Result]], query: SearchQuery) -> None:
         """Renders the elements
@@ -692,14 +715,19 @@ class ResultRenderer:
                 html.a(result.title, id="result_%s" % query, href=result.url, target="main")
 
 
-#.
-#   .--Search Plugins------------------------------------------------------.
-#   |  ____                      _       ____  _             _             |
-#   | / ___|  ___  __ _ _ __ ___| |__   |  _ \| |_   _  __ _(_)_ __  ___   |
-#   | \___ \ / _ \/ _` | '__/ __| '_ \  | |_) | | | | |/ _` | | '_ \/ __|  |
-#   |  ___) |  __/ (_| | | | (__| | | | |  __/| | |_| | (_| | | | | \__ \  |
-#   | |____/ \___|\__,_|_|  \___|_| |_| |_|   |_|\__,_|\__, |_|_| |_|___/  |
-#   |                                                  |___/               |
+#   .--Quicksearch Plugins-------------------------------------------------.
+#   |         ___        _      _                            _             |
+#   |        / _ \ _   _(_) ___| | _____  ___  __ _ _ __ ___| |__          |
+#   |       | | | | | | | |/ __| |/ / __|/ _ \/ _` | '__/ __| '_ \         |
+#   |       | |_| | |_| | | (__|   <\__ \  __/ (_| | | | (__| | | |        |
+#   |        \__\_\\__,_|_|\___|_|\_\___/\___|\__,_|_|  \___|_| |_|        |
+#   |                                                                      |
+#   |                   ____  _             _                              |
+#   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
+#   |                  | |_) | | | | |/ _` | | '_ \/ __|                   |
+#   |                  |  __/| | |_| | (_| | | | | \__ \                   |
+#   |                  |_|   |_|\__,_|\__, |_|_| |_|___/                   |
+#   |                                 |___/                                |
 #   +----------------------------------------------------------------------+
 #   | Realize the search mechanism to find objects via livestatus          |
 #   '----------------------------------------------------------------------'

@@ -534,7 +534,7 @@ class SidebarRenderer:
         html.close_a()
         html.close_div()
 
-        self._show_main_menu()
+        MainMenuRenderer().show()
 
         html.div('',
                  id_="side_fold",
@@ -558,9 +558,6 @@ class SidebarRenderer:
 
             html.close_a()
             html.close_div()
-
-    def _show_main_menu(self) -> None:
-        MainMenuRenderer().show()
 
     def _get_check_mk_edition_title(self):
         if cmk_version.is_enterprise_edition():

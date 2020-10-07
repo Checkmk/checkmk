@@ -260,6 +260,7 @@ def check_levels(
     render_func: Optional[Callable[[float], str]] = None,
     label: Optional[str] = None,
     boundaries: Optional[Tuple[Optional[float], Optional[float]]] = None,
+    notice_only: bool = False,
 ) -> Generator[Result, None, None]:
     pass
 
@@ -274,6 +275,7 @@ def check_levels(
     render_func: Optional[Callable[[float], str]] = None,
     label: Optional[str] = None,
     boundaries: Optional[Tuple[Optional[float], Optional[float]]] = None,
+    notice_only: bool = False,
 ) -> Generator[Union[Result, Metric], None, None]:
     pass
 
@@ -287,6 +289,7 @@ def check_levels(
     render_func: Optional[Callable[[float], str]] = None,
     label: Optional[str] = None,
     boundaries: Optional[Tuple[Optional[float], Optional[float]]] = None,
+    notice_only: bool = False,
 ) -> Generator[Union[Result, Metric], None, None]:
     """Generic function for checking a value against levels.
 
@@ -303,6 +306,8 @@ def check_levels(
                       human readable string.
         label:        The label to prepend to the output.
         boundaries:   Minimum and maximum to add to the metric.
+        notice_only:  Only show up in service output if not OK (otherwise in details).
+                      See `notice` keyword of `Result` class.
 
     Example:
 
@@ -325,7 +330,10 @@ def check_levels(
 
     value_state, levels_text = _do_check_levels(value, levels_upper, levels_lower, render_func)
 
-    yield Result(state=value_state, summary=info_text + levels_text)
+    if notice_only:
+        yield Result(state=value_state, notice=info_text + levels_text)
+    else:
+        yield Result(state=value_state, summary=info_text + levels_text)
     if metric_name:
         yield Metric(metric_name, value, levels=levels_upper, boundaries=boundaries)
 

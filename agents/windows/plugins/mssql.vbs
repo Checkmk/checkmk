@@ -105,6 +105,7 @@ sections.add "backup", "<<<mssql_backup:sep(124)>>>"
 sections.add "transactionlogs", "<<<mssql_transactionlogs:sep(124)>>>"
 sections.add "datafiles", "<<<mssql_datafiles:sep(124)>>>"
 sections.add "clusters", "<<<mssql_cluster:sep(124)>>>"
+sections.add "jobs", "<<<mssql_jobs:sep(09)>>>"
 ' Has been deprecated with 1.4.0i1. Keep this for nicer transition for some versions.
 sections.add "versions", "<<<mssql_versions:sep(124)>>>"
 sections.add "connections", "<<<mssql_connections>>>"
@@ -677,6 +678,40 @@ For Each instance_id In instances.Keys: Do ' Continue trick
 
             addOutput(instance_id & " " & Replace(database_name, " ", "_") & " " & connection_count)
             RS.MoveNext
+        Loop
+        RS.Close
+    End If
+
+    addOutput(sections("jobs"))
+    RS.Open "USE [msdb];", CONN
+    RS.Open "SELECT  " &_
+            "    sj.job_id " &_
+            "   ,sj.name AS job_name " &_
+            "   ,sj.enabled AS job_enabled " &_
+            "   ,CAST(sjs.next_run_date AS VARCHAR(8)) AS next_run_date " &_
+            "   ,CAST(sjs.next_run_time AS VARCHAR(6)) AS next_run_time " &_
+            "   ,sjserver.last_run_outcome " &_
+            "   ,sjserver.last_outcome_message " &_
+            "   ,CAST(sjserver.last_run_date AS VARCHAR(8)) AS last_run_date " &_
+            "   ,CAST(sjserver.last_run_time AS VARCHAR(6)) AS last_run_time " &_
+            "   ,sjserver.last_run_duration " &_
+            "   ,ss.enabled AS schedule_enabled " &_
+            "   ,CONVERT(VARCHAR, CURRENT_TIMESTAMP, 20) AS server_current_time " &_
+            " FROM dbo.sysjobs sj " &_
+            " LEFT JOIN dbo.sysjobschedules sjs ON sj.job_id = sjs.job_id " &_
+            " LEFT JOIN dbo.sysjobservers sjserver ON sj.job_id = sjserver.job_id " &_
+            " LEFT JOIN dbo.sysschedules ss ON sjs.schedule_id = ss.schedule_id " &_
+            " ORDER BY sj.name " &_
+            "          ,sjs.next_run_date ASC " &_
+            "          ,sjs.next_run_time ASC " &_
+            "; ", CONN
+
+    errMsg = checkConnErrors(CONN)
+    If Not errMsg = "" Then
+        addOutput(instance_id & " " & errMsg)
+    Else
+        Do While Not RS.Eof
+            addOutput(instance_id & vbCrLf & RS.GetString)
         Loop
         RS.Close
     End If

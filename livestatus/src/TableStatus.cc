@@ -250,6 +250,10 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "The average latency for executing Check_MK checks (i.e. the time the start of the execution is behind the schedule)",
         offsets, [](const TableStatus & /*r*/) { return 0.0; }));
     addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
+        "average_latency_fetcher",
+        "The average latency for executing Check_MK fetchers (i.e. the time the start of the execution is behind the schedule)",
+        offsets, [](const TableStatus & /*r*/) { return 0.0; }));
+    addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
         "average_latency_real_time",
         "The average latency for executing real time checks (i.e. the time the start of the execution is behind the schedule)",
         offsets, [](const TableStatus & /*r*/) { return 0.0; }));

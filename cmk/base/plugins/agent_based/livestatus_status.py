@@ -152,13 +152,15 @@ def _generate_livestatus_results(
         yield Result(state=state(params["site_stopped"]), summary="Site is currently not running")
         return
 
+    yield Result(state=state.OK, summary="Livestatus version: %s" % status["livestatus_version"])
+
     for key, title in [
-        ("host_checks", "HostChecks"),
-        ("service_checks", "ServiceChecks"),
-        ("forks", "ProcessCreations"),
-        ("connections", "LivestatusConnects"),
-        ("requests", "LivestatusRequests"),
-        ("log_messages", "LogMessages"),
+        ("host_checks", "Host checks"),
+        ("service_checks", "Service checks"),
+        ("forks", "Process creations"),
+        ("connections", "Livestatus connects"),
+        ("requests", "Livestatus requests"),
+        ("log_messages", "Log messages"),
     ]:
         value = get_rate(
             value_store=value_store,
@@ -166,7 +168,11 @@ def _generate_livestatus_results(
             time=this_time,
             value=float(status[key]),
         )
-        yield Result(state=state.OK, summary="%s: %.1f/s" % (title, value))
+        if key in ("host_checks", "service_checks"):
+            yield Result(state=state.OK, summary="%s: %.1f/s" % (title, value))
+        else:
+            yield Result(state=state.OK, notice="%s: %.1f/s" % (title, value))
+
         yield Metric(name=key, value=value)
 
     if status["program_version"].startswith("Check_MK"):
@@ -198,25 +204,28 @@ def _generate_livestatus_results(
                 levels_upper=params[key],
                 render_func=render_func,
                 label=label,
+                notice_only=True,
             )
 
     yield from check_levels(
         value=int(status["num_hosts"]),
         metric_name="monitored_hosts",
         levels_upper=params.get("levels_hosts"),
-        label="Monitored Hosts",
+        label="Hosts",
+        notice_only=True,
     )
     yield from check_levels(
         value=int(status["num_services"]),
         metric_name="monitored_services",
         levels_upper=params.get("levels_services"),
         label="Services",
+        notice_only=True,
     )
     # Output some general information
-    yield Result(state=state.OK,
-                 summary="Core version: %s" %
-                 status["program_version"].replace("Check_MK", "Checkmk"))
-    yield Result(state=state.OK, summary="Livestatus version: %s" % status["livestatus_version"])
+    yield Result(
+        state=state.OK,
+        notice="Core version: %s" % status["program_version"].replace("Check_MK", "Checkmk"),
+    )
 
     # cert_valid_until should only be empty in one case that we know of so far:
     # the value is collected via the linux special agent with the command 'date'
@@ -230,7 +239,7 @@ def _generate_livestatus_results(
         valid_until = int(valid_until_str)
         yield Result(
             state=state.OK,
-            summary="Site certificate valid until %s" % render.date(valid_until),
+            notice="Site certificate valid until %s" % render.date(valid_until),
         )
         secs_left = valid_until - this_time
         warn_d, crit_d = params["site_cert_days"]
@@ -239,6 +248,7 @@ def _generate_livestatus_results(
             label="Expiring in",
             levels_lower=None if None in (warn_d, crit_d) else (warn_d * 86400.0, crit_d * 86400.0),
             render_func=render.timespan,
+            notice_only=True,
         )
         yield Metric("site_cert_days", secs_left / 86400.0)
 
@@ -257,8 +267,8 @@ def _generate_livestatus_results(
     ]
     # Check settings of enablings. Here we are quiet unless a non-OK state is found
     for settingname, title in settings:
-        if status[settingname] != '1' and params[settingname] != 0:
-            yield Result(state=state(params[settingname]), summary=title)
+        if status[settingname] != '1':
+            yield Result(state=state(params[settingname]), notice=title)
 
     # special considerations for enable_event_handlers
     if status["program_version"].startswith("Check_MK 1.2.6"):
@@ -270,9 +280,11 @@ def _generate_livestatus_results(
         # handlers defined, so this is nothing to warn about. Start warn when the
         # user defines his first alert handlers.
         return
-    if status["enable_event_handlers"] != '1' and params["enable_event_handlers"] != 0:
-        yield Result(state=state(params["enable_event_handlers"]),
-                     summary="Alert handlers are disabled")
+    if status["enable_event_handlers"] != '1':
+        yield Result(
+            state=state(params["enable_event_handlers"]),
+            notice="Alert handlers are disabled",
+        )
 
 
 register.check_plugin(

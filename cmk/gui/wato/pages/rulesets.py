@@ -1290,7 +1290,7 @@ def _vs_ruleset_group(mode_name: str) -> DropdownChoice:
     )
 
 
-class EditRuleMode(WatoMode):
+class ABCEditRuleMode(WatoMode):
     @classmethod
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeEditRuleset
@@ -2109,7 +2109,7 @@ class RuleConditionRenderer:
 
 
 @mode_registry.register
-class ModeEditRule(EditRuleMode):
+class ModeEditRule(ABCEditRuleMode):
     @classmethod
     def name(cls):
         return "edit_rule"
@@ -2125,7 +2125,7 @@ class ModeEditRule(EditRuleMode):
 
 
 @mode_registry.register
-class ModeCloneRule(EditRuleMode):
+class ModeCloneRule(ABCEditRuleMode):
     @classmethod
     def name(cls):
         return "clone_rule"
@@ -2156,7 +2156,7 @@ class ModeCloneRule(EditRuleMode):
 
 
 @mode_registry.register
-class ModeNewRule(EditRuleMode):
+class ModeNewRule(ABCEditRuleMode):
     @classmethod
     def name(cls):
         return "new_rule"

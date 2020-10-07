@@ -19,6 +19,7 @@ from cmk.utils.exceptions import (
     MKGeneralException,
 )
 
+from cmk.gui.type_defs import ABCMegaMenuSearch
 import cmk.gui.utils
 import cmk.gui.config as config
 import cmk.gui.sites as sites
@@ -673,7 +674,6 @@ class QuicksearchSnapin(SidebarSnapin):
             return
 
         try:
-            # TODO: Integrate here the interface to the index search
             results = self._quicksearch_manager.generate_results(query)
             QuicksearchResultRenderer().show(results, query)
 
@@ -1121,3 +1121,35 @@ class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
 
 
 match_plugin_registry.register(HosttagMatchPlugin())
+
+#   .--Menu Search---------------------------------------------------------.
+#   |      __  __                    ____                      _           |
+#   |     |  \/  | ___ _ __  _   _  / ___|  ___  __ _ _ __ ___| |__        |
+#   |     | |\/| |/ _ \ '_ \| | | | \___ \ / _ \/ _` | '__/ __| '_ \       |
+#   |     | |  | |  __/ | | | |_| |  ___) |  __/ (_| | | | (__| | | |      |
+#   |     |_|  |_|\___|_| |_|\__,_| |____/ \___|\__,_|_|  \___|_| |_|      |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Search in menus (Monitoring + Setup)                                 |
+#   '----------------------------------------------------------------------'
+
+
+class MonitoringSearch(ABCMegaMenuSearch):
+    """Search field in the monitoring menu"""
+    def show_search_field(self) -> None:
+        id_ = f"mk_side_search_field_{self.name}"
+        html.open_div(id_="mk_side_search",
+                      class_="content_center",
+                      onclick="cmk.quicksearch.close_popup();")
+        html.input(id_=id_,
+                   type_="text",
+                   name="search",
+                   autocomplete="off",
+                   placeholder="Search in Monitoring")
+        html.icon_button("#",
+                         _("Search"),
+                         "quicksearch",
+                         onclick="cmk.quicksearch.on_search_click();")
+        html.close_div()
+        html.div('', id_="mk_side_clear")
+        html.javascript(f"cmk.quicksearch.register_search_field('{id_}');")

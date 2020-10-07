@@ -103,6 +103,7 @@ mega_menu_registry.register(
         icon_name="main_user",
         sort_index=20,
         topics=_user_menu_topics,
+        search=None,
     ))
 
 

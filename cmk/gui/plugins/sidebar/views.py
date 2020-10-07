@@ -18,6 +18,7 @@ from cmk.gui.plugins.sidebar import (
     footnotelinks,
     make_topic_menu,
     show_topic_menu,
+    search,
 )
 from cmk.gui.i18n import _, _l
 
@@ -84,4 +85,5 @@ mega_menu_registry.register(
         icon_name="main_monitoring",
         sort_index=5,
         topics=get_view_menu_items,
+        search=search.MonitoringSearch("monitoring_search"),
     ))

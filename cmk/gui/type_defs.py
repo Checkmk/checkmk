@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from abc import ABC, abstractmethod
 from typing import Dict, Union, List, Tuple, Any, Optional, Callable, NamedTuple
 from cmk.utils.type_defs import UserId
 from cmk.gui.htmllib import HTML
@@ -89,6 +90,20 @@ class SetOnceDict(dict):
         raise NotImplementedError("Deleting items are not supported.")
 
 
+class ABCMegaMenuSearch(ABC):
+    """Abstract base class for search fields in mega menus"""
+    def __init__(self, name: str) -> None:
+        self._name = name
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @abstractmethod
+    def show_search_field(self) -> None:
+        ...
+
+
 TopicMenuItem = NamedTuple("TopicMenuItem", [
     ("name", str),
     ("title", str),
@@ -112,4 +127,5 @@ MegaMenu = NamedTuple("MegaMenu", [
     ("icon_name", str),
     ("sort_index", int),
     ("topics", Callable[[], List[TopicMenuTopic]]),
+    ("search", Optional[ABCMegaMenuSearch]),
 ])

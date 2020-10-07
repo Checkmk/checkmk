@@ -1910,4 +1910,5 @@ mega_menu_registry.register(
         icon_name="main_customize",
         sort_index=10,
         topics=_customize_menu_topics,
+        search=None,
     ))

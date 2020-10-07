@@ -37,6 +37,7 @@ class MegaMenuRegistry(Registry[MegaMenu]):
         ...     icon_name="main_monitoring",
         ...     sort_index=5,
         ...     topics=lambda: [],
+        ...     search=None,
         ... ))
         MegaMenu(...)
         >>> assert mega_menu_registry["monitoring"].sort_index == 5

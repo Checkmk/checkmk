@@ -29,9 +29,7 @@ from cmk.utils.type_defs import CheckPluginName  # pylint: disable=cmk-module-la
 # from cmk.base.config import logwatch_rules will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
 # import from legacy API until we come up with something better
-from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation
-    host_name, service_extra_conf,
-)
+from cmk.base.check_api import host_name, service_extra_conf  # pylint: disable=cmk-module-layer-violation
 
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, Parameters
 from .agent_based_api.v1 import Metric, register, Result, Service, State as state
@@ -40,11 +38,8 @@ from .utils import logwatch
 ClusterSection = Dict[Optional[str], logwatch.Section]
 
 
-def discover_group(
-    params: List[Parameters],
-    section: logwatch.Section,
-) -> DiscoveryResult:
-    yield from discover_logwatch_ec_common(section, params, "groups")
+def discover_group(section: logwatch.Section,) -> DiscoveryResult:
+    yield from discover_logwatch_ec_common(section, logwatch.get_ec_rule_params(), "groups")
 
 
 def check_logwatch_ec(params: Parameters, section: logwatch.Section) -> CheckResult:
@@ -71,9 +66,6 @@ register.check_plugin(
     service_name="Log Forwarding",
     sections=["logwatch"],
     discovery_function=discover_group,
-    discovery_default_parameters={},
-    discovery_ruleset_name="logwatch_ec",
-    discovery_ruleset_type="all",
     check_function=check_logwatch_ec,
     check_default_parameters={},
     check_ruleset_name="logwatch_ec",
@@ -81,11 +73,8 @@ register.check_plugin(
 )
 
 
-def discover_single(
-    params: List[Parameters],
-    section: logwatch.Section,
-) -> DiscoveryResult:
-    yield from discover_logwatch_ec_common(section, params, "single")
+def discover_single(section: logwatch.Section,) -> DiscoveryResult:
+    yield from discover_logwatch_ec_common(section, logwatch.get_ec_rule_params(), "single")
 
 
 def check_logwatch_ec_single(
@@ -121,9 +110,6 @@ register.check_plugin(
     service_name="Log %s",
     sections=["logwatch"],
     discovery_function=discover_single,
-    discovery_default_parameters={},
-    discovery_ruleset_name="logwatch_ec",
-    discovery_ruleset_type="all",
     check_function=check_logwatch_ec_single,
     check_default_parameters={},
     cluster_check_function=cluster_check_logwatch_ec_single,

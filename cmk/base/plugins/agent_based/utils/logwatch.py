@@ -21,6 +21,10 @@ import re
 from ..agent_based_api.v1.type_defs import Parameters
 from ..agent_based_api.v1 import regex, Result, State as state
 
+from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation
+    get_checkgroup_parameters, host_extra_conf, host_name,
+)
+
 ItemData = TypedDict(
     "ItemData",
     {
@@ -38,6 +42,14 @@ Section = TypedDict(
     },
     total=True,
 )
+
+
+def get_ec_rule_params():
+    """Isolate the remaining API violation w.r.t. parameters"""
+    return host_extra_conf(
+        host_name(),
+        get_checkgroup_parameters('logwatch_ec', []),
+    )
 
 
 def discoverable_items(*sections: Section) -> List[str]:

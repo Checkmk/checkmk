@@ -80,8 +80,9 @@ SECTION1: logwatch.logwatch.Section = {
 
 def test_discovery_single(monkeypatch):
     monkeypatch.setattr(logwatch, '_get_discovery_groups', lambda: [])
+    monkeypatch.setattr(logwatch.logwatch, 'get_ec_rule_params', lambda: [])
     assert sorted(
-        logwatch.discover_logwatch_single([], SECTION1),
+        logwatch.discover_logwatch_single(SECTION1),
         key=lambda s: s.item,
     ) == [
         Service(item='empty.log'),
@@ -89,7 +90,7 @@ def test_discovery_single(monkeypatch):
         Service(item='mylog'),
     ]
 
-    assert not list(logwatch.discover_logwatch_groups([], SECTION1))
+    assert not list(logwatch.discover_logwatch_groups(SECTION1))
 
 
 def test_check_single(monkeypatch):
@@ -145,8 +146,13 @@ SECTION2: logwatch.logwatch.Section = {
 
 def test_logwatch_discover_single_restrict(monkeypatch):
     monkeypatch.setattr(logwatch, '_get_discovery_groups', lambda: [])
+    monkeypatch.setattr(
+        logwatch.logwatch,
+        'get_ec_rule_params',
+        lambda: [Parameters({'restrict_logfiles': [u'.*2']})],
+    )
     assert sorted(
-        logwatch.discover_logwatch_single([Parameters({'restrict_logfiles': [u'.*2']})], SECTION2),
+        logwatch.discover_logwatch_single(SECTION2),
         key=lambda s: s.item,
     ) == [
         Service(item='log1'),
@@ -160,8 +166,9 @@ def test_logwatch_discover_single_groups(monkeypatch):
         '_get_discovery_groups',
         lambda: [[('my_group', ('~log.*', '~.*1'))]],
     )
+    monkeypatch.setattr(logwatch.logwatch, 'get_ec_rule_params', lambda: [])
 
-    assert list(logwatch.discover_logwatch_single([], SECTION2)) == [
+    assert list(logwatch.discover_logwatch_single(SECTION2)) == [
         Service(item='log1'),
     ]
 
@@ -175,8 +182,9 @@ def test_logwatch_discover_groups(monkeypatch):
             ('my_%s_group', ('~(log).*', '~.*5')),
         ]],
     )
+    monkeypatch.setattr(logwatch.logwatch, 'get_ec_rule_params', lambda: [])
 
-    assert list(logwatch.discover_logwatch_groups([], SECTION2)) == [
+    assert list(logwatch.discover_logwatch_groups(SECTION2)) == [
         Service(
             item='my_log_group',
             parameters={

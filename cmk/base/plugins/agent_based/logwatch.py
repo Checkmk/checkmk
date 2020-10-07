@@ -31,7 +31,7 @@ from cmk.base.check_api import get_checkgroup_parameters, host_extra_conf, host_
 # from cmk.base.config import logwatch_rule will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
 
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, Parameters
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .agent_based_api.v1 import (
     get_value_store,
     regex,
@@ -102,13 +102,10 @@ def _is_cache_new(last_run: float, node: Optional[str]) -> bool:
 #
 
 
-def discover_logwatch_single(
-    params: List[Parameters],
-    section: logwatch.Section,
-) -> DiscoveryResult:
+def discover_logwatch_single(section: logwatch.Section,) -> DiscoveryResult:
     not_forwarded_logs = logwatch.select_forwarded(
         logwatch.discoverable_items(section),
-        params,
+        logwatch.get_ec_rule_params(),
         invert=True,
     )
     inventory_groups = _get_discovery_groups()
@@ -119,13 +116,10 @@ def discover_logwatch_single(
             yield Service(item=logfile)
 
 
-def discover_logwatch_groups(
-    params: List[Parameters],
-    section: logwatch.Section,
-) -> DiscoveryResult:
+def discover_logwatch_groups(section: logwatch.Section,) -> DiscoveryResult:
     not_forwarded_logs = logwatch.select_forwarded(
         logwatch.discoverable_items(section),
-        params,
+        logwatch.get_ec_rule_params(),
         invert=True,
     )
     inventory_groups = _get_discovery_groups()
@@ -179,9 +173,6 @@ register.check_plugin(
     name='logwatch',
     service_name="Log %s",
     discovery_function=discover_logwatch_single,
-    discovery_ruleset_name="logwatch_ec",
-    discovery_ruleset_type="all",
-    discovery_default_parameters={},
     check_function=check_logwatch_node,
     cluster_check_function=check_logwatch,
 )
@@ -302,9 +293,6 @@ register.check_plugin(
     name='logwatch_groups',
     service_name="Log %s",
     discovery_function=discover_logwatch_groups,
-    discovery_ruleset_name="logwatch_ec",
-    discovery_ruleset_type="all",
-    discovery_default_parameters={},
     check_function=check_logwatch_groups_node,
     cluster_check_function=check_logwatch_groups,
 )

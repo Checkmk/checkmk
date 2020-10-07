@@ -69,10 +69,11 @@ INFO1 = [
                 }),
     ]),
 ])
-def test_logwatch_ec_inventory_single(info, fwd_rule, expected_result):
+def test_logwatch_ec_inventory_single(monkeypatch, info, fwd_rule, expected_result):
     parsed = parse_logwatch(info)
 
-    actual_result = sorted(logwatch_ec.discover_single(fwd_rule, parsed), key=lambda s: s.item)
+    monkeypatch.setattr(logwatch_ec.logwatch, 'get_ec_rule_params', lambda: fwd_rule)
+    actual_result = sorted(logwatch_ec.discover_single(parsed), key=lambda s: s.item)
     assert actual_result == expected_result
 
 
@@ -93,8 +94,9 @@ def test_logwatch_ec_inventory_single(info, fwd_rule, expected_result):
         Service(parameters={'expected_logfiles': ['log1', 'log2']}),
     ]),
 ])
-def test_logwatch_ec_inventory_groups(info, fwd_rule, expected_result):
+def test_logwatch_ec_inventory_groups(monkeypatch, info, fwd_rule, expected_result):
     parsed = parse_logwatch(info)
 
-    actual_result = list(logwatch_ec.discover_group(fwd_rule, parsed))
+    monkeypatch.setattr(logwatch_ec.logwatch, 'get_ec_rule_params', lambda: fwd_rule)
+    actual_result = list(logwatch_ec.discover_group(parsed))
     assert actual_result == expected_result

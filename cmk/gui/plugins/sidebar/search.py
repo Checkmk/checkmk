@@ -453,16 +453,13 @@ class LivestatusSearchConductor(ABCSearchConductor):
 
 class QuicksearchManager:
     """Producing the results for the given search query"""
-    def __init__(self, query: SearchQuery) -> None:
-        self._query: SearchQuery = query
-
-    def generate_results(self) -> Dict[str, List[Result]]:
-        search_objects = self._determine_search_objects()
+    def generate_results(self, query: SearchQuery) -> Dict[str, List[Result]]:
+        search_objects = self._determine_search_objects(query)
         self._conduct_search(search_objects)
         return self._evaluate_results(search_objects)
 
-    def generate_search_url(self) -> str:
-        search_objects = self._determine_search_objects()
+    def generate_search_url(self, query: SearchQuery) -> str:
+        search_objects = self._determine_search_objects(query)
 
         try:
             self._conduct_search(search_objects)
@@ -479,12 +476,12 @@ class QuicksearchManager:
             url_params.extend([
                 ("view_name", "allservices"),
                 ("filled_in", "filter"),
-                ("service_regex", self._query),
+                ("service_regex", query),
             ])
 
         return _build_url(url_params)
 
-    def _determine_search_objects(self) -> List[ABCSearchConductor]:
+    def _determine_search_objects(self, query: SearchQuery) -> List[ABCSearchConductor]:
         """Construct search objects from the query
 
         Try to find search object expressions and construct objects or
@@ -494,19 +491,19 @@ class QuicksearchManager:
         livestatus based search plugins.
         """
 
-        found_filters = self._find_search_object_expressions(self._query)
+        found_filters = self._find_search_object_expressions(query)
 
         search_objects: List[ABCSearchConductor] = []
         if found_filters:
             # The query contains at least one search expression to search a specific search plugin.
-            used_filters = self._get_used_filters_from_query(self._query, found_filters)
+            used_filters = self._get_used_filters_from_query(query, found_filters)
             search_objects.append(LivestatusSearchConductor(used_filters, FilterBehaviour.CONTINUE))
         else:
             # No explicit filters specified by search expression. Execute the quicksearch plugins in
             # the order they are configured to let them answer the query.
             for filter_name, filter_behaviour_str in config.quicksearch_search_order:
                 search_objects.append(
-                    self._make_conductor(filter_name, {filter_name: [_to_regex(self._query)]},
+                    self._make_conductor(filter_name, {filter_name: [_to_regex(query)]},
                                          FilterBehaviour[filter_behaviour_str.upper()]))
 
         return search_objects
@@ -606,6 +603,7 @@ class QuicksearchSnapin(SidebarSnapin):
         self._name = name
         self._placeholder = f'{_("Search in")} {_(self._name.capitalize())}'
         self._input_id = f"mk_side_search_field_{self._name}"
+        self._quicksearch_manager = QuicksearchManager()
         super().__init__()
 
     @classmethod
@@ -659,7 +657,7 @@ class QuicksearchSnapin(SidebarSnapin):
 
         try:
             # TODO: Integrate here the interface to the index search
-            results = QuicksearchManager(query).generate_results()
+            results = self._quicksearch_manager.generate_results(query)
             ResultRenderer().show(results, query)
 
         except TooManyRowsError as e:
@@ -680,7 +678,7 @@ class QuicksearchSnapin(SidebarSnapin):
         if not query:
             return
 
-        raise HTTPRedirect(QuicksearchManager(query).generate_search_url())
+        raise HTTPRedirect(self._quicksearch_manager.generate_search_url(query))
 
 
 class ResultRenderer:

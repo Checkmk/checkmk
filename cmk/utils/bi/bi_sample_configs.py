@@ -47,7 +47,6 @@ bi_sample_config = {
                     'type': 'host_search'
                 }
             },
-            'pack_id': 'default'
         }],
         'contact_groups': [],
         'id': 'default',
@@ -76,7 +75,6 @@ bi_sample_config = {
                     'type': 'empty'
                 }
             }],
-            'pack_id': 'default',
             'params': {
                 'arguments': ['HOSTNAME']
             },
@@ -111,7 +109,6 @@ bi_sample_config = {
                     'type': 'empty'
                 }
             }],
-            'pack_id': 'default',
             'params': {
                 'arguments': ['HOSTNAME']
             },
@@ -165,7 +162,6 @@ bi_sample_config = {
                     'type': 'empty'
                 }
             }],
-            'pack_id': 'default',
             'params': {
                 'arguments': ['HOSTNAME', 'FS']
             },
@@ -255,7 +251,6 @@ bi_sample_config = {
                     'type': 'service_search'
                 }
             }],
-            'pack_id': 'default',
             'params': {
                 'arguments': ['HOSTNAME']
             },
@@ -309,7 +304,6 @@ bi_sample_config = {
                     'type': 'empty'
                 }
             }],
-            'pack_id': 'default',
             'params': {
                 'arguments': ['HOSTNAME']
             },
@@ -344,7 +338,6 @@ bi_sample_config = {
                     'type': 'empty'
                 }
             }],
-            'pack_id': 'default',
             'params': {
                 'arguments': ['HOSTNAME']
             },
@@ -458,7 +451,6 @@ bi_sample_config = {
                     'type': 'empty'
                 }
             }],
-            'pack_id': 'default',
             'params': {
                 'arguments': ['HOSTNAME']
             },
@@ -493,7 +485,6 @@ bi_sample_config = {
                     'type': 'empty'
                 }
             }],
-            'pack_id': 'default',
             'params': {
                 'arguments': ['HOSTNAME']
             },
@@ -528,7 +519,6 @@ bi_sample_config = {
                     'type': 'empty'
                 }
             }],
-            'pack_id': 'default',
             'params': {
                 'arguments': ['HOSTNAME']
             },
@@ -563,7 +553,6 @@ bi_sample_config = {
                     'type': 'empty'
                 }
             }],
-            'pack_id': 'default',
             'params': {
                 'arguments': ['HOSTNAME']
             },
@@ -598,7 +587,6 @@ bi_sample_config = {
                     'type': 'empty'
                 }
             }],
-            'pack_id': 'default',
             'params': {
                 'arguments': ['HOSTNAME']
             },
@@ -634,7 +622,6 @@ bi_sample_config = {
                     'type': 'empty'
                 }
             }],
-            'pack_id': 'default',
             'params': {
                 'arguments': ['HOSTNAME']
             },

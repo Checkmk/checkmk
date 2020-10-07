@@ -51,6 +51,7 @@ livestatus_status_default_levels = {
     "site_cert_days": (30, 7),
     "average_latency_generic": (30, 60),
     "average_latency_cmk": (30, 60),
+    "average_latency_fetcher": (30, 60),
     "helper_usage_generic": (60.0, 90.0),
     "helper_usage_cmk": (60.0, 90.0),
     "helper_usage_fetcher": (40.0, 80.0),
@@ -181,6 +182,7 @@ def _generate_livestatus_results(
         for factor, render_func, key, label in [
             (1, lambda x: "%.3fs" % x, "average_latency_generic", "Average check latency"),
             (1, lambda x: "%.3fs" % x, "average_latency_cmk", "Average Checkmk latency"),
+            (1, lambda x: "%.3fs" % x, "average_latency_fetcher", "Average fetcher latency"),
             (100, render.percent, "helper_usage_generic", "Check helper usage"),
             (100, render.percent, "helper_usage_cmk", "Checkmk helper usage"),
             (100, render.percent, "helper_usage_fetcher", "Fetcher helper usage"),

@@ -122,6 +122,12 @@ metric_info["average_latency_cmk"] = {
     "color": "15/a",
 }
 
+metric_info["average_latency_fetcher"] = {
+    "title": _("Checkmk fetcher latency"),
+    "unit": "s",
+    "color": "15/a",
+}
+
 metric_info["average_latency_generic"] = {
     "title": _("Check latency"),
     "unit": "s",
@@ -327,6 +333,14 @@ graph_info["average_check_latency"] = {
     "title": _("Average check latency"),
     "metrics": [
         ("average_latency_cmk", "line"),
+        ("average_latency_generic", "line"),
+    ],
+}
+
+graph_info["average_fetcher_latency"] = {
+    "title": _("Average check latency"),
+    "metrics": [
+        ("average_latency_fetcher", "line"),
         ("average_latency_generic", "line"),
     ],
 }

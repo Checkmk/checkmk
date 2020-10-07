@@ -100,6 +100,19 @@ def _parameter_valuespec_livestatus_status():
                            default_value=60,
                        ),
                    ])),
+            ("average_latency_fetcher",
+             Tuple(title=_("Levels Latency Fetcher"),
+                   help=_("Set Levels for the Fetcher Latency Time"),
+                   elements=[
+                       Age(
+                           title=_("Warning at or above"),
+                           default_value=30,
+                       ),
+                       Age(
+                           title=_("Critical at or above"),
+                           default_value=60,
+                       ),
+                   ])),
             ("helper_usage_generic",
              Tuple(title=_("Levels Helper usage Check"),
                    help=_("Set Levels for the Check helper Usage"),

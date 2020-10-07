@@ -1,0 +1,18 @@
+Title: fileinfo.groups, filestats: enable additional rules for specific files in a file group
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1600412089
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+The plugins fileinfo.groups and filestats allow the user to monitor the size,
+age and count of a group of files on the Linux filesystem. With this extension,
+the rules for file size and age can be overwritten for specific files within a
+particular group. This can be done by defining a filename or a regular
+expression, and additional rules for those files. This functionality is
+optional and can be activated by checking the 'Additional rules for files'
+option in the "Size, age and count of file groups" and "Size, age and count of
+file groups (mk_filestats)" rulesets respectively.

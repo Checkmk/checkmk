@@ -64,7 +64,7 @@ body.side {
 
   div.shortcuts {
     display: flex;
-    padding: $spacing;
+    padding: $spacing $spacing (0.5 * $spacing);
     border-bottom: 1px solid $sidebar-border-color;
 
     a {
@@ -79,7 +79,7 @@ body.side {
       }
     }
 
-    img { width: 19px; }
+    img { margin-bottom: 6px; }
   }
 
   #side_content {
@@ -123,9 +123,9 @@ body.side {
     height: 100%;
     text-decoration: none;
     background-image: url("images/tribe29_icon.svg");
-    background-position: center;
+    background-position: center 5px;
     background-repeat: no-repeat;
-    background-size: auto 28px;
+    background-size: auto 44px;
     outline: none;
   }
 }

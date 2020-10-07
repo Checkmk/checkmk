@@ -88,9 +88,10 @@ def _check_disk(
     value_store = get_value_store()
     disk_with_rates = _compute_rates(disk, value_store)
     yield from diskstat.check_diskstat_dict(
-        params,
-        disk_with_rates,
-        value_store,
+        params=params,
+        disk=disk_with_rates,
+        value_store=value_store,
+        this_time=time.time(),
     )
 
 

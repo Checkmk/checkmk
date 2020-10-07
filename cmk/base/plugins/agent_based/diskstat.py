@@ -67,7 +67,6 @@
 #  Index 16 -- sectors discarded
 #  Index 17 -- time spent discarding
 
-import re
 from typing import (
     Any,
     Dict,
@@ -76,6 +75,10 @@ from typing import (
     Sequence,
     Tuple,
 )
+
+import re
+import time
+
 from .agent_based_api.v1 import (
     get_rate,
     get_value_store,
@@ -408,9 +411,10 @@ def check_diskstat(
             return
 
     yield from diskstat.check_diskstat_dict(
-        params,
-        disk_with_rates,
-        value_store,
+        params=params,
+        disk=disk_with_rates,
+        value_store=value_store,
+        this_time=time.time(),
     )
 
 

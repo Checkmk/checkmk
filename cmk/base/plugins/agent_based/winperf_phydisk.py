@@ -46,6 +46,8 @@ from typing import (
     Optional,
     Sequence,
 )
+import time
+
 from .agent_based_api.v1 import (
     get_rate,
     get_value_store,
@@ -231,9 +233,10 @@ def check_winperf_phydisk(
             return
 
     yield from diskstat.check_diskstat_dict(
-        _averaging_to_seconds(params),
-        disk_with_rates,
-        value_store,
+        params=_averaging_to_seconds(params),
+        disk=disk_with_rates,
+        value_store=value_store,
+        this_time=time.time(),
     )
 
 

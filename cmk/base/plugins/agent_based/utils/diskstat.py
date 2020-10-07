@@ -6,12 +6,12 @@
 
 from collections import defaultdict
 import re
-import time
 from typing import (
     Callable,
     DefaultDict,
     Iterable,
     Mapping,
+    MutableMapping,
     Optional,
     Sequence,
     Tuple,
@@ -24,7 +24,9 @@ from ..agent_based_api.v1 import (
     IgnoreResultsError,
     Metric,
     render,
+    Result,
     Service,
+    State,
     type_defs,
 )
 
@@ -151,70 +153,94 @@ class MetricSpecs(TypedDict, total=False):
     levels_scale: float
     render_func: Callable[[float], str]
     label: str
+    in_service_output: bool
 
 
-_METRICS: Mapping[str, MetricSpecs] = {
-    'utilization': {
-        'levels_scale': 0.01,  # value comes as fraction, but levels are specified in percent
-        'render_func': lambda x: render.percent(x * 100),
-    },
-    'read_throughput': {
-        'levels_key': 'read',
-        'levels_scale': 1e6,  # levels are specified in MB/s
-        'render_func': render.iobandwidth,
-    },
-    'write_throughput': {
-        'levels_key': 'write',
-        'levels_scale': 1e6,  # levels are specified in MB/s
-        'render_func': render.iobandwidth,
-    },
-    'average_wait': {
-        'levels_scale': 1e-3,  # levels are specified in ms
-        'render_func': render.timespan,
-    },
-    'average_read_wait': {
-        'levels_key': 'read_wait',
-        'levels_scale': 1e-3,  # levels are specified in ms
-        'render_func': render.timespan,
-    },
-    'average_write_wait': {
-        'levels_key': 'write_wait',
-        'levels_scale': 1e-3,  # levels are specified in ms
-        'render_func': render.timespan,
-    },
-    'latency': {
-        'levels_scale': 1e-3,  # levels are specified in ms
-        'render_func': render.timespan,
-    },
-    'read_latency': {
-        'levels_scale': 1e-3,  # levels are specified in ms
-        'render_func': render.timespan,
-    },
-    'write_latency': {
-        'levels_scale': 1e-3,  # levels are specified in ms
-        'render_func': render.timespan,
-    },
-    'queue_length': {
+_METRICS: Tuple[Tuple[str, MetricSpecs], ...] = (
+    (
+        'utilization',
+        {
+            'levels_scale': 0.01,  # value comes as fraction, but levels are specified in percent
+            'render_func': lambda x: render.percent(x * 100),
+        }),
+    (
+        'read_throughput',
+        {
+            'levels_key': 'read',
+            'levels_scale': 1e6,  # levels are specified in MB/s
+            'render_func': render.iobandwidth,
+            'label': 'Read',
+            'in_service_output': True
+        }),
+    (
+        'write_throughput',
+        {
+            'levels_key': 'write',
+            'levels_scale': 1e6,  # levels are specified in MB/s
+            'render_func': render.iobandwidth,
+            'label': 'Write',
+            'in_service_output': True
+        }),
+    (
+        'average_wait',
+        {
+            'levels_scale': 1e-3,  # levels are specified in ms
+            'render_func': render.timespan,
+        }),
+    (
+        'average_read_wait',
+        {
+            'levels_key': 'read_wait',
+            'levels_scale': 1e-3,  # levels are specified in ms
+            'render_func': render.timespan,
+        }),
+    (
+        'average_write_wait',
+        {
+            'levels_key': 'write_wait',
+            'levels_scale': 1e-3,  # levels are specified in ms
+            'render_func': render.timespan,
+        }),
+    ('queue_length', {
         'render_func': lambda x: "%.2f" % x,
         'label': 'Average queue length',
-    },
-    'read_ql': {
+    }),
+    ('read_ql', {
         'render_func': lambda x: "%.2f" % x,
         'label': 'Average read queue length',
-    },
-    'write_ql': {
+    }),
+    ('write_ql', {
         'render_func': lambda x: "%.2f" % x,
         'label': 'Average write queue length',
-    },
-    'read_ios': {
+    }),
+    ('read_ios', {
         'render_func': lambda x: "%.2f/s" % x,
         'label': 'Read operations',
-    },
-    'write_ios': {
+    }),
+    ('write_ios', {
         'render_func': lambda x: "%.2f/s" % x,
         'label': 'Write operations',
-    },
-}
+    }),
+    (
+        'latency',
+        {
+            'levels_scale': 1e-3,  # levels are specified in ms
+            'render_func': render.timespan,
+            'in_service_output': True
+        }),
+    (
+        'read_latency',
+        {
+            'levels_scale': 1e-3,  # levels are specified in ms
+            'render_func': render.timespan,
+        }),
+    (
+        'write_latency',
+        {
+            'levels_scale': 1e-3,  # levels are specified in ms
+            'render_func': render.timespan,
+        }),
+)
 
 
 # Example:
@@ -236,42 +262,44 @@ _METRICS: Mapping[str, MetricSpecs] = {
 #       'write_ql'                   : 0.0,
 # }}
 def check_diskstat_dict(
+    *,
     params: type_defs.Parameters,
     disk: Disk,
-    value_store,
+    value_store: MutableMapping,
+    this_time: float,
 ) -> type_defs.CheckResult:
+    if not disk:
+        return
     # Averaging
     # Note: this check uses a simple method of averaging: As soon as averaging
     # is turned on the actual metrics are *replaced* by the averaged ones. No
     # duplication of performance data or check output here. This is because we
     # have so many metrics...
-    prefix = ""
     # here, a value in seconds must be provided (preferably from the ruleset "diskstat"); note that
     # the deprecated ruleset "disk_io" uses minutes for this field and is therefore incompatible
     # with this function
     averaging = params.get("average")
     if averaging:
-        avg_disk = {}  # Do not modify our arguments!!
-        for key, value in disk.items():
-            if isinstance(value, (int, float)):
-                avg_disk[key] = get_average(
-                    value_store=value_store,
-                    # We add 'check_diskstat_dict' to the key to avoid possible overlap with keys
-                    # used in check plugins. For example, for the SUMMARY-item, the check plugin
-                    # winperf_phydisk first computes all rates for all items using 'metric.item' as
-                    # key and then summarizes the disks. Hence, for a disk called 'avg', these keys
-                    # would be the same as the keys used here.
-                    key="check_diskstat_dict.%s.avg" % key,
-                    time=time.time(),
-                    value=value,
-                    backlog_minutes=averaging / 60.,
-                )
-            else:
-                avg_disk[key] = value
-        disk = avg_disk
-        prefix = "%s average: " % render.timespan(averaging)
+        yield Result(
+            state=State.OK,
+            notice="All values averaged over %s" % render.timespan(averaging),
+        )
+        disk = {
+            key: get_average(
+                value_store=value_store,
+                # We add 'check_diskstat_dict' to the key to avoid possible overlap with keys
+                # used in check plugins. For example, for the SUMMARY-item, the check plugin
+                # winperf_phydisk first computes all rates for all items using 'metric.item' as
+                # key and then summarizes the disks. Hence, for a disk called 'avg', these keys
+                # would be the same as the keys used here.
+                key="check_diskstat_dict.%s.avg" % key,
+                time=this_time,
+                value=value,
+                backlog_minutes=averaging / 60.,
+            ) for key, value in list(disk.items()) if isinstance(value, (int, float))
+        }
 
-    for key, specs in _METRICS.items():
+    for key, specs in _METRICS:
         metric_val = disk.get(key)
         if metric_val is not None:
             yield from check_levels(
@@ -282,15 +310,20 @@ def check_diskstat_dict(
                 ),
                 metric_name="disk_" + key,
                 render_func=specs.get('render_func'),
-                label=prefix + (specs.get('label') or key.replace("_", " ").capitalize()),
+                label=specs.get('label') or key.replace("_", " ").capitalize(),
+                notice_only=not specs.get('in_service_output'),
             )
-            prefix = ''
+
+    # make sure we have a latency.
+    if 'latency' not in disk and 'average_write_wait' in disk and 'average_read_wait' in disk:
+        latency = max(disk['average_write_wait'], disk['average_read_wait'])
+        yield Result(state=State.OK, summary="Latency: %s" % render.timespan(latency))
 
     # All the other metrics are currently not output in the plugin output - simply because
     # of their amount. They are present as performance data and will shown in graphs.
 
     # Send everything as performance data now. Sort keys alphabetically
-    for key in sorted(set(disk) - set(_METRICS)):
+    for key in sorted(set(disk) - {m for m, _ in _METRICS}):
         value = disk[key]
         if isinstance(value, (int, float)):
             # Currently the levels are not shown in the perfdata

@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import pytest  # type: ignore[import]
 from testlib import get_value_store_fixture
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -44,13 +46,9 @@ def test_check_disk(value_store):
     with pytest.raises(IgnoreResultsError):
         list(aix_diskiod._check_disk(type_defs.Parameters({}), DISK))
     assert list(aix_diskiod._check_disk(type_defs.Parameters({}), DISK)) == [
-        Result(state=state.OK,
-               summary='Read throughput: 0.00 B/s',
-               details='Read throughput: 0.00 B/s'),
+        Result(state=state.OK, summary='Read: 0.00 B/s'),
         Metric('disk_read_throughput', 0.0, levels=(None, None), boundaries=(None, None)),
-        Result(state=state.OK,
-               summary='Write throughput: 0.00 B/s',
-               details='Write throughput: 0.00 B/s'),
+        Result(state=state.OK, summary='Write: 0.00 B/s'),
         Metric('disk_write_throughput', 0.0, levels=(None, None), boundaries=(None, None)),
     ]
 

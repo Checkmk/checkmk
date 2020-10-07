@@ -226,6 +226,8 @@ class ABCEditGlobalSettingMode(WatoMode):
                 icon_name="reset",
                 item=make_form_submit_link(form_name="value_editor", button_name="_reset"),
                 is_enabled=reset_possible,
+                is_shortcut=True,
+                is_suggested=True,
             ))
 
         return menu

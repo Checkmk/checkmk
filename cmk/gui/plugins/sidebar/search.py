@@ -599,10 +599,7 @@ def _maybe_strip(param: Optional[str]) -> Optional[str]:
 
 @snapin_registry.register
 class QuicksearchSnapin(SidebarSnapin):
-    def __init__(self, name=""):
-        self._name = name
-        self._placeholder = f'{_("Search in")} {_(self._name.capitalize())}'
-        self._input_id = f"mk_side_search_field_{self._name}"
+    def __init__(self):
         self._quicksearch_manager = QuicksearchManager()
         super().__init__()
 
@@ -623,21 +620,18 @@ class QuicksearchSnapin(SidebarSnapin):
         )
 
     def show(self):
+        id_ = "mk_side_search_field"
         html.open_div(id_="mk_side_search",
                       class_="content_center",
                       onclick="cmk.quicksearch.close_popup();")
-        html.input(id_=self._input_id,
-                   type_="text",
-                   name="search",
-                   autocomplete="off",
-                   placeholder=self._placeholder)
+        html.input(id_=id_, type_="text", name="search", autocomplete="off")
         html.icon_button("#",
                          _("Search"),
                          "quicksearch",
                          onclick="cmk.quicksearch.on_search_click();")
         html.close_div()
         html.div('', id_="mk_side_clear")
-        html.javascript(f"cmk.quicksearch.register_search_field('{self._input_id}');")
+        html.javascript(f"cmk.quicksearch.register_search_field('{id_}');")
 
     @classmethod
     def allowed_roles(cls):

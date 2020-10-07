@@ -102,13 +102,14 @@ class MegaMenuRenderer:
         hide_entries_js = "cmk.popup_menu.mega_menu_hide_entries('%s')" % more_id
 
         html.open_div(class_="navigation_bar")
-        # Currently we only want the search in setup and monitoring
-        if menu.name in ["setup", "monitoring"]:
-            html.open_div(class_="search_bar")
-            QuicksearchSnapin(menu.name).show()
-            html.close_div()
-        else:
-            html.div("", class_="search_bar")
+        # TODO (jh): implement new search function in menus
+        # if menu.search:
+        #     html.open_div(class_="search_bar")
+        #     menu.search.show()
+        #     html.close_div()
+        # else:
+        #     html.div("", class_="search_bar")
+        html.div("", class_="search_bar")
         topics = menu.topics()
         if any_advanced_items(topics):
             html.open_div()

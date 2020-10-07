@@ -26,7 +26,7 @@ import cmk.gui.werks as werks
 import cmk.gui.sites as sites
 import cmk.gui.pages
 import cmk.gui.plugins.sidebar
-import cmk.gui.plugins.sidebar.quicksearch
+import cmk.gui.plugins.sidebar.search
 from cmk.gui.valuespec import CascadingDropdown, Dictionary
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.log import logger

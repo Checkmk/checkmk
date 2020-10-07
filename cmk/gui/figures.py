@@ -10,6 +10,7 @@ import abc
 import json
 from typing import Type, Dict, Any
 
+from cmk.gui.utils.url_encoder import HTTPVariables
 from cmk.gui.plugins.dashboard import Dashlet
 from cmk.gui.globals import html
 
@@ -98,7 +99,7 @@ class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @property
-    def update_interval(self):
+    def update_interval(self) -> int:
         return 60
 
     def on_resize(self):
@@ -108,6 +109,34 @@ class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
                 "}") % {
                     "instance": self.instance_name
                 }
+
+    def js_dashlet(self, fetch_url: str):
+        div_id = "%s_dashlet_%d" % (self.type_name(), self._dashlet_id)
+        html.div("", id_=div_id)
+
+        args: HTTPVariables = []
+        args.append(("context", json.dumps(self._dashlet_spec["context"])))
+        args.append(
+            ("properties", json.dumps(self.vs_parameters().value_to_json(self._dashlet_spec))))
+        body = html.urlencode_vars(args)
+
+        html.javascript(
+            """
+            let %(type_name)s_class_%(dashlet_id)d = cmk.figures.figure_registry.get_figure("%(type_name)s");
+            let %(instance_name)s = new %(type_name)s_class_%(dashlet_id)d(%(div_selector)s);
+            %(instance_name)s.set_post_url_and_body(%(url)s, %(body)s);
+            %(instance_name)s.initialize();
+            %(instance_name)s.scheduler.set_update_interval(%(update)d);
+            %(instance_name)s.scheduler.enable();
+            """ % {
+                "type_name": self.type_name(),
+                "dashlet_id": self._dashlet_id,
+                "instance_name": self.instance_name,
+                "div_selector": json.dumps("#%s" % div_id),
+                "url": json.dumps(fetch_url),
+                "body": json.dumps(body),
+                "update": self.update_interval,
+            })
 
 
 class TableFigureDataCreator:

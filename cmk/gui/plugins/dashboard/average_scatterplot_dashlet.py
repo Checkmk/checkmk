@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 from typing import Dict, Optional, Tuple, List
 import numpy as np  # type: ignore[import]
 
@@ -24,7 +23,6 @@ from cmk.gui.plugins.dashboard import dashlet_registry
 from cmk.gui.plugins.dashboard.utils import site_query
 from cmk.gui.plugins.metrics.utils import MetricName, reverse_translate_metric_name
 from cmk.gui.plugins.metrics.rrd_fetch import rrd_columns, merge_multicol
-from cmk.gui.utils.url_encoder import HTTPVariables
 from cmk.gui.figures import ABCFigureDashlet, ABCDataGenerator
 import cmk.gui.metrics as metrics
 
@@ -244,32 +242,7 @@ class AverageScatterplotDashlet(ABCFigureDashlet):
         return AverageScatterplotDataGenerator
 
     def show(self):
-        div_id = "%s_dashlet_%d" % (self.type_name(), self._dashlet_id)
-        html.div("", id_=div_id)
-
-        fetch_url = "ajax_average_scatterplot_data.py"
-        args: HTTPVariables = []
-        args.append(("context", json.dumps(self._dashlet_spec["context"])))
-        args.append(
-            ("properties", json.dumps(self.vs_parameters().value_to_json(self._dashlet_spec))))
-        body = html.urlencode_vars(args)
-
-        html.javascript(
-            """
-            let average_scatterplot_class_%(dashlet_id)d = cmk.figures.figure_registry.get_figure("average_scatterplot");
-            let %(instance_name)s = new average_scatterplot_class_%(dashlet_id)d(%(div_selector)s);
-            %(instance_name)s.initialize();
-            %(instance_name)s.set_post_url_and_body(%(url)s, %(body)s);
-            %(instance_name)s.scheduler.set_update_interval(%(update)d);
-            %(instance_name)s.scheduler.enable();
-            """ % {
-                "dashlet_id": self._dashlet_id,
-                "instance_name": self.instance_name,
-                "div_selector": json.dumps("#%s" % div_id),
-                "url": json.dumps(fetch_url),
-                "body": json.dumps(body),
-                "update": 300,
-            })
+        self.js_dashlet("ajax_average_scatterplot_data.py")
 
 
 @page_registry.register_page("ajax_average_scatterplot_data")

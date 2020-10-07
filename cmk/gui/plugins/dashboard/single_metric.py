@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 from typing import List, Tuple, Optional
 
 from cmk.gui.i18n import _
@@ -21,7 +20,6 @@ from cmk.gui.plugins.dashboard import dashlet_registry
 from cmk.gui.plugins.dashboard.utils import site_query, create_data_for_single_metric
 from cmk.gui.plugins.metrics.utils import MetricName, reverse_translate_metric_name
 from cmk.gui.plugins.metrics.rrd_fetch import rrd_columns
-from cmk.gui.utils.url_encoder import HTTPVariables
 from cmk.gui.figures import ABCFigureDashlet, ABCDataGenerator
 
 
@@ -178,32 +176,7 @@ class GaugeDashlet(ABCFigureDashlet):
         return ["service"]
 
     def show(self):
-        div_id = "%s_dashlet_%d" % (self.type_name(), self._dashlet_id)
-        html.div("", id_=div_id)
-
-        fetch_url = "single_metric_data.py"
-        args: HTTPVariables = []
-        args.append(("context", json.dumps(self._dashlet_spec["context"])))
-        args.append(
-            ("properties", json.dumps(self.vs_parameters().value_to_json(self._dashlet_spec))))
-        body = html.urlencode_vars(args)
-
-        html.javascript(
-            """
-            let gauge_class_%(dashlet_id)d = cmk.figures.figure_registry.get_figure("gauge");
-            let %(instance_name)s = new gauge_class_%(dashlet_id)d(%(div_selector)s);
-            %(instance_name)s.initialize();
-            %(instance_name)s.set_post_url_and_body(%(url)s, %(body)s);
-            %(instance_name)s.scheduler.set_update_interval(%(update)d);
-            %(instance_name)s.scheduler.enable();
-            """ % {
-                "dashlet_id": self._dashlet_id,
-                "instance_name": self.instance_name,
-                "div_selector": json.dumps("#%s" % div_id),
-                "url": json.dumps(fetch_url),
-                "body": json.dumps(body),
-                "update": 60,
-            })
+        self.js_dashlet("single_metric_data.py")
 
 
 #   .--Bar Plot------------------------------------------------------------.
@@ -239,32 +212,7 @@ class BarplotDashlet(ABCFigureDashlet):
         return ["service"]
 
     def show(self):
-        div_id = "%s_dashlet_%d" % (self.type_name(), self._dashlet_id)
-        html.div("", id_=div_id)
-
-        fetch_url = "single_metric_data.py"
-        args: HTTPVariables = []
-        args.append(("context", json.dumps(self._dashlet_spec["context"])))
-        args.append(
-            ("properties", json.dumps(self.vs_parameters().value_to_json(self._dashlet_spec))))
-        body = html.urlencode_vars(args)
-
-        html.javascript(
-            """
-            let barplot_class_%(dashlet_id)d = cmk.figures.figure_registry.get_figure("barplot");
-            let %(instance_name)s = new barplot_class_%(dashlet_id)d(%(div_selector)s);
-            %(instance_name)s.initialize();
-            %(instance_name)s.set_post_url_and_body(%(url)s, %(body)s);
-            %(instance_name)s.scheduler.set_update_interval(%(update)d);
-            %(instance_name)s.scheduler.enable();
-            """ % {
-                "dashlet_id": self._dashlet_id,
-                "instance_name": self.instance_name,
-                "div_selector": json.dumps("#%s" % div_id),
-                "url": json.dumps(fetch_url),
-                "body": json.dumps(body),
-                "update": 60,
-            })
+        self.js_dashlet("single_metric_data.py")
 
 
 #   .--Single Graph--------------------------------------------------------.
@@ -294,6 +242,10 @@ class SingleMetricDashlet(ABCFigureDashlet):
         return _("Single metric")
 
     @classmethod
+    def data_generator(cls):
+        return SingleMetricDataGenerator
+
+    @classmethod
     def description(cls):
         return _("Displays a single metric of a specific host and service.")
 
@@ -316,33 +268,4 @@ class SingleMetricDashlet(ABCFigureDashlet):
         return ["service"]
 
     def show(self):
-        div_id = "%s_dashlet_%d" % (self.type_name(), self._dashlet_id)
-        html.div("", id_=div_id)
-
-        fetch_url = "single_metric_data.py"
-        args: HTTPVariables = []
-        args.append(("context", json.dumps(self._dashlet_spec["context"])))
-        args.append(
-            ("properties", json.dumps(self.vs_parameters().value_to_json(self._dashlet_spec))))
-        body = html.urlencode_vars(args)
-
-        html.javascript(
-            """
-            let single_metric_class_%(dashlet_id)d = cmk.figures.figure_registry.get_figure("single_metric");
-            let %(instance_name)s = new single_metric_class_%(dashlet_id)d(%(div_selector)s);
-            %(instance_name)s.initialize();
-            %(instance_name)s.set_post_url_and_body(%(url)s, %(body)s);
-            %(instance_name)s.scheduler.set_update_interval(%(update)d);
-            %(instance_name)s.scheduler.enable();
-            """ % {
-                "dashlet_id": self._dashlet_id,
-                "instance_name": self.instance_name,
-                "div_selector": json.dumps("#%s" % div_id),
-                "url": json.dumps(fetch_url),
-                "body": json.dumps(body),
-                "update": 60,
-            })
-
-    @classmethod
-    def data_generator(cls):
-        return SingleMetricDataGenerator
+        self.js_dashlet("single_metric_data.py")

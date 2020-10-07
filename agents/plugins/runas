@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+VERSION="2.0.0i1"
+
 # This plugin allows to execute mrpe, local and plugin skripts with a different user context
 # It is configured with in the file $MK_CONFDIR/runas.cfg
 #

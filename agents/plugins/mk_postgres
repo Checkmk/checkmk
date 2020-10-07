@@ -5,6 +5,8 @@
 
 # TODO postgres_connections output format
 
+VERSION="2.0.0i1"
+
 function print_sections() {
     echo "<<<postgres_instances>>>"
     echo "<<<postgres_sessions>>>"

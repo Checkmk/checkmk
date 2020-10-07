@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+VERSION="2.0.0i1"
+
 # This is not part of the standard agent since it can take very
 # long to run if your TCP/UDP table is large. Netstat seems to
 # have an execution time complexity of at least O(n^2) on Linux.

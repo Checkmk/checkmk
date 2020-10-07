@@ -9,6 +9,8 @@ This is a Check_MK Agent plugin. If configured, it will be called by the
 agent without any arguments.
 """
 
+__version__ = "2.0.0i2"
+
 import subprocess
 import re
 import os

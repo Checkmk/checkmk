@@ -15,6 +15,9 @@ Important: 1) If MongoDB runs as single instance the agent data is assigned
               replica set name, or use the piggyback translation rule to modify the
               hostname according to your needs.
 """
+
+__version__ = "2.0.0i2"
+
 import os
 import sys
 import time

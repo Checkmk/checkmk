@@ -208,6 +208,7 @@ div#top_heading {
         line-height: 16px;
         text-align: left;
         background-color: $page-menu-bg-color;
+        opacity: 1;
         scrollbar-width: none; /* Firefox */
 
         img {
@@ -242,7 +243,7 @@ div#top_heading {
               text-decoration: none;
             }
 
-            &.enabled a:hover { opacity: .7; }
+            &.enabled a:hover { color: $success; }
 
             &.disabled a {
               text-decoration: none;
@@ -286,7 +287,12 @@ div#top_heading {
     }
 
     &#page_menu_bar.hide_suggestions {
-      td.shortcuts a.suggested { display: inline-block; }
+      td.shortcuts a.suggested {
+        display: inline-block;
+        line-height: 26px;
+
+
+    }
       tr#suggestions { display: none; }
       a#menu_shortcut_toggle_suggestions { transform: rotate(180deg); }
     }

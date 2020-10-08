@@ -460,7 +460,7 @@ def transform_discovery_rules(params: type_defs.Parameters) -> DiscoveryParams:
 
 
 def _groups_from_params(
-        discovery_params: Sequence[DiscoveryParams]) -> Dict[str, GroupConfiguration]:
+    discovery_params: Sequence[DiscoveryParams],) -> Dict[str, GroupConfiguration]:
     groups: Dict[str, GroupConfiguration] = {}
     inclusion_importances = {}
     exclusion_conditions = []
@@ -963,6 +963,28 @@ def _transform_check_params(params: type_defs.Parameters) -> type_defs.Parameter
     return type_defs.Parameters(params_mutable)
 
 
+def _check_speed(interface: Interface, targetspeed: Optional[int]) -> Result:
+    # Check speed settings of interface, but only if speed information
+    # is available. This is not always the case.
+    mon_state = state.OK
+    if interface.speed:
+        info_speed = render.nicspeed(interface.speed / 8)
+        if targetspeed is not None and int(interface.speed) != targetspeed:
+            info_speed += " (wrong speed, expected: %s)" % render.nicspeed(targetspeed / 8)
+            mon_state = state.WARN
+    elif targetspeed:
+        info_speed = "assuming %s" % render.nicspeed(targetspeed / 8)
+    elif interface.speed_as_text:
+        info_speed = "speed %s" % interface.speed_as_text
+    else:
+        info_speed = "speed unknown"
+
+    return Result(
+        state=mon_state,
+        summary=info_speed,
+    )
+
+
 # TODO: Check what the relationship between Errors, Discards, and ucast/mcast actually is.
 # One case of winperf_if appeared to indicate that in that case Errors = Discards.
 def check_single_interface(
@@ -1116,6 +1138,8 @@ def check_single_interface(
             summary='MAC: %s' % render_mac_address(interface.phys_address),
         )
 
+    yield _check_speed(interface, targetspeed)
+
     # prepare reference speed for computing relative bandwidth usage
     speed = int(interface.speed)
     ref_speed = None
@@ -1123,26 +1147,6 @@ def check_single_interface(
         ref_speed = speed / 8.0
     elif targetspeed:
         ref_speed = targetspeed / 8.0
-
-    # Check speed settings of interface, but only if speed information
-    # is available. This is not always the case.
-    mon_state = state.OK
-    if speed:
-        info_speed = render.nicspeed(speed / 8)
-        if targetspeed is not None and speed != targetspeed:
-            info_speed += " (wrong speed, expected: %s)" % render.nicspeed(targetspeed / 8)
-            mon_state = state.WARN
-    elif targetspeed:
-        info_speed = "assuming %s" % render.nicspeed(targetspeed / 8)
-    elif interface.speed_as_text:
-        info_speed = "speed %s" % interface.speed_as_text
-    else:
-        info_speed = "speed unknown"
-
-    yield Result(
-        state=mon_state,
-        summary=info_speed,
-    )
 
     # Convert the traffic levels to interface specific levels, for example where the percentage
     # levels are converted to absolute levels or assumed speeds of an interface are treated correctly

@@ -9,6 +9,7 @@ from typing import (
     List,
     Dict,
     Mapping,
+    NamedTuple,
     Generator,
 )
 from .agent_based_api.v1 import (
@@ -16,7 +17,7 @@ from .agent_based_api.v1 import (
     regex,
     Result,
     register,
-    State as state,
+    State,
 )
 
 from .agent_based_api.v1.type_defs import (
@@ -60,19 +61,25 @@ WINDOWS_SERVICES_CHECK_DEFAULT_PARAMETERS = {
 SERVICES_SUMMARY_DEFAULT_PARAMETERS = {"ignored": [], "state_if_stopped": 0}
 
 
-def parse_windows_services(string_table: AgentStringTable) -> Dict[str, Dict[str, str]]:
-    def to_service(status: str, description: str) -> Dict[str, str]:
-        cur_state, start_type = status.split('/', 1) if "/" in status else (status, "unknown")
-        return {
-            "state": cur_state,
-            "start_type": start_type,
-            "description": description,
-        }
+class WinService(NamedTuple):
+    name: str
+    state: str
+    start_type: str
+    description: str
 
-    return {
-        name: to_service(status, " ".join(description))
+
+Section = List[WinService]  # deterministic order!
+
+
+def parse_windows_services(string_table: AgentStringTable) -> Section:
+    def to_service(name: str, status: str, description: str) -> WinService:
+        cur_state, start_type = status.split('/', 1) if "/" in status else (status, "unknown")
+        return WinService(name, cur_state, start_type, description)
+
+    return [
+        to_service(name, status, " ".join(description))
         for name, status, *description in string_table
-    }
+    ]
 
 
 register.agent_section(
@@ -81,34 +88,25 @@ register.agent_section(
 )
 
 
-def discovery_windows_services(params: List[Dict[str, Any]],
-                               section: Dict[str, Dict[str, str]]) -> DiscoveryResult:
+def discovery_windows_services(params: List[Dict[str, Any]], section: Section) -> DiscoveryResult:
 
     # Handle single entries (type str)
-    def add_matching_services(name, description, service_state, start_type, entry):
+    def add_matching_services(service: WinService, entry):
         # New wato rule handling
-        svc, *statespec = entry
+        svc, state, mode = entry
         # First match name or description (optional since rule based config option available)
         if svc:
-            if svc.startswith("~"):
-                r = regex(svc[1:])
-
-                if not r.match(name) and not r.match(description):
-                    return
-            elif svc not in (name, description):
+            if not svc.startswith("~") and svc not in (service.name, service.description):
                 return
 
-        if isinstance(statespec, list):
-            # New wato rule handling (always given as tuple of two)
-            if (statespec[0] and statespec[0] != service_state) or (statespec[1] and
-                                                                    statespec[1] != start_type):
+            r = regex(svc[1:])
+            if not r.match(service.name) and not r.match(service.description):
                 return
 
-        else:
-            for match_criteria in statespec.split("/"):
-                if match_criteria not in {service_state, start_type}:
-                    return
-        yield Service(item=name)
+        if (state and state != service.state) or (mode and mode != service.start_type):
+            return
+
+        yield Service(item=service.name)
 
     # Extract the WATO compatible rules for the current host
     rules = []
@@ -126,11 +124,9 @@ def discovery_windows_services(params: List[Dict[str, Any]],
         else:
             rules.append((None, service_state, start_mode))
 
-    for service_name, service_details in section.items():
+    for service in section:
         for rule in rules:
-            yield from add_matching_services(service_name, service_details["description"],
-                                             service_details["state"],
-                                             service_details["start_type"], rule)
+            yield from add_matching_services(service, rule)
 
 
 # Format of parameters
@@ -139,53 +135,56 @@ def discovery_windows_services(params: List[Dict[str, Any]],
 #                  ( "stopped", None, 2 ) ],
 #    "else" : 2,
 # }
-def check_windows_services(item: str, params: Parameters,
-                           section: Dict[str, Dict[str, str]]) -> Generator[Result, None, None]:
+def check_windows_services(
+    item: str,
+    params: Parameters,
+    section: Section,
+) -> Generator[Result, None, None]:
 
     # allow to match agains the internal name or agains the display name
     # of the service
-    for service_name, service_details in section.items():
-        service_state = service_details["state"]
-        service_description = service_details["description"]
-        service_start_type = service_details["start_type"]
-        if item in (service_name, service_description) or service_name in params.get(
-                "additional_servicenames", []):
+    additional_names = params.get("additional_servicenames", [])
+    for service in section:
+        if item not in (service.name, service.description) and service.name not in additional_names:
+            continue
 
-            for t_state, t_start_type, mon_state in params.get("states", [("running", None, 0)]):
-                if (t_state is None or t_state == service_state) \
-                 and (t_start_type is None or t_start_type == service_start_type):
-                    this_state = mon_state
-                    break
-                this_state = params.get("else", 2)
+        for t_state, t_start_type, mon_state in params.get("states", [("running", None, 0)]):
+            if ((t_state is None or t_state == service.state) and
+                (t_start_type is None or t_start_type == service.start_type)):
+                this_state = mon_state
+                break
+            this_state = params.get("else", 2)
 
-            yield Result(
-                state=state(this_state),
-                summary="%s: %s (start type is %s)" %
-                (service_description, service_state, service_start_type),
-            )
+        yield Result(
+            state=State(this_state),
+            summary=f"{service.description}: {service.state} (start type is {service.start_type})",
+        )
 
 
-def cluster_check_windows_services(item: str, params: Parameters,
-                                   section: Mapping[str, Dict[str, Dict[str, str]]]) -> CheckResult:
+def cluster_check_windows_services(
+    item: str,
+    params: Parameters,
+    section: Mapping[str, Section],
+) -> CheckResult:
     # A service may appear more than once (due to clusters).
     # First make a list of all matching entries with their
     # states
     found = []
-    for node, services in section.items():
-        results = list(check_windows_services(item, params, services))
+    for node, node_section in section.items():
+        results = list(check_windows_services(item, params, node_section))
         if results:
             found.append((node, results[0]))
 
     if not found:
-        yield Result(state=state(params.get("else", 2)), summary="service not found")
+        yield Result(state=State(params.get("else", 2)), summary="service not found")
         return
 
     # We take the best found state (neccessary for clusters)
-    best_state = state.best(*(result.state for _node, result in found))
+    best_state = State.best(*(result.state for _node, result in found))
     best_running_on, best_result = [(n, r) for n, r in found if r.state == best_state][-1]
 
     yield best_result
-    if best_running_on and best_state != state.CRIT:
+    if best_running_on and best_state != State.CRIT:
         yield Result(state=best_state, summary="Running on: %s" % best_running_on)
 
 
@@ -203,39 +202,37 @@ register.check_plugin(
 )
 
 
-def discovery_services_summary(section: Dict[str, Dict[str, str]]) -> DiscoveryResult:
+def discovery_services_summary(section: Section) -> DiscoveryResult:
     if section:
         yield Service()
 
 
-def check_services_summary(params: Parameters, section: Dict[str, Dict[str, str]]) -> CheckResult:
+def check_services_summary(params: Parameters, section: Section) -> CheckResult:
     blacklist = params.get("ignored", [])
     stoplist = []
     num_blacklist = 0
     num_auto = 0
 
-    for service_name, service_details in section.items():
+    for service in section:
+        if service.start_type != "auto":
+            continue
 
-        if service_details["start_type"] == "auto":
-            num_auto += 1
-            if service_details["state"] == "stopped":
-                match = False
-                for srv in blacklist:
-                    if re.match(srv, service_name):
-                        match = True
-                if match is False:
-                    stoplist.append(service_name)
-                else:
-                    num_blacklist += 1
+        num_auto += 1
+        if service.state == "stopped":
+            if any(re.match(srv, service.name) for srv in blacklist):
+                num_blacklist += 1
+            else:
+                stoplist.append(service.name)
+
     num_stoplist = len(stoplist)
-    num_srv = len(section.keys())
+    num_srv = len(section)
 
-    if num_stoplist > 0:
+    if stoplist:
         stopped_srvs = " (" + ", ".join(stoplist) + ")"
-        cur_state = state(params.get("state_if_stopped", 0))
+        cur_state = State(params.get("state_if_stopped", 0))
     else:
         stopped_srvs = ""
-        cur_state = state.OK
+        cur_state = State.OK
 
     yield Result(
         state=cur_state,

@@ -20,38 +20,26 @@ STRING_TABLE = [
     ['app', 'pending', 'Windows App', 'Update'],
 ]
 
-PARSED = {
-    'WSearch': {
-        'description': 'Windows Search',
-        'start_type': 'demand',
-        'state': 'stopped'
-    },
-    'app': {
-        'description': 'Windows App Update',
-        'start_type': 'unknown',
-        'state': 'pending'
-    },
-    'wscsvc': {
-        'description': 'Security Center',
-        'start_type': 'auto',
-        'state': 'running'
-    },
-    'wuauserv': {
-        'description': 'Windows Update',
-        'start_type': 'disabled',
-        'state': 'stopped'
-    },
-}
+PARSED = [
+    services.WinService('wscsvc', 'running', 'auto', 'Security Center'),
+    services.WinService('WSearch', 'stopped', 'demand', 'Windows Search'),
+    services.WinService('wuauserv', 'stopped', 'disabled', 'Windows Update'),
+    services.WinService('app', 'pending', 'unknown', 'Windows App Update'),
+]
 
-PARSED_NODE = copy.deepcopy(PARSED)
-PARSED_NODE["app"] = {
-    'description': 'Windows App Update',
-    'start_type': 'unknown',
-    'state': 'running'
-}
+PARSED_NODE = [
+    services.WinService('wscsvc', 'running', 'auto', 'Security Center'),
+    services.WinService('WSearch', 'stopped', 'demand', 'Windows Search'),
+    services.WinService('wuauserv', 'stopped', 'disabled', 'Windows Update'),
+    services.WinService('app', 'running', 'unknown', 'Windows App Update'),
+]
 
-PARSED_AUTO = copy.deepcopy(PARSED)
-PARSED_AUTO["app"] = {'description': 'Windows App Update', 'start_type': 'auto', 'state': 'stopped'}
+PARSED_AUTO = [
+    services.WinService('wscsvc', 'running', 'auto', 'Security Center'),
+    services.WinService('WSearch', 'stopped', 'demand', 'Windows Search'),
+    services.WinService('wuauserv', 'stopped', 'disabled', 'Windows Update'),
+    services.WinService('app', 'stopped', 'auto', 'Windows App Update'),
+]
 
 
 def test_parse():
@@ -105,40 +93,28 @@ def test_discovery_windows_services(params, discovered_services):
 
 @pytest.mark.parametrize("item, params, yielded_results", [
     ("WSearch", services.WINDOWS_SERVICES_CHECK_DEFAULT_PARAMETERS, [
-        Result(state=state.CRIT,
-               summary='Windows Search: stopped (start type is demand)',
-               details='Windows Search: stopped (start type is demand)')
+        Result(state=state.CRIT, summary='Windows Search: stopped (start type is demand)'),
     ]),
     ("WSearch", {
         "else": 1
     }, [
-        Result(state=state.WARN,
-               summary='Windows Search: stopped (start type is demand)',
-               details='Windows Search: stopped (start type is demand)')
+        Result(state=state.WARN, summary='Windows Search: stopped (start type is demand)'),
     ]),
     ("WSearch", {
         "states": [("stopped", None, 0)]
     }, [
-        Result(state=state.OK,
-               summary='Windows Search: stopped (start type is demand)',
-               details='Windows Search: stopped (start type is demand)')
+        Result(state=state.OK, summary='Windows Search: stopped (start type is demand)'),
     ]),
     ("WSearch", {
         "states": [(None, "demand", 1)]
     }, [
-        Result(state=state.WARN,
-               summary='Windows Search: stopped (start type is demand)',
-               details='Windows Search: stopped (start type is demand)')
+        Result(state=state.WARN, summary='Windows Search: stopped (start type is demand)'),
     ]),
     ("WSearch", {
         "additional_servicenames": ["wuauserv"]
     }, [
-        Result(state=state.CRIT,
-               summary='Windows Search: stopped (start type is demand)',
-               details='Windows Search: stopped (start type is demand)'),
-        Result(state=state.CRIT,
-               summary='Windows Update: stopped (start type is disabled)',
-               details='Windows Update: stopped (start type is disabled)')
+        Result(state=state.CRIT, summary='Windows Search: stopped (start type is demand)'),
+        Result(state=state.CRIT, summary='Windows Update: stopped (start type is disabled)'),
     ]),
 ])
 def test_check_windows_services(item, params, yielded_results):
@@ -147,17 +123,13 @@ def test_check_windows_services(item, params, yielded_results):
 
 @pytest.mark.parametrize("item, params, yielded_results", [
     ("app", services.WINDOWS_SERVICES_CHECK_DEFAULT_PARAMETERS, [
-        Result(state=state.OK,
-               summary='Windows App Update: running (start type is unknown)',
-               details='Windows App Update: running (start type is unknown)'),
+        Result(state=state.OK, summary='Windows App Update: running (start type is unknown)'),
         Result(state=state.OK, summary='Running on: node2', details='Running on: node2')
     ]),
     ("app", {
         "states": [("running", None, 2)]
     }, [
-        Result(state=state.CRIT,
-               summary='Windows App Update: running (start type is unknown)',
-               details='Windows App Update: running (start type is unknown)'),
+        Result(state=state.CRIT, summary='Windows App Update: running (start type is unknown)'),
     ]),
     ("non-existant-service", services.WINDOWS_SERVICES_CHECK_DEFAULT_PARAMETERS, [
         Result(state=state.CRIT, summary='service not found', details='service not found'),

@@ -536,10 +536,13 @@ class SidebarRenderer:
 
         MainMenuRenderer().show()
 
-        html.div('',
-                 id_="side_fold",
-                 title=_("Toggle the sidebar"),
-                 onclick="cmk.sidebar.toggle_sidebar()")
+        html.open_div(id_="side_fold",
+                      title=_("Toggle the sidebar"),
+                      onclick="cmk.sidebar.toggle_sidebar()")
+        html.icon("sidebar_folded", class_="folded")
+        html.icon("sidebar")
+        html.div(_("Sidebar"))
+        html.close_div()
 
         if config.sidebar_show_version_in_sidebar:
             html.open_div(id_="side_version")

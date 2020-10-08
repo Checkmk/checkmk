@@ -285,10 +285,13 @@ class ModeEditHost(ABCHostMode):
                             title=_("For all hosts on site %s") % self._host.site_id(),
                             entries=[
                                 PageMenuEntry(
-                                    title=_("Refresh DNS information"),
+                                    title=_("Update DNS cache"),
                                     icon_name="update",
                                     item=make_simple_link(
                                         html.makeactionuri([("_update_dns_cache", "1")])),
+                                    shortcut_title=_("Update site DNS cache"),
+                                    is_shortcut=True,
+                                    is_suggested=True,
                                 ),
                             ],
                         ),

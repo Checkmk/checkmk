@@ -15,7 +15,6 @@
 
 #include "DowntimeOrComment.h"  // IWYU pragma: keep
 #include "nagios.h"
-class Logger;
 class MonitoringCore;
 
 class DowntimesOrComments {
@@ -29,7 +28,6 @@ public:
 private:
     std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> _entries;
     MonitoringCore *const _mc;
-    Logger *const _logger;
 };
 
 #endif  // DowntimesOrComments_h

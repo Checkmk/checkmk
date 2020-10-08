@@ -147,6 +147,7 @@ liblivestatus_a_SOURCES = \
         OringFilter.cc \
         OutputBuffer.cc \
         PerfdataAggregator.cc \
+        POSIXUtils.cc \
         Query.cc \
         RegExp.cc \
         Renderer.cc \

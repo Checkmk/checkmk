@@ -16,12 +16,12 @@
 #include <vector>
 
 #include "Filter.h"
+#include "Logger.h"
 #include "Row.h"
 #include "contact_fwd.h"
 #include "opids.h"
 class Aggregation;
 class Aggregator;
-class Logger;
 class RowRenderer;
 
 template <typename T>
@@ -71,10 +71,10 @@ public:
     [[nodiscard]] virtual std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory factory) const = 0;
 
-    [[nodiscard]] Logger *logger() const { return _logger; }
+    [[nodiscard]] Logger *logger() const { return &_logger; }
 
 private:
-    Logger *const _logger;
+    mutable ContextLogger _logger;
     std::string _name;
     std::string _description;
     ColumnOffsets _offsets;

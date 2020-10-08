@@ -8,9 +8,11 @@
 #include <utility>
 
 #include "Logger.h"
+#include "POSIXUtils.h"
 
 Column::Column(std::string name, std::string description, ColumnOffsets offsets)
-    : _logger(Logger::getLogger("cmk.livestatus"))
+    : _logger(Logger::getLogger("cmk.livestatus"),
+              [](std::ostream &os) { os << "[" << getThreadName() << "] "; })
     , _name(std::move(name))
     , _description(std::move(description))
     , _offsets(std::move(offsets)) {}

@@ -22,10 +22,8 @@ public:
     [[nodiscard]] std::string name() const;
     virtual std::unique_ptr<Column> createColumn(
         const std::string &name, const std::string &arguments) = 0;
-    [[nodiscard]] Logger *logger() const;
 
 protected:
-    Logger *const _logger;
     const std::string _name;
     const std::string _description;  // Note: Currently unused!
     ColumnOffsets _offsets;

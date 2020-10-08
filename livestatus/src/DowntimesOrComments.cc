@@ -9,9 +9,9 @@
 
 #include "DowntimeOrComment.h"
 #include "Logger.h"
+#include "MonitoringCore.h"
 
-DowntimesOrComments::DowntimesOrComments(MonitoringCore *mc)
-    : _mc(mc), _logger(Logger::getLogger("cmk.livestatus")) {}
+DowntimesOrComments::DowntimesOrComments(MonitoringCore *mc) : _mc(mc) {}
 
 void DowntimesOrComments::registerDowntime(nebstruct_downtime_data *data) {
     unsigned long id = data->downtime_id;
@@ -22,7 +22,7 @@ void DowntimesOrComments::registerDowntime(nebstruct_downtime_data *data) {
             break;
         case NEBTYPE_DOWNTIME_DELETE:
             if (_entries.erase(id) == 0) {
-                Informational(_logger)
+                Informational(_mc->loggerLivestatus())
                     << "Cannot delete non-existing downtime " << id;
             }
             break;
@@ -40,7 +40,7 @@ void DowntimesOrComments::registerComment(nebstruct_comment_data *data) {
             break;
         case NEBTYPE_COMMENT_DELETE:
             if (_entries.erase(id) == 0) {
-                Informational(_logger)
+                Informational(_mc->loggerLivestatus())
                     << "Cannot delete non-existing comment " << id;
             }
             break;

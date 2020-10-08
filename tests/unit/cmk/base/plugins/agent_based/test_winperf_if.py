@@ -451,36 +451,28 @@ def test_winperf_if_group_patterns(value_store):
             section,
         ) if not isinstance(result, IgnoreResults)
     ] == [
-        Result(state=state.OK, summary='[1]', details='[1]'),
-        Result(state=state.OK,
-               summary='Operational state: Connected',
-               details='Operational state: Connected'),
-        Result(state=state.OK, summary='1.41 GBit/s', details='1.41 GBit/s'),
-        Result(state=state.OK, summary='[2]', details='[2]'),
-        Result(state=state.OK,
-               summary='Operational state: Connected',
-               details='Operational state: Connected'),
-        Result(state=state.OK, summary='1.41 GBit/s', details='1.41 GBit/s'),
-        Result(state=state.OK, summary='Teaming', details='Teaming'),
-        Result(state=state.OK, summary='Operational state: up', details='Operational state: up'),
+        Result(state=state.OK, notice='[1]'),
+        Result(state=state.OK, notice='Operational state: Connected'),
+        Result(state=state.OK, summary='Speed: 1.41 GBit/s'),
+        Result(state=state.OK, notice='[2]'),
+        Result(state=state.OK, notice='Operational state: Connected'),
+        Result(state=state.OK, summary='Speed: 1.41 GBit/s'),
+        Result(state=state.OK, notice='Teaming'),
+        Result(state=state.OK, notice='Operational state: up'),
         Result(
             state=state.OK,
-            summary=
+            notice=
             'Members: [Broadcom ABC123 NetXtreme 123 GigE [Client1] 138 (Connected), Broadcom ABC456 NetXtreme 456 GigE [Client2] 137 (Connected)]',
-            details=
-            'Members: [Broadcom ABC123 NetXtreme 123 GigE [Client1] 138 (Connected), Broadcom ABC456 NetXtreme 456 GigE [Client2] 137 (Connected)]'
         ),
-        Result(state=state.OK, summary='2.82 GBit/s', details='2.82 GBit/s'),
-        Result(state=state.OK, summary='Teaming', details='Teaming'),
-        Result(state=state.OK, summary='Operational state: up', details='Operational state: up'),
+        Result(state=state.OK, summary='Speed: 2.82 GBit/s'),
+        Result(state=state.OK, notice='Teaming'),
+        Result(state=state.OK, notice='Operational state: up'),
         Result(
             state=state.OK,
-            summary=
+            notice=
             'Members: [isatap.{A1A1A1A1-A1A1-A1A1-A1A1-A1A1A1A1A1A1} (Connected), isatap.{B1B1B1B1-B1B1-B1B1-B1B1-B1B1B1B1B1B1} (Connected), isatap.{C1C1C1C1-C1C1-C1C1-C1C1-C1C1C1C1C1C1} (Connected), isatap.{D1D1D1D1-D1D1-D1D1-D1D1-D1D1D1D1D1D1} (Connected), isatap.{E1E1E1E1-E1E1-E1E1-E1E1-E1E1E1E1E1E1} (Connected), isatap.{F1F1F1F1-F1F1-F1F1-F1F1-F1F1F1F1F1F1} (Connected)]',
-            details=
-            'Members: [isatap.{A1A1A1A1-A1A1-A1A1-A1A1-A1A1A1A1A1A1} (Connected), isatap.{B1B1B1B1-B1B1-B1B1-B1B1-B1B1B1B1B1B1} (Connected), isatap.{C1C1C1C1-C1C1-C1C1-C1C1-C1C1C1C1C1C1} (Connected), isatap.{D1D1D1D1-D1D1-D1D1-D1D1-D1D1D1D1D1D1} (Connected), isatap.{E1E1E1E1-E1E1-E1E1-E1E1-E1E1E1E1E1E1} (Connected), isatap.{F1F1F1F1-F1F1-F1F1-F1F1-F1F1F1F1F1F1} (Connected)]'
         ),
-        Result(state=state.OK, summary='600 kBit/s', details='600 kBit/s'),
+        Result(state=state.OK, summary='Speed: 600 kBit/s'),
     ]
 
 
@@ -539,13 +531,10 @@ def winperf_if_teaming_parsed(time, out_octets):
             'discovered_speed': 10000000000
         },
         [
-            Result(state=state.OK, summary='[SLOT 6 Port 1 DAG]', details='[SLOT 6 Port 1 DAG]'),
-            Result(state=state.OK,
-                   summary='Operational state: Connected',
-                   details='Operational state: Connected'),
-            Result(
-                state=state.OK, summary='MAC: A0:36:9F:B0:A3:60', details='MAC: A0:36:9F:B0:A3:60'),
-            Result(state=state.OK, summary='10 GBit/s', details='10 GBit/s'),
+            Result(state=state.OK, notice='[SLOT 6 Port 1 DAG]'),
+            Result(state=state.OK, notice='Operational state: Connected'),
+            Result(state=state.OK, notice='MAC: A0:36:9F:B0:A3:60'),
+            Result(state=state.OK, summary='Speed: 10 GBit/s'),
             Metric('in', 0.0, boundaries=(0.0, 1250000000.0)),
             Metric('inmcast', 0.0),
             Metric('inbcast', 0.0),
@@ -561,9 +550,8 @@ def winperf_if_teaming_parsed(time, out_octets):
             Metric('outdisc', 0.0),
             Metric('outerr', 0.0),
             Metric('outqlen', 0.0),
-            Result(state=state.OK, summary='In: 0.00 B/s (0.0%)', details='In: 0.00 B/s (0.0%)'),
-            Result(
-                state=state.OK, summary='Out: 1.07 GB/s (85.9%)', details='Out: 1.07 GB/s (85.9%)'),
+            Result(state=state.OK, summary='In: 0.00 B/s (0%)'),
+            Result(state=state.OK, summary='Out: 1.07 GB/s (85.9%)'),
         ],
     ),
     (
@@ -573,13 +561,10 @@ def winperf_if_teaming_parsed(time, out_octets):
             'discovered_speed': 10000000000
         },
         [
-            Result(state=state.OK, summary='[SLOT 4 Port 2 DAG]', details='[SLOT 4 Port 2 DAG]'),
-            Result(state=state.OK,
-                   summary='Operational state: Connected',
-                   details='Operational state: Connected'),
-            Result(
-                state=state.OK, summary='MAC: A0:36:9F:B0:B3:66', details='MAC: A0:36:9F:B0:B3:66'),
-            Result(state=state.OK, summary='10 GBit/s', details='10 GBit/s'),
+            Result(state=state.OK, notice='[SLOT 4 Port 2 DAG]'),
+            Result(state=state.OK, notice='Operational state: Connected'),
+            Result(state=state.OK, notice='MAC: A0:36:9F:B0:B3:66'),
+            Result(state=state.OK, summary='Speed: 10 GBit/s'),
             Metric('in', 0.0, boundaries=(0.0, 1250000000.0)),
             Metric('inmcast', 0.0),
             Metric('inbcast', 0.0),
@@ -595,9 +580,8 @@ def winperf_if_teaming_parsed(time, out_octets):
             Metric('outdisc', 0.0),
             Metric('outerr', 0.0),
             Metric('outqlen', 0.0),
-            Result(state=state.OK, summary='In: 0.00 B/s (0.0%)', details='In: 0.00 B/s (0.0%)'),
-            Result(
-                state=state.OK, summary='Out: 1.07 GB/s (85.9%)', details='Out: 1.07 GB/s (85.9%)'),
+            Result(state=state.OK, summary='In: 0.00 B/s (0%)'),
+            Result(state=state.OK, summary='Out: 1.07 GB/s (85.9%)'),
         ],
     ),
     (
@@ -610,13 +594,10 @@ def winperf_if_teaming_parsed(time, out_octets):
             },
         },
         [
-            Result(state=state.OK, summary='Teaming', details='Teaming'),
-            Result(state=state.OK, summary='Operational state: up',
-                   details='Operational state: up'),
-            Result(state=state.OK,
-                   summary='Members: [3 (Connected), 8 (Connected)]',
-                   details='Members: [3 (Connected), 8 (Connected)]'),
-            Result(state=state.OK, summary='20 GBit/s', details='20 GBit/s'),
+            Result(state=state.OK, notice='Teaming'),
+            Result(state=state.OK, notice='Operational state: up'),
+            Result(state=state.OK, notice='Members: [3 (Connected), 8 (Connected)]'),
+            Result(state=state.OK, summary='Speed: 20 GBit/s'),
             Metric('in', 0.0, boundaries=(0.0, 2500000000.0)),
             Metric('inmcast', 0.0),
             Metric('inbcast', 0.0),
@@ -632,9 +613,8 @@ def winperf_if_teaming_parsed(time, out_octets):
             Metric('outdisc', 0.0),
             Metric('outerr', 0.0),
             Metric('outqlen', 0.0),
-            Result(state=state.OK, summary='In: 0.00 B/s (0.0%)', details='In: 0.00 B/s (0.0%)'),
-            Result(
-                state=state.OK, summary='Out: 2.15 GB/s (85.9%)', details='Out: 2.15 GB/s (85.9%)'),
+            Result(state=state.OK, summary='In: 0.00 B/s (0%)'),
+            Result(state=state.OK, summary='Out: 2.15 GB/s (85.9%)'),
         ],
     ),
 ])
@@ -714,9 +694,9 @@ def test_winperf_if_teaming_performance_data(monkeypatch, value_store, item, par
                     'discovered_oper_status': ['1']
                 },
                 [
-                    Result(state=state.OK, summary='[TEAM:F[o]O 123-BAR]'),
-                    Result(state=state.OK, summary='Operational state: Connected'),
-                    Result(state=state.OK, summary='10 GBit/s'),
+                    Result(state=state.OK, notice='[TEAM:F[o]O 123-BAR]'),
+                    Result(state=state.OK, notice='Operational state: Connected'),
+                    Result(state=state.OK, summary='Speed: 10 GBit/s'),
                 ],
             ),
             (
@@ -727,9 +707,9 @@ def test_winperf_if_teaming_performance_data(monkeypatch, value_store, item, par
                     'discovered_oper_status': ['1']
                 },
                 [
-                    Result(state=state.OK, summary='[TEAM:F[o]O 123-BAR 2]'),
-                    Result(state=state.OK, summary='Operational state: Connected'),
-                    Result(state=state.OK, summary='10 GBit/s'),
+                    Result(state=state.OK, notice='[TEAM:F[o]O 123-BAR 2]'),
+                    Result(state=state.OK, notice='Operational state: Connected'),
+                    Result(state=state.OK, summary='Speed: 10 GBit/s'),
                 ],
             ),
         ],
@@ -848,9 +828,9 @@ def test_winperf_if_teaming_performance_data(monkeypatch, value_store, item, par
                     'discovered_oper_status': ['1']
                 },
                 [
-                    Result(state=state.OK, summary='[A B-C]'),
-                    Result(state=state.OK, summary='Operational state: Connected'),
-                    Result(state=state.OK, summary='10 GBit/s'),
+                    Result(state=state.OK, notice='[A B-C]'),
+                    Result(state=state.OK, notice='Operational state: Connected'),
+                    Result(state=state.OK, summary='Speed: 10 GBit/s'),
                 ],
             ),
             (
@@ -861,9 +841,9 @@ def test_winperf_if_teaming_performance_data(monkeypatch, value_store, item, par
                     'discovered_oper_status': ['1']
                 },
                 [
-                    Result(state=state.OK, summary='[FOO B-A-R 53]'),
-                    Result(state=state.OK, summary='Operational state: Connected'),
-                    Result(state=state.OK, summary='1 GBit/s'),
+                    Result(state=state.OK, notice='[FOO B-A-R 53]'),
+                    Result(state=state.OK, notice='Operational state: Connected'),
+                    Result(state=state.OK, summary='Speed: 1 GBit/s'),
                 ],
             ),
             (
@@ -874,9 +854,9 @@ def test_winperf_if_teaming_performance_data(monkeypatch, value_store, item, par
                     'discovered_oper_status': ['1']
                 },
                 [
-                    Result(state=state.OK, summary='[A B-C 3]'),
-                    Result(state=state.OK, summary='Operational state: Connected'),
-                    Result(state=state.OK, summary='10 GBit/s'),
+                    Result(state=state.OK, notice='[A B-C 3]'),
+                    Result(state=state.OK, notice='Operational state: Connected'),
+                    Result(state=state.OK, summary='Speed: 10 GBit/s'),
                 ],
             ),
             (
@@ -887,9 +867,9 @@ def test_winperf_if_teaming_performance_data(monkeypatch, value_store, item, par
                     'discovered_oper_status': ['1']
                 },
                 [
-                    Result(state=state.OK, summary='[FOO B-A-R 52]'),
-                    Result(state=state.OK, summary='Operational state: Connected'),
-                    Result(state=state.OK, summary='1 GBit/s'),
+                    Result(state=state.OK, notice='[FOO B-A-R 52]'),
+                    Result(state=state.OK, notice='Operational state: Connected'),
+                    Result(state=state.OK, summary='Speed: 1 GBit/s'),
                 ],
             ),
         ],

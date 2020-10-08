@@ -73,9 +73,9 @@ from cmk.base.plugins.agent_based.utils import interfaces
                     'discovered_oper_status': ['1']
                 },
                 [
-                    Result(state=state.OK, summary='[GTB1020-2-CL_mgmt]'),
-                    Result(state=state.OK, summary='Operational state: up'),
-                    Result(state=state.OK, summary='1 GBit/s'),
+                    Result(state=state.OK, notice='[GTB1020-2-CL_mgmt]'),
+                    Result(state=state.OK, notice='Operational state: up'),
+                    Result(state=state.OK, summary='Speed: 1 GBit/s'),
                     Result(state=state.OK, summary='Current Port: e0f-112 (is home port)'),
                 ],
             ),
@@ -87,9 +87,9 @@ from cmk.base.plugins.agent_based.utils import interfaces
                     'discovered_oper_status': ['1']
                 },
                 [
-                    Result(state=state.OK, summary='[GTB1020-2_ic1]'),
-                    Result(state=state.OK, summary='Operational state: up'),
-                    Result(state=state.OK, summary='1 GBit/s'),
+                    Result(state=state.OK, notice='[GTB1020-2_ic1]'),
+                    Result(state=state.OK, notice='Operational state: up'),
+                    Result(state=state.OK, summary='Speed: 1 GBit/s'),
                     Result(state=state.OK, summary='Current Port: e0f-2231 (is home port)'),
                 ],
             ),
@@ -150,10 +150,10 @@ from cmk.base.plugins.agent_based.utils import interfaces
                     'discovered_oper_status': ['1']
                 },
                 [
-                    Result(state=state.OK, summary='[ifgrp_sto]'),
-                    Result(state=state.OK, summary='Operational state: up'),
-                    Result(state=state.OK, summary='MAC: 01:B0:89:22:DF:02'),
-                    Result(state=state.OK, summary='1 GBit/s'),
+                    Result(state=state.OK, notice='[ifgrp_sto]'),
+                    Result(state=state.OK, notice='Operational state: up'),
+                    Result(state=state.OK, notice='MAC: 01:B0:89:22:DF:02'),
+                    Result(state=state.OK, summary='Speed: 1 GBit/s'),
                     Result(state=state.OK, summary='Physical interfaces: e0c(up)'),
                     Result(state=state.OK, summary='e0d(up)'),
                 ],
@@ -195,9 +195,9 @@ from cmk.base.plugins.agent_based.utils import interfaces
                     'discovered_oper_status': ['1']
                 },
                 [
-                    Result(state=state.OK, summary='[cluster_mgmt]'),
-                    Result(state=state.OK, summary='Operational state: up'),
-                    Result(state=state.OK, summary='speed auto'),
+                    Result(state=state.OK, notice='[cluster_mgmt]'),
+                    Result(state=state.OK, notice='Operational state: up'),
+                    Result(state=state.OK, summary='Speed: auto'),
                     Result(state=state.OK, summary='Current Port: e0a (is home port)'),
                 ],
             ),

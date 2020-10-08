@@ -964,25 +964,26 @@ def _transform_check_params(params: type_defs.Parameters) -> type_defs.Parameter
 
 
 def _check_speed(interface: Interface, targetspeed: Optional[int]) -> Result:
-    # Check speed settings of interface, but only if speed information
-    # is available. This is not always the case.
-    mon_state = state.OK
-    if interface.speed:
-        info_speed = render.nicspeed(interface.speed / 8)
-        if targetspeed is not None and int(interface.speed) != targetspeed:
-            info_speed += " (wrong speed, expected: %s)" % render.nicspeed(targetspeed / 8)
-            mon_state = state.WARN
-    elif targetspeed:
-        info_speed = "assuming %s" % render.nicspeed(targetspeed / 8)
-    elif interface.speed_as_text:
-        info_speed = "speed %s" % interface.speed_as_text
-    else:
-        info_speed = "speed unknown"
+    """Check speed settings of interface
 
-    return Result(
-        state=mon_state,
-        summary=info_speed,
-    )
+    Only if speed information is available. This is not always the case.
+    """
+    if interface.speed:
+        speed_actual = render.nicspeed(interface.speed / 8)
+        speed_expected = ("" if (targetspeed is None or int(interface.speed) == targetspeed) else
+                          " (expected: %s)" % render.nicspeed(targetspeed / 8))
+        return Result(
+            state=state.WARN if speed_expected else state.OK,
+            summary=f"Speed: {speed_actual}{speed_expected}",
+        )
+
+    if targetspeed:
+        return Result(
+            state=state.OK,
+            summary="Speed: %s (assumed)" % render.nicspeed(targetspeed / 8),
+        )
+
+    return Result(state=state.OK, summary="Speed: %s" % (interface.speed_as_text or "unknown"))
 
 
 # TODO: Check what the relationship between Errors, Discards, and ucast/mcast actually is.
@@ -1084,7 +1085,7 @@ def check_single_interface(
     if info_interface:
         yield Result(
             state=state.OK,
-            summary=info_interface,
+            notice=info_interface,
         )
 
     info_oper_status, info_admin_status = _render_status_info_main_interface(
@@ -1098,7 +1099,7 @@ def check_single_interface(
             target_oper_states,
             _get_map_states(params.get("map_operstates", [])),
         ),
-        summary=info_oper_status,
+        notice=info_oper_status,
     )
 
     if info_admin_status:
@@ -1108,7 +1109,7 @@ def check_single_interface(
                 target_admin_states,
                 _get_map_states(params.get("map_admin_states", [])),
             ),
-            summary=info_admin_status,
+            notice=info_admin_status,
         )
 
     if group_members:
@@ -1129,22 +1130,21 @@ def check_single_interface(
 
         yield Result(
             state=state.OK,
-            summary='Members: %s' % ' '.join(infos_group),
+            notice='Members: %s' % ' '.join(infos_group),
         )
 
     if interface.phys_address:
         yield Result(
             state=state.OK,
-            summary='MAC: %s' % render_mac_address(interface.phys_address),
+            notice='MAC: %s' % render_mac_address(interface.phys_address),
         )
 
     yield _check_speed(interface, targetspeed)
 
     # prepare reference speed for computing relative bandwidth usage
-    speed = int(interface.speed)
     ref_speed = None
-    if speed:
-        ref_speed = speed / 8.0
+    if interface.speed:
+        ref_speed = interface.speed / 8.0
     elif targetspeed:
         ref_speed = targetspeed / 8.0
 
@@ -1272,7 +1272,7 @@ def check_single_interface(
 
         # Check bandwidth thresholds incl. prediction
         if predictive:
-            result = list(
+            result, _metric, *ref_curve = list(
                 check_levels_predictive(
                     traffic,
                     levels=levels_predictive,
@@ -1280,32 +1280,29 @@ def check_single_interface(
                     render_func=bandwidth_renderer,
                     label=title,
                 ))
-            if len(result) == 3:
-                yield result[2]  # reference curve for predictive levels
+            assert isinstance(result, Result)
+            if ref_curve:
+                yield from ref_curve  # reference curve for predictive levels
         else:
-            result = list(
-                check_levels(
-                    traffic,
-                    levels_upper=levels_uppper,
-                    levels_lower=levels_lower,
-                    metric_name=dsname,
-                    render_func=bandwidth_renderer,
-                    label=title,
-                ))
-        next_result = result[0]
-
-        if speed:
-            perc_used = 100.0 * traffic / speed
-            assumed_info = ""
-            if assumed_speed_in or assumed_speed_out:
-                assumed_info = "/" + bandwidth_renderer(speed)
-            assert isinstance(next_result, Result)
-            next_result = Result(
-                state=next_result.state,
-                summary=next_result.summary + " (%.1f%%%s)" % (perc_used, assumed_info),
+            result, = check_levels(
+                traffic,
+                levels_upper=levels_uppper,
+                levels_lower=levels_lower,
+                render_func=bandwidth_renderer,
+                label=title,
             )
 
-        yield next_result
+        if speed:
+            perc_info = render.percent(100.0 * traffic / speed)
+            if assumed_speed_in or assumed_speed_out:
+                perc_info += "/" + bandwidth_renderer(speed)
+
+            yield Result(
+                state=result.state,
+                summary="%s (%s)" % (result.summary, perc_info),
+            )
+        else:
+            yield result
 
         # check error, broadcast, multicast and non-unicast packets and discards
         pacrate = urate + nurate + errorrate
@@ -1341,6 +1338,7 @@ def check_single_interface(
                             metric_name=dsname if text == "errors" else text,
                             render_func=render.percent,
                             label=infotxt,
+                            notice_only=True,
                         )
                     elif isinstance(params_crit, int):  # absolute levels
                         infotxt += " packets"
@@ -1353,6 +1351,7 @@ def check_single_interface(
                             metric_name=dsname,
                             render_func=lambda x: "%d" % x,
                             label=infotxt,
+                            notice_only=True,
                         )
 
         for _txt, _rate, _warn, _crit in [("non-unicast packets", nurate, nucast_warn, nucast_crit),
@@ -1365,6 +1364,7 @@ def check_single_interface(
                     metric_name=_txt,
                     render_func=lambda x: "%.2f/s" % x,
                     label="%s %s" % (what, _txt),
+                    notice_only=True,
                 )
 
 

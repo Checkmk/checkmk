@@ -151,32 +151,45 @@ def test_discovery_services_summary():
     (services.SERVICES_SUMMARY_DEFAULT_PARAMETERS, [
         Result(
             state=state.OK,
-            summary=
-            '4 services, 2 services in autostart - of which 1 services are stopped (app), 0 services stopped but ignored',
-            details=
-            '4 services, 2 services in autostart - of which 1 services are stopped (app), 0 services stopped but ignored'
-        )
+            summary='Autostart services: 2',
+            details='Autostart services: 2\nServices found in total: 4',
+        ),
+        Result(
+            state=state.OK,
+            summary='Stopped services: 1',
+            details='Stopped services: app',
+        ),
     ]),
     ({
         "state_if_stopped": 2
     }, [
         Result(
+            state=state.OK,
+            summary='Autostart services: 2',
+            details='Autostart services: 2\nServices found in total: 4',
+        ),
+        Result(
             state=state.CRIT,
-            summary=
-            '4 services, 2 services in autostart - of which 1 services are stopped (app), 0 services stopped but ignored',
-            details=
-            '4 services, 2 services in autostart - of which 1 services are stopped (app), 0 services stopped but ignored'
-        )
+            summary='Stopped services: 1',
+            details='Stopped services: app',
+        ),
     ]),
     ({
         "ignored": ["app"]
     }, [
         Result(
             state=state.OK,
-            summary=
-            '4 services, 2 services in autostart - of which 0 services are stopped, 1 services stopped but ignored',
-            details=
-            '4 services, 2 services in autostart - of which 0 services are stopped, 1 services stopped but ignored'
+            summary='Autostart services: 2',
+            details='Autostart services: 2\nServices found in total: 4',
+        ),
+        Result(
+            state=state.OK,
+            summary='Stopped services: 0',
+            details='Stopped services: 0',
+        ),
+        Result(
+            state=state.OK,
+            notice='Stopped but ignored: 1',
         )
     ]),
 ])

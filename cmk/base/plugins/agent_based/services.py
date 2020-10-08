@@ -224,22 +224,20 @@ def check_services_summary(params: Parameters, section: Section) -> CheckResult:
             else:
                 stoplist.append(service.name)
 
-    num_stoplist = len(stoplist)
-    num_srv = len(section)
-
-    if stoplist:
-        stopped_srvs = " (" + ", ".join(stoplist) + ")"
-        cur_state = State(params.get("state_if_stopped", 0))
-    else:
-        stopped_srvs = ""
-        cur_state = State.OK
+    yield Result(
+        state=State.OK,
+        summary=f"Autostart services: {num_auto}",
+        details=f"Autostart services: {num_auto}\nServices found in total: {len(section)}",
+    )
 
     yield Result(
-        state=cur_state,
-        summary=
-        "%d services, %d services in autostart - of which %d services are stopped%s, %d services stopped but ignored"
-        % (num_srv, num_auto, num_stoplist, stopped_srvs, num_blacklist),
+        state=State(params.get("state_if_stopped", 0)) if stoplist else State.OK,
+        summary=f"Stopped services: {len(stoplist)}",
+        details=("Stopped services: %s" % ', '.join(stoplist)) if stoplist else None,
     )
+
+    if num_blacklist:
+        yield Result(state=State.OK, notice=f"Stopped but ignored: {num_blacklist}")
 
 
 register.check_plugin(

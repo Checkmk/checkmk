@@ -10,7 +10,7 @@ from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
     Parameters,
 )
-from .agent_based_api.v1 import get_value_store, register, Result, Service, State as state
+from .agent_based_api.v1 import get_value_store, register, render, Result, Service, State as state
 from .utils import cpu_util
 
 
@@ -52,19 +52,22 @@ def check_esx_vsphere_hostsystem_cpu(
     yield from cpu_util.check_cpu_util(get_value_store(), usage, params)
     yield Result(
         state=state.OK,
-        summary="%.2fGHz/%.2fGHz" % (used_mhz / 1000.0, total_mhz / 1000.0),
+        notice="%s/%s" % (
+            render.frequency(used_mhz * 1e6),
+            render.frequency(total_mhz * 1e6),
+        ),
     )
     yield Result(
         state=state.OK,
-        summary="Sockets: %d" % num_sockets,
+        notice="Sockets: %d" % num_sockets,
     )
     yield Result(
         state=state.OK,
-        summary="Cores/socket: %d" % int(num_cores / num_sockets),
+        notice="Cores/socket: %d" % int(num_cores / num_sockets),
     )
     yield Result(
         state=state.OK,
-        summary="Threads: %d" % num_threads,
+        notice="Threads: %d" % num_threads,
     )
 
 

@@ -16,7 +16,6 @@ from ..agent_based_api.v1 import (
     Metric,
     regex,
     render,
-    Result,
 )
 
 
@@ -129,15 +128,14 @@ def _check_single_core_util(
     levels: Optional[Tuple[float, float]],
     label: str,
 ) -> CheckResult:
-    for result in check_levels(
-            util,
-            levels_upper=levels,
-            render_func=render.percent,
-            label=label,
-    ):
-        yield Result(state=result.state, notice=result.summary)
-    if metric:
-        yield Metric(metric, util, levels=levels)
+    yield from check_levels(
+        util,
+        levels_upper=levels,
+        render_func=render.percent,
+        label=label,
+        metric_name=metric,
+        notice_only=True,
+    )
 
 
 def _util_perfdata(core: str, total_perc: float, core_index: int, this_time: float, params: Mapping,
@@ -220,4 +218,5 @@ def cpu_util_time(
         levels_upper=levels,
         render_func=render.timespan,
         label="%s is under high load for" % core,
+        notice_only=True,
     )

@@ -8,7 +8,6 @@
 #include <utility>
 
 #include "Column.h"
-#include "Logger.h"
 
 DynamicColumn::DynamicColumn(std::string name, std::string description,
                              ColumnOffsets offsets)

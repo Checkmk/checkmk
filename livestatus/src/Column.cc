@@ -5,6 +5,7 @@
 
 #include "Column.h"
 
+#include <ostream>
 #include <utility>
 
 #include "Logger.h"

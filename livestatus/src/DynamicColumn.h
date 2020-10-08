@@ -12,7 +12,6 @@
 #include <string>
 
 #include "Column.h"
-class Logger;
 
 class DynamicColumn {
 public:

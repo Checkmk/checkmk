@@ -288,7 +288,7 @@ headers:
 	doc/helpers/headrify
 
 
-$(OPENAPI_SPEC): $(shell find cmk/gui/plugins/openapi -name "*.py") $(shell find cmk/gui/cee/plugins/openapi -name "*.py")
+$(OPENAPI_SPEC): $(shell find cmk/gui/plugins/openapi $(wildcard cmk/gui/cee/plugins/openapi) -name "*.py")
 	@export PYTHONPATH=${REPO_PATH} ; \
 	export TMPFILE=$$(mktemp);  \
 	$(PIPENV) run python -m cmk.gui.openapi > $$TMPFILE && \

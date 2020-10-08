@@ -379,12 +379,12 @@ class CREFolder(BaseFolder):
 
     @staticmethod
     def invalidate_caches():
+        Folder.root_folder().drop_caches()
         for cache_id in ["wato_folders", "folder_choices", "folder_choices_full_title"]:
             try:
                 del current_app.g[cache_id]
             except KeyError:
                 pass
-        Folder.root_folder().drop_caches()
 
     # Find folder that is specified by the current URL. This is either by a folder
     # path in the variable "folder" or by a host name in the variable "host". In the

@@ -49,13 +49,11 @@ def test_chrony_servers_unreachable():
     assert list(
         chrony.check_chrony({"ntp_levels": (None, None, None)}, {
             "Reference ID": '55DCBEF6 ()',
-            "Stratum": 3,
-            "System time": 0.275117,
             "address": "()",
         }, None)) == [
             Result(
                 state=state.WARN,
-                summary="NTP servers unreachable. Reference ID: 55DCBEF6 ()",
+                notice="NTP servers: unreachable\nReference ID: 55DCBEF6 ()",
             )
         ]
 
@@ -68,6 +66,7 @@ def test_chrony_stratum_crit():
             "System time": None,
             "address": "(foo.bar)",
         }, None)) == [
+            Result(state=state.OK, notice='NTP servers: (foo.bar)\nReference ID: None'),
             Result(
                 state=state.CRIT,
                 summary="Stratum: 3 (warn/crit at 2/2)",
@@ -83,6 +82,7 @@ def test_chrony_offet_crit():
             "System time": 0.275117,
             "address": "(moo)",
         }, None)) == [
+            Result(state=state.OK, notice='NTP servers: (moo)\nReference ID: None'),
             Result(
                 state=state.WARN,
                 summary="Offset: 0.2751 ms (warn/crit at 0.1200 ms/0.4200 ms)",

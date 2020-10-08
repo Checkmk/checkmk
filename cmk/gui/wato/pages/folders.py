@@ -438,7 +438,8 @@ class ModeFolder(WatoMode):
         yield PageMenuEntry(
             title=_("Manual services"),
             icon_name="rulesets",
-            item=make_simple_link(watolib.folder_preserving_link([("mode", "static_checks")])),
+            item=make_simple_link(
+                watolib.folder_preserving_link([("mode", "rulesets"), ("group", "static")])),
             is_advanced=True,
         )
 

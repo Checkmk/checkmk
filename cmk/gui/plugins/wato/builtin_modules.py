@@ -388,7 +388,7 @@ class MainModuleIntegrateNagiosPlugins(MainModule):
 class MainModuleStaticChecks(MainModule):
     @property
     def mode_or_url(self):
-        return "static_checks"
+        return "wato.py?mode=rulesets&group=static"
 
     @property
     def topic(self):

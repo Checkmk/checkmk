@@ -115,15 +115,13 @@ class RulespecGroupRegistry(cmk.utils.plugin_registry.Registry[Type[RulespecBase
         else:
             raise TypeError("Got invalid type \"%s\"" % instance.__name__)
 
-    def get_group_choices(self, mode: str) -> List[_Tuple[str, str]]:
+    def get_group_choices(self) -> List[_Tuple[str, str]]:
         """Returns all available ruleset groups to be used in dropdown choices"""
         choices: List[_Tuple[str, str]] = []
 
         main_groups = [g_class() for g_class in self.get_main_groups()]
         for main_group in sorted(main_groups, key=lambda g: g.title):
-            if mode == "static_checks" and main_group.name != "static":
-                continue
-            if mode != "static_checks" and main_group.name == "static":
+            if main_group.name == "static":
                 continue
 
             choices.append((main_group.name, main_group.choice_title))

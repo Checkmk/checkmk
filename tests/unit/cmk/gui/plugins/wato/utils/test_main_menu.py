@@ -19,7 +19,7 @@ def test_registered_modules():
         'tags',
         'globalvars',
         'host_attrs',
-        'static_checks',
+        'wato.py?mode=rulesets&group=static',
         'check_plugins',
         'read_only',
         'predefined_conditions',

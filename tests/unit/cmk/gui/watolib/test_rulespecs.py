@@ -1313,21 +1313,9 @@ def _expected_rulespec_group_choices():
 
 @pytest.mark.parametrize("mode,result", [
     ("rulesets", _expected_rulespec_group_choices()),
-    ("static_checks", [
-        ('static', u'Manual services'),
-        ('static/applications', u'&nbsp;&nbsp;\u2319 Applications, Processes & Services'),
-        ('static/hardware', u'&nbsp;&nbsp;\u2319 Hardware, BIOS'),
-        ('static/networking', u'&nbsp;&nbsp;\u2319 Networking'),
-        ('static/os', u'&nbsp;&nbsp;\u2319 Operating System Resources'),
-        ('static/printers', u'&nbsp;&nbsp;\u2319 Printers'),
-        ('static/storage', u'&nbsp;&nbsp;\u2319 Storage, Filesystems and Files'),
-        ('static/environment',
-         u'&nbsp;&nbsp;\u2319 Temperature, Humidity, Electrical Parameters, etc.'),
-        ('static/virtualization', u'&nbsp;&nbsp;\u2319 Virtualization'),
-    ]),
 ])
 def test_rulespec_group_choices(mode, result):
-    assert sorted(rulespec_group_registry.get_group_choices(mode=mode)) == sorted(result)
+    assert sorted(rulespec_group_registry.get_group_choices()) == sorted(result)
 
 
 @pytest.mark.parametrize("term,result", [

@@ -218,7 +218,6 @@ from cmk.gui.wato.pages.roles import (
     ModeRoleMatrix,
 )
 from cmk.gui.wato.pages.rulesets import (
-    ModeStaticChecksRulesets,
     ModeEditRuleset,
     ModeEditRule,
     ModeCloneRule,

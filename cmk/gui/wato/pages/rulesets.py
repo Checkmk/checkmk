@@ -411,6 +411,10 @@ class ModeRulesetGroup(ABCRulesetMode):
             url=None,
         )
 
+    def _breadcrumb_url(self) -> str:
+        return html.makeuri_contextless([("mode", self.name()), ("group", self._group_name)],
+                                        filename="wato.py")
+
     def _get_page_type(self, search_options: Dict[str, str]) -> PageType:
         return PageType.RulesetGroup
 
@@ -570,6 +574,17 @@ class ModeEditRuleset(WatoMode):
     @classmethod
     def permissions(cls):
         return []
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeRulesetGroup
+
+    def breadcrumb(self) -> Breadcrumb:
+        # To be able to calculate the breadcrumb with the ModeRulesetGroup as parent, we need to
+        # ensure that the group identity is available.
+        with html.stashed_vars():
+            html.request.set_var("group", self._rulespec.main_group_name)
+            return super().breadcrumb()
 
     def __init__(self):
         super(ModeEditRuleset, self).__init__()

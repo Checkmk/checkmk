@@ -34,7 +34,6 @@ class TCPFetcher(AgentFetcher):
         super().__init__(file_cache, logging.getLogger("cmk.fetchers.tcp"))
         self.family: Final = socket.AddressFamily(family)
         # json has no builtin tuple, we have to convert
-        verify_ipaddress(address[0])
         assert address[0] is not None
         self.address: Final[Tuple[HostAddress, int]] = (address[0], address[1])
         self.timeout: Final = timeout
@@ -62,6 +61,7 @@ class TCPFetcher(AgentFetcher):
         }
 
     def open(self) -> None:
+        verify_ipaddress(self.address[0])
         self._logger.debug(
             "Connecting via TCP to %s:%d (%ss timeout)",
             self.address[0],

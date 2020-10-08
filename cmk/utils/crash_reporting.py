@@ -254,9 +254,9 @@ def _get_local_vars_of_last_exception() -> str:
         for key, val in inspect.trace()[-1][0].f_locals.items():
             local_vars[key] = _format_var_for_export(val)
     except IndexError:
-        # please don't crash in the attempt to report a crash.
-        # Don't know why inspect.trace() causes an IndexError but it does happen
-        pass
+        # Handle case where sys.exc_info has no crash information
+        # (https://docs.python.org/2/library/sys.html#sys.exc_info)
+        rass
 
     # This needs to be encoded as the local vars might contain binary data which can not be
     # transported using JSON.

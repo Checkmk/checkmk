@@ -74,7 +74,7 @@ def check_mssql_counters_cache_hits(
     ... }):
     ...   print(result)
     Result(state=<State.OK: 0>, summary='99.6%', details='99.6%')
-    Metric('cache_hit_ratio', 99.59123862409379, levels=(None, None), boundaries=(None, None))
+    Metric('cache_hit_ratio', 99.59123862409379)
     """
     yield from _check_common("", item, section)
 
@@ -94,7 +94,7 @@ def cluster_check_mssql_counters_cache_hits(
     ... }):
     ...   print(result)
     Result(state=<State.OK: 0>, summary='[node1] 99.6%', details='[node1] 99.6%')
-    Metric('cache_hit_ratio', 99.59123862409379, levels=(None, None), boundaries=(None, None))
+    Metric('cache_hit_ratio', 99.59123862409379)
     """
     for node_name, node_section in section.items():
         yield from _check_common(node_name, item, node_section)

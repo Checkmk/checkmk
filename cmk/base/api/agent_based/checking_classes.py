@@ -251,8 +251,11 @@ class Metric(
         )
 
     def __repr__(self):
-        return "%s(%r, %r, levels=%r, boundaries=%r)" % (self.__class__.__name__, self.name,
-                                                         self.value, self.levels, self.boundaries)
+        levels = "" if self.levels == (None, None) else ", levels=%r" % (self.levels,)
+        boundaries = "" if self.boundaries == (None,
+                                               None) else ", boundaries=%r" % (self.boundaries,)
+        return "%s(%r, %r%s%s)" % (self.__class__.__name__, self.name, self.value, levels,
+                                   boundaries)
 
 
 class Result(

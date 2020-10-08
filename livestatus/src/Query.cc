@@ -367,7 +367,7 @@ private:
     double sum_{0};
 };
 
-std::map<std::string, AggregationFactory> stats_ops{
+const std::map<std::string, AggregationFactory> stats_ops{
     {"sum", []() { return std::make_unique<SumAggregation>(); }},
     {"min", []() { return std::make_unique<MinAggregation>(); }},
     {"max", []() { return std::make_unique<MaxAggregation>(); }},
@@ -467,11 +467,12 @@ void Query::parseSeparatorsLine(char *line) {
 }
 
 namespace {
-std::map<std::string, OutputFormat> formats{{"CSV", OutputFormat::csv},
-                                            {"csv", OutputFormat::broken_csv},
-                                            {"json", OutputFormat::json},
-                                            {"python", OutputFormat::python},
-                                            {"python3", OutputFormat::python3}};
+const std::map<std::string, OutputFormat> formats{
+    {"CSV", OutputFormat::csv},
+    {"csv", OutputFormat::broken_csv},
+    {"json", OutputFormat::json},
+    {"python", OutputFormat::python},
+    {"python3", OutputFormat::python3}};
 }  // namespace
 
 void Query::parseOutputFormatLine(char *line) {

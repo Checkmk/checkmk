@@ -166,6 +166,7 @@ Logger *LogManager::lookup(const std::string &name, Logger *parent) {
     return it->second.get();
 }
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 LogManager LogManager::global_log_manager;
 
 // -----------------------------------------------------------------------------

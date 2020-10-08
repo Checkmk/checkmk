@@ -34,7 +34,7 @@ using namespace std::chrono_literals;
 
 namespace {
 // NOTE: Keep this in sync with EC code. Ugly...
-std::vector<std::string> grepping_filters = {
+const std::vector<std::string> grepping_filters = {
     "event_id",         "event_text",      "event_comment",     "event_host",
     "event_host_regex", "event_contact",   "event_application", "event_rule_id",
     "event_owner",      "event_ipaddress", "event_core_host"

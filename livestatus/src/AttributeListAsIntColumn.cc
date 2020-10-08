@@ -20,7 +20,7 @@
 
 namespace {
 // see MODATTR_FOO in nagios/common.h
-std::map<std::string, unsigned long> known_attributes = {
+const std::map<std::string, unsigned long> known_attributes = {
     {"notifications_enabled", 0},    {"active_checks_enabled", 1},
     {"passive_checks_enabled", 2},   {"event_handler_enabled", 3},
     {"flap_detection_enabled", 4},   {"failure_prediction_enabled", 5},

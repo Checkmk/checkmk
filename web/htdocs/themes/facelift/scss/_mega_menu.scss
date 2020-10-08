@@ -33,6 +33,8 @@
   padding: 0;
   margin: 0;
 
+  img:hover { opacity: 1; }
+
   #mk_side_search {
     width: auto;
     padding: (2 * $spacing) $spacing;
@@ -54,13 +56,7 @@
     border-left: 4px solid $navigation-bg-color;
     box-sizing: border-box;
 
-    &:not(.delayed):hover, &.active {
-      border-left-color: $success;
-
-      > a.popup_trigger > img.icon {
-        opacity: .5;
-      }
-    }
+    &:not(.delayed):hover, &.active { border-left-color: $success; }
 
     &:not(.active) a.popup_trigger img.active { display: none; }
 
@@ -163,10 +159,7 @@
                 transform: rotate(270deg);
               }
 
-              + img {
-                margin: 0 4px 2px 0;
-                &:hover { opacity: 1; }
-              }
+              + img { margin: 0 4px 2px 0; }
             }
           }
 

@@ -150,7 +150,12 @@ body.main .popup_menu #side_header > span {
   text-align: center;
   cursor: pointer;
 
-  img { margin-bottom: 8px; }
+  img {
+    margin-bottom: 8px;
+
+    &:hover { opacity: 1; }
+  }
+
   &:not(.folded) img.folded { display: none; }
   &.folded img:not(.folded) { display: none; }
 }

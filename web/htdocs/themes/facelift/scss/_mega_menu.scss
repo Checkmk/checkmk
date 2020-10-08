@@ -62,11 +62,15 @@
       }
     }
 
+    &:not(.active) a.popup_trigger img.active { display: none; }
+
     &.active {
       background-color: $popup-trigger-active-bg-color;
 
       a.popup_trigger {
-        font-weight: bold;
+        color: $success;
+
+        img:not(.active) { display: none; }
       }
 
       div.popup_menu {

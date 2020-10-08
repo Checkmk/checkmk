@@ -54,7 +54,9 @@ class MainMenuRenderer:
         for menu_item in self._get_main_menu_items():
             html.open_li()
             html.popup_trigger(
-                html.render_icon(menu_item.icon_name) + html.render_div(menu_item.title),
+                (html.render_icon(menu_item.icon_name) +
+                 html.render_icon(menu_item.icon_name + "_active", class_="active") +
+                 html.render_div(menu_item.title)),
                 ident="mega_menu_" + menu_item.name,
                 method=MethodInline(self._get_mega_menu_content(menu_item)),
                 cssclass=menu_item.name,

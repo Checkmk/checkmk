@@ -701,11 +701,12 @@ def create_data_for_single_metric(cls, properties, context):
             "tag": row_id,
             "timestamp": int(time.time()),
             "value": metric['value'],
+            "formatted_value": metric['unit']['render'](metric['value']),
             "url": svc_url,
             "label": host,
         })
 
-        used_metrics.append((row_id, host, metric))
+        used_metrics.append((row_id, metric, d_row))
 
     return data, used_metrics
 

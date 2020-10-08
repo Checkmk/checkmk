@@ -21,6 +21,7 @@ from cmk.gui.plugins.dashboard.utils import site_query, create_data_for_single_m
 from cmk.gui.plugins.metrics.utils import MetricName, reverse_translate_metric_name
 from cmk.gui.plugins.metrics.rrd_fetch import rrd_columns
 from cmk.gui.figures import ABCFigureDashlet, ABCDataGenerator
+from cmk.gui.plugins.views.painters import paint_service_state_short
 
 
 class SingleMetricDataGenerator(ABCDataGenerator):
@@ -70,7 +71,8 @@ class SingleMetricDataGenerator(ABCDataGenerator):
     @site_query
     def _get_data(cls, properties, context):
         cmc_cols = [
-            "host_name", "service_check_command", "service_description", "service_perf_data"
+            "host_name", "service_check_command", "service_description", "service_perf_data",
+            "service_state", "service_has_been_checked"
         ]
         metric_columns = []
         if properties["time_range"] != "current":
@@ -95,12 +97,16 @@ class SingleMetricDataGenerator(ABCDataGenerator):
     def _create_single_metric_config(cls, data, metrics, properties, context):
         plot_definitions = []
 
+        def svc_map(row):
+            css_classes, status_name = paint_service_state_short(row)
+            return {"style": css_classes, "msg": _("Status: ") + status_name}
+
         # Historic values are always added as plot_type area
         if properties["time_range"] != "current":
-            for row_id, host, metric in metrics:
+            for row_id, metric, row in metrics:
                 plot_definition = {
                     "plot_type": "area",
-                    "label": host,
+                    "label": row['host_name'],
                     "id": row_id,
                     "use_tags": [row_id]
                 }
@@ -109,12 +115,13 @@ class SingleMetricDataGenerator(ABCDataGenerator):
                 plot_definitions.append(plot_definition)
 
         # The current/last value definition also gets the metric levels
-        for row_id, host, metric in metrics:
+        for row_id, metric, row in metrics:
             plot_definition = {
                 "plot_type": "single_value",
                 "id": "%s_single" % row_id,
                 "use_tags": [row_id],
-                "label": host,
+                "label": row['host_name'],
+                "svc_state": svc_map(row),
                 "metrics": {
                     "warn": metric["scalar"].get("warn"),
                     "crit": metric["scalar"].get("crit"),

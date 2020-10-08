@@ -151,6 +151,8 @@ body.main .popup_menu #side_header > span {
   text-align: center;
   cursor: pointer;
 
+  &:not(.folded) { color: $success; }
+
   img {
     margin-bottom: 8px;
 

@@ -1670,8 +1670,10 @@ def configure_attributes(new,
                     html.open_b()
                     html.write(content)
                     html.close_b()
-                else:
+                elif isinstance(attr, str):
                     html.b(_u(content))
+                else:
+                    html.b(content)
 
             html.write_text(explanation)
             html.close_div()

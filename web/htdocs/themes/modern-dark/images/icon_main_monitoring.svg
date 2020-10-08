@@ -1,15 +1,19 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="18px" height="15px" viewBox="0 0 18 15" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <title>monitoring</title>
-    <g id="design" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="bar_left_actions" transform="translate(-23.000000, -150.000000)" fill="#F6F6F6">
-            <g id="Nav" transform="translate(-0.000000, 0.000000)">
-                <g id="monitoring" transform="translate(23.000000, 150.000000)">
-                    <path d="M4.629112,13.76164 C4.629112,14.28084 4.289432,14.70572 3.874312,14.70572 L0.754712,14.70572 C0.339592,14.70572 -7.99999998e-06,14.28084 -7.99999998e-06,13.76164 L-7.99999998e-06,5.807 C-7.99999998e-06,5.28788 0.339592,4.86308 0.754712,4.86308 L3.874312,4.86308 C4.289432,4.86308 4.629112,5.28788 4.629112,5.807 L4.629112,13.76164 Z" id="Fill-1"></path>
-                    <path d="M10.954968,13.76164 C10.954968,14.28084 10.615368,14.70572 10.200248,14.70572 L7.080568,14.70572 C6.665528,14.70572 6.325848,14.28084 6.325848,13.76164 L6.325848,3.5414 C6.325848,3.0222 6.665528,2.5974 7.080568,2.5974 L10.200248,2.5974 C10.615368,2.5974 10.954968,3.0222 10.954968,3.5414 L10.954968,13.76164 Z" id="Fill-4"></path>
-                    <path d="M17.280832,13.76164 C17.280832,14.28084 16.941232,14.70572 16.526112,14.70572 L13.406512,14.70572 C12.991392,14.70572 12.651712,14.28084 12.651712,13.76164 L12.651712,1.02404 C12.651712,0.50484 12.991392,0.08004 13.406512,0.08004 L16.526112,0.08004 C16.941232,0.08004 17.280832,0.50484 17.280832,1.02404 L17.280832,13.76164 Z" id="Fill-7"></path>
-                </g>
-            </g>
-        </g>
-    </g>
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 24.2.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 18 15" style="enable-background:new 0 0 18 15;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill-rule:evenodd;clip-rule:evenodd;fill:#F6F6F6;}
+</style>
+<desc>Created with Sketch.</desc>
+<g id="monitoring">
+	<g>
+		<path id="Fill-1" class="st0" d="M4.6,13.9c0,0.5-0.3,0.9-0.8,0.9H0.8c-0.4,0-0.8-0.4-0.8-0.9v-8C0,5.4,0.3,5,0.8,5h3.1
+			c0.4,0,0.8,0.4,0.8,0.9V13.9z"/>
+		<path id="Fill-4" class="st0" d="M11,13.9c0,0.5-0.3,0.9-0.8,0.9H7.1c-0.4,0-0.8-0.4-0.8-0.9V3.6c0-0.5,0.3-0.9,0.8-0.9h3.1
+			c0.4,0,0.8,0.4,0.8,0.9V13.9z"/>
+		<path id="Fill-7" class="st0" d="M17.3,13.9c0,0.5-0.3,0.9-0.8,0.9h-3.1c-0.4,0-0.8-0.4-0.8-0.9V1.1c0-0.5,0.3-0.9,0.8-0.9h3.1
+			c0.4,0,0.8,0.4,0.8,0.9V13.9z"/>
+	</g>
+</g>
 </svg>

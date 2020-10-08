@@ -163,6 +163,9 @@ var switch_popup_timeout = null;
 // trigger. This currently only works on PopupMethodInline based popups.
 export function switch_popup_menu_group(trigger, group_cls, delay) {
     const popup = trigger.nextSibling;
+
+    utils.remove_class(popup.parentNode, "delayed");
+
     // When the new focucssed dropdown is already open, leave it open
     if (utils.has_class(popup.parentNode, "active")) {
         return;
@@ -179,12 +182,17 @@ export function switch_popup_menu_group(trigger, group_cls, delay) {
         return;
     }
 
-    stop_popup_menu_group_switch();
+    stop_popup_menu_group_switch(trigger);
+
+    utils.add_class(popup.parentNode, "delayed");
     switch_popup_timeout = setTimeout(() => switch_popup_menu_group(trigger, group_cls, null), delay);
 }
 
-export function stop_popup_menu_group_switch() {
+export function stop_popup_menu_group_switch(trigger) {
     if (switch_popup_timeout !== null) {
+        const popup = trigger.nextSibling;
+        utils.remove_class(popup.parentNode, "delayed");
+
         clearTimeout(switch_popup_timeout);
     }
 }

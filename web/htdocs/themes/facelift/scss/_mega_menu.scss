@@ -54,7 +54,7 @@
     border-left: 4px solid $navigation-bg-color;
     box-sizing: border-box;
 
-    &:hover {
+    &:not(.delayed):hover, &.active {
       border-left-color: $success;
 
       > a.popup_trigger > img.icon {

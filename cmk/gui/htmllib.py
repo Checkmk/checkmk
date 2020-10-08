@@ -2748,7 +2748,7 @@ class html(ABCHTMLGenerator):
             onmouseenter: Optional[str] = (
                 "cmk.popup_menu.switch_popup_menu_group(this, %s, %s)" %
                 (json.dumps(popup_group), json.dumps(hover_switch_delay)))
-            onmouseleave: Optional[str] = "cmk.popup_menu.stop_popup_menu_group_switch()"
+            onmouseleave: Optional[str] = "cmk.popup_menu.stop_popup_menu_group_switch(this)"
         else:
             onmouseenter = None
             onmouseleave = None

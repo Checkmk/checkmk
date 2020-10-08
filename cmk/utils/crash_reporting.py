@@ -256,7 +256,7 @@ def _get_local_vars_of_last_exception() -> str:
     except IndexError:
         # Handle case where sys.exc_info has no crash information
         # (https://docs.python.org/2/library/sys.html#sys.exc_info)
-        rass
+        pass
 
     # This needs to be encoded as the local vars might contain binary data which can not be
     # transported using JSON.

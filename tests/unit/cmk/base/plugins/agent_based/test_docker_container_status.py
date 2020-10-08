@@ -129,14 +129,14 @@ def test_discovery_docker_container_status_uptime(section_uptime, expected_servi
     ({}, [
         Result(state=state.OK, summary='Up since Jun 05 2019 08:58:07'),
         Result(state=state.OK, summary='Uptime: 1 hour 1 minute'),
-        Metric('uptime', 3713.0, levels=(None, None), boundaries=(None, None)),
+        Metric('uptime', 3713.0),
     ]),
     ({
         "min": (1000, 2000)
     }, [
         Result(state=state.OK, summary='Up since Jun 05 2019 08:58:07'),
         Result(state=state.OK, summary='Uptime: 1 hour 1 minute'),
-        Metric('uptime', 3713.0, levels=(None, None), boundaries=(None, None)),
+        Metric('uptime', 3713.0),
     ]),
     ({
         "max": (1000, 2000)
@@ -147,7 +147,7 @@ def test_discovery_docker_container_status_uptime(section_uptime, expected_servi
             summary=
             'Uptime: 1 hour 1 minute (warn/crit at 16 minutes 40 seconds/33 minutes 20 seconds)',
         ),
-        Metric('uptime', 3713.0, levels=(1000.0, 2000.0), boundaries=(None, None)),
+        Metric('uptime', 3713.0, levels=(1000.0, 2000.0)),
     ]),
 ])
 def test_check_docker_container_status_uptime(params, expected_results):

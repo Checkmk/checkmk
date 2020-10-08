@@ -302,12 +302,9 @@ def test_scale_levels(levels, factor):
             }),
             DISK,
             [
-                Result(state=state.CRIT, summary='Utilization: 53.2% (warn/crit at 10.0%/20.0%)'),
+                Result(state=state.CRIT, notice='Utilization: 53.2% (warn/crit at 10.0%/20.0%)'),
                 Metric('disk_utilization', 0.53242, levels=(0.1, 0.2)),
-                Result(
-                    state=state.CRIT,
-                    summary='Read: 12.3 kB/s (warn/crit at 10.0 B/s/100 B/s)',
-                ),
+                Result(state=state.CRIT, summary='Read: 12.3 kB/s (warn/crit at 10.0 B/s/100 B/s)'),
                 Metric('disk_read_throughput', 12312.4324, levels=(10.0, 100.0)),
                 Result(
                     state=state.CRIT,
@@ -318,15 +315,12 @@ def test_scale_levels(levels, factor):
                 Metric('disk_average_wait', 30.0),
                 Result(
                     state=state.CRIT,
-                    summary=
-                    'Average read wait: 2 minutes 3 seconds (warn/crit at 1 second/2 seconds)',
+                    notice='Average read wait: 2 minutes 3 seconds (warn/crit at 1 second/2 seconds)'
                 ),
                 Metric('disk_average_read_wait', 123.0, levels=(1.0, 2.0)),
-                Result(
-                    state=state.CRIT,
-                    summary=
-                    'Average write wait: 1 minute 30 seconds (warn/crit at 1 second/2 seconds)',
-                ),
+                Result(state=state.CRIT,
+                       notice=
+                       'Average write wait: 1 minute 30 seconds (warn/crit at 1 second/2 seconds)'),
                 Metric('disk_average_write_wait', 90.0, levels=(1.0, 2.0)),
                 Result(state=state.OK, notice='Average queue length: 123.00'),
                 Metric('disk_queue_length', 123.0),
@@ -334,14 +328,12 @@ def test_scale_levels(levels, factor):
                 Metric('disk_read_ql', 90.0),
                 Result(state=state.OK, notice='Average write queue length: 781.00'),
                 Metric('disk_write_ql', 781.0),
-                Result(
-                    state=state.WARN,
-                    summary='Read operations: 12379.44/s (warn/crit at 10000.00/s/100000.00/s)',
-                ),
+                Result(state=state.WARN,
+                       notice='Read operations: 12379.44/s (warn/crit at 10000.00/s/100000.00/s)'),
                 Metric('disk_read_ios', 12379.435345, levels=(10000.0, 100000.0)),
                 Result(
                     state=state.CRIT,
-                    summary='Write operations: 8707809.98/s (warn/crit at 100000.00/s/1000000.00/s)',
+                    notice='Write operations: 8707809.98/s (warn/crit at 100000.00/s/1000000.00/s)'
                 ),
                 Metric('disk_write_ios', 8707809.98289, levels=(100000.0, 1000000.0)),
                 Result(
@@ -349,15 +341,11 @@ def test_scale_levels(levels, factor):
                     summary='Latency: 2 seconds (warn/crit at 1 second/2 seconds)',
                 ),
                 Metric('disk_latency', 2.0, levels=(1.0, 2.0)),
-                Result(
-                    state=state.CRIT,
-                    summary='Read latency: 3 seconds (warn/crit at 1 second/2 seconds)',
-                ),
+                Result(state=state.CRIT,
+                       notice='Read latency: 3 seconds (warn/crit at 1 second/2 seconds)'),
                 Metric('disk_read_latency', 3.0, levels=(1.0, 2.0)),
-                Result(
-                    state=state.CRIT,
-                    notice='Write latency: 4 seconds (warn/crit at 1 second/2 seconds)',
-                ),
+                Result(state=state.CRIT,
+                       notice='Write latency: 4 seconds (warn/crit at 1 second/2 seconds)'),
                 Metric('disk_write_latency', 4.0, levels=(1.0, 2.0)),
                 Metric('disk_x', 0.0),
                 Metric('disk_y', 1.0),

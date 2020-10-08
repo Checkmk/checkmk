@@ -87,7 +87,7 @@ def test_discovery():
                 details=
                 'Time since last backup: 1 hour 43 minutes (warn/crit at 50 seconds/1 minute 0 seconds)'
             ),
-            Metric('age', 6180.0, levels=(50.0, 60.0), boundaries=(None, None)),
+            Metric('age', 6180.0, levels=(50.0, 60.0)),
         ],
     ),
     (
@@ -98,7 +98,7 @@ def test_discovery():
             Result(state=state.OK,
                    summary='Time since last backup: 1 hour 43 minutes',
                    details='Time since last backup: 1 hour 43 minutes'),
-            Metric('age', 6180.0, levels=(None, None), boundaries=(None, None)),
+            Metric('age', 6180.0),
         ],
     ),
     (
@@ -109,7 +109,7 @@ def test_discovery():
             Result(state=state.OK,
                    summary='Time since last backup: 7 hours 40 minutes',
                    details='Time since last backup: 7 hours 40 minutes'),
-            Metric('age', 27600.0, levels=(None, None), boundaries=(None, None)),
+            Metric('age', 27600.0),
             Result(state=state.OK,
                    summary='Incremental SCN 545791334',
                    details='Incremental SCN 545791334'),
@@ -143,5 +143,5 @@ def test_cluster_check():
         Result(state=state.OK,
                summary='Time since last backup: 1 minute 0 seconds',
                details='Time since last backup: 1 minute 0 seconds'),
-        Metric('age', 60.0, levels=(None, None), boundaries=(None, None))
+        Metric('age', 60.0)
     ] == yielded_results

@@ -386,7 +386,7 @@ def test_regression_discovery(monkeypatch, discovery_params, discovery_results):
 
 @pytest.mark.parametrize('item, check_results', [
     ('Summary', [
-        Metric('ambient_temp', 18.5, levels=(None, None), boundaries=(None, None)),
+        Metric('ambient_temp', 18.5),
         Result(
             state=state.CRIT,
             summary=
@@ -666,202 +666,202 @@ def test_regression_discovery(monkeypatch, discovery_params, discovery_results):
     ('Ambient', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='18.50 degrees_C', details='18.50 degrees_C'),
-        Metric('Ambient', 18.5, levels=(37.0, 42.0), boundaries=(None, None))
+        Metric('Ambient', 18.5, levels=(37.0, 42.0))
     ]),
     ('Systemboard', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='28.00 degrees_C', details='28.00 degrees_C'),
-        Metric('Systemboard', 28.0, levels=(75.0, 80.0), boundaries=(None, None))
+        Metric('Systemboard', 28.0, levels=(75.0, 80.0))
     ]),
     ('CPU', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='33.00 degrees_C', details='33.00 degrees_C'),
-        Metric('CPU', 33.0, levels=(95.0, 99.0), boundaries=(None, None))
+        Metric('CPU', 33.0, levels=(95.0, 99.0))
     ]),
     ('MEM_A', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='21.00 degrees_C', details='21.00 degrees_C'),
-        Metric('MEM_A', 21.0, levels=(78.0, 82.0), boundaries=(None, None))
+        Metric('MEM_A', 21.0, levels=(78.0, 82.0))
     ]),
     ('MEM_B', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='21.00 degrees_C', details='21.00 degrees_C'),
-        Metric('MEM_B', 21.0, levels=(78.0, 82.0), boundaries=(None, None))
+        Metric('MEM_B', 21.0, levels=(78.0, 82.0))
     ]),
     ('PSU1_Inlet', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='29.00 degrees_C', details='29.00 degrees_C'),
-        Metric('PSU1_Inlet', 29.0, levels=(57.0, 61.0), boundaries=(None, None))
+        Metric('PSU1_Inlet', 29.0, levels=(57.0, 61.0))
     ]),
     ('PSU2_Inlet', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='28.00 degrees_C', details='28.00 degrees_C'),
-        Metric('PSU2_Inlet', 28.0, levels=(57.0, 61.0), boundaries=(None, None))
+        Metric('PSU2_Inlet', 28.0, levels=(57.0, 61.0))
     ]),
     ('PSU1', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='56.00 degrees_C', details='56.00 degrees_C'),
-        Metric('PSU1', 56.0, levels=(102.0, 107.0), boundaries=(None, None))
+        Metric('PSU1', 56.0, levels=(102.0, 107.0))
     ]),
     ('PSU2', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='58.00 degrees_C', details='58.00 degrees_C'),
-        Metric('PSU2', 58.0, levels=(102.0, 107.0), boundaries=(None, None))
+        Metric('PSU2', 58.0, levels=(102.0, 107.0))
     ]),
     ('BATT_3.0V', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='3.27 Volts', details='3.27 Volts'),
-        Metric('BATT_3.0V', 3.27, levels=(None, 3.495), boundaries=(None, None))
+        Metric('BATT_3.0V', 3.27, levels=(None, 3.495))
     ]),
     ('STBY_3.3V', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='3.35 Volts', details='3.35 Volts'),
-        Metric('STBY_3.3V', 3.35, levels=(None, 3.567), boundaries=(None, None))
+        Metric('STBY_3.3V', 3.35, levels=(None, 3.567))
     ]),
     ('iRMC_1.8V_STBY', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='1.79 Volts', details='1.79 Volts'),
-        Metric('iRMC_1.8V_STBY', 1.79, levels=(None, 1.93), boundaries=(None, None))
+        Metric('iRMC_1.8V_STBY', 1.79, levels=(None, 1.93))
     ]),
     ('iRMC_1.5V_STBY', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='1.50 Volts', details='1.50 Volts'),
-        Metric('iRMC_1.5V_STBY', 1.5, levels=(None, 1.61), boundaries=(None, None))
+        Metric('iRMC_1.5V_STBY', 1.5, levels=(None, 1.61))
     ]),
     ('iRMC_1.0V_STBY', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='0.98 Volts', details='0.98 Volts'),
-        Metric('iRMC_1.0V_STBY', 0.98, levels=(None, 1.08), boundaries=(None, None))
+        Metric('iRMC_1.0V_STBY', 0.98, levels=(None, 1.08))
     ]),
     ('MAIN_12V', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='12.54 Volts', details='12.54 Volts'),
-        Metric('MAIN_12V', 12.54, levels=(None, 12.96), boundaries=(None, None))
+        Metric('MAIN_12V', 12.54, levels=(None, 12.96))
     ]),
     ('MAIN_5V', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='5.21 Volts', details='5.21 Volts'),
-        Metric('MAIN_5V', 5.212, levels=(None, 5.4), boundaries=(None, None))
+        Metric('MAIN_5V', 5.212, levels=(None, 5.4))
     ]),
     ('MAIN_3.3V', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='3.33 Volts', details='3.33 Volts'),
-        Metric('MAIN_3.3V', 3.333, levels=(None, 3.567), boundaries=(None, None))
+        Metric('MAIN_3.3V', 3.333, levels=(None, 3.567))
     ]),
     ('MEM_1.35V', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='1.36 Volts', details='1.36 Volts'),
-        Metric('MEM_1.35V', 1.36, levels=(None, 1.61), boundaries=(None, None))
+        Metric('MEM_1.35V', 1.36, levels=(None, 1.61))
     ]),
     ('PCH_1.05V', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='1.04 Volts', details='1.04 Volts'),
-        Metric('PCH_1.05V', 1.04, levels=(None, 1.13), boundaries=(None, None))
+        Metric('PCH_1.05V', 1.04, levels=(None, 1.13))
     ]),
     ('MEM_VTT_0.68V', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='0.66 Volts', details='0.66 Volts'),
-        Metric('MEM_VTT_0.68V', 0.66, levels=(None, 0.81), boundaries=(None, None))
+        Metric('MEM_VTT_0.68V', 0.66, levels=(None, 0.81))
     ]),
     ('FAN1_SYS', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='5160.00 RPM', details='5160.00 RPM'),
-        Metric('FAN1_SYS', 5160.0, levels=(None, None), boundaries=(None, None))
+        Metric('FAN1_SYS', 5160.0)
     ]),
     ('FAN2_SYS', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='2400.00 RPM', details='2400.00 RPM'),
-        Metric('FAN2_SYS', 2400.0, levels=(None, None), boundaries=(None, None))
+        Metric('FAN2_SYS', 2400.0)
     ]),
     ('FAN3_SYS', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='2400.00 RPM', details='2400.00 RPM'),
-        Metric('FAN3_SYS', 2400.0, levels=(None, None), boundaries=(None, None))
+        Metric('FAN3_SYS', 2400.0)
     ]),
     ('FAN4_SYS', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='1980.00 RPM', details='1980.00 RPM'),
-        Metric('FAN4_SYS', 1980.0, levels=(None, None), boundaries=(None, None))
+        Metric('FAN4_SYS', 1980.0)
     ]),
     ('FAN5_SYS', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='2280.00 RPM', details='2280.00 RPM'),
-        Metric('FAN5_SYS', 2280.0, levels=(None, None), boundaries=(None, None))
+        Metric('FAN5_SYS', 2280.0)
     ]),
     ('FAN_PSU1', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='2320.00 RPM', details='2320.00 RPM'),
-        Metric('FAN_PSU1', 2320.0, levels=(None, None), boundaries=(None, None))
+        Metric('FAN_PSU1', 2320.0)
     ]),
     ('FAN_PSU2', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='2400.00 RPM', details='2400.00 RPM'),
-        Metric('FAN_PSU2', 2400.0, levels=(None, None), boundaries=(None, None))
+        Metric('FAN_PSU2', 2400.0)
     ]),
     ('PSU1_Power', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='18.00 Watts', details='18.00 Watts'),
-        Metric('PSU1_Power', 18.0, levels=(None, None), boundaries=(None, None))
+        Metric('PSU1_Power', 18.0)
     ]),
     ('PSU2_Power', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='30.00 Watts', details='30.00 Watts'),
-        Metric('PSU2_Power', 30.0, levels=(None, None), boundaries=(None, None))
+        Metric('PSU2_Power', 30.0)
     ]),
     ('Total_Power', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='48.00 Watts', details='48.00 Watts'),
-        Metric('Total_Power', 48.0, levels=(None, 498.0), boundaries=(None, None))
+        Metric('Total_Power', 48.0, levels=(None, 498.0))
     ]),
     ('Total_Power_Out', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='33.00 Watts', details='33.00 Watts'),
-        Metric('Total_Power_Out', 33.0, levels=(None, None), boundaries=(None, None))
+        Metric('Total_Power_Out', 33.0)
     ]),
     ('I2C1_error_ratio', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='0.00 %', details='0.00 %'),
-        Metric('I2C1_error_ratio', 0.0, levels=(10.0, 20.0), boundaries=(None, None))
+        Metric('I2C1_error_ratio', 0.0, levels=(10.0, 20.0))
     ]),
     ('I2C2_error_ratio', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='0.00 %', details='0.00 %'),
-        Metric('I2C2_error_ratio', 0.0, levels=(10.0, 20.0), boundaries=(None, None))
+        Metric('I2C2_error_ratio', 0.0, levels=(10.0, 20.0))
     ]),
     ('I2C3_error_ratio', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='0.00 %', details='0.00 %'),
-        Metric('I2C3_error_ratio', 0.0, levels=(10.0, 20.0), boundaries=(None, None))
+        Metric('I2C3_error_ratio', 0.0, levels=(10.0, 20.0))
     ]),
     ('I2C4_error_ratio', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='0.00 %', details='0.00 %'),
-        Metric('I2C4_error_ratio', 0.0, levels=(10.0, 20.0), boundaries=(None, None))
+        Metric('I2C4_error_ratio', 0.0, levels=(10.0, 20.0))
     ]),
     ('I2C5_error_ratio', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='0.00 %', details='0.00 %'),
-        Metric('I2C5_error_ratio', 0.0, levels=(10.0, 20.0), boundaries=(None, None))
+        Metric('I2C5_error_ratio', 0.0, levels=(10.0, 20.0))
     ]),
     ('I2C6_error_ratio', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='0.00 %', details='0.00 %'),
-        Metric('I2C6_error_ratio', 0.0, levels=(10.0, 20.0), boundaries=(None, None))
+        Metric('I2C6_error_ratio', 0.0, levels=(10.0, 20.0))
     ]),
     ('I2C7_error_ratio', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='0.00 %', details='0.00 %'),
-        Metric('I2C7_error_ratio', 0.0, levels=(10.0, 20.0), boundaries=(None, None))
+        Metric('I2C7_error_ratio', 0.0, levels=(10.0, 20.0))
     ]),
     ('I2C8_error_ratio', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='0.00 %', details='0.00 %'),
-        Metric('I2C8_error_ratio', 0.0, levels=(10.0, 20.0), boundaries=(None, None))
+        Metric('I2C8_error_ratio', 0.0, levels=(10.0, 20.0))
     ]),
     ('SEL_Level', [
         Result(state=state.OK, summary='Status: ok', details='Status: ok'),
         Result(state=state.OK, summary='0.00 %', details='0.00 %'),
-        Metric('SEL_Level', 0.0, levels=(90.0, None), boundaries=(None, None))
+        Metric('SEL_Level', 0.0, levels=(90.0, None))
     ]),
 ])
 def test_regression_check(item, check_results):

@@ -47,7 +47,7 @@ from cmk.base.plugins.agent_based.utils import ipmi
             [
                 Result(state=state.OK, summary='Status: ok', details='Status: ok'),
                 Result(state=state.OK, summary='1.04 Volts', details='1.04 Volts'),
-                Metric('PCH_1.05V', 1.04, levels=(None, 1.13), boundaries=(None, None)),
+                Metric('PCH_1.05V', 1.04, levels=(None, 1.13)),
             ],
         ),
         (
@@ -65,7 +65,7 @@ from cmk.base.plugins.agent_based.utils import ipmi
             [
                 Result(state=state.CRIT, summary='Status: ok', details='Status: ok'),
                 Result(state=state.OK, summary='1.04 Volts', details='1.04 Volts'),
-                Metric('PCH_1.05V', 1.04, levels=(None, 1.13), boundaries=(None, None)),
+                Metric('PCH_1.05V', 1.04, levels=(None, 1.13)),
             ],
         ),
         (
@@ -100,7 +100,7 @@ from cmk.base.plugins.agent_based.utils import ipmi
             [
                 Result(state=state.OK, summary='Status: ok', details='Status: ok'),
                 Result(state=state.OK, summary='1.04 C', details='1.04 C'),
-                Metric('value', 1.04, levels=(None, 1.13), boundaries=(None, None)),
+                Metric('value', 1.04, levels=(None, 1.13)),
             ],
         ),
         (
@@ -118,7 +118,7 @@ from cmk.base.plugins.agent_based.utils import ipmi
             [
                 Result(state=state.OK, summary='Status: nc', details='Status: nc'),
                 Result(state=state.OK, summary='1.04 Volts', details='1.04 Volts'),
-                Metric('PCH_1.05V', 1.04, levels=(None, 1.13), boundaries=(None, None)),
+                Metric('PCH_1.05V', 1.04, levels=(None, 1.13)),
                 Result(state=state.WARN,
                        summary='Sensor is non-critical',
                        details='Sensor is non-critical'),
@@ -141,7 +141,7 @@ from cmk.base.plugins.agent_based.utils import ipmi
                 Result(state=state.CRIT,
                        summary='2.10 Volts (warn/crit at 1.13 Volts/1.13 Volts)',
                        details='2.10 Volts (warn/crit at 1.13 Volts/1.13 Volts)'),
-                Metric('PCH_1.05V', 2.1, levels=(None, 1.13), boundaries=(None, None)),
+                Metric('PCH_1.05V', 2.1, levels=(None, 1.13)),
             ],
         ),
         (
@@ -161,7 +161,7 @@ from cmk.base.plugins.agent_based.utils import ipmi
                 Result(state=state.CRIT,
                        summary='0.50 Volts (warn/crit below 0.97 Volts/0.97 Volts)',
                        details='0.50 Volts (warn/crit below 0.97 Volts/0.97 Volts)'),
-                Metric('PCH_1.05V', 0.5, levels=(None, 1.13), boundaries=(None, None)),
+                Metric('PCH_1.05V', 0.5, levels=(None, 1.13)),
             ],
         ),
         (
@@ -184,7 +184,7 @@ from cmk.base.plugins.agent_based.utils import ipmi
             [
                 Result(state=state.OK, summary='Status: ok', details='Status: ok'),
                 Result(state=state.OK, summary='1.04 Volts', details='1.04 Volts'),
-                Metric('PCH_1.05V', 1.04, levels=(None, 1.13), boundaries=(None, None)),
+                Metric('PCH_1.05V', 1.04, levels=(None, 1.13)),
                 Result(state=state.CRIT,
                        summary='PCH_1.05V: 1.04 Volts (warn/crit below 1.00 Volts/2.00 Volts)',
                        details='PCH_1.05V: 1.04 Volts (warn/crit below 1.00 Volts/2.00 Volts)')
@@ -209,7 +209,7 @@ from cmk.base.plugins.agent_based.utils import ipmi
             [
                 Result(state=state.OK, summary='Status: ok', details='Status: ok'),
                 Result(state=state.OK, summary='1.04 Volts', details='1.04 Volts'),
-                Metric('PCH_1.05V', 1.04, levels=(None, 1.13), boundaries=(None, None)),
+                Metric('PCH_1.05V', 1.04, levels=(None, 1.13)),
                 Result(state=state.WARN,
                        summary='PCH_1.05V: 1.04 Volts (warn/crit at 1.00 Volts/4.00 Volts)',
                        details='PCH_1.05V: 1.04 Volts (warn/crit at 1.00 Volts/4.00 Volts)')
@@ -230,7 +230,7 @@ from cmk.base.plugins.agent_based.utils import ipmi
             [
                 Result(state=state.OK, summary='Status: ok', details='Status: ok'),
                 Result(state=state.OK, summary='1.04 Volts', details='1.04 Volts'),
-                Metric('PCH_1.05V', 1.04, levels=(None, 1.13), boundaries=(None, None)),
+                Metric('PCH_1.05V', 1.04, levels=(None, 1.13)),
                 Result(state=state.UNKNOWN,
                        summary='User-defined state',
                        details='User-defined state'),
@@ -335,7 +335,7 @@ SECTION = {
         type_defs.Parameters({}),
         lambda txt: state.OK,
         [
-            Metric('ambient_temp', 18.5, levels=(None, None), boundaries=(None, None)),
+            Metric('ambient_temp', 18.5),
             Result(state=state.OK, summary='10 sensors OK', details='10 sensors OK'),
         ],
     ),
@@ -344,7 +344,7 @@ SECTION = {
         lambda txt: ('Failure detected' in txt and state.CRIT) or
         ('State Deasserted' in txt and state.WARN or state.OK),
         [
-            Metric('ambient_temp', 18.5, levels=(None, None), boundaries=(None, None)),
+            Metric('ambient_temp', 18.5),
             Result(
                 state=state.CRIT,
                 summary=
@@ -358,7 +358,7 @@ SECTION = {
         type_defs.Parameters({"ignored_sensors": ["CPU", "VCORE"]}),
         lambda txt: state.OK,
         [
-            Metric('ambient_temp', 18.5, levels=(None, None), boundaries=(None, None)),
+            Metric('ambient_temp', 18.5),
             Result(state=state.OK,
                    summary='10 sensors - 8 OK - 2 skipped',
                    details='10 sensors - 8 OK - 2 skipped'),
@@ -368,7 +368,7 @@ SECTION = {
         type_defs.Parameters({"ignored_sensorstates": ["ns", "nr", "na"]}),
         lambda txt: state.OK,
         [
-            Metric('ambient_temp', 18.5, levels=(None, None), boundaries=(None, None)),
+            Metric('ambient_temp', 18.5),
             Result(state=state.OK,
                    summary='10 sensors - 9 OK - 1 skipped',
                    details='10 sensors - 9 OK - 1 skipped'),
@@ -381,7 +381,7 @@ SECTION = {
         }),
         lambda txt: state.OK,
         [
-            Metric('ambient_temp', 18.5, levels=(None, None), boundaries=(None, None)),
+            Metric('ambient_temp', 18.5),
             Result(
                 state=state.WARN,
                 summary=
@@ -397,7 +397,7 @@ SECTION = {
         })]}),
         lambda txt: state.OK,
         [
-            Metric('ambient_temp', 18.5, levels=(None, None), boundaries=(None, None)),
+            Metric('ambient_temp', 18.5),
             Result(
                 state=state.WARN,
                 summary=

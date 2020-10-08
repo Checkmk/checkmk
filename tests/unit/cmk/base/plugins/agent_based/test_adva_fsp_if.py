@@ -79,10 +79,10 @@ def test_discover_adva_fsp_if():
                    details='Admin/Operational State: up/up'),
             Result(
                 state=State.OK, summary='Output power: -3.1 dBm', details='Output power: -3.1 dBm'),
-            Metric('output_power', -3.1, levels=(None, None), boundaries=(None, None)),
+            Metric('output_power', -3.1),
             Result(state=State.OK, summary='Input power: -2.7 dBm',
                    details='Input power: -2.7 dBm'),
-            Metric('input_power', -2.7, levels=(None, None), boundaries=(None, None)),
+            Metric('input_power', -2.7),
         ],
     ),
     (
@@ -97,11 +97,11 @@ def test_discover_adva_fsp_if():
                    details='Admin/Operational State: up/up'),
             Result(
                 state=State.CRIT, summary='Output power: 2.2 dBm', details='Output power: 2.2 dBm'),
-            Metric('output_power', 2.2, levels=(None, 1.0), boundaries=(None, None)),
+            Metric('output_power', 2.2, levels=(None, 1.0)),
             Result(state=State.CRIT,
                    summary='Input power: -12.0 dBm',
                    details='Input power: -12.0 dBm'),
-            Metric('input_power', -12.0, levels=(None, 12.3), boundaries=(None, None)),
+            Metric('input_power', -12.0, levels=(None, 12.3)),
         ],
     ),
     (

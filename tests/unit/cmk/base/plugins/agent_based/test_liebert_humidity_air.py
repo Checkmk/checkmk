@@ -76,7 +76,7 @@ def test_discover_liebert_humidity_air(section, extra_section, result):
             PARSED_EXTRA_SECTION,
             [
                 Result(state=state.OK, summary='36.50 % RH', details='36.50 % RH'),
-                Metric(name='humidity', value=36.5, levels=(50.0, 55.0), boundaries=(None, None)),
+                Metric(name='humidity', value=36.5, levels=(50.0, 55.0)),
             ],
         ),
         (

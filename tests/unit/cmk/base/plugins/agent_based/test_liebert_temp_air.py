@@ -75,7 +75,7 @@ def test_discover_liebert_temp_air(section, extra_section, result):
             PARSED_SECTION,
             PARSED_EXTRA_SECTION,
             [
-                Metric(name='temp', value=42.0, levels=(50.0, 55.0), boundaries=(None, None)),
+                Metric(name='temp', value=42.0, levels=(50.0, 55.0)),
                 Result(state=state.OK, summary='Temperature: 42.0°C'),
                 Result(
                     state=state.OK,

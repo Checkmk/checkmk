@@ -107,9 +107,9 @@ def test_sap_hana_license_discovery():
      ]),
      ("X04 55", [
          Result(state=state.OK, summary='Size: 5 B', details='Size: 5 B'),
-         Metric('license_size', 5.0, levels=(None, None), boundaries=(None, None)),
+         Metric('license_size', 5.0),
          Result(state=state.OK, summary='Usage: 50.0%', details='Usage: 50.0%'),
-         Metric('license_usage_perc', 50.0, levels=(None, None), boundaries=(None, None)),
+         Metric('license_usage_perc', 50.0),
          Result(state=state.WARN, summary='License: not FALSE', details='License: not FALSE'),
          Result(state=state.WARN,
                 summary='Expiration date: 2020-08-02 23:59:59.999999000',
@@ -119,7 +119,7 @@ def test_sap_hana_license_discovery():
          "X00 00",
          [
              Result(state=state.OK, summary='Size: 5 B', details='Size: 5 B'),
-             Metric('license_size', 5.0, levels=(None, None), boundaries=(None, None)),
+             Metric('license_size', 5.0),
              Result(state=state.WARN,
                     summary='Usage: cannot calculate',
                     details='Usage: cannot calculate'),

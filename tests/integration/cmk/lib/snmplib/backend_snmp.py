@@ -10,12 +10,12 @@ from cmk.snmplib.type_defs import ABCSNMPBackend, OID, SNMPHostConfig, SNMPRawVa
 from typing import List, Tuple, Optional, Type
 
 try:
-    from cmk.fetchers.cee.snmp_backend.inline import InlineSNMPBackend
+    from cmk.fetchers.cee.snmp_backend.inline import InlineSNMPBackend  # type: ignore[import]
 except ImportError:
     InlineSNMPBackend = None  # type: ignore[assignment, misc]
 
 try:
-    from cmk.fetchers.cee.snmp_backend.pysnmp_backend import PySNMPBackend
+    from cmk.fetchers.cee.snmp_backend.pysnmp_backend import PySNMPBackend  # type: ignore[import]
 except ImportError:
     PySNMPBackend = None  # type: ignore[assignment, misc]
 

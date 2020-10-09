@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.base.plugins.agent_based.ntp as ntp
+
 ntp_default_levels = (10, 200.0, 500.0)  # stratum, ms offset
 
 factory_settings["ntp_time_default_levels"] = {
@@ -39,33 +41,30 @@ ntp_inventory_mode = "summary"
 
 
 # We monitor all servers we have reached at least once
-def inventory_ntp(info):
+def inventory_ntp(parsed):
     if ntp_inventory_mode not in ["detailed", "both"]:
-        return []
-    inventory = []
-    for _statecode, peer, refid, _stratum, _t, _when, _poll, reach, _delay, _offset, _jitter in info:
-        if reach != "0" and refid != '.LOCL.':
-            inventory.append((peer, "ntp_default_levels"))
-    return inventory
+        return
+
+    for peer in parsed.values():
+        if peer.reach != "0" and peer.refid != '.LOCL.':
+            yield peer.name, "ntp_default_levels"
 
 
-def inventory_ntp_summary(info):
-    if ntp_inventory_mode not in ["summary", "both"]:
-        return []
-    if len(info) > 0:
-        return [(None, {})]
+def inventory_ntp_summary(parsed):
+    if ntp_inventory_mode in ["summary", "both"] and parsed:
+        yield None, {}
 
 
-def ntp_fmt_time(t):
-    if t == '-':
+def ntp_fmt_time(raw: str) -> int:
+    if raw == '-':
         return 0
-    elif t[-1] == "m":
-        return int(t[:-1]) * 60
-    elif t[-1] == "h":
-        return int(t[:-1]) * 60 * 60
-    elif t[-1] == "d":
-        return int(t[:-1]) * 60 * 60 * 24
-    return int(t)
+    if raw[-1] == "m":
+        return int(raw[:-1]) * 60
+    if raw[-1] == "h":
+        return int(raw[:-1]) * 60 * 60
+    if raw[-1] == "d":
+        return int(raw[:-1]) * 60 * 60 * 24
+    return int(raw)
 
 
 # Helper function that parses the information about one
@@ -74,18 +73,16 @@ def ntp_fmt_time(t):
 # 1. Nagios check output text
 # 2. The offset (only if state != 3)
 # 3. The jitter (only if state != 3)
-def check_ntp_server_state(line, params):
-    statecode, _peer, _refid, stratum, _t, when, poll, reach, _delay, offset, jitter = line
-    if reach == "0":
+def check_ntp_server_state(peer: ntp.Peer, params):
+    if peer.reach == "0":
         return (3, "peer is unreachable")
 
-    offset = float(offset)
-    jitter = float(jitter)
+    offset = float(peer.offset)
+    jitter = float(peer.jitter)
 
-    when = ntp_fmt_time(when)
-    poll = ntp_fmt_time(poll)
-    stratum = int(stratum)
-    state = ntp_state_codes.get(statecode, "unknown")
+    when = ntp_fmt_time(peer.when)
+    stratum = int(peer.stratum)
+    state = ntp_state_codes.get(peer.statecode, "unknown")
     infotext = "%s - stratum %d, offset %.2f ms, jitter %.2f ms" % (state, stratum, offset, jitter)
     if when > 0:
         infotext += ", last reached %d secs ago" % when
@@ -93,9 +90,9 @@ def check_ntp_server_state(line, params):
     crit_stratum, warn, crit = params
     if abs(offset) >= crit:
         return (2, "critical offset" + " " + infotext, offset, jitter)
-    elif state in ["falsetick"]:
+    if state in ["falsetick"]:
         return (2, infotext, offset, jitter)
-    elif stratum >= crit_stratum:
+    if stratum >= crit_stratum:
         return (2,
                 infotext + (", stratum is too high (max allowed is %d)(!!)" % (crit_stratum - 1)))
 
@@ -106,26 +103,28 @@ def check_ntp_server_state(line, params):
     # elif when > 2*poll and when > 128: # when can exceed poll for small polling values
     #     return (3, "response due since %d secs%s" % (when - poll, infotext), offset, jitter)
 
-    elif abs(offset) >= warn:
+    if abs(offset) >= warn:
         return (1, "offset too high" + " " + infotext, offset, jitter)
+
     return (0, infotext, offset, jitter)
 
 
-def check_ntp(item, params, info):
-    for line in info:
-        if line[1] == item and len(line) == 11:
-            state = check_ntp_server_state(line, params)
-            if len(state) == 4:
-                state, text, offset, jitter = state  # pylint: disable=unbalanced-tuple-unpacking
-                _crit_stratum, warn, crit = params
-                perfdata = [("offset", offset, warn, crit, 0, None),
-                            ("jitter", jitter, warn, crit, 0, None)]
-            else:
-                state, text = state
-                perfdata = []
-            return (state, text, perfdata)
+def check_ntp(item, params, parsed: ntp.Section):
+    peer = parsed.get(item)
+    if peer is None:
+        return
 
-    return 3, "peer not found", []
+    state = check_ntp_server_state(peer, params)
+    if len(state) == 4:
+        state, text, offset, jitter = state  # pylint: disable=unbalanced-tuple-unpacking
+        _crit_stratum, warn, crit = params
+        perfdata = [("offset", offset, warn, crit, 0, None),
+                    ("jitter", jitter, warn, crit, 0, None)]
+    else:
+        state, text = state
+        perfdata = []
+
+    yield state, text, perfdata
 
 
 def _get_suitable_line(info):
@@ -137,31 +136,29 @@ def _get_suitable_line(info):
     return index
 
 
-def check_ntp_summary(_no_item, params, info):
+def check_ntp_summary(_no_item, params, parsed):
+    # We only are interested in our system peer or pulse per second source (pps)
+    peer = parsed.get(None)
+    if peer is None:
+        if parsed:
+            yield 0, "found %d peers, but none is suitable" % len(parsed)
+        yield from tolerance_check(params, None)
+        return
+
     if isinstance(params, tuple):
         params = {
             "ntp_levels": params,
             "alert_delay": (300, 3600),
         }
-    # No information at all? NTP daemon not running or timeout in ntpq -p
-    if len(info) == 0:
-        yield 3, "no information from NTP: timeout in ntpq -p or NTP daemon not running"
-        return
 
-    # We only are interested in our system peer or pulse per second source (pps)
-    index = _get_suitable_line(info)
-    if index is None:
-        yield 0, "found %d peers, but none is suitable" % len(info)
-    else:
-        state, text, perfdata = check_ntp(info[index][1], params["ntp_levels"], [info[index]])
-        text += " (synchronized on %s)" % info[index][1]
-        yield state, text, perfdata
-
-    for subresult in tolerance_check(params, None if index is None else time.time()):
-        yield subresult
+    (state, text, perfdata), = check_ntp(peer.name, params["ntp_levels"], parsed)
+    text += f" (synchronized on {peer.name})"
+    yield state, text, perfdata
+    yield from tolerance_check(params, time.time())
 
 
 check_info["ntp"] = {
+    # there's a section against the new API defined!
     'check_function': check_ntp,
     'inventory_function': inventory_ntp,
     'service_description': 'NTP Peer %s',
@@ -170,6 +167,7 @@ check_info["ntp"] = {
 }
 
 check_info["ntp.time"] = {
+    # there's a section against the new API defined!
     'check_function': check_ntp_summary,
     'inventory_function': inventory_ntp_summary,
     'service_description': 'NTP Time',

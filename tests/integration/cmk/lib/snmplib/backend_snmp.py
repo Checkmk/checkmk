@@ -44,13 +44,14 @@ logger = logging.getLogger(__name__)
 
 @pytest.mark.parametrize("oid", [
     (".1.3.6.1.2.1.4.12.0"),
+    (".1.3.6.1"),
     (".1.3.6.1.2.1.2.2.1.6.1"),
     (".1.3.6.1.2.1.2.2.1.6.*"),
 ])
 def test_get_ipv4(oid: OID):
     configs = _create_configs_ipv4()
     result_pysnmp, result_inline, result_classic = _create_results_snmpbackend_get(oid, configs)
-
+    print(result_pysnmp, result_inline, result_classic)
     assert result_pysnmp == result_inline == result_classic
 
 

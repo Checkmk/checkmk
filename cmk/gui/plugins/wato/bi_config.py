@@ -9,7 +9,6 @@ import json
 import copy
 from typing import Dict, Any, List, Type, Tuple as _Tuple, Optional as _Optional
 
-import cmk
 import cmk.utils.version as cmk_version
 import cmk.gui.escaping as escaping
 from cmk.gui.pages import page_registry, AjaxPage
@@ -72,6 +71,8 @@ from cmk.gui.page_menu import (
     make_form_submit_link,
     make_checkbox_selection_topic,
 )
+
+from cmk.gui.node_visualization import BILayoutManagement
 
 from cmk.utils.bi.bi_compiler import bi_compiler_auto_cleanup
 from cmk.utils.bi.bi_aggregation_functions import BIAggregationFunctionSchema
@@ -1494,7 +1495,7 @@ class BIModeEditAggregation(ABCBIMode):
 
         visualization_choices = []
         visualization_choices.append((None, _("Use default layout")))
-        templates = cmk.gui.node_visualization.BILayoutManagement.get_all_bi_template_layouts()
+        templates = BILayoutManagement.get_all_bi_template_layouts()
         for template_id in sorted(templates.keys()):
             visualization_choices.append((template_id, template_id))
 

@@ -2151,7 +2151,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'k8s_ingress_infos',
         'k8s_job_info',
         'k8s_namespaces',
-        'k8s_nodes',
         'k8s_persistent_volume_claims',
         'k8s_persistent_volumes',
         'k8s_pod_container',

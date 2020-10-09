@@ -5,6 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import TypedDict, Dict, List
+import json
+
+from ..agent_based_api.v1.type_defs import AgentStringTable
+
+
+def parse_json(string_table: AgentStringTable) -> Dict:
+    data = json.loads(string_table[0][0])
+    assert isinstance(data, dict)
+    return data
 
 
 class Filesystem(TypedDict):

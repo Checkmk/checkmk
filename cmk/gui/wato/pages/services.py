@@ -1355,6 +1355,8 @@ def _page_menu_host_labels_entries(host: watolib.CREHost,
             _start_js_call(host, options._replace(action=DiscoveryAction.UPDATE_HOST_LABELS))),
         name="update_host_labels",
         is_enabled=False,
+        is_shortcut=True,
+        is_show_more=True,
         css_classes=["action"],
     )
 

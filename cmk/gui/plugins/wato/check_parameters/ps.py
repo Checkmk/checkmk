@@ -235,6 +235,21 @@ def process_level_elements():
 
 # Add checks that have parameters but are only configured as manual checks
 def ps_cleanup_params(params):
+    # New parameter format: dictionary. Example:
+    # {
+    #    "user" : "foo",
+    #    "process" : "/usr/bin/food",
+    #    "warnmin" : 1,
+    #    "okmin"   : 1,
+    #    "okmax"   : 1,
+    #    "warnmax" : 1,
+    # }
+
+    # Even newer format:
+    # {
+    #   "user" : "foo",
+    #   "levels" : (1, 1, 99999, 99999)
+    # }
     if isinstance(params, (list, tuple)):
         if len(params) == 5:
             procname, warnmin, okmin, okmax, warnmax = params
@@ -247,12 +262,12 @@ def ps_cleanup_params(params):
             "user": user,
         }
 
-    if any(k in params for k in ['okmin', 'warnmin', 'okmax', 'warnmax']):
+    elif any(k in params for k in ['okmin', 'warnmin', 'okmax', 'warnmax']):
         params["levels"] = (
             params.pop("warnmin", 1),
             params.pop("okmin", 1),
-            params.pop("warnmax", 99999),
             params.pop("okmax", 99999),
+            params.pop("warnmax", 99999),
         )
 
     if "cpu_rescale_max" not in params:

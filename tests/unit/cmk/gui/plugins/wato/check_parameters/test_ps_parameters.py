@@ -10,6 +10,7 @@ from cmk.gui.plugins.wato.check_parameters.ps import (
     CPU_RESCALE_MAX_UNSPEC,
     forbid_re_delimiters_inside_groups,
     convert_inventory_processes,
+    ps_cleanup_params,
     validate_process_discovery_descr_option,
 )
 from cmk.gui.plugins.wato.check_parameters.cpu_utilization import transform_cpu_iowait
@@ -119,3 +120,45 @@ def test_transform_cpu_iowait(params, result):
     ])
 def test_convert_inventory_process(params, result):
     assert convert_inventory_processes(params) == result
+
+
+@pytest.mark.parametrize("params, result", [
+    (("sshd", 1, 1, 99, 200), {
+        "process": "sshd",
+        "user": None,
+        "levels": (1, 1, 99, 200),
+        'cpu_rescale_max': CPU_RESCALE_MAX_UNSPEC,
+    }),
+    (("sshd", "root", 2, 2, 5, 5), {
+        "process": "sshd",
+        "user": "root",
+        "levels": (2, 2, 5, 5),
+        'cpu_rescale_max': CPU_RESCALE_MAX_UNSPEC,
+    }),
+    ({
+        "user": "foo",
+        "process": "/usr/bin/foo",
+        "warnmin": 1,
+        "okmin": 1,
+        "okmax": 3,
+        "warnmax": 3,
+    }, {
+        "user": "foo",
+        "process": "/usr/bin/foo",
+        "levels": (1, 1, 3, 3),
+        'cpu_rescale_max': CPU_RESCALE_MAX_UNSPEC,
+    }),
+    ({
+        "user": "foo",
+        "process": "/usr/bin/foo",
+        "levels": (1, 1, 3, 3),
+        'cpu_rescale_max': True,
+    }, {
+        "user": "foo",
+        "process": "/usr/bin/foo",
+        "levels": (1, 1, 3, 3),
+        'cpu_rescale_max': True,
+    }),
+])
+def test_ps_cleanup_params(params, result):
+    assert ps_cleanup_params(params) == result

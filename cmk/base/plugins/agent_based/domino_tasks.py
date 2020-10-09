@@ -112,6 +112,12 @@ register.check_plugin(
     discovery_ruleset_type="all",
     discovery_default_parameters={},
     check_function=check_domino_tasks,
+    # Note: domino_tasks is a ManualCheckParameterRulespec. If the user specifies an already
+    # discovered item, the manual check will overrule the corresponding autocheck. As a result, for
+    # the user it looks as if the parameters specified in the manual check configuration were simply
+    # passed to the check plugin, without any sort of overruling. Also note that we cannot simply
+    # remove this line. If we did that, the checktype domino_tasks would not be available any more
+    # when configuring the manual check.
     check_ruleset_name="domino_tasks",
     check_default_parameters={},
     cluster_check_function=cluster_check_domino_tasks,

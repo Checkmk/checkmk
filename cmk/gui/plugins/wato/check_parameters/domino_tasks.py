@@ -34,6 +34,35 @@ def _transform_inv_domino_tasks_rules(par):
     }
 
 
+def _vs_levels(help_txt):
+    return Tuple(
+        title=_('Levels on task count'),
+        help=help_txt,
+        elements=[
+            Integer(
+                title=_("Critical below"),
+                unit=_("tasks"),
+                default_value=1,
+            ),
+            Integer(
+                title=_("Warning below"),
+                unit=_("tasks"),
+                default_value=1,
+            ),
+            Integer(
+                title=_("Warning above"),
+                unit=_("tasks"),
+                default_value=99999,
+            ),
+            Integer(
+                title=_("Critical above"),
+                unit=_("tasks"),
+                default_value=99999,
+            ),
+        ],
+    )
+
+
 def _valuespec_inv_domino_tasks_rules():
     return Transform(
         Dictionary(
@@ -95,36 +124,11 @@ def _valuespec_inv_domino_tasks_rules():
                         elements=[
                             (
                                 'levels',
-                                Tuple(
-                                    title=_('Levels'),
-                                    help=
-                                    _("Please note that if you specify and also if you modify levels "
-                                      "here, the change is activated only during an inventory. Saving "
-                                      "this rule is not enough. This is due to the nature of inventory "
-                                      "rules."),
-                                    elements=[
-                                        Integer(
-                                            title=_("Critical below"),
-                                            unit=_("processes"),
-                                            default_value=1,
-                                        ),
-                                        Integer(
-                                            title=_("Warning below"),
-                                            unit=_("processes"),
-                                            default_value=1,
-                                        ),
-                                        Integer(
-                                            title=_("Warning above"),
-                                            unit=_("processes"),
-                                            default_value=1,
-                                        ),
-                                        Integer(
-                                            title=_("Critical above"),
-                                            unit=_("processes"),
-                                            default_value=1,
-                                        ),
-                                    ],
-                                ),
+                                _vs_levels(
+                                    _("Please note that if you specify and also if you modify "
+                                      "levels here, the change is activated only during an "
+                                      "inventory. Saving this rule is not enough. This is due to "
+                                      "the nature of inventory rules.")),
                             ),
                         ],
                         optional_keys=False,
@@ -157,58 +161,54 @@ def _item_spec_domino_tasks():
     )
 
 
+def _transform_valuespec_domino_tasks(par):
+    if 'levels' not in par:
+        par['levels'] = (
+            par.pop("warnmin"),
+            par.pop("okmin"),
+            par.pop("okmax"),
+            par.pop("warnmax"),
+        )
+    return par
+
+
 def _parameter_valuespec_domino_tasks():
-    return Dictionary(
-        elements=[
-            (
-                "process",
-                Alternative(
-                    title=_("Name of the task"),
-                    elements=[
-                        TextAscii(
-                            title=_("Exact name of the task"),
-                            size=50,
-                        ),
-                        Transform(
-                            RegExp(
+    return Transform(
+        Dictionary(
+            elements=[
+                (
+                    "process",
+                    Alternative(
+                        title=_("Name of the task"),
+                        elements=[
+                            TextAscii(
+                                title=_("Exact name of the task"),
                                 size=50,
-                                mode=RegExp.prefix,
                             ),
-                            title=_("Regular expression matching tasks"),
-                            help=_("This regex must match the <i>beginning</i> of the complete "
-                                   "command line of the task including arguments"),
-                            forth=lambda x: x[1:],  # remove ~
-                            back=lambda x: "~" + x,  # prefix ~
-                        ),
-                        FixedValue(
-                            None,
-                            totext="",
-                            title=_("Match all tasks"),
-                        )
-                    ],
-                    match=lambda x: (not x and 2) or (x[0] == '~' and 1 or 0))),
-            ("warnmin",
-             Integer(
-                 title=_("Minimum number of matched tasks for WARNING state"),
-                 default_value=1,
-             )),
-            ("okmin",
-             Integer(
-                 title=_("Minimum number of matched tasks for OK state"),
-                 default_value=1,
-             )),
-            ("okmax",
-             Integer(
-                 title=_("Maximum number of matched tasks for OK state"),
-                 default_value=99999,
-             )),
-            ("warnmax",
-             Integer(
-                 title=_("Maximum number of matched tasks for WARNING state"),
-                 default_value=99999,
-             )),
-        ],
-        required_keys=['warnmin', 'okmin', 'okmax', 'warnmax', 'process'],
+                            Transform(
+                                RegExp(
+                                    size=50,
+                                    mode=RegExp.prefix,
+                                ),
+                                title=_("Regular expression matching tasks"),
+                                help=_("This regex must match the <i>beginning</i> of the complete "
+                                       "command line of the task including arguments"),
+                                forth=lambda x: x[1:],  # remove ~
+                                back=lambda x: "~" + x,  # prefix ~
+                            ),
+                            FixedValue(
+                                None,
+                                totext="",
+                                title=_("Match all tasks"),
+                            )
+                        ],
+                        match=lambda x: (not x and 2) or (x[0] == '~' and 1 or 0))),
+                ("levels",
+                 _vs_levels(_("Specify levels on the minimum and maximum number of tasks."),)),
+            ],
+            optional_keys=False,
+        ),
+        forth=_transform_valuespec_domino_tasks,
     )
 
 

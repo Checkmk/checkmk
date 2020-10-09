@@ -17,6 +17,7 @@ from cmk.utils.type_defs import CheckPluginName
 from cmk.base.api.agent_based import value_store
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters
 from cmk.base.plugins.agent_based import ps_section
 from cmk.base.plugins.agent_based.utils import ps as ps_utils
 
@@ -191,38 +192,39 @@ PS_DISCOVERY_WATO_RULES = [  # type: ignore[var-annotated]
     {},
 ]
 
+
 @pytest.mark.parametrize("params, result", [
     (("sshd", 1, 1, 99, 99), {
         "process": "sshd",
         "user": None,
         "levels": (1, 1, 99, 99),
-        'cpu_rescale_max': None,
+        'cpu_rescale_max': 'cpu_rescale_max_unspecified',
     }),
     (("sshd", "root", 2, 2, 5, 5), {
         "process": "sshd",
         "user": "root",
         "levels": (2, 2, 5, 5),
-        'cpu_rescale_max': None,
+        'cpu_rescale_max': 'cpu_rescale_max_unspecified',
     }),
-    ({
+    (Parameters({
         "user": "foo",
         "process": "/usr/bin/foo",
         "warnmin": 1,
         "okmin": 1,
         "okmax": 3,
         "warnmax": 3,
-    }, {
+    }), {
         "user": "foo",
         "process": "/usr/bin/foo",
         "levels": (1, 1, 3, 3),
-        'cpu_rescale_max': None,
+        'cpu_rescale_max': 'cpu_rescale_max_unspecified',
     }),
-    ({
+    (Parameters({
         "user": "foo",
         "process": "/usr/bin/foo",
         "levels": (1, 1, 3, 3),
         'cpu_rescale_max': True,
-    }, {
+    }), {
         "user": "foo",
         "process": "/usr/bin/foo",
         "levels": (1, 1, 3, 3),
@@ -230,7 +232,7 @@ PS_DISCOVERY_WATO_RULES = [  # type: ignore[var-annotated]
     }),
 ])
 def test_cleanup_params(params, result):
-    assert ps_utils.ps_cleanup_params(params) == result
+    assert ps_utils.ps_cleanup_params(params) == Parameters(result)
 
 
 PS_DISCOVERED_ITEMS = [

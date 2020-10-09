@@ -1139,8 +1139,6 @@ def check_single_interface(
             notice='MAC: %s' % render_mac_address(interface.phys_address),
         )
 
-    yield _check_speed(interface, targetspeed)
-
     # prepare reference speed for computing relative bandwidth usage
     ref_speed = None
     if interface.speed:
@@ -1214,6 +1212,7 @@ def check_single_interface(
 
     # if at least one counter wrapped, we do not handle the counters at all
     if caught_ignore_results_error:
+        yield _check_speed(interface, targetspeed)
         # If there is a threshold on the bandwidth, we cannot proceed
         # further (the check would be flapping to green on a wrap)
         if any(traffic_levels.values()):
@@ -1366,6 +1365,7 @@ def check_single_interface(
                     label="%s %s" % (what, _txt),
                     notice_only=True,
                 )
+    yield _check_speed(interface, targetspeed)
 
 
 def cluster_check(

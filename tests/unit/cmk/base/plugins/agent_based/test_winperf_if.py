@@ -534,7 +534,6 @@ def winperf_if_teaming_parsed(time, out_octets):
             Result(state=state.OK, notice='[SLOT 6 Port 1 DAG]'),
             Result(state=state.OK, notice='Operational state: Connected'),
             Result(state=state.OK, notice='MAC: A0:36:9F:B0:A3:60'),
-            Result(state=state.OK, summary='Speed: 10 GBit/s'),
             Metric('in', 0.0, boundaries=(0.0, 1250000000.0)),
             Metric('inmcast', 0.0),
             Metric('inbcast', 0.0),
@@ -552,6 +551,7 @@ def winperf_if_teaming_parsed(time, out_octets):
             Metric('outqlen', 0.0),
             Result(state=state.OK, summary='In: 0.00 B/s (0%)'),
             Result(state=state.OK, summary='Out: 1.07 GB/s (85.9%)'),
+            Result(state=state.OK, summary='Speed: 10 GBit/s'),
         ],
     ),
     (
@@ -564,7 +564,6 @@ def winperf_if_teaming_parsed(time, out_octets):
             Result(state=state.OK, notice='[SLOT 4 Port 2 DAG]'),
             Result(state=state.OK, notice='Operational state: Connected'),
             Result(state=state.OK, notice='MAC: A0:36:9F:B0:B3:66'),
-            Result(state=state.OK, summary='Speed: 10 GBit/s'),
             Metric('in', 0.0, boundaries=(0.0, 1250000000.0)),
             Metric('inmcast', 0.0),
             Metric('inbcast', 0.0),
@@ -582,6 +581,7 @@ def winperf_if_teaming_parsed(time, out_octets):
             Metric('outqlen', 0.0),
             Result(state=state.OK, summary='In: 0.00 B/s (0%)'),
             Result(state=state.OK, summary='Out: 1.07 GB/s (85.9%)'),
+            Result(state=state.OK, summary='Speed: 10 GBit/s'),
         ],
     ),
     (
@@ -597,7 +597,6 @@ def winperf_if_teaming_parsed(time, out_octets):
             Result(state=state.OK, notice='Teaming'),
             Result(state=state.OK, notice='Operational state: up'),
             Result(state=state.OK, notice='Members: [3 (Connected), 8 (Connected)]'),
-            Result(state=state.OK, summary='Speed: 20 GBit/s'),
             Metric('in', 0.0, boundaries=(0.0, 2500000000.0)),
             Metric('inmcast', 0.0),
             Metric('inbcast', 0.0),
@@ -615,6 +614,7 @@ def winperf_if_teaming_parsed(time, out_octets):
             Metric('outqlen', 0.0),
             Result(state=state.OK, summary='In: 0.00 B/s (0%)'),
             Result(state=state.OK, summary='Out: 2.15 GB/s (85.9%)'),
+            Result(state=state.OK, summary='Speed: 20 GBit/s'),
         ],
     ),
 ])

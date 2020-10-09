@@ -53,8 +53,6 @@ from cmk.gui.http import Request  # pylint: disable=cmk-module-layer-violation
 
 import cmk.update_rrd_fs_names  # pylint: disable=cmk-module-layer-violation  # TODO: this should be fine
 
-from cmk.gui.plugins.wato.check_parameters.diskstat import transform_diskstat  # pylint: disable=cmk-module-layer-violation
-
 # mapping removed check plugins to their replacement:
 REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("snmp_uptime"): CheckPluginName("uptime"),
@@ -67,8 +65,6 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("cisco_mem_asa64"): CheckPluginName("cisco_mem_asa"),
     CheckPluginName("if64adm"): CheckPluginName("if64"),
 }
-
-WATO_RULESET_PARAM_TRANSFORMS = [('diskstat_inventory', transform_diskstat)]
 
 
 # TODO: Better make our application available?
@@ -195,21 +191,27 @@ class UpdateConfig:
     def _rewrite_wato_rulesets(self):
         all_rulesets = cmk.gui.watolib.rulesets.AllRulesets()
         all_rulesets.load()
-
-        self._transform_wato_rulesets_params(all_rulesets, WATO_RULESET_PARAM_TRANSFORMS)
-
+        self._transform_wato_rulesets_params(all_rulesets)
         all_rulesets.save()
 
-    def _transform_wato_rulesets_params(self, all_rulesets, transforms):
-        for param_name, transform_func in transforms:
-            try:
-                ruleset = all_rulesets.get(param_name)
-            except KeyError:
-                continue
-            rules = ruleset.get_rules()
-            for rule in rules:
-                transformed_params = transform_func(rule[2].value)
-                rule[2].value = transformed_params
+    def _transform_wato_rulesets_params(self, all_rulesets):
+        num_errors = 0
+        for ruleset in all_rulesets.get_rulesets().values():
+            valuespec = ruleset.valuespec()
+            for folder, folder_index, rule in ruleset.get_rules():
+                try:
+                    rule.value = valuespec.transform_value(rule.value)
+                except Exception as e:
+                    if self._arguments.debug:
+                        raise
+                    self._logger.error(
+                        "ERROR: Failed to transform rule: (Ruleset: %s, Folder: %s, "
+                        "Rule: %d, Value: %s: %s", ruleset.name, folder.path(), folder_index,
+                        rule.value, e)
+                    num_errors += 1
+
+        if num_errors:
+            raise MKGeneralException("Failed to transform %d rule values" % num_errors)
 
     def _initialize_gui_environment(self):
         self._logger.log(VERBOSE, "Loading GUI plugins...")

@@ -5520,12 +5520,12 @@ class IconSelector(ValueSpec):
     # During upload of user specific icons, the meta data is added to the images.
     def available_icons(self, only_local: bool = False) -> Dict[str, str]:
         icons = {}
-        icons.update(self._available_builtin_assets("icon", only_local))
+        icons.update(self._available_builtin_assets("icon_", only_local))
         icons.update(self._available_user_icons(only_local))
         return icons
 
     def available_emblems(self, only_local: bool = False) -> Dict[str, str]:
-        return self._available_builtin_assets("emblem", only_local)
+        return self._available_builtin_assets("emblem_", only_local)
 
     def _available_builtin_assets(self, prefix: str, only_local: bool = False) -> Dict[str, str]:
         if not self._show_builtin_icons:
@@ -5539,8 +5539,8 @@ class IconSelector(ValueSpec):
 
             for file_stem, category in self._get_assets_from_directories(
                     dirs, default_category="builtin").items():
-                if file_stem.startswith(prefix + "_"):
-                    assets[file_stem[5:]] = category
+                if file_stem.startswith(prefix):
+                    assets[file_stem[len(prefix):]] = category
         return assets
 
     def _available_user_icons(self, only_local=False) -> Dict[str, str]:

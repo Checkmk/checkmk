@@ -354,8 +354,9 @@ class ABCHostAttribute(metaclass=abc.ABCMeta):
     def is_tag_attribute(self) -> bool:
         return False
 
-    def is_advanced(self) -> bool:
-        """Whether or not this attribute is treated as advanced element in the GUI"""
+    def is_show_more(self) -> bool:
+        """Whether or not this attribute is treated as an element only shown on
+        show more button in the GUI"""
         return False
 
 

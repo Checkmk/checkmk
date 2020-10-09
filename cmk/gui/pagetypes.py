@@ -238,8 +238,9 @@ class Base:
         return "other"
 
     @classmethod
-    def type_is_advanced(cls) -> bool:
-        """Whether or not this page type should be treated as advanced element in the navigation"""
+    def type_is_show_more(cls) -> bool:
+        """Whether or not this page type should be treated as element in the
+        navigation only shown on show more button"""
         return False
 
     # Store for all instances of this page type. The key into
@@ -378,13 +379,14 @@ class PageRenderer(Base):
                         "Topics with the same number will be sorted alphabetically.") %
                  cls.phrase("title_plural"),
              )),
-            (1.6, "is_advanced",
+            (1.6, "is_show_more",
              Checkbox(
-                 title=_("Is advanced"),
+                 title=_("Show more"),
+                 label=_("Only show the %s if show more is active" % cls.phrase("title_plural")),
                  default_value=False,
-                 help=_("The navigation allows to hide items based on a basic / advanced "
-                        "toggle. You can specify here whether or not this %s should be "
-                        "treated as basic or advanced %s.") %
+                 help=_("The navigation allows to hide items based on a show "
+                        "less / show more toggle. You can specify here whether or "
+                        "not this %s should only be shown with show more %s.") %
                  (cls.phrase("title_plural"), cls.phrase("title_plural")),
              )),
             (2.0, 'hidden',
@@ -399,7 +401,7 @@ class PageRenderer(Base):
     @classmethod
     def _transform_old_spec(cls, spec):
         spec.setdefault("sort_index", 99)
-        spec.setdefault("is_advanced", False)
+        spec.setdefault("is_show_more", False)
         return spec
 
     @classmethod
@@ -439,8 +441,8 @@ class PageRenderer(Base):
     def sort_index(self) -> int:
         return self._.get("sort_index", 99)
 
-    def is_advanced(self) -> bool:
-        return self._.get("is_advanced", False)
+    def is_show_more(self) -> bool:
+        return self._.get("is_show_more", False)
 
     # Helper functions for page handlers and render function
     def page_header(self):
@@ -1830,7 +1832,7 @@ def _customize_menu_topics() -> List[TopicMenuTopic]:
             title=_("Views"),
             url="edit_views.py",
             sort_index=10,
-            is_advanced=False,
+            is_show_more=False,
             icon_name="view",
             emblem=None,
         ),
@@ -1839,7 +1841,7 @@ def _customize_menu_topics() -> List[TopicMenuTopic]:
             title=_("Dashboards"),
             url="edit_dashboards.py",
             sort_index=20,
-            is_advanced=False,
+            is_show_more=False,
             icon_name="dashboard",
             emblem=None,
         ),
@@ -1850,7 +1852,7 @@ def _customize_menu_topics() -> List[TopicMenuTopic]:
                       title=_("Reports"),
                       url="edit_reports.py",
                       sort_index=10,
-                      is_advanced=True,
+                      is_show_more=True,
                       icon_name="report",
                       emblem=None),
     ]
@@ -1861,7 +1863,7 @@ def _customize_menu_topics() -> List[TopicMenuTopic]:
             title=page_type_.phrase("title_plural"),
             url="%ss.py" % page_type_.type_name(),
             sort_index=40 + (index * 10),
-            is_advanced=page_type_.type_is_advanced(),
+            is_show_more=page_type_.type_is_show_more(),
             icon_name=page_type_.type_icon(),
             emblem=page_type_.type_emblem(),
         )

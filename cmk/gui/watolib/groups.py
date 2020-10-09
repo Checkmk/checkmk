@@ -400,7 +400,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
     def sort_index(cls):
         return 25
 
-    def is_advanced(self):
+    def is_show_more(self):
         return True
 
     def help(self):

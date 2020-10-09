@@ -15,8 +15,8 @@ from cmk.utils.plugin_registry import Registry
 from cmk.gui.type_defs import MegaMenu, TopicMenuTopic
 
 
-def any_advanced_items(topics: List[TopicMenuTopic]) -> bool:
-    return any(item.is_advanced for topic in topics for item in topic.items)
+def any_show_more_items(topics: List[TopicMenuTopic]) -> bool:
+    return any(item.is_show_more for topic in topics for item in topic.items)
 
 
 class MegaMenuRegistry(Registry[MegaMenu]):

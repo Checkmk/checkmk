@@ -81,7 +81,7 @@ class SidebarSnapin(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @classmethod
-    def has_advanced_items(cls) -> bool:
+    def has_show_more_items(cls) -> bool:
         return False
 
     @classmethod
@@ -355,7 +355,7 @@ def make_topic_menu(visuals: List[Tuple[str, Tuple[str, Visual]]]) -> List[Topic
                 title=visual["title"],
                 url=url,
                 sort_index=visual["sort_index"],
-                is_advanced=visual["is_advanced"],
+                is_show_more=visual["is_show_more"],
                 icon_name=visual["icon"],
                 emblem=visual.get("emblem", None),
             ))

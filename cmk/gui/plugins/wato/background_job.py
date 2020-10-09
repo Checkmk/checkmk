@@ -61,7 +61,7 @@ class MainModuleBackgroundJobs(MainModule):
         return 60
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return True
 
 

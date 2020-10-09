@@ -209,7 +209,7 @@ class UIIconPlacement(UserAttribute):
 class UIBasicAdvancedToggle(UserAttribute):
     @classmethod
     def name(cls):
-        return "ui_basic_advanced_mode"
+        return "show_mode"
 
     def topic(self):
         return "personal"
@@ -225,8 +225,8 @@ class UIBasicAdvancedToggle(UserAttribute):
                    "shown at all."),
             choices=[
                 (None, _("Default to show less")),
-                ("default_advanced", _("Default to show more")),
-                ("enforce_advanced", _("Enforce show more")),
+                ("default_show_more", _("Default to show more")),
+                ("enforce_show_more", _("Enforce show more")),
             ],
         )
 

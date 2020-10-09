@@ -235,8 +235,9 @@ class Filter(metaclass=abc.ABCMeta):
         self.description = description
 
     @property
-    def is_advanced(self) -> bool:
-        """Whether or not treat this as advanced GUI element"""
+    def is_show_more(self) -> bool:
+        """Whether or not treat this as GUI element that is only visible on
+        show more button"""
         return False
 
     def available(self) -> bool:

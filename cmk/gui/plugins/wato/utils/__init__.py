@@ -1437,7 +1437,7 @@ def configure_attributes(new,
             topic_title,
             isopen=topic_id in ["basic", "address", "data_sources"],
             table_id=topic_id,
-            show_advanced_toggle=True,
+            show_more_toggle=True,
         )
 
         if topic_id == "basic":
@@ -1605,7 +1605,7 @@ def configure_attributes(new,
             forms.section(_u(attr.title()),
                           checkbox=checkbox_code,
                           section_id="attr_" + attrname,
-                          is_advanced=attr.is_advanced())
+                          is_show_more=attr.is_show_more())
             html.help(attr.help())
 
             if len(values) == 1:

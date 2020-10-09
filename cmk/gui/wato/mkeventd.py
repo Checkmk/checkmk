@@ -3050,7 +3050,7 @@ class MainModuleEventConsole(MainModule):
         return config.mkeventd_enabled
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return True
 
 

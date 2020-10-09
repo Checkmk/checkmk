@@ -449,9 +449,9 @@ class SidebarRenderer:
 
         html.open_div(class_=["head", snapin.visible.value], **head_actions)
 
-        advanced = snapin_instance.has_advanced_items()
+        show_more = snapin_instance.has_show_more_items()
         may_configure = config.user.may("general.configure_sidebar")
-        if advanced or may_configure:
+        if show_more or may_configure:
             html.open_div(class_="snapin_buttons")
 
             if may_configure:
@@ -461,7 +461,7 @@ class SidebarRenderer:
                           title=_("Toggle this snapin"),
                           onclick="cmk.sidebar.toggle_sidebar_snapin(this, '%s')" % toggle_url)
 
-            if advanced:
+            if show_more:
                 html.open_span(class_="moresnapin")
                 html.more_button(more_id, dom_levels_up=4)
                 html.close_span()
@@ -806,7 +806,7 @@ class CustomSnapins(pagetypes.Overridable):
         return "custom_snapin"
 
     @classmethod
-    def type_is_advanced(cls) -> bool:
+    def type_is_show_more(cls) -> bool:
         return True
 
     @classmethod

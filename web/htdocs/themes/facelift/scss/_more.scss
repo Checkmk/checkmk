@@ -8,27 +8,27 @@
   to   { opacity: 1; }
 }
 
-.advanced {
+.show_more_mode {
   display: none;
   opacity: 0;
 }
 
 .more {
-  .advanced {
+  .show_more_mode {
     display: block;
     animation: fadein 0s both;
   }
 
-  td.advanced {
+  td.show_more_mode {
     display: table-cell;
   }
 
-  tr.advanced {
+  tr.show_more_mode {
     display: table-row;
   }
 }
 
-.more.withanimation .advanced {
+.more.withanimation .show_more_mode {
   animation: fadein 1s both;
 }
 

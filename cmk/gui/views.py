@@ -780,7 +780,7 @@ class GUIViewRenderer(ABCViewRenderer):
                     item=PageMenuPopup(self._render_command_form(info_name, command)),
                     name="command_%s" % command.ident,
                     is_enabled=_should_show_command_form(self.view.datasource),
-                    is_advanced=command.is_advanced,
+                    is_show_more=command.is_show_more,
                     css_classes=["command"],
                 )
 

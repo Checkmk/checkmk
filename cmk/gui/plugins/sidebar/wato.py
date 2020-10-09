@@ -80,7 +80,7 @@ def get_wato_menu_items() -> List[TopicMenuTopic]:
                 title=module.title,
                 url=module.get_url(),
                 sort_index=module.sort_index,
-                is_advanced=module.is_advanced,
+                is_show_more=module.is_show_more,
                 icon_name=module.icon,
                 emblem=module.emblem,
             ))

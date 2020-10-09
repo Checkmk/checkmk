@@ -44,7 +44,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         return _("Tactical overview")
 
     @classmethod
-    def has_advanced_items(cls):
+    def has_show_more_items(cls):
         return True
 
     @classmethod
@@ -157,10 +157,10 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
 
             html.open_tr()
             html.th(row.title)
-            html.th(_("Problems"), class_="advanced")
+            html.th(_("Problems"), class_="show_more_mode")
             html.th(_("Unhandled"))
             if show_stales and has_stale_objects:
-                html.th(_("Stale"), class_="advanced")
+                html.th(_("Stale"), class_="show_more_mode")
             html.close_tr()
 
             td_class = 'col4' if has_stale_objects else 'col3'
@@ -175,7 +175,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                 url = html.makeuri_contextless(getattr(row.views, ty) + context_vars,
                                                filename="view.py")
                 html.open_td(class_=[
-                    td_class, "states prob" if value != 0 else None, "advanced" if ty ==
+                    td_class, "states prob" if value != 0 else None, "show_more_mode" if ty ==
                     "handled" else "basic"
                 ])
                 link(str(value), url)
@@ -186,11 +186,11 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                     url = html.makeuri_contextless(row.views.stale + context_vars,
                                                    filename="view.py")
                     html.open_td(
-                        class_=[td_class, "states prob" if stales != 0 else None, "advanced"])
+                        class_=[td_class, "states prob" if stales != 0 else None, "show_more_mode"])
                     link(str(stales), url)
                     html.close_td()
                 else:
-                    html.td(html.render_span("0"), class_="advanced")
+                    html.td(html.render_span("0"), class_="show_more_mode")
 
             html.close_tr()
         html.close_table()

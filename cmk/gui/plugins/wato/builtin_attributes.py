@@ -63,7 +63,7 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
     def topic(self):
         return HostAttributeTopicBasicSettings
 
-    def is_advanced(self) -> bool:
+    def is_show_more(self) -> bool:
         return True
 
     @classmethod
@@ -174,7 +174,7 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
     def sort_index(cls):
         return 50
 
-    def is_advanced(self) -> bool:
+    def is_show_more(self) -> bool:
         return True
 
     def name(self):
@@ -279,7 +279,7 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
     def sort_index(cls):
         return 80
 
-    def is_advanced(self) -> bool:
+    def is_show_more(self) -> bool:
         return True
 
     def show_in_table(self):
@@ -755,7 +755,7 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
     def name(self):
         return "site"
 
-    def is_advanced(self) -> bool:
+    def is_show_more(self) -> bool:
         return True
 
     def topic(self):
@@ -987,7 +987,7 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
     def sort_index(cls):
         return 190
 
-    def is_advanced(self) -> bool:
+    def is_show_more(self) -> bool:
         return True
 
     def help(self):

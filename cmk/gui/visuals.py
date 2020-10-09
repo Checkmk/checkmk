@@ -260,7 +260,7 @@ def transform_old_visual(visual):
 
     # 1.7 introduced these settings for the new mega menus
     visual.setdefault("sort_index", 99)
-    visual.setdefault("is_advanced", False)
+    visual.setdefault("is_show_more", False)
 
 
 def load_user_visuals(what: str, builtin_visuals: Dict[Any, Any],
@@ -915,13 +915,14 @@ def page_edit_visual(what,
                         "Topics with the same number will be sorted alphabetically.") %
                  visual_type.title,
              )),
-            ("is_advanced",
+            ("is_show_more",
              Checkbox(
-                 title=_("Is advanced"),
+                 title=_("Show more"),
+                 label=_("Only show the %s if show more is active" % visual_type.title),
                  default_value=99,
-                 help=_("The navigation allows to hide items based on a basic / advanced "
-                        "toggle. You can specify here whether or not this %s should be "
-                        "treated as basic or advanced %s.") %
+                 help=_("The navigation allows to hide items based on a show "
+                        "less / show more toggle. You can specify here whether or "
+                        "not this %s should only be shown with show more %s.") %
                  (visual_type.title, visual_type.title),
              )),
             ('description', TextAreaUnicode(title=_('Description') + '<sup>*</sup>',
@@ -971,7 +972,7 @@ def page_edit_visual(what,
                     'title',
                     'topic',
                     'sort_index',
-                    'is_advanced',
+                    'is_show_more',
                     'description',
                     'linktitle',
                     'icon',
@@ -1467,7 +1468,7 @@ class VisualFilterListWithAddPopup(VisualFilterList):
                 filter_name = choice[0]
 
                 filter_obj = filter_registry[filter_name]
-                html.open_li(class_="advanced" if filter_obj.is_advanced else "basic")
+                html.open_li(class_="show_more_mode" if filter_obj.is_show_more else "basic")
 
                 html.a(choice[1].title() or filter_name,
                        href="javascript:void(0)",

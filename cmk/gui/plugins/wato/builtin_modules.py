@@ -57,7 +57,7 @@ class MainModuleFolder(MainModule):
         return 10
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -94,7 +94,7 @@ class MainModuleTags(MainModule):
         return 30
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -129,7 +129,7 @@ class MainModuleGlobalSettings(MainModule):
         return 10
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -164,7 +164,7 @@ class MainModuleReadOnly(MainModule):
         return 20
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return True
 
 
@@ -199,7 +199,7 @@ class MainModuleRuleSearch(MainModule):
         return 5
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -234,7 +234,7 @@ class MainModulePredefinedConditions(MainModule):
         return 30
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return True
 
 
@@ -273,7 +273,7 @@ class MainModuleHostAndServiceParameters(MainModule):
         return 20
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -308,7 +308,7 @@ class MainModuleHWSWInventory(MainModule):
         return 60
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return True
 
 
@@ -344,7 +344,7 @@ class MainModuleNetworkingServices(MainModule):
         return 30
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -380,7 +380,7 @@ class MainModuleIntegrateNagiosPlugins(MainModule):
         return 40
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return True
 
 
@@ -415,7 +415,7 @@ class MainModuleStaticChecks(MainModule):
         return 50
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return True
 
 
@@ -450,7 +450,7 @@ class MainModuleCheckPlugins(MainModule):
         return 70
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return True
 
 
@@ -485,7 +485,7 @@ class MainModuleHostGroups(MainModule):
         return 50
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -520,7 +520,7 @@ class MainModuleHostCustomAttributes(MainModule):
         return 55
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return True
 
 
@@ -555,7 +555,7 @@ class MainModuleServiceGroups(MainModule):
         return 60
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -590,7 +590,7 @@ class MainModuleUsers(MainModule):
         return 20
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -625,7 +625,7 @@ class MainModuleRoles(MainModule):
         return 40
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -660,7 +660,7 @@ class MainModuleLDAP(MainModule):
         return 50
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return True
 
 
@@ -695,7 +695,7 @@ class MainModuleUserCustomAttributes(MainModule):
         return 55
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return True
 
 
@@ -730,7 +730,7 @@ class MainModuleContactGroups(MainModule):
         return 30
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -765,7 +765,7 @@ class MainModuleNotifications(MainModule):
         return 10
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -801,7 +801,7 @@ class MainModuleTimeperiods(MainModule):
         return 40
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -836,7 +836,7 @@ class MainModuleSites(MainModule):
         return 70
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -871,7 +871,7 @@ class MainModuleBackup(MainModule):
         return 10
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -906,7 +906,7 @@ class MainModulePasswords(MainModule):
         return 50
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -941,7 +941,7 @@ class MainModuleAuditLog(MainModule):
         return 80
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return True
 
 
@@ -976,7 +976,7 @@ class MainModuleIcons(MainModule):
         return 85
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return True
 
 
@@ -1011,7 +1011,7 @@ class MainModuleAnalyzeConfig(MainModule):
         return 40
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -1046,7 +1046,7 @@ class MainModuleReleaseNotes(MainModule):
         return 60
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -1084,7 +1084,7 @@ class MainModuleDiagnostics(MainModule):
         return 30
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -1123,7 +1123,7 @@ class MainModuleMonitoringRules(MainModule):
         return 10
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -1158,7 +1158,7 @@ class MainModuleDiscoveryRules(MainModule):
         return 20
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -1192,7 +1192,7 @@ class MainModuleAgentsWindows(MainModule):
         return 15
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -1226,7 +1226,7 @@ class MainModuleAgentsLinux(MainModule):
         return 10
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -1268,7 +1268,7 @@ class MainModuleOtherAgents(MainModule):
         return 20
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -1307,7 +1307,7 @@ class MainModuleAgentAccessRules(MainModule):
         return 60
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -1342,7 +1342,7 @@ class MainModuleSNMPRules(MainModule):
         return 70
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -1377,7 +1377,7 @@ class MainModuleVMCloudContainer(MainModule):
         return 30
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -1412,7 +1412,7 @@ class MainModuleOtherIntegrations(MainModule):
         return 40
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -1447,5 +1447,5 @@ class MainModuleCustomIntegrations(MainModule):
         return 50
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return True

@@ -161,7 +161,7 @@ class MainModule(MenuItem, metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def is_advanced(self) -> bool:
+    def is_show_more(self) -> bool:
         raise NotImplementedError()
 
 
@@ -194,7 +194,7 @@ def register_modules(*args):
                 "permission": wato_module.permission,
                 "description": wato_module.description,
                 "sort_index": wato_module.sort_index,
-                "is_advanced": False,
+                "is_show_more": False,
             })
         main_module_registry.register(cls)
 

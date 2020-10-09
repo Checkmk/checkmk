@@ -2693,7 +2693,7 @@ class html(ABCHTMLGenerator):
                     dom_levels_up: int,
                     additional_js: str = "",
                     with_text: bool = False) -> None:
-        if config.user.get_attribute("ui_basic_advanced_mode") == "enforce_advanced":
+        if config.user.get_attribute("show_mode") == "enforce_show_more":
             return
 
         self.open_a(href="javascript:void(0)",

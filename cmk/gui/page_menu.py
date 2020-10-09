@@ -133,7 +133,7 @@ class PageMenuEntry:
     name: Optional[str] = None
     description: Optional[str] = None
     is_enabled: bool = True
-    is_advanced: bool = False
+    is_show_more: bool = False
     is_list_entry: bool = True
     is_shortcut: bool = False
     is_suggested: bool = False
@@ -166,8 +166,8 @@ class PageMenuDropdown:
     popup_data: Optional[List[Union[str, Dict]]] = None
 
     @property
-    def any_advanced_entries(self) -> bool:
-        return any(entry.is_advanced for topic in self.topics for entry in topic.entries)
+    def any_show_more_entries(self) -> bool:
+        return any(entry.is_show_more for topic in self.topics for entry in topic.entries)
 
     @property
     def is_empty(self) -> bool:
@@ -487,7 +487,7 @@ class PageMenuRenderer:
         show_more = html.foldable_container_is_open("more_buttons", id_, isopen=False)
         html.open_div(class_=["menu", ("more" if show_more else "less")], id_=id_)
 
-        if dropdown.any_advanced_entries:
+        if dropdown.any_show_more_entries:
             html.open_div(class_=["more_container"])
             html.more_button(id_, dom_levels_up=2)
             html.close_div()
@@ -546,7 +546,7 @@ class PageMenuRenderer:
     def _get_entry_css_classes(self, entry: PageMenuEntry) -> List[str]:
         return [
             ("enabled" if entry.is_enabled else "disabled"),
-            ("advanced" if entry.is_advanced else "basic"),
+            ("show_more_mode" if entry.is_show_more else "basic"),
         ] + html.normalize_css_spec(entry.css_classes)
 
 

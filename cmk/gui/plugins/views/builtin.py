@@ -290,7 +290,7 @@ multisite_builtin_views.update({
         'title': _('Service check durations'),
         "topic": "history",
         "sort_index": 70,
-        "is_advanced": True,
+        "is_show_more": True,
         'icon': 'service_duration',
     },
     'comments': {
@@ -1640,7 +1640,7 @@ multisite_builtin_views.update({
         'icon': 'services',
         'emblem': 'pending',
         "sort_index": 50,
-        "is_advanced": True,
+        "is_show_more": True,
     },
     'searchhost': {
         'browser_reload': 60,
@@ -2105,7 +2105,7 @@ multisite_builtin_views.update({
         'title': _('Search time graphs'),
         "topic": "history",
         "sort_index": 50,
-        "is_advanced": True,
+        "is_show_more": True,
     },
     'hostpnp': {
         'browser_reload': 90,
@@ -2218,7 +2218,7 @@ multisite_builtin_views.update({
         'title': _('Stale services'),
         "topic": "problems",
         "sort_index": 40,
-        "is_advanced": True,
+        "is_show_more": True,
     },
     'stale_hosts': {
         'browser_reload': 30,
@@ -2555,7 +2555,7 @@ multisite_builtin_views.update({
         'title': _('Search history'),
         "topic": "history",
         "sort_index": 40,
-        "is_advanced": True,
+        "is_show_more": True,
     },
     'sitesvcs_ok': {
         'browser_reload': 60,
@@ -2878,7 +2878,7 @@ multisite_builtin_views.update({
         "topic": "problems",
         "sort_index": 50,
         'icon': 'alert_statistics',
-        "is_advanced": True,
+        "is_show_more": True,
     },
 
     # Special views for NagStaMon
@@ -4532,7 +4532,7 @@ multisite_builtin_views['crash_reports'] = {
     'user_sortable': True,
     "topic": "analyze",
     "sort_index": 30,
-    "is_advanced": True,
+    "is_show_more": True,
 }
 
 multisite_builtin_views['cmk_servers'] = {

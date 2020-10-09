@@ -120,7 +120,7 @@ class MainModuleBI(MainModule):
         return 70
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return True
 
 
@@ -418,7 +418,7 @@ class ModeBIPacks(ABCBIMode):
                                             ("mode", "edit_ruleset"),
                                             ("varname", "active_checks:bi_aggr"),
                                         ])),
-                                    is_advanced=True,
+                                    is_show_more=True,
                                 ),
                             ],
                         ),

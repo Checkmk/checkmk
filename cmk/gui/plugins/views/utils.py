@@ -496,7 +496,7 @@ class Command(metaclass=abc.ABCMeta):
         return "commands"
 
     @property
-    def is_advanced(self) -> bool:
+    def is_show_more(self) -> bool:
         return False
 
     def executor(self, command: str, site: str) -> None:

@@ -105,7 +105,7 @@ def header(title: str,
            table_id: str = "",
            narrow: bool = False,
            css: Optional[str] = None,
-           show_advanced_toggle: bool = False) -> None:
+           show_more_toggle: bool = False) -> None:
     global g_header_open, g_section_open
     if g_header_open:
         end()
@@ -123,7 +123,7 @@ def header(title: str,
         id_=ensure_str(base64.b64encode(ensure_binary(title))),
         isopen=isopen,
         title=title,
-        show_advanced_toggle=show_advanced_toggle,
+        show_more_toggle=show_more_toggle,
     )
     html.tr(html.render_td('', colspan=2))
     g_header_open = True
@@ -135,7 +135,7 @@ def _begin_foldable_nform_container(
     id_: str,
     isopen: bool,
     title: str,
-    show_advanced_toggle: bool,
+    show_more_toggle: bool,
 ) -> bool:
     isopen = html.foldable_container_is_open(treename, id_, isopen)
     onclick = html.foldable_container_onclick(treename, id_, fetch_url=None)
@@ -150,7 +150,7 @@ def _begin_foldable_nform_container(
              src="themes/%s/images/tree_closed.png" % (html.get_theme()),
              align="absbottom")
     html.write_text(title)
-    if show_advanced_toggle:
+    if show_more_toggle:
         html.more_button("foldable_" + id_, dom_levels_up=4)
     html.close_td()
     html.close_tr()
@@ -180,12 +180,12 @@ def section(title: Union[None, HTML, str] = None,
             hide: bool = False,
             legend: bool = True,
             css: Optional[str] = None,
-            is_advanced: bool = False) -> None:
+            is_show_more: bool = False) -> None:
     global g_section_open
     section_close()
     html.open_tr(
         id_=section_id,
-        class_=[css, "advanced" if is_advanced else "basic"],
+        class_=[css, "show_more_mode" if is_show_more else "basic"],
         style="display:none;" if hide else None,
     )
 

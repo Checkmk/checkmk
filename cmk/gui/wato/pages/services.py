@@ -1298,7 +1298,7 @@ def _page_menu_service_configuration_entries(host: watolib.CREHost,
 
 BulkEntry = NamedTuple("BulkEntry", [
     ("is_shortcut", bool),
-    ("is_advanced", bool),
+    ("is_show_more", bool),
     ("source", str),
     ("target", str),
     ("title", str),
@@ -1341,7 +1341,7 @@ def _page_menu_selected_services_entries(host: watolib.CREHost,
             name="bulk_%s_%s" % (entry.source, entry.target),
             is_enabled=False,
             is_shortcut=entry.is_shortcut,
-            is_advanced=entry.is_advanced,
+            is_show_more=entry.is_show_more,
             css_classes=["action"],
         )
 

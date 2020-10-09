@@ -399,7 +399,7 @@ class ModeFolder(WatoMode):
             icon_name="rulesets",
             item=make_simple_link(
                 watolib.folder_preserving_link([("mode", "rulesets"), ("group", "inventory")])),
-            is_advanced=True,
+            is_show_more=True,
         )
 
     def _page_menu_entries_service_settings(self) -> Iterator[PageMenuEntry]:
@@ -432,7 +432,7 @@ class ModeFolder(WatoMode):
             icon_name="rulesets",
             item=make_simple_link(
                 watolib.folder_preserving_link([("mode", "rulesets"), ("group", "custom_checks")])),
-            is_advanced=True,
+            is_show_more=True,
         )
 
         yield PageMenuEntry(
@@ -440,7 +440,7 @@ class ModeFolder(WatoMode):
             icon_name="rulesets",
             item=make_simple_link(
                 watolib.folder_preserving_link([("mode", "rulesets"), ("group", "static")])),
-            is_advanced=True,
+            is_show_more=True,
         )
 
     def _page_menu_entries_agents(self) -> Iterator[PageMenuEntry]:
@@ -469,7 +469,7 @@ class ModeFolder(WatoMode):
             item=make_simple_link(
                 watolib.folder_preserving_link([("mode", "rulesets"),
                                                 ("group", "custom_integrations")])),
-            is_advanced=True,
+            is_show_more=True,
         )
 
         yield PageMenuEntry(
@@ -505,7 +505,7 @@ class ModeFolder(WatoMode):
                 icon_name="dcd_connections",
                 item=make_simple_link(watolib.folder_preserving_link([("mode", "dcd_connections")
                                                                      ])),
-                is_advanced=True,
+                is_show_more=True,
             )
 
     def _page_menu_entries_filter(self) -> Iterator[PageMenuEntry]:

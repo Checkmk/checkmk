@@ -603,7 +603,7 @@ def count_check(
     if processes.running_on_nodes:
         yield Result(
             state=state.OK,
-            summary="Running on nodes %s" % ", ".join(sorted(processes.running_on_nodes)),
+            notice="Running on nodes %s" % ", ".join(sorted(processes.running_on_nodes)),
         )
 
 
@@ -624,6 +624,7 @@ def memory_check(
             levels_upper=params.get(levels),
             render_func=render.bytes,
             label=label,
+            notice_only=True,
         )
         yield Metric(metric, size, levels=params.get(levels))
 
@@ -647,6 +648,7 @@ def memory_perc_check(
         levels_upper=params["resident_levels_perc"],
         render_func=render.percent,
         label="Percentage of total RAM",
+        notice_only=True,
     )
 
 
@@ -725,6 +727,7 @@ def uptime_check(
             levels_upper=params.get("max_age"),
             render_func=render.timespan,
             label="Running for",
+            notice_only=True,
         )
     else:
         yield from check_levels(
@@ -732,12 +735,14 @@ def uptime_check(
             levels_lower=params.get("min_age"),
             render_func=render.timespan,
             label="Youngest running for",
+            notice_only=True,
         )
         yield from check_levels(
             max_elapsed,
             levels_upper=params.get("max_age"),
             render_func=render.timespan,
             label="Oldest running for",
+            notice_only=True,
         )
 
 
@@ -751,4 +756,5 @@ def handle_count_check(
         levels_upper=params.get("handle_count"),
         render_func=lambda d: str(int(d)),
         label="Process handles",
+        notice_only=True,
     )

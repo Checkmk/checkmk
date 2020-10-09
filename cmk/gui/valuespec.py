@@ -5518,36 +5518,39 @@ class IconSelector(ValueSpec):
     # During upload of user specific icons, the meta data is added to the images.
     def available_icons(self, only_local: bool = False) -> Dict[str, str]:
         icons = {}
-        icons.update(self._available_builtin_icons(only_local))
+        icons.update(self._available_builtin_assets("icon", only_local))
         icons.update(self._available_user_icons(only_local))
         return icons
 
-    def _available_builtin_icons(self, only_local: bool = False) -> Dict[str, str]:
+    def available_emblems(self, only_local: bool = False) -> Dict[str, str]:
+        return self._available_builtin_assets("emblem", only_local)
+
+    def _available_builtin_assets(self, prefix: str, only_local: bool = False) -> Dict[str, str]:
         if not self._show_builtin_icons:
             return {}
 
-        icons = {}
+        assets = {}
         for theme in html.icon_themes():
             dirs = [Path(cmk.utils.paths.local_web_dir) / "htdocs/themes" / theme / "images"]
             if not only_local:
                 dirs.append(Path(cmk.utils.paths.web_dir) / "htdocs/themes" / theme / "images")
 
-            for file_stem, category in self._get_icons_from_directories(
+            for file_stem, category in self._get_assets_from_directories(
                     dirs, default_category="builtin").items():
-                if file_stem.startswith("icon_"):
-                    icons[file_stem[5:]] = category
-        return icons
+                if file_stem.startswith(prefix + "_"):
+                    assets[file_stem[5:]] = category
+        return assets
 
     def _available_user_icons(self, only_local=False) -> Dict[str, str]:
         dirs = [Path(cmk.utils.paths.local_web_dir) / "htdocs/images/icons"]
         if not only_local:
             dirs.append(Path(cmk.utils.paths.web_dir) / "htdocs/images/icons")
 
-        return self._get_icons_from_directories(dirs, default_category="misc")
+        return self._get_assets_from_directories(dirs, default_category="misc")
 
-    def _get_icons_from_directories(self, dirs: List[Path],
-                                    default_category: str) -> Dict[str, str]:
-        icons: Dict[str, str] = {}
+    def _get_assets_from_directories(self, dirs: List[Path],
+                                     default_category: str) -> Dict[str, str]:
+        assets: Dict[str, str] = {}
         for directory in dirs:
             try:
                 files = [f for f in directory.iterdir() if f.is_file()]
@@ -5568,12 +5571,12 @@ class IconSelector(ValueSpec):
                 else:
                     continue
 
-                icons[file_.stem] = category
+                assets[file_.stem] = category
 
         for exclude in self._exclude:
-            icons.pop(exclude, None)
+            assets.pop(exclude, None)
 
-        return icons
+        return assets
 
     def _extract_category_from_png(self, file_path: Path, default: str) -> str:
         # extract the category from the meta data
@@ -5583,7 +5586,7 @@ class IconSelector(ValueSpec):
             return default
         return category
 
-    def available_icons_by_category(self, icons):
+    def _available_icons_by_category(self, icons):
         by_cat: Dict[str, List[str]] = {}
         for icon_name, category_name in icons.items():
             by_cat.setdefault(category_name, [])
@@ -5643,7 +5646,7 @@ class IconSelector(ValueSpec):
         html.open_div(class_="icons", id_="%s_icons" % varprefix)
 
         icons = self.available_icons()
-        available_icons = self.available_icons_by_category(icons)
+        available_icons = self._available_icons_by_category(icons)
         active_category = icons.get(value, available_icons[0][0])
 
         # Render tab navigation

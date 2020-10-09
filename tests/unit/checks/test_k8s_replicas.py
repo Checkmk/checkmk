@@ -7,6 +7,8 @@
 import pytest  # type: ignore[import]
 from checktestlib import CheckResult, assertCheckResultsEqual
 
+from cmk.base.plugins.agent_based.utils.k8s import parse_json
+
 pytestmark = pytest.mark.checks
 
 info_unavailable_ok = [[
@@ -98,7 +100,7 @@ info_recreate = [[
 ])
 def test_k8s_replicas(check_manager, info, expected):
     check = check_manager.get_check("k8s_replicas")
-    parsed = check.run_parse(info)
+    parsed = parse_json(info)
     actual = check.run_check(None, {}, parsed)
 
     assertCheckResultsEqual(

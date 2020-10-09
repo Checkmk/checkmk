@@ -30,7 +30,6 @@ parsed = {
 
 discovery = {
     '': [
-        HostLabel(u'cmk/kubernetes_object', u'ingress', plugin_name=None),
         (u'cafe.example.com/coffee', None), (u'cafe.example.com/tea', None)
     ]
 }

@@ -177,6 +177,10 @@ test-format-shell:
 test-format-js:
 	cd ..; scripts/run-prettier --check "web/htdocs/js/**/*.js"
 
+test-format-js-docker:
+	../scripts/run-in-docker.sh make --quiet test-format-js
+
+
 test-gui-crawl: prepare-node-modules
 	$(PYTEST) -T gui_crawl $(realpath gui_crawl/test_gui_crawl.py)
 

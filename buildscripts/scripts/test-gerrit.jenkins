@@ -53,6 +53,9 @@ node (NODE) {
         // Gather the list of changed livestatus / core files
         def CHANGED_CORE_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep -e '^livestatus' -e '^enterprise/core' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
 
+        // Gather the list of changed JavaScript files in raw and enterprise edition
+        def CHANGED_JS_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep '^web/htdocs/js/' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
+
         // this variable is needed as long as we have base plugins that are
         // concantenated for pylint (See tests/pylint/test_pylint.py)
         def WORKDIR="${WORKSPACE}/tmp"
@@ -111,7 +114,7 @@ node (NODE) {
             COMMAND: "make --quiet test-format-shell &> ${RESULTS}/shell-format.txt",
             TEXT_ON_SKIP: ''
          )
-         
+
          gerrit_stages.run(
             NAME: 'Shell Unit',
             CONDITION: true,
@@ -119,6 +122,15 @@ node (NODE) {
             ENV_VARS: [],
             COMMAND: "make test-unit-sh-docker &> ${RESULTS}/shell-unit.txt",
             TEXT_ON_SKIP: ''
+         )
+
+        gerrit_stages.run(
+            NAME: 'JavaScript Format',
+            CONDITION: CHANGED_JS_FILES != "",
+            DIR: 'tests',
+            ENV_VARS: [],
+            COMMAND: "make --quiet test-format-js-docker &> ${RESULTS}/js-prettier.txt",
+            TEXT_ON_SKIP: 'No JavaScript files changed. Skipping.'
          )
 
          PYTHON_VERSIONS.each { PYTHON_VERSION ->

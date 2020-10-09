@@ -230,6 +230,10 @@ class ValueSpec:
         it has been returned by from_html_vars() or because it has been checked
         with validate_datatype())."""
 
+    def transform_value(self, value: Any) -> Any:
+        """Transform the given value with the valuespecs transform logic and give it back"""
+        return value
+
 
 class FixedValue(ValueSpec):
     """A fixed non-editable value, e.g. to be used in 'Alternative'"""
@@ -2925,6 +2929,20 @@ class CascadingDropdown(ValueSpec):
                 return
         raise MKUserError(varprefix + "_sel", _("Value %r is not allowed here.") % (value,))
 
+    def transform_value(self, value: CascadingDropdownChoiceValue) -> CascadingDropdownChoiceValue:
+        value_ident: CascadingDropdownChoiceIdent = value[0] if isinstance(value, tuple) else value
+        try:
+            ident, _title, vs = next(elem for elem in self.choices() if elem[0] == value_ident)
+        except StopIteration:
+            raise ValueError(_("%s is not an allowed value") % value)
+
+        if vs is None and ident == value:
+            return value
+
+        assert isinstance(value, tuple) and vs is not None
+
+        return (value[0], vs.transform_value(value[1]))
+
 
 ListChoiceChoiceValue = Union[str, int]
 ListChoiceChoicePairs = Sequence[_Tuple[ListChoiceChoiceValue, str]]
@@ -4221,6 +4239,9 @@ class Optional(ValueSpec):
         if value != self._none_value:
             self._valuespec.validate_value(value, varprefix + "_value")
 
+    def transform_value(self, value):
+        return self._valuespec.transform_value(value)
+
 
 class Alternative(ValueSpec):
     """Handle case when there are several possible allowed formats
@@ -4488,6 +4509,9 @@ class Tuple(ValueSpec):
         for no, (element, val) in enumerate(zip(self._elements, value)):
             vp = varprefix + "_" + str(no)
             element.validate_datatype(val, vp)
+
+    def transform_value(self, value):
+        return tuple(vs.transform_value(value[index]) for index, vs in enumerate(self._elements))
 
 
 DictionaryEntry = _Tuple[str, ValueSpec]
@@ -4833,6 +4857,13 @@ class Dictionary(ValueSpec):
             elif not self._optional_keys or param in self._required_keys:
                 raise MKUserError(varprefix, _("The entry %s is missing") % vs.title())
 
+    def transform_value(self, value):
+        return {
+            param: vs.transform_value(value[param])
+            for param, vs in self._get_elements()
+            if param in value
+        }
+
 
 # TODO: Cleanup this and all call sites. Replace it with some kind of DropdownChoice
 # based valuespec
@@ -4983,6 +5014,9 @@ class Foldable(ValueSpec):
     def _validate_value(self, value: Any, varprefix: str) -> None:
         self._valuespec.validate_value(value, varprefix)
 
+    def transform_value(self, value):
+        return self._valuespec.transform_value(value)
+
 
 class Transform(ValueSpec):
     """Transforms the value from one representation to another while being
@@ -5056,6 +5090,9 @@ class Transform(ValueSpec):
 
     def _validate_value(self, value: Any, varprefix: str) -> None:
         self._valuespec.validate_value(self.forth(value), varprefix)
+
+    def transform_value(self, value: Any) -> Any:
+        return self.back(self._valuespec.transform_value(self.forth(value)))
 
 
 # TODO: Change to factory, cleanup kwargs

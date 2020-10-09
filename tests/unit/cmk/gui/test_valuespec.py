@@ -241,3 +241,74 @@ def test_email_validation_non_compliance(address):
 def test_email_validation_raises(address):
     with pytest.raises(MKUserError):
         vs.EmailAddress().validate_value(address, "")
+
+
+def test_transform_value_no_transform_vs():
+    valuespec = vs.TextAscii()
+    assert valuespec.transform_value("lala") == "lala"
+    assert valuespec.transform_value("AAA") == "AAA"
+
+
+def test_transform_value_with_transform_vs():
+    valuespec = vs.Transform(
+        vs.TextAscii(),
+        forth=lambda x: x if x == "lala" else x.upper(),
+        back=lambda x: x + "aaa",
+    )
+
+    assert valuespec.transform_value("lala") == "lalaaaa"
+    assert valuespec.transform_value("AAA") == "AAAaaa"
+
+
+def test_transform_value_dict():
+    valuespec = vs.Dictionary(elements=[
+        ("a", vs.TextAscii()),
+    ])
+    assert valuespec.transform_value({"a": "lala"}) == {"a": "lala"}
+
+
+def test_transform_value_in_dict():
+    valuespec = vs.Dictionary(elements=[
+        ("a",
+         vs.Transform(
+             vs.TextAscii(),
+             forth=lambda x: x if x == "lala" else x.upper(),
+             back=lambda x: x + "aaa",
+         )),
+    ])
+
+    assert valuespec.transform_value({"a": "lala"}) == {"a": "lalaaaa"}
+    assert valuespec.transform_value({"a": "AAA"}) == {"a": "AAAaaa"}
+
+
+def test_transform_value_in_tuple():
+    valuespec = vs.Tuple(elements=[
+        vs.Transform(
+            vs.TextAscii(),
+            forth=lambda x: x if x == "lala" else x.upper(),
+            back=lambda x: x + "aaa",
+        ),
+        vs.Transform(
+            vs.TextAscii(),
+            forth=lambda x: x if x == "lala" else x.upper(),
+            back=lambda x: x + "aaa",
+        ),
+    ])
+
+    assert valuespec.transform_value(("lala", "AAA")) == ("lalaaaa", "AAAaaa")
+
+
+def test_transform_value_in_cascading_dropdown():
+    valuespec = vs.CascadingDropdown(choices=[
+        ("a", "Title a", vs.TextAscii()),
+        ("b", "Title b",
+         vs.Transform(
+             vs.TextAscii(),
+             forth=lambda x: x if x == "lala" else x.upper(),
+             back=lambda x: x + "aaa",
+         )),
+    ])
+
+    assert valuespec.transform_value(("a", "abc")) == ("a", "abc")
+    assert valuespec.transform_value(("b", "lala")) == ("b", "lalaaaa")
+    assert valuespec.transform_value(("b", "AAA")) == ("b", "AAAaaa")

@@ -19,6 +19,7 @@ function popup_context() {
         popup: null,
         data: null,
         onclose: null,
+        onopen: null,
         remove_on_close: false,
     };
 
@@ -27,6 +28,7 @@ function popup_context() {
         this.id = spec.id || null;
         this.data = spec.data || null;
         this.onclose = spec.onclose || null;
+        this.onopen = spec.onopen || null;
         this.remove_on_close = spec.remove_on_close || false;
 
         if (this.id) {
@@ -40,6 +42,12 @@ function popup_context() {
 
         if (this.container) {
             utils.add_class(this.container, "active");
+        }
+    };
+
+    popup.open = function () {
+        if (this.onopen) {
+            eval(this.onopen);
         }
     };
 
@@ -72,6 +80,10 @@ function popup_context() {
 
 export function close_popup() {
     active_popup.close();
+}
+
+export function open_popup() {
+    active_popup.open();
 }
 
 // Registerd as click handler on the page while the popup menu is opened
@@ -112,10 +124,12 @@ function handle_popup_close(event) {
 //                           ID of the color picker and its recent color.
 //
 // data:        JSON data which can be used by actions in popup menus
+// onopen:      JavaScript code represented as a string that is evaluated when the
+//              popup is opened
 // onclose:     JavaScript code represented as a string that is evaluated when the
 //              popup is closed
 // resizable:   Allow the user to resize the popup by drag/drop (not persisted)
-export function toggle_popup(event, trigger_obj, ident, method, data, onclose, resizable) {
+export function toggle_popup(event, trigger_obj, ident, method, data, onclose, onopen, resizable) {
     if (!event) event = window.event;
 
     if (active_popup.id) {
@@ -156,8 +170,11 @@ export function toggle_popup(event, trigger_obj, ident, method, data, onclose, r
         trigger_obj: trigger_obj,
         data: data,
         onclose: onclose,
+        onopen: onopen,
         remove_on_close: method.type !== "inline",
     });
+
+    open_popup();
 }
 
 var switch_popup_timeout = null;
@@ -491,4 +508,8 @@ export function mega_menu_hide_entries(menu_id) {
         }
     });
     resize_mega_menu_popup(menu.parentElement);
+}
+
+export function focus_search_field(input_id) {
+    document.getElementById(input_id).focus();
 }

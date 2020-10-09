@@ -8,7 +8,7 @@
 Cares about the main navigation of our GUI. This is a) the small sidebar and b) the mega menu
 """
 
-from typing import NamedTuple, List
+from typing import NamedTuple, List, Optional
 
 import cmk.gui.config as config
 from cmk.gui.i18n import _
@@ -30,6 +30,7 @@ MainMenuItem = NamedTuple("MainMenuItem", [
     ("name", str),
     ("title", str),
     ("icon_name", str),
+    ("onopen", Optional[str]),
 ])
 
 
@@ -62,6 +63,7 @@ class MainMenuRenderer:
                 cssclass=menu_item.name,
                 popup_group="main_menu_popup",
                 hover_switch_delay=150,  # ms
+                onopen=menu_item.onopen,
             )
             html.close_li()
 
@@ -69,11 +71,13 @@ class MainMenuRenderer:
         # TODO: Add permissions? For example WATO is not allowed for all users
         items: List[MainMenuItem] = []
         for menu in sorted(mega_menu_registry.values(), key=lambda g: g.sort_index):
-            items.append(MainMenuItem(
-                name=menu.name,
-                title=menu.title,
-                icon_name=menu.icon_name,
-            ))
+            items.append(
+                MainMenuItem(
+                    name=menu.name,
+                    title=menu.title,
+                    icon_name=menu.icon_name,
+                    onopen=menu.search.onopen if menu.search else None,
+                ))
         return items
 
     # TODO(tb): can we use the MegaMenuRenderer here and move this code to mega_menu.py?

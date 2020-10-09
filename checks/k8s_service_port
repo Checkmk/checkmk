@@ -7,7 +7,6 @@
 
 def discover_k8s_service_port(parsed):
     if parsed:
-        yield HostLabel(u'cmk/kubernetes_object', u'service')
         for item in parsed:
             yield (item, {})
 
@@ -49,7 +48,7 @@ def check_k8s_service_port(item, params, parsed):
 
 
 check_info['k8s_service_port'] = {
-    'parse_function': parse_k8s,
+    # section is already migrated
     'inventory_function': discover_k8s_service_port,
     'check_function': check_k8s_service_port,
     'service_description': 'Port %s',

@@ -165,7 +165,7 @@ _METRIC_SPECS: Mapping[str, Tuple[str, Callable]] = {
 def _process_job_stats(
     job: Job,
     age_levels: Tuple[int, int],
-    exit_code_to_state_map: List[Tuple[int, int]],
+    exit_code_to_state_map: Dict[int, state],
 ) -> Generator[Union[Result, Metric], None, None]:
 
     prefix = ''
@@ -185,15 +185,8 @@ def _process_job_stats(
     exit_code_job = job['exit_code']
     txt = 'Exit-Code: %d' % exit_code_job
 
-    for exit_code, mon_state_int in exit_code_to_state_map:
-        if exit_code == exit_code_job:
-            mon_state = state(mon_state_int)
-            break
-    else:
-        mon_state = state.OK if exit_code_job == 0 else state.CRIT
-
     yield result_constructor(
-        mon_state=mon_state,
+        mon_state=exit_code_to_state_map.get(exit_code_job, state.CRIT),
         summary=prefix + txt,
     )
 
@@ -234,7 +227,10 @@ def check_job(
     yield from _process_job_stats(
         job,
         params['age'],
-        params.get('exit_code_to_state_map', []),
+        {
+            0: state.OK,
+            **{k: state(v) for k, v in params.get('exit_code_to_state_map', [])}
+        },
     )
 
 

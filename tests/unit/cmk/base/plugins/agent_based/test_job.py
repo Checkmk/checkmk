@@ -269,13 +269,17 @@ def _aggr_shrek_result(node: str) -> Result:
         (
             SECTION_1['SHREK'],
             (0, 0),
-            [],
+            {
+                0: state.OK
+            },
             RESULTS_SHREK,
         ),
         (
             SECTION_1['SHREK'],
             (1, 2),
-            [],
+            {
+                0: state.OK
+            },
             itertools.chain(
                 RESULTS_SHREK[0:1],
                 [
@@ -290,7 +294,9 @@ def _aggr_shrek_result(node: str) -> Result:
         (
             SECTION_1['SHREK'],
             (0, 0),
-            [(0, 1)],
+            {
+                0: state.WARN
+            },
             itertools.chain(
                 [
                     Result(
@@ -307,7 +313,9 @@ def _aggr_shrek_result(node: str) -> Result:
                 [1557301261, 1557301321, 1557301381, 1557301441, 1537301501, 1557301561],
             ),
             (1, 2),
-            [],
+            {
+                0: state.OK
+            },
             itertools.chain(
                 [
                     Result(

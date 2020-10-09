@@ -514,10 +514,10 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     @staticmethod
     def invalidate_caches():
+        Folder.root_folder().drop_caches()
         g.pop('wato_folders', {})
         for cache_id in ["folder_choices", "folder_choices_full_title"]:
             g.pop(cache_id, None)
-        Folder.root_folder().drop_caches()
 
     # Find folder that is specified by the current URL. This is either by a folder
     # path in the variable "folder" or by a host name in the variable "host". In the

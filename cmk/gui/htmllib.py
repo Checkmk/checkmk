@@ -2607,16 +2607,16 @@ class html(ABCHTMLGenerator):
             id_=id_,
             class_=classes,
             align='absmiddle' if middle else None,
-            src=(icon_name if "/" in icon_name else self._detect_icon_path(icon_name)),
+            src=icon_name if "/" in icon_name else self._detect_icon_path(icon_name, prefix="icon"),
         )
 
         if emblem:
-            emblem_path = self._detect_icon_path("emblem_" + emblem)
+            emblem_path = self._detect_icon_path(emblem, prefix="emblem")
             return self.render_span(icon + self.render_img(emblem_path, class_="emblem"),
                                     class_="emblem")
         return icon
 
-    def _detect_icon_path(self, icon_name: str) -> str:
+    def _detect_icon_path(self, icon_name: str, prefix: str) -> str:
         """Detect from which place an icon shall be used and return it's path relative to htdocs/
 
         Priority:
@@ -2630,11 +2630,12 @@ class html(ABCHTMLGenerator):
         8. images/icons/[name].png in standard hierarchy
         """
         for theme in self.icon_themes():
-            rel_path = "share/check_mk/web/htdocs/themes/%s/images/icon_%s" % (theme, icon_name)
+            path = "share/check_mk/web/htdocs/themes/%s/images/%s_%s" % (theme, prefix, icon_name)
             for file_type in ["svg", "png"]:
                 for base_dir in [cmk.utils.paths.omd_root, cmk.utils.paths.omd_root + "/local"]:
-                    if os.path.exists(base_dir + "/" + rel_path + "." + file_type):
-                        return "themes/%s/images/icon_%s.%s" % (self._theme, icon_name, file_type)
+                    if os.path.exists(base_dir + "/" + path + "." + file_type):
+                        return "themes/%s/images/%s_%s.%s" % (self._theme, prefix, icon_name,
+                                                              file_type)
 
         # TODO: This fallback is odd. Find use cases and clean this up
         return "images/icons/%s.png" % icon_name

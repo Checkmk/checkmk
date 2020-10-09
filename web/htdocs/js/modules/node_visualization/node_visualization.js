@@ -124,7 +124,6 @@ export class TopologyVisualization extends NodeVisualization {
 
         topo_ds.subscribe_new_data(d => this._show_topology(list_of_hosts));
 
-        this.add_search_togglebutton();
         this.add_depth_slider();
         this.add_max_nodes_slider();
 
@@ -173,48 +172,6 @@ export class TopologyVisualization extends NodeVisualization {
         d3.select("label#max_nodes_error_text").text(errors);
     }
 
-    add_search_togglebutton() {
-        let togglebuttons = d3.select("div#togglebuttons");
-        let search = togglebuttons.selectAll("div#search").data([null]);
-        search
-            .enter()
-            .append("div")
-            .attr("id", "search")
-            .classed("box", true)
-            .classed("togglebutton", true)
-            .classed("filters", true)
-            .style("cursor", "pointer")
-            .classed("noselect", true)
-            .classed("box", true)
-            .classed("on", true)
-            .classed("up", true)
-            .on("click", () => this._toggle_search())
-            .append("img")
-            .attr("src", this.get_theme_prefix() + "/images/icon_filter.png")
-            .attr("title", "Search")
-            .style("opacity", 1);
-
-        d3.select("#topology_filters").style("height", "0px");
-    }
-
-    _toggle_search() {
-        let search = d3.select("div#togglebuttons div#search");
-        let is_up = search.classed("up");
-        if (is_up) {
-            search.classed("up", false);
-            search.classed("down", true);
-            node_visualization_utils.DefaultTransition.add_transition(
-                d3.select("#topology_filters")
-            ).style("height", null);
-        } else {
-            search.classed("up", true);
-            search.classed("down", false);
-            node_visualization_utils.DefaultTransition.add_transition(
-                d3.select("#topology_filters")
-            ).style("height", "0px");
-        }
-    }
-
     add_depth_slider() {
         let slider = d3
             .select("div#toolbar_controls div#custom")
@@ -242,6 +199,13 @@ export class TopologyVisualization extends NodeVisualization {
             })
             .property("value", this._mesh_depth);
         slider_enter.append("label").attr("id", "mesh_depth_text");
+
+        d3.select("form#form_filter input[name=topology_mesh_depth]").remove();
+        d3.select("form#form_filter")
+            .append("input")
+            .attr("name", "topology_mesh_depth")
+            .attr("type", "hidden")
+            .property("value", this._mesh_depth);
     }
 
     add_max_nodes_slider() {
@@ -278,19 +242,26 @@ export class TopologyVisualization extends NodeVisualization {
             .style("display", "block")
             .style("margin-left", "12px")
             .style("margin-top", "-5px");
+
+        d3.select("form#form_filter input[name=topology_max_nodes]").remove();
+        d3.select("form#form_filter")
+            .append("input")
+            .attr("name", "topology_max_nodes")
+            .attr("type", "hidden")
+            .property("value", this._max_nodes);
     }
 
     update_sliders() {
         d3.select("#max_nodes_slider").property("value", this._max_nodes);
         d3.select("#max_nodes_text").text(this._max_nodes);
-        d3.select("div#topology_filters input[name=topology_max_nodes]").property(
+        d3.select("form#form_filter input[name=topology_max_nodes]").property(
             "value",
             this._max_nodes
         );
 
         d3.select("#mesh_depth_slider").property("value", this._mesh_depth);
         d3.select("#mesh_depth_text").text(this._mesh_depth);
-        d3.select("div#topology_filters input[name=topology_mesh_depth]").property(
+        d3.select("form#form_filter input[name=topology_mesh_depth]").property(
             "value",
             this._mesh_depth
         );

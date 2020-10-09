@@ -102,6 +102,7 @@ from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=un
     DashboardConfig, DashboardName, DashletSize, DashletInputFunc, DashletHandleInputFunc,
     DashletId,
 )
+from cmk.gui.node_visualization import get_topology_view_and_filters
 
 loaded_with_language: Union[None, bool, str] = False
 
@@ -796,7 +797,6 @@ def _page_menu(breadcrumb: Breadcrumb, name: DashboardName, board: DashboardConf
         ],
         breadcrumb=breadcrumb,
     )
-
     _extend_display_dropdown(menu, board, board_context, unconfigured_single_infos)
 
     return menu
@@ -871,6 +871,15 @@ class AjaxInitialDashboardFilters(ABCAjaxInitialFilters):
         dashboard_name = page_name
         board = _load_dashboard_with_cloning(get_permitted_dashboards(), dashboard_name, edit=False)
         board = _add_context_to_dashboard(board)
+
+        # For the topology dashboard filters are retrieved from a corresponding view context
+        if page_name == "topology":
+            _view, show_filters = get_topology_view_and_filters()
+            return {
+                f.ident: board["context"][f.ident] if f.ident in board["context"] else {}
+                for f in show_filters
+                if f.available()
+            }
         return board["context"]
 
 

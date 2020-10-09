@@ -38,6 +38,9 @@ from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import FilterHeaders
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
 from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.page_menu import (make_display_options_dropdown, PageMenu, PageMenuEntry,
+                               PageMenuSidePopup, PageMenuTopic)
+from cmk.gui.plugins.dashboard.utils import DashboardName
 
 TopologyConfig = Dict[str, Any]
 Mesh = Set[str]
@@ -126,7 +129,9 @@ class ParentChildTopologyPage(Page):
                       mesh_depth: int = 0,
                       max_nodes: int = 400) -> None:
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), "")
-        html.header("", breadcrumb)
+        page_menu = PageMenu(breadcrumb=breadcrumb)
+        self._extend_display_dropdown(page_menu, "topology")
+        html.header(_("Network Topology"), breadcrumb, page_menu)
         self.show_topology_content(hostnames,
                                    mode,
                                    growth_auto_max_nodes=growth_auto_max_nodes,
@@ -140,17 +145,7 @@ class ParentChildTopologyPage(Page):
                               max_nodes: int = 400,
                               mesh_depth: int = 0) -> None:
         div_id = "node_visualization"
-        html.div("", id=div_id)
-
-        # Filters
-        html.open_div(id="topology_filters")
-        view, filters = self._get_topology_view_and_filters()
-        html.request.set_var("topology_mesh_depth", str(mesh_depth))
-        html.request.set_var("topology_max_nodes", str(max_nodes))
-        cmk.gui.views.show_filter_form(view, filters)
-        html.final_javascript("cmk.page_menu.open_popup('popup_filters');")
-        html.close_div()
-
+        html.div("", id_=div_id)
         html.javascript(
             "topology_instance = new cmk.node_visualization.TopologyVisualization(%s, %s);" %
             (json.dumps(div_id), json.dumps(mode)))
@@ -172,19 +167,31 @@ class ParentChildTopologyPage(Page):
         return []
 
     def _get_filter_headers(self) -> FilterHeaders:
-        view, filters = self._get_topology_view_and_filters()
+        view, filters = get_topology_view_and_filters()
         return cmk.gui.views.get_livestatus_filter_headers(view, filters)
 
-    def _get_topology_view_and_filters(self) -> Tuple[View, List[Filter]]:
-        view_spec = get_permitted_views()["topology_filters"]
-        view_name = "topology_filters"
-        view = View(view_name, view_spec, view_spec.get("context", {}))
-        filters = cmk.gui.visuals.filters_of_visual(view.spec,
-                                                    view.datasource.infos,
-                                                    link_filters=view.datasource.link_filters)
-
-        show_filters = cmk.gui.visuals.visible_filters_of_visual(view.spec, filters)
-        return view, show_filters
+    def _extend_display_dropdown(self, menu: PageMenu, board_name: DashboardName) -> None:
+        _view, show_filters = get_topology_view_and_filters()
+        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+        display_dropdown.topics.insert(
+            0,
+            PageMenuTopic(
+                title=_("Filter"),
+                entries=[
+                    PageMenuEntry(
+                        title=_("Filter"),
+                        icon_name="filters",
+                        item=PageMenuSidePopup(
+                            cmk.gui.visuals.render_filter_form(
+                                info_list=["host", "service"],
+                                mandatory_filters=[],
+                                context={f.ident: {} for f in show_filters if f.available()},
+                                page_name=board_name,
+                                reset_ajax_page="ajax_initial_dashboard_filters")),
+                        name="filters",
+                        is_shortcut=True,
+                    ),
+                ]))
 
 
 @cmk.gui.pages.register("bi_map")
@@ -917,3 +924,14 @@ class ParentChildNetworkTopology(Topology):
 
 
 topology_registry.register(ParentChildNetworkTopology)
+
+
+def get_topology_view_and_filters() -> Tuple[View, List[Filter]]:
+    view_name = "topology_filters"
+    view_spec = get_permitted_views()[view_name]
+    view = View(view_name, view_spec, view_spec.get("context", {}))
+    filters = cmk.gui.visuals.filters_of_visual(view.spec,
+                                                view.datasource.infos,
+                                                link_filters=view.datasource.link_filters)
+    show_filters = cmk.gui.visuals.visible_filters_of_visual(view.spec, filters)
+    return view, show_filters

@@ -1486,9 +1486,7 @@ class VisualFilterListWithAddPopup(VisualFilterList):
         filters_applied = html.request.get_ascii_input("filled_in") == "filter"
         html.javascript('cmk.valuespecs.listofmultiple_init(%s, %s);' %
                         (json.dumps(varprefix), json.dumps(filters_applied)))
-        # TODO: Currently does not work, because the filter popup (a parent element) has a simplebar
-        # scrollbar. Need to investigate...
-        html.final_javascript("cmk.utils.add_simplebar_scrollbar(%s);" % json.dumps(filter_list_id))
+        html.javascript("cmk.utils.add_simplebar_scrollbar(%s);" % json.dumps(filter_list_id))
 
 
 @page_registry.register_page("ajax_visual_filter_list_get_choice")

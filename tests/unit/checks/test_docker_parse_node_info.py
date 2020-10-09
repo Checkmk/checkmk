@@ -7,6 +7,8 @@
 import os
 import pytest  # type: ignore[import]
 
+from cmk.base.plugins.agent_based.utils import legacy_docker
+
 pytestmark = pytest.mark.checks
 
 exec(open(os.path.join(os.path.dirname(__file__), '../../../checks/legacy_docker.include')).read())
@@ -430,6 +432,6 @@ def test_parse_legacy_docker_node_info(indata, outdata_subset):
                 parsed[key]  # type: ignore[name-defined,misc]
             )
 
-    parsed = parse_legacy_docker_node_info(indata)  # type: ignore[name-defined] # pylint: disable=undefined-variable
+    parsed = legacy_docker.parse_node_info(indata)
     for k, v in outdata_subset.items():
         assert_contains(parsed, k, v)

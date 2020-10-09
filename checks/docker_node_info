@@ -4,12 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import cmk.base.plugins.agent_based.utils.docker as docker
+import cmk.base.plugins.agent_based.utils.legacy_docker as legacy_docker
 
 
 def parse_docker_node_info(info):
     version = docker.get_version(info)
     if version is None:
-        return parse_legacy_docker_node_info(info)  # pylint: disable=undefined-variable
+        return legacy_docker.parse_node_info(info)  # pylint: disable=undefined-variable
 
     if len(info) < 2:
         return {}

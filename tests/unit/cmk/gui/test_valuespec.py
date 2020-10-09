@@ -129,6 +129,33 @@ def test_dropdownchoice_value_to_json_conversion(choices, value, result):
 
 
 @pytest.mark.parametrize(
+    "choices, deprecated_choices, value, is_valid_datatype",
+    [
+        ([(1, "1"), (2, "2")], [], 1, True),
+        ([(1, "1"), (2, "2")], [], 3, True),
+        ([(1, "1"), (2, "2")], [None], None, True),
+        ([(1, "1"), (2, "2")], ['a'], 4.1523, False),
+    ],
+    ids=[
+        'valid_choice_valid_datatype',
+        'invalid_choice_valid_datatype',
+        'invalid_choice_valid_deprecated_choice',
+        'invalid_choice_invalid_deprecated_choice',
+    ],
+)
+def test_dropdownchoice_validate_datatype(choices, deprecated_choices, value, is_valid_datatype):
+    dropdown_choice = vs.DropdownChoice(
+        choices,
+        deprecated_choices=deprecated_choices,
+    )
+    if is_valid_datatype:
+        dropdown_choice.validate_datatype(value, "")
+    else:
+        with pytest.raises(MKUserError):
+            dropdown_choice.validate_datatype(value, "")
+
+
+@pytest.mark.parametrize(
     "value, result_title",
     [
         (("age", 4 * 60 * 60), "The last 4 fun hours"),  # Werk 4477, deprecated input on cmk2.0

@@ -2377,29 +2377,30 @@ class DropdownChoice(ValueSpec):
 
     # TODO: Cleanup redefined builtin sorted
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        # DropdownChoice
-        choices: DropdownChoices,
-        sorted: bool = False,
-        label: _Optional[str] = None,
-        help_separator: _Optional[str] = None,
-        prefix_values: bool = False,
-        empty_text: _Optional[str] = None,
-        invalid_choice: _Optional[str] = "complain",
-        invalid_choice_title: _Optional[str] = None,
-        invalid_choice_error: _Optional[str] = None,
-        no_preselect: bool = False,
-        no_preselect_value: Any = None,
-        no_preselect_title: str = "",
-        no_preselect_error: _Optional[str] = None,
-        on_change: _Optional[str] = None,
-        read_only: bool = False,
-        encode_value: bool = True,
-        # ValueSpec
-        title: _Optional[str] = None,
-        help: _Optional[ValueSpecHelp] = None,
-        default_value: Any = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+            self,
+            # DropdownChoice
+            choices: DropdownChoices,
+            sorted: bool = False,
+            label: _Optional[str] = None,
+            help_separator: _Optional[str] = None,
+            prefix_values: bool = False,
+            empty_text: _Optional[str] = None,
+            invalid_choice: _Optional[str] = "complain",
+            invalid_choice_title: _Optional[str] = None,
+            invalid_choice_error: _Optional[str] = None,
+            no_preselect: bool = False,
+            no_preselect_value: Any = None,
+            no_preselect_title: str = "",
+            no_preselect_error: _Optional[str] = None,
+            on_change: _Optional[str] = None,
+            read_only: bool = False,
+            encode_value: bool = True,
+            # ValueSpec
+            title: _Optional[str] = None,
+            help: _Optional[ValueSpecHelp] = None,
+            default_value: Any = DEF_VALUE,
+            validate: _Optional[ValueSpecValidateFunc] = None,
+            deprecated_choices: Sequence[DropdownChoiceValue] = (),
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._choices = choices
@@ -2423,6 +2424,7 @@ class DropdownChoice(ValueSpec):
         self._on_change = on_change
         self._read_only = read_only
         self._encode_value = encode_value
+        self._deprecated_choices = deprecated_choices
 
     def choices(self) -> List[DropdownChoiceEntry]:
         if callable(self._choices):
@@ -2476,9 +2478,9 @@ class DropdownChoice(ValueSpec):
                       read_only=self._read_only)
 
     def validate_datatype(self, value: Any, varprefix: str) -> None:
-        for choice in self.choices():
-            if isinstance(value, type(choice[0])):
-                return
+        if any(isinstance(value, type(choice[0]))
+               for choice in self.choices()) or value in self._deprecated_choices:
+            return
         raise MKUserError(
             varprefix,
             _("The value %r has type %s, but does not match any of the available choice types.") %

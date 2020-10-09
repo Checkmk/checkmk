@@ -7,7 +7,6 @@
 
 def inventory_k8s_job_info(parsed):
     if parsed:
-        yield HostLabel(u"cmk/kubernetes_object", u"job")
         yield (None, {})
 
 
@@ -24,10 +23,8 @@ def check_k8s_job_info(_no_item, params, parsed):
 
 
 check_info["k8s_job_info"] = {
-    "parse_function": parse_k8s,
+    # section is already migrated
     "inventory_function": inventory_k8s_job_info,
     "check_function": check_k8s_job_info,
     "service_description": "Jobs",
-    "has_perfdata": False,
-    "includes": ["k8s.include"],
 }

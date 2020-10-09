@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Dict, Generator, List, Optional, Tuple, Union
+from typing import Dict, Generator, List, Optional, Sequence, Tuple, Union
 
 import collections
 import contextlib
@@ -41,29 +41,22 @@ ps_info.__new__.__defaults__ = (None,) * len(ps_info._fields)  # type: ignore[at
 Section = Tuple[int, List[Tuple[ps_info, List[str]]]]
 
 
-def get_discovery_specs(params):
+def get_discovery_specs(params: Sequence[Parameters]):
     inventory_specs = []
     for value in params[:-1]:  # skip empty default parameters
-        # We cast to a dict here because value is of type Parameters, which is not mutable. Thus,
-        # the assignment default_params["cpu_rescale_max"] = None might fail in case we still have
-        # some legacy-style parameters which do not have the entry default_params.
-        default_params = dict(value.get('default_params', value))
-        if "cpu_rescale_max" not in default_params:
-            default_params["cpu_rescale_max"] = None
-
         inventory_specs.append((
             value['descr'],
             value.get('match'),
             value.get('user'),
             value.get('cgroup', (None, False)),
             value.get('label', {}),
-            default_params,
+            value['default_params'],
         ))
     return inventory_specs
 
 
 def host_labels_ps(
-    params: List[Parameters],
+    params: Sequence[Parameters],
     section: Section,
 ) -> HostLabelGenerator:
     specs = get_discovery_specs(params)
@@ -324,12 +317,14 @@ class ProcessAggregator:
     def core_weight(self, is_win):
         cpu_rescale_max = self.params.get('cpu_rescale_max')
 
-        # Rule not set up, only windows scaled
-        if cpu_rescale_max is None and not is_win:
-            return 1.0
-
-        # Current rule is set. Explicitly ask not to divide
-        if cpu_rescale_max is False:
+        if any((
+                # Rule not set up, only windows scaled
+                cpu_rescale_max == 'cpu_rescale_max_unspecified' and not is_win,
+                # Current rule is set. Explicitly ask not to divide
+                cpu_rescale_max is False,
+                # Domino tasks counter
+                cpu_rescale_max is None,
+        )):
             return 1.0
 
         # Use default of division
@@ -470,7 +465,7 @@ SectionCpu = Dict[str, Union[float, List[float]]]
 
 
 def discover_ps(
-    params: List[Parameters],
+    params: Sequence[Parameters],
     section_ps: Optional[Section],
     section_mem: Optional[SectionMem],
     section_cpu: Optional[SectionCpu],
@@ -508,15 +503,8 @@ def discover_ps(
                 "match_groups": match_groups,
                 "user": i_userspec,
                 "cgroup": cgroupspec,
+                **default_params,
             }
-
-            # default_params is either a clean dict with optional
-            # parameters to set as default or - from version 1.2.4 - the
-            # dict from the rule itself. In the later case we need to remove
-            # the keys that do not specify default parameters
-            for key, value in default_params.items():
-                if key not in ("descr", "match", "user", "perfdata"):
-                    inv_params[key] = value
 
             yield Service(
                 item=i_servicedesc,

@@ -7,6 +7,7 @@
 import pytest  # type: ignore[import]
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.wato.check_parameters.ps import (
+    CPU_RESCALE_MAX_UNSPEC,
     forbid_re_delimiters_inside_groups,
     convert_inventory_processes,
     validate_process_discovery_descr_option,
@@ -52,47 +53,69 @@ def test_transform_cpu_iowait(params, result):
     assert transform_cpu_iowait(params) == result
 
 
-@pytest.mark.parametrize('params, result', [
-    ({}, {
-        'default_params': {
-            "cpu_rescale_max": None
-        }
-    }),
-    ({
-        'levels': (1, 1, 50, 50),
-    }, {
-        'default_params': {
+@pytest.mark.parametrize(
+    'params, result',
+    [
+        ({}, {
+            'default_params': {
+                "cpu_rescale_max": CPU_RESCALE_MAX_UNSPEC,
+            }
+        }),
+        ({
             'levels': (1, 1, 50, 50),
-            "cpu_rescale_max": None,
-        },
-    }),
-    ({
-        'user': False,
-        'default_params': {
-            'virtual_levels': (50, 100),
-        }
-    }, {
-        'user': False,
-        'default_params': {
-            'virtual_levels': (50, 100),
-            "cpu_rescale_max": None,
-        }
-    }),
-    ({
-        'default_params': {
-            'cpu_rescale_max': True
-        },
-        'match': '/usr/lib/firefox/firefox',
-        'descr': 'firefox',
-        'user': False
-    }, {
-        'default_params': {
-            'cpu_rescale_max': True
-        },
-        'match': '/usr/lib/firefox/firefox',
-        'descr': 'firefox',
-        'user': False
-    }),
-])
+        }, {
+            'default_params': {
+                'levels': (1, 1, 50, 50),
+                "cpu_rescale_max": CPU_RESCALE_MAX_UNSPEC,
+            },
+        }),
+        ({
+            'user': False,
+            'default_params': {
+                'virtual_levels': (50, 100),
+            }
+        }, {
+            'user': False,
+            'default_params': {
+                'virtual_levels': (50, 100),
+                "cpu_rescale_max": CPU_RESCALE_MAX_UNSPEC,
+            }
+        }),
+        ({
+            'default_params': {
+                'cpu_rescale_max': True
+            },
+            'match': '/usr/lib/firefox/firefox',
+            'descr': 'firefox',
+            'user': False
+        }, {
+            'default_params': {
+                'cpu_rescale_max': True
+            },
+            'match': '/usr/lib/firefox/firefox',
+            'descr': 'firefox',
+            'user': False
+        }),
+        (
+            # Legacy-style rule without default_params. This is from v1.5 or before, since the key
+            # default_params was made non-optional in v1.6.
+            {
+                'perfdata': True,
+                'levels': (1, 1, 20, 20),
+                'descr': 'cron',
+                'match': '/usr/sbin/cron',
+                'user': None,
+            },
+            {
+                'default_params': {
+                    'cpu_rescale_max': 'cpu_rescale_max_unspecified',
+                    'levels': (1, 1, 20, 20)
+                },
+                'descr': 'cron',
+                'match': '/usr/sbin/cron',
+                'user': None,
+            },
+        )
+    ])
 def test_convert_inventory_process(params, result):
     assert convert_inventory_processes(params) == result

@@ -96,12 +96,13 @@ WSOPREKPFS01,85,126562500,csrss.exe,1176,744,8,468750,44486656,569344
 
 PS_DISCOVERY_WATO_RULES = [  # type: ignore[var-annotated]
     {
-        "default_params": {},
+        "default_params": {"cpu_rescale_max": "cpu_rescale_max_unspecified"},
         "descr": "smss",
         "match": "~smss.exe"
     },
     {
         "default_params": {
+            "cpu_rescale_max": "cpu_rescale_max_unspecified",
             "cpulevels": (90.0, 98.0),
             "handle_count": (1000, 2000),
             "levels": (1, 1, 99999, 99999),
@@ -116,6 +117,7 @@ PS_DISCOVERY_WATO_RULES = [  # type: ignore[var-annotated]
     },
     {
         "default_params": {
+            "cpu_rescale_max": "cpu_rescale_max_unspecified",
             "process_info": "text"
         },
         "match": "~.*(fire)fox",
@@ -124,6 +126,7 @@ PS_DISCOVERY_WATO_RULES = [  # type: ignore[var-annotated]
     },
     {
         "default_params": {
+            "cpu_rescale_max": "cpu_rescale_max_unspecified",
             "process_info": "text"
         },
         "match": "~.*(fire)fox",
@@ -147,6 +150,7 @@ PS_DISCOVERY_WATO_RULES = [  # type: ignore[var-annotated]
     },
     {
         "default_params": {
+            "cpu_rescale_max": "cpu_rescale_max_unspecified",
             "max_age": (3600, 7200),
             "resident_levels_perc": (25.0, 50.0),
             "single_cpulevels": (90.0, 98.0),
@@ -157,17 +161,18 @@ PS_DISCOVERY_WATO_RULES = [  # type: ignore[var-annotated]
         "user": "root"
     },
     {
-        "default_params": {},
+        "default_params": {"cpu_rescale_max": "cpu_rescale_max_unspecified"},
         "descr": "sshd",
         "match": "~.*sshd"
     },
     {
-        'default_params': {},
+        'default_params': {"cpu_rescale_max": "cpu_rescale_max_unspecified"},
         'descr': 'PS counter',
         'user': 'zombie',
     },
     {
         "default_params": {
+            "cpu_rescale_max": "cpu_rescale_max_unspecified",
             "process_info": "text"
         },
         "match": r"~/omd/sites/(\w+)/lib/cmc/checkhelper",
@@ -176,6 +181,7 @@ PS_DISCOVERY_WATO_RULES = [  # type: ignore[var-annotated]
     },
     {
         "default_params": {
+            "cpu_rescale_max": "cpu_rescale_max_unspecified",
             "process_info": "text"
         },
         "match": r"~/omd/sites/\w+/lib/cmc/checkhelper",
@@ -245,7 +251,7 @@ PS_DISCOVERED_ITEMS = [
         "process": "~.*(fire)fox",
         "process_info": "text",
         "user": None,
-        'cpu_rescale_max': None,
+        'cpu_rescale_max': 'cpu_rescale_max_unspecified',
         'match_groups': ('fire',),
         'cgroup': (None, False),
     }),
@@ -253,7 +259,7 @@ PS_DISCOVERED_ITEMS = [
         "process": "~/omd/sites/(\\w+)/lib/cmc/checkhelper",
         "process_info": "text",
         "user": None,
-        'cpu_rescale_max': None,
+        'cpu_rescale_max': 'cpu_rescale_max_unspecified',
         'match_groups': ('heute',),
         'cgroup': (None, False),
     }),
@@ -262,26 +268,26 @@ PS_DISCOVERED_ITEMS = [
         "process_info": "text",
         "user": None,
         'match_groups': (),
-        'cpu_rescale_max': None,
+        'cpu_rescale_max': 'cpu_rescale_max_unspecified',
         'cgroup': (None, False),
     }),
     Service(item="Checkhelpers twelve", parameters={
         "process": "~/omd/sites/(\\w+)/lib/cmc/checkhelper",
         "process_info": "text",
         "user": None,
-        'cpu_rescale_max': None,
+        'cpu_rescale_max': 'cpu_rescale_max_unspecified',
         'match_groups': ('twelve',),
         'cgroup': (None, False),
     }),
     Service(item="sshd", parameters={
         "process": "~.*sshd",
         "user": None,
-        'cpu_rescale_max': None,
+        'cpu_rescale_max': 'cpu_rescale_max_unspecified',
         "match_groups": (),
         'cgroup': (None, False),
     }),
     Service(item="PS counter", parameters={
-        'cpu_rescale_max': None,
+        'cpu_rescale_max': 'cpu_rescale_max_unspecified',
         'process': None,
         'user': 'zombie',
         "match_groups": (),
@@ -298,14 +304,14 @@ PS_DISCOVERED_ITEMS = [
         "single_cpulevels": (90.0, 98.0),
         "user": None,
         "virtual_levels": (1073741824000, 2147483648000),
-        'cpu_rescale_max': None,
+        'cpu_rescale_max': 'cpu_rescale_max_unspecified',
         "match_groups": (),
         'cgroup': (None, False),
     }),
     Service(item="smss", parameters={
         "process": "~smss.exe",
         "user": None,
-        'cpu_rescale_max': None,
+        'cpu_rescale_max': 'cpu_rescale_max_unspecified',
         "match_groups": (),
         'cgroup': (None, False),
     }),

@@ -42,6 +42,12 @@ from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
 )
 
+# This object indicates that the setting 'CPU rescale maximum load' has not been set, which can only
+# be the case for legacy rules from before version 1.6.0, see werk #6646. Note that we cannot use
+# None here because DropdownChoice only renders invalid_choice_title if the input value is not
+# None...
+CPU_RESCALE_MAX_UNSPEC = 'cpu_rescale_max_unspecified'
+
 
 def process_level_elements():
     cpu_rescale_max_choices: DropdownChoices = [
@@ -66,6 +72,7 @@ def process_level_elements():
              invalid_choice_error=_("CPU rescale maximum load is Unspecified.") + " " +
              _("Starting from version 1.6.0 this value must be configured. "
                "Read Werk #6646 for further information."),
+             deprecated_choices=[CPU_RESCALE_MAX_UNSPEC],
          )),
         ('levels',
          Tuple(
@@ -249,7 +256,7 @@ def ps_cleanup_params(params):
         )
 
     if "cpu_rescale_max" not in params:
-        params["cpu_rescale_max"] = None
+        params["cpu_rescale_max"] = CPU_RESCALE_MAX_UNSPEC
 
     return params
 
@@ -516,7 +523,7 @@ def convert_inventory_processes(old_dict):
 
     # cmk1.6 cpu rescaling load rule
     if "cpu_rescale_max" not in old_dict.get("default_params", {}):
-        new_dict["default_params"]["cpu_rescale_max"] = None
+        new_dict["default_params"]["cpu_rescale_max"] = CPU_RESCALE_MAX_UNSPEC
 
     # cmk1.6 move icon into default_params to match setup of static and discovered ps checks
     if "icon" in old_dict:

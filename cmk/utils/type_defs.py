@@ -12,6 +12,7 @@ import sys
 from contextlib import suppress
 from typing import (
     Any,
+    Callable,
     Dict,
     Final,
     Generic,
@@ -301,26 +302,20 @@ class SourceType(enum.Enum):
 
 
 T_co = TypeVar("T_co", covariant=True)
+U_co = TypeVar("U_co", covariant=True)
 E_co = TypeVar("E_co", covariant=True)
+F_co = TypeVar("F_co", covariant=True)
 
 
 class Result(Generic[T_co, E_co], abc.ABC):
-    """An error container.
+    """An error container inspired by OCaml.
 
-    This error container was inspired by a variety of such containers
-    from other programming languages.
+    https://caml.inria.fr/pub/docs/manual-ocaml/libref/Result.html
 
     See Also:
-
-        The list is sorted alphabetically by programming language:
-
         - C++: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0323r4.html
         - Haskell: https://hackage.haskell.org/package/category-extras-0.52.0/docs/Control-Monad-Either.html
-        - OCaml: https://doc.rust-lang.org/std/result/enum.Result.html
-        - Rust: https://caml.inria.fr/pub/docs/manual-ocaml/libref/Result.html
-
-        We use the OCaml API without the purely functional interface, that is,
-        without `join`, `bind`, `fold` or `map`.
+        - Rust: https://doc.rust-lang.org/std/result/enum.Result.html
 
     """
     __slots__ = ()
@@ -354,6 +349,10 @@ class Result(Generic[T_co, E_co], abc.ABC):
     def __iter__(self) -> Iterable[T_co]:
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def iter_error(self) -> Iterable[E_co]:
+        raise NotImplementedError
+
     @property
     @abc.abstractmethod
     def ok(self) -> T_co:
@@ -373,6 +372,25 @@ class Result(Generic[T_co, E_co], abc.ABC):
 
     @abc.abstractmethod
     def is_error(self) -> bool:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def as_optional(self) -> Optional[T_co]:
+        raise NotImplementedError
+
+    def flatten(self) -> "Result[T_co, E_co]":
+        return self.join()
+
+    @abc.abstractmethod
+    def join(self) -> "Result[T_co, E_co]":
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def map(self, func: Callable[[T_co], U_co]) -> "Result[U_co, E_co]":
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def map_error(self, func: Callable[[E_co], F_co]) -> "Result[T_co, F_co]":
         raise NotImplementedError
 
 
@@ -414,6 +432,9 @@ class OKResult(Result[T_co, E_co]):
     def __iter__(self) -> Iterable[T_co]:
         return iter((self.ok,))
 
+    def iter_error(self) -> Iterable[E_co]:
+        return iter(())
+
     @property
     def ok(self) -> T_co:
         return self._ok
@@ -427,6 +448,20 @@ class OKResult(Result[T_co, E_co]):
 
     def is_error(self) -> bool:
         return False
+
+    def as_optional(self) -> T_co:
+        return self.ok
+
+    def join(self) -> "OKResult[T_co, E_co]":
+        if isinstance(self.ok, OKResult):
+            return self.ok.join()
+        return self
+
+    def map(self, func: Callable[[T_co], U_co]) -> "OKResult[U_co, E_co]":
+        return OKResult(func(self.ok))
+
+    def map_error(self, _func: Callable[[E_co], F_co]) -> "OKResult[T_co, F_co]":
+        return OKResult(self.ok)
 
 
 class ErrorResult(Result[T_co, E_co]):
@@ -467,6 +502,9 @@ class ErrorResult(Result[T_co, E_co]):
     def __iter__(self) -> Iterable[T_co]:
         return iter(())
 
+    def iter_error(self) -> Iterable[E_co]:
+        return iter((self.error,))
+
     @property
     def ok(self) -> NoReturn:
         raise ValueError(self)
@@ -480,6 +518,20 @@ class ErrorResult(Result[T_co, E_co]):
 
     def is_error(self) -> bool:
         return True
+
+    def as_optional(self) -> None:
+        return None
+
+    def join(self) -> "ErrorResult[T_co, E_co]":
+        if isinstance(self.error, ErrorResult):
+            return self.error.join()
+        return self
+
+    def map(self, _func: Callable[[T_co], U_co]) -> "ErrorResult[U_co, E_co]":
+        return ErrorResult(self.error)
+
+    def map_error(self, func: Callable[[E_co], F_co]) -> "ErrorResult[T_co, F_co]":
+        return ErrorResult(func(self.error))
 
 
 HostKey = NamedTuple("HostKey", [

@@ -129,6 +129,38 @@ class TestOkResult:
     def test_iter(self, result, value):
         assert list(result) == [value]
 
+    def test_iter_error(self, result):
+        assert list(result.iter_error()) == []
+
+    def test_as_optional(self, result):
+        assert result.as_optional() == result.ok
+
+    def test_flatten1(self, result):
+        nested: Result[Result, Result] = OKResult(result)
+        assert nested != result
+        assert nested.flatten() == result
+        assert nested.flatten() == result.flatten()
+        assert nested.flatten() == nested.join()
+
+    def test_flatten2(self, result):
+        nested: Result[Result, Result] = OKResult(OKResult(result))
+        assert nested != result
+        assert nested.flatten() == result
+        assert nested.flatten() == result.flatten()
+        assert nested.flatten() == nested.join()
+
+    def test_map(self, result):
+        ok = "ok"
+        assert not isinstance(result.ok, type(ok))
+
+        other = result.map(lambda v: ok)
+        assert other != result
+        assert other == OKResult(ok)
+
+    def test_map_error(self, result):
+        error = "error"
+        assert result.map_error(lambda v: error) == result
+
 
 class TestErrorResult:
     @pytest.fixture
@@ -198,3 +230,35 @@ class TestErrorResult:
 
     def test_iter(self, result):
         assert list(result) == []
+
+    def test_iter_error(self, result, value):
+        assert list(result.iter_error()) == [value]
+
+    def test_as_optional(self, result):
+        assert result.as_optional() is None
+
+    def test_flatten1(self, result):
+        nested: Result[Result, Result] = ErrorResult(result)
+        assert nested != result
+        assert nested.flatten() == result
+        assert nested.flatten() == result.flatten()
+        assert nested.flatten() == nested.join()
+
+    def test_flatten2(self, result):
+        nested: Result[Result, Result] = ErrorResult(ErrorResult(result))
+        assert nested != result
+        assert nested.flatten() == result
+        assert nested.flatten() == result.flatten()
+        assert nested.flatten() == nested.join()
+
+    def test_map(self, result):
+        ok = "ok"
+        assert result.map(lambda v: ok) == result
+
+    def test_map_error(self, result):
+        error = "error"
+        assert not isinstance(result.error, type(error))
+
+        other = result.map_error(lambda v: error)
+        assert other != result
+        assert other.error == error

@@ -1,0 +1,24 @@
+Title: WATO: Improved performance on host lookup on various pages
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p19
+Date: 1603114669
+Class: feature
+
+Bigger installations (>200k services) tend to have a large WATO configuration with thousands of folders and hosts.
+Finding a host in these configuration took a considerable amount of time on some pages
+
+<ul>
+<li>Web API host calls, except add_host</li>
+<li>Bulk discovery</li>
+<li>Host diagnose</li>
+<li>Fetching agent output</li>
+<li>Service discovery</li>
+<li>And some other pages, where the actual folder of the host is not known/specified</li>
+<li></li>
+</ul>
+
+To fix this problem, a folder lookup index has been introduced to improve the time taken to find a hostname in the configuration.
+

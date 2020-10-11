@@ -138,13 +138,20 @@ from cmk.base.check_api_utils import (  # noqa: F401 # pylint: disable=unused-im
 from cmk.base.check_api_utils import (  # noqa: F401 # pylint: disable=unused-import
     check_type, host_name, Service, service_description, state_markers,
 )
-from cmk.base.discovered_labels import DiscoveredHostLabels as HostLabels  # noqa: F401 # pylint: disable=unused-import
 from cmk.base.discovered_labels import DiscoveredServiceLabels as ServiceLabels  # noqa: F401 # pylint: disable=unused-import
-from cmk.base.discovered_labels import HostLabel, ServiceLabel  # noqa: F401 # pylint: disable=unused-import
+from cmk.base.discovered_labels import ServiceLabel  # noqa: F401 # pylint: disable=unused-import
 
 Warn = Union[None, int, float]
 Crit = Union[None, int, float]
 Levels = Tuple  # Has length 2 or 4
+
+
+def HostLabel(*_a, **_kw):
+    raise NotImplementedError("Creation of HostLabels in legacy plugins is no longer supported"
+                              " (see https://checkmk.de/check_mk-werks.php?werk_id=11117).")
+
+
+HostLabels = HostLabel
 
 
 def get_check_api_context() -> _config.CheckContext:

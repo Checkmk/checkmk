@@ -26,8 +26,8 @@ from cmk.base.api.agent_based.register.utils import DUMMY_RULESET_NAME
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_api_utils import Service as LegacyService  # pylint: disable=cmk-module-layer-violation
+# TODO: see if this can be moved here!
 from cmk.base.check_utils import get_default_parameters  # pylint: disable=cmk-module-layer-violation
-from cmk.base.discovered_labels import HostLabel, DiscoveredHostLabels  # pylint: disable=cmk-module-layer-violation
 
 # There are so many check_info keys, make sure we didn't miss one.
 CONSIDERED_KEYS = {
@@ -68,10 +68,6 @@ def _create_discovery_function(
             return
 
         for element in original_discovery_result:
-            if isinstance(element, (HostLabel, DiscoveredHostLabels)):
-                # these are dealt with in the host_label_function!
-                continue
-
             if isinstance(element, LegacyService):
                 yield Service(
                     item=element.item,

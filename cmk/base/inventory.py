@@ -43,7 +43,6 @@ import cmk.base.section as section
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow, InventoryResult
 from cmk.base.checkers import ABCSource, ABCHostSections
 from cmk.base.checkers.host_sections import HostKey, MultiHostSections
-from cmk.base.discovered_labels import HostLabel
 
 #.
 #   .--Inventory-----------------------------------------------------------.
@@ -533,5 +532,4 @@ def get_inventory_context() -> config.InventoryContext:
     return {
         "inv_tree_list": inv_tree_list,
         "inv_tree": inv_tree,
-        "HostLabel": HostLabel,
     }

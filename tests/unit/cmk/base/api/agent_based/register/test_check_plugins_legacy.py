@@ -44,7 +44,6 @@ def test_create_discovery_function(monkeypatch):
             ("foo", {}),
             ("foo", "params_string"),
             "some string",
-            HostLabel("whoop", "deedoo"),
             OldService("bar", {"P": "O"}),
         ]
 

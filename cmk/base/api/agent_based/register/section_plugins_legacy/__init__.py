@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper to register a new-style section based on config.check_info
 """
-from typing import Any, Callable, Dict, Generator, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from cmk.snmplib.type_defs import SNMPTree  # pylint: disable=cmk-module-layer-violation
 
@@ -16,13 +16,10 @@ from cmk.base.api.agent_based.register.section_plugins import (
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
     AgentSectionPlugin,
-    HostLabelFunction,
     SNMPParseFunction,
     SNMPSectionPlugin,
 )
 from cmk.base.api.agent_based.type_defs import AgentStringTable
-from cmk.base.check_api_utils import Service  # pylint: disable=cmk-module-layer-violation
-from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel  # pylint: disable=cmk-module-layer-violation
 
 from .convert_scan_functions import create_detect_spec
 
@@ -194,37 +191,6 @@ def _create_snmp_parse_function(
     return parse_function
 
 
-def _create_host_label_function(discover_function: Optional[Callable],
-                                extra_sections: List[str]) -> Optional[HostLabelFunction]:
-    """Wrap discover_function to filter for HostLabels"""
-    if discover_function is None:
-        return None
-
-    extra_sections_count = len(extra_sections)
-
-    def host_label_function(section: Any) -> Generator[HostLabel, None, None]:
-        if not extra_sections_count:
-            discover_arg = section
-        else:
-            discover_arg = [section] + [[]] * extra_sections_count
-
-        discovery_iter = discover_function(discover_arg)  # type: ignore
-        if discovery_iter is None:
-            return
-
-        for service_or_host_label in discovery_iter:
-            if isinstance(service_or_host_label, Service):
-                for host_label in service_or_host_label.host_labels.to_list():
-                    yield host_label
-            elif isinstance(service_or_host_label, HostLabel):
-                yield service_or_host_label
-            elif isinstance(service_or_host_label, DiscoveredHostLabels):
-                for host_label in service_or_host_label.to_list():
-                    yield host_label
-
-    return host_label_function
-
-
 def create_agent_section_plugin_from_legacy(
     check_plugin_name: str,
     check_info_dict: Dict[str, Any],
@@ -239,15 +205,9 @@ def create_agent_section_plugin_from_legacy(
 
     parse_function = _create_agent_parse_function(check_info_dict.get('parse_function'),)
 
-    host_label_function = _create_host_label_function(
-        check_info_dict.get('inventory_function'),
-        check_info_dict.get('extra_sections', []),
-    )
-
     return create_agent_section_plugin(
         name=get_section_name(check_plugin_name),
         parse_function=parse_function,
-        host_label_function=host_label_function,
         validate_creation_kwargs=validate_creation_kwargs,
     )
 
@@ -273,11 +233,6 @@ def create_snmp_section_plugin_from_legacy(
         recover_layout_function,
     )
 
-    host_label_function = _create_host_label_function(
-        check_info_dict.get('inventory_function'),
-        check_info_dict.get('extra_sections', []),
-    )
-
     detect_spec = create_detect_spec(
         check_plugin_name,
         snmp_scan_function,
@@ -287,7 +242,6 @@ def create_snmp_section_plugin_from_legacy(
     return create_snmp_section_plugin(
         name=get_section_name(check_plugin_name),
         parse_function=parse_function,
-        host_label_function=host_label_function,
         trees=trees,
         detect_spec=detect_spec,
         validate_creation_kwargs=validate_creation_kwargs,

@@ -7,7 +7,8 @@
 # yapf: disable
 # type: ignore
 
-from cmk.base.discovered_labels import HostLabel
+from cmk.base.plugins.agent_based.docker_node_info import parse_docker_node_info
+
 
 DEPRECATION_WARNING = (1, (
     "Deprecated plugin/agent (see long output)(!)\nYou are using legacy code, which may lead to "
@@ -18,7 +19,7 @@ DEPRECATION_WARNING = (1, (
 
 checkname = 'docker_node_info'
 
-info = [['|Containers', ' 0'], ['| Running', ' 0'], ['| Paused', ' 0'], ['| Stopped', ' 0'],
+parsed = parse_docker_node_info([['|Containers', ' 0'], ['| Running', ' 0'], ['| Paused', ' 0'], ['| Stopped', ' 0'],
         ['|Images', ' 0'], ['|Server Version', ' 18.06.1-ce'], ['|Storage Driver', ' overlay2'],
         ['| Backing Filesystem', ' extfs'], ['| Supports d_type', ' true'],
         ['| Native Overlay Diff', ' true'], ['|Logging Driver', ' json-file'],
@@ -40,12 +41,12 @@ info = [['|Containers', ' 0'], ['| Running', ' 0'], ['| Paused', ' 0'], ['| Stop
         ], ['|Docker Root Dir', ' /var/lib/docker'], ['|Debug Mode (client)', ' false'],
         ['|Debug Mode (server)', ' false'], ['|Registry', ' https', '//index.docker.io/v1/'],
         ['|Labels', ''], ['|Experimental', ' false'], ['|Insecure Registries', ''],
-        ['| 127.0.0.0/8', ''], ['|Live Restore Enabled', ' false']]
+        ['| 127.0.0.0/8', ''], ['|Live Restore Enabled', ' false']])
 
-discovery = {'': [(None, {}),
-                  HostLabel(u'cmk/docker_object', u'node')
-                 ],
-            'containers': [(None, {})]}
+discovery = {
+    '': [(None, {})],
+    'containers': [(None, {})],
+}
 
 checks = {
     '': [

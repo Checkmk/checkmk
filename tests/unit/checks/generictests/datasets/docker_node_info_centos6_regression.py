@@ -7,7 +7,8 @@
 # yapf: disable
 # type: ignore
 
-from cmk.base.discovered_labels import HostLabel
+from cmk.base.plugins.agent_based.docker_node_info import parse_docker_node_info
+
 
 DEPRECATION_WARNING = (1, (
     "Deprecated plugin/agent (see long output)(!)\nYou are using legacy code, which may lead to "
@@ -17,7 +18,7 @@ DEPRECATION_WARNING = (1, (
 
 checkname = 'docker_node_info'
 
-info = [
+parsed = parse_docker_node_info([
     [u'|Containers', u' 42'],
     [u'|Images', u' 23'],
     [u'|Storage Driver', u' devicemapper'],
@@ -48,10 +49,12 @@ info = [
         u'|ID', u' XXXX', u'XXXX', u'XXXX', u'XXXX', u'XXXX', u'XXXX', u'BLOB', u'BOBO', u'0COV',
         u'FEFE', u'WHOO', u'0TEH'
     ],
-]
+])
 
-discovery = {'': [(None, {}), HostLabel(u'cmk/docker_object', u'node')],
-            'containers': [(None, {})]}
+discovery = {
+    '': [(None, {})],
+    'containers': [(None, {})],
+}
 
 checks = {
     '': [

@@ -258,18 +258,17 @@ def do_inventory_actions_during_checking_for(
     sources: Sequence[ABCSource],
     multi_host_sections: MultiHostSections,
 ) -> None:
-    hostname = host_config.hostname
 
     if not host_config.do_status_data_inventory:
-        _cleanup_status_data(hostname)
+        _cleanup_status_data(host_config.hostname)
         return  # nothing to do here
 
     _inventory_tree, status_data_tree = _do_inv_for(
-        config.HostConfig.make_host_config(hostname),
+        host_config,
         ipaddress,
         multi_host_sections=multi_host_sections,
     )[:2]
-    _save_status_data_tree(hostname, status_data_tree)
+    _save_status_data_tree(host_config.hostname, status_data_tree)
 
 
 def _cleanup_status_data(hostname: HostName) -> None:

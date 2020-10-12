@@ -27,9 +27,8 @@ def discovery_mssql_counters_generic(
     want_counters: Set[str],
     dflt: Optional[Dict[str, str]] = None,
 ) -> DiscoveryResult:
-    yield from (Service(item="%s %s %s" % (obj, instance, counter), parameters=dflt)
+    yield from (Service(item="%s %s" % (obj, instance), parameters=dflt)
                 for (obj, instance), counters in section.items()
-                for counter in counters
                 if want_counters.intersection(counters))
 
 

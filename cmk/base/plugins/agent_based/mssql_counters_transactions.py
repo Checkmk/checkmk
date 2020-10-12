@@ -34,9 +34,7 @@ def discovery_mssql_counters_transactions(section: Section) -> DiscoveryResult:
     ...     ('MSSQL_VEEAMSQL2012', 'tempdb'): {'transactions/sec': 24410428, 'tracked_transactions/sec': 0, 'write_transactions/sec': 10381607},
     ... }):
     ...   print(result)
-    Service(item='MSSQL_VEEAMSQL2012 tempdb transactions/sec', parameters={}, labels=[])
-    Service(item='MSSQL_VEEAMSQL2012 tempdb tracked_transactions/sec', parameters={}, labels=[])
-    Service(item='MSSQL_VEEAMSQL2012 tempdb write_transactions/sec', parameters={}, labels=[])
+    Service(item='MSSQL_VEEAMSQL2012 tempdb', parameters={}, labels=[])
     """
     yield from discovery_mssql_counters_generic(
         section, {'transactions/sec', 'write_transactions/sec', 'tracked_transactions/sec'})

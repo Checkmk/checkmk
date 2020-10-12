@@ -366,11 +366,7 @@ def test_cluster_check_mssql_counters_cache_hits(item, section, expected_results
 
 @pytest.mark.parametrize("section,expected_services", [
     (big_parsed_data, [
-        Service(item='MSSQL_VEEAMSQL2012 tempdb data_file(s)_size_(kb)'),
-        Service(item='MSSQL_VEEAMSQL2012 tempdb log_file(s)_size_(kb)'),
-        Service(item='MSSQL_VEEAMSQL2012 tempdb transactions/sec'),
-        Service(item='MSSQL_VEEAMSQL2012 tempdb tracked_transactions/sec'),
-        Service(item='MSSQL_VEEAMSQL2012 tempdb write_transactions/sec'),
+        Service(item='MSSQL_VEEAMSQL2012 tempdb'),
     ]),
 ])
 def test_discovery_mssql_counters_file_sizes(section, expected_services):
@@ -467,16 +463,8 @@ def test_cluster_check_mssql_locks_per_batch(item, params, section, expected_res
 
 @pytest.mark.parametrize("section,expected_services", [
     (big_parsed_data, [
-        Service(item='MSSQL_VEEAMSQL2012:Locks OibTrackTbl lock_requests/sec'),
-        Service(item='MSSQL_VEEAMSQL2012:Locks OibTrackTbl lock_timeouts/sec'),
-        Service(item='MSSQL_VEEAMSQL2012:Locks _Total lock_requests/sec'),
-        Service(item='MSSQL_VEEAMSQL2012:Locks _Total lock_timeouts/sec'),
-        Service(item='MSSQL_VEEAMSQL2012:Locks _Total number_of_deadlocks/sec'),
-        Service(item='MSSQL_VEEAMSQL2012:Locks _Total lock_waits/sec'),
-        Service(item='MSSQL_VEEAMSQL2012:Locks _Total lock_wait_time_(ms)'),
-        Service(item='MSSQL_VEEAMSQL2012:Locks _Total average_wait_time_(ms)'),
-        Service(item='MSSQL_VEEAMSQL2012:Locks _Total average_wait_time_base'),
-        Service(item='MSSQL_VEEAMSQL2012:Locks _Total lock_timeouts_(timeout_>_0)/sec')
+        Service(item='MSSQL_VEEAMSQL2012:Locks OibTrackTbl'),
+        Service(item='MSSQL_VEEAMSQL2012:Locks _Total'),
     ]),
 ])
 def test_discovery_mssql_counters_locks(section, expected_services):
@@ -545,11 +533,7 @@ def test_cluster_check_mssql_locks(item, params, section, expected_results):
 
 @pytest.mark.parametrize("section,expected_services", [
     (big_parsed_data, [
-        Service(item='MSSQL_VEEAMSQL2012:Buffer_Manager None buffer_cache_hit_ratio'),
-        Service(item='MSSQL_VEEAMSQL2012:Buffer_Manager None buffer_cache_hit_ratio_base'),
-        Service(item='MSSQL_VEEAMSQL2012:Buffer_Manager None page_lookups/sec'),
-        Service(item='MSSQL_VEEAMSQL2012:Buffer_Manager None readahead_pages/sec'),
-        Service(item='MSSQL_VEEAMSQL2012:Buffer_Manager None page_writes/sec'),
+        Service(item='MSSQL_VEEAMSQL2012:Buffer_Manager None'),
     ]),
 ])
 def test_discovery_mssql_counters_pageactivity(section, expected_services):
@@ -659,11 +643,7 @@ def test_cluster_check_mssql_counters_sqlstats(item, params, section, expected_r
 
 @pytest.mark.parametrize("section,expected_services", [
     (big_parsed_data, [
-        Service(item='MSSQL_VEEAMSQL2012 tempdb data_file(s)_size_(kb)'),
-        Service(item='MSSQL_VEEAMSQL2012 tempdb log_file(s)_size_(kb)'),
-        Service(item='MSSQL_VEEAMSQL2012 tempdb transactions/sec'),
-        Service(item='MSSQL_VEEAMSQL2012 tempdb tracked_transactions/sec'),
-        Service(item='MSSQL_VEEAMSQL2012 tempdb write_transactions/sec'),
+        Service(item='MSSQL_VEEAMSQL2012 tempdb'),
     ]),
 ])
 def test_discovery_mssql_counters_transactions(section, expected_services):

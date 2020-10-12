@@ -27,11 +27,7 @@ def discovery_mssql_counters_file_sizes(section: Section) -> DiscoveryResult:
     ...   ('MSSQL_VEEAMSQL2012', 'tempdb'): {'data_file(s)_size_(kb)': 164928, 'log_file(s)_size_(kb)': 13624, 'log_file(s)_used_size_(kb)': 8768, 'percent_log_used': 64, 'active_transactions': 0}
     ... }):
     ...   print(result)
-    Service(item='MSSQL_VEEAMSQL2012 tempdb data_file(s)_size_(kb)', parameters={}, labels=[])
-    Service(item='MSSQL_VEEAMSQL2012 tempdb log_file(s)_size_(kb)', parameters={}, labels=[])
-    Service(item='MSSQL_VEEAMSQL2012 tempdb log_file(s)_used_size_(kb)', parameters={}, labels=[])
-    Service(item='MSSQL_VEEAMSQL2012 tempdb percent_log_used', parameters={}, labels=[])
-    Service(item='MSSQL_VEEAMSQL2012 tempdb active_transactions', parameters={}, labels=[])
+    Service(item='MSSQL_VEEAMSQL2012 tempdb', parameters={}, labels=[])
     """
     yield from discovery_mssql_counters_generic(
         section, {'data_file(s)_size_(kb)', 'log_file(s)_size_(kb)', 'log_file(s)_used_size_(kb)'},

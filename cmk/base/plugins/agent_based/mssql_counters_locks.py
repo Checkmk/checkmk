@@ -34,11 +34,7 @@ def discovery_mssql_counters_locks(section: Section) -> DiscoveryResult:
     ...     ('MSSQL_VEEAMSQL2012:Locks', '_Total'): {'lock_requests/sec': 3900449701, 'lock_timeouts/sec': 86978, 'number_of_deadlocks/sec': 19, 'lock_waits/sec': 938, 'lock_wait_time_(ms)': 354413},
     ... }):
     ...   print(result)
-    Service(item='MSSQL_VEEAMSQL2012:Locks _Total lock_requests/sec', parameters={}, labels=[])
-    Service(item='MSSQL_VEEAMSQL2012:Locks _Total lock_timeouts/sec', parameters={}, labels=[])
-    Service(item='MSSQL_VEEAMSQL2012:Locks _Total number_of_deadlocks/sec', parameters={}, labels=[])
-    Service(item='MSSQL_VEEAMSQL2012:Locks _Total lock_waits/sec', parameters={}, labels=[])
-    Service(item='MSSQL_VEEAMSQL2012:Locks _Total lock_wait_time_(ms)', parameters={}, labels=[])
+    Service(item='MSSQL_VEEAMSQL2012:Locks _Total', parameters={}, labels=[])
     """
     yield from discovery_mssql_counters_generic(
         section,

@@ -336,7 +336,12 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
         exact_match = self.num_rows() == 1
         target_view = self._get_target_view(exact_match=exact_match)
 
-        url_params: HTTPVariables = [("view_name", target_view), ("filled_in", "filter")]
+        url_params: HTTPVariables = [
+            ("view_name", target_view),
+            ("filled_in", "filter"),
+            ("_show_filter_form", "0"),
+        ]
+
         for plugin in self._used_search_plugins:
             match_info = plugin.get_matches(target_view, self._rows[0] if exact_match else None,
                                             self.livestatus_table, self._used_filters, self._rows)
@@ -490,6 +495,7 @@ class QuicksearchManager:
             url_params.extend([
                 ("view_name", "allservices"),
                 ("filled_in", "filter"),
+                ("_show_filter_form", "0"),
                 ("service_regex", query),
             ])
 

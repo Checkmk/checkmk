@@ -24,9 +24,7 @@ from cmk.utils.paths import core_helper_config_dir
 from cmk.utils.type_defs import (
     AgentRawData,
     ConfigSerial,
-    ErrorResult,
-    OKResult,
-    Result,
+    result,
     SectionName,
 )
 
@@ -387,6 +385,16 @@ class TestFetcherMessage:
     def message(self, header, payload):
         return FetcherMessage(header, payload)
 
+    @pytest.fixture
+    def snmp_raw_data(self):
+        table: SNMPTable = [[[6500337, 11822045]]]
+        raw_data: SNMPRawData = {SectionName('snmp_uptime'): table}
+        return raw_data
+
+    @pytest.fixture
+    def agent_raw_data(self):
+        return b"<<<check_mk>>>"
+
     def test_accessors(self, message, header, payload):
         assert message.header == header
 
@@ -400,24 +408,22 @@ class TestFetcherMessage:
     def test_len(self, message, header, payload):
         assert len(message) == len(header) + len(payload)
 
-    def test_from_raw_data_tcp(self):
-        result: Result[AgentRawData, Exception] = OKResult(b"<<<check_mk>>>Hallo")
-        message = FetcherMessage.from_raw_data(result, FetcherType.TCP)
+    def test_from_raw_data_tcp(self, agent_raw_data):
+        raw_data: result.Result[AgentRawData, Exception] = result.OK(agent_raw_data)
+        message = FetcherMessage.from_raw_data(raw_data, FetcherType.TCP)
         assert message.header.fetcher_type is FetcherType.TCP
         assert message.header.payload_type is PayloadType.AGENT
-        assert message.raw_data == result
+        assert message.raw_data == raw_data
 
-    def test_from_raw_data_snmp(self):
-        table: SNMPTable = [[[6500337, 11822045]]]
-        raw_data: SNMPRawData = {SectionName('snmp_uptime'): table}
-        result: Result[SNMPRawData, Exception] = OKResult(raw_data)
-        message = FetcherMessage.from_raw_data(result, FetcherType.SNMP)
+    def test_from_raw_data_snmp(self, snmp_raw_data):
+        raw_data: result.Result[SNMPRawData, Exception] = result.OK(snmp_raw_data)
+        message = FetcherMessage.from_raw_data(raw_data, FetcherType.SNMP)
         assert message.header.fetcher_type is FetcherType.SNMP
         assert message.header.payload_type is PayloadType.SNMP
-        assert message.raw_data == result
+        assert message.raw_data == raw_data
 
     def test_from_raw_data_exception(self):
-        error: Result[AgentRawData, Exception] = ErrorResult(ValueError("zomg!"))
+        error: result.Result[AgentRawData, Exception] = result.Error(ValueError("zomg!"))
         message = FetcherMessage.from_raw_data(error, FetcherType.TCP)
         assert message.header.fetcher_type is FetcherType.TCP
         assert message.header.payload_type is PayloadType.ERROR
@@ -425,20 +431,18 @@ class TestFetcherMessage:
         assert type(message.raw_data.error) is type(error.error)
         assert message.raw_data.error.args == error.error.args
 
-    def test_raw_data_tcp(self):
-        result: Result[AgentRawData, Exception] = OKResult(b"<<<check_mk>>>Hallo")
-        message = FetcherMessage.from_raw_data(result, FetcherType.TCP)
-        assert message.raw_data == result
+    def test_raw_data_tcp(self, agent_raw_data):
+        raw_data: result.Result[AgentRawData, Exception] = result.OK(agent_raw_data)
+        message = FetcherMessage.from_raw_data(raw_data, FetcherType.TCP)
+        assert message.raw_data == raw_data
 
-    def test_raw_data_snmp(self):
-        table: SNMPTable = [[[6500337, 11822045]]]
-        raw_data: SNMPRawData = {SectionName('snmp_uptime'): table}
-        result: Result[SNMPRawData, Exception] = OKResult(raw_data)
-        message = FetcherMessage.from_raw_data(result, FetcherType.SNMP)
-        assert message.raw_data == result
+    def test_raw_data_snmp(self, snmp_raw_data):
+        raw_data: result.Result[SNMPRawData, Exception] = result.OK(snmp_raw_data)
+        message = FetcherMessage.from_raw_data(raw_data, FetcherType.SNMP)
+        assert message.raw_data == raw_data
 
     def test_raw_data_exception(self):
-        result: Result[AgentRawData, Exception] = ErrorResult(Exception("zomg!"))
-        message = FetcherMessage.from_raw_data(result, FetcherType.TCP)
+        raw_data: result.Result[AgentRawData, Exception] = result.Error(Exception("zomg!"))
+        message = FetcherMessage.from_raw_data(raw_data, FetcherType.TCP)
         assert isinstance(message.raw_data.error, Exception)
         assert str(message.raw_data.error) == "zomg!"

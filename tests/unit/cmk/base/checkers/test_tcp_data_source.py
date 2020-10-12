@@ -12,7 +12,7 @@ import pytest  # type: ignore[import]
 # No stub file
 from testlib.base import Scenario  # type: ignore[import]
 
-from cmk.utils.type_defs import OKResult
+from cmk.utils.type_defs import result
 
 from cmk.base.checkers._abstract import Mode
 from cmk.base.checkers.agent import AgentHostSections, AgentSummarizerDefault
@@ -24,7 +24,7 @@ def mode_fixture(request):
     return request.param
 
 
-@pytest.mark.parametrize("result,reported,rule", [
+@pytest.mark.parametrize("res,reported,rule", [
     (None, "127.0.0.1", None),
     (None, None, "127.0.0.1"),
     ((0, 'Allowed IP ranges: 1.2.3.4', []), "1.2.3.4", "1.2.3.4"),
@@ -33,7 +33,7 @@ def mode_fixture(request):
     ((1, 'Unexpected allowed IP ranges (missing: 1.2.3.4 1.2.3.5)(!)', []), "1.2.3.6",
      "1.2.3.{4,5,6}"),
 ])
-def test_tcpdatasource_only_from(mode, monkeypatch, result, reported, rule):
+def test_tcpdatasource_only_from(mode, monkeypatch, res, reported, rule):
     ts = Scenario().add_host("hostname")
     ts.set_option("agent_config", {"only_from": [rule]} if rule else {})
     config_cache = ts.apply(monkeypatch)
@@ -42,10 +42,10 @@ def test_tcpdatasource_only_from(mode, monkeypatch, result, reported, rule):
     monkeypatch.setattr(config_cache, "host_extra_conf", lambda host, ruleset: ruleset)
 
     summarizer = AgentSummarizerDefault(source.exit_spec, source)
-    assert summarizer._sub_result_only_from({"onlyfrom": reported}) == result
+    assert summarizer._sub_result_only_from({"onlyfrom": reported}) == res
 
 
-@pytest.mark.parametrize("restricted_address_mismatch_state, only_from, rule, result", [
+@pytest.mark.parametrize("restricted_address_mismatch_state, only_from, rule, res", [
     (None, "1.2.{3,4,5}.6", "1.2.3.6",
      (1, 'Unexpected allowed IP ranges (exceeding: 1.2.4.6 1.2.5.6)(!)', [])),
     (None, "1.2.3.6", "1.2.3.{4,5,6}",
@@ -67,9 +67,14 @@ def test_tcpdatasource_only_from(mode, monkeypatch, result, reported, rule):
     (3, "1.2.3.6", "1.2.3.{4,5,6}",
      (3, 'Unexpected allowed IP ranges (missing: 1.2.3.4 1.2.3.5)(?)', [])),
 ])
-def test_tcpdatasource_restricted_address_mismatch(mode, monkeypatch,
-                                                   restricted_address_mismatch_state, only_from,
-                                                   rule, result):
+def test_tcpdatasource_restricted_address_mismatch(
+    mode,
+    monkeypatch,
+    restricted_address_mismatch_state,
+    only_from,
+    rule,
+    res,
+):
     hostname = "hostname"
     ts = Scenario().add_host(hostname)
     ts.set_option("agent_config", {"only_from": [(rule, [], [hostname], {})]})
@@ -85,7 +90,7 @@ def test_tcpdatasource_restricted_address_mismatch(mode, monkeypatch,
     source = TCPSource(hostname, "ipaddress", mode=mode)
     summarizer = AgentSummarizerDefault(source.exit_spec, source)
 
-    assert summarizer._sub_result_only_from({"onlyfrom": only_from}) == result
+    assert summarizer._sub_result_only_from({"onlyfrom": only_from}) == res
 
 
 def test_attribute_defaults(mode, monkeypatch):
@@ -131,7 +136,7 @@ class TestSummaryResult:
             mode=mode,
         )
 
-        assert source.summarize(OKResult(AgentHostSections())) == (
+        assert source.summarize(result.OK(AgentHostSections())) == (
             0,
             "Version: unknown, OS: unknown",
             [],

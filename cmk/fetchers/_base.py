@@ -9,14 +9,14 @@ import itertools
 import logging
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Literal, Dict, final, Final, Generic, Optional, Type, TypeVar, Union
+from typing import Any, Dict, final, Final, Generic, Literal, Optional, Type, TypeVar, Union
 
 import cmk.utils
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKException, MKGeneralException, MKIPAddressLookupError
 from cmk.utils.log import logger as cmk_logger
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import ErrorResult, HostAddress, OKResult, Result
+from cmk.utils.type_defs import HostAddress, result
 
 from cmk.snmplib.type_defs import TRawData
 
@@ -119,13 +119,13 @@ class ABCFileCache(Generic[TRawData], abc.ABC):
 
         # TODO: Use some generic store file read function to generalize error handling,
         # but there is currently no function that simply reads data from the file
-        result = self.path.read_bytes()
-        if not result:
+        cache_file = self.path.read_bytes()
+        if not cache_file:
             self._logger.debug("Not using cache (Empty)")
             return None
 
         self._logger.log(VERBOSE, "Using data from cache file %s", self.path)
-        return self._from_cache_file(result)
+        return self._from_cache_file(cache_file)
 
     def write(self, raw_data: TRawData) -> None:
         if self.disabled:
@@ -198,14 +198,14 @@ class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @final
-    def fetch(self, mode: Mode) -> Result[TRawData, Exception]:
+    def fetch(self, mode: Mode) -> result.Result[TRawData, Exception]:
         """Return the data from the source, either cached or from IO."""
         try:
-            return OKResult(self._fetch(mode))
+            return result.OK(self._fetch(mode))
         except Exception as exc:
             if cmk.utils.debug.enabled():
                 raise
-            return ErrorResult(exc)
+            return result.Error(exc)
 
     @abc.abstractmethod
     def _is_cache_enabled(self, mode: Mode) -> bool:

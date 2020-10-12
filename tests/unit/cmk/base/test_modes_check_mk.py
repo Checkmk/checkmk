@@ -8,7 +8,7 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
 
-from cmk.utils.type_defs import OKResult
+from cmk.utils.type_defs import result
 
 import cmk.base.modes.check_mk as check_mk
 from cmk.base.checkers import FileCacheFactory
@@ -30,7 +30,7 @@ class TestModeDumpAgent:
 
     @pytest.fixture
     def patch_fetch(self, raw_data, monkeypatch):
-        monkeypatch.setattr(TCPSource, "fetch", lambda self: OKResult(raw_data))
+        monkeypatch.setattr(TCPSource, "fetch", lambda self: result.OK(raw_data))
 
     @pytest.fixture
     def scenario(self, hostname, ipaddress, monkeypatch):

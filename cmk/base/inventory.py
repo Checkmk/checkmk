@@ -25,7 +25,7 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostName,
     MetricTuple,
-    Result,
+    result,
     ServiceAdditionalDetails,
     ServiceDetails,
     ServiceState,
@@ -192,7 +192,8 @@ def _get_multi_host_sections_for_inv(
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
-) -> Tuple[MultiHostSections, Sequence[Tuple[ABCSource, Result[ABCHostSections, Exception]]]]:
+) -> Tuple[MultiHostSections, Sequence[Tuple[ABCSource, result.Result[ABCHostSections,
+                                                                      Exception]]]]:
     if host_config.is_cluster:
         return MultiHostSections(), []
 

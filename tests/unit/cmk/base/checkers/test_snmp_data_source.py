@@ -11,7 +11,7 @@ import pytest  # type: ignore[import]
 from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.utils.exceptions import MKIPAddressLookupError
-from cmk.utils.type_defs import ErrorResult, OKResult, SourceType
+from cmk.utils.type_defs import result, SourceType
 
 from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree
 
@@ -147,11 +147,11 @@ class TestSNMPSummaryResult:
 
     @pytest.mark.usefixtures("scenario")
     def test_defaults(self, source):
-        assert source.summarize(OKResult(AgentHostSections())) == (0, "Success", [])
+        assert source.summarize(result.OK(AgentHostSections())) == (0, "Success", [])
 
     @pytest.mark.usefixtures("scenario")
     def test_with_exception(self, source):
-        assert source.summarize(ErrorResult(Exception())) == (3, "(?)", [])
+        assert source.summarize(result.Error(Exception())) == (3, "(?)", [])
 
 
 def test_make_snmp_section_detects(monkeypatch, hostname, ipaddress):

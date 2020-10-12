@@ -19,11 +19,9 @@ import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKIPAddressLookupError, MKSNMPError, MKTimeout
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import (
-    ErrorResult,
     HostAddress,
     HostName,
-    OKResult,
-    Result,
+    result,
     SectionName,
     ServiceCheckResult,
     SourceType,
@@ -217,16 +215,16 @@ class ABCParser(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
     @final
     def parse(
         self,
-        raw_data: Result[TRawData, Exception],
-    ) -> Result[THostSections, Exception]:
+        raw_data: result.Result[TRawData, Exception],
+    ) -> result.Result[THostSections, Exception]:
         if raw_data.is_error():
-            return ErrorResult(raw_data.error)
+            return result.Error(raw_data.error)
         try:
-            return OKResult(self._parse(raw_data.ok))
+            return result.OK(self._parse(raw_data.ok))
         except Exception as exc:
             if cmk.utils.debug.enabled():
                 raise
-            return ErrorResult(exc)
+            return result.Error(exc)
 
     @abc.abstractmethod
     def _parse(self, raw_data: TRawData) -> THostSections:
@@ -351,18 +349,21 @@ class ABCSource(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         return self._make_fetcher().to_json()
 
     @final
-    def fetch(self) -> Result[TRawData, Exception]:
+    def fetch(self) -> result.Result[TRawData, Exception]:
         try:
             with self._make_fetcher() as fetcher:
                 return fetcher.fetch(self.mode)
         except Exception as exc:
             if cmk.utils.debug.enabled():
                 raise
-            return ErrorResult(exc)
+            return result.Error(exc)
 
     @final
     @cpu_tracking.track
-    def parse(self, raw_data: Result[TRawData, Exception]) -> Result[THostSections, Exception]:
+    def parse(
+        self,
+        raw_data: result.Result[TRawData, Exception],
+    ) -> result.Result[THostSections, Exception]:
         try:
             host_sections = self._make_parser().parse(raw_data)
             if host_sections.is_error():
@@ -378,10 +379,13 @@ class ABCSource(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
             self._logger.log(VERBOSE, "ERROR: %s", exc)
             if cmk.utils.debug.enabled():
                 raise
-            return ErrorResult(exc)
+            return result.Error(exc)
 
     @final
-    def summarize(self, host_sections: Result[THostSections, Exception]) -> ServiceCheckResult:
+    def summarize(
+        self,
+        host_sections: result.Result[THostSections, Exception],
+    ) -> ServiceCheckResult:
         return self._make_summarizer().summarize(host_sections)
 
     @abc.abstractmethod
@@ -428,7 +432,7 @@ class ABCSummarizer(Generic[THostSections], metaclass=abc.ABCMeta):
     @final
     def summarize(
         self,
-        host_sections: Result[THostSections, Exception],
+        host_sections: result.Result[THostSections, Exception],
     ) -> ServiceCheckResult:
         """Summarize the host sections."""
         if host_sections.is_ok():

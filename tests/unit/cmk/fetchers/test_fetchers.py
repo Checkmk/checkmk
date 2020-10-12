@@ -17,7 +17,7 @@ import pytest  # type: ignore[import]
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
 
 import cmk.utils.store as store
-from cmk.utils.type_defs import AgentRawData, OKResult, SectionName
+from cmk.utils.type_defs import AgentRawData, result, SectionName
 
 from cmk.snmplib import snmp_table
 from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPHostConfig, SNMPRawData, SNMPTable, SNMPTree
@@ -147,10 +147,10 @@ class TestIPMIFetcher:
         assert other.password == fetcher.password
 
     def test_command_raises_IpmiException_handling(self, file_cache, monkeypatch):
-        def open(*args):
+        def open_(*args):
             raise IpmiException()
 
-        monkeypatch.setattr(IPMIFetcher, "open", open)
+        monkeypatch.setattr(IPMIFetcher, "open", open_)
 
         with pytest.raises(MKFetcherError):
             with IPMIFetcher(
@@ -334,7 +334,7 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
         )
         section_name = SectionName('pim')
         fetcher.configured_snmp_sections = {section_name}
-        assert fetcher.fetch(Mode.INVENTORY) == OKResult({section_name: [table]})
+        assert fetcher.fetch(Mode.INVENTORY) == result.OK({section_name: [table]})
 
     def test_fetch_from_io_partially_empty(self, monkeypatch, fetcher):
         section_name = SectionName('pum')
@@ -346,7 +346,7 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
             if oid_info.base == fetcher.snmp_section_trees[section_name][0].base else [],
         )
         fetcher.configured_snmp_sections = {section_name}
-        assert fetcher.fetch(Mode.CHECKING) == OKResult({section_name: [table, []]})
+        assert fetcher.fetch(Mode.CHECKING) == result.OK({section_name: [table, []]})
 
     def test_fetch_from_io_empty(self, monkeypatch, fetcher):
         monkeypatch.setattr(
@@ -359,7 +359,7 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
             "gather_available_raw_section_names",
             lambda *_, **__: {SectionName('pam')},
         )
-        assert fetcher.fetch(Mode.DISCOVERY) == OKResult({})
+        assert fetcher.fetch(Mode.DISCOVERY) == result.OK({})
 
 
 class TestTCPFetcher:
@@ -487,19 +487,19 @@ class TestFetcherCaching:
 
     def test_fetch_not_reading_cache_in_checking_mode(self, fetcher):
         assert fetcher.file_cache.cache == b"cached_section"
-        assert fetcher.fetch(Mode.CHECKING) == OKResult(b"fetched_section")
+        assert fetcher.fetch(Mode.CHECKING) == result.OK(b"fetched_section")
         assert fetcher.file_cache.cache == b"fetched_section"
 
     # We are in fact testing a generic feature of the ABCFetcher and use the TCPFetcher for this
     def test_fetch_reading_cache_in_discovery_mode(self, fetcher):
         assert fetcher.file_cache.cache == b"cached_section"
-        assert fetcher.fetch(Mode.DISCOVERY) == OKResult(b"cached_section")
+        assert fetcher.fetch(Mode.DISCOVERY) == result.OK(b"cached_section")
         assert fetcher.file_cache.cache == b"cached_section"
 
     # We are in fact testing a generic feature of the ABCFetcher and use the TCPFetcher for this
     def test_fetch_reading_cache_in_inventory_mode(self, fetcher):
         assert fetcher.file_cache.cache == b"cached_section"
-        assert fetcher.fetch(Mode.INVENTORY) == OKResult(b"cached_section")
+        assert fetcher.fetch(Mode.INVENTORY) == result.OK(b"cached_section")
         assert fetcher.file_cache.cache == b"cached_section"
 
 

@@ -8,7 +8,7 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
 
-from cmk.utils.type_defs import OKResult
+from cmk.utils.type_defs import result
 
 from cmk.base.checkers import Mode
 from cmk.base.checkers.agent import AgentHostSections
@@ -30,5 +30,5 @@ def test_attribute_defaults(monkeypatch, ipaddress, mode):
     assert source.ipaddress == ipaddress
     assert source.mode is mode
     assert source.description.startswith("Process piggyback data from")
-    assert source.summarize(OKResult(AgentHostSections())) == (0, "", [])
+    assert source.summarize(result.OK(AgentHostSections())) == (0, "", [])
     assert source.id == "piggyback"

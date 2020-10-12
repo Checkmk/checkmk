@@ -18,21 +18,13 @@ import signal
 import struct
 from pathlib import Path
 from types import FrameType
-from typing import Any, Dict, Final, Iterator, List, Optional, Type, Union, NamedTuple
+from typing import Any, Dict, Final, Iterator, List, NamedTuple, Optional, Type, Union
 
-import cmk.utils.log as log
 import cmk.utils.cleanup
+import cmk.utils.log as log
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.paths import core_helper_config_dir
-from cmk.utils.type_defs import (
-    ConfigSerial,
-    ErrorResult,
-    HostName,
-    OKResult,
-    Protocol,
-    Result,
-    SectionName,
-)
+from cmk.utils.type_defs import ConfigSerial, HostName, Protocol, result, SectionName
 
 from cmk.snmplib.type_defs import AbstractRawData, SNMPRawData
 
@@ -81,7 +73,7 @@ class L3Message(Protocol):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def result(self) -> Result[AbstractRawData, Exception]:
+    def result(self) -> result.Result[AbstractRawData, Exception]:
         raise NotImplementedError
 
 
@@ -122,8 +114,8 @@ class AgentPayload(L3Message):
         except SyntaxError as exc:
             raise ValueError(repr(data)) from exc
 
-    def result(self) -> Result[AbstractRawData, Exception]:
-        return OKResult(self._value)
+    def result(self) -> result.Result[AbstractRawData, Exception]:
+        return result.OK(self._value)
 
 
 class SNMPPayload(L3Message):
@@ -150,8 +142,8 @@ class SNMPPayload(L3Message):
         except SyntaxError as exc:
             raise ValueError(repr(data)) from exc
 
-    def result(self) -> Result[SNMPRawData, Exception]:
-        return OKResult(self._value)
+    def result(self) -> result.Result[SNMPRawData, Exception]:
+        return result.OK(self._value)
 
     @staticmethod
     def _serialize(value: SNMPRawData) -> bytes:
@@ -189,8 +181,8 @@ class ErrorPayload(L3Message):
         except SyntaxError as exc:
             raise ValueError(repr(data)) from exc
 
-    def result(self) -> Result[AbstractRawData, Exception]:
-        return ErrorResult(self._error)
+    def result(self) -> result.Result[AbstractRawData, Exception]:
+        return result.Error(self._error)
 
     @staticmethod
     def _serialize(error: Exception) -> bytes:
@@ -292,7 +284,7 @@ class FetcherMessage(Protocol):
     @classmethod
     def from_raw_data(
         cls,
-        raw_data: Result[AbstractRawData, Exception],
+        raw_data: result.Result[AbstractRawData, Exception],
         fetcher_type: FetcherType,
     ) -> "FetcherMessage":
         if raw_data.is_error():
@@ -333,7 +325,7 @@ class FetcherMessage(Protocol):
         )
 
     @property
-    def raw_data(self) -> Result[AbstractRawData, Exception]:
+    def raw_data(self) -> result.Result[AbstractRawData, Exception]:
         return self.payload.result()
 
 
@@ -560,7 +552,7 @@ def run_fetcher(entry: Dict[str, Any], mode: Mode) -> FetcherMessage:
         with fetcher_type.from_json(fetcher_params) as fetcher:
             raw_data = fetcher.fetch(mode)
     except Exception as exc:
-        raw_data = ErrorResult(exc)
+        raw_data = result.Error(exc)
 
     return FetcherMessage.from_raw_data(raw_data, fetcher_type)
 

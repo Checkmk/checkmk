@@ -16,7 +16,7 @@ import cmk.utils.paths
 import cmk.utils.piggyback
 import cmk.utils.tty as tty
 from cmk.utils.log import console
-from cmk.utils.type_defs import HostAddress, HostName, Result, SourceType
+from cmk.utils.type_defs import HostAddress, HostName, result, SourceType
 
 from cmk.fetchers.controller import FetcherMessage
 
@@ -219,7 +219,7 @@ def update_host_sections(
     selected_raw_sections: Optional[SelectedRawSections],
     host_config: HostConfig,
     fetcher_messages: Optional[Sequence[FetcherMessage]] = None,
-) -> Sequence[Tuple[ABCSource, Result[ABCHostSections, Exception]]]:
+) -> Sequence[Tuple[ABCSource, result.Result[ABCHostSections, Exception]]]:
     """Gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
 
     Communication errors are not raised through by this functions. All agent related errors are
@@ -234,7 +234,7 @@ def update_host_sections(
 
     # Special agents can produce data for the same check_plugin_name on the same host, in this case
     # the section lines need to be extended
-    result: List[Tuple[ABCSource, Result[ABCHostSections, Exception]]] = []
+    data: List[Tuple[ABCSource, result.Result[ABCHostSections, Exception]]] = []
     for hostname, ipaddress, sources in nodes:
         for source_index, source in enumerate(sources):
             console.vverbose("  Source: %s/%s\n" % (source.source_type, source.fetcher_type))
@@ -264,7 +264,7 @@ def update_host_sections(
                 raw_data = fetcher_message.raw_data
 
             source_result = source.parse(raw_data)
-            result.append((source, source_result))
+            data.append((source, source_result))
             if source_result.is_ok():
                 console.vverbose("  -> Add sections: %s\n" %
                                  sorted([str(s) for s in source_result.ok.sections.keys()]))
@@ -283,7 +283,7 @@ def update_host_sections(
             host_sections.piggybacked_raw_data,
         )
 
-    return result
+    return data
 
 
 def _make_piggyback_nodes(

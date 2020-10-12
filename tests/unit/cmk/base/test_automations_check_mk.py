@@ -8,7 +8,7 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
 
-from cmk.utils.type_defs import OKResult
+from cmk.utils.type_defs import result
 
 import cmk.base.automations.check_mk as check_mk
 from cmk.base.checkers.tcp import TCPSource
@@ -36,7 +36,7 @@ class TestAutomationDiagHost:
 
     @pytest.fixture
     def patch_fetch(self, raw_data, monkeypatch):
-        monkeypatch.setattr(TCPSource, "fetch", lambda self: OKResult(raw_data))
+        monkeypatch.setattr(TCPSource, "fetch", lambda self: result.OK(raw_data))
 
     @pytest.mark.usefixtures("scenario")
     @pytest.mark.usefixtures("patch_fetch")

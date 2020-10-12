@@ -15,7 +15,7 @@ from testlib.base import Scenario  # type: ignore[import]
 
 import cmk.utils.piggyback
 from cmk.utils.type_defs import (
-    OKResult,
+    result,
     ParsedSectionName,
     SectionName,
     SourceType,
@@ -453,7 +453,7 @@ class TestMakeHostSectionsHosts:
         monkeypatch.setattr(
             ABCSource,
             "parse",
-            lambda self, raw_data: OKResult(
+            lambda self, raw_data: result.OK(
                 DummyHostSection(
                     sections=
                     {SectionName("section_name_%s" % self.hostname): [["section_content"]]},
@@ -700,7 +700,7 @@ class TestMakeHostSectionsClusters:
         monkeypatch.setattr(
             ABCSource,
             "parse",
-            lambda self, *args, **kwargs: OKResult(DummyHostSection(
+            lambda self, *args, **kwargs: result.OK(DummyHostSection(
                 sections={SectionName("section_name_%s" % self.hostname): [["section_content"]]},
                 cache_info={},
                 piggybacked_raw_data={},
@@ -798,7 +798,7 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
         return {}
 
     def check(_, *args, **kwargs):
-        return OKResult(AgentHostSections(sections={section_name: [[str(section_name)]]}))
+        return result.OK(AgentHostSections(sections={section_name: [[str(section_name)]]}))
 
     monkeypatch.setattr(
         ip_lookup,

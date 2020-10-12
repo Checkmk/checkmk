@@ -20,7 +20,7 @@ class Peer(NamedTuple):
     poll: str
     reach: str
     delay: str
-    offset: str
+    offset: float
     jitter: str
 
 
@@ -32,7 +32,19 @@ def parse_ntp(string_table: AgentStringTable) -> Section:
     for line in string_table:
         if len(line) != 11:
             continue
-        peer = Peer(*line)
+        peer = Peer(
+            statecode=line[0],
+            name=line[1],
+            refid=line[2],
+            stratum=line[3],
+            t=line[4],
+            when=line[5],
+            poll=line[6],
+            reach=line[7],
+            delay=line[8],
+            offset=float(line[9]),
+            jitter=line[10],
+        )
         section[peer.name] = peer
         if None not in section and peer.statecode in '*o':  # keep first one!
             section[None] = peer

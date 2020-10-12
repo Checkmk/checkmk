@@ -74,18 +74,16 @@ def ntp_fmt_time(raw: str) -> int:
 # 2. The offset (only if state != 3)
 # 3. The jitter (only if state != 3)
 def check_ntp_server_state(peer: ntp.Peer, params):
-    jitter = float(peer.jitter)
-
     when = ntp_fmt_time(peer.when)
     stratum = int(peer.stratum)
     state = ntp_state_codes.get(peer.statecode, "unknown")
-    infotext = "%s - stratum %d, jitter %.2f ms" % (state, stratum, jitter)
+    infotext = "%s - stratum %d" % (state, stratum)
     if when > 0:
         infotext += ", last reached %d secs ago" % when
 
     crit_stratum, _warn, _crit = params
     if state in ["falsetick"]:
-        return (2, infotext, jitter)
+        return 2, infotext
     if stratum >= crit_stratum:
         return (2,
                 infotext + (", stratum is too high (max allowed is %d)(!!)" % (crit_stratum - 1)))
@@ -97,7 +95,7 @@ def check_ntp_server_state(peer: ntp.Peer, params):
     # elif when > 2*poll and when > 128: # when can exceed poll for small polling values
     #     return (3, "response due since %d secs%s" % (when - poll, infotext), offset, jitter)
 
-    return (0, infotext, jitter)
+    return 0, infotext
 
 
 def check_ntp(item, params, parsed: ntp.Section):
@@ -117,15 +115,15 @@ def check_ntp(item, params, parsed: ntp.Section):
         infoname="Offset",
     )
 
-    state = check_ntp_server_state(peer, params)
-    if len(state) == 3:
-        state, text, jitter = state  # pylint: disable=unbalanced-tuple-unpacking
-        perfdata = [("jitter", jitter, warn, crit, 0, None)]
-    else:
-        state, text = state
-        perfdata = []
+    yield check_ntp_server_state(peer, params)
 
-    yield state, text, perfdata
+    yield check_levels(
+        peer.jitter,
+        "jitter",
+        None,
+        human_readable_func=lambda f: "%.4f ms" % f,
+        infoname="\nJitter",
+    )
 
 
 def check_ntp_summary(_no_item, params, parsed):

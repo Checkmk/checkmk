@@ -21,7 +21,7 @@ class Peer(NamedTuple):
     reach: str
     delay: str
     offset: float
-    jitter: str
+    jitter: float
 
 
 Section = Dict[Optional[str], Peer]
@@ -43,7 +43,7 @@ def parse_ntp(string_table: AgentStringTable) -> Section:
             reach=line[7],
             delay=line[8],
             offset=float(line[9]),
-            jitter=line[10],
+            jitter=float(line[10]),
         )
         section[peer.name] = peer
         if None not in section and peer.statecode in '*o':  # keep first one!

@@ -57,17 +57,20 @@ class BIAggregation:
         return BIAggregation(aggregation_config)
 
     def compile(self) -> BICompiledAggregation:
-        branches = self.node.compile({})
+        compiled_branches: List[BICompiledRule] = []
+        if not self.computation_options.disabled:
+            branches = self.node.compile({})
 
-        # Each sub-branch represents one BI Aggregation with an unique name
-        # Postprocessing takes care of the "remaining services" action
-        for branch in branches:
-            branch.compile_postprocess(branch)
+            # Each sub-branch represents one BI Aggregation with an unique name
+            # The postprocessing phase takes care of the "remaining services" action
+            for branch in branches:
+                branch.compile_postprocess(branch)
 
-        verified_branches = self._verify_all_branches_start_with_rule(branches)
+            compiled_branches = self._verify_all_branches_start_with_rule(branches)
+
         return BICompiledAggregation(
             self.id,
-            verified_branches,
+            compiled_branches,
             self.computation_options,
             self.aggregation_visualization,
             self.groups,

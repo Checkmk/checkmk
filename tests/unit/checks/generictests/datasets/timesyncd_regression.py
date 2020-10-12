@@ -26,15 +26,23 @@ info = [[u'Server:', u'91.189.91.157', u'(ntp.ubuntu.com)'],
 discovery = {'': [(None, {})]}
 
 checks = {
-    '': [(None, {
-        'alert_delay': (300, 3600),
-        'last_synchronised': (3600, 7200),
-        'quality_levels': (200.0, 500.0),
-        'stratum_level': 10
-    }, [(0, 'Stratum: 2.00', []),
-        (0, 'Jitter: 0.00 s', [('jitter', 0.0, 0.2, 0.5, None, None)]),
-        (0, u'Offset: 54.0 \xb5s', [('time_offset', 5.3991e-05, 0.2, 0.5, None,
-                                     None)]),
-        (2, 'Last synchronised: 22 h (warn/crit at 60 m/120 m)', []),
-        (0, u'synchronised on 91.189.91.157', [])])]
+    '': [
+        (None, {
+            'alert_delay': (300, 3600),
+            'last_synchronised': (3600, 7200),
+            'quality_levels': (200.0, 500.0),
+            'stratum_level': 10
+         }, [
+             (0, u'Offset: 53 microseconds', [('time_offset', 5.3991e-05, 0.2, 0.5)]),
+             (2, ('Time since last sync: 22 hours 1 minute '
+                 '(warn/crit at 1 hour 0 minutes/2 hours 0 minutes)'), []),
+             (0, 'Stratum: 2.00', []),
+             (0, 'Jitter: 0.00 s', [('jitter', 0.0, 0.2, 0.5)]),
+             (0, u'synchronised on 91.189.91.157', []),
+        ]),
+    ],
 }
+
+
+# this should be set by the check itself, but that won't work in tests.
+mock_item_state = {'': {'time_server': 1569922392.37}}

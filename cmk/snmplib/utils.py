@@ -7,8 +7,6 @@
 import re
 from typing import Callable, List, Optional, Tuple
 
-from six import iterbytes
-
 from cmk.utils.regex import regex
 from .type_defs import OID, SNMPDetectAtom, SNMPDetectSpec
 
@@ -41,17 +39,3 @@ def _evaluate_snmp_detection_atom(
         return pattern == ".*" and not flag
     # ignore case!
     return bool(regex(pattern, re.IGNORECASE | re.DOTALL).fullmatch(value)) is flag
-
-
-def binstring_to_int(binstring: bytes) -> int:
-    """Convert a string to an integer.
-
-    This is done by consideren the string to be a little endian byte string.
-    Such strings are sometimes used by SNMP to encode 64 bit counters without
-    needed COUNTER64 (which is not available in SNMP v1)."""
-    value = 0
-    mult = 1
-    for byte in iterbytes(binstring[::-1]):
-        value += mult * byte
-        mult *= 256
-    return value

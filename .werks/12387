@@ -1,0 +1,31 @@
+Title: dell_compellent_folder: Fix space calculations
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p25
+Date: 1622534141
+Class: fix
+
+Currently, the following MIBs are used:
+<ul>
+<li>DELL-STORAGE-SC-MIB::scDiskFolderSUTotalSpace2: available space
+for the folder</li>
+<li>DELL-STORAGE-SC-MIB::scDiskFolderSUFreeSpace: difference between the
+configured space and available space</li>
+</ul>
+
+Both values (available space and configured space) are configured by
+the admin and do not change with the usage of the folder. Instead, the
+follwoing MIBs should be used:
+<ul>
+<li>DELL-STORAGE-SC-MIB::scDiskFolderSUAllocSpace: space allocated to the
+folder (i.e. the total space),</li>
+<li>DELL-STORAGE-SC-MIB::scDiskFolderSUUsedSpace2: space used by the data
+stored in the folder</li>
+</ul>
+
+The available space is given by the difference of the two.
+
+This change also makes the check use the standard check parameters for
+filesystem checks

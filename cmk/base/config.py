@@ -126,9 +126,7 @@ AllClusters = Dict[str, List[HostName]]
 AgentTargetVersion = Union[None, str, Tuple[str, str], Tuple[str, Dict[str, str]]]
 RRDConfig = Dict[str, Any]
 CheckContext = Dict[str, Any]
-InventoryContext = Dict[str, Any]
 GetCheckApiContext = Callable[[], Dict[str, Any]]
-GetInventoryApiContext = Callable[[], Dict[str, Any]]
 CheckIncludes = List[str]
 DiscoveryCheckParameters = Dict
 SpecialAgentConfiguration = NamedTuple(
@@ -1484,10 +1482,9 @@ def load_all_agent_based_plugins(get_check_api_context: GetCheckApiContext,) -> 
     # We could do further refactoring to resolve this, but the time would probably
     # be spent better migrating the legacy inventory plugins to the new API...
     import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
-    from cmk.base.inventory import get_inventory_context  # pylint: disable=import-outside-toplevel
     inventory_plugins.load_legacy_inventory_plugins(
         get_check_api_context,
-        get_inventory_context,
+        agent_based_register.inventory_plugins_legacy.get_inventory_context,
     )
 
     _all_checks_loaded = True

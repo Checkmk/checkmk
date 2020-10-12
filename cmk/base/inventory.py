@@ -286,8 +286,7 @@ def _do_inv_for(
     multi_host_sections: MultiHostSections,
 ) -> Tuple[StructuredDataTree, StructuredDataTree]:
 
-    initialize_inventory_tree()
-    inventory_tree = g_inv_tree
+    inventory_tree = StructuredDataTree()
     status_data_tree = StructuredDataTree()
 
     node = inventory_tree.get_dict("software.applications.check_mk.cluster.")
@@ -431,29 +430,6 @@ def _integrate_table_row(
 #   | Managing the inventory tree of a host                                |
 #   '----------------------------------------------------------------------'
 
-g_inv_tree = StructuredDataTree()  # TODO Remove one day. Deprecated with version 1.5.0i3??
-
-
-def initialize_inventory_tree(tree=None) -> None:
-    # TODO (mo):
-    # This function has been resurrected in order to facilitate the migration
-    # of legacy inventory plugins to the new API.
-    # Once the processing of the plugins switched to the new API, we can
-    # move this function and all related functionality to
-    # cmk.base.api.agent_based.register.inventory_plugins_legacy
-    global g_inv_tree
-    g_inv_tree = StructuredDataTree() if tree is None else tree
-
-
-# Dict based
-def inv_tree(path: str) -> Dict:  # TODO Remove one day. Deprecated with version 1.5.0i3??
-    return g_inv_tree.get_dict(path)
-
-
-# List based
-def inv_tree_list(path: str) -> List:  # TODO Remove one day. Deprecated with version 1.5.0i3??
-    return g_inv_tree.get_list(path)
-
 
 def _save_inventory_tree(hostname: HostName,
                          inventory_tree: StructuredDataTree) -> Optional[StructuredDataTree]:
@@ -511,25 +487,3 @@ def _run_inventory_export_hooks(host_config: config.HostConfig,
             if cmk.utils.debug.enabled():
                 raise
             raise MKGeneralException("Failed to execute export hook %s: %s" % (hookname, e))
-
-
-#.
-#   .--Plugin API----------------------------------------------------------.
-#   |           ____  _             _            _    ____ ___             |
-#   |          |  _ \| |_   _  __ _(_)_ __      / \  |  _ \_ _|            |
-#   |          | |_) | | | | |/ _` | | '_ \    / _ \ | |_) | |             |
-#   |          |  __/| | |_| | (_| | | | | |  / ___ \|  __/| |             |
-#   |          |_|   |_|\__,_|\__, |_|_| |_| /_/   \_\_|  |___|            |
-#   |                         |___/                                        |
-#   +----------------------------------------------------------------------+
-#   | Helper API for being used in inventory plugins. Plugins have access  |
-#   | to all things defined by the regular Checkmk check API and all the  |
-#   | things declared here.                                                |
-#   '----------------------------------------------------------------------'
-
-
-def get_inventory_context() -> config.InventoryContext:
-    return {
-        "inv_tree_list": inv_tree_list,
-        "inv_tree": inv_tree,
-    }

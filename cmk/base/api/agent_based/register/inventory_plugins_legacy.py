@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper to register a new-style section based on config.check_info
 """
-from typing import Any, Callable, Dict, Generator
+from typing import Any, Callable, Dict, Generator, List
 
 import cmk.utils.misc
 
@@ -21,9 +21,6 @@ from cmk.base.api.agent_based.inventory_classes import (
 from cmk.base.api.agent_based.register.inventory_plugins import create_inventory_plugin
 from cmk.base.api.agent_based.type_defs import Parameters
 
-# TODO (mo): move this here.
-from cmk.base.inventory import initialize_inventory_tree  # pylint: disable=cmk-module-layer-violation
-
 
 class MockStructuredDataTree:
     def __init__(self):
@@ -34,11 +31,29 @@ class MockStructuredDataTree:
     def _normalize(path: str):
         return tuple(path.strip(':.').split('.'))
 
-    def get_dict(self, path):
+    def get_dict(self, path: str):
         return self.attributes.setdefault(self._normalize(path), dict())
 
-    def get_list(self, path):
+    def get_list(self, path: str):
         return self.tables.setdefault(self._normalize(path), list())
+
+
+g_inv_tree = MockStructuredDataTree()  # every plugin will get its own!
+
+
+def inv_tree(path: str) -> Dict:
+    return g_inv_tree.get_dict(path)
+
+
+def inv_tree_list(path: str) -> List:
+    return g_inv_tree.get_list(path)
+
+
+def get_inventory_context() -> Dict[str, Any]:
+    return {
+        "inv_tree_list": inv_tree_list,
+        "inv_tree": inv_tree,
+    }
 
 
 def _create_inventory_function(
@@ -52,7 +67,8 @@ def _create_inventory_function(
         # base on the info contained in them after running the legacy inventory function
         local_status_data_tree = MockStructuredDataTree()
         local_inventory_tree = MockStructuredDataTree()
-        initialize_inventory_tree(local_inventory_tree)
+        global g_inv_tree
+        g_inv_tree = local_inventory_tree
 
         legacy_inventory_function(
             *args,

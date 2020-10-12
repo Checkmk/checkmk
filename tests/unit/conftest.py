@@ -137,14 +137,14 @@ def _config_load_all_checks():
 @pytest.mark.usesfixture('config_load_all_checks')
 def _config_load_all_inventory_plugins():
     # Local import to have faster pytest initialization
-    import cmk.base.inventory as inventory  # pylint: disable=bad-option-value,import-outside-toplevel
+    import cmk.base.api.agent_based.register.inventory_plugins_legacy as inventory_legacy  # pylint: disable=bad-option-value,import-outside-toplevel
     import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=bad-option-value,import-outside-toplevel
     import cmk.base.check_api as check_api  # pylint: disable=bad-option-value,import-outside-toplevel
 
     with cmk_debug_enabled():  # fail if a plugin can't be loaded
         inventory_plugins.load_legacy_inventory_plugins(
             check_api.get_check_api_context,
-            inventory.get_inventory_context,
+            inventory_legacy.get_inventory_context,
         )
 
     assert len(inventory_plugins.inv_info) > 90  # sanitiy check, may decrease as we migrate

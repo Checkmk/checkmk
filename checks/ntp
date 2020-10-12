@@ -127,15 +127,6 @@ def check_ntp(item, params, parsed: ntp.Section):
     yield state, text, perfdata
 
 
-def _get_suitable_line(info):
-    index = None
-    for idx, line in enumerate(info):
-        if line[0] in ('*', 'o'):
-            index = idx
-            break
-    return index
-
-
 def check_ntp_summary(_no_item, params, parsed):
     # We only are interested in our system peer or pulse per second source (pps)
     peer = parsed.get(None)

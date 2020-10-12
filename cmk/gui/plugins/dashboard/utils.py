@@ -33,6 +33,13 @@ from cmk.gui.plugins.views.utils import (
 from cmk.gui.utils.url_encoder import HTTPVariables
 from cmk.gui.metrics import translate_perf_data
 from cmk.gui.plugins.metrics.rrd_fetch import merge_multicol
+from cmk.gui.pagetypes import PagetypeTopics
+from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.breadcrumb import (
+    make_topic_breadcrumb,
+    Breadcrumb,
+    BreadcrumbItem,
+)
 
 DashboardName = str
 DashboardConfig = Dict[str, Any]
@@ -701,3 +708,10 @@ def create_data_for_single_metric(cls, properties, context):
         used_metrics.append((row_id, host, metric))
 
     return data, used_metrics
+
+
+def dashboard_breadcrumb(name: str, board: DashboardConfig, title: str) -> Breadcrumb:
+    breadcrumb = make_topic_breadcrumb(mega_menu_registry.menu_monitoring(),
+                                       PagetypeTopics.get_topic(board["topic"]))
+    breadcrumb.append(BreadcrumbItem(title, html.makeuri_contextless([("name", name)])))
+    return breadcrumb

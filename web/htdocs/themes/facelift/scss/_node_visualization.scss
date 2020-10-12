@@ -9,11 +9,8 @@
 }
 
 #node_visualization {
-  position: absolute;
-  top: 100px;
-  right: 10px;
-  bottom: 10px;
-  left: 10px;
+  position: relative;
+  height: 100%;
 }
 
 #topology_filters {
@@ -59,9 +56,11 @@ div.node_vis {
     position: absolute;
     top: 16px;
     left: 280px;
+    display: flex;
 
     #custom {
         display: flex;
+        flex-direction: column;
     }
   }
 
@@ -151,7 +150,7 @@ div.node_vis {
 
   /* topology depth */
   div.topology_slider {
-      padding-top: 4px;
+      padding-top: 8px;
       padding-right: 8px;
   }
 
@@ -210,7 +209,7 @@ div.node_vis {
 
   div#history_icons {
     position: absolute;
-    top: 8px;
+    top: 12px;
     right: 339px;
     width: 60px;
 
@@ -373,13 +372,13 @@ div.node_vis {
 
   #reset_pan_and_zoom {
     position: absolute;
-    top: 13px;
+    top: 17px;
     right: 408px;
   }
 
   #translation_infobox {
     position: absolute;
-    top: 50px;
+    top: 54px;
     right: 369px;
     width: 200px;
   }
@@ -406,7 +405,29 @@ div.node_vis {
   image.growth_possible {
     filter: $node-vis-growth-img-filter;
   }
+
+  div#togglebuttons {
+    display: flex;
+
+    div#togglebutton_layouting_toolbar + div.togglebox {
+      margin: 7px;
+      padding-top: 6px;
+      box-sizing: border-box;
+    }
+  }
 }
+
+@media only screen and (max-width: 1350px) {
+  div.node_vis {
+    #reset_pan_and_zoom { top: 88px; }
+    #translation_infobox { top: 124px; }
+  }
+}
+
+@media only screen and (max-width: 1150px) {
+  div.node_vis div#layouting_toolbar { top: 84px; }
+}
+
 
 div.node_vis line.dashed, div.node_vis path.dashed, .style_indicator {
   animation-duration: 25s;
@@ -466,4 +487,9 @@ div.node_vis line.dashed, div.node_vis path.dashed, .style_indicator {
 
 svg text {
   fill: $primary-font-color;
+}
+
+div#main_window_layered {
+  height: 100%;
+  width: 100%;
 }

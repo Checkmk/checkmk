@@ -653,10 +653,6 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
         this.scale_x = d3.scaleLinear().domain([0, this.width]).range([0, this.width]);
         this.scale_y = d3.scaleLinear().domain([0, this.height]).range([0, this.height]);
 
-        this.selection
-            .style("width", this.width + this._margin.left + this._margin.right + "px")
-            .style("height", this.height + this._margin.top + this._margin.bottom + "px");
-
         for (var layer_id in this._layers) {
             this._layers[layer_id].size_changed();
         }

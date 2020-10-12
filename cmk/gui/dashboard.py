@@ -84,18 +84,10 @@ if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.dashboard  # pylint: disable=no-name-in-module
 
 from cmk.gui.plugins.views.utils import data_source_registry
-from cmk.gui.plugins.dashboard.utils import (
-    builtin_dashboards,
-    GROW,
-    MAX,
-    dashlet_types,
-    dashlet_registry,
-    Dashlet,
-    get_all_dashboards,
-    save_all_dashboards,
-    get_permitted_dashboards,
-    copy_view_into_dashlet,
-)
+from cmk.gui.plugins.dashboard.utils import (builtin_dashboards, GROW, MAX, dashlet_types,
+                                             dashlet_registry, Dashlet, get_all_dashboards,
+                                             save_all_dashboards, get_permitted_dashboards,
+                                             copy_view_into_dashlet, dashboard_breadcrumb)
 # Can be used by plugins
 from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=unused-import
     DashletType, DashletTypeName, DashletRefreshInterval, DashletRefreshAction, DashletConfig,
@@ -513,7 +505,7 @@ def draw_dashboard(name: DashboardName) -> None:
         unconfigured_single_infos.update(dashlet.unconfigured_single_infos())
 
     html.add_body_css_class("dashboard")
-    breadcrumb = _dashboard_breadcrumb(name, board, title)
+    breadcrumb = dashboard_breadcrumb(name, board, title)
     html.header(title,
                 breadcrumb=breadcrumb,
                 page_menu=_page_menu(breadcrumb, name, board, board_context,
@@ -586,18 +578,6 @@ def _get_dashlets(name: DashboardName, board: DashboardConfig) -> List[Dashlet]:
         dashlets.append(dashlet)
 
     return dashlets
-
-
-def _dashboard_breadcrumb(name: str, board: DashboardConfig, title: str) -> Breadcrumb:
-    breadcrumb = make_topic_breadcrumb(mega_menu_registry.menu_monitoring(),
-                                       PagetypeTopics.get_topic(board["topic"]))
-
-    breadcrumb.append(BreadcrumbItem(
-        title,
-        html.makeuri_contextless([("name", name)]),
-    ))
-
-    return breadcrumb
 
 
 def _get_refresh_dashlets(

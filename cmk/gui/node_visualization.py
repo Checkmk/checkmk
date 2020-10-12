@@ -40,7 +40,7 @@ from cmk.gui.breadcrumb import make_simple_page_breadcrumb
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (make_display_options_dropdown, PageMenu, PageMenuEntry,
                                PageMenuSidePopup, PageMenuTopic)
-from cmk.gui.plugins.dashboard.utils import DashboardName
+from cmk.gui.plugins.dashboard.utils import DashboardName, get_permitted_dashboards, dashboard_breadcrumb
 
 TopologyConfig = Dict[str, Any]
 Mesh = Set[str]
@@ -128,10 +128,12 @@ class ParentChildTopologyPage(Page):
                       growth_auto_max_nodes: Optional[int] = None,
                       mesh_depth: int = 0,
                       max_nodes: int = 400) -> None:
-        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), "")
+        board_name = "topology"
+        board = get_permitted_dashboards()[board_name]
+        breadcrumb = dashboard_breadcrumb(board_name, board, board["title"])
         page_menu = PageMenu(breadcrumb=breadcrumb)
-        self._extend_display_dropdown(page_menu, "topology")
-        html.header(_("Network Topology"), breadcrumb, page_menu)
+        self._extend_display_dropdown(page_menu, board_name)
+        html.header(board["title"], breadcrumb, page_menu)
         self.show_topology_content(hostnames,
                                    mode,
                                    growth_auto_max_nodes=growth_auto_max_nodes,

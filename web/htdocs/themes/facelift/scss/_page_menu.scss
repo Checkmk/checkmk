@@ -579,13 +579,10 @@ div#page_menu_popups div.side_popup {
     padding: 0;
     overflow: auto;
     background-color: $base-color;
-    border: none;
+    border-left: $popup-border;
+    border-right: $popup-inner-border;
 
-    &.active {
-      display: block;
-      border-left: $popup-border;
-      border-right: $popup-inner-border;
-    }
+    &.active { display: block; }
 
     div.filter_group:last-child { margin-bottom: 10px; }
 

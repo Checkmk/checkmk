@@ -122,7 +122,7 @@ class MegaMenuRenderer:
                              with_text=True)
             html.close_div()
         html.close_div()
-        html.open_div(class_="content inner")
+        html.open_div(class_="content inner", id="content_inner_%s" % menu.name)
         for topic in topics:
             self._show_topic(topic, menu.name)
         html.div(None, class_=["topic", "sentinel"])
@@ -130,6 +130,8 @@ class MegaMenuRenderer:
         html.close_div()
         html.javascript(hide_entries_js)
         html.javascript("cmk.popup_menu.initialize_mega_menus();")
+        html.open_div(class_="content inner", id="content_inner_%s_search" % menu.name)
+        html.close_div()
 
     def _show_topic(self, topic: TopicMenuTopic, menu_id: str) -> None:
         show_more = all(i.is_show_more for i in topic.items)

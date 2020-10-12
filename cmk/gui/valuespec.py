@@ -5604,7 +5604,7 @@ class IconSelector(ValueSpec):
                 icon_categories.append((category_name, category_alias, by_cat[category_name]))
         return icon_categories
 
-    def render_icon(self, icon_name, onclick='', title='', id_=''):
+    def _render_icon(self, icon_name, onclick='', title='', id_=''):
         if not icon_name:
             icon_name = self._empty_img
 
@@ -5626,7 +5626,7 @@ class IconSelector(ValueSpec):
         html.hidden_field(varprefix + "_value", value or '', varprefix + "_value", add_var=True)
 
         if value:
-            content = self.render_icon(value, '', _('Choose another Icon'), id_=varprefix + '_img')
+            content = self._render_icon(value, '', _('Choose another Icon'), id_=varprefix + '_img')
         else:
             content = _('Select an Icon')
 
@@ -5679,7 +5679,7 @@ class IconSelector(ValueSpec):
                     title=icon,
                 )
 
-                html.write_html(self.render_icon(icon, id_=varprefix + '_i_' + icon, title=icon))
+                html.write_html(self._render_icon(icon, id_=varprefix + '_i_' + icon, title=icon))
 
                 html.span(icon)
 
@@ -5711,7 +5711,7 @@ class IconSelector(ValueSpec):
 
     def value_to_text(self, value):
         # TODO: This is a workaround for a bug. This function needs to return str objects right now.
-        return "%s" % self.render_icon(value)
+        return "%s" % self._render_icon(value)
 
     def validate_datatype(self, value, varprefix):
         if value is not None and not isinstance(value, str):

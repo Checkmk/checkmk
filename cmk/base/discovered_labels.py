@@ -172,7 +172,7 @@ class HostLabel(ABCLabel):
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, HostLabel):
-            raise TypeError('%s not type HostLabel' % other)
+            raise TypeError(f'{other!r} is not of type HostLabel')
         return (self.name == other.name and self.value == other.value and
                 self.plugin_name == other.plugin_name)
 

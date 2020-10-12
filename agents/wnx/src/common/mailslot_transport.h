@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // Simple Mail Slot Transport
 // Windows only
@@ -181,14 +182,16 @@ public:
         FAILED_CREATE = -5
     };
 
-private:
-    MailSlot(const MailSlot&) {}
-    MailSlot& operator=(const MailSlot&) {}
+    MailSlot(const MailSlot&) = delete;
+    MailSlot& operator=(const MailSlot&) = delete;
+
+    MailSlot(MailSlot&&) = delete;
+    MailSlot& operator=(MailSlot&&) = delete;
 
 public:
     // convert slot name into fully qualified global object
     static std::string BuildMailSlotName(const char* slot_name, int id,
-                                         const char* pc_name = ".") {
+                                         const char* pc_name) {
         std::string name = "\\\\";
         name += pc_name;
         name += "\\mailslot\\Global\\";  // this work. ok. don't touch.
@@ -197,29 +200,37 @@ public:
         name += std::to_string(id);  // session id or something unique
         return name;
     }
-
-    MailSlot(const char* name, int id, const char* pc_name = ".") {
+    MailSlot(const char* name, int id, const char* pc_name) {
         name_ = BuildMailSlotName(name, id, pc_name);
     }
 
+    MailSlot(const char* name, int id) {
+        name_ = BuildMailSlotName(name, id, ".");
+    }
+
     // with prepared mail slot
-    MailSlot(const char* name) : name_(name) {}
+    explicit MailSlot(const char* name) : name_(name) {}
 
     ~MailSlot() { Close(); }
 
     // API below
 
     // Accessors
-    bool IsOwner() const noexcept {
+    [[nodiscard]] bool IsOwner() const noexcept {
         return owner_;
     }  // true, if mailslot had been "created", false if "opened"
-    bool IsPostman() const noexcept { return !owner_; }
-    const char* GetName() const noexcept { return name_.c_str(); }
-    HANDLE GetHandle() const noexcept { return handle_; }
+    [[nodiscard]] bool IsPostman() const noexcept { return !owner_; }
+    [[nodiscard]] const char* GetName() const noexcept { return name_.c_str(); }
+    [[nodiscard]] HANDLE GetHandle() const noexcept { return handle_; }
+
+    bool ConstructThread(cma::MailBoxThreadFoo foo, int sleep_ms,
+                                void* context) {
+        return ConstructThread(foo, sleep_ms, context, false);
+    }
 
     // mailbox start here
     bool ConstructThread(cma::MailBoxThreadFoo foo, int sleep_ms, void* context,
-                         bool force_open = false) {
+                         bool force_open) {
         if (main_thread_) {
             MailSlotLog(XLOG_FUNC + " Double call is forbidden");
             return false;
@@ -258,7 +269,7 @@ public:
     // postman the only operation
     bool ExecPost(const void* data, uint64_t length) {
         auto len = static_cast<int>(length);
-        if (!data && len) {
+        if (data == nullptr && len != 0) {
             MailSlotLog("Bad data for \"%s\"posting %p %d", name_.c_str(), data,
                         len);
             return false;
@@ -453,6 +464,6 @@ private:
 
     std::atomic<bool> keep_running_ = true;  // thread flag
     std::unique_ptr<std::thread>
-        main_thread_;  // controlled by Construct/Dismantle
+        main_thread_{};  // controlled by Construct/Dismantle
 };
 };  // namespace cma

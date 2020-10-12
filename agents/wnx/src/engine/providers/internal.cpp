@@ -33,22 +33,16 @@ std::unordered_map<std::string_view, std::chrono::duration<int>>
 };
 
 // pickup first word before space
-// "word left over" => ["word", "ledt over"]
-auto SplitStringLine(const std::string& Line) {
+// "word left over" => ["word", "left over"]
+auto SplitStringLine(const std::string& line) {
     using namespace cma::carrier;
-    std::string cur_string = Line;
-    std::string marker;
-    {
-        auto end = cur_string.find_first_of(' ');
-        if (end == std::string::npos) {
-            return std::make_tuple(Line, std::string());
-        }
-        // split
-        auto segment = cur_string.substr(0, end);
-        cur_string = cur_string.substr(end + 1);
-        return std::make_tuple(segment, cur_string);
+
+    auto end = line.find_first_of(' ');
+    if (end == std::string::npos) {
+        return std::make_tuple(line, std::string());
     }
-    return std::make_tuple(std::string(), std::string());
+    // split
+    return std::make_tuple(line.substr(0, end), line.substr(end + 1));
 }
 
 // returns tuple with parsed command line
@@ -83,12 +77,12 @@ std::tuple<uint64_t, std::string, std::string> ParseCommandLine(
 
 void Basic::registerOwner(cma::srv::ServiceProcessor* sp) { host_sp_ = sp; }
 
-std::string Basic::generateContent(const std::string_view& SectionName,
-                                   bool ForceGeneration) {
-    auto real_name = SectionName == cma::section::kUseEmbeddedName
+std::string Basic::generateContent(const std::string_view& section_name,
+                                   bool force_generation) {
+    auto real_name = section_name == cma::section::kUseEmbeddedName
                          ? uniq_name_
-                         : SectionName;
-    if (!ForceGeneration &&
+                         : section_name;
+    if (!force_generation &&
         !cma::cfg::groups::global.allowedSection(real_name)) {
         XLOG::t("The section \"{}\" is disabled in config", real_name);
         return {};
@@ -104,7 +98,7 @@ std::string Basic::generateContent(const std::string_view& SectionName,
 
         if (headerless_) return std::move(section_body);
         // print header with default or commanded section name
-        return std::move(makeHeader(SectionName) + section_body);
+        return std::move(makeHeader(section_name) + section_body);
     } catch (const std::exception& e) {
         XLOG::l.crit("Exception {} in {}", e.what(), uniq_name_);
     } catch (...) {
@@ -197,8 +191,8 @@ bool Synchronous::startSynchronous(
                                       // asio - for TCP
                                       // grpc - for GRPC
                                       // rest - for Rest
-    const std::string& CommandLine,   // format "id name whatever"
-    std::chrono::milliseconds Period) {
+    const std::string& CommandLine    // format "id name whatever"
+) {
     using namespace cma::section;
     try {
         carrier_.establishCommunication(InternalPort);
@@ -230,8 +224,7 @@ bool Asynchronous::startAsynchronous(
 
 // #TODO gtest
 bool Asynchronous::startSynchronous(const std::string& InternalPort,
-                                    const std::string& CommandLine,
-                                    std::chrono::milliseconds Period) {
+                                    const std::string& CommandLine) {
     using namespace std::chrono;
     // #TODO avoid possible race condition
     if (thread_.joinable()) {
@@ -270,7 +263,7 @@ void Asynchronous::threadProc(
         auto [marker, section_name, leftover] = ParseCommandLine(CommandLine);
 
         for (;;) {
-            auto tm = steady_clock().now();
+            auto tm = steady_clock::now();
 
             sendGatheredData(CommandLine);
 

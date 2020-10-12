@@ -1150,13 +1150,8 @@ class TimeperiodValuespec(ValueSpec):
             return r
 
     def value_to_text(self, value):
-        text = ""
-        if self.is_active(value):
-            # TODO/Phantasm: highlight currently active timewindow
-            text += self._get_timeperiod_valuespec().value_to_text(value)
-        else:
-            text += self._enclosed_valuespec.value_to_text(value)
-        return text
+        # TODO/Phantasm: highlight currently active timewindow
+        return self._get_used_valuespec(value).value_to_text(value)
 
     def from_html_vars(self, varprefix):
         if html.request.var(self.tp_current_mode) == "1":
@@ -1176,10 +1171,7 @@ class TimeperiodValuespec(ValueSpec):
 
     def _validate_value(self, value, varprefix):
         super(TimeperiodValuespec, self)._validate_value(value, varprefix)
-        if self.is_active(value):
-            self._get_timeperiod_valuespec().validate_value(value, varprefix)
-        else:
-            self._enclosed_valuespec.validate_value(value, varprefix)
+        self._get_used_valuespec(value).validate_value(value, varprefix)
 
     def _get_timeperiod_valuespec(self):
         return Dictionary(
@@ -1222,6 +1214,14 @@ class TimeperiodValuespec(ValueSpec):
         if isinstance(value, dict) and self.tp_default_value_key in value:
             return value.get(self.tp_default_value_key)
         return value
+
+    # Returns the currently used ValueSpec based on the current value
+    def _get_used_valuespec(self, value: Any) -> ValueSpec:
+        return self._get_timeperiod_valuespec() if self.is_active(
+            value) else self._enclosed_valuespec
+
+    def transform_value(self, value: Any) -> Any:
+        return self._get_used_valuespec(value).transform_value(value)
 
 
 class MatchItemGeneratorRules(ABCMatchItemGenerator):

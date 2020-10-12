@@ -27,7 +27,7 @@ discovery = {
 checks = {
     'time': [
         (None, {'alert_delay': (300, 3600), 'ntp_levels': (10, 200.0, 500.0)}, [
-            (0, 'found 1 peers, but none is suitable', []),
+            (0, 'Found 1 peers, but none is suitable', []),
             (0, 'Just started monitoring', []),
         ]),
     ],

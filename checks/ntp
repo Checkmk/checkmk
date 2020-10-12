@@ -141,7 +141,7 @@ def check_ntp_summary(_no_item, params, parsed):
     peer = parsed.get(None)
     if peer is None:
         if parsed:
-            yield 0, "found %d peers, but none is suitable" % len(parsed)
+            yield 0, "Found %d peers, but none is suitable" % len(parsed)
         yield from tolerance_check(params, None)
         return
 
@@ -151,10 +151,9 @@ def check_ntp_summary(_no_item, params, parsed):
             "alert_delay": (300, 3600),
         }
 
-    (state, text, perfdata), = check_ntp(peer.name, params["ntp_levels"], parsed)
-    text += f" (synchronized on {peer.name})"
-    yield state, text, perfdata
+    yield from check_ntp(peer.name, params["ntp_levels"], parsed)
     yield from tolerance_check(params, time.time())
+    yield 0, f"\nSynchronized on {peer.name}"
 
 
 check_info["ntp"] = {

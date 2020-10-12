@@ -95,6 +95,9 @@ class BIRule(ABCBIRule, ABCWithSchema):
         return len(self.nodes)
 
     def compile(self, extern_arguments: List[str]) -> List[ABCBICompiledNode]:
+        if self.computation_options.disabled:
+            return []
+
         mapped_rule_arguments: MacroMappings = dict(
             zip(["$%s$" % x for x in self._params.arguments], extern_arguments))
 

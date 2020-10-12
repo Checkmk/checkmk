@@ -195,7 +195,9 @@ def _generate_livestatus_results(
                 value = factor * float(status[key])
             except KeyError:
                 # may happen if we are trying to query old host
-                if key in ["helper_usage_fetcher", "helper_usage_checker"]:
+                if key in [
+                        "helper_usage_fetcher", "helper_usage_checker", "average_latency_fetcher"
+                ]:
                     value = 0.0
                 else:
                     raise

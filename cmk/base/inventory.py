@@ -9,7 +9,7 @@ while the inventory is performed for one host.
 In the future all inventory code should be moved to this module."""
 
 import os
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Dict, List, NamedTuple, Optional, Sequence, Tuple
 from contextlib import suppress
 
 import cmk.utils.cleanup
@@ -25,7 +25,6 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostName,
     MetricTuple,
-    result,
     ServiceAdditionalDetails,
     ServiceDetails,
     ServiceState,
@@ -41,8 +40,20 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.section as section
 
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow, InventoryResult
-from cmk.base.checkers import ABCSource, ABCHostSections
+from cmk.base.checkers import ABCSource, SourceResult
 from cmk.base.checkers.host_sections import HostKey, MultiHostSections
+
+
+class InventoryTrees(NamedTuple):
+    inventory: StructuredDataTree
+    status_data: StructuredDataTree
+
+
+class ActiveInventoryResult(NamedTuple):
+    trees: InventoryTrees
+    source_results: Sequence[SourceResult]
+    safe_to_write: bool
+
 
 #.
 #   .--Inventory-----------------------------------------------------------.
@@ -61,29 +72,16 @@ def do_inv(hostnames: List[HostName]) -> None:
     store.makedirs(cmk.utils.paths.inventory_output_dir)
     store.makedirs(cmk.utils.paths.inventory_archive_dir)
 
-    config_cache = config.get_config_cache()
-
     for hostname in hostnames:
         section.section_begin(hostname)
         try:
             host_config = config.HostConfig.make_host_config(hostname)
-            if host_config.is_cluster:
-                ipaddress = None
-            else:
-                ipaddress = ip_lookup.lookup_ip_address(host_config)
+            inv_result = _do_active_inventory_for(host_config)
 
-            # TODO: Results are completely ignored here. We should process the results to make error
-            # visible on the console
-            multi_host_sections, _results = _get_multi_host_sections_for_inv(
-                config_cache, host_config, ipaddress)
-
-            inventory_tree, status_data_tree = _do_inv_for(
-                host_config,
-                ipaddress,
-                multi_host_sections=multi_host_sections,
-            )
-            _run_inventory_export_hooks(host_config, inventory_tree)
-            _show_inventory_results_on_console(inventory_tree, status_data_tree)
+            _run_inventory_export_hooks(host_config, inv_result.trees.inventory)
+            # TODO: inv_results.source_results is completely ignored here.
+            # We should process the results to make errors visible on the console
+            _show_inventory_results_on_console(inv_result.trees)
 
         except Exception as e:
             if cmk.utils.debug.enabled():
@@ -94,12 +92,11 @@ def do_inv(hostnames: List[HostName]) -> None:
             cmk.utils.cleanup.cleanup_globals()
 
 
-def _show_inventory_results_on_console(inventory_tree: StructuredDataTree,
-                                       status_data_tree: StructuredDataTree) -> None:
+def _show_inventory_results_on_console(trees: InventoryTrees) -> None:
     section.section_success("Found %s%s%d%s inventory entries" %
-                            (tty.bold, tty.yellow, inventory_tree.count_entries(), tty.normal))
+                            (tty.bold, tty.yellow, trees.inventory.count_entries(), tty.normal))
     section.section_success("Found %s%s%d%s status entries" %
-                            (tty.bold, tty.yellow, status_data_tree.count_entries(), tty.normal))
+                            (tty.bold, tty.yellow, trees.status_data.count_entries(), tty.normal))
 
 
 @cmk.base.decorator.handle_check_mk_check_result("check_mk_active-cmk_inv",
@@ -112,58 +109,46 @@ def do_inv_check(
     _inv_sw_missing = options.get("sw-missing", 0)
     _inv_fail_status = options.get("inv-fail-status", 1)
 
-    config_cache = config.get_config_cache()
     host_config = config.HostConfig.make_host_config(hostname)
-    if host_config.is_cluster:
-        ipaddress = None
-    else:
-        ipaddress = ip_lookup.lookup_ip_address(host_config)
 
-    multi_host_sections, results = _get_multi_host_sections_for_inv(config_cache, host_config,
-                                                                    ipaddress)
-
-    inventory_tree, status_data_tree = _do_inv_for(
-        host_config,
-        ipaddress,
-        multi_host_sections=multi_host_sections,
-    )
+    inv_result = _do_active_inventory_for(host_config)
+    trees = inv_result.trees
 
     status = 0
     infotexts: List[str] = []
     long_infotexts: List[str] = []
 
-    #TODO add cluster if and only if all sources do not fail?
-    if _all_sources_fail(host_config, ipaddress):
+    if inv_result.safe_to_write:
+        old_tree = _save_inventory_tree(hostname, trees.inventory)
+    else:
         old_tree, sources_state = None, 1
         status = max(status, sources_state)
         infotexts.append("Cannot update tree%s" % check_api_utils.state_markers[sources_state])
-    else:
-        old_tree = _save_inventory_tree(hostname, inventory_tree)
 
-    _run_inventory_export_hooks(host_config, inventory_tree)
+    _run_inventory_export_hooks(host_config, trees.inventory)
 
-    if inventory_tree.is_empty() and status_data_tree.is_empty():
+    if trees.inventory.is_empty() and trees.status_data.is_empty():
         infotexts.append("Found no data")
 
     else:
-        infotexts.append("Found %d inventory entries" % inventory_tree.count_entries())
+        infotexts.append("Found %d inventory entries" % trees.inventory.count_entries())
 
         # Node 'software' is always there because _do_inv_for creates this node for cluster info
-        if not inventory_tree.get_sub_container(['software']).has_edge('packages')\
+        if not trees.inventory.get_sub_container(['software']).has_edge('packages')\
            and _inv_sw_missing:
             infotexts.append("software packages information is missing" +
                              check_api_utils.state_markers[_inv_sw_missing])
             status = max(status, _inv_sw_missing)
 
         if old_tree is not None:
-            if not old_tree.is_equal(inventory_tree, edges=["software"]):
+            if not old_tree.is_equal(trees.inventory, edges=["software"]):
                 infotext = "software changes"
                 if _inv_sw_changes:
                     status = max(status, _inv_sw_changes)
                     infotext += check_api_utils.state_markers[_inv_sw_changes]
                 infotexts.append(infotext)
 
-            if not old_tree.is_equal(inventory_tree, edges=["hardware"]):
+            if not old_tree.is_equal(trees.inventory, edges=["hardware"]):
                 infotext = "hardware changes"
                 if _inv_hw_changes:
                     status = max(status, _inv_hw_changes)
@@ -171,10 +156,10 @@ def do_inv_check(
 
                 infotexts.append(infotext)
 
-        if not status_data_tree.is_empty():
-            infotexts.append("Found %s status entries" % status_data_tree.count_entries())
+        if not trees.status_data.is_empty():
+            infotexts.append("Found %s status entries" % trees.status_data.count_entries())
 
-    for source, host_sections in results:
+    for source, host_sections in inv_result.source_results:
         source_state, source_output, _source_perfdata = source.summarize(host_sections)
         if source_state != 0:
             # Do not output informational things (state == 0). Also do not use source states
@@ -187,12 +172,37 @@ def do_inv_check(
     return status, infotexts, long_infotexts, []
 
 
+def _do_active_inventory_for(host_config: config.HostConfig,) -> ActiveInventoryResult:
+
+    if host_config.is_cluster:
+        return ActiveInventoryResult(
+            trees=_do_inv_for_cluster(host_config),
+            source_results=[],
+            safe_to_write=True,
+        )
+
+    ipaddress = ip_lookup.lookup_ip_address(host_config)
+    config_cache = config.get_config_cache()
+
+    multi_host_sections, source_results = _get_multi_host_sections_for_inv(
+        config_cache, host_config, ipaddress)
+
+    return ActiveInventoryResult(
+        trees=_do_inv_for_realhost(
+            host_config,
+            ipaddress,
+            multi_host_sections=multi_host_sections,
+        ),
+        source_results=source_results,
+        safe_to_write=_safe_to_write_tree(source_results),
+    )
+
+
 def _get_multi_host_sections_for_inv(
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
-) -> Tuple[MultiHostSections, Sequence[Tuple[ABCSource, result.Result[ABCHostSections,
-                                                                      Exception]]]]:
+) -> Tuple[MultiHostSections, Sequence[SourceResult]]:
     if host_config.is_cluster:
         return MultiHostSections(), []
 
@@ -220,33 +230,15 @@ def _get_multi_host_sections_for_inv(
     return multi_host_sections, results
 
 
-def _all_sources_fail(
-    host_config: config.HostConfig,
-    ipaddress: Optional[HostAddress],
-) -> bool:
-    """We want to check if ALL data sources of a host fail:
-    By default a host has the auto-piggyback data source. We remove it if
-    it's not a pure piggyback host and there's no piggyback data available
-    for this host.
-    In this case the piggyback data source never fails (self._exception = None)."""
-    if host_config.is_cluster:
-        return False
+def _safe_to_write_tree(results: Sequence[SourceResult]) -> bool:
+    """Check if data sources of a host failed
 
-    # TODO(ml): This function makes no sense and is no op anyway.
-    #           We could fix it by actually searching for errors in the sources
-    #           as it seems that it is what was meant initially.
-    exceptions_by_source = {
-        source.id: None for source in checkers.make_sources(
-            host_config,
-            ipaddress,
-            mode=checkers.Mode.INVENTORY,
-        )
-    }
-    if "piggyback" in exceptions_by_source and not len(exceptions_by_source) == 1\
-       and not host_config.has_piggyback_data:
-        del exceptions_by_source["piggyback"]
-
-    return all(exception is not None for exception in exceptions_by_source.values())
+    If a data source failed, we may have incomlete data. In that case we
+    may not write it to disk because that would result in a flapping state
+    of the tree, which would blow up the inventory history (in terms of disk usage).
+    """
+    # If a result is not OK, that means the corresponding sections have not been added.
+    return all(source_result.is_ok() for _source, source_result in results)
 
 
 def do_inventory_actions_during_checking_for(
@@ -259,15 +251,16 @@ def do_inventory_actions_during_checking_for(
 ) -> None:
 
     if not host_config.do_status_data_inventory:
+        # includes cluster case
         _cleanup_status_data(host_config.hostname)
         return  # nothing to do here
 
-    _inventory_tree, status_data_tree = _do_inv_for(
+    trees = _do_inv_for_realhost(
         host_config,
         ipaddress,
         multi_host_sections=multi_host_sections,
-    )[:2]
-    _save_status_data_tree(host_config.hostname, status_data_tree)
+    )
+    _save_status_data_tree(host_config.hostname, trees.status_data)
 
 
 def _cleanup_status_data(hostname: HostName) -> None:
@@ -279,38 +272,12 @@ def _cleanup_status_data(hostname: HostName) -> None:
         os.remove(filepath + ".gz")
 
 
-def _do_inv_for(
-    host_config: config.HostConfig,
-    ipaddress: Optional[HostAddress],
-    *,
-    multi_host_sections: MultiHostSections,
-) -> Tuple[StructuredDataTree, StructuredDataTree]:
-
+def _do_inv_for_cluster(host_config: config.HostConfig) -> InventoryTrees:
     inventory_tree = StructuredDataTree()
-    status_data_tree = StructuredDataTree()
+    _set_cluster_property(inventory_tree, host_config)
 
-    node = inventory_tree.get_dict("software.applications.check_mk.cluster.")
-    if host_config.is_cluster:
-        node["is_cluster"] = True
-        _do_inv_for_cluster(host_config, inventory_tree)
-    else:
-        node["is_cluster"] = False
-        _do_inv_for_realhost(
-            host_config,
-            multi_host_sections,
-            ipaddress,
-            inventory_tree,
-            status_data_tree,
-        )
-
-    inventory_tree.normalize_nodes()
-    status_data_tree.normalize_nodes()
-    return inventory_tree, status_data_tree
-
-
-def _do_inv_for_cluster(host_config: config.HostConfig, inventory_tree: StructuredDataTree) -> None:
-    if host_config.nodes is None:
-        return
+    if not host_config.nodes:
+        return InventoryTrees(inventory_tree, StructuredDataTree())
 
     inv_node = inventory_tree.get_list("software.applications.check_mk.cluster.nodes:")
     for node_name in host_config.nodes:
@@ -318,14 +285,20 @@ def _do_inv_for_cluster(host_config: config.HostConfig, inventory_tree: Structur
             "name": node_name,
         })
 
+    inventory_tree.normalize_nodes()
+    return InventoryTrees(inventory_tree, StructuredDataTree())
+
 
 def _do_inv_for_realhost(
     host_config: config.HostConfig,
-    multi_host_sections: MultiHostSections,
     ipaddress: Optional[HostAddress],
-    inventory_tree: StructuredDataTree,
-    status_data_tree: StructuredDataTree,
-):
+    *,
+    multi_host_sections: MultiHostSections,
+) -> InventoryTrees:
+    inventory_tree = StructuredDataTree()
+    status_data_tree = StructuredDataTree()
+    _set_cluster_property(inventory_tree, host_config)
+
     section.section_step("Executing inventory plugins")
     console.verbose("Plugins:")
     for inventory_plugin in agent_based_register.iter_all_inventory_plugins():
@@ -352,6 +325,18 @@ def _do_inv_for_realhost(
         )
 
     console.verbose("\n")
+
+    inventory_tree.normalize_nodes()
+    status_data_tree.normalize_nodes()
+    return InventoryTrees(inventory_tree, status_data_tree)
+
+
+def _set_cluster_property(
+    inventory_tree: StructuredDataTree,
+    host_config: config.HostConfig,
+) -> None:
+    inventory_tree.get_dict(
+        "software.applications.check_mk.cluster.")["is_cluster"] = host_config.is_cluster
 
 
 def _aggregate_inventory_results(

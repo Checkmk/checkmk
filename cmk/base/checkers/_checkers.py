@@ -35,7 +35,9 @@ from .programs import DSProgramSource, SpecialAgentSource
 from .snmp import SNMPSource
 from .tcp import TCPSource
 
-__all__ = ["update_host_sections", "make_sources", "make_nodes"]
+__all__ = ["update_host_sections", "make_sources", "make_nodes", "SourceResult"]
+
+SourceResult = Tuple[ABCSource, result.Result[ABCHostSections, Exception]]
 
 
 class _Builder:
@@ -219,7 +221,7 @@ def update_host_sections(
     selected_raw_sections: Optional[SelectedRawSections],
     host_config: HostConfig,
     fetcher_messages: Optional[Sequence[FetcherMessage]] = None,
-) -> Sequence[Tuple[ABCSource, result.Result[ABCHostSections, Exception]]]:
+) -> Sequence[SourceResult]:
     """Gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
 
     Communication errors are not raised through by this functions. All agent related errors are
@@ -234,7 +236,7 @@ def update_host_sections(
 
     # Special agents can produce data for the same check_plugin_name on the same host, in this case
     # the section lines need to be extended
-    data: List[Tuple[ABCSource, result.Result[ABCHostSections, Exception]]] = []
+    data: List[SourceResult] = []
     for hostname, ipaddress, sources in nodes:
         for source_index, source in enumerate(sources):
             console.vverbose("  Source: %s/%s\n" % (source.source_type, source.fetcher_type))

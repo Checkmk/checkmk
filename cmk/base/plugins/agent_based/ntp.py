@@ -14,17 +14,26 @@ class Peer(NamedTuple):
     statecode: str
     name: str
     refid: str
-    stratum: str
-    t: str
-    when: str
-    poll: str
+    stratum: int
+    when: int
     reach: str
-    delay: str
     offset: float
     jitter: float
 
 
 Section = Dict[Optional[str], Peer]
+
+
+def _ntp_fmt_time(raw: str) -> int:
+    if raw == '-':
+        return 0
+    if raw[-1] == "m":
+        return int(raw[:-1]) * 60
+    if raw[-1] == "h":
+        return int(raw[:-1]) * 60 * 60
+    if raw[-1] == "d":
+        return int(raw[:-1]) * 60 * 60 * 24
+    return int(raw)
 
 
 def parse_ntp(string_table: AgentStringTable) -> Section:
@@ -36,12 +45,9 @@ def parse_ntp(string_table: AgentStringTable) -> Section:
             statecode=line[0],
             name=line[1],
             refid=line[2],
-            stratum=line[3],
-            t=line[4],
-            when=line[5],
-            poll=line[6],
+            stratum=int(line[3]),
+            when=_ntp_fmt_time(line[5]),
             reach=line[7],
-            delay=line[8],
             offset=float(line[9]),
             jitter=float(line[10]),
         )

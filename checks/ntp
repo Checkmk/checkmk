@@ -55,18 +55,6 @@ def inventory_ntp_summary(parsed):
         yield None, {}
 
 
-def ntp_fmt_time(raw: str) -> int:
-    if raw == '-':
-        return 0
-    if raw[-1] == "m":
-        return int(raw[:-1]) * 60
-    if raw[-1] == "h":
-        return int(raw[:-1]) * 60 * 60
-    if raw[-1] == "d":
-        return int(raw[:-1]) * 60 * 60 * 24
-    return int(raw)
-
-
 # Helper function that parses the information about one
 # peer and returns a tuple of
 # 0. Nagios state (0, 1, 2 or 3)
@@ -74,17 +62,15 @@ def ntp_fmt_time(raw: str) -> int:
 # 2. The offset (only if state != 3)
 # 3. The jitter (only if state != 3)
 def check_ntp_server_state(peer: ntp.Peer, params):
-    when = ntp_fmt_time(peer.when)
-    stratum = int(peer.stratum)
     state = ntp_state_codes.get(peer.statecode, "unknown")
-    infotext = "%s - stratum %d" % (state, stratum)
-    if when > 0:
-        infotext += ", last reached %d secs ago" % when
+    infotext = "%s - stratum %d" % (state, peer.stratum)
+    if peer.when > 0:
+        infotext += ", last reached %d secs ago" % peer.when
 
     crit_stratum, _warn, _crit = params
     if state in ["falsetick"]:
         return 2, infotext
-    if stratum >= crit_stratum:
+    if peer.stratum >= crit_stratum:
         return (2,
                 infotext + (", stratum is too high (max allowed is %d)(!!)" % (crit_stratum - 1)))
 

@@ -1099,3 +1099,21 @@ export function message_close(msg_id) {
         m.parentNode.removeChild(m);
     }
 }
+
+/************************************************
+ * user menu callbacks
+ *************************************************/
+
+// for quick access options in user menu
+
+export function toggle_user_attribute(mode) {
+    ajax.call_ajax(mode, {
+        method: "POST",
+        response_handler: function (handler_data, ajax_response) {
+            const data = JSON.parse(ajax_response);
+            if (data.result_code == 0) {
+                window.location.reload();
+            }
+        },
+    });
+}

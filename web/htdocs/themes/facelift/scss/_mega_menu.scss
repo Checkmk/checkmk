@@ -83,7 +83,7 @@
       div.content.inner { height: inherit; }
     }
     &.help_links > div.popup_menu { @include small-menu(100px); }
-    &.user > div.popup_menu { @include small-menu(150px); }
+    &.user > div.popup_menu { @include small-menu(240px); }
 
     div.popup_menu {
       position: absolute;
@@ -185,7 +185,7 @@
               display: block;
               margin-left: 28px;
 
-              & > img, & > span { margin-left: -28px; } /* No spacing if icons per entry are used */
+              & > img, & > span.emblem { margin-left: -28px; } /* No spacing if icons per entry are used */
             }
 
             a.active {
@@ -196,6 +196,18 @@
               width: 14px;
               height: 14px;
               margin-right: 5px;
+            }
+
+            input.button {
+              float: right;
+              width: 56px;
+              height: 13px;
+              padding: 1px;
+              margin: 0;
+              font-weight: bold;
+              color: $bg-color;
+              background-color: $success;
+              border: none;
             }
 
             &.show_all_items {

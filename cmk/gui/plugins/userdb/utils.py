@@ -32,6 +32,10 @@ def load_cached_profile(user_id: UserId) -> Optional[UserSpec]:
     return user.load_file("cached_profile", None)
 
 
+def save_cached_profile(user_id: UserId, cached_profile: UserSpec) -> None:
+    config.save_user_file("cached_profile", cached_profile, user_id=user_id)
+
+
 def _multisite_dir() -> str:
     return cmk.utils.paths.default_config_dir + "/multisite.d/wato/"
 

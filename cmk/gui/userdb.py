@@ -54,6 +54,7 @@ from cmk.gui.plugins.userdb.utils import (
     get_connection,
     active_connections,
     release_users_lock,
+    save_cached_profile,
 )
 
 # Datastructures and functions needed before plugins can be loaded
@@ -1000,7 +1001,7 @@ def _save_cached_profile(user_id: UserId, user: UserSpec, multisite_keys: List[s
         if key in multisite_keys or key not in non_contact_keys:
             cache[key] = user[key]
 
-    config.save_user_file("cached_profile", cache, user_id=user_id)
+    save_cached_profile(user_id, cache)
 
 
 def contactgroups_of_user(user_id: UserId) -> List[ContactgroupName]:

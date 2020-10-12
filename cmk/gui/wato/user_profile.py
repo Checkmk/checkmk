@@ -7,7 +7,7 @@
 
 import time
 import abc
-from typing import List, Union, Iterator
+from typing import Iterator, List, Union
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.i18n
@@ -23,6 +23,7 @@ from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
 from cmk.gui.config import SiteId, SiteConfiguration
 from cmk.gui.plugins.userdb.htpasswd import hash_password
+from cmk.gui.plugins.userdb.utils import load_cached_profile, save_cached_profile
 from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, MKAuthException
 from cmk.gui.i18n import _, _l, _u
 from cmk.gui.globals import html
@@ -44,7 +45,39 @@ from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
 
 
+def _get_current_theme_titel() -> str:
+    return [titel for theme_id, titel in config.theme_choices() if theme_id == html.get_theme()][0]
+
+
+def _get_sidebar_position() -> str:
+    if config.user.get_attribute("ui_sidebar_position"):
+        return _("left")
+
+    return _("right")
+
+
 def _user_menu_topics() -> List[TopicMenuTopic]:
+    quick_items = [
+        TopicMenuItem(
+            name="ui_theme",
+            title=_("Interface theme"),
+            url="javascript:cmk.sidebar.toggle_user_attribute(\"ajax_ui_theme.py\")",
+            target="",
+            sort_index=10,
+            icon_name="color_mode",
+            button_title=_get_current_theme_titel(),
+        ),
+        TopicMenuItem(
+            name="sidebar_position",
+            title=_("Sidebar position"),
+            url="javascript:cmk.sidebar.toggle_user_attribute(\"ajax_sidebar_position.py\")",
+            target="",
+            sort_index=20,
+            icon_name="sidebar_position",
+            button_title=_get_sidebar_position(),
+        ),
+    ]
+
     items = [
         TopicMenuItem(
             name="change_password",
@@ -80,12 +113,21 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
                 icon_name="topic_events",
             ))
 
-    return [TopicMenuTopic(
-        name="user",
-        title=_("User"),
-        icon_name="topic_profile",
-        items=items,
-    )]
+    return [
+        TopicMenuTopic(
+            name="user",
+            title=_("Quick access"),
+            # TODO(rb): set correct icon
+            icon_name="topic_profile",
+            items=quick_items,
+        ),
+        TopicMenuTopic(
+            name="user",
+            title=_("Profile"),
+            icon_name="topic_profile",
+            items=items,
+        )
+    ]
 
 
 mega_menu_registry.register(
@@ -96,6 +138,46 @@ mega_menu_registry.register(
         sort_index=20,
         topics=_user_menu_topics,
     ))
+
+
+@page_registry.register_page("ajax_ui_theme")
+class ModeAjaxCycleThemes(AjaxPage):
+    """AJAX handler for quick access option 'Interface theme" in user menu"""
+    def page(self):
+        themes = [theme for theme, _title in cmk.gui.config.theme_choices()]
+        current_theme = html.get_theme()
+        try:
+            theme_index = themes.index(current_theme)
+        except ValueError:
+            raise MKUserError(None, _("Could not determine current theme."))
+
+        if len(themes) == theme_index + 1:
+            new_theme = themes[0]
+        else:
+            new_theme = themes[theme_index + 1]
+
+        # TODO(rb): use load_cached_profile/save_cached_profile where
+        # userdb.load/userdb.save is used
+        assert config.user.id is not None
+        user_id = config.user.id
+        cached_profile = load_cached_profile(config.user.id)
+        if cached_profile is None:
+            raise MKUserError(None, _("Could not load cached user profile."))
+
+        cached_profile["ui_theme"] = new_theme
+        save_cached_profile(user_id, cached_profile)
+
+
+@page_registry.register_page("ajax_sidebar_position")
+class ModeAjaxCycleSidebarPosition(AjaxPage):
+    """AJAX handler for quick access option 'Sidebar position" in user menu"""
+    def page(self):
+        users = userdb.load_users(lock=True)
+        assert config.user.id is not None
+        user = users[config.user.id]
+        user["ui_sidebar_position"] = None if _get_sidebar_position() == "left" else "left"
+
+        userdb.save_users(users)
 
 
 def user_profile_async_replication_page() -> None:

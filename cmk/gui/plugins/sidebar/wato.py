@@ -320,7 +320,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         for topic in topics:
             targets: Choices = []
             for item in topic.items:
-                if item.url.startswith("dashboards.py"):
+                if item.url and item.url.startswith("dashboards.py"):
                     name = 'dashboard|' + item.name
                 else:
                     name = item.name

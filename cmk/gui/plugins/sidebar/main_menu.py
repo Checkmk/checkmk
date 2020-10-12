@@ -8,11 +8,12 @@
 Cares about the main navigation of our GUI. This is a) the small sidebar and b) the mega menu
 """
 
-from typing import NamedTuple, List, Optional
+from typing import NamedTuple, List, Optional, Union
 
 import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.htmllib import HTML
 from cmk.gui.plugins.sidebar.search import QuicksearchSnapin
 from cmk.gui.utils.popups import MethodInline
 from cmk.gui.type_defs import (
@@ -178,6 +179,14 @@ class MegaMenuRenderer:
         )
         if config.user.get_attribute("icons_per_item"):
             html.icon(item.icon_name or "trans", emblem=item.emblem)
-        html.write_text(item.title)
+        self._show_item_title(item)
         html.close_a()
         html.close_li()
+
+    def _show_item_title(self, item: TopicMenuItem) -> None:
+        item_title: Union[HTML, str] = item.title
+        if not item.button_title:
+            html.write_text(item_title)
+            return
+        html.span(item.title)
+        html.button(item.name, item.button_title)

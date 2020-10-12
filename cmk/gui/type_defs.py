@@ -118,6 +118,7 @@ class TopicMenuItem(NamedTuple):
     is_show_more: bool = False
     icon_name: Optional[str] = None
     emblem: Optional[str] = None
+    button_title: Optional[str] = None
 
 
 class TopicMenuTopic(NamedTuple):

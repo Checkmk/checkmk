@@ -74,9 +74,6 @@ def ntp_fmt_time(raw: str) -> int:
 # 2. The offset (only if state != 3)
 # 3. The jitter (only if state != 3)
 def check_ntp_server_state(peer: ntp.Peer, params):
-    if peer.reach == "0":
-        return (3, "peer is unreachable")
-
     offset = float(peer.offset)
     jitter = float(peer.jitter)
 
@@ -113,6 +110,9 @@ def check_ntp(item, params, parsed: ntp.Section):
     peer = parsed.get(item)
     if peer is None:
         return
+    if peer.reach == "0":
+        yield 3, f"Peer {peer.name} is unreachable"
+        return
 
     state = check_ntp_server_state(peer, params)
     if len(state) == 4:
@@ -133,7 +133,11 @@ def check_ntp_summary(_no_item, params, parsed):
     if peer is None:
         if parsed:
             yield 0, "Found %d peers, but none is suitable" % len(parsed)
-        yield from tolerance_check(params, None)
+        yield from tolerance_check(
+            set_sync_time=None,
+            levels=params.get("alert_delay"),
+            notice_only=False,
+        )
         return
 
     if isinstance(params, tuple):
@@ -143,7 +147,11 @@ def check_ntp_summary(_no_item, params, parsed):
         }
 
     yield from check_ntp(peer.name, params["ntp_levels"], parsed)
-    yield from tolerance_check(params, time.time())
+    yield from tolerance_check(
+        set_sync_time=time.time(),
+        levels=params.get("alert_delay"),
+        notice_only=True,
+    )
     yield 0, f"\nSynchronized on {peer.name}"
 
 

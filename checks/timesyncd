@@ -63,8 +63,10 @@ def check_timesyncd(_item, params, parsed):
     server = parsed.get("server")
     if server is None or server == "null":
         yield 0, "Found no time server"
-        for subresult in tolerance_check(params, None):
-            yield subresult
+        yield from tolerance_check(
+            set_sync_time=None,
+            levels=params.get("alert_delay"),
+        )
         return
 
     stratum_level = params.get("stratum_level") - 1
@@ -99,7 +101,8 @@ def check_timesyncd(_item, params, parsed):
                            human_readable_func=get_age_human_readable,
                            infoname="Last synchronised")
 
-        set_item_state("time_server", synctime)  # remember last successful sync
+        # just to remember last successful sync, yields nothing:
+        yield from tolerance_check(set_sync_time=synctime, levels=None)
 
     yield 0, "synchronised on %s" % server
 

@@ -7,7 +7,6 @@
 from typing import List, Tuple, Optional
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
 from cmk.gui.valuespec import (
     Dictionary,
     Timerange,
@@ -259,23 +258,16 @@ class SingleMetricDashlet(ABCFigureDashlet):
     def description(cls):
         return _("Displays a single metric of a specific host and service.")
 
-    def _adjust_font_size_js(self):
-        return """
-            let oTdMetricValue = document.getElementById("dashlet_%s").getElementsByClassName("metric_value dynamic_font_size");
-            if (oTdMetricValue.length)
-                cmk.dashboard.adjust_single_metric_font_size(oTdMetricValue[0]);
-        """ % self._dashlet_id
-
-    def update(self):
-        self.show()
-        html.javascript(self._adjust_font_size_js())
-
-    def on_resize(self):
-        return self._adjust_font_size_js()
-
     @classmethod
     def single_infos(cls):
         return ["service"]
+
+    def on_resize(self):
+        return ("if (typeof %(instance)s != 'undefined') {"
+                "%(instance)s.update_gui();"
+                "}") % {
+                    "instance": self.instance_name
+                }
 
     def show(self):
         self.js_dashlet("single_metric_data.py")

@@ -62,26 +62,11 @@ def inventory_ntp_summary(parsed):
 # 2. The offset (only if state != 3)
 # 3. The jitter (only if state != 3)
 def check_ntp_server_state(peer: ntp.Peer, params):
-    state = ntp_state_codes.get(peer.statecode, "unknown")
-    infotext = "%s - stratum %d" % (state, peer.stratum)
+    infotext = ntp_state_codes.get(peer.statecode, "unknown")
     if peer.when > 0:
         infotext += ", last reached %d secs ago" % peer.when
 
-    crit_stratum, _warn, _crit = params
-    if state in ["falsetick"]:
-        return 2, infotext
-    if peer.stratum >= crit_stratum:
-        return (2,
-                infotext + (", stratum is too high (max allowed is %d)(!!)" % (crit_stratum - 1)))
-
-    # The following check in some cases produces false alarms. The poll interval can
-    # switch back to a low value while 'when' still being at a high value. While
-    # this happens only for a short time, it will make the check alarm. So we
-    # rather switch this condition off:
-    # elif when > 2*poll and when > 128: # when can exceed poll for small polling values
-    #     return (3, "response due since %d secs%s" % (when - poll, infotext), offset, jitter)
-
-    return 0, infotext
+    return 2 if infotext == "falsetick" else 0, infotext
 
 
 def check_ntp(item, params, parsed: ntp.Section):
@@ -92,7 +77,7 @@ def check_ntp(item, params, parsed: ntp.Section):
         yield 3, f"Peer {peer.name} is unreachable"
         return
 
-    _crit_stratum, warn, crit = params
+    crit_stratum, warn, crit = params
     yield check_levels(
         peer.offset,
         "offset",
@@ -109,6 +94,14 @@ def check_ntp(item, params, parsed: ntp.Section):
         None,
         human_readable_func=lambda f: "%.4f ms" % f,
         infoname="\nJitter",
+    )
+
+    yield check_levels(
+        peer.stratum,
+        None,
+        (crit_stratum, crit_stratum),
+        human_readable_func=int,
+        infoname="\nStratum",
     )
 
 

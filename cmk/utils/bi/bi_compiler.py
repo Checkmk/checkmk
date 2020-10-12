@@ -21,9 +21,13 @@ from cmk.utils.bi.bi_data_fetcher import (
     sites_callback_holder,
     SiteProgramStart,
 )
+
+import cmk.utils.store as store
+from cmk.utils.exceptions import MKGeneralException
+
+from cmk.utils.i18n import _
 from cmk.utils.bi.bi_trees import BICompiledAggregation, BICompiledAggregationSchema
 from cmk.utils.bi.bi_aggregation import BIAggregation
-import cmk.utils.store as store
 from cmk.utils.type_defs import HostName, ServiceName
 
 
@@ -103,6 +107,8 @@ class BICompiler:
                 self._logger.debug("Compilation of %s took %f" %
                                    (aggregation.id, time.time() - start))
 
+            self._verify_aggregation_title_uniqueness(self._compiled_aggregations)
+
             for aggr_id, aggr in self._compiled_aggregations.items():
                 start = time.time()
                 result = BICompiledAggregationSchema().dump(aggr)
@@ -116,6 +122,19 @@ class BICompiler:
 
         self._path_compilation_timestamp.write_text(
             str(current_configstatus["configfile_timestamp"]))
+
+    def _verify_aggregation_title_uniqueness(
+            self, compiled_aggregations: Dict[str, BICompiledAggregation]) -> None:
+        used_titles: Dict[str, str] = {}
+        for aggr_id, bi_aggregation in compiled_aggregations.items():
+            for bi_branch in bi_aggregation.branches:
+                branch_title = bi_branch.properties.title
+                if branch_title in used_titles:
+                    raise MKGeneralException(
+                        _("The aggregation titles are not unique. \"%s\" is created "
+                          "by aggregation <b>%s</b> and <b>%s</b>") %
+                        (branch_title, aggr_id, used_titles[branch_title]))
+                used_titles[branch_title] = aggr_id
 
     def prepare_for_compilation(self, online_sites: Set[SiteProgramStart]):
         bi_packs.load_config()

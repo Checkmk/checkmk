@@ -120,10 +120,6 @@ def do_inv_check(
     else:
         ipaddress = ip_lookup.lookup_ip_address(host_config)
 
-    status = 0
-    infotexts: List[str] = []
-    long_infotexts: List[str] = []
-
     multi_host_sections, results = _get_multi_host_sections_for_inv(config_cache, host_config,
                                                                     ipaddress)
 
@@ -132,6 +128,10 @@ def do_inv_check(
         ipaddress,
         multi_host_sections=multi_host_sections,
     )
+
+    status = 0
+    infotexts: List[str] = []
+    long_infotexts: List[str] = []
 
     #TODO add cluster if and only if all sources do not fail?
     if _all_sources_fail(host_config, ipaddress):

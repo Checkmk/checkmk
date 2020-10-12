@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.base.plugins.agent_based.ntp as ntp
+import cmk.base.plugins.agent_based.agent_based_api.v1.render as render
 
 ntp_default_levels = (10, 200.0, 500.0)  # stratum, ms offset
 
@@ -55,20 +56,6 @@ def inventory_ntp_summary(parsed):
         yield None, {}
 
 
-# Helper function that parses the information about one
-# peer and returns a tuple of
-# 0. Nagios state (0, 1, 2 or 3)
-# 1. Nagios check output text
-# 2. The offset (only if state != 3)
-# 3. The jitter (only if state != 3)
-def check_ntp_server_state(peer: ntp.Peer, params):
-    infotext = ntp_state_codes.get(peer.statecode, "unknown")
-    if peer.when > 0:
-        infotext += ", last reached %d secs ago" % peer.when
-
-    return 2 if infotext == "falsetick" else 0, infotext
-
-
 def check_ntp(item, params, parsed: ntp.Section):
     peer = parsed.get(item)
     if peer is None:
@@ -86,7 +73,11 @@ def check_ntp(item, params, parsed: ntp.Section):
         infoname="Offset",
     )
 
-    yield check_ntp_server_state(peer, params)
+    if peer.when > 0:
+        yield 0, "Time since last sync: %s" % render.timespan(peer.when)
+
+    state = ntp_state_codes.get(peer.statecode, "unknown")
+    yield 2 if state == "falsetick" else 0, f"\nState: {state}"
 
     yield check_levels(
         peer.jitter,

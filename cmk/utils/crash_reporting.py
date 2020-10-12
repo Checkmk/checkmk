@@ -48,7 +48,7 @@ class RobustJSONEncoder(json.JSONEncoder):
 
 
 class CrashReportStore:
-    _keep_num_crashes = 20
+    _keep_num_crashes = 200
     """Caring about the persistance of crash reports in the local site"""
     def save(self, crash: 'ABCCrashReport') -> None:
         """Save the crash report instance to it's crash report directory"""

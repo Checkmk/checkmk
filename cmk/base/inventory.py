@@ -286,7 +286,6 @@ def _do_inv_for(
     *,
     multi_host_sections: MultiHostSections,
 ) -> Tuple[StructuredDataTree, StructuredDataTree]:
-    hostname = host_config.hostname
 
     initialize_inventory_tree()
     inventory_tree = g_inv_tree
@@ -301,7 +300,6 @@ def _do_inv_for(
         _do_inv_for_realhost(
             host_config,
             multi_host_sections,
-            hostname,
             ipaddress,
             inventory_tree,
             status_data_tree,
@@ -326,7 +324,6 @@ def _do_inv_for_cluster(host_config: config.HostConfig, inventory_tree: Structur
 def _do_inv_for_realhost(
     host_config: config.HostConfig,
     multi_host_sections: MultiHostSections,
-    hostname: HostName,
     ipaddress: Optional[HostAddress],
     inventory_tree: StructuredDataTree,
     status_data_tree: StructuredDataTree,
@@ -336,7 +333,7 @@ def _do_inv_for_realhost(
     for inventory_plugin in agent_based_register.iter_all_inventory_plugins():
 
         kwargs = multi_host_sections.get_section_kwargs(
-            HostKey(hostname, ipaddress, SourceType.HOST),
+            HostKey(host_config.hostname, ipaddress, SourceType.HOST),
             inventory_plugin.sections,
         )
         if not kwargs:

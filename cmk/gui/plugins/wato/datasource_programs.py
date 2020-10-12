@@ -2264,6 +2264,8 @@ def _transform_aws(d):
     if 'cloudwatch' in services:
         services['cloudwatch_alarms'] = services['cloudwatch']
         del services['cloudwatch']
+    if 'assume_role' not in d:
+        d['assume_role'] = {}
     return d
 
 

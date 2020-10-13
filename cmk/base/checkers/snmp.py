@@ -4,9 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from functools import cached_property
 import time
 from pathlib import Path
-from typing import Collection, Optional, Sequence, Tuple
+from typing import Collection, Mapping, Optional, Set
 
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
 
@@ -167,18 +168,17 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
     def _make_summarizer(self) -> "SNMPSummarizer":
         return SNMPSummarizer(self.exit_spec)
 
-    def _make_snmp_section_detects(self) -> Sequence[Tuple[SectionName, SNMPDetectSpec]]:
+    def _make_snmp_section_detects(self) -> Mapping[SectionName, SNMPDetectSpec]:
         """Create list of all SNMP scan specifications"""
         disabled_sections = self.host_config.disabled_snmp_sections()
-        return [(
-            snmp_section_plugin.name,
-            snmp_section_plugin.detect_spec,
-        )
-                for snmp_section_plugin in agent_based_register.iter_all_snmp_sections()
-                if snmp_section_plugin.name not in disabled_sections]
+        return {
+            snmp_section_plugin.name: snmp_section_plugin.detect_spec
+            for snmp_section_plugin in agent_based_register.iter_all_snmp_sections()
+            if snmp_section_plugin.name not in disabled_sections
+        }
 
     def _make_configured_snmp_sections(self) -> Collection[SectionName]:
-        section_names = set(
+        snmp_section_names = self._enabled_snmp_sections.intersection(
             agent_based_register.get_relevant_raw_sections(
                 check_plugin_names=check_table.get_needed_check_names(
                     self.hostname,
@@ -188,11 +188,13 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
                 consider_inventory_plugins=self.host_config.do_status_data_inventory,
             ))
 
-        snmp_section_names = section_names.intersection(
-            s.name for s in agent_based_register.iter_all_snmp_sections()
-        ) - self.host_config.disabled_snmp_sections()
-
         return SNMPSource._sort_section_names(snmp_section_names)
+
+    # TODO: filter out disabled sections in fetcher. They need to known them anyway.
+    @cached_property
+    def _enabled_snmp_sections(self) -> Set[SectionName]:
+        return {s.name for s in agent_based_register.iter_all_snmp_sections()
+               } - self.host_config.disabled_snmp_sections()
 
     @staticmethod
     def _sort_section_names(section_names: Collection[SectionName]) -> Collection[SectionName]:

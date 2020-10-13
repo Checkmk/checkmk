@@ -173,4 +173,4 @@ def test_make_snmp_section_detects(monkeypatch, hostname, ipaddress):
     )
     Scenario().add_host(hostname).apply(monkeypatch)
     source = SNMPSource.snmp(hostname, ipaddress, mode=Mode.DISCOVERY)
-    assert source._make_snmp_section_detects() == [(plugin.name, plugin.detect_spec)]
+    assert source._make_snmp_section_detects() == {plugin.name: plugin.detect_spec}

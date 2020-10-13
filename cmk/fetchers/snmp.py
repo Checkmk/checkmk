@@ -7,7 +7,7 @@
 import ast
 import logging
 from functools import partial
-from typing import Any, cast, Collection, Dict, Final, List, Mapping, Sequence, Tuple
+from typing import Any, cast, Collection, Dict, Final, List, Mapping, Optional, Set, Tuple
 
 from cmk.utils.type_defs import SectionName
 
@@ -45,7 +45,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         file_cache: SNMPFileCache,
         *,
         snmp_section_trees: Mapping[SectionName, List[SNMPTree]],
-        snmp_section_detects: Sequence[Tuple[SectionName, SNMPDetectSpec]],
+        snmp_section_detects: Mapping[SectionName, SNMPDetectSpec],
         configured_snmp_sections: Collection[SectionName],
         on_error: str,
         missing_sys_description: bool,
@@ -78,17 +78,13 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
                 SectionName(name): [SNMPTree.from_json(tree) for tree in trees
                                    ] for name, trees in serialized["snmp_section_trees"].items()
             },
-            snmp_section_detects=[
-                (
-                    SectionName(name),
+            snmp_section_detects={
+                SectionName(name): SNMPDetectSpec(
                     # The cast is necessary as mypy does not infer types in a list comprehension.
                     # See https://github.com/python/mypy/issues/5068
-                    SNMPDetectSpec([[cast(SNMPDetectAtom, tuple(inner))
-                                     for inner in outer]
-                                    for outer in specs]),
-                )
-                for name, specs in serialized["snmp_section_detects"]
-            ],
+                    [[cast(SNMPDetectAtom, tuple(inner)) for inner in outer] for outer in specs])
+                for name, specs in serialized["snmp_section_detects"].items()
+            },
             configured_snmp_sections={
                 SectionName(name) for name in serialized["configured_snmp_sections"]
             },
@@ -105,7 +101,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
                 str(n): [tree.to_json() for tree in trees
                         ] for n, trees in self.snmp_section_trees.items()
             },
-            "snmp_section_detects": [(str(n), d) for n, d in self.snmp_section_detects],
+            "snmp_section_detects": {str(n): d for n, d in self.snmp_section_detects.items()},
             "configured_snmp_sections": [str(s) for s in self.configured_snmp_sections],
             "on_error": self.on_error,
             "missing_sys_description": self.missing_sys_description,
@@ -119,9 +115,23 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
     def close(self) -> None:
         pass
 
-    def _detect(self) -> Collection[SectionName]:
+    def _detect(
+        self,
+        *,
+        restrict_to: Optional[Collection[SectionName]] = None,
+    ) -> Set[SectionName]:
+        if restrict_to is None:
+            # TODO: disabled sections must be considered here, once
+            # snmp_section_detects is a global configuration.
+            sections: Collection[Tuple[SectionName,
+                                       SNMPDetectSpec]] = self.snmp_section_detects.items()
+        else:
+            sections = [(n, self.snmp_section_detects[n])
+                        for n in restrict_to
+                        if n in self.snmp_section_detects]
+
         return gather_available_raw_section_names(
-            sections=self.snmp_section_detects,
+            sections=sections,
             on_error=self.on_error,
             missing_sys_description=self.missing_sys_description,
             backend=self._backend,

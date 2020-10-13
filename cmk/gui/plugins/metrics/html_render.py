@@ -771,7 +771,7 @@ def render_ajax_graph_hover(context, hover_time):
 # TODO: This is not acurate! Especially when the font size is changed this does not lead to correct
 # results. But this is a more generic problem of the html_size_per_ex which is hard coded instead
 # of relying on the font as it should.
-def graph_legend_height_ex(graph_render_options, graph_artwork):
+def graph_legend_height_ex(graph_render_options, graph_artwork) -> float:
     if not show_graph_legend(graph_render_options, graph_artwork):
         return 0.0
     # Add header line + spacing: '3.0'
@@ -882,9 +882,8 @@ def host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_opt
         graph_artwork = artwork.compute_graph_artwork(graph_recipe, graph_data_range,
                                                       graph_render_options)
         if graph_artwork["curves"]:
-            legend_width, legend_height = graph_legend_height_ex(graph_render_options,
-                                                                 graph_artwork)
-            graph_render_options["size"] = (width - legend_width, height - legend_height)
+            legend_height = graph_legend_height_ex(graph_render_options, graph_artwork)
+            graph_render_options["size"] = (width, height - legend_height)
 
     html_code = render_graphs_from_definitions([graph_recipe],
                                                graph_data_range,

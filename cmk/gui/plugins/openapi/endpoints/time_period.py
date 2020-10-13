@@ -33,8 +33,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
 )
 
-TIME = Tuple[str, str]
-TIME_RANGE = Tuple[TIME, TIME]
+TIME_RANGE = Tuple[str, str]
 
 
 @endpoint_schema(constructors.collection_href('time_period'),
@@ -151,8 +150,9 @@ def _daily_time_ranges(active_time_ranges: List[Dict[str, Any]]) -> Dict[str, Li
     Examples:
         >>> _daily_time_ranges(
         ... [{"day": "monday", "time_ranges": [{"start": dt.time(12), "end": dt.time(14)}]}])
-        {'monday': [(('12', '0'), ('14', '0'))], \
-'tuesday': [], 'wednesday': [], 'thursday': [], 'friday': [], 'saturday': [], 'sunday': []}
+        {'monday': [('12:00', '14:00')], 'tuesday': [], 'wednesday': [], 'thursday': [], \
+'friday': [], 'saturday': [], 'sunday': []}
+
     """
 
     result: Dict[str, List[TIME_RANGE]] = {day: [] for day in defines.weekday_ids()}
@@ -183,17 +183,14 @@ def _active_time_ranges_readable(days: Dict[str, Any]) -> List[Dict[str, Any]]:
         >>> _active_time_ranges_readable(
         ... {'monday': [(('12', '0'), ('14', '0'))], 'tuesday': [], 'wednesday': [],
         ... 'thursday': [], 'friday': [], 'saturday': [], 'sunday': []})
-        [{'day': 'monday', 'time_ranges': [{'start': '12:00', 'end': '14:00'}]}]
+        [{'day': 'monday', 'time_ranges': [{'start': ('12', '0'), 'end': ('14', '0')}]}]
     """
 
     result: List[Dict[str, Any]] = []
     for day, time_ranges in days.items():
         temp: List[Dict[str, str]] = []
         for time_range in time_ranges:
-            temp.append({
-                "start": _time_readable(time_range[0]),
-                "end": _time_readable(time_range[1])
-            })
+            temp.append({"start": time_range[0], "end": time_range[1]})
         if temp:
             result.append({"day": day, "time_ranges": temp})
     return result
@@ -221,22 +218,19 @@ def _exceptions_readable(mk_exceptions: Dict[str, Any]) -> List[Dict[str, Any]]:
 
     Examples:
         >>> _exceptions_readable({"2020-01-01": [(('14', '0'), ('18', '0'))]})
-        [{'date': '2020-01-01', 'time_ranges': [{'start': '14:00', 'end': '18:00'}]}]
+        [{'date': '2020-01-01', 'time_ranges': [{'start': ('14', '0'), 'end': ('18', '0')}]}]
 
     """
     result: List[Dict[str, Any]] = []
     for test_date, time_ranges in mk_exceptions.items():
         time_ranges_formatted: List[Dict[str, str]] = []
         for time_range in time_ranges:
-            time_ranges_formatted.append({
-                "start": _time_readable(time_range[0]),
-                "end": _time_readable(time_range[1])
-            })
+            time_ranges_formatted.append({"start": time_range[0], "end": time_range[1]})
         result.append({"date": test_date, "time_ranges": time_ranges_formatted})
     return result
 
 
-def _time_readable(mk_time: TIME) -> str:
+def _time_readable(mk_time: str) -> str:
     minutes = "00" if mk_time[1] == "0" else mk_time[1]
     return f"{mk_time[0]}:{minutes}"
 
@@ -246,10 +240,10 @@ def _format_time_range(time_range: Dict[str, dt.time]) -> TIME_RANGE:
     return _mk_time_format(time_range['start']), _mk_time_format(time_range['end'])
 
 
-def _mk_time_format(time: dt.time) -> TIME:
+def _mk_time_format(time: dt.time) -> str:
     minutes = time.strftime("%M")
-    minutes = "0" if minutes == "00" else minutes
-    return time.strftime("%H"), minutes
+    minutes = "00" if minutes == "0" else minutes
+    return f"{time.strftime('%H')}:{minutes}"
 
 
 def _mk_date_format(exception_date: dt.date) -> str:

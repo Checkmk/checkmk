@@ -15,7 +15,7 @@ pytestmark = pytest.mark.checks
         "ssl": (False, 143),
         "auth": ("hans", "wurst"),
     }
-}, ["--server=foo", "--port=143", "--username=hans", "--password=wurst"])])
+}, ["--fetch-server=foo", "--fetch-port=143", "--fetch-username=hans", "--fetch-password=wurst"])])
 def test_check_mailboxes_argument_parsing(check_manager, params, expected_args):
     """Tests if all required arguments are present."""
     active_check = check_manager.get_active_check("check_mailboxes")

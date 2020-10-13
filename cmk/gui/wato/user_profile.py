@@ -51,27 +51,21 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
             title=_("Change password"),
             url="user_change_pw.py",
             sort_index=10,
-            is_show_more=False,
             icon_name="topic_change_password",
-            emblem=None,
         ),
         TopicMenuItem(
             name="user_profile",
             title=_("Edit profile"),
             url="user_profile.py",
             sort_index=20,
-            is_show_more=False,
             icon_name="topic_profile",
-            emblem=None,
         ),
         TopicMenuItem(
             name="logout",
             title=_("Logout"),
             url="logout.py",
             sort_index=30,
-            is_show_more=False,
             icon_name="sidebar_logout",
-            emblem=None,
         ),
     ]
 
@@ -83,9 +77,7 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
                 title=_("Notification rules"),
                 url="wato.py?mode=user_notifications_p",
                 sort_index=30,
-                is_show_more=False,
                 icon_name="topic_events",
-                emblem=None,
             ))
 
     return [TopicMenuTopic(
@@ -103,7 +95,6 @@ mega_menu_registry.register(
         icon_name="main_user",
         sort_index=20,
         topics=_user_menu_topics,
-        search=None,
     ))
 
 

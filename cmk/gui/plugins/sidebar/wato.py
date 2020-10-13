@@ -100,7 +100,6 @@ mega_menu_registry.register(
         icon_name="main_setup",
         sort_index=15,
         topics=get_wato_menu_items,
-        search=None,
     ))
 
 

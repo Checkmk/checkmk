@@ -109,31 +109,31 @@ class ABCMegaMenuSearch(ABC):
         ...
 
 
-TopicMenuItem = NamedTuple("TopicMenuItem", [
-    ("name", str),
-    ("title", str),
-    ("url", str),
-    ("sort_index", int),
-    ("is_show_more", bool),
-    ("icon_name", Optional[str]),
-    ("emblem", Optional[str]),
-])
+class TopicMenuItem(NamedTuple):
+    name: str
+    title: str
+    url: str
+    sort_index: int
+    is_show_more: bool = False
+    icon_name: Optional[str] = None
+    emblem: Optional[str] = None
 
-TopicMenuTopic = NamedTuple("TopicMenuTopic", [
-    ("name", "str"),
-    ("title", "str"),
-    ("items", List[TopicMenuItem]),
-    ("icon_name", Optional[str]),
-])
 
-MegaMenu = NamedTuple("MegaMenu", [
-    ("name", str),
-    ("title", str),
-    ("icon_name", str),
-    ("sort_index", int),
-    ("topics", Callable[[], List[TopicMenuTopic]]),
-    ("search", Optional[ABCMegaMenuSearch]),
-])
+class TopicMenuTopic(NamedTuple):
+    name: "str"
+    title: "str"
+    items: List[TopicMenuItem]
+    icon_name: Optional[str] = None
+
+
+class MegaMenu(NamedTuple):
+    name: str
+    title: str
+    icon_name: str
+    sort_index: int
+    topics: Callable[[], List[TopicMenuTopic]]
+    search: Optional[ABCMegaMenuSearch] = None
+
 
 SearchQuery = str
 

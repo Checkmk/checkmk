@@ -36,6 +36,8 @@ def test_registered_pages():
         'ajax_popup_move_to_folder',
         'ajax_reschedule',
         'ajax_search',
+        'ajax_search_monitoring',
+        'ajax_search_setup',
         'ajax_service_discovery',
         'ajax_set_foldertree',
         'ajax_set_rowselection',

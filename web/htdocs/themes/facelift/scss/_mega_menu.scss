@@ -35,7 +35,7 @@
 
   img:hover { opacity: 1; }
 
-  #mk_side_search {
+  #mk_side_search_monitoring, #mk_side_search_setup {
     width: auto;
     padding: (2 * $spacing) $spacing;
     box-sizing: border-box;
@@ -135,6 +135,10 @@
         padding: 0;
         overflow-y: auto;
         border-top: 1px solid $headline-color;
+
+        &.hidden {
+          display: none;
+        }
 
         div.topic {
           flex-grow: 1;

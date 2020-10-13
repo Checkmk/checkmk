@@ -37,6 +37,7 @@ from cmk.gui.type_defs import (
     Rows,
     ViewName,
 )
+from cmk.gui.pages import page_registry, AjaxPage
 
 #   .--Quicksearch---------------------------------------------------------.
 #   |         ___        _      _                            _             |
@@ -1140,22 +1141,74 @@ match_plugin_registry.register(HosttagMatchPlugin())
 #   '----------------------------------------------------------------------'
 
 
+class ResultsRenderer:
+    def __init__(self, search_type: str):
+
+        # TODO: In the future, we should separate the rendering and the generation of the results
+        # TODO: Add here the callables for obtaining the search results
+        if search_type == "monitoring":
+            self._generate_results = lambda q: f"Here, you will find monitoring results for '{q}'"
+        elif search_type == "setup":
+            self._generate_results = lambda q: f"Here, you will find setup results for '{q}'"
+        else:
+            raise NotImplementedError(f"Renderer not implemented for type '{search_type}'")
+
+    def render(self, query) -> cmk.gui.utils.html.HTML:
+        results = self._generate_results(query)
+        return html.render_div(id_="foo_bar", content=results, class_="topic")
+
+
 class MonitoringSearch(ABCMegaMenuSearch):
     """Search field in the monitoring menu"""
     def show_search_field(self) -> None:
-        id_ = f"mk_side_search_field_{self.name}"
-        html.open_div(id_="mk_side_search",
+        html.open_div(id_="mk_side_search_monitoring",
                       class_="content_center",
                       onclick="cmk.quicksearch.close_popup();")
-        html.input(id_=id_,
+        html.input(id_=f"mk_side_search_field_{self.name}",
                    type_="text",
                    name="search",
                    autocomplete="off",
-                   placeholder="Search in Monitoring")
+                   placeholder=_("Search in Monitoring"),
+                   oninput="cmk.search.on_input_search('monitoring')")
+        # TODO: Check if this icon button can be removed
         html.icon_button("#",
                          _("Search"),
                          "quicksearch",
                          onclick="cmk.quicksearch.on_search_click();")
         html.close_div()
         html.div('', id_="mk_side_clear")
-        html.javascript(f"cmk.quicksearch.register_search_field('{id_}');")
+
+
+@page_registry.register_page("ajax_search_monitoring")
+class PageSearchMonitoring(AjaxPage):
+    def page(self):
+        query = html.request.get_unicode_input_mandatory("q")
+        return ResultsRenderer("monitoring").render(query)
+
+
+class SetupSearch(ABCMegaMenuSearch):
+    """Search field in the monitoring menu"""
+    def show_search_field(self) -> None:
+        html.open_div(id_="mk_side_search_setup",
+                      class_="content_center",
+                      onclick="cmk.quicksearch.close_popup();")
+        html.input(id_=f"mk_side_search_field_{self.name}",
+                   type_="text",
+                   name="search",
+                   autocomplete="off",
+                   placeholder=_("Search in Setup"),
+                   oninput="cmk.search.on_input_search('setup');")
+        # TODO: Check if this icon button can be removed
+        html.icon_button("#",
+                         _("Search"),
+                         "quicksearch",
+                         onclick="cmk.quicksearch.on_search_click();")
+        html.close_div()
+        html.div('', id_="mk_side_clear")
+
+
+@page_registry.register_page("ajax_search_setup")
+class PageSearchSetup(AjaxPage):
+    def page(self):
+        query = html.request.get_unicode_input_mandatory("q")
+        return ResultsRenderer("setup").render(query)

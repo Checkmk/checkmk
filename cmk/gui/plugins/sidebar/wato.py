@@ -23,6 +23,7 @@ from cmk.gui.plugins.sidebar import (
     footnotelinks,
     make_topic_menu,
     show_topic_menu,
+    search,
 )
 
 from cmk.gui.plugins.wato.utils.main_menu import (
@@ -100,6 +101,7 @@ mega_menu_registry.register(
         icon_name="main_setup",
         sort_index=15,
         topics=get_wato_menu_items,
+        search=search.SetupSearch("setup_search"),
     ))
 
 

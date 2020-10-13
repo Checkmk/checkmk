@@ -11,6 +11,7 @@ import * as quicksearch from "quicksearch";
 import * as visibility_detection from "visibility_detection";
 import * as valuespecs from "valuespecs";
 import * as popup_menu from "popup_menu";
+import * as search from "search";
 
 export const cmk_export = {
     get_url: ajax.get_url,
@@ -25,5 +26,6 @@ export const cmk_export = {
         visibility_detection: visibility_detection,
         valuespecs: valuespecs,
         popup_menu: popup_menu,
+        search: search,
     },
 };

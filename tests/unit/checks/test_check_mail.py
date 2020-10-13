@@ -15,8 +15,12 @@ pytestmark = pytest.mark.checks
         "auth": ("foo", "bar"),
     }))
 }, [
-    "--protocol=IMAP", "--server=$HOSTADDRESS$", "--ssl", "--port=143", "--username=foo",
-    "--password=bar"
+    "--fetch-protocol=IMAP",
+    "--fetch-server=$HOSTADDRESS$",
+    "--fetch-tls",
+    "--fetch-port=143",
+    "--fetch-username=foo",
+    "--fetch-password=bar",
 ])])
 def test_check_mail_argument_parsing(check_manager, params, expected_args):
     """Tests if all required arguments are present."""

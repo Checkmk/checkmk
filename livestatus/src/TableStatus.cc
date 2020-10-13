@@ -237,7 +237,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "livestatus_usage",
         "The average usage of the livestatus connection slots, ranging from 0.0 (0%) up to 1.0 (100%)",
         offsets, [](const TableStatus & /*r*/) {
-            return g_avg_livestatus_usage._average;
+            return g_avg_livestatus_usage.get();
         }));
 
     addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(

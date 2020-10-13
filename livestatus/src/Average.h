@@ -13,14 +13,11 @@
 class Average {
 public:
     void update(double value);
-
-    double get() const { return _average; }
+    [[nodiscard]] double get() const { return _average; }
 
 private:
     std::chrono::steady_clock::time_point _last_update{};
     double _average{0};
-
-    friend class TableStatus;  // for _average
 };
 
 #endif  // Average_h

@@ -112,8 +112,9 @@ class ABCMegaMenuSearch(ABC):
 class TopicMenuItem(NamedTuple):
     name: str
     title: str
-    url: str
     sort_index: int
+    url: str
+    target: str = "main"
     is_show_more: bool = False
     icon_name: Optional[str] = None
     emblem: Optional[str] = None

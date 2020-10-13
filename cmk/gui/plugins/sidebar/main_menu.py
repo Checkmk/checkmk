@@ -171,7 +171,7 @@ class MegaMenuRenderer:
         html.open_li(class_="show_more_mode" if item.is_show_more else None)
         html.open_a(
             href=item.url,
-            target="main",
+            target=item.target,
             onclick="cmk.popup_menu.close_popup()",
         )
         if config.user.get_attribute("icons_per_item"):

@@ -12,7 +12,8 @@ in this module as small as possible.
 from typing import List
 
 from cmk.utils.plugin_registry import Registry
-from cmk.gui.type_defs import MegaMenu, TopicMenuTopic
+from cmk.gui.i18n import _, _l
+from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, TopicMenuItem
 
 
 def any_show_more_items(topics: List[TopicMenuTopic]) -> bool:
@@ -55,8 +56,49 @@ class MegaMenuRegistry(Registry[MegaMenu]):
     def menu_setup(self) -> MegaMenu:
         return self["setup"]
 
+    def menu_help(self) -> MegaMenu:
+        return self["help"]
+
     def menu_user(self) -> MegaMenu:
         return self["user"]
 
 
 mega_menu_registry = MegaMenuRegistry()
+
+
+def _help_menu_topics() -> List[TopicMenuTopic]:
+    return [
+        TopicMenuTopic(
+            name="help",
+            title=_("Help"),
+            icon_name=None,  # TODO(CMK-5773): add an icon
+            items=[
+                TopicMenuItem(
+                    name="manual",
+                    title=_("Manual"),
+                    url="https://checkmk.com/cms.html",
+                    target="_blank",
+                    sort_index=30,
+                    icon_name=None,  # TODO(CMK-5773): add an icon
+                ),
+                TopicMenuItem(
+                    name="youtube_channel",
+                    title=_("Youtube"),
+                    url="https://www.youtube.com/user/MathiasKettner",
+                    target="_blank",
+                    sort_index=30,
+                    icon_name=None,  # TODO(CMK-5773): add an icon
+                ),
+            ],
+        ),
+    ]
+
+
+mega_menu_registry.register(
+    MegaMenu(
+        name="help_links",
+        title=_l("Help"),
+        icon_name="main_help",
+        sort_index=18,
+        topics=_help_menu_topics,
+    ))

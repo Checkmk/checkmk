@@ -74,14 +74,16 @@
       }
     }
 
-    &.user > div.popup_menu {
+    @mixin small-menu($height) {
       top: unset;
-      height: 150px;
-      margin-top: -150px;
+      height: $height;
+      margin-top: -$height;
 
       div.navigation_bar { height: 0; }
       div.content.inner { height: inherit; }
     }
+    &.help_links > div.popup_menu { @include small-menu(100px); }
+    &.user > div.popup_menu { @include small-menu(150px); }
 
     div.popup_menu {
       position: absolute;
@@ -263,9 +265,8 @@
     margin: 0;
     list-style: none;
 
-    &:last-of-type {
-      margin-top: auto;  // place the user menu at the bottom
-      margin-bottom: 10px;
+    &:nth-last-of-type(2) {
+      margin-top: auto;  // place the help and user menu at the bottom
     }
 
     a.popup_trigger {

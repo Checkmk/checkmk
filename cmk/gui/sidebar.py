@@ -637,7 +637,7 @@ def _shortcut_menu_items() -> List[ShortcutMenuItem]:
         ShortcutMenuItem(
             name="manual",
             title=_("Manual"),
-            icon_name="main_help",
+            icon_name="main_manual",
             url="https://checkmk.com/cms.html",
             target_name="blank",
             permission_name=None,

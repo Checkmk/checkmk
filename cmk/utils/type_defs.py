@@ -305,30 +305,6 @@ HostKey = NamedTuple("HostKey", [
 ])
 
 
-class OIDSpec:
-    """Basic class for OID spec of the form ".1.2.3.4.5" or "2.3"
-    """
-    VALID_CHARACTERS = '.' + string.digits
-
-    @classmethod
-    def validate(cls, value: str) -> None:
-        if not isinstance(value, str):
-            raise TypeError("expected a non-empty string: %r" % (value,))
-        if not value:
-            raise ValueError("expected a non-empty string: %r" % (value,))
-
-        invalid = ''.join(c for c in value if c not in cls.VALID_CHARACTERS)
-        if invalid:
-            raise ValueError("invalid characters in OID descriptor: %r" % invalid)
-
-        if value.endswith('.'):
-            raise ValueError("%r should not end with '.'" % (value,))
-
-    def __init__(self, value: str) -> None:
-        self.validate(value)
-        self._value = value
-
-
 # TODO: We should really parse our configuration file and use a
 # class/NamedTuple, see above.
 def timeperiod_spec_alias(timeperiod_spec: TimeperiodSpec, default: str = u"") -> str:

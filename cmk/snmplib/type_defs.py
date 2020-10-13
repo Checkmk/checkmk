@@ -176,25 +176,25 @@ OID_END_OCTET_STRING = -4  # yet same, but omit first byte (assuming that is the
 class OIDSpec:
     """Basic class for OID spec of the form ".1.2.3.4.5" or "2.3"
     """
-    VALID_CHARACTERS = '.' + string.digits
+    VALID_CHARACTERS = set(('.', *string.digits))
 
     @classmethod
     def validate(cls, value: str) -> None:
         if not isinstance(value, str):
-            raise TypeError("expected a non-empty string: %r" % (value,))
+            raise TypeError(f"expected a non-empty string: {value!r}")
         if not value:
-            raise ValueError("expected a non-empty string: %r" % (value,))
-        invalid = ''.join(c for c in value if c not in cls.VALID_CHARACTERS)
-        if invalid:
-            raise ValueError("invalid characters in OID descriptor: %r" % invalid)
+            raise ValueError(f"expected a non-empty string: {value!r}")
+        if not cls.VALID_CHARACTERS.issuperset(value):
+            invalid_chars = ''.join(sorted(set(value).difference(cls.VALID_CHARACTERS)))
+            raise ValueError(f"invalid characters in OID descriptor: {invalid_chars!r}")
         if value.endswith('.'):
-            raise ValueError("%r should not end with '.'" % (value,))
+            raise ValueError(f"{value} should not end with '.'")
 
     def __init__(self, value: Union["OIDSpec", str]) -> None:
         if isinstance(value, OIDSpec):
             value = str(value)
-
-        self.validate(value)
+        else:
+            self.validate(value)
         self._value = value
 
     def __add__(self, right: Any) -> "OIDSpec":

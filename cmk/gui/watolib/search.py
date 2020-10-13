@@ -19,6 +19,7 @@ from typing import (
 from cmk.utils.paths import omd_root
 from cmk.utils.plugin_registry import Registry
 from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
+from cmk.gui.plugins.watolib.utils import SampleConfigGenerator, sample_config_generator_registry
 
 
 @dataclass
@@ -105,8 +106,29 @@ class IndexSearcher:
         return results
 
 
-def get_index_store():
+def get_index_store() -> IndexStore:
     return IndexStore(pathlib.Path(omd_root / pathlib.Path('tmp/check_mk/wato/search_index.pkl')))
+
+
+def build_and_store_index() -> None:
+    index_builder = IndexBuilder(match_item_generator_registry)
+    index_store = get_index_store()
+    index_store.store_index(index_builder.build_index())
+
+
+@sample_config_generator_registry.register
+class SampleConfigGeneratorSearchIndex(SampleConfigGenerator):
+    """Initial building and storing of search index"""
+    @classmethod
+    def ident(cls) -> str:
+        return "search_index"
+
+    @classmethod
+    def sort_index(cls) -> int:
+        return 70
+
+    def generate(self) -> None:
+        build_and_store_index()
 
 
 match_item_generator_registry = MatchItemGeneratorRegistry()

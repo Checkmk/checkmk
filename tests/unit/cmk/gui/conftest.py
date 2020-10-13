@@ -364,7 +364,7 @@ def wsgi_app_debug_off(monkeypatch):
 @pytest.fixture(autouse=True)
 def deactivate_search_index_creation_on_change(monkeypatch):
     monkeypatch.setattr(
-        changes,
-        "_update_and_store_search_index",
+        changes.search,
+        "build_and_store_index",
         lambda *_, **__: None,
     )

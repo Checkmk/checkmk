@@ -73,13 +73,6 @@ def log_audit(linkinfo, action, message, user_id=None):
     log_entry(linkinfo, action, message, user_id)
 
 
-# TODO (jh): make this change-specific
-def _update_and_store_search_index():
-    index_store = search.get_index_store()
-    index_builder = search.IndexBuilder(search.match_item_generator_registry)
-    index_store.store_index(index_builder.build_index())
-
-
 def add_change(action_name,
                text,
                obj=None,
@@ -92,7 +85,8 @@ def add_change(action_name,
     log_audit(obj, action_name, text, config.user.id if add_user else '')
     cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
 
-    _update_and_store_search_index()
+    # TODO (jh): make this change-specific
+    search.build_and_store_index()
 
     # On each change to the Checkmk configuration mark the agents to be rebuild
     # TODO: Really? Why?

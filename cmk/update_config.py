@@ -44,6 +44,7 @@ from cmk.gui.plugins.userdb.utils import save_connection_config, load_connection
 import cmk.gui.watolib.tags  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.hosts_and_folders  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.rulesets  # pylint: disable=cmk-module-layer-violation
+import cmk.gui.watolib.search  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.modules  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.config  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.utils  # pylint: disable=cmk-module-layer-violation
@@ -123,6 +124,7 @@ class UpdateConfig:
             (self._update_fs_used_name, "Migrating fs_used name"),
             (self._migrate_pagetype_topics_to_ids, "Migrate pagetype topics"),
             (self._add_missing_type_to_ldap_connections, "Migrate LDAP connections"),
+            (self._create_search_index, "Creating search index"),
         ]
 
     # FS_USED UPDATE DELETE THIS FOR CMK 1.8, THIS ONLY migrates 1.6->1.7
@@ -412,6 +414,13 @@ class UpdateConfig:
         for connection in connections:
             connection.setdefault("type", "ldap")
         save_connection_config(connections)
+
+    def _create_search_index(self):
+        """Rebuild and store the search index used by the seach field in the Setup menu.
+
+        This is necessary for example if a new Rulespec was added by an MKP.
+        """
+        cmk.gui.watolib.search.build_and_store_index()
 
 
 def _id_from_title(title):

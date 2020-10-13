@@ -168,10 +168,7 @@ def create_inventory_plugin_from_legacy(
 ) -> InventoryPlugin:
 
     if inventory_info_dict.get('depends_on'):
-        # TODO (mo): this affects only inv_cisco_vlans. For now, we silently
-        # skip this, until we migrate inv_cisco_vlans to the new api; then
-        # raise NotImplementedError("cannot auto-migrate plugins with dependencies")
-        pass
+        raise NotImplementedError("cannot auto-migrate plugins with dependencies")
 
     new_inventory_name = maincheckify(inventory_plugin_name)
 

@@ -732,7 +732,7 @@ class ACTestCheckMKCheckerUsage(ACTest):
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
             "<li>Check which checks / plugins are <a href=\"view.py?view_name=service_check_durations\">consuming most helper process time</a></li>"
-            "<li>Increase the <a href=\"wato.py?mode=edit_configvar&varname=cmc_cmk_helpers\">number of Checkmk helpers</a></li>"
+            "<li>Increase the <a href=\"wato.py?mode=edit_configvar&varname=cmc_checker_helpers\">number of Checkmk checkers</a></li>"
             "</ul>"
             "</p>"
             "<p>But you need to be careful that you don't configure too many Checkmk "
@@ -768,8 +768,8 @@ class ACTestCheckMKCheckerUsage(ACTest):
 
         # Only report this as warning in case the user increased the default helper configuration
         default_values = watolib.ABCConfigDomain.get_all_default_globals()
-        if self._get_effective_global_setting(
-                "cmc_cmk_helpers") > default_values["cmc_cmk_helpers"] and checker_usage_perc < 50:
+        if self._get_effective_global_setting("cmc_checker_helpers") > default_values[
+                "cmc_checker_helpers"] and checker_usage_perc < 50:
             yield ACResultWARN(
                 _("The checker usage is below 50%, you may decrease the number of "
                   "checkers to reduce the memory consumption."))

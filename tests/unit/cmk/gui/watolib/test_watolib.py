@@ -216,6 +216,7 @@ def test_registered_configvars():
             'cmc_dump_core',
             "cmc_enable_fetchers",
             "cmc_fetcher_helpers",
+            "cmc_checker_helpers",
             'cmc_flap_settings',
             'cmc_graphite',
             'cmc_import_nagios_state',

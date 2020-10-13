@@ -2631,7 +2631,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'sni_octopuse_cpu',
         'sni_octopuse_status',
         'sni_octopuse_trunks',
-        'snmp_info',
         'solaris_fmadm',
         'solaris_multipath',
         'solaris_prtdiag_status',

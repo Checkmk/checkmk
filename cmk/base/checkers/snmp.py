@@ -153,6 +153,7 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
             },
             snmp_section_detects=self._make_snmp_section_detects(),
             configured_snmp_sections=self._make_configured_snmp_sections(),
+            structured_data_snmp_sections=self._make_structured_data_snmp_sections(),
             on_error=self.on_snmp_scan_error,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(
                 self.snmp_config.hostname,
@@ -185,6 +186,13 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
                     filter_mode="include_clustered",
                     skip_ignored=True,
                 ),
+                consider_inventory_plugins=False,
+            ))
+
+    def _make_structured_data_snmp_sections(self) -> Set[SectionName]:
+        return self._enabled_snmp_sections.intersection(
+            agent_based_register.get_relevant_raw_sections(
+                check_plugin_names=(),
                 consider_inventory_plugins=self.host_config.do_status_data_inventory,
             ))
 

@@ -51,7 +51,8 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         *,
         snmp_section_trees: Mapping[SectionName, List[SNMPTree]],
         snmp_section_detects: Mapping[SectionName, SNMPDetectSpec],
-        configured_snmp_sections: Collection[SectionName],
+        configured_snmp_sections: Set[SectionName],
+        structured_data_snmp_sections: Set[SectionName],
         on_error: str,
         missing_sys_description: bool,
         use_snmpwalk_cache: bool,
@@ -61,6 +62,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         self.snmp_section_trees: Final = snmp_section_trees
         self.snmp_section_detects: Final = snmp_section_detects
         self.configured_snmp_sections: Final = configured_snmp_sections
+        self.structured_data_snmp_sections: Final = structured_data_snmp_sections
         self.on_error: Final = on_error
         self.missing_sys_description: Final = missing_sys_description
         self.use_snmpwalk_cache: Final = use_snmpwalk_cache
@@ -93,6 +95,9 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
             configured_snmp_sections={
                 SectionName(name) for name in serialized["configured_snmp_sections"]
             },
+            structured_data_snmp_sections={
+                SectionName(name) for name in serialized["structured_data_snmp_sections"]
+            },
             on_error=serialized["on_error"],
             missing_sys_description=serialized["missing_sys_description"],
             use_snmpwalk_cache=serialized["use_snmpwalk_cache"],
@@ -108,6 +113,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
             },
             "snmp_section_detects": {str(n): d for n, d in self.snmp_section_detects.items()},
             "configured_snmp_sections": [str(s) for s in self.configured_snmp_sections],
+            "structured_data_snmp_sections": [str(s) for s in self.structured_data_snmp_sections],
             "on_error": self.on_error,
             "missing_sys_description": self.missing_sys_description,
             "use_snmpwalk_cache": self.use_snmpwalk_cache,
@@ -155,8 +161,9 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         return mode not in (Mode.DISCOVERY, Mode.CHECKING)
 
     def _fetch_from_io(self, mode: Mode) -> SNMPRawData:
-        selected_sections = (self._detect()
-                             if mode is Mode.DISCOVERY else self.configured_snmp_sections)
+        selected_sections = (self._detect() if mode is Mode.DISCOVERY else
+                             (self.configured_snmp_sections |
+                              self._detect(restrict_to=self.structured_data_snmp_sections)))
 
         fetched_data: SNMPRawData = {}
         for section_name in self._sort_section_names(selected_sections):

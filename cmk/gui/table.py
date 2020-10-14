@@ -7,7 +7,7 @@
 from contextlib import contextmanager
 import re
 import json
-from typing import Any, Dict, Iterator, List, NamedTuple, Optional, Tuple, Union, cast
+from typing import Any, Dict, Iterator, List, Literal, NamedTuple, Optional, Tuple, Union, cast
 
 from six import ensure_str
 
@@ -57,7 +57,7 @@ def table_element(
     searchable: bool = True,
     sortable: bool = True,
     foldable: bool = False,
-    limit: Optional[int] = None,
+    limit: Union[None, int, Literal[False]] = None,
     output_format: str = "html",
     omit_if_empty: bool = False,
     omit_empty_columns: bool = False,
@@ -114,7 +114,7 @@ class Table:
         searchable: bool = True,
         sortable: bool = True,
         foldable: bool = False,
-        limit: Optional[int] = None,
+        limit: Union[None, int, Literal[False]] = None,
         output_format: str = "html",
         omit_if_empty: bool = False,
         omit_empty_columns: bool = False,
@@ -316,18 +316,19 @@ class Table:
         # Render header
         if self.limit_hint is not None:
             num_rows_unlimited = self.limit_hint
-        self._write_table(rows, num_rows_unlimited, self._show_action_row(), actions_visible,
-                          search_term)
 
-        if self.title and self.options["foldable"]:
-            html.end_foldable_container()
-
-        if limit is not None and num_rows_unlimited > limit:
+        if limit and num_rows_unlimited > limit:
 
             html.show_message(
                 _('This table is limited to show only %d of %d rows. '
                   'Click <a href="%s">here</a> to disable the limitation.') %
                 (limit, num_rows_unlimited, html.makeuri([('limit', 'none')])))
+
+        self._write_table(rows, num_rows_unlimited, self._show_action_row(), actions_visible,
+                          search_term)
+
+        if self.title and self.options["foldable"]:
+            html.end_foldable_container()
 
         return
 

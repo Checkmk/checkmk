@@ -440,7 +440,7 @@ class DiscoveryPageRenderer:
         for label_id, label in discovery_result.host_labels.items():
             host_labels_by_plugin.setdefault(label["plugin_name"], {})[label_id] = label["value"]
 
-        with table_element(css="data", searchable=False, limit=None, sortable=False) as table:
+        with table_element(css="data", searchable=False, limit=False, sortable=False) as table:
             table.groupheader(_("Discovered host labels"))
             for plugin_name, labels in sorted(host_labels_by_plugin.items(), key=lambda x: x[0]):
                 table.row()
@@ -487,7 +487,7 @@ class DiscoveryPageRenderer:
             html.begin_form("checks_%s" % entry.table_group, method="POST", action="wato.py")
             html.h3(self._get_group_header(entry))
 
-            with table_element(css="data", searchable=False, limit=None, sortable=False) as table:
+            with table_element(css="data", searchable=False, limit=False, sortable=False) as table:
                 for check in sorted(checks, key=lambda c: c[6].lower()):
                     self._show_check_row(table, discovery_result, request, check,
                                          entry.show_bulk_actions)

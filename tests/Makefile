@@ -234,7 +234,7 @@ test-unit:
 	$(PYTEST) \
 		-T unit \
 		--doctest-modules \
-		../cmk/base/plugins \
+		../cmk/base \
 		../cmk/gui \
 		../cmk/special_agents \
 		../cmk/utils \
@@ -251,7 +251,7 @@ test-unit-coverage-html:
 		--cov-config=.coveragerc_unit \
 		--no-cov-on-fail \
 		--doctest-modules \
-		../cmk/base/plugins \
+		../cmk/base \
 		../cmk/gui \
 		../cmk/special_agents \
 		../cmk/utils \

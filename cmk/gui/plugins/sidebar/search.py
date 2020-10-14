@@ -38,6 +38,7 @@ from cmk.gui.type_defs import (
     ViewName,
 )
 from cmk.gui.pages import page_registry, AjaxPage
+from cmk.gui.watolib.search import IndexSearcher, get_index_store
 
 #   .--Quicksearch---------------------------------------------------------.
 #   |         ___        _      _                            _             |
@@ -1141,21 +1142,49 @@ match_plugin_registry.register(HosttagMatchPlugin())
 #   '----------------------------------------------------------------------'
 
 
-class ResultsRenderer:
+class MenuSearchResultsRenderer:
+    _max_num_displayed_results = 10
+
     def __init__(self, search_type: str):
 
         # TODO: In the future, we should separate the rendering and the generation of the results
-        # TODO: Add here the callables for obtaining the search results
         if search_type == "monitoring":
-            self._generate_results = lambda q: f"Here, you will find monitoring results for '{q}'"
+            self._generate_results = QuicksearchManager().generate_results
         elif search_type == "setup":
-            self._generate_results = lambda q: f"Here, you will find setup results for '{q}'"
+            self._generate_results = IndexSearcher(get_index_store()).search
         else:
             raise NotImplementedError(f"Renderer not implemented for type '{search_type}'")
 
-    def render(self, query) -> cmk.gui.utils.html.HTML:
+    def render(self, query: str) -> str:
         results = self._generate_results(query)
-        return html.render_div(id_="foo_bar", content=results, class_="topic")
+        with html.plugged():
+            for topic, search_results in results.items():
+                html.open_div(id_=topic, class_="topic")
+                self._render_topic(topic)
+                html.open_ul()
+                for result in list(search_results)[:self._max_num_displayed_results]:
+                    self._render_result(result)
+                # TODO: Remove this as soon as the index search does limit its search results
+                if len(list(search_results)) >= self._max_num_displayed_results:
+                    html.write_text(
+                        _(f"Showing only first {self._max_num_displayed_results} results."))
+                html.close_ul()
+                html.close_div()
+            html.div(None, class_=["topic", "sentinel"])
+            html_text = html.drain()
+        return html_text
+
+    def _render_topic(self, topic):
+        # TODO: Add the corresponding icon
+        html.open_h2()
+        html.span(topic)
+        html.close_h2()
+
+    def _render_result(self, result):
+        html.open_li()
+        html.open_a(href=result.url, target="main", onclick="cmk.popup_menu.close_popup()")
+        html.write_text(result.title)
+        html.close_li()
 
 
 class MonitoringSearch(ABCMegaMenuSearch):
@@ -1183,7 +1212,7 @@ class MonitoringSearch(ABCMegaMenuSearch):
 class PageSearchMonitoring(AjaxPage):
     def page(self):
         query = html.request.get_unicode_input_mandatory("q")
-        return ResultsRenderer("monitoring").render(query)
+        return MenuSearchResultsRenderer("monitoring").render(query)
 
 
 class SetupSearch(ABCMegaMenuSearch):
@@ -1211,4 +1240,4 @@ class SetupSearch(ABCMegaMenuSearch):
 class PageSearchSetup(AjaxPage):
     def page(self):
         query = html.request.get_unicode_input_mandatory("q")
-        return ResultsRenderer("setup").render(query)
+        return MenuSearchResultsRenderer("setup").render(query)

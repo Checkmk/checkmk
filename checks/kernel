@@ -178,7 +178,7 @@ def inventory_cpu_utilization(parsed):
 # - guest_nice: Time spent running a niced guest (since Linux 2.6.33)
 
 
-def kernel_check_cpu_utilization(item, params, parsed):
+def kernel_check_cpu_utilization(_item, params, parsed):
     params = transform_cpu_iowait(params)
     _, items = parsed
     total, cores = [], []
@@ -186,9 +186,9 @@ def kernel_check_cpu_utilization(item, params, parsed):
     # Look for entry matching "cpu" (this is the combined load of all cores)
     for cpu in items.get('Cpu Utilization', []):
         if cpu[0] == 'cpu':
-            total.append(cpu_info([cpu[0]] + cpu[1]))
+            total.append(CPUInfo(cpu[0], *cpu[1]))
         elif cpu[0].startswith('cpu'):
-            cores.append(cpu_info([cpu[0]] + cpu[1]))
+            cores.append(CPUInfo(cpu[0], *cpu[1]))
 
     if len(total) != 1:
         return 3, "More than one line with CPU info found. This check is not cluster-enabled."

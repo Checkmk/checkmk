@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Mapping, Optional, Tuple
+from typing import Mapping, NamedTuple, Optional, Tuple
 
 import time
 
@@ -17,6 +17,68 @@ from ..agent_based_api.v1 import (
     regex,
     render,
 )
+
+
+class CPUInfo(
+        NamedTuple("_CPUInfo", [
+            ('name', str),
+            ('user', float),
+            ('nice', float),
+            ('system', float),
+            ('idle', float),
+            ('iowait', float),
+            ('irq', float),
+            ('softirq', float),
+            ('steal', float),
+            ('guest', float),
+            ('guest_nice', float),
+        ])):
+    """Handle CPU measurements
+
+    name: name of core
+    user: normal processes executing in user mode
+    nice: niced processes executing in user mode
+    system: processes executing in kernel mode
+    idle: twiddling thumbs
+    iowait: waiting for I/O to complete
+    irq: servicing interrupts
+    softirq: servicing softirqs
+    steal: involuntary wait
+    guest: time spent in guest OK, also counted in 0 (user)
+    guest_nice: time spent in niced guest OK, also counted in 1 (nice)
+    """
+    def __new__(cls, name: str, *values: float) -> "CPUInfo":
+        # we can assume we have at least one value
+        caster = int if values and isinstance(values[0], int) else float
+        fillup = (caster(0) for _ in range(10 - len(values)))
+        return super().__new__(cls, name, *(caster(v) for v in values), *fillup)
+
+    @property
+    def util_total(self) -> float:
+        return self.user + self.nice + self.system + self.iowait + self.irq + self.softirq + self.steal
+
+    @property
+    def total_sum(self) -> float:
+        return self.util_total + self.idle
+
+    @property
+    def utils_perc(self) -> Tuple[float, float, float, float, float, float]:
+        # https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sched/cputim  e.c
+        # see 'account_guest_time'
+        # if task_nice(p) <= 0:
+        #     cpustat[CPUTIME_USER] += cputime;
+        #     cpustat[CPUTIME_GUEST] += cputime;
+        guest = self.guest + self.guest_nice
+        user = self.user + self.nice - guest
+        system = self.system + self.irq + self.softirq
+
+        total_sum = self.total_sum
+
+        def _percent(x: float) -> float:
+            return 100.0 * float(x) / float(total_sum)
+
+        return (_percent(user), _percent(system), _percent(self.iowait), _percent(self.steal),
+                _percent(guest), _percent(self.util_total))
 
 
 def core_name(orig: str, core_index: int) -> Tuple[str, str]:

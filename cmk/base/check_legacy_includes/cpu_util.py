@@ -5,6 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+import time
+
 from cmk.base.check_api import clear_item_state
 from cmk.base.check_api import MKCounterWrapped
 from cmk.base.check_api import get_age_human_readable
@@ -13,8 +15,6 @@ from cmk.base.check_api import get_average
 from cmk.base.check_api import get_rate
 from cmk.base.check_api import set_item_state, get_item_state
 from cmk.base.check_api import check_levels
-import collections
-import time
 # Common file for all (modern) checks that check CPU utilization (not load!)
 
 # Example for check parameters:
@@ -40,6 +40,7 @@ import time
 import cmk.base.plugins.agent_based.utils.cpu_util as cpu_util
 
 cpu_util_core_name = cpu_util.core_name
+CPUInfo = cpu_util.CPUInfo
 
 #                                                                                        #
 ##########################################################################################
@@ -47,61 +48,7 @@ cpu_util_core_name = cpu_util.core_name
 ##########################################################################################
 
 
-# This one can handle user, system and wait. values is a list of:
-# - 0 - name: name of core
-# - 1 - user: normal processes executing in user mode
-# - 2 - nice: niced processes executing in user mode
-# - 3 - system: processes executing in kernel mode
-# - 4 - idle: twiddling thumbs
-# - 5 - iowait: waiting for I/O to complete
-# - 6 - irq: servicing interrupts
-# - 7 - softirq: servicing softirqs
-# - 8 - steal: involuntary wait
-# - 9 - guest: time spent in guest OK, also counted in 0 (user)
-# -10 - guest_nice: time spent in niced guest OK, also counted in 1 (nice)
-class CpuInfo(
-        collections.namedtuple("CPU_utilization",
-                               ('name', 'user', 'nice', 'system', 'idle', 'iowait', 'irq',
-                                'softirq', 'steal', 'guest', 'guest_nice'))):
-    __slots__ = ()
-
-    @property
-    def util_total(self):
-        return self.user + self.nice + self.system + self.iowait + self.irq + self.softirq + self.steal
-
-    @property
-    def total_sum(self):
-        return self.util_total + self.idle
-
-    @property
-    def utils_perc(self):
-        # https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sched/cputime.c
-        # see 'account_guest_time'
-        # if task_nice(p) <= 0:
-        #     cpustat[CPUTIME_USER] += cputime;
-        #     cpustat[CPUTIME_GUEST] += cputime;
-        guest = self.guest + self.guest_nice
-        user = self.user + self.nice - guest
-
-        system = self.system + self.irq + self.softirq
-        wait = self.iowait
-        steal = self.steal
-        total_sum = self.total_sum
-
-        perc = [
-            100.0 * float(x) / float(total_sum)
-            for x in [user, system, wait, steal, guest, self.util_total]
-        ]
-        return perc
-
-
-def cpu_info(elements, caster=int):
-    entries = [elements[0]] + list(map(caster, elements[1:]))
-    entries.extend([0] * (11 - len(entries)))
-    return CpuInfo(*entries)
-
-
-def util_counter(stats, this_time):
+def util_counter(stats: CPUInfo, this_time: float) -> CPUInfo:
     # Compute jiffi-differences of all relevant counters
     diff_values = []
     for n, v in enumerate(stats[1:], start=1):
@@ -110,7 +57,7 @@ def util_counter(stats, this_time):
         diff_values.append(v - last_val)
         set_item_state(countername, (this_time, v))
 
-    return cpu_info([stats.name] + diff_values)
+    return CPUInfo(stats.name, *diff_values)
 
 
 def check_cpu_util(util, params, this_time=None, cores=None, perf_max=100):
@@ -173,7 +120,7 @@ def check_cpu_util(util, params, this_time=None, cores=None, perf_max=100):
             yield from _util_perfdata(core, total_perc, core_index, this_time, params)
 
 
-def check_cpu_util_unix(values, params, cores=None, values_counter=True):
+def check_cpu_util_unix(values: CPUInfo, params, cores=None, values_counter=True):
     this_time = time.time()
     if values_counter:
         diff_values = util_counter(values, this_time)

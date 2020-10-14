@@ -35,7 +35,7 @@ from cmk.gui.http import Request
 from cmk.gui.plugins.userdb import htpasswd
 from cmk.gui.utils import get_random_string
 from cmk.gui.watolib.users import delete_users, edit_users
-from cmk.gui.watolib import changes
+from cmk.gui.watolib import search
 from cmk.gui.wsgi import make_app
 
 SPEC_LOCK = threading.Lock()
@@ -361,10 +361,8 @@ def wsgi_app_debug_off(monkeypatch):
     return _make_webtest(debug=False)
 
 
-@pytest.fixture(autouse=True)
-def deactivate_search_index_creation_on_change(monkeypatch):
-    monkeypatch.setattr(
-        changes.search,
-        "build_and_store_index",
-        lambda *_, **__: None,
-    )
+@pytest.fixture(scope='function', autouse=True)
+def store_search_index():
+    # We need to do this at the scope of individual functions because cleanup_after_test wipes out
+    # the entire OMD folder structure
+    search.get_index_store().store_index({})

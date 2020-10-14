@@ -15,6 +15,7 @@ from typing import (
     List,
     Mapping,
     Sequence,
+    Tuple,
 )
 
 from cmk.utils.paths import omd_root
@@ -52,6 +53,10 @@ class ABCMatchItemGenerator(ABC):
     def generate_match_items(self) -> Iterable[MatchItem]:
         ...
 
+    @abstractmethod
+    def is_affected_by_change(self, change_action_name: str) -> bool:
+        ...
+
 
 class MatchItemGeneratorRegistry(Registry[ABCMatchItemGenerator]):
     def plugin_name(self, instance: ABCMatchItemGenerator) -> str:
@@ -62,11 +67,21 @@ class IndexBuilder:
     def __init__(self, registry: MatchItemGeneratorRegistry):
         self._registry = registry
 
-    def build_index(self) -> Index:
+    @staticmethod
+    def _build_index(names_and_generators: Iterable[Tuple[str, ABCMatchItemGenerator]]) -> Index:
         return {
             name: list(match_item_generator.generate_match_items())
-            for name, match_item_generator in self._registry.items()
+            for name, match_item_generator in names_and_generators
         }
+
+    def build_full_index(self) -> Index:
+        return self._build_index(self._registry.items())
+
+    def build_changed_sub_indices(self, change_action_name: str) -> Index:
+        return self._build_index(
+            ((name, match_item_generator)
+             for name, match_item_generator in self._registry.items()
+             if match_item_generator.is_affected_by_change(change_action_name)))
 
 
 class IndexStore:
@@ -118,7 +133,16 @@ def get_index_store() -> IndexStore:
 def build_and_store_index() -> None:
     index_builder = IndexBuilder(match_item_generator_registry)
     index_store = get_index_store()
-    index_store.store_index(index_builder.build_index())
+    index_store.store_index(index_builder.build_full_index())
+
+
+def update_and_store_index(change_action_name: str) -> None:
+    index_builder = IndexBuilder(match_item_generator_registry)
+    index_store = get_index_store()
+    index_store.store_index({
+        **index_store.load_index(),
+        **index_builder.build_changed_sub_indices(change_action_name)
+    })
 
 
 @sample_config_generator_registry.register

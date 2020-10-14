@@ -71,7 +71,8 @@ def discover_snmp_info(section: SNMPInfo) -> DiscoveryResult:
 def check_snmp_info(section: SNMPInfo) -> CheckResult:
     yield Result(
         state=State.OK,
-        summary=f"{section.description}, {section.name}, {section.location}, {section.contact}",
+        summary=f"{section.name}, {section.location}, {section.contact}",
+        details=f"{section.description}, {section.name}, {section.location}, {section.contact}",
     )
 
 

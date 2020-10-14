@@ -521,6 +521,7 @@ class TextAscii(ValueSpec):
         onkeyup: _Optional[str] = None,
         autocomplete: bool = True,
         hidden: bool = False,
+        placeholder: _Optional[str] = None,
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
@@ -548,6 +549,7 @@ class TextAscii(ValueSpec):
         self._onkeyup = onkeyup
         self._autocomplete = autocomplete
         self._hidden = hidden
+        self._placeholder = placeholder
 
     def canonical_value(self) -> str:
         return ""
@@ -568,6 +570,7 @@ class TextAscii(ValueSpec):
             type_="password" if self._hidden else "text",
             autocomplete="off" if not self._autocomplete else None,
             onkeyup=self._onkeyup if self._onkeyup else None,
+            placeholder=self._placeholder,
         )
 
     # NOTE: Class hierarchy is broken, we can get Unicode here!
@@ -1009,6 +1012,7 @@ class TextAsciiAutocomplete(TextAscii):
         minlen: _Optional[int] = None,
         onkeyup: _Optional[str] = None,
         hidden: bool = False,
+        placeholder: _Optional[str] = None,
         # From ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
@@ -1036,6 +1040,7 @@ class TextAsciiAutocomplete(TextAscii):
             onkeyup=onkeyup,
             autocomplete=False,
             hidden=hidden,
+            placeholder=placeholder,
             title=title,
             help=help,
             default_value=default_value,

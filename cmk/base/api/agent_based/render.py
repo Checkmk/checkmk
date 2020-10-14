@@ -122,7 +122,7 @@ def disksize(bytes_: float) -> str:
 
     Example:
       >>> disksize(1024)
-      "1.02 KB"
+      '1.02 kB'
     """
     value_str, unit = _auto_scale(float(bytes_), use_si_units=True)
     return "%s %s" % (value_str if unit != "B" else value_str.split('.')[0], unit)
@@ -133,7 +133,7 @@ def bytes(bytes_: float) -> str:  # pylint: disable=redefined-builtin
 
     Example:
       >>> bytes(1024**2)
-      "2.00 MiB"
+      '1.00 MiB'
     """
     value_str, unit = _auto_scale(float(bytes_), use_si_units=False)
     return "%s %s" % (value_str if unit != "B" else value_str.split('.')[0], unit)
@@ -144,7 +144,7 @@ def filesize(bytes_: float) -> str:
 
     Example:
       >>> filesize(12345678)
-      "12,345,678"
+      '12,345,678 B'
     """
     val_str = "%.0f" % float(bytes_)
     if len(val_str) <= 3:

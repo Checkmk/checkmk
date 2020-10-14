@@ -86,7 +86,7 @@ def matches(oidstr: str, value: str) -> SNMPDetectSpec:
 
     Example:
 
-        >>> DETECT = match("1.2.3.4", ".* Server")
+        >>> DETECT = matches("1.2.3.4", ".* Server")
 
     """
     return SNMPDetectSpec([[(oidstr, value, True)]])
@@ -315,10 +315,10 @@ def check_levels(
         ...     23.0,
         ...     levels_upper=(12., 42.),
         ...     label="Fridge",
-        ...     render_func=lambda v: "%.1f°",
+        ...     render_func=lambda v: "%.1f°" % v,
         ... )
         >>> print(result.summary)
-        'Fridge: 23.0° (warn/crit at 12.0°/42.0°)'
+        Fridge: 23.0° (warn/crit at 12.0°/42.0°)
 
     """
     if render_func is None:

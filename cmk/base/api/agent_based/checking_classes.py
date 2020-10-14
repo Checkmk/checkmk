@@ -179,7 +179,7 @@ class State(enum.Enum):
             >>> State.worst(State.OK, State.WARN, State.CRIT, State.UNKNOWN)
             <State.CRIT: 2>
             >>> State.worst(0, 1, State.CRIT)
-            <state.CRIT: 2>
+            <State.CRIT: 2>
         """
         if cls.CRIT in args or 2 in args:
             return cls.CRIT

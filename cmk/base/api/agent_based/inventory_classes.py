@@ -66,15 +66,15 @@ class Attributes(
 
         Example:
 
-            >>> Attributes(
+            >>> _ = Attributes(
             ...     path = ["os", "vendor"],
             ...     inventory_attributes = {
             ...         "name" : "Micki$osft",
             ...         "date" : "1920",
-            ...     }
+            ...     },
             ...     status_attributes = {
             ...         "uptime" : "0",
-            ...     }
+            ...     },
             ... )
 
         """
@@ -108,21 +108,18 @@ class TableRow(
 
         Example:
 
-            >>> TableRow(
+            >>> _ = TableRow(
             ...     path = ["software", "applications", "oracle", "instance"],
             ...     key_columns = {
-            ...         "sid" : item_data['sid'],
+            ...         "sid" : "DECAF-FOOBAR",
             ...     },
             ...     inventory_columns = {
-            ...         "version": item_data['version'],
-            ...         "openmode": item_data['openmode'],
-            ...         "logmode": item_data['log_mode'],
-            ...         "logins": item_data['logins'],
-            ...         "db_creation_time": _parse_raw_db_creation_time(item_data['db_creation_time']),
-            ...     }
+            ...         "version": "23.42",
+            ...         "logmode": "debug",
+            ...     },
             ...     status_columns = {
-            ...         "db_uptime": up_seconds,
-            ...     }
+            ...         "db_uptime": 123456,
+            ...     },
             ... )
 
         """

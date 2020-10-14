@@ -382,7 +382,7 @@ export class FigureBase {
         this._call_pre_render_hooks(data);
         this.update_data(data);
         this.remove_loading_image();
-        this.update_gui(data);
+        this.update_gui();
         this._call_post_render_hooks(data);
     }
 

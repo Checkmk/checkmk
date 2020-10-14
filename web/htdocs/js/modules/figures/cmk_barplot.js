@@ -38,7 +38,7 @@ class BarplotFigure extends cmk_figures.FigureBase {
     }
 
     render() {
-        if (this._data) this.update_gui(this._data);
+        if (this._data) this.update_gui();
     }
 
     resize() {
@@ -61,7 +61,8 @@ class BarplotFigure extends cmk_figures.FigureBase {
         });
     }
 
-    update_gui(data) {
+    update_gui() {
+        let data = this._data;
         this.render_title(data.title);
         this._update_plot_definitions(data.plot_definitions || []);
         this._crossfilter.remove(() => true);

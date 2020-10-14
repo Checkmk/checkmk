@@ -29,12 +29,9 @@ export class TableFigure extends cmk_figures.FigureBase {
     //   ]
     // }
 
-    update_data(data) {
-        // eslint-disable-line no-unused-vars
-    }
-
-    update_gui(data) {
+    update_gui() {
         // TODO: clear table when no rows exist
+        let data = this._data;
         if (!data.rows) return;
         if (data.classes) this._table.classed(data.classes.join(" "), true);
 

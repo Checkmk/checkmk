@@ -209,15 +209,18 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
         this.update_domains();
     }
 
-    update_gui(data) {
-        this.remove_loading_image();
-
+    update_data(data) {
         data.data.forEach(d => {
             d.date = new Date(d.timestamp * 1000);
         });
 
         this._title = data.title;
         this._update_crossfilter(data.data);
+        this._data = data;
+    }
+
+    update_gui() {
+        let data = this._data;
         this._update_subplots(data.plot_definitions);
 
         this.update_domains();
@@ -1523,8 +1526,8 @@ class CmkGraphShifter extends CmkGraphTimeseriesFigure {
         this._setup_cutter_options_panel();
     }
 
-    update_gui(data) {
-        CmkGraphTimeseriesFigure.prototype.update_gui.call(this, data);
+    update_gui() {
+        CmkGraphTimeseriesFigure.prototype.update_gui.call(this);
         this._update_cutter_options_panel();
     }
 
@@ -1647,7 +1650,7 @@ class CmkGraphShifter extends CmkGraphTimeseriesFigure {
 
         this._apply_shift_config(this._data);
         this._legend.selectAll("table").remove();
-        this.update_gui(this._data);
+        this.update_gui();
     }
 }
 

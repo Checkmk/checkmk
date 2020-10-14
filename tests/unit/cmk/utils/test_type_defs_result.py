@@ -113,6 +113,11 @@ class TestOk:
         error = "error"
         assert result.map_error(lambda v: error) == result
 
+    def test_fold(self, result):
+        ok = lambda ok_: "ok"
+        error = lambda err_: "error"
+        assert result.fold(ok=ok, error=error) == "ok"
+
 
 class TestError:
     @pytest.fixture
@@ -214,3 +219,8 @@ class TestError:
         other = result.map_error(lambda v: error)
         assert other != result
         assert other.error == error
+
+    def test_fold(self, result):
+        ok = lambda ok_: "ok"
+        error = lambda err_: "error"
+        assert result.fold(ok=ok, error=error) == "error"

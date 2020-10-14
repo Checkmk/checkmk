@@ -6,18 +6,14 @@
 """An error container adapted from OCaml.
 
 Note:
-    The higher-order functions `bind` and `fold` and the conversions
+    The higher-order function `bind` and the conversions
     to sequence and list are not explicitly implemented.
 
     The functionality is available such that:
 
     - `bind: ('a, 'e) result -> ('a -> ('b, 'e) result) -> ('b, 'e) result`
-        is done with `Result.__init__()` followed by either `Result.map()` or
-        a call to a function that takes the `Result`.
-
-    - `fold: ~ok:('a -> 'c) -> ~error:('e -> 'c) -> ('a, 'e) result -> 'c`
-        can be implemented with type dispatch followed by handling
-        `OKResult.ok` and `ErrorResult.error`.
+        is done with `Result.__init__()` followed by either `Result.map()`,
+        `Result.bind()` or a call to a function that takes the `Result`.
 
     - `to_list` is done with `list()` as `list(Result[T, E]) -> List[T]`
         since `Result.__iter__()` is implemented.
@@ -126,6 +122,15 @@ class Result(Generic[T_co, E_co], abc.ABC):
     def map_error(self, func: Callable[[E_co], F_co]) -> "Result[T_co, F_co]":
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def fold(
+        self,
+        *,
+        ok: Callable[[T_co], U_co],
+        error: Callable[[E_co], U_co],
+    ):
+        raise NotImplementedError
+
 
 class OK(Result[T_co, E_co]):
     """A successful computation."""
@@ -192,10 +197,18 @@ class OK(Result[T_co, E_co]):
         return self
 
     def map(self, func: Callable[[T_co], U_co]) -> "OK[U_co, E_co]":
-        return OK(func(self.ok))
+        return OK(func(self.join().ok))
 
     def map_error(self, _func: Callable[[E_co], F_co]) -> "OK[T_co, F_co]":
-        return OK(self.ok)
+        return OK(self.join().ok)
+
+    def fold(
+        self,
+        *,
+        ok: Callable[[T_co], U_co],
+        error: Callable[[E_co], U_co],
+    ):
+        return ok(self.join().ok)
 
 
 class Error(Result[T_co, E_co]):
@@ -263,7 +276,15 @@ class Error(Result[T_co, E_co]):
         return self
 
     def map(self, _func: Callable[[T_co], U_co]) -> "Error[U_co, E_co]":
-        return Error(self.error)
+        return Error(self.join().error)
 
     def map_error(self, func: Callable[[E_co], F_co]) -> "Error[T_co, F_co]":
-        return Error(func(self.error))
+        return Error(func(self.join().error))
+
+    def fold(
+        self,
+        *,
+        ok: Callable[[T_co], U_co],
+        error: Callable[[E_co], U_co],
+    ):
+        return error(self.join().error)

@@ -17,6 +17,7 @@ from cmk.gui.htmllib import HTML
 from cmk.gui.plugins.sidebar.search import QuicksearchSnapin
 from cmk.gui.utils.popups import MethodInline
 from cmk.gui.type_defs import (
+    Icon,
     MegaMenu,
     TopicMenuTopic,
     TopicMenuItem,
@@ -30,7 +31,7 @@ from cmk.gui.main_menu import (
 MainMenuItem = NamedTuple("MainMenuItem", [
     ("name", str),
     ("title", str),
-    ("icon_name", str),
+    ("icon", Icon),
     ("onopen", Optional[str]),
 ])
 
@@ -54,10 +55,17 @@ class MainMenuRenderer:
 
     def _show_main_menu_content(self) -> None:
         for menu_item in self._get_main_menu_items():
+            if isinstance(menu_item.icon, dict):
+                active_icon: Icon = {
+                    "icon": menu_item.icon["icon"] + "_active",
+                    "emblem": menu_item.icon["emblem"]
+                }
+            else:
+                active_icon = menu_item.icon + "_active"
+
             html.open_li()
             html.popup_trigger(
-                (html.render_icon(menu_item.icon_name) +
-                 html.render_icon(menu_item.icon_name + "_active", class_="active") +
+                (html.render_icon(menu_item.icon) + html.render_icon(active_icon, class_="active") +
                  html.render_div(menu_item.title)),
                 ident="mega_menu_" + menu_item.name,
                 method=MethodInline(self._get_mega_menu_content(menu_item)),
@@ -76,7 +84,7 @@ class MainMenuRenderer:
                 MainMenuItem(
                     name=menu.name,
                     title=menu.title,
-                    icon_name=menu.icon_name,
+                    icon=menu.icon,
                     onopen=menu.search.onopen if menu.search else None,
                 ))
         return items
@@ -152,8 +160,8 @@ class MegaMenuRenderer:
                     onclick="cmk.popup_menu.mega_menu_show_all_topics('%s')" % topic_id)
         html.icon(icon="collapse_arrow", title=_("Show all %s topics") % menu_id)
         html.close_a()
-        if not config.user.get_attribute("icons_per_item") and topic.icon_name:
-            html.icon(topic.icon_name)
+        if not config.user.get_attribute("icons_per_item") and topic.icon:
+            html.icon(topic.icon)
         html.span(topic.title)
         html.close_h2()
 
@@ -178,7 +186,7 @@ class MegaMenuRenderer:
             onclick="cmk.popup_menu.close_popup()",
         )
         if config.user.get_attribute("icons_per_item"):
-            html.icon(item.icon_name or "trans", emblem=item.emblem)
+            html.icon(item.icon or "trans")
         self._show_item_title(item)
         html.close_a()
         html.close_li()

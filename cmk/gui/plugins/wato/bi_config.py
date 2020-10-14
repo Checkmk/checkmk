@@ -1183,7 +1183,7 @@ class ModeBIEditRule(ABCBIMode):
              NodeVisualizationLayoutStyle(
                  title="BI visualization layout style",
                  help=_("The following layout style is applied to the matching node"))),
-            ("icon", IconSelector(title=_("Icon"))),
+            ("icon", IconSelector(title=_("Icon"), with_emblem=False)),
             ("nodes",
              ListOf(
                  bi_valuespecs.get_bi_rule_node_choices_vs(),
@@ -1192,20 +1192,18 @@ class ModeBIEditRule(ABCBIMode):
              )),
             ("state_messages",
              Optional(
-                 Dictionary(elements=[(state,
-                                       TextAscii(
-                                           title=_("Message when rule result is %s") % name,
-                                           default_value=None,
-                                           size=80,
-                                       )) for state, name in [
-                                           ("0", "OK"),
-                                           ("1",
-                                            "WARN"),
-                                           ("2",
-                                            "CRIT"),
-                                           ("3",
-                                            "UNKNOWN"),
-                                       ]]),
+                 Dictionary(
+                     elements=[(state,
+                                TextAscii(
+                                    title=_("Message when rule result is %s") % name,
+                                    default_value=None,
+                                    size=80,
+                                )) for state, name in [
+                                    ("0", "OK"),
+                                    ("1", "WARN"),
+                                    ("2", "CRIT"),
+                                    ("3", "UNKNOWN"),
+                                ]]),
                  title=_("Additional messages describing rule state"),
                  help=
                  _("This option allows you to display an additional, freely configurable text, to the rule outcome, "

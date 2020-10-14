@@ -6,7 +6,7 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Iterable, List, Mapping, NamedTuple, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Mapping, NamedTuple, Optional, Tuple, TypedDict, Union
 from cmk.utils.type_defs import UserId
 from cmk.gui.htmllib import HTML
 
@@ -109,6 +109,14 @@ class ABCMegaMenuSearch(ABC):
         ...
 
 
+class _Icon(TypedDict):
+    icon: str
+    emblem: Optional[str]
+
+
+Icon = Union[str, _Icon]
+
+
 class TopicMenuItem(NamedTuple):
     name: str
     title: str
@@ -116,8 +124,7 @@ class TopicMenuItem(NamedTuple):
     url: str
     target: str = "main"
     is_show_more: bool = False
-    icon_name: Optional[str] = None
-    emblem: Optional[str] = None
+    icon: Optional[Icon] = None
     button_title: Optional[str] = None
 
 
@@ -125,13 +132,13 @@ class TopicMenuTopic(NamedTuple):
     name: "str"
     title: "str"
     items: List[TopicMenuItem]
-    icon_name: Optional[str] = None
+    icon: Optional[Icon] = None
 
 
 class MegaMenu(NamedTuple):
     name: str
     title: str
-    icon_name: str
+    icon: Icon
     sort_index: int
     topics: Callable[[], List[TopicMenuTopic]]
     search: Optional[ABCMegaMenuSearch] = None

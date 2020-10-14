@@ -5523,11 +5523,17 @@ def _encode_labels_for_tagify(labels):
 
 
 class IconSelector(ValueSpec):
-    def __init__(self, allow_empty=True, empty_img="empty", show_builtin_icons=True, **kwargs):
+    def __init__(self,
+                 allow_empty=True,
+                 empty_img="empty",
+                 show_builtin_icons=True,
+                 with_emblem=True,
+                 **kwargs):
         super().__init__(**kwargs)
         self._allow_empty = allow_empty
         self._empty_img = empty_img
         self._show_builtin_icons = show_builtin_icons
+        self._with_emblem = with_emblem
 
         self._exclude = [
             'trans',
@@ -5631,17 +5637,31 @@ class IconSelector(ValueSpec):
                 icon_categories.append((category_name, category_alias, by_cat[category_name]))
         return icon_categories
 
-    def _render_icon(self, icon_name, onclick='', title='', id_=''):
-        if not icon_name:
-            icon_name = self._empty_img
+    def _render_icon(self, icon, onclick='', title='', id_=''):
+        if not icon:
+            icon = self._empty_img
+        if id_.endswith('_emblem_img'):
+            icon = {'icon': 'empty', 'emblem': icon}
 
-        icon = html.render_icon(icon_name, title=title, middle=True, id_=id_)
+        icon_tag = html.render_icon(icon, title=title, middle=True, id_=id_)
         if onclick:
-            icon = html.render_a(icon, href="javascript:void(0)", onclick=onclick)
+            icon_tag = html.render_a(icon_tag, href="javascript:void(0)", onclick=onclick)
 
-        return icon
+        return icon_tag
+
+    def _transform_icon_str(self, value):
+        if isinstance(value, dict):
+            return value
+        return {'icon': value, 'emblem': None}
 
     def render_input(self, varprefix, value):
+        value = self._transform_icon_str(value)
+
+        self._render_input(varprefix, value['icon'])
+        if self._with_emblem:
+            self._render_input(varprefix + "_emblem", value['emblem'])
+
+    def _render_input(self, varprefix, value):
         # Handle complain phase with validation errors correctly and get the value
         # from the HTML vars
         if value is None:
@@ -5674,13 +5694,14 @@ class IconSelector(ValueSpec):
     def render_popup_input(self, varprefix, value):
         html.open_div(class_="icons", id_="%s_icons" % varprefix)
 
-        icons = self.available_icons()
+        is_emblem = varprefix.endswith("_emblem")
+        icons = self.available_emblems() if is_emblem else self.available_icons()
         available_icons = self._available_icons_by_category(icons)
         active_category = icons.get(value, available_icons[0][0])
 
         # Render tab navigation
         html.open_ul()
-        for category_name, category_alias, icons in available_icons:
+        for category_name, category_alias, _icons in available_icons:
             html.open_li(class_="active" if active_category == category_name else None)
             html.a(category_alias,
                    href="javascript:cmk.valuespecs.iconselector_toggle(%s, %s)" %
@@ -5691,7 +5712,7 @@ class IconSelector(ValueSpec):
         html.close_ul()
 
         # Now render the icons grouped by category
-        empty = ['empty'] if self._allow_empty else []
+        empty = ['empty'] if self._allow_empty or is_emblem else []
         for category_name, category_alias, icons in available_icons:
             html.open_div(id_="%s_%s_container" % (varprefix, category_name),
                           class_=["icon_container", "%s_container" % varprefix],
@@ -5706,7 +5727,10 @@ class IconSelector(ValueSpec):
                     title=icon,
                 )
 
-                html.write_html(self._render_icon(icon, id_=varprefix + '_i_' + icon, title=icon))
+                icon_path = (html.detect_icon_path(icon, prefix="emblem")
+                             if is_emblem and icon != 'empty' else icon)
+                html.write_html(
+                    self._render_icon(icon_path, id_=varprefix + '_i_' + icon, title=icon))
 
                 html.span(icon)
 
@@ -5731,6 +5755,17 @@ class IconSelector(ValueSpec):
         html.close_div()
 
     def from_html_vars(self, varprefix):
+        icon = self._from_html_vars(varprefix)
+        if not self._with_emblem:
+            return icon
+
+        emblem = self._from_html_vars(varprefix + "_emblem")
+        if not emblem:
+            return icon
+
+        return {'icon': icon, 'emblem': emblem}
+
+    def _from_html_vars(self, varprefix):
         icon = html.request.var(varprefix + '_value')
         if icon == 'empty':
             return None
@@ -5738,18 +5773,33 @@ class IconSelector(ValueSpec):
 
     def value_to_text(self, value):
         # TODO: This is a workaround for a bug. This function needs to return str objects right now.
-        return "%s" % self._render_icon(value)
+        return "%s" % self._render_icon(value["icon"] if isinstance(value, dict) else value)
 
     def validate_datatype(self, value, varprefix):
-        if value is not None and not isinstance(value, str):
-            raise MKUserError(varprefix, _("The type is %s, but should be str") % type(value))
+        if self._with_emblem and not isinstance(value, (str, dict)):
+            raise MKUserError(varprefix, "The type is %s, but should be str or dict" % type(value))
+        if not self._with_emblem and not isinstance(value, str):
+            raise MKUserError(varprefix, "The type is %s, but should be str or dict" % type(value))
+
+        value = self._transform_icon_str(value)
+        if not (value["icon"] is None or isinstance(value["icon"], str)):
+            raise MKUserError(varprefix,
+                              _("The icon type is %s, but should be str") % type(value["icon"]))
+        if not (value["emblem"] is None or isinstance(value["emblem"], str)):
+            raise MKUserError(varprefix,
+                              _("The emblem type is %s, but should be str") % type(value["emblem"]))
 
     def _validate_value(self, value, varprefix):
-        if not self._allow_empty and not value:
+        value = self._transform_icon_str(value)
+
+        if not self._allow_empty and not value["icon"]:
             raise MKUserError(varprefix, _("You need to select an icon."))
 
-        if value and value not in self.available_icons():
-            raise MKUserError(varprefix, _("The selected icon image does not exist."))
+        if value["icon"] and value["icon"] not in self.available_icons():
+            raise MKUserError(varprefix, _("The selected icon does not exist."))
+
+        if value["emblem"] and value["emblem"] not in self.available_emblems():
+            raise MKUserError(varprefix, _("The selected emblem does not exist."))
 
 
 # TODO: Cleanup kwargs

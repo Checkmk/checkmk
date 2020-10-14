@@ -312,10 +312,6 @@ class Base:
     def type_icon(cls) -> str:
         raise NotImplementedError()
 
-    @classmethod
-    def type_emblem(cls) -> _Optional[str]:
-        return None
-
     # Lädt alle Dinge vom aktuellen User-Homeverzeichnis und
     # mergt diese mit den übergebenen eingebauten
     @classmethod
@@ -1706,10 +1702,12 @@ class PagetypeTopics(Overridable):
                 _("Topic"),
                 [
                     # sort-index, key, valuespec
-                    (2.5, "icon_name", IconSelector(
-                        title=_("Icon"),
-                        allow_empty=False,
-                    )),
+                    (2.5, "icon_name",
+                     IconSelector(
+                         title=_("Icon"),
+                         allow_empty=False,
+                         with_emblem=False,
+                     )),
                     (2.5, "sort_index",
                      Integer(
                          title=_("Sort index"),
@@ -1841,8 +1839,7 @@ def _customize_menu_topics() -> List[TopicMenuTopic]:
             url="edit_views.py",
             sort_index=10,
             is_show_more=False,
-            icon_name="view",
-            emblem=None,
+            icon="view",
         ),
         TopicMenuItem(
             name="dashboards",
@@ -1850,8 +1847,7 @@ def _customize_menu_topics() -> List[TopicMenuTopic]:
             url="edit_dashboards.py",
             sort_index=20,
             is_show_more=False,
-            icon_name="dashboard",
-            emblem=None,
+            icon="dashboard",
         ),
     ]
     graph_items = []
@@ -1861,8 +1857,7 @@ def _customize_menu_topics() -> List[TopicMenuTopic]:
                       url="edit_reports.py",
                       sort_index=10,
                       is_show_more=True,
-                      icon_name="report",
-                      emblem=None),
+                      icon="report")
     ]
 
     for index, page_type_ in enumerate(all_page_types().values()):
@@ -1872,8 +1867,7 @@ def _customize_menu_topics() -> List[TopicMenuTopic]:
             url="%ss.py" % page_type_.type_name(),
             sort_index=40 + (index * 10),
             is_show_more=page_type_.type_is_show_more(),
-            icon_name=page_type_.type_icon(),
-            emblem=page_type_.type_emblem(),
+            icon=page_type_.type_icon(),
         )
 
         if page_type_.type_name() in ("pagetype_topic", "bookmark_list", "custom_snapin"):
@@ -1889,25 +1883,25 @@ def _customize_menu_topics() -> List[TopicMenuTopic]:
         TopicMenuTopic(
             name="general",
             title=_("General"),
-            icon_name="topic_general",
+            icon="topic_general",
             items=general_items,
         ),
         TopicMenuTopic(
             name="monitoring",
             title=_("Monitoring"),
-            icon_name="topic_configure",
+            icon="topic_configure",
             items=monitoring_items,
         ),
         TopicMenuTopic(
             name="graphs",
             title=_("Graphs"),
-            icon_name="topic_graphs",
+            icon="topic_graphs",
             items=graph_items,
         ),
         TopicMenuTopic(
             name="business_reporting",
             title=_("Business reporting"),
-            icon_name="topic_reporting",
+            icon="topic_reporting",
             items=business_reporting_items,
         )
     ]
@@ -1917,7 +1911,7 @@ mega_menu_registry.register(
     MegaMenu(
         name="customize",
         title=_l("Customize"),
-        icon_name="main_customize",
+        icon="main_customize",
         sort_index=10,
         topics=_customize_menu_topics,
     ))

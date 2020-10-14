@@ -9,6 +9,7 @@ import re
 from typing import Optional, NamedTuple, List, Type
 
 from cmk.gui.i18n import _l
+from cmk.gui.type_defs import Icon
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.utils.plugin_registry
@@ -141,12 +142,8 @@ class MainModule(MenuItem, metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def icon(self) -> str:
+    def icon(self) -> Icon:
         raise NotImplementedError()
-
-    @property
-    def emblem(self) -> Optional[str]:
-        return None
 
     @abc.abstractproperty
     def permission(self) -> Optional[str]:

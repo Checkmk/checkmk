@@ -1489,7 +1489,10 @@ multisite_builtin_views['ec_history_recent'] = mkeventd_view({
     "sort_index": 20,
     'title': _('Recent Event History'),
     'description': _('Information about events and actions on events during the recent 24 hours.'),
-    'emblem': 'time',
+    'icon': {
+        'icon': 'event',
+        'emblem': 'time'
+    },
     'datasource': 'mkeventd_history',
     'layout': 'table',
     'painters': [

@@ -66,7 +66,7 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
             url="javascript:cmk.sidebar.toggle_user_attribute(\"ajax_ui_theme.py\")",
             target="",
             sort_index=10,
-            icon_name="color_mode",
+            icon="color_mode",
             button_title=_get_current_theme_titel(),
         ),
         TopicMenuItem(
@@ -75,7 +75,7 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
             url="javascript:cmk.sidebar.toggle_user_attribute(\"ajax_sidebar_position.py\")",
             target="",
             sort_index=20,
-            icon_name="sidebar_position",
+            icon="sidebar_position",
             button_title=_get_sidebar_position(),
         ),
     ]
@@ -86,21 +86,21 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
             title=_("Change password"),
             url="user_change_pw.py",
             sort_index=10,
-            icon_name="topic_change_password",
+            icon="topic_change_password",
         ),
         TopicMenuItem(
             name="user_profile",
             title=_("Edit profile"),
             url="user_profile.py",
             sort_index=20,
-            icon_name="topic_profile",
+            icon="topic_profile",
         ),
         TopicMenuItem(
             name="logout",
             title=_("Logout"),
             url="logout.py",
             sort_index=30,
-            icon_name="sidebar_logout",
+            icon="sidebar_logout",
         ),
     ]
 
@@ -112,7 +112,7 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
                 title=_("Notification rules"),
                 url="wato.py?mode=user_notifications_p",
                 sort_index=30,
-                icon_name="topic_events",
+                icon="topic_events",
             ))
 
     return [
@@ -120,13 +120,13 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
             name="user",
             title=_("Quick toggle"),
             # TODO(rb): set correct icon
-            icon_name="topic_profile",
+            icon="topic_profile",
             items=quick_items,
         ),
         TopicMenuTopic(
             name="user",
             title=_("Profile"),
-            icon_name="topic_profile",
+            icon="topic_profile",
             items=items,
         )
     ]
@@ -136,7 +136,7 @@ mega_menu_registry.register(
     MegaMenu(
         name="user",
         title=_l("User"),
-        icon_name="main_user",
+        icon="main_user",
         sort_index=20,
         topics=_user_menu_topics,
     ))

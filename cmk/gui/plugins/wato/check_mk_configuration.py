@@ -1051,10 +1051,12 @@ class ConfigVariableUserIconsAndActions(ConfigVariable):
                     ID(title=_("ID")),
                     Dictionary(
                         elements=[
-                            ('icon', IconSelector(
-                                title=_('Icon'),
-                                allow_empty=False,
-                            )),
+                            ('icon',
+                             IconSelector(
+                                 title=_('Icon'),
+                                 allow_empty=False,
+                                 with_emblem=False,
+                             )),
                             ('title', TextUnicode(title=_('Title'),)),
                             ('url',
                              Transform(
@@ -4043,6 +4045,7 @@ def _valuespec_extra_host_conf_icon_image():
             help=_("You can assign icons to hosts for the status GUI. "
                    "Put your images into <tt>%s</tt>. ") %
             (cmk.utils.paths.omd_root + "/local/share/check_mk/web/htdocs/images/icons"),
+            with_emblem=False,
         ),
         forth=lambda v: v and (v.endswith('.png') and v[:-4]) or v,
     )
@@ -4063,6 +4066,7 @@ def _valuespec_extra_service_conf_icon_image():
             help=_("You can assign icons to services for the status GUI. "
                    "Put your images into <tt>%s</tt>. ") %
             (cmk.utils.paths.omd_root + "/local/share/check_mk/web/htdocs/images/icons"),
+            with_emblem=False,
         ),
         forth=lambda v: v and (v.endswith('.png') and v[:-4]) or v,
     )

@@ -486,13 +486,16 @@ function sort_select(select, cmp_func) {
 
 export function iconselector_select(event, varprefix, value) {
     // set value of valuespec
-    var obj = document.getElementById(varprefix + "_value");
+    const obj = document.getElementById(varprefix + "_value");
     obj.value = value;
 
-    var src_img = document.getElementById(varprefix + "_i_" + value);
+    const src_img = document.getElementById(varprefix + "_i_" + value);
 
     // Set the new choosen icon in the valuespecs image
-    var img = document.getElementById(varprefix + "_img");
+    let img = document.getElementById(varprefix + "_img");
+    if (varprefix.match(/_emblem$/)) {
+        img = img.nextSibling;
+    }
     img.src = src_img.src;
 
     popup_menu.close_popup();

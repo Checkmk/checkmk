@@ -141,7 +141,7 @@ from cmk.gui.page_menu import (
     PageMenuPopupsRenderer,
     enable_page_menu_entry,
 )
-from cmk.gui.type_defs import CSSSpec
+from cmk.gui.type_defs import CSSSpec, Icon
 
 if TYPE_CHECKING:
     from cmk.gui.http import Request
@@ -1095,7 +1095,7 @@ class html(ABCHTMLGenerator):
     def icon_themes(self) -> List[str]:
         """Returns the themes where icons of a theme can be found in increasing order of importance.
         By default the facelift theme provides all icons. If a theme wants to use different icons it
-        only needs to add those icons under the same name. See _detect_icon_path for a detailed list
+        only needs to add those icons under the same name. See detect_icon_path for a detailed list
         of paths.
         """
         return ["facelift"] if self._theme == "facelift" else ["facelift", self._theme]
@@ -2568,56 +2568,54 @@ class html(ABCHTMLGenerator):
     #
 
     def icon(self,
-             icon: str,
+             icon: Icon,
              title: Optional[str] = None,
              middle: bool = True,
              id_: Optional[str] = None,
              cssclass: Optional[str] = None,
-             class_: CSSSpec = None,
-             emblem: Optional[str] = None) -> None:
+             class_: CSSSpec = None) -> None:
         self.write_html(
-            self.render_icon(icon_name=icon,
+            self.render_icon(icon=icon,
                              title=title,
                              middle=middle,
                              id_=id_,
                              cssclass=cssclass,
-                             class_=class_,
-                             emblem=emblem))
+                             class_=class_))
 
     def empty_icon(self) -> None:
         self.write_html(self.render_icon("trans"))
 
     def render_icon(self,
-                    icon_name: str,
+                    icon: Icon,
                     title: Optional[str] = None,
                     middle: bool = True,
                     id_: Optional[str] = None,
                     cssclass: Optional[str] = None,
-                    class_: CSSSpec = None,
-                    emblem: Optional[str] = None) -> HTML:
+                    class_: CSSSpec = None) -> HTML:
         classes = ["icon", cssclass]
         if isinstance(class_, list):
             classes.extend(class_)
         else:
             classes.append(class_)
 
-        icon = self._render_start_tag(
+        icon_name = icon["icon"] if isinstance(icon, dict) else icon
+        icon_element = self._render_start_tag(
             'img',
             close_tag=True,
             title=title,
             id_=id_,
             class_=classes,
             align='absmiddle' if middle else None,
-            src=icon_name if "/" in icon_name else self._detect_icon_path(icon_name, prefix="icon"),
+            src=icon_name if "/" in icon_name else self.detect_icon_path(icon_name, prefix="icon"),
         )
 
-        if emblem:
-            emblem_path = self._detect_icon_path(emblem, prefix="emblem")
-            return self.render_span(icon + self.render_img(emblem_path, class_="emblem"),
+        if isinstance(icon, dict) and icon["emblem"] is not None:
+            emblem_path = self.detect_icon_path(icon["emblem"], prefix="emblem")
+            return self.render_span(icon_element + self.render_img(emblem_path, class_="emblem"),
                                     class_="emblem")
-        return icon
+        return icon_element
 
-    def _detect_icon_path(self, icon_name: str, prefix: str) -> str:
+    def detect_icon_path(self, icon_name: str, prefix: str) -> str:
         """Detect from which place an icon shall be used and return it's path relative to htdocs/
 
         Priority:
@@ -2644,14 +2642,13 @@ class html(ABCHTMLGenerator):
     def render_icon_button(self,
                            url: Union[None, str, str],
                            title: str,
-                           icon: str,
+                           icon: Icon,
                            id_: Optional[str] = None,
                            onclick: Optional[HTMLTagAttributeValue] = None,
                            style: Optional[str] = None,
                            target: Optional[str] = None,
                            cssclass: Optional[str] = None,
-                           class_: CSSSpec = None,
-                           emblem: Optional[str] = None) -> HTML:
+                           class_: CSSSpec = None) -> HTML:
         # Same API as other elements: class_ can be a list or string/None
         classes = [cssclass]
         if isinstance(class_, list):
@@ -2663,7 +2660,7 @@ class html(ABCHTMLGenerator):
         assert href is not None
 
         return self.render_a(
-            content=HTML(self.render_icon(icon, emblem=emblem, cssclass="iconbutton")),
+            content=HTML(self.render_icon(icon, cssclass="iconbutton")),
             href=href,
             title=title,
             id_=id_,
@@ -2677,17 +2674,16 @@ class html(ABCHTMLGenerator):
     def icon_button(self,
                     url: Optional[str],
                     title: str,
-                    icon: str,
+                    icon: Icon,
                     id_: Optional[str] = None,
                     onclick: Optional[HTMLTagAttributeValue] = None,
                     style: Optional[str] = None,
                     target: Optional[str] = None,
                     cssclass: Optional[str] = None,
-                    class_: CSSSpec = None,
-                    emblem: Optional[str] = None) -> None:
+                    class_: CSSSpec = None) -> None:
         self.write_html(
-            self.render_icon_button(url, title, icon, id_, onclick, style, target, cssclass, class_,
-                                    emblem))
+            self.render_icon_button(url, title, icon, id_, onclick, style, target, cssclass,
+                                    class_))
 
     def more_button(self,
                     id_: str,

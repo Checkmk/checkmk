@@ -125,8 +125,10 @@ multisite_builtin_views.update({
         'title': _('Unmonitored services'),
         "topic": "analyze",
         "sort_index": 60,
-        'icon': 'services',
-        'emblem': 'warning',
+        'icon': {
+            'icon': 'services',
+            'emblem': 'warning'
+        },
     },
     'pending_discovery': {
         'browser_reload': 0,
@@ -179,8 +181,10 @@ multisite_builtin_views.update({
         'title': _('Pending service discovery'),
         "topic": "analyze",
         "sort_index": 50,
-        'icon': 'service_discovery',
-        'emblem': 'pending',
+        'icon': {
+            'icon': 'service_discovery',
+            'emblem': 'pending'
+        },
     },
     'allservices': {
         'browser_reload': 90,
@@ -1637,8 +1641,10 @@ multisite_builtin_views.update({
         'sorters': [],
         'title': _('Pending services'),
         'topic': "analyze",
-        'icon': 'services',
-        'emblem': 'pending',
+        'icon': {
+            'icon': 'services',
+            'emblem': 'pending'
+        },
         "sort_index": 50,
         "is_show_more": True,
     },
@@ -1685,8 +1691,10 @@ multisite_builtin_views.update({
         'title': _('Host search'),
         "topic": "overview",
         "sort_index": 30,
-        'icon': 'folder',
-        'emblem': 'search',
+        'icon': {
+            'icon': 'folder',
+            'emblem': 'search'
+        },
     },
     'searchsvc': {
         'browser_reload': 60,
@@ -1771,8 +1779,10 @@ multisite_builtin_views.update({
         ],
         'title': _('Service search'),
         "topic": "overview",
-        'icon': 'services',
-        'emblem': 'search',
+        'icon': {
+            'icon': 'services',
+            'emblem': 'search'
+        },
         "sort_index": 40,
     },
     'service': {
@@ -2068,8 +2078,10 @@ multisite_builtin_views.update({
         ],
         'hidden': False,
         'hide_filters': [],
-        'icon': 'graph',
-        'emblem': 'search',
+        'icon': {
+            'icon': 'graph',
+            'emblem': 'search'
+        },
         'layout': 'boxed',
         'mustsearch': True,
         'name': 'searchpnp',
@@ -2176,8 +2188,10 @@ multisite_builtin_views.update({
         'title': _('Recently changed services'),
         "topic": "history",
         "sort_index": 80,
-        'icon': 'services',
-        'emblem': 'warning',
+        'icon': {
+            'icon': 'services',
+            'emblem': 'warning'
+        },
     },
     'uncheckedsvc': {
         'browser_reload': 30,
@@ -2518,8 +2532,10 @@ multisite_builtin_views.update({
         ],
         'hidden': False,
         'hide_filters': [],
-        'icon': 'event',
-        'emblem': 'search',
+        'icon': {
+            'icon': 'event',
+            'emblem': 'search'
+        },
         'layout': 'table',
         'linktitle': _('Search history'),
         'mustsearch': True,
@@ -4096,8 +4112,10 @@ multisite_builtin_views.update({
         'hidden': False,
         'hide_filters': [],
         'hidebutton': True,
-        'icon': 'notifications',
-        'emblem': 'warning',
+        'icon': {
+            'icon': 'notifications',
+            'emblem': 'warning'
+        },
         'layout': 'table',
         'linktitle': _('Notifications'),
         'mustsearch': False,

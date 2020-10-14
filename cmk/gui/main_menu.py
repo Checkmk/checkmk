@@ -35,7 +35,7 @@ class MegaMenuRegistry(Registry[MegaMenu]):
         >>> mega_menu_registry.register(MegaMenu(
         ...     name="monitoring",
         ...     title=_l("Monitor"),
-        ...     icon_name="main_monitoring",
+        ...     icon="main_monitoring",
         ...     sort_index=5,
         ...     topics=lambda: [],
         ...     search=None,
@@ -71,7 +71,7 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
         TopicMenuTopic(
             name="help",
             title=_("Help"),
-            icon_name=None,  # TODO(CMK-5773): add an icon
+            icon=None,  # TODO(CMK-5773): add an icon
             items=[
                 TopicMenuItem(
                     name="manual",
@@ -79,7 +79,7 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                     url="https://checkmk.com/cms.html",
                     target="_blank",
                     sort_index=30,
-                    icon_name=None,  # TODO(CMK-5773): add an icon
+                    icon=None,  # TODO(CMK-5773): add an icon
                 ),
                 TopicMenuItem(
                     name="youtube_channel",
@@ -87,7 +87,7 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                     url="https://www.youtube.com/checkmk-channel",
                     target="_blank",
                     sort_index=30,
-                    icon_name=None,  # TODO(CMK-5773): add an icon
+                    icon=None,  # TODO(CMK-5773): add an icon
                 ),
             ],
         ),
@@ -98,7 +98,7 @@ mega_menu_registry.register(
     MegaMenu(
         name="help_links",
         title=_l("Help"),
-        icon_name="main_help",
+        icon="main_help",
         sort_index=18,
         topics=_help_menu_topics,
     ))

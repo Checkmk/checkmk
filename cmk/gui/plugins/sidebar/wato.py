@@ -47,9 +47,8 @@ def render_wato(mini):
             for item in topic.items:
                 html.icon_button(url=item.url,
                                  title=item.title,
-                                 icon=item.icon_name or "wato",
-                                 target="main",
-                                 emblem=item.emblem)
+                                 icon=item.icon or "wato",
+                                 target="main")
     else:
         show_topic_menu(treename="wato", menu=menu, show_item_icons=True)
 
@@ -72,7 +71,7 @@ def get_wato_menu_items() -> List[TopicMenuTopic]:
             TopicMenuTopic(
                 name=module.topic.name,
                 title=module.topic.title,
-                icon_name=module.topic.icon_name,
+                icon=module.topic.icon_name,
                 items=[],
             ))
         topic.items.append(
@@ -82,8 +81,7 @@ def get_wato_menu_items() -> List[TopicMenuTopic]:
                 url=module.get_url(),
                 sort_index=module.sort_index,
                 is_show_more=module.is_show_more,
-                icon_name=module.icon,
-                emblem=module.emblem,
+                icon=module.icon,
             ))
 
     # Sort the items of all topics
@@ -98,7 +96,7 @@ mega_menu_registry.register(
     MegaMenu(
         name="setup",
         title=_l("Setup"),
-        icon_name="main_setup",
+        icon="main_setup",
         sort_index=15,
         topics=get_wato_menu_items,
         search=search.SetupSearch("setup_search"),

@@ -2346,7 +2346,7 @@ def _collect_linked_visuals_of_type(type_name: str, view: View, rows: Rows,
     visual_type.load_handler()
     available_visuals = visual_type.permitted_visuals
 
-    for visual in sorted(available_visuals.values(), key=lambda x: x.get('icon') or ""):
+    for visual in sorted(available_visuals.values(), key=lambda x: x.get('name') or ""):
         if visual == view.spec:
             continue
 

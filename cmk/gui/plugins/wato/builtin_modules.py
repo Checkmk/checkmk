@@ -254,11 +254,7 @@ class MainModuleHostAndServiceParameters(MainModule):
 
     @property
     def icon(self):
-        return "folder"
-
-    @property
-    def emblem(self):
-        return "settings"
+        return {"icon": "folder", "emblem": "settings"}
 
     @property
     def permission(self):
@@ -1069,11 +1065,7 @@ class MainModuleMonitoringRules(MainModule):
 
     @property
     def icon(self):
-        return "services"
-
-    @property
-    def emblem(self):
-        return "settings"
+        return {"icon": "services", "emblem": "settings"}
 
     @property
     def permission(self):
@@ -1288,11 +1280,7 @@ class MainModuleAgentAccessRules(MainModule):
 
     @property
     def icon(self):
-        return "agents"
-
-    @property
-    def emblem(self):
-        return "settings"
+        return {"icon": "agents", "emblem": "settings"}
 
     @property
     def permission(self):

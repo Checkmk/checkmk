@@ -82,7 +82,7 @@ mega_menu_registry.register(
     MegaMenu(
         name="monitoring",
         title=_l("Monitor"),
-        icon_name="main_monitoring",
+        icon="main_monitoring",
         sort_index=5,
         topics=get_view_menu_items,
         search=search.MonitoringSearch("monitoring_search"),

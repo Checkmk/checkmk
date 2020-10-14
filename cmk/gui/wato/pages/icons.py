@@ -58,7 +58,7 @@ class ModeIcons(WatoMode):
                                           save_title=_("Upload"))
 
     def _load_custom_icons(self):
-        s = IconSelector(show_builtin_icons=False)
+        s = IconSelector(show_builtin_icons=False, with_emblem=False)
         return s.available_icons(only_local=True)
 
     def _vs_upload(self):

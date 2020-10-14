@@ -91,7 +91,7 @@ class IPMISource(AgentSource):
 
 
 class IPMISummarizer(AgentSummarizer):
-    def _summarize(self, host_sections: AgentHostSections) -> ServiceCheckResult:
+    def summarize_success(self, host_sections: AgentHostSections) -> ServiceCheckResult:
         return 0, "Version: %s" % self._get_ipmi_version(host_sections), []
 
     @staticmethod

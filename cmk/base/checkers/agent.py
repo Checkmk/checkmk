@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 import time
 from pathlib import Path
 from typing import cast, Dict, Final, List, Optional, Tuple
@@ -124,7 +125,12 @@ class AgentSource(ABCSource[AgentRawData, AgentHostSections]):
         self.main_data_source: Final[bool] = main_data_source
 
     def _make_parser(self) -> "AgentParser":
-        return AgentParser(self.hostname, self.persisted_sections_file_path, self._logger)
+        return AgentParser(
+            self.hostname,
+            self.persisted_sections_file_path,
+            self.use_outdated_persisted_sections,
+            self._logger,
+        )
 
 
 class AgentSummarizer(ABCSummarizer[AgentHostSections]):
@@ -142,7 +148,7 @@ class AgentSummarizerDefault(AgentSummarizer):
         self.source = source
         self._host_config = self.source.host_config
 
-    def _summarize(
+    def summarize_success(
         self,
         host_sections: AgentHostSections,
     ) -> ServiceCheckResult:
@@ -312,6 +318,19 @@ class AgentSummarizerDefault(AgentSummarizer):
 
 class AgentParser(ABCParser[AgentRawData, AgentHostSections]):
     """A parser for agent data."""
+    def __init__(
+        self,
+        hostname: HostName,
+        persisted_sections_file_path: Path,
+        use_outdated_persisted_sections: bool,
+        logger: logging.Logger,
+    ) -> None:
+        super().__init__()
+        self.hostname: Final[HostName] = hostname
+        self.host_config = config.HostConfig.make_host_config(self.hostname)
+        self.persisted_sections_file_path: Final[Path] = persisted_sections_file_path
+        self.use_outdated_persisted_sections: Final[bool] = use_outdated_persisted_sections
+        self._logger = logger
 
     # TODO(ml): Refactor, we should structure the code so that we have one
     #   function per attribute in AgentHostSections (AgentHostSections.sections,
@@ -319,12 +338,18 @@ class AgentParser(ABCParser[AgentRawData, AgentHostSections]):
     #   and AgentHostSections.persisted_sections) and a few simple helper functions.
     #   Moreover, the main loop of the parser (at `for line in raw_data.split(b"\n")`)
     #   is an FSM and shoule be written as such.  (See CMK-5004)
-    def _parse(self, raw_data: AgentRawData) -> AgentHostSections:
+    def parse(self, raw_data: AgentRawData) -> AgentHostSections:
         if config.agent_simulator:
             raw_data = agent_simulator.process(raw_data)
 
         assert isinstance(raw_data, AgentRawData), type(raw_data)
-        return self._parse_host_section(raw_data, self.host_config.check_mk_check_interval)
+        host_sections = self._parse_host_section(raw_data, self.host_config.check_mk_check_interval)
+        host_sections.add_persisted_sections(
+            self.persisted_sections_file_path,
+            self.use_outdated_persisted_sections,
+            logger=self._logger,
+        )
+        return host_sections
 
     def _parse_host_section(
         self,

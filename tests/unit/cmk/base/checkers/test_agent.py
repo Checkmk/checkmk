@@ -22,6 +22,7 @@ from cmk.fetchers import FetcherType
 from cmk.fetchers.agent import NoCache
 
 import cmk.base.config as config
+from cmk.base.checkers._abstract import ABCHostSections
 from cmk.base.checkers import Mode
 from cmk.base.checkers.agent import AgentParser, AgentSource, AgentSummarizer
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
@@ -46,8 +47,20 @@ class TestParser:
         ts.add_host(hostname)
         ts.apply(monkeypatch)
 
+    @pytest.fixture
+    def patch_io(self, monkeypatch):
+        monkeypatch.setattr(
+            ABCHostSections,
+            "add_persisted_sections",
+            lambda *args, **kwargs: None,
+        )
+
+    @pytest.fixture
+    def store(self, fs, patch_io):
+        return Path(fs.create_file("/tmp/store").GetPath())
+
     @pytest.mark.usefixtures("scenario")
-    def test_raw_section_populates_sections(self, hostname, logger):
+    def test_raw_section_populates_sections(self, hostname, logger, store):
         raw_data = b"\n".join((
             b"<<<a_section>>>",
             b"first line",
@@ -59,7 +72,7 @@ class TestParser:
             b"<<<>>>",  # to be skipped
         ))
 
-        ahs = AgentParser(hostname, Path(""), logger).parse(result.OK(raw_data)).ok
+        ahs = AgentParser(hostname, store, False, logger).parse(raw_data)
 
         assert ahs.sections == {
             SectionName("a_section"): [["first", "line"], ["second", "line"]],
@@ -70,7 +83,13 @@ class TestParser:
         assert ahs.persisted_sections == {}
 
     @pytest.mark.usefixtures("scenario")
-    def test_piggyback_populates_piggyback_raw_data(self, hostname, logger, monkeypatch):
+    def test_piggyback_populates_piggyback_raw_data(
+        self,
+        hostname,
+        store,
+        logger,
+        monkeypatch,
+    ):
         time_time = 1000
         monkeypatch.setattr(time, "time", lambda: time_time)
         monkeypatch.setattr(config.HostConfig, "check_mk_check_interval", 10)
@@ -94,7 +113,7 @@ class TestParser:
             b"first line",
         ))
 
-        ahs = AgentParser(hostname, Path(""), logger).parse(result.OK(raw_data)).ok
+        ahs = AgentParser(hostname, store, False, logger).parse(raw_data)
 
         assert ahs.sections == {}
         assert ahs.cache_info == {}
@@ -124,6 +143,7 @@ class TestParser:
     def test_persist_option_populates_cache_info_and_persisted_sections(
         self,
         hostname,
+        store,
         logger,
         monkeypatch,
     ):
@@ -137,7 +157,7 @@ class TestParser:
             b"second line",
         ))
 
-        ahs = AgentParser(hostname, Path(""), logger).parse(result.OK(raw_data)).ok
+        ahs = AgentParser(hostname, store, False, logger).parse(raw_data)
 
         assert ahs.sections == {SectionName("section"): [["first", "line"], ["second", "line"]]}
         assert ahs.cache_info == {SectionName("section"): (time_time, time_delta)}
@@ -167,7 +187,7 @@ class TestParser:
 
 
 class StubSummarizer(AgentSummarizer):
-    def _summarize(self, host_sections):
+    def summarize_success(self, host_sections):
         return 0, "", []
 
 

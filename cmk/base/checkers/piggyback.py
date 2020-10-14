@@ -70,7 +70,7 @@ class PiggybackSummarizer(AgentSummarizer):
         super().__init__(exit_spec)
         self.source = source
 
-    def _summarize(self, host_sections: AgentHostSections) -> ServiceCheckResult:
+    def summarize_success(self, host_sections: AgentHostSections) -> ServiceCheckResult:
         """Returns useful information about the data source execution
 
         Return only summary information in case there is piggyback data"""

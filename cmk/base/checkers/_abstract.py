@@ -117,7 +117,7 @@ class ABCHostSections(Generic[TRawData, TSections, TPersistedSections, TSectionC
         use_outdated_persisted_sections: bool,
         *,
         logger: logging.Logger,
-    ):
+    ) -> None:
         """Add information from previous persisted infos."""
         persisted_sections = self._determine_persisted_sections(
             persisted_sections_file_path,
@@ -192,42 +192,9 @@ THostSections = TypeVar("THostSections", bound=ABCHostSections)
 
 
 class ABCParser(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
-    """Parse raw data into host sections.
-
-    Note:
-        Only private methods are allowed to handle `TRawData` and
-        `THostSections`.  Public methods must always use
-        `Result[TRawData, Exception]` and `Result[THostSections, Exception]`.
-
-    """
-    def __init__(
-        self,
-        hostname: HostName,
-        persisted_sections_file_path: Path,
-        logger: logging.Logger,
-    ) -> None:
-        super().__init__()
-        self.hostname: Final[HostName] = hostname
-        self.persisted_sections_file_path: Final[Path] = persisted_sections_file_path
-        self.host_config = config.HostConfig.make_host_config(self.hostname)
-        self._logger = logger
-
-    @final
-    def parse(
-        self,
-        raw_data: result.Result[TRawData, Exception],
-    ) -> result.Result[THostSections, Exception]:
-        if raw_data.is_error():
-            return result.Error(raw_data.error)
-        try:
-            return result.OK(self._parse(raw_data.ok))
-        except Exception as exc:
-            if cmk.utils.debug.enabled():
-                raise
-            return result.Error(exc)
-
+    """Parse raw data into host sections."""
     @abc.abstractmethod
-    def _parse(self, raw_data: TRawData) -> THostSections:
+    def parse(self, raw_data: TRawData) -> THostSections:
         raise NotImplementedError
 
 
@@ -365,16 +332,7 @@ class ABCSource(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         raw_data: result.Result[TRawData, Exception],
     ) -> result.Result[THostSections, Exception]:
         try:
-            host_sections = self._make_parser().parse(raw_data)
-            if host_sections.is_error():
-                return host_sections
-
-            host_sections.ok.add_persisted_sections(
-                self.persisted_sections_file_path,
-                self.use_outdated_persisted_sections,
-                logger=self._logger,
-            )
-            return host_sections
+            return raw_data.map(self._make_parser().parse)
         except Exception as exc:
             self._logger.log(VERBOSE, "ERROR: %s", exc)
             if cmk.utils.debug.enabled():
@@ -386,7 +344,11 @@ class ABCSource(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         self,
         host_sections: result.Result[THostSections, Exception],
     ) -> ServiceCheckResult:
-        return self._make_summarizer().summarize(host_sections)
+        summarizer = self._make_summarizer()
+        return host_sections.fold(
+            ok=summarizer.summarize_success,
+            error=summarizer.summarize_failure,
+        )
 
     @abc.abstractmethod
     def _make_file_cache(self) -> ABCFileCache[TRawData]:
@@ -418,29 +380,18 @@ class ABCSource(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
 
 
 class ABCSummarizer(Generic[THostSections], metaclass=abc.ABCMeta):
-    """Class to summarize parsed data into a ServiceCheckResult.
-
-    Note:
-        Only private methods are allowed to handle `THostSections`.
-        Public methods must always use `Result[THostSections, Exception]`.
-
-    """
+    """Class to summarize parsed data into a ServiceCheckResult."""
     def __init__(self, exit_spec: config.ExitSpec) -> None:
         super().__init__()
         self.exit_spec: Final[config.ExitSpec] = exit_spec
 
-    @final
-    def summarize(
-        self,
-        host_sections: result.Result[THostSections, Exception],
-    ) -> ServiceCheckResult:
-        """Summarize the host sections."""
-        if host_sections.is_ok():
-            return self._summarize(host_sections.ok)
+    @abc.abstractmethod
+    def summarize_success(self, host_sections: THostSections) -> ServiceCheckResult:
+        raise NotImplementedError
 
-        exc_msg = "%s" % host_sections.error
-        status = self._extract_status(host_sections.error)
-        return status, exc_msg + check_api_utils.state_markers[status], []
+    def summarize_failure(self, exc: Exception) -> ServiceCheckResult:
+        status = self._extract_status(exc)
+        return status, str(exc) + check_api_utils.state_markers[status], []
 
     def _extract_status(self, exc: Exception) -> int:
         if isinstance(exc, MKEmptyAgentData):
@@ -455,7 +406,3 @@ class ABCSummarizer(Generic[THostSections], metaclass=abc.ABCMeta):
         if isinstance(exc, MKTimeout):
             return self.exit_spec.get("timeout", 2)
         return self.exit_spec.get("exception", 3)
-
-    @abc.abstractmethod
-    def _summarize(self, host_sections: THostSections) -> ServiceCheckResult:
-        raise NotImplementedError

@@ -4,10 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from functools import cached_property
+import logging
 import time
+from functools import cached_property
 from pathlib import Path
-from typing import Mapping, Optional, Set
+from typing import Final, Mapping, Optional, Set
 
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
 
@@ -26,14 +27,7 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_table as check_table
 import cmk.base.config as config
 
-from ._abstract import (
-    ABCSource,
-    ABCHostSections,
-    ABCParser,
-    ABCSummarizer,
-    FileCacheFactory,
-    Mode,
-)
+from ._abstract import ABCHostSections, ABCParser, ABCSource, ABCSummarizer, FileCacheFactory, Mode
 
 
 class SNMPHostSections(ABCHostSections[SNMPRawData, SNMPSections, SNMPPersistedSections,
@@ -164,7 +158,12 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
         )
 
     def _make_parser(self) -> "SNMPParser":
-        return SNMPParser(self.hostname, self.persisted_sections_file_path, self._logger)
+        return SNMPParser(
+            self.hostname,
+            self.persisted_sections_file_path,
+            self.use_outdated_persisted_sections,
+            self._logger,
+        )
 
     def _make_summarizer(self) -> "SNMPSummarizer":
         return SNMPSummarizer(self.exit_spec)
@@ -241,7 +240,21 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
 
 class SNMPParser(ABCParser[SNMPRawData, SNMPHostSections]):
     """A parser for SNMP data."""
-    def _parse(
+    def __init__(
+        self,
+        hostname: HostName,
+        persisted_sections_file_path: Path,
+        use_outdated_persisted_sections: bool,
+        logger: logging.Logger,
+    ) -> None:
+        super().__init__()
+        self.hostname: Final[HostName] = hostname
+        self.host_config = config.HostConfig.make_host_config(self.hostname)
+        self.persisted_sections_file_path: Final[Path] = persisted_sections_file_path
+        self.use_outdated_persisted_sections: Final[bool] = use_outdated_persisted_sections
+        self._logger = logger
+
+    def parse(
         self,
         raw_data: SNMPRawData,
     ) -> SNMPHostSections:
@@ -249,7 +262,13 @@ class SNMPParser(ABCParser[SNMPRawData, SNMPHostSections]):
             raw_data,
             self.host_config,
         )
-        return SNMPHostSections(raw_data, persisted_sections=persisted_sections)
+        host_sections = SNMPHostSections(raw_data, persisted_sections=persisted_sections)
+        host_sections.add_persisted_sections(
+            self.persisted_sections_file_path,
+            self.use_outdated_persisted_sections,
+            logger=self._logger,
+        )
+        return host_sections
 
     @staticmethod
     def _extract_persisted_sections(
@@ -277,5 +296,5 @@ class SNMPParser(ABCParser[SNMPRawData, SNMPHostSections]):
 
 
 class SNMPSummarizer(ABCSummarizer[SNMPHostSections]):
-    def _summarize(self, host_sections: SNMPHostSections) -> ServiceCheckResult:
+    def summarize_success(self, host_sections: SNMPHostSections) -> ServiceCheckResult:
         return 0, "Success", []

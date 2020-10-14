@@ -2049,11 +2049,10 @@ def ldap_filter_of_connection(connection_id, *args, **kwargs):
 def ldap_sync_simple(user_id, ldap_user, user, user_attr, attr):
     if attr in ldap_user:
         attr_value = ldap_user[attr][0]
-        if user_attr != 'disable_notifications':
-            return {user_attr: attr_value}
         # LDAP attribute in boolean format sends str "TRUE" or "FALSE"
-        if attr_value == 'TRUE':
-            return {user_attr: {'disable': True}}
+        if user_attr == 'disable_notifications':
+            return {user_attr: {'disable': attr_value == "TRUE"}}
+        return {user_attr: attr_value}
     return {}
 
 

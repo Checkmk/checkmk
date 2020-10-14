@@ -45,21 +45,19 @@ info = [[u'instance_name node0',
 discovery = {'': [(u'node0', {'inv_speed': 16000000000, 'inv_state': u'online'})]}
 
 
-checks = {'': [(u'node0',
-                {'inv_speed': 16000000000, 'inv_state': u'online'},
-                [(0, u'State: online', []),
-                 (0, 'Speed: 16 Gbit/s', []),
-                 (0, u'Address de:ad:be:ef', []),
-                 (0, 'Read: 150.00 B/s', [('read_bytes', 150.0, None, None, None, None)]),
-                 (0, 'Write: 160.00 B/s', [('write_bytes', 160.0, None, None, None, None)]),
-                 (0, 'Read OPS: 140', [('read_ops', 140, None, None, None, None)]),
-                 (0, 'Write OPS: 130', [('write_ops', 130, None, None, None, None)]),
-                 (0,
-                  'Latency: 90.00 ms',
-                  [('avg_latency_latency', 90.0, None, None, None, None)]),
-                 (0,
-                  'Read Latency: 170.00 ms',
-                  [('avg_read_latency_latency', 170.0, None, None, None, None)]),
-                 (0,
-                  'Write Latency: 30.00 ms',
-                  [('avg_write_latency_latency', 30.0, None, None, None, None)])])]}
+checks = {
+    '': [
+        (u'node0', {'inv_speed': 16000000000, 'inv_state': u'online'}, [
+            (0, 'Read: 150.00 B/s', [('read_bytes', 150.0)]),
+            (0, 'Write: 160.00 B/s', [('write_bytes', 160.0)]),
+            (0, 'Speed: 16 Gbit/s', []),
+            (0, '\nState: online', []),
+            (0, '\nRead OPS: 140', [('read_ops', 140)]),
+            (0, '\nWrite OPS: 130', [('write_ops', 130)]),
+            (0, '\nLatency: 90.00 ms',[('avg_latency_latency', 90.0)]),
+            (0, '\nRead Latency: 170.00 ms', [('avg_read_latency_latency', 170.0)]),
+            (0, '\nWrite Latency: 30.00 ms', [('avg_write_latency_latency', 30.0)]),
+            (0, '\nAddress de:ad:be:ef', []),
+        ]),
+    ],
+}

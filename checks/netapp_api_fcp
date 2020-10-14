@@ -40,23 +40,25 @@ def inventory_netapp_api_fcp(parsed):
 # }
 
 
-def check_fibrechannel_common(item, params, parsed):
+def check_netapp_api_fcp(item, params, parsed):
     fcp_if = parsed.get(item)
     if not fcp_if:
         return
 
-    # State
-    yield 0 if fcp_if["state"] == "online" else 2, "State: %s" % fcp_if["state"]
-
+    yield from _io_bytes_results(item, params, fcp_if)
     yield from _speed_result(params, fcp_if)
 
-    # Address
-    if "address" in fcp_if:
-        yield 0, "Address %s" % fcp_if["address"]
+    # this may be in the details *or* summary:
+    state_str = fcp_if["state"]
+    yield _notice_only_fy(0 if state_str == "online" else 2, f"State: {state_str}", [])
 
-    yield from _io_bytes_results(item, params, fcp_if)
+    # the rest will be in the details.
     yield from _io_ops_results(item, params, fcp_if)
     yield from _latency_results(item, params, fcp_if)
+
+    # Address - details always.
+    if "address" in fcp_if:
+        yield _notice_only_fy(0, "Address %s" % fcp_if["address"], [])
 
 
 def _speed_result(params, fcp_if):
@@ -118,13 +120,13 @@ def _io_ops_results(item, params, fcp_if):
         if value is None:  # cannot happen. left in until migration, to illustrate intention.
             continue
 
-        yield check_levels(
+        yield _notice_only_fy(*check_levels(
             value,
             what,
             None,
             human_readable_func=int,
             infoname=descr,
-        )
+        ))
 
 
 def _latency_results(item, params, fcp_if):
@@ -141,13 +143,19 @@ def _latency_results(item, params, fcp_if):
         except MKCounterWrapped:
             continue
 
-        yield check_levels(
+        yield _notice_only_fy(*check_levels(
             value,
             "%s_latency" % what,
             params.get(what),
             unit="ms",
             infoname=text,
-        )
+        ))
+
+
+def _notice_only_fy(state, text, metrics):
+    """mimic behaviour of notice_only kwarg of new check_levels to the extend possible"""
+    newline = "" if state else "\n"
+    return state, f"{newline}{text}", metrics
 
 
 def parse_netapp_api_fcp(info):
@@ -171,10 +179,6 @@ def parse_netapp_api_fcp(info):
         fcp_interfaces[key] = fcp_data
 
     return fcp_interfaces
-
-
-def check_netapp_api_fcp(item, params, parsed):
-    return check_fibrechannel_common(item, params, parsed)
 
 
 check_info["netapp_api_fcp"] = {

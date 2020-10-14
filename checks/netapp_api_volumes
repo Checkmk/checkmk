@@ -41,24 +41,29 @@ def _create_key(protocol, mode, field):
 
 def _check_single_netapp_api_volume(item, params, volume):
     mega = 1024.0 * 1024.0
-    size_total = volume["size-total"] / mega  # fixed: true-division
-    size_avail = volume["size-available"] / mega  # fixed: true-division
     inodes_total = volume["files-total"]
-    inodes_avail = inodes_total - volume["files-used"]
-    state, info, perf = df_check_filesystem_single(
+    yield df_check_filesystem_single(
         item,
-        size_total,
-        size_avail,
+        volume["size-total"] / mega,
+        volume["size-available"] / mega,
         0,
         inodes_total,
-        inodes_avail,
+        inodes_total - volume["files-used"],
         params,
     )
 
+    yield _generate_volume_metrics(params, volume)
+
+
+def _generate_volume_metrics(
+    params,
+    volume,
+):
     now = time.time()
     base = {}
     metrics_map = {'write_ops': 'write_ops_s'}
 
+    perfdata = []
     for protocol in params.get("perfdata", []):
         for mode in ["read", "write", "other"]:
             for field in ["data", "ops", "latency"]:
@@ -69,10 +74,7 @@ def _check_single_netapp_api_volume(item, params, volume):
                     continue
 
                 try:
-                    delta = get_rate("netapp_api_volumes.%s.%s" % (item, key),
-                                     now,
-                                     value,
-                                     onwrap=RAISE)
+                    delta = get_rate(key, now, value, onwrap=RAISE)
                 except MKCounterWrapped:
                     continue
 
@@ -118,9 +120,9 @@ def _check_single_netapp_api_volume(item, params, volume):
                         "ops",
                     )]  # fixed: true-division
 
-                perf.append((metrics_map.get(key, key), delta))
+                perfdata.append((metrics_map.get(key, key), delta))
 
-    return state, info, perf
+    return 0, '', perfdata
 
 
 def _combine_netapp_api_volumes(volumes_in_group, parsed):
@@ -165,7 +167,7 @@ def check_netapp_api_volumes(item, params, parsed):
         )
 
         if combined_volumes:
-            yield _check_single_netapp_api_volume(item, params, combined_volumes)
+            yield from _check_single_netapp_api_volume(item, params, combined_volumes)
 
         yield 0, "%d volume(s) in group" % len(volumes_in_group)
         for vol, state in volumes_not_online.items():
@@ -184,7 +186,7 @@ def check_netapp_api_volumes(item, params, parsed):
             yield 1, "Volume is %s" % volume.get("state")
             return
 
-        yield _check_single_netapp_api_volume(item, params, volume)
+        yield from _check_single_netapp_api_volume(item, params, volume)
 
 
 check_info["netapp_api_volumes"] = {

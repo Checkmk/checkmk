@@ -211,7 +211,7 @@ def mock_util(*args):
         for protocol in ["", "nfs", "cifs", "san", "fcp", "iscsi"]:
             for mode in ["read", "write", "other"]:
                 for field in ["data", "ops", "latency"]:
-                    key = "netapp_api_volumes.%s.%s" % (item, _create_key(protocol, mode, field))
+                    key = _create_key(protocol, mode, field)
                     item_state[key, None] = (1591789747, 0)
 
     return item_state[args]
@@ -234,6 +234,7 @@ checks = {
                      ('trend', 46290.73742521239, None, None, 0, 121944.54020182292),
                      ('inodes_used', 63106, None, None, 0.0, 31876696.0)],
                 ),
+                (0, '', []),
             ],
         ),
         (
@@ -259,6 +260,7 @@ checks = {
                      ('trend', 21834.93724313627, None, None, 0, 121944.54020182292),
                      ('inodes_used', 62894, 28689026.400000002, 30282861.2, 0.0, 31876696.0)],
                 ),
+                (0, '', []),
             ],
         ),
         (
@@ -313,6 +315,8 @@ checks = {
                      ('trend', 124195.93898073, 100.0, 200.0, 0, 12800.0),
                      ('trend_hoursleft', 23.719475746763944),
                      ('inodes_used', 3414, 8404987.5, 8871931.25, 0.0, 9338875.0),
+                ]),
+                (0, '', [
                      ('read_data', 9716.487764641188), ('read_ops', 18.67761891668958),
                      ('read_latency', 0.05978019446345899), ('write_data', 88.09100907341215),
                      ('write_ops_s', 0.2686279901017322), ('write_latency', 0.17518730808597746),
@@ -362,6 +366,8 @@ checks = {
                      ('trend', 451.6255079968184, 100.0, 200.0, 0, 43690.666666666664),
                      ('trend_hoursleft', 55687.124533336086),
                      ('inodes_used', 315, 28689026.400000002, 30282861.2, 0.0, 31876696.0),
+                ]),
+                (0, '', [
                      ('read_data', 111128.57093758593), ('read_ops', 18.929749793786087),
                      ('read_latency', 0.1663962017502451), ('write_data', 187.43112455320318),
                      ('write_ops_s', 0.5312070387682155), ('write_latency', 0.28390010351966877),
@@ -399,6 +405,7 @@ checks = {
                      ('trend', 11943.480410396396, None, None, 0, 9066.666666666666),
                      ('inodes_used', 10737, None, None, 0.0, 7782396.0)],
                 ),
+                (0, '', []),
                 (
                     0,
                     '1 volume(s) in group',
@@ -420,6 +427,7 @@ checks = {
                      ('trend', 21506965.151722867, None, None, 0, 2636993.8777669272),
                      ('inodes_used', 272219307, None, None, 0.0, 874985078.0)],
                 ),
+                (0, '', []),
                 (
                     0,
                     '6 volume(s) in group',

@@ -48,28 +48,7 @@ def check_fibrechannel_common(item, params, parsed):
     # State
     yield 0 if fcp_if["state"] == "online" else 2, "State: %s" % fcp_if["state"]
 
-    # Speed, in Bits
-    speed_state = 0
-    fcp_speed = fcp_if.get("speed")
-
-    speed_info = ""
-    if fcp_speed:
-        speed_info += get_nic_speed_human_readable(fcp_speed)
-    for what in ["speed", "inv_speed"]:
-        if what in params:
-            if params[what] is None:
-                speed_state = 0
-            elif not fcp_speed:
-                speed_state = 1
-                speed_info += "missing speed, expected %s" % (get_nic_speed_human_readable(
-                    params[what]))
-            elif fcp_speed != params[what]:
-                speed_state = 2
-                speed_info += " (wrong speed, expected %s)" % (get_nic_speed_human_readable(
-                    params[what]))
-            break
-    if speed_info:
-        yield speed_state, speed_info
+    yield from _speed_result(params, fcp_if)
 
     # Address
     if "address" in fcp_if:
@@ -78,6 +57,25 @@ def check_fibrechannel_common(item, params, parsed):
     yield from _io_bytes_results(item, params, fcp_if)
     yield from _io_ops_results(item, params, fcp_if)
     yield from _latency_results(item, params, fcp_if)
+
+
+def _speed_result(params, fcp_if):
+    speed = fcp_if.get("speed")
+    speed_str = None if speed is None else get_nic_speed_human_readable(speed)
+    expected_speed = params.get("speed", params.get("inv_speed"))
+    expected_speed_str = (None if expected_speed is None else
+                          get_nic_speed_human_readable(expected_speed))
+
+    if speed is None:
+        if expected_speed is not None:
+            yield 1, f"Speed: unknown (expected: {expected_speed_str})"
+        return
+
+    if expected_speed is None or speed == expected_speed:
+        yield 0, f"Speed: {speed_str}"
+        return
+
+    yield 2, f"Speed: {speed_str} (expected: {expected_speed_str})"
 
 
 def _io_bytes_results(item, params, fcp_if):

@@ -13,6 +13,7 @@ from typing import (
     Final,
     Iterable,
     List,
+    Mapping,
     Sequence,
 )
 
@@ -36,7 +37,7 @@ class MatchItem:
 
 
 MatchItems = Iterable[MatchItem]
-Index = Sequence[MatchItem]
+Index = Mapping[str, Sequence[MatchItem]]
 
 
 class ABCMatchItemGenerator(ABC):
@@ -62,10 +63,10 @@ class IndexBuilder:
         self._registry = registry
 
     def build_index(self) -> Index:
-        return [
-            match_item for match_item_generator in self._registry.values()
-            for match_item in match_item_generator.generate_match_items()
-        ]
+        return {
+            name: list(match_item_generator.generate_match_items())
+            for name, match_item_generator in self._registry.items()
+        }
 
 
 class IndexStore:
@@ -86,6 +87,10 @@ class IndexStore:
         with open(self._path, mode='rb') as index_file:
             return pickle.load(index_file)
 
+    def all_match_items(self) -> MatchItems:
+        yield from (
+            match_item for match_items in self.load_index().values() for match_item in match_items)
+
 
 class IndexSearcher:
     def __init__(self, index_store: IndexStore) -> None:
@@ -94,7 +99,7 @@ class IndexSearcher:
     def search(self, query: SearchQuery) -> SearchResultsByTopic:
         query_lowercase = query.lower()
         results: Dict[str, List[SearchResult]] = {}
-        for match_item in self._index_store.load_index():
+        for match_item in self._index_store.all_match_items():
             if any(query_lowercase in match_text for match_text in match_item.match_texts):
                 results.setdefault(
                     match_item.topic,

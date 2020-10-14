@@ -46,7 +46,7 @@ def check_fibrechannel_common(item, params, parsed):
         return
 
     # State
-    yield fcp_if["state"] not in ["online"] and 2 or 0, "State: %s" % fcp_if["state"]
+    yield 0 if fcp_if["state"] == "online" else 2, "State: %s" % fcp_if["state"]
 
     # Speed, in Bits
     speed_state = 0
@@ -75,60 +75,81 @@ def check_fibrechannel_common(item, params, parsed):
     if "address" in fcp_if:
         yield 0, "Address %s" % fcp_if["address"]
 
-    yield from _traffic_results(item, params, fcp_if)
+    yield from _io_bytes_results(item, params, fcp_if)
+    yield from _io_ops_results(item, params, fcp_if)
     yield from _latency_results(item, params, fcp_if)
 
 
-def _traffic_results(item, params, fcp_if):
-    general_levels = if_get_traffic_levels(params)
-    traffic_levels = get_specific_traffic_levels(general_levels, "Bytes", fcp_if.get("speed"), None,
-                                                 None)
+def _io_bytes_results(item, params, fcp_if):
+    traffic_levels = get_specific_traffic_levels(if_get_traffic_levels(params), "Bytes",
+                                                 fcp_if.get("speed"), None, None)
     now = fcp_if["now"]
-    for what, levels_what, descr, format_func in [
-        ("read_bytes", "in", "Read", lambda x: get_bytes_human_readable(x, unit="B/s")),
-        ("write_bytes", "out", "Write", lambda x: get_bytes_human_readable(x, unit="B/s")),
-        ("read_ops", None, "Read OPS", int), ("write_ops", None, "Write OPS", int)
+    for what, levels_what, descr in [
+        ("read_bytes", "in", "Read"),
+        ("write_bytes", "out", "Write"),
     ]:
         value = get_rate("%s.%s" % (item, what), now, fcp_if.get(what))
-        if value is None:
+        if value is None:  # cannot happen. left in until migration, to illustrate intention.
             continue
 
-        if levels_what:
-            if (what, 'predictive') in traffic_levels:
-                level_params = traffic_levels[(what, 'predictive')]
-            else:
-                bw_warn = traffic_levels[(levels_what, 'upper', 'warn')]
-                bw_crit = traffic_levels[(levels_what, 'upper', 'crit')]
-                bw_warn_min = traffic_levels[(levels_what, 'lower', 'warn')]
-                bw_crit_min = traffic_levels[(levels_what, 'lower', 'crit')]
-                level_params = (bw_warn, bw_crit, bw_warn_min, bw_crit_min)
+        if (what, 'predictive') in traffic_levels:
+            level_params = traffic_levels[(what, 'predictive')]
         else:
-            level_params = None
+            bw_warn = traffic_levels[(levels_what, 'upper', 'warn')]
+            bw_crit = traffic_levels[(levels_what, 'upper', 'crit')]
+            bw_warn_min = traffic_levels[(levels_what, 'lower', 'warn')]
+            bw_crit_min = traffic_levels[(levels_what, 'lower', 'crit')]
+            level_params = (bw_warn, bw_crit, bw_warn_min, bw_crit_min)
 
-        yield check_levels(value,
-                           what,
-                           level_params,
-                           human_readable_func=format_func,
-                           infoname=descr)
+        yield check_levels(
+            value,
+            what,
+            level_params,
+            human_readable_func=lambda x: get_bytes_human_readable(x, unit="B/s"),
+            infoname=descr,
+        )
+
+
+def _io_ops_results(item, params, fcp_if):
+    now = fcp_if["now"]
+    for what, descr in [
+        ("read_ops", "Read OPS"),
+        ("write_ops", "Write OPS"),
+    ]:
+        value = get_rate("%s.%s" % (item, what), now, fcp_if.get(what))
+        if value is None:  # cannot happen. left in until migration, to illustrate intention.
+            continue
+
+        yield check_levels(
+            value,
+            what,
+            None,
+            human_readable_func=int,
+            infoname=descr,
+        )
 
 
 def _latency_results(item, params, fcp_if):
     total_ops = fcp_if["total_ops"]
-    for what, text in [("avg_latency", "Latency"), ("avg_read_latency", "Read Latency"),
-                       ("avg_write_latency", "Write Latency")]:
+    for what, text in [
+        ("avg_latency", "Latency"),
+        ("avg_read_latency", "Read Latency"),
+        ("avg_write_latency", "Write Latency"),
+    ]:
         try:
             # According to NetApp's "Performance Management Design Guide",
             # the latency is a function of `total_ops`.
             value = get_rate("%s.%s" % (item, what), total_ops, fcp_if.get(what), onwrap=RAISE)
         except MKCounterWrapped:
-            value = None
+            continue
 
-        if value is not None:
-            yield check_levels(value,
-                               "%s_latency" % what,
-                               params.get(what),
-                               unit="ms",
-                               infoname=text)
+        yield check_levels(
+            value,
+            "%s_latency" % what,
+            params.get(what),
+            unit="ms",
+            infoname=text,
+        )
 
 
 def parse_netapp_api_fcp(info):

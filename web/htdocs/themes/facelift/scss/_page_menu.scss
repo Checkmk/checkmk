@@ -203,7 +203,7 @@ div#top_heading {
         display: none;
         max-height: calc(100vh - 113px);
         min-width: 220px;
-        padding: $spacing;
+        padding: 0 $spacing $spacing;
         overflow-y: auto;
         line-height: 16px;
         text-align: left;
@@ -224,15 +224,12 @@ div#top_heading {
 
           div.topic_title {
             display: inline-block;
-            padding-bottom: 1px;
-            padding-left: 32px;
-            font-size: 10px;
+            padding: $spacing 0 2px 32px;
+            font-size: $font-size-global;
             font-weight: normal;
             color: rgba($font-color, .5);
             cursor: default;
           }
-
-          div.entry:last-child { margin-bottom: 6px; }
 
           div.entry {
             padding-left: $spacing;
@@ -279,8 +276,8 @@ div#top_heading {
 
           a.more {
             position: absolute;
-            top: -2px;
-            right: -5px;
+            top: $spacing;
+            right: 0;
           }
         }
       }

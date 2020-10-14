@@ -143,7 +143,7 @@ class PageMenuEntry:
     def __post_init__(self):
         # Enforce all shortcuts to be suggested links. The user can then toggle all entries between
         # the suggested button format and the smaller shortcut buttons.
-        if self.is_shortcut and self.name not in ["toggle_suggestions", "up"]:
+        if self.is_shortcut and self.name not in ["toggle_suggestions"]:
             self.is_suggested = True
 
 
@@ -379,7 +379,7 @@ def make_simple_form_page_menu(breadcrumb: Breadcrumb,
                                save_title: Optional[str] = None,
                                save_icon: str = "save",
                                save_is_enabled: bool = True,
-                               add_abort_link: bool = True,
+                               add_abort_link: bool = False,
                                abort_url: Optional[str] = None) -> PageMenu:
     """Factory for creating a simple menu for object edit dialogs that just link back"""
     entries = []

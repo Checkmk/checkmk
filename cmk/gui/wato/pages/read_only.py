@@ -58,7 +58,6 @@ class ModeManageReadOnly(WatoMode):
             breadcrumb,
             form_name="read_only",
             button_name="_save",
-            add_abort_link=False,
         )
 
     def action(self):

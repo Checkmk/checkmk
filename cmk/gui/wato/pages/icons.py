@@ -55,8 +55,7 @@ class ModeIcons(WatoMode):
         return make_simple_form_page_menu(breadcrumb,
                                           form_name="upload_form",
                                           button_name="_do_upload",
-                                          save_title=_("Upload"),
-                                          add_abort_link=False)
+                                          save_title=_("Upload"))
 
     def _load_custom_icons(self):
         s = IconSelector(show_builtin_icons=False)

@@ -87,8 +87,7 @@ class ModeDiagnostics(WatoMode):
         menu = make_simple_form_page_menu(breadcrumb,
                                           form_name="diagnostics",
                                           button_name="_start",
-                                          save_title="Start",
-                                          add_abort_link=False)
+                                          save_title="Start")
         menu.dropdowns.insert(
             1,
             PageMenuDropdown(

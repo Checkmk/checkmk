@@ -1363,6 +1363,7 @@ class ABCEditRuleMode(WatoMode):
         menu = make_simple_form_page_menu(breadcrumb,
                                           form_name="rule_editor",
                                           button_name="save",
+                                          add_abort_link=True,
                                           abort_url=backurl)
 
         action_dropdown = menu.dropdowns[0]

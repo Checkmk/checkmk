@@ -186,10 +186,7 @@ class ABCUserProfilePage(Page):
             raise MKAuthException(_('User profiles can not be edited (WATO is disabled).'))
 
     def _page_menu(self, breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(breadcrumb,
-                                          form_name="profile",
-                                          button_name="_save",
-                                          add_abort_link=False)
+        menu = make_simple_form_page_menu(breadcrumb, form_name="profile", button_name="_save")
         menu.dropdowns.insert(1, page_menu_dropdown_user_related(html.myfile))
         return menu
 

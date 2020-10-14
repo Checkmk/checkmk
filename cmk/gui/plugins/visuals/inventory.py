@@ -344,13 +344,14 @@ class FilterInvtableVersion(Filter):
 
 
 class FilterInvText(Filter):
-    def __init__(self, *, ident: str, title: str, inv_path: str) -> None:
+    def __init__(self, *, ident: str, title: str, inv_path: str, is_show_more: bool = True) -> None:
         super().__init__(ident=ident,
                          title=title,
                          sort_index=800,
                          info="host",
                          htmlvars=[ident],
-                         link_columns=[])
+                         link_columns=[],
+                         is_show_more=is_show_more)
         self._invpath = inv_path
 
     @property
@@ -392,14 +393,21 @@ class FilterInvText(Filter):
 
 
 class FilterInvFloat(Filter):
-    def __init__(self, *, ident: str, title: str, inv_path: str, unit: Optional[str],
-                 scale: Optional[float]) -> None:
+    def __init__(self,
+                 *,
+                 ident: str,
+                 title: str,
+                 inv_path: str,
+                 unit: Optional[str],
+                 scale: Optional[float],
+                 is_show_more: bool = True) -> None:
         super().__init__(ident=ident,
                          title=title,
                          sort_index=800,
                          info="host",
                          htmlvars=[ident + "_from", ident + "_to"],
-                         link_columns=[])
+                         link_columns=[],
+                         is_show_more=is_show_more)
         self._invpath = inv_path
         self._unit = unit
         self._scale = scale if scale is not None else 1.0
@@ -450,8 +458,13 @@ class FilterInvFloat(Filter):
 
 
 class FilterInvBool(FilterTristate):
-    def __init__(self, *, ident: str, title: str, inv_path: str) -> None:
-        super().__init__(ident=ident, title=title, sort_index=800, info="host", column=ident)
+    def __init__(self, *, ident: str, title: str, inv_path: str, is_show_more: bool = True) -> None:
+        super().__init__(ident=ident,
+                         title=title,
+                         sort_index=800,
+                         info="host",
+                         column=ident,
+                         is_show_more=is_show_more)
         self._invpath = inv_path
 
     def need_inventory(self) -> bool:
@@ -481,7 +494,8 @@ class FilterHasInv(FilterTristate):
                          title=_("Has Inventory Data"),
                          sort_index=801,
                          info="host",
-                         column="host_inventory")
+                         column="host_inventory",
+                         is_show_more=True)
 
     def need_inventory(self) -> bool:
         return self.tristate_value() != -1
@@ -513,7 +527,8 @@ class FilterInvHasSoftwarePackage(Filter):
                              self._varprefix + "version_to",
                              self._varprefix + "negate",
                          ],
-                         link_columns=[])
+                         link_columns=[],
+                         is_show_more=True)
 
     @property
     def filtername(self):

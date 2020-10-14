@@ -108,7 +108,7 @@ inventory_displayhints.update({
             "partition_name",
         ],
     },
-    ".hardware.system.product": {"title": _("Product")},
+    ".hardware.system.product": {"title": _("Product"), "is_show_more": False},
     ".hardware.system.serial": {"title": _("Serial Number")},
     ".hardware.system.expresscode": {"title": _("Express Servicecode")},
     ".hardware.system.model": {"title": _("Model Name")},
@@ -400,10 +400,10 @@ inventory_displayhints.update({
     ".software.firmware.version": {"title": _("Version")},
     ".software.firmware.platform_level": {"title": _("Platform Firmware level")},
     ".software.os.": {"title": _("Operating System")},
-    ".software.os.name": {"title": _("Name"), "short": _("Operating System")},
+    ".software.os.name": {"title": _("Name"), "short": _("Operating System"), "is_show_more": False},
     ".software.os.version": {"title": _("Version")},
     ".software.os.vendor": {"title": _("Vendor")},
-    ".software.os.type": {"title": _("Type")},  # e.g. "linux"
+    ".software.os.type": {"title": _("Type"), "is_show_more": False},  # e.g. "linux"
     ".software.os.install_date": {"title": _("Install Date"), "paint": "date"},
     ".software.os.kernel_version": {"title": _("Kernel Version"), "short": _("Kernel")},
     ".software.os.arch": {"title": _("Kernel Architecture"), "short": _("Architecture")},
@@ -412,7 +412,7 @@ inventory_displayhints.update({
     ".software.configuration.": {"title": _("Configuration")},
     ".software.configuration.snmp_info.": {"title": _("SNMP Information")},
     ".software.configuration.snmp_info.contact": {"title": _("Contact")},
-    ".software.configuration.snmp_info.location": {"title": _("Location")},
+    ".software.configuration.snmp_info.location": {"title": _("Location"), "is_show_more": False},
     ".software.configuration.snmp_info.name": {"title": _("System name")},
     ".software.packages:": {
         "title": _("Packages"),

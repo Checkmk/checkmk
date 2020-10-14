@@ -147,7 +147,7 @@ def _inv_filter_info():
 
 
 # Declares painters, sorters and filters to be used in views based on all host related datasources.
-def _declare_inv_column(invpath, datatype, title, short=None):
+def _declare_inv_column(invpath, datatype, title, short=None, is_show_more: bool = True):
     if invpath == ".":
         name = "inv"
     else:
@@ -197,17 +197,21 @@ def _declare_inv_column(invpath, datatype, title, short=None):
 
         # Declare filter. Sync this with _declare_invtable_column()
         if datatype == "str":
-            filter_registry.register(FilterInvText(
-                ident=name,
-                title=title,
-                inv_path=invpath,
-            ))
+            filter_registry.register(
+                FilterInvText(
+                    ident=name,
+                    title=title,
+                    inv_path=invpath,
+                    is_show_more=is_show_more,
+                ))
         elif datatype == "bool":
-            filter_registry.register(FilterInvBool(
-                ident=name,
-                title=title,
-                inv_path=invpath,
-            ))
+            filter_registry.register(
+                FilterInvBool(
+                    ident=name,
+                    title=title,
+                    inv_path=invpath,
+                    is_show_more=is_show_more,
+                ))
         else:
             filter_registry.register(
                 FilterInvFloat(
@@ -216,6 +220,7 @@ def _declare_inv_column(invpath, datatype, title, short=None):
                     inv_path=invpath,
                     unit=filter_info.get("unit"),
                     scale=filter_info.get("scale", 1.0),
+                    is_show_more=is_show_more,
                 ))
 
 
@@ -693,7 +698,11 @@ def declare_inventory_columns():
         if "*" not in invpath:
             datatype = hint.get("paint", "str")
             long_title = _inv_titleinfo_long(invpath, None)
-            _declare_inv_column(invpath, datatype, long_title, hint.get("short", hint["title"]))
+            _declare_inv_column(invpath,
+                                datatype,
+                                long_title,
+                                hint.get("short", hint["title"]),
+                                is_show_more=hint.get("is_show_more", True))
 
 
 #.

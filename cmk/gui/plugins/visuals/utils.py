@@ -211,7 +211,8 @@ class Filter(metaclass=abc.ABCMeta):
                  info: str,
                  htmlvars: List[str],
                  link_columns: List[ColumnName],
-                 description: Optional[str] = None) -> None:
+                 description: Optional[str] = None,
+                 is_show_more: bool = False) -> None:
         """
         info:          The datasource info this filter needs to work. If this
                        is "service", the filter will also be available in tables
@@ -233,12 +234,7 @@ class Filter(metaclass=abc.ABCMeta):
         self.htmlvars = htmlvars
         self.link_columns = link_columns
         self.description = description
-
-    @property
-    def is_show_more(self) -> bool:
-        """Whether or not treat this as GUI element that is only visible on
-        show more button"""
-        return False
+        self.is_show_more = is_show_more
 
     def available(self) -> bool:
         """Some filters can be unavailable due to the configuration
@@ -309,7 +305,8 @@ class FilterTristate(Filter):
                  sort_index: int,
                  info: str,
                  column: Optional[str],
-                 deflt: int = -1):
+                 deflt: int = -1,
+                 is_show_more: bool = False):
         self.column = column
         self.varname = "is_" + ident
         super().__init__(ident=ident,
@@ -317,7 +314,8 @@ class FilterTristate(Filter):
                          sort_index=sort_index,
                          info=info,
                          htmlvars=[self.varname],
-                         link_columns=[])
+                         link_columns=[],
+                         is_show_more=is_show_more)
         self.deflt = deflt
 
     def display(self):
@@ -345,8 +343,14 @@ class FilterTristate(Filter):
 
 class FilterTime(Filter):
     """Filter for setting time ranges, e.g. on last_state_change and last_check"""
-    def __init__(self, *, ident: str, title: str, sort_index: int, info: str,
-                 column: Optional[str]):
+    def __init__(self,
+                 *,
+                 ident: str,
+                 title: str,
+                 sort_index: int,
+                 info: str,
+                 column: Optional[str],
+                 is_show_more: bool = False):
         self.column = column
         self.ranges = [
             (86400, _("days")),
@@ -366,7 +370,8 @@ class FilterTime(Filter):
                          sort_index=sort_index,
                          info=info,
                          htmlvars=varnames,
-                         link_columns=[column] if column is not None else [])
+                         link_columns=[column] if column is not None else [],
+                         is_show_more=is_show_more)
 
     def display(self):
         choices: Choices = [(str(sec), title + " " + _("ago")) for sec, title in self.ranges]

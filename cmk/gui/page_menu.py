@@ -359,7 +359,7 @@ def make_up_link(breadcrumb: Breadcrumb) -> PageMenuDropdown:
     )
 
 
-def make_checkbox_selection_topic() -> PageMenuTopic:
+def make_checkbox_selection_topic(is_enabled: bool = True) -> PageMenuTopic:
     return PageMenuTopic(
         title=_("Selection"),
         entries=[
@@ -367,6 +367,7 @@ def make_checkbox_selection_topic() -> PageMenuTopic:
                 title=_("Toggle all checkboxes"),
                 icon_name="checkbox",
                 item=make_javascript_link("cmk.selection.toggle_all_rows();"),
+                is_enabled=is_enabled,
             ),
         ],
     )

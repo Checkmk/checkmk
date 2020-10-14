@@ -763,7 +763,7 @@ class GUIViewRenderer(ABCViewRenderer):
                         title=_("On selected objects"),
                         entries=list(self._page_menu_entries_selected_objects()),
                     ),
-                    make_checkbox_selection_topic(),
+                    make_checkbox_selection_topic(is_enabled=self.view.checkboxes_displayed),
                 ],
             )
         ]

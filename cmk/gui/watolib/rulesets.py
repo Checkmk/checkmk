@@ -609,8 +609,8 @@ class Ruleset:
         ]:
             return True
 
-        return self.rulespec.group_name \
-            in rulespec_group_registry.get_matching_group_names(search_options["ruleset_group"])
+        return self.rulespec.group_name in rulespec_group_registry.get_matching_group_names(
+            search_options["ruleset_group"])
 
     def get_rule(self, folder, rule_index):
         return self._rules[folder.path()][rule_index]
@@ -829,8 +829,8 @@ class Rule:
     def to_config(self):
         # Special case: The main folder must not have a host_folder condition, because
         # these rules should also affect non WATO hosts.
-        for_config = self.conditions.to_config_with_folder_macro() \
-            if not self.folder.is_root() else self.conditions.to_config_without_folder()
+        for_config = self.conditions.to_config_with_folder_macro(
+        ) if not self.folder.is_root() else self.conditions.to_config_without_folder()
         return self._to_config(for_config)
 
     def to_web_api(self):
@@ -993,19 +993,19 @@ class Rule:
                                                                    value_text):
             return False
 
-        if self.conditions.host_list \
-            and not _match_one_of_search_expression(search_options, "rule_host_list", self.conditions.host_list[0]):
+        if self.conditions.host_list and not _match_one_of_search_expression(
+                search_options, "rule_host_list", self.conditions.host_list[0]):
             return False
 
-        if self.conditions.item_list \
-           and not _match_one_of_search_expression(search_options, "rule_item_list", self.conditions.item_list[0]):
+        if self.conditions.item_list and not _match_one_of_search_expression(
+                search_options, "rule_item_list", self.conditions.item_list[0]):
             return False
 
         to_search = [
             self.comment(),
             self.description(),
-        ] + (self.conditions.host_list[0] if self.conditions.host_list else []) \
-          + (self.conditions.item_list[0] if self.conditions.item_list else [])
+        ] + (self.conditions.host_list[0] if self.conditions.host_list else
+             []) + (self.conditions.item_list[0] if self.conditions.item_list else [])
 
         if value_text is not None:
             to_search.append(value_text)
@@ -1060,10 +1060,10 @@ class Rule:
         return self.conditions
 
     def is_discovery_rule_of(self, host):
-        return self.conditions.host_name == [host.name()] \
-               and self.conditions.host_tags == {} \
-               and self.conditions.has_only_explicit_service_conditions() \
-               and self.folder.is_transitive_parent_of(host.folder())
+        return self.conditions.host_name == [
+            host.name()
+        ] and self.conditions.host_tags == {} and self.conditions.has_only_explicit_service_conditions(
+        ) and self.folder.is_transitive_parent_of(host.folder())
 
     def replace_explicit_host_condition(self, old_name, new_name):
         """Does an in-place(!) replacement of explicit (non regex) hostnames in rules"""

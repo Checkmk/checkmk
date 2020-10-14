@@ -1198,8 +1198,9 @@ def service_depends_on(hostname: HostName, servicedesc: ServiceName) -> List[Ser
             raise MKGeneralException("Invalid entry '%r' in service dependencies: "
                                      "must have 3 or 4 entries" % entry)
 
-        if tuple_rulesets.hosttags_match_taglist(config_cache.tag_list_of_host(hostname), tags) and \
-           tuple_rulesets.in_extraconf_hostlist(hostlist, hostname):
+        if tuple_rulesets.hosttags_match_taglist(config_cache.tag_list_of_host(hostname),
+                                                 tags) and tuple_rulesets.in_extraconf_hostlist(
+                                                     hostlist, hostname):
             for pattern in patternlist:
                 matchobject = regex(pattern).search(servicedesc)
                 if matchobject:
@@ -2359,9 +2360,8 @@ class HostConfig:
         self.management_protocol = management_protocol.get(hostname)
         self.has_management_board: bool = self.management_protocol is not None
 
-        self.is_ping_host = not self.is_snmp_host and\
-                            not self.is_agent_host and\
-                            not self.has_management_board
+        self.is_ping_host = not (self.is_snmp_host or self.is_agent_host or
+                                 self.has_management_board)
 
         self.is_dual_host = self.is_tcp_host and self.is_snmp_host
         self.is_all_agents_host = self.tag_groups["agent"] == "all-agents"
@@ -2374,14 +2374,14 @@ class HostConfig:
         # Whether or not the given host is configured to be monitored via IPv4.
         # This is the case when it is set to be explicit IPv4 or implicit (when
         # host is not an IPv6 host and not a "No IP" host)
-        self.is_ipv4_host = "ip-v4" in self.tag_groups \
-                or (not self.is_ipv6_host and not self.is_no_ip_host)
+        self.is_ipv4_host = "ip-v4" in self.tag_groups or (not self.is_ipv6_host and
+                                                           not self.is_no_ip_host)
 
         self.is_ipv4v6_host = "ip-v6" in self.tag_groups and "ip-v4" in self.tag_groups
 
         # Whether or not the given host is configured to be monitored primarily via IPv6
-        self.is_ipv6_primary = (not self.is_ipv4v6_host and self.is_ipv6_host) \
-                                or (self.is_ipv4v6_host and self._primary_ip_address_family_of() == "ipv6")
+        self.is_ipv6_primary = (not self.is_ipv4v6_host and self.is_ipv6_host) or (
+            self.is_ipv4v6_host and self._primary_ip_address_family_of() == "ipv6")
 
     @staticmethod
     def make_snmp_config(hostname: HostName, address: HostAddress) -> SNMPHostConfig:
@@ -3730,8 +3730,7 @@ class ConfigCache:
                 raise MKGeneralException(
                     "Invalid entry clustered_services_of['%s']: %s is not a cluster." %
                     (cluster, cluster))
-            if hostname in nodes and \
-                self.in_boolean_serviceconf_list(hostname, servicedesc, conf):
+            if hostname in nodes and self.in_boolean_serviceconf_list(hostname, servicedesc, conf):
                 return cluster
 
         # 1. Old style: clustered_services assumes that each host belong to

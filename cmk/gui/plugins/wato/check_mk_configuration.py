@@ -5095,8 +5095,7 @@ def _validate_max_cache_ages_and_validity_periods(params, varprefix):
 
 
 def _validate_max_cache_age_and_validity_period(max_cache_age, period, varprefix):
-    if isinstance(max_cache_age, int) and isinstance(period, int)\
-       and max_cache_age < period:
+    if isinstance(max_cache_age, int) and isinstance(period, int) and max_cache_age < period:
         raise MKUserError(varprefix, _("Maximum cache age must be greater than period."))
 
 

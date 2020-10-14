@@ -262,9 +262,8 @@ def do_check(
         # may be None.  This needs to be understood in detail and cleaned up. As the InlineSNMP
         # stats feature is a very rarely used debugging feature, the analyzation and fix is
         # postponed now.
-        if config.record_inline_snmp_stats \
-           and ipaddress is not None \
-           and host_config.snmp_config(ipaddress).snmp_backend == "inline":
+        if config.record_inline_snmp_stats and ipaddress is not None and host_config.snmp_config(
+                ipaddress).snmp_backend == "inline":
             inline.snmp_stats_save()
 
 
@@ -650,8 +649,8 @@ def legacy_determine_check_params(entries: LegacyCheckParameters) -> LegacyCheck
 
     # Check if first entry is not dict based or if its dict based
     # check if the tp_default_value is not a dict
-    if not isinstance(entries[0], dict) or \
-       not isinstance(entries[0].get("tp_default_value", {}), dict):
+    if not isinstance(entries[0], dict) or not isinstance(entries[0].get("tp_default_value", {}),
+                                                          dict):
         # This rule is tuple based, means no dict-key merging
         if not isinstance(entries[0], dict):
             return entries[0]  # A tuple rule, simply return first match

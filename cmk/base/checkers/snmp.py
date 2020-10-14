@@ -7,7 +7,7 @@
 from functools import cached_property
 import time
 from pathlib import Path
-from typing import Collection, Mapping, Optional, Set
+from typing import Mapping, Optional, Set
 
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
 
@@ -177,8 +177,8 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
             if snmp_section_plugin.name not in disabled_sections
         }
 
-    def _make_configured_snmp_sections(self) -> Collection[SectionName]:
-        snmp_section_names = self._enabled_snmp_sections.intersection(
+    def _make_configured_snmp_sections(self) -> Set[SectionName]:
+        return self._enabled_snmp_sections.intersection(
             agent_based_register.get_relevant_raw_sections(
                 check_plugin_names=check_table.get_needed_check_names(
                     self.hostname,
@@ -188,32 +188,11 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
                 consider_inventory_plugins=self.host_config.do_status_data_inventory,
             ))
 
-        return SNMPSource._sort_section_names(snmp_section_names)
-
     # TODO: filter out disabled sections in fetcher. They need to known them anyway.
     @cached_property
     def _enabled_snmp_sections(self) -> Set[SectionName]:
         return {s.name for s in agent_based_register.iter_all_snmp_sections()
                } - self.host_config.disabled_snmp_sections()
-
-    @staticmethod
-    def _sort_section_names(section_names: Collection[SectionName]) -> Collection[SectionName]:
-        # In former Checkmk versions (<=1.4.0) CPU check plugins were
-        # checked before other check plugins like interface checks.
-        # In Checkmk versions >= 1.5.0 the order is random and
-        # interface check plugins are executed before CPU check plugins.
-        # This leads to high CPU utilization sent by device. Thus we have
-        # to re-order the check plugin names.
-        # There are some nested check plugin names which have to be considered, too.
-        #   for f in $(grep "service_description.*CPU [^lL]" -m1 * | cut -d":" -f1); do
-        #   if grep -q "snmp_info" $f; then echo $f; fi done
-        cpu_sections_without_cpu_in_name = {
-            SectionName("brocade_sys"),
-            SectionName("bvip_util"),
-        }
-        return sorted(section_names,
-                      key=lambda x:
-                      (not ('cpu' in str(x) or x in cpu_sections_without_cpu_in_name), x))
 
     @staticmethod
     def _make_description(

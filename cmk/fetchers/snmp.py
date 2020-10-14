@@ -7,7 +7,7 @@
 import ast
 import logging
 from functools import partial
-from typing import Any, cast, Collection, Dict, Final, List, Mapping, Optional, Set, Tuple
+from typing import Any, cast, Collection, Dict, Final, Iterable, List, Mapping, Optional, Set, Tuple
 
 from cmk.utils.type_defs import SectionName
 
@@ -40,6 +40,11 @@ class SNMPFileCache(ABCFileCache[SNMPRawData]):
 
 
 class SNMPFetcher(ABCFetcher[SNMPRawData]):
+    CPU_SECTIONS_WITHOUT_CPU_IN_NAME = {
+        SectionName("brocade_sys"),
+        SectionName("bvip_util"),
+    }
+
     def __init__(
         self,
         file_cache: SNMPFileCache,
@@ -154,7 +159,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
                              if mode is Mode.DISCOVERY else self.configured_snmp_sections)
 
         fetched_data: SNMPRawData = {}
-        for section_name in selected_sections:
+        for section_name in self._sort_section_names(selected_sections):
             self._logger.debug("%s: Fetching data", section_name)
 
             oid_info = self.snmp_section_trees[section_name]
@@ -172,3 +177,22 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
                 fetched_data[section_name] = fetched_section_data
 
         return fetched_data
+
+    @classmethod
+    def _sort_section_names(
+        cls,
+        section_names: Iterable[SectionName],
+    ) -> Iterable[SectionName]:
+        # In former Checkmk versions (<=1.4.0) CPU check plugins were
+        # checked before other check plugins like interface checks.
+        # In Checkmk versions >= 1.5.0 the order is random and
+        # interface check plugins are executed before CPU check plugins.
+        # This leads to high CPU utilization sent by device. Thus we have
+        # to re-order the check plugin names.
+        # There are some nested check plugin names which have to be considered, too.
+        #   for f in $(grep "service_description.*CPU [^lL]" -m1 * | cut -d":" -f1); do
+        #   if grep -q "snmp_info" $f; then echo $f; fi done
+        return sorted(
+            section_names,
+            key=lambda x: (not ('cpu' in str(x) or x in cls.CPU_SECTIONS_WITHOUT_CPU_IN_NAME), x),
+        )

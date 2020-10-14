@@ -1238,7 +1238,7 @@ def test_grouped_rulespecs():
             'snmpv2c_hosts',
             'snmpv3_contexts',
             'snmp_timing',
-            'non_inline_snmp_hosts',
+            'snmp_backend_hosts',
             'usewalk_hosts',
             'snmp_ports',
             'snmp_limit_oid_range',

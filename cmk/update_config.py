@@ -75,6 +75,10 @@ REMOVED_GLOBALS_MAP = [
     }),
 ]
 
+REMOVED_WATO_RULESETS_MAP = {
+    "non_inline_snmp_hosts": "snmp_backend_hosts",
+}
+
 
 # TODO: Better make our application available?
 class DummyApplication:
@@ -211,8 +215,26 @@ class UpdateConfig:
     def _rewrite_wato_rulesets(self):
         all_rulesets = cmk.gui.watolib.rulesets.AllRulesets()
         all_rulesets.load()
+        self._transform_replaced_wato_rulesets(all_rulesets)
         self._transform_wato_rulesets_params(all_rulesets)
         all_rulesets.save()
+
+    def _transform_replaced_wato_rulesets(self, all_rulesets):
+        replacements: Dict[str, cmk.gui.watolib.rulesets.Ruleset] = {}
+        for ruleset_name in all_rulesets.get_rulesets():
+            if ruleset_name not in REMOVED_WATO_RULESETS_MAP:
+                continue
+            new_ruleset = all_rulesets.get(ruleset_name).clone()
+            new_ruleset.set_name(REMOVED_WATO_RULESETS_MAP[ruleset_name])
+            if not new_ruleset.is_empty():
+                self._logger.log(VERBOSE, "Found deprecated ruleset: %s" % ruleset_name)
+                replacements.setdefault(ruleset_name, new_ruleset)
+
+        for old_ruleset_name, ruleset in replacements.items():
+            self._logger.log(VERBOSE,
+                             "Replacing ruleset %s with %s" % (old_ruleset_name, ruleset.name))
+            all_rulesets.set(ruleset.name, ruleset)
+            all_rulesets.delete(old_ruleset_name)
 
     def _transform_wato_rulesets_params(self, all_rulesets):
         num_errors = 0

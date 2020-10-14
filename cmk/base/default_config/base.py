@@ -68,6 +68,8 @@ snmp_backend_default: _Union[bool, str] = "inline"
 use_inline_snmp: _Union[bool, str] = True
 
 # Ruleset to enable specific SNMP Backend for each host.
+snmp_backend_hosts: _List = []
+# Deprecated: Replaced by snmp_backend_hosts
 non_inline_snmp_hosts: _List = []
 
 # Ruleset to recduce fetched OIDs of a check, only inline SNMP

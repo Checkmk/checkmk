@@ -305,6 +305,9 @@ class RulesetCollection:
     def set(self, name, ruleset):
         self._rulesets[name] = ruleset
 
+    def delete(self, name):
+        del self._rulesets[name]
+
     def get_rulesets(self):
         return self._rulesets
 
@@ -436,6 +439,7 @@ class Ruleset:
     def __init__(self, name, tag_to_group_map):
         super(Ruleset, self).__init__()
         self.name = name
+        self.tag_to_group_map = tag_to_group_map
         self.rulespec = rulespec_registry[name]
         # Holds list of the rules. Using the folder paths as keys.
         self._rules = {}
@@ -446,6 +450,16 @@ class Ruleset:
         # Converts pre 1.6 tuple rulesets in place to 1.6+ format
         self.tuple_transformer = ruleset_matcher.RulesetToDictTransformer(
             tag_to_group_map=tag_to_group_map)
+
+    def clone(self):
+        cloned = Ruleset(self.name, self.tag_to_group_map)
+        cloned.rulespec = self.rulespec
+        for folder, _rule_index, rule in self.get_rules():
+            cloned.append_rule(folder, rule)
+        return cloned
+
+    def set_name(self, name):
+        self.name = name
 
     def is_empty(self):
         return self.num_rules() == 0

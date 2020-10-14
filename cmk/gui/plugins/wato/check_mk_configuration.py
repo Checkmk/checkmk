@@ -4431,6 +4431,25 @@ rulespec_registry.register(
     ))
 
 
+def _help_non_inline_snmp_hosts():
+    return _("Check_MK has an efficient SNMP implementation called Inline SNMP which reduces "
+             "the load produced by SNMP monitoring on the monitoring host significantly. This "
+             "option is enabled by default for all SNMP hosts and it is a good idea to keep "
+             "this default setting. However, there are SNMP devices which have problems with "
+             "this SNMP implementation. You can use this rule to disable Inline SNMP for these "
+             "hosts.")
+
+
+rulespec_registry.register(
+    BinaryHostRulespec(
+        group=RulespecGroupAgentSNMP,
+        help_func=_help_non_inline_snmp_hosts,
+        name="non_inline_snmp_hosts",
+        title=lambda: _("Hosts not using Inline-SNMP"),
+        is_deprecated=True,
+    ))
+
+
 def _help_snmp_backend():
     return _(
         "Checkmk has an efficient SNMP implementations called Inline SNMP and PySNMP which reduce "
@@ -4459,7 +4478,7 @@ rulespec_registry.register(
         valuespec=_valuespec_snmp_backend,
         group=RulespecGroupAgentSNMP,
         help_func=_help_snmp_backend,
-        name="non_inline_snmp_hosts",
+        name="snmp_backend_hosts",
         title=lambda: _("Hosts using a specific SNMP Backend"),
     ))
 

@@ -2585,8 +2585,7 @@ class HostConfig:
     def _get_snmp_backend(self) -> str:
         has_inline_snmp = "netsnmp" in sys.modules
         has_pysnmp = "pysnmp" in sys.modules
-        host_backend_config = self._config_cache.host_extra_conf(self.hostname,
-                                                                 non_inline_snmp_hosts)
+        host_backend_config = self._config_cache.host_extra_conf(self.hostname, snmp_backend_hosts)
 
         if host_backend_config:
             # If more backends are configured for this host take the first one

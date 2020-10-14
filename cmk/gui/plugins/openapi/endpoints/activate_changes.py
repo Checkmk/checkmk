@@ -29,7 +29,7 @@ ACTIVATION_ID = ParamDict.create(
                  method='post',
                  response_schema=response_schemas.DomainObject)
 def activate_changes(params):
-    """Activate pending changes."""
+    """Activate pending changes"""
     body = params.get('body', {})
     sites = body.get('sites', [])
     activation_id = watolib.activate_changes_start(sites)
@@ -64,7 +64,7 @@ def _serve_activation_run(activation_id, is_running=False):
                  will_do_redirects=True,
                  output_empty=True)
 def activate_changes_state(params):
-    """Wait for an activation-run to complete.
+    """Wait for an activation-run to complete
 
     This endpoint will periodically redirect on itself to prevent timeouts.
     """
@@ -87,7 +87,7 @@ def activate_changes_state(params):
                  parameters=[ACTIVATION_ID],
                  response_schema=response_schemas.DomainObject)
 def show_activation(params):
-    """Show the status of a particular activation-run.
+    """Show the status of a particular activation-run
     """
     activation_id = params['activation_id']
     manager = watolib.ActivateChangesManager()
@@ -101,7 +101,7 @@ def show_activation(params):
                  method='get',
                  response_schema=response_schemas.DomainObjectCollection)
 def list_activations(params):
-    """List currently running activations."""
+    """List currently running activations"""
     manager = watolib.ActivateChangesManager()
     activations = []
     for activation_id, change in manager.activations():

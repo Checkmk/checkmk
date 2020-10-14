@@ -39,7 +39,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
                  request_schema=request_schemas.AcknowledgeHostProblem,
                  output_empty=True)
 def set_acknowledgement_on_host(params):
-    """Acknowledge problems on a specific host."""
+    """Acknowledge problems on a specific host"""
     host_name = params['host_name']
 
     host = Query([Hosts.name, Hosts.state], Hosts.name.equals(host_name)).first(sites.live())
@@ -151,7 +151,7 @@ def bulk_set_acknowledgement_on_hosts(params):
                  request_schema=request_schemas.AcknowledgeServiceProblem,
                  output_empty=True)
 def set_acknowledgement_for_service(params):
-    """Acknowledge problems for a specific service globally."""
+    """Acknowledge problems for a specific service globally"""
     service_description = unquote(params['service_description'])
     body = params['body']
 

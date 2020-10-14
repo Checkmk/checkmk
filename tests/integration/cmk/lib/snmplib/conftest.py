@@ -19,7 +19,7 @@ import cmk.utils.log as log
 import cmk.utils.paths
 
 import cmk.snmplib.snmp_cache as snmp_cache
-from cmk.snmplib.type_defs import SNMPHostConfig
+from cmk.snmplib.type_defs import SNMPHostConfig, SNMPBackend
 
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
 try:
@@ -179,7 +179,7 @@ def backend_fixture(request, snmp_data_dir):
         snmpv3_contexts=[],
         character_encoding=None,
         is_usewalk_host=backend is StoredWalkSNMPBackend,
-        snmp_backend="inline" if backend is InlineSNMPBackend else "classic",
+        snmp_backend=SNMPBackend.inline if backend is InlineSNMPBackend else SNMPBackend.classic,
         record_stats=False,
     )
 

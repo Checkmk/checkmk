@@ -12,6 +12,7 @@ from cmk.snmplib.type_defs import (
     SNMPHostConfig,
     SNMPRawValue,
     SNMPRowInfo,
+    SNMPBackend,
 )
 from typing import List, Tuple, Optional, Type
 
@@ -220,7 +221,7 @@ def _create_configs_ipv4() -> List[SNMPHostConfig]:
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend="classic",
+            snmp_backend=SNMPBackend.classic,
             record_stats=False,
         ),
         SNMPHostConfig(
@@ -237,7 +238,7 @@ def _create_configs_ipv4() -> List[SNMPHostConfig]:
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend="classic",
+            snmp_backend=SNMPBackend.classic,
             record_stats=False,
         ),
         SNMPHostConfig(
@@ -261,7 +262,7 @@ def _create_configs_ipv4() -> List[SNMPHostConfig]:
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend="classic",
+            snmp_backend=SNMPBackend.classic,
             record_stats=False,
         ),
     ]
@@ -283,7 +284,7 @@ def _create_configs_ipv6() -> List[SNMPHostConfig]:
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend="classic",
+            snmp_backend=SNMPBackend.classic,
             record_stats=False,
         ),
         SNMPHostConfig(
@@ -300,7 +301,7 @@ def _create_configs_ipv6() -> List[SNMPHostConfig]:
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend="classic",
+            snmp_backend=SNMPBackend.classic,
             record_stats=False,
         ),
         SNMPHostConfig(
@@ -324,7 +325,7 @@ def _create_configs_ipv6() -> List[SNMPHostConfig]:
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend="classic",
+            snmp_backend=SNMPBackend.classic,
             record_stats=False,
         ),
     ]
@@ -349,7 +350,7 @@ def _create_configs_special_auth() -> List[SNMPHostConfig]:
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend="classic",
+            snmp_backend=SNMPBackend.classic,
             record_stats=False,
         ),
         SNMPHostConfig(
@@ -371,7 +372,7 @@ def _create_configs_special_auth() -> List[SNMPHostConfig]:
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend="classic",
+            snmp_backend=SNMPBackend.classic,
             record_stats=False,
         ),
     ]
@@ -393,7 +394,7 @@ def _create_configs_oidranges():
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend="classic",
+            snmp_backend=SNMPBackend.classic,
             record_stats=False,
         ),
         SNMPHostConfig(
@@ -410,7 +411,7 @@ def _create_configs_oidranges():
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend="classic",
+            snmp_backend=SNMPBackend.classic,
             record_stats=False,
         ),
         SNMPHostConfig(
@@ -427,7 +428,7 @@ def _create_configs_oidranges():
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend="classic",
+            snmp_backend=SNMPBackend.classic,
             record_stats=False,
         ),
         SNMPHostConfig(
@@ -444,7 +445,7 @@ def _create_configs_oidranges():
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend="classic",
+            snmp_backend=SNMPBackend.classic,
             record_stats=False,
         ),
     ]

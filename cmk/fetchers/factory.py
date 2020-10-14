@@ -7,7 +7,7 @@
 from typing import Optional
 import logging
 
-from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPHostConfig
+from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPHostConfig, SNMPBackend
 
 from .snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
 try:
@@ -44,10 +44,10 @@ def backend(snmp_config: SNMPHostConfig,
     if use_cache or snmp_config.is_usewalk_host:
         return StoredWalkSNMPBackend(snmp_config, logger)
 
-    if snmp_config.snmp_backend == "inline":
+    if snmp_config.snmp_backend == SNMPBackend.inline:
         return inline.InlineSNMPBackend(snmp_config, logger)
 
-    if snmp_config.snmp_backend == "pysnmp":
+    if snmp_config.snmp_backend == SNMPBackend.pysnmp:
         return pysnmp_backend.PySNMPBackend(snmp_config, logger)
 
     return ClassicSNMPBackend(snmp_config, logger)

@@ -23,6 +23,8 @@ from cmk.utils.type_defs import (
     ServiceName,
 )
 
+from cmk.snmplib.type_defs import SNMPBackend
+
 import cmk.base.config as config
 
 CrashReportStore = crash_reporting.CrashReportStore
@@ -106,7 +108,7 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
                 "is_cluster": host_config.is_cluster,
                 "description": description,
                 "check_type": check_plugin_name,
-                "inline_snmp": host_config.snmp_config(hostname).snmp_backend == "inline",
+                "inline_snmp": host_config.snmp_config(hostname).snmp_backend == SNMPBackend.inline,
                 "manual_check": is_manual_check,
                 **check_plugin_kwargs,
             },

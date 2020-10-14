@@ -68,7 +68,7 @@ def _graph_colors(theme_id):
         "modern-dark": {
             "background_color": "#282828",
             "foreground_color": "#ffffff",
-            "canvas_color": "#282828",
+            "canvas_color": None,
         },
         "pdf": {
             "background_color": "#f8f4f0",

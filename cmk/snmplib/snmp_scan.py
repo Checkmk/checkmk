@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-from typing import Iterable, Tuple, Set
+from typing import Collection, Iterable, Tuple, Set
 
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError
@@ -22,12 +22,15 @@ SNMPScanSection = Tuple[SectionName, SNMPDetectSpec]
 
 # gather auto_discovered check_plugin_names for this host
 def gather_available_raw_section_names(
-    sections: Iterable[SNMPScanSection],
+    sections: Collection[SNMPScanSection],
     on_error: str,
     *,
     missing_sys_description: bool,
     backend: ABCSNMPBackend,
 ) -> Set[SectionName]:
+    if not sections:
+        return set()
+
     try:
         return _snmp_scan(
             sections,

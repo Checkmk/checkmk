@@ -24,7 +24,15 @@ from cmk.gui.exceptions import MKGeneralException, MKTimeout
 import cmk.gui.config as config
 import cmk.gui.visuals as visuals
 from cmk.gui.globals import g, html
-from cmk.gui.valuespec import ValueSpec, ValueSpecValidateFunc, DictionaryEntry
+from cmk.gui.valuespec import (
+    ValueSpec,
+    ValueSpecValidateFunc,
+    DictionaryEntry,
+    Dictionary,
+    FixedValue,
+    Checkbox,
+    TextUnicode,
+)
 from cmk.gui.plugins.views.utils import (
     get_permitted_views,
     get_all_views,
@@ -364,6 +372,52 @@ class Dashlet(metaclass=abc.ABCMeta):
             return module.__dict__[func_name]()
 
         return globals()[urlfunc]()
+
+
+def dashlet_vs_general_settings(dashlet: Dashlet, single_infos: List[str]):
+    return Dictionary(
+        title=_('General Settings'),
+        render='form',
+        optional_keys=['title', 'title_url'],
+        elements=[
+            ('type',
+             FixedValue(
+                 dashlet.type_name(),
+                 totext=dashlet.title(),
+                 title=_('Dashlet Type'),
+             )),
+            visuals.single_infos_spec(single_infos),
+            ('background',
+             Checkbox(
+                 title=_('Colored Background'),
+                 label=_('Render background'),
+                 help=_('Render gray background color behind the dashlets content.'),
+                 default_value=True,
+             )),
+            ('show_title',
+             Checkbox(
+                 title=_('Show Title'),
+                 label=_('Render the titlebar above the dashlet'),
+                 help=_('Render the titlebar including title and link above the dashlet.'),
+                 default_value=True,
+             )),
+            ('title',
+             TextUnicode(
+                 title=_('Custom Title') + '<sup>*</sup>',
+                 help=_(
+                     'Most dashlets have a hard coded default title. For example the view snapin '
+                     'has even a dynamic title which defaults to the real title of the view. If you '
+                     'like to use another title, set it here.'),
+                 size=50,
+             )),
+            ('title_url',
+             TextUnicode(
+                 title=_('Link of Title'),
+                 help=_('The URL of the target page the link of the dashlet should link to.'),
+                 size=50,
+             )),
+        ],
+    )
 
 
 class IFrameDashlet(Dashlet, metaclass=abc.ABCMeta):

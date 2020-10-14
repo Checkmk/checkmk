@@ -230,8 +230,6 @@ export class FigureBase {
         this._pre_render_hooks = [];
         this._post_render_hooks = [];
 
-        this.scheduler = new Scheduler(() => this._fetch_data(), this.get_update_interval());
-
         // Post url and body for fetching the graph data
         this._post_url = "";
         this._post_body = "";
@@ -240,6 +238,8 @@ export class FigureBase {
         this._data = {data: [], plot_definitions: []};
 
         this._crossfilter = new crossfilter.default();
+
+        this.scheduler = new Scheduler(() => this._fetch_data(), this.get_update_interval());
     }
 
     initialize(with_debugging) {
@@ -448,15 +448,34 @@ export class FigureBase {
     render_title(title) {
         if (!this.svg) return;
 
-        this.svg
+        if (title) title = [title];
+        else title = [];
+
+        let title_component = this.svg
             .selectAll(".title")
-            .data([title])
+            .data(title)
+            .join("g")
+            .classed("title", true);
+
+        title_component
+            .selectAll("rect")
+            .data(d => [d])
+            .join("rect")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", this.figure_size.width)
+            .attr("height", 24)
+            .style("fill", "#262f38"); // fill gets toggled in UX project
+
+        title_component
+            .selectAll("text")
+            .data(d => [d])
             .join("text")
             .text(d => d)
             .attr("y", 18)
             .attr("x", this.figure_size.width / 2)
-            .attr("text-anchor", "middle")
-            .classed("title", true);
+            .style("font-size", "12px")
+            .attr("text-anchor", "middle");
     }
 }
 

@@ -128,7 +128,7 @@ class AverageScatterplotDataGenerator(ABCDataGenerator):
         }
 
     @classmethod
-    def generate_response_data(cls, properties, context):
+    def generate_response_data(cls, properties, context, settings):
         elements = cls._create_plot_elements(properties, context)
         return cls._create_scatterplot_config(elements, properties, context)
 

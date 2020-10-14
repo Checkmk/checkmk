@@ -10,7 +10,6 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Timerange,
-    TextUnicode,
     CascadingDropdown,
     DropdownChoice,
 )
@@ -29,13 +28,12 @@ class SingleMetricDataGenerator(ABCDataGenerator):
     def vs_parameters(cls):
         return Dictionary(title=_("Properties"),
                           render="form",
-                          optional_keys=["title"],
+                          optional_keys=False,
                           elements=cls._vs_elements())
 
     @classmethod
     def _vs_elements(cls):
         return [
-            ("title", TextUnicode(default_value="", title=_("Figure title"))),
             ("metric", MetricName()),  # MetricChoice would be nicer, but we use the context filters
             ("time_range",
              CascadingDropdown(
@@ -91,12 +89,12 @@ class SingleMetricDataGenerator(ABCDataGenerator):
         return cmc_cols + metric_columns
 
     @classmethod
-    def generate_response_data(cls, properties, context):
+    def generate_response_data(cls, properties, context, settings):
         data, metrics = create_data_for_single_metric(cls, properties, context)
-        return cls._create_single_metric_config(data, metrics, properties, context)
+        return cls._create_single_metric_config(data, metrics, properties, context, settings)
 
     @classmethod
-    def _create_single_metric_config(cls, data, metrics, properties, context):
+    def _create_single_metric_config(cls, data, metrics, properties, context, settings):
         plot_definitions = []
 
         def svc_map(row):
@@ -141,7 +139,8 @@ class SingleMetricDataGenerator(ABCDataGenerator):
             "data": data,
         }
 
-        response["title"] = properties.get("title")
+        response["title"] = settings.get("title") if settings.get("show_title", False) else None
+
         return response
 
 

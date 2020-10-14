@@ -26,10 +26,8 @@ from cmk.gui.type_defs import InfoName, VisualContext
 from cmk.gui.valuespec import (
     Transform,
     Dictionary,
-    TextUnicode,
     DropdownChoice,
     Checkbox,
-    FixedValue,
 )
 from cmk.gui.valuespec import ValueSpec, ValueSpecValidateFunc, DictionaryEntry
 import cmk.gui.i18n
@@ -87,7 +85,8 @@ from cmk.gui.plugins.views.utils import data_source_registry
 from cmk.gui.plugins.dashboard.utils import (builtin_dashboards, GROW, MAX, dashlet_types,
                                              dashlet_registry, Dashlet, get_all_dashboards,
                                              save_all_dashboards, get_permitted_dashboards,
-                                             copy_view_into_dashlet, dashboard_breadcrumb)
+                                             copy_view_into_dashlet, dashboard_breadcrumb,
+                                             dashlet_vs_general_settings)
 # Can be used by plugins
 from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=unused-import
     DashletType, DashletTypeName, DashletRefreshInterval, DashletRefreshAction, DashletConfig,
@@ -960,7 +959,7 @@ def draw_dashlet(dashlet: Dashlet, content: str, title: str) -> None:
     div there is an inner div containing the actual dashlet content. This content
     is updated later using the dashboard_dashlet.py ajax call.
     """
-    if title is not None and dashlet.show_title():
+    if dashlet.type_name() not in ['single_metric'] and title is not None and dashlet.show_title():
         html.div(html.render_span(title),
                  id_="dashlet_title_%d" % dashlet.dashlet_id,
                  class_=["title"])
@@ -1288,12 +1287,12 @@ def page_edit_dashlet() -> None:
         raise MKUserError("name", _('The requested dashboard does not exist.'))
 
     if ident is None:
-        ty = html.request.get_str_input_mandatory('type')
+        type_name = html.request.get_str_input_mandatory('type')
         mode = 'add'
         title = _('Add Dashlet')
 
         try:
-            dashlet_type = dashlet_registry[ty]
+            dashlet_type = cast(Dashlet, dashlet_registry[type_name])
         except KeyError:
             raise MKUserError("type", _('The requested dashlet type does not exist.'))
 
@@ -1302,7 +1301,7 @@ def page_edit_dashlet() -> None:
             'position': dashlet_type.initial_position(),
             'size': dashlet_type.initial_size(),
             'single_infos': dashlet_type.single_infos(),
-            'type': ty,
+            'type': type_name,
         }
         dashlet_spec.update(dashlet_type.default_settings())
 
@@ -1332,55 +1331,14 @@ def page_edit_dashlet() -> None:
         except IndexError:
             raise MKUserError("id", _('The dashlet does not exist.'))
 
-        ty = cast(str, dashlet_spec['type'])
-        dashlet_type = dashlet_registry[ty]
+        type_name = cast(str, dashlet_spec['type'])
+        dashlet_type = cast(Dashlet, dashlet_registry[type_name])
         single_infos = cast(List[str], dashlet_spec['single_infos'])
 
     breadcrumb = _dashlet_editor_breadcrumb(board, dashboard, title)
     html.header(title, breadcrumb=breadcrumb, page_menu=_dashlet_editor_page_menu(breadcrumb))
 
-    vs_general = Dictionary(
-        title=_('General Settings'),
-        render='form',
-        optional_keys=['title', 'title_url'],
-        elements=[
-            ('type', FixedValue(
-                ty,
-                totext=dashlet_type.title(),
-                title=_('Dashlet Type'),
-            )),
-            visuals.single_infos_spec(single_infos),
-            ('background',
-             Checkbox(
-                 title=_('Colored Background'),
-                 label=_('Render background'),
-                 help=_('Render gray background color behind the dashlets content.'),
-                 default_value=True,
-             )),
-            ('show_title',
-             Checkbox(
-                 title=_('Show Title'),
-                 label=_('Render the titlebar above the dashlet'),
-                 help=_('Render the titlebar including title and link above the dashlet.'),
-                 default_value=True,
-             )),
-            ('title',
-             TextUnicode(
-                 title=_('Custom Title') + '<sup>*</sup>',
-                 help=_(
-                     'Most dashlets have a hard coded default title. For example the view snapin '
-                     'has even a dynamic title which defaults to the real title of the view. If you '
-                     'like to use another title, set it here.'),
-                 size=50,
-             )),
-            ('title_url',
-             TextUnicode(
-                 title=_('Link of Title'),
-                 help=_('The URL of the target page the link of the dashlet should link to.'),
-                 size=50,
-             )),
-        ],
-    )
+    vs_general = dashlet_vs_general_settings(dashlet_type, single_infos)
 
     def dashlet_info_handler(dashlet_spec: DashletConfig) -> List[str]:
         assert board is not None
@@ -1411,6 +1369,14 @@ def page_edit_dashlet() -> None:
     elif isinstance(params, tuple):
         # It's a tuple of functions which should be used to render and parse the params
         render_input_func, handle_input_func = params
+
+    # Check disjoint option on known valuespecs
+    if isinstance(vs_type, Dictionary):
+        settings_elements = set(el[0] for el in vs_general._elements)
+        pe = vs_type._elements() if callable(vs_type._elements) else vs_type._elements
+        properties_elements = set(el[0] for el in pe)
+        assert settings_elements.isdisjoint(
+            properties_elements), "Dashlet settings and properties have a shared option name"
 
     if html.request.var('save') and html.transaction_valid():
         try:

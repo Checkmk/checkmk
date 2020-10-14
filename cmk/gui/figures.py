@@ -8,12 +8,14 @@
 
 import abc
 import json
-from typing import Type, Dict, Any
+from typing import cast, Type, Dict, Any
 
 from cmk.gui.utils.url_encoder import HTTPVariables
-from cmk.gui.plugins.dashboard import Dashlet
+from cmk.gui.plugins.dashboard.utils import Dashlet, dashlet_vs_general_settings, dashlet_registry
+from cmk.gui.i18n import _
 from cmk.gui.globals import html
-
+from cmk.gui.exceptions import (
+    MKUserError,)
 FigureResponse = Dict[str, Any]
 
 
@@ -35,15 +37,25 @@ class ABCDataGenerator(metaclass=abc.ABCMeta):
 
     @classmethod
     @abc.abstractmethod
-    def generate_response_data(cls, properties, context):
+    def generate_response_data(cls, properties, context, settings):
         raise NotImplementedError()
 
     @classmethod
     def generate_response_from_request(cls):
+        settings = json.loads(html.request.get_str_input_mandatory("settings"))
+
+        try:
+            dashlet_type = cast(Dashlet, dashlet_registry[settings.get("type")])
+        except KeyError:
+            raise MKUserError("type", _('The requested dashlet type does not exist.'))
+
+        settings = dashlet_vs_general_settings(
+            dashlet_type, dashlet_type.single_infos()).value_from_json(settings)
+
         properties = cls.vs_parameters().value_from_json(
             json.loads(html.request.get_str_input_mandatory("properties")))
         context = json.loads(html.request.get_str_input_mandatory("context", "{}"))
-        response_data = cls.generate_response_data(properties, context)
+        response_data = cls.generate_response_data(properties, context, settings)
         return create_figures_response(response_data)
 
 
@@ -114,10 +126,14 @@ class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
         div_id = "%s_dashlet_%d" % (self.type_name(), self._dashlet_id)
         html.div("", id_=div_id)
 
+        vs_general_settings = dashlet_vs_general_settings(self, self.single_infos())
+        dashlet_settings = vs_general_settings.value_to_json(self._dashlet_spec)
+        dashlet_properties = self.vs_parameters().value_to_json(self._dashlet_spec)
+
         args: HTTPVariables = []
+        args.append(("settings", json.dumps(dashlet_settings)))
         args.append(("context", json.dumps(self._dashlet_spec["context"])))
-        args.append(
-            ("properties", json.dumps(self.vs_parameters().value_to_json(self._dashlet_spec))))
+        args.append(("properties", json.dumps(dashlet_properties)))
         body = html.urlencode_vars(args)
 
         html.javascript(

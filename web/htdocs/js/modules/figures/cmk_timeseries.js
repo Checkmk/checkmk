@@ -145,6 +145,9 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
                 height: this._div_selection.node().parentNode.offsetHeight,
             };
         this.figure_size = new_size;
+        if (this._title) {
+            this.margin.top = 10 + 24; // 24 from UX project
+        }
         this.plot_size = {
             width: new_size.width - this.margin.left - this.margin.right,
             height:

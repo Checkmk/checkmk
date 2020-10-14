@@ -22,7 +22,7 @@ class BarChartDataGenerator(ABCDataGenerator):
        The dashlet logic/visualization is specified in ABCFigureDashlet
     """
     @classmethod
-    def generate_response_data(cls, properties, context):
+    def generate_response_data(cls, properties, context, settings):
         data_rows = cls._get_data(properties, context)
         bar_elements = cls._create_bar_elements(data_rows, properties, context)
         return cls._create_bar_chart_config(bar_elements, properties, context)
@@ -215,9 +215,9 @@ class BarBarChartDataGenerator(BarChartDataGenerator):
         raise MKUserError("timestep", _("Invalid timestep \"%d\" given" % timestep))
 
     @classmethod
-    def generate_response_data(cls, properties, context):
+    def generate_response_data(cls, properties, context, settings):
         bar_chart_config = super(BarBarChartDataGenerator,
-                                 cls).generate_response_data(properties, context)
+                                 cls).generate_response_data(properties, context, settings)
         # Add barbar elements
         response = cls._create_barbar_chart_config(bar_chart_config, properties, context)
 

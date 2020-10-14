@@ -75,7 +75,11 @@ def check_fibrechannel_common(item, params, parsed):
     if "address" in fcp_if:
         yield 0, "Address %s" % fcp_if["address"]
 
-    # Traffic
+    yield from _traffic_results(item, params, fcp_if)
+    yield from _latency_results(item, params, fcp_if)
+
+
+def _traffic_results(item, params, fcp_if):
     general_levels = if_get_traffic_levels(params)
     traffic_levels = get_specific_traffic_levels(general_levels, "Bytes", fcp_if.get("speed"), None,
                                                  None)
@@ -107,7 +111,8 @@ def check_fibrechannel_common(item, params, parsed):
                            human_readable_func=format_func,
                            infoname=descr)
 
-    # Latency
+
+def _latency_results(item, params, fcp_if):
     total_ops = fcp_if["total_ops"]
     for what, text in [("avg_latency", "Latency"), ("avg_read_latency", "Read Latency"),
                        ("avg_write_latency", "Write Latency")]:

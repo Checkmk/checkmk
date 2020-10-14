@@ -25,6 +25,7 @@ import cmk.utils.log as log
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.paths import core_helper_config_dir
 from cmk.utils.type_defs import ConfigSerial, HostName, Protocol, result, SectionName
+import cmk.utils.cpu_tracking as cpu_tracking
 
 from cmk.snmplib.type_defs import AbstractRawData, SNMPRawData
 
@@ -594,17 +595,25 @@ def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
     # functionality of the Microcore.
 
     messages: List[FetcherMessage] = []
-    with timeout_control(timeout):
+    with cpu_tracking.execute("fetchers"), timeout_control(timeout):
         try:
             # fill as many messages as possible before timeout exception raised
             for entry in fetchers:
-                messages.append(run_fetcher(entry, mode))
+                with cpu_tracking.phase(entry["fetcher_type"]):
+                    messages.append(run_fetcher(entry, mode))
         except MKTimeout as exc:
             # fill missing entries with timeout errors
             messages.extend([
                 _make_fetcher_timeout_message(FetcherType[entry["fetcher_type"]], exc)
                 for entry in fetchers[len(messages):]
             ])
+
+    times = cpu_tracking.get_times()
+    json_times = json.dumps({"cpu_times": times})
+
+    # TODO (sk): Replace log with message
+    # this is temporary log to check data path, to be replaced with new FetcherType
+    log.logger.debug("CPU timings: %s", json_times)
 
     log.logger.debug("Produced %d messages:", len(messages))
     for message in messages:

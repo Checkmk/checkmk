@@ -50,6 +50,7 @@ from cmk.utils.type_defs import (
     ServiceState,
     SourceType,
 )
+import cmk.utils.cpu_tracking as cpu_tracking
 
 from cmk.fetchers.controller import FetcherMessage
 
@@ -58,7 +59,6 @@ import cmk.base.check_api_utils as check_api_utils
 import cmk.base.check_table as check_table
 import cmk.base.config as config
 import cmk.base.core
-import cmk.base.cpu_tracking as cpu_tracking
 import cmk.base.crash_reporting
 import cmk.base.checkers as checkers
 import cmk.base.decorator
@@ -119,6 +119,7 @@ def do_check(
     only_check_plugin_names: Optional[Set[CheckPluginName]] = None,
     fetcher_messages: Optional[Sequence[FetcherMessage]] = None
 ) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[str]]:
+    cpu_tracking.reset()
     cpu_tracking.start("busy")
     console.verbose("Checkmk version %s\n", cmk_version.__version__)
 

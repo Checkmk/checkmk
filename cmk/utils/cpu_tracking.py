@@ -7,7 +7,8 @@
 import functools
 import os
 import time
-from typing import Any, Callable, Dict, List, Tuple
+import contextlib
+from typing import Any, Callable, Dict, List, Tuple, Iterator
 
 from cmk.utils.log import console
 
@@ -18,6 +19,15 @@ from cmk.utils.log import console
 times: Dict[str, List[float]] = {}
 last_time_snapshot: List[float] = []
 phase_stack: List[str] = []
+
+
+def reset():
+    global times
+    global last_time_snapshot
+    global phase_stack
+    times = {}
+    last_time_snapshot = []
+    phase_stack = []
 
 
 def start(initial_phase: str) -> None:
@@ -36,13 +46,13 @@ def end() -> None:
     del phase_stack[:]
 
 
-def push_phase(phase: str) -> None:
+def push_phase(phase_name: str) -> None:
     if _is_not_tracking():
         return
 
-    console.vverbose("[cpu_tracking] Push phase '%s' (Stack: %r)\n" % (phase, phase_stack))
+    console.vverbose("[cpu_tracking] Push phase '%s' (Stack: %r)\n" % (phase_name, phase_stack))
     _add_times_to_phase()
-    phase_stack.append(phase)
+    phase_stack.append(phase_name)
 
 
 def pop_phase() -> None:
@@ -65,9 +75,9 @@ def _is_not_tracking() -> bool:
 def _add_times_to_phase() -> None:
     global last_time_snapshot
     new_time_snapshot = _time_snapshot()
-    for phase in phase_stack[-1], "TOTAL":
-        phase_times = times.get(phase, [0.0] * len(new_time_snapshot))
-        times[phase] = [
+    for phase_name in phase_stack[-1], "TOTAL":
+        phase_times = times.get(phase_name, [0.0] * len(new_time_snapshot))
+        times[phase_name] = [
             phase_times[i] + new_time_snapshot[i] - last_time_snapshot[i]
             for i in range(len(new_time_snapshot))
         ]
@@ -90,3 +100,21 @@ def track(method: Callable) -> Callable:
             pop_phase()
 
     return wrapper
+
+
+@contextlib.contextmanager
+def phase(phase_name: str) -> Iterator[None]:
+    push_phase(phase_name)
+    try:
+        yield
+    finally:
+        pop_phase()
+
+
+@contextlib.contextmanager
+def execute(name: str) -> Iterator[None]:
+    start(name)
+    try:
+        yield
+    finally:
+        end()

@@ -26,6 +26,7 @@ from cmk.utils.type_defs import (
     ServiceCheckResult,
     SourceType,
 )
+import cmk.utils.cpu_tracking as cpu_tracking
 
 from cmk.snmplib.type_defs import TRawData
 
@@ -35,7 +36,6 @@ from cmk.fetchers.type_defs import Mode
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
-import cmk.base.cpu_tracking as cpu_tracking
 from cmk.base.check_utils import (
     PiggybackRawData,
     SectionCacheInfo,

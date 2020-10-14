@@ -42,6 +42,7 @@ from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.valuespec import (
+    DropdownChoice,
     TextUnicode,
     TextAscii,
     ValueSpec,
@@ -125,20 +126,8 @@ class ModeFolder(WatoMode):
                     title=_("Folder"),
                     topics=[
                         PageMenuTopic(
-                            title=_("Folders"),
+                            title=_("Folder"),
                             entries=list(self._page_menu_entries_this_folder()),
-                        ),
-                        PageMenuTopic(
-                            title=_("Host settings"),
-                            entries=list(self._page_menu_entries_host_settings()),
-                        ),
-                        PageMenuTopic(
-                            title=_("Service settings"),
-                            entries=list(self._page_menu_entries_service_settings()),
-                        ),
-                        PageMenuTopic(
-                            title=_("Agent settings"),
-                            entries=list(self._page_menu_entries_agents()),
                         ),
                     ],
                 ),
@@ -366,7 +355,7 @@ class ModeFolder(WatoMode):
     def _page_menu_entries_this_folder(self) -> Iterator[PageMenuEntry]:
         if self._folder.may("read"):
             yield PageMenuEntry(
-                title=_("Folder properties"),
+                title=_("Properties"),
                 icon_name="edit",
                 item=make_simple_link(self._folder.edit_url(backfolder=self._folder)),
             )
@@ -383,108 +372,19 @@ class ModeFolder(WatoMode):
 
         yield make_folder_status_link(watolib.Folder.current(), view_name="allhosts")
 
-    def _page_menu_entries_host_settings(self) -> Iterator[PageMenuEntry]:
-        if not config.user.may("wato.rulesets") and not config.user.may("wato.seeall"):
-            return
-
-        yield PageMenuEntry(
-            title=_("Monitoring settings"),
-            icon_name="rulesets",
-            item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "rulesets"), ("group", "monconf")])),
-        )
-
-        yield PageMenuEntry(
-            title=_("HW/SW inventory"),
-            icon_name="rulesets",
-            item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "rulesets"), ("group", "inventory")])),
-            is_show_more=True,
-        )
-
-    def _page_menu_entries_service_settings(self) -> Iterator[PageMenuEntry]:
-        if not config.user.may("wato.rulesets") and not config.user.may("wato.seeall"):
-            return
-
-        yield PageMenuEntry(
-            title=_("Monitoring settings"),
-            icon_name="rulesets",
-            item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "rulesets"), ("group", "monconf")])),
-        )
-
-        yield PageMenuEntry(
-            title=_("Discovery settings"),
-            icon_name="rulesets",
-            item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "rulesets"), ("group", "checkparams")])),
-        )
-
-        yield PageMenuEntry(
-            title=_("Check network settings"),
-            icon_name="rulesets",
-            item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "rulesets"), ("group", "activechecks")])),
-        )
-
-        yield PageMenuEntry(
-            title=_("Integrate Nagios plugins"),
-            icon_name="rulesets",
-            item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "rulesets"), ("group", "custom_checks")])),
-            is_show_more=True,
-        )
-
-        yield PageMenuEntry(
-            title=_("Manual services"),
-            icon_name="rulesets",
-            item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "rulesets"), ("group", "static")])),
-            is_show_more=True,
-        )
-
-    def _page_menu_entries_agents(self) -> Iterator[PageMenuEntry]:
-        if not config.user.may("wato.rulesets") and not config.user.may("wato.seeall"):
-            return
-
-        yield PageMenuEntry(
-            title=_("VM, Cloud, Container"),
-            icon_name="rulesets",
-            item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "rulesets"),
-                                                ("group", "vm_cloud_container")])),
-        )
-
-        yield PageMenuEntry(
-            title=_("Other integrations"),
-            icon_name="rulesets",
-            item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "rulesets"),
-                                                ("group", "datasource_programs")])),
-        )
-
-        yield PageMenuEntry(
-            title=_("Custom integrations"),
-            icon_name="rulesets",
-            item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "rulesets"),
-                                                ("group", "custom_integrations")])),
-            is_show_more=True,
-        )
-
-        yield PageMenuEntry(
-            title=_("Agent access settings"),
-            icon_name="rulesets",
-            item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "rulesets"), ("group", "agent")])),
-        )
-
-        yield PageMenuEntry(
-            title=_("SNMP settings"),
-            icon_name="rulesets",
-            item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "rulesets"), ("group", "snmp")])),
-        )
+        if config.user.may("wato.rulesets") or config.user.may("wato.seeall"):
+            yield PageMenuEntry(
+                title=_("Rules"),
+                icon_name="rulesets",
+                item=make_simple_link(
+                    watolib.folder_preserving_link([
+                        ("mode", "rule_search"),
+                        ("filled_in", "rule_search"),
+                        ("folder", watolib.Folder.current().path()),
+                        ("search_p_ruleset_used", DropdownChoice.option_id(True)),
+                        ("search_p_ruleset_used_USE", "on"),
+                    ])),
+            )
 
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(

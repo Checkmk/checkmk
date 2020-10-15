@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
 import sys
 import getopt
 import socket
@@ -11,6 +12,7 @@ import traceback
 from typing import Any, Dict, Optional, List, Tuple, Union
 
 import snap7  # type: ignore[import]
+from snap7.common import Snap7Library  # type: ignore[import]
 from snap7.snap7types import S7AreaCT, S7AreaDB, S7AreaMK, S7AreaPA, S7AreaPE, S7AreaTM  # type: ignore[import]
 
 
@@ -168,6 +170,10 @@ def main(sys_argv=None):
         # we would have to use get_string(data, offset-1)) from snap7.utils
         'str': (None, lambda data, offset, size, bit: data[offset:offset + size]),
     }
+
+    # The dynamic library detection of Snap7Library using ctypes.util.find_library does not work for
+    # some reason. Load the library from our standard path.
+    Snap7Library(lib_location="%s/lib/libsnap7.so" % os.environ["OMD_ROOT"])
 
     unhandled_error = False
     for device in devices:

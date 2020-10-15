@@ -511,3 +511,4 @@ class TestFetcherType:
         assert FetcherType.PROGRAM.make() is ProgramFetcher
         assert FetcherType.SNMP.make() is SNMPFetcher
         assert FetcherType.TCP.make() is TCPFetcher
+        assert FetcherType.CPU.make() is TCPFetcher

@@ -20,6 +20,8 @@ times: Dict[str, List[float]] = {}
 last_time_snapshot: List[float] = []
 phase_stack: List[str] = []
 
+# TODO (sk) make private low level API: reset, start, end
+
 
 def reset():
     global times
@@ -102,6 +104,14 @@ def track(method: Callable) -> Callable:
     return wrapper
 
 
+def update(cpu_times: Dict[str, List[float]]):
+    for name, value_list in cpu_times.items():
+        if name in times:
+            times[name] = [sum(x) for x in zip(value_list, times[name])]
+        else:
+            times[name] = value_list
+
+
 @contextlib.contextmanager
 def phase(phase_name: str) -> Iterator[None]:
     push_phase(phase_name)
@@ -113,6 +123,7 @@ def phase(phase_name: str) -> Iterator[None]:
 
 @contextlib.contextmanager
 def execute(name: str) -> Iterator[None]:
+    reset()
     start(name)
     try:
         yield

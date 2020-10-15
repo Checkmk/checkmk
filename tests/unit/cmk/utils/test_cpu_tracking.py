@@ -128,3 +128,27 @@ def test_cpu_tracking_add_times(monkeypatch):
     assert times["TOTAL"][4] == 9.0
     assert times["busy"][4] == 2.0
     assert times["agent"][4] == 7.0
+
+
+def test_cpu_tracking_update(monkeypatch):
+    monkeypatch.setattr("time.time", lambda: 0.0)
+    cpu_tracking.start("busy")
+    cpu_tracking.update(
+        {
+            "busy": [1.0, 2.0, 3.0, 4.0, 5.0],
+            "agent": [1.0, 2.0, 3.0, 4.0, 5.0],
+            "test": [1.0, 2.0, 3.0, 4.0, 5.0],
+            "TOTAL": [3.0, 6.0, 9.0, 12.0, 15.0]
+        },)
+    cpu_tracking.push_phase("agent")
+    monkeypatch.setattr("time.time", lambda: 9.0)
+    cpu_tracking.pop_phase()
+
+    cpu_tracking.end()
+    times = cpu_tracking.get_times()
+    assert len(times) == 4
+
+    assert times["TOTAL"][4] == 24.0  # 15 + 9
+    assert times["busy"][4] == 5.0  # 5 + 0
+    assert times["agent"][4] == 14.0  # 5 + 9
+    assert times["test"][4] == 5.0  # 5

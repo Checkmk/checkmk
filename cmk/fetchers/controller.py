@@ -571,6 +571,15 @@ def _make_fetcher_timeout_message(fetcher_type: FetcherType, exc: MKTimeout) -> 
     )
 
 
+def _append_cpu_message(messages: List[FetcherMessage]) -> None:
+    times = cpu_tracking.get_times()
+    json_times = json.dumps({"cpu_times": times})
+
+    messages.append(
+        FetcherMessage.from_raw_data(result.OK(json_times.encode("utf-8")), FetcherType.CPU))
+    log.logger.debug("CPU timings: %s", json_times)
+
+
 def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
     """ Writes to the stdio next data:
     Count Type            Content                     Action
@@ -608,12 +617,7 @@ def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
                 for entry in fetchers[len(messages):]
             ])
 
-    times = cpu_tracking.get_times()
-    json_times = json.dumps({"cpu_times": times})
-
-    # TODO (sk): Replace log with message
-    # this is temporary log to check data path, to be replaced with new FetcherType
-    log.logger.debug("CPU timings: %s", json_times)
+    _append_cpu_message(messages)
 
     log.logger.debug("Produced %d messages:", len(messages))
     for message in messages:

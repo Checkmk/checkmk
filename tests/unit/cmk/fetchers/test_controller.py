@@ -408,10 +408,11 @@ class TestFetcherMessage:
     def test_len(self, message, header, payload):
         assert len(message) == len(header) + len(payload)
 
-    def test_from_raw_data_tcp(self, agent_raw_data):
+    @pytest.mark.parametrize("fetcher_type", [FetcherType.TCP, FetcherType.CPU])
+    def test_from_raw_data_standard(self, agent_raw_data, fetcher_type):
         raw_data: result.Result[AgentRawData, Exception] = result.OK(agent_raw_data)
-        message = FetcherMessage.from_raw_data(raw_data, FetcherType.TCP)
-        assert message.header.fetcher_type is FetcherType.TCP
+        message = FetcherMessage.from_raw_data(raw_data, fetcher_type)
+        assert message.header.fetcher_type is fetcher_type
         assert message.header.payload_type is PayloadType.AGENT
         assert message.raw_data == raw_data
 
@@ -431,9 +432,10 @@ class TestFetcherMessage:
         assert type(message.raw_data.error) is type(error.error)
         assert message.raw_data.error.args == error.error.args
 
-    def test_raw_data_tcp(self, agent_raw_data):
+    @pytest.mark.parametrize("fetcher_type", [FetcherType.TCP, FetcherType.CPU])
+    def test_raw_data_tcp_standard(self, agent_raw_data, fetcher_type):
         raw_data: result.Result[AgentRawData, Exception] = result.OK(agent_raw_data)
-        message = FetcherMessage.from_raw_data(raw_data, FetcherType.TCP)
+        message = FetcherMessage.from_raw_data(raw_data, fetcher_type)
         assert message.raw_data == raw_data
 
     def test_raw_data_snmp(self, snmp_raw_data):

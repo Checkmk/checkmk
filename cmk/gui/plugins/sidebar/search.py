@@ -1175,8 +1175,10 @@ class MenuSearchResultsRenderer:
         return html_text
 
     def _render_topic(self, topic):
-        # TODO: Add the corresponding icon
         html.open_h2()
+        html.div(class_="spacer", content="")
+        # TODO: Add the corresponding icon
+        html.icon("topic_overview")
         html.span(topic)
         html.close_h2()
 

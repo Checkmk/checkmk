@@ -157,7 +157,7 @@
             span { margin-left: 22px; }
             img + span { margin-left: 0; } /* No spacing if icons per entry are used */
 
-            a.show_all_topics {
+            a.show_all_topics, div.spacer {
               img {
                 display: none;
                 float: left;

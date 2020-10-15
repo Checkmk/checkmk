@@ -89,7 +89,6 @@ register.agent_section(
 
 
 def discovery_windows_services(params: List[Dict[str, Any]], section: Section) -> DiscoveryResult:
-
     # Handle single entries (type str)
     def add_matching_services(service: WinService, entry):
         # New wato rule handling
@@ -129,20 +128,20 @@ def discovery_windows_services(params: List[Dict[str, Any]], section: Section) -
             yield from add_matching_services(service, rule)
 
 
-# Format of parameters
-# {
-#    "states" : [ ( "running", "demand", 1 ),
-#                  ( "stopped", None, 2 ) ],
-#    "else" : 2,
-# }
-def check_windows_services(
+def check_windows_services_single(
     item: str,
     params: Parameters,
     section: Section,
 ) -> Generator[Result, None, None]:
-
-    # allow to match agains the internal name or agains the display name
-    # of the service
+    """
+    >>> for result in check_windows_services_single(
+    ...    item="GoodService",
+    ...    params={'additional_servicenames': [], 'else': 0, 'states': [('running', 'auto', 0)]},
+    ...    section=[WinService(name='GoodService', state='stopped', start_type='demand', description='nixda')]):
+    ...   print(result)
+    Result(state=<State.OK: 0>, summary='nixda: stopped (start type is demand)', details='nixda: stopped (start type is demand)')
+    """
+    # allow to match agains the internal name or agains the display name of the service
     additional_names = params.get("additional_servicenames", [])
     for service in section:
         if item not in (service.name, service.description) and service.name not in additional_names:
@@ -161,6 +160,18 @@ def check_windows_services(
         )
 
 
+def check_windows_services(
+    item: str,
+    params: Parameters,
+    section: Section,
+) -> Generator[Result, None, None]:
+    results = list(check_windows_services_single(item, params, section))
+    if results:
+        yield from results
+    else:
+        yield Result(state=State(params.get("else", 2)), summary="service not found")
+
+
 def cluster_check_windows_services(
     item: str,
     params: Parameters,
@@ -171,7 +182,7 @@ def cluster_check_windows_services(
     # states
     found = []
     for node, node_section in section.items():
-        results = list(check_windows_services(item, params, node_section))
+        results = list(check_windows_services_single(item, params, node_section))
         if results:
             found.append((node, results[0]))
 

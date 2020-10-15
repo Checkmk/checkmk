@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
 import pytest  # type: ignore[import]
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
@@ -115,6 +114,17 @@ def test_discovery_windows_services(params, discovered_services):
     }, [
         Result(state=state.CRIT, summary='Windows Search: stopped (start type is demand)'),
         Result(state=state.CRIT, summary='Windows Update: stopped (start type is disabled)'),
+    ]),
+    ("NonExistent", {
+        "states": [(None, "demand", 1)],
+    }, [
+        Result(state=state.CRIT, summary='service not found'),
+    ]),
+    ("NonExistent", {
+        "states": [(None, "demand", 1)],
+        "else": 0,
+    }, [
+        Result(state=state.OK, summary='service not found'),
     ]),
 ])
 def test_check_windows_services(item, params, yielded_results):

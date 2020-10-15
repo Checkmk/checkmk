@@ -1408,8 +1408,8 @@ class BIModeEditAggregation(ABCBIMode):
             self._bi_aggregation.pack_id = self.bi_pack.id
         else:
             try:
-                self._bi_aggregation = self._bi_packs.get_aggregation(aggr_id)
-            except IndexError:
+                self._bi_aggregation = self._bi_packs.get_aggregation_mandatory(aggr_id)
+            except KeyError:
                 raise MKUserError("id", _("This aggregation does not exist."))
 
     @classmethod

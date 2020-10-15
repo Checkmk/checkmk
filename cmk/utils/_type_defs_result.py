@@ -131,6 +131,8 @@ class OK(Result[T_co, E_co]):
     __slots__ = ["_ok"]
 
     def __init__(self, ok: T_co):
+        if isinstance(ok, Error):
+            raise TypeError(ok)
         self._ok: Final[T_co] = ok
 
     def __repr__(self):
@@ -213,6 +215,8 @@ class Error(Result[T_co, E_co]):
     __slots__ = ["_error"]
 
     def __init__(self, error: E_co):
+        if isinstance(error, OK):
+            raise TypeError(error)
         self._error: Final[E_co] = error
 
     def __repr__(self):

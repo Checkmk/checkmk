@@ -5,6 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+
+#############################################################################
+#############################################################################
+#
+#   This code is already migrated. This banner is supposed to vanish
+#   in the next couple of commits.
+#
+#############################################################################
+#############################################################################
+
 # parsed = {
 #     "ESTABLISHED" : 6,
 #     "BOUND"       : 17,

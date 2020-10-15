@@ -2712,7 +2712,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'systemd_units.services',
         'systemd_units.services_summary',
         'systemtime',
-        'tcp_conn_stats',
         'teracom_tcw241_analog',
         'teracom_tcw241_digital',
         'timemachine',

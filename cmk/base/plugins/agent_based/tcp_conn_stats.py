@@ -4,9 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Dict
-from .agent_based_api.v1.type_defs import AgentStringTable
+from .agent_based_api.v1.type_defs import AgentStringTable, CheckResult, DiscoveryResult, Parameters
 
-from .agent_based_api.v1 import register
+from .agent_based_api.v1 import check_levels, register, Service
 
 TCPConnections = Dict[str, int]
 
@@ -92,4 +92,30 @@ def parse_tcp_conn_stats(string_table: AgentStringTable) -> TCPConnections:
 register.agent_section(
     name="tcp_conn_stats",
     parse_function=parse_tcp_conn_stats,
+)
+
+
+def discover_tcp_connections(section: TCPConnections) -> DiscoveryResult:
+    if any(value != 0 for value in section.values()):
+        yield Service()
+
+
+def check_tcp_connections(params: Parameters, section: TCPConnections) -> CheckResult:
+    for tcp_state, tcp_count in sorted(section.items()):
+        yield from check_levels(
+            tcp_count,
+            levels_upper=params.get(tcp_state),
+            metric_name=tcp_state,
+            render_func=lambda i: "%d" % i,
+            label=tcp_state.replace('_', ' ').capitalize(),
+        )
+
+
+register.check_plugin(
+    name="tcp_conn_stats",
+    service_name="TCP Connections",
+    discovery_function=discover_tcp_connections,
+    check_function=check_tcp_connections,
+    check_default_parameters={},
+    check_ruleset_name="tcp_conn_stats",
 )

@@ -6,6 +6,7 @@ import {call_ajax} from "ajax";
 import {add_class, remove_class} from "utils";
 
 var g_call_ajax_obj = null;
+var g_current_search_position = null;
 
 class Search {
     constructor(id) {
@@ -45,6 +46,7 @@ class Search {
     }
 
     show_results_div() {
+        g_current_search_position = null;
         add_class(document.getElementById(this.content_id), "hidden");
     }
 
@@ -73,7 +75,15 @@ const monitoring_search = new Search("monitoring");
 const setup_search = new Search("setup");
 
 export function on_input_search(id) {
+    let current_search = get_current_search(id);
+    if (current_search) {
+        current_search.execute_search();
+    }
+}
+
+function get_current_search(id) {
     let current_search = null;
+
     switch (id) {
         case "monitoring":
             current_search = monitoring_search;
@@ -82,10 +92,58 @@ export function on_input_search(id) {
             current_search = setup_search;
             break;
         default:
-            console.log("on_input_search called for non-implemented search!");
+            console.log("The requested search is not implemented: " + id);
             break;
     }
-    if (current_search) {
-        current_search.execute_search();
+
+    return current_search;
+}
+export function on_key_down(id) {
+    let current_search = get_current_search(id);
+    let current_key = window.event.key;
+
+    if (!(current_key || current_search)) {
+        return;
     }
+    switch (current_key) {
+        case "ArrowDown":
+        case "ArrowUp":
+            move_current_search_position(current_key == "ArrowDown" ? 1 : -1, current_search);
+            window.event.preventDefault();
+            break;
+        case "Enter":
+            click_current_search_position(current_search);
+            break;
+    }
+}
+
+function click_current_search_position(current_search) {
+    if (g_current_search_position == null) {
+        return;
+    }
+    document
+        .getElementById(current_search.search_id)
+        .getElementsByTagName("li")
+        [g_current_search_position].getElementsByClassName("active")[0]
+        .click();
+}
+
+function move_current_search_position(step, current_search) {
+    if (g_current_search_position == null) {
+        g_current_search_position = -1;
+    }
+
+    g_current_search_position += step;
+
+    let result_list = document.getElementById(current_search.search_id).getElementsByTagName("li");
+    if (!result_list) return;
+
+    if (g_current_search_position < 0) g_current_search_position = result_list.length - 1;
+    if (g_current_search_position > result_list.length - 1) g_current_search_position = 0;
+
+    result_list.forEach((value, idx) => {
+        idx == g_current_search_position
+            ? add_class(value.childNodes[0], "active")
+            : remove_class(value.childNodes[0], "active");
+    });
 }

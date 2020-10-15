@@ -188,6 +188,10 @@
               & > img, & > span { margin-left: -28px; } /* No spacing if icons per entry are used */
             }
 
+            a.active {
+              color: $success;
+            }
+
             img.icon {
               width: 14px;
               height: 14px;

@@ -35,30 +35,28 @@ def apache_status_check_params(value, params, op_txt):
     return state, levelstxt, extra_perf
 
 
-_apache_status_fields = {
-    # key                sort  convert-func param_function
-    'Uptime': (0, int),
-    'IdleWorkers': (5, int),
-    'BusyWorkers': (6, int, apache_status_check_params, "at"),
-    'OpenSlots': (7, int, apache_status_check_params, "below"),
-    'TotalSlots': (8, int),
-    'Total Accesses': (9, int),
-    'CPULoad': (10, float),
-    'Total kBytes': (11, float),
-    'ReqPerSec': (12, float),
-    'BytesPerReq': (13, float),
-    'BytesPerSec': (14, float),
-    'Scoreboard': (15, str),
-    'ConnsTotal': (16, int),
-    'ConnsAsyncWriting': (17, int),
-    'ConnsAsyncKeepAlive': (18, int),
-    'ConnsAsyncClosing': (19, int),
-    'BusyServers': (20, int),
-    'IdleServers': (21, int),
-}
+_FIELD_CASTER_MAP = collections.OrderedDict((
+    ('Uptime', int),
+    ('IdleWorkers', int),
+    ('BusyWorkers', int),
+    ('OpenSlots', int),
+    ('TotalSlots', int),
+    ('Total Accesses', int),
+    ('CPULoad', float),
+    ('Total kBytes', float),
+    ('ReqPerSec', float),
+    ('BytesPerReq', float),
+    ('BytesPerSec', float),
+    ('Scoreboard', str),
+    ('ConnsTotal', int),
+    ('ConnsAsyncWriting', int),
+    ('ConnsAsyncKeepAlive', int),
+    ('ConnsAsyncClosing', int),
+    ('BusyServers', int),
+    ('IdleServers', int),
+))
 
-_apache_status_stats = collections.OrderedDict((
-    # scoreboard stats
+_SCOREBOARD_LABEL_MAP = collections.OrderedDict((
     ('Waiting', '_'),
     ('StartingUp', 'S'),
     ('ReadingRequest', 'R'),
@@ -79,11 +77,12 @@ def apache_status_parse_legacy(info):
         if len(line) != 4 and not (len(line) == 5 and line[2] == 'Total'):
             continue  # Skip unexpected lines
         label = (' '.join(line[2:-1])).rstrip(':')
-        if label not in _apache_status_fields:
+        caster = _FIELD_CASTER_MAP.get(label)
+        if caster is None:
             continue
 
         address, port = line[:2]
-        value = _apache_status_fields[label][1](line[-1])
+        value = caster(line[-1])
         if port == "None":
             item = address
         else:
@@ -94,7 +93,7 @@ def apache_status_parse_legacy(info):
 
         # Get statistics from scoreboard
         if label == 'Scoreboard':
-            for stat_label, key in _apache_status_stats.items():
+            for stat_label, key in _SCOREBOARD_LABEL_MAP.items():
                 data[item]['State_' + stat_label] = value.count(key)
             data[item]['OpenSlots'] = value.count('.')
 
@@ -123,11 +122,12 @@ def apache_status_parse(info):
         except ValueError:
             # There is nothing to split.
             continue
-        try:
-            value = _apache_status_fields[label][1](status)
-        except KeyError:
+        caster = _FIELD_CASTER_MAP.get(label)
+        if caster is None:
             # Not a label we handle.
             continue
+        value = caster(status)
+
         if instance and port != "None":
             item = '%s:%s' % (instance, port)
         elif instance:
@@ -139,7 +139,7 @@ def apache_status_parse(info):
 
         # Get statistics from scoreboard
         if label == 'Scoreboard':
-            for stat_label, key in _apache_status_stats.items():
+            for stat_label, key in _SCOREBOARD_LABEL_MAP.items():
                 data[item]['State_' + stat_label] = value.count(key)
             data[item]['OpenSlots'] = value.count('.')
 
@@ -184,15 +184,13 @@ def check_apache_status(item, params, info):
     output = []
     perfdata = []
 
-    for key, value in sorted(data.items(),
-                             key=lambda x: _apache_status_fields.get(x[0], (0, None))[0]):
-        if key not in _apache_status_fields:
-            continue
+    for key in (k for k in _FIELD_CASTER_MAP if k in data):
+        value = data[key]
 
         # Don't process the scoreboard data directly. Print states instead
         if key == 'Scoreboard':
             states = []
-            for stat_label in _apache_status_stats:
+            for stat_label in _SCOREBOARD_LABEL_MAP:
                 val = data.get('State_' + stat_label, 0)
                 if val > 0:
                     states.append('%s: %d' % (stat_label, val))
@@ -209,10 +207,10 @@ def check_apache_status(item, params, info):
 
         extra_info = ""
         extra_perf = []
-        apache_status_key = _apache_status_fields[key]
-        if params.get(key) and len(apache_status_key) > 3:
+        if params.get(key) and key in ('BusyWorkers', 'OpenSlots'):
+            levels_type = "at" if key == 'BusyWorkers' else "below"
             key_state, extra_info, extra_perf = \
-                apache_status_key[2](value, params.get(key), apache_status_key[3])
+                apache_status_check_params(value, params.get(key), levels_type)
             worst_state = max(key_state, worst_state)
 
         output.append('%s: %s%s' % (key, display_value, extra_info))

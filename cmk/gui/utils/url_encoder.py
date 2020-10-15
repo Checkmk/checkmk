@@ -14,7 +14,8 @@ from cmk.gui.type_defs import HTTPVariables
 
 # TODO: Change methods to simple helper functions. The URLEncoder class is not really needed
 class URLEncoder:
-    def urlencode_vars(self, vars_: HTTPVariables) -> str:
+    @staticmethod
+    def urlencode_vars(vars_: HTTPVariables) -> str:
         """Convert a mapping object or a sequence of two-element tuples to a “percent-encoded” string
 
         This function returns a str object, never unicode!
@@ -41,7 +42,8 @@ class URLEncoder:
 
         return urllib.parse.urlencode(pairs)
 
-    def urlencode(self, value: Optional[str]) -> str:
+    @staticmethod
+    def urlencode(value: Optional[str]) -> str:
         """Replace special characters in string using the %xx escape.
         This function returns a str object in py2 and py3
         """

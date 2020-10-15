@@ -108,6 +108,7 @@ from cmk.gui.utils.popups import PopupMethod
 from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.gui.utils.timeout_manager import TimeoutManager
 from cmk.gui.utils.url_encoder import URLEncoder
+from cmk.gui.utils.urls import requested_file_name, makeuri_contextless
 from cmk.gui.i18n import _
 from cmk.gui.http import Response
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
@@ -1025,7 +1026,7 @@ class html(ABCHTMLGenerator):
 
         self.init_mobile()
 
-        self.myfile = self._requested_file_name()
+        self.myfile = requested_file_name(self.request)
 
         # Disable caching for all our pages as they are mostly dynamically generated,
         # user related and are required to be up-to-date on every refresh
@@ -1098,24 +1099,6 @@ class html(ABCHTMLGenerator):
     def _init_screenshot_mode(self) -> None:
         if self.request.var("screenshotmode", "1" if config.screenshotmode else ""):
             self.screenshotmode = True
-
-    def _requested_file_name(self) -> str:
-        parts = self.request.requested_file.rstrip("/").split("/")
-
-        if len(parts) == 3 and parts[-1] == "check_mk":
-            # Load index page when accessing /[site]/check_mk
-            myfile = "index"
-
-        elif parts[-1].endswith(".py"):
-            # Regular pages end with .py - Stript it away to get the page name
-            myfile = parts[-1][:-3]
-            if myfile == "":
-                myfile = "index"
-
-        else:
-            myfile = "index"
-
-        return myfile
 
     def init_mobile(self) -> None:
         if self.request.has_var("mobile"):
@@ -1512,12 +1495,11 @@ class html(ABCHTMLGenerator):
         return filename
 
     def makeuri_contextless(self, vars_: 'HTTPVariables', filename: Optional[str] = None) -> str:
-        if not filename:
-            assert self.myfile is not None
-            filename = self.myfile + ".py"
-        if vars_:
-            return filename + "?" + self.urlencode_vars(vars_)
-        return filename
+        return makeuri_contextless(
+            self.request,
+            vars_,
+            filename=filename,
+        )
 
     def makeactionuri(self,
                       addvars: 'HTTPVariables',

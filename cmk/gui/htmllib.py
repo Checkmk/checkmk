@@ -46,7 +46,23 @@ import json.encoder  # type: ignore[import]
 import abc
 import pprint
 from contextlib import contextmanager
-from typing import Union, Optional, List, Dict, Tuple, Any, Iterator, cast, Mapping, Set, TYPE_CHECKING, TypeVar, NamedTuple, Text
+from typing import (
+    Union,
+    Optional,
+    List,
+    Dict,
+    Tuple,
+    Any,
+    Iterator,
+    cast,
+    Mapping,
+    Set,
+    Sequence,
+    TYPE_CHECKING,
+    TypeVar,
+    NamedTuple,
+    Text,
+)
 from pathlib import Path
 import urllib.parse
 
@@ -108,7 +124,13 @@ from cmk.gui.utils.popups import PopupMethod
 from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.gui.utils.timeout_manager import TimeoutManager
 from cmk.gui.utils.url_encoder import URLEncoder
-from cmk.gui.utils.urls import requested_file_name, makeuri_contextless
+from cmk.gui.utils.urls import (
+    makeactionuri,
+    makeactionuri_contextless,
+    makeuri,
+    makeuri_contextless,
+    requested_file_name,
+)
 from cmk.gui.i18n import _
 from cmk.gui.http import Response
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
@@ -1478,21 +1500,14 @@ class html(ABCHTMLGenerator):
                 addvars: 'HTTPVariables',
                 remove_prefix: Optional[str] = None,
                 filename: Optional[str] = None,
-                delvars: Optional[List[str]] = None) -> str:
-        new_vars = [nv[0] for nv in addvars]
-        vars_: 'HTTPVariables' = [
-            (v, val)
-            for v, val in self.request.itervars()
-            if v[0] != "_" and v not in new_vars and (not delvars or v not in delvars)
-        ]
-        if remove_prefix is not None:
-            vars_ = [i for i in vars_ if not i[0].startswith(remove_prefix)]
-        vars_ = vars_ + addvars
-        if filename is None:
-            filename = self.urlencode(self.myfile) + ".py"
-        if vars_:
-            return filename + "?" + self.urlencode_vars(vars_)
-        return filename
+                delvars: Optional[Sequence[str]] = None) -> str:
+        return makeuri(
+            self.request,
+            addvars,
+            remove_prefix=remove_prefix,
+            filename=filename,
+            delvars=delvars,
+        )
 
     def makeuri_contextless(self, vars_: 'HTTPVariables', filename: Optional[str] = None) -> str:
         return makeuri_contextless(
@@ -1504,16 +1519,24 @@ class html(ABCHTMLGenerator):
     def makeactionuri(self,
                       addvars: 'HTTPVariables',
                       filename: Optional[str] = None,
-                      delvars: Optional[List[str]] = None) -> str:
-        return self.makeuri(addvars + [("_transid", self.transaction_manager.get())],
-                            filename=filename,
-                            delvars=delvars)
+                      delvars: Optional[Sequence[str]] = None) -> str:
+        return makeactionuri(
+            self.request,
+            self.transaction_manager,
+            addvars,
+            filename=filename,
+            delvars=delvars,
+        )
 
     def makeactionuri_contextless(self,
                                   addvars: 'HTTPVariables',
                                   filename: Optional[str] = None) -> str:
-        return self.makeuri_contextless(addvars + [("_transid", self.transaction_manager.get())],
-                                        filename=filename)
+        return makeactionuri_contextless(
+            self.request,
+            self.transaction_manager,
+            addvars,
+            filename=filename,
+        )
 
     #
     # HTML heading and footer rendering

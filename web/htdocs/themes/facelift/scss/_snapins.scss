@@ -12,8 +12,8 @@ div.bookmark {
   overflow: hidden;
   color: $font-color;
   text-overflow: ellipsis;
-  -o-text-overflow: ellipsis;
   white-space: nowrap;
+  -o-text-overflow: ellipsis;
 }
 
 /*
@@ -168,18 +168,21 @@ table.mkeventd_performance {
  * NagVis maps snapin
  */
 div.state1 {
-  &.statea, &.stated {
+  &.statea,
+  &.stated {
     border-color: rgb(255, 255, 0);
   }
 }
 
 div.state2 {
-  &.statea, &.stated {
+  &.statea,
+  &.stated {
     border-color: rgb(255, 0, 0);
   }
 }
 
-div.statea, div.stated {
+div.statea,
+div.stated {
   background-color: rgb(0, 187, 51);
 }
 
@@ -265,7 +268,8 @@ div.speedometer {
   height: 223px;
 }
 
-img#speedometerbg, canvas#speedometer {
+img#speedometerbg,
+canvas#speedometer {
   position: absolute;
   top: 0;
   left: 0;
@@ -318,7 +322,8 @@ table.tacticaloverview {
     }
   }
 
-  a, span {
+  a,
+  span {
     display: block;
     margin-right: 2px;
   }
@@ -338,7 +343,8 @@ body.main .popup_menu table.tacticaloverview td span {
   color: $font-color;
 }
 
-table.tacticaloverview td a.link, table.tacticaloverview td a:hover {
+table.tacticaloverview td a.link,
+table.tacticaloverview td a:hover {
   color: $font-color;
 }
 
@@ -442,7 +448,9 @@ div.spacertop {
     margin-bottom: 10px;
   }
 
-  img.emblem { bottom: 3px; }
+  img.emblem {
+    bottom: 3px;
+  }
 
   div.footnotelink {
     float: right;
@@ -481,15 +489,19 @@ div.spacertop {
   padding: 0;
 
   img {
-    display: none; }
+    display: none;
+  }
 
   input {
-    margin:  0;
+    margin: 0;
     font-size: 11px;
     background-repeat: no-repeat;
   }
 
-  input, select, textarea, #mk_side_search_field {
+  input,
+  select,
+  textarea,
+  #mk_side_search_field {
     box-sizing: border-box;
   }
 }
@@ -527,7 +539,9 @@ div.spacertop {
 /*
  * Quicksearch snapin
  */
-#mk_side_search, #mk_side_search_setup, #mk_side_search_monitoring {
+#mk_side_search,
+#mk_side_search_setup,
+#mk_side_search_monitoring {
   @extend %search-shared;
 
   input {
@@ -570,12 +584,14 @@ div.spacertop {
     text-align: left;
     text-decoration: none;
 
-    &:hover, &.active {
+    &:hover,
+    &.active {
       background-color: $snapin-bg-color;
     }
   }
 
-  div.error, div.warning {
+  div.error,
+  div.warning {
     padding: 2px;
     font-size: 12px;
   }
@@ -638,15 +654,15 @@ table.cmc_stats {
       display: inline-block;
 
       td {
-	font-size: 11px;
+        font-size: 11px;
 
-	&.tuple_td:nth-of-type(2) {
-	  padding-left: 8px;
-	}
+        &.tuple_td:nth-of-type(2) {
+          padding-left: 8px;
+        }
 
-	&.tuple_left {
-	  padding-right: 4px;
-	}
+        &.tuple_left {
+          padding-right: 4px;
+        }
       }
 
       span.title {

@@ -2,4 +2,11 @@
   "tabWidth": 4,
   "bracketSpacing": false,
   "arrowParens": "avoid",
+  "overrides": [{
+    "files": "*.scss",
+    "options": {
+      "printWidth": 100,
+      "tabWidth": 2,
+    }
+  }]
 }

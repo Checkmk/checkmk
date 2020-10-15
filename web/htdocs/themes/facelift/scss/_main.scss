@@ -20,7 +20,8 @@
 '-------------------------------------------------------------------------*/
 
 /* Change some general defaults of HTML that we do not like */
-td, th {
+td,
+th {
   vertical-align: top;
 }
 
@@ -38,7 +39,12 @@ th {
 }
 
 /* Default font size for the complete Multisite GUI */
-button, input, td, th, select, textarea {
+button,
+input,
+td,
+th,
+select,
+textarea {
   font-size: 12px;
 }
 
@@ -47,7 +53,9 @@ input.number {
 }
 
 /* Styling for input elements */
-input, select, textarea {
+input,
+select,
+textarea {
   padding: 3px;
   margin-top: 0;
   font-family: arial, helvetica, sans-serif;
@@ -65,19 +73,20 @@ select:not([multiple]) {
   background-position: right 50%;
   background-repeat: no-repeat;
   background-size: 20px 11px;
-  -webkit-appearance: none;  /* Removes default chrome and safari style */
-  -moz-appearance: none;     /* Removes default style Firefox */
+  -webkit-appearance: none; /* Removes default chrome and safari style */
+  -moz-appearance: none; /* Removes default style Firefox */
 }
 
 div.popup_menu select:not([multiple]) {
-  background: $popup-menu-select-bg-color url("images/select_arrow.png") right 10% / 20px 11px no-repeat;
+  background: $popup-menu-select-bg-color url("images/select_arrow.png") right 10% / 20px 11px
+    no-repeat;
 }
 
 select::-ms-expand {
   display: none;
 }
 
-input[type=file] {
+input[type="file"] {
   color: rgb(0, 0, 0);
 }
 
@@ -85,7 +94,9 @@ form {
   margin: 0;
 }
 
-input:hover, select:hover, textarea:hover,
+input:hover,
+select:hover,
+textarea:hover,
 input[type="checkbox"]:hover + label:before {
   background-color: $input-hover-bg-color;
 }
@@ -133,7 +144,6 @@ select.icon option {
   background-size: 18px;
 }
 
-
 // TODO : Figure out where these can be found in the front end
 input.button,
 table.vs_duallist a.control,
@@ -169,16 +179,19 @@ table.vs_duallist a.control,
 
   &:active {
     background-color: rgb(59, 102, 120);
-    border-color:  rgb(34, 65, 77) rgb(134, 169, 184) rgb(134, 169, 184) rgb(34, 64, 77);
+    border-color: rgb(34, 65, 77) rgb(134, 169, 184) rgb(134, 169, 184) rgb(34, 64, 77);
     box-shadow: inset 0 0 0.5px rgb(68, 68, 68);
   }
 }
 
 input.button,
-input.button:not([type=text]),
-input.button:not([type=password]) {
-  &[disabled="disabled"], &:disabled {
-    &, &:hover, &:active {
+input.button:not([type="text"]),
+input.button:not([type="password"]) {
+  &[disabled="disabled"],
+  &:disabled {
+    &,
+    &:hover,
+    &:active {
       cursor: initial;
       background-color: rgb(19, 211, 137);
       filter: grayscale(100%);
@@ -192,7 +205,8 @@ input.button:not([type=password]) {
 }
 
 input.button.hot {
-  &, &:active {
+  &,
+  &:active {
     color: $hot-font-color;
     background-color: rgb(17, 189, 123);
     border: 1px solid rgb(17, 189, 123);
@@ -234,7 +248,8 @@ input.button.hot {
     box-shadow: none;
   }
 
-  a, .wato div.globalvars & a {
+  a,
+  .wato div.globalvars & a {
     display: block;
     width: 30px;
     color: $toggle-switch-font-color;
@@ -244,7 +259,8 @@ input.button.hot {
   }
 
   &.on {
-    a, .wato div.globalvars & a {
+    a,
+    .wato div.globalvars & a {
       float: right;
       background-color: $toggle-switch-on-bg-color;
       border: $toggle-switch-on-border;
@@ -252,13 +268,15 @@ input.button.hot {
   }
 
   &.off {
-    a, .wato div.globalvars & a {
+    a,
+    .wato div.globalvars & a {
       background-color: $toggle-switch-off-bg-color;
       border: $toggle-switch-off-border;
     }
   }
 
-  a:hover, .wato div.globalvars & a:hover {
+  a:hover,
+  .wato div.globalvars & a:hover {
     /* TODO: create a better hover effect */
     text-decoration: none;
     opacity: 0.5;
@@ -285,8 +303,8 @@ a.button {
   border-color: rgb(221, 221, 221) rgb(136, 136, 136) rgb(51, 51, 51) rgb(221, 221, 221);
   border-style: solid;
   border-width: 1px;
-  -webkit-border-radius: 4px;
   border-radius: 4px;
+  -webkit-border-radius: 4px;
 }
 
 /*for IE8 */
@@ -301,7 +319,6 @@ input[type="submit"]:focus {
 img.icon {
   width: 20px;
   height: 20px;
-
 }
 
 span.emblem {
@@ -316,7 +333,9 @@ img.emblem {
   height: 10px;
 }
 
-a.inline img.icon, img.icon.inline, div.icon {
+a.inline img.icon,
+img.icon.inline,
+div.icon {
   width: 16px;
   height: 16px;
   vertical-align: middle;
@@ -358,14 +377,14 @@ img.treeangle {
   vertical-align: middle;
   cursor: pointer;
   filter: $treeangle-img-filter;
-  transition: transform .2s ease-in-out;
-  -webkit-transition: -webkit-transform .2s ease-in-out;
-  -moz-transition: -moz-transform .2s ease-in-out;
+  transition: transform 0.2s ease-in-out;
+  -webkit-transition: -webkit-transform 0.2s ease-in-out;
+  -moz-transition: -moz-transform 0.2s ease-in-out;
 
   &.open {
+    transform: rotate(90deg);
     -webkit-transform: rotate(90deg);
     -moz-transform: rotate(90deg);
-    transform: rotate(90deg);
   }
 
   &.nform {
@@ -391,7 +410,7 @@ b.treeangle.title {
   }
 }
 
-img.treeangle+.treeangle.title {
+img.treeangle + .treeangle.title {
   display: inline-block;
 }
 
@@ -413,8 +432,6 @@ ul.closed {
   display: none;
 }
 
-
-
 /*-------------------------------------------------------------------------.
 |             __  __                                                       |
 |            |  \/  | ___  ___ ___  __ _  __ _  ___  ___                   |
@@ -426,7 +443,11 @@ ul.closed {
 | Styles for messages-boxes in various situations (called by htmllib.py)   |
 '-------------------------------------------------------------------------*/
 
-div.really, div.success, div.error, div.message, div.warning {
+div.really,
+div.success,
+div.error,
+div.message,
+div.warning {
   padding: 0.5em 1em;
   margin: 0.25em;
   border-radius: 1ex;
@@ -438,7 +459,9 @@ div.really {
   border-color: rgb(136, 0, 0);
 }
 
-div.success { background-color: $base-color; }
+div.success {
+  background-color: $base-color;
+}
 
 div.message {
   color: rgb(0, 0, 0);
@@ -451,7 +474,8 @@ div.error {
   background-color: $color-state-2-background;
   border-color: rgb(238, 68, 0);
 
-  a, a:link {
+  a,
+  a:link {
     color: rgb(255, 255, 255);
   }
 
@@ -466,7 +490,8 @@ body.main div.warning {
   background-color: $yellow;
   border-color: rgb(255, 204, 0);
 
-  a, a:link {
+  a,
+  a:link {
     color: $black;
   }
 }
@@ -474,7 +499,8 @@ body.main div.warning {
 /* Warnings embedded in tables without margins and padding, those are
    just needed for body */
 
-td div.warning, td > div.error {
+td div.warning,
+td > div.error {
   padding: 5px 10px;
   margin-top: 3px;
   margin-bottom: 3px;
@@ -603,7 +629,7 @@ table.valuespec_listof {
 
   &.regular {
     > tbody > tr > td {
-      padding: 3px 0 5px 0;
+      padding: 3px 0 5px;
       border-bottom: 1px solid rgb(153, 187, 204);
 
       &:first-child {
@@ -648,31 +674,37 @@ div.valuespec_listof_floating_container {
       vertical-align: top;
 
       &.vlof_buttons img {
-	margin-top: 4px;
+        margin-top: 4px;
       }
 
       &.vlof_content .tagify {
-	tag {
-	  margin: 4px 5px 2px 4px;
+        tag {
+          margin: 4px 5px 2px 4px;
 
-	  x {
-	    display: none;
-	  }
+          x {
+            display: none;
+          }
 
-	  > div {
-	    padding-right: .3em;
-	  }
-	}
+          > div {
+            padding-right: 0.3em;
+          }
+        }
 
-	span.tagify__input {
-	  margin: 3px 5px 2px 4px;
-	}
+        span.tagify__input {
+          margin: 3px 5px 2px 4px;
+        }
       }
     }
   }
 }
 
-table.nform table.valuespec_listof div.valuespec_listof_floating_container > table > tbody > tr > td {
+table.nform
+  table.valuespec_listof
+  div.valuespec_listof_floating_container
+  > table
+  > tbody
+  > tr
+  > td {
   border-bottom: none;
 }
 
@@ -694,7 +726,7 @@ table.valuespec_listof.regular > tbody > tr {
 
 table.vs_duallist {
   td {
-  width: 50%;
+    width: 50%;
 
     select {
       width: 100%;
@@ -703,7 +735,7 @@ table.vs_duallist {
     }
 
     &.head {
-      text-align:center;
+      text-align: center;
     }
   }
 
@@ -760,7 +792,7 @@ table.listchoice {
       height: 10px;
     }
 
-    input[type=checkbox] {
+    input[type="checkbox"] {
       height: 12px;
       margin: 0;
     }
@@ -778,12 +810,12 @@ div.popup {
   z-index: 200;
   width: -moz-max-content;
   width: intrinsic;
-  padding:10px;
+  padding: 10px;
   color: rgb(255, 255, 255);
   background-color: rgb(69, 130, 157);
   border: 1px solid rgb(255, 255, 255);
-  -webkit-border-radius: 5px;
   border-radius: 5px;
+  -webkit-border-radius: 5px;
 
   span {
     display: block;
@@ -800,7 +832,8 @@ div#hover_menu {
   width: auto;
   color: rgb(0, 0, 0);
 
-  div.error, div.message {
+  div.error,
+  div.message {
     width: 350px;
     margin: 0;
   }
@@ -902,9 +935,13 @@ div.popup_trigger.colorpicker div.popup_menu {
   margin-top: 2px;
   color: $font-color;
 
-  input, select, textarea,
-  div.snapin select, div.snapin & select,
-  div.snapin textarea, div.snapin & textarea,
+  input,
+  select,
+  textarea,
+  div.snapin select,
+  div.snapin & select,
+  div.snapin textarea,
+  div.snapin & textarea,
   #mk_side_search_field {
     margin: 0;
     margin-bottom: 8px;
@@ -931,14 +968,19 @@ div.popup_trigger.colorpicker .popup_menu {
 | Pages showing the Check_MK change log (werks.py)                         |
 '-------------------------------------------------------------------------*/
 
-tr.data td.werklevel, tr.data td.werkclass, tr.data td.werkcomp {
+tr.data td.werklevel,
+tr.data td.werkclass,
+tr.data td.werkcomp {
   width: 100px;
   text-align: center;
   white-space: nowrap;
 }
 
 table.data.werks {
-  td.werkclassfeature, td.werkclassfix, td.werklevel2, td.werklevel3,
+  td.werkclassfeature,
+  td.werkclassfix,
+  td.werklevel2,
+  td.werklevel3,
   td.werkcompincomp_ack {
     color: $dark-font-color;
   }
@@ -1034,7 +1076,6 @@ body.main .popup_menu table.werks td span {
   text-decoration: underline;
 }
 
-
 /* NOWIKI formatting in Werks */
 td.nowiki {
   h3 {
@@ -1068,7 +1109,8 @@ td.nowiki {
     border: 1px solid rgb(0, 0, 0);
     border-collapse: collapse;
 
-    table td, table th {
+    table td,
+    table th {
       border: 1px solid rgb(136, 136, 136);
     }
   }
@@ -1081,7 +1123,7 @@ table.modifydowntimes > tbody > tr {
     vertical-align: middle;
   }
 
-  &:nth-child(1) > td:nth-child(1)  {
+  &:nth-child(1) > td:nth-child(1) {
     padding-top: 0;
   }
 }
@@ -1091,7 +1133,6 @@ table.modifydowntimes > tbody > tr {
 }
 
 .select2-container--default {
-
   .select2-results {
     color: rgb(0, 0, 0);
   }
@@ -1119,57 +1160,57 @@ table.modifydowntimes > tbody > tr {
     background-color: $select2-dropdown-bg-color;
   }
 
-  .select2-results__option[aria-selected=true] {
+  .select2-results__option[aria-selected="true"] {
     background-color: $select2-dropdown-bg-color;
   }
 
   .select2-results__option--highlighted[aria-selected] {
-    background-color: $select2-dropdown-highlight-color;
     color: $font-color;
+    background-color: $select2-dropdown-highlight-color;
   }
 }
 
 div.vs_autocomplete {
-    height: 22px;
+  height: 22px;
 }
 
-div.vs_autocomplete .error{
+div.vs_autocomplete .error {
   padding: 0.5em 2em;
   margin: 0;
 }
 
 span.vs_autocomplete .select2-dropdown {
-    border: 0px;
-    position: inherit;
+  position: inherit;
+  border: none;
 }
 
 span.vs_autocomplete .select2-dropdown--below {
-    top: -8px;
+  top: -8px;
 }
 
 span.vs_autocomplete .select2-search--dropdown {
-    padding: 0px;
-    margin: 0px;
+  padding: 0;
+  margin: 0;
 }
 
 span.vs_autocomplete .select2-search__field {
-    height: 22px;
-    padding-left: 6px;
-    border-radius: 4px;
+  height: 22px;
+  padding-left: 6px;
+  border-radius: 4px;
 }
 
 span.vs_autocomplete .select2-results__options {
-    border: 1px solid #aaa;
-    border-top: 0px;
-    border-radius: 4px;
+  border: 1px solid #aaa;
+  border-top: 0;
+  border-radius: 4px;
 }
 
 div.metricchoice div.vs_autocomplete .select2-dropdown--below {
-    top: -11px;
+  top: -11px;
 }
 
 div.vs_autocomplete > .select2-container--below > .selection > span {
-    display: none;
+  display: none;
 }
 
 div.vs_age.inline {
@@ -1189,21 +1230,21 @@ html {
   font-size: $font-size-global;
 }
 
-.link, .title {
+.link,
+.title {
   display: inline-block;
   padding: 0 2px; /* affects spacing in sidebar plugins */
   font-size: $font-size-default;
   font-weight: $font-weight-default;
   letter-spacing: $letter-spacing-table;
   color: $font-color;
-  transition: color .15s ease-in-out;
+  transition: color 0.15s ease-in-out;
 }
 
 div.graph {
   border: 1px solid $color-table-border;
   border-radius: $theme-border-radius;
   box-shadow: none;
-
 
   &.preview {
     padding: 4px !important;
@@ -1261,10 +1302,14 @@ div.content {
   width: 60px !important;
 }
 
-.bi_rule_tree img.treeangle, .invtree img.treeangle,
-.grouped_row_header img.treeangle.nform, .aggrtree img.treeangle {
-  &, body.main & {
-    &.open, &.closed {
+.bi_rule_tree img.treeangle,
+.invtree img.treeangle,
+.grouped_row_header img.treeangle.nform,
+.aggrtree img.treeangle {
+  &,
+  body.main & {
+    &.open,
+    &.closed {
       margin: 1px 4px 0;
     }
   }
@@ -1344,8 +1389,11 @@ table.data td > div:last-child div.graph_with_timeranges {
   margin-bottom: 8px;
 }
 
-div.metricchoice select, div.metricchoice input, div.metricchoice select,
-div.metricchoice textarea, div.metricchoice #mk_side_search_field {
+div.metricchoice select,
+div.metricchoice input,
+div.metricchoice select,
+div.metricchoice textarea,
+div.metricchoice #mk_side_search_field {
   margin: 4px 0;
 }
 
@@ -1353,7 +1401,9 @@ td.title {
   display: table-cell;
 }
 
-#form_search input, #form_search select, #form_search textarea,
+#form_search input,
+#form_search select,
+#form_search textarea,
 #form_search #mk_side_search_field {
   width: auto;
   border: $primary-border;
@@ -1388,7 +1438,9 @@ th.header_state {
   }
 }
 
-.hot a, .hot body.main .popup_menu span, body.main .popup_menu .hot span {
+.hot a,
+.hot body.main .popup_menu span,
+body.main .popup_menu .hot span {
   color: $hot-font-color;
   background-color: $hot-bg-color;
   border-color: $color-nuance-16;
@@ -1403,14 +1455,23 @@ div.info {
 }
 
 .age {
-  input, select, textarea, div.snapin select, div.snapin & select,
-  div.snapin textarea, div.snapin & textarea, #mk_side_search_field {
+  input,
+  select,
+  textarea,
+  div.snapin select,
+  div.snapin & select,
+  div.snapin textarea,
+  div.snapin & textarea,
+  #mk_side_search_field {
     box-sizing: content-box;
   }
 }
 
-body.main a, body.main .popup_menu span, body.main .popup_menu a,
-body.main a:link, body.main a:visited {
+body.main a,
+body.main .popup_menu span,
+body.main .popup_menu a,
+body.main a:link,
+body.main a:visited {
   color: $font-color;
 }
 
@@ -1421,7 +1482,6 @@ img.glass {
 tr.hidden {
   display: none;
 }
-
 
 .simplebar-scrollbar::before {
   background: $simplebar-scrollbar-color;

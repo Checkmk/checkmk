@@ -75,11 +75,13 @@ body.side {
       text-decoration: none;
 
       &:hover img {
-        opacity: .5;
+        opacity: 0.5;
       }
     }
 
-    img { margin-bottom: 6px; }
+    img {
+      margin-bottom: 6px;
+    }
   }
 
   #side_content {
@@ -151,16 +153,25 @@ body.main .popup_menu #side_header > span {
   text-align: center;
   cursor: pointer;
 
-  &:not(.folded) { color: $success; }
+  &:not(.folded) {
+    color: $success;
+  }
 
   img {
     margin-bottom: 8px;
 
-    &:hover { opacity: 1; }
+    &:hover {
+      opacity: 1;
+    }
   }
 
-  &:not(.folded) img.folded { display: none; }
-  &.folded img:not(.folded) { display: none; }
+  &:not(.folded) img.folded {
+    display: none;
+  }
+
+  &.folded img:not(.folded) {
+    display: none;
+  }
 }
 
 #side_version {
@@ -203,7 +214,8 @@ span#msg_label {
 }
 
 /* General layout of snapins */
-body.side div.snapin, div.add_snapin div.snapin  {
+body.side div.snapin,
+div.add_snapin div.snapin {
   width: 100%;
   padding: (0.75 * $spacing) (2 * $spacing);
   overflow: hidden;
@@ -260,7 +272,7 @@ div.snapin {
 
   span.moresnapin {
     display: inline-block;
-    width: 16px;  /* FIXME: get rid of the animation that uses 4 images */
+    width: 16px; /* FIXME: get rid of the animation that uses 4 images */
     margin-right: 4px;
 
     img {
@@ -277,7 +289,7 @@ div.snapin {
       width: 16px;
       height: 16px;
       padding: 0;
-      margin-top: -9px;  /* HACK to align the button */
+      margin-top: -9px; /* HACK to align the button */
     }
   }
 
@@ -327,9 +339,13 @@ div.snapin {
     color: $font-color;
     text-decoration: none;
 
-    &:hover { text-decoration: underline; }
+    &:hover {
+      text-decoration: underline;
+    }
 
-    &.iconlink img:not(.emblem) { margin-right: 5px; }
+    &.iconlink img:not(.emblem) {
+      margin-right: 5px;
+    }
   }
 
   ul {
@@ -495,7 +511,6 @@ div#snapinDragIndicator {
   box-shadow: 0 0 3px rgb(255, 255, 255);
 }
 
-
 /*-------------------------------------------------------------------------.
 |          _       _     _                         _                       |
 |         / \   __| | __| |  ___ _ __   __ _ _ __ (_)_ __  ___             |
@@ -509,7 +524,8 @@ div#snapinDragIndicator {
 
 div.add_snapin {
   div.snapinadder {
-    &, &:hover {
+    &,
+    &:hover {
       float: left;
       width: 270px;
       height: 220px;
@@ -519,10 +535,11 @@ div.add_snapin {
       border: 1px solid $snapin-bg-color;
       border-radius: 5px;
       box-shadow: 0 0 0 rgba(0, 0, 0, 0.1);
-      transition: box-shadow .15s 0s ease-in-out;
+      transition: box-shadow 0.15s 0s ease-in-out;
     }
 
-    *, &:hover * {
+    *,
+    &:hover * {
       color: $font-color;
     }
 
@@ -562,7 +579,8 @@ div.add_snapin {
       }
     }
 
-    .snapin b, .head b {
+    .snapin b,
+    .head b {
       font-weight: $font-weight-bold;
     }
 
@@ -589,7 +607,6 @@ div.add_snapin {
     }
   }
 }
-
 
 /*-Popup Msg-----------------------------------------------------------.
 |           ____                           __  __                      |

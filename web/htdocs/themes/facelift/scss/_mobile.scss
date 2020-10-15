@@ -5,10 +5,14 @@
 
 /* Styles for Check_MK mobile interface */
 body.mobile {
-  div.really, div.success, div.error, div.message, div.warning {
+  div.really,
+  div.success,
+  div.error,
+  div.message,
+  div.warning {
     width: 80%;
     padding: 0.5ex 1em;
-    margin: 1em 0 3em 0;
+    margin: 1em 0 3em;
     text-align: center;
     border-style: solid;
     border-width: 2px;
@@ -124,8 +128,9 @@ body.mobile {
     height: 14px;
   }
 
-  .ui-header .ui-title, .ui-footer .ui-title {
-    margin: .6em 46px .8em;
+  .ui-header .ui-title,
+  .ui-footer .ui-title {
+    margin: 0.6em 46px 0.8em;
   }
 
   .ui-li-aside.state {
@@ -143,7 +148,8 @@ body.mobile {
     font-size: 25px;
   }
 
-  #loginhead, #loginfoot {
+  #loginhead,
+  #loginfoot {
     color: rgb(68, 68, 68);
     text-align: center;
   }

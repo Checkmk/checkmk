@@ -7,19 +7,24 @@
 body.dashboard {
   overflow: hidden;
 
-  &.main div#main_page_content { padding-bottom: 0; }
+  &.main div#main_page_content {
+    padding-bottom: 0;
+  }
 
   #menu_entry_toggle_edit img.icon {
     background-size: 16px;
   }
 
-  #menu_shortcut_toggle_edit, #menu_suggestion_toggle_edit {
+  #menu_shortcut_toggle_edit,
+  #menu_suggestion_toggle_edit {
     img.icon {
       background-size: 20px;
     }
   }
 
-  #menu_shortcut_toggle_edit, #menu_entry_toggle_edit, #menu_suggestion_toggle_edit {
+  #menu_shortcut_toggle_edit,
+  #menu_entry_toggle_edit,
+  #menu_suggestion_toggle_edit {
     img.icon {
       background-image: url("images/icon_dashboard_edit.png");
       background-repeat: no-repeat;
@@ -67,7 +72,7 @@ div.dashlet {
       color: $primary-font-color;
 
       &[id*="dashlet_graph"] img[id*="dashlet_img"] {
-	filter: $pnp4nagios-img-filter;
+        filter: $pnp4nagios-img-filter;
       }
     }
   }
@@ -98,10 +103,10 @@ div.dashlet {
     margin: 0;
     overflow: hidden;
     font-size: $font-size-default;
-    text-align: center;
     font-weight: 500;
     letter-spacing: 2px;
     color: $font-color;
+    text-align: center;
     white-space: nowrap;
     background: $headline-color;
     border: 1px solid $color-table-border;
@@ -150,25 +155,27 @@ div.dashlet {
 
   table.hoststats {
     position: absolute;
+    top: -1px;
     right: 10px;
     width: 135px;
     height: 142px;
     margin-top: 0;
     border-collapse: collapse;
     border-spacing: 0;
-    top: -1px;
 
     &.narrow {
       /* TODO: Remove this style after decoupling from classic theme */
       margin-top: 0;
 
-      th, td {
+      th,
+      td {
         font-size: 11px;
         font-weight: normal;
       }
     }
 
-    th, td {
+    th,
+    td {
       padding: 0 4px;
       vertical-align: middle;
       border-color: rgb(73, 138, 166);
@@ -211,9 +218,9 @@ div.dashlet {
 }
 
 div.dashlet > div.title span {
-  padding-left: 0; /* left align with titles of contained views */
   position: relative;
   top: 4px;
+  padding-left: 0; /* left align with titles of contained views */
 }
 
 /* Overview dashlet is not selectable TODO: Check if this style can be dropped */
@@ -236,7 +243,8 @@ div.dashlet_inner div.stats {
   margin: 0;
   background-color: $bg-color-secondary;
 
-  table th, table td {
+  table th,
+  table td {
     background: $dashboard-stats-bg-color;
     border-top: 1px solid $dashlet-stats-border-top-color;
     border-bottom: none;
@@ -254,7 +262,7 @@ body.main.dashlet {
 
     tr.data {
       border-bottom: $dashboard-tr-border-bottom;
-      transition: .15s ease-in-out;
+      transition: 0.15s ease-in-out;
     }
   }
 
@@ -276,7 +284,7 @@ body.main.dashlet {
 
       &.state {
         border-top: none;
-	border-top-color: $state-border-top-color;
+        border-top-color: $state-border-top-color;
       }
     }
 
@@ -290,21 +298,21 @@ body.main.dashlet {
   }
 }
 
-div[id^=dashlet] div.dashlet_inner > div {
+div[id^="dashlet"] div.dashlet_inner > div {
   border: 1px solid $color-table-border;
   border-radius: $dashlet-title-border-radius;
   box-sizing: border-box;
-  transition: .15s ease-in-out;
+  transition: 0.15s ease-in-out;
 }
 
-div[id^=dashlet] div.title + div.dashlet_inner > div {
+div[id^="dashlet"] div.title + div.dashlet_inner > div {
   border-top: none;
   border-radius: 0;
 }
 
-iframe[id^=dashlet_iframe] {
+iframe[id^="dashlet_iframe"] {
   background: $bg-color-secondary;
-  transition: .15s ease-in-out;
+  transition: 0.15s ease-in-out;
 }
 
 /*
@@ -337,13 +345,13 @@ div.dashlet.edit {
     height: 14px;
     cursor: pointer;
     /* background-color: rgba(0, 0, 0, 0.7); */
-    background-image: url(images/dashlet_edit_lo.png);
+    background-image: url("images/dashlet_edit_lo.png");
     border-radius: 5px;
     /* IE < 9 */
     filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
 
     &:hover {
-      background-image: url(images/dashlet_edit_hi.png);
+      background-image: url("images/dashlet_edit_hi.png");
     }
   }
 
@@ -356,13 +364,13 @@ div.dashlet.edit {
     height: 14px;
     cursor: pointer;
     /* background-color: rgba(0, 0, 0, 0.7); */
-    background-image: url(images/dashlet_clone_lo.png);
+    background-image: url("images/dashlet_clone_lo.png");
     border-radius: 5px;
     /* IE < 9 */
     filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
 
     &:hover {
-      background-image: url(images/dashlet_clone_hi.png);
+      background-image: url("images/dashlet_clone_hi.png");
     }
   }
 
@@ -375,13 +383,13 @@ div.dashlet.edit {
     height: 14px;
     cursor: pointer;
     /* background-color: rgba(0, 0, 0, 0.7); */
-    background-image: url(images/dashlet_del_lo.png);
+    background-image: url("images/dashlet_del_lo.png");
     border-radius: 5px;
     /* IE < 9 */
     filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
 
     &:hover {
-      background-image: url(images/dashlet_del_hi.png);
+      background-image: url("images/dashlet_del_hi.png");
     }
   }
 
@@ -392,17 +400,17 @@ div.dashlet.edit {
     height: 14px;
     cursor: auto;
     /* background-color: rgba(255, 255, 255, 0.7); */
-    background-image: url(images/dashlet_anchor_lo.png);
+    background-image: url("images/dashlet_anchor_lo.png");
     border-radius: 5px;
     /* IE < 9 */
     filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
 
     &.off {
       cursor: pointer;
-      background-image: url(images/dashlet_anchor_off.png);
+      background-image: url("images/dashlet_anchor_off.png");
 
       &:hover {
-        background-image: url(images/dashlet_anchor_hi.png);
+        background-image: url("images/dashlet_anchor_hi.png");
       }
     }
 
@@ -437,7 +445,7 @@ div#dashboard.grid {
   cursor: pointer;
   border: 1px solid rgb(102, 102, 102);
   border-radius: 2px;
-  box-shadow: .5px .5px 2px rgb(51, 51, 51);
+  box-shadow: 0.5px 0.5px 2px rgb(51, 51, 51);
 }
 
 .sizer0 {
@@ -498,7 +506,8 @@ div#dashboard.grid {
 }
 
 /* arrow on left */
-.sizer0.anchor1:before, .sizer0.anchor2:before {
+.sizer0.anchor1:before,
+.sizer0.anchor2:before {
   top: -7px;
   left: -11px;
   width: 13px;
@@ -506,16 +515,19 @@ div#dashboard.grid {
   background-repeat: no-repeat;
 }
 
-.sizer0.anchor1.max:before, .sizer0.anchor2.max:before {
+.sizer0.anchor1.max:before,
+.sizer0.anchor2.max:before {
   background-image: url("images/dashlet_arrow_l_max.png");
 }
 
-.sizer0.anchor1.grow:before, .sizer0.anchor2.grow:before {
+.sizer0.anchor1.grow:before,
+.sizer0.anchor2.grow:before {
   background-image: url("images/dashlet_arrow_l_grow.png");
 }
 
 /* arrow on right */
-.sizer0.anchor0:before, .sizer0.anchor3:before {
+.sizer0.anchor0:before,
+.sizer0.anchor3:before {
   top: -7px;
   left: 100%;
   width: 12px;
@@ -523,16 +535,19 @@ div#dashboard.grid {
   background-repeat: no-repeat;
 }
 
-.sizer0.anchor0.max:before, .sizer0.anchor3.max:before {
+.sizer0.anchor0.max:before,
+.sizer0.anchor3.max:before {
   background-image: url("images/dashlet_arrow_r_max.png");
 }
 
-.sizer0.anchor0.grow:before, .sizer0.anchor3.grow:before {
+.sizer0.anchor0.grow:before,
+.sizer0.anchor3.grow:before {
   background-image: url("images/dashlet_arrow_r_grow.png");
 }
 
 /* arrow at top */
-.sizer1.anchor2:before, .sizer1.anchor3:before {
+.sizer1.anchor2:before,
+.sizer1.anchor3:before {
   top: -10px;
   left: -7px;
   width: 23px;
@@ -540,16 +555,19 @@ div#dashboard.grid {
   background-repeat: no-repeat;
 }
 
-.sizer1.anchor2.max:before, .sizer1.anchor3.max:before {
+.sizer1.anchor2.max:before,
+.sizer1.anchor3.max:before {
   background-image: url("images/dashlet_arrow_t_max.png");
 }
 
-.sizer1.anchor2.grow:before, .sizer1.anchor3.grow:before {
+.sizer1.anchor2.grow:before,
+.sizer1.anchor3.grow:before {
   background-image: url("images/dashlet_arrow_t_grow.png");
 }
 
 /* arrow at bottom */
-.sizer1.anchor0:before, .sizer1.anchor1:before {
+.sizer1.anchor0:before,
+.sizer1.anchor1:before {
   bottom: -10px;
   left: -7px;
   width: 23px;
@@ -557,11 +575,13 @@ div#dashboard.grid {
   background-repeat: no-repeat;
 }
 
-.sizer1.anchor0.max:before, .sizer1.anchor1.max:before {
+.sizer1.anchor0.max:before,
+.sizer1.anchor1.max:before {
   background-image: url("images/dashlet_arrow_b_max.png");
 }
 
-.sizer1.anchor0.grow:before, .sizer1.anchor1.grow:before {
+.sizer1.anchor0.grow:before,
+.sizer1.anchor1.grow:before {
   background-image: url("images/dashlet_arrow_b_grow.png");
 }
 
@@ -584,11 +604,11 @@ div#dashboard.grid {
   height: auto;
   /* Should be unset in IE9+ I think. */
   filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+  transform: rotate(-90deg);
   -webkit-transform: rotate(-90deg);
   -moz-transform: rotate(-90deg);
   -ms-transform: rotate(-90deg);
   -o-transform: rotate(-90deg);
-  transform: rotate(-90deg);
 }
 
 /* left side */
@@ -686,9 +706,9 @@ div#dashboard.grid {
 }
 
 .dashlet.pnpgraph .dashlet_inner {
-  background-color: $dashlet-inner-bg-color;
   color: $primary-font-color;
   text-align: center;
+  background-color: $dashlet-inner-bg-color;
 }
 
 .dashlet.pnpgraph .graph {
@@ -719,32 +739,38 @@ div.dashlet.single_metric {
 
   div.single_metric g {
     &.state.svcstate {
-      &.state0 rect{
-          stroke: $color-state-success-background;
+      &.state0 rect {
+        stroke: $color-state-success-background;
       }
-      &.state1 rect{
-          stroke: $color-state-1-background;
+
+      &.state1 rect {
+        stroke: $color-state-1-background;
       }
-      &.state2 rect{
-          stroke: $color-state-2-background;
+
+      &.state2 rect {
+        stroke: $color-state-2-background;
       }
-      &.state3 rect{
-          stroke: $color-state-3-background;
+
+      &.state3 rect {
+        stroke: $color-state-3-background;
       }
     }
 
     &.state.svcstate {
-      &.state0 text{
-          fill: $color-state-success-background;
+      &.state0 text {
+        fill: $color-state-success-background;
       }
-      &.state1 text{
-          fill: $color-state-1-background;
+
+      &.state1 text {
+        fill: $color-state-1-background;
       }
-      &.state2 text{
-          fill: $color-state-2-background;
+
+      &.state2 text {
+        fill: $color-state-2-background;
       }
-      &.state3 text{
-          fill: $color-state-3-background;
+
+      &.state3 text {
+        fill: $color-state-3-background;
       }
     }
 
@@ -752,33 +778,45 @@ div.dashlet.single_metric {
       width: 100%;
 
       text {
-	&.state0, &.state0 > a, &.state0 > a:link {
-	  fill: $black;
-	}
+        &.state0,
+        &.state0 > a,
+        &.state0 > a:link {
+          fill: $black;
+        }
 
-	&.state-fill-font, &.no-state-color {
-	  &, > a {
-	    fill: $font-color !important;
-	  }
-	}
+        &.state-fill-font,
+        &.no-state-color {
+          &,
+          > a {
+            fill: $font-color !important;
+          }
+        }
 
-	&.state-fill-font {
-	  &.state0, &.state0 > a, &.state0 > a:link {
-	    fill: $color-state-success-background !important;
-	  }
+        &.state-fill-font {
+          &.state0,
+          &.state0 > a,
+          &.state0 > a:link {
+            fill: $color-state-success-background !important;
+          }
 
-	  &.state1, &.state1 > a, &.state1 > a:link {
-	    fill: $color-state-1-background !important;
-	  }
+          &.state1,
+          &.state1 > a,
+          &.state1 > a:link {
+            fill: $color-state-1-background !important;
+          }
 
-	  &.state2, &.state2 > a, &.state2 > a:link {
-	    fill: $color-state-2-background !important;
-	  }
+          &.state2,
+          &.state2 > a,
+          &.state2 > a:link {
+            fill: $color-state-2-background !important;
+          }
 
-	  &.state3, &.state3 > a, &.state3 > a:link {
-	    fill: $color-state-3-background !important;
-	  }
-	}
+          &.state3,
+          &.state3 > a,
+          &.state3 > a:link {
+            fill: $color-state-3-background !important;
+          }
+        }
       }
     }
   }
@@ -794,63 +832,75 @@ div.dashlet.single_metric {
       table-layout: fixed;
 
       td {
-	padding: 0;
-	text-align: center;
-	border-radius: 16px;
+        padding: 0;
+        text-align: center;
+        border-radius: 16px;
 
-	&.metric_value {
-	  position: relative;
-	  height: 100%;
-	  margin: 0 auto;
-	  text-align: center;
-	  border-radius: 16px;
+        &.metric_value {
+          position: relative;
+          height: 100%;
+          margin: 0 auto;
+          text-align: center;
+          border-radius: 16px;
 
-	  a {
-	    text-decoration: none;
-	    white-space: nowrap;
-	  }
+          a {
+            text-decoration: none;
+            white-space: nowrap;
+          }
 
-	  &.state0, &.state0 > a, &.state0 > a:link {
-	    color: $black;
-	  }
+          &.state0,
+          &.state0 > a,
+          &.state0 > a:link {
+            color: $black;
+          }
 
-	  &.state-color-font, &.no-state-color {
-	    &, > a {
-	      color: $font-color !important;
-	      background-color: transparent !important;
-	    }
-	  }
+          &.state-color-font,
+          &.no-state-color {
+            &,
+            > a {
+              color: $font-color !important;
+              background-color: transparent !important;
+            }
+          }
 
-	  &.state-color-font {
-	    &.state0, &.state0 > a, &.state0 > a:link {
-	      color: $color-state-success-background !important;
-	    }
+          &.state-color-font {
+            &.state0,
+            &.state0 > a,
+            &.state0 > a:link {
+              color: $color-state-success-background !important;
+            }
 
-	    &.state1, &.state1 > a, &.state1 > a:link {
-	      color: $color-state-1-background !important;
-	    }
+            &.state1,
+            &.state1 > a,
+            &.state1 > a:link {
+              color: $color-state-1-background !important;
+            }
 
-	    &.state2, &.state2 > a, &.state2 > a:link {
-	      color: $color-state-2-background !important;
-	    }
+            &.state2,
+            &.state2 > a,
+            &.state2 > a:link {
+              color: $color-state-2-background !important;
+            }
 
-	    &.state3, &.state3 > a, &.state3 > a:link {
-	      color: $color-state-3-background !important;
-	    }
-	  }
-	}
+            &.state3,
+            &.state3 > a,
+            &.state3 > a:link {
+              color: $color-state-3-background !important;
+            }
+          }
+        }
       }
 
       div.no_metric_match {
-	margin: 8px 0;
+        margin: 8px 0;
       }
 
       a {
-	text-decoration: none;
+        text-decoration: none;
 
-	&:hover {
-	  text-decoration: underline;
-	}
+        &:hover {
+          text-decoration: underline;
+        }
       }
     }
   }

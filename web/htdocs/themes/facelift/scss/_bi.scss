@@ -30,9 +30,11 @@
 tr.odd0 .aggrtree ul.subtree {
   border-color: rgb(204, 204, 204);
 }
+
 tr.even0 .aggrtree ul.subtree {
   border-color: rgb(170, 170, 170);
 }
+
 .aggrtree ul.subtree li {
   padding: 0;
   padding-bottom: 1px;
@@ -95,12 +97,15 @@ table.aggrtree {
   width: 100%;
   border-collapse: collapse;
 }
+
 table.aggrtree td.leaf.odd {
   background-color: rgb(224, 224, 224);
 }
+
 table.aggrtree td.leaf.even {
   background-color: rgb(240, 240, 240);
 }
+
 table.aggrtree td.node {
   background-color: rgb(232, 232, 232);
 }
@@ -108,30 +113,37 @@ table.aggrtree td.node {
 td.aggrtree_box {
   line-height: 22px;
 }
+
 .bibox_box {
   padding: 1px 3px;
-  margin: 0 0 0 0;
+  margin: 0;
   margin-right: 3px;
   cursor: pointer;
-  border-color: black;
+  border-color: #000;
   border-style: solid;
   border-width: 1px;
 }
+
 .bibox_box.open.noleaf {
   box-shadow: inset 0.5px 0.5px 3px rgb(68, 68, 68);
 }
+
 .bibox_box.noleaf:hover {
   border-style: dashed;
 }
+
 .bibox_box.closed.noleaf {
   box-shadow: 0.5px 0.5px 3px rgb(0, 0, 0);
 }
+
 .bibox_box.leaf {
-  border-color: white;
+  border-color: #fff;
 }
+
 .bibox {
   padding: 0;
 }
+
 table.aggrtree.ltr td {
   padding: 3px;
   border: 1px solid rgb(204, 204, 204);

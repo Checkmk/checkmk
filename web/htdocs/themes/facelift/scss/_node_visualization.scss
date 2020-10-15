@@ -22,11 +22,13 @@
   pointer-events: none;
 }
 
-.topology_center, .topology_remote {
+.topology_center,
+.topology_remote {
   fill: transparent;
 }
 
-#topology_filters div.floatfilter, #topology_filters input#search {
+#topology_filters div.floatfilter,
+#topology_filters input#search {
   pointer-events: all;
   background-color: $topology-filter-bg-color;
   border-color: $topology-filter-border-color;
@@ -52,18 +54,17 @@ div.node_vis {
     top: 25px;
   }
 
-  #toolbar #toolbar_controls{
+  #toolbar #toolbar_controls {
     position: absolute;
     top: 16px;
     left: 280px;
     display: flex;
 
     #custom {
-        display: flex;
-        flex-direction: column;
+      display: flex;
+      flex-direction: column;
     }
   }
-
 
   .togglebutton {
     width: 29px;
@@ -81,7 +82,7 @@ div.node_vis {
       border-color: $node-vis-toggle-down-bg-color; // light grey
 
       img {
-	left: 0;
+        left: 0;
       }
     }
 
@@ -91,18 +92,20 @@ div.node_vis {
   }
 
   .node_element .growth_root {
-      stroke: $node-vis-growth-root-color;
-      stroke-width: 1;
-   }
+    stroke: $node-vis-growth-root-color;
+    stroke-width: 1;
+  }
 
-  div.box, img.box {
+  div.box,
+  img.box {
     background-color: $bg-color-default;
     border: $node-vis-box-border;
     border-radius: 4px;
     box-shadow: $node-vis-box-shadow;
   }
 
-  img.layouting_icon, img.node_icon {
+  img.layouting_icon,
+  img.node_icon {
     width: 24px;
     height: 24px;
   }
@@ -150,12 +153,12 @@ div.node_vis {
 
   /* topology depth */
   div.topology_slider {
-      padding-top: 8px;
-      padding-right: 8px;
+    padding-top: 8px;
+    padding-right: 8px;
   }
 
   div.topology_slider input {
-      width: 80px;
+    width: 80px;
   }
 
   /* datasources */
@@ -222,11 +225,11 @@ div.node_vis {
       filter: $node-vis-history-filter;
 
       &.disabled {
-	opacity: 0.3;
+        opacity: 0.3;
       }
 
       &:hover {
-	cursor: pointer;
+        cursor: pointer;
       }
     }
   }
@@ -259,7 +262,8 @@ div.node_vis {
     }
   }
 
-  .node_element, .infobox_entry {
+  .node_element,
+  .infobox_entry {
     cursor: pointer;
   }
 
@@ -311,7 +315,7 @@ div.node_vis {
   }
 
   circle.state_circle {
-    stroke: black;
+    stroke: #000;
     stroke-width: 1;
   }
 
@@ -384,12 +388,12 @@ div.node_vis {
   }
 
   g.generic_stop_growth text.stop_growth_text {
-      display: unset;
+    display: unset;
   }
 
   g.generic_stop_growth circle {
     stroke-width: 1;
-    stroke: black;
+    stroke: #000;
   }
 
   g.generic_growth_possible circle {
@@ -410,8 +414,8 @@ div.node_vis {
     display: flex;
 
     div#togglebutton_layouting_toolbar + div.togglebox {
-      margin: 7px;
       padding-top: 6px;
+      margin: 7px;
       box-sizing: border-box;
     }
   }
@@ -419,17 +423,25 @@ div.node_vis {
 
 @media only screen and (max-width: 1350px) {
   div.node_vis {
-    #reset_pan_and_zoom { top: 88px; }
-    #translation_infobox { top: 124px; }
+    #reset_pan_and_zoom {
+      top: 88px;
+    }
+
+    #translation_infobox {
+      top: 124px;
+    }
   }
 }
 
 @media only screen and (max-width: 1150px) {
-  div.node_vis div#layouting_toolbar { top: 84px; }
+  div.node_vis div#layouting_toolbar {
+    top: 84px;
+  }
 }
 
-
-div.node_vis line.dashed, div.node_vis path.dashed, .style_indicator {
+div.node_vis line.dashed,
+div.node_vis path.dashed,
+.style_indicator {
   animation-duration: 25s;
   animation-iteration-count: infinite;
   animation-name: dash;
@@ -490,6 +502,6 @@ svg text {
 }
 
 div#main_window_layered {
-  height: 100%;
   width: 100%;
+  height: 100%;
 }

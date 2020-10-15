@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List
 import pytest  # type: ignore[import]
 
 from cmk.base.plugins.agent_based.logwatch_section import parse_logwatch
@@ -73,7 +72,7 @@ def test_logwatch_ec_inventory_single(monkeypatch, info, fwd_rule, expected_resu
     parsed = parse_logwatch(info)
 
     monkeypatch.setattr(logwatch_ec.logwatch, 'get_ec_rule_params', lambda: fwd_rule)
-    actual_result = sorted(logwatch_ec.discover_single(parsed), key=lambda s: s.item)
+    actual_result = sorted(logwatch_ec.discover_single(parsed), key=lambda s: s.item or "")
     assert actual_result == expected_result
 
 

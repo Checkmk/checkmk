@@ -6,11 +6,8 @@
 
 # pylint: disable=protected-access
 
-from typing import Dict, List
-
 import pytest  # type: ignore[import]
 
-import cmk.base.config
 from cmk.base.plugins.agent_based import logwatch
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State as state
@@ -83,7 +80,7 @@ def test_discovery_single(monkeypatch):
     monkeypatch.setattr(logwatch.logwatch, 'get_ec_rule_params', lambda: [])
     assert sorted(
         logwatch.discover_logwatch_single(SECTION1),
-        key=lambda s: s.item,
+        key=lambda s: s.item or "",
     ) == [
         Service(item='empty.log'),
         Service(item='my_other_log'),
@@ -153,7 +150,7 @@ def test_logwatch_discover_single_restrict(monkeypatch):
     )
     assert sorted(
         logwatch.discover_logwatch_single(SECTION2),
-        key=lambda s: s.item,
+        key=lambda s: s.item or "",
     ) == [
         Service(item='log1'),
         Service(item='log5'),

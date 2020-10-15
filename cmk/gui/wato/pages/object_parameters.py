@@ -119,7 +119,7 @@ class ModeObjectParameters(WatoMode):
         for groupname in sorted(rulespec_group_registry.get_host_rulespec_group_names()):
             maingroup = groupname.split("/")[0]
             for rulespec in sorted(rulespec_registry.get_by_group(groupname),
-                                   key=lambda x: x.title):
+                                   key=lambda x: x.title or ""):
                 if (rulespec.item_type == 'service') == (not self._service):
                     continue  # This rule is not for hosts/services
 

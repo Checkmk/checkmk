@@ -327,7 +327,8 @@ def test_inventory_common():
         ps_section.parse_ps(info),
         None,
         None,
-    )}.values(), key=lambda s: s.item) == sorted(PS_DISCOVERED_ITEMS, key=lambda s: s.item)  # type: ignore[attr-defined]
+    )}.values(), key=lambda s: s.item or "") == sorted(PS_DISCOVERED_ITEMS, key=lambda s: s.item or
+            "")  # type: ignore[attr-defined]
 
 
 CheckResult = tuple

@@ -136,9 +136,16 @@ def size_trend(
         return (None if levels[0] is None else levels[0] / 100 * size_mb,
                 None if levels[1] is None else levels[1] / 100 * size_mb)
 
+    def minn(a: Optional[float], b: Optional[float]) -> Optional[float]:
+        if a is None:
+            return b
+        if b is None:
+            return a
+        return min(a, b)
+
     def mins(levels1: Optional[Levels], levels2: Optional[Levels]) -> Levels:
-        return ((min(levels1[0], levels2[0]),
-                 min(levels1[1], levels2[1])) if levels1 and levels2 else  #
+        return ((minn(levels1[0], levels2[0]),
+                 minn(levels1[1], levels2[1])) if levels1 and levels2 else  #
                 levels1 or levels2 or (None, None))
 
     if levels.get("trend_perfdata"):

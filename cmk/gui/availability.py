@@ -1141,7 +1141,7 @@ def compute_availability_groups(what: AVObjectType, av_data: AVData,
             titled_groups.append((title, group_id))  # ACHTUNG
 
     # 3. Loop over all groups and render them
-    for title, group_id in sorted(titled_groups, key=lambda x: x[1]):
+    for title, group_id in sorted(titled_groups, key=lambda x: x[1] or ""):
         group_table = []
         for entry in av_data:
             group_ids: AVGroupIds = entry["groups"]

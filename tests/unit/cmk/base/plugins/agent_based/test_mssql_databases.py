@@ -31,7 +31,7 @@ def _get_section():
 def test_discover_mssql_databases(section):
 
     assert sorted(discover_mssql_databases(section),
-                  key=lambda s: s.item) == [  # type: ignore[attr-defined]
+                  key=lambda s: s.item or "") == [  # type: ignore[attr-defined]
                       Service(item='MSSQL_MSSQL46 CorreLog_Report_T'),
                       Service(item='MSSQL_MSSQL46 NOC_ALARM_T'),
                       Service(item='MSSQL_MSSQL46 master'),

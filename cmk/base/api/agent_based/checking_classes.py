@@ -155,7 +155,7 @@ class State(enum.Enum):
         # we are nice and handle ints
         best = min(
             (cls(int(s)) for s in args),
-            key=_sorted.get,
+            key=lambda s: _sorted[s],
         )
 
         return best

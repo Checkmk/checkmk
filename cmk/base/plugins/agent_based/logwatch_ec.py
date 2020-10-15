@@ -16,7 +16,6 @@
 
 import ast
 import errno
-import io
 import os
 import socket
 import time
@@ -415,8 +414,8 @@ def logwatch_forward_spool_directory(
                               '', time.time())
     os.makedirs(spool_path, exist_ok=True)
 
-    io.open('%s/%s' % (spool_path, file_name), 'w', encoding="utf-8").write(
-        ('\n'.join(messages) + '\n').encode("utf-8"))
+    with open('%s/%s' % (spool_path, file_name), 'w', encoding="utf-8") as f:
+        f.write('\n'.join(messages) + '\n')
     os.rename('%s/%s' % (spool_path, file_name), '%s/%s' % (spool_path, file_name[1:]))
 
     return LogwatchFordwardResult(num_forwarded=len(messages))
@@ -510,7 +509,7 @@ def logwatch_spool_messages(message_chunks, result):
 
         try:
             # Partially processed chunks or the new one
-            with io.open(spool_file_path, "w", encoding="utf-8") as handle:
+            with open(spool_file_path, "w", encoding="utf-8") as handle:
                 handle.write(repr(message_chunk))
 
             result.num_spooled += len(message_chunk)
@@ -574,7 +573,7 @@ def logwatch_load_spooled_messages(method, result):
         time_spooled = float(filename[6:])
 
         try:
-            messages = ast.literal_eval(io.open(path, encoding="utf-8").read())
+            messages = ast.literal_eval(open(path, encoding="utf-8").read())
         except IOError as exc:
             if exc.errno != errno.ENOENT:
                 raise
@@ -586,7 +585,7 @@ def logwatch_load_spooled_messages(method, result):
 
 
 def logwatch_spool_drop_messages(path, result):
-    messages = ast.literal_eval(io.open(path, encoding="utf-8").read())
+    messages = ast.literal_eval(open(path, encoding="utf-8").read())
     result.num_dropped += len(messages)
 
     file_size = os.stat(path).st_size

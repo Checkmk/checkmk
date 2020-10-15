@@ -155,8 +155,11 @@ def add_replication_paths(paths: List[ReplicationPathCompat]) -> None:
             # OMD_ROOT directory now
             site_path = os.path.relpath(path[2], cmk.utils.paths.omd_root)
 
+            excludes: List[str] = []
             # mypy does not understand this
-            excludes = path[3] if len(path) == 4 else []  # type: ignore[misc]
+            if len(path) == 4:
+                excludes = path[3]  # type: ignore[misc]
+
             clean_paths.append(ReplicationPath(path[0], path[1], site_path, excludes))
             continue
 

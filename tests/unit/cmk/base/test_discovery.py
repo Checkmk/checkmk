@@ -390,7 +390,7 @@ def test__get_post_discovery_services(monkeypatch, grouped_services, mode, param
     service_filters = discovery.get_service_filter_funcs(params)
 
     new_item_names = [
-        entry.item for entry in discovery._get_post_discovery_services(
+        entry.item or "" for entry in discovery._get_post_discovery_services(
             "hostname",
             grouped_services,
             service_filters,

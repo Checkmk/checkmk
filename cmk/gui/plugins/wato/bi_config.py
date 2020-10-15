@@ -231,7 +231,7 @@ class ABCBIMode(WatoMode):
 
     def _allowed_rules(self):
         allowed_rules = {}
-        for bi_pack in sorted(self._bi_packs.get_packs().values()):
+        for bi_pack in sorted(self._bi_packs.get_packs().values(), key=lambda p: p.title):
             if bi_valuespecs.may_use_rules_in_pack(bi_pack):
                 allowed_rules.update(bi_pack.get_rules())
         return allowed_rules

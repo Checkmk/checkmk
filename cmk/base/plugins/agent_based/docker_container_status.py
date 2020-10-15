@@ -56,7 +56,9 @@ def parse_docker_container_status(string_table: AgentStringTable) -> Dict[str, A
     version = docker.get_version(string_table)  # pylint: disable=undefined-variable
 
     index = 0 if version is None else 1
-    section = docker.json_get_obj(string_table[index]) or {} if string_table[index:] else {}  # pylint: disable=undefined-variable
+    section: Dict[str, Any] = {}
+    if string_table[index:]:
+        section = docker.json_get_obj(string_table[index]) or {}
 
     if version is None:
         return DeprecatedDict(section)  # pylint: disable=undefined-variable

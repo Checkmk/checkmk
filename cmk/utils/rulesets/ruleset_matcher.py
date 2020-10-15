@@ -530,11 +530,9 @@ class RulesetOptimizer:
         return True
 
     def _condition_cache_id(self, hostlist, tags, labels, rule_path):
-        host_parts: List[Optional[str]] = []
+        host_parts: List[str] = []
 
-        if hostlist is None:
-            host_parts.append(None)
-        else:
+        if hostlist is not None:
             negate, hostlist = parse_negated_condition_list(hostlist)
             if negate:
                 host_parts.append("!")

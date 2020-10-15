@@ -179,7 +179,6 @@ class AutomationTryDiscovery(Automation):
         buf = io.StringIO()
         with redirect_stdout(buf), redirect_stderr(buf):
             log.setup_console_logging()
-            log.logger.setLevel(log.VERBOSE)
             check_preview_table, host_labels = self._execute_discovery(args)
             return {
                 "output": buf.getvalue(),
@@ -811,6 +810,7 @@ class AutomationRestart(Automation):
 
     def execute(self, args: List[str]) -> core_config.ConfigurationWarnings:
         with redirect_stdout(open(os.devnull, "w")):
+            log.setup_console_logging()
             try:
                 do_restart(create_core(config.monitoring_core), self._mode())
             except (MKBailOut, MKGeneralException) as e:

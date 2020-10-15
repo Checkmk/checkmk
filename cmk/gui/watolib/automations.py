@@ -17,10 +17,12 @@ from typing import Tuple, Dict, Any, Optional, NamedTuple, Sequence
 
 import urllib3  # type: ignore[import]
 import requests
+import logging
 from six import ensure_str
 
 from livestatus import SiteId, SiteConfiguration
 
+from cmk.utils.log import VERBOSE
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 
@@ -91,7 +93,15 @@ def check_mk_local_automation(command: str,
     if timeout:
         new_args = ["--timeout", "%d" % timeout] + new_args
 
-    cmd = ['check_mk', '--automation', command] + new_args
+    cmd = ['check_mk']
+
+    if auto_logger.isEnabledFor(logging.DEBUG):
+        cmd.append("-vv")
+    elif auto_logger.isEnabledFor(VERBOSE):
+        cmd.append("-v")
+
+    cmd += ['--automation', command] + new_args
+
     if command in ['restart', 'reload']:
         call_hook_pre_activate_changes()
 

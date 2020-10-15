@@ -66,6 +66,7 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("statgrab_mem"): CheckPluginName("mem_used"),
     CheckPluginName("cisco_mem_asa64"): CheckPluginName("cisco_mem_asa"),
     CheckPluginName("if64adm"): CheckPluginName("if64"),
+    CheckPluginName("winperf_tcp_conn"): CheckPluginName("tcp_conn_stats"),
 }
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]

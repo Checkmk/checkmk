@@ -2845,7 +2845,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'winperf_mem',
         'winperf_msx_queues',
         'winperf_processor.util',
-        'winperf_tcp_conn',
         'winperf_ts_sessions',
         'wmi_cpuload',
         'wmi_webservices',

@@ -4,13 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
+import collections
+
 
 def apache_status_check_params(value, params, op_txt):
     def apply_operator(val, param, op_txt):
         if op_txt == "at":
             return val >= param
-        elif op_txt == "below":
+        if op_txt == "below":
             return val < param
+        return None
 
     warn, crit = params
     extra_perf = [warn, crit]
@@ -163,40 +167,33 @@ def check_apache_status(item, params, info):
         # fix item name discovered before werk 2763
         item = item[:-5]
 
-    all_data = apache_status_parse(info)
-    if item not in all_data:
-        return (3, 'Unable to find instance in agent output')
-    data_dict = all_data[item]
+    data = apache_status_parse(info).get(item)
+    if data is None:
+        return
 
     this_time = int(time.time())
 
-    if "Total Accesses" in data_dict:
-        data_dict["ReqPerSec"] = get_rate("apache_status_%s_accesses" % item, this_time,
-                                          data_dict["Total Accesses"])
-        del data_dict["Total Accesses"]
-    if "Total kBytes" in data_dict:
-        data_dict["BytesPerSec"] = get_rate("apache_status_%s_bytes" % item, this_time,
-                                            data_dict["Total kBytes"] * 1024)
-        del data_dict["Total kBytes"]
-
-    data = list(data_dict.items())
+    if "Total Accesses" in data:
+        data["ReqPerSec"] = get_rate("apache_status_%s_accesses" % item, this_time,
+                                     data.pop("Total Accesses"))
+    if "Total kBytes" in data:
+        data["BytesPerSec"] = get_rate("apache_status_%s_bytes" % item, this_time,
+                                       data.pop("Total kBytes") * 1024)
 
     worst_state = 0
     output = []
     perfdata = []
 
-    # Sort keys
-    data.sort(key=lambda x: _apache_status_fields.get(x[0], (0, None))[0])
-
-    for key, value in data:
+    for key, value in sorted(data.items(),
+                             key=lambda x: _apache_status_fields.get(x[0], (0, None))[0]):
         if key not in _apache_status_fields:
             continue
 
         # Don't process the scoreboard data directly. Print states instead
         if key == 'Scoreboard':
             states = []
-            for stat_label, key in _apache_status_stats.items():
-                val = data_dict.get('State_' + stat_label, 0)
+            for stat_label in _apache_status_stats:
+                val = data.get('State_' + stat_label, 0)
                 if val > 0:
                     states.append('%s: %d' % (stat_label, val))
                 perfdata.append(('State_' + stat_label, val))

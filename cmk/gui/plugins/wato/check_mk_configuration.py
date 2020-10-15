@@ -2464,7 +2464,7 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
         return ConfigDomainCore
 
     def ident(self):
-        return "use_inline_snmp"
+        return "snmp_backend_default"
 
     def valuespec(self):
         return Transform(
@@ -2485,6 +2485,35 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
                   "only available via our subscription."),
             ),
             forth=lambda x: "inline" if x is True else ("classic" if x is False else x),
+        )
+
+
+@config_variable_registry.register
+class ConfigVariableUseInlineSNMP(ConfigVariable):
+    def group(self):
+        return ConfigVariableGroupCheckExecution
+
+    def domain(self):
+        return ConfigDomainCore
+
+    def ident(self):
+        return "use_inline_snmp"
+
+    def valuespec(self):
+        return Checkbox(
+            title=_("Use Inline SNMP (deprecated)"),
+            label=_("Enable inline SNMP (directly use net-snmp libraries) (deprecated)"),
+            help=_(
+                "By default Check_MK uses command line calls of Net-SNMP tools like snmpget or "
+                "snmpwalk to gather SNMP information. For each request a new command line "
+                "program is being executed. It is now possible to use the inline SNMP implementation "
+                "which calls the net-snmp libraries directly via its python bindings. This "
+                "should increase the performance of SNMP checks in a significant way. The inline "
+                "SNMP mode is a feature which improves the performance for large installations and "
+                "only available via our subscription."
+                "<b>Note:</b> This option is deprecated and has been replaced by"
+                "<a href='%s'>Choose SNMP Backend</a>. Changes to this option will have no effect"
+                "to the behaviour of Checkmk"),
         )
 
 

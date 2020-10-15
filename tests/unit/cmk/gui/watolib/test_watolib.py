@@ -172,6 +172,7 @@ def test_registered_configvars():
         'trusted_certificate_authorities',
         'ui_theme',
         'use_dns_cache',
+        'snmp_backend_default',
         'use_inline_snmp',
         'use_new_descriptions_for',
         'user_downtime_timeranges',

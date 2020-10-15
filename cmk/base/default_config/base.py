@@ -63,7 +63,10 @@ http_proxies: _Dict = {}
 # the names of the rules are kept because of backwards compatibility.
 # Old value is True or False and new value is a string for the respective backend.
 # From version 2.0.0i1 upwards old values are no longer configurable.
+snmp_backend_default: _Union[bool, str] = "inline"
+# Deprecated: Replaced by snmp_backend_hosts
 use_inline_snmp: _Union[bool, str] = True
+
 # Ruleset to enable specific SNMP Backend for each host.
 non_inline_snmp_hosts: _List = []
 

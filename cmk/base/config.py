@@ -2599,9 +2599,9 @@ class HostConfig:
                 return "classic"
             raise MKGeneralException("Bad Host SNMP Backend configuration: %s" % host_backend)
 
-        if has_inline_snmp and use_inline_snmp in ["inline", True]:
+        if has_inline_snmp and snmp_backend_default in ["inline", True]:
             return "inline"
-        if has_pysnmp and use_inline_snmp == "pysnmp":
+        if has_pysnmp and snmp_backend_default == "pysnmp":
             return "pysnmp"
         return "classic"
 

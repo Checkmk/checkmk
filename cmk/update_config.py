@@ -67,6 +67,14 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("if64adm"): CheckPluginName("if64"),
 }
 
+# List[(old_config_name, new_config_name, replacement_dict{old: new})]
+REMOVED_GLOBALS_MAP = [
+    ("use_inline_snmp", "snmp_backend_default", {
+        True: "inline",
+        False: "classic"
+    }),
+]
+
 
 # TODO: Better make our application available?
 class DummyApplication:
@@ -115,6 +123,7 @@ class UpdateConfig:
 
     def _steps(self):
         return [
+            (self._rewrite_removed_global_settings, "Rewriting removed global settings"),
             (self._rewrite_wato_tag_config, "Rewriting WATO tags"),
             (self._rewrite_wato_host_and_folder_config, "Rewriting WATO hosts and folders"),
             (self._rewrite_wato_rulesets, "Rewriting WATO rulesets"),
@@ -141,6 +150,16 @@ class UpdateConfig:
         root_folder = cmk.gui.watolib.hosts_and_folders.Folder.root_folder()
         root_folder.save()
         root_folder.rewrite_hosts_files()
+
+    def _rewrite_removed_global_settings(self):
+        global_config = cmk.gui.watolib.global_settings.load_configuration_settings()
+        for old_config_name, new_config_name, replacement in REMOVED_GLOBALS_MAP:
+            if old_config_name in global_config:
+                self._logger.log(VERBOSE, "Replacing %s with %s", old_config_name, new_config_name)
+                old_value = global_config[old_config_name]
+                global_config[new_config_name] = replacement[old_value]
+                del global_config[old_config_name]
+        cmk.gui.watolib.global_settings.save_global_settings(global_config)
 
     def _rewrite_autochecks(self):
         # Failing to load the config here will result in the loss of *all*

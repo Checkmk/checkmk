@@ -1254,7 +1254,7 @@ def _page_menu_entry_show_plugin_names(host: watolib.CREHost,
 def _page_menu_service_configuration_entries(host: watolib.CREHost,
                                              options: DiscoveryOptions) -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
-        title=_("Add all missing, remove all vanished"),
+        title=_("Add missing, remove vanished"),
         icon_name="services_fix_all",
         item=make_javascript_link(
             _start_js_call(host, options._replace(action=DiscoveryAction.FIX_ALL))),
@@ -1265,7 +1265,7 @@ def _page_menu_service_configuration_entries(host: watolib.CREHost,
     )
 
     yield PageMenuEntry(
-        title=_("Do a full service scan"),
+        title=_("Full service scan"),
         icon_name="services_full_scan",
         item=make_javascript_link(
             _start_js_call(host, options._replace(action=DiscoveryAction.SCAN))),
@@ -1320,7 +1320,7 @@ def _page_menu_selected_services_entries(host: watolib.CREHost,
             BulkEntry(False, True, DiscoveryState.MONITORED, DiscoveryState.IGNORED,
                       _("Disable monitored services"), None),
             BulkEntry(False, True, DiscoveryState.IGNORED, DiscoveryState.MONITORED,
-                      _("Add disabled services to monitoring"), None),
+                      _("Monitor disabled services"), None),
             BulkEntry(False, True, DiscoveryState.IGNORED, DiscoveryState.UNDECIDED,
                       _("Declare disabled services as undecided"), None),
             BulkEntry(True, False, DiscoveryState.VANISHED, DiscoveryState.REMOVED,
@@ -1356,7 +1356,7 @@ def _page_menu_host_labels_entries(host: watolib.CREHost,
         name="update_host_labels",
         is_enabled=False,
         is_shortcut=True,
-        is_show_more=True,
+        is_suggested=True,
         css_classes=["action"],
     )
 

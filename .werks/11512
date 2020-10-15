@@ -1,0 +1,13 @@
+Title: IPMI Management Board: Fix "Discovery Session no longer connected"
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p19
+Date: 1602769303
+Class: fix
+
+Fix unstable IPMI management board monitoring: Once an IPMI management board
+was configured, the Check_MK or Check_MK Discovery service could show
+{{Discovery Session no longer connected}} after trying to contact the host
+multiple times.

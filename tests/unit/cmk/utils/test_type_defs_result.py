@@ -101,6 +101,21 @@ class TestOk:
         assert nested.flatten() == result.flatten()
         assert nested.flatten() == nested.join()
 
+    def test_bind_ok(self, result):
+        ok: Result[str, str] = OK("ok")
+        assert result.ok != ok.ok
+
+        other = result.bind(lambda v: ok)
+        assert other != result
+        assert other == ok
+
+    def test_bind_error(self, result):
+        error: Result[str, str] = Error("error")
+
+        other = result.bind(lambda v: error)
+        assert other != result
+        assert other == error
+
     def test_map(self, result):
         ok = "ok"
         assert not isinstance(result.ok, type(ok))
@@ -207,6 +222,21 @@ class TestError:
         assert nested.flatten() == result
         assert nested.flatten() == result.flatten()
         assert nested.flatten() == nested.join()
+
+    def test_bind_ok(self, result):
+        ok: Result[str, str] = OK("ok")
+
+        other = result.bind(lambda v: ok)
+        assert other != ok
+        assert other == result
+
+    def test_bind_error(self, result):
+        error: Result[str, str] = Error("error")
+        assert result.error != error.error
+
+        other = result.bind(lambda: error)
+        assert other != error
+        assert other == result
 
     def test_map(self, result):
         ok = "ok"

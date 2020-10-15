@@ -6,20 +6,10 @@
 """An error container adapted from OCaml.
 
 Note:
-    The higher-order function `bind` and the conversions
-    to sequence and list are not explicitly implemented.
+    The conversions to sequence (`to_seq`) and list (`to_list`) are not necessary.
 
-    The functionality is available such that:
-
-    - `bind: ('a, 'e) result -> ('a -> ('b, 'e) result) -> ('b, 'e) result`
-        is done with `Result.__init__()` followed by either `Result.map()`,
-        `Result.bind()` or a call to a function that takes the `Result`.
-
-    - `to_list` is done with `list()` as `list(Result[T, E]) -> List[T]`
-        since `Result.__iter__()` is implemented.
-
-    - `to_seq` is done with `for v in result: ...`, also thanks
-        to `Result.__iter__()`
+    Use `list(Result[T, E]) -> List[T]` to convert to list and `for v in result: ...`
+    for the sequence.
 
 See Also:
     - OCaml (implemented): https://caml.inria.fr/pub/docs/manual-ocaml/libref/Result.html
@@ -111,6 +101,10 @@ class Result(Generic[T_co, E_co], abc.ABC):
         return self.join()
 
     @abc.abstractmethod
+    def bind(self, func: Callable[[T_co], "Result[U_co, E_co]"]) -> "Result[U_co, E_co]":
+        raise NotImplementedError
+
+    @abc.abstractmethod
     def join(self) -> "Result[T_co, E_co]":
         raise NotImplementedError
 
@@ -191,6 +185,9 @@ class OK(Result[T_co, E_co]):
     def as_optional(self) -> T_co:
         return self.ok
 
+    def bind(self, func: Callable[[T_co], Result[U_co, E_co]]) -> Result[U_co, E_co]:
+        return func(self.join().ok)
+
     def join(self) -> "OK[T_co, E_co]":
         if isinstance(self.ok, OK):
             return self.ok.join()
@@ -269,6 +266,9 @@ class Error(Result[T_co, E_co]):
 
     def as_optional(self) -> None:
         return None
+
+    def bind(self, func: Callable[[T_co], Result[U_co, E_co]]) -> Result[U_co, E_co]:
+        return Error(self.join().error)
 
     def join(self) -> "Error[T_co, E_co]":
         if isinstance(self.error, Error):

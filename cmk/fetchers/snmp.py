@@ -167,7 +167,12 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
 
         fetched_data: SNMPRawData = {}
         for section_name in self._sort_section_names(selected_sections):
-            self._logger.debug("%s: Fetching data", section_name)
+            if self.use_snmpwalk_cache:
+                walk_cache_msg = "SNMP walk cache is enabled: Use any locally cached information"
+            else:
+                walk_cache_msg = "SNMP walk cache is disabled"
+
+            self._logger.debug("%s: Fetching data (%s)", section_name, walk_cache_msg)
 
             oid_info = self.snmp_section_trees[section_name]
             # oid_info is a list: Each element of that list is interpreted as one real oid_info

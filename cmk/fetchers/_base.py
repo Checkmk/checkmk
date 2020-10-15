@@ -213,6 +213,10 @@ class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     def _fetch(self, mode: Mode) -> TRawData:
+        self._logger.debug("[%s] Fetch with cache settings: %r, Cache enabled: %r",
+                           self.__class__.__name__, self.file_cache.to_json(),
+                           self._is_cache_enabled(mode))
+
         # TODO(ml): EAFP would significantly simplify the code.
         if self.file_cache.simulation or self._is_cache_enabled(mode):
             raw_data = self._fetch_from_cache()

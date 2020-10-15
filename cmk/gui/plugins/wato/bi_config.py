@@ -827,7 +827,7 @@ class ModeBIRules(ABCBIMode):
                     table.text_cell(_("Title"), title)
 
                     aggr_func_data = BIAggregationFunctionSchema().dump(
-                        bi_rule.aggregation_function).data
+                        bi_rule.aggregation_function)
                     aggr_func_gui = bi_valuespecs.bi_config_aggregation_function_registry[
                         bi_rule.aggregation_function.type()]
 
@@ -1037,7 +1037,7 @@ class ModeBIEditRule(ABCBIMode):
                 except KeyError:
                     raise MKGeneralException(_("This BI rule does not exist"))
             else:
-                default_value = BIRuleSchema().dump({"pack_id": self.bi_pack.id}).data
+                default_value = BIRuleSchema().dump({"pack_id": self.bi_pack.id})
                 bi_rule = BIRule(default_value)
         else:
             bi_rule = self.bi_pack.get_rule_mandatory(self.rule_id)
@@ -1045,7 +1045,7 @@ class ModeBIEditRule(ABCBIMode):
         self._may_use_rules_from_packs(bi_rule)
 
         html.begin_form("birule", method="POST")
-        rule_vs_config = BIRuleSchema().dump(bi_rule).data
+        rule_vs_config = BIRuleSchema().dump(bi_rule)
         self.valuespec().render_input("rule", rule_vs_config)
         forms.end()
         html.hidden_fields()
@@ -1476,7 +1476,7 @@ class BIModeEditAggregation(ABCBIMode):
     def page(self):
         html.begin_form("biaggr", method="POST")
 
-        aggr_vs_config = BIAggregationSchema().dump(self._bi_aggregation).data
+        aggr_vs_config = BIAggregationSchema().dump(self._bi_aggregation)
         self.get_vs_aggregation().render_input("aggr", aggr_vs_config)
         forms.end()
         html.hidden_fields()

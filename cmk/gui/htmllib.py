@@ -1115,10 +1115,6 @@ class html(ABCHTMLGenerator):
         else:
             myfile = "index"
 
-        # Redirect to mobile GUI if we are a mobile device and the index is requested
-        if myfile == "index" and self.mobile:
-            myfile = "mobile"
-
         return myfile
 
     def init_mobile(self) -> None:

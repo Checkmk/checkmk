@@ -336,7 +336,7 @@ div#top_heading {
 
         &.disabled {
           pointer-events: none;
-          filter: grayscale(100%) brightness(55%);
+          filter: grayscale(70%) brightness(125%);
         }
 
         a {
@@ -344,18 +344,25 @@ div#top_heading {
           align-items: center;
           justify-content: center;
 
-          height: 34px;
-          padding: 0 11px;
+          height: 30px;
+          padding: 0 8px;
           font-size: 12px;
           font-weight: bold;
-          line-height: $menu-item-spacing;
+          line-height: 16px;
           color: $button-font-color-default;
           text-decoration: none;
           background-color: $button-bg-color-secondary;
           border-radius: 4px;
 
           img {
-            margin-right: 6px;
+            width: 15px;
+            height: 15px;
+            padding: 0;
+            margin-right: 5px;
+
+            &:hover {
+              opacity: 1;
+            }
           }
 
           &:hover {

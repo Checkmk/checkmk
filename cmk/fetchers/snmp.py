@@ -161,7 +161,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         return mode not in (Mode.DISCOVERY, Mode.CHECKING)
 
     def _fetch_from_io(self, mode: Mode) -> SNMPRawData:
-        selected_sections = (self._detect() if mode is Mode.DISCOVERY else
+        selected_sections = (self._detect() if mode in (Mode.DISCOVERY, Mode.CACHED_DISCOVERY) else
                              (self.configured_snmp_sections |
                               self._detect(restrict_to=self.structured_data_snmp_sections)))
 

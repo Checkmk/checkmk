@@ -1731,10 +1731,12 @@ def get_check_preview(
         save_labels=False,
     )
 
+    mode = checkers.Mode.CACHED_DISCOVERY if use_caches else checkers.Mode.DISCOVERY
+
     sources = checkers.make_sources(
         host_config,
         ip_address,
-        mode=checkers.Mode.DISCOVERY,
+        mode=mode,
     )
     for source in sources:
         _configure_sources(source, discovery_parameters=discovery_parameters)
@@ -1746,7 +1748,7 @@ def get_check_preview(
             config_cache,
             host_config,
             ip_address,
-            checkers.Mode.DISCOVERY,
+            mode,
             sources,
         ),
         max_cachefile_age=config.discovery_max_cachefile_age(use_caches),

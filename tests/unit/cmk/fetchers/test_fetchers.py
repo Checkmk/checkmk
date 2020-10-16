@@ -363,6 +363,35 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
         assert fetcher.fetch(Mode.DISCOVERY) == result.OK({})
 
 
+class TestSNMPFetcherFetchCache(ABCTestSNMPFetcher):
+    @pytest.fixture
+    def file_cache(self):
+        return StubFileCache(
+            path=Path(os.devnull),
+            max_age=0,
+            disabled=True,
+            use_outdated=True,
+            simulation=False,
+        )
+
+    @pytest.fixture(autouse=True)
+    def populate_cache(self, fetcher):
+        assert isinstance(fetcher.file_cache, StubFileCache)
+        fetcher.file_cache.cache = b"cached_section"
+
+    @pytest.fixture(autouse=True)
+    def patch_io(self, fetcher, monkeypatch):
+        monkeypatch.setattr(fetcher, "_fetch_from_io", lambda mode: b"fetched_section")
+
+    def test_fetch_not_reading_cache_in_discovery_mode(self, fetcher):
+        assert fetcher.file_cache.cache == b"cached_section"
+        assert fetcher.fetch(Mode.DISCOVERY) == result.OK(b"fetched_section")
+
+    def test_fetch_reading_cache_in_cached_discovery_mode(self, fetcher):
+        assert fetcher.file_cache.cache == b"cached_section"
+        assert fetcher.fetch(Mode.CACHED_DISCOVERY) == result.OK(b"cached_section")
+
+
 class TestTCPFetcher:
     @pytest.fixture
     def file_cache(self):

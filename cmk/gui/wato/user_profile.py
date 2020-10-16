@@ -7,7 +7,7 @@
 
 import time
 import abc
-from typing import Iterator, List, Union
+from typing import Iterator, List, Optional, Union
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.i18n
@@ -156,28 +156,27 @@ class ModeAjaxCycleThemes(AjaxPage):
         else:
             new_theme = themes[theme_index + 1]
 
-        # TODO(rb): use load_cached_profile/save_cached_profile where
-        # userdb.load/userdb.save is used
-        assert config.user.id is not None
-        user_id = config.user.id
-        cached_profile = load_cached_profile(config.user.id)
-        if cached_profile is None:
-            raise MKUserError(None, _("Could not load cached user profile."))
-
-        cached_profile["ui_theme"] = new_theme
-        save_cached_profile(user_id, cached_profile)
+        _set_user_attribute("ui_theme", new_theme)
 
 
 @page_registry.register_page("ajax_sidebar_position")
 class ModeAjaxCycleSidebarPosition(AjaxPage):
     """AJAX handler for quick access option 'Sidebar position" in user menu"""
     def page(self):
-        users = userdb.load_users(lock=True)
-        assert config.user.id is not None
-        user = users[config.user.id]
-        user["ui_sidebar_position"] = None if _get_sidebar_position() == "left" else "left"
+        _set_user_attribute("ui_sidebar_position",
+                            None if _get_sidebar_position() == "left" else "left")
 
-        userdb.save_users(users)
+
+def _set_user_attribute(key: str, value: Optional[str]):
+    assert config.user.id is not None
+    user_id = config.user.id
+    cached_profile = load_cached_profile(config.user.id)
+    if cached_profile is None:
+        raise MKUserError(None, _("Could not load cached user profile."))
+
+    cached_profile[key] = value
+    save_cached_profile(user_id, cached_profile)
+    userdb.save_custom_attr(user_id, key, value)
 
 
 def user_profile_async_replication_page() -> None:

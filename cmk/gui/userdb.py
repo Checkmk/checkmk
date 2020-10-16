@@ -839,6 +839,16 @@ def _save_user_profiles(updated_profiles: Users) -> None:
         else:
             remove_custom_attr(user_id, "idle_timeout")
 
+        if "ui_theme" in user:
+            save_custom_attr(user_id, "ui_theme", user["ui_theme"])
+        else:
+            remove_custom_attr(user_id, "ui_theme")
+
+        if "ui_sidebar_position" in user:
+            save_custom_attr(user_id, 'ui_sidebar_position', user['ui_sidebar_position'])
+        else:
+            remove_custom_attr(user_id, "ui_sidebar_position")
+
         _save_cached_profile(user_id, user, multisite_keys, non_contact_keys)
 
 
@@ -923,23 +933,27 @@ def write_contacts_and_users_file(profiles: Users,
 def _non_contact_keys() -> List[str]:
     """User attributes not to put into contact definitions for Check_MK"""
     return [
-        "roles",
-        "password",
-        "locked",
         "automation_secret",
-        "language",
-        "serial",
         "connector",
-        "num_failed_logins",
         "enforce_pw_change",
-        "last_pw_change",
-        "session_info",
         "idle_timeout",
+        "language",
+        "last_pw_change",
+        "locked",
+        "num_failed_logins",
+        "password",
+        "roles",
+        "serial",
+        "session_info",
     ] + _get_multisite_custom_variable_names()
 
 
 def _multisite_keys() -> List[str]:
     """User attributes to put into multisite configuration"""
+    multisite_variables = [
+        var for var in _get_multisite_custom_variable_names()
+        if var not in ["ui_theme", "ui_sidebar_position"]
+    ]
     return [
         "roles",
         "locked",
@@ -947,7 +961,7 @@ def _multisite_keys() -> List[str]:
         "alias",
         "language",
         "connector",
-    ] + _get_multisite_custom_variable_names()
+    ] + multisite_variables
 
 
 def _get_multisite_custom_variable_names() -> List[str]:

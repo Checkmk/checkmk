@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-VERSION="2.0.0i1"
-
 # This is not part of the standard agent since it can produce much
 # output data of the table is large. This plugin is just needed for
 # checking if certain known TCP connections are established.

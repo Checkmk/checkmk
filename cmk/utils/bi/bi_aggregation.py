@@ -97,7 +97,7 @@ class BIAggregation:
 
 class BIAggregationSchema(Schema):
     id = ReqString(default="", example="aggr1")
-    customer = String(default="", example="customer1")
+    customer = String(default="", missing="", example="customer1")
     groups = create_nested_schema_for_class(
         BIAggregationGroups,
         example_config={

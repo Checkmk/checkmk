@@ -81,11 +81,14 @@ from cmk.gui.permissions import (
     permission_registry,
     Permission,
 )
-from cmk.gui.bi import get_cached_bi_packs, BIManager
+from cmk.gui.bi import get_cached_bi_packs, BIManager, bi_livestatus_query
 
 # TODO: forbidden import, integrate into bi_config... ?
 import cmk.gui.plugins.wato.bi_valuespecs as bi_valuespecs
+import cmk.gui.sites
 from cmk.utils.bi.bi_actions import BICallARuleAction
+from cmk.utils.bi.bi_lib import SitesCallback
+from cmk.utils.bi.bi_compiler import BICompiler
 
 
 @main_module_registry.register
@@ -1252,9 +1255,9 @@ class BIAggregationForm(Dictionary):
 @page_registry.register_page("ajax_bi_rule_preview")
 class AjaxBIRulePreview(AjaxPage):
     def page(self):
-        bi_manager = BIManager()
-        bi_manager.compiler.prepare_for_compilation(
-            bi_manager.compiler.compute_current_configstatus()["online_sites"])
+        sites_callback = SitesCallback(cmk.gui.sites.states, bi_livestatus_query)
+        compiler = BICompiler(BIManager.bi_configuration_file(), sites_callback)
+        compiler.prepare_for_compilation(compiler.compute_current_configstatus()["online_sites"])
 
         # Create preview rule
         vs = ModeBIEditRule.valuespec()
@@ -1274,8 +1277,7 @@ class AjaxBIRulePreview(AjaxPage):
             try:
                 # TODO: start in thread, check timeout
                 # Provide performance statistics/advice for bad regex and setups
-                search_results = node.search.execute(mapped_example_arguments,
-                                                     bi_manager.compiler.bi_searcher)
+                search_results = node.search.execute(mapped_example_arguments, compiler.bi_searcher)
                 modified_search_results = []
                 for search_result in search_results:
                     entry = mapped_example_arguments.copy()
@@ -1296,9 +1298,9 @@ class AjaxBIRulePreview(AjaxPage):
 class AjaxBIAggregationPreview(AjaxPage):
     def page(self):
         # Prepare compiler
-        bi_manager = BIManager()
-        bi_manager.compiler.prepare_for_compilation(
-            bi_manager.compiler.compute_current_configstatus()["online_sites"])
+        sites_callback = SitesCallback(cmk.gui.sites.states, bi_livestatus_query)
+        compiler = BICompiler(BIManager.bi_configuration_file(), sites_callback)
+        compiler.prepare_for_compilation(compiler.compute_current_configstatus()["online_sites"])
 
         # Create preview aggr
         varprefix = html.request.var("varprefix")
@@ -1310,8 +1312,7 @@ class AjaxBIAggregationPreview(AjaxPage):
         try:
             # TODO: start in thread, check timeout
             # Provide performance statistics/advice for bad regex and setups
-            search_results = preview_bi_aggr.node.search.execute({},
-                                                                 bi_manager.compiler.bi_searcher)
+            search_results = preview_bi_aggr.node.search.execute({}, compiler.bi_searcher)
             response.append(_finalize_preview_response(search_results))
         except MKGeneralException:
             response.append([{_("Error"): _("Can not evaluate search")}])

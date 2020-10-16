@@ -158,7 +158,7 @@ class BISiteHostPairSchema(Schema):
     host_name = ReqString()
 
     @pre_dump
-    def pre_dump(self, obj: Tuple) -> Dict:
+    def pre_dumper(self, obj: Tuple, many=False) -> Dict:
         # Convert aggregations and rules to list
         return {"site_id": obj[0], "host_name": obj[1]}
 

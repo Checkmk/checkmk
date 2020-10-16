@@ -137,6 +137,7 @@ class BIHostSearch(ABCBISearch):
         search_results = []
         for search_match in search_matches:
             search_result = {
+                "$1$": search_match.host.name,
                 "$HOSTNAME$": search_match.host.name,
                 "$HOSTALIAS$": search_match.host.alias
             }
@@ -155,6 +156,7 @@ class BIHostSearch(ABCBISearch):
                     continue
                 handled_children.add(child)
                 search_result = {
+                    "$1$": bi_searcher.hosts[child].name,
                     "$HOSTNAME$": bi_searcher.hosts[child].name,
                     "$HOSTALIAS$": bi_searcher.hosts[child].alias
                 }
@@ -170,6 +172,7 @@ class BIHostSearch(ABCBISearch):
                     continue
                 handled_parents.add(parent)
                 search_result = {
+                    "$1$": search_match.host.name,
                     "$HOSTNAME$": search_match.host.name,
                     "$HOSTALIAS$": search_match.host.alias
                 }

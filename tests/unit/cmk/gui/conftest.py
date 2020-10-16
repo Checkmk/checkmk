@@ -35,8 +35,8 @@ from cmk.gui.globals import AppContext, RequestContext
 from cmk.gui.http import Request
 from cmk.gui.utils import get_random_string
 from cmk.gui.watolib.users import delete_users, edit_users
-from cmk.gui.watolib import changes
 from cmk.gui.wsgi import make_app
+from cmk.gui.plugins.wato import check_mk_configuration
 
 SPEC_LOCK = threading.Lock()
 
@@ -374,10 +374,12 @@ def wsgi_app_debug_off(monkeypatch):
     return _make_webtest(debug=False)
 
 
-@pytest.fixture(autouse=True)
-def deactivate_search_index_creation_on_change(monkeypatch):
+@pytest.fixture(scope='function', autouse=True)
+def config_omd_default_globals(monkeypatch):
+    # When building the search index, some HostRulespecs will try to load a non-existing
+    # configuration
     monkeypatch.setattr(
-        changes.search,
-        "build_and_store_index",
-        lambda *_, **__: None,
+        check_mk_configuration.ConfigDomainOMD,
+        'default_globals',
+        lambda *_, **__: {'site_core': 'cmc'},
     )

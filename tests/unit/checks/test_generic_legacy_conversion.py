@@ -1105,7 +1105,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'allnet_ip_sensoric.humidity',
         'allnet_ip_sensoric.pressure',
         'allnet_ip_sensoric',
-        'apache_status',
         'apc_ats_output',
         'apc_ats_status',
         'apc_humidity',

@@ -41,7 +41,6 @@ def test_section_parse_function_does_something():
         'ad_replication',
         'aix_lvm',
         'aix_multipath',
-        'apache_status',
         'appdynamics_memory',
         'appdynamics_sessions',
         'appdynamics_web_container',

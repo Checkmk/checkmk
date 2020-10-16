@@ -468,11 +468,14 @@ class HostAttributeContactGroups(ABCHostAttribute):
             html.checkbox(
                 varprefix + self.name() + "_use",
                 value["use"],
-                label=_("Add these groups as <b>contacts</b> to all hosts in this folder"))
+                label=_("Add these groups as <b>contacts</b> to all hosts <b>in this folder</b>"))
             html.br()
-            html.checkbox(varprefix + self.name() + "_recurse_use",
-                          value["recurse_use"],
-                          label=_("Add these groups as <b>contacts in all subfolders</b>"))
+            html.checkbox(
+                varprefix + self.name() + "_recurse_use",
+                value["recurse_use"],
+                label=
+                _("Add these groups as <b>contacts</b> to all hosts <b>in all subfolders of this folder</b>"
+                 ))
 
         html.hr()
         html.help(
@@ -481,9 +484,12 @@ class HostAttributeContactGroups(ABCHostAttribute):
               "assigned other contact groups to services via rules in <i>Host & Service Parameters</i>. "
               "As long as you do not have any such rule a service always inherits all contact groups "
               "from its host."))
-        html.checkbox(varprefix + self.name() + "_use_for_services",
-                      value.get("use_for_services", False),
-                      label=_("Always add host contact groups also to its services"))
+        html.checkbox(
+            varprefix + self.name() + "_use_for_services",
+            value.get("use_for_services", False),
+            label=_("Always add host contact groups also to its services") if is_host else
+            _("Always add these groups as <b>contacts</b> to all services <b>in all subfolders of this folder</b>"
+             ))
 
     def load_data(self):
         # Make cache valid only during this HTTP request

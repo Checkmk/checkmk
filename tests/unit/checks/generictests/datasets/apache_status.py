@@ -53,15 +53,21 @@ checks = {
     '': [
         ('MY CHECK MK', {}, [
             (0, 'Uptime: 27 h', [(u'Uptime', 99739)]),
-            (0, 'IdleWorkers: 49', [(u'IdleWorkers', 49)]),
-            (0, 'BusyWorkers: 1', [(u'BusyWorkers', 1)]),
-            (0, 'OpenSlots: 100', [('OpenSlots', 100)]),
-            (0, 'TotalSlots: 150', [('TotalSlots', 150)]),
-            (0, 'CPULoad: 0.00', [(u'CPULoad', 0.00482259)]),
-            (0, 'ReqPerSec: 0.00', [(u'ReqPerSec', 0.0)]),
-            (0, 'BytesPerReq: 1657.38', [(u'BytesPerReq', 1657.38)]),
-            (0, 'BytesPerSec: 0.00', [(u'BytesPerSec', 0.0)]),
-            (0, 'States: (Waiting: 49, SendingReply: 1)', [
+            (0, 'Idle workers: 49', [(u'IdleWorkers', 49)]),
+            (0, 'Busy workers: 1', [(u'BusyWorkers', 1)]),
+            (0, 'Total slots: 150', [('TotalSlots', 150)]),
+            (0, 'Open slots: 100', [('OpenSlots', 100)]),
+            (0, 'CPU load: 0.00', [(u'CPULoad', 0.00482259)]),
+            (0, 'Requests per second: 0.00', [(u'ReqPerSec', 0.0)]),
+            (0, 'Bytes per request: 1657.38', [(u'BytesPerReq', 1657.38)]),
+            (0, 'Bytes per second: 0.00', [(u'BytesPerSec', 0.0)]),
+            (0, 'Total connections: 0', [(u'ConnsTotal', 0)]),
+            (0, 'Async writing connections: 0', [(u'ConnsAsyncWriting', 0)]),
+            (0, 'Async keep alive connections: 0', [(u'ConnsAsyncKeepAlive', 0)]),
+            (0, 'Async closing connections: 0', [(u'ConnsAsyncClosing', 0)]),
+            (0, ('\nScoreboard states:'
+                 '\n  Waiting: 49'
+                 '\n  SendingReply: 1'), [
                 ('State_Waiting', 49),
                 ('State_StartingUp', 0),
                 ('State_ReadingRequest', 0),
@@ -73,10 +79,6 @@ checks = {
                 ('State_Finishing', 0),
                 ('State_IdleCleanup', 0),
             ]),
-            (0, 'ConnsTotal: 0', [(u'ConnsTotal', 0)]),
-            (0, 'ConnsAsyncWriting: 0', [(u'ConnsAsyncWriting', 0)]),
-            (0, 'ConnsAsyncKeepAlive: 0', [(u'ConnsAsyncKeepAlive', 0)]),
-            (0, 'ConnsAsyncClosing: 0', [(u'ConnsAsyncClosing', 0)]),
         ]),
     ],
 }

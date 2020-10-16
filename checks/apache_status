@@ -7,26 +7,46 @@
 import time
 import collections
 
-_FIELD_CASTER_MAP = collections.OrderedDict((
-    ('Uptime', int),
-    ('IdleWorkers', int),
-    ('BusyWorkers', int),
-    ('OpenSlots', int),
-    ('TotalSlots', int),
-    ('Total Accesses', int),
-    ('CPULoad', float),
-    ('Total kBytes', float),
-    ('ReqPerSec', float),
-    ('BytesPerReq', float),
-    ('BytesPerSec', float),
-    ('Scoreboard', str),
-    ('ConnsTotal', int),
-    ('ConnsAsyncWriting', int),
-    ('ConnsAsyncKeepAlive', int),
-    ('ConnsAsyncClosing', int),
-    ('BusyServers', int),
-    ('IdleServers', int),
-))
+_FIELD_CASTER_MAP = {
+    'Uptime': int,
+    'IdleWorkers': int,
+    'BusyWorkers': int,
+    'OpenSlots': int,
+    'TotalSlots': int,
+    'Total Accesses': int,
+    'CPULoad': float,
+    'Total kBytes': float,
+    'ReqPerSec': float,
+    'BytesPerReq': float,
+    'BytesPerSec': float,
+    'Scoreboard': str,
+    'ConnsTotal': int,
+    'ConnsAsyncWriting': int,
+    'ConnsAsyncKeepAlive': int,
+    'ConnsAsyncClosing': int,
+    'BusyServers': int,
+    'IdleServers': int,
+}
+
+_CHECK_LEVEL_ENTRIES = (
+    ('Uptime', 'Uptime'),
+    ('IdleWorkers', 'Idle workers'),
+    ('BusyWorkers', 'Busy workers'),
+    ('TotalSlots', 'Total slots'),
+    ('OpenSlots', 'Open slots'),
+    ('Total Accesses', 'Total access'),
+    ('CPULoad', 'CPU load'),
+    ('Total kBytes', 'Total kB'),
+    ('ReqPerSec', 'Requests per second'),
+    ('BytesPerReq', 'Bytes per request'),
+    ('BytesPerSec', 'Bytes per second'),
+    ('ConnsTotal', 'Total connections'),
+    ('ConnsAsyncWriting', 'Async writing connections'),
+    ('ConnsAsyncKeepAlive', 'Async keep alive connections'),
+    ('ConnsAsyncClosing', 'Async closing connections'),
+    ('BusyServers', 'Busy servers'),
+    ('IdleServers', 'Idle servers'),
+)
 
 _SCOREBOARD_LABEL_MAP = collections.OrderedDict((
     ('Waiting', '_'),
@@ -152,21 +172,9 @@ def check_apache_status(item, params, info):
         data["BytesPerSec"] = get_rate("apache_status_%s_bytes" % item, this_time,
                                        data.pop("Total kBytes") * 1024)
 
-    for key in (k for k in _FIELD_CASTER_MAP if k in data):
+    for key, label in ((k, l) for k, l in _CHECK_LEVEL_ENTRIES if k in data):
         value = data[key]
         levels_to_lower = (None, None) if key == 'OpenSlots' else ()
-
-        # Don't process the scoreboard data directly. Print states instead
-        if key == 'Scoreboard':
-            states = []
-            perfdata = []
-            for stat_label in _SCOREBOARD_LABEL_MAP:
-                val = data.get('State_' + stat_label, 0)
-                if val > 0:
-                    states.append('%s: %d' % (stat_label, val))
-                perfdata.append(('State_' + stat_label, val))
-            yield 0, 'States: (%s)' % ', '.join(states), perfdata
-            continue
 
         renderer = None
         if key == 'Uptime':
@@ -179,8 +187,22 @@ def check_apache_status(item, params, info):
             key.replace(' ', '_'),
             levels_to_lower + params.get(key, (None, None)),
             human_readable_func=renderer,
-            infoname=key,
+            infoname=label,
         )
+
+    yield from _scoreboard_results(data)
+
+
+def _scoreboard_results(data):
+    # Don't process the scoreboard data directly. Print states instead
+    states = []
+    perfdata = []
+    for key in _SCOREBOARD_LABEL_MAP:
+        value = data.get(f'State_{key}', 0)
+        if value > 0:
+            states.append(f'{key}: {value}')
+        perfdata.append((f'State_{key}', value))
+    yield 0, '\nScoreboard states:\n  %s' % '\n  '.join(states), perfdata
 
 
 check_info['apache_status'] = {

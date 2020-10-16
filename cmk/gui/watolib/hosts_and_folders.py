@@ -2881,9 +2881,6 @@ class MatchItemGeneratorHosts(ABCMatchItemGenerator):
             match_texts=[host_name],
         ) for host_name, host_attributes in self._host_collector().items())
 
-    def is_affected_by_change(self, change_action_name: str) -> bool:
-        return 'host' in change_action_name
-
 
 class MatchItemGeneratorFolders(ABCMatchItemGenerator):
     def __init__(
@@ -2901,9 +2898,6 @@ class MatchItemGeneratorFolders(ABCMatchItemGenerator):
             url=folder.url(),
             match_texts=[folder.title()],
         ) for folder in self._folder_collector().values())
-
-    def is_affected_by_change(self, change_action_name: str) -> bool:
-        return 'folder' in change_action_name
 
 
 match_item_generator_registry.register(MatchItemGeneratorHosts(

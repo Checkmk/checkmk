@@ -1244,9 +1244,6 @@ class MatchItemGeneratorRules(ABCMatchItemGenerator):
                     for rulespec in self._rulespec_registry.get_by_group(group)
                     if rulespec.title)
 
-    def is_affected_by_change(self, *_, **__) -> bool:
-        return False
-
 
 rulespec_registry = RulespecRegistry(rulespec_group_registry)
 

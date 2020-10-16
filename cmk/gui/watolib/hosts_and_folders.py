@@ -27,7 +27,7 @@ from cmk.gui.exceptions import (
     MKUserError,
 )
 from cmk.gui.htmllib import HTML
-from cmk.gui.globals import g, html
+from cmk.gui.globals import g, html, request
 from cmk.gui.type_defs import HTTPVariables, SetOnceDict
 from cmk.gui.valuespec import Choices
 from cmk.gui.watolib.utils import (
@@ -57,6 +57,7 @@ from cmk.gui.watolib.search import (
 )
 from cmk.gui.background_job import BackgroundJobAlreadyRunning
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.utils import urls
 
 import cmk.utils.version as cmk_version
 
@@ -540,13 +541,13 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         if folder:
             return folder
 
-        if html.request.has_var("folder"):
+        if request.has_var("folder"):
             try:
-                folder = Folder.folder(html.request.var("folder"))
+                folder = Folder.folder(request.var("folder"))
             except MKGeneralException as e:
                 raise MKUserError("folder", "%s" % e)
         else:
-            host_name = html.request.var("host")
+            host_name = request.var("host")
             folder = Folder.root_folder()
             if host_name:  # find host with full scan. Expensive operation
                 host = Host.host(host_name)
@@ -1288,11 +1289,14 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         if withlinks:
             # In this case, we return a List[HTML]
             return [
-                html.render_a(folder.title(),
-                              href=html.makeuri_contextless([("mode", "folder"),
-                                                             ("folder", folder.path())],
-                                                            filename="wato.py"))
-                for folder in self.parent_folder_chain() + [self]
+                html.render_a(
+                    folder.title(),
+                    href=urls.makeuri_contextless(
+                        request,
+                        [("mode", "folder"), ("folder", folder.path())],
+                        filename="wato.py",
+                    ),
+                ) for folder in self.parent_folder_chain() + [self]
             ]
         # In this case, we return a List[str]
         return [folder.title() for folder in self.parent_folder_chain() + [self]]
@@ -1442,10 +1446,10 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 break
         if not have_mode:
             url_vars.append(("mode", "folder"))
-        if html.request.var("debug") == "1":
+        if request.var("debug") == "1":
             add_vars.append(("debug", "1"))
         url_vars += add_vars
-        return html.makeuri_contextless(url_vars, filename="wato.py")
+        return urls.makeuri_contextless(request, url_vars, filename="wato.py")
 
     def edit_url(self, backfolder: 'Optional[CREFolder]' = None) -> str:
         if backfolder is None:
@@ -1453,11 +1457,14 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 backfolder = self.parent()
             else:
                 backfolder = self
-        return html.makeuri_contextless([
-            ("mode", "editfolder"),
-            ("folder", self.path()),
-            ("backfolder", backfolder.path()),
-        ])
+        return urls.makeuri_contextless(
+            request,
+            [
+                ("mode", "editfolder"),
+                ("folder", self.path()),
+                ("backfolder", backfolder.path()),
+            ],
+        )
 
     def locked(self) -> Union[bool, str]:
         return self._locked
@@ -1947,7 +1954,7 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
     """A virtual folder representing the result of a search."""
     @staticmethod
     def criteria_from_html_vars():
-        crit = {".name": html.request.var("host_search_host")}
+        crit = {".name": request.var("host_search_host")}
         crit.update(
             collect_attributes("host_search",
                                new=False,
@@ -1958,8 +1965,8 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
     # This method is allowed to return None when no search is currently performed.
     @staticmethod
     def current_search_folder():
-        if html.request.has_var("host_search"):
-            base_folder = Folder.folder(html.request.var("folder", ""))
+        if request.has_var("host_search"):
+            base_folder = Folder.folder(request.var("folder", ""))
             search_criteria = SearchFolder.criteria_from_html_vars()
             folder = SearchFolder(base_folder, search_criteria)
             Folder.set_current(folder)
@@ -2032,7 +2039,7 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
 
         url_vars = [("host_search", "1")] + add_vars
 
-        for varname, value in html.request.itervars():
+        for varname, value in request.itervars():
             if varname.startswith("host_search_") \
                 or varname.startswith("_change"):
                 url_vars.append((varname, value))
@@ -2322,32 +2329,44 @@ class CREHost(WithPermissions, WithAttributes):
         raise MKAuthException(reason)
 
     def edit_url(self):
-        return html.makeuri_contextless([
-            ("mode", "edit_host"),
-            ("folder", self.folder().path()),
-            ("host", self.name()),
-        ])
+        return urls.makeuri_contextless(
+            request,
+            [
+                ("mode", "edit_host"),
+                ("folder", self.folder().path()),
+                ("host", self.name()),
+            ],
+        )
 
     def params_url(self):
-        return html.makeuri_contextless([
-            ("mode", "object_parameters"),
-            ("folder", self.folder().path()),
-            ("host", self.name()),
-        ])
+        return urls.makeuri_contextless(
+            request,
+            [
+                ("mode", "object_parameters"),
+                ("folder", self.folder().path()),
+                ("host", self.name()),
+            ],
+        )
 
     def services_url(self):
-        return html.makeuri_contextless([
-            ("mode", "inventory"),
-            ("folder", self.folder().path()),
-            ("host", self.name()),
-        ])
+        return urls.makeuri_contextless(
+            request,
+            [
+                ("mode", "inventory"),
+                ("folder", self.folder().path()),
+                ("host", self.name()),
+            ],
+        )
 
     def clone_url(self):
-        return html.makeuri_contextless([
-            ("mode", "newcluster" if self.is_cluster() else "newhost"),
-            ("folder", self.folder().path()),
-            ("clone", self.name()),
-        ])
+        return urls.makeuri_contextless(
+            request,
+            [
+                ("mode", "newcluster" if self.is_cluster() else "newhost"),
+                ("folder", self.folder().path()),
+                ("clone", self.name()),
+            ],
+        )
 
     # .--------------------------------------------------------------------.
     # | MODIFICATIONS                                                      |

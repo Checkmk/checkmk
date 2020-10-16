@@ -44,38 +44,33 @@ smart_stats_default_levels = {
 
 def parse_smart_raw_values(info):
     disks = {}
-    disk_name = None
 
     for line in info:
         if len(line) >= 13:
-            if line[0] != disk_name:
-                disk_name = line[0]
-                disk = {}
-                disks[disk_name] = disk
+            disk = disks.setdefault(line[0], {})
 
             field = line[4]
-            if field != "Unknown_Attribute":
-                value = saveint(line[12])
-                disk[field] = value
+            if field == "Unknown_Attribute":
+                continue
+            disk[field] = saveint(line[12])
+
         # nvme
         elif 3 <= len(line) <= 6:
             if "/dev" in line[0]:
-                disk_name = line[0]
-                disk = {}
-                disks[disk_name] = disk
+                disk = disks.setdefault(line[0], {})
+                continue
 
-            else:
-                field, value = [e.strip() for e in " ".join(line).split(":")]
-                value = value.replace("%", "").replace(".", "").replace(",", "")
-                if field == "Temperature":
-                    value = value.split()[0]
-                if field == "Critical Warning":
-                    value = int(value, 16)
-                if field == "Data Units Read":
-                    value = (int(value.split()[0]) * 512000)
-                if field == "Data Units Written":
-                    value = (int(value.split()[0]) * 512000)
-                disk[field.replace(" ", "_")] = saveint(value)
+            field, value = [e.strip() for e in " ".join(line).split(":")]
+            value = value.replace("%", "").replace(".", "").replace(",", "")
+            if field == "Temperature":
+                value = value.split()[0]
+            if field == "Critical Warning":
+                value = int(value, 16)
+            if field == "Data Units Read":
+                value = (int(value.split()[0]) * 512000)
+            if field == "Data Units Written":
+                value = (int(value.split()[0]) * 512000)
+            disk[field.replace(" ", "_")] = saveint(value)
 
     return disks
 
@@ -124,25 +119,21 @@ smart_stats_fields = [
 
 def inventory_smart_stats(info):
     disks = parse_smart_raw_values(info)
-    inventory = []
     for disk_name, disk in disks.items():
-        for field in disk:
-            if field in smart_stats_fields:  # found at least one interesting field
-                cleaned = dict([(f, disk[f]) for f in smart_stats_fields if f in disk])
-                inventory.append((disk_name, cleaned))
-                break
-    return inventory
+        cleaned = {f: disk[f] for f in smart_stats_fields if f in disk}
+        if cleaned:
+            yield disk_name, cleaned
 
 
 def check_smart_stats(item, params, info):
     # params is a snapshot of all counters at the point of time of inventory
 
     disks = parse_smart_raw_values(info)
-    normalized = parse_smart_normalized_values(info)
-
-    if item not in disks:
+    disk = disks.get(item)
+    if disk is None:
         return
-    disk = disks[item]
+
+    normalized = parse_smart_normalized_values(info)
 
     for unit, field, descr in [
         (' hours', 'Power_On_Hours', 'Powered on'),
@@ -219,10 +210,9 @@ check_info["smart.stats"] = {
 
 def inventory_smart_temp(info):
     disks = parse_smart_raw_values(info)
+    relevant = {"Temperature_Celsius", "Temperature_Internal", "Temperature"}
     for disk_name, disk in disks.items():
-        if "Temperature_Celsius" in disk or \
-           "Temperature_Internal" in disk or \
-           "Temperature" in disk:
+        if relevant.intersection(disk):
             yield disk_name, {}
 
 

@@ -1431,6 +1431,11 @@ def configure_attributes(new,
 
     volatile_topics = []
     hide_attributes = []
+    show_more_mode: bool = False
+
+    show_more_mode = bool(config.user.get_attribute("show_mode") and \
+            "show_more" in config.user.get_attribute("show_mode"))
+
     for topic_id, topic_title in watolib.get_sorted_host_attribute_topics(for_what, new):
         topic_is_volatile = True  # assume topic is sometimes hidden due to dependencies
 
@@ -1439,6 +1444,7 @@ def configure_attributes(new,
             isopen=topic_id in ["basic", "address", "data_sources"],
             table_id=topic_id,
             show_more_toggle=True,
+            show_more_mode=show_more_mode,
         )
 
         if topic_id == "basic":

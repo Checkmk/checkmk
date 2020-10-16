@@ -105,7 +105,8 @@ def header(title: str,
            table_id: str = "",
            narrow: bool = False,
            css: Optional[str] = None,
-           show_more_toggle: bool = False) -> None:
+           show_more_toggle: bool = False,
+           show_more_mode: bool = False) -> None:
     global g_header_open, g_section_open
     if g_header_open:
         end()
@@ -116,6 +117,7 @@ def header(title: str,
                         "narrow" if narrow else None,
                         css if css else None,
                         "open" if isopen else "closed",
+                        "more" if show_more_mode else None,
                     ])
 
     _begin_foldable_nform_container(

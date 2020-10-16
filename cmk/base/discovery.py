@@ -1106,6 +1106,26 @@ def _perform_host_label_discovery(
         DiscoveredHostLabelsStore(hostname).save(return_host_labels.to_dict())
 
     if new_host_labels:
+        # Some check plugins like 'df' may discover services based on host labels.
+        # A rule may look like:
+        # [{
+        #     'value': {
+        #         'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'],
+        #         'never_ignore_mountpoints': ['~.*/omd/sites/[^/]+/tmp$']
+        #     },
+        #     'condition': {
+        #         'host_labels': {
+        #             'cmk/check_mk_server': 'yes'
+        #         }
+        #     }
+        # }]
+        # In the first step '_discover_host_labels' the ruleset optimizer caches the
+        # result of the evaluation of these rules. Contemporary we may find new host
+        # labels which are not yet taken into account by the ruleset optimizer.
+        # In the next step '_discover_services' we want to discover new services
+        # based on these new host labels but we only got the cached result.
+        # If we found new host labels, we have to evaluate these rules again in order
+        # to find new services, eg. in 'inventory_df'. Thus we have to clear these caches.
         config.get_config_cache().ruleset_matcher.ruleset_optimizer.clear_caches()
 
     return return_host_labels, new_host_labels_per_plugin

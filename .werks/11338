@@ -1,0 +1,14 @@
+Title: Fix "Fortigate Active Sessions" ruleset duplicates
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1602836170
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+In previous versions, there were two WATO rules which had the name
+"Fortigate Active Sessions" where one concerned the Cluster
+environment. This change renames the Cluster rule to allow a
+proper differentitation.

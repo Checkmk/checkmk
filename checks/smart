@@ -54,6 +54,12 @@ def parse_smart_raw_values(info):
                 continue
             disk[field] = saveint(line[12])
 
+            if field == "Reallocated_Event_Count":  # special case, see check function
+                try:
+                    disk["_normalized_Reallocated_Event_Count"] = int(line[6]), int(line[8])
+                except ValueError:
+                    pass
+
         # nvme
         elif 3 <= len(line) <= 6:
             if "/dev" in line[0]:
@@ -72,32 +78,6 @@ def parse_smart_raw_values(info):
                 value = (int(value.split()[0]) * 512000)
             disk[field.replace(" ", "_")] = saveint(value)
 
-    return disks
-
-
-def parse_smart_normalized_values(info):
-    disks = {}
-    disk_name = None
-
-    for line in info:
-        if len(line) >= 13:
-            if line[0] != disk_name:
-                disk_name = line[0]
-                disk = {}
-                disks[disk_name] = disk
-
-            field = line[4]
-            if field != "Unknown_Attribute":
-                try:
-                    value = int(line[6])
-                except ValueError:
-                    disk[field] = None, None
-                    continue
-                if isinstance(line[8], int):
-                    threshold = int(line[8])
-                else:
-                    threshold = None
-                disk[field] = value, threshold
     return disks
 
 
@@ -132,8 +112,6 @@ def check_smart_stats(item, params, info):
     disk = disks.get(item)
     if disk is None:
         return
-
-    normalized = parse_smart_normalized_values(info)
 
     for unit, field, descr in [
         (' hours', 'Power_On_Hours', 'Powered on'),
@@ -188,7 +166,7 @@ def check_smart_stats(item, params, info):
         # aggregated value remained at it's initial/ok state. So we use the aggregated
         # value now. Only for this field.
         if field == "Reallocated_Event_Count":
-            norm_value, norm_threshold = normalized[item][field]
+            norm_value, norm_threshold = disk.get(f"_normalized_{field}", (None, None))
             if norm_value is None:
                 yield 0, infotext, [(field, value)]
                 continue

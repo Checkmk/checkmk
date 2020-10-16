@@ -37,34 +37,37 @@ class SingleMetricDataGenerator(ABCDataGenerator):
     def _vs_elements(cls):
         return [
             ("title", TextUnicode(default_value="", title=_("Figure title"))),
-            ("metric", MetricName()),  # MetricChoice would be nicer, but is CEE
-            ("rrd_consolidation",
-             DropdownChoice(
+            ("metric", MetricName()),  # MetricChoice would be nicer, but we use the context filters
+            ("time_range",
+             CascadingDropdown(
+                 title=_("Timerange"),
+                 orientation="horizontal",
                  choices=[
-                     ("average", _("Average")),
-                     ("min", _("Minimum")),
-                     ("max", _("Maximum")),
+                     ("current", _("Only show current value")),
+                     ("range", _("Show historic values"),
+                      Dictionary(
+                          optional_keys=False,
+                          elements=[
+                              ('window',
+                               Timerange(title=_("Time range to consider"),
+                                         default_value="d0",
+                                         allow_empty=True)),
+                              ("rrd_consolidation",
+                               DropdownChoice(
+                                   choices=[
+                                       ("average", _("Average")),
+                                       ("min", _("Minimum")),
+                                       ("max", _("Maximum")),
+                                   ],
+                                   default_value="max",
+                                   title="RRD consolidation",
+                                   help=
+                                   _("Consolidation function for the [cms_graphing#rrds|RRD] data column"
+                                    ),
+                               )),
+                          ])),
                  ],
-                 default_value="average",
-                 title="RRD consolidation",
-                 help=_("Consolidation function for the [cms_graphing#rrds|RRD] data column"),
-             )),
-            (
-                "time_range",
-                CascadingDropdown(
-                    title=_("Timerange"),
-                    orientation="horizontal",
-                    choices=[
-                        ("current", _("Only show current value")),
-                        (
-                            "range",
-                            _("Show historic values"),
-                            # TODO: add RRD consolidation, here and in _get_data below
-                            Timerange(title=_("Time range to consider"),
-                                      default_value="d0",
-                                      allow_empty=True)),
-                    ],
-                    default_value="current"))
+                 default_value="current"))
         ]
 
     @classmethod
@@ -76,15 +79,15 @@ class SingleMetricDataGenerator(ABCDataGenerator):
         ]
         metric_columns = []
         if properties["time_range"] != "current":
-            from_time, until_time = map(int,
-                                        Timerange().compute_range(properties["time_range"][1])[0])
+            params = properties["time_range"][1]
+
+            from_time, until_time = map(int, Timerange().compute_range(params['window'])[0])
             data_range = "%s:%s:%s" % (from_time, until_time, 60)
             _metrics: List[Tuple[str, Optional[str], float]] = [
                 (name, None, scale)
                 for name, scale in reverse_translate_metric_name(properties["metric"])
             ]
-            metric_columns = list(rrd_columns(_metrics, properties["rrd_consolidation"],
-                                              data_range))
+            metric_columns = list(rrd_columns(_metrics, params["rrd_consolidation"], data_range))
 
         return cmc_cols + metric_columns
 

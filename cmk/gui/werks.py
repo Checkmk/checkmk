@@ -145,6 +145,8 @@ def _page_menu_entries_ack_all_werks() -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
         title=_("Acknowledge all"),
         icon_name="werk_ack",
+        is_shortcut=True,
+        is_suggested=True,
         item=make_simple_link(html.makeactionuri([("_ack_all", "1")])),
         is_enabled=bool(unacknowledged_incompatible_werks()),
     )

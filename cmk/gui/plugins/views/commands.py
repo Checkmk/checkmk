@@ -562,7 +562,15 @@ class CommandAcknowledge(Command):
 
     @property
     def title(self):
-        return _("Acknowledge Problems")
+        return _("Acknowledge problems")
+
+    @property
+    def is_shortcut(self):
+        return True
+
+    @property
+    def is_suggested(self):
+        return True
 
     @property
     def permission(self):
@@ -770,6 +778,14 @@ class CommandScheduleDowntimes(Command):
     @property
     def title(self):
         return _("Schedule downtimes")
+
+    @property
+    def is_shortcut(self):
+        return True
+
+    @property
+    def is_suggested(self):
+        return True
 
     @property
     def permission(self):

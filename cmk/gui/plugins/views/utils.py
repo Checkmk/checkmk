@@ -499,6 +499,14 @@ class Command(metaclass=abc.ABCMeta):
     def is_show_more(self) -> bool:
         return False
 
+    @property
+    def is_shortcut(self) -> bool:
+        return False
+
+    @property
+    def is_suggested(self) -> bool:
+        return False
+
     def executor(self, command: str, site: str) -> None:
         """Function that is called to execute this action"""
         sites.live().command("[%d] %s" % (int(time.time()), command), SiteId(site))

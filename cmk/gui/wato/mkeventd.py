@@ -2948,6 +2948,8 @@ def _page_menu_entry_settings():
     return PageMenuEntry(
         title=_("Settings"),
         icon_name="configuration",
+        is_shortcut=True,
+        is_suggested=True,
         item=make_simple_link(html.makeuri_contextless([("mode", "mkeventd_config")])),
     )
 

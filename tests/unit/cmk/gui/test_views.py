@@ -181,7 +181,7 @@ def test_registered_commands():
             'group': 'acknowledge',
             'permission': 'action.acknowledge',
             'tables': ['host', 'service', 'aggr'],
-            'title': u'Acknowledge Problems'
+            'title': u'Acknowledge problems'
         },
         'ec_custom_actions': {
             'permission': 'mkeventd.actions',

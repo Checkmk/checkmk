@@ -781,6 +781,8 @@ class GUIViewRenderer(ABCViewRenderer):
                     name="command_%s" % command.ident,
                     is_enabled=_should_show_command_form(self.view.datasource),
                     is_show_more=command.is_show_more,
+                    is_shortcut=command.is_shortcut,
+                    is_suggested=command.is_suggested,
                     css_classes=["command"],
                 )
 
@@ -874,6 +876,8 @@ class GUIViewRenderer(ABCViewRenderer):
             item=make_simple_link(
                 html.makeuri([("show_checkboxes", "0" if self.view.checkboxes_displayed else "1")
                              ])),
+            is_shortcut=True,
+            is_suggested=True,
             is_enabled=checkboxes_toggleable,
         )
 
@@ -2211,10 +2215,16 @@ def _get_context_page_menu_dropdowns(view: View, rows: Rows,
             PageMenuDropdown(
                 name=ident,
                 title=info.title if is_single_info else info.title_plural,
-                topics=list(
-                    _get_context_page_menu_topics(view, info, is_single_info, topics,
-                                                  dropdown_visuals, singlecontext_request_vars,
-                                                  mobile)) + host_setup_topic,
+                topics=host_setup_topic + list(
+                    _get_context_page_menu_topics(
+                        view,
+                        info,
+                        is_single_info,
+                        topics,
+                        dropdown_visuals,
+                        singlecontext_request_vars,
+                        mobile,
+                    )),
             ))
 
     return dropdowns
@@ -2520,7 +2530,7 @@ def _page_menu_entries_host_setup() -> Iterator[PageMenuEntry]:
     host_name = html.request.get_ascii_input_mandatory("host")
 
     yield PageMenuEntry(
-        title=_("Configuration"),
+        title=_("Host configuration"),
         icon_name="wato",
         item=make_simple_link(_link_to_host_by_name(host_name)),
     )

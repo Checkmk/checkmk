@@ -7,34 +7,6 @@
 import time
 import collections
 
-
-def apache_status_check_params(value, params, op_txt):
-    def apply_operator(val, param, op_txt):
-        if op_txt == "at":
-            return val >= param
-        if op_txt == "below":
-            return val < param
-        return None
-
-    warn, crit = params
-    extra_perf = [warn, crit]
-    levelstxt = ""
-    state = 0
-
-    if apply_operator(value, crit, op_txt):
-        state = 2
-        symbol = "(!!)"
-    elif apply_operator(value, warn, op_txt):
-        state = 1
-        symbol = "(!)"
-
-    if state:
-        levelstxt += " (warn/crit %s %s/%s)%s" % \
-                       (op_txt, warn, crit, symbol)
-
-    return state, levelstxt, extra_perf
-
-
 _FIELD_CASTER_MAP = collections.OrderedDict((
     ('Uptime', int),
     ('IdleWorkers', int),
@@ -180,43 +152,35 @@ def check_apache_status(item, params, info):
         data["BytesPerSec"] = get_rate("apache_status_%s_bytes" % item, this_time,
                                        data.pop("Total kBytes") * 1024)
 
-    worst_state = 0
-    output = []
-    perfdata = []
-
     for key in (k for k in _FIELD_CASTER_MAP if k in data):
         value = data[key]
+        levels_to_lower = (None, None) if key == 'OpenSlots' else ()
 
         # Don't process the scoreboard data directly. Print states instead
         if key == 'Scoreboard':
             states = []
+            perfdata = []
             for stat_label in _SCOREBOARD_LABEL_MAP:
                 val = data.get('State_' + stat_label, 0)
                 if val > 0:
                     states.append('%s: %d' % (stat_label, val))
                 perfdata.append(('State_' + stat_label, val))
-            output.append('States: (%s)' % ', '.join(states))
+            yield 0, 'States: (%s)' % ', '.join(states), perfdata
             continue
 
+        renderer = None
         if key == 'Uptime':
-            display_value = get_age_human_readable(value)
-        elif isinstance(value, float):
-            display_value = '%0.2f' % value
-        else:
-            display_value = '%d' % value
+            renderer = get_age_human_readable
+        elif not isinstance(value, float):
+            renderer = lambda i: "%d" % int(i)
 
-        extra_info = ""
-        extra_perf = []
-        if params.get(key) and key in ('BusyWorkers', 'OpenSlots'):
-            levels_type = "at" if key == 'BusyWorkers' else "below"
-            key_state, extra_info, extra_perf = \
-                apache_status_check_params(value, params.get(key), levels_type)
-            worst_state = max(key_state, worst_state)
-
-        output.append('%s: %s%s' % (key, display_value, extra_info))
-        perfdata.append(tuple([key.replace(' ', '_'), value] + extra_perf))
-
-    return (worst_state, ', '.join(output), perfdata)
+        yield check_levels(
+            value,
+            key.replace(' ', '_'),
+            levels_to_lower + params.get(key, (None, None)),
+            human_readable_func=renderer,
+            infoname=key,
+        )
 
 
 check_info['apache_status'] = {

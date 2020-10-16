@@ -113,37 +113,34 @@ def check_smart_stats(item, params, info):
     if disk is None:
         return
 
-    for unit, field, descr in [
-        (' hours', 'Power_On_Hours', 'Powered on'),
-        ('', 'Power_Cycle_Count', 'Power cycles'),
-        ('', 'Reallocated_Sector_Ct', 'Reallocated sectors'),
-        ('', 'Reallocated_Event_Count', 'Reallocated events'),
-        ('', 'Spin_Retry_Count', 'Spin retries'),
-        ('', 'Current_Pending_Sector', 'Pending sectors'),
-        ('', 'Command_Timeout', 'Command timeouts'),
-        ('', 'End-to-End_Error', 'End-to-End errors'),
-        ('', 'Reported_Uncorrect', 'Uncorrectable errors'),
-        ('', 'Uncorrectable_Error_Cnt', 'Uncorrectable errors'),
-        ('', 'UDMA_CRC_Error_Count', 'UDMA CRC errors'),
-        ('', 'CRC_Error_Count', 'UDMA CRC errors'),
+    for field, descr, renderer in [
+        ('Power_On_Hours', 'Powered on', lambda i: "%s hours" % i),
+        ('Power_Cycle_Count', 'Power cycles', str),
+        ('Reallocated_Sector_Ct', 'Reallocated sectors', str),
+        ('Reallocated_Event_Count', 'Reallocated events', str),
+        ('Spin_Retry_Count', 'Spin retries', str),
+        ('Current_Pending_Sector', 'Pending sectors', str),
+        ('Command_Timeout', 'Command timeouts', str),
+        ('End-to-End_Error', 'End-to-End errors', str),
+        ('Reported_Uncorrect', 'Uncorrectable errors', str),
+        ('Uncorrectable_Error_Cnt', 'Uncorrectable errors', str),
+        ('UDMA_CRC_Error_Count', 'UDMA CRC errors', str),
+        ('CRC_Error_Count', 'UDMA CRC errors', str),
             #nvme
-        ('', 'Power_Cycles', 'Power cycles'),
-        ('', 'Critical_Warning', 'Critical warning'),
-        ('%', 'Available_Spare', 'Available spare'),
-        ('%', 'Percentage_Used', 'Percentage used'),
-        ('', 'Media_and_Data_Integrity_Errors', 'Media and data integrity errors'),
-        ('', 'Error_Information_Log_Entries', 'Error information log entries'),
-        ('', 'Data_Units_Read', 'Data units read'),
-        ('', 'Data_Units_Written', 'Data units written'),
+        ('Power_Cycles', 'Power cycles', str),
+        ('Critical_Warning', 'Critical warning', str),
+        ('Available_Spare', 'Available spare', get_percent_human_readable),
+        ('Percentage_Used', 'Percentage used', get_percent_human_readable),
+        ('Media_and_Data_Integrity_Errors', 'Media and data integrity errors', str),
+        ('Error_Information_Log_Entries', 'Error information log entries', str),
+        ('Data_Units_Read', 'Data units read', get_bytes_human_readable),
+        ('Data_Units_Written', 'Data units written', get_bytes_human_readable),
     ]:
         value = disk.get(field)
         if value is None:
             continue
 
-        if field.startswith("Data_Units_"):
-            infotext = "%s: %s%s" % (descr, get_bytes_human_readable(value), unit)
-        else:
-            infotext = "%s: %d%s" % (descr, value, unit)
+        infotext = "%s: %s" % (descr, renderer(value))
 
         if field == "Available_Spare":
             ref_value = int(disk.get("Available_Spare_Threshold"))
@@ -156,10 +153,9 @@ def check_smart_stats(item, params, info):
 
         if field == "Available_Spare":
             state = 2 if value < ref_value else 0
-            hints = ["during discovery: %d (!!)" % ref_value] if value < ref_value else []
         else:
             state = 2 if value > ref_value else 0
-            hints = ["during discovery: %d (!!)" % ref_value] if value > ref_value else []
+        hints = ["during discovery: %d (!!)" % ref_value] if state else []
 
         # For reallocated event counts we experienced to many reported errors for disks
         # which still seem to be OK. The raw value increased by a small amount but the

@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.hp_proliant import *  # pylint: disable=wildcard-import,unused-wildcard-import
 condition_map = {
     '1': ('other', 3),  # the status could not be determined or not present.
     '2': ('ok', 0),  # operating normally
@@ -84,6 +85,5 @@ check_info["hp_proliant_psu"] = {
             "8",  # cpqHeFltTolPowerSupplyCapacityMaximum
         ]),
     'snmp_scan_function': hp_proliant_scan_function,
-    'includes': ['hp_proliant.include'],
     'has_perfdata': True,
 }

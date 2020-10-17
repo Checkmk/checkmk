@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.ibm_mq import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<ibm_mq_plugin:sep(58)>>>
 # version|2.0.4
 # dspmq|OK
@@ -51,5 +52,4 @@ check_info["ibm_mq_plugin"] = {
     'service_description': 'IBM MQ Plugin',
     'has_perfdata': False,
     "group": "ibm_mq_plugin",
-    "includes": ["ibm_mq.include"],
 }

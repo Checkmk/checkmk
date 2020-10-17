@@ -21,6 +21,13 @@ from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_funct
 )
 from cmk.base.api.agent_based.type_defs import AgentSectionPlugin, SNMPSectionPlugin
 
+from cmk.base.check_legacy_includes.df_netapp import is_netapp_filer  # type: ignore[attr-defined]
+from cmk.base.check_legacy_includes.fsc import _is_fsc_or_windows, is_fsc  # type: ignore[attr-defined]
+from cmk.base.check_legacy_includes.ucd_hr import _is_ucd  # type: ignore[attr-defined]
+from cmk.base.check_legacy_includes.cisco_cpu_scan_functions import (  # type: ignore[attr-defined]
+    _has_table_2, _is_cisco, _is_cisco_nexus,
+)
+
 pytestmark = pytest.mark.checks
 
 
@@ -136,19 +143,18 @@ def test_scan_function_translation(config_snmp_scan_functions):
         _ = create_detect_spec(name, scan_func, [])
 
 
-@pytest.mark.parametrize("check_name, func_name", [
-    ("fsc_subsystems", "_is_fsc_or_windows"),
-    ("ucd_processes", "_is_ucd"),
-    ("fsc_temp", "is_fsc"),
-    ("df_netapp32", "is_netapp_filer"),
-    ("cisco_cpu", "_has_table_2"),
-    ("cisco_cpu", "_is_cisco"),
-    ("cisco_cpu", "_is_cisco_nexus"),
+@pytest.mark.parametrize("func", [
+    _is_fsc_or_windows,
+    _is_ucd,
+    is_fsc,
+    is_netapp_filer,
+    _has_table_2,
+    _is_cisco,
+    _is_cisco_nexus,
 ])
-def test_explicit_conversion(check_manager, check_name, func_name):
-    scan_func = check_manager.get_check(check_name).context[func_name]
-    created = create_detect_spec("unit-test", scan_func, [])
-    explicit = _explicit_conversions(scan_func.__name__)
+def test_explicit_conversion(func):
+    created = create_detect_spec("unit-test", func, [])
+    explicit = _explicit_conversions(func.__name__)
     assert created == explicit
 
 

@@ -9,9 +9,8 @@ import pytest  # type: ignore[import]
 
 from cmk.base.plugins.agent_based.utils import legacy_docker
 
+from cmk.base.check_legacy_includes.legacy_docker import *
 pytestmark = pytest.mark.checks
-
-exec(open(os.path.join(os.path.dirname(__file__), '../../../checks/legacy_docker.include')).read())
 
 
 @pytest.mark.parametrize(

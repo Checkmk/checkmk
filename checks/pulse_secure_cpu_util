@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
 import cmk.base.plugins.agent_based.utils.pulse_secure as pulse_secure
 
 factory_settings["pulse_secure_cpu_util_def_levels"] = {"util": (80., 90.)}
@@ -32,6 +33,5 @@ check_info["pulse_secure_cpu_util"] = {
         ]),
     "snmp_scan_function": pulse_secure.scan_pulse_secure,
     "group": "cpu_utilization",
-    "includes": ["cpu_util.include"],
     "default_levels_variable": "pulse_secure_cpu_util_def_levels",
 }

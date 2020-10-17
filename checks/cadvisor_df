@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 import json
 
 
@@ -36,5 +38,4 @@ check_info["cadvisor_df"] = {
     'check_function': check_cadvisor_df,
     'service_description': 'Filesystem',
     'has_perfdata': True,
-    'includes': ["df.include", "size_trend.include"],
 }

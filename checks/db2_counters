@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.db2 import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<db2_counters>>>
 # TIMESTAMP 1426610723
 # db2taddm:CMDBS1 deadlocks 0
@@ -119,6 +120,5 @@ check_info['db2_counters'] = {
     "inventory_function": inventory_db2_counters,
     "has_perfdata": True,
     "group": "db2_counters",
-    "includes": ["db2.include"],
     "default_levels_variable": "db2_counters_default_levels",
 }

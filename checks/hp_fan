@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.hp import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_hp_fan(info):
     return {
@@ -42,5 +44,4 @@ check_info['hp_fan'] = {
             "4",  # hpicfFanState
         ]),
     'snmp_scan_function': scan_hp,
-    'includes': ['hp.include'],
 }

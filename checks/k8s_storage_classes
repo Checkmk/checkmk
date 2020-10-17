@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.k8s import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 @get_parsed_item_data
 def check_k8s_storage_classes(_no_item, _no_params, storage):
@@ -21,5 +23,4 @@ check_info['k8s_storage_classes'] = {
     'inventory_function': discover(),
     'check_function': check_k8s_storage_classes,
     'service_description': 'Storage class %s',
-    'includes': ['k8s.include'],
 }

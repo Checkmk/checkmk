@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.cisco_sensor_item import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # normal(1):         the environment is good, such as low
 #                    temperature.
 # warning(2):        the environment is bad, such as temperature
@@ -57,5 +58,4 @@ check_info['cisco_temp_perf'] = {
                                6, # ciscoEnvMonTemperatureState
                                OID_END
                             ]),
-    "includes"              : ['cisco_sensor_item.include'],
 }

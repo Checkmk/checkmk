@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.hp_msa import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<hp_msa_system>>>
 # system 1 system-name IMSAKO2B1
 # system 1 system-contact cia@cgm.com
@@ -63,5 +64,4 @@ check_info['hp_msa_system'] = {
     'inventory_function': inventory_hp_msa_health,
     'check_function': check_hp_msa_health,
     'service_description': 'System Health %s',
-    'includes': ["hp_msa.include"],
 }

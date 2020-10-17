@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # NAME    SIZE  ALLOC   FREE  CAP  HEALTH  ALTROOT
 # app02  39.8G  14.1G  25.6G  35%  ONLINE  -
 # rpool  39.8G  32.9G  6.81G  82%  ONLINE  -
@@ -63,5 +65,4 @@ check_info['zpool'] = {
     "service_description": "Storage Pool %s",
     "has_perfdata": True,
     "group": "filesystem",
-    "includes": ["size_trend.include", "df.include"],
 }

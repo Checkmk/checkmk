@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_aws_glacier(info):  # pylint: disable=function-redefined
     parsed = parse_aws(info)
@@ -60,7 +62,6 @@ check_info['aws_glacier'] = {
     'check_function': check_aws_glacier_archives,
     'service_description': 'AWS/Glacier Vault: %s',
     'has_perfdata': True,
-    'includes': ['aws.include'],
     'group': 'aws_glacier_vault_archives',
 }
 

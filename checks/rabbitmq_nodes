@@ -4,6 +4,8 @@
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
 # |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
@@ -291,7 +293,6 @@ check_info["rabbitmq_nodes.mem"] = {
     "service_description": "RabbitMQ Node %s Memory",
     "has_perfdata": True,
     "group": "memory_multiitem",
-    "includes": ["mem.include"],
 }
 
 
@@ -347,7 +348,6 @@ check_info["rabbitmq_nodes.uptime"] = {
     "service_description": "RabbitMQ Node %s Uptime",
     "has_perfdata": True,
     "group": "rabbitmq_nodes_uptime",
-    "includes": ["uptime.include"],
 }
 
 

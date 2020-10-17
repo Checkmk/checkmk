@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings['aws_elb_limits_default_levels'] = {
     'load_balancers': (None, 80.0, 90.0),
     'load_balancer_listeners': (None, 80.0, 90.0),
@@ -21,7 +22,6 @@ check_info['aws_elb_limits'] = {
     'inventory_function': discover(),
     'check_function': check_aws_elb_limits,
     'service_description': 'AWS/ELB Limits %s',
-    'includes': ['aws.include'],
     'group': 'aws_elb_limits',
     'default_levels_variable': 'aws_elb_limits_default_levels',
     'has_perfdata': True,

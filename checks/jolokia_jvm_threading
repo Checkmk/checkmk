@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.jolokia import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings['jolokia_jvm_threading.pool'] = {
     'currentThreadsBusy': (80, 90),
 }
@@ -13,12 +14,12 @@ def parse_jolokia_jvm_threading(info):
     parsed = {}
     for instance, mbean, data in parse_jolokia_json_output(info):
 
-        type_ = _jolokia_mbean_attribute('type', mbean)
+        type_ = jolokia_mbean_attribute('type', mbean)
         parsed_data = parsed.setdefault(instance, {}).setdefault(type_, {})
 
         if type_ == "ThreadPool":
             for key in data:
-                name = _jolokia_mbean_attribute('name', key).strip('"')
+                name = jolokia_mbean_attribute('name', key).strip('"')
                 parsed_data[name] = data[key]
         else:
             parsed_data.update(data)
@@ -71,7 +72,6 @@ check_info["jolokia_jvm_threading"] = {
     "service_description": "JVM %s Threading",
     "group": "jvm_threading",
     "has_perfdata": True,
-    "includes": ["jolokia.include"],
 }
 
 

@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.db2 import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # No used space check for Tablsspaces with CONTENTS in ('TEMPORARY','UNDO')
 # It is impossible to check the used space in UNDO and TEMPORARY Tablespaces
 # These Types of Tablespaces are ignored in this plugin.
@@ -105,5 +106,4 @@ check_info['db2_tablespaces'] = {
     "has_perfdata": True,
     "group": "db2_tablespaces",
     "default_levels_variable": "db2_tablespaces_default_levels",
-    "includes": ["db2.include"]
 }

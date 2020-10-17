@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<netapp_api_environment:sep(9)>>>
 # sensor-name PSU1 FAULT  sensor-type discrete    node-name BIN-CL1-N1    discrete-sensor-value OK    discrete-sensor-state normal    threshold-sensor-state normal
 
@@ -135,7 +137,6 @@ check_info["netapp_api_environment"] = {
     'parse_function': _parse_netapp_api_environment,
     'service_description': 'PSU Controller %s',
     'group': 'hw_psu',
-    'includes': ["netapp_api.include", "temperature.include"],
 }
 
 

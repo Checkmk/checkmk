@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
 fortigate_memory_base_default_levels = (70, 80)  # taken from fortigate_memory
 
 
@@ -50,5 +51,4 @@ check_info["fortigate_memory_base"] = {
             4,  # fgSysMemUsage
             5  # fgSysMemCapacity
         ]),
-    "includes": ['mem.include'],
 }

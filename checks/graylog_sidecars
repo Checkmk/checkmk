@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<graylog_sidecars>>>
 # {"sort": "node_name", "pagination": {"count": 1, "per_page": 50, "total": 1,
 # "page": 1}, "sidecars": [{"co  llectors": null, "node_name": "testserver",
@@ -70,7 +71,7 @@ def check_graylog_sidecars(item, params, item_data):
 
     last_seen = item_data.get("last_seen")
     if last_seen is not None:
-        local_timestamp = _handle_iso_utc_to_localtimestamp(last_seen)
+        local_timestamp = handle_iso_utc_to_localtimestamp(last_seen)
         age = time.time() - local_timestamp
 
         yield 0, "Last seen: %s" % get_timestamp_human_readable(local_timestamp)
@@ -150,5 +151,4 @@ check_info["graylog_sidecars"] = {
     "service_description": "Graylog Sidecar %s",
     "has_perfdata": True,
     "group": "graylog_sidecars",
-    "includes": ["graylog.include"],
 }

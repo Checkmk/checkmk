@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_atto_fibrebridge_chassis(info):
     parsed = {}
@@ -50,7 +52,6 @@ check_info["atto_fibrebridge_chassis.temp"] = {
     "service_description": "Temperature %s",
     "group": "temperature",
     "has_perfdata": True,
-    "includes": ["temperature.include"],
 }
 
 #.

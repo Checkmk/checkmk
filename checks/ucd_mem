@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.ucd_hr import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # FIXME
 # The WATO group 'memory_simple' needs an item and the service_description should
 # have a '%s'.  At the moment the current empty item '' and 'Memory' without '%s'
@@ -92,5 +94,4 @@ check_info['ucd_mem'] = {
     'snmp_scan_function': is_ucd_mem,
     'default_levels_variable': 'ucd_mem_default_levels',
     'group': 'memory_simple',
-    'includes': ["ucd_hr.include", "mem.include"],
 }

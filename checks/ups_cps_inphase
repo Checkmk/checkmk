@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_ups_cps_inphase(info):
     parsed = {}
@@ -31,6 +33,5 @@ check_info["ups_cps_inphase"] = {
             "1",  #upsAdvanceInputLineVoltage "in 1/10 VAC"
             "4",  #upsAdvanceInputFrequency "in 1/10 Hz"
         ]),
-    "includes": ["elphase.include"],
     "group": "el_inphase",
 }

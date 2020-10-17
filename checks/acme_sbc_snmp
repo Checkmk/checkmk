@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.acme import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # comNET GmbH, Fabian Binder
 
 # .1.3.6.1.4.1.9148.3.2.1.1.3 Health Score (apSysHealthScore)
@@ -66,7 +67,6 @@ check_info['acme_sbc_snmp'] = {
             "4",  # APSYSMGMT-MIB::apSysRedundancy
         ]),
     'snmp_scan_function': scan_acme,
-    'includes': ['acme.include'],
     'group': 'acme_sbc_snmp',
     'default_levels_variable': 'acme_sbc_snmp_default_levels',
 }

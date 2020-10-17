@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
 #   .--mem.linux-----------------------------------------------------------.
 #   |                                      _ _                             |
 #   |           _ __ ___   ___ _ __ ___   | (_)_ __  _   ___  __           |
@@ -127,7 +128,6 @@ check_info["mem.linux"] = {
     'has_perfdata': True,
     'group': 'memory_linux',
     "handle_real_time_checks": True,
-    'includes': ['mem.include'],
 }
 
 #.
@@ -279,7 +279,6 @@ check_info["mem.win"] = {
     'group': 'memory_pagefile_win',
     'default_levels_variable': 'memory_win_default_levels',
     "handle_real_time_checks": True,
-    "includes": ["mem.include"],
 }
 
 #.

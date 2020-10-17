@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.mysql import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<mysql>>>
 # [[mysql]]
 # Aborted_clients 0
@@ -54,7 +56,6 @@ check_info['mysql'] = {
     "inventory_function": discover(lambda k, values: 'version' in values),
     "check_function": check_mysql_version,
     "service_description": "MySQL Version %s",
-    "includes": ['mysql.include'],
 }
 
 #.
@@ -135,7 +136,6 @@ check_info['mysql.innodb_io'] = {
     "service_description": "MySQL InnoDB IO %s",
     "has_perfdata": True,
     "group": "mysql_innodb_io",
-    "includes": ["diskstat.include"],
 }
 
 #.

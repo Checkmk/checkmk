@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # TODO: The extra_sections part is only transitional code to avoid
 # duplicate CPU services.
 # Previously, the duplicate services were handled in the agent_vsphere
@@ -58,7 +60,6 @@ check_info['esx_vsphere_hostsystem.mem_usage_cluster'] = {
     "service_description": "Memory",
     "group": "mem_cluster",
     "has_perfdata": True,
-    "includes": ["mem.include"],
 }
 
 #.
@@ -130,7 +131,6 @@ check_info['esx_vsphere_hostsystem.cpu_util_cluster'] = {
     "service_description": "CPU utilization",
     "group": "cpu_utilization_cluster",
     "has_perfdata": True,
-    "includes": ["cpu_util.include"],
 }
 #.
 #   .--Memory--------------------------------------------------------------.

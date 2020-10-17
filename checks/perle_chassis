@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.perle import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # .1.3.6.1.4.1.1966.21.1.1.1.1.1.1.2.1 MCR1900 --> PERLE-MCR-MGT-MIB::chassisModelName.1
 # .1.3.6.1.4.1.1966.21.1.1.1.1.1.1.4.1 103-001715T10033 --> PERLE-MCR-MGT-MIB::chassisSerialNumber.1
 # .1.3.6.1.4.1.1966.21.1.1.1.1.1.1.5.1 0.0 --> PERLE-MCR-MGT-MIB::chassisBootloaderVersion.1
@@ -47,7 +49,6 @@ check_info['perle_chassis'] = {
             '9',  # PERLE-MCR-MGT-MIB::chassisTemperature
         ]),
     'snmp_scan_function': perle_scan_function,
-    'includes': ['perle.include'],
 }
 
 
@@ -64,6 +65,5 @@ check_info['perle_chassis.temp'] = {
     'check_function': check_perle_chassis_temp,
     'service_description': 'Temperature %s',
     'has_perfdata': True,
-    'includes': ['temperature.include', 'perle.include'],
     'group': 'temperature',
 }

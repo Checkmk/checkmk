@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.db2 import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<db2_backup>>>
 # [[[db2taddm:CMDBS1]]]
 # 2015-03-12-04.00.13.000000
@@ -49,5 +50,4 @@ check_info['db2_backup'] = {
     "check_function": check_db2_backup,
     "inventory_function": inventory_db2_backup,
     "group": "db2_backup",
-    "includes": ["db2.include"],
 }

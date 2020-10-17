@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.azure import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings['levels_azure_storageaccounts'] = {}
 # metrics description:
 # https://docs.microsoft.com/en-US/azure/monitoring-and-diagnostics/monitoring-supported-metrics#microsoftstoragestorageaccounts
@@ -48,7 +49,6 @@ check_info['azure_storageaccounts'] = {
     'inventory_function': discover(),
     'check_function': check_azure_storageaccounts,
     'service_description': "Storage %s account",
-    'includes': ['azure.include'],
     'has_perfdata': True,
     'default_levels_variable': 'levels_azure_storageaccounts',
     'group': 'azure_storageaccounts',
@@ -72,7 +72,6 @@ check_info['azure_storageaccounts.flow'] = {
     'check_function': check_azure_storageaccounts_flow,
     'service_description': "Storage %s flow",
     'has_perfdata': True,
-    'includes': ['azure.include'],
     'default_levels_variable': 'levels_azure_storageaccounts',
     'group': 'azure_storageaccounts',
 }
@@ -99,7 +98,6 @@ check_info['azure_storageaccounts.performance'] = {
     'check_function': check_azure_storageaccounts_performance,
     'service_description': "Storage %s performance",
     'has_perfdata': True,
-    'includes': ['azure.include'],
     'default_levels_variable': 'levels_azure_storageaccounts',
     'group': 'azure_storageaccounts',
 }

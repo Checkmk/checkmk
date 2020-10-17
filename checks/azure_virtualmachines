@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.azure import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # The following two are needed both in the factory settings for
 # the single check, as well as in the summary check.
 _AZURE_VM_STATES_PROV = {
@@ -66,7 +67,6 @@ check_info['azure_virtualmachines'] = {
     'inventory_function': discover(),
     'check_function': check_azure_virtualmachines,
     'service_description': "VM %s",
-    'includes': ['azure.include'],
     'default_levels_variable': 'levels_azure_virtualmachines',
     'group': 'azure_vms',
 }
@@ -159,7 +159,6 @@ check_info['azure_virtualmachines.summary'] = {
     'inventory_function': discover_azure_virtualmachines_summary,
     'check_function': check_azure_virtualmachines_summary,
     'service_description': "VM Summary",
-    'includes': ['azure.include'],
     'default_levels_variable': 'levels_azure_virtualmachines_summary',
     'group': 'azure_vms_summary',
 }

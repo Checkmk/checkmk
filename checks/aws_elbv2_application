@@ -4,9 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_aws_elbv2_application(info):
-    metrics = _extract_aws_metrics_by_labels([
+    metrics = extract_aws_metrics_by_labels([
         'ConsumedLCUs',
         'ActiveConnectionCount',
         'NewConnectionCount',
@@ -62,7 +64,6 @@ check_info['aws_elbv2_application'] = {
     'inventory_function': lambda p: inventory_aws_generic_single(p, ['ConsumedLCUs']),
     'check_function': check_aws_elbv2_application_lcu,
     'service_description': 'AWS/ApplicationELB LCUs',
-    'includes': ['aws.include'],
     'group': 'aws_elbv2_lcu',
     'has_perfdata': True,
 }
@@ -116,7 +117,6 @@ check_info['aws_elbv2_application.connections'] = {
         p, _aws_elbv2_application_connection_types, requirement=any),
     'check_function': check_aws_elbv2_application_connections,
     'service_description': 'AWS/ApplicationELB Connections',
-    'includes': ['aws.include'],
     'has_perfdata': True,
 }
 
@@ -141,7 +141,6 @@ check_info['aws_elbv2_application.http_elb'] = {
     'inventory_function': lambda p: inventory_aws_generic_single(p, ['RequestCount']),
     'check_function': check_aws_elbv2_application_http_elb,
     'service_description': 'AWS/ApplicationELB HTTP ELB',
-    'includes': ['aws.include'],
     'group': 'aws_elb_http',
     'has_perfdata': True,
 }
@@ -180,7 +179,6 @@ check_info['aws_elbv2_application.http_redirects'] = {
         p, _aws_elbv2_application_http_redirects_metrics, requirement=any),
     'check_function': check_aws_elbv2_application_http_redirects,
     'service_description': 'AWS/ApplicationELB HTTP Redirects',
-    'includes': ['aws.include'],
     'has_perfdata': True,
 }
 
@@ -233,6 +231,5 @@ check_info['aws_elbv2_application.statistics'] = {
         p, _aws_elbv2_application_statistics_metrics, requirement=any),
     'check_function': check_aws_elbv2_application_statistics,
     'service_description': 'AWS/ApplicationELB Statistics',
-    'includes': ['aws.include'],
     'has_perfdata': True,
 }

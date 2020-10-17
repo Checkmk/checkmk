@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.hp import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_hp_psu(info):
     parsed = {index: {"temp": int(temp), "status": dev_status} for index, dev_status, temp in info}
@@ -44,7 +47,6 @@ check_info['hp_psu.temp'] = {
     'check_function': check_hp_psu_temp,
     'service_description': "Temperature Power Supply %s",
     'group': "temperature",
-    'includes': ["temperature.include"],
     'has_perfdata': True,
 }
 
@@ -92,5 +94,4 @@ check_info['hp_psu'] = {
             "4",  # hpicfPsTemp
         ]),
     'snmp_scan_function': scan_hp,
-    'includes': ['hp.include'],
 }

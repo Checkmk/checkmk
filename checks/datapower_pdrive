@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.datapower_scan import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def inventory_datapower_pdrive(info):
     for controller, device, _ldrive, _position, status, _progress, _vendor, _product, _fail in info:
@@ -73,5 +75,4 @@ check_info['datapower_pdrive'] = {
             "18",  # dpStatusRaidPhysicaldrivetatusFailure
         ]),
     "snmp_scan_function": scan_datapower,
-    "includes": ["datapower_scan.include"],
 }

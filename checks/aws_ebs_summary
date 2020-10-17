@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
 AWSEBSStorageTypes = {
     "gp2": "General Purpose SSD",
     "io1": "Provisioned IOPS SSD",
@@ -57,7 +58,6 @@ check_info['aws_ebs_summary'] = {
     'inventory_function': discover_single,
     'check_function': check_aws_ebs_summary,
     'service_description': 'AWS/EBS Summary',
-    'includes': ['aws.include'],
 }
 
 #.
@@ -85,5 +85,4 @@ check_info['aws_ebs_summary.health'] = {
         inventory_aws_generic(p, ['VolumeStatus']),
     'check_function': check_aws_ebs_summary_health,
     'service_description': 'AWS/EBS Health %s',
-    'includes': ['aws.include'],
 }

@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.k8s import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def discover_k8s_service_port(parsed):
     if parsed:
@@ -53,5 +55,4 @@ check_info['k8s_service_port'] = {
     'check_function': check_k8s_service_port,
     'service_description': 'Port %s',
     'group': 'k8s_port',
-    'includes': ['k8s.include'],
 }

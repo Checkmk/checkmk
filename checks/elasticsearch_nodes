@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<elasticsearch_nodes>>>
 # mynode1 open_file_descriptors 434
 # mynode1 max_file_descriptors 4096
@@ -72,5 +73,4 @@ check_info["elasticsearch_nodes"] = {
     "service_description": "Elasticsearch Node %s",
     "has_perfdata": True,
     "group": "elasticsearch_nodes",
-    "includes": ["cpu_util.include"],
 }

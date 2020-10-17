@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings["sensatronics_temp_default_levels"] = {"levels": (23.0, 25.0)}
 
 
@@ -33,6 +34,5 @@ check_info["sensatronics_temp"] = {
             "1.0",  #Sensor Name
             "2.0",  #Sensor Value
         ]),
-    "includes": ["temperature.include"],
     "default_levels_variable": "sensatronics_temp_default_levels"
 }

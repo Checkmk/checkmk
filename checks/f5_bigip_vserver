@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.f5_bigip import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Current server status
 # vserver["status"]
 # 0 - NONE:   disabled
@@ -208,5 +209,4 @@ check_info["f5_bigip_vserver"] = {
             "2.3.1.25",  # 14 packet_velocity_asic Total Connections
         ]),
     "snmp_scan_function": scan_f5_bigip,
-    "includes": ["f5_bigip.include"],
 }

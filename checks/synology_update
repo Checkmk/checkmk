@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.synology import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings["synology_update_levels"] = {
     "ok_states": [2],
     "warn_states": [5],
@@ -49,7 +50,6 @@ check_info["synology_update"] = {
             3,  #Version
             4,  #Status
         ]),
-    "includes": ["synology.include"],
     "default_levels_variable": "synology_update_levels",
     "group": "synology_update",
 }

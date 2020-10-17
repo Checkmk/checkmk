@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.filerdisks import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Agent output:
 # <<<ibm_svc_disk:sep(58)>>>
 # 0:online::member:sas_hdd:558.4GB:7:V7BRZ_mdisk08:4:1:24::
@@ -94,7 +96,6 @@ check_info["ibm_svc_disks"] = {
     'check_function': check_ibm_svc_disks,
     'inventory_function': discover_single,
     'service_description': 'Disk Summary',
-    'includes': ['ibm_svc.include', 'filerdisks.include'],
     'group': 'netapp_disks',
     'default_levels_variable': 'filer_disks_default_levels',
     'has_perfdata': True,

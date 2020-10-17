@@ -4,10 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.fjdarye import *  # pylint: disable=wildcard-import,unused-wildcard-import
 check_info["fjdarye101_cmods_mem"] = {
     'check_function': check_fjdarye_item,
     'inventory_function': inventory_fjdarye_item,
-    'includes': ["fjdarye.include"],
     'service_description': 'Controller Module Memory %s',
     # 1: fjdaryCmmemoryIndex, 3: fjdaryCmmemoryStatus
     'snmp_info': ('.1.3.6.1.4.1.211.1.21.1.101.2.4.2.1', [1, 3]),

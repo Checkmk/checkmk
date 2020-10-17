@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # do need this, the params field can't be None
 factory_settings["emc_isilon_ifs"] = {}
 
@@ -25,7 +27,6 @@ check_info["emc_isilon_ifs"] = {
     "check_function": check_emc_isilon_ifs,
     "inventory_function": inventory_emc_isilon_ifs,
     "service_description": "Filesystem %s",
-    "includes": ["size_trend.include", "df.include"],
     "group": "filesystem",
     "default_levels_variable": "emc_isilon_ifs",
     "has_perfdata": True,

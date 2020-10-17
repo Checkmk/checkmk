@@ -12,8 +12,7 @@ import pytest  # type: ignore[import]
 from cmk.utils.regex import regex  # noqa: F401 # pylint: disable=unused-import
 from cmk.base.check_api import MKCounterWrapped
 
-with open(os.path.join(os.path.dirname(__file__), '../../../checks/ibm_mq.include')) as f:
-    exec(f.read())
+from cmk.base.check_legacy_includes.ibm_mq import *
 
 pytestmark = pytest.mark.checks
 

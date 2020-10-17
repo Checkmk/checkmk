@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def check_aws_ec2_summary(item, params, parsed):
     instances_by_state = {}
@@ -28,5 +30,4 @@ check_info['aws_ec2_summary'] = {
     'inventory_function': discover_single,
     'check_function': check_aws_ec2_summary,
     'service_description': 'AWS/EC2 Summary',
-    'includes': ['aws.include'],
 }

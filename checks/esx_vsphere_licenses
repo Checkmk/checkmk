@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.license import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Example output from agent:
 # esx_vsphere_licenses:sep(9)>>>
 # VMware vSphere 5 Standard   100 130
@@ -45,5 +46,4 @@ check_info['esx_vsphere_licenses'] = {
     "service_description": "License %s",
     "has_perfdata": True,
     "group": "esx_licenses",
-    "includes": ["license.include"]
 }

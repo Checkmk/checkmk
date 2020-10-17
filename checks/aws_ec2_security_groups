@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def inventory_aws_ec2_security_groups(parsed):
     if parsed:
@@ -30,5 +32,4 @@ check_info['aws_ec2_security_groups'] = {
     'inventory_function': inventory_aws_ec2_security_groups,
     'check_function': check_aws_ec2_security_groups,
     'service_description': 'AWS/EC2 Security Groups',
-    'includes': ['aws.include'],
 }

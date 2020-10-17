@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 import cmk.base.plugins.agent_based.utils.pulse_secure as pulse_secure
 
 factory_settings["pulse_secure_temp_def_levels"] = {"levels": (70., 75.)}
@@ -32,6 +33,5 @@ check_info["pulse_secure_temp"] = {
         ]),
     "snmp_scan_function": pulse_secure.scan_pulse_secure,
     "group": "temperature",
-    "includes": ["temperature.include"],
     "default_levels_variable": "pulse_secure_temp_def_levels",
 }

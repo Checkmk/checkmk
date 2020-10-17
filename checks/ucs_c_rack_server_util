@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # exemplary output of special agent agent_ucs_bladecenter (separator is <TAB> and means tabulator):
 #
 #<<<ucs_c_rack_server_util:sep(9)>>>
@@ -100,7 +101,6 @@ check_info["ucs_c_rack_server_util.cpu"] = {
     'service_description': 'CPU Utilization %s',
     'default_levels_variable': 'ucs_c_rack_server_util_cpu_default_levels',
     'has_perfdata': True,
-    'includes': ['cpu_util.include'],
 }
 
 #################################

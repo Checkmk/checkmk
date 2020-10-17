@@ -4,6 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-import,unused-wildcard-import
 import cmk.base.plugins.agent_based.esx_vsphere_counters as esx_vsphere_counters
 
 # Example output:
@@ -92,7 +96,6 @@ check_info['esx_vsphere_counters.diskio'] = {
     'service_description': 'Disk IO %s',
     'has_perfdata': True,
     'group': 'diskstat',
-    'includes': ["diskstat.include"],
 }
 
 #.
@@ -169,7 +172,6 @@ check_info['esx_vsphere_counters'] = {
     'check_function': check_esx_vsphere_counters_datastoreio,
     'service_description': 'Datastore IO %s',
     'has_perfdata': True,
-    'includes': ['diskstat.include'],
     'group': 'diskstat'
 }
 
@@ -203,7 +205,6 @@ check_info['esx_vsphere_counters.uptime'] = {
     'check_function': check_esx_vsphere_counters_uptime,
     'service_description': 'Uptime',
     'has_perfdata': True,
-    'includes': ['uptime.include'],
     'group': 'uptime',
 }
 
@@ -269,7 +270,6 @@ check_info['esx_vsphere_counters.ramdisk'] = {
     'check_function': check_esx_vsphere_counters_ramdisk,
     'service_description': 'Ramdisk %s',
     'has_perfdata': True,
-    'includes': ['size_trend.include', 'df.include'],
     'group': 'filesystem',
     'default_levels_variable': 'filesystem_default_levels',
 }

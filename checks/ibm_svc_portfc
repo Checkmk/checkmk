@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Output may have 11 fields:
 # id:fc_io_port_id:port_id:type:port_speed:node_id:node_name:WWPN:nportid:status:attachment
 # Example output from agent:
@@ -88,5 +89,4 @@ check_info["ibm_svc_portfc"] = {
     "check_function": check_ibm_svc_portfc,
     "inventory_function": inventory_ibm_svc_portfc,
     "service_description": "FC %s",
-    "includes": ["ibm_svc.include"],
 }

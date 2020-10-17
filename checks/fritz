@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 #
 # Internet connection
@@ -41,7 +43,6 @@ check_info['fritz.conn'] = {
     "inventory_function": inventory_fritz_conn,
     "check_function": check_fritz_conn,
     "service_description": "Connection",
-    "includes": ["uptime.include"],
     "has_perfdata": True,
 }
 

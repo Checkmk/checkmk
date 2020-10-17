@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
 AWSCostAndUageMetrics = [
     ("Unblended", "UnblendedCost", "unblended"),
 ]
@@ -61,7 +62,6 @@ check_info['aws_costs_and_usage'] = {
     'inventory_function': inventory_aws_costs_and_usage_summary,
     'check_function': check_aws_costs_and_usage_summary,
     'service_description': 'AWS/CE %s',
-    'includes': ['aws.include'],
     'group': 'aws_costs_and_usage',
     'has_perfdata': True,
 }

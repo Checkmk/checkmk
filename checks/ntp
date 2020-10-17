@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.time import *  # pylint: disable=wildcard-import,unused-wildcard-import
 import cmk.base.plugins.agent_based.ntp as ntp
 import cmk.base.plugins.agent_based.agent_based_api.v1.render as render
 
@@ -141,5 +142,4 @@ check_info["ntp.time"] = {
     'has_perfdata': True,
     'group': 'ntp_time',
     'default_levels_variable': "ntp_time_default_levels",
-    'includes': ["time.include"]
 }

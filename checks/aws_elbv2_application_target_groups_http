@@ -4,9 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_aws_elbv2_target_groups_http(info):
-    metrics = _extract_aws_metrics_by_labels([
+    metrics = extract_aws_metrics_by_labels([
         'RequestCount', 'HTTPCode_Target_2XX_Count', 'HTTPCode_Target_3XX_Count',
         'HTTPCode_Target_4XX_Count', 'HTTPCode_Target_5XX_Count'
     ], parse_aws(info))
@@ -24,7 +26,6 @@ check_info['aws_elbv2_application_target_groups_http'] = {
     'inventory_function': discover(lambda k, v: 'RequestCount' in v),
     'check_function': check_aws_application_elb_target_groups_http,
     'service_description': 'AWS/ApplicationELB HTTP %s',
-    'includes': ['aws.include'],
     'group': 'aws_elbv2_target_errors',
     'has_perfdata': True,
 }

@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.fan import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.genua import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings["genua_fan_default_levels"] = {
     "lower": (2000, 1000),
     "upper": (8000, 8400),
@@ -70,6 +72,5 @@ check_info['genua_fan'] = {
             ])
     ],
     "snmp_scan_function": scan_genua,
-    "includes": ["genua.include", "fan.include"],
     "default_levels_variable": "genua_fan_default_levels",
 }

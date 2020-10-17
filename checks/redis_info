@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.redis import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<redis_info>>>
 # [[[MY_FIRST_REDIS|127.0.0.1|6380]]]
 # ...
@@ -112,7 +114,6 @@ check_info["redis_info"] = {
     "service_description": "Redis %s Server Info",
     "has_perfdata": True,
     "group": "redis_info",
-    "includes": ["redis.include", "uptime.include"],
 }
 #.
 #   .--Persistence---------------------------------------------------------.

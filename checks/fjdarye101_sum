@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.fjdarye import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # check_mk plugin to monitor storage systems like Fujitsu ETERNUS DX80 S2 supporting FJDARY-E100.MIB
 # Copyright (c) 2012 FuH Entwicklungsgesellschaft mbH, Umkirch, Germany. All rights reserved.
 # Author: Philipp Hoefflin, 2012, hoefflin+cmk@fuh-e.de
@@ -14,7 +15,6 @@
 
 check_info["fjdarye101_sum"] = {
     'check_function': check_fjdarye_sum,
-    'includes': ["fjdarye.include"],
     'inventory_function': inventory_fjdarye_sum,
     'service_description': 'Summary Status %s',
     # 1: fjdaryUnitStatus

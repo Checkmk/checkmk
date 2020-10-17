@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 climaveneta_sensors = {
     1: "Room",
     3: "Outlet Air 1",
@@ -50,6 +51,5 @@ check_info["climaveneta_temp"] = {
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0") == "pCO Gateway",
     "snmp_info": (".1.3.6.1.4.1.9839.2.1", [OID_END, 2]),
     "group": "temperature",
-    "includes": ["temperature.include"],
     "default_levels_variable": "climaveneta_temp_default_levels"
 }

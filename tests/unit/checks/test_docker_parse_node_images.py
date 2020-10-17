@@ -12,11 +12,13 @@ import re
 
 import pytest  # type: ignore[import]
 
+from cmk.base.check_legacy_includes.legacy_docker import *
+
+
 pytestmark = pytest.mark.checks
 
 regex = re.compile
 
-exec(open(os.path.join(os.path.dirname(__file__), '../../../checks/legacy_docker.include')).read())
 
 REQUIRED_IMAGE_KEYS = (
     ("Id", str),

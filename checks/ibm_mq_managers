@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.ibm_mq import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<ibm_mq_managers:sep(10)>>>
 # QMNAME(QMIMIQ11) STATUS(RUNNING) DEFAULT(NO) STANDBY(PERMITTED) INSTNAME(Installation1) INSTPATH(/usr/mqm) INSTVER(8.0.0.5)
 #     INSTANCE(iasv0001) MODE(Active)
@@ -112,5 +113,4 @@ check_info['ibm_mq_managers'] = {
     'service_description': 'IBM MQ Manager %s',
     "default_levels_variable": "ibm_mq_managers_default_levels",
     'group': 'ibm_mq_managers',
-    'includes': ['ibm_mq.include'],
 }

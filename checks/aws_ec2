@@ -4,13 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.if_include import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings['if_default_levels'] = IF_CHECK_DEFAULT_PARAMETERS
 
 EC2DefaultItemName = "Summary"
 
 
 def parse_aws_ec2(info):
-    metrics = _extract_aws_metrics_by_labels([
+    metrics = extract_aws_metrics_by_labels([
         'CPUCreditUsage',
         'CPUCreditBalance',
         'CPUUtilization',
@@ -77,7 +81,6 @@ check_info['aws_ec2'] = {
         EC2DefaultItemName], ['StatusCheckFailed_System', 'StatusCheckFailed_Instance']),
     'check_function': check_aws_ec2_status_check,
     'service_description': 'AWS/EC2 Status Check',
-    'includes': ['aws.include'],
 }
 
 #.
@@ -119,7 +122,6 @@ check_info['aws_ec2.cpu_credits'] = {
     'check_function': check_aws_ec2_cpu_credits,
     'service_description': 'AWS/EC2 CPU Credits',
     'group': 'aws_ec2_cpu_credits',
-    'includes': ['aws.include'],
     'default_levels_variable': 'aws_cpu_credits',
     'has_perfdata': True,
 }
@@ -155,7 +157,6 @@ check_info['aws_ec2.cpu_util'] = {
     'group': 'cpu_utilization',
     'default_levels_variable': 'aws_ec2_cpu_util_default_levels',
     'has_perfdata': True,
-    'includes': ['cpu_util.include', 'aws.include'],
 }
 
 #.
@@ -208,7 +209,6 @@ check_info['aws_ec2.disk_io'] = {
     ]),
     'check_function': check_aws_ec2_disk_io,
     'service_description': 'AWS/EC2 Disk IO %s',
-    'includes': ['diskstat.include', 'aws.include'],
     'group': 'diskstat',
     'has_perfdata': True,
 }
@@ -259,7 +259,6 @@ check_info['aws_ec2.network_io'] = {
     'inventory_function': lambda p: inventory_aws_generic(p, ['NetworkIn', 'NetworkOut']),
     'check_function': check_aws_ec2_network_io,
     'service_description': 'AWS/EC2 Network IO %s',
-    'includes': ['aws.include', 'if.include'],
     'default_levels_variable': "if_default_levels",
     'group': 'if',
     'has_perfdata': True,

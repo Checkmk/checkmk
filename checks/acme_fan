@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.acme import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # .1.3.6.1.4.1.9148.3.3.1.4.1.1.3.1 MAIN FAN1 --> ACMEPACKET-ENVMON-MIB::apEnvMonFanStatusDescr.1
 # .1.3.6.1.4.1.9148.3.3.1.4.1.1.3.2 MAIN FAN2 --> ACMEPACKET-ENVMON-MIB::apEnvMonFanStatusDescr.2
 # .1.3.6.1.4.1.9148.3.3.1.4.1.1.3.3 MAIN FAN3 --> ACMEPACKET-ENVMON-MIB::apEnvMonFanStatusDescr.3
@@ -42,6 +43,5 @@ check_info['acme_fan'] = {
             "5",  # ACMEPACKET-ENVMON-MIB::apEnvMonFanState
         ]),
     'snmp_scan_function': scan_acme,
-    'includes': ['acme.include'],
     'group': 'hw_fans_perc',
 }

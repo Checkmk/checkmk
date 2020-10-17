@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.blade_scan import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_blade_bays(info):
     map_states = {
@@ -82,5 +85,4 @@ check_info["blade_bays"] = {
         ],
         [OID_END, "1.1.5", "1.1.6", "1.1.2", "1.1.1", "1.1.7", "1.1.8"]),  # BLADE-MIB
     'snmp_scan_function': scan_blade_modules,
-    'includes': ['elphase.include', 'blade_scan.include'],
 }

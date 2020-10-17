@@ -10,7 +10,7 @@ import pytest  # type: ignore[import]
 
 pytestmark = pytest.mark.checks
 
-exec(open(os.path.join(os.path.dirname(__file__), '../../../checks/legacy_docker.include')).read())
+from cmk.base.check_legacy_includes.legacy_docker import *
 
 regex = re.compile
 

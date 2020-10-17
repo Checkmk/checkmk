@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Note: This file is almost identical with ibm_svc_nodestats. We should
 # create an include file for sharing common code!
 
@@ -127,7 +129,6 @@ check_info["ibm_svc_nodestats.diskio"] = {
     "check_function": check_ibm_svc_nodestats_diskio,
     "inventory_function": inventory_ibm_svc_nodestats_diskio,
     "service_description": "Disk IO %s",
-    "includes": ["ibm_svc.include"],
     "has_perfdata": True,
 }
 
@@ -236,7 +237,6 @@ check_info["ibm_svc_nodestats.cpu_util"] = {
     "service_description": "CPU utilization %s",
     "has_perfdata": True,
     "group": "cpu_utilization_multiitem",
-    "includes": ["cpu_util.include"],
 }
 
 #.

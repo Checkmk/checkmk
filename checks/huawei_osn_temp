@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.huawei_osn import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # The laser should not get hotter than 70°C
 factory_settings['huawei_osn_temp_default_levels'] = {
     'levels': (70, 80),
@@ -35,6 +37,5 @@ check_info['huawei_osn_temp'] = {
     'snmp_scan_function': huawei_osn_scan_function,
     'group': "temperature",
     'has_perfdata': True,
-    'includes': ['huawei_osn.include', 'temperature.include'],
     'default_levels_variable': 'huawei_osn_temp_default_levels',
 }

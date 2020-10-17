@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def inventory_fast_lta_silent_cubes_status(info):
     if len(info) > 0 and len(info[0]) > 1:
@@ -27,7 +30,6 @@ check_info["fast_lta_silent_cubes.capacity"] = {
     "service_description": "Fast LTA SC Capacity %s",
     "has_perfdata": True,
     "group": "filesystem",
-    "includes": ["size_trend.include", "df.include"],
     "snmp_info": (
         ".1.3.6.1.4.1.27417.3",
         [

@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.cisco_ucs import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # comNET GmbH, Fabian Binder - 2018-05-30
 
 # .1.3.6.1.4.1.9.9.719.1.30.12.1.2 memory Unit Name
@@ -41,6 +43,5 @@ check_info['cisco_ucs_temp_mem'] = {
             "6",  # cucsMemoryUnitEnvStatsTemperature
         ]),
     "group": "temperature",
-    "includes": ["cisco_ucs.include", "temperature.include"],
     "default_levels_variable": "cisco_ucs_temp_mem_default_levels",
 }

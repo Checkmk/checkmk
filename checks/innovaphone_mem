@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.innovaphone import *  # pylint: disable=wildcard-import,unused-wildcard-import
 innovaphone_mem_default_levels = (60.0, 70.0)
 
 
@@ -21,5 +22,4 @@ check_info["innovaphone_mem"] = {
     "service_description": "Memory",
     "has_perfdata": True,
     "group": "innovaphone_mem",
-    "includes": ["innovaphone.include"],
 }

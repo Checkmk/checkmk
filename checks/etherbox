@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # The etherbox supports the following sensor types on each port
 # sensor types
 # 0 = no sensor
@@ -94,7 +96,6 @@ check_info["etherbox.temp"] = {
     "group": "temperature",
     "snmp_scan_function": etherbox_scan,
     "snmp_info": etherbox_info,
-    "includes": ["temperature.include"],
 }
 
 #.
@@ -126,7 +127,6 @@ check_info["etherbox.humidity"] = {
     "group": "humidity",
     "snmp_scan_function": etherbox_scan,
     "snmp_info": etherbox_info,
-    "includes": ["humidity.include"],
 }
 
 #.

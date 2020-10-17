@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.prism import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<prism_alerts:sep(9)>>>
 # timestamp       message severity
 # 1456749413164951        DIMM fault detected on host 172.25.209.110. The node is running with 384 GB whereas 512 GB was installed.       kCritical
@@ -47,5 +48,4 @@ check_info['prism_alerts'] = {
     'parse_function': parse_prism,
     'has_perfdata': True,
     'service_description': "Prism Alerts",
-    'includes': ["prism.include"],
 }

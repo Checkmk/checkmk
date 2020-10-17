@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.hp_msa import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # drives 1 durable-id disk_01.01
 # drives 1 enclosure-id 1
 # drives 1 drawer-id 255
@@ -149,7 +152,6 @@ check_info['hp_msa_disk'] = {
     'inventory_function': inventory_hp_msa_health,
     'check_function': check_hp_msa_health,
     'service_description': 'Disk Health %s',
-    'includes': ["hp_msa.include"],
 }
 
 #.
@@ -168,7 +170,6 @@ check_info['hp_msa_disk.io'] = {
     'service_description': 'Disks IO %s',
     'has_perfdata': True,
     'group': 'diskstat',
-    'includes': ["hp_msa.include", "diskstat.include"],
 }
 
 #.
@@ -205,7 +206,6 @@ check_info['hp_msa_disk.temp'] = {
     'group': 'temperature',
     'has_perfdata': True,
     'default_levels_variable': "hp_msa_disk_temp_default_levels",
-    'includes': ["hp_msa.include", "temperature.include"],
 }
 
 #.

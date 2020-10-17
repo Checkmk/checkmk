@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.tcp_connections import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Example output from agent:
 # <<<winperf_tcp_conn>>>
 # 1368619819.06 638
@@ -41,5 +42,4 @@ check_info["winperf_tcp_conn"] = {
     'service_description': 'TCP connections',
     'has_perfdata': True,
     'group': 'tcp_conn_stats',
-    'includes': ["tcp_connections.include"],
 }

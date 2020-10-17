@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import cmk.base.plugins.agent_based.utils.sap_hana as sap_hana
+from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 factory_settings["sap_hana_memrate_default_levels"] = {"levels": ('perc_used', (70.0, 80.0))}
 
@@ -47,7 +48,6 @@ check_info['sap_hana_memrate'] = {
     'inventory_function': inventory_sap_hana_memrate,
     'check_function': check_sap_hana_memrate,
     'service_description': 'SAP HANA Memory %s',
-    'includes': ['mem.include'],
     "has_perfdata": True,
     'group': 'sap_hana_memory',
     'default_levels_variable': 'sap_hana_memrate_default_levels',

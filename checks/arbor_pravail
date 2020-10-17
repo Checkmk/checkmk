@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.arbor import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.cpu_load import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # .1.3.6.1.4.1.9694.1.6.2.3.0 2070 --> PRAVAIL-MIB::deviceCpuLoadAvg1min.0
 # .1.3.6.1.4.1.9694.1.6.2.4.0 2059 --> PRAVAIL-MIB::deviceCpuLoadAvg5min.0
 # .1.3.6.1.4.1.9694.1.6.2.5.0 2059 --> PRAVAIL-MIB::deviceCpuLoadAvg15min.0
@@ -48,7 +50,6 @@ check_info["arbor_pravail"] = {
             "39.0",  # pravailOverrunDropRatePps
         ]),
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Pravail"),
-    "includes": ["arbor.include"]
 }
 
 check_info["arbor_pravail.cpu_load"] = {
@@ -57,7 +58,6 @@ check_info["arbor_pravail.cpu_load"] = {
     "service_description": "CPU load",
     "has_perfdata": True,
     "group": "cpu_load",
-    "includes": ["cpu_load.include"],
 }
 
 check_info["arbor_pravail.disk_usage"] = {

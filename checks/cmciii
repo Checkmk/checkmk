@@ -4,6 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.cmciii import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # In order to stay compatible we have to build the items
 # this complicated way :(
 
@@ -212,7 +216,6 @@ check_info['cmciii'] = {
     "check_function": check_cmciii_state,
     "service_description": "State %s",
     "snmp_scan_function": lambda oid: ".1.3.6.1.4.1.2606.7" in oid(".1.3.6.1.2.1.1.2.0"),
-    "includes": ["cmciii.include"],
     "snmp_info": [
         (
             ".1.3.6.1.4.1.2606.7.4.1.2.1",
@@ -475,7 +478,6 @@ check_info['cmciii.temp'] = {
     "service_description": "Temperature %s",
     "has_perfdata": True,
     "group": "temperature",
-    "includes": ["temperature.include"]
 }
 
 #.
@@ -506,7 +508,6 @@ check_info['cmciii.temp_in_out'] = {
     "service_description": "Temperature %s",
     "has_perfdata": True,
     "group": "temperature",
-    "includes": ["temperature.include"]
 }
 
 #.
@@ -586,7 +587,6 @@ check_info['cmciii.humidity'] = {
     "service_description": "%s",
     "has_perfdata": True,
     "group": "humidity",
-    "includes": ["humidity.include"]
 }
 
 #.
@@ -614,5 +614,4 @@ check_info['cmciii.phase'] = {
     "service_description": "Input %s",
     "has_perfdata": True,
     "group": "el_inphase",
-    "includes": ["elphase.include"],
 }

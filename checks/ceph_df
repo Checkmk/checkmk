@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def _sanitize_line(line):
     """Merges units to values in case values and units are contained in separate line elements."""
@@ -126,7 +129,6 @@ check_info['ceph_df'] = {
     'check_function': df_check_filesystem_list,
     'service_description': 'Ceph Pool %s',
     'has_perfdata': True,
-    'includes': ['df.include', 'size_trend.include'],
     'group': 'filesystem',
     'default_levels_variable': 'filesystem_default_levels',
 }

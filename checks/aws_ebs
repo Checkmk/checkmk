@@ -4,9 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_aws_ebs(info):
-    return _extract_aws_metrics_by_labels(
+    return extract_aws_metrics_by_labels(
         [
             "VolumeReadOps",
             "VolumeWriteOps",
@@ -61,7 +64,6 @@ check_info['aws_ebs'] = {
         inventory_aws_generic(p, ['VolumeReadOps', 'VolumeWriteOps', 'VolumeReadBytes', 'VolumeWriteBytes', 'VolumeQueueLength']),
     'check_function': check_aws_ebs,
     'service_description': 'AWS/EBS Disk IO %s',
-    'includes': ['diskstat.include', 'aws.include'],
     'group': 'diskstat',
     'has_perfdata': True,
 }
@@ -91,7 +93,6 @@ check_info['aws_ebs.burst_balance'] = {
         inventory_aws_generic(p, ['BurstBalance']),
     'check_function': check_aws_ebs_burst_balance,
     'service_description': 'AWS/EBS Burst Balance %s',
-    'includes': ['aws.include'],
     'group': 'aws_ebs_burst_balance',
     'has_perfdata': True
 }

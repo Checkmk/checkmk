@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings["innovaphone_temp_default_levels"] = {"levels": (45, 50)}
 
 
@@ -21,6 +22,5 @@ check_info["innovaphone_temp"] = {
     "service_description": "Temperature %s",
     "has_perfdata": True,
     "group": "temperature",
-    "includes": ["temperature.include"],
     "default_levels_variable": "innovaphone_temp_default_levels"
 }

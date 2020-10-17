@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import cmk.base.plugins.agent_based.utils.docker as docker
+from cmk.base.check_legacy_includes.legacy_docker import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
 def parse_docker_network(info):
@@ -59,6 +60,5 @@ def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
 
 
 inv_info["docker_node_network.networks"] = {
-    "includes": ['legacy_docker.include'],
     "inv_function": inv_docker_node_network_networks,
 }

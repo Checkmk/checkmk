@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.azure import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 @get_data_or_go_stale
 def check_azure_virtualnetworkgateways(_item, params, resource):
@@ -32,7 +34,6 @@ check_info['azure_virtualnetworkgateways'] = {
     'inventory_function': discover(),
     'check_function': check_azure_virtualnetworkgateways,
     'service_description': "VNet Gateway %s",
-    'includes': ['azure.include'],
     'has_perfdata': True,
     'group': 'azure_virtualnetworkgateways',
 }

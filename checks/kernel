@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.transforms import *  # pylint: disable=wildcard-import,unused-wildcard-import
 #   .--kernel--Counters----------------------------------------------------.
 #   |                ____                  _                               |
 #   |               / ___|___  _   _ _ __ | |_ ___ _ __ ___                |
@@ -203,5 +205,4 @@ check_info["kernel.util"] = {
     'service_description': 'CPU utilization',
     'has_perfdata': True,
     'group': 'cpu_iowait',
-    'includes': ['cpu_util.include', 'transforms.include'],
 }

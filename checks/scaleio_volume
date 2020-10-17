@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.scaleio import *  # pylint: disable=wildcard-import,unused-wildcard-import
 #<<<scaleio_volume>>>
 #VOLUME f6a9425800000002:
 #        ID                                                 f6a9425800000002
@@ -59,7 +61,6 @@ check_info['scaleio_volume'] = {
     'inventory_function': inventory_scaleio_volume,
     'check_function': check_scaleio_volume,
     'service_description': 'ScaleIO Volume %s',
-    'includes': ['scaleio.include', 'diskstat.include'],
     'has_perfdata': True,
     'group': 'diskstat',
 }

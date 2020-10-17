@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.akcp_sensor import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Example for contents of info
 #           description                 state  online
 # ["Port 4 Rauchmelder USV Raum A",      "2",   "1"]
@@ -20,5 +21,4 @@ check_info["akcp_exp_smoke"] = {
             6,  # SPAGENT-MIB::sensorSmokeStatus
             8,  # SPAGENT-MIB::sensorSmokeGoOffline
         ]),
-    "includes": ["akcp_sensor.include"],
 }

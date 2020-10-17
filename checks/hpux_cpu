@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.cpu_load import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<hpux_cpu>>>
 #  2:23pm  up 196 days,  4:47,  5 users,  load average: 0.05, 0.04, 0.04
 #      8 logical processors (2 per socket)
@@ -33,5 +34,4 @@ check_info["hpux_cpu"] = {
     'service_description': 'CPU load',
     'has_perfdata': True,
     "group": "cpu_load",
-    "includes": ["cpu_load.include"],
 }

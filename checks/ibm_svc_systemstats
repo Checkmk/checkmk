@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Note: This file is almost identical with ibm_svc_systemstats. We should
 # create an include file for sharing common code!
 
@@ -226,7 +227,6 @@ check_info["ibm_svc_systemstats.cpu_util"] = {
     "service_description": "CPU utilization Total",
     "has_perfdata": True,
     "group": "cpu_utilization",
-    "includes": ["cpu_util.include"],
 }
 
 #.

@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.hp_proliant import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_hp_proliant_raid(info):
     parsed = {}
@@ -81,5 +83,4 @@ check_info["hp_proliant_raid"] = {
             "12",  # CPQIDA-MIB::cpqDaLogDrvPercentRebuild
         ]),
     'snmp_scan_function': hp_proliant_scan_function,
-    'includes': ['hp_proliant.include'],
 }

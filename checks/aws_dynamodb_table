@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings['aws_dynamodb_capacity_defaults'] = {
     'levels_%s' % op: {
         'levels_average': {
@@ -18,7 +19,7 @@ def parse_aws_dynamodb_table(info):
     parsed = parse_aws(info)
 
     # the last entry contains the provisioned limits
-    metrics = _extract_aws_metrics_by_labels([
+    metrics = extract_aws_metrics_by_labels([
         "Minimum_ConsumedReadCapacityUnits",
         "Maximum_ConsumedReadCapacityUnits",
         "Sum_ConsumedReadCapacityUnits",
@@ -43,7 +44,6 @@ def parse_aws_dynamodb_table(info):
 
 check_info['aws_dynamodb_table'] = {
     'parse_function': parse_aws_dynamodb_table,
-    'includes': ['aws.include'],
 }
 
 

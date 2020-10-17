@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.azure import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # https://www.unigma.com/2016/07/11/best-practices-for-monitoring-microsoft-azure/
 factory_settings["azure_databases_default_levels"] = {
     "storage_percent_levels": (85., 95.),
@@ -146,7 +148,6 @@ check_info['azure_databases'] = {
     'inventory_function': discover(),
     'check_function': check_azure_databases,
     'service_description': "DB %s",
-    'includes': ['azure.include', 'cpu_util.include'],
     'default_levels_variable': 'azure_databases_default_levels',
     'group': 'azure_databases',
 }

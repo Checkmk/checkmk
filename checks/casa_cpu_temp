@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_casa_info_temp(info):
     entity_names = {int(k): v for k, v in (x for x in info[0])}
@@ -56,5 +58,4 @@ check_info["casa_cpu_temp"] = {
         (".1.3.6.1.2.1.99.1.1.1.5", [OID_END, '']),  # Temperatures, Status
         (".1.3.6.1.2.1.99.1.1.1.6", [OID_END, '']),  # Temperatures, Unit
     ],
-    "includes": ["temperature.include"]
 }

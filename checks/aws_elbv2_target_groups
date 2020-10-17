@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
 #'TargetGroups': [
 #        {
 #            'TargetGroupArn': 'string',
@@ -85,7 +86,6 @@ check_info['aws_elbv2_target_groups'] = {
     'inventory_function': inventory_aws_application_elb_target_groups,
     'check_function': check_aws_application_elb_target_groups,
     'service_description': 'AWS/ApplicationELB Target Groups',
-    'includes': ['aws.include'],
 }
 
 
@@ -104,5 +104,4 @@ check_info['aws_elbv2_target_groups.network'] = {
     'inventory_function': inventory_aws_network_elb_target_groups,
     'check_function': check_aws_network_elb_target_groups,
     'service_description': 'AWS/NetworkELB Target Groups',
-    'includes': ['aws.include'],
 }

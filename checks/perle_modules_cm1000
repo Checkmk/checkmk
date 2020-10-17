@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.perle import *  # pylint: disable=wildcard-import,unused-wildcard-import
 check_info['perle_modules_cm1000'] = {
     'inventory_function': inventory_perle_cm_modules,
     'check_function': check_perle_cm_modules,
@@ -24,5 +25,4 @@ check_info['perle_modules_cm1000'] = {
             "1.1.24",  # PERLE-MCR-MGT-MIB::cm1000CopperSpeed
         ]),
     'snmp_scan_function': perle_scan_function,
-    'includes': ['perle.include'],
 }

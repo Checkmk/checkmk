@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<netapp_api_qtree_quota:sep(9)>>>
 # quota user01    quota-type user disk-limit 12288000 quota-users AD\aolov  volume vol_silber2_group_cifs   disk-used 0
 # quota user01    quota-type user disk-limit 12288000 quota-users AD\bva    volume vol_silber2_group_cifs   disk-used 0
@@ -45,6 +48,5 @@ check_info["netapp_api_qtree_quota"] = {
     'service_description': 'Qtree %s',
     'has_perfdata': True,
     'group': "filesystem",
-    'includes': ["size_trend.include", "df.include", "netapp_api.include"],
     "default_levels_variable": "filesystem_default_levels",
 }

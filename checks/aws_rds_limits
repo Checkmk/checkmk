@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings['aws_rds_limits_default_levels'] = {
     "db_instances": (None, 80.0, 90.0),
     "reserved_db_instances": (None, 80.0, 90.0),
@@ -51,7 +52,6 @@ check_info['aws_rds_limits'] = {
     'inventory_function': discover(),
     'check_function': check_aws_rds_limits,
     'service_description': 'AWS/RDS Limits %s',
-    'includes': ['aws.include'],
     'group': 'aws_rds_limits',
     'default_levels_variable': 'aws_rds_limits_default_levels',
     'has_perfdata': True,

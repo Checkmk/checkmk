@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # 7mode
 # <<<netapp_api_cpu:sep(9)>>>
 # cpu_busy        8362860064
@@ -74,7 +76,6 @@ check_info["netapp_api_cpu"] = {
     "service_description": "CPU utilization Node %s",
     "has_perfdata": True,
     "group": "cpu_utilization_multiitem",
-    "includes": ["cpu_util.include", "netapp_api.include"]
 }
 
 # 7Mode CPU utilization
@@ -86,7 +87,6 @@ check_info["netapp_api_cpu.utilization"] = {
     "default_levels_variable": "netapp_api_cpu_cm_default_levels",
     "has_perfdata": True,
     "group": "cpu_utilization",
-    "includes": ["cpu_util.include"]
 }
 
 
@@ -123,5 +123,4 @@ check_info["netapp_api_cpu.nvram_bat"] = {
     "check_function": check_netapp_api_nvram_bat,
     "service_description": "NVRAM Battery %s",
     "has_perfdata": True,
-    "includes": ["cpu_util.include", "netapp_api.include"]
 }

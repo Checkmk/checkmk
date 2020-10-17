@@ -7,6 +7,7 @@
 see https://solutionpartner.cisco.com/media/prime-infrastructure/api-reference/
       szier-m8-106.cisco.com/webacs/api/v1/data/AccessPointscc3b.html
 """
+from cmk.base.check_legacy_includes.cisco_prime import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 import collections
 
@@ -40,5 +41,4 @@ check_info["cisco_prime_wifi_access_points"] = {
     "service_description": "Cisco Prime WiFi Access Points",
     "group": "cisco_prime_wifi_access_points",
     "has_perfdata": True,
-    "includes": ["cisco_prime.include"],
 }

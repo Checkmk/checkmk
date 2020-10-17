@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 #   .--output--------------------------------------------------------------.
 #   |                               _               _                      |
 #   |                    ___  _   _| |_ _ __  _   _| |_                    |
@@ -256,7 +259,6 @@ check_info["bluenet2_powerrail"] = {
                 "4.1.5",  # bluenet2VariableDataValue
             ])
     ],
-    'includes': ["elphase.include"],
     'group': 'el_inphase',
 }
 
@@ -283,7 +285,6 @@ check_info["bluenet2_powerrail.rcm"] = {
     "service_description": "Inlet %s",
     "has_perfdata": True,
     "default_levels_variable": "bluenet2_powerrail_rcm_default_levels",
-    'includes': ["elphase.include"],
     'group': 'el_inphase',
 }
 
@@ -324,7 +325,6 @@ check_info["bluenet2_powerrail.temp"] = {
     "service_description": "Temperature %s",
     "has_perfdata": True,
     "default_levels_variable": "bluenet2_powerrail_temp_default_levels",
-    "includes": ["temperature.include"],
     "group": "temperature",
 }
 
@@ -359,6 +359,5 @@ check_info["bluenet2_powerrail.humidity"] = {
     "check_function": check_bluenet2_powerrail_humidity,
     'service_description': 'Humidity %s',
     "has_perfdata": True,
-    "includes": ["humidity.include"],
     "group": "humidity",
 }

@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.datapower_scan import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # FIXME
 # The WATO group 'memory_simple' needs an item and the service_description should
 # have a '%s'.  At the moment the current empty item '' and 'Memory' without '%s'
@@ -42,7 +44,6 @@ check_info['datapower_mem'] = {
             "3",  # dpStatusMemoryStatusUsedMemory
         ]),
     "snmp_scan_function": scan_datapower,
-    "includes": ["mem.include", "datapower_scan.include"],
     "group": "memory_simple",
     "default_levels_variable": "datapower_mem_default_levels",
     "has_perfdata": True,

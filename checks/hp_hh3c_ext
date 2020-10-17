@@ -4,6 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_hp_hh3c_ext(info):
     entity_info = dict(info[1])
@@ -80,7 +84,6 @@ check_info['hp_hh3c_ext'] = {
     ],
     'snmp_scan_function': lambda oid: oid('.1.3.6.1.2.1.1.2.0').startswith(
         '.1.3.6.1.4.1.25506.11.1.239'),
-    'includes': ['temperature.include'],
     'group': 'temperature',
     'has_perfdata': True,
 }
@@ -170,7 +173,6 @@ check_info['hp_hh3c_ext.cpu'] = {
     'inventory_function': inventory_hp_hh3c_ext_cpu,
     'check_function': check_hp_hh3c_ext_cpu,
     'service_description': 'CPU utilization %s',
-    'includes': ['cpu_util.include'],
     'group': 'cpu_utilization_multiitem',
     'has_perfdata': True,
 }
@@ -216,7 +218,6 @@ check_info['hp_hh3c_ext.mem'] = {
     'inventory_function': inventory_hp_hh3c_ext_mem,
     'check_function': check_hp_hh3c_ext_mem,
     'service_description': 'Memory %s',
-    'includes': ['mem.include'],
     'group': 'memory_multiitem',
     'has_perfdata': True,
     'default_levels_variable': 'hp_hh3c_ext_mem_default_levels',

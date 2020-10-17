@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.k8s import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings['k8s_resources_default_levels'] = {
     'cpu': (90.0, 95.0),
     'memory': (90.0, 95.0),
@@ -53,7 +54,6 @@ def get_k8s_resources_check_function(name, default, readable):
 
 check_info['k8s_resources'] = {
     'parse_function': parse_k8s,
-    'includes': ['k8s.include'],
 }
 
 check_info['k8s_resources.pods'] = {

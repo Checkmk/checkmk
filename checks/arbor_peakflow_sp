@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.arbor import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.cpu_load import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # .1.3.6.1.4.1.9694.1.4.2.1.1.0 796 --> PEAKFLOW-SP-MIB::deviceCpuLoadAvg1min.0
 # .1.3.6.1.4.1.9694.1.4.2.1.2.0 742 --> PEAKFLOW-SP-MIB::deviceCpuLoadAvg5min.0
 # .1.3.6.1.4.1.9694.1.4.2.1.3.0 742 --> PEAKFLOW-SP-MIB::deviceCpuLoadAvg15min.0
@@ -50,7 +52,6 @@ check_info["arbor_peakflow_sp"] = {
             "12.0",  # deviceTotalFlowsHC
         ]),
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Peakflow SP"),
-    "includes": ["arbor.include"]
 }
 
 check_info["arbor_peakflow_sp.cpu_load"] = {
@@ -59,7 +60,6 @@ check_info["arbor_peakflow_sp.cpu_load"] = {
     "service_description": "CPU load",
     "has_perfdata": True,
     "group": "cpu_load",
-    "includes": ["cpu_load.include"],
 }
 
 check_info["arbor_peakflow_sp.disk_usage"] = {

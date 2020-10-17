@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<graylog_failures>>>
 
 import json
@@ -85,5 +86,4 @@ check_info["graylog_failures"] = {
     "service_description": "Graylog Index Failures",
     "has_perfdata": True,
     "group": "graylog_failures",
-    "includes": ["graylog.include"],
 }

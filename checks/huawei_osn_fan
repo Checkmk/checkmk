@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.huawei_osn import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def inventory_huawei_osn_fan(info):
     for line in info:
@@ -36,5 +38,4 @@ check_info['huawei_osn_fan'] = {
             '2',  # OPTIX-OSN902-FUNCTION-MIB::optixWDMGetFanSpeed
         ]),
     'snmp_scan_function': huawei_osn_scan_function,
-    'includes': ['huawei_osn.include',],
 }

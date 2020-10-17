@@ -4,12 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.azure import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_azure_ad(info):
     parsed = {}
     for line in info:
         key = line[0]
-        value = _AZURE_AGENT_SEPARATOR.join(line[1:])
+        value = AZURE_AGENT_SEPARATOR.join(line[1:])
         if key == 'users_count':
             try:
                 parsed[None] = {'count': int(value)}
@@ -67,7 +69,6 @@ check_info['azure_ad'] = {
     'inventory_function': discover_ad_users,
     'check_function': check_azure_users,
     'service_description': 'AD Users',
-    'includes': ['azure.include'],
     'has_perfdata': True,
 }
 

@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.scaleio import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 #<<<scaleio_system:sep(9)>>>
 #SYSTEM 5914d6b47d479d5a:
 #        ID                                                 5914d6b47d479d5a
@@ -39,7 +42,6 @@ check_info['scaleio_system'] = {
     'inventory_function': inventory_scaleio_system,
     'check_function': check_scaleio_system,
     'service_description': 'ScaleIO System %s',
-    'includes': ['size_trend.include', 'df.include', 'scaleio.include'],
     'group': 'filesystem',
     'has_perfdata': True,
 }

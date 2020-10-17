@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.brocade import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_brocade_sfp(info):
     parsed = {}
@@ -77,7 +80,6 @@ check_info['brocade_sfp.temp'] = {
     'service_description': "SFP Temperature %s",
     'has_perfdata': True,
     'group': "temperature",
-    'includes': ["brocade.include", "temperature.include"],
 }
 
 #.
@@ -161,6 +163,5 @@ check_info['brocade_sfp'] = {
                                      ]),
                            ],
     'has_perfdata'       : True,
-    'includes'           : [ "brocade.include" ],
     'group'              : "brocade_sfp",
 }

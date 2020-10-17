@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<netapp_api_luns:sep(9)>>>
 # lun /vol/iscsi_crm_dblogs/crm_dblogs_lu01   read-only false size 644286182400   vserver ISCSI_CRM   size-used 538924421120  online true volume iscsi_crm_dblogs
 
@@ -61,6 +64,5 @@ check_info["netapp_api_luns"] = {
     'service_description': 'LUN %s',
     'has_perfdata': True,
     'group': "netapp_luns",
-    'includes': ["size_trend.include", "df.include", "netapp_api.include"],
     "default_levels_variable": "netapp_api_luns_default_levels",
 }

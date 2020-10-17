@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.ddn_s2a import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_ddn_s2a_uptime(info):
     return {key: value[0] for key, value in parse_ddn_s2a_api_response(info).items()}
@@ -32,6 +35,5 @@ check_info["ddn_s2a_uptime"] = {
     # because this value is different from the uptime value
     # supplied via SNMP.
     "has_perfdata": True,
-    'includes': ["ddn_s2a.include", "uptime.include"],
     "group": "uptime",
 }

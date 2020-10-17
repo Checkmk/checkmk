@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.ucd_hr import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_ucd_diskio(info):
     if not info:
@@ -62,5 +65,4 @@ check_info["ucd_diskio"] = {
     "snmp_scan_function": is_ucd,
     "has_perfdata": True,
     "group": "diskstat",
-    "includes": ["ucd_hr.include", "diskstat.include"],
 }

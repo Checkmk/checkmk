@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.ddn_s2a import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_ddn_s2a_version(info):
     return {key: value[0] for key, value in parse_ddn_s2a_api_response(info).items()}
@@ -24,5 +26,4 @@ check_info["ddn_s2a_version"] = {
     "inventory_function": inventory_ddn_s2a_version,
     "check_function": check_ddn_s2a_version,
     "service_description": "DDN S2A Version",
-    'includes': ["ddn_s2a.include"],
 }

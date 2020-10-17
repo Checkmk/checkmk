@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.hp_msa import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<hp_msa_controller>>>
 # controller-statistics 1 durable-id controller_A
 # controller-statistics 1 cpu-load 3
@@ -64,7 +67,6 @@ check_info['hp_msa_controller'] = {
     'service_description': 'CPU Utilization %s',
     'has_perfdata': True,
     'group': 'cpu_utilization_multiitem',
-    'includes': ["hp_msa.include", "cpu_util.include"],
 }
 
 #.
@@ -83,5 +85,4 @@ check_info['hp_msa_controller.io'] = {
     'service_description': 'Controller IO %s',
     'has_perfdata': True,
     'group': 'diskstat',
-    'includes': ["hp_msa.include", "diskstat.include"],
 }

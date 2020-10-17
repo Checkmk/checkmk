@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.dell_om import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def inventory_dell_om_esmlog(info):
     if len(info) > 0:
@@ -37,5 +39,4 @@ check_info["dell_om_esmlog"] = {
         [
             1,  # eventlogStatus
         ]),
-    "includes": ["dell_om.include"],
 }

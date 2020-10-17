@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.checkpoint import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # FIXME
 # The WATO group 'memory_simple' needs an item and the service_description should
 # have a '%s'.  At the moment the current item 'System' and 'Memory' without '%s'
@@ -54,5 +56,4 @@ check_info['checkpoint_memory'] = {
     'snmp_scan_function': scan_checkpoint,
     'default_levels_variable': 'checkpoint_memory_default_levels',
     'group': 'memory_simple',
-    'includes': ["checkpoint.include", "mem.include"],
 }

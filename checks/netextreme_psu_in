@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # .1.3.6.1.4.1.1916.1.1.1.27.1.9.1 52550 --> EXTREME-SYSTEM-MIB::extremePowerSupplyInputPowerUsage.1
 # .1.3.6.1.4.1.1916.1.1.1.27.1.9.2 43700 --> EXTREME-SYSTEM-MIB::extremePowerSupplyInputPowerUsage.2
 # .1.3.6.1.4.1.1916.1.1.1.27.1.11.1 -3 --> EXTREME-SYSTEM-MIB::extremePowerSupplyInputPowerUsageUnitMultiplier.1
@@ -42,5 +43,4 @@ check_info['netextreme_psu_in'] = {
     'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1916.2"),
     'group': "el_inphase",
     'default_levels_variable': "netextreme_psu_in_default_levels",
-    'includes': ["elphase.include"],
 }

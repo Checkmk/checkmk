@@ -112,6 +112,10 @@ def stand_alone_template(file_name):
         # Fake data structures where checks register (See cmk/base/checks.py)
         file_handle.write("""
 # -*- encoding: utf-8 -*-
+
+from cmk.base.check_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
+
 check_info                         = {}
 check_includes                     = {}
 precompile_params                  = {}
@@ -158,29 +162,21 @@ def inv_tree(path, default_value=None):
             'wrong-import-position',
         ]
 
-        # add the modules
         # These pylint warnings are incompatible with our "concatenation technology".
         file_handle.write("# pylint: disable=%s\n" % ','.join(disable_pylint))
-
-        pylint_cmk.add_file(file_handle, repo_path() + "/cmk/base/check_api.py")
-        pylint_cmk.add_file(file_handle, repo_path() + "/cmk/base/inventory_plugins.py")
 
         yield file_handle
 
 
 def _compile_check_and_inventory_plugins(pylint_test_dir):
 
-    includes = set()
-    plugins = set(pylint_cmk.check_files(repo_path() + "/inventory"))
-    for f_name in pylint_cmk.check_files(repo_path() + "/checks"):
-        if f_name.endswith(".include"):
-            includes.add(f_name)
-        else:
-            plugins.add(f_name)
+    for idx, f_name in enumerate(pylint_cmk.check_files(repo_path() + "/checks")):
+        with stand_alone_template(pylint_test_dir + "/cmk_checks_%s.py" % idx) as file_handle:
+            pylint_cmk.add_file(file_handle, f_name)
 
     with stand_alone_template(pylint_test_dir + "/cmk_checks.py") as file_handle:
-
-        for path in sorted(includes) + sorted(plugins):
+        pylint_cmk.add_file(file_handle, repo_path() + "/cmk/base/inventory_plugins.py")
+        for path in pylint_cmk.check_files(repo_path() + "/inventory"):
             pylint_cmk.add_file(file_handle, path)
 
 

@@ -6,6 +6,8 @@
 
 import pytest  # type: ignore[import]
 
+from cmk.base.check_legacy_includes.bonding import _check_ieee_302_3ad_specific  # type: ignore[attr-defined]
+
 pytestmark = pytest.mark.checks
 
 
@@ -82,6 +84,4 @@ pytestmark = pytest.mark.checks
     ),
 ])
 def test_check_ieee_302_3ad_specific(check_manager, params, status, result):
-    bonding_check = check_manager.get_check("lnx_bonding")
-    check_ieee_302_3ad_specific = bonding_check.context["_check_ieee_302_3ad_specific"]
-    assert list(check_ieee_302_3ad_specific(params, status)) == result
+    assert list(_check_ieee_302_3ad_specific(params, status)) == result

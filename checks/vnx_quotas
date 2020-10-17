@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # ..|..,total,avail,used,totalKB
 # <<<vnx_quotas:sep(124)>>>
 # [[[fs]]]
@@ -136,5 +138,4 @@ check_info['vnx_quotas'] = {
     'has_perfdata': True,
     'group': "filesystem",
     'default_levels_variable': 'filesystem_default_levels',
-    'includes': ['df.include', 'size_trend.include'],
 }

@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.couchbase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_couchbase_buckets_operations(info):
     parsed = parse_couchbase_lines(info)
@@ -84,7 +86,6 @@ check_info['couchbase_buckets_operations'] = {
     'inventory_function': discover(lambda k, v: k is not None and 'ops' in v),
     'check_function': check_couchbase_buckets_operations,
     'service_description': 'Couchbase Bucket %s Operations',
-    'includes': ['couchbase.include'],
     'group': 'couchbase_ops',
     'has_perfdata': True
 }
@@ -94,7 +95,6 @@ check_info['couchbase_buckets_operations.total'] = {
     'inventory_function': discover(lambda k, v: k is None and 'ops' in v),
     'check_function': check_couchbase_buckets_operations,
     'service_description': 'Couchbase Bucket Operations',
-    'includes': ['couchbase.include'],
     'group': 'couchbase_ops_buckets',
     'has_perfdata': True
 }

@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.dhcp_pools import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Example outputs from agent:
 #
 # <<<win_dhcp_pools>>>
@@ -150,7 +151,6 @@ check_info["win_dhcp_pools"] = {
     'service_description': 'DHCP Pool %s',
     'has_perfdata': True,
     'group': 'win_dhcp_pools',
-    'includes': ['dhcp_pools.include'],
 }
 
 #.

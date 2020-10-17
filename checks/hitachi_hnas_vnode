@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.hitachi_hnas import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def hitachi_hnas_vnode_combine_item(id_, name):
     combined = str(id_)
@@ -52,5 +54,4 @@ check_info["hitachi_hnas_vnode"] = {
     "snmp_info": (".1.3.6.1.4.1.11096.6.1.1.1.2.5.11.1", [1, 2, 4, 5, 6]),
     # ID, Name, Status, isAdmin, hostedBy
     "snmp_scan_function": hitachin_hnas_scan_function,
-    "includes": ["hitachi_hnas.include"],
 }

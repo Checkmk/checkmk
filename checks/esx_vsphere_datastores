@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Example output from agent:
 # [zmucvm99-lds]
 # accessible  True
@@ -81,7 +83,6 @@ check_info['esx_vsphere_datastores'] = {
     "inventory_function": discover(),
     "check_function": check_esx_vsphere_datastores,
     "service_description": "Filesystem %s",
-    "includes": ['size_trend.include', 'df.include'],
     "has_perfdata": True,
     "group": "esx_vsphere_datastores",
     "default_levels_variable": "filesystem_default_levels",

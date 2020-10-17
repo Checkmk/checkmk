@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.checkpoint import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def inventory_checkpoint_ha_problems(info):
     for name, _dev_status, _description in info:
@@ -30,5 +32,4 @@ check_info['checkpoint_ha_problems'] = {
             3,  # haProblemStatus
             6,  # haProblemDescr
         ]),
-    'includes': ['checkpoint.include'],
 }

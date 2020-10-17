@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 #   .--Example output from agent-------------------------------------------.
 # <<<libelle_business_shadow:sep(58)>>>
 #   DBShadow Oracle                           Libelle AG
@@ -394,7 +396,6 @@ check_info["libelle_business_shadow.archive_dir"] = {
     "service_description": "Libelle Business Shadow %s",
     "has_perfdata": True,
     "group": "filesystem",
-    "includes": ["size_trend.include", "df.include"],
 }
 
 #.

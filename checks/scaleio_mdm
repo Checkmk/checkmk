@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.scaleio import *  # pylint: disable=wildcard-import,unused-wildcard-import
 #<<<scaleio_mdm:sep(44)>>>
 #Cluster:
 #    Mode: 3_node, State: Normal, Active: 3/3, Replicas: 2/2
@@ -126,5 +127,4 @@ check_info['scaleio_mdm'] = {
     'inventory_function': inventory_scaleio_mdm,
     'check_function': check_scaleio_mdm,
     'service_description': 'ScaleIO cluster status',
-    'includes': ['scaleio.include'],
 }

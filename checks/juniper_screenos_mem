@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.juniper_mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_juniper_screenos_mem(info):
     new_info = []
@@ -26,5 +28,4 @@ check_info["juniper_screenos_mem"] = {
             "1.0",  # Memory bytes used
             "2.0",  # Memory bytes free
         ]),
-    "includes": ["juniper_mem.include"],
 }

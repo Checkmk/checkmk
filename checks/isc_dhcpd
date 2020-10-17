@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.dhcp_pools import *  # pylint: disable=wildcard-import,unused-wildcard-import
 isc_dhcpd_default_levels = (15.0, 5.0)
 
 # Example output from agent:
@@ -99,5 +100,4 @@ check_info["isc_dhcpd"] = {
     'service_description': 'DHCP Pool %s',
     'group': 'win_dhcp_pools',
     'has_perfdata': True,
-    'includes': ["dhcp_pools.include"],
 }

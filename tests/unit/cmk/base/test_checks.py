@@ -67,7 +67,8 @@ def _search_from_imports(check_file_path):
         return [
             "%s:%d:%s" % (Path(check_file_path).stem, line_no, repr(line.strip()))
             for line_no, line in enumerate(f_.readlines(), 1)
-            if re.search(r'from\s.*\simport\s', line.strip())
+            if (re.search(r'from\s.*\simport\s', line.strip()) and
+                not line.startswith("from cmk.base.check_legacy_includes."))
         ]
 
 

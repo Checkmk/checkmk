@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.alcatel import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings['alcatel_temp'] = ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS
 
 alcatel_power_operstate_map = {
@@ -74,5 +75,4 @@ check_info["alcatel_power"] = {
             36,  # MIB object "chasEntPhysPowerType":
             #     0 no power supply, 1 ac, 2 dc (not available on old devices)
         ]),
-    "includes": ["alcatel.include"],
 }

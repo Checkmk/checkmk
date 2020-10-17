@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.prism import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<prism_containers:sep(9)>>>
 # name    usage   capacity
 # DS01_NFS_Nutanix_B2B_Intern_SAS_Contrainer      2518694292480   38575532134515
@@ -53,6 +54,5 @@ check_info['prism_containers'] = {
     'group': "prism_container",
     'has_perfdata': True,
     'service_description': "Container %s",
-    'includes': ["prism.include"],
     'default_levels_variable': 'prism_container_default_levels'
 }

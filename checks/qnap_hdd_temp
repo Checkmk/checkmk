@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings["qnap_hdd_temp_default_levels"] = {
     "levels": (40, 45),
 }
@@ -35,5 +36,4 @@ check_info["qnap_hdd_temp"] = {
     "has_perfdata": True,
     "default_levels_variable": "qnap_hdd_temp_default_levels",
     "group": "temperature",
-    "includes": ["temperature.include"],
 }

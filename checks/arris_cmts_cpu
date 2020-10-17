@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.arris_cmts import *  # pylint: disable=wildcard-import,unused-wildcard-import
 arris_cmts_cpu_default_levels = (90, 95)
 
 
@@ -62,5 +63,4 @@ check_info["arris_cmts_cpu"] = {
             8,  # cadIdleCpuRecentPercent
         ]),
     "group": "cpu_utilization_multiitem",
-    "includes": ["arris_cmts.include"]
 }

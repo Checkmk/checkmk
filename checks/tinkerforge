@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<tinkerforge:sep(44)>>>
 # temperature,6QHSgJ.a.tiq,2181
 # humidity,6QHSgJ.c.ugg,250
@@ -137,7 +139,6 @@ check_info['tinkerforge.temperature'] = {
     'has_perfdata': True,
     'service_description': "Temperature %s",
     'group': 'temperature',
-    'includes': ['temperature.include']
 }
 
 check_info['tinkerforge.ambient'] = {
@@ -154,7 +155,6 @@ check_info['tinkerforge.humidity'] = {
     'has_perfdata': True,
     'group': 'humidity',
     'service_description': "Humidity %s",
-    'includes': ["humidity.include"],
 }
 
 check_info['tinkerforge.motion'] = {

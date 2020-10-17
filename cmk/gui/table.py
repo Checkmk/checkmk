@@ -301,7 +301,7 @@ class Table:
         # Apply limit after search / sorting etc.
         num_rows_unlimited = len(rows)
         limit = self.limit
-        if limit is not None:
+        if limit:
             # only use rows up to the limit plus the fixed rows
             limited_rows = []
             for index in range(num_rows_unlimited):

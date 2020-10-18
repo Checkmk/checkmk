@@ -83,6 +83,11 @@ def test_imports_in_checks():
                                                                   "\n".join(with_from_imports))
 
 
+def test_includes_are_deprecated(config_check_info):
+    for name, check_info in config_check_info.items():
+        assert not check_info.get("includes"), f"Plugin {name}: includes are deprecated!"
+
+
 @pytest.mark.parametrize('plugin_path', ['checks', 'inventory'])
 def test_check_plugin_header(plugin_path: str):
     for plugin in Path(testlib.repo_path(), plugin_path).iterdir():

@@ -177,6 +177,7 @@ def patch_data_source(mocker):
 @pytest.mark.usefixtures("scenario")
 def test_mode_inventory_caching(hosts, cache, force, monkeypatch, mocker):
 
+    monkeypatch.setattr(cmk.base.api.agent_based.register, 'iter_all_inventory_plugins', lambda: ())
     kwargs = {}
     kwargs.update(hosts[1])
     kwargs.update(cache[1])

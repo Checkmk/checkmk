@@ -21,7 +21,7 @@ from cmk.utils.diagnostics import (
 import cmk.utils.version as cmk_version
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request as global_request
 from cmk.gui.exceptions import (
     HTTPRedirect,)
 import cmk.gui.config as config
@@ -58,6 +58,8 @@ from cmk.gui.plugins.wato import (
     mode_registry,
 )
 from cmk.gui.pages import page_registry, Page
+
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 
 @mode_registry.register
@@ -278,7 +280,7 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
         )
 
     def _back_url(self) -> str:
-        return html.makeuri([])
+        return makeuri(global_request, [])
 
     def do_execute(self, diagnostics_parameters: DiagnosticsParameters,
                    job_interface: BackgroundProcessInterface) -> None:
@@ -296,9 +298,11 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
 
         if result["tarfile_created"]:
             tarfile_path = result['tarfile_path']
-            download_url = html.makeuri_contextless([("site", site),
-                                                     ("tarfile_name", str(Path(tarfile_path)))],
-                                                    "download_diagnostics_dump.py")
+            download_url = makeuri_contextless(
+                global_request,
+                [("site", site), ("tarfile_name", str(Path(tarfile_path)))],
+                filename="download_diagnostics_dump.py",
+            )
             button = html.render_icon_button(download_url, _("Download"), "diagnostics_dump_file")
 
             job_interface.send_progress_update(_("Dump file: %s") % tarfile_path)

@@ -24,7 +24,7 @@ import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, MKAuthException
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
@@ -65,6 +65,8 @@ from cmk.gui.plugins.wato import (
 import cmk.gui.bi
 from cmk.utils.bi.bi_packs import BIHostRenamer
 
+from cmk.gui.utils.urls import makeuri
+
 try:
     import cmk.gui.cee.plugins.wato.alert_handling as alert_handling  # type: ignore[import]
 except ImportError:
@@ -93,7 +95,7 @@ class RenameHostsBackgroundJob(watolib.WatoBackgroundJob):
             raise MKGeneralException(_("Another renaming operation is currently in progress"))
 
     def _back_url(self):
-        return html.makeuri([])
+        return makeuri(request, [])
 
 
 @gui_background_job.job_registry.register

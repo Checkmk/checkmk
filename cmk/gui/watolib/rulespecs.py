@@ -12,7 +12,7 @@ from typing import Union, Dict, List, Type, Optional, Any, Callable, Tuple as _T
 import cmk.utils.plugin_registry
 
 from cmk.gui.type_defs import HTTPVariables
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.valuespec import (
@@ -35,6 +35,7 @@ from cmk.gui.watolib.search import (
 )
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.utils.urls import makeuri
 
 
 class RulespecBaseGroup(metaclass=abc.ABCMeta):
@@ -1133,7 +1134,7 @@ class TimeperiodValuespec(ValueSpec):
 
         url_vars: HTTPVariables = []
         url_vars += vars_copy.items()
-        toggle_url = html.makeuri(url_vars)
+        toggle_url = makeuri(request, url_vars)
 
         if is_active:
             value = self._get_timeperiod_value(value)

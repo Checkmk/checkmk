@@ -36,7 +36,7 @@ from cmk.gui.plugins.wato.utils.context_buttons import make_folder_status_link
 
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request as global_request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
@@ -61,6 +61,7 @@ from cmk.gui.page_menu import (
     make_display_options_dropdown,
     make_form_submit_link,
 )
+from cmk.gui.utils.urls import makeuri
 
 
 def make_folder_breadcrumb(folder: watolib.CREFolder) -> Breadcrumb:
@@ -433,8 +434,8 @@ class ModeFolder(WatoMode):
                 icon_name="trans",
                 item=PageMenuCheckbox(
                     is_checked=setting,
-                    check_url=html.makeuri([(toggle_id, "1")]),
-                    uncheck_url=html.makeuri([(toggle_id, "")]),
+                    check_url=makeuri(global_request, [(toggle_id, "1")]),
+                    uncheck_url=makeuri(global_request, [(toggle_id, "")]),
                 ),
             )
 
@@ -865,7 +866,7 @@ class ModeFolder(WatoMode):
         show_all, limit = HTML(""), 3
         if len(labels) > limit and html.request.var("_show_all") != "1":
             show_all = HTML(" ") + html.render_a("... (%s)" % _("show all"),
-                                                 href=html.makeuri([("_show_all", "1")]))
+                                                 href=makeuri(global_request, [("_show_all", "1")]))
             labels = dict(sorted(labels.items())[:limit])
         return labels, show_all
 

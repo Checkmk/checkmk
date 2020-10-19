@@ -21,7 +21,7 @@ from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -74,6 +74,7 @@ from cmk.gui.page_menu import (
     make_simple_form_page_menu,
     make_display_options_dropdown,
 )
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 NotificationRule = Dict[str, Any]
 
@@ -342,7 +343,7 @@ class ABCNotificationsMode(ABCEventsMode):
         if profilemode:
             return _("Notification rules")
         if userid:
-            url = html.makeuri([("mode", "user_notifications"), ("user", userid)])
+            url = makeuri(request, [("mode", "user_notifications"), ("user", userid)])
             code = html.render_icon_button(url, _("Edit this user's notifications"), "edit")
             return code + _("Notification rules of user %s") % userid
         return _("Global notification rules")
@@ -645,7 +646,7 @@ class ModeNotifications(ABCNotificationsMode):
                 table.row()
                 table.cell("&nbsp;", css="buttons")
 
-                analyse_url = html.makeuri([("analyse", str(nr))])
+                analyse_url = makeuri(request, [("analyse", str(nr))])
                 html.icon_button(analyse_url, _("Analyze ruleset with this notification"),
                                  "analyze")
 
@@ -863,8 +864,11 @@ class ModeUserNotifications(ABCUserNotificationsMode):
         return ModeEditUser
 
     def _breadcrumb_url(self) -> str:
-        return html.makeuri_contextless([("mode", self.name()), ("user", self._user_id())],
-                                        filename="wato.py")
+        return makeuri_contextless(
+            request,
+            [("mode", self.name()), ("user", self._user_id())],
+            filename="wato.py",
+        )
 
     def _user_id(self):
         return html.request.get_unicode_input("user")

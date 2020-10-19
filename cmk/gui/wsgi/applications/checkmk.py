@@ -29,6 +29,7 @@ from cmk.gui.globals import html, request, RequestContext, AppContext
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.utils.urls import makeuri
 
 # TODO
 #  * derive all exceptions from werkzeug's http exceptions.
@@ -182,7 +183,7 @@ def _handle_not_authenticated():
     # or "dashboard.py". This results in strange problems.
     if html.myfile != 'login':
         raise HTTPRedirect('%scheck_mk/login.py?_origtarget=%s' %
-                           (config.url_prefix(), html.urlencode(html.makeuri([]))))
+                           (config.url_prefix(), html.urlencode(makeuri(request, []))))
     # This either displays the login page or validates the information submitted
     # to the login form. After successful login a http redirect to the originally
     # requested page is performed.

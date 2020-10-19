@@ -22,7 +22,7 @@ from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.plugins.userdb.utils import load_connection_config, save_connection_config
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
@@ -42,6 +42,8 @@ from cmk.gui.plugins.wato import (
     make_action_link,
     wato_confirm,
 )
+
+from cmk.gui.utils.urls import makeuri_contextless
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -111,8 +113,12 @@ class ModeLDAPConfig(LDAPMode):
         yield PageMenuEntry(
             title=_("Users"),
             icon_name="users",
-            item=make_simple_link(html.makeuri_contextless([("mode", "users")],
-                                                           filename="wato.py")),
+            item=make_simple_link(
+                makeuri_contextless(
+                    request,
+                    [("mode", "users")],
+                    filename="wato.py",
+                )),
         )
 
     def action(self):

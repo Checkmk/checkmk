@@ -16,7 +16,7 @@ from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.wato.pages.rulesets import ModeEditRuleset
 from cmk.gui.breadcrumb import Breadcrumb
@@ -32,6 +32,7 @@ from cmk.gui.plugins.wato import (
     mode_registry,
     ConfigHostname,
 )
+from cmk.gui.utils.urls import makeuri_contextless
 
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place
@@ -113,7 +114,7 @@ class ModePatternEditor(WatoMode):
             title=_("Host log files"),
             icon_name="logwatch",
             item=make_simple_link(
-                html.makeuri_contextless([("host", self._hostname)], filename="logwatch.py")),
+                makeuri_contextless(request, [("host", self._hostname)], filename="logwatch.py")),
         )
 
         if self._item:
@@ -121,8 +122,11 @@ class ModePatternEditor(WatoMode):
                 title=("Show log file"),
                 icon_name="logwatch",
                 item=make_simple_link(
-                    html.makeuri_contextless([("host", self._hostname), ("file", self._item)],
-                                             filename="logwatch.py")),
+                    makeuri_contextless(
+                        request,
+                        [("host", self._hostname), ("file", self._item)],
+                        filename="logwatch.py",
+                    )),
             )
 
     def page(self):

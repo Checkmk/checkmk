@@ -26,7 +26,7 @@ from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.plugins.userdb.utils import load_cached_profile, save_cached_profile
 from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, MKAuthException
 from cmk.gui.i18n import _, _l, _u
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request as global_request
 from cmk.gui.pages import page_registry, AjaxPage, Page
 from cmk.gui.page_menu import (
     PageMenu,
@@ -43,6 +43,8 @@ from cmk.gui.wato.pages.users import select_language
 
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
+
+from cmk.gui.utils.urls import makeuri
 
 
 def _get_current_theme_titel() -> str:
@@ -469,7 +471,7 @@ class UserProfile(ABCUserProfilePage):
             html.reload_sidebar()
             html.show_message(_("Successfully updated user profile."))
             # Ensure theme changes are applied without additional user interaction
-            html.immediate_browser_redirect(0.5, html.makeuri([]))
+            html.immediate_browser_redirect(0.5, makeuri(global_request, []))
 
         if html.has_user_errors():
             html.show_user_errors()

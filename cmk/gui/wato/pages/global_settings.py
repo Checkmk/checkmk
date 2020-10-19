@@ -26,7 +26,7 @@ from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
@@ -43,6 +43,8 @@ from cmk.gui.page_menu import (
     make_simple_form_page_menu,
     make_display_options_dropdown,
 )
+
+from cmk.gui.utils.urls import makeuri
 
 
 class ABCGlobalSettingsMode(WatoMode):
@@ -410,8 +412,8 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
             icon_name="trans",
             item=PageMenuCheckbox(
                 is_checked=self._show_only_modified,
-                check_url=html.makeuri([("_show_only_modified", "1")]),
-                uncheck_url=html.makeuri([("_show_only_modified", "0")]),
+                check_url=makeuri(request, [("_show_only_modified", "1")]),
+                uncheck_url=makeuri(request, [("_show_only_modified", "0")]),
             ),
         )
 

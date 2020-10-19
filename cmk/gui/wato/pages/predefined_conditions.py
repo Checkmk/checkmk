@@ -11,7 +11,7 @@ import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.valuespec import (
     FixedValue,
@@ -36,6 +36,8 @@ from cmk.gui.plugins.wato import (
     SimpleEditMode,
     mode_registry,
 )
+
+from cmk.gui.utils.urls import makeuri_contextless
 
 
 def dummy_rulespec() -> ServiceRulespec:
@@ -122,10 +124,12 @@ class ModePredefinedConditions(SimpleListMode):
                          _("Show rules using this %s") % self._mode_type.name_singular(), "search")
 
     def _search_url(self, ident):
-        return html.makeuri_contextless([("mode", "rulesets"),
-                                         ("search_p_rule_predefined_condition",
-                                          DropdownChoice.option_id(ident)),
-                                         ("search_p_rule_predefined_condition_USE", "on")])
+        return makeuri_contextless(
+            request,
+            [("mode", "rulesets"),
+             ("search_p_rule_predefined_condition", DropdownChoice.option_id(ident)),
+             ("search_p_rule_predefined_condition_USE", "on")],
+        )
 
     def _show_entry_cells(self, table, ident, entry):
         table.cell(_("Title"), html.render_text(entry["title"]))

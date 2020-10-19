@@ -11,7 +11,7 @@ from typing import Iterator, Optional, Type
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError, MKAuthException, MKGeneralException, HTTPRedirect
 from cmk.gui.valuespec import (
@@ -39,6 +39,7 @@ from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
 from cmk.gui.watolib.hosts_and_folders import CREHost
 from cmk.gui.wato.pages.folders import delete_host_after_confirm, ModeFolder
+from cmk.gui.utils.urls import makeuri_contextless
 
 
 class ABCHostMode(WatoMode, metaclass=abc.ABCMeta):
@@ -255,8 +256,11 @@ class ModeEditHost(ABCHostMode):
         return ["hosts"]
 
     def _breadcrumb_url(self) -> str:
-        return html.makeuri_contextless([("mode", self.name()), ("host", self._host.name())],
-                                        filename="wato.py")
+        return makeuri_contextless(
+            request,
+            [("mode", self.name()), ("host", self._host.name())],
+            filename="wato.py",
+        )
 
     def _init_host(self):
         hostname = html.request.get_ascii_input_mandatory("host")

@@ -34,7 +34,7 @@ from cmk.gui.plugins.userdb.utils import (
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _u, get_languages, get_language_alias
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.valuespec import (
     UserID,
     EmailAddress,
@@ -61,6 +61,8 @@ from cmk.gui.plugins.wato import (
     wato_confirm,
     make_action_link,
 )
+
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -237,7 +239,7 @@ class ModeUsers(WatoMode):
             # Still running
             html.show_message(
                 HTML(_("User synchronization currently running: ")) + self._job_details_link())
-            url = html.makeuri([])
+            url = makeuri(request, [])
             html.immediate_browser_redirect(2, url)
 
         elif self._job_snapshot.state() == gui_background_job.background_job.JobStatusStates.FINISHED \
@@ -258,10 +260,11 @@ class ModeUsers(WatoMode):
         return html.render_a("%s" % self._job.get_title(), href=self._job.detail_url())
 
     def _job_details_url(self):
-        return html.makeuri_contextless(
+        return makeuri_contextless(
+            request,
             [("mode", "background_job_details"),
              ("back_url",
-              html.makeuri_contextless([("mode", "users")], filename="%s.py" % html.myfile)),
+              makeuri_contextless(request, [("mode", "users")], filename="%s.py" % html.myfile)),
              ("job_id", self._job_snapshot.get_job_id())],
             filename="wato.py")
 
@@ -497,8 +500,11 @@ class ModeEditUser(WatoMode):
         return ModeUsers
 
     def _breadcrumb_url(self) -> str:
-        return html.makeuri_contextless([("mode", self.name()), ("edit", self._user_id)],
-                                        filename="wato.py")
+        return makeuri_contextless(
+            request,
+            [("mode", self.name()), ("edit", self._user_id)],
+            filename="wato.py",
+        )
 
     def __init__(self):
         super(ModeEditUser, self).__init__()

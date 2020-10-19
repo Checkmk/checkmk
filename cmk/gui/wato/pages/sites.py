@@ -55,7 +55,7 @@ from cmk.gui.plugins.watolib.utils import config_variable_registry
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head, wato_confirm
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.log import logger
 from cmk.gui.breadcrumb import Breadcrumb
@@ -75,6 +75,8 @@ from cmk.gui.wato.pages.global_settings import (
     ABCEditGlobalSettingMode,
     is_a_checkbox,
 )
+
+from cmk.gui.utils.urls import makeuri_contextless
 
 
 def _site_globals_editable(site_id, site):
@@ -167,8 +169,11 @@ class ModeEditSite(WatoMode):
         return _("Edit site connection %s") % self._site_id
 
     def _breadcrumb_url(self) -> str:
-        return html.makeuri_contextless([("mode", self.name()), ("site", self._site_id)],
-                                        filename="wato.py")
+        return makeuri_contextless(
+            request,
+            [("mode", self.name()), ("site", self._site_id)],
+            filename="wato.py",
+        )
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(breadcrumb, form_name="site", button_name="save")
@@ -482,7 +487,7 @@ class ModeDistributedMonitoring(WatoMode):
                                     title=_("Add connection"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        html.makeuri_contextless([("mode", "edit_site")]),),
+                                        makeuri_contextless(request, [("mode", "edit_site")]),),
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
@@ -957,8 +962,11 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         return _("Edit site specific global settings of %s") % self._site_id
 
     def _breadcrumb_url(self) -> str:
-        return html.makeuri_contextless([("mode", self.name()), ("site", self._site_id)],
-                                        filename="wato.py")
+        return makeuri_contextless(
+            request,
+            [("mode", self.name()), ("site", self._site_id)],
+            filename="wato.py",
+        )
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
@@ -1382,7 +1390,7 @@ def _page_menu_entries_site_details(site_id: str, site: Dict,
             title=_("Global settings"),
             icon_name="configuration",
             item=make_simple_link(
-                html.makeuri_contextless([("mode", "edit_site_globals"), ("site", site_id)]),),
+                makeuri_contextless(request, [("mode", "edit_site_globals"), ("site", site_id)]),),
         )
 
     if current_mode != "edit_site":
@@ -1390,7 +1398,7 @@ def _page_menu_entries_site_details(site_id: str, site: Dict,
             title=_("Edit connection"),
             icon_name="edit",
             item=make_simple_link(
-                html.makeuri_contextless([("mode", "edit_site"), ("site", site_id)]),),
+                makeuri_contextless(request, [("mode", "edit_site"), ("site", site_id)]),),
         )
 
     if current_mode != "site_livestatus_encryption":
@@ -1398,6 +1406,8 @@ def _page_menu_entries_site_details(site_id: str, site: Dict,
             title=_("Status encryption"),
             icon_name="encrypted",
             item=make_simple_link(
-                html.makeuri_contextless([("mode", "site_livestatus_encryption"),
-                                          ("site", site_id)]),),
+                makeuri_contextless(
+                    request,
+                    [("mode", "site_livestatus_encryption"), ("site", site_id)],
+                )),
         )

@@ -34,7 +34,7 @@ import cmk.gui.forms as forms
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.valuespec import (
     Transform,
     Checkbox,
@@ -81,6 +81,8 @@ from cmk.gui.plugins.wato import (
 )
 
 from cmk.gui.plugins.wato.utils import LabelCondition
+
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 if watolib.has_agent_bakery():
     import cmk.gui.cee.plugins.wato.agent_bakery.misc as agent_bakery  # pylint: disable=import-error,no-name-in-module
@@ -222,7 +224,7 @@ class ABCRulesetMode(WatoMode):
                         ("varname", ruleset.name),
                         ("back_mode", self.name()),
                     ]
-                    view_url = html.makeuri(url_vars)
+                    view_url = makeuri(request, url_vars)
 
                     html.a(ruleset.title(),
                            href=view_url,
@@ -412,8 +414,11 @@ class ModeRulesetGroup(ABCRulesetMode):
         )
 
     def _breadcrumb_url(self) -> str:
-        return html.makeuri_contextless([("mode", self.name()), ("group", self._group_name)],
-                                        filename="wato.py")
+        return makeuri_contextless(
+            request,
+            [("mode", self.name()), ("group", self._group_name)],
+            filename="wato.py",
+        )
 
     def _get_page_type(self, search_options: Dict[str, str]) -> PageType:
         return PageType.RulesetGroup
@@ -511,9 +516,10 @@ def _page_menu_entry_rule_search() -> PageMenuEntry:
     return PageMenuEntry(
         title=_("Rule search"),
         icon_name="search",
-        item=make_simple_link(html.makeuri_contextless([
-            ("mode", "rule_search"),
-        ])),
+        item=make_simple_link(makeuri_contextless(
+            request,
+            [("mode", "rule_search")],
+        )),
     )
 
 
@@ -540,11 +546,11 @@ def _page_menu_entry_search_rules(search_options: SearchOptions, mode: str,
         title=title,
         icon_name="search",
         item=make_simple_link(
-            html.makeuri([
+            makeuri(request, [
                 ("mode", "rule_search_form"),
                 ("back_mode", mode),
             ],
-                         delvars=["filled_in"])),
+                    delvars=["filled_in"])),
         is_shortcut=page_type is PageType.RuleSearch and html.form_submitted(),
         is_suggested=page_type is PageType.RuleSearch and html.form_submitted(),
     )
@@ -688,8 +694,11 @@ class ModeEditRuleset(WatoMode):
             pass
 
     def _breadcrumb_url(self) -> str:
-        return html.makeuri_contextless([("mode", self.name()), ("varname", self._name)],
-                                        filename="wato.py")
+        return makeuri_contextless(
+            request,
+            [("mode", self.name()), ("varname", self._name)],
+            filename="wato.py",
+        )
 
     def title(self) -> str:
         assert self._rulespec.title is not None

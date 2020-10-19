@@ -80,12 +80,14 @@ def discover_tcp_connections(section: TCPConnections) -> DiscoveryResult:
 
 def check_tcp_connections(params: Parameters, section: TCPConnections) -> CheckResult:
     for tcp_state, tcp_count in sorted(section.items()):
+        label = tcp_state.replace('_', ' ').capitalize()
         yield from check_levels(
             tcp_count,
             levels_upper=params.get(tcp_state),
             metric_name=tcp_state,
             render_func=lambda i: "%d" % i,
-            label=tcp_state.replace('_', ' ').capitalize(),
+            label=label,
+            notice_only=(label != "Established"),
         )
 
 

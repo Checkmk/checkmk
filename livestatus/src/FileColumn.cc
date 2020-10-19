@@ -38,7 +38,7 @@ std::unique_ptr<std::vector<char>> FileColumn<T>::getValue(Row row) const {
         path /= filepath;
     }
     if (!std::filesystem::is_regular_file(path)) {
-        Notice(logger()) << path << " is not a regular file";
+        Debug(logger()) << path << " is not a regular file";
         return nullptr;
     }
     auto file_size = std::filesystem::file_size(path);

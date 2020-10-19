@@ -27,7 +27,6 @@ import cmk.base.autochecks  # pylint: disable=cmk-module-layer-violation
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
 import cmk.base.check_api  # pylint: disable=cmk-module-layer-violation
 from cmk.base.check_utils import Service  # pylint: disable=cmk-module-layer-violation
-from cmk.base.api.agent_based import register  # pylint: disable=cmk-module-layer-violation
 
 import cmk.utils.log as log
 from cmk.utils.log import VERBOSE
@@ -108,7 +107,7 @@ class UpdateConfig:
                 try:
                     step_func()
                 except Exception:
-                    self._logger.error(" + \"%s\" failed" % title, exc_info=True)
+                    self._logger.log(VERBOSE, " + \"%s\" failed" % title, exc_info=True)
                     if self._arguments.debug:
                         raise
 
@@ -150,11 +149,8 @@ class UpdateConfig:
         cmk.base.config.load()
         cmk.base.config.load_all_agent_based_plugins(cmk.base.check_api.get_check_api_context)
         check_variables = cmk.base.config.get_check_variables()
+
         failed_hosts: List[str] = []
-
-        all_rulesets = cmk.gui.watolib.rulesets.AllRulesets()
-        all_rulesets.load()
-
         for autocheck_file in Path(cmk.utils.paths.autochecks_dir).glob("*.mk"):
             hostname = autocheck_file.stem
             try:
@@ -173,7 +169,7 @@ class UpdateConfig:
                 failed_hosts.append(hostname)
                 continue
 
-            autochecks = [self._fix_service(s, all_rulesets) for s in autochecks]
+            autochecks = [self._map_removed_check_plugin_names(s) for s in autochecks]
             cmk.base.autochecks.save_autochecks_file(hostname, autochecks)
 
         if failed_hosts:
@@ -181,53 +177,15 @@ class UpdateConfig:
             self._logger.error(msg)
             raise MKGeneralException(msg)
 
-    def _transformed_params(
-        self,
-        plugin_name: CheckPluginName,
-        params,
-        all_rulesets: cmk.gui.watolib.rulesets.AllRulesets,
-    ) -> Any:
-        check_plugin = register.get_check_plugin(plugin_name)
-        if check_plugin:
-            ruleset_name = "checkgroup_parameters:%s" % check_plugin.check_ruleset_name
-            if ruleset_name in all_rulesets.get_rulesets():
-                ruleset = all_rulesets.get_rulesets()[ruleset_name]
-                new_params = ruleset.valuespec().transform_value(params)
-                if params and not new_params:
-                    self._logger.warning("Transforming %r returned empty (plugin=%s, ruleset=%r" %
-                                         (params, plugin_name, ruleset_name))
-                assert not isinstance(params, dict) or isinstance(new_params, dict), (
-                    "if params had been a dict transformed params should be a dict, too.")
-                return {**params, **new_params} if isinstance(params, dict) else new_params
-        return None
-
-    def _fix_service(
-        self,
-        service: Service,
-        all_rulesets: cmk.gui.watolib.rulesets.AllRulesets,
-    ) -> Service:
-        """Change names of removed plugins to the new ones and transform parameters"""
-        new_plugin_name = REMOVED_CHECK_PLUGIN_MAP.get(service.check_plugin_name)
-        try:
-            new_params = self._transformed_params(
-                new_plugin_name or service.check_plugin_name,
-                service.parameters,
-                all_rulesets,
-            )
-        except Exception as exc:
-            self._logger.error("Transforming params for %r resulted in an error: %r" %
-                               (service.check_plugin_name, exc))
-            new_params = service.parameters
-
-        if new_plugin_name is None and new_params is None:
-            # don't create a new service if nothing has changed
+    def _map_removed_check_plugin_names(self, service: Service) -> Service:
+        """Change names of removed plugins to the new ones"""
+        if service.check_plugin_name not in REMOVED_CHECK_PLUGIN_MAP:
             return service
-
         return Service(
-            check_plugin_name=new_plugin_name or service.check_plugin_name,
+            check_plugin_name=REMOVED_CHECK_PLUGIN_MAP[service.check_plugin_name],
             item=service.item,
             description=service.description,
-            parameters=new_params or service.parameters,
+            parameters=service.parameters,
             service_labels=service.service_labels,
         )
 

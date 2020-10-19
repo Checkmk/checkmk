@@ -4865,18 +4865,10 @@ class Dictionary(ValueSpec):
                 raise MKUserError(varprefix, _("The entry %s is missing") % vs.title())
 
     def transform_value(self, value):
-        assert isinstance(value, dict)
         return {
-            **{
-                param: vs.transform_value(value[param])  #
-                for param, vs in self._get_elements()  #
-                if param in value
-            },
-            **{
-                param: value[param]  #
-                for param in self._ignored_keys  #
-                if param in value
-            }
+            param: vs.transform_value(value[param])
+            for param, vs in self._get_elements()
+            if param in value
         }
 
 

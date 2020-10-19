@@ -29,7 +29,7 @@ def _get_inv_info(config_load_all_checks):  # no idea why usefixtures will not w
 def test_no_new_legacy_tests():
     this_dir = Path(__file__).parent
 
-    assert [p.name for p in this_dir.iterdir()] == [
+    assert [p.name for p in this_dir.iterdir() if p.name != "__pycache__"] == [
         "test_generic_legacy_conversion_inv.py",
     ], ("Please do not put new tests in %s. They belong to the tests for agent_based plugins." %
         this_dir)

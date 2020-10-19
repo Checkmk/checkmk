@@ -14,6 +14,7 @@ import urllib.parse
 from http.cookiejar import CookieJar
 from pathlib import Path
 from typing import Any, NamedTuple, Literal
+from functools import lru_cache
 
 import pytest  # type: ignore[import]
 import webtest  # type: ignore[import]
@@ -353,10 +354,14 @@ class WebTestAppForCMK(webtest.TestApp):
         raise NotImplementedError("Format %s not implemented" % output_format)
 
 
+@lru_cache
+def _session_wsgi_callable(debug):
+    return make_app(debug=debug)
+
+
 def _make_webtest(debug):
-    wsgi_callable = make_app(debug=debug)
     cookies = CookieJar()
-    return WebTestAppForCMK(wsgi_callable, cookiejar=cookies)
+    return WebTestAppForCMK(_session_wsgi_callable(debug), cookiejar=cookies)
 
 
 @pytest.fixture(scope='function')

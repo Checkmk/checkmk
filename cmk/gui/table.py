@@ -63,6 +63,7 @@ def table_element(
     omit_if_empty: bool = False,
     omit_empty_columns: bool = False,
     omit_headers: bool = False,
+    omit_update_header: bool = False,
     empty_text: Optional[str] = None,
     help: Optional[str] = None,  # pylint: disable=redefined-builtin
     css: Optional[str] = None,
@@ -78,6 +79,7 @@ def table_element(
                       omit_if_empty=omit_if_empty,
                       omit_empty_columns=omit_empty_columns,
                       omit_headers=omit_headers,
+                      omit_update_header=omit_update_header,
                       empty_text=empty_text,
                       help=help,
                       css=css)
@@ -120,6 +122,7 @@ class Table:
         omit_if_empty: bool = False,
         omit_empty_columns: bool = False,
         omit_headers: bool = False,
+        omit_update_header: bool = False,
         empty_text: Optional[str] = None,
         help: Optional[str] = None,  # pylint: disable=redefined-builtin
         css: Optional[str] = None,
@@ -150,6 +153,7 @@ class Table:
             "omit_if_empty": omit_if_empty,
             "omit_empty_columns": omit_empty_columns,
             "omit_headers": omit_headers,
+            "omit_update_header": omit_update_header,
             "searchable": searchable,
             "sortable": sortable,
             "foldable": foldable,
@@ -400,8 +404,10 @@ class Table:
 
     def _write_table(self, rows: TableRows, num_rows_unlimited: int, actions_enabled: bool,
                      actions_visible: bool, search_term: Optional[str]) -> None:
-        headinfo = _("1 row") if len(rows) == 1 else _("%d rows") % num_rows_unlimited
-        html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
+        if not self.options["omit_update_header"]:
+            headinfo = _("1 row") if len(rows) == 1 else _("%d rows") % num_rows_unlimited
+
+            html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
 
         table_id = self.id
 

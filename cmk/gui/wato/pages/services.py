@@ -428,20 +428,32 @@ class DiscoveryPageRenderer:
     def render(self, discovery_result: DiscoveryResult, request: dict) -> str:
         with html.plugged():
             self._toggle_action_page_menu_entries(discovery_result)
-            self._show_discovered_host_labels(discovery_result)
-            self._show_discovery_details(discovery_result, request)
+            host_labels_row_count = self._show_discovered_host_labels(discovery_result)
+            details_row_count = self._show_discovery_details(discovery_result, request)
+            self._update_header_info(host_labels_row_count + details_row_count)
             return html.drain()
 
-    def _show_discovered_host_labels(self, discovery_result: DiscoveryResult) -> None:
+    def _update_header_info(self, abs_row_count: int):
+        headinfo = _("1 row") if abs_row_count == 1 else _("%d rows") % abs_row_count
+
+        html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
+
+    def _show_discovered_host_labels(self, discovery_result: DiscoveryResult) -> int:
+        host_label_row_count = 0
         if not discovery_result.host_labels:
-            return
+            return host_label_row_count
 
         host_labels_by_plugin: Dict[str, Dict[str, str]] = {}
         for label_id, label in discovery_result.host_labels.items():
             host_labels_by_plugin.setdefault(label["plugin_name"], {})[label_id] = label["value"]
 
-        with table_element(css="data", searchable=False, limit=False, sortable=False) as table:
+        with table_element(css="data",
+                           searchable=False,
+                           limit=False,
+                           sortable=False,
+                           omit_update_header=False) as table:
             table.groupheader(_("Discovered host labels"))
+            host_label_row_count += len(host_labels_by_plugin)
             for plugin_name, labels in sorted(host_labels_by_plugin.items(), key=lambda x: x[0]):
                 table.row()
                 labels_html = render_labels(
@@ -453,11 +465,14 @@ class DiscoveryPageRenderer:
                 table.text_cell(_("Check plugin"), plugin_name)
                 table.cell(_("Host labels"), labels_html)
 
-    def _show_discovery_details(self, discovery_result: DiscoveryResult, request: dict) -> None:
+        return host_label_row_count
+
+    def _show_discovery_details(self, discovery_result: DiscoveryResult, request: dict) -> int:
+        detail_row_count = 0
         if not discovery_result.check_table and self._is_active(discovery_result):
             html.br()
             html.show_message(_("Discovered no service yet."))
-            return
+            return detail_row_count
 
         if not discovery_result.check_table and self._host.is_cluster():
             html.br()
@@ -468,10 +483,10 @@ class DiscoveryPageRenderer:
                   "specify which services of your nodes shal be added to the "
                   "cluster. This is done using the <a href=\"%s\">%s</a> ruleset.") %
                 (url, _("Clustered services")))
-            return
+            return detail_row_count
 
         if not discovery_result.check_table:
-            return
+            return detail_row_count
 
         # We currently don't get correct information from cmk.base (the data sources). Better
         # don't display this until we have the information.
@@ -487,7 +502,12 @@ class DiscoveryPageRenderer:
             html.begin_form("checks_%s" % entry.table_group, method="POST", action="wato.py")
             html.h3(self._get_group_header(entry))
 
-            with table_element(css="data", searchable=False, limit=False, sortable=False) as table:
+            with table_element(css="data",
+                               searchable=False,
+                               limit=False,
+                               sortable=False,
+                               omit_update_header=True) as table:
+                detail_row_count += len(checks)
                 for check in sorted(checks, key=lambda c: c[6].lower()):
                     self._show_check_row(table, discovery_result, request, check,
                                          entry.show_bulk_actions)
@@ -496,6 +516,7 @@ class DiscoveryPageRenderer:
                 self._toggle_bulk_action_page_menu_entries(discovery_result, entry.table_group)
             html.hidden_fields()
             html.end_form()
+        return detail_row_count
 
     def _is_active(self, discovery_result):
         return discovery_result.job_status["is_active"]

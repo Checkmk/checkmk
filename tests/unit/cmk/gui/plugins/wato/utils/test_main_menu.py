@@ -49,7 +49,6 @@ def test_registered_modules():
         'wato.py?mode=rulesets&group=agent',
         'wato.py?mode=rulesets&group=checkparams',
         'wato.py?mode=rulesets&group=custom_checks',
-        'wato.py?mode=rulesets&group=custom_integrations',
         'wato.py?mode=rulesets&group=datasource_programs',
         'wato.py?mode=rulesets&group=inventory',
         'wato.py?mode=rulesets&group=monconf',

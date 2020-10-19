@@ -13,6 +13,7 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
     IndividualOrStoredPassword,
     RulespecGroup,
+    RulespecSubGroup,
     monitoring_macro_help,
     rulespec_group_registry,
     rulespec_registry,
@@ -80,18 +81,107 @@ class RulespecGroupDatasourcePrograms(RulespecGroup):
 
 
 @rulespec_group_registry.register
-class RulespecGroupCustomIntegrations(RulespecGroup):
+class RulespecGroupDatasourceProgramsOS(RulespecSubGroup):
     @property
-    def name(self):
-        return "custom_integrations"
+    def main_group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def sub_group_name(self):
+        return "os"
+
+    @property
+    def title(self):
+        return _("Operating systems")
+
+
+@rulespec_group_registry.register
+class RulespecGroupDatasourceProgramsApps(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def sub_group_name(self):
+        return "apps"
+
+    @property
+    def title(self):
+        return _("Applications")
+
+
+@rulespec_group_registry.register
+class RulespecGroupDatasourceProgramsCloud(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def sub_group_name(self):
+        return "cloud"
+
+    @property
+    def title(self):
+        return _("Cloud based environments")
+
+
+class RulespecGroupDatasourceProgramsContainer(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def sub_group_name(self):
+        return "container"
+
+    @property
+    def title(self):
+        return _("Containerization")
+
+
+@rulespec_group_registry.register
+class RulespecGroupDatasourceProgramsCustom(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def sub_group_name(self):
+        return "custom"
 
     @property
     def title(self):
         return _("Custom integrations")
 
+
+@rulespec_group_registry.register
+class RulespecGroupDatasourceProgramsHardware(RulespecSubGroup):
     @property
-    def help(self):
-        return _("Integrate custom platform connections (special agents)")
+    def main_group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def sub_group_name(self):
+        return "hw"
+
+    @property
+    def title(self):
+        return _("Hardware")
+
+
+@rulespec_group_registry.register
+class RulespecGroupDatasourceProgramsTesting(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def sub_group_name(self):
+        return "testing"
+
+    @property
+    def title(self):
+        return _("Testing")
 
 
 def _valuespec_datasource_programs():
@@ -112,7 +202,7 @@ def _valuespec_datasource_programs():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupCustomIntegrations,
+        group=RulespecGroupDatasourceProgramsCustom,
         name="datasource_programs",
         valuespec=_valuespec_datasource_programs,
     ))
@@ -132,7 +222,7 @@ def _valuespec_special_agents_ddn_s2a():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:ddn_s2a",
         valuespec=_valuespec_special_agents_ddn_s2a,
     ))
@@ -218,7 +308,7 @@ def _valuespec_special_agents_cisco_prime():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsOS,
         name="special_agents:cisco_prime",
         valuespec=_valuespec_special_agents_cisco_prime,
     ))
@@ -805,7 +895,7 @@ def _valuespec_special_agents_hp_msa():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:hp_msa",
         valuespec=_valuespec_special_agents_hp_msa,
     ))
@@ -888,7 +978,7 @@ def _valuespec_special_agents_ipmi_sensors():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsOS,
         name="special_agents:ipmi_sensors",
         valuespec=_valuespec_special_agents_ipmi_sensors,
     ))
@@ -930,7 +1020,7 @@ def _valuespec_special_agents_netapp():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:netapp",
         valuespec=_valuespec_special_agents_netapp,
     ))
@@ -973,7 +1063,7 @@ def _valuespec_special_agents_activemq():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_activemq(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:activemq",
         valuespec=_valuespec_special_agents_activemq,
     ))
@@ -1042,7 +1132,7 @@ def _valuespec_special_agents_emcvnx():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_emcvnx(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:emcvnx",
         valuespec=_valuespec_special_agents_emcvnx,
     ))
@@ -1120,7 +1210,7 @@ def _valuespec_special_agents_ibmsvc():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_ibmsvc(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:ibmsvc",
         valuespec=_valuespec_special_agents_ibmsvc,
     ))
@@ -1144,7 +1234,7 @@ def _valuespec_special_agents_random():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_random(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsTesting,
         name="special_agents:random",
         valuespec=_valuespec_special_agents_random,
     ))
@@ -1169,7 +1259,7 @@ def _valuespec_special_agents_acme_sbc():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_acme_sbc(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:acme_sbc",
         valuespec=_valuespec_special_agents_acme_sbc,
     ))
@@ -1204,7 +1294,7 @@ def _valuespec_special_agents_fritzbox():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_fritzbox(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:fritzbox",
         valuespec=_valuespec_special_agents_fritzbox,
     ))
@@ -1229,7 +1319,7 @@ def _valuespec_special_agents_innovaphone():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_innovaphone(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:innovaphone",
         valuespec=_valuespec_special_agents_innovaphone,
     ))
@@ -1252,7 +1342,7 @@ def _valuespec_special_agents_hivemanager():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_hivemanager(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:hivemanager",
         valuespec=_valuespec_special_agents_hivemanager,
     ))
@@ -1302,7 +1392,7 @@ def _valuespec_special_agents_hivemanager_ng():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_hivemanager_ng(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:hivemanager_ng",
         valuespec=_valuespec_special_agents_hivemanager_ng,
     ))
@@ -1337,7 +1427,7 @@ def _valuespec_special_agents_allnet_ip_sensoric():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_allnet_ip_sensoric(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:allnet_ip_sensoric",
         valuespec=_valuespec_special_agents_allnet_ip_sensoric,
     ))
@@ -1370,7 +1460,7 @@ def _valuespec_special_agents_ucs_bladecenter():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:ucs_bladecenter",
         valuespec=_valuespec_special_agents_ucs_bladecenter,
     ))
@@ -1553,7 +1643,7 @@ def _valuespec_special_agents_siemens_plc():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_siemens_plc(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:siemens_plc",
         valuespec=_valuespec_special_agents_siemens_plc,
     ))
@@ -1610,7 +1700,7 @@ def _valuespec_special_agents_ruckus_spot():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:ruckus_spot",
         valuespec=_valuespec_special_agents_ruckus_spot,
     ))
@@ -1671,7 +1761,7 @@ def _valuespec_special_agents_appdynamics():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_appdynamics(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:appdynamics",
         valuespec=_valuespec_special_agents_appdynamics,
     ))
@@ -1734,7 +1824,7 @@ def _valuespec_special_agents_jolokia():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_jolokia(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:jolokia",
         valuespec=_valuespec_special_agents_jolokia,
     ))
@@ -1765,7 +1855,7 @@ def _valuespec_special_agents_tinkerforge():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:tinkerforge",
         valuespec=_valuespec_special_agents_tinkerforge,
     ))
@@ -1789,7 +1879,7 @@ def _valuespec_special_agents_prism():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsOS,
         name="special_agents:prism",
         valuespec=_valuespec_special_agents_prism,
     ))
@@ -1841,7 +1931,7 @@ def _valuespec_special_agents_3par():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:3par",
         title=lambda: _("3PAR Configuration"),
         valuespec=_valuespec_special_agents_3par,
@@ -1869,7 +1959,7 @@ def _valuespec_special_agents_storeonce():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:storeonce",
         valuespec=_valuespec_special_agents_storeonce,
     ))
@@ -1897,7 +1987,7 @@ def _valuespec_special_agents_storeonce4x():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:storeonce4x",
         valuespec=_valuespec_special_agents_storeonce4x,
     ))
@@ -1919,7 +2009,7 @@ def _valuespec_special_agents_salesforce():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsApps,
         help_func=lambda: _("This rule selects the special agent for Salesforce."),
         name="special_agents:salesforce",
         title=lambda: _("Salesforce"),
@@ -2179,7 +2269,7 @@ def _valuespec_special_agents_bi():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:bi",
         valuespec=_valuespec_special_agents_bi,
     ))
@@ -2488,7 +2578,7 @@ def _valuespec_special_agents_vnx_quotas():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_vnx_quotas(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:vnx_quotas",
         valuespec=_valuespec_special_agents_vnx_quotas,
     ))
@@ -2558,7 +2648,7 @@ def _valuespec_special_agents_elasticsearch():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_elasticsearch(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:elasticsearch",
         valuespec=_valuespec_special_agents_elasticsearch,
     ))
@@ -2632,7 +2722,7 @@ def _valuespec_special_agents_splunk():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_splunk(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:splunk",
         valuespec=_valuespec_special_agents_splunk,
     ))
@@ -2717,7 +2807,7 @@ def _valuespec_special_agents_jenkins():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_jenkins(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:jenkins",
         valuespec=_valuespec_special_agents_jenkins,
     ))
@@ -2750,7 +2840,7 @@ def _valuespec_special_agents_zerto():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:zerto",
         valuespec=_valuespec_special_agents_zerto,
     ))
@@ -2878,7 +2968,7 @@ def _valuespec_special_agents_graylog():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_graylog(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:graylog",
         valuespec=_valuespec_special_agents_graylog,
     ))
@@ -2914,7 +3004,7 @@ def _valuespec_special_agents_couchbase():
 rulespec_registry.register(
     HostRulespec(
         factory_default=watolib.Rulespec.FACTORY_DEFAULT_UNUSED,
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:couchbase",
         valuespec=_valuespec_special_agents_couchbase,
     ))
@@ -3083,7 +3173,7 @@ def _valuespec_special_agents_jira():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_jira(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:jira",
         valuespec=_valuespec_special_agents_jira,
     ))
@@ -3161,7 +3251,7 @@ def _valuespec_special_agents_rabbitmq():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_rabbitmq(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:rabbitmq",
         valuespec=_valuespec_special_agents_rabbitmq,
     ))

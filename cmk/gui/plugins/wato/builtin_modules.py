@@ -1393,7 +1393,7 @@ class MainModuleOtherIntegrations(MainModule):
 
     @property
     def description(self):
-        return _("Integrate platforms using special agents, e.g. SAP R/3")
+        return _("Monitoring of applications such as processes, services or databases")
 
     @property
     def sort_index(self):
@@ -1402,38 +1402,3 @@ class MainModuleOtherIntegrations(MainModule):
     @property
     def is_show_more(self):
         return False
-
-
-@main_module_registry.register
-class MainModuleCustomIntegrations(MainModule):
-    @property
-    def mode_or_url(self):
-        return "wato.py?mode=rulesets&group=custom_integrations"
-
-    @property
-    def topic(self):
-        return MainModuleTopicAgents
-
-    @property
-    def title(self):
-        return _("Custom integrations")
-
-    @property
-    def icon(self):
-        return "integrations_custom"
-
-    @property
-    def permission(self):
-        return "rulesets"
-
-    @property
-    def description(self):
-        return _("Integrate custom platform connections (special agents)")
-
-    @property
-    def sort_index(self):
-        return 50
-
-    @property
-    def is_show_more(self):
-        return True

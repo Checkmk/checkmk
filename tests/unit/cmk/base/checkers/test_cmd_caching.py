@@ -127,6 +127,11 @@ def patch_data_source(mocker):
     _patch_data_source(mocker)
 
 
+@pytest.fixture
+def without_inventory_plugins(monkeypatch):
+    monkeypatch.setattr(cmk.base.api.agent_based.register, 'iter_all_inventory_plugins', lambda: ())
+
+
 # When called without hosts, it uses all hosts and defaults to using the data source cache
 # When called with an explicit list of hosts the cache is not used by default, the option
 # --cache enables it and --no-cache enforce never to use it
@@ -174,10 +179,8 @@ def patch_data_source(mocker):
     ],
     ids=["force=True", "force=False"],
 )
-@pytest.mark.usefixtures("scenario")
-def test_mode_inventory_caching(hosts, cache, force, monkeypatch, mocker):
-
-    monkeypatch.setattr(cmk.base.api.agent_based.register, 'iter_all_inventory_plugins', lambda: ())
+@pytest.mark.usefixtures("scenario", "without_inventory_plugins")
+def test_mode_inventory_caching(hosts, cache, force, mocker):
     kwargs = {}
     kwargs.update(hosts[1])
     kwargs.update(cache[1])
@@ -216,6 +219,7 @@ def test_mode_inventory_caching(hosts, cache, force, monkeypatch, mocker):
 
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("patch_data_source")
+@pytest.mark.usefixtures("without_inventory_plugins")
 def test_mode_inventory_as_check():
     assert cmk.base.modes.check_mk.mode_inventory_as_check({}, "ds-test-host1") == 0
     assert ABCSource.parse.call_count == 2  # type: ignore[attr-defined]

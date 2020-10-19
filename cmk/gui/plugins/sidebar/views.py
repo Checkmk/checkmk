@@ -21,6 +21,7 @@ from cmk.gui.plugins.sidebar import (
     search,
 )
 from cmk.gui.i18n import _, _l
+from cmk.gui.node_visualization import ParentChildTopologyPage
 
 
 @snapin_registry.register
@@ -71,8 +72,12 @@ def get_view_menu_items() -> List[TopicMenuTopic]:
                      if (not config.visible_views or name in config.visible_views) and
                      (not config.hidden_views or name not in config.hidden_views)]
 
+    network_topology_visual_spec = ParentChildTopologyPage.visual_spec()
+    pages_to_show = [(network_topology_visual_spec["name"], network_topology_visual_spec)]
+
     visuals_to_show = [("views", e) for e in views_to_show]
     visuals_to_show += [("dashboards", e) for e in dashboard.get_permitted_dashboards().items()]
+    visuals_to_show += [("pages", e) for e in pages_to_show]
     visuals_to_show += page_type_items
 
     return make_topic_menu(visuals_to_show)

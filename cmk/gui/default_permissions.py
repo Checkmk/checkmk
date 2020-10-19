@@ -40,13 +40,14 @@ class PermissionSectionGeneral(PermissionSection):
         return 10
 
 
-permission_registry.register(PermissionGeneralUse := Permission(
-    section=PermissionSectionGeneral,
-    name="use",
-    title=_l("Use the GUI at all"),
-    description=_l("Users without this permission are not let in at all"),
-    defaults=config.builtin_role_ids,
-))
+PermissionGeneralUse = permission_registry.register(
+    Permission(
+        section=PermissionSectionGeneral,
+        name="use",
+        title=_l("Use the GUI at all"),
+        description=_l("Users without this permission are not let in at all"),
+        defaults=config.builtin_role_ids,
+    ))
 
 permission_registry.register(
     Permission(
@@ -282,4 +283,14 @@ permission_registry.register(
             "use to track down the issues in the code or send it as report to the Checkmk team to fix this issue "
             "Only users with this permission are able to see the reports in the GUI."),
         defaults=["admin"],
+    ))
+
+permission_registry.register(
+    Permission(
+        section=PermissionSectionGeneral,
+        name="parent_child_topology",
+        title=_l("Network Topology"),
+        description=_l("This dashboard uses the parent relationships of your hosts to "
+                       "display a hierarchical map."),
+        defaults=config.builtin_role_ids,
     ))

@@ -334,10 +334,9 @@ def make_topic_menu(visuals: List[Tuple[str, Tuple[str, Visual]]]) -> List[Topic
 
         topic_id = visual["topic"]
         try:
-            topic = topics[visual["topic"]]
-        except KeyError:
-            topic_id = "other"
             topic = topics[topic_id]
+        except KeyError:
+            topic = topics["other"]
 
         url = _visual_url(visual_type_name, name)
 
@@ -373,6 +372,11 @@ def _visual_url(visual_type_name: str, name: str) -> str:
 
     if visual_type_name == "dashboards":
         return "dashboard.py?name=%s" % name
+
+    # Note: This is no real visual type like the others here. This is just a hack to make top level
+    # pages work with this function.
+    if visual_type_name == "pages":
+        return name if name.endswith(".py") else "%s.py" % name
 
     if visual_type_name == "reports":
         return "report.py?name=%s" % name

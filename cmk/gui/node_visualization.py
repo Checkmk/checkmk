@@ -29,18 +29,22 @@ from cmk.gui.pages import (
 
 from cmk.gui.plugins.views.utils import (
     get_permitted_views,)
-from cmk.gui.views import View
+from cmk.gui.views import ABCAjaxInitialFilters, View
 
 import cmk.gui.visuals
 from cmk.gui.exceptions import MKGeneralException
 
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import FilterHeaders
-from cmk.gui.breadcrumb import make_simple_page_breadcrumb
+from cmk.gui.breadcrumb import (
+    make_current_page_breadcrumb_item,
+    make_simple_page_breadcrumb,
+    make_topic_breadcrumb,
+)
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (make_display_options_dropdown, PageMenu, PageMenuEntry,
                                PageMenuSidePopup, PageMenuTopic)
-from cmk.gui.plugins.dashboard.utils import DashboardName, get_permitted_dashboards, dashboard_breadcrumb
+from cmk.gui.pagetypes import PagetypeTopics
 
 TopologyConfig = Dict[str, Any]
 Mesh = Set[str]
@@ -57,8 +61,22 @@ class MKGrowthInterruption(MKGeneralException):
 
 @page_registry.register_page("parent_child_topology")
 class ParentChildTopologyPage(Page):
+    @classmethod
+    def visual_spec(cls):
+        return {
+            "topic": "overview",
+            "title": _("Network Topology"),
+            "name": "parent_child_topology",
+            "sort_index": 50,
+            "is_show_more": False,
+            "icon": "network_topology",
+            "hidden": False,
+        }
+
     def page(self) -> PageResult:
         """ Determines the hosts to be shown """
+        config.user.need_permission("general.parent_child_topology")
+
         growth_auto_max_nodes = None
 
         # Jump this number of hops from the root node(s)
@@ -128,12 +146,13 @@ class ParentChildTopologyPage(Page):
                       growth_auto_max_nodes: Optional[int] = None,
                       mesh_depth: int = 0,
                       max_nodes: int = 400) -> None:
-        board_name = "topology"
-        board = get_permitted_dashboards()[board_name]
-        breadcrumb = dashboard_breadcrumb(board_name, board, board["title"])
+        visual_spec = ParentChildTopologyPage.visual_spec()
+        breadcrumb = make_topic_breadcrumb(mega_menu_registry.menu_monitoring(),
+                                           PagetypeTopics.get_topic(visual_spec["topic"]))
+        breadcrumb.append(make_current_page_breadcrumb_item(visual_spec["title"]))
         page_menu = PageMenu(breadcrumb=breadcrumb)
-        self._extend_display_dropdown(page_menu, board_name)
-        html.header(board["title"], breadcrumb, page_menu)
+        self._extend_display_dropdown(page_menu, visual_spec["name"])
+        html.header(visual_spec["title"], breadcrumb, page_menu)
         self.show_topology_content(hostnames,
                                    mode,
                                    growth_auto_max_nodes=growth_auto_max_nodes,
@@ -172,7 +191,7 @@ class ParentChildTopologyPage(Page):
         view, filters = get_topology_view_and_filters()
         return cmk.gui.views.get_livestatus_filter_headers(view, filters)
 
-    def _extend_display_dropdown(self, menu: PageMenu, board_name: DashboardName) -> None:
+    def _extend_display_dropdown(self, menu: PageMenu, page_name: str) -> None:
         _view, show_filters = get_topology_view_and_filters()
         display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
         display_dropdown.topics.insert(
@@ -188,12 +207,30 @@ class ParentChildTopologyPage(Page):
                                 info_list=["host", "service"],
                                 mandatory_filters=[],
                                 context={f.ident: {} for f in show_filters if f.available()},
-                                page_name=board_name,
-                                reset_ajax_page="ajax_initial_dashboard_filters")),
+                                page_name=page_name,
+                                reset_ajax_page="ajax_initial_topology_filters")),
                         name="filters",
                         is_shortcut=True,
                     ),
                 ]))
+
+
+def get_topology_view_and_filters() -> Tuple[View, List[Filter]]:
+    view_name = "topology_filters"
+    view_spec = get_permitted_views()[view_name]
+    view = View(view_name, view_spec, view_spec.get("context", {}))
+    filters = cmk.gui.visuals.filters_of_visual(view.spec,
+                                                view.datasource.infos,
+                                                link_filters=view.datasource.link_filters)
+    show_filters = cmk.gui.visuals.visible_filters_of_visual(view.spec, filters)
+    return view, show_filters
+
+
+@page_registry.register_page("ajax_initial_topology_filters")
+class AjaxInitialTopologyFilters(ABCAjaxInitialFilters):
+    def _get_context(self, page_name: str) -> Dict:
+        _view, show_filters = get_topology_view_and_filters()
+        return {f.ident: {} for f in show_filters if f.available()}
 
 
 @cmk.gui.pages.register("bi_map")
@@ -926,14 +963,3 @@ class ParentChildNetworkTopology(Topology):
 
 
 topology_registry.register(ParentChildNetworkTopology)
-
-
-def get_topology_view_and_filters() -> Tuple[View, List[Filter]]:
-    view_name = "topology_filters"
-    view_spec = get_permitted_views()[view_name]
-    view = View(view_name, view_spec, view_spec.get("context", {}))
-    filters = cmk.gui.visuals.filters_of_visual(view.spec,
-                                                view.datasource.infos,
-                                                link_filters=view.datasource.link_filters)
-    show_filters = cmk.gui.visuals.visible_filters_of_visual(view.spec, filters)
-    return view, show_filters

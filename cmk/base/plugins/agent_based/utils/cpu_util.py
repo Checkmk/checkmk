@@ -161,12 +161,14 @@ def check_cpu_util(
         levels=levels,
         render_func=render.percent,
         label=label,
+        boundaries=(0, None),
     ) if isinstance(levels, dict) else check_levels(
         value_checked,
         metric_name=metric_name,
         levels_upper=levels,
         render_func=render.percent,
         label=label,
+        boundaries=(0, None),
     )
 
     if "core_util_time_total" in params:

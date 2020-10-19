@@ -35,7 +35,7 @@ parsed = parse_kernel([
     ], [u'ctxt', u'539210403'], [u'processes', u'4700038'],
 ])
 
-discovery = {'': [], 'performance': [(None, {})], 'util': [(None, {})]}
+discovery = {'': [], 'performance': [(None, {})]}
 
 _basic_result_util = [
     (0, 'User: 6.49%', [('user', 6.48547647710549)]),
@@ -45,253 +45,43 @@ _basic_result_util = [
 ]
 
 checks = {
-    '':
-        [],
-    'performance':
-        [
-            (
-                None,
-                {},
-                [
-                    (0, 'Process Creations: 418.23/s',
-                     [('process_creations', 418.2272646378359, None, None, None, None)]),
-                    (0, 'Context Switches: 47980.99/s',
-                     [('context_switches', 47980.99332621463, None, None, None, None)]),
-                    (0, 'Major Page Faults: 159.73/s',
-                     [('major_page_faults', 159.72868837871508, None, None, None, None)]),
-                    (0, 'Page Swap in: 22.32/s',
-                     [('page_swap_in', 22.319718811176365, None, None, None, None)]),
-                    (0, 'Page Swap Out: 66.89/s',
-                     [('page_swap_out', 66.8896600818651, None, None, None, None)]),
-                ]),
-            (
-                None,
-                {
-                    'ctxt': (30000.0, 45000.0),
-                    'processes': (400.0, 500.0),
-                    'page_swap_in_levels': (10.0, 50.0),
-                    'page_swap_out_levels_lower': (500.0, 100.0),
-                },
-                [
-                    (1, 'Process Creations: 418.23/s (warn/crit at 400.00/s/500.00/s)',
-                     [('process_creations', 418.2272646378359, 400.0, 500.0)]),
-                    (2, 'Context Switches: 47980.99/s (warn/crit at 30000.00/s/45000.00/s)',
-                     [('context_switches', 47980.99332621463, 30000.0, 45000.0)]),
-                    (0, 'Major Page Faults: 159.73/s',
-                     [('major_page_faults', 159.72868837871508, None, None, None, None)]),
-                    (1, 'Page Swap in: 22.32/s (warn/crit at 10.00/s/50.00/s)',
-                     [('page_swap_in', 22.319718811176365, 10.0, 50.0, None, None)]),
-                    (2, 'Page Swap Out: 66.89/s (warn/crit below 500.00/s/100.00/s)',
-                     [('page_swap_out', 66.8896600818651, None, None, None, None)]),
-                ],
-            )],
-    'util':
-        [
-            (
-                None,
-                {},
-                _basic_result_util,
-            ),
-            (None,
-             {'levels_single': (80, 90)},
-             _basic_result_util,
-             ),
-            (None,
-             {'levels_single': (1, 5)},
-             _basic_result_util +
-             [
-                 (1, 'Core cpu0: 2.54% (warn/crit at 1.0%/5.0%)', []),
-                 (1, 'Core cpu1: 2.16% (warn/crit at 1.0%/5.0%)', []),
-             ]),
-            (None,
-             {'core_util_graph': True},
-             _basic_result_util +
-             [
-                 (0, '', [('cpu_core_util_0', 2.544477089431855)]),
-                 (0, '', [('cpu_core_util_1', 2.158715165178048)]),
-             ]),
-            (None,
-             {'core_util_time': (1, 1, 2)},
-             _basic_result_util +
-             [
-                 (2, 'cpu0 is under high load for: 120 s (warn/crit at 1.00 s/2.00 s)', []),
-                 (2, 'cpu1 is under high load for: 120 s (warn/crit at 1.00 s/2.00 s)', []),
-             ]),
-            (None,
-             {'levels_single': (80, 90), 'core_util_graph': True},
-             _basic_result_util +
-             [
-                 (0, '', [('cpu_core_util_0', 2.544477089431855, 80.0, 90.0)]),
-                 (0, '', [('cpu_core_util_1', 2.158715165178048, 80.0, 90.0)]),
-             ]),
-            (None,
-             {'levels_single': (1, 5), 'core_util_graph': True},
-             _basic_result_util +
-             [
-                 (1, 'Core cpu0: 2.54% (warn/crit at 1.0%/5.0%)',
-                  [('cpu_core_util_0', 2.544477089431855, 1.0, 5.0)]),
-                 (1, 'Core cpu1: 2.16% (warn/crit at 1.0%/5.0%)',
-                  [('cpu_core_util_1', 2.158715165178048, 1.0, 5.0)]),
-             ]),
-            (None,
-             {'levels_single': (80, 90), 'core_util_time': (1, 1, 2)},
-             _basic_result_util +
-             [
-                 (2, 'cpu0 is under high load for: 120 s (warn/crit at 1.00 s/2.00 s)', []),
-                 (2, 'cpu1 is under high load for: 120 s (warn/crit at 1.00 s/2.00 s)', []),
-             ]),
-            (None,
-             {'levels_single': (1, 5), 'core_util_time': (1, 1, 2)},
-             _basic_result_util +
-             [
-                 (2, 'cpu0 is under high load for: 120 s (warn/crit at 1.00 s/2.00 s)', []),
-                 (1, 'Core cpu0: 2.54% (warn/crit at 1.0%/5.0%)', []),
-                 (2, 'cpu1 is under high load for: 120 s (warn/crit at 1.00 s/2.00 s)', []),
-                 (1, 'Core cpu1: 2.16% (warn/crit at 1.0%/5.0%)', []),
-             ]),
-            (None,
-             {'levels_single': (80, 90), 'core_util_graph': True, 'core_util_time': (1, 1, 2)},
-             _basic_result_util +
-             [
-                 (2, 'cpu0 is under high load for: 120 s (warn/crit at 1.00 s/2.00 s)', []),
-                 (0, '', [('cpu_core_util_0', 2.544477089431855, 80.0, 90.0)]),
-                 (2, 'cpu1 is under high load for: 120 s (warn/crit at 1.00 s/2.00 s)', []),
-                 (0, '', [('cpu_core_util_1', 2.158715165178048, 80.0, 90.0)]),
-             ]),
-            (None,
-             {'levels_single': (1, 5), 'core_util_graph': True, 'core_util_time': (1, 1, 2)},
-             _basic_result_util +
-             [
-                 (2, 'cpu0 is under high load for: 120 s (warn/crit at 1.00 s/2.00 s)', []),
-                 (1, 'Core cpu0: 2.54% (warn/crit at 1.0%/5.0%)',
-                  [('cpu_core_util_0', 2.544477089431855, 1.0, 5.0)]),
-                 (2, 'cpu1 is under high load for: 120 s (warn/crit at 1.00 s/2.00 s)', []),
-                 (1, 'Core cpu1: 2.16% (warn/crit at 1.0%/5.0%)',
-                  [('cpu_core_util_1', 2.158715165178048, 1.0, 5.0)]),
-             ]),
-            (None,
-             {'average_single': {'time_average': 2, 'apply_levels': False, 'show_graph': False}},
-             _basic_result_util
-             ),
-            (None,
-             {'levels_single': (80, 90),
-              'average_single': {'time_average': 2, 'apply_levels': False, 'show_graph': False}},
-             _basic_result_util
-             ),
-            (None,
-             {'levels_single': (1, 5),
-              'average_single': {'time_average': 2, 'apply_levels': False, 'show_graph': False}},
-             _basic_result_util +
-             [
-                 (1, 'Core cpu0: 2.54% (warn/crit at 1.0%/5.0%)', []),
-                 (1, 'Core cpu1: 2.16% (warn/crit at 1.0%/5.0%)', []),
-
-             ]),
-            (None,
-             {'levels_single': (80, 90),
-              'average_single': {'time_average': 2, 'apply_levels': True, 'show_graph': False}},
-             _basic_result_util
-             ),
-            (None,
-             {'levels_single': (1, 5),
-              'average_single': {'time_average': 2, 'apply_levels': True, 'show_graph': False}},
-             _basic_result_util
-             ),
-            (None,
-             {'levels_single': (0, 1),
-              'average_single': {'time_average': 2, 'apply_levels': True, 'show_graph': False}},
-             _basic_result_util +
-             [
-                 (1, 'Core cpu0 (2-min average): 0% (warn/crit at 0%/1.0%)', []),
-                 (1, 'Core cpu1 (2-min average): 0% (warn/crit at 0%/1.0%)', []),
-             ]),
-            (None,
-             {'average_single': {'time_average': 2, 'apply_levels': False, 'show_graph': True}},
-             _basic_result_util +
-             [
-                 (0, '', [('cpu_core_util_average_0', 0.0, None, None)]),
-                 (0, '', [('cpu_core_util_average_1', 0.0, None, None)]),
-             ]),
-            (None,
-             {'core_util_graph': True,
-              'average_single': {'time_average': 2, 'apply_levels': False, 'show_graph': False}},
-             _basic_result_util +
-             [
-                 (0, '', [('cpu_core_util_0', 2.544477089431855, None, None)]),
-                 (0, '', [('cpu_core_util_1', 2.158715165178048, None, None)]),
-             ]),
-            (None,
-             {'core_util_graph': True,
-              'average_single': {'time_average': 2, 'apply_levels': False, 'show_graph': True}},
-             _basic_result_util +
-             [
-                 (0, '', [('cpu_core_util_0', 2.544477089431855, None, None)]),
-                 (0, '', [('cpu_core_util_average_0', 0.0, None, None)]),
-                 (0, '', [('cpu_core_util_1', 2.158715165178048, None, None)]),
-                 (0, '', [('cpu_core_util_average_1', 0.0, None, None)]),
-             ]),
-            (None,
-             {'levels_single': (1, 5),
-              'core_util_graph': True,
-              'average_single': {'time_average': 2, 'apply_levels': False, 'show_graph': True}},
-             _basic_result_util +
-             [
-                 (1, 'Core cpu0: 2.54% (warn/crit at 1.0%/5.0%)',
-                  [('cpu_core_util_0', 2.544477089431855, 1.0, 5.0)]),
-                 (0, '', [('cpu_core_util_average_0', 0.0, None, None)]),
-                 (1, 'Core cpu1: 2.16% (warn/crit at 1.0%/5.0%)',
-                  [('cpu_core_util_1', 2.158715165178048, 1.0, 5.0)]),
-                 (0, '', [('cpu_core_util_average_1', 0.0, None, None)]),
-             ]),
-            (None,
-             {'levels_single': (0, 1),
-              'core_util_graph': True,
-              'average_single': {'time_average': 2, 'apply_levels': False, 'show_graph': True}},
-             _basic_result_util +
-             [
-                 (2, 'Core cpu0: 2.54% (warn/crit at 0%/1.0%)',
-                  [('cpu_core_util_0', 2.544477089431855, 0.0, 1.0)]),
-                 (0, '', [('cpu_core_util_average_0', 0.0, None, None)]),
-                 (2, 'Core cpu1: 2.16% (warn/crit at 0%/1.0%)',
-                  [('cpu_core_util_1', 2.158715165178048, 0.0, 1.0)]),
-                 (0, '', [('cpu_core_util_average_1', 0.0, None, None)]),
-             ]),
-            (None,
-             {'levels_single': (0, 1),
-              'core_util_graph': True,
-              'average_single': {'time_average': 2, 'apply_levels': True, 'show_graph': True}},
-             _basic_result_util +
-             [
-                 (0, '', [('cpu_core_util_0', 2.544477089431855, None, None)]),
-                 (1, 'Core cpu0 (2-min average): 0% (warn/crit at 0%/1.0%)',
-                  [('cpu_core_util_average_0', 0.0, 0.0, 1.0)]),
-                 (0, '', [('cpu_core_util_1', 2.158715165178048, None, None)]),
-                 (1, 'Core cpu1 (2-min average): 0% (warn/crit at 0%/1.0%)',
-                  [('cpu_core_util_average_1', 0.0, 0.0, 1.0)]),
-             ]),
-            (None,
-             {'core_util_time': (1, 1, 2),
-              'average_single': {'time_average': 2, 'apply_levels': False, 'show_graph': False}},
-             _basic_result_util +
-             [
-                 (2, 'cpu0 is under high load for: 120 s (warn/crit at 1.00 s/2.00 s)', []),
-                 (2, 'cpu1 is under high load for: 120 s (warn/crit at 1.00 s/2.00 s)', []),
-             ]),
-            (None,
-             {'core_util_time': (1, 1, 2),
-              'levels_single': (0, 1),
-              'core_util_graph': True,
-              'average_single': {'time_average': 2, 'apply_levels': True, 'show_graph': True}},
-             _basic_result_util +
-             [
-                 (2, 'cpu0 is under high load for: 120 s (warn/crit at 1.00 s/2.00 s)', []),
-                 (0, '', [('cpu_core_util_0', 2.544477089431855, None, None)]),
-                 (1, 'Core cpu0 (2-min average): 0% (warn/crit at 0%/1.0%)',
-                  [('cpu_core_util_average_0', 0.0, 0.0, 1.0)]),
-                 (2, 'cpu1 is under high load for: 120 s (warn/crit at 1.00 s/2.00 s)', []),
-                 (0, '', [('cpu_core_util_1', 2.158715165178048, None, None)]),
-                 (1, 'Core cpu1 (2-min average): 0% (warn/crit at 0%/1.0%)',
-                  [('cpu_core_util_average_1', 0.0, 0.0, 1.0)]),
-             ]),
-        ],
+    '': [],
+    'performance': [
+        (
+            None,
+            {},
+            [
+                (0, 'Process Creations: 418.23/s',
+                 [('process_creations', 418.2272646378359, None, None, None, None)]),
+                (0, 'Context Switches: 47980.99/s',
+                 [('context_switches', 47980.99332621463, None, None, None, None)]),
+                (0, 'Major Page Faults: 159.73/s',
+                 [('major_page_faults', 159.72868837871508, None, None, None, None)]),
+                (0, 'Page Swap in: 22.32/s',
+                 [('page_swap_in', 22.319718811176365, None, None, None, None)]),
+                (0, 'Page Swap Out: 66.89/s',
+                 [('page_swap_out', 66.8896600818651, None, None, None, None)]),
+            ]),
+        (
+            None,
+            {
+                'ctxt': (30000.0, 45000.0),
+                'processes': (400.0, 500.0),
+                'page_swap_in_levels': (10.0, 50.0),
+                'page_swap_out_levels_lower': (500.0, 100.0),
+            },
+            [
+                (1, 'Process Creations: 418.23/s (warn/crit at 400.00/s/500.00/s)',
+                 [('process_creations', 418.2272646378359, 400.0, 500.0)]),
+                (2, 'Context Switches: 47980.99/s (warn/crit at 30000.00/s/45000.00/s)',
+                 [('context_switches', 47980.99332621463, 30000.0, 45000.0)]),
+                (0, 'Major Page Faults: 159.73/s',
+                 [('major_page_faults', 159.72868837871508, None, None, None, None)]),
+                (1, 'Page Swap in: 22.32/s (warn/crit at 10.00/s/50.00/s)',
+                 [('page_swap_in', 22.319718811176365, 10.0, 50.0, None, None)]),
+                (2, 'Page Swap Out: 66.89/s (warn/crit below 500.00/s/100.00/s)',
+                 [('page_swap_out', 66.8896600818651, None, None, None, None)]),
+            ],
+        ),
+    ],
 }

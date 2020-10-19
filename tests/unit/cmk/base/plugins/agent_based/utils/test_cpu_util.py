@@ -43,7 +43,7 @@ def test_check_cpu_util():
                 state=State.CRIT,
                 summary='Total CPU (3min average): 123% (warn/crit at 80.0%/90.0%)',
             ),
-            Metric('util_average', 123.0, levels=(80.0, 90.0)),
+            Metric('util_average', 123.0, levels=(80.0, 90.0), boundaries=(0.0, None)),
             Result(
                 state=State.WARN,
                 summary='Core my_core: 12.0% (warn/crit at 12.0%/13.0%)',
@@ -77,7 +77,7 @@ def test_check_cpu_util_unix():
             Result(state=State.OK, summary='Guest: 2.00%'),
             Metric("guest", 2.),
             Result(state=State.OK, summary='Total CPU: 42.0%'),
-            Metric("util", 42.),
+            Metric("util", 42., boundaries=(0.0, None)),
         ]
 
 

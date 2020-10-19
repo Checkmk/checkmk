@@ -5,9 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Dict, Final, List, Optional, Tuple, Union
-from .agent_based_api.v1.type_defs import StringTable
+from .agent_based_api.v1.type_defs import StringTable, CheckResult, DiscoveryResult, Parameters
 
-from .agent_based_api.v1 import register
+import time
+
+from .agent_based_api.v1 import get_value_store, register, Result, Service, State
+from .utils.cpu_util import check_cpu_util_unix, CPUInfo
 
 SectionDict = Dict[str, Union[List[Tuple[str, int]],  #
                               List[Tuple[str, List[str]]],  # TODO: .util.cpu_util.CPUInfo?
@@ -79,4 +82,66 @@ def parse_kernel(string_table: StringTable) -> Section:
 register.agent_section(
     name="kernel",
     parse_function=parse_kernel,
+)
+
+
+def discover_kernel_util(section: Section) -> DiscoveryResult:
+    if section[1].get('Cpu Utilization'):
+        yield Service()
+
+
+# Columns of cpu usage /proc/stat:
+# - cpuX: number of CPU or only 'cpu' for aggregation
+# - user: normal processes executing in user mode
+# - nice: niced processes executing in user mode
+# - system: processes executing in kernel mode
+# - idle: twiddling thumbs
+# - iowait: waiting for I/O to complete
+# - irq: servicing interrupts
+# - softirq: servicing softirqs
+# - steal: Stolen time, which is the time spent in other operating systems
+#          when running in a virtualized environment (since Linux 2.6.11)
+# - guest: Time spent running a virtual CPU for guest operating systems (since Linux 2.6.24)
+# - guest_nice: Time spent running a niced guest (since Linux 2.6.33)
+
+
+def check_kernel_util(params: Parameters, section: Section) -> CheckResult:
+    total: Optional[CPUInfo] = None
+    cores = []
+
+    # Look for entry matching "cpu" (this is the combined load of all cores)
+    for cpu in section[1].get('Cpu Utilization', []):
+        if cpu[0] == 'cpu':
+            total = CPUInfo(cpu[0], *cpu[1])  # type: ignore[misc]
+        elif cpu[0].startswith('cpu'):
+            cores.append(CPUInfo(cpu[0], *cpu[1]))  # type: ignore[misc]
+
+    if total is None:
+        yield Result(
+            state=State.UNKNOWN,
+            summary="Inconsistent data: No line with CPU info found.",
+        )
+        return
+
+    # total contains now the following columns:
+    # 'cpu' user nice system idle wait hw-int sw-int (steal ...)
+    # convert number to int
+    yield from check_cpu_util_unix(
+        cpu_info=total,
+        params=params,
+        this_time=time.time(),
+        value_store=get_value_store(),
+        cores=cores,
+        values_counter=True,
+    )
+
+
+register.check_plugin(
+    name="kernel_util",
+    service_name='CPU utilization',
+    sections=["kernel"],
+    discovery_function=discover_kernel_util,
+    check_function=check_kernel_util,
+    check_default_parameters={},
+    check_ruleset_name='cpu_iowait',
 )

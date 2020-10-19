@@ -2188,7 +2188,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'kentix_temp',
         'kernel',
         'kernel.performance',
-        'kernel.util',
         'knuerr_rms_humidity',
         'knuerr_rms_temp',
         'knuerr_sensors',

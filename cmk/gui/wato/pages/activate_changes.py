@@ -29,7 +29,7 @@ import cmk.gui.watolib.activate_changes
 
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.display_options import display_options
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request as global_request
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import Checkbox, Dictionary, TextAreaUnicode
@@ -43,6 +43,7 @@ from cmk.gui.page_menu import (
     make_simple_link,
     make_javascript_link,
 )
+from cmk.gui.utils.urls import makeuri_contextless
 
 
 @mode_registry.register
@@ -99,9 +100,10 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             yield PageMenuEntry(
                 title=_("Sites"),
                 icon_name="sites",
-                item=make_simple_link(html.makeuri_contextless([
-                    ("mode", "sites"),
-                ])),
+                item=make_simple_link(makeuri_contextless(
+                    global_request,
+                    [("mode", "sites")],
+                )),
             )
 
         if config.user.may("wato.auditlog"):

@@ -10,7 +10,7 @@ import traceback
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.log import logger
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
@@ -28,6 +28,8 @@ from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
 )
+
+from cmk.gui.utils.urls import makeuri_contextless
 
 
 @main_module_registry.register
@@ -81,7 +83,7 @@ class ModeBackgroundJobsOverview(WatoMode):
     def page(self):
         job_manager = gui_background_job.GUIBackgroundJobManager()
 
-        back_url = html.makeuri_contextless([("mode", "background_jobs_overview")])
+        back_url = makeuri_contextless(request, [("mode", "background_jobs_overview")])
         job_manager.show_status_of_job_classes(gui_background_job.job_registry.values(),
                                                job_details_back_url=back_url)
 

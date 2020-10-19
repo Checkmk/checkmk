@@ -15,8 +15,9 @@ import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.htmllib import CSSSpec, HTML, HTMLContent, HTMLTagAttributes
+from cmk.gui.utils.urls import makeuri
 
 TableHeader = NamedTuple(
     "TableHeader",
@@ -322,7 +323,7 @@ class Table:
             html.show_message(
                 _('This table is limited to show only %d of %d rows. '
                   'Click <a href="%s">here</a> to disable the limitation.') %
-                (limit, num_rows_unlimited, html.makeuri([('limit', 'none')])))
+                (limit, num_rows_unlimited, makeuri(request, [('limit', 'none')])))
 
         self._write_table(rows, num_rows_unlimited, self._show_action_row(), actions_visible,
                           search_term)
@@ -595,7 +596,7 @@ class Table:
                         img = 'table_actions_off'
 
                     html.open_div(class_=["toggle_actions"])
-                    html.icon_button(html.makeuri([('_%s_actions' % table_id, state)]),
+                    html.icon_button(makeuri(request, [('_%s_actions' % table_id, state)]),
                                      help_txt,
                                      img,
                                      cssclass='toggle_actions')

@@ -24,7 +24,7 @@ from cmk.gui.table import table_element
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.watolib.rulespecs import rulespec_registry
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.page_menu import (
@@ -51,6 +51,8 @@ from cmk.gui.plugins.wato import (
     search_form,
     get_search_expression,
 )
+
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 
 @mode_registry.register
@@ -101,8 +103,10 @@ class ModeCheckPlugins(WatoMode):
         menu = MainMenu()
         for topic, _has_second_level, title, helptext in _man_page_catalog_topics():
             menu.add_item(
-                MenuItem(mode_or_url=html.makeuri([("mode", "check_plugin_topic"),
-                                                   ("topic", topic)]),
+                MenuItem(mode_or_url=makeuri(
+                    request,
+                    [("mode", "check_plugin_topic"), ("topic", topic)],
+                ),
                          title=title,
                          icon="plugins_" + topic,
                          permission=None,
@@ -207,8 +211,11 @@ class ModeCheckPluginTopic(WatoMode):
 
     def _breadcrumb_url(self) -> str:
         """Ensure the URL is computed correctly when linking from man pages to the topic"""
-        return html.makeuri_contextless([("mode", self.name()), ("topic", self._topic)],
-                                        filename="wato.py")
+        return makeuri_contextless(
+            request,
+            [("mode", self.name()), ("topic", self._topic)],
+            filename="wato.py",
+        )
 
     def _from_vars(self):
         self._topic = html.request.get_ascii_input_mandatory("topic", "")
@@ -245,7 +252,7 @@ class ModeCheckPluginTopic(WatoMode):
             # For some topics we render a second level in the same optic as the first level
             menu = MainMenu()
             for path_comp, subnode in self._manpages.items():
-                url = html.makeuri([("topic", "%s/%s" % (self._path[0], path_comp))])
+                url = makeuri(request, [("topic", "%s/%s" % (self._path[0], path_comp))])
                 title = self._titles.get(path_comp, path_comp)
                 helptext = self._get_check_plugin_stats(subnode)
 
@@ -292,8 +299,10 @@ def _add_breadcrumb_topic_items(breadcrumb, titles, path):
         breadcrumb.append(
             BreadcrumbItem(
                 title=titles.get(elements[-1], elements[-1]),
-                url=html.makeuri_contextless([("mode", "check_plugin_topic"),
-                                              ("topic", "/".join(elements))]),
+                url=makeuri_contextless(
+                    request,
+                    [("mode", "check_plugin_topic"), ("topic", "/".join(elements))],
+                ),
             ))
     return breadcrumb
 
@@ -308,8 +317,14 @@ def _render_manpage_list(titles, manpage_list, path_comp, heading):
             if not isinstance(entry, dict):
                 continue
             table.row()
-            url = html.makeuri([("mode", "check_manpage"), ("check_type", entry["name"]),
-                                ("back", html.makeuri([]))])
+            url = makeuri(
+                request,
+                [
+                    ("mode", "check_manpage"),
+                    ("check_type", entry["name"]),
+                    ("back", makeuri(request, [])),
+                ],
+            )
             table.cell(_("Type of Check"),
                        "<a href='%s'>%s</a>" % (url, entry["title"]),
                        css="title")
@@ -432,9 +447,11 @@ class ModeCheckManPage(WatoMode):
             command = "check_mk_active-" + self._check_type[6:]
         else:
             command = "check_mk-" + self._check_type
-        url = html.makeuri_contextless([("view_name", "searchsvc"), ("check_command", command),
-                                        ("filled_in", "filter")],
-                                       filename="view.py")
+        url = makeuri_contextless(
+            request,
+            [("view_name", "searchsvc"), ("check_command", command), ("filled_in", "filter")],
+            filename="view.py",
+        )
 
         return PageMenu(
             dropdowns=[
@@ -506,7 +523,7 @@ class ModeCheckManPage(WatoMode):
             return
 
         rulespec = rulespec_registry[varname]
-        url = html.makeuri_contextless([("mode", "edit_ruleset"), ("varname", varname)])
+        url = makeuri_contextless(request, [("mode", "edit_ruleset"), ("varname", varname)])
         param_ruleset = html.render_a(rulespec.title, url)
         html.open_tr()
         html.th(_("Parameter rule set"))

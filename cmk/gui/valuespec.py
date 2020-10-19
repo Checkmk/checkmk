@@ -56,12 +56,14 @@ import cmk.gui.sites as sites
 import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.pages import page_registry, Page, AjaxPage
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request as global_request
 from cmk.gui.htmllib import HTML
 from cmk.gui.htmllib import Choices, GroupedChoices, ChoiceGroup
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.view_utils import render_labels
 from cmk.gui.utils.popups import MethodAjax, MethodColorpicker
+
+from cmk.gui.utils.urls import makeuri
 
 import livestatus
 
@@ -5664,7 +5666,7 @@ class IconSelector(ValueSpec):
                            ('varprefix', varprefix),
                            ('allow_empty', '1' if self._allow_empty else '0'),
                            ('show_builtin_icons', '1' if self._show_builtin_icons else '0'),
-                           ('back', html.makeuri([])),
+                           ('back', makeuri(global_request, [])),
                        ]),
             resizable=True,
         )

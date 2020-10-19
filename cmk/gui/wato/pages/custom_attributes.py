@@ -19,7 +19,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 import cmk.utils.store as store
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
@@ -36,6 +36,7 @@ from cmk.gui.watolib.host_attributes import (
 )
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.plugins.wato import WatoMode, add_change, mode_registry, wato_confirm
+from cmk.gui.utils.urls import makeuri_contextless
 
 
 def update_user_custom_attrs():
@@ -523,8 +524,12 @@ class ModeCustomUserAttrs(ModeCustomAttrs):
         yield PageMenuEntry(
             title=_("Users"),
             icon_name="users",
-            item=make_simple_link(html.makeuri_contextless([("mode", "users")],
-                                                           filename="wato.py")),
+            item=make_simple_link(
+                makeuri_contextless(
+                    request,
+                    [("mode", "users")],
+                    filename="wato.py",
+                )),
         )
 
 
@@ -555,6 +560,10 @@ class ModeCustomHostAttrs(ModeCustomAttrs):
         yield PageMenuEntry(
             title=_("Hosts"),
             icon_name="host",
-            item=make_simple_link(html.makeuri_contextless([("mode", "folder")],
-                                                           filename="wato.py")),
+            item=make_simple_link(
+                makeuri_contextless(
+                    request,
+                    [("mode", "folder")],
+                    filename="wato.py",
+                )),
         )

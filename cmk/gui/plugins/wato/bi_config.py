@@ -42,7 +42,7 @@ from cmk.gui.valuespec import (
 )
 
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.breadcrumb import Breadcrumb
@@ -89,6 +89,8 @@ import cmk.gui.sites
 from cmk.utils.bi.bi_actions import BICallARuleAction
 from cmk.utils.bi.bi_lib import SitesCallback
 from cmk.utils.bi.bi_compiler import BICompiler
+
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 
 @main_module_registry.register
@@ -176,7 +178,7 @@ class ABCBIMode(WatoMode):
         add_change(action_name, text, domains=[watolib.ConfigDomainGUI], sites=site_ids)
 
     def url_to_pack(self, addvars, bi_pack):
-        return html.makeuri_contextless(addvars + [("pack", bi_pack.id)])
+        return makeuri_contextless(request, addvars + [("pack", bi_pack.id)])
 
     def _get_selection(self, _type):
         checkbox_name = "_c_%s_" % _type
@@ -194,8 +196,10 @@ class ABCBIMode(WatoMode):
         if bi_rule is None:
             raise MKUserError("pack", _("This BI rule does not exist."))
 
-        edit_url = html.makeuri_contextless([("mode", "bi_edit_rule"), ("id", bi_rule.id),
-                                             ("pack", bi_pack.id)])
+        edit_url = makeuri_contextless(
+            request,
+            [("mode", "bi_edit_rule"), ("id", bi_rule.id), ("pack", bi_pack.id)],
+        )
         title = "%s (%s)" % (bi_rule.properties.title, bi_rule.id)
 
         sub_rule_ids = self.aggregation_sub_rule_ids(bi_rule)
@@ -381,7 +385,7 @@ class ModeBIPacks(ABCBIMode):
                 PageMenuEntry(
                     title=_("Add BI pack"),
                     icon_name="new",
-                    item=make_simple_link(html.makeuri_contextless([("mode", "bi_edit_pack")])),
+                    item=make_simple_link(makeuri_contextless(request, [("mode", "bi_edit_pack")])),
                     is_shortcut=True,
                     is_suggested=True,
                 ))
@@ -409,19 +413,25 @@ class ModeBIPacks(ABCBIMode):
                                     title=_("Monitor state"),
                                     icon_name="rulesets",
                                     item=make_simple_link(
-                                        html.makeuri_contextless([
-                                            ("mode", "edit_ruleset"),
-                                            ("varname", "special_agents:bi"),
-                                        ])),
+                                        makeuri_contextless(
+                                            request,
+                                            [
+                                                ("mode", "edit_ruleset"),
+                                                ("varname", "special_agents:bi"),
+                                            ],
+                                        )),
                                 ),
                                 PageMenuEntry(
                                     title=_("Monitor single state (Deprecated)"),
                                     icon_name="rulesets",
                                     item=make_simple_link(
-                                        html.makeuri_contextless([
-                                            ("mode", "edit_ruleset"),
-                                            ("varname", "active_checks:bi_aggr"),
-                                        ])),
+                                        makeuri_contextless(
+                                            request,
+                                            [
+                                                ("mode", "edit_ruleset"),
+                                                ("varname", "active_checks:bi_aggr"),
+                                            ],
+                                        )),
                                     is_show_more=True,
                                 ),
                             ],
@@ -468,11 +478,14 @@ class ModeBIPacks(ABCBIMode):
                 table.cell(_("Actions"), css="buttons")
                 if config.user.may("wato.bi_admin"):
                     target_mode = "bi_edit_pack"
-                    edit_url = html.makeuri_contextless([("mode", target_mode), ("pack", pack.id)])
+                    edit_url = makeuri_contextless(
+                        request,
+                        [("mode", target_mode), ("pack", pack.id)],
+                    )
                     html.icon_button(edit_url, _("Edit properties of this BI pack"), "edit")
                     delete_url = html.makeactionuri([("_delete", pack.id)])
                     html.icon_button(delete_url, _("Delete this BI pack"), "delete")
-                rules_url = html.makeuri_contextless([("mode", "bi_rules"), ("pack", pack.id)])
+                rules_url = makeuri_contextless(request, [("mode", "bi_rules"), ("pack", pack.id)])
                 html.icon_button(rules_url,
                                  _("View and edit the rules and aggregations in this BI pack"),
                                  "bi_rules")
@@ -519,8 +532,11 @@ class ModeBIRules(ABCBIMode):
         return ModeBIPacks
 
     def _breadcrumb_url(self) -> str:
-        return html.makeuri_contextless([("mode", self.name()), ("pack", self.bi_pack.id)],
-                                        filename="wato.py")
+        return makeuri_contextless(
+            request,
+            [("mode", self.name()), ("pack", self.bi_pack.id)],
+            filename="wato.py",
+        )
 
     def title(self):
         if self._view_type == "list":
@@ -797,11 +813,14 @@ class ModeBIRules(ABCBIMode):
                     html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
 
                     if rule_refs == 0:
-                        tree_url = html.makeuri_contextless([
-                            ("mode", "bi_rule_tree"),
-                            ("id", rule_id),
-                            ("pack", self.bi_pack.id),
-                        ])
+                        tree_url = makeuri_contextless(
+                            request,
+                            [
+                                ("mode", "bi_rule_tree"),
+                                ("id", rule_id),
+                                ("pack", self.bi_pack.id),
+                            ],
+                        )
                         html.icon_button(tree_url, _("This is a top-level rule. Show rule tree"),
                                          "bitree")
 
@@ -841,9 +860,11 @@ class ModeBIRules(ABCBIMode):
                     for (pack_id, aggr_id,
                          bi_aggregation) in aggregations_that_use_rule.get(rule_id, []):
                         if aggr_id not in have_this:
-                            aggr_url = html.makeuri_contextless([("mode", "bi_edit_aggregation"),
-                                                                 ("id", aggr_id),
-                                                                 ("pack", pack_id)])
+                            aggr_url = makeuri_contextless(
+                                request,
+                                [("mode", "bi_edit_aggregation"), ("id", aggr_id),
+                                 ("pack", pack_id)],
+                            )
                             html.a(self._aggregation_title(bi_aggregation), href=aggr_url)
                             html.br()
                             have_this.add(aggr_id)
@@ -1650,8 +1671,11 @@ class BIModeAggregations(ABCBIMode):
         return ModeBIPacks
 
     def _breadcrumb_url(self) -> str:
-        return html.makeuri_contextless([("mode", self.name()), ("pack", self.bi_pack.id)],
-                                        filename="wato.py")
+        return makeuri_contextless(
+            request,
+            [("mode", self.name()), ("pack", self.bi_pack.id)],
+            filename="wato.py",
+        )
 
     def title(self):
         return self.title_for_pack(self.bi_pack) + " - " + _("Aggregations")
@@ -1846,9 +1870,11 @@ class BIModeAggregations(ABCBIMode):
                 html.checkbox("_c_aggregation_%s" % aggregation_id)
 
                 table.cell(_("Actions"), css="buttons")
-                edit_url = html.makeuri_contextless([("mode", "bi_edit_aggregation"),
-                                                     ("id", aggregation_id),
-                                                     ("pack", self.bi_pack.id)])
+                edit_url = makeuri_contextless(
+                    request,
+                    [("mode", "bi_edit_aggregation"), ("id", aggregation_id),
+                     ("pack", self.bi_pack.id)],
+                )
                 html.icon_button(edit_url, _("Edit this aggregation"), "edit")
 
                 clone_url = self.url_to_pack([("mode", "bi_edit_aggregation"),
@@ -1890,8 +1916,10 @@ class BIModeAggregations(ABCBIMode):
                 action = bi_aggregation.node.action
                 assert isinstance(action, BICallARuleAction)
                 rule_id = action.rule_id
-                edit_url = html.makeuri([("mode", "bi_edit_rule"), ("pack", self.bi_pack.id),
-                                         ("id", rule_id)])
+                edit_url = makeuri(
+                    request,
+                    [("mode", "bi_edit_rule"), ("pack", self.bi_pack.id), ("id", rule_id)],
+                )
                 table.cell(_("Rule Tree"), css="bi_rule_tree")
                 self.render_aggregation_rule_tree(bi_aggregation)
 

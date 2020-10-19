@@ -8,7 +8,7 @@ import abc
 from typing import Union, Tuple, List, Optional, Type
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.page_menu import PageMenu
@@ -16,6 +16,8 @@ from cmk.gui.type_defs import MegaMenu
 from cmk.gui.main_menu import mega_menu_registry
 
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
+
+from cmk.gui.utils.urls import makeuri_contextless
 
 NewMode = Union[None, bool, str]
 ActionResult = Union[NewMode, Tuple[NewMode, str]]
@@ -100,7 +102,7 @@ class WatoMode(metaclass=abc.ABCMeta):
         This can be useful when a mode needs some more contextual information
         to link to the correct page.
         """
-        return html.makeuri_contextless([("mode", self.name())], filename="wato.py")
+        return makeuri_contextless(request, [("mode", self.name())], filename="wato.py")
 
     def _topic_breadcrumb_item(self) -> Optional[BreadcrumbItem]:
         """Return the BreadcrumbItem for the topic of this mode

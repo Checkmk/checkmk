@@ -69,7 +69,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.i18n import _u, _
-from cmk.gui.globals import html, g
+from cmk.gui.globals import html, g, request as global_request
 from cmk.gui.exceptions import (
     HTTPRedirect,
     MKGeneralException,
@@ -147,6 +147,8 @@ if cmk_version.is_managed_edition():
 
 from cmk.gui.type_defs import (PainterSpec, HTTPVariables, InfoName, FilterHeaders, Row, Rows,
                                ColumnName, Visual, ViewSpec)
+
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language: Union[bool, None, str] = False
@@ -486,7 +488,7 @@ class View:
             breadcrumb.append(
                 BreadcrumbItem(
                     title=view_title(self.spec),
-                    url=html.makeuri_contextless(request_vars),
+                    url=makeuri_contextless(global_request, request_vars),
                 ))
             return breadcrumb
 
@@ -519,7 +521,10 @@ class View:
             breadcrumb.append(
                 BreadcrumbItem(
                     title=view_title(self.spec),
-                    url=html.makeuri_contextless([("view_name", self.name), ("host", host_name)]),
+                    url=makeuri_contextless(
+                        global_request,
+                        [("view_name", self.name), ("host", host_name)],
+                    ),
                 ))
             return breadcrumb
 
@@ -533,8 +538,14 @@ class View:
         breadcrumb.append(
             BreadcrumbItem(
                 title=view_title(self.spec),
-                url=html.makeuri_contextless([("view_name", self.name), ("host", host_name),
-                                              ("service", self.context["service"])]),
+                url=makeuri_contextless(
+                    global_request,
+                    [
+                        ("view_name", self.name),
+                        ("host", host_name),
+                        ("service", self.context["service"]),
+                    ],
+                ),
             ))
 
         return breadcrumb
@@ -612,7 +623,7 @@ class GUIViewRenderer(ABCViewRenderer):
             if html.do_actions() and html.transaction_valid():  # submit button pressed, no reload
                 try:
                     # Create URI with all actions variables removed
-                    backurl = html.makeuri([], delvars=['filled_in', 'actions'])
+                    backurl = makeuri(global_request, [], delvars=['filled_in', 'actions'])
                     has_done_actions = do_actions(view_spec, self.view.datasource.infos[0], rows,
                                                   backurl)
                 except MKUserError as e:
@@ -796,13 +807,13 @@ class GUIViewRenderer(ABCViewRenderer):
         yield PageMenuEntry(
             title=_("Export CSV"),
             icon_name="download_csv",
-            item=make_simple_link(html.makeuri([("output_format", "csv_export")])),
+            item=make_simple_link(makeuri(global_request, [("output_format", "csv_export")])),
         )
 
         yield PageMenuEntry(
             title=_("Export JSON"),
             icon_name="download_json",
-            item=make_simple_link(html.makeuri([("output_format", "json_export")])),
+            item=make_simple_link(makeuri(global_request, [("output_format", "json_export")])),
         )
 
     def _page_menu_entries_export_reporting(self, rows: Rows) -> Iterator[PageMenuEntry]:
@@ -815,7 +826,7 @@ class GUIViewRenderer(ABCViewRenderer):
         yield PageMenuEntry(
             title=_("This view as PDF"),
             icon_name="report",
-            item=make_simple_link(html.makeuri([], filename="report_instant.py")),
+            item=make_simple_link(makeuri(global_request, [], filename="report_instant.py")),
         )
 
         # Link related reports
@@ -874,8 +885,10 @@ class GUIViewRenderer(ABCViewRenderer):
             title=_("Toggle checkboxes"),
             icon_name="checkbox",
             item=make_simple_link(
-                html.makeuri([("show_checkboxes", "0" if self.view.checkboxes_displayed else "1")
-                             ])),
+                makeuri(
+                    global_request,
+                    [("show_checkboxes", "0" if self.view.checkboxes_displayed else "1")],
+                )),
             is_shortcut=True,
             is_suggested=True,
             is_enabled=checkboxes_toggleable,
@@ -890,7 +903,7 @@ class GUIViewRenderer(ABCViewRenderer):
             if self.view.spec["owner"] != config.user.id:
                 url_vars.append(("load_user", self.view.spec["owner"]))
 
-            url = html.makeuri_contextless(url_vars, filename="edit_view.py")
+            url = makeuri_contextless(global_request, url_vars, filename="edit_view.py")
 
             yield PageMenuEntry(
                 title=_("Customize view"),
@@ -1175,7 +1188,11 @@ def show_create_view_dialog(next_url=None):
             vs_ds.validate_value(ds, 'ds')
 
             if not next_url:
-                next_url = html.makeuri([('datasource', ds)], filename="create_view_infos.py")
+                next_url = makeuri(
+                    global_request,
+                    [('datasource', ds)],
+                    filename="create_view_infos.py",
+                )
             else:
                 next_url = next_url + '&datasource=%s' % ds
             raise HTTPRedirect(next_url)
@@ -2166,13 +2183,20 @@ def get_limit() -> Optional[int]:
 
 def _link_to_folder_by_path(path: str) -> str:
     """Return an URL to a certain WATO folder when we just know its path"""
-    return html.makeuri_contextless([("mode", "folder"), ("folder", path)], filename="wato.py")
+    return makeuri_contextless(
+        global_request,
+        [("mode", "folder"), ("folder", path)],
+        filename="wato.py",
+    )
 
 
 def _link_to_host_by_name(host_name: str) -> str:
     """Return an URL to the edit-properties of a host when we just know its name"""
-    return html.makeuri_contextless([("mode", "edit_host"), ("host", host_name)],
-                                    filename="wato.py")
+    return makeuri_contextless(
+        global_request,
+        [("mode", "edit_host"), ("host", host_name)],
+        filename="wato.py",
+    )
 
 
 def _get_context_page_menu_dropdowns(view: View, rows: Rows,
@@ -2385,12 +2409,15 @@ def _make_page_menu_entry_for_visual(visual_type: VisualType, visual: Visual,
     # add context link to this visual. For reports we put in
     # the *complete* context, even the non-single one.
     if visual_type.multicontext_links:
-        uri = html.makeuri([(visual_type.ident_attr, name)], filename=filename)
+        uri = makeuri(global_request, [(visual_type.ident_attr, name)], filename=filename)
 
     else:
         # For views and dashboards currently the current filter settings
-        uri = html.makeuri_contextless(vars_values + [(visual_type.ident_attr, name)],
-                                       filename=filename)
+        uri = makeuri_contextless(
+            global_request,
+            vars_values + [(visual_type.ident_attr, name)],
+            filename=filename,
+        )
 
     linktitle = visual.get("linktitle") or visual["title"]
     return PageMenuEntry(title=_u(linktitle),
@@ -2425,7 +2452,7 @@ def _get_availability_entry(view: View, info: VisualInfo,
     return PageMenuEntry(
         title=_("Availability"),
         icon_name="availability",
-        item=make_simple_link(html.makeuri([("mode", "availability")])),
+        item=make_simple_link(makeuri(global_request, [("mode", "availability")])),
     )
 
 
@@ -2452,7 +2479,8 @@ def _get_combined_graphs_entry(view: View, info: VisualInfo,
     if not _show_in_current_dropdown(view, info.ident, is_single_info):
         return None
 
-    url = html.makeuri(
+    url = makeuri(
+        global_request,
         [
             ("single_infos", ",".join(view.spec["single_infos"])),
             ("datasource", view.datasource.ident),
@@ -2539,8 +2567,11 @@ def _page_menu_entries_host_setup() -> Iterator[PageMenuEntry]:
         title=_("Service configuration"),
         icon_name="services",
         item=make_simple_link(
-            html.makeuri_contextless([("mode", "inventory"), ("host", host_name)],
-                                     filename="wato.py")),
+            makeuri_contextless(
+                global_request,
+                [("mode", "inventory"), ("host", host_name)],
+                filename="wato.py",
+            )),
     )
 
     is_cluster = False
@@ -2549,8 +2580,11 @@ def _page_menu_entries_host_setup() -> Iterator[PageMenuEntry]:
             title=_("Connection tests"),
             icon_name="diagnose",
             item=make_simple_link(
-                html.makeuri_contextless([("mode", "diag_host"), ("host", host_name)],
-                                         filename="wato.py")),
+                makeuri_contextless(
+                    global_request,
+                    [("mode", "diag_host"), ("host", host_name)],
+                    filename="wato.py",
+                )),
         )
 
     if config.user.may('wato.rulesets'):
@@ -2558,8 +2592,11 @@ def _page_menu_entries_host_setup() -> Iterator[PageMenuEntry]:
             title=_("Effective parameters"),
             icon_name="rulesets",
             item=make_simple_link(
-                html.makeuri_contextless([("mode", "object_parameters"), ("host", host_name)],
-                                         filename="wato.py")),
+                makeuri_contextless(
+                    global_request,
+                    [("mode", "object_parameters"), ("host", host_name)],
+                    filename="wato.py",
+                )),
         )
 
 

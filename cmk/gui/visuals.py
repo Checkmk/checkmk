@@ -59,7 +59,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.i18n
 from cmk.gui.i18n import _u, _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request as global_request
 from cmk.gui.breadcrumb import make_main_menu_breadcrumb, Breadcrumb, BreadcrumbItem
 from cmk.gui.page_menu import (
     PageMenuDropdown,
@@ -77,6 +77,8 @@ from cmk.gui.plugins.visuals.utils import (
     visual_type_registry,
     filter_registry,
 )
+
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.plugins.visuals.utils import (  # noqa: F401 # pylint: disable=unused-import
@@ -535,7 +537,7 @@ def page_list(what,
 
                 # Clone / Customize
                 buttontext = _("Create a customized copy of this")
-                backurl = html.urlencode(html.makeuri([]))
+                backurl = html.urlencode(makeuri(global_request, []))
                 clone_url = "edit_%s.py?load_user=%s&load_name=%s&back=%s" \
                             % (what_s, owner, visual_name, backurl)
                 html.icon_button(clone_url, buttontext, "clone")
@@ -554,7 +556,11 @@ def page_list(what,
                     edit_vars = [("load_name", visual_name)]
                     if owner != config.user.id:
                         edit_vars.append(("owner", owner))
-                    edit_url = html.makeuri_contextless(edit_vars, filename="edit_%s.py" % what_s)
+                    edit_url = makeuri_contextless(
+                        global_request,
+                        edit_vars,
+                        filename="edit_%s.py" % what_s,
+                    )
                     html.icon_button(edit_url, _("Edit"), "edit")
 
                 # Custom buttons - visual specific
@@ -994,8 +1000,11 @@ def page_edit_visual(what,
 
             if html.request.var("save") or save_and_go:
                 if save_and_go:
-                    back_url = html.makeuri_contextless([(visual_type.ident_attr, visual['name'])],
-                                                        filename=save_and_go + '.py')
+                    back_url = makeuri_contextless(
+                        global_request,
+                        [(visual_type.ident_attr, visual['name'])],
+                        filename=save_and_go + '.py',
+                    )
 
                 if html.check_transaction():
                     all_visuals[(owner_user_id, visual["name"])] = visual
@@ -1678,7 +1687,7 @@ def visual_page_breadcrumb(what: str, title: str, page_name: str) -> Breadcrumb:
     if page_name == "list":  # The list is the parent of all others
         return breadcrumb
 
-    breadcrumb.append(BreadcrumbItem(title=title, url=html.makeuri([])))
+    breadcrumb.append(BreadcrumbItem(title=title, url=makeuri(global_request, [])))
     return breadcrumb
 
 

@@ -38,7 +38,7 @@ from cmk.gui.valuespec import (
 )
 import cmk.gui.i18n
 from cmk.gui.i18n import _
-from cmk.gui.globals import g, html
+from cmk.gui.globals import g, html, request
 import cmk.gui.plugins.userdb
 from cmk.gui.plugins.userdb.htpasswd import Htpasswd
 from cmk.gui.plugins.userdb.ldap_connector import MKLDAPException
@@ -56,6 +56,8 @@ from cmk.gui.plugins.userdb.utils import (
     release_users_lock,
     save_cached_profile,
 )
+
+from cmk.gui.utils.urls import makeuri_contextless
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language: Union[bool, None, str] = False
@@ -1234,7 +1236,7 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
         )
 
     def _back_url(self) -> str:
-        return html.makeuri_contextless([("mode", "users")], filename="wato.py")
+        return makeuri_contextless(request, [("mode", "users")], filename="wato.py")
 
     def do_sync(self, job_interface: background_job.BackgroundProcessInterface,
                 add_to_changelog: bool, enforce_sync: bool, load_users_func: Callable,

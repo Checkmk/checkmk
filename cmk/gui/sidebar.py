@@ -16,7 +16,7 @@ import cmk.utils.paths
 
 import cmk.gui.i18n
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
 import cmk.gui.utils as utils
 import cmk.gui.config as config
@@ -38,6 +38,7 @@ from cmk.gui.page_menu import (
     PageMenuDropdown,
     PageMenuTopic,
 )
+from cmk.gui.utils.urls import makeuri_contextless
 
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.sidebar  # pylint: disable=no-name-in-module
@@ -410,7 +411,7 @@ class SidebarRenderer:
 
     def _show_add_snapin_button(self) -> None:
         html.open_div(id_="add_snapin")
-        html.open_a(href=html.makeuri_contextless([], filename="sidebar_add_snapin.py"),
+        html.open_a(href=makeuri_contextless(request, [], filename="sidebar_add_snapin.py"),
                     target="main")
         html.icon("add", title=_("Add snapins to your sidebar"))
         html.close_a()
@@ -606,7 +607,7 @@ def _shortcut_menu_items() -> List[ShortcutMenuItem]:
             name="main",
             title=_("Main"),
             icon_name="main_dashboard",
-            url=html.makeuri_contextless([("name", "main")], "dashboard.py"),
+            url=makeuri_contextless(request, [("name", "main")], "dashboard.py"),
             target_name="main",
             permission_name="dashboard.main",
         ),
@@ -614,7 +615,7 @@ def _shortcut_menu_items() -> List[ShortcutMenuItem]:
             name="system",
             title=_("System"),
             icon_name="main_cmk_dashboard",
-            url=html.makeuri_contextless([("name", "cmk_overview")], "dashboard.py"),
+            url=makeuri_contextless(request, [("name", "cmk_overview")], "dashboard.py"),
             target_name="main",
             permission_name="dashboard.cmk_overview",
         ),
@@ -622,7 +623,7 @@ def _shortcut_menu_items() -> List[ShortcutMenuItem]:
             name="problems",
             title=_("Problems"),
             icon_name="main_problems",
-            url=html.makeuri_contextless([("name", "simple_problems")], "dashboard.py"),
+            url=makeuri_contextless(request, [("name", "simple_problems")], "dashboard.py"),
             target_name="main",
             permission_name="dashboard.simple_problems",
         ),
@@ -630,7 +631,7 @@ def _shortcut_menu_items() -> List[ShortcutMenuItem]:
             name="hosts",
             title=_("Hosts"),
             icon_name="main_folder",
-            url=html.makeuri_contextless([("mode", "folder")], "wato.py"),
+            url=makeuri_contextless(request, [("mode", "folder")], "wato.py"),
             target_name="main",
             permission_name="wato.hosts",
         ),

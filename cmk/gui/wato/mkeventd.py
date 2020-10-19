@@ -77,7 +77,7 @@ from cmk.gui.valuespec import (
     rule_option_elements,
 )
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML, Choices
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.permissions import (
@@ -136,6 +136,8 @@ from cmk.gui.plugins.wato.check_mk_configuration import (
     ConfigVariableGroupWATO,
 )
 from cmk.gui.plugins.wato.globals_notification import ConfigVariableGroupNotifications
+
+from cmk.gui.utils.urls import makeuri_contextless
 
 
 def _compiled_mibs_dir():
@@ -1215,9 +1217,12 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     title=_("Add rule pack"),
                     icon_name="new",
                     item=make_simple_link(
-                        html.makeuri_contextless([
-                            ("mode", "mkeventd_edit_rule_pack"),
-                        ])),
+                        makeuri_contextless(
+                            request,
+                            [
+                                ("mode", "mkeventd_edit_rule_pack"),
+                            ],
+                        )),
                     is_shortcut=True,
                     is_suggested=True,
                 ),
@@ -1437,12 +1442,14 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 table.row(css=css_matches_search)
                 table.cell(_("Actions"), css="buttons")
 
-                edit_url = html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack"),
-                                                     ("edit", nr)])
+                edit_url = makeuri_contextless(
+                    request,
+                    [("mode", "mkeventd_edit_rule_pack"), ("edit", nr)],
+                )
                 html.icon_button(edit_url, _("Edit properties of this rule pack"), "edit")
 
                 # Cloning does not work until we have unique IDs
-                # clone_url  = html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack"), ("clone", nr)])
+                # clone_url  = makeuri_contextless(request, [("mode", "mkeventd_edit_rule_pack"), ("clone", nr)])
                 # html.icon_button(clone_url, _("Create a copy of this rule pack"), "clone")
 
                 drag_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_move", nr)])
@@ -1470,7 +1477,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 rules_url_vars = [("mode", "mkeventd_rules"), ("rule_pack", id_)]
                 if found_packs.get(id_):
                     rules_url_vars.append(("search", search_expression))
-                rules_url = html.makeuri_contextless(rules_url_vars)
+                rules_url = makeuri_contextless(request, rules_url_vars)
                 html.icon_button(rules_url, _("Edit the rules in this pack"), "mkeventd_rules")
 
                 if type_ == ec.RulePackType.internal:
@@ -1597,8 +1604,11 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         return ModeEventConsoleRulePacks
 
     def _breadcrumb_url(self) -> str:
-        return html.makeuri_contextless([("mode", self.name()), ("rule_pack", self._rule_pack_id)],
-                                        filename="wato.py")
+        return makeuri_contextless(
+            request,
+            [("mode", self.name()), ("rule_pack", self._rule_pack_id)],
+            filename="wato.py",
+        )
 
     def _from_vars(self):
         self._rule_pack_id = html.request.var("rule_pack")
@@ -1644,8 +1654,10 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     title=_("Add rule"),
                     icon_name="new",
                     item=make_simple_link(
-                        html.makeuri_contextless([("mode", "mkeventd_edit_rule"),
-                                                  ("rule_pack", self._rule_pack_id)])),
+                        makeuri_contextless(
+                            request,
+                            [("mode", "mkeventd_edit_rule"), ("rule_pack", self._rule_pack_id)],
+                        )),
                     is_shortcut=True,
                     is_suggested=True,
                 ),
@@ -1659,8 +1671,10 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     title=_("Edit properties"),
                     icon_name="edit",
                     item=make_simple_link(
-                        html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack"),
-                                                  ("edit", self._rule_pack_nr)])),
+                        makeuri_contextless(
+                            request,
+                            [("mode", "mkeventd_edit_rule_pack"), ("edit", self._rule_pack_nr)],
+                        )),
                 ),
             ],
         )
@@ -1800,12 +1814,22 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                                                ("rule_pack", self._rule_pack_id), ("_delete", nr)])
                 drag_url = make_action_link([("mode", "mkeventd_rules"),
                                              ("rule_pack", self._rule_pack_id), ("_move", nr)])
-                edit_url = html.makeuri_contextless([("mode", "mkeventd_edit_rule"),
-                                                     ("rule_pack", self._rule_pack_id),
-                                                     ("edit", nr)])
-                clone_url = html.makeuri_contextless([("mode", "mkeventd_edit_rule"),
-                                                      ("rule_pack", self._rule_pack_id),
-                                                      ("clone", nr)])
+                edit_url = makeuri_contextless(
+                    request,
+                    [
+                        ("mode", "mkeventd_edit_rule"),
+                        ("rule_pack", self._rule_pack_id),
+                        ("edit", nr),
+                    ],
+                )
+                clone_url = makeuri_contextless(
+                    request,
+                    [
+                        ("mode", "mkeventd_edit_rule"),
+                        ("rule_pack", self._rule_pack_id),
+                        ("clone", nr),
+                    ],
+                )
 
                 table.cell(_("Actions"), css="buttons")
                 html.icon_button(edit_url, _("Edit this rule"), "edit")
@@ -2547,8 +2571,10 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                                     title=_("Add one or multiple MIBs"),
                                     icon_name="upload",
                                     item=make_simple_link(
-                                        html.makeuri_contextless([("mode", "mkeventd_upload_mibs")
-                                                                 ])),
+                                        makeuri_contextless(
+                                            request,
+                                            [("mode", "mkeventd_upload_mibs")],
+                                        )),
                                 ),
                             ],
                         ),
@@ -2911,7 +2937,10 @@ def _page_menu_entries_related_ec(mode_name: str) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(
             title=_("Rule packs"),
             icon_name="event",
-            item=make_simple_link(html.makeuri_contextless([("mode", "mkeventd_rule_packs")])),
+            item=make_simple_link(makeuri_contextless(
+                request,
+                [("mode", "mkeventd_rule_packs")],
+            )),
         )
 
     if config.user.may("mkeventd.config") and config.user.may("wato.rulesets"):
@@ -2932,7 +2961,7 @@ def _page_menu_entry_rulesets():
         title=_("Rules"),
         icon_name="rulesets",
         item=make_simple_link(
-            html.makeuri_contextless([("mode", "rulesets"), ("group", "eventconsole")])),
+            makeuri_contextless(request, [("mode", "rulesets"), ("group", "eventconsole")])),
     )
 
 
@@ -2940,7 +2969,7 @@ def _page_menu_entry_status():
     return PageMenuEntry(
         title=_("Status"),
         icon_name="status",
-        item=make_simple_link(html.makeuri_contextless([("mode", "mkeventd_status")])),
+        item=make_simple_link(makeuri_contextless(request, [("mode", "mkeventd_status")])),
     )
 
 
@@ -2950,7 +2979,7 @@ def _page_menu_entry_settings():
         icon_name="configuration",
         is_shortcut=True,
         is_suggested=True,
-        item=make_simple_link(html.makeuri_contextless([("mode", "mkeventd_config")])),
+        item=make_simple_link(makeuri_contextless(request, [("mode", "mkeventd_config")])),
     )
 
 
@@ -2958,7 +2987,7 @@ def _page_menu_entry_snmp_mibs():
     return PageMenuEntry(
         title=_("SNMP MIBs"),
         icon_name="snmpmib",
-        item=make_simple_link(html.makeuri_contextless([("mode", "mkeventd_mibs")])),
+        item=make_simple_link(makeuri_contextless(request, [("mode", "mkeventd_mibs")])),
     )
 
 

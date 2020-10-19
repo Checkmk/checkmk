@@ -19,7 +19,7 @@ from typing import Optional, List, Type, Union, Tuple, Dict
 from cmk.gui.table import table_element, Table
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
@@ -44,6 +44,7 @@ from cmk.gui.page_menu import (
     make_simple_link,
     make_simple_form_page_menu,
 )
+from cmk.gui.utils.urls import makeuri_contextless
 
 
 class SimpleModeType(metaclass=abc.ABCMeta):
@@ -167,9 +168,10 @@ class SimpleListMode(SimpleWatoModeBase):
                                     title=self._new_button_label(),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        html.makeuri_contextless([
-                                            ("mode", self._mode_type.edit_mode_name())
-                                        ])),
+                                        makeuri_contextless(
+                                            request,
+                                            [("mode", self._mode_type.edit_mode_name())],
+                                        )),
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
@@ -245,16 +247,22 @@ class SimpleListMode(SimpleWatoModeBase):
     def _show_action_cell(self, table, ident):
         table.cell(_("Actions"), css="buttons")
 
-        edit_url = html.makeuri_contextless([
-            ("mode", self._mode_type.edit_mode_name()),
-            ("ident", ident),
-        ])
+        edit_url = makeuri_contextless(
+            request,
+            [
+                ("mode", self._mode_type.edit_mode_name()),
+                ("ident", ident),
+            ],
+        )
         html.icon_button(edit_url, _("Edit this %s") % self._mode_type.name_singular(), "edit")
 
-        clone_url = html.makeuri_contextless([
-            ("mode", self._mode_type.edit_mode_name()),
-            ("clone", ident),
-        ])
+        clone_url = makeuri_contextless(
+            request,
+            [
+                ("mode", self._mode_type.edit_mode_name()),
+                ("clone", ident),
+            ],
+        )
         html.icon_button(clone_url, _("Clone this %s") % self._mode_type.name_singular(), "clone")
 
         delete_url = watolib.make_action_link([

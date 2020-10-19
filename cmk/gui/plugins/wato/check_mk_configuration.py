@@ -18,7 +18,7 @@ import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import request
 
 from cmk.gui.valuespec import (
     Dictionary,
@@ -93,6 +93,8 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.watolib.bulk_discovery import vs_bulk_discovery
 from cmk.gui.watolib.groups import load_contact_group_information
+
+from cmk.gui.utils.urls import makeuri_contextless
 
 #   .--Global Settings-----------------------------------------------------.
 #   |  ____ _       _           _   ____       _   _   _                   |
@@ -5156,9 +5158,11 @@ def _transform_piggybacked_exception(p):
 
 
 def _valuespec_piggybacked_host_files():
-    global_max_cache_age_uri = html.makeuri_contextless(
+    global_max_cache_age_uri = makeuri_contextless(
+        request,
         [('mode', 'edit_configvar'), ('varname', 'piggyback_max_cachefile_age')],
-        filename="wato.py")
+        filename="wato.py",
+    )
 
     global_max_cache_age_title = _("Use maximum age from <a href=\"%s\">global settings</a>" %
                                    global_max_cache_age_uri)

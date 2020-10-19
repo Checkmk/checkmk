@@ -271,15 +271,11 @@ def test_mgmt_inherit_protocol(protocol, host_attribute, base_variable, folder_c
 
 
 @pytest.fixture(name="make_folder")
-def fixture_make_folder(mocker, fs):
+def fixture_make_folder(mocker):
     """
     Returns a function to create patched folders for tests. Note that the global setting
     "Hide folders without read permissions" will currently always be set during setup.
     """
-    # Set the disk size of the fake in memory filesystem to zero bytes to ensure that no
-    # files are written by accident e.g. in CREFolder.__init__:
-    fs.set_disk_usage(0)
-
     mocker.patch.object(hosts_and_folders.config,
                         'wato_hide_folders_without_read_permissions',
                         True,

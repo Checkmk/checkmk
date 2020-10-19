@@ -51,22 +51,12 @@ def clone_file_cache(file_cache):
 
 
 class TestFileCache:
-    @pytest.fixture(autouse=True)
-    def patch_store(self, fs, monkeypatch):
-        # Patching `save_file` is necessary because the store assumes
-        # a real filesystem.
-        monkeypatch.setattr(
-            store,
-            "save_file",
-            lambda path, contents: fs.create_file(path, contents=contents),
-        )
+    @pytest.fixture
+    def path(self, tmp_path):
+        return tmp_path / "database"
 
     @pytest.fixture
-    def path(self):
-        return Path("/tmp/file_cache/database")
-
-    @pytest.fixture
-    def file_cache(self, path, fs):
+    def file_cache(self, path):
         return SNMPFileCache(
             path=path,
             max_age=999,

@@ -56,8 +56,8 @@ class TestParser:
         )
 
     @pytest.fixture
-    def store(self, fs, patch_io):
-        return Path(fs.create_file("/tmp/store").GetPath())
+    def store(self, tmp_path, patch_io):
+        return tmp_path / "store"
 
     @pytest.mark.usefixtures("scenario")
     def test_raw_section_populates_sections(self, hostname, logger, store):

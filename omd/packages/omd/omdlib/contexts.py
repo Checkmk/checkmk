@@ -31,6 +31,7 @@ from typing import cast, Optional
 from cmk.utils.exceptions import MKTerminate
 
 import omdlib
+import omdlib.utils
 from omdlib.init_scripts import check_status
 from omdlib.config_hooks import call_hook, sort_hooks
 from omdlib.utils import is_dockerized
@@ -108,7 +109,7 @@ class SiteContext(AbstractSiteContext):
 
     @property
     def dir(self) -> str:
-        return "/omd/sites/" + cast(str, self._sitename)
+        return os.path.join(omdlib.utils.omd_base_path(), "omd/sites", cast(str, self._sitename))
 
     @property
     def tmp_dir(self) -> str:
@@ -206,7 +207,7 @@ class SiteContext(AbstractSiteContext):
 
     def is_disabled(self) -> bool:
         """Whether or not this site has been disabled with 'omd disable'"""
-        apache_conf = "/omd/apache/%s.conf" % self.name
+        apache_conf = os.path.join(omdlib.utils.omd_base_path(), "omd/apache/%s.conf" % self.name)
         return not os.path.exists(apache_conf)
 
     def is_stopped(self) -> bool:

@@ -56,6 +56,7 @@ from cmk.utils.exceptions import MKTerminate
 import omdlib
 import omdlib.certs
 import omdlib.backup
+import omdlib.utils
 from omdlib.utils import chdir, ok, delete_user_file
 from omdlib.version_info import VersionInfo
 from omdlib.dialog import (
@@ -184,11 +185,8 @@ def is_root() -> bool:
 
 
 def all_sites() -> Iterable[str]:
-    return sorted([
-        s  #
-        for s in os.listdir("/omd/sites")  #
-        if os.path.isdir(os.path.join("/omd/sites/", s))
-    ])
+    basedir = os.path.join(omdlib.utils.omd_base_path(), "omd/sites")
+    return sorted([s for s in os.listdir(basedir) if os.path.isdir(os.path.join(basedir, s))])
 
 
 def start_site(version_info: VersionInfo, site: SiteContext) -> None:
@@ -1724,12 +1722,16 @@ def main_versions(version_info: VersionInfo, site: AbstractSiteContext,
 
 
 def default_version() -> str:
-    return os.path.basename(os.path.realpath("/omd/versions/default"))
+    return os.path.basename(
+        os.path.realpath(os.path.join(omdlib.utils.omd_base_path(), "omd/versions/default")))
 
 
 def omd_versions() -> Iterable[str]:
     try:
-        return sorted([v for v in os.listdir("/omd/versions") if v != "default"])
+        return sorted([
+            v for v in os.listdir(os.path.join(omdlib.utils.omd_base_path(), "omd/versions"))
+            if v != "default"
+        ])
     except OSError as e:
         if e.errno == errno.ENOENT:
             return []

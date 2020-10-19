@@ -2698,6 +2698,7 @@ class html(ABCHTMLGenerator):
             return
 
         self.open_a(href="javascript:void(0)",
+                    id_="more_%s" % id_,
                     class_=["more", "has_text" if with_text else ""],
                     onfocus="if (this.blur) this.blur();",
                     onclick="cmk.utils.toggle_more(this, %s, %d);%s" %

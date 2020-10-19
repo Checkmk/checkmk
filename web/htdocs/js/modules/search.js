@@ -14,12 +14,13 @@ class Search {
         this.content_id = "content_inner_" + id;
         this.search_id = "content_inner_" + id + "_search";
         this.input_id = "mk_side_search_field_" + id + "_search";
+        this.more_id = "more_main_menu_" + id;
     }
 
     execute_search() {
         if (this.has_search_query()) {
             Search.kill_previous_search();
-            this.show_results_div();
+            this.display_search_results();
             const obj = document.getElementById(this.search_id);
             g_call_ajax_obj = call_ajax(
                 "ajax_search_" + this.id + ".py?q=" + encodeURIComponent(this.get_current_input()),
@@ -29,7 +30,7 @@ class Search {
                 }
             );
         } else {
-            this.hide_results_div();
+            this.display_menu_items();
         }
     }
 
@@ -41,12 +42,21 @@ class Search {
         return this.get_current_input().length > 0 ? true : false;
     }
 
-    hide_results_div() {
+    display_menu_items() {
+        // Clear also the result list, as the popup resize mechanism is relying on finding only
+        // ul's which corresponds to the main menu items
+        document.getElementById(this.search_id).innerHTML = "";
+
+        remove_class(document.getElementById(this.more_id), "hidden");
         remove_class(document.getElementById(this.content_id), "hidden");
     }
 
-    show_results_div() {
+    display_search_results() {
         g_current_search_position = null;
+
+        // The more button has currently no function in the search results, so hide it during
+        // search.
+        add_class(document.getElementById(this.more_id), "hidden");
         add_class(document.getElementById(this.content_id), "hidden");
     }
 

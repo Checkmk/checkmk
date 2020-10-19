@@ -77,6 +77,10 @@ a.more {
     }
   }
 
+  &.hidden {
+    display: none;
+  }
+
   &.has_text {
     width: auto;
     font-size: $font-size-small;

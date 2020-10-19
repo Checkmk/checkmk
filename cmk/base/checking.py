@@ -234,24 +234,23 @@ def do_check(
         cpu_tracking.end()
         phase_times = cpu_tracking.get_times()
         total_times = phase_times["TOTAL"]
-        run_time = total_times[4]
 
-        infotexts.append("execution time %.1f sec" % run_time)
+        infotexts.append("execution time %.1f sec" % total_times.run_time)
         if config.check_mk_perfdata_with_times:
             perfdata += [
-                "execution_time=%.3f" % run_time,
-                "user_time=%.3f" % total_times[0],
-                "system_time=%.3f" % total_times[1],
-                "children_user_time=%.3f" % total_times[2],
-                "children_system_time=%.3f" % total_times[3],
+                "execution_time=%.3f" % total_times.run_time,
+                "user_time=%.3f" % total_times.process.user,
+                "system_time=%.3f" % total_times.process.system,
+                "children_user_time=%.3f" % total_times.process.children_user,
+                "children_system_time=%.3f" % total_times.process.children_system,
             ]
 
             for phase, times in phase_times.items():
                 if phase in ["agent", "snmp", "ds"]:
-                    t = times[4] - sum(times[:4])  # real time - CPU time
+                    t = times.run_time - sum(times.process[:4])  # real time - CPU time
                     perfdata.append("cmk_time_%s=%.3f" % (phase, t))
         else:
-            perfdata.append("execution_time=%.3f" % run_time)
+            perfdata.append("execution_time=%.3f" % total_times.run_time)
 
         return status, infotexts, long_infotexts, perfdata
     finally:

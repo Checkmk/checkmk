@@ -4,11 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import contextlib
 import functools
 import os
+import posix
 import time
-import contextlib
-from typing import Any, Callable, Dict, List, Tuple, Iterator
+from dataclasses import dataclass
+from typing import Any, Callable, Dict, Iterable, Iterator, List, Tuple
 
 from cmk.utils.log import console
 
@@ -16,8 +18,60 @@ from cmk.utils.log import console
 # TODO: This should be rewritten to a context manager object. See cmk.utils.profile for
 #       an example how it could look like.
 
-times: Dict[str, List[float]] = {}
-last_time_snapshot: List[float] = []
+
+def times_result(seq: Iterable[float]) -> posix.times_result:
+    # mypy warnings are false positives.
+    return posix.times_result(tuple(seq))  # type: ignore[arg-type, call-arg]
+
+
+@dataclass(frozen=True)
+class Snapshot:
+    process: posix.times_result
+    run_time: float
+
+    @classmethod
+    def null(cls):
+        return cls(
+            times_result((0.0, 0.0, 0.0, 0.0, 0.0)),
+            0.0,
+        )
+
+    @classmethod
+    def take(cls) -> "Snapshot":
+        return cls(os.times(), time.time())
+
+    @classmethod
+    def deserialize(cls, serialized: Dict[str, Any]) -> "Snapshot":
+        try:
+            return cls(
+                times_result(serialized["process"]),
+                serialized["run_time"],
+            )
+        except LookupError as exc:
+            raise ValueError(serialized) from exc
+
+    def serialize(self) -> Dict[str, Any]:
+        return {"process": tuple(self.process), "run_time": self.run_time}
+
+    def __add__(self, other: "Snapshot") -> "Snapshot":
+        if not isinstance(other, Snapshot):
+            return NotImplemented
+        return Snapshot(
+            times_result(t0 + t1 for t0, t1 in zip(self.process, other.process)),
+            self.run_time + other.run_time,
+        )
+
+    def __sub__(self, other: "Snapshot") -> "Snapshot":
+        if not isinstance(other, Snapshot):
+            return NotImplemented
+        return Snapshot(
+            times_result(t0 - t1 for t0, t1 in zip(self.process, other.process)),
+            self.run_time - other.run_time,
+        )
+
+
+times: Dict[str, Snapshot] = {}
+last_time_snapshot: Snapshot = Snapshot.null()
 phase_stack: List[str] = []
 
 # TODO (sk) make private low level API: reset, start, end
@@ -28,7 +82,7 @@ def reset():
     global last_time_snapshot
     global phase_stack
     times = {}
-    last_time_snapshot = []
+    last_time_snapshot = Snapshot.null()
     phase_stack = []
 
 
@@ -36,7 +90,7 @@ def start(initial_phase: str) -> None:
     global times, last_time_snapshot
     console.vverbose("[cpu_tracking] Start with phase '%s'\n" % initial_phase)
     times = {}
-    last_time_snapshot = _time_snapshot()
+    last_time_snapshot = Snapshot.take()
 
     del phase_stack[:]
     phase_stack.append(initial_phase)
@@ -66,7 +120,7 @@ def pop_phase() -> None:
     del phase_stack[-1]
 
 
-def get_times() -> Dict[str, List[float]]:
+def get_times() -> Dict[str, Snapshot]:
     return times
 
 
@@ -76,19 +130,11 @@ def _is_not_tracking() -> bool:
 
 def _add_times_to_phase() -> None:
     global last_time_snapshot
-    new_time_snapshot = _time_snapshot()
+    new_time_snapshot = Snapshot.take()
     for phase_name in phase_stack[-1], "TOTAL":
-        phase_times = times.get(phase_name, [0.0] * len(new_time_snapshot))
-        times[phase_name] = [
-            phase_times[i] + new_time_snapshot[i] - last_time_snapshot[i]
-            for i in range(len(new_time_snapshot))
-        ]
+        phase_times = times.get(phase_name, Snapshot.null())
+        times[phase_name] = phase_times + new_time_snapshot - last_time_snapshot
     last_time_snapshot = new_time_snapshot
-
-
-def _time_snapshot() -> List[float]:
-    # TODO: Create a better structure for this data
-    return list(os.times()[:4]) + [time.time()]
 
 
 def track(method: Callable) -> Callable:
@@ -104,10 +150,10 @@ def track(method: Callable) -> Callable:
     return wrapper
 
 
-def update(cpu_times: Dict[str, List[float]]):
+def update(cpu_times: Dict[str, Snapshot]):
     for name, value_list in cpu_times.items():
         if name in times:
-            times[name] = [sum(x) for x in zip(value_list, times[name])]
+            times[name] += value_list
         else:
             times[name] = value_list
 

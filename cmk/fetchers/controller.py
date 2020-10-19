@@ -572,8 +572,11 @@ def _make_fetcher_timeout_message(fetcher_type: FetcherType, exc: MKTimeout) -> 
 
 
 def _append_cpu_message(messages: List[FetcherMessage]) -> None:
-    times = cpu_tracking.get_times()
-    json_times = json.dumps({"cpu_times": times})
+    json_times = json.dumps({
+        "cpu_times": {
+            phase: snapshot.serialize() for phase, snapshot in cpu_tracking.get_times().items()
+        }
+    })
 
     messages.append(
         FetcherMessage.from_raw_data(result.OK(json_times.encode("utf-8")), FetcherType.CPU))

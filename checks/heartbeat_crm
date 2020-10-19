@@ -57,7 +57,10 @@ def heartbeat_crm_parse_general(info):
     dc = None
     num_nodes = None
     num_resources = None
-    for line in info:
+    for raw_line in info:
+        # lines are prefixed with _* in pacemaker versions 2.0.3, e.g.:
+        # _* Current DC: ha02 (version 2.0.3-5.el8_2.1-4b1f869f0f)
+        line = raw_line[1:] if not raw_line[0].isalnum() else raw_line
         line_txt = ' '.join(line)
         title = line_txt.split(':', 1)[0]
 
@@ -83,7 +86,11 @@ def heartbeat_crm_parse_general(info):
             num_nodes = int(line[0])
             continue
 
-        if 'resources configured' in line_txt.lower():
+        if 'resources configured' in line_txt.lower(
+        ) or 'resource instances configured' in line_txt.lower():
+            # outputs may vary:
+            # pacemaker version < 2.0.3: 21 Resources configured.
+            # pacemaker version = 2.0.3:  3 resource instances configured
             num_resources = int(line[0])
 
     return last_updated, dc, num_nodes, num_resources

@@ -178,14 +178,12 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
         if html.request.has_var('site'):
             site = html.request.var('site')
         else:
-            query = "GET hosts\nFilter: name = %s\nColumns: name" % livestatus.lqencode(host)
-            try:
-                sites.live().set_prepend_site(True)
-                site = sites.live().query_column(query)[0]
-            except IndexError:
-                raise MKUserError("host", _("The host could not be found on any active site."))
-            finally:
-                sites.live().set_prepend_site(False)
+            with sites.prepend_site():
+                query = "GET hosts\nFilter: name = %s\nColumns: name" % livestatus.lqencode(host)
+                try:
+                    site = sites.live().query_value(query)
+                except livestatus.MKLivestatusNotFoundError:
+                    raise MKUserError("host", _("The host could not be found on any active site."))
 
         # New graphs which have been added via "add to visual" option don't have a timerange
         # configured. So we assume the default timerange here by default.

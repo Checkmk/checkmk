@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.kernel import parse_kernel
+
 # yapf: disable
 # type: ignore
 
@@ -15,21 +17,23 @@ mock_item_state = {'performance': (0, 0),
 
 checkname = 'kernel'
 
-info = [[u'11238'], [u'nr_free_pages', u'198749'], [u'pgpgin', u'169984814'],
-        [u'pgpgout', u'97137765'], [u'pswpin', u'250829'], [u'pswpout', u'751706'],
-        [u'pgmajfault', u'1795031'],
-        [
-            u'cpu', u'13008772', u'12250', u'5234590', u'181918601', u'73242', u'0', u'524563',
-            u'0', u'0', u'0'
-        ],
-        [
-            u'cpu0', u'1602366', u'1467', u'675813', u'22730303', u'9216', u'0', u'265437', u'0',
-            u'0', u'0'
-        ],
-        [
-            u'cpu1', u'1463624', u'1624', u'576516', u'22975174', u'8376', u'0', u'116908', u'0',
-            u'0', u'0'
-        ], [u'ctxt', u'539210403'], [u'processes', u'4700038']]
+parsed = parse_kernel([
+    [u'11238'], [u'nr_free_pages', u'198749'], [u'pgpgin', u'169984814'],
+    [u'pgpgout', u'97137765'], [u'pswpin', u'250829'], [u'pswpout', u'751706'],
+    [u'pgmajfault', u'1795031'],
+    [
+        u'cpu', u'13008772', u'12250', u'5234590', u'181918601', u'73242', u'0', u'524563',
+        u'0', u'0', u'0'
+    ],
+    [
+        u'cpu0', u'1602366', u'1467', u'675813', u'22730303', u'9216', u'0', u'265437', u'0',
+        u'0', u'0'
+    ],
+    [
+        u'cpu1', u'1463624', u'1624', u'576516', u'22975174', u'8376', u'0', u'116908', u'0',
+        u'0', u'0'
+    ], [u'ctxt', u'539210403'], [u'processes', u'4700038'],
+])
 
 discovery = {'': [], 'performance': [(None, {})], 'util': [(None, {})]}
 

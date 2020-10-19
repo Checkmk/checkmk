@@ -6,6 +6,9 @@
 
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.check_legacy_includes.transforms import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
+import cmk.base.plugins.agent_based.kernel
+
 #   .--kernel--Counters----------------------------------------------------.
 #   |                ____                  _                               |
 #   |               / ___|___  _   _ _ __ | |_ ___ _ __ ___                |
@@ -19,11 +22,7 @@ from cmk.base.check_legacy_includes.transforms import *  # pylint: disable=wildc
 
 kernel_default_levels = None
 
-kernel_counter_names = collections.OrderedDict([("processes", "Process Creations"),
-                                                ("ctxt", "Context Switches"),
-                                                ("pgmajfault", "Major Page Faults"),
-                                                ("pswpin", "Page Swap in"),
-                                                ("pswpout", "Page Swap Out")])
+kernel_counter_names = cmk.base.plugins.agent_based.kernel.KERNEL_COUNTER_NAMES
 
 kernel_metrics_names = {
     'ctxt': 'context_switches',
@@ -32,28 +31,6 @@ kernel_metrics_names = {
     'pswpin': 'page_swap_in',
     'pswpout': 'page_swap_out',
 }
-
-
-def parse_kernel(info):
-    try:
-        timestamp = int(info[0][0])
-    except (IndexError, ValueError):
-        timestamp = None
-
-    parsed = {}
-    for line in info[1:]:
-        if line[0] in kernel_counter_names:
-            try:
-                parsed.setdefault(kernel_counter_names[line[0]], []).append((line[0], int(line[1])))
-            except (IndexError, ValueError):
-                continue
-
-        if line[0].startswith('cpu'):
-            try:
-                parsed.setdefault('Cpu Utilization', []).append((line[0], line[1:]))
-            except (IndexError, ValueError):
-                continue
-    return timestamp, parsed
 
 
 # item is one of the keys in /proc/stat or /proc/vmstat
@@ -78,7 +55,7 @@ def check_kernel(item, params, parsed):
 
 # This check is deprecated. Please have a look at werk #8969.
 check_info["kernel"] = {
-    'parse_function': parse_kernel,
+    # section is already migrated!
     'check_function': check_kernel,
     'service_description': 'Kernel %s',
     'has_perfdata': True,

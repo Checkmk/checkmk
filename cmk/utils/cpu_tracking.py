@@ -84,7 +84,7 @@ def reset():
     global phase_stack
     times.clear()
     last_time_snapshot = Snapshot.null()
-    phase_stack = []
+    phase_stack.clear()
 
 
 def start(initial_phase: str) -> None:
@@ -93,14 +93,13 @@ def start(initial_phase: str) -> None:
     times.clear()
     last_time_snapshot = Snapshot.take()
 
-    del phase_stack[:]
-    phase_stack.append(initial_phase)
+    phase_stack[:] = [initial_phase]
 
 
 def end() -> None:
     console.vverbose("[cpu_tracking] End\n")
     _add_times_to_phase()
-    del phase_stack[:]
+    phase_stack.clear()
 
 
 def push_phase(phase_name: str) -> None:
@@ -118,7 +117,7 @@ def pop_phase() -> None:
 
     console.vverbose("[cpu_tracking] Pop phase '%s' (Stack: %r)\n" % (phase_stack[-1], phase_stack))
     _add_times_to_phase()
-    del phase_stack[-1]
+    phase_stack.pop()
 
 
 def get_times() -> Dict[str, Snapshot]:

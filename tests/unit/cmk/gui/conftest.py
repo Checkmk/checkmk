@@ -32,7 +32,6 @@ import cmk.gui.htmllib as htmllib
 import cmk.gui.login as login
 from cmk.gui.globals import AppContext, RequestContext
 from cmk.gui.http import Request
-from cmk.gui.plugins.userdb import htpasswd
 from cmk.gui.utils import get_random_string
 from cmk.gui.watolib.users import delete_users, edit_users
 from cmk.gui.watolib import changes
@@ -51,6 +50,7 @@ HTTPMethod = Literal[
     "get", "put", "post", "delete",
     "GET", "PUT", "POST", "DELETE",
 ]  # yapf: disable
+
 
 @pytest.fixture(scope='function')
 def register_builtin_html():

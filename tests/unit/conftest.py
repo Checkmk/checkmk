@@ -11,6 +11,7 @@ import logging
 from pathlib import Path
 
 import pytest  # type: ignore[import]
+import livestatus
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -177,6 +178,25 @@ def config_check_variables(config_load_all_checks):
     # Local import to have faster pytest initialization
     import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
     return copy.deepcopy(config.get_check_variables())
+
+
+@pytest.fixture(autouse=True)
+def prevent_livestatus_connect(monkeypatch):
+    """Prevent tests from trying to open livestatus connections. This will result in connect
+    timeouts which slow down our tests."""
+    monkeypatch.setattr(
+        livestatus.SingleSiteConnection, "_create_socket", lambda s, f: pytest.fail(
+            "The test tried to use a livestatus connection. This will result in connect timeouts. "
+            "Use mock_livestatus for mocking away the livestatus API"))
+
+    orig_init = livestatus.MultiSiteConnection.__init__
+
+    def init_mock(self, *args, **kwargs):
+        orig_init(self, *args, **kwargs)
+        if self.deadsites:
+            pytest.fail("Dead sites: %r" % self.deadsites)
+
+    monkeypatch.setattr(livestatus.MultiSiteConnection, "__init__", init_mock)
 
 
 @pytest.fixture(name="mock_livestatus")

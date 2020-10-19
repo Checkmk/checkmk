@@ -48,6 +48,8 @@ def to_timestamp(values: Sequence[str]) -> float:
         with suppress(ValueError):
             return datetime.strptime(' '.join(values), '%m/%d/%Y %I:%M:%S %p')
         with suppress(ValueError):
+            return datetime.strptime(' '.join(values), '%d/%m/%Y %I:%M:%S')
+        with suppress(ValueError):
             return datetime.strptime(' '.join(values), '%d-%m-%Y %H:%M:%S')
         with suppress(ValueError):
             return datetime.strptime(" ".join(values).split(".")[0], "%Y-%m-%d %H:%M:%S")

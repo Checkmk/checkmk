@@ -166,7 +166,6 @@ def test_registered_configvars():
         'support_credentials',
         'table_row_limit',
         'tcp_connect_timeout',
-        'topology_default_filter_group',
         'translate_snmptraps',
         'trusted_certificate_authorities',
         'ui_theme',

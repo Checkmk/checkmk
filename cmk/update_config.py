@@ -43,7 +43,7 @@ from cmk.gui.bi import BIManager  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.pagetypes as pagetypes  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.visuals as visuals  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.plugins.views.utils import get_all_views  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.plugins.dashboard.utils import get_all_dashboards  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.plugins.dashboard.utils import builtin_dashboards, get_all_dashboards, transform_topology_dashlet  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.plugins.userdb.utils import save_connection_config, load_connection_config, USER_SCHEME_SERIAL  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.plugins.watolib.utils import filter_unknown_settings  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.tags  # pylint: disable=cmk-module-layer-violation
@@ -136,6 +136,7 @@ class UpdateConfig:
 
     def _steps(self):
         return [
+            (self._migrate_topology_dashlet, "Migrate deprecated network topology dashlet"),
             (self._rewrite_removed_global_settings, "Rewriting removed global settings"),
             (self._rewrite_wato_tag_config, "Rewriting WATO tags"),
             (self._rewrite_wato_host_and_folder_config, "Rewriting WATO hosts and folders"),
@@ -563,6 +564,22 @@ class UpdateConfig:
     def _rewrite_bi_configuration(self):
         """Convert the bi configuration to the new (REST API compatible) format"""
         BILegacyPacksConverter(BIManager.bi_configuration_file()).convert_config()
+
+    def _migrate_topology_dashlet(self):
+        global_config = cmk.gui.watolib.global_settings.load_configuration_settings(
+            full_config=True)
+        filter_group = global_config.get("topology_default_filter_group", "")
+
+        dashboards = visuals.load("dashboards", builtin_dashboards)
+        modified_user_instances: Set[UserId] = set()
+        for (owner, _name), dashboard in dashboards.items():
+            for dashlet in dashboard["dashlets"]:
+                if dashlet["type"] == "network_topology":
+                    transform_topology_dashlet(dashlet, filter_group)
+                    modified_user_instances.add(owner)
+
+        for user_id in modified_user_instances:
+            visuals.save("dashboards", dashboards, user_id)
 
     def _set_user_scheme_serial(self):
         """Set attribute to detect with what cmk version the user was created.

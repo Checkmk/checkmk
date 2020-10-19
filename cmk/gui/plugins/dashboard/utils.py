@@ -531,6 +531,7 @@ def get_permitted_dashboards() -> Dict[DashboardName, DashboardConfig]:
 # This code transforms views from user_dashboards.mk which have been
 # migrated/created with daily snapshots from 2014-08 till beginning 2014-10.
 # FIXME: Can be removed one day. Mark as incompatible change or similar.
+# Also this method transforms network topology dashlets to custom url ones
 def _transform_dashboards(
     boards: Dict[Tuple[UserId, DashboardName], DashboardConfig]
 ) -> Dict[Tuple[UserId, DashboardName], DashboardConfig]:
@@ -543,9 +544,8 @@ def _transform_dashboards(
     return boards
 
 
-def _transform_dashlets_mut(dashlet_spec):
+def _transform_dashlets_mut(dashlet_spec: DashletConfig) -> DashletConfig:
     # abusing pass by reference to mutate dashlet
-
     if dashlet_spec['type'] == 'view':
         transform_painter_spec(dashlet_spec)
 
@@ -572,8 +572,29 @@ def _transform_dashlets_mut(dashlet_spec):
             "title_format", title_format or dashlet_spec["graph_render_options"]["title_format"])
         dashlet_spec["graph_render_options"].pop("show_title", None)
 
+    if dashlet_spec["type"] == "network_topology":
+        # -> 2.0.0i Removed network topology dashlet type
+        transform_topology_dashlet(dashlet_spec)
+
     # -> 2.0.0i1 All dashlets have new mandatory title_format
     dashlet_spec.setdefault("title_format", ['plain'])
+
+    return dashlet_spec
+
+
+def transform_topology_dashlet(dashlet_spec: DashletConfig,
+                               filter_group: str = "") -> DashletConfig:
+    site_id = dashlet_spec["context"].get("site", config.omd_site())
+
+    dashlet_spec.update({
+        "type": "url",
+        "title": _("Network topology of site %s") % site_id,
+        "url": "../nagvis/frontend/nagvis-js/index.php?mod=Map&header_template="\
+                "on-demand-filter&header_menu=1&label_show=1&sources=automap&act=view"\
+                "&backend_id=%s&render_mode=undirected&url_target=main&filter_group=%s"\
+                % (site_id, filter_group),
+        "show_in_iframe": True,
+    })
 
     return dashlet_spec
 

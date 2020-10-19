@@ -12,7 +12,6 @@ from typing import Dict, List, Tuple as _Tuple, Any
 import cmk.utils.paths
 from cmk.utils.tags import TagGroup
 
-import cmk.gui.sites as sites
 import cmk.gui.config as config
 import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.utils as utils
@@ -1438,33 +1437,6 @@ class ConfigVariableServiceViewGrouping(ConfigVariable):
                 "together. Groups of only one service will not be rendered. If multiple patterns "
                 "match a service, the service will be added to the first matching group."),
             add_label=_("Add new grouping definition"),
-        )
-
-
-@config_variable_registry.register
-class ConfigVariableTopologyDefaultFilterGroup(ConfigVariable):
-    def group(self):
-        return ConfigVariableGroupUserInterface
-
-    def domain(self):
-        return ConfigDomainGUI
-
-    def ident(self):
-        return "topology_default_filter_group"
-
-    def valuespec(self):
-        return Optional(
-            DropdownChoice(
-                choices=lambda: sites.all_groups("host"),
-                sorted=True,
-            ),
-            title=_("Network Topology: Default Filter Group"),
-            help=_(
-                "By default the network topology view shows you the parent / child relations "
-                "of all hosts within your local site. The list can be filtered based on hostgroup "
-                "memberships by the users. You can define a default group to use for filtering "
-                "which is used when a user opens the network topology view."),
-            none_label=_("Show all hosts when opening the network topology view"),
         )
 
 

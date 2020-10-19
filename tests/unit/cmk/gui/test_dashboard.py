@@ -43,7 +43,6 @@ def test_dashlet_registry_plugins():
         'hoststats',
         'notify_failed_notifications',
         'mk_logo',
-        'network_topology',
         'servicestats',
         'url',
         'overview',
@@ -71,7 +70,6 @@ def _expected_intervals():
     expected = [
         ('hoststats', 60),
         ('mk_logo', False),
-        ('network_topology', False),
         ('nodata', False),
         ('notify_failed_notifications', 60),
         ('notify_users', False),

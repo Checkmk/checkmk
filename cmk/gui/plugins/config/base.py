@@ -413,9 +413,6 @@ user_downtime_timeranges: _List[_Dict[str, _Any]] = [
 # Override toplevel and sort_index settings of builtin icons
 builtin_icon_visibility: _Dict = {}
 
-# Name of the hostgroup to filter the network topology view by default
-topology_default_filter_group = None
-
 trusted_certificate_authorities = {
     "use_system_wide_cas": True,
     "trusted_cas": [],

@@ -1028,7 +1028,8 @@ def transform_action_url(url_spec: Union[Tuple[str, str], str]) -> Tuple[str, Op
 
 
 def is_stale(row: Row) -> bool:
-    return row.get('service_staleness', row.get('host_staleness', 0)) >= config.staleness_threshold
+    staleness = row.get('service_staleness', row.get('host_staleness', 0)) or 0
+    return staleness >= config.staleness_threshold
 
 
 def paint_stalified(row: Row, text: CellContent) -> CellSpec:

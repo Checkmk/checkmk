@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Tuple, Iterator
+from typing import Tuple, Iterator, Set
 
 from cmk.utils.prediction import lq_logic
 import cmk.gui.watolib as watolib
@@ -61,6 +61,10 @@ class FilterWatoFolder(Filter):
 
     def choices(self) -> Choices:
         self.check_wato_data_update()
+        allowed_folders = self._fetch_folders()
+        return [entry for entry in self.selection if entry[0] in allowed_folders]
+
+    def _fetch_folders(self) -> Set[str]:
         # Note: WATO Folders that the user has not permissions to must not be visible.
         # Permissions in this case means, that the user has view permissions for at
         # least one host in that folder.
@@ -78,8 +82,7 @@ class FilterWatoFolder(Filter):
                     subfolder += "/"
                 subfolder += part
                 allowed_folders.add(subfolder)
-
-        return [entry for entry in self.selection if entry[0] in allowed_folders]
+        return allowed_folders
 
     def display(self):
         html.dropdown(self.ident, self.choices())

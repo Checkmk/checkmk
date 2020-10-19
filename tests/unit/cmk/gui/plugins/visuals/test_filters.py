@@ -15,6 +15,7 @@ import cmk.gui.config
 import cmk.gui.inventory
 from cmk.gui.globals import html
 import cmk.gui.plugins.visuals
+from cmk.gui.plugins.visuals.wato import FilterWatoFolder
 
 # Triggers plugin loading
 import cmk.gui.views
@@ -23,15 +24,59 @@ import cmk.gui.visuals
 from testlib import on_time
 
 
+# mock_livestatus does not support Stats queries at the moment. We need to mock the function away
+# for the "wato_folder" filter test to pass.
+@pytest.fixture(name="mock_wato_folders")
+def fixture_mock_wato_folders(monkeypatch):
+    monkeypatch.setattr(FilterWatoFolder, "_fetch_folders", lambda s: {""})
+
+
+@pytest.fixture(name="live")
+def fixture_livestatus_test_config(mock_livestatus, mock_wato_folders):
+    live = mock_livestatus
+    live.add_table('hostgroups', [
+        {"name": "hg", "alias": "HG",},
+        {"name": "hg1", "alias": "HG 1",},
+    ])
+    live.add_table('servicegroups', [
+        {"name": "sg", "alias": "SG",},
+        {"name": "sg1", "alias": "SG 1",},
+    ])
+    live.add_table('contactgroups', [
+        {"name": "cg", "alias": "CG",},
+        {"name": "cg1", "alias": "CG 1",},
+    ])
+    live.add_table('commands', [
+        {"name": "cmd", "alias": "CMD",},
+        {"name": "cmd1", "alias": "CMD 1",},
+    ])
+    live.add_table('hosts', [{
+        'name': 'example.com',
+        'alias': 'example.com alias',
+        'address': 'server.example.com',
+        'custom_variables': {
+            "FILENAME": "/wato/hosts.mk",
+            "ADDRESS_FAMILY": "4",
+            "ADDRESS_4": "127.0.0.1",
+            "ADDRESS_6": "",
+            "TAGS": "/wato/ auto-piggyback cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:heute tcp",
+        },
+        'contacts': [],
+        'contact_groups': ['all'],
+        'filename': "/wato/hosts.mk",
+    }])
+    return live
+
+
 # In general filters should not affect livestatus query in case there is no variable set for them
 @pytest.mark.parametrize("filter_ident", cmk.gui.plugins.visuals.utils.filter_registry.keys())
-def test_filters_filter_with_empty_request(register_builtin_html, filter_ident):
+def test_filters_filter_with_empty_request(register_builtin_html, filter_ident, live):
     if filter_ident == "hostgroupvisibility":
         expected_filter = "Filter: hostgroup_num_hosts > 0\n"
     else:
         expected_filter = ""
 
-    with html.stashed_vars():
+    with live(expect_status_query=False), html.stashed_vars():
         html.request.del_vars()
 
         filt = cmk.gui.plugins.visuals.utils.filter_registry[filter_ident]
@@ -1019,10 +1064,49 @@ def test_filters_filter_table(register_builtin_html, test, monkeypatch):
 
 
 # Filter form is not really checked. Only checking that no exception occurs
-def test_filters_display_with_empty_request(register_builtin_html):
-    with html.stashed_vars():
+def test_filters_display_with_empty_request(register_builtin_html, live):
+    with live, html.stashed_vars():
         html.request.del_vars()
 
         for filt in cmk.gui.plugins.visuals.utils.filter_registry.values():
             with html.plugged():
+                _set_expected_queries(filt.ident, live)
                 filt.display()
+
+
+def _set_expected_queries(filt_ident, live):
+    if filt_ident in ["hostgroups", "opthostgroup", "hostgroup"]:
+        live.expect_query(
+            'GET hostgroups\nCache: reload\nColumns: name alias\n'
+        )
+        if filt_ident == "hostgroups":
+            live.expect_query(
+                'GET hostgroups\nCache: reload\nColumns: name alias\n'
+            )
+        return
+
+    if filt_ident in [ "servicegroups", "optservicegroup", "servicegroup" ]:
+        live.expect_query(
+            'GET servicegroups\nCache: reload\nColumns: name alias\n'
+        )
+        if filt_ident == "servicegroups":
+            live.expect_query(
+                'GET servicegroups\nCache: reload\nColumns: name alias\n'
+            )
+        return
+
+    if filt_ident in ["contactgroups", "optcontactgroup", "opthost_contactgroup",
+            "optservice_contactgroup", "optevent_effective_contactgroup"]:
+        live.expect_query(
+            'GET contactgroups\nCache: reload\nColumns: name alias\n'
+        )
+        if filt_ident == "contactgroups":
+            live.expect_query(
+                'GET contactgroups\nCache: reload\nColumns: name alias\n'
+            )
+        return
+
+    if filt_ident in ["host_check_command", "check_command"]:
+        live.expect_query(
+            'GET commands\nCache: reload\nColumns: name\n'
+        )

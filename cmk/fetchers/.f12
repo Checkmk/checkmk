@@ -15,6 +15,7 @@ echo "Copy CRE files..."
 sudo rsync \
   --exclude="__pycache__" \
   --exclude="*.pyc" \
+  --exclude="flycheck*" \
   --exclude="cee" \
   -a * "$DESTDIR"
 

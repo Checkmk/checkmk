@@ -13,6 +13,7 @@ echo "Update site $SITE..."
 echo "Copy CRE files..."
 sudo rsync \
     --exclude="*.pyc" \
+    --exclude="flycheck*" \
     --exclude=cee \
     --exclude=cee.py \
     --exclude=cme.py \

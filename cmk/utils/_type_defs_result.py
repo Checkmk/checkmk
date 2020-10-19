@@ -122,7 +122,7 @@ class Result(Generic[T_co, E_co], abc.ABC):
         *,
         ok: Callable[[T_co], U_co],
         error: Callable[[E_co], U_co],
-    ):
+    ) -> U_co:
         raise NotImplementedError
 
 
@@ -206,7 +206,7 @@ class OK(Result[T_co, E_co]):
         *,
         ok: Callable[[T_co], U_co],
         error: Callable[[E_co], U_co],
-    ):
+    ) -> U_co:
         return ok(self.join().ok)
 
 
@@ -290,5 +290,5 @@ class Error(Result[T_co, E_co]):
         *,
         ok: Callable[[T_co], U_co],
         error: Callable[[E_co], U_co],
-    ):
+    ) -> U_co:
         return error(self.join().error)

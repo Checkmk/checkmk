@@ -25,7 +25,7 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry, PageHandlers
 from cmk.gui.type_defs import (
@@ -39,6 +39,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.watolib.search import IndexSearcher, get_index_store
+from cmk.gui.utils.urls import makeuri
 
 #   .--Quicksearch---------------------------------------------------------.
 #   |         ___        _      _                            _             |
@@ -91,7 +92,7 @@ class TooManyRowsError(MKException):
 
 def _build_url(url_params: HTTPVariables) -> str:
     new_params = url_params[:]
-    return html.makeuri(new_params, delvars=["q"], filename="view.py")
+    return makeuri(request, new_params, delvars=["q"], filename="view.py")
 
 
 class ABCQuicksearchConductor(metaclass=abc.ABCMeta):

@@ -45,7 +45,7 @@ from cmk.gui.valuespec import ValueSpec, DropdownChoice
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u
-from cmk.gui.globals import g, html
+from cmk.gui.globals import g, html, request
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.display_options import display_options
 from cmk.gui.permissions import permission_registry
@@ -71,6 +71,8 @@ from cmk.gui.type_defs import (
     VisualContext,
     PainterParameters,
 )
+
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 if TYPE_CHECKING:
     from cmk.gui.views import View
@@ -1768,7 +1770,7 @@ class Cell:
                 params.append(('display_options', display_options.title_options))
 
             classes += ["sort"]
-            onclick = "location.href=\'%s\'" % html.makeuri(params, 'sort')
+            onclick = "location.href=\'%s\'" % makeuri(request, params, 'sort')
             title = _('Sort by %s') % self.title()
 
         if is_last_column_header:
@@ -2116,9 +2118,11 @@ def make_service_breadcrumb(host_name: HostName, service_name: ServiceName) -> B
     breadcrumb.append(
         BreadcrumbItem(
             title=view_title(service_view_spec),
-            url=html.makeuri_contextless([("view_name", "service"), ("host", host_name),
-                                          ("service", service_name)],
-                                         filename="view.py"),
+            url=makeuri_contextless(
+                request,
+                [("view_name", "service"), ("host", host_name), ("service", service_name)],
+                filename="view.py",
+            ),
         ))
 
     return breadcrumb
@@ -2136,7 +2140,11 @@ def make_host_breadcrumb(host_name: HostName) -> Breadcrumb:
     breadcrumb.append(
         BreadcrumbItem(
             title=_u(allhosts_view_spec["title"]),
-            url=html.makeuri_contextless([("view_name", "allhosts")], filename="view.py"),
+            url=makeuri_contextless(
+                request,
+                [("view_name", "allhosts")],
+                filename="view.py",
+            ),
         ))
 
     # 2. level: host home page
@@ -2144,8 +2152,11 @@ def make_host_breadcrumb(host_name: HostName) -> Breadcrumb:
     breadcrumb.append(
         BreadcrumbItem(
             title=view_title(host_view_spec),
-            url=html.makeuri_contextless([("view_name", "host"), ("host", host_name)],
-                                         filename="view.py"),
+            url=makeuri_contextless(
+                request,
+                [("view_name", "host"), ("host", host_name)],
+                filename="view.py",
+            ),
         ))
 
     return breadcrumb

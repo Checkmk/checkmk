@@ -23,7 +23,7 @@ from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException, MKTimeout
 import cmk.gui.config as config
 import cmk.gui.visuals as visuals
-from cmk.gui.globals import g, html
+from cmk.gui.globals import g, html, request
 from cmk.gui.valuespec import (
     ValueSpec,
     ValueSpecValidateFunc,
@@ -48,6 +48,7 @@ from cmk.gui.breadcrumb import (
     Breadcrumb,
     BreadcrumbItem,
 )
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 DashboardName = str
 DashboardConfig = Dict[str, Any]
@@ -173,8 +174,11 @@ class Dashlet(metaclass=abc.ABCMeta):
     @classmethod
     def add_url(cls) -> str:
         """The URL to open for adding a new dashlet of this type to a dashboard"""
-        return html.makeuri([('type', cls.type_name()), ('back', html.makeuri([('edit', '1')]))],
-                            filename='edit_dashlet.py')
+        return makeuri(
+            request,
+            [('type', cls.type_name()), ('back', makeuri(request, [('edit', '1')]))],
+            filename='edit_dashlet.py',
+        )
 
     @classmethod
     def default_settings(cls):
@@ -332,7 +336,8 @@ class Dashlet(metaclass=abc.ABCMeta):
         if self._dashlet_spec.get("url"):
             return self._dashlet_spec["url"]
 
-        return html.makeuri_contextless(
+        return makeuri_contextless(
+            request,
             [
                 ('name', self._dashboard_name),
                 ('id', self._dashlet_id),
@@ -681,8 +686,11 @@ def copy_view_into_dashlet(dashlet: DashletConfig,
             view["context"],
             view["single_infos"],
         ).items()))
-    dashlet['title_url'] = html.makeuri_contextless(name_part + singlecontext_vars,
-                                                    filename='view.py')
+    dashlet['title_url'] = makeuri_contextless(
+        request,
+        name_part + singlecontext_vars,
+        filename='view.py',
+    )
 
     dashlet['type'] = 'view'
     dashlet['name'] = 'dashlet_%d' % nr
@@ -734,9 +742,12 @@ def create_data_for_single_metric(cls, properties, context):
         series = merge_multicol(d_row, columns, properties)
         site = d_row['site']
         host = d_row["host_name"]
-        svc_url = html.makeuri([("view_name", "service"), ("site", site), ("host", host),
-                                ("service", d_row['service_description'])],
-                               filename="view.py")
+        svc_url = makeuri(
+            request,
+            [("view_name", "service"), ("site", site), ("host", host),
+             ("service", d_row['service_description'])],
+            filename="view.py",
+        )
 
         row_id = "row_%d" % idx
 
@@ -768,5 +779,5 @@ def create_data_for_single_metric(cls, properties, context):
 def dashboard_breadcrumb(name: str, board: DashboardConfig, title: str) -> Breadcrumb:
     breadcrumb = make_topic_breadcrumb(mega_menu_registry.menu_monitoring(),
                                        PagetypeTopics.get_topic(board["topic"]))
-    breadcrumb.append(BreadcrumbItem(title, html.makeuri_contextless([("name", name)])))
+    breadcrumb.append(BreadcrumbItem(title, makeuri_contextless(request, [("name", name)])))
     return breadcrumb

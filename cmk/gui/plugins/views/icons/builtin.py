@@ -44,7 +44,7 @@ import cmk.gui.bi as bi
 import cmk.gui.config as config
 import cmk.utils
 import cmk.utils.render
-from cmk.gui.globals import g, html
+from cmk.gui.globals import g, html, request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views import (
     display_options,
@@ -56,6 +56,7 @@ from cmk.gui.plugins.views import (
 from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
 from cmk.gui.plugins.views.graphs import cmk_graph_url
 from cmk.gui.utils.popups import MethodAjax
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 #   .--Action Menu---------------------------------------------------------.
 #   |          _        _   _               __  __                         |
@@ -96,7 +97,7 @@ class ActionMenuIcon(Icon):
             url_vars.append(('display_options', html.request.var('display_options')))
         if html.request.has_var('_display_options'):
             url_vars.append(('_display_options', html.request.var('_display_options')))
-        url_vars.append(('_back_url', html.makeuri([])))
+        url_vars.append(('_back_url', makeuri(request, [])))
 
         return html.render_popup_trigger(
             html.render_icon('menu', _('Open the action menu'), cssclass="iconbutton"),
@@ -248,7 +249,7 @@ class RuleEditorIcon(Icon):
             else:
                 title = _("Parameters for this host")
 
-            return 'rulesets', title, html.makeuri_contextless(urlvars, "wato.py")
+            return 'rulesets', title, makeuri_contextless(request, urlvars, "wato.py")
 
 
 #.
@@ -291,8 +292,11 @@ class ManpageIcon(Icon):
             else:
                 return
             urlvars = [("mode", "check_manpage"), ("check_type", check_type)]
-            return 'check_plugins', _("Manual page for this check type"), html.makeuri_contextless(
-                urlvars, "wato.py")
+            return (
+                'check_plugins',
+                _("Manual page for this check type"),
+                makeuri_contextless(request, urlvars, "wato.py"),
+            )
 
 
 #.
@@ -491,8 +495,11 @@ class LogwatchIcon(Icon):
             return
 
         sitename, hostname, item = row['site'], row['host_name'], row['service_description'][4:]
-        url = html.makeuri_contextless([("site", sitename), ("host", hostname), ("file", item)],
-                                       filename="logwatch.py")
+        url = makeuri_contextless(
+            request,
+            [("site", sitename), ("host", hostname), ("file", item)],
+            filename="logwatch.py",
+        )
         return 'logwatch', _('Open Log'), url
 
 
@@ -897,7 +904,7 @@ class AggregationsIcon(Icon):
             ]
             if what == "service":
                 urivars += [("aggr_service_service", row["service_description"])]
-            url = html.makeuri_contextless(urivars, filename="view.py")
+            url = makeuri_contextless(request, urivars, filename="view.py")
             return 'aggr', _("BI Aggregations containing this %s") % \
                             (what == "host" and _("Host") or _("Service")), url
 
@@ -1022,7 +1029,8 @@ class CrashdumpsIcon(Icon):
                     "to the development team.")
 
             crash_id = match.group(1)
-            crashurl = html.makeuri_contextless(
+            crashurl = makeuri_contextless(
+                request,
                 [
                     ("site", row["site"]),
                     ("crash_id", crash_id),

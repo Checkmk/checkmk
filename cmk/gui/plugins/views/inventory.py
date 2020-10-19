@@ -22,7 +22,7 @@ import cmk.gui.sites as sites
 import cmk.gui.inventory as inventory
 from cmk.gui.type_defs import PaintResult
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import Dictionary, Checkbox
 from cmk.gui.escaping import escape_text
@@ -59,6 +59,8 @@ from cmk.gui.plugins.views import (
     cmp_simple_number,
     render_labels,
 )
+
+from cmk.gui.utils.urls import makeuri_contextless
 
 
 def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
@@ -1647,7 +1649,8 @@ class NodeRenderer:
                 title = self._replace_placeholders(title, invpath)
 
             header = self._get_header(title, ".".join(map(str, node_abs_path)), "#666")
-            fetch_url = html.makeuri_contextless(
+            fetch_url = makeuri_contextless(
+                request,
                 [
                     ("site", self._site_id),
                     ("host", self._hostname),
@@ -1718,7 +1721,8 @@ class NodeRenderer:
 
         # Link to Multisite view with exactly this table
         if "view" in hint:
-            url = html.makeuri_contextless(
+            url = makeuri_contextless(
+                request,
                 [
                     ("view_name", hint["view"]),
                     ("host", self._hostname),

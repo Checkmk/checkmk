@@ -16,7 +16,7 @@ import cmk.utils.render
 
 from cmk.gui import sites, escaping
 from cmk.gui.htmllib import HTML
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request as global_request
 import cmk.gui.config as config
 from cmk.gui.exceptions import MKGeneralException
 
@@ -30,6 +30,8 @@ from cmk.gui.plugins.metrics import artwork
 from cmk.gui.plugins.metrics.identification import graph_identification_types
 
 from cmk.gui.utils.popups import MethodAjax
+
+from cmk.gui.utils.urls import makeuri_contextless
 
 RenderOutput = Union[HTML, str]
 
@@ -175,25 +177,34 @@ def _render_graph_title_elements(graph_artwork, graph_render_options):
 
     if "add_host_name" in title_format_params:
         host_name = spec_info["host_name"]
-        host_url = html.makeuri_contextless([("view_name", "hoststatus"),
-                                             ("host", spec_info["host_name"])],
-                                            filename="view.py")
+        host_url = makeuri_contextless(
+            global_request,
+            [("view_name", "hoststatus"), ("host", spec_info["host_name"])],
+            filename="view.py",
+        )
         title_elements.append((host_name, host_url))
 
     if "add_host_alias" in title_format_params:
         host_alias = _get_alias_of_host(spec_info["site"], spec_info["host_name"])
-        host_url = html.makeuri_contextless([("view_name", "hoststatus"),
-                                             ("host", spec_info["host_name"])],
-                                            filename="view.py")
+        host_url = makeuri_contextless(
+            global_request,
+            [("view_name", "hoststatus"), ("host", spec_info["host_name"])],
+            filename="view.py",
+        )
         title_elements.append((host_alias, host_url))
 
     if "add_service_description" in title_format_params:
         service_description = spec_info["service_description"]
         if service_description != "_HOST_":
-            service_url = html.makeuri_contextless([("view_name", "service"),
-                                                    ("host", spec_info["host_name"]),
-                                                    ("service", service_description)],
-                                                   filename="view.py")
+            service_url = makeuri_contextless(
+                global_request,
+                [
+                    ("view_name", "service"),
+                    ("host", spec_info["host_name"]),
+                    ("service", service_description),
+                ],
+                filename="view.py",
+            )
             title_elements.append((service_description, service_url))
 
     return title_elements

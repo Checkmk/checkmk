@@ -11,7 +11,7 @@ import cmk.gui.bi as bi
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 
 from cmk.gui.plugins.views import (
     data_source_registry,
@@ -23,6 +23,8 @@ from cmk.gui.plugins.views import (
     painter_registry,
     Painter,
 )
+
+from cmk.gui.utils.urls import makeuri
 
 #     ____        _
 #    |  _ \  __ _| |_ __ _ ___  ___  _   _ _ __ ___ ___  ___
@@ -406,7 +408,7 @@ class PainterAggrOutput(Painter):
 def paint_aggr_hosts(row, link_to_view):
     h = []
     for site, host in row["aggr_hosts"]:
-        url = html.makeuri([("view_name", link_to_view), ("site", site), ("host", host)])
+        url = makeuri(request, [("view_name", link_to_view), ("site", site), ("host", host)])
         h.append(html.render_a(host, url))
     return "", HTML(" ").join(h)
 

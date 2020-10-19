@@ -10,9 +10,10 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib import HTML
+from cmk.gui.utils.urls import makeuri_contextless
 
 from cmk.gui.plugins.wato.check_mk_configuration import transform_virtual_host_trees
 from . import SidebarSnapin, snapin_registry
@@ -178,7 +179,7 @@ class VirtualHostTree(SidebarSnapin):
         urlvars += self._get_tag_url_vars(tree_spec, node_values)
         urlvars += self._get_folder_url_vars(node_values)
 
-        return html.makeuri_contextless(urlvars, "view.py")
+        return makeuri_contextless(request, urlvars, "view.py")
 
     def _get_tag_url_vars(self, tree_spec, node_values):
         urlvars = []

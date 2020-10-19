@@ -21,7 +21,7 @@ import cmk.gui.metrics as metrics
 import cmk.gui.sites as sites
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.globals import g, html
+from cmk.gui.globals import g, html, request
 from cmk.gui.valuespec import (
     DateFormat,
     Dictionary,
@@ -67,6 +67,8 @@ from cmk.gui.plugins.views.graphs import (
     paint_time_graph_cmk,
     cmk_time_graph_params,
 )
+
+from cmk.gui.utils.urls import makeuri_contextless
 
 #   .--Painter Options-----------------------------------------------------.
 #   |                   ____       _       _                               |
@@ -4900,7 +4902,8 @@ class PainterHostDockerNode(Painter):
 
         content = []
         for host_name in docker_nodes:
-            url = html.makeuri_contextless(
+            url = makeuri_contextless(
+                request,
                 [
                     ("view_name", "host"),
                     ("host", host_name),

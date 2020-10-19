@@ -36,7 +36,7 @@ from cmk.gui.table import table_element, Table
 
 import cmk.gui.bi as bi
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.breadcrumb import BreadcrumbItem, Breadcrumb
 from cmk.gui.page_menu import (
@@ -70,6 +70,8 @@ from cmk.gui.plugins.views import (
     display_options,
     format_plugin_output,
 )
+
+from cmk.gui.utils.urls import makeuri
 
 from cmk.gui.visuals import page_menu_dropdown_add_to_visual
 
@@ -164,7 +166,8 @@ def _show_availability_options_controls() -> None:
 
     html.open_div(class_="update_buttons")
     html.button("apply", _("Apply"), "submit")
-    reset_url = html.makeuri(
+    reset_url = makeuri(
+        request,
         [("_reset", "1")],
         remove_prefix="avo_",
         delvars=["apply", "filled_in"],
@@ -317,7 +320,7 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
                 "matched entries and the result might be incomplete. ") % avoptions["logrow_limit"]
             text += html.render_a(
                 _('Repeat query without limit.'),
-                html.makeuri([("_unset_logrow_limit", "1"), ("avo_logrow_limit", 0)]))
+                makeuri(request, [("_unset_logrow_limit", "1"), ("avo_logrow_limit", 0)]))
             html.show_warning(text)
 
         do_render_availability(what, av_rawdata, av_data, av_mode, av_object, avoptions)
@@ -379,7 +382,7 @@ def _page_menu_availability(breadcrumb: Breadcrumb, view, what: AVObjectType, av
                             PageMenuEntry(
                                 title=_("Status view"),
                                 icon_name="status",
-                                item=make_simple_link(html.makeuri([("mode", "status")])),
+                                item=make_simple_link(makeuri(request, [("mode", "status")])),
                             ),
                         ],
                     ),
@@ -421,7 +424,7 @@ def _page_menu_entries_av_mode(what: AVObjectType, av_mode: AVMode, av_object: A
             title=_("Availability"),
             icon_name="availability",
             item=make_simple_link(
-                html.makeuri([("av_mode", "availability"), ("av_host", ""), ("av_aggr", "")])),
+                makeuri(request, [("av_mode", "availability"), ("av_host", ""), ("av_aggr", "")])),
         )
         return
 
@@ -429,7 +432,7 @@ def _page_menu_entries_av_mode(what: AVObjectType, av_mode: AVMode, av_object: A
         yield PageMenuEntry(
             title=_("Timeline"),
             icon_name="timeline",
-            item=make_simple_link(html.makeuri([("av_mode", "timeline")])),
+            item=make_simple_link(makeuri(request, [("av_mode", "timeline")])),
         )
         return
 
@@ -449,7 +452,7 @@ def _page_menu_entries_export_data() -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
         title=_("Export CSV"),
         icon_name="download_csv",
-        item=make_simple_link(html.makeuri([("output_format", "csv_export")])),
+        item=make_simple_link(makeuri(request, [("output_format", "csv_export")])),
     )
 
 
@@ -463,7 +466,7 @@ def _page_menu_entries_export_reporting() -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
         title=_("This view as PDF"),
         icon_name="report",
-        item=make_simple_link(html.makeuri([], filename="report_instant.py")),
+        item=make_simple_link(makeuri(request, [], filename="report_instant.py")),
     )
 
 
@@ -547,7 +550,7 @@ def _render_availability_timeline(what: AVObjectType, av_entry: AVEntry, avoptio
 
             table.cell(_("Links"), css="buttons")
             if what == "bi":
-                url = html.makeuri([("timewarp", str(int(row["from"])))])
+                url = makeuri(request, [("timewarp", str(int(row["from"])))])
                 if html.request.var("timewarp") and html.request.get_integer_input_mandatory(
                         "timewarp") == int(row["from"]):
                     html.disabled_icon_button("timewarp_off")
@@ -556,11 +559,16 @@ def _render_availability_timeline(what: AVObjectType, av_entry: AVEntry, avoptio
                                      _("Time warp - show BI aggregate during this time period"),
                                      "timewarp")
             else:
-                url = html.makeuri([("anno_site", av_entry["site"]),
-                                    ("anno_host", av_entry["host"]),
-                                    ("anno_service", av_entry["service"]),
-                                    ("anno_from", str(row["from"])),
-                                    ("anno_until", str(row["until"]))])
+                url = makeuri(
+                    request,
+                    [
+                        ("anno_site", av_entry["site"]),
+                        ("anno_host", av_entry["host"]),
+                        ("anno_service", av_entry["service"]),
+                        ("anno_from", str(row["from"])),
+                        ("anno_until", str(row["until"])),
+                    ],
+                )
                 html.icon_button(url, _("Create an annotation for this period"), "annotation")
 
             table.cell(_("From"), row["from_text"], css="nobr narrow")
@@ -791,8 +799,14 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
 
             aggr_name = aggr_rows[0]["aggr_name"]
             aggr_group = aggr_rows[0]["aggr_group"]
-            timeline_url = html.makeuri([("av_mode", "timeline"), ("av_aggr_name", aggr_name),
-                                         ("av_aggr_group", aggr_group)])
+            timeline_url = makeuri(
+                request,
+                [
+                    ("av_mode", "timeline"),
+                    ("av_aggr_name", aggr_name),
+                    ("av_aggr_group", aggr_group),
+                ],
+            )
 
             dropdown.topics[-1].entries.append(
                 PageMenuEntry(
@@ -863,7 +877,7 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
                         if not button_back_shown and int(
                                 span["from"]) == timewarp and previous_span is not None:
                             html.icon_button(
-                                html.makeuri([("timewarp", str(int(previous_span["from"])))]),
+                                makeuri(request, [("timewarp", str(int(previous_span["from"])))]),
                                 _("Jump one phase back"), "back")
                             button_back_shown = True
                         # Multiple followup spans can have the same "from" time
@@ -871,15 +885,18 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
                         elif not button_forth_shown and previous_span and int(
                                 previous_span["from"]) == timewarp and int(
                                     span["from"]) != timewarp:
-                            html.icon_button(html.makeuri([("timewarp", str(int(span["from"])))]),
-                                             _("Jump one phase forth"), "forth")
+                            html.icon_button(
+                                makeuri(
+                                    request,
+                                    [("timewarp", str(int(span["from"])))],
+                                ), _("Jump one phase forth"), "forth")
                             button_forth_shown = True
                         previous_span = span
                     if not button_forth_shown:
                         html.disabled_icon_button("forth_off")
 
                     html.write_text(" &nbsp; ")
-                    html.icon_button(html.makeuri([("timewarp", "")]), _("Close Timewarp"),
+                    html.icon_button(makeuri(request, [("timewarp", "")]), _("Close Timewarp"),
                                      "closetimewarp")
                     html.write_text("%s %s" %
                                     (_("Timewarp to "),
@@ -906,7 +923,7 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
                 "<b>Note:</b> The shown data does not necessarily reflect the "
                 "matched entries and the result might be incomplete. ") % avoptions["logrow_limit"]
             text += html.render_a(_('Repeat query without limit.'),
-                                  html.makeuri([("_unset_logrow_limit", "1")]))
+                                  makeuri(request, [("_unset_logrow_limit", "1")]))
             html.show_warning(text)
 
         if html.output_format == "csv_export" and config.user.may("general.csv_export"):
@@ -993,7 +1010,7 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
                 ("anno_from", int(annotation["from"])),
                 ("anno_until", int(annotation["until"])),
             ]
-            edit_url = html.makeuri(anno_vars)
+            edit_url = makeuri(request, anno_vars)
             html.icon_button(edit_url, _("Edit this annotation"), "edit")
             del_anno: 'HTTPVariables' = [("_delete_annotation", "1")]
             delete_url = html.makeactionuri(del_anno + anno_vars)
@@ -1113,7 +1130,7 @@ def edit_annotation(breadcrumb: Breadcrumb) -> bool:
 def _edit_annotation_breadcrumb(breadcrumb: Breadcrumb, title: str) -> Breadcrumb:
     breadcrumb.append(BreadcrumbItem(
         title=title,
-        url=html.makeuri([]),
+        url=makeuri(request, []),
     ))
     return breadcrumb
 

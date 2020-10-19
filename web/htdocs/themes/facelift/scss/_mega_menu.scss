@@ -240,13 +240,16 @@
             input.button {
               float: right;
               width: 56px;
-              height: 13px;
-              padding: 1px;
+              height: 16px;
+              padding: 2px;
               margin: 0;
-              font-weight: bold;
-              color: $bg-color;
-              background-color: $success;
-              border: none;
+              margin-top: 2px;
+              font-size: 9px;
+              line-height: 12px;
+              letter-spacing: 0;
+              color: $hot-font-color;
+              background-color: $color-state-success-background;
+              border-color: $color-state-success-border;
             }
 
             &.show_all_items {

@@ -116,7 +116,7 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
     return [
         TopicMenuTopic(
             name="user",
-            title=_("Quick access"),
+            title=_("Quick toggle"),
             # TODO(rb): set correct icon
             icon_name="topic_profile",
             items=quick_items,

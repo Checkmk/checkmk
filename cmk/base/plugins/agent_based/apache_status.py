@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Dict, Final
+from .agent_based_api.v1.type_defs import AgentStringTable, CheckResult, DiscoveryResult, Parameters
+
 import time
 import collections
 
@@ -19,7 +22,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 
-_FIELD_CASTER_MAP = {
+Section = Dict[str, Dict[str, float]]
+
+_FIELD_CASTER_MAP: Final = {
     'Uptime': int,
     'IdleWorkers': int,
     'BusyWorkers': int,
@@ -40,7 +45,7 @@ _FIELD_CASTER_MAP = {
     'IdleServers': int,
 }
 
-_CHECK_LEVEL_ENTRIES = (
+_CHECK_LEVEL_ENTRIES: Final = (
     ('Uptime', 'Uptime'),
     ('IdleWorkers', 'Idle workers'),
     ('BusyWorkers', 'Busy workers'),
@@ -60,23 +65,23 @@ _CHECK_LEVEL_ENTRIES = (
     ('IdleServers', 'Idle servers'),
 )
 
-_SCOREBOARD_LABEL_MAP = collections.OrderedDict((
-    ('Waiting', '_'),
-    ('StartingUp', 'S'),
-    ('ReadingRequest', 'R'),
-    ('SendingReply', 'W'),
-    ('Keepalive', 'K'),
-    ('DNS', 'D'),
-    ('Closing', 'C'),
-    ('Logging', 'L'),
-    ('Finishing', 'G'),
-    ('IdleCleanup', 'O'),
-))
+_SCOREBOARD_LABEL_MAP: Final = {  # order is relevant!
+    'Waiting': '_',
+    'StartingUp': 'S',
+    'ReadingRequest': 'R',
+    'SendingReply': 'W',
+    'Keepalive': 'K',
+    'DNS': 'D',
+    'Closing': 'C',
+    'Logging': 'L',
+    'Finishing': 'G',
+    'IdleCleanup': 'O',
+}
 
 
-def apache_status_parse_legacy(info):
+def apache_status_parse_legacy(info: AgentStringTable) -> Section:
     # This parse function is required for compatibility with agents older than the 1.6 release.
-    data = {}  # type: ignore[var-annotated]
+    data: Section = {}
     for line in info:
         if len(line) != 4 and not (len(line) == 5 and line[2] == 'Total'):
             continue  # Skip unexpected lines
@@ -113,13 +118,13 @@ def apache_status_parse_legacy(info):
     return data
 
 
-def apache_status_parse(string_table):
+def apache_status_parse(string_table: AgentStringTable) -> Section:
     if len(frozenset(len(_) for _ in string_table)) != 1:
         # The separator was changed in 1.6 so that the elements of `info`
         # have a constant length.
         return apache_status_parse_legacy(string_table)
 
-    data = collections.defaultdict(dict)  # type: ignore[var-annotated]
+    data: Section = collections.defaultdict(dict)
     for address, port, instance, apache_info in string_table:
         try:
             label, status = apache_info.split(":", 1)
@@ -165,15 +170,12 @@ register.agent_section(
 )
 
 
-def discover_apache_status(section):
+def discover_apache_status(section: Section) -> DiscoveryResult:
     for item in section:
         yield Service(item=item)
 
 
-def check_apache_status(item, params, section):
-    if params is None:
-        params = {}
-
+def check_apache_status(item: str, params: Parameters, section: Section) -> CheckResult:
     if item.endswith(":None"):
         # fix item name discovered before werk 2763
         item = item[:-5]
@@ -214,7 +216,7 @@ def check_apache_status(item, params, section):
     yield from _scoreboard_results(data)
 
 
-def _scoreboard_results(data):
+def _scoreboard_results(data: Dict[str, float]) -> CheckResult:
     # Don't process the scoreboard data directly. Print states instead
     states = []
     for key in _SCOREBOARD_LABEL_MAP:

@@ -3,9 +3,11 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Dict
 import pytest
 
 import cmk.base.plugins.agent_based.agent_based_api.v1
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_value_store,
     Metric,
@@ -121,7 +123,7 @@ AGENT_OUTPUT_2 = [
     ]
 ]
 
-SECTION_2 = {
+SECTION_2: Dict[str, Dict[str, float]] = {
     'MY CHECK MK': {
         'BusyWorkers': 1,
         'BytesPerReq': 1657.38,
@@ -134,9 +136,10 @@ SECTION_2 = {
         'IdleWorkers': 49,
         'OpenSlots': 100,
         'ReqPerSec': 0.630425,
-        'Scoreboard': (' ________________________________W_________________'
-                       '...................................................'
-                       '.................................................'),
+        'Scoreboard': (  # type: ignore[dict-item]
+            ' ________________________________W_________________'
+            '...................................................'
+            '.................................................'),
         'State_Closing': 0,
         'State_DNS': 0,
         'State_Finishing': 0,
@@ -179,7 +182,7 @@ def test_check_function(monkeypatch):
         },
     )
 
-    assert list(apache_status.check_apache_status("MY CHECK MK", {}, SECTION_2)) == [
+    assert list(apache_status.check_apache_status("MY CHECK MK", Parameters({}), SECTION_2)) == [
         Result(state=State.OK, summary='Uptime: 1 day 3 hours'),
         Metric('Uptime', 99739),
         Result(state=State.OK, summary='Idle workers: 49'),

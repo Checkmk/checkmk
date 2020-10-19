@@ -84,7 +84,7 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                 TopicMenuItem(
                     name="youtube_channel",
                     title=_("Youtube"),
-                    url="https://www.youtube.com/user/MathiasKettner",
+                    url="https://www.youtube.com/checkmk-channel",
                     target="_blank",
                     sort_index=30,
                     icon_name=None,  # TODO(CMK-5773): add an icon

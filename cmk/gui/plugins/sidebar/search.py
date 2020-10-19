@@ -1186,6 +1186,7 @@ class MenuSearchResultsRenderer:
         html.open_li()
         html.open_a(href=result.url, target="main", onclick="cmk.popup_menu.close_popup()")
         html.write_text(result.title)
+        html.close_a()
         html.close_li()
 
 

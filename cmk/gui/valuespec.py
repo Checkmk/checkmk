@@ -3100,6 +3100,12 @@ class ListChoice(ValueSpec):
             if html.get_checkbox("%s_%d" % (varprefix, nr))
         ]
 
+    def value_to_json(self, value):
+        return value
+
+    def value_from_json(self, json_value):
+        return json_value
+
     def validate_datatype(self, value, varprefix):
         if not isinstance(value, list):
             raise MKUserError(varprefix,

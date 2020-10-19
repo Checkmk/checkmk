@@ -8,7 +8,7 @@ import copy
 import time
 import json
 import traceback
-from typing import NamedTuple, Optional, Tuple, List, Union
+from typing import NamedTuple, Optional, Tuple, List, Union, Iterable
 
 import livestatus
 
@@ -27,6 +27,7 @@ from cmk.gui.log import logger
 from cmk.gui.plugins.metrics.utils import render_color_icon
 
 from cmk.gui.plugins.metrics import artwork
+from cmk.gui.plugins.metrics.valuespecs import transform_graph_render_options_title_format
 from cmk.gui.plugins.metrics.identification import graph_identification_types
 
 from cmk.gui.utils.popups import MethodAjax
@@ -157,43 +158,42 @@ def _render_graph_title_elements(graph_artwork, graph_render_options):
     if "title" in graph_render_options:
         return [(graph_render_options["title"], None)]
 
-    title_elements: List[Tuple[str, Optional[str]]] = [(graph_artwork["title"], None)]
+    title_elements: List[Tuple[str, Optional[str]]] = []
 
-    if isinstance(graph_render_options["title_format"], (tuple, list)):
-        title_format, title_format_params = graph_render_options["title_format"]
-    else:
-        title_format, title_format_params = graph_render_options["title_format"], []
+    title_format = transform_graph_render_options_title_format(graph_render_options["title_format"])
 
-    if title_format == "plain":
-        return title_elements
+    if "plain" in title_format:
+        title_elements.append((graph_artwork["title"], None))
 
     # Only add host/service information for template based graphs
     ident_type, spec_info = graph_artwork["definition"]["specification"]
     if ident_type != "template":
         return title_elements
 
-    if title_format != "add_title_infos":
-        raise NotImplementedError()
+    title_elements.extend(title_info_elements(spec_info, title_format))
 
-    if "add_host_name" in title_format_params:
-        host_name = spec_info["host_name"]
+    return title_elements
+
+
+def title_info_elements(spec_info, title_format) -> Iterable[Tuple[str, str]]:
+    if "add_host_name" in title_format:
         host_url = makeuri_contextless(
             global_request,
             [("view_name", "hoststatus"), ("host", spec_info["host_name"])],
             filename="view.py",
         )
-        title_elements.append((host_name, host_url))
+        yield spec_info["host_name"], host_url
 
-    if "add_host_alias" in title_format_params:
+    if "add_host_alias" in title_format:
         host_alias = _get_alias_of_host(spec_info["site"], spec_info["host_name"])
         host_url = makeuri_contextless(
             global_request,
             [("view_name", "hoststatus"), ("host", spec_info["host_name"])],
             filename="view.py",
         )
-        title_elements.append((host_alias, host_url))
+        yield host_alias, host_url
 
-    if "add_service_description" in title_format_params:
+    if "add_service_description" in title_format:
         service_description = spec_info["service_description"]
         if service_description != "_HOST_":
             service_url = makeuri_contextless(
@@ -205,9 +205,10 @@ def _render_graph_title_elements(graph_artwork, graph_render_options):
                 ],
                 filename="view.py",
             )
-            title_elements.append((service_description, service_url))
+            yield service_description, service_url
 
-    return title_elements
+    if "add_metric_name" in title_format:
+        yield spec_info["metric"], ""
 
 
 def _get_alias_of_host(site, host_name):
@@ -827,7 +828,7 @@ def _graph_title_height_ex(graph_render_options):
 default_dashlet_graph_render_options = {
     "font_size": 8,
     "show_legend": False,
-    "title_format": ("add_title_infos", ["add_host_name", "add_service_description"]),
+    "title_format": ["plain", "add_host_name", "add_service_description"],
     "show_controls": False,
     "resizable": False,
     "show_time_range_previews": False,

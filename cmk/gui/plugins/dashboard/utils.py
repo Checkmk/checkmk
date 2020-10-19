@@ -41,6 +41,7 @@ from cmk.gui.plugins.views.utils import (
 from cmk.gui.utils.url_encoder import HTTPVariables
 from cmk.gui.metrics import translate_perf_data
 from cmk.gui.plugins.metrics.rrd_fetch import merge_multicol
+from cmk.gui.plugins.metrics.valuespecs import vs_title_infos
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.breadcrumb import (
@@ -383,7 +384,7 @@ def dashlet_vs_general_settings(dashlet: Dashlet, single_infos: List[str]):
     return Dictionary(
         title=_('General Settings'),
         render='form',
-        optional_keys=['title', 'title_url'],
+        optional_keys=['title', 'title_format', 'title_url'],
         elements=[
             ('type',
              FixedValue(
@@ -415,6 +416,7 @@ def dashlet_vs_general_settings(dashlet: Dashlet, single_infos: List[str]):
                      'like to use another title, set it here.'),
                  size=50,
              )),
+            ("title_format", vs_title_infos()),
             ('title_url',
              TextUnicode(
                  title=_('Link of Title'),

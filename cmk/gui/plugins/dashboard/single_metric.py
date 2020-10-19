@@ -17,6 +17,7 @@ from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.plugins.dashboard import dashlet_registry
 from cmk.gui.plugins.dashboard.utils import site_query, create_data_for_single_metric
 from cmk.gui.plugins.metrics.utils import MetricName, reverse_translate_metric_name
+from cmk.gui.plugins.metrics.html_render import title_info_elements
 from cmk.gui.plugins.metrics.rrd_fetch import rrd_columns
 from cmk.gui.figures import ABCFigureDashlet, ABCDataGenerator
 from cmk.gui.plugins.views.painters import paint_service_state_short
@@ -138,8 +139,15 @@ class SingleMetricDataGenerator(ABCDataGenerator):
             "plot_definitions": plot_definitions,
             "data": data,
         }
+        title: List[Tuple[str, Optional[str]]] = []
+        if settings.get("show_title", False):
+            if settings.get("title") and "plain" in settings.get("title_format", []):
+                title.append((settings.get("title"), ""))
+            title.extend(
+                title_info_elements(row,
+                                    [f for f in settings.get("title_format", []) if f != "plain"]))
 
-        response["title"] = settings.get("title") if settings.get("show_title", False) else None
+        response["title"] = " / ".join(txt for txt, _ in title)
 
         return response
 

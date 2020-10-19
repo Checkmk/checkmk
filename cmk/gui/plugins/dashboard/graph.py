@@ -23,7 +23,7 @@ from cmk.gui.plugins.dashboard import (
 )
 
 from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options
-from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
+from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options, transform_graph_render_options
 
 
 @dashlet_registry.register
@@ -103,6 +103,7 @@ class GraphDashlet(Dashlet):
                  default_values=default_dashlet_graph_render_options,
                  exclude=[
                      "show_time_range_previews",
+                     "title_format",
                  ],
              )),
         ]
@@ -152,19 +153,6 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
         return self._reload_js()
 
     def _reload_js(self):
-        # Be compatible to pre 1.5.0i2 format
-        # TODO: Do this conversion during __init__() or during config loading
-        if "graph_render_options" not in self._dashlet_spec:
-            if self._dashlet_spec.pop("show_service", True):
-                title_format = ("add_title_infos", ["add_host_name", "add_service_description"])
-            else:
-                title_format = ("plain", [])
-
-            self._dashlet_spec["graph_render_options"] = {
-                "show_legend": self._dashlet_spec.pop("show_legend", False),
-                "title_format": title_format,
-            }
-
         host = self._dashlet_spec['context'].get('host', html.request.var("host"))
         if not host:
             raise MKUserError('host', _('Missing needed host parameter.'))
@@ -196,7 +184,19 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
             "graph_index": self._dashlet_spec["source"] - 1,
         })
 
+        # Be compatible to pre 1.5.0i2 format
+        # TODO: Do this conversion during __init__() or during config loading
+        if "graph_render_options" not in self._dashlet_spec:
+            self._dashlet_spec["graph_render_options"] = transform_graph_render_options({
+                "show_legend": self._dashlet_spec.pop("show_legend", False),
+                "show_service": self._dashlet_spec.pop("show_service", True),
+            })
+
         graph_render_options = self._dashlet_spec["graph_render_options"]
+        graph_render_options.setdefault(
+            "title_format",
+            self._dashlet_spec.get("title_format",
+                                   default_dashlet_graph_render_options["title_format"]))
 
         return "dashboard_render_graph(%d, %s, %s, '%s')" % \
                 (self._dashlet_id, json.dumps(graph_identification),

@@ -197,6 +197,7 @@ def check_apache_status(item: str, params: Parameters, section: Section) -> Chec
     for key, label in ((k, l) for k, l in _CHECK_LEVEL_ENTRIES if k in data):
         value = data[key]
         levels_are_lower = (key == 'OpenSlots')
+        notice_only = key not in {'Uptime', 'IdleWorkers', 'BusyWorkers', 'TotalSlots'}
 
         renderer = None
         if key == 'Uptime':
@@ -211,6 +212,7 @@ def check_apache_status(item: str, params: Parameters, section: Section) -> Chec
             levels_upper=None if levels_are_lower else params.get(key),
             render_func=renderer,
             label=label,
+            notice_only=notice_only,
         )
 
     yield from _scoreboard_results(data)

@@ -50,7 +50,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.page_menu import (
@@ -61,6 +61,7 @@ from cmk.gui.page_menu import (
     make_simple_link,
     make_simple_form_page_menu,
 )
+from cmk.gui.utils.urls import makeuri_contextless
 
 #.
 #   .--Config--------------------------------------------------------------.
@@ -418,10 +419,14 @@ class Jobs(BackupEntityCollection):
                 delete_url = html.makeactionuri_contextless([("mode", "backup"),
                                                              ("_action", "delete"),
                                                              ("_job", job_ident)])
-                edit_url = html.makeuri_contextless([("mode", "edit_backup_job"),
-                                                     ("job", job_ident)])
-                state_url = html.makeuri_contextless([("mode", "backup_job_state"),
-                                                      ("job", job_ident)])
+                edit_url = makeuri_contextless(
+                    request,
+                    [("mode", "edit_backup_job"), ("job", job_ident)],
+                )
+                state_url = makeuri_contextless(
+                    request,
+                    [("mode", "backup_job_state"), ("job", job_ident)],
+                )
 
                 state = job.state()
 
@@ -564,7 +569,7 @@ class PageBackup:
                                     title=_("Restore"),
                                     icon_name="backup_restore",
                                     item=make_simple_link(
-                                        html.makeuri_contextless([("mode", "backup_restore")])),
+                                        makeuri_contextless(request, [("mode", "backup_restore")])),
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
@@ -580,14 +585,14 @@ class PageBackup:
         yield PageMenuEntry(
             title=_("Backup targets"),
             icon_name="backup_targets",
-            item=make_simple_link(html.makeuri_contextless([("mode", "backup_targets")])),
+            item=make_simple_link(makeuri_contextless(request, [("mode", "backup_targets")])),
             is_shortcut=True,
             is_suggested=True,
         )
         yield PageMenuEntry(
             title=_("Backup encryption keys"),
             icon_name="backup_key",
-            item=make_simple_link(html.makeuri_contextless([("mode", "backup_keys")])),
+            item=make_simple_link(makeuri_contextless(request, [("mode", "backup_keys")])),
             is_shortcut=True,
             is_suggested=True,
         )
@@ -596,7 +601,7 @@ class PageBackup:
             yield PageMenuEntry(
                 title=_("Add job"),
                 icon_name="backup_job_new",
-                item=make_simple_link(html.makeuri_contextless([("mode", "edit_backup_job")])),
+                item=make_simple_link(makeuri_contextless(request, [("mode", "edit_backup_job")])),
                 is_shortcut=True,
                 is_suggested=True,
             )
@@ -831,7 +836,7 @@ class PageEditBackupJob:
                 job.from_config(self._job_cfg)
 
             jobs.save()
-        raise HTTPRedirect(html.makeuri_contextless([("mode", "backup")]))
+        raise HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
 
     def page(self):
         html.begin_form("edit_job", method="POST")
@@ -1049,16 +1054,20 @@ class Targets(BackupEntityCollection):
             for target_ident, target in sorted(self.objects.items()):
                 table.row()
                 table.cell(_("Actions"), css="buttons")
-                restore_url = html.makeuri_contextless([("mode", "backup_restore"),
-                                                        ("target", target_ident)])
+                restore_url = makeuri_contextless(
+                    request,
+                    [("mode", "backup_restore"), ("target", target_ident)],
+                )
                 html.icon_button(restore_url, _("Restore from this backup target"),
                                  "backup_restore")
 
                 if editable:
                     delete_url = html.makeactionuri_contextless([("mode", "backup_targets"),
                                                                  ("target", target_ident)])
-                    edit_url = html.makeuri_contextless([("mode", "edit_backup_target"),
-                                                         ("target", target_ident)])
+                    edit_url = makeuri_contextless(
+                        request,
+                        [("mode", "edit_backup_target"), ("target", target_ident)],
+                    )
 
                     html.icon_button(edit_url, _("Edit this backup target"), "edit")
                     html.icon_button(delete_url, _("Delete this backup target"), "delete")
@@ -1101,7 +1110,10 @@ class PageBackupTargets:
                                     title=_("Add target"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        html.makeuri_contextless([("mode", "edit_backup_target")])),
+                                        makeuri_contextless(
+                                            request,
+                                            [("mode", "edit_backup_target")],
+                                        )),
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
@@ -1247,7 +1259,7 @@ class PageEditBackupTarget:
                 target.from_config(self._target_cfg)
 
             targets.save()
-        raise HTTPRedirect(html.makeuri_contextless([("mode", "backup_targets")]))
+        raise HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
     def page(self):
         html.begin_form("edit_target", method="POST")

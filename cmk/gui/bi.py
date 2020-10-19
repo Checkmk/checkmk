@@ -18,7 +18,7 @@ import cmk.gui.utils
 import cmk.gui.view_utils
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import html, g
+from cmk.gui.globals import html, g, request
 from cmk.gui.htmllib import HTML, HTMLContent
 from cmk.gui.permissions import (
     permission_section_registry,
@@ -26,6 +26,7 @@ from cmk.gui.permissions import (
     permission_registry,
     Permission,
 )
+from cmk.gui.utils.urls import makeuri_contextless
 
 from cmk.utils.bi.bi_packs import BIAggregationPacks
 from cmk.utils.bi.bi_data_fetcher import BIStatusFetcher
@@ -420,14 +421,18 @@ class ABCFoldableTreeRenderer(metaclass=abc.ABCMeta):
         # (4) CPU load                  (show_host == False, service is not None)
 
         if show_host or not service:
-            host_url = html.makeuri_contextless([("view_name", "hoststatus"), ("site", site),
-                                                 ("host", host)],
-                                                filename="view.py")
+            host_url = makeuri_contextless(
+                request,
+                [("view_name", "hoststatus"), ("site", site), ("host", host)],
+                filename="view.py",
+            )
 
         if service:
-            service_url = html.makeuri_contextless([("view_name", "service"), ("site", site),
-                                                    ("host", host), ("service", service)],
-                                                   filename="view.py")
+            service_url = makeuri_contextless(
+                request,
+                [("view_name", "service"), ("site", site), ("host", host), ("service", service)],
+                filename="view.py",
+            )
 
         with self._show_node(tree, show_host):
             self._assume_icon(site, host, service)

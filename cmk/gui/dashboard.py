@@ -33,7 +33,7 @@ from cmk.gui.valuespec import ValueSpec, ValueSpecValidateFunc, DictionaryEntry
 import cmk.gui.i18n
 from cmk.gui.i18n import _u, _
 from cmk.gui.log import logger
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.views import ABCAjaxInitialFilters
@@ -94,6 +94,8 @@ from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=un
     DashletId,
 )
 from cmk.gui.node_visualization import get_topology_view_and_filters
+
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 loaded_with_language: Union[None, bool, str] = False
 
@@ -793,7 +795,7 @@ def _dashboard_edit_entries(name: DashboardName, board: DashboardConfig,
         yield PageMenuEntry(
             title=_("Edit dashboard"),
             icon_name="edit",
-            item=make_simple_link(html.makeuri([("edit", 1)])),
+            item=make_simple_link(makeuri(request, [("edit", 1)])),
         )
         return
 
@@ -809,10 +811,11 @@ def _dashboard_edit_entries(name: DashboardName, board: DashboardConfig,
         title=_("Properties"),
         icon_name="properties",
         item=make_simple_link(
-            html.makeuri_contextless(
+            makeuri_contextless(
+                request,
                 [
                     ("load_name", name),
-                    ("back", html.urlencode(html.makeuri([]))),
+                    ("back", html.urlencode(makeuri(request, []))),
                 ],
                 filename="edit_dashboard.py",
             )),
@@ -869,7 +872,7 @@ def _dashboard_add_dashlet_entries(name: DashboardName, board: DashboardConfig,
         icon_name="dashlet_view",
         item=make_simple_link(
             'create_view_dashlet.py?name=%s&create=0&back=%s' %
-            (html.urlencode(name), html.urlencode(html.makeuri([('edit', '1')])))),
+            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
     )
 
     for ty, dashlet_type in sorted(dashlet_registry.items(), key=lambda x: x[1].sort_index()):
@@ -1180,7 +1183,11 @@ def page_create_view_dashlet() -> None:
 
     if create:
         import cmk.gui.views as views  # pylint: disable=import-outside-toplevel
-        url = html.makeuri([('back', html.makeuri([]))], filename="create_view_dashlet_infos.py")
+        url = makeuri(
+            request,
+            [('back', makeuri(request, []))],
+            filename="create_view_dashlet_infos.py",
+        )
         views.show_create_view_dialog(next_url=url)
 
     else:
@@ -1205,16 +1212,19 @@ def page_create_view_dashlet_infos() -> None:
     # Create a new view by choosing the datasource and the single object types
     visuals.page_create_visual('views',
                                data_source_registry[ds_name]().infos,
-                               next_url=html.makeuri_contextless([
+                               next_url=makeuri_contextless(request, [
                                    ('name', html.request.var('name')),
                                    ('type', 'view'),
                                    ('datasource', ds_name),
-                                   ('back', html.makeuri([])),
+                                   ('back', makeuri(request, [])),
                                    ('next',
-                                    html.makeuri_contextless([('name', html.request.var('name')),
-                                                              ('edit', '1')], 'dashboard.py')),
+                                    makeuri_contextless(
+                                        request,
+                                        [('name', html.request.var('name')), ('edit', '1')],
+                                        'dashboard.py',
+                                    )),
                                ],
-                                                                 filename='edit_dashlet.py'))
+                                                            filename='edit_dashlet.py'))
 
 
 def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Callable) -> None:
@@ -1240,7 +1250,8 @@ def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Calla
             add_dashlet(dashlet_spec, dashboard)
 
             raise HTTPRedirect(
-                html.makeuri_contextless(
+                makeuri_contextless(
+                    request,
                     [
                         ("name", name),
                         ("id", str(dashlet_id)),

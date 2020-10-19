@@ -18,7 +18,7 @@ from cmk.gui.plugins.views.utils import (
 )
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger
@@ -30,6 +30,7 @@ from cmk.gui.plugins.views.utils import (
 )
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.page_menu import PageMenuEntry, PageMenuLink
+from cmk.gui.utils.urls import makeuri
 
 HeaderButton = Union[Tuple[str, str, str], Tuple[str, str, str, str]]
 Items = List[Tuple[str, str, str]]
@@ -125,7 +126,7 @@ def jqm_page_navfooter(items: NavigationBar, current: str, page_id: str) -> None
     html.open_ul()
 
     for href, title, icon, custom_css in items:
-        href = html.makeuri([("page", href), ("search", "Search")])
+        href = makeuri(request, [("page", href), ("search", "Search")])
         if current == href:
             custom_css += ' ui-state-persist ui-btn-active'
         else:
@@ -186,7 +187,7 @@ def page_login() -> None:
 
     html.begin_form("login", method='POST', add_transid=False)
     # Keep information about original target URL
-    default_origtarget = "index.py" if html.myfile in ["login", "logout"] else html.makeuri([])
+    default_origtarget = "index.py" if html.myfile in ["login", "logout"] else makeuri(request, [])
     origtarget = html.get_url_input("_origtarget", default_origtarget)
     html.hidden_field('_origtarget', escaping.escape_attribute(origtarget))
 

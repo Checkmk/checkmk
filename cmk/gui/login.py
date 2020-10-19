@@ -28,11 +28,13 @@ import cmk.gui.mobile
 from cmk.gui.http import Request
 from cmk.gui.pages import page_registry, Page
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, local
+from cmk.gui.globals import html, local, request as global_request
 from cmk.gui.htmllib import HTML
 from cmk.gui.breadcrumb import Breadcrumb
 
 from cmk.gui.exceptions import HTTPRedirect, MKInternalError, MKAuthException, MKUserError, FinalizeRequest
+
+from cmk.gui.utils.urls import makeuri
 
 auth_logger = logger.getChild("auth")
 
@@ -208,7 +210,7 @@ def _check_auth_cookie(cookie_name: str) -> Optional[UserId]:
         result = userdb.need_to_change_pw(username)
         if result:
             raise HTTPRedirect('user_change_pw.py?_origtarget=%s&reason=%s' %
-                               (html.urlencode(html.makeuri([])), result))
+                               (html.urlencode(makeuri(global_request, [])), result))
 
     # Return the authenticated username
     return username
@@ -453,7 +455,8 @@ class LoginPage(Page):
         html.add_body_css_class("login")
         html.header(config.get_page_heading(), Breadcrumb(), javascripts=[])
 
-        default_origtarget = "index.py" if html.myfile in ["login", "logout"] else html.makeuri([])
+        default_origtarget = ("index.py" if html.myfile in ["login", "logout"] else makeuri(
+            global_request, []))
         origtarget = html.get_url_input("_origtarget", default_origtarget)
 
         # Never allow the login page to be opened in the iframe. Redirect top page to login page.

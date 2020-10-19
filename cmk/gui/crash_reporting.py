@@ -25,7 +25,7 @@ import cmk.gui.pages
 import cmk.gui.i18n
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
 import cmk.gui.userdb as userdb
 from cmk.gui.log import logger
@@ -53,6 +53,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     make_simple_link,
 )
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 CrashReportStore = cmk.utils.crash_reporting.CrashReportStore
 CrashInfo = Dict
@@ -81,7 +82,8 @@ def show_crash_dump_message(crash: 'GUICrashReport', plain_text: bool, fail_sile
                      "Detailed information can be found on the crash report page "
                      "or in <tt>var/log/web.log</tt>.")
     else:
-        crash_url = html.makeuri(
+        crash_url = makeuri(
+            request,
             [
                 ("site", config.omd_site()),
                 ("crash_id", crash.ident_to_text()),
@@ -213,7 +215,11 @@ class PageCrash(ABCCrashReportPage):
         breadcrumb.append(
             BreadcrumbItem(
                 title=_("Crash reports"),
-                url=html.makeuri_contextless([("view_name", "crash_reports")], filename="view.py"),
+                url=makeuri_contextless(
+                    request,
+                    [("view_name", "crash_reports")],
+                    filename="view.py",
+                ),
             ))
 
         breadcrumb.append(make_current_page_breadcrumb_item(title))
@@ -234,7 +240,7 @@ class PageCrash(ABCCrashReportPage):
                                     title=_("Download"),
                                     icon_name="download",
                                     item=make_simple_link(
-                                        html.makeuri([], filename="download_crash_report.py")),
+                                        makeuri(request, [], filename="download_crash_report.py")),
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
@@ -297,7 +303,8 @@ class PageCrash(ABCCrashReportPage):
                   "checkmk_support_contract.html\" target=\"_blank\">our website</a>."))
             html.close_div()
             html.open_div(id_="fail_msg", style="display:none")
-            report_url = html.makeuri_contextless(
+            report_url = makeuri_contextless(
+                request,
                 [
                     ("subject", "Checkmk Crash Report - " + self._get_version()),
                 ],
@@ -482,7 +489,8 @@ class ReportRendererCheck(ABCReportRenderer):
         host = crash_info["details"]["host"]
         service = crash_info["details"]["description"]
 
-        host_url = html.makeuri(
+        host_url = makeuri(
+            request,
             [
                 ("view_name", "hoststatus"),
                 ("host", host),
@@ -496,7 +504,8 @@ class ReportRendererCheck(ABCReportRenderer):
             item=make_simple_link(host_url),
         )
 
-        service_url = html.makeuri(
+        service_url = makeuri(
+            request,
             [("view_name", "service"), ("host", host), ("service", service), (
                 "site",
                 site_id,

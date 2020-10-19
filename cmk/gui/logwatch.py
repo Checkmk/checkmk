@@ -17,7 +17,7 @@ import cmk.gui.config as config
 from cmk.gui.table import table_element
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
@@ -33,6 +33,7 @@ from cmk.gui.page_menu import (
     make_simple_link,
     make_display_options_dropdown,
 )
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 #   .--HTML Output---------------------------------------------------------.
 #   |     _   _ _____ __  __ _        ___        _               _         |
@@ -88,7 +89,11 @@ def show_log_list():
         if all_logs_empty:
             continue  # Logfile vanished
 
-        html.h2(html.render_a(host_name, href=html.makeuri([('site', site), ('host', host_name)])))
+        html.h2(
+            html.render_a(host_name, href=makeuri(
+                request,
+                [('site', site), ('host', host_name)],
+            )))
         list_logs(site, host_name, logs)
     html.footer()
 
@@ -117,8 +122,11 @@ def _log_list_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
                                 title=_("Analyze patterns"),
                                 icon_name="analyze",
                                 item=make_simple_link(
-                                    html.makeuri_contextless([("mode", "pattern_editor")],
-                                                             filename="wato.py")),
+                                    makeuri_contextless(
+                                        request,
+                                        [("mode", "pattern_editor")],
+                                        filename="wato.py",
+                                    )),
                             ),
                         ],
                     ),
@@ -130,12 +138,16 @@ def _log_list_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
 
 
 def services_url(site, host_name):
-    return html.makeuri_contextless([("view_name", "host"), ("site", site), ("host", host_name)],
-                                    filename="view.py")
+    return makeuri_contextless(
+        request,
+        [("view_name", "host"), ("site", site), ("host", host_name)],
+        filename="view.py",
+    )
 
 
 def analyse_url(site, host_name, file_name='', match=''):
-    return html.makeuri_contextless(
+    return makeuri_contextless(
+        request,
         [
             ("mode", "pattern_editor"),
             ("site", site),
@@ -189,7 +201,10 @@ def _host_log_list_page_menu(breadcrumb: Breadcrumb, site_id: config.SiteId,
                                 title=_("All log files"),
                                 icon_name="logwatch",
                                 item=make_simple_link(
-                                    html.makeuri([('site', ''), ('host', ''), ('file', '')])),
+                                    makeuri(
+                                        request,
+                                        [('site', ''), ('host', ''), ('file', '')],
+                                    )),
                             ),
                         ],
                     ),
@@ -233,7 +248,7 @@ def list_logs(site, host_name, logfile_names):
         for file_name in logfile_names:
             table.row()
             file_display = form_file_to_ext(file_name)
-            uri = html.makeuri([('site', site), ('host', host_name), ('file', file_display)])
+            uri = makeuri(request, [('site', site), ('host', host_name), ('file', file_display)])
             logfile_link = html.render_a(file_display, href=uri)
 
             try:
@@ -321,7 +336,7 @@ def _show_file_breadcrumb(host_name: HostName, title: str) -> Breadcrumb:
     breadcrumb.append(
         BreadcrumbItem(
             title=_("Log files of host %s") % host_name,
-            url=html.makeuri([('file', '')]),
+            url=makeuri(request, [('file', '')]),
         ))
     breadcrumb.append(make_current_page_breadcrumb_item(title))
     return breadcrumb
@@ -347,13 +362,13 @@ def _show_file_page_menu(breadcrumb: Breadcrumb, site_id: config.SiteId, host_na
                             PageMenuEntry(
                                 title=_("Log files of host %s" % host_name),
                                 icon_name="logwatch",
-                                item=make_simple_link(html.makeuri([('file', '')])),
+                                item=make_simple_link(makeuri(request, [('file', '')])),
                             ),
                             PageMenuEntry(
                                 title=_("All log files"),
                                 icon_name="logwatch",
                                 item=make_simple_link(
-                                    html.makeuri([('site', ''), ('host', ''), ('file', '')])),
+                                    makeuri(request, [('site', ''), ('host', ''), ('file', '')])),
                             ),
                         ],
                     ),
@@ -404,8 +419,8 @@ def _extend_display_dropdown(menu: PageMenu) -> None:
                     icon_name="trans",
                     item=PageMenuCheckbox(
                         is_checked=html.request.var('_hidecontext', 'no') == 'yes',
-                        check_url=html.makeuri([("_hidecontext", "yes")]),
-                        uncheck_url=html.makeuri([("_show_backlog", "no")]),
+                        check_url=makeuri(request, [("_hidecontext", "yes")]),
+                        uncheck_url=makeuri(request, [("_show_backlog", "no")]),
                     ),
                 ),
             ],

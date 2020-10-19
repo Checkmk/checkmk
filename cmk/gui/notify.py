@@ -19,7 +19,7 @@ import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.i18n
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.permissions import (
@@ -47,6 +47,7 @@ from cmk.gui.page_menu import (
     make_simple_form_page_menu,
 )
 from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.utils.urls import makeuri
 
 
 def get_gui_messages(user_id=None):
@@ -289,7 +290,7 @@ def _process_notify_message(msg):
     message += "</table>"
 
     message += _('<p>Sent notification to: %s</p>') % ', '.join(recipients)
-    message += '<a href="%s">%s</a>' % (html.makeuri([]), _('Back to previous page'))
+    message += '<a href="%s">%s</a>' % (makeuri(request, []), _('Back to previous page'))
     html.show_message(HTML(message))
 
     if errors:

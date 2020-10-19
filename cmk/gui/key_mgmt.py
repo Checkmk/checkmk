@@ -16,7 +16,7 @@ import cmk.utils.store as store
 from cmk.gui.table import table_element
 import cmk.gui.config as config
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.valuespec import (
     Dictionary,
     Password,
@@ -35,6 +35,7 @@ from cmk.gui.page_menu import (
     make_simple_link,
     make_simple_form_page_menu,
 )
+from cmk.gui.utils.urls import makeuri_contextless
 
 
 class KeypairStore:
@@ -110,7 +111,7 @@ class PageKeyManagement:
                                     title=_("Add key"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        html.makeuri_contextless([("mode", self.edit_mode)])),
+                                        makeuri_contextless(request, [("mode", self.edit_mode)])),
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
@@ -118,7 +119,7 @@ class PageKeyManagement:
                                     title=_("Upload key"),
                                     icon_name="upload",
                                     item=make_simple_link(
-                                        html.makeuri_contextless([("mode", self.upload_mode)])),
+                                        makeuri_contextless(request, [("mode", self.upload_mode)])),
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
@@ -182,8 +183,10 @@ class PageKeyManagement:
                 if self._may_edit_config():
                     delete_url = html.makeactionuri([("_delete", key_id)])
                     html.icon_button(delete_url, _("Delete this key"), "delete")
-                download_url = html.makeuri_contextless([("mode", self.download_mode),
-                                                         ("key", key_id)])
+                download_url = makeuri_contextless(
+                    request,
+                    [("mode", self.download_mode), ("key", key_id)],
+                )
                 html.icon_button(download_url, _("Download this key"), "download")
                 table.cell(_("Description"), html.render_text(key["alias"]))
                 table.cell(_("Created"), cmk.utils.render.date(key["date"]))

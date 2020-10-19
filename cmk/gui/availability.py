@@ -36,7 +36,8 @@ from cmk.gui.valuespec import (
     Timerange,
 )
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 AVMode = str  # TODO: Improve this type
 AVObjectType = str  # TODO: Improve this type
@@ -207,7 +208,8 @@ def get_av_display_options(what) -> AVOptionValueSpecs:
         ]
 
     if not cmk_version.is_raw_edition():
-        ruleset_search_url = html.makeuri_contextless(
+        ruleset_search_url = makeuri_contextless(
+            request,
             [
                 ("filled_in", "search"),
                 ("search", "long_output"),
@@ -1384,11 +1386,25 @@ def layout_availability_table(what: AVObjectType, group_title: _Optional[str],
         urls = []
         if "omit_buttons" not in labelling:
             if what != "bi":
-                timeline_url = html.makeuri([("av_mode", "timeline"), ("av_site", site),
-                                             ("av_host", host), ("av_service", service)])
+                timeline_url = makeuri(
+                    request,
+                    [
+                        ("av_mode", "timeline"),
+                        ("av_site", site),
+                        ("av_host", host),
+                        ("av_service", service),
+                    ],
+                )
             else:
-                timeline_url = html.makeuri([("av_mode", "timeline"), ("av_aggr_group", host),
-                                             ("aggr_name", service), ("view_name", "aggr_single")])
+                timeline_url = makeuri(
+                    request,
+                    [
+                        ("av_mode", "timeline"),
+                        ("av_aggr_group", host),
+                        ("aggr_name", service),
+                        ("view_name", "aggr_single"),
+                    ],
+                )
             urls.append(("timeline", _("Timeline"), timeline_url))
             if what != "bi":
                 urls.append(

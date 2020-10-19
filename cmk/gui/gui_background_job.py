@@ -17,7 +17,7 @@ import cmk.gui.config as config
 import cmk.gui.log as log
 import cmk.gui.background_job as background_job
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import g, html
+from cmk.gui.globals import g, html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.permissions import (
@@ -26,6 +26,7 @@ from cmk.gui.permissions import (
     permission_registry,
     Permission,
 )
+from cmk.gui.utils.urls import makeuri_contextless
 
 
 @permission_section_registry.register
@@ -213,7 +214,8 @@ class GUIBackgroundJob(GUIBackgroundJobSnapshottedFunctions):
 
     def detail_url(self):
         """Returns the URL that displays the job detail page"""
-        return html.makeuri_contextless(
+        return makeuri_contextless(
+            request,
             [
                 ("mode", "background_job_details"),
                 ("job_id", self.get_job_id()),
@@ -512,9 +514,15 @@ class JobRenderer:
 
         # Job ID
         html.open_td(css="job_id")
-        uri = html.makeuri_contextless([("mode", "background_job_details"),
-                                        ("back_url", job_details_back_url), ("job_id", job_id)],
-                                       filename="wato.py")
+        uri = makeuri_contextless(
+            request,
+            [
+                ("mode", "background_job_details"),
+                ("back_url", job_details_back_url),
+                ("job_id", job_id),
+            ],
+            filename="wato.py",
+        )
         html.a(job_id, href=uri)
         html.close_td()
 

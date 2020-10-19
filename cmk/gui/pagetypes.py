@@ -46,7 +46,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry
 from cmk.gui.i18n import _l, _u, _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.page_menu import (
     PageMenu,
@@ -81,6 +81,8 @@ from cmk.gui.type_defs import (
     TopicMenuItem,
 )
 from cmk.gui.main_menu import mega_menu_registry
+
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 SubPagesSpec = _Optional[List[Tuple[str, str, str]]]
 
@@ -449,8 +451,11 @@ class PageRenderer(Base):
         return self.phrase("title") + " - " + self.title()
 
     def page_url(self):
-        return html.makeuri_contextless([(self.ident_attr(), self.name())],
-                                        filename="%s.py" % self.type_name())
+        return makeuri_contextless(
+            request,
+            [(self.ident_attr(), self.name())],
+            filename="%s.py" % self.type_name(),
+        )
 
     def render_title(self):
         if self._can_be_linked():
@@ -631,7 +636,7 @@ class Overridable(Base):
         return "edit_%s.py?load_name=%s%s" % (self.type_name(), self.name(), owner)
 
     def clone_url(self):
-        backurl = html.urlencode(html.makeuri([]))
+        backurl = html.urlencode(makeuri(request, []))
         return "edit_%s.py?load_user=%s&load_name=%s&mode=clone&back=%s" \
                     % (self.type_name(), self.owner(), self.name(), backurl)
 
@@ -943,7 +948,7 @@ class Overridable(Base):
         if page_name == "list":  # The list is the parent of all others
             return breadcrumb
 
-        breadcrumb.append(BreadcrumbItem(title=title, url=html.makeuri([])))
+        breadcrumb.append(BreadcrumbItem(title=title, url=makeuri(request, [])))
         return breadcrumb
 
     @classmethod
@@ -1471,8 +1476,11 @@ def _page_menu_entries_sub_pages(mode: str, sub_pages: SubPagesSpec, ident_attr_
             title=title,
             icon_name=icon,
             item=make_simple_link(
-                html.makeuri_contextless([(ident_attr_name, visualname)],
-                                         filename=pagename + '.py')),
+                makeuri_contextless(
+                    request,
+                    [(ident_attr_name, visualname)],
+                    filename=pagename + '.py',
+                )),
         )
 
 

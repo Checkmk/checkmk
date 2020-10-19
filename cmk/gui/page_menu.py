@@ -19,11 +19,12 @@ from dataclasses import dataclass, field
 from typing import List, Iterator, Optional, Dict, Union
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.popups import MethodInline
 from cmk.gui.type_defs import CSSSpec
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 
 def enable_page_menu_entry(name: str):
@@ -279,7 +280,7 @@ def make_display_options_dropdown() -> PageMenuDropdown:
                         title=_("This page without navigation"),
                         icon_name="frameurl",
                         item=PageMenuLink(Link(
-                            url=html.makeuri([]),
+                            url=makeuri(request, []),
                             target="_top",
                         )),
                     ),
@@ -288,8 +289,9 @@ def make_display_options_dropdown() -> PageMenuDropdown:
                         icon_name="pageurl",
                         item=PageMenuLink(
                             Link(
-                                url=html.makeuri_contextless(
-                                    [("start_url", html.makeuri([]))],
+                                url=makeuri_contextless(
+                                    request,
+                                    [("start_url", makeuri(request, []))],
                                     filename="index.py",
                                 ),
                                 target="_top",

@@ -10,7 +10,7 @@ from livestatus import lqencode
 from cmk.utils.render import date_and_time
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.visuals import get_filter_headers
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.plugins.dashboard import dashlet_registry
@@ -19,6 +19,7 @@ from cmk.gui.figures import ABCFigureDashlet
 from cmk.gui.utils.url_encoder import HTTPVariables
 from cmk.gui.exceptions import MKTimeout, MKGeneralException
 from cmk.gui.valuespec import Dictionary, DropdownChoice
+from cmk.gui.utils.urls import makeuri_contextless
 
 
 #   .--Base Classes--------------------------------------------------------.
@@ -120,7 +121,7 @@ class ABCEventBarChartDataGenerator(BarBarChartDataGenerator):
             for k, f in fil.items():
                 args.append((k, f))
 
-        return tooltip, html.makeuri_contextless(args, filename="view.py")
+        return tooltip, makeuri_contextless(request, args, filename="view.py")
 
 
 class ABCEventBarChartDashlet(ABCFigureDashlet):

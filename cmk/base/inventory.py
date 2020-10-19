@@ -9,7 +9,7 @@ while the inventory is performed for one host.
 In the future all inventory code should be moved to this module."""
 
 import os
-from typing import Dict, List, NamedTuple, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Sequence, Tuple
 from contextlib import suppress
 
 import cmk.utils.cleanup
@@ -304,9 +304,8 @@ def _do_inv_for_realhost(
     *,
     multi_host_sections: MultiHostSections,
 ) -> InventoryTrees:
-    inventory_tree = StructuredDataTree()
-    status_data_tree = StructuredDataTree()
-    _set_cluster_property(inventory_tree, host_config)
+    tree_aggregator = _TreeAggregator()
+    _set_cluster_property(tree_aggregator.trees.inventory, host_config)
 
     section.section_step("Executing inventory plugins")
     console.verbose("Plugins:")
@@ -327,18 +326,16 @@ def _do_inv_for_realhost(
             kwargs["params"] = host_config.inventory_parameters(
                 str(inventory_plugin.inventory_ruleset_name))  # TODO (mo): keep type!
 
-        _aggregate_inventory_results(
+        tree_aggregator.aggregate_results(
             inventory_plugin.inventory_function(**kwargs),
-            inventory_tree,
-            status_data_tree,
             inventory_plugin.name,
         )
 
     console.verbose("\n")
 
-    inventory_tree.normalize_nodes()
-    status_data_tree.normalize_nodes()
-    return InventoryTrees(inventory_tree, status_data_tree)
+    tree_aggregator.trees.inventory.normalize_nodes()
+    tree_aggregator.trees.status_data.normalize_nodes()
+    return tree_aggregator.trees
 
 
 def _set_cluster_property(
@@ -349,69 +346,74 @@ def _set_cluster_property(
         "software.applications.check_mk.cluster.")["is_cluster"] = host_config.is_cluster
 
 
-def _aggregate_inventory_results(
-    inventory_generator: InventoryResult,
-    inventory_tree: StructuredDataTree,
-    status_data_tree: StructuredDataTree,
-    plugin_name: InventoryPluginName,
-) -> None:
+class _TreeAggregator:
+    def __init__(self):
+        self.trees = InventoryTrees(
+            inventory=StructuredDataTree(),
+            status_data=StructuredDataTree(),
+        )
+        self._index_cache = {}
 
-    try:
-        inventory_items = list(inventory_generator)
-    except Exception as exc:
-        if cmk.utils.debug.enabled():
-            raise
-        console.warning(f"Error in inventory plugin {plugin_name}: {exc}")
-        return
+    def aggregate_results(
+        self,
+        inventory_generator: InventoryResult,
+        plugin_name: InventoryPluginName,
+    ) -> None:
 
-    for item in inventory_items:
-        if isinstance(item, Attributes):
-            _integrate_attributes(item, inventory_tree, status_data_tree)
-        elif isinstance(item, TableRow):
-            _integrate_table_row(item, inventory_tree, status_data_tree)
-        else:  # can't happen
-            raise NotImplementedError()
+        try:
+            inventory_items = list(inventory_generator)
+        except Exception as exc:
+            if cmk.utils.debug.enabled():
+                raise
+            console.warning(f"Error in inventory plugin {plugin_name}: {exc}")
+            return
 
+        for item in inventory_items:
+            if isinstance(item, Attributes):
+                self._integrate_attributes(item)
+            elif isinstance(item, TableRow):
+                self._integrate_table_row(item)
+            else:  # can't happen
+                raise NotImplementedError()
 
-def _integrate_attributes(
-    attributes: Attributes,
-    inventory_tree: StructuredDataTree,
-    status_data_tree: StructuredDataTree,
-) -> None:
+    def _integrate_attributes(
+        self,
+        attributes: Attributes,
+    ) -> None:
 
-    leg_path = ".".join(attributes.path) + "."
-    if attributes.inventory_attributes:
-        inventory_tree.get_dict(leg_path).update(attributes.inventory_attributes)
-    if attributes.status_attributes:
-        status_data_tree.get_dict(leg_path).update(attributes.status_attributes)
+        leg_path = ".".join(attributes.path) + "."
+        if attributes.inventory_attributes:
+            self.trees.inventory.get_dict(leg_path).update(attributes.inventory_attributes)
+        if attributes.status_attributes:
+            self.trees.status_data.get_dict(leg_path).update(attributes.status_attributes)
 
+    @staticmethod
+    def _make_row_key(key_columns: Mapping[str, Any],) -> Tuple[Any, ...]:
+        return tuple(v for k, v in sorted(key_columns.items()))
 
-def _integrate_table_row(
-    table_row: TableRow,
-    inventory_tree: StructuredDataTree,
-    status_data_tree: StructuredDataTree,
-) -> None:
-    def _find_matching_row_index(rows, key_columns):
-        for index, row in enumerate(rows):
-            if all(k in row and row[k] == v for k, v in key_columns.items()):
-                return index
-        return None
+    def _integrate_table_row(
+        self,
+        table_row: TableRow,
+    ) -> None:
+        leg_path = ".".join(table_row.path) + ":"
+        row_key = self._make_row_key(table_row.key_columns)
 
-    leg_path = ".".join(table_row.path) + ":"
+        inv_rows = self.trees.inventory.get_list(leg_path)
 
-    inv_rows = inventory_tree.get_list(leg_path)
-    idx = _find_matching_row_index(inv_rows, table_row.key_columns)
-    if idx is None:
-        inv_rows.append({**table_row.key_columns, **table_row.inventory_columns})
-    else:
-        inv_rows[idx].update(table_row.inventory_columns)
+        next_inv_idx = len(inv_rows)
+        inv_idx = self._index_cache.setdefault((leg_path, 'inv', row_key), next_inv_idx)
+        if inv_idx == next_inv_idx:
+            inv_rows.append({**table_row.key_columns, **table_row.inventory_columns})
+        else:
+            inv_rows[inv_idx].update(table_row.inventory_columns)
 
-    sd_rows = status_data_tree.get_list(leg_path)
-    idx = _find_matching_row_index(sd_rows, table_row.key_columns)
-    if idx is None:
-        sd_rows.append({**table_row.key_columns, **table_row.status_columns})
-    else:
-        sd_rows[idx].update(table_row.status_columns)
+        sd_rows = self.trees.status_data.get_list(leg_path)
+        next_sd_idx = len(sd_rows)
+        sd_idx = self._index_cache.setdefault((leg_path, 'sd', row_key), next_sd_idx)
+        if sd_idx == next_sd_idx:
+            sd_rows.append({**table_row.key_columns, **table_row.status_columns})
+        else:
+            sd_rows[sd_idx].update(table_row.status_columns)
 
 
 #.

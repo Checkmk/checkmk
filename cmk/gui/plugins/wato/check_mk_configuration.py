@@ -2511,10 +2511,9 @@ class ConfigVariableUseInlineSNMP(ConfigVariable):
               "should increase the performance of SNMP checks in a significant way. The inline "
               "SNMP mode is a feature which improves the performance for large installations and "
               "only available via our subscription."
-              "<b>Note:</b> This option is deprecated and has been replaced by"
-              "<a href='%s'>Choose SNMP Backend</a>. Changes to this option will have no effect"
-              "to the behaviour of Checkmk") %
-            "wato.py?mode=edit_ruleset&varname=snmp_backend_default",
+              "<b>Note:</b> This option is deprecated and has been replaced by "
+              "Choose SNMP Backend. Changes to this option will have no effect "
+              "to the behaviour of Checkmk"),
         )
 
 

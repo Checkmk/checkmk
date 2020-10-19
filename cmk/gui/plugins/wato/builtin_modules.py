@@ -324,7 +324,7 @@ class MainModuleNetworkingServices(MainModule):
 
     @property
     def title(self):
-        return _("Check networking services")
+        return _("HTTP, TCP, Email, ...")
 
     @property
     def icon(self):

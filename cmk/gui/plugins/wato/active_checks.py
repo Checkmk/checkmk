@@ -71,7 +71,7 @@ class RulespecGroupActiveChecks(RulespecGroup):
 
     @property
     def title(self):
-        return _("Check networking services")
+        return _("HTTP, TCP, Email, ...")
 
     @property
     def help(self):

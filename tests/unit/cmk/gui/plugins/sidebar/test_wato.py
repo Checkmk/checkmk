@@ -99,9 +99,9 @@ def expected_items() -> Dict[str, List[str]]:
         'services': [
             'wato.py?mode=rulesets&group=monconf',
             'wato.py?mode=rulesets&group=checkparams',
+            'wato.py?mode=rulesets&group=static',
             'wato.py?mode=rulesets&group=activechecks',
             'wato.py?mode=rulesets&group=custom_checks',
-            'wato.py?mode=rulesets&group=static',
             'service_groups',
             'check_plugins',
         ],

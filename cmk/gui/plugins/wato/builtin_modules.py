@@ -385,41 +385,6 @@ class MainModuleIntegrateNagiosPlugins(MainModule):
 
 
 @main_module_registry.register
-class MainModuleStaticChecks(MainModule):
-    @property
-    def mode_or_url(self):
-        return "wato.py?mode=rulesets&group=static"
-
-    @property
-    def topic(self):
-        return MainModuleTopicServices
-
-    @property
-    def title(self):
-        return _("Manual services")
-
-    @property
-    def icon(self):
-        return "static_checks"
-
-    @property
-    def permission(self):
-        return "rulesets"
-
-    @property
-    def description(self):
-        return _("Configure fixed checks without using service discovery")
-
-    @property
-    def sort_index(self):
-        return 50
-
-    @property
-    def is_show_more(self):
-        return True
-
-
-@main_module_registry.register
 class MainModuleCheckPlugins(MainModule):
     @property
     def mode_or_url(self):
@@ -1160,6 +1125,41 @@ class MainModuleDiscoveryRules(MainModule):
     @property
     def is_show_more(self):
         return False
+
+
+@main_module_registry.register
+class MainModuleEnforcedServices(MainModule):
+    @property
+    def mode_or_url(self):
+        return "wato.py?mode=rulesets&group=static"
+
+    @property
+    def topic(self):
+        return MainModuleTopicServices
+
+    @property
+    def title(self):
+        return _("Enforced services")
+
+    @property
+    def icon(self):
+        return "static_checks"
+
+    @property
+    def permission(self):
+        return "rulesets"
+
+    @property
+    def description(self):
+        return _("Configure enforced checks without using service discovery")
+
+    @property
+    def sort_index(self):
+        return 25
+
+    @property
+    def is_show_more(self):
+        return True
 
 
 class MainModuleAgentsWindows(MainModule):

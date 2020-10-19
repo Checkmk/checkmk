@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import TextAscii
 from cmk.gui.plugins.wato import (
-    RulespecGroupManualChecksEnvironment,
+    RulespecGroupEnforcedServicesEnvironment,
     ManualCheckParameterRulespec,
     rulespec_registry,
 )
@@ -23,7 +23,7 @@ def _item_spec_temperature_auto():
 rulespec_registry.register(
     ManualCheckParameterRulespec(
         check_group_name="temperature_auto",
-        group=RulespecGroupManualChecksEnvironment,
+        group=RulespecGroupEnforcedServicesEnvironment,
         is_deprecated=True,
         item_spec=_item_spec_temperature_auto,
         title=lambda: _("Temperature sensors with builtin levels"),

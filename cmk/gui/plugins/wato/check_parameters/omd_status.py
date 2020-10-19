@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import TextAscii
 from cmk.gui.plugins.wato import (
-    RulespecGroupManualChecksApplications,
+    RulespecGroupEnforcedServicesApplications,
     ManualCheckParameterRulespec,
     rulespec_registry,
 )
@@ -23,7 +23,7 @@ def _item_spec_omd_status():
 rulespec_registry.register(
     ManualCheckParameterRulespec(
         check_group_name="omd_status",
-        group=RulespecGroupManualChecksApplications,
+        group=RulespecGroupEnforcedServicesApplications,
         item_spec=_item_spec_omd_status,
         title=lambda: _("OMD site status"),
     ))

@@ -23,7 +23,7 @@ from cmk.gui.watolib.rulespecs import (
     HostRulespec,
     rulespec_registry,
     CheckTypeGroupSelection,
-    RulespecGroupManualChecks,
+    RulespecGroupEnforcedServices,
     ManualCheckParameterRulespec,
 )
 from cmk.gui.valuespec import (
@@ -1560,7 +1560,7 @@ def test_legacy_register_rule_attributes(monkeypatch):
 @pytest.fixture(name="patch_rulespec_registries")
 def fixture_patch_rulespec_registries(monkeypatch):
     group_registry = watolib.RulespecGroupRegistry()
-    group_registry.register(RulespecGroupManualChecks)
+    group_registry.register(RulespecGroupEnforcedServices)
     test_rulespec_registry = RulespecRegistry(group_registry)
     monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry", group_registry)
     monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_registry", test_rulespec_registry)

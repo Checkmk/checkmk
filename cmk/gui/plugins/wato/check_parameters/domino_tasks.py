@@ -16,7 +16,7 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.plugins.wato import (
-    RulespecGroupManualChecksApplications,
+    RulespecGroupEnforcedServicesApplications,
     RulespecGroupCheckParametersDiscovery,
     rulespec_registry,
     HostRulespec,
@@ -215,7 +215,7 @@ def _parameter_valuespec_domino_tasks():
 rulespec_registry.register(
     ManualCheckParameterRulespec(
         check_group_name="domino_tasks",
-        group=RulespecGroupManualChecksApplications,
+        group=RulespecGroupEnforcedServicesApplications,
         item_spec=_item_spec_domino_tasks,
         parameter_valuespec=_parameter_valuespec_domino_tasks,
         title=lambda: _("Lotus Domino Tasks"),

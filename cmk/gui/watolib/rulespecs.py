@@ -176,14 +176,14 @@ rulespec_group_registry = RulespecGroupRegistry()
 
 
 @rulespec_group_registry.register
-class RulespecGroupManualChecks(RulespecGroup):
+class RulespecGroupEnforcedServices(RulespecGroup):
     @property
     def name(self):
         return "static"
 
     @property
     def title(self):
-        return _("Manual services")
+        return _("Enforced services")
 
     @property
     def help(self):
@@ -195,10 +195,10 @@ class RulespecGroupManualChecks(RulespecGroup):
 
 
 @rulespec_group_registry.register
-class RulespecGroupManualChecksNetworking(RulespecSubGroup):
+class RulespecGroupEnforcedServicesNetworking(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupManualChecks
+        return RulespecGroupEnforcedServices
 
     @property
     def sub_group_name(self):
@@ -210,10 +210,10 @@ class RulespecGroupManualChecksNetworking(RulespecSubGroup):
 
 
 @rulespec_group_registry.register
-class RulespecGroupManualChecksApplications(RulespecSubGroup):
+class RulespecGroupEnforcedServicesApplications(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupManualChecks
+        return RulespecGroupEnforcedServices
 
     @property
     def sub_group_name(self):
@@ -225,10 +225,10 @@ class RulespecGroupManualChecksApplications(RulespecSubGroup):
 
 
 @rulespec_group_registry.register
-class RulespecGroupManualChecksEnvironment(RulespecSubGroup):
+class RulespecGroupEnforcedServicesEnvironment(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupManualChecks
+        return RulespecGroupEnforcedServices
 
     @property
     def sub_group_name(self):
@@ -240,10 +240,10 @@ class RulespecGroupManualChecksEnvironment(RulespecSubGroup):
 
 
 @rulespec_group_registry.register
-class RulespecGroupManualChecksOperatingSystem(RulespecSubGroup):
+class RulespecGroupEnforcedServicesOperatingSystem(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupManualChecks
+        return RulespecGroupEnforcedServices
 
     @property
     def sub_group_name(self):
@@ -255,10 +255,10 @@ class RulespecGroupManualChecksOperatingSystem(RulespecSubGroup):
 
 
 @rulespec_group_registry.register
-class RulespecGroupManualChecksHardware(RulespecSubGroup):
+class RulespecGroupEnforcedServicesHardware(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupManualChecks
+        return RulespecGroupEnforcedServices
 
     @property
     def sub_group_name(self):
@@ -270,10 +270,10 @@ class RulespecGroupManualChecksHardware(RulespecSubGroup):
 
 
 @rulespec_group_registry.register
-class RulespecGroupManualChecksStorage(RulespecSubGroup):
+class RulespecGroupEnforcedServicesStorage(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupManualChecks
+        return RulespecGroupEnforcedServices
 
     @property
     def sub_group_name(self):
@@ -285,10 +285,10 @@ class RulespecGroupManualChecksStorage(RulespecSubGroup):
 
 
 @rulespec_group_registry.register
-class RulespecGroupManualChecksVirtualization(RulespecSubGroup):
+class RulespecGroupEnforcedServicesVirtualization(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupManualChecks
+        return RulespecGroupEnforcedServices
 
     @property
     def sub_group_name(self):

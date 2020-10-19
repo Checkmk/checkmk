@@ -65,11 +65,12 @@ from cmk.gui.groups import (
 from cmk.gui.watolib.rulespecs import (  # noqa: F401 # pylint: disable=unused-import
     BinaryHostRulespec, BinaryServiceRulespec, CheckParameterRulespecWithItem,
     CheckParameterRulespecWithoutItem, HostRulespec, ManualCheckParameterRulespec, Rulespec,
-    RulespecGroup, RulespecGroupManualChecksApplications, RulespecGroupManualChecksEnvironment,
-    RulespecGroupManualChecksHardware, RulespecGroupManualChecksNetworking,
-    RulespecGroupManualChecksOperatingSystem, RulespecGroupManualChecksStorage,
-    RulespecGroupManualChecksVirtualization, RulespecSubGroup, ServiceRulespec, TimeperiodValuespec,
-    rulespec_group_registry, rulespec_registry,
+    RulespecGroup, RulespecGroupEnforcedServicesApplications,
+    RulespecGroupEnforcedServicesEnvironment, RulespecGroupEnforcedServicesHardware,
+    RulespecGroupEnforcedServicesNetworking, RulespecGroupEnforcedServicesOperatingSystem,
+    RulespecGroupEnforcedServicesStorage, RulespecGroupEnforcedServicesVirtualization,
+    RulespecSubGroup, ServiceRulespec, TimeperiodValuespec, rulespec_group_registry,
+    rulespec_registry,
 )
 from cmk.gui.watolib.host_attributes import (  # noqa: F401 # pylint: disable=unused-import
     ABCHostAttributeNagiosText, ABCHostAttributeValueSpec, HostAttributeTopicAddress,

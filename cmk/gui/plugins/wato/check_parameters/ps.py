@@ -32,7 +32,7 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.plugins.wato import (
-    RulespecGroupManualChecksApplications,
+    RulespecGroupEnforcedServicesApplications,
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
     UserIconOrAction,
@@ -509,7 +509,7 @@ def _manual_parameter_valuespec_ps():
 rulespec_registry.register(
     ManualCheckParameterRulespec(
         check_group_name="ps",
-        group=RulespecGroupManualChecksApplications,
+        group=RulespecGroupEnforcedServicesApplications,
         item_spec=_manual_item_spec_ps,
         parameter_valuespec=_manual_parameter_valuespec_ps,
         title=lambda: _("State and count of processes"),
@@ -855,7 +855,7 @@ def _manual_parameter_valuespec_hr_ps():
 rulespec_registry.register(
     ManualCheckParameterRulespec(
         check_group_name="hr_ps",
-        group=RulespecGroupManualChecksApplications,
+        group=RulespecGroupEnforcedServicesApplications,
         item_spec=_manual_item_spec_hr_ps,
         parameter_valuespec=_manual_parameter_valuespec_hr_ps,
         title=lambda: _("State and count of processes (only SNMP)"),

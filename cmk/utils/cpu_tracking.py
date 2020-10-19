@@ -9,8 +9,9 @@ import functools
 import os
 import posix
 import time
+from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Iterable, Iterator, List, Tuple
+from typing import Any, Callable, DefaultDict, Dict, Iterable, Iterator, List, Tuple
 
 from cmk.utils.log import console
 
@@ -70,7 +71,7 @@ class Snapshot:
         )
 
 
-times: Dict[str, Snapshot] = {}
+times: DefaultDict[str, Snapshot] = defaultdict(Snapshot.null)
 last_time_snapshot: Snapshot = Snapshot.null()
 phase_stack: List[str] = []
 
@@ -81,7 +82,7 @@ def reset():
     global times
     global last_time_snapshot
     global phase_stack
-    times = {}
+    times.clear()
     last_time_snapshot = Snapshot.null()
     phase_stack = []
 
@@ -89,7 +90,7 @@ def reset():
 def start(initial_phase: str) -> None:
     global times, last_time_snapshot
     console.vverbose("[cpu_tracking] Start with phase '%s'\n" % initial_phase)
-    times = {}
+    times.clear()
     last_time_snapshot = Snapshot.take()
 
     del phase_stack[:]
@@ -132,8 +133,7 @@ def _add_times_to_phase() -> None:
     global last_time_snapshot
     new_time_snapshot = Snapshot.take()
     for phase_name in phase_stack[-1], "TOTAL":
-        phase_times = times.get(phase_name, Snapshot.null())
-        times[phase_name] = phase_times + new_time_snapshot - last_time_snapshot
+        times[phase_name] += new_time_snapshot - last_time_snapshot
     last_time_snapshot = new_time_snapshot
 
 
@@ -152,10 +152,7 @@ def track(method: Callable) -> Callable:
 
 def update(cpu_times: Dict[str, Snapshot]):
     for name, value_list in cpu_times.items():
-        if name in times:
-            times[name] += value_list
-        else:
-            times[name] = value_list
+        times[name] += value_list
 
 
 @contextlib.contextmanager

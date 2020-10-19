@@ -59,25 +59,31 @@ def heartbeat_crm_parse_general(info):
     num_resources = None
     for line in info:
         line_txt = ' '.join(line)
+        title = line_txt.split(':', 1)[0]
 
-        if line_txt.startswith("Last updated:"):
+        if title == "Last updated":
             if "Last change:" in line_txt:
                 # Some versions seem to combine both lines
                 last_updated = line_txt[:line_txt.index("Last change:")].split(": ")[1].strip()
             else:
                 last_updated = ' '.join(line[2:])
+            continue
 
-        elif line_txt.startswith('Current DC:'):
+        if title == 'Current DC':
             dc = line[2]
+            continue
 
-        elif "nodes and" in line_txt and "resources configured" in line_txt:
+        if "nodes and" in line_txt and "resources configured" in line_txt:
             # Some versions put number of nodes and resources in one line
             num_nodes = int(line[0])
             num_resources = int(line[3])
+            continue
 
-        elif ' '.join(line[1:3]).rstrip('.,').lower() == 'nodes configured':
+        if 'nodes configured' in line_txt.lower():
             num_nodes = int(line[0])
-        elif ' '.join(line[1:3]).rstrip('.,').lower() == 'resources configured':
+            continue
+
+        if 'resources configured' in line_txt.lower():
             num_resources = int(line[0])
 
     return last_updated, dc, num_nodes, num_resources

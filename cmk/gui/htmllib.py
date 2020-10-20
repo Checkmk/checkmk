@@ -122,8 +122,9 @@ class Escaper(object):
         super(Escaper, self).__init__()
         self._unescaper_text = re.compile(
             r'&lt;(/?)(h1|h2|b|tt|i|u|br(?: /)?|nobr(?: /)?|pre|a|sup|p|li|ul|ol)&gt;')
-        self._quote = re.compile(r"(?:&quot;|&#x27;)")
-        self._a_href = re.compile(r'&lt;a href=((?:&quot;|&#x27;).*?(?:&quot;|&#x27;))&gt;')
+        self._a_href = re.compile(
+            r'&lt;a href=(?:(?:&quot;|&#x27;)(.*?)(?:&quot;|&#x27;))(?: target=(?:(?:&quot;|&#x27;)(.*?)(?:&quot;|&#x27;)))?&gt;'
+        )
 
     # Encode HTML attributes. Replace HTML syntax with HTML text.
     # For example: replace '"' with '&quot;', '<' with '&lt;'.
@@ -161,8 +162,15 @@ class Escaper(object):
         text = self.escape_attribute(text)
         text = self._unescaper_text.sub(r'<\1\2>', text)
         for a_href in self._a_href.finditer(text):
-            text = text.replace(a_href.group(0),
-                                "<a href=%s>" % self._quote.sub("\"", a_href.group(1)))
+            href = a_href.group(1)
+            target = a_href.group(2)
+
+            if target:
+                unescaped_tag = "<a href=\"%s\" target=\"%s\">" % (href, target)
+            else:
+                unescaped_tag = "<a href=\"%s\">" % href
+
+            text = text.replace(a_href.group(0), unescaped_tag)
         return text.replace("&amp;nbsp;", "&nbsp;")
 
 

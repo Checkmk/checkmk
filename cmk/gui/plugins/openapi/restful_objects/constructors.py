@@ -9,7 +9,6 @@ import re
 from typing import Any, Dict, List, Optional, Union
 from urllib.parse import quote
 
-from connexion import ProblemException  # type: ignore[import]
 from werkzeug.datastructures import ETags
 
 from cmk.gui.globals import request
@@ -27,6 +26,7 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     ResultType,
     Serializable,
 )
+from cmk.gui.plugins.openapi.utils import ProblemException
 
 
 def link_rel(

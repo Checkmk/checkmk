@@ -7,7 +7,6 @@ import logging
 import urllib.parse
 from typing import Dict, Type
 
-from connexion import ProblemException  # type: ignore[import]
 from werkzeug.exceptions import HTTPException
 
 from werkzeug.routing import Map, Submount
@@ -15,7 +14,7 @@ from werkzeug.routing import Map, Submount
 from cmk.gui import config
 from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.openapi import ENDPOINT_REGISTRY
-from cmk.gui.plugins.openapi.utils import problem
+from cmk.gui.plugins.openapi.utils import problem, ProblemException
 from cmk.gui.wsgi.auth import verify_user, bearer_auth
 from cmk.gui.wsgi.middleware import with_context_middleware, OverrideRequestMethod
 from cmk.gui.wsgi.wrappers import ParameterDict
@@ -96,19 +95,13 @@ class CheckmkRESTAPI:
             with verify_user(rfc7662['sub'], rfc7662):
                 wsgi_app = func(ParameterDict(path_args))
                 return wsgi_app(environ, start_response)
+        except ProblemException as exc:
+            # ProblemException is derived from HTTPException, so we have to catch it first.
+            return exc.to_problem()(environ, start_response)
         except HTTPException as e:
             # We don't want to log explicit HTTPExceptions as these are intentional.
             # HTTPExceptions are WSGI apps
             return e(environ, start_response)
-        except ProblemException as exc:
-            # FIXME: Replace connexion exceptions with our own.
-            return problem(
-                status=exc.status,
-                detail=exc.detail,
-                title=exc.title,
-                type_=exc.type,
-                ext=exc.ext,
-            )(environ, start_response)
         except MKException as exc:
             if self.debug:
                 raise

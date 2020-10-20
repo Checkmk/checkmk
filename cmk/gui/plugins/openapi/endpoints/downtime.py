@@ -10,8 +10,6 @@ import http.client
 import datetime as dt
 from typing import Dict, Literal
 
-from connexion import ProblemException  # type: ignore[import]
-
 from cmk.gui import config, sites
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi import fields
@@ -26,7 +24,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME, SERVICE_DESCRIPTION
-from cmk.gui.plugins.openapi.utils import problem
+from cmk.gui.plugins.openapi.utils import problem, ProblemException
 from cmk.gui.watolib.downtime import (
     execute_livestatus_command,
     remove_downtime_command,

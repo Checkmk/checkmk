@@ -6,7 +6,7 @@
 """Business intelligence"""
 
 import http
-from connexion import ProblemException  # type: ignore
+import http.client
 
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -14,6 +14,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     endpoint_schema,
     response_schemas,
 )
+from cmk.gui.plugins.openapi.utils import ProblemException
 
 from cmk.utils.bi.bi_lib import ReqString
 from cmk.utils.bi.bi_rule import BIRule, BIRuleSchema

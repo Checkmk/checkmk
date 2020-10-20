@@ -11,9 +11,8 @@ import json
 
 from typing import List, Dict, Any, Tuple
 
-from connexion import ProblemException  # type: ignore[import]
-
 from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
+from cmk.gui.plugins.openapi.utils import ProblemException
 from cmk.utils.type_defs import TimeperiodSpec
 from cmk.gui.http import Response
 

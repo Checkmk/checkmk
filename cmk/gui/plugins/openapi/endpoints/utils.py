@@ -8,12 +8,11 @@ import http.client
 
 from typing import Any, Dict, Literal, Sequence, List, Optional, Type
 
-from connexion import ProblemException  # type: ignore[import]
-
 from cmk.gui.http import Response
 from cmk.gui.groups import load_group_information, GroupSpecs, GroupSpec
 from cmk.gui.plugins.openapi.livestatus_helpers.types import Column, Table
 from cmk.gui.plugins.openapi.restful_objects import constructors
+from cmk.gui.plugins.openapi.utils import ProblemException
 from cmk.gui.watolib.groups import edit_group, GroupType
 
 

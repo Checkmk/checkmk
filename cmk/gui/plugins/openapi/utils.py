@@ -9,6 +9,7 @@ from typing import Literal, Optional, Dict, Any
 from marshmallow import Schema
 
 import docstring_parser  # type: ignore[import]
+from werkzeug.exceptions import HTTPException
 
 from cmk.gui.http import Response
 
@@ -39,6 +40,38 @@ def problem(
     response.set_content_type("application/problem+json")
     response.set_data(json.dumps(problem_dict))
     return response
+
+
+class ProblemException(HTTPException):
+    def __init__(
+        self,
+        status: int = 400,
+        title: str = "A problem occured.",
+        detail: Optional[str] = None,
+        type_: Optional[str] = None,
+        ext: Optional[Dict[str, Any]] = None,
+    ):
+        """
+        This exception is holds arguments that are going to be passed to the
+        `problem` function to generate a proper response.
+        """
+        super().__init__(description=title)
+        # These two are named as such for HTTPException compatibility.
+        self.code: int = status
+        self.description: str = title
+
+        self.detail = detail
+        self.type = type_
+        self.ext = ext
+
+    def to_problem(self):
+        return problem(
+            status=self.code,
+            title=self.description,
+            detail=self.detail,
+            type_=self.type,
+            ext=self.ext,
+        )
 
 
 class BaseSchema(Schema):

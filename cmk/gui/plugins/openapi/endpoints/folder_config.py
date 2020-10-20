@@ -6,8 +6,6 @@
 """Folders"""
 import http.client
 
-from connexion import ProblemException  # type: ignore[import]
-
 from cmk.gui import watolib
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
@@ -18,12 +16,12 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import IDENT_FIELD
+from cmk.gui.plugins.openapi.utils import ProblemException
 from cmk.gui.watolib import CREFolder
 from cmk.gui.wsgi.type_defs import DomainObject
 
 # TODO: Remove all hard-coded response creation in favour of a generic one
 # TODO: Implement formal description (GET endpoint) of move action
-# TODO: throw out connexion
 # TODO: add redoc.js
 
 

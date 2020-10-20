@@ -6,10 +6,7 @@
 """Decorators to expose API endpoints.
 
 Decorating a function with `endpoint_schema` will result in a change of the SPEC object,
-which then has to be dumped into the checkmk.yaml file for use by connexion and SwaggerUI.
-
-Response validation will be done in `endpoint_schema` itself. Response validation provided by
-connexion is disabled.
+which then has to be dumped into the checkmk.yaml file.
 
 """
 import dataclasses
@@ -256,11 +253,19 @@ class Endpoint:
 
         Args:
             request_schema:
-                Optionally, a request-schema which actually won't get used, as long as the `connexion`
-                library still does the input-validation.
+                Optionally, a schema to validate the JSON request body.
 
             response_schema:
-                Optionally, a response-schema, which *will* get validated if passed.
+                Optionally, a schema to validate the response body.
+
+            header_schema:
+                Optionally, as schema to validate the HTTP headers.
+
+            path_schema:
+                Optionally, as schema to validate the path template variables.
+
+            query_schema:
+                Optionally, as schema to validate the query string parameters.
 
         Returns:
             The wrapping function.

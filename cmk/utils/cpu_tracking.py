@@ -72,7 +72,7 @@ class Snapshot:
 
 
 times: DefaultDict[str, Snapshot] = defaultdict(Snapshot.null)
-last_time_snapshot: Snapshot = Snapshot.null()
+prev_snapshot: Snapshot = Snapshot.null()
 phase_stack: List[str] = []
 
 # TODO (sk) make private low level API: reset, start, end
@@ -80,18 +80,18 @@ phase_stack: List[str] = []
 
 def reset():
     global times
-    global last_time_snapshot
+    global prev_snapshot
     global phase_stack
     times.clear()
-    last_time_snapshot = Snapshot.null()
+    prev_snapshot = Snapshot.null()
     phase_stack.clear()
 
 
 def start(initial_phase: str) -> None:
-    global times, last_time_snapshot
+    global times, prev_snapshot
     console.vverbose("[cpu_tracking] Start with phase '%s'\n" % initial_phase)
     times.clear()
-    last_time_snapshot = Snapshot.take()
+    prev_snapshot = Snapshot.take()
 
     phase_stack[:] = [initial_phase]
 
@@ -129,11 +129,11 @@ def _is_not_tracking() -> bool:
 
 
 def _add_times_to_phase() -> None:
-    global last_time_snapshot
-    new_time_snapshot = Snapshot.take()
+    global prev_snapshot
+    snapshot = Snapshot.take()
     for phase_name in phase_stack[-1], "TOTAL":
-        times[phase_name] += new_time_snapshot - last_time_snapshot
-    last_time_snapshot = new_time_snapshot
+        times[phase_name] += snapshot - prev_snapshot
+    prev_snapshot = snapshot
 
 
 def track(method: Callable) -> Callable:

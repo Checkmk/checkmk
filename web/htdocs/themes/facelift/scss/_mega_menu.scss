@@ -83,6 +83,9 @@
       }
     }
 
+    /* NOTE: the actual height of the content has to be used here. Otherwise */
+    /* artifacts will appear at the bottom of the menu. height: max-content */
+    /* will not suffice, since we set the margin as well. */
     @mixin small-menu($height) {
       top: unset;
       height: $height;
@@ -94,22 +97,16 @@
 
       div.content.inner {
         height: inherit;
+        border-top: none;
       }
     }
 
     &.help_links > div.popup_menu {
-      @include small-menu(100px);
+      @include small-menu(106px);
     }
 
     &.user > div.popup_menu {
-      @include small-menu(150px);
-    }
-
-    &.help_links > div.popup_menu {
-      @include small-menu(100px);
-    }
-    &.user > div.popup_menu {
-      @include small-menu(240px);
+      @include small-menu(235px);
     }
 
     div.popup_menu {
@@ -120,7 +117,6 @@
       height: calc(100vh - #{$page-header-height});
       background-color: $base-color;
       border-right: $popup-border;
-      border-left: 1px solid $headline-color;
       visibility: hidden;
 
       a {

@@ -1,0 +1,10 @@
+Title: sap_hana_diskusage: Fix scaling of filesystem values in service graphs
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p19
+Date: 1603198700
+Class: fix
+
+

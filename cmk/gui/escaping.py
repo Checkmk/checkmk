@@ -7,6 +7,7 @@
 from html import escape as html_escape
 import re
 from typing import Union
+from urllib.parse import urlparse
 
 from six import ensure_str
 
@@ -113,6 +114,11 @@ def escape_text(text: EscapableEntity) -> str:
     text = _UNESCAPER_TEXT.sub(r'<\1\2>', text)
     for a_href in _A_HREF.finditer(text):
         href = a_href.group(1)
+
+        parsed = urlparse(href)
+        if parsed.scheme != "" and parsed.scheme not in ["http", "https"]:
+            continue  # Do not unescape links containing disallowed URLs
+
         target = a_href.group(2)
 
         if target:

@@ -16,7 +16,6 @@ import cmk.base.api.agent_based.checking_classes as checking_classes
 import cmk.base.api.agent_based.register.check_plugins_legacy as check_plugins_legacy
 from cmk.base.check_api_utils import Service as OldService
 import cmk.base.config as config
-from cmk.base.discovered_labels import HostLabel
 
 
 def dummy_generator(section):  # pylint: disable=unused-argument
@@ -88,14 +87,13 @@ def test_create_check_function():
             "check_function": insane_check,
             "service_description": "Foo %s",
         },
-        None,
     )
 
     fixed_params = inspect.signature(new_function).parameters
-    assert list(fixed_params) == ["item", "section"]
+    assert list(fixed_params) == ["item", "params", "section"]
     assert inspect.isgeneratorfunction(new_function)
 
-    results = new_function(item="Test Item", section=["info"])
+    results = new_function(item="Test Item", section=["info"], params={})
     # we cannot compare the actual Result objects because of
     # the nasty bypassing of validation in the legacy conversion
     assert [tuple(r) for r in results] == [
@@ -125,7 +123,7 @@ def test_create_check_plugin_from_legacy_wo_params():
     assert plugin.discovery_default_parameters is None
     assert plugin.discovery_ruleset_name is None
     assert plugin.check_function.__name__ == 'check_migration_wrapper'
-    assert plugin.check_default_parameters is None
+    assert plugin.check_default_parameters == {}
     assert plugin.check_ruleset_name is None
     assert plugin.cluster_check_function.__name__ == "cluster_legacy_mode_from_hell"
 

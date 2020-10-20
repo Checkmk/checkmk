@@ -20,8 +20,6 @@ from cmk.base.api.agent_based.type_defs import SectionPlugin
 
 ITEM_VARIABLE = "%s"
 
-DUMMY_RULESET_NAME = "non_existent_auto_migration_dummy_rule"
-
 
 def get_validated_plugin_module_name() -> Optional[str]:
     """Find out which module registered the plugin and make sure its in the right place"""
@@ -155,8 +153,7 @@ def validate_check_ruleset_item_consistency(
     Mixed checkgroups lead to strange exceptions when processing the check parameters.
     So it is much better to catch these errors in a central place with a clear error message.
     """
-    if (check_plugin.check_ruleset_name is None or
-            str(check_plugin.check_ruleset_name) == DUMMY_RULESET_NAME):
+    if check_plugin.check_ruleset_name is None:
         return
 
     present_check_plugins = check_plugins_by_ruleset_name[check_plugin.check_ruleset_name]

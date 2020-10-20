@@ -22,7 +22,6 @@ from cmk.base.api.agent_based.checking_classes import (
     State,
 )
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
-from cmk.base.api.agent_based.register.utils import DUMMY_RULESET_NAME
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_api_utils import Service as LegacyService  # pylint: disable=cmk-module-layer-violation
@@ -108,8 +107,7 @@ def _resolve_string_parameters(
                          (params_unresolved, check_name))
 
 
-def _create_check_function(name: str, check_info_dict: Dict[str, Any],
-                           ruleset_name: Optional[str]) -> Callable:
+def _create_check_function(name: str, check_info_dict: Dict[str, Any]) -> Callable:
     """Create an API compliant check function"""
     service_descr = check_info_dict["service_description"]
     if not isinstance(service_descr, str):
@@ -118,7 +116,6 @@ def _create_check_function(name: str, check_info_dict: Dict[str, Any],
     # 1) ensure we have the correct signature
     sig_function = _create_signature_check_function(
         requires_item="%s" in service_descr,
-        requires_params=ruleset_name is not None,
         original_function=check_info_dict["check_function"],
     )
 
@@ -126,14 +123,14 @@ def _create_check_function(name: str, check_info_dict: Dict[str, Any],
     @functools.wraps(sig_function)
     def check_result_generator(*args, **kwargs):
         assert not args, "pass arguments as keywords to check function"
-        if "params" in kwargs:
-            parameters = kwargs["params"]
-            if isinstance(parameters, Parameters):
-                # In the new API check_functions will be passed an immutable mapping
-                # instead of a dict. However, we have way too many 'if isinsance(params, dict)'
-                # call sites to introduce this into legacy code, so use the plain dict.
-                parameters = copy.deepcopy(parameters._data)
-            kwargs["params"] = unwrap_parameters(parameters)
+        assert "params" in kwargs, "'params' is missing in kwargs: %r" % (kwargs,)
+        parameters = kwargs["params"]
+        if isinstance(parameters, Parameters):
+            # In the new API check_functions will be passed an immutable mapping
+            # instead of a dict. However, we have way too many 'if isinsance(params, dict)'
+            # call sites to introduce this into legacy code, so use the plain dict.
+            parameters = copy.deepcopy(parameters._data)
+        kwargs["params"] = unwrap_parameters(parameters)
 
         item_state.reset_wrapped_counters()  # not supported by the new API!
 
@@ -228,28 +225,17 @@ def _create_new_result(
 
 def _create_signature_check_function(
     requires_item: bool,
-    requires_params: bool,
     original_function: Callable,
 ) -> Callable:
     """Create the function for a check function with the required signature"""
     if requires_item:
-        if requires_params:
 
-            def check_migration_wrapper(item, params, section):
-                return original_function(item, params, section)
-        else:
-            # suppress "All conditional function variants must have identical signatures"
-            def check_migration_wrapper(item, section):  # type: ignore[misc]
-                return original_function(item, {}, section)
+        def check_migration_wrapper(item, params, section):
+            return original_function(item, params, section)
     else:
-        if requires_params:
 
-            def check_migration_wrapper(params, section):  # type: ignore[misc]
-                return original_function(None, params, section)
-        else:
-
-            def check_migration_wrapper(section):  # type: ignore[misc]
-                return original_function(None, {}, section)
+        def check_migration_wrapper(params, section):  # type: ignore[misc]
+            return original_function(None, params, section)
 
     return check_migration_wrapper
 
@@ -259,7 +245,7 @@ def _create_wrapped_parameters(
     check_info_dict: Dict[str, Any],
     factory_settings: Dict[str, Dict],
     get_check_context: Callable,
-) -> Optional[Dict[str, Any]]:
+) -> Dict[str, Any]:
     """compute default parameters and wrap them in a dictionary"""
     default_parameters = get_default_parameters(
         check_info_dict,
@@ -267,7 +253,7 @@ def _create_wrapped_parameters(
         get_check_context(check_plugin_name),
     )
     if default_parameters is None:
-        return {} if check_info_dict.get("group") else None
+        return {}
 
     if isinstance(default_parameters, dict):
         return default_parameters
@@ -325,13 +311,9 @@ def create_check_plugin_from_legacy(
         get_check_context,
     )
 
-    check_ruleset_name = check_info_dict.get("group")
-    if check_ruleset_name is None and check_default_parameters is not None:
-        check_ruleset_name = DUMMY_RULESET_NAME
     check_function = _create_check_function(
         check_plugin_name,
         check_info_dict,
-        check_ruleset_name,
     )
 
     return create_check_plugin(
@@ -343,7 +325,7 @@ def create_check_plugin_from_legacy(
         discovery_ruleset_name=None,
         check_function=check_function,
         check_default_parameters=check_default_parameters,
-        check_ruleset_name=check_ruleset_name,
+        check_ruleset_name=check_info_dict.get("group"),
         cluster_check_function=_create_cluster_legacy_mode_from_hell(check_function),
         # Legacy check plugins may return an item even if the service description
         # does not contain a '%s'. In this case the old check API assumes an implicit,

@@ -93,9 +93,9 @@ def _start(initial_phase: str) -> None:
     phase_stack[:] = [initial_phase]
 
 
-def _end() -> None:
+def _end(phase_name: str) -> None:
     console.vverbose("[cpu_tracking] End\n")
-    _add_times_to_phase(Snapshot.take())
+    _add_times_to_phase(phase_name, Snapshot.take())
     phase_stack.clear()
 
 
@@ -104,16 +104,16 @@ def _push_phase(phase_name: str) -> None:
         return
 
     console.vverbose("[cpu_tracking] Push phase '%s' (Stack: %r)\n" % (phase_name, phase_stack))
-    _add_times_to_phase(Snapshot.take())
+    _add_times_to_phase(phase_stack[-1], Snapshot.take())
     phase_stack.append(phase_name)
 
 
-def _pop_phase() -> None:
+def _pop_phase(phase_name: str) -> None:
     if not is_tracking():
         return
 
     console.vverbose("[cpu_tracking] Pop phase '%s' (Stack: %r)\n" % (phase_stack[-1], phase_stack))
-    _add_times_to_phase(Snapshot.take())
+    _add_times_to_phase(phase_name, Snapshot.take())
     phase_stack.pop()
 
 
@@ -125,10 +125,10 @@ def is_tracking() -> bool:
     return bool(phase_stack)
 
 
-def _add_times_to_phase(snapshot: Snapshot) -> None:
+def _add_times_to_phase(phase_name: str, snapshot: Snapshot) -> None:
     global prev_snapshot
-    for phase_name in phase_stack[-1], "TOTAL":
-        times[phase_name] += snapshot - prev_snapshot
+    for pn in phase_name, "TOTAL":
+        times[pn] += snapshot - prev_snapshot
     prev_snapshot = snapshot
 
 
@@ -143,7 +143,7 @@ def phase(phase_name: str) -> Iterator[None]:
     try:
         yield
     finally:
-        _pop_phase()
+        _pop_phase(phase_name)
 
 
 @contextlib.contextmanager
@@ -153,4 +153,4 @@ def execute(name: str) -> Iterator[None]:
     try:
         yield
     finally:
-        _end()
+        _end(name)

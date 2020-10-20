@@ -29,7 +29,6 @@ responses = "*" # used for unit tests
 polib = "*"  # used by locale/add-authors for working with .po files
 webtest = "*"  # used by WSGI based tests
 pre-commit = "*"  # used to fix / find issues before commiting changes
-pyfakefs = "*" # used for unit tests
 flake8 = "*"
 sphinx = "*" # used for the plugin API documentation
 sphinx-autodoc-typehints = "*" # used for the plugin API documentation

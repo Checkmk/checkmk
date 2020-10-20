@@ -1,0 +1,14 @@
+Title: Fix possible XSS using titles of views
+Knowledge: doc
+Level: 1
+Component: multisite
+Class: security
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p19
+Date: 1603204494
+
+Authenticated users that are allowed to configure and share custom views
+could inject arbitrary JS code to all users which are permitted to view this
+view.

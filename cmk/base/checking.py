@@ -231,7 +231,7 @@ def do_check(
                 infotexts.append(missing_data_infotext)
 
         phase_times = cpu_tracking.get_times()
-        total_times = phase_times["TOTAL"]
+        total_times = phase_times["busy"]
 
         infotexts.append("execution time %.1f sec" % total_times.run_time)
         if config.check_mk_perfdata_with_times:

@@ -10,7 +10,7 @@ import posix
 import time
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any, DefaultDict, Dict, Iterable, Iterator, List
+from typing import Any, DefaultDict, Dict, Iterable, Iterator
 
 from cmk.utils.log import console
 
@@ -71,50 +71,12 @@ class Snapshot:
 
 
 times: DefaultDict[str, Snapshot] = defaultdict(Snapshot.null)
-prev_snapshot: Snapshot = Snapshot.null()
-phase_stack: List[str] = []
+_running: bool = False
 
 
 def reset():
     global times
-    global prev_snapshot
-    global phase_stack
     times.clear()
-    prev_snapshot = Snapshot.null()
-    phase_stack.clear()
-
-
-def _start(initial_phase: str) -> None:
-    global times, prev_snapshot
-    console.vverbose("[cpu_tracking] Start with phase '%s'\n" % initial_phase)
-    times.clear()
-    prev_snapshot = Snapshot.take()
-
-    phase_stack[:] = [initial_phase]
-
-
-def _end(phase_name: str) -> None:
-    console.vverbose("[cpu_tracking] End\n")
-    _add_times_to_phase(phase_name, Snapshot.take())
-    phase_stack.clear()
-
-
-def _push_phase(phase_name: str) -> None:
-    if not is_tracking():
-        return
-
-    console.vverbose("[cpu_tracking] Push phase '%s' (Stack: %r)\n" % (phase_name, phase_stack))
-    _add_times_to_phase(phase_stack[-1], Snapshot.take())
-    phase_stack.append(phase_name)
-
-
-def _pop_phase(phase_name: str) -> None:
-    if not is_tracking():
-        return
-
-    console.vverbose("[cpu_tracking] Pop phase '%s' (Stack: %r)\n" % (phase_stack[-1], phase_stack))
-    _add_times_to_phase(phase_name, Snapshot.take())
-    phase_stack.pop()
 
 
 def get_times() -> Dict[str, Snapshot]:
@@ -122,14 +84,7 @@ def get_times() -> Dict[str, Snapshot]:
 
 
 def is_tracking() -> bool:
-    return bool(phase_stack)
-
-
-def _add_times_to_phase(phase_name: str, snapshot: Snapshot) -> None:
-    global prev_snapshot
-    for pn in phase_name, "TOTAL":
-        times[pn] += snapshot - prev_snapshot
-    prev_snapshot = snapshot
+    return _running
 
 
 def update(cpu_times: Dict[str, Snapshot]):
@@ -139,18 +94,31 @@ def update(cpu_times: Dict[str, Snapshot]):
 
 @contextlib.contextmanager
 def phase(phase_name: str) -> Iterator[None]:
-    _push_phase(phase_name)
+    console.vverbose("[cpu_tracking] Push phase %r\n", phase_name)
+    start = Snapshot.take()
     try:
         yield
     finally:
-        _pop_phase(phase_name)
+        console.vverbose("[cpu_tracking] Pop phase %r\n", phase_name)
+        delta = Snapshot.take() - start
+        if is_tracking():
+            times[phase_name] += delta
 
 
 @contextlib.contextmanager
-def execute(name: str) -> Iterator[None]:
+def execute(phase_name: str) -> Iterator[None]:
+    assert not is_tracking(), "tracking already started"
+    console.vverbose("[cpu_tracking] Start with phase %r\n", phase_name)
+
+    global _running
+    _running = True
     reset()
-    _start(name)
+    times.clear()
+    start = Snapshot.take()
     try:
         yield
     finally:
-        _end(name)
+        console.vverbose("[cpu_tracking] End\n")
+        _running = False
+        delta = Snapshot.take() - start
+        times[phase_name] += delta

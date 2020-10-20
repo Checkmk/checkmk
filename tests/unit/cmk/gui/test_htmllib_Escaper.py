@@ -56,6 +56,9 @@ def test_unescape_attribute(inp, out):
         ("<ol></ol>", None),
         ("<a href=\"xyz\">abc</a>", None),
         ("<a href=\"xyz\" target=\"123\">abc</a>", None),
+        # Links with target 1st and href 2nd will not be unescaped
+        ("<a target=\"123\" href=\"xyz\">abc</a>",
+         "&lt;a target=&quot;123&quot; href=&quot;xyz&quot;&gt;abc</a>"),
         ("blah<a href=\"link0\">aaa</a>blah<a href=\"link1\" target=\"ttt\">bbb</a>", None),
         ("\"I am not a link\" target=\"still not a link\"",
          "&quot;I am not a link&quot; target=&quot;still not a link&quot;"),
@@ -69,6 +72,8 @@ def test_unescape_attribute(inp, out):
             "<a href=\"xyz\">abc</a>&lt;script&gt;alert(1)&lt;/script&gt;<a href=\"xyz\">abc</a>",
         ),
         ("&nbsp;", None),
+        # At the moment also javascript URLs are accepted. This will be refused in the next step
+        ("<a href=\"javascript:alert(1)\">abc</a>", None),
     ])
 def test_escape_text(inp, out):
     if out is None:

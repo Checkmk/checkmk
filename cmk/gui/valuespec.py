@@ -2434,7 +2434,7 @@ class DropdownChoice(ValueSpec):
                                       _("Element '%r' does not exist anymore"))
         self._invalid_choice_error = (
             invalid_choice_error if invalid_choice_error is not None else
-            _("The selected element is not longer available. Please select something else."))
+            _("The selected element '%r' is not longer available. Please select something else."))
         self._no_preselect = no_preselect
         self._no_preselect_value = no_preselect_value
         self._no_preselect_title = no_preselect_title
@@ -2479,7 +2479,8 @@ class DropdownChoice(ValueSpec):
         if self._invalid_choice == "complain" and value is not None and self._value_is_invalid(
                 value):
             defval = value
-            options.append((defval, self._get_invalid_choice_title(value)))
+            options.append((defval, self._get_invalid_choice_text(self._invalid_choice_title,
+                                                                  value)))
 
         if value is None and not options:
             html.write(self._empty_text)
@@ -2505,10 +2506,10 @@ class DropdownChoice(ValueSpec):
             _("The value %r has type %s, but does not match any of the available choice types.") %
             (value, _type_name(value)))
 
-    def _get_invalid_choice_title(self, value: DropdownChoiceValue) -> str:
-        if "%s" in self._invalid_choice_title or "%r" in self._invalid_choice_title:
-            return self._invalid_choice_title % (value,)
-        return self._invalid_choice_title
+    def _get_invalid_choice_text(self, tmpl: str, value: DropdownChoiceValue) -> str:
+        if "%s" in tmpl or "%r" in tmpl:
+            return tmpl % (value,)
+        return tmpl
 
     def value_to_text(self, value: DropdownChoiceValue) -> str:
         for val, title in self.choices():
@@ -2517,7 +2518,8 @@ class DropdownChoice(ValueSpec):
                     return escaping.escape_attribute(
                         title.split(self._help_separator, 1)[0].strip())
                 return escaping.escape_attribute(title)
-        return escaping.escape_attribute(self._get_invalid_choice_title(value))
+        return escaping.escape_attribute(
+            self._get_invalid_choice_text(self._invalid_choice_title, value))
 
     def value_to_json(self, value):
         return value
@@ -2536,7 +2538,9 @@ class DropdownChoice(ValueSpec):
             return self.default_value()  # garbled URL or len(choices) == 0
         if not choices:
             raise MKUserError(varprefix, self._empty_text)
-        raise MKUserError(varprefix, self._invalid_choice_error)
+        raise MKUserError(
+            varprefix,
+            self._get_invalid_choice_text(self._invalid_choice_error, html.request.var(varprefix)))
 
     def _is_selected_option_from_html(self, varprefix: str, val: DropdownChoiceValue) -> bool:
         selected_value = html.request.var(varprefix)

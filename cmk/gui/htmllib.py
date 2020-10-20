@@ -66,6 +66,7 @@ import signal
 import json
 import abc
 import pprint
+import urlparse
 from contextlib import contextmanager
 
 import six
@@ -163,6 +164,11 @@ class Escaper(object):
         text = self._unescaper_text.sub(r'<\1\2>', text)
         for a_href in self._a_href.finditer(text):
             href = a_href.group(1)
+
+            parsed = urlparse.urlparse(href)
+            if parsed.scheme != "" and parsed.scheme not in ["http", "https"]:
+                continue  # Do not unescape links containing disallowed URLs
+
             target = a_href.group(2)
 
             if target:

@@ -70,8 +70,14 @@ def test_unescape_attribute(inp, out):
             "<a href=\"xyz\">abc</a>&lt;script&gt;alert(1)&lt;/script&gt;<a href=\"xyz\">abc</a>",
         ),
         ("&nbsp;", None),
-        # At the moment also javascript URLs are accepted. This will be refused in the next step
-        ("<a href=\"javascript:alert(1)\">abc</a>", None),
+        # Only http/https are allowed as schemes
+        ("<a href=\"http://checkmk.com/\">abc</a>", None),
+        ("<a href=\"https://checkmk.com/\">abc</a>", None),
+        ("<a href=\"HTTP://CHECKMK.COM/\">abc</a>", None),
+        ("<a href=\"ftp://checkmk.com/\">abc</a>",
+         "&lt;a href=&quot;ftp://checkmk.com/&quot;&gt;abc</a>"),
+        ("<a href=\"javascript:alert(1)\">abc</a>",
+         "&lt;a href=&quot;javascript:alert(1)&quot;&gt;abc</a>"),
     ])
 def test_escape_text(inp, out):
     if out is None:

@@ -84,8 +84,14 @@ class IndexStore:
             pickle.dump(index, index_file)
 
     def load_index(self) -> Index:
-        with open(self._path, mode='rb') as index_file:
-            return pickle.load(index_file)
+        try:
+            with open(self._path, mode='rb') as index_file:
+                return pickle.load(index_file)
+        except FileNotFoundError:
+            # TODO (jh): once building the index runs in the background, raise another Exception
+            # here indicating that we are currently building
+            self.store_index(IndexBuilder(match_item_generator_registry).build_index())
+            return self.load_index()
 
     def all_match_items(self) -> MatchItems:
         yield from (

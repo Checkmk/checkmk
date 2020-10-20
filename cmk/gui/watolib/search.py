@@ -19,9 +19,17 @@ from typing import (
 )
 
 from cmk.utils.paths import omd_root
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.plugin_registry import Registry
+from cmk.gui.background_job import BackgroundJobAlreadyRunning, BackgroundProcessInterface
+from cmk.gui.gui_background_job import GUIBackgroundJob, job_registry
+from cmk.gui.i18n import _
 from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
 from cmk.gui.plugins.watolib.utils import SampleConfigGenerator, sample_config_generator_registry
+
+
+class IndexNotFoundException(MKGeneralException):
+    """Raised when trying to load a non-existing search index file"""
 
 
 @dataclass
@@ -98,15 +106,14 @@ class IndexStore:
         with open(self._path, mode='wb') as index_file:
             pickle.dump(index, index_file)
 
-    def load_index(self) -> Index:
+    def load_index(self, launch_rebuild_if_missing: bool = True) -> Index:
         try:
             with open(self._path, mode='rb') as index_file:
                 return pickle.load(index_file)
         except FileNotFoundError:
-            # TODO (jh): once building the index runs in the background, raise another Exception
-            # here indicating that we are currently building
-            self.store_index(IndexBuilder(match_item_generator_registry).build_full_index())
-            return self.load_index()
+            if launch_rebuild_if_missing:
+                build_and_store_index_background()
+            raise IndexNotFoundException
 
     def all_match_items(self) -> MatchItems:
         yield from (
@@ -142,13 +149,72 @@ def build_and_store_index() -> None:
     index_store.store_index(index_builder.build_full_index())
 
 
-def update_and_store_index(change_action_name: str) -> None:
+def _build_and_store_index_background(job_interface: BackgroundProcessInterface) -> None:
+    job_interface.send_progress_update(_("Building of search index started"))
+    build_and_store_index()
+    job_interface.send_result_message(_("Search index successfully built"))
+
+
+def build_and_store_index_background() -> None:
+    build_job = SearchIndexBackgroundJob()
+    build_job.set_function(_build_and_store_index_background)
+    try:
+        build_job.start()
+    except BackgroundJobAlreadyRunning:
+        pass
+
+
+def _update_and_store_index_background(
+    change_action_name: str,
+    job_interface: BackgroundProcessInterface,
+) -> None:
+
+    job_interface.send_progress_update(_("Updating of search index started"))
+
     index_builder = IndexBuilder(match_item_generator_registry)
     index_store = get_index_store()
+
+    try:
+        current_index = index_store.load_index(launch_rebuild_if_missing=False)
+    except IndexNotFoundException:
+        job_interface.send_progress_update(
+            _("Search index file not found, re-building from scratch"))
+        _build_and_store_index_background(job_interface)
+        return
+
     index_store.store_index({
-        **index_store.load_index(),
+        **current_index,
         **index_builder.build_changed_sub_indices(change_action_name)
     })
+
+    job_interface.send_result_message(_("Search index successfully updated"))
+
+
+def update_and_store_index_background(change_action_name: str) -> None:
+    update_job = SearchIndexBackgroundJob()
+    update_job.set_function(_update_and_store_index_background, change_action_name)
+    try:
+        update_job.start()
+    except BackgroundJobAlreadyRunning:
+        pass
+
+
+@job_registry.register
+class SearchIndexBackgroundJob(GUIBackgroundJob):
+    job_prefix = "search_index"
+
+    @classmethod
+    def gui_title(cls):
+        return _("Search index")
+
+    def __init__(self):
+        last_job_status = GUIBackgroundJob(self.job_prefix).get_status()
+        super().__init__(
+            self.job_prefix,
+            title=_("Search index"),
+            stoppable=False,
+            estimated_duration=last_job_status.get("duration"),
+        )
 
 
 @sample_config_generator_registry.register

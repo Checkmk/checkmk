@@ -44,6 +44,7 @@ def test_registered_background_jobs():
         'ActivationCleanupBackgroundJob',
         'CheckmkAutomationBackgroundJob',
         'DiagnosticsDumpBackgroundJob',
+        'SearchIndexBackgroundJob',
     ]
 
     if not cmk_version.is_raw_edition():

@@ -38,7 +38,7 @@ from cmk.gui.type_defs import (
     ViewName,
 )
 from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.watolib.search import IndexSearcher, get_index_store
+from cmk.gui.watolib.search import IndexNotFoundException, IndexSearcher, get_index_store
 from cmk.gui.utils.urls import makeuri
 
 #   .--Quicksearch---------------------------------------------------------.
@@ -1248,4 +1248,13 @@ class SetupSearch(ABCMegaMenuSearch):
 class PageSearchSetup(AjaxPage):
     def page(self):
         query = html.request.get_unicode_input_mandatory("q")
-        return MenuSearchResultsRenderer("setup").render(query)
+        try:
+            return MenuSearchResultsRenderer("setup").render(query)
+        except IndexNotFoundException:
+            with html.plugged():
+                html.open_div(class_="topic")
+                html.open_ul()
+                html.write_text(_("Currently indexing, please try again shortly."))
+                html.close_ul()
+                html.close_div()
+                return html.drain()

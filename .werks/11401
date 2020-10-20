@@ -10,7 +10,7 @@ Version: 2.0.0i1
 
 It is now possible to extend Checkmk by writing your own bakery plugins.
 That is, you can now deploy your own agent plugins and have them baked into
-your agents by the agent bakery.
+your agent packages by the agent bakery.
 
 While this was also possible before by placing the right files at the right
 locations, you can now deploy your plugins with the help of a well-documented,

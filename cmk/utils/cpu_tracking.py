@@ -5,13 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import contextlib
-import functools
 import os
 import posix
 import time
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any, Callable, DefaultDict, Dict, Iterable, Iterator, List, Tuple
+from typing import Any, DefaultDict, Dict, Iterable, Iterator, List
 
 from cmk.utils.log import console
 
@@ -133,19 +132,6 @@ def _add_times_to_phase(snapshot: Snapshot) -> None:
     for phase_name in phase_stack[-1], "TOTAL":
         times[phase_name] += snapshot - prev_snapshot
     prev_snapshot = snapshot
-
-
-def track(method: Callable) -> Callable:
-    """Decorator to track CPU in methods."""
-    @functools.wraps(method)
-    def wrapper(self: Any, *args: Tuple[Any], **kwargs: Dict[str, Any]) -> None:
-        push_phase(self.cpu_tracking_id)
-        try:
-            return method(self, *args, **kwargs)
-        finally:
-            pop_phase()
-
-    return wrapper
 
 
 def update(cpu_times: Dict[str, Snapshot]):

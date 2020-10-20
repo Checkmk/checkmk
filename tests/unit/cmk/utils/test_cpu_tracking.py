@@ -112,25 +112,6 @@ def test_cpu_tracking_multiple_phases(monkeypatch):
     assert times["agent"].run_time == 3.0
 
 
-def test_cpu_tracking_decorator(monkeypatch):
-    class K:
-        cpu_tracking_id = "hello"
-
-        @cpu_tracking.track
-        def tracked(self):
-            pass
-
-    monkeypatch.setattr("time.time", lambda: 0.0)
-    cpu_tracking.start("hello")
-    monkeypatch.setattr("time.time", lambda: 42.0)
-    obj = K()
-    obj.tracked()
-    cpu_tracking.end()
-
-    times = cpu_tracking.get_times()
-    assert times["hello"].run_time == 42.0
-
-
 def test_cpu_tracking_context_managers(monkeypatch):
     monkeypatch.setattr("time.time", lambda: 0.0)
     with cpu_tracking.execute("busy"):

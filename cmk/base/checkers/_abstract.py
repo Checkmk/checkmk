@@ -326,18 +326,18 @@ class ABCSource(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
             return result.Error(exc)
 
     @final
-    @cpu_tracking.track
     def parse(
         self,
         raw_data: result.Result[TRawData, Exception],
     ) -> result.Result[THostSections, Exception]:
-        try:
-            return raw_data.map(self._make_parser().parse)
-        except Exception as exc:
-            self._logger.log(VERBOSE, "ERROR: %s", exc)
-            if cmk.utils.debug.enabled():
-                raise
-            return result.Error(exc)
+        with cpu_tracking.phase(self.cpu_tracking_id):
+            try:
+                return raw_data.map(self._make_parser().parse)
+            except Exception as exc:
+                self._logger.log(VERBOSE, "ERROR: %s", exc)
+                if cmk.utils.debug.enabled():
+                    raise
+                return result.Error(exc)
 
     @final
     def summarize(

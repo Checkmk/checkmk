@@ -437,13 +437,15 @@ def _fileinfo_check_function(check_definition, params, outof_range_txt):
         if value in [None, ""]:
             continue
         infotext = "%s: %s" % (title, verbfunc(value))
-        warn, crit = None, None
-        state = 0
+        states = [0]
+        perf_warn, perf_crit = None, None
         for state, warn, crit, comp_text in _fileinfo_check_file(value, params, key):
             if not state:
                 continue
+            states.append(state)
             infotext += " (warn/crit %s %s/%s)" % (comp_text, verbfunc(warn), verbfunc(crit))
-        yield 0 if outof_range_txt else state, infotext, [(key, value, warn, crit)]
+            perf_warn, perf_crit = warn, crit
+        yield 0 if outof_range_txt else max(states), infotext, [(key, value, perf_warn, perf_crit)]
 
 
 def _fileinfo_check_file(value, params, key):

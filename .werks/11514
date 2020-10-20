@@ -1,0 +1,12 @@
+Title: fileinfo: Fix service state if minimal, maximal age or minimal, maximal size is reached
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p19
+Date: 1603199925
+Class: fix
+
+The levels for minimal, maximal age or and minimal, maximal size are evaluated
+correctly and the levels information {{warn/crit ...}} is added but the service
+state may stay {{OK}} in some cases.

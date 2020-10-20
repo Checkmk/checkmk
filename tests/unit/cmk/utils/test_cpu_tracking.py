@@ -84,7 +84,7 @@ def test_phase_without_tracking():
 
 def test_cpu_tracking_simple(set_time):
     set_time(0.0)
-    with cpu_tracking.execute("busy"):
+    with cpu_tracking.execute(), cpu_tracking.phase("busy"):
         assert cpu_tracking.get_times() == {}
         set_time(1.0)
 
@@ -96,7 +96,7 @@ def test_cpu_tracking_simple(set_time):
 
 def test_cpu_tracking_multiple_phases(set_time):
     set_time(0.0)
-    with cpu_tracking.execute("busy"):
+    with cpu_tracking.execute(), cpu_tracking.phase("busy"):
         set_time(2.0)
 
         with cpu_tracking.phase("agent"):
@@ -115,7 +115,7 @@ def test_cpu_tracking_multiple_phases(set_time):
 
 def test_cpu_tracking_add_times(set_time):
     set_time(0.0)
-    with cpu_tracking.execute("busy"):
+    with cpu_tracking.execute(), cpu_tracking.phase("busy"):
         set_time(2.0)
 
         with cpu_tracking.phase("agent"):
@@ -134,7 +134,7 @@ def test_cpu_tracking_add_times(set_time):
 def test_cpu_tracking_nested_times(set_time):
     set_time(0.0)
 
-    with cpu_tracking.execute("one"):
+    with cpu_tracking.execute(), cpu_tracking.phase("one"):
         set_time(2.0)
 
         with cpu_tracking.phase("two"):
@@ -153,7 +153,7 @@ def test_cpu_tracking_nested_times(set_time):
 
 def test_cpu_tracking_update(set_time):
     set_time(0.0)
-    with cpu_tracking.execute("busy"):
+    with cpu_tracking.execute(), cpu_tracking.phase("busy"):
         cpu_tracking.update(
             {
                 "busy": cpu_tracking.Snapshot(

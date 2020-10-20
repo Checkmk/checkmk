@@ -131,7 +131,7 @@ def do_check(
     long_infotexts: List[ServiceAdditionalDetails] = []
     perfdata: List[str] = []
     try:
-        with cpu_tracking.execute("busy"):
+        with cpu_tracking.execute(), cpu_tracking.phase("busy"):
             license_usage.try_history_update()
 
             # In case of keepalive we always have an ipaddress (can be 0.0.0.0 or :: when

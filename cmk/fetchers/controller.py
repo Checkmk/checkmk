@@ -607,7 +607,7 @@ def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
     # functionality of the Microcore.
 
     messages: List[FetcherMessage] = []
-    with cpu_tracking.execute("fetchers"), timeout_control(timeout):
+    with cpu_tracking.execute(), cpu_tracking.phase("fetchers"), timeout_control(timeout):
         try:
             # fill as many messages as possible before timeout exception raised
             for entry in fetchers:

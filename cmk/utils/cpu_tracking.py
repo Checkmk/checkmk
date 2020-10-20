@@ -106,19 +106,16 @@ def phase(phase_name: str) -> Iterator[None]:
 
 
 @contextlib.contextmanager
-def execute(phase_name: str) -> Iterator[None]:
+def execute() -> Iterator[None]:
     assert not is_tracking(), "tracking already started"
-    console.vverbose("[cpu_tracking] Start with phase %r\n", phase_name)
+    console.vverbose("[cpu_tracking] Start")
 
     global _running
     _running = True
     reset()
     times.clear()
-    start = Snapshot.take()
     try:
         yield
     finally:
         console.vverbose("[cpu_tracking] End\n")
         _running = False
-        delta = Snapshot.take() - start
-        times[phase_name] += delta

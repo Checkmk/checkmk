@@ -36,20 +36,17 @@
 #include "datablock.h"
 #include "tools/_process.h"
 #include "tools/_tgt.h"
+#include "tools/_win.h"
 
 namespace wtools {
 constexpr const wchar_t* kWToolsLogName = L"check_mk_wtools.log";
-
-inline bool IsHandleValid(HANDLE h) noexcept {
-    return h != nullptr && h != INVALID_HANDLE_VALUE;
-}
 
 // this is functor to kill any pointer allocated with ::LocalAlloc
 // usually this pointer comes from Windows API
 template <typename T>
 struct LocalAllocDeleter {
     void operator()(T* r) noexcept {
-        if (r) ::LocalFree(reinterpret_cast<HLOCAL>(r));
+        if (r != nullptr) ::LocalFree(reinterpret_cast<HLOCAL>(r));
     }
 };
 
@@ -507,7 +504,7 @@ private:
 
         // Take a snapshot of all processes in the system.
         auto hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-        if (hProcessSnap == INVALID_HANDLE_VALUE) {
+        if (wtools::IsInvalidHandle(hProcessSnap)) {
             return {};
         };
 

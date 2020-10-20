@@ -18,6 +18,7 @@
 #include "logger.h"
 #include "providers/fileinfo_details.h"
 #include "tools/_raii.h"
+#include "tools/_win.h"
 #include "tools/_xlog.h"
 
 namespace cma::provider::details {
@@ -28,7 +29,7 @@ std::filesystem::path ReadBaseNameWithCase(
     const std::filesystem::path &FilePath) {
     WIN32_FIND_DATAW file_data{0};
     auto handle = ::FindFirstFileW(FilePath.wstring().c_str(), &file_data);
-    if (handle == INVALID_HANDLE_VALUE) {
+    if (wtools::IsInvalidHandle(handle)) {
         XLOG::t.w("Unexpected status [{}] when reading file '{}'",
                   GetLastError(), FilePath.u8string());
         return FilePath;

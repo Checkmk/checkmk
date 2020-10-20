@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // provides basic api to start and stop service
 
@@ -44,16 +45,14 @@
 #include "providers/wmi.h"
 #include "read_file.h"
 #include "realtime.h"
+#include "tools/_win.h"
 #include "tools/_xlog.h"
 
 namespace cma::srv {
 // mini processes of the global type
 class TheMiniProcess {
 public:
-    TheMiniProcess()
-        : process_handle_(INVALID_HANDLE_VALUE)
-        , thread_handle_(INVALID_HANDLE_VALUE)
-        , process_id_(0) {}
+    TheMiniProcess() = default;
 
     TheMiniProcess(const TheMiniProcess&) = delete;
     TheMiniProcess& operator=(const TheMiniProcess&) = delete;
@@ -70,9 +69,9 @@ public:
 
 private:
     mutable std::mutex lock_;
-    HANDLE process_handle_;
-    HANDLE thread_handle_;
-    uint32_t process_id_;
+    HANDLE process_handle_{wtools::InvalidHandle()};
+    HANDLE thread_handle_{wtools::InvalidHandle()};
+    uint32_t process_id_{0};
     std::string process_name_;  // for debug purposes
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
@@ -121,8 +120,8 @@ public:
             [this](const std::string CommandLine,  //
                    const AnswerId Tp,              //
                    const ServiceProcessor* Proc) {
-                engine_.updateSectionStatus();  // actual data gathering is here
-                                                // for plugins and local
+                engine_.updateSectionStatus();  // actual data gathering is
+                                                // here for plugins and local
 
                 engine_.registerCommandLine(CommandLine);
                 auto port_name = Proc->getInternalPort();
@@ -247,8 +246,8 @@ public:
     cma::cfg::modules::ModuleCommander& getModuleCommander() noexcept {
         return mc_;
     }
-    const cma::cfg::modules::ModuleCommander& getModuleCommander() const
-        noexcept {
+    const cma::cfg::modules::ModuleCommander& getModuleCommander()
+        const noexcept {
         return mc_;
     }
 
@@ -269,8 +268,8 @@ private:
     // on this phase we are starting our async plugins
     void preContextCall() {}
 
-    void informDevice(cma::rt::Device& Device, std::string_view Ip) const
-        noexcept;
+    void informDevice(cma::rt::Device& Device,
+                      std::string_view Ip) const noexcept;
 
     // used to start OpenHardwareMonitor if conditions are ok
     bool stopRunningOhmProcess() noexcept;
@@ -466,9 +465,8 @@ private:
                   answer_.getStopWatch().getUsCount() / 1000);
     }
 
-    // We wait here for all answers from all providers, internal and external.
-    // The call is *blocking*
-    // #TODO break waiting
+    // We wait here for all answers from all providers, internal and
+    // external. The call is *blocking* #TODO break waiting
     cma::srv::AsyncAnswer::DataBlock getAnswer(int Count) {
         using namespace std::chrono;
         XLOG::t.i("waiting futures(only start)");

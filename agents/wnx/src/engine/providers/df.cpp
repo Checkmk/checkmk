@@ -10,6 +10,7 @@
 
 #include "common/wtools.h"
 #include "tools/_raii.h"
+#include "tools/_win.h"
 #include "tools/_xlog.h"
 
 namespace cma::provider {
@@ -88,7 +89,7 @@ std::vector<std::string> GetMountPointVector(std::string_view volume_id) {
     auto handle =
         ::FindFirstVolumeMountPointA(volume_id.data(), storage.get(), sz);
 
-    if (!wtools::IsHandleValid(handle)) return {};
+    if (wtools::IsBadHandle(handle)) return {};
     ON_OUT_OF_SCOPE(FindVolumeMountPointClose(handle));
 
     std::string vol(volume_id);
@@ -117,7 +118,7 @@ std::string ProduceMountPointsOutput(const std::string& VolumeId) {
     auto handle =
         ::FindFirstVolumeMountPointA(VolumeId.c_str(), storage.get(), sz);
 
-    if (!wtools::IsHandleValid(handle)) return {};
+    if (wtools::IsBadHandle(handle)) return {};
     ON_OUT_OF_SCOPE(FindVolumeMountPointClose(handle));
 
     std::string out;

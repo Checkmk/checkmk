@@ -17,6 +17,7 @@
 
 #include "logger.h"
 #include "tools/_misc.h"
+#include "tools/_win.h"
 #include "wtools.h"
 
 #pragma comment(lib, "Wtsapi32.lib")
@@ -80,10 +81,6 @@ void RevertFileRedirection() {
 }
 }  // namespace krnl
 
-inline bool IsBadHandle(HANDLE x) noexcept {
-    return INVALID_HANDLE_VALUE == x || nullptr == x;
-}
-
 struct AppSettings {
 public:
     bool use_system_account = false;
@@ -132,7 +129,7 @@ STARTUPINFO MakeStartupInfo(const AppSettings& settings) {
     si.dwFlags = STARTF_USESHOWWINDOW;
     si.wShowWindow = settings.show_window ? SW_SHOW : SW_HIDE;
 
-    if (!IsBadHandle(settings.hStdErr)) {
+    if (!wtools::IsBadHandle(settings.hStdErr)) {
         si.hStdError = settings.hStdErr;
         si.hStdInput = settings.hStdIn;
         si.hStdOutput = settings.hStdOut;
@@ -432,13 +429,13 @@ void CleanUpInteractiveProcess(CleanupInteractive* pCI) noexcept {
 
 // GTEST [-]
 bool GetUserHandleSystemAccount(HANDLE& user_handle) {
-    if (!IsBadHandle(user_handle))
+    if (!wtools::IsBadHandle(user_handle))
         return true;  // we can have already ready handle
 
     EnablePrivilege(SE_DEBUG_NAME);  // OpenProcess
                                      // GetLocalSystemProcessToken
     user_handle = GetLocalSystemProcessToken();
-    if (IsBadHandle(user_handle)) {
+    if (wtools::IsBadHandle(user_handle)) {
         XLOG::l("Not able to get Local System token");
         return false;
     } else
@@ -477,7 +474,7 @@ bool GetUserHandleCurrentUser(HANDLE& user_handle, HANDLE hCmdPipe) {
         LogDupeError(XLOG_FLINE + " !!!");  // gives max rights
     ::RevertToSelf();
 
-    return !IsBadHandle(user_handle);
+    return !wtools::IsBadHandle(user_handle);
 }
 
 bool GetUserHandlePredefinedUser(HANDLE& user_handle,
@@ -489,7 +486,7 @@ bool GetUserHandlePredefinedUser(HANDLE& user_handle,
         user.data(), domain.empty() ? nullptr : domain.c_str(), password.data(),
         LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_WINNT50, &user_handle);
     XLOG::l.t("LogonUser {}", ::GetLastError());
-    if ((FALSE == logged_in) || IsBadHandle(user_handle)) {
+    if ((FALSE == logged_in) || wtools::IsBadHandle(user_handle)) {
         XLOG::l("Error logging in as '{}' [{}]",
                 wtools::ConvertToUTF8(user_name), ::GetLastError());
         return false;
@@ -518,7 +515,7 @@ bool GetUserHandle(AppSettings& settings, BOOL& profile_loaded,
     if (!settings.user.empty()) {
         auto ret = GetUserHandlePredefinedUser(settings.hUser, settings.user,
                                                settings.password);
-        if (!IsBadHandle(settings.hUser) && !settings.dont_load_profile)
+        if (!wtools::IsBadHandle(settings.hUser) && !settings.dont_load_profile)
             profile_loaded = LoadProfile(settings.hUser, profile);
         return true;
     }
@@ -568,7 +565,7 @@ bool LimitRights(HANDLE& hUser) {
         return false;
     }
 
-    if (!IsBadHandle(hUser)) {
+    if (!wtools::IsBadHandle(hUser)) {
         HANDLE hNew = nullptr;
         SAFER_LEVEL_HANDLE safer = nullptr;
         if (FALSE == s_SaferCreateLevel(SAFER_SCOPEID_USER,
@@ -594,7 +591,7 @@ bool LimitRights(HANDLE& hUser) {
             if (!ret) XLOG::l.bp(XLOG_FLINE + " trash!");
         }
 
-        if (!IsBadHandle(hNew)) {
+        if (!wtools::IsBadHandle(hNew)) {
             auto ret = CloseHandle(hUser);
             if (!ret) XLOG::l.bp(XLOG_FLINE + " trash!");
 
@@ -720,7 +717,8 @@ bool StartProcess(AppSettings& settings, HANDLE command_pipe) {
         XLOG::l.i("Exec starting process [{}] as Local System",
                   wtools::ConvertToUTF8(path));
 
-        if (IsBadHandle(settings.hUser)) XLOG::l("Have bad user handle");
+        if (wtools::IsBadHandle(settings.hUser))
+            XLOG::l("Have bad user handle");
 
         EnablePrivilege(SE_IMPERSONATE_NAME);
         auto impersonated = ::ImpersonateLoggedOnUser(settings.hUser);
@@ -788,7 +786,7 @@ bool StartProcess(AppSettings& settings, HANDLE command_pipe) {
             // CreateProcessWithLogonW can't be called from LocalSystem on
             // Win2003 and earlier, so LogonUser/CreateProcessAsUser must be
             // used. Might as well try for everyone
-            if (!bLaunched && !IsBadHandle(settings.hUser)) {
+            if (!bLaunched && !wtools::IsBadHandle(settings.hUser)) {
                 XLOG::t(
                     "Failed CreateProcessWithLogonW - trying CreateProcessAsUser [{}]",
                     ::GetLastError());
@@ -880,7 +878,7 @@ bool StartProcess(AppSettings& settings, HANDLE command_pipe) {
 
     if (profile_loaded) UnloadUserProfile(settings.hUser, profile.hProfile);
 
-    if (!IsBadHandle(settings.hUser)) {
+    if (!wtools::IsBadHandle(settings.hUser)) {
         CloseHandle(settings.hUser);
         settings.hUser = nullptr;
     }

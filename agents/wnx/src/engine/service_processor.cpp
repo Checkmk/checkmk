@@ -763,7 +763,7 @@ HANDLE CreateDevNull() {
 // This Function is safe
 bool TheMiniProcess::start(const std::wstring& exe_name) {
     std::unique_lock lk(lock_);
-    if (process_handle_ != INVALID_HANDLE_VALUE) {
+    if (!wtools::IsInvalidHandle(process_handle_)) {
         // check status and reset handle if required
         DWORD exit_code = STILL_ACTIVE;
         if (!::GetExitCodeProcess(process_handle_,
@@ -773,11 +773,11 @@ bool TheMiniProcess::start(const std::wstring& exe_name) {
                 XLOG::l.i("Finished with {} code", exit_code);
             }
             CloseHandle(process_handle_);
-            process_handle_ = INVALID_HANDLE_VALUE;
+            process_handle_ = wtools::InvalidHandle();
         }
     }
 
-    if (process_handle_ == INVALID_HANDLE_VALUE) {
+    if (wtools::IsInvalidHandle(process_handle_)) {
         auto null_handle = CreateDevNull();
         STARTUPINFO si{0};
         si.cb = sizeof(STARTUPINFO);
@@ -805,7 +805,7 @@ bool TheMiniProcess::start(const std::wstring& exe_name) {
 // returns true when killing occurs
 bool TheMiniProcess::stop() {
     std::unique_lock lk(lock_);
-    if (process_handle_ == INVALID_HANDLE_VALUE) return false;
+    if (wtools::IsInvalidHandle(process_handle_)) return false;
 
     auto name = process_name_;
     auto pid = process_id_;
@@ -814,7 +814,7 @@ bool TheMiniProcess::stop() {
     process_id_ = 0;
     process_name_.clear();
     CloseHandle(handle);
-    process_handle_ = INVALID_HANDLE_VALUE;
+    process_handle_ = wtools::InvalidHandle();
 
     // check status and reset handle if required
     DWORD exit_code = STILL_ACTIVE;

@@ -60,18 +60,18 @@ def test_cpu_tracking_initial_times():
 
 
 def test_cpu_tracking_initial_state():
-    assert cpu_tracking._is_not_tracking()
+    assert not cpu_tracking.is_tracking()
 
 
 def test_pop_without_tracking():
-    assert cpu_tracking._is_not_tracking()
+    assert not cpu_tracking.is_tracking()
     cpu_tracking.pop_phase()
-    assert cpu_tracking._is_not_tracking()
+    assert not cpu_tracking.is_tracking()
 
 
 def test_push_without_tracking():
     cpu_tracking.push_phase("bla")
-    assert cpu_tracking._is_not_tracking()
+    assert not cpu_tracking.is_tracking()
 
 
 def test_cpu_tracking_simple(monkeypatch):

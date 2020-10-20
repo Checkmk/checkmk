@@ -103,7 +103,7 @@ def end() -> None:
 
 
 def push_phase(phase_name: str) -> None:
-    if _is_not_tracking():
+    if not is_tracking():
         return
 
     console.vverbose("[cpu_tracking] Push phase '%s' (Stack: %r)\n" % (phase_name, phase_stack))
@@ -112,7 +112,7 @@ def push_phase(phase_name: str) -> None:
 
 
 def pop_phase() -> None:
-    if _is_not_tracking():
+    if not is_tracking():
         return
 
     console.vverbose("[cpu_tracking] Pop phase '%s' (Stack: %r)\n" % (phase_stack[-1], phase_stack))
@@ -124,8 +124,8 @@ def get_times() -> Dict[str, Snapshot]:
     return times
 
 
-def _is_not_tracking() -> bool:
-    return not bool(phase_stack)
+def is_tracking() -> bool:
+    return bool(phase_stack)
 
 
 def _add_times_to_phase(snapshot: Snapshot) -> None:

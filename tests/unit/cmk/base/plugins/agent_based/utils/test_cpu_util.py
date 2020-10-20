@@ -3,6 +3,9 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# pylint: disable=protected-access
+
 from typing import Any, Dict
 import pytest  # type: ignore[import]
 
@@ -93,3 +96,16 @@ def test_cpu_util_time():
             levels=(5., 10.),
             value_store=value_store,
         ))
+
+
+def test__util_counter():
+
+    cpu = cpu_util.CPUInfo("cpu-name", 100, 40, 60, 80, 50, 80, 30, 60, 20, 40)
+
+    assert cpu_util._util_counter(cpu, {}) == cpu
+
+    assert cpu_util._util_counter(cpu, {
+        "cpu.util.user": 20,
+        "cpu.util.system": 10,
+        "cpu.util.idle": 5,
+    }) == cpu_util.CPUInfo("cpu-name", 80, 40, 50, 75, 50, 80, 30, 60, 20, 40)

@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Mapping, NamedTuple, Optional, Tuple
+from typing import Mapping, MutableMapping, NamedTuple, Optional, Tuple
 
 import time
 
@@ -282,3 +282,17 @@ def cpu_util_time(
         label="%s is under high load for" % core,
         notice_only=True,
     )
+
+
+def _util_counter(
+    stats: CPUInfo,
+    value_store: MutableMapping,
+) -> CPUInfo:
+    """Compute jiffi-differences of all relevant counters"""
+    diff_values = []
+    for field, value in zip(stats._fields[1:], stats[1:]):
+        key = f"cpu.util.{field}"
+        diff_values.append(value - value_store.get(key, 0))
+        value_store[key] = value
+
+    return CPUInfo(stats.name, *diff_values)

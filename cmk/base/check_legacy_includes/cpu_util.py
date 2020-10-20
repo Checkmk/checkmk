@@ -48,6 +48,7 @@ CPUInfo = cpu_util.CPUInfo
 ##########################################################################################
 
 
+# ALREADY MIGRATED
 def util_counter(stats: CPUInfo, this_time: float) -> CPUInfo:
     # Compute jiffi-differences of all relevant counters
     diff_values = []

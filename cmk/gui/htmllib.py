@@ -127,8 +127,6 @@ from cmk.gui.utils.url_encoder import URLEncoder
 from cmk.gui.utils.urls import (
     makeactionuri,
     makeactionuri_contextless,
-    makeuri,
-    makeuri_contextless,
     requested_file_name,
 )
 from cmk.gui.i18n import _
@@ -1495,26 +1493,6 @@ class html(ABCHTMLGenerator):
     #
     # URL building
     #
-
-    def makeuri(self,
-                addvars: 'HTTPVariables',
-                remove_prefix: Optional[str] = None,
-                filename: Optional[str] = None,
-                delvars: Optional[Sequence[str]] = None) -> str:
-        return makeuri(
-            self.request,
-            addvars,
-            remove_prefix=remove_prefix,
-            filename=filename,
-            delvars=delvars,
-        )
-
-    def makeuri_contextless(self, vars_: 'HTTPVariables', filename: Optional[str] = None) -> str:
-        return makeuri_contextless(
-            self.request,
-            vars_,
-            filename=filename,
-        )
 
     def makeactionuri(self,
                       addvars: 'HTTPVariables',

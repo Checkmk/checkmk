@@ -1464,6 +1464,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 ("folder", self.path()),
                 ("backfolder", backfolder.path()),
             ],
+            filename="wato.py",
         )
 
     def locked(self) -> Union[bool, str]:
@@ -2336,6 +2337,7 @@ class CREHost(WithPermissions, WithAttributes):
                 ("folder", self.folder().path()),
                 ("host", self.name()),
             ],
+            filename="wato.py",
         )
 
     def params_url(self):
@@ -2346,6 +2348,7 @@ class CREHost(WithPermissions, WithAttributes):
                 ("folder", self.folder().path()),
                 ("host", self.name()),
             ],
+            filename="wato.py",
         )
 
     def services_url(self):
@@ -2356,6 +2359,7 @@ class CREHost(WithPermissions, WithAttributes):
                 ("folder", self.folder().path()),
                 ("host", self.name()),
             ],
+            filename="wato.py",
         )
 
     def clone_url(self):
@@ -2366,6 +2370,7 @@ class CREHost(WithPermissions, WithAttributes):
                 ("folder", self.folder().path()),
                 ("clone", self.name()),
             ],
+            filename="wato.py",
         )
 
     # .--------------------------------------------------------------------.

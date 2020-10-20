@@ -272,7 +272,7 @@ class ModeTags(ABCTagMode):
         if not self._tag_config.tag_groups + self._tag_config.get_aux_tags():
             MainMenu([
                 MenuItem(
-                    "edit_ttag", _("Create new tag group"), "new", "hosttags",
+                    "edit_tag", _("Create new tag group"), "new", "hosttags",
                     _("Each tag group will create one dropdown choice in the host configuration.")),
                 MenuItem(
                     "edit_auxtag", _("Create new auxiliary tag"), "new", "hosttags",

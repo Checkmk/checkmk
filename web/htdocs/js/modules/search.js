@@ -47,7 +47,10 @@ class Search {
         // ul's which corresponds to the main menu items
         document.getElementById(this.search_id).innerHTML = "";
 
-        remove_class(document.getElementById(this.more_id), "hidden");
+        const more_button = document.getElementById(this.more_id);
+        if (more_button) {
+            remove_class(more_button, "hidden");
+        }
         remove_class(document.getElementById(this.content_id), "hidden");
     }
 
@@ -55,8 +58,11 @@ class Search {
         g_current_search_position = null;
 
         // The more button has currently no function in the search results, so hide it during
-        // search.
-        add_class(document.getElementById(this.more_id), "hidden");
+        // search in case it is available.
+        const more_button = document.getElementById(this.more_id);
+        if (more_button) {
+            add_class(more_button, "hidden");
+        }
         add_class(document.getElementById(this.content_id), "hidden");
     }
 

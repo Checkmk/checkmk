@@ -98,7 +98,7 @@ def start(initial_phase: str) -> None:
 
 def end() -> None:
     console.vverbose("[cpu_tracking] End\n")
-    _add_times_to_phase()
+    _add_times_to_phase(Snapshot.take())
     phase_stack.clear()
 
 
@@ -107,7 +107,7 @@ def push_phase(phase_name: str) -> None:
         return
 
     console.vverbose("[cpu_tracking] Push phase '%s' (Stack: %r)\n" % (phase_name, phase_stack))
-    _add_times_to_phase()
+    _add_times_to_phase(Snapshot.take())
     phase_stack.append(phase_name)
 
 
@@ -116,7 +116,7 @@ def pop_phase() -> None:
         return
 
     console.vverbose("[cpu_tracking] Pop phase '%s' (Stack: %r)\n" % (phase_stack[-1], phase_stack))
-    _add_times_to_phase()
+    _add_times_to_phase(Snapshot.take())
     phase_stack.pop()
 
 
@@ -128,9 +128,8 @@ def _is_not_tracking() -> bool:
     return not bool(phase_stack)
 
 
-def _add_times_to_phase() -> None:
+def _add_times_to_phase(snapshot: Snapshot) -> None:
     global prev_snapshot
-    snapshot = Snapshot.take()
     for phase_name in phase_stack[-1], "TOTAL":
         times[phase_name] += snapshot - prev_snapshot
     prev_snapshot = snapshot

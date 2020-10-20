@@ -5,12 +5,16 @@ license: GPL
 distribution: check_mk
 description:
 
- This check monitors the latency of write IO operations. The total writes will
- always be displayed. Additionally write IO latency groups will be displayed
- if the counter is greater than a given threshold. The state will change
- accordingly to the defined threshold.
+ This check monitors the latency of write IO operations. This is shown as the
+ number of write IO operations as a percentage of total write IO operations within
+ a particular latency range. A latency range is a range of time intervals,
+ e.g. 0-0.1 ms, 0.1-0.2 ms, etc.
 
- Thresholds and correlating states can be defined for each latency group.
+ Thresholds for WARN and CRIT states can be defined, along with the starting
+ range from which the levels are relevant. For example, show a WARN if 1% of
+ overall write IO operations have a latency of 10-20 ms or above, and CRIT if 2%
+ of overall write IO operations reach this threshold. The corresponding ruleset
+ for these thresholds is named "Nimble IO levels".
 
 item:
  Name of the volume

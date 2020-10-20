@@ -61,6 +61,7 @@ def util_counter(stats: CPUInfo, this_time: float) -> CPUInfo:
     return CPUInfo(stats.name, *diff_values)
 
 
+# ALREADY MIGRATED
 def check_cpu_util(util, params, this_time=None, cores=None, perf_max=100):
     # Convert legacy param style to new dict style
     if params is None:
@@ -121,6 +122,7 @@ def check_cpu_util(util, params, this_time=None, cores=None, perf_max=100):
             yield from _util_perfdata(core, total_perc, core_index, this_time, params)
 
 
+# ALREADY MIGRATED
 def check_cpu_util_unix(values: CPUInfo, params, cores=None, values_counter=True):
     this_time = time.time()
     if values_counter:
@@ -133,6 +135,8 @@ def check_cpu_util_unix(values: CPUInfo, params, cores=None, values_counter=True
         user_perc = values.user
         system_perc = values.system
         wait_perc = values.iowait
+        steal_perc = values.steal
+        guest_perc = values.guest
         util_total_perc = values.util_total
 
     yield check_levels(user_perc,
@@ -187,6 +191,7 @@ def check_cpu_util_unix(values: CPUInfo, params, cores=None, values_counter=True
         yield check_result
 
 
+# ALREADY MIGRATED
 def _check_single_core_util(util, metric, levels, infoname):
     state, infotext, perfdata = check_levels(
         util,
@@ -201,6 +206,7 @@ def _check_single_core_util(util, metric, levels, infoname):
         yield state, infotext, perfdata
 
 
+# ALREADY MIGRATED
 def _util_perfdata(core, total_perc, core_index, this_time, params):
 
     if "core_util_time" in params:
@@ -244,6 +250,7 @@ def _util_perfdata(core, total_perc, core_index, this_time, params):
         )
 
 
+# not yet migrated!
 def check_cpu_util_linux_container(_no_item, params, parsed):
     con_ticks = parsed.get("container_ticks")
     sys_ticks = parsed.get("system_ticks")
@@ -268,6 +275,7 @@ def check_cpu_util_linux_container(_no_item, params, parsed):
 #   '----------------------------------------------------------------------'
 
 
+# ALREADY MIGRATED
 def cpu_util_time(this_time, core, perc, threshold, warn_core, crit_core):
     core_state_name = "cpu.util.core.high.%s" % core
     if perc > threshold:

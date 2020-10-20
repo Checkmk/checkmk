@@ -9,7 +9,7 @@
 from typing import Any, Dict
 import pytest  # type: ignore[import]
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.utils import cpu_util
 
 pytestmark = pytest.mark.checks
@@ -17,7 +17,7 @@ pytestmark = pytest.mark.checks
 
 def test_check_cpu_util():
     """
-    Test a quite streight forward case. Nothing in particular, just to have at least any test.
+    Test a quite straight forward case. Nothing in particular, just to have at least any test.
     """
 
     value_store: Dict[str, Any] = {}
@@ -40,18 +40,44 @@ def test_check_cpu_util():
         )) == [
             Metric('util', 123.0, levels=(80.0, 90.0), boundaries=(0.0, 200.0)),
             Result(
-                state=state.CRIT,
+                state=State.CRIT,
                 summary='Total CPU (3min average): 123% (warn/crit at 80.0%/90.0%)',
             ),
             Metric('util_average', 123.0, levels=(80.0, 90.0)),
             Result(
-                state=state.WARN,
+                state=State.WARN,
                 summary='Core my_core: 12.0% (warn/crit at 12.0%/13.0%)',
             ),
             Result(
-                state=state.CRIT,
+                state=State.CRIT,
                 summary='Core your_core: 42.0% (warn/crit at 12.0%/13.0%)',
             ),
+        ]
+
+
+def test_check_cpu_util_unix():
+
+    assert list(
+        cpu_util.check_cpu_util_unix(
+            cpu_info=cpu_util.CPUInfo("cpu-name", 10, 4, 6, 8, 5, 8, 3, 6, 2, 4),
+            params={},
+            this_time=0,
+            value_store={},
+            cores=[],
+            values_counter=False,
+        )) == [
+            Result(state=State.OK, summary='User: 10.0%'),
+            Metric("user", 10.),
+            Result(state=State.OK, summary='System: 6.00%'),
+            Metric("system", 6.),
+            Result(state=State.OK, summary='Wait: 5.00%'),
+            Metric("wait", 5.),
+            Result(state=State.OK, summary='Steal: 6.00%'),
+            Metric("steal", 6.),
+            Result(state=State.OK, summary='Guest: 2.00%'),
+            Metric("guest", 2.),
+            Result(state=State.OK, summary='Total CPU: 42.0%'),
+            Metric("util", 42.),
         ]
 
 
@@ -82,7 +108,7 @@ def test_cpu_util_time():
         )
     ) == [
         Result(
-            state=state.WARN,
+            state=State.WARN,
             summary='my_core is under high load for: 7 seconds (warn/crit at 5 seconds/10 seconds)',
         ),
     ]

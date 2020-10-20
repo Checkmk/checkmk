@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Mapping, MutableMapping, NamedTuple, Optional, Tuple
+from typing import List, Mapping, MutableMapping, NamedTuple, Optional, Tuple
 
 import time
 
@@ -13,6 +13,7 @@ from ..agent_based_api.v1 import (
     check_levels,
     check_levels_predictive,
     get_average,
+    IgnoreResultsError,
     Metric,
     regex,
     render,
@@ -182,6 +183,90 @@ def check_cpu_util(
     ]):
         for core_index, (core, total_perc) in enumerate(cores):
             yield from _util_perfdata(core, total_perc, core_index, this_time, params, value_store)
+
+
+def check_cpu_util_unix(
+    *,
+    cpu_info: CPUInfo,
+    params: Mapping,
+    this_time: float,
+    value_store: MutableMapping,
+    cores: List[CPUInfo],
+    values_counter: bool,
+) -> CheckResult:
+    if values_counter:
+        diff_values = _util_counter(cpu_info, value_store)
+        sum_jiffies = diff_values.total_sum
+        if sum_jiffies == 0:
+            raise IgnoreResultsError("Too short time difference since last check")
+        user_perc, system_perc, wait_perc, steal_perc, guest_perc, util_total_perc = diff_values.utils_perc
+    else:
+        user_perc = cpu_info.user
+        system_perc = cpu_info.system
+        wait_perc = cpu_info.iowait
+        steal_perc = cpu_info.steal
+        guest_perc = cpu_info.guest
+        util_total_perc = cpu_info.util_total
+
+    yield from check_levels(
+        user_perc,
+        metric_name='user',
+        render_func=render.percent,
+        label="User",
+    )
+    yield from check_levels(
+        system_perc,
+        metric_name='system',
+        render_func=render.percent,
+        label="System",
+    )
+    yield from check_levels(
+        wait_perc,
+        metric_name='wait',
+        levels_upper=params.get('iowait'),
+        render_func=render.percent,
+        label="Wait",
+    )
+
+    # Compute values used in virtualized environments (Xen, etc.)
+    # Only do this for counters that have counted at least one tick
+    # since the system boot. This avoids silly output in systems
+    # where these counters are not being used
+    if cpu_info.steal:
+        yield from check_levels(
+            steal_perc,
+            metric_name="steal",
+            levels_upper=params.get('steal'),
+            render_func=render.percent,
+            label="Steal",
+        )
+
+    if cpu_info.guest:
+        yield from check_levels(
+            guest_perc,
+            metric_name='guest',
+            render_func=render.percent,
+            label="Guest",
+        )
+
+    summary_cores = []
+    for core in cores:
+        key = f"cpu.util.{core.name}.total"
+        prev_total = value_store.get(key, 0)
+        util_total = core.util_total
+        total_diff = util_total - prev_total
+        value_store[key] = util_total
+        total_perc = (100.0 * total_diff / sum_jiffies) * len(cores)
+        summary_cores.append((core.name, total_perc))
+
+    yield from check_cpu_util(
+        value_store=value_store,
+        util=util_total_perc,
+        params=params,
+        this_time=this_time,
+        cores=summary_cores,
+        perf_max=None,
+    )
 
 
 def _check_single_core_util(

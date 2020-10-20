@@ -1,0 +1,28 @@
+Title: Better detection of changes in baked agent packages
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1603178161
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+Previously, the only property that has been observed by the agent bakery to decide whether
+to bake new agents, was the WATO agent configuration. This sometimes lead to problems when
+deploying your own plugins, because changes in agent plugin files won't get recognized and
+hence no new agent would get baked. Furthermore, if you managed to force-bake the agents,
+including the file changes, the config hash would still stay the same, hence the agent updater
+would refuse to deploy the new package to the hosts.
+
+The agent bakery will now recognize changes in every file that gets deployed to the configured
+agent packages and reflect them in generating a different agent hash on baking agents. This is
+also true for files that get superceded by their counterpart at the local hierarchy, see Werk #10975.
+
+Similar to a config change, changes in underlying files will lead to a highlighted "Bake agents"
+button at the agent bakery.
+
+Please note that this mechanism will only work work bakery plugins that are specified via
+the new Bakery API, see Werk #11401. This includes all builtin bakery plugins. E.g., if you
+decide to adapt the Checkmk linux agent (copy an adapted version to the local hierarchy),
+your changes will get recognized.

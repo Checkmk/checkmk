@@ -949,7 +949,6 @@ input.time {
   font-family: monospace;
 }
 
-/* TODO: Reproduce .inputerror elements */
 .inputerror {
   input,
   select,
@@ -960,6 +959,7 @@ input.time {
   div.snapin & textarea,
   #mk_side_search_field,
   span.checkbox,
+  span.select2 .select2-selection,
   > select {
     background-color: $color-nuance-15;
   }

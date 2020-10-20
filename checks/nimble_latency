@@ -69,7 +69,7 @@ def parse_nimble_read_latency(info):
                 except ValueError:
                     continue
                 inst = parsed.setdefault(vol_name, {}).setdefault(ty, {})
-                inst[(key, title)] = value
+                inst[key] = title, value
     return parsed
 
 
@@ -85,24 +85,18 @@ def _check_nimble_latency(item, params, data, ty):
         return
 
     timestamp = time.time()
-    for (key, title), value in ty_data.items():
-        rate = get_rate("nimble_%s_latency.%s.%s" % (ty, item, key), timestamp, value)
+    for key, (title, value) in ty_data.items():
+        metric_name = "nimble_%s_latency_%s" % (ty, key.replace(".", ""))
+        value_store_name = "nimble_%s_latency.%s.%s" % (ty, item, key)
+        rate = get_rate(value_store_name, timestamp, value)
 
-        yield 0, None, [("nimble_%s_latency_%s" % (ty, key.replace(".", "")), rate)]
-
-        rate_readable = get_age_human_readable(rate)
-        if key == "total":
-            yield 0, '%s: %s' % (title, rate_readable)
-            continue
-
-        state, state_count = params[key]
-        if rate > state_count:
-            level_info = ""
-            if state:
-                level_info = " (level at %s)" % get_age_human_readable(state_count)
-            yield state, "%s: %s%s" % (title, rate_readable, level_info)
-        else:
-            continue
+        yield check_levels(
+            value=rate,
+            dsname=metric_name,
+            params=params.get(key),
+            human_readable_func=get_age_human_readable,
+            infoname=title,
+        )
 
 
 @get_parsed_item_data

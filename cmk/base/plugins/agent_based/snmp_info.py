@@ -10,6 +10,7 @@ from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
     HostLabelGenerator,
     SNMPStringTable,
+    InventoryResult,
 )
 
 from .agent_based_api.v1 import (
@@ -20,6 +21,7 @@ from .agent_based_api.v1 import (
     Service,
     SNMPTree,
     State,
+    Attributes,
 )
 
 
@@ -81,4 +83,24 @@ register.check_plugin(
     service_name="SNMP Info",
     discovery_function=discover_snmp_info,
     check_function=check_snmp_info,
+)
+
+
+def inventory_snmp_info(section: SNMPInfo) -> InventoryResult:
+    yield Attributes(path=["hardware", "system"],
+                     inventory_attributes={
+                         "product": section.description,
+                     })
+
+    yield Attributes(path=["software", "configuration", "snmp_info"],
+                     inventory_attributes={
+                         "contact": section.contact,
+                         "name": section.name,
+                         "location": section.location,
+                     })
+
+
+register.inventory_plugin(
+    name="snmp_info",
+    inventory_function=inventory_snmp_info,
 )

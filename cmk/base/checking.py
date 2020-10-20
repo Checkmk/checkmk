@@ -119,8 +119,6 @@ def do_check(
     only_check_plugin_names: Optional[Set[CheckPluginName]] = None,
     fetcher_messages: Optional[Sequence[FetcherMessage]] = None
 ) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[str]]:
-    cpu_tracking.reset()
-    cpu_tracking.start("busy")
     console.verbose("Checkmk version %s\n", cmk_version.__version__)
 
     config_cache = config.get_config_cache()
@@ -133,105 +131,105 @@ def do_check(
     long_infotexts: List[ServiceAdditionalDetails] = []
     perfdata: List[str] = []
     try:
-        license_usage.try_history_update()
+        with cpu_tracking.execute("busy"):
+            license_usage.try_history_update()
 
-        # In case of keepalive we always have an ipaddress (can be 0.0.0.0 or :: when
-        # address is unknown). When called as non keepalive ipaddress may be None or
-        # is already an address (2nd argument)
-        if ipaddress is None and not host_config.is_cluster:
-            ipaddress = ip_lookup.lookup_ip_address(host_config)
+            # In case of keepalive we always have an ipaddress (can be 0.0.0.0 or :: when
+            # address is unknown). When called as non keepalive ipaddress may be None or
+            # is already an address (2nd argument)
+            if ipaddress is None and not host_config.is_cluster:
+                ipaddress = ip_lookup.lookup_ip_address(host_config)
 
-        item_state.load(hostname)
+            item_state.load(hostname)
 
-        # When monitoring Checkmk clusters, the cluster nodes are responsible for fetching all
-        # information from the monitored host and cache the result for the cluster checks to be
-        # performed on the cached information.
-        #
-        # This means that in case of SNMP nodes, they need to take the clustered services of the
-        # node into account, fetch the needed sections and cache them for the cluster host.
-        #
-        # But later, when checking the node services, the node has to only deal with the unclustered
-        # services.
-        belongs_to_cluster = len(config_cache.clusters_of(hostname)) > 0
+            # When monitoring Checkmk clusters, the cluster nodes are responsible for fetching all
+            # information from the monitored host and cache the result for the cluster checks to be
+            # performed on the cached information.
+            #
+            # This means that in case of SNMP nodes, they need to take the clustered services of the
+            # node into account, fetch the needed sections and cache them for the cluster host.
+            #
+            # But later, when checking the node services, the node has to only deal with the unclustered
+            # services.
+            belongs_to_cluster = len(config_cache.clusters_of(hostname)) > 0
 
-        services_to_fetch = _get_services_to_fetch(
-            host_name=hostname,
-            belongs_to_cluster=belongs_to_cluster,
-            config_cache=config_cache,
-            only_check_plugins=only_check_plugin_names,
-        )
+            services_to_fetch = _get_services_to_fetch(
+                host_name=hostname,
+                belongs_to_cluster=belongs_to_cluster,
+                config_cache=config_cache,
+                only_check_plugins=only_check_plugin_names,
+            )
 
-        services_to_check = _filter_clustered_services(
-            config_cache=config_cache,
-            host_name=hostname,
-            belongs_to_cluster=belongs_to_cluster,
-            services=services_to_fetch,
-        )
+            services_to_check = _filter_clustered_services(
+                config_cache=config_cache,
+                host_name=hostname,
+                belongs_to_cluster=belongs_to_cluster,
+                services=services_to_fetch,
+            )
 
-        # see which raw sections we may need
-        selected_raw_sections = agent_based_register.get_relevant_raw_sections(
-            check_plugin_names=(s.check_plugin_name for s in services_to_fetch),
-            consider_inventory_plugins=host_config.do_status_data_inventory,
-        )
+            # see which raw sections we may need
+            selected_raw_sections = agent_based_register.get_relevant_raw_sections(
+                check_plugin_names=(s.check_plugin_name for s in services_to_fetch),
+                consider_inventory_plugins=host_config.do_status_data_inventory,
+            )
 
-        sources = checkers.make_sources(
-            host_config,
-            ipaddress,
-            mode=checkers.Mode.CHECKING,
-        )
-        mhs = MultiHostSections()
+            sources = checkers.make_sources(
+                host_config,
+                ipaddress,
+                mode=checkers.Mode.CHECKING,
+            )
+            mhs = MultiHostSections()
 
-        result = checkers.update_host_sections(
-            mhs,
-            checkers.make_nodes(
+            result = checkers.update_host_sections(
+                mhs,
+                checkers.make_nodes(
+                    config_cache,
+                    host_config,
+                    ipaddress,
+                    checkers.Mode.CHECKING,
+                    sources,
+                ),
+                selected_raw_sections=selected_raw_sections,
+                max_cachefile_age=host_config.max_cachefile_age,
+                host_config=host_config,
+                fetcher_messages=fetcher_messages,
+            )
+
+            num_success, plugins_missing_data = _do_all_checks_on_host(
                 config_cache,
                 host_config,
                 ipaddress,
-                checkers.Mode.CHECKING,
-                sources,
-            ),
-            selected_raw_sections=selected_raw_sections,
-            max_cachefile_age=host_config.max_cachefile_age,
-            host_config=host_config,
-            fetcher_messages=fetcher_messages,
-        )
-
-        num_success, plugins_missing_data = _do_all_checks_on_host(
-            config_cache,
-            host_config,
-            ipaddress,
-            multi_host_sections=mhs,
-            services=services_to_check,
-            only_check_plugins=only_check_plugin_names,
-        )
-        inventory.do_inventory_actions_during_checking_for(
-            config_cache,
-            host_config,
-            ipaddress,
-            sources=sources,
-            multi_host_sections=mhs,
-        )
-
-        if _submit_to_core:
-            item_state.save(hostname)
-
-        for source, host_sections in result:
-            source_state, source_output, source_perfdata = source.summarize(host_sections)
-            if source_output != "":
-                status = max(status, source_state)
-                infotexts.append("[%s] %s" % (source.id, source_output))
-                perfdata.extend([_convert_perf_data(p) for p in source_perfdata])
-
-        if plugins_missing_data:
-            missing_data_status, missing_data_infotext = _check_plugins_missing_data(
-                plugins_missing_data,
-                exit_spec,
-                bool(num_success),
+                multi_host_sections=mhs,
+                services=services_to_check,
+                only_check_plugins=only_check_plugin_names,
             )
-            status = max(status, missing_data_status)
-            infotexts.append(missing_data_infotext)
+            inventory.do_inventory_actions_during_checking_for(
+                config_cache,
+                host_config,
+                ipaddress,
+                sources=sources,
+                multi_host_sections=mhs,
+            )
 
-        cpu_tracking.end()
+            if _submit_to_core:
+                item_state.save(hostname)
+
+            for source, host_sections in result:
+                source_state, source_output, source_perfdata = source.summarize(host_sections)
+                if source_output != "":
+                    status = max(status, source_state)
+                    infotexts.append("[%s] %s" % (source.id, source_output))
+                    perfdata.extend([_convert_perf_data(p) for p in source_perfdata])
+
+            if plugins_missing_data:
+                missing_data_status, missing_data_infotext = _check_plugins_missing_data(
+                    plugins_missing_data,
+                    exit_spec,
+                    bool(num_success),
+                )
+                status = max(status, missing_data_status)
+                infotexts.append(missing_data_infotext)
+
         phase_times = cpu_tracking.get_times()
         total_times = phase_times["TOTAL"]
 

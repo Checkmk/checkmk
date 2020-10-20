@@ -131,6 +131,27 @@ def test_cpu_tracking_add_times(set_time):
     assert times["agent"].run_time == 7.0, times["agent"]
 
 
+def test_cpu_tracking_nested_times(set_time):
+    set_time(0.0)
+
+    with cpu_tracking.execute("one"):
+        set_time(2.0)
+
+        with cpu_tracking.phase("two"):
+            set_time(4.0)
+
+            with cpu_tracking.phase("three"):
+                set_time(6.0)
+
+    times = cpu_tracking.get_times()
+    assert len(times) == 4, times.keys()
+
+    assert times["one"].run_time == 2.0
+    assert times["two"].run_time == 2.0
+    assert times["three"].run_time == 2.0
+    assert times["TOTAL"].run_time == 6.0
+
+
 def test_cpu_tracking_update(set_time):
     set_time(0.0)
     with cpu_tracking.execute("busy"):

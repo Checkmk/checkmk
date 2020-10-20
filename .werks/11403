@@ -1,0 +1,22 @@
+Title: Improved versioning for baked agent packages
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1603177874
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+Previously, when updating a baked agent via a package manager, you would eventually
+receive a warning about a downgrade of the Checkmk agent. The reason for this was the
+baked agent's version string, that was formed of Checkmk version and the agent's configuration
+hash , with the latter being quite random and thus confusing the package manager, that expects
+an increasing versioning. E.g. a version string could be <tt>1.6.0p18.f123abcd</tt> before bake,
+and <tt>1.6.0p18.1234cdef</tt> after bake.
+
+This behavior is now fixed by introducing an internal bake revision, that increases on every
+newly baked package (per Checkmk version) and that's only purpose is to guarantee an
+increasing version string for the .rpm, .deb and .pkg packages (e.g. <tt>1.6.0p18-1.f123abcd</tt>
+before bake, <tt>1.6.0p17-2.1234cdef</tt> after bake). Please note that this revision won't
+be visible on the GUI or in the package's filenames, it only affects the package's metadata.

@@ -578,12 +578,10 @@ def forget_manual_vertical_zoom():
         save_user_graph_data_range(user_range)
 
 
-def render_graphs_from_specification_html(graph_identification,
-                                          graph_data_range,
-                                          graph_render_options,
-                                          render_async=True):
+def resolve_graph_recipe(graph_identification, destination=None):
     try:
-        graph_recipes = graph_identification_types.create_graph_recipes(graph_identification)
+        return graph_identification_types.create_graph_recipes(graph_identification,
+                                                               destination=None)
     except livestatus.MKLivestatusNotFoundError:
         return render_graph_error_html(
             "%s\n\n%s: %r" % (_("Cannot fetch data via Livestatus"),
@@ -591,6 +589,16 @@ def render_graphs_from_specification_html(graph_identification,
             _("Cannot calculate graph recipes"))
     except Exception as e:
         return render_graph_error_html(e, _("Cannot calculate graph recipes"))
+
+
+def render_graphs_from_specification_html(graph_identification,
+                                          graph_data_range,
+                                          graph_render_options,
+                                          render_async=True):
+
+    graph_recipes = resolve_graph_recipe(graph_identification)
+    if not isinstance(graph_recipes, list):
+        return graph_recipes  # This is to html.write the exception
 
     return render_graphs_from_definitions(graph_recipes, graph_data_range, graph_render_options,
                                           render_async)
@@ -838,6 +846,7 @@ def _graph_title_height_ex(graph_render_options):
 default_dashlet_graph_render_options = {
     "font_size": 8,
     "show_legend": False,
+    "show_title": False,
     "title_format": ["plain", "add_host_name", "add_service_description"],
     "show_controls": False,
     "resizable": False,
@@ -886,16 +895,14 @@ def host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_opt
     graph_data_range["step"] = estimate_graph_step_for_html(graph_data_range["time_range"],
                                                             graph_render_options)
 
-    try:
-        graph_recipes = graph_identification_types.create_graph_recipes(
-            graph_identification, destination=GraphDestinations.dashlet)
-        if graph_recipes:
-            graph_recipe = graph_recipes[0]
-        else:
-            raise MKGeneralException(_("Failed to calculate a graph recipe."))
-    except livestatus.MKLivestatusNotFoundError:
-        html.div(_("Cannot render graphs: cannot fetch data via Livestatus"), class_="error")
-        return
+    graph_recipes = resolve_graph_recipe(graph_identification,
+                                         destination=GraphDestinations.dashlet)
+    if not isinstance(graph_recipes, list):
+        return graph_recipes  # This is to html.write the exception
+    if graph_recipes:
+        graph_recipe = graph_recipes[0]
+    else:
+        raise MKGeneralException(_("Failed to calculate a graph recipe."))
 
     # When the legend is enabled, we need to reduce the height by the height of the legend to
     # make the graph fit into the dashlet area.

@@ -8,7 +8,7 @@ import json
 import livestatus
 
 import cmk.gui.sites as sites
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (
@@ -29,7 +29,7 @@ from cmk.gui.plugins.dashboard.utils import (
     DashletId,
 )
 
-from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options
+from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options, resolve_graph_recipe
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options, transform_graph_render_options
 
 
@@ -72,6 +72,9 @@ class GraphDashlet(Dashlet):
     def has_context(cls):
         return True
 
+    def display_title(self) -> str:
+        return self._dashlet_spec.get("title", self._dashlet_spec["_graph_title"] or self.title())
+
     def __init__(self, dashboard_name: DashboardName, dashboard: DashboardConfig,
                  dashlet_id: DashletId, dashlet: DashletConfig) -> None:
         super().__init__(dashboard_name=dashboard_name,
@@ -90,6 +93,14 @@ class GraphDashlet(Dashlet):
         self._dashlet_spec["graph_render_options"].setdefault("title_format", title_format)
 
         self._dashlet_spec["_graph_identification"] = self.graph_identification()
+
+        graph_recipes = resolve_graph_recipe(self._dashlet_spec["_graph_identification"])
+        if not isinstance(graph_recipes, list):
+            return
+        if graph_recipes:
+            self._dashlet_spec["_graph_title"] = graph_recipes[0]["title"]
+        else:
+            raise MKGeneralException(_("Failed to calculate a graph recipe."))
 
         # New graphs which have been added via "add to visual" option don't have a timerange
         # configured. So we assume the default timerange here by default.
@@ -166,6 +177,7 @@ class GraphDashlet(Dashlet):
                  exclude=[
                      "show_time_range_previews",
                      "title_format",
+                     "show_title",
                  ],
              )),
         ]

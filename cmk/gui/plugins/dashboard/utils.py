@@ -29,6 +29,7 @@ from cmk.gui.valuespec import (
     ValueSpecValidateFunc,
     DictionaryEntry,
     Dictionary,
+    DropdownChoice,
     FixedValue,
     Checkbox,
     TextUnicode,
@@ -401,10 +402,14 @@ def dashlet_vs_general_settings(dashlet: Dashlet, single_infos: List[str]):
                  default_value=True,
              )),
             ('show_title',
-             Checkbox(
-                 title=_('Show Title'),
-                 label=_('Render the titlebar above the dashlet'),
+             DropdownChoice(
+                 title=_("Show title header"),
                  help=_('Render the titlebar including title and link above the dashlet.'),
+                 choices=[
+                     (False, _("Don't show any header")),
+                     (True, _("Show header with highlighted background")),
+                     ("transparent", _("Show title without any background")),
+                 ],
                  default_value=True,
              )),
             ('title',

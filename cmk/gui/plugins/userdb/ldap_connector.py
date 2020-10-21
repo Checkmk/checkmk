@@ -89,6 +89,7 @@ from cmk.gui.plugins.userdb.utils import (
     cleanup_connection_id,
     release_users_lock,
     CheckCredentialsResult,
+    add_internal_attributes,
 )
 
 from cmk.utils.type_defs import UserId
@@ -1239,6 +1240,7 @@ class LDAPUserConnector(UserConnector):
 
             users[user_id] = user  # Update the user record
             if mode_create:
+                add_internal_attributes(users[user_id])
                 changes.append(_("LDAP [%s]: Created user %s") % (connection_id, user_id))
             else:
                 details = []

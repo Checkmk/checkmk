@@ -55,6 +55,7 @@ from cmk.gui.plugins.userdb.utils import (
     active_connections,
     release_users_lock,
     save_cached_profile,
+    add_internal_attributes,
 )
 
 from cmk.gui.utils.urls import makeuri_contextless
@@ -692,6 +693,9 @@ def load_users(lock: bool = False) -> Users:
                     "password": password,
                     "locked": False,
                 }
+
+                add_internal_attributes(new_user)
+
                 result[uid] = new_user
             # Make sure that the user has an alias
             result[uid].setdefault("alias", uid)

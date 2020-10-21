@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.userdb as userdb
+from cmk.gui.plugins.userdb.utils import add_internal_attributes
 import cmk.gui.config as config
 import cmk.gui.mkeventd
 from cmk.gui.i18n import _
@@ -67,6 +68,9 @@ def edit_users(changed_users):
             new_users_info.append(user_id)
         else:
             modified_users_info.append(user_id)
+
+        if is_new_user:
+            add_internal_attributes(user_attrs)
 
         all_users[user_id] = user_attrs
 

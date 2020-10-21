@@ -44,7 +44,7 @@ import cmk.gui.pagetypes as pagetypes  # pylint: disable=cmk-module-layer-violat
 import cmk.gui.visuals as visuals  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.plugins.views.utils import get_all_views  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.plugins.dashboard.utils import get_all_dashboards  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.plugins.userdb.utils import save_connection_config, load_connection_config  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.plugins.userdb.utils import save_connection_config, load_connection_config, USER_SCHEME_SERIAL  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.plugins.watolib.utils import filter_unknown_settings  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.tags  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.hosts_and_folders  # pylint: disable=cmk-module-layer-violation
@@ -52,6 +52,7 @@ import cmk.gui.watolib.rulesets  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.search  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.modules  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.config  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.userdb import load_users, save_users  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.utils  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.htmllib as htmllib  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.globals import AppContext, RequestContext  # pylint: disable=cmk-module-layer-violation
@@ -146,9 +147,10 @@ class UpdateConfig:
             (self._add_missing_type_to_ldap_connections, "Migrate LDAP connections"),
             (self._create_search_index, "Creating search index"),
             (self._rewrite_bi_configuration, "Rewrite BI Configuration"),
+            (self._set_user_scheme_serial, "Set version specific user attributes"),
         ]
 
-    # FS_USED UPDATE DELETE THIS FOR CMK 1.8, THIS ONLY migrates 1.6->1.7
+    # FS_USED UPDATE DELETE THIS FOR CMK 1.8, THIS ONLY migrates 1.6->2.0
     def _update_fs_used_name(self):
         check_df_includes_use_new_metric()
         cmk.update_rrd_fs_names.update()
@@ -387,7 +389,7 @@ class UpdateConfig:
     def _migrate_pagetype_topics_to_ids(self):
         """Change all visuals / page types to use IDs as topics
 
-        1.7 changed the topic from a free form user localizable string to an ID
+        2.0 changed the topic from a free form user localizable string to an ID
         that references the builtin and user managable "pagetype_topics".
 
         Try to detect builtin or existing topics topics, reference them and
@@ -562,6 +564,26 @@ class UpdateConfig:
         """Convert the bi configuration to the new (REST API compatible) format"""
         BILegacyPacksConverter(BIManager.bi_configuration_file()).convert_config()
 
+    def _set_user_scheme_serial(self):
+        """Set attribute to detect with what cmk version the user was created.
+        We start that with 2.0"""
+        users = load_users(lock=True)
+        for user_id in users:
+            # pre 2.0 user
+            if users[user_id].get("user_scheme_serial") is None:
+                _set_show_mode(users, user_id)
+            # here you could set attributes based on the current scheme
+
+            users[user_id]["user_scheme_serial"] = USER_SCHEME_SERIAL
+        save_users(users)
+
+
+def _set_show_mode(users, user_id):
+    """Set show_mode for existing user to 'default to show more' on upgrade to
+    2.0"""
+    users[user_id]["show_mode"] = "default_show_more"
+    return users
+
 
 def _id_from_title(title):
     return re.sub("[^-a-zA-Z0-9_]+", "", title.lower().replace(" ", "_"))
@@ -611,7 +633,7 @@ def check_df_includes_use_new_metric():
             mat = re.search('fs_used', r, re.M)
             if not mat:
                 msg = ('source: %s\n Returns the wrong perfdata\n' % df_file +
-                       'Checkmk 1.7 requires Filesystem check plugins to deliver '
+                       'Checkmk 2.0 requires Filesystem check plugins to deliver '
                        '"Used filesystem space" perfdata under the metric name fs_used. '
                        'Your local extension pluging seems to be using the old convention '
                        'of mountpoints as the metric name. Please update your include file '

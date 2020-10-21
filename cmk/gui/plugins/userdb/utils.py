@@ -19,6 +19,10 @@ from cmk.gui.i18n import _
 import cmk.gui.config as config
 from cmk.utils.type_defs import UserId
 
+# count this up, if new user attributes are used or old are marked as
+# incompatible
+USER_SCHEME_SERIAL = 0
+
 UserSpec = Dict[str, Any]  # TODO: Improve this type
 RoleSpec = Dict[str, Any]  # TODO: Improve this type
 Roles = Dict[str, RoleSpec]  # TODO: Improve this type
@@ -110,6 +114,10 @@ def new_user_template(connection_id: str) -> UserSpec:
     # Apply the default user profile
     new_user.update(config.default_user_profile)
     return new_user
+
+
+def add_internal_attributes(user: UserSpec) -> UserSpec:
+    return user.setdefault("user_scheme_serial", USER_SCHEME_SERIAL)
 
 
 #   .--Connections---------------------------------------------------------.

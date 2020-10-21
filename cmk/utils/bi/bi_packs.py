@@ -31,7 +31,6 @@ from cmk.utils.bi.bi_lib import (
 
 from cmk.utils.bi.bi_rule import BIRule, BIRuleSchema
 from cmk.utils.bi.bi_rule_interface import bi_rule_id_registry
-from cmk.utils.bi.bi_legacy_config_converter import BILegacyConfigConverter
 from cmk.utils.bi.bi_sample_configs import bi_sample_config
 from cmk.utils.bi.bi_aggregation import BIAggregation, BIAggregationSchema
 from cmk.utils.bi.bi_node_generator import BINodeGenerator
@@ -249,15 +248,8 @@ class BIAggregationPacks:
 
     def load_config(self) -> None:
         if not Path(self._bi_configuration_file).exists():
-            base_dir = Path(self._bi_configuration_file)
-            legacy_filename = base_dir.parent / "bi.mk"
-            if legacy_filename.exists():
-                packs_data = BILegacyConfigConverter().get_schema_for_packs()
-                self._instantiate_packs(packs_data)
-                self.save_config()
-            else:
-                self.load_config_from_schema(bi_sample_config)
-                return
+            self.load_config_from_schema(bi_sample_config)
+            return
 
         self.load_config_from_schema(store.load_object_from_file(self._bi_configuration_file))
 

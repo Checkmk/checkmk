@@ -36,6 +36,8 @@ from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.paths
 import cmk.utils
 from cmk.utils.type_defs import CheckPluginName, UserId
+from cmk.utils.bi.bi_legacy_config_converter import BILegacyPacksConverter
+from cmk.gui.bi import BIManager  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.pagetypes as pagetypes  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.visuals as visuals  # pylint: disable=cmk-module-layer-violation
@@ -140,6 +142,7 @@ class UpdateConfig:
             (self._migrate_pagetype_topics_to_ids, "Migrate pagetype topics"),
             (self._add_missing_type_to_ldap_connections, "Migrate LDAP connections"),
             (self._create_search_index, "Creating search index"),
+            (self._rewrite_bi_configuration, "Rewrite BI Configuration"),
         ]
 
     # FS_USED UPDATE DELETE THIS FOR CMK 1.8, THIS ONLY migrates 1.6->1.7
@@ -508,6 +511,10 @@ class UpdateConfig:
         This is necessary for example if a new Rulespec was added by an MKP.
         """
         cmk.gui.watolib.search.build_and_store_index()
+
+    def _rewrite_bi_configuration(self):
+        """Convert the bi configuration to the new (REST API compatible) format"""
+        BILegacyPacksConverter(BIManager.bi_configuration_file()).convert_config()
 
 
 def _id_from_title(title):

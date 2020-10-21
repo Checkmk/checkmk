@@ -20,11 +20,13 @@ from typing import Dict, Union, List, Any, Tuple
 from pathlib import Path
 from cmk.utils.rulesets.ruleset_matcher import (RulesetToDictTransformer, get_tag_to_group_map)
 import cmk.gui.config as config  # pylint: disable=cmk-module-layer-violation
+import cmk.gui.watolib as watolib  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=cmk-module-layer-violation,no-name-in-module
 from cmk.utils.log import logger
+from cmk.utils.bi.bi_packs import BIAggregationPacks
 
 BIAggrOptions = Dict[str, Any]
 BIAggrGroups = List[str]
@@ -576,3 +578,16 @@ class BILegacyConfigConverter(BIManagement):
         for x in self._packs.values():
             packs.append(pack_converter.old_to_new_schema(x))
         return packs
+
+
+class BILegacyPacksConverter(BIAggregationPacks):
+    def convert_config(self):
+        if Path(self._bi_configuration_file).exists():
+            # Already converted bi.mk -> bi_config.mk
+            return
+        if not Path(watolib.multisite_dir(), "bi.mk").exists():
+            # No legacy bi.mk available
+            return
+        packs_data = BILegacyConfigConverter().get_schema_for_packs()
+        self._instantiate_packs(packs_data)
+        self.save_config()

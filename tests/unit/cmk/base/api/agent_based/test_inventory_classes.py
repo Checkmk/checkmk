@@ -26,7 +26,7 @@ def test_atrributes_wrong_types():
     with pytest.raises(TypeError):
         _ = Attributes(
             path=["software", "os"],
-            inventory_attributes={"version": (42, 23)},  # type: ignore[dict-item]
+            inventory_attributes={"version": 42},  # type: ignore[dict-item]
         )
 
 

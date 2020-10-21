@@ -6,7 +6,7 @@
 
 from dataclasses import dataclass
 import time
-from typing import Dict, Iterable, Optional, Sequence, Union
+from typing import Iterable, Optional, Sequence, Union
 
 from .agent_based_api.v1.type_defs import InventoryResult, Parameters, SNMPStringByteTable
 from .agent_based_api.v1 import (
@@ -185,7 +185,7 @@ def inventory_if(
         except ValueError:
             if_index_nr = ""
 
-        interface_row: Dict[str, Union[str, float]] = {
+        interface_row = {
             "speed": interface.speed,
             "phys_address": interface.phys_address,
             "oper_status": interface.oper_status,

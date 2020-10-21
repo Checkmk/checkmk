@@ -11,6 +11,7 @@ from cmk.gui.valuespec import (
     Integer,
     TextAscii,
     Tuple,
+    Transform,
 )
 
 from cmk.gui.plugins.wato import (
@@ -21,7 +22,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _parameter_valuespec_hw_fans():
-    return Dictionary(
+    hw_fans_dict = Dictionary(
         elements=[
             (
                 "lower",
@@ -49,6 +50,10 @@ def _parameter_valuespec_hw_fans():
              Checkbox(title=_("Performance data"), label=_("Enable performance data"))),
         ],
         optional_keys=["upper", "output_metrics"],
+    )
+    return Transform(
+        hw_fans_dict,
+        forth=lambda spec: spec if isinstance(spec, dict) else {"lower": spec},
     )
 
 

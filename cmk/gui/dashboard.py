@@ -31,7 +31,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.valuespec import ValueSpec, ValueSpecValidateFunc, DictionaryEntry
 import cmk.gui.i18n
-from cmk.gui.i18n import _u, _
+from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.globals import html, request
 from cmk.gui.pagetypes import PagetypeTopics
@@ -93,6 +93,7 @@ from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=un
     DashboardConfig, DashboardName, DashletSize, DashletInputFunc, DashletHandleInputFunc,
     DashletId,
 )
+from cmk.gui.plugins.metrics.html_render import title_info_elements, render_title_elements
 from cmk.gui.node_visualization import get_topology_view_and_filters
 
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
@@ -518,7 +519,7 @@ def draw_dashboard(name: DashboardName) -> None:
     dashlet_styles(board)
 
     for dashlet in dashlets:
-        title, content = _render_dashlet(
+        dashlet_title, content = _render_dashlet(
             board,
             dashlet,
             is_update=False,
@@ -528,7 +529,7 @@ def draw_dashboard(name: DashboardName) -> None:
 
         # Now after the dashlet content has been calculated render the whole dashlet
         dashlet_container_begin(dashlet)
-        draw_dashlet(dashlet, content, title)
+        draw_dashlet(dashlet, content, dashlet_title)
         dashlet_container_end()
 
     # Display the dialog during initial rendering when required context information is missing.
@@ -621,9 +622,9 @@ def dashlet_container_end() -> None:
 
 
 def _render_dashlet(board: DashboardConfig, dashlet: Dashlet, is_update: bool, mtime: int,
-                    missing_mandatory_context_filters: bool) -> Tuple[str, str]:
+                    missing_mandatory_context_filters: bool) -> Tuple[Union[str, HTML], str]:
     content = ""
-    title = ""
+    title: Union[str, HTML] = ""
     try:
         missing_single_infos = dashlet.missing_single_infos()
         if missing_single_infos or missing_mandatory_context_filters:
@@ -645,15 +646,19 @@ def _render_dashlet(board: DashboardConfig, dashlet: Dashlet, is_update: bool, m
     return title, content
 
 
-def _render_dashlet_title(dashlet: Dashlet) -> str:
+def _render_dashlet_title(dashlet: Dashlet) -> Union[str, HTML]:
     title = dashlet.display_title()
-    if title is not None and dashlet.show_title():
-        url = dashlet.title_url()
-        if url:
-            title = u"%s" % html.render_a(_u(title), url)
-        else:
-            title = _u(title)
-    return title
+    title_elements = []
+    title_format = dashlet._dashlet_spec.get("title_format", [])
+
+    if dashlet.show_title() and title and "plain" in title_format:
+        title_elements.append((title, dashlet.title_url()))
+
+    if dashlet.type_name() == "pnpgraph":
+        title_elements.extend(
+            title_info_elements(dashlet._dashlet_spec["_graph_identification"][1], title_format))
+
+    return render_title_elements(title_elements)
 
 
 def _render_dashlet_content(board: DashboardConfig, dashlet: Dashlet, is_update: bool,
@@ -954,7 +959,7 @@ def get_dashlet(board: DashboardName, ident: DashletId) -> DashletConfig:
         raise MKGeneralException(_('The dashlet does not exist.'))
 
 
-def draw_dashlet(dashlet: Dashlet, content: str, title: str) -> None:
+def draw_dashlet(dashlet: Dashlet, content: str, title: Union[str, HTML]) -> None:
     """Draws the initial HTML code for one dashlet
 
     Each dashlet has an id "dashlet_%d", where %d is its index (in

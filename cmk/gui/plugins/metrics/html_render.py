@@ -20,7 +20,7 @@ from cmk.gui.globals import html, request as global_request
 import cmk.gui.config as config
 from cmk.gui.exceptions import MKGeneralException
 
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _u, _
 
 from cmk.gui.log import logger
 
@@ -145,9 +145,22 @@ def graph_ajax_context(graph_artwork, graph_data_range, graph_render_options):
     }
 
 
-def render_plain_graph_title(graph_artwork, graph_render_options):
-    return " / ".join(
-        txt for txt, _url in _render_graph_title_elements(graph_artwork, graph_render_options))
+def render_title_elements(elements, *, plain_text: bool = False) -> Union[str, HTML]:
+    def _wrap_link(txt, url):
+        title: Union[str, HTML] = _u(txt)
+        if not plain_text and url:
+            title = html.render_a(title, href=url)
+        return title
+
+    link: Union[str, HTML] = " / " if plain_text else HTML(" / ")
+    return link.join(_wrap_link(txt, url) for txt, url in elements if txt)
+
+
+def render_plain_graph_title(graph_artwork, graph_render_options) -> str:
+    title = render_title_elements(_render_graph_title_elements(graph_artwork, graph_render_options),
+                                  plain_text=True)
+    assert isinstance(title, str)
+    return title
 
 
 def _render_graph_title_elements(graph_artwork, graph_render_options):
@@ -229,10 +242,7 @@ def _get_alias_of_host(site, host_name):
 
 
 def render_html_graph_title(graph_artwork, graph_render_options):
-    title = HTML(" / ").join([
-        (html.render_a(txt, href=url) if url else txt)
-        for txt, url in _render_graph_title_elements(graph_artwork, graph_render_options)
-    ])
+    title = render_title_elements(_render_graph_title_elements(graph_artwork, graph_render_options))
     if title:
         return html.render_div(
             title,

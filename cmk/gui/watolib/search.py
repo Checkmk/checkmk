@@ -25,7 +25,12 @@ from cmk.gui.background_job import BackgroundJobAlreadyRunning, BackgroundProces
 from cmk.gui.gui_background_job import GUIBackgroundJob, job_registry
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
-from cmk.gui.plugins.watolib.utils import SampleConfigGenerator, sample_config_generator_registry
+from cmk.gui.plugins.watolib.utils import (
+    ConfigVariableRegistry,
+    SampleConfigGenerator,
+    config_variable_registry,
+    sample_config_generator_registry,
+)
 
 
 class IndexNotFoundException(MKGeneralException):
@@ -232,4 +237,34 @@ class SampleConfigGeneratorSearchIndex(SampleConfigGenerator):
         build_and_store_index()
 
 
+class MatchItemGeneratorGlobalSettings(ABCMatchItemGenerator):
+    def __init__(
+        self,
+        name: str,
+        conf_var_registry: ConfigVariableRegistry,
+    ) -> None:
+        super().__init__(name)
+        self._config_variable_registry = conf_var_registry
+
+    def generate_match_items(self) -> MatchItems:
+        yield from (MatchItem(
+            title=title,
+            topic="Global settings",
+            url="wato.py?mode=edit_configvar&varname=%s" % ident,
+            match_texts=[title],
+        ) for ident, config_var_type in self._config_variable_registry.items()
+                    for config_var in [config_var_type()]
+                    for title in [config_var.valuespec().title()]
+                    if config_var.in_global_settings() and title)
+
+    def is_affected_by_change(self, *_, **__) -> bool:
+        return False
+
+
 match_item_generator_registry = MatchItemGeneratorRegistry()
+
+match_item_generator_registry.register(
+    MatchItemGeneratorGlobalSettings(
+        'global_settings',
+        config_variable_registry,
+    ))

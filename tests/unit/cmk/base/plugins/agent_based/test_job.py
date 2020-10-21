@@ -196,40 +196,6 @@ def test_parse(string_table, expected_parsed_data):
     assert job.parse_job(string_table) == expected_parsed_data
 
 
-@pytest.mark.parametrize("warn, crit, result", [
-    (0, 0, (state.OK, '2019-01-12 14:53:21')),
-    (1, 0, (state.WARN, '2019-01-12 14:53:21 (more than 1 second ago)')),
-    (1, 2, (state.CRIT, '2019-01-12 14:53:21 (more than 2 seconds ago)')),
-])
-def test_process_start_time(warn, crit, result):
-    with on_time(*TIME):
-        assert job._process_start_time(1547301201, warn, crit) == result
-
-
-def test_normal_result():
-    summary = 'summary'
-    for s in [state.OK, state.WARN, state.CRIT, state.UNKNOWN]:
-        assert job._normal_result(
-            mon_state=s,
-            summary=summary,
-        ) == Result(
-            state=s,
-            summary=summary,
-        )
-
-
-def test_ok_result():
-    summary = 'summary'
-    for s in [state.OK, state.WARN, state.CRIT, state.UNKNOWN]:
-        assert job._ok_result(
-            mon_state=s,
-            summary=summary,
-        ) == Result(
-            state=state.OK,
-            summary=summary,
-        )
-
-
 RESULTS_SHREK: List[Union[Metric, Result]] = [
     Result(state=state.OK, summary='Latest exit code: 0'),
     Result(state=state.OK, summary='Real time: 2 minutes 0 seconds'),

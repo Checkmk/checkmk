@@ -8,12 +8,10 @@ import time
 from typing import (
     Callable,
     Dict,
-    Generator,
     List,
     Mapping,
     TypedDict,
     Tuple,
-    Union,
 )
 from .agent_based_api.v1 import (
     check_levels,
@@ -51,7 +49,7 @@ from .agent_based_api.v1.clusterize import aggregate_node_details
 # max_res_kbytes 1984
 # avg_mem_kbytes 0
 
-Metrics = Dict[str, Union[int, float]]
+Metrics = Dict[str, float]
 
 
 class Job(TypedDict, total=False):
@@ -75,7 +73,7 @@ def _job_parse_real_time(s: str) -> float:
     return float(parts[-1]) + min_sec + hour_sec
 
 
-def _job_parse_key_values(line: List[str]) -> Tuple[str, Union[int, float]]:
+def _job_parse_key_values(line: List[str]) -> Tuple[str, float]:
     key, val = line
     if key == 'real_time':
         return key, _job_parse_real_time(val)
@@ -126,28 +124,10 @@ register.agent_section(
 )
 
 
-def discover_job(section: Section) -> Generator[Service, None, None]:
+def discover_job(section: Section) -> type_defs.DiscoveryResult:
     for jobname, job in section.items():
         if not job["running"]:
             yield Service(item=jobname)
-
-
-def _process_start_time(value: float, warn: int, crit: int) -> Tuple[state, str]:
-    display_value = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(value))
-    job_age = time.time() - value
-    if crit and job_age >= crit:
-        return state.CRIT, display_value + " (more than %s ago)" % render.timespan(crit)
-    if warn and job_age >= warn:
-        return state.WARN, display_value + " (more than %s ago)" % render.timespan(warn)
-    return state.OK, display_value
-
-
-def _normal_result(mon_state: state, summary: str) -> Result:
-    return Result(state=mon_state, summary=summary)
-
-
-def _ok_result(mon_state: state, summary: str) -> Result:
-    return Result(state=state.OK, summary=summary)
 
 
 _METRIC_SPECS: Mapping[str, Tuple[str, Callable]] = {
@@ -178,7 +158,7 @@ def _process_job_stats(
     job: Job,
     age_levels: Tuple[int, int],
     exit_code_to_state_map: Dict[int, state],
-) -> Generator[Union[Result, Metric], None, None]:
+) -> type_defs.CheckResult:
 
     yield Result(
         state=exit_code_to_state_map.get(job['exit_code'], state.CRIT),
@@ -227,7 +207,7 @@ def check_job(
     item: str,
     params: type_defs.Parameters,
     section: Section,
-) -> Generator[Union[Result, Metric], None, None]:
+) -> type_defs.CheckResult:
 
     job = section.get(item)
     if job is None:
@@ -262,7 +242,7 @@ def cluster_check_job(
     item: str,
     params: type_defs.Parameters,
     section: Dict[str, Section],
-) -> Generator[Result, None, None]:
+) -> type_defs.CheckResult:
     """
     This check used to simply yield all metrics from all nodes, which is useless, since the user
     cannot interpret these numbers. For now, we do not yield any metrics until a better solution is

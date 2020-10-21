@@ -212,9 +212,9 @@ def inventory_if(
     yield Attributes(
         path=["networking"],
         inventory_attributes={
-            "available_ethernet_ports": str(available_ethernet_ports),
-            "total_ethernet_ports": str(total_ethernet_ports),
-            "total_interfaces": str(section_inv_if.n_interfaces_total),
+            "available_ethernet_ports": available_ethernet_ports,
+            "total_ethernet_ports": total_ethernet_ports,
+            "total_interfaces": section_inv_if.n_interfaces_total,
         },
     )
 

@@ -14,6 +14,7 @@ from .agent_based_api.v1.type_defs import (
 )
 
 from .agent_based_api.v1 import (
+    Attributes,
     exists,
     HostLabel,
     register,
@@ -21,7 +22,6 @@ from .agent_based_api.v1 import (
     Service,
     SNMPTree,
     State,
-    Attributes,
 )
 
 

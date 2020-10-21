@@ -13,7 +13,7 @@ from typing import Any, Dict, List, Optional
 
 import cmk.utils.version as cmk_version  # pylint: disable=cmk-module-layer-violation
 from .agent_based_api.v1.type_defs import InventoryResult
-from .agent_based_api.v1 import Attributes, register, TableRow
+from .agent_based_api.v1 import Attributes, register, render, TableRow
 
 
 def _service_status(status: Dict[str, List[str]], service_name: str):
@@ -71,11 +71,11 @@ def merge_sections(
         })["status_columns"] = {
             'num_hosts': status['num_hosts'],
             'num_services': status['num_services'],
-            'check_helper_usage': ("%.2f%%" % helper_usage_generic),
-            'check_mk_helper_usage': ("%.2f%%" % helper_usage_cmk),
-            'fetcher_helper_usage': ("%.2f%%" % helper_usage_fetcher),
-            'checker_helper_usage': ("%.2f%%" % helper_usage_checker),
-            'livestatus_usage': ("%.2f%%" % livestatus_usage),
+            'check_helper_usage': render.percent(helper_usage_generic),
+            'check_mk_helper_usage': render.percent(helper_usage_cmk),
+            'fetcher_helper_usage': render.percent(helper_usage_fetcher),
+            'checker_helper_usage': render.percent(helper_usage_checker),
+            'livestatus_usage': render.percent(livestatus_usage),
         }
 
     # SECTION: omd_status
@@ -115,7 +115,7 @@ def merge_sections(
             "inventory_columns": {}
         })["status_columns"].update(omd_status_dict)
 
-    merged_section["check_mk"]["num_sites"] = str(num_sites)
+    merged_section["check_mk"]["num_sites"] = num_sites
 
     # SECTION: omd_info
     # Section may not be available in agent output (e.g. when using old linux agent)
@@ -142,7 +142,7 @@ def merge_sections(
                 "status_columns": {}
             })["inventory_columns"].update(values)
 
-        merged_section["check_mk"]["num_versions"] = str(len(versions))
+        merged_section["check_mk"]["num_versions"] = len(versions)
 
     return merged_section
 
@@ -162,8 +162,8 @@ def generate_inventory(merged_sections: Dict[str, Any]) -> InventoryResult:
 
     yield Attributes(path=["software", "applications", "check_mk"],
                      inventory_attributes={
-                         "num_versions": merged_sections["check_mk"].get("num_versions", "n.a."),
-                         "num_sites": merged_sections["check_mk"].get("num_sites", "n.a.")
+                         "num_versions": merged_sections["check_mk"].get("num_versions"),
+                         "num_sites": merged_sections["check_mk"].get("num_sites")
                      })
 
 

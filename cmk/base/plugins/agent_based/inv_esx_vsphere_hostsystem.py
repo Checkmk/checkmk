@@ -20,14 +20,15 @@
 # hardware.cpuPkg.vendor.0 intel
 # hardware.cpuPkg.vendor.1 intel
 
-from typing import Dict, Tuple, List, Callable, TypedDict, Optional
-from .agent_based_api.v1 import register, type_defs, Attributes, render
-from .esx_vsphere_hostsystem_section import Section
+from typing import Callable, Dict, Final, List, Optional, Tuple, TypedDict, Union
 import time
 
-FIRST_ELEMENT = lambda v: v[0]
-FIRST_ELEMENT_AS_FLOAT = lambda v: float(FIRST_ELEMENT(v))
-JOIN_LIST = lambda v: " ".join(v)  # pylint: disable=W0108
+from .agent_based_api.v1 import Attributes, register, type_defs
+from .esx_vsphere_hostsystem_section import Section
+
+FIRST_ELEMENT: Final = lambda v: v[0]
+FIRST_ELEMENT_AS_FLOAT: Final = lambda v: float(v[0])
+JOIN_LIST: Final = " ".join
 SUB_SECTION = TypedDict("SUB_SECTION", {
     "path": List[str],
     "translation": Dict[str, Tuple[str, Callable]]
@@ -38,22 +39,20 @@ SECTION_TO_INVENTORY: Dict[str, SUB_SECTION] = {
     "hw": {
         "path": ["hardware", "cpu"],
         "translation": {
-            "hardware.cpuInfo.hz":
-                ("max_speed", lambda v: render.frequency(FIRST_ELEMENT_AS_FLOAT(v))),
+            "hardware.cpuInfo.hz": ("max_speed", FIRST_ELEMENT_AS_FLOAT),
             "hardware.cpuInfo.numCpuPackages": ("cpus", FIRST_ELEMENT),
             "hardware.cpuInfo.numCpuCores": ("cores", FIRST_ELEMENT),
             "hardware.cpuInfo.numCpuThreads": ("threads", FIRST_ELEMENT),
             "hardware.cpuPkg.description.1": ("model", JOIN_LIST),
             "hardware.cpuPkg.vendor.1": ("vendor", FIRST_ELEMENT),
-            "hardware.cpuPkg.busHz.0":
-                ("bus_speed", lambda v: render.frequency(FIRST_ELEMENT_AS_FLOAT(v))),
+            "hardware.cpuPkg.busHz.0": ("bus_speed", FIRST_ELEMENT_AS_FLOAT),
         },
     },
     "sw": {
         "path": ["software", "bios"],
         "translation": {
             "hardware.biosInfo.biosVersion": ("version", FIRST_ELEMENT),
-            "hardware.biosInfo.releaseDate": ("date", lambda v: _try_convert_to_epoch(v[0]))
+            "hardware.biosInfo.releaseDate": ("date", lambda v: _try_convert_to_epoch(v[0])),
         },
     },
     "sys": {
@@ -68,16 +67,15 @@ SECTION_TO_INVENTORY: Dict[str, SUB_SECTION] = {
     "mem": {
         "path": ["hardware", "memory"],
         "translation": {
-            "hardware.memorySize":
-                ("total_ram_usable", lambda v: render.bytes(FIRST_ELEMENT_AS_FLOAT(v)))
+            "hardware.memorySize": ("total_ram_usable", FIRST_ELEMENT_AS_FLOAT)
         },
     }
 }
 
 
-def _try_convert_to_epoch(releaseDate: str) -> Optional[str]:
+def _try_convert_to_epoch(release_date: str) -> Optional[str]:
     try:
-        epoch = time.strftime("%Y-%m-%d", time.strptime(releaseDate, "%Y-%m-%dT%H:%M:%SZ"))
+        epoch = time.strftime("%Y-%m-%d", time.strptime(release_date, "%Y-%m-%dT%H:%M:%SZ"))
     except ValueError:
         return None
     return epoch
@@ -86,7 +84,7 @@ def _try_convert_to_epoch(releaseDate: str) -> Optional[str]:
 def inv_esx_vsphere_hostsystem(section: Section) -> type_defs.InventoryResult:
 
     for name, sub_section in SECTION_TO_INVENTORY.items():
-        data: Dict[str, str] = {}
+        data: Dict[str, Union[None, str, float]] = {}
         for section_key, (inv_key, transform) in sub_section["translation"].items():
             if section_key in section:
                 data[inv_key] = transform(section[section_key])
@@ -95,7 +93,7 @@ def inv_esx_vsphere_hostsystem(section: Section) -> type_defs.InventoryResult:
         if name == "hw":
             if all([k in data for k in ["cpus", "cores", "threads"]]):
                 for inv_key, metric in (("cores_per_cpu", "cores"), ("threads_per_cpu", "threads")):
-                    data[inv_key] = "%d" % (int(data[metric]) / int(data["cpus"]))
+                    data[inv_key] = int(data[metric]) / int(data["cpus"])  # type: ignore[arg-type]
         if name == "sys":
             # We only know for HP that ServiceTag is the serial...
             if data["vendor"] == "HP":

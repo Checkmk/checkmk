@@ -897,9 +897,9 @@ def test_inventory_if():
                      }),
             Attributes(path=['networking'],
                        inventory_attributes={
-                           'available_ethernet_ports': '19',
-                           'total_ethernet_ports': '30',
-                           'total_interfaces': '31'
+                           'available_ethernet_ports': 19,
+                           'total_ethernet_ports': 30,
+                           'total_interfaces': 31
                        },
                        status_attributes={}),
         ]

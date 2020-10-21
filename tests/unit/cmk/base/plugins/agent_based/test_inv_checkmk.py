@@ -223,8 +223,8 @@ SECTION_OMD_INFO = {
 
 MERGED_SECTION_ENTERPRISE = {
     'check_mk': {
-        'num_sites': '3',
-        'num_versions': '5'
+        'num_sites': 3,
+        'num_versions': 5
     },
     'sites': {
         'cisco': {
@@ -332,8 +332,8 @@ MERGED_SECTION_ENTERPRISE = {
 
 MERGED_SECTION_RAWEDITION = {
     'check_mk': {
-        'num_sites': '3',
-        'num_versions': '5'
+        'num_sites': 3,
+        'num_versions': 5
     },
     'sites': {
         'cisco': {
@@ -561,8 +561,8 @@ def test_inventory_checkmk():
                  status_columns={}),
         Attributes(path=['software', 'applications', 'check_mk'],
                    inventory_attributes={
-                       'num_versions': '5',
-                       'num_sites': '3'
+                       'num_versions': 5,
+                       'num_sites': 3
                    },
                    status_attributes={}),
     ]

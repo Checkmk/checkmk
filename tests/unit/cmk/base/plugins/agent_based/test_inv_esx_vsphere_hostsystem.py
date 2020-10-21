@@ -50,15 +50,15 @@ def test_inventory():
     assert actual == [
         Attributes(path=['hardware', 'cpu'],
                    inventory_attributes={
-                       'max_speed': '2.93 GHz',
+                       'max_speed': 2933437096.0,
                        'cpus': '2',
                        'cores': '12',
                        'threads': '24',
                        'model': 'Intel(R) Xeon(R) CPU X5670 @ 2.93GHz',
                        'vendor': 'intel',
-                       'bus_speed': '133 MHz',
-                       'cores_per_cpu': '6',
-                       'threads_per_cpu': '12'
+                       'bus_speed': 133338039.0,
+                       'cores_per_cpu': 6.0,
+                       'threads_per_cpu': 12.0
                    },
                    status_attributes={}),
         Attributes(path=['software', 'bios'],
@@ -75,6 +75,6 @@ def test_inventory():
                    },
                    status_attributes={}),
         Attributes(path=['hardware', 'memory'],
-                   inventory_attributes={'total_ram_usable': '136 GiB'},
+                   inventory_attributes={'total_ram_usable': 146016378880.0},
                    status_attributes={}),
     ]

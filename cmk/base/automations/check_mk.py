@@ -222,7 +222,7 @@ automations.register(AutomationTryDiscovery())
 class AutomationSetAutochecks(DiscoveryAutomation):
     cmd = "set-autochecks"
     needs_config = True
-    needs_checks = True  # TODO: Can we change this?
+    needs_checks = False
 
     # Set the new list of autochecks. This list is specified by a
     # table of (checktype, item). No parameters are specified. Those
@@ -236,10 +236,8 @@ class AutomationSetAutochecks(DiscoveryAutomation):
         host_config = config_cache.get_host_config(hostname)
 
         new_services: List[Service] = []
-        for (raw_check_plugin_name, item), (params, raw_service_labels) in new_items.items():
+        for (raw_check_plugin_name, item), (descr, params, raw_service_labels) in new_items.items():
             check_plugin_name = CheckPluginName(raw_check_plugin_name)
-
-            descr = config.service_description(hostname, check_plugin_name, item)
 
             service_labels = DiscoveredServiceLabels()
             for label_id, label_value in raw_service_labels.items():

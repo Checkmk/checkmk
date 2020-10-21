@@ -156,14 +156,14 @@ class Discovery:
 
             if table_source == DiscoveryState.UNDECIDED:
                 if table_target == DiscoveryState.MONITORED:
-                    autochecks_to_save[(check_type, item)] = (params, service_labels)
+                    autochecks_to_save[(check_type, item)] = (descr, params, service_labels)
                     saved_services.add(descr)
                 elif table_target == DiscoveryState.IGNORED:
                     add_disabled_rule.add(descr)
 
             elif table_source == DiscoveryState.VANISHED:
                 if table_target != DiscoveryState.REMOVED:
-                    autochecks_to_save[(check_type, item)] = (params, service_labels)
+                    autochecks_to_save[(check_type, item)] = (descr, params, service_labels)
                     saved_services.add(descr)
                 if table_target == DiscoveryState.IGNORED:
                     add_disabled_rule.add(descr)
@@ -173,7 +173,7 @@ class Discovery:
                         DiscoveryState.MONITORED,
                         DiscoveryState.IGNORED,
                 ]:
-                    autochecks_to_save[(check_type, item)] = (params, service_labels)
+                    autochecks_to_save[(check_type, item)] = (descr, params, service_labels)
 
                 if table_target == DiscoveryState.IGNORED:
                     add_disabled_rule.add(descr)
@@ -191,7 +191,7 @@ class Discovery:
                         DiscoveryState.MONITORED,
                         DiscoveryState.IGNORED,
                 ]:
-                    autochecks_to_save[(check_type, item)] = (params, service_labels)
+                    autochecks_to_save[(check_type, item)] = (descr, params, service_labels)
                     saved_services.add(descr)
                 if table_target == DiscoveryState.IGNORED:
                     add_disabled_rule.add(descr)
@@ -200,7 +200,7 @@ class Discovery:
                     DiscoveryState.CLUSTERED_NEW,
                     DiscoveryState.CLUSTERED_OLD,
             ]:
-                autochecks_to_save[(check_type, item)] = (params, service_labels)
+                autochecks_to_save[(check_type, item)] = (descr, params, service_labels)
                 saved_services.add(descr)
 
             elif table_source in [
@@ -212,7 +212,7 @@ class Discovery:
                 # for adding, removing, etc. of this service on the cluster. Therefore we
                 # do not allow any operation for this clustered service on the related node.
                 # We just display the clustered service state (OLD, NEW, VANISHED).
-                autochecks_to_save[(check_type, item)] = (params, service_labels)
+                autochecks_to_save[(check_type, item)] = (descr, params, service_labels)
                 saved_services.add(descr)
 
         if apply_changes:

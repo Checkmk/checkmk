@@ -72,7 +72,7 @@ MetricTuple = Tuple[MetricName, float, Optional[float], Optional[float], Optiona
 ServiceCheckResult = Tuple[ServiceState, ServiceDetails, List[MetricTuple]]
 
 LegacyCheckParameters = Union[None, Dict, Tuple, List, str]
-SetAutochecksTable = Dict[Tuple[str, Item], Tuple[LegacyCheckParameters, Labels]]
+SetAutochecksTable = Dict[Tuple[str, Item], Tuple[ServiceName, LegacyCheckParameters, Labels]]
 
 UserId = NewType("UserId", str)
 EventRule = Dict[str, Any]  # TODO Improve this

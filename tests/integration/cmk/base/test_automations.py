@@ -222,10 +222,10 @@ def test_automation_try_discovery_host(test_cfg, site):
 
 def test_automation_set_autochecks(test_cfg, site):
     new_items: SetAutochecksTable = {
-        ("df", "xxx"): ({}, {
+        ("df", "xxx"): ("Filesystem xxx", {}, {
             u"xyz": u"123"
         }),
-        ("uptime", None): (None, {}),
+        ("uptime", None): ("Uptime", None, {}),
     }
 
     try:

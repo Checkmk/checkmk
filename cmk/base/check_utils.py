@@ -6,13 +6,12 @@
 
 from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
 
-from cmk.utils.type_defs import CheckPluginName, HostName, Item, SectionName
+from cmk.utils.type_defs import CheckPluginName, HostName, Item, SectionName, LegacyCheckParameters
 
 from cmk.snmplib.type_defs import SNMPPersistedSections, SNMPSectionContent, SNMPSections
 
 from cmk.base.discovered_labels import DiscoveredServiceLabels
 
-LegacyCheckParameters = Union[None, Dict, Tuple, List, str]
 RulesetName = str
 
 SectionCacheInfo = Dict[SectionName, Tuple[int, int]]

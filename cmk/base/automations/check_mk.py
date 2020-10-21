@@ -35,6 +35,7 @@ from cmk.utils.type_defs import (
     HostName,
     ServiceDetails,
     ServiceState,
+    SetAutochecksTable,
 )
 
 import cmk.snmplib.snmp_modes as snmp_modes
@@ -48,6 +49,7 @@ import cmk.base.check_api as check_api
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.check_table as check_table
 import cmk.base.check_utils
+from cmk.base.check_utils import Service
 import cmk.base.checking
 import cmk.base.config as config
 import cmk.base.core
@@ -228,14 +230,14 @@ class AutomationSetAutochecks(DiscoveryAutomation):
     # from a new inventory.
     def execute(self, args: List[str]) -> None:
         hostname = args[0]
-        new_items = ast.literal_eval(sys.stdin.read())
+        new_items: SetAutochecksTable = ast.literal_eval(sys.stdin.read())
 
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
 
-        new_services = []
-        for (check_plugin_name, item), (params, raw_service_labels) in new_items.items():
-            check_plugin_name = CheckPluginName(check_plugin_name)
+        new_services: List[Service] = []
+        for (raw_check_plugin_name, item), (params, raw_service_labels) in new_items.items():
+            check_plugin_name = CheckPluginName(raw_check_plugin_name)
 
             descr = config.service_description(hostname, check_plugin_name, item)
 
@@ -243,8 +245,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
             for label_id, label_value in raw_service_labels.items():
                 service_labels.add_label(ServiceLabel(label_id, label_value))
 
-            new_services.append(
-                discovery.Service(check_plugin_name, item, descr, params, service_labels))
+            new_services.append(Service(check_plugin_name, item, descr, params, service_labels))
 
         host_config.set_autochecks(new_services)
         self._trigger_discovery_check(config_cache, host_config)

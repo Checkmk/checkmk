@@ -579,10 +579,10 @@ def run_fetcher(entry: Dict[str, Any], mode: Mode) -> FetcherMessage:
 
     log.logger.debug("Executing fetcher: %s", entry["fetcher_type"])
 
-    stats = L3Stats({})  # TODO(ml): We should actually measure here.
     try:
         fetcher_params = entry["fetcher_params"]
     except KeyError as exc:
+        stats = L3Stats({})
         payload = ErrorPayload(exc)
         return FetcherMessage(
             FetcherHeader(
@@ -597,12 +597,17 @@ def run_fetcher(entry: Dict[str, Any], mode: Mode) -> FetcherMessage:
         )
 
     try:
-        with fetcher_type.from_json(fetcher_params) as fetcher:
+        with cpu_tracking.phase(
+                fetcher_type.name), fetcher_type.from_json(fetcher_params) as fetcher:
             raw_data = fetcher.fetch(mode)
     except Exception as exc:
         raw_data = result.Error(exc)
 
-    return FetcherMessage.from_raw_data(raw_data, stats, fetcher_type)
+    return FetcherMessage.from_raw_data(
+        raw_data,
+        L3Stats(cpu_tracking.get_times()),
+        fetcher_type,
+    )
 
 
 def _make_fetcher_timeout_message(
@@ -622,26 +627,6 @@ def _make_fetcher_timeout_message(
         payload,
         stats,
     )
-
-
-def _append_cpu_message(messages: List[FetcherMessage]) -> None:
-    payload = AgentPayload(b"")
-    stats = L3Stats(cpu_tracking.get_times())
-
-    messages.append(
-        FetcherMessage(
-            FetcherHeader(
-                FetcherType.CPU,
-                PayloadType.AGENT,
-                status=0,
-                payload_length=len(payload),
-                stats_length=len(stats),
-            ),
-            payload,
-            stats,
-        ))
-
-    log.logger.debug("CPU timings: %s", stats)
 
 
 def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
@@ -672,17 +657,14 @@ def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
         try:
             # fill as many messages as possible before timeout exception raised
             for entry in fetchers:
-                with cpu_tracking.phase(entry["fetcher_type"]):
-                    messages.append(run_fetcher(entry, mode))
+                messages.append(run_fetcher(entry, mode))
         except MKTimeout as exc:
             # fill missing entries with timeout errors
-            stats = L3Stats({})  # TODO(ml): Get the actual value from the tracker.
+            stats = L3Stats(cpu_tracking.get_times())
             messages.extend([
                 _make_fetcher_timeout_message(FetcherType[entry["fetcher_type"]], stats, exc)
                 for entry in fetchers[len(messages):]
             ])
-
-    _append_cpu_message(messages)
 
     log.logger.debug("Produced %d messages:", len(messages))
     for message in messages:

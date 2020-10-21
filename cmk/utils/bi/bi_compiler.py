@@ -4,10 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
+import os
 import time
 import cmk
-import pprint
+import marshal
 from pathlib import Path
 from typing import (
     Dict,
@@ -83,7 +83,7 @@ class BICompiler:
             if aggr_id in self._compiled_aggregations:
                 continue
             self._logger.debug("Loading cached aggregation results %s" % aggr_id)
-            aggr_data = ast.literal_eval(path_object.read_text())
+            aggr_data = self._marshal_load_data(str(path_object))
             self._compiled_aggregations[aggr_id] = BIAggregation.create_trees_from_schema(aggr_data)
 
         self._update_part_of_aggregation_map()
@@ -128,10 +128,11 @@ class BICompiler:
             for aggr_id, aggr in self._compiled_aggregations.items():
                 start = time.time()
                 result = BICompiledAggregationSchema().dump(aggr)
-                # TODO: remove pprint before going live, change to marshal
-                self._path_compiled_aggregations.joinpath(aggr_id).write_text(
-                    pprint.pformat(result))
-                self._logger.debug("Dump config took %f" % (time.time() - start))
+                self._logger.debug("Schema dump took config took %f (%d branches)" %
+                                   (time.time() - start, len(aggr.branches)))
+                start = time.time()
+                self._marshal_save_data(self._path_compiled_aggregations.joinpath(aggr_id), result)
+                self._logger.debug("Save dump to disk took %f" % (time.time() - start))
 
         known_sites = {kv[0]: kv[1] for kv in current_configstatus.get("known_sites", set())}
         self._bi_structure_fetcher._cleanup_orphaned_files(known_sites)
@@ -232,3 +233,15 @@ class BICompiler:
             latest_timestamp = max(latest_timestamp, path_object.stat().st_mtime)
 
         return latest_timestamp
+
+    def _marshal_save_data(self, filepath, data) -> None:
+        with open(filepath, "wb") as f:
+            marshal.dump(data, f)
+            os.fsync(f.fileno())
+
+    def _marshal_load_data(self, filepath) -> Dict:
+        try:
+            with open(filepath, "rb") as f:
+                return marshal.load(f)
+        except ValueError:
+            return {}

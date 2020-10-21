@@ -24,6 +24,7 @@ from cmk.utils.structured_data import StructuredDataTree
 from cmk.utils.type_defs import (
     HostAddress,
     HostName,
+    InventoryPluginName,
     MetricTuple,
     ServiceAdditionalDetails,
     ServiceDetails,
@@ -330,6 +331,7 @@ def _do_inv_for_realhost(
             inventory_plugin.inventory_function(**kwargs),
             inventory_tree,
             status_data_tree,
+            inventory_plugin.name,
         )
 
     console.verbose("\n")
@@ -351,6 +353,7 @@ def _aggregate_inventory_results(
     inventory_generator: InventoryResult,
     inventory_tree: StructuredDataTree,
     status_data_tree: StructuredDataTree,
+    plugin_name: InventoryPluginName,
 ) -> None:
 
     try:
@@ -358,7 +361,7 @@ def _aggregate_inventory_results(
     except Exception as exc:
         if cmk.utils.debug.enabled():
             raise
-        console.warning("Error in plugin: %s" % exc)
+        console.warning(f"Error in inventory plugin {plugin_name}: {exc}")
         return
 
     for item in inventory_items:

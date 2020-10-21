@@ -61,6 +61,8 @@ def inv_hp_proliant_mem(info):
         node.append(array)
 
 
-inv_info['hp_proliant_mem'] = {
-    'inv_function': inv_hp_proliant_mem,
-}
+# TODO: bring this back CMK-5976
+#
+#inv_info['hp_proliant_mem'] = {
+#    'inv_function': inv_hp_proliant_mem,
+#}

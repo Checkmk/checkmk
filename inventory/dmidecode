@@ -312,6 +312,8 @@ def dmidecode_parse_time(v):  # 155 ns
     return float(parts[0])  # assume seconds
 
 
-inv_info['dmidecode'] = {
-    "inv_function": inv_dmidecode,
-}
+# TODO: bring this back CMK-5976
+#
+#inv_info['dmidecode'] = {
+#    "inv_function": inv_dmidecode,
+#}

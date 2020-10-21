@@ -8,6 +8,7 @@ from collections.abc import Mapping as ABCMapping
 import io
 import operator
 import os
+import errno
 import time
 import re
 import shutil
@@ -16,12 +17,14 @@ from typing import Any, Callable, Dict, List, Mapping, Optional, Set, Tuple, Typ
 
 from livestatus import SiteId
 
+from cmk.gui.log import logger
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.hooks as hooks
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import (
+    RequestTimeout,
     MKGeneralException,
     MKAuthException,
     MKUserError,
@@ -59,6 +62,7 @@ from cmk.gui.background_job import BackgroundJobAlreadyRunning
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.utils import urls
 
+import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
 from cmk.utils import store
@@ -1380,6 +1384,83 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 return host
         return None
 
+    @staticmethod
+    def host_lookup_cache_path():
+        return os.path.join(cmk.utils.paths.tmp_dir, "wato", "wato_host_folder_lookup.cache")
+
+    @staticmethod
+    def find_host_by_lookup_cache(host_name):
+        """This function tries to create a host object using its name from a lookup cache.
+        If this does not work (cache miss), the regular search for the host is started.
+        If the host was found by the regular search, the lookup cache is updated accordingly."""
+
+        cache_path = Folder.host_lookup_cache_path()
+        if not os.path.exists(cache_path) or os.stat(cache_path).st_size == 0:
+            Folder.build_host_lookup_cache(cache_path)
+
+        try:
+            folder_lookup_cache = store.load_object_from_file(cache_path, {})
+            folder_hint = folder_lookup_cache.get(host_name)
+            if folder_hint is not None and Folder.folder_exists(folder_hint):
+                folder_instance = Folder.folder(folder_hint)
+                host_instance = folder_instance.host(host_name)
+                if host_instance is not None:
+                    return host_instance
+
+            # The hostname was not found in the lookup cache
+            # Use find_host_recursively to search this host in the configuration
+            host_instance = Folder.root_folder().find_host_recursively(host_name)
+            if not host_instance:
+                return None
+
+            # Save newly found host instance to cache
+            folder_lookup_cache[host_name] = host_instance.folder().path()
+            store.save_object_to_file(cache_path, folder_lookup_cache, pretty=False)
+            return host_instance
+        except RequestTimeout:
+            raise
+        except Exception:
+            logger.warning(
+                "Unexpected exception in find_host_by_lookup_cache. Falling back to recursive host lookup",
+                exc_info=True)
+            return Folder.root_folder().find_host_recursively(host_name)
+
+    @staticmethod
+    def build_host_lookup_cache(cache_path):
+        store.aquire_lock(cache_path)
+        folder_lookup = {}
+        for host_name, host in Folder.root_folder().all_hosts_recursively().items():
+            folder_lookup[host_name] = host.folder().path()
+        store.save_object_to_file(cache_path, folder_lookup, pretty=False)
+
+    @staticmethod
+    def delete_host_lookup_cache():
+        try:
+            os.unlink(Folder.host_lookup_cache_path())
+        except OSError as e:
+            if e.errno == errno.ENOENT:
+                return  # Not existant -> OK
+            raise
+
+    @staticmethod
+    def add_hosts_to_lookup_cache(host2path_list):
+        cache_path = Folder.host_lookup_cache_path()
+        folder_lookup_cache = store.load_object_from_file(cache_path, {}, lock=True)
+        for (hostname, folder_path) in host2path_list:
+            folder_lookup_cache[hostname] = folder_path
+        store.save_object_to_file(cache_path, folder_lookup_cache, pretty=False)
+
+    @staticmethod
+    def delete_hosts_from_lookup_cache(hostnames):
+        cache_path = Folder.host_lookup_cache_path()
+        folder_lookup_cache = store.load_object_from_file(cache_path, {}, lock=True)
+        for hostname in hostnames:
+            try:
+                del folder_lookup_cache[hostname]
+            except KeyError:
+                pass
+        store.save_object_to_file(cache_path, folder_lookup_cache, pretty=False)
+
     def _user_needs_permission(self, how: str) -> None:
         if how == "write" and config.user.may("wato.all_folders"):
             return
@@ -1628,6 +1709,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         self._clear_id_cache()
         Folder.invalidate_caches()
         need_sidebar_reload()
+        Folder.delete_host_lookup_cache()
 
     def move_subfolder_to(self, subfolder, target_folder):
         # 1. Check preconditions
@@ -1661,6 +1743,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                    obj=subfolder,
                    sites=affected_sites)
         need_sidebar_reload()
+        Folder.delete_host_lookup_cache()
 
     def edit(self, new_title, new_attributes):
         # 1. Check preconditions
@@ -1728,6 +1811,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                        _("Created new host %s.") % host_name,
                        obj=host,
                        sites=[host.site_id()])
+
         self.persist_instance()  # num_hosts has changed
         self.save_hosts()
 
@@ -1739,6 +1823,9 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                                                signing_credentials=None)
             except BackgroundJobAlreadyRunning:
                 pass
+
+        folder_path = self.path()
+        Folder.add_hosts_to_lookup_cache([(x[0], folder_path) for x in entries])
 
     def delete_hosts(self, host_names):
         # 1. Check preconditions
@@ -1771,6 +1858,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         self.persist_instance()  # num_hosts has changed
         self.save_hosts()
+        Folder.delete_hosts_from_lookup_cache(host_names)
 
     def _get_parents_of_hosts(self, host_names):
         # Note: Deletion of chosen hosts which are parents
@@ -1825,8 +1913,12 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         self.persist_instance()  # num_hosts has changed
         self.save_hosts()
+
         target_folder.persist_instance()
         target_folder.save_hosts()
+
+        folder_path = target_folder.path()
+        Folder.add_hosts_to_lookup_cache([(x, folder_path) for x in host_names])
 
     def rename_host(self, oldname, newname):
         # 1. Check preconditions
@@ -1844,6 +1936,10 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                    _("Renamed host from %s to %s") % (oldname, newname),
                    obj=host,
                    sites=[host.site_id()])
+
+        Folder.delete_hosts_from_lookup_cache([oldname])
+        Folder.add_hosts_to_lookup_cache([(newname, self.path())])
+
         self.save_hosts()
 
     def rename_parent(self, oldname, newname):
@@ -2136,7 +2232,7 @@ class CREHost(WithPermissions, WithAttributes):
 
     @staticmethod
     def host(host_name):
-        return Folder.root_folder().find_host_recursively(host_name)
+        return Folder.find_host_by_lookup_cache(host_name)
 
     @staticmethod
     def all():

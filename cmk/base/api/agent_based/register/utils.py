@@ -5,14 +5,31 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-from typing import Callable, Dict, Iterable, List, Literal, Optional, Set, Tuple, Union
+from typing import (
+    Callable,
+    Dict,
+    get_args,
+    Iterable,
+    List,
+    Literal,
+    Mapping,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
 import inspect
 
 from pathlib import Path
 
-from cmk.utils.type_defs import (CheckPluginName, InventoryPluginName, ParsedSectionName,
-                                 SectionName, RuleSetName)
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    InventoryPluginName,
+    ParsedSectionName,
+    RuleSetName,
+    SectionName,
+)
 from cmk.utils.paths import agent_based_plugins_dir
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
@@ -101,10 +118,12 @@ def validate_function_arguments(
     else:
         expected_params.extend('section_%s' % s for s in sections)
 
-    present_params = list(inspect.signature(function).parameters)
+    parameters = inspect.signature(function).parameters
+    present_params = list(parameters)
 
     if expected_params == present_params:
-        return
+        return (None if type_label == "cluster_check" else
+                _validate_optional_section_annotation(parameters))
 
     # We know we must raise. Dispatch for a better error message:
 
@@ -124,6 +143,22 @@ def validate_function_arguments(
 
     exp_str = ', '.join(expected_params)
     raise TypeError(f"{type_label}_function: expected arguments: {exp_str}")
+
+
+def _validate_optional_section_annotation(params: Mapping[str, inspect.Parameter]) -> None:
+    """Validate that the section annotation is correct, if present.
+
+    The thing is: if we have more than one section, all of them must be `Optional`.
+    """
+    section_args = [p for n, p in params.items() if n.startswith("section_")]
+    if not section_args:
+        return  # we know nothing in this case
+    if all(p.annotation == p.empty for p in section_args):
+        return  # no typing used in plugin
+    none_type = type(None)
+    if all(none_type in get_args(p.annotation) for p in section_args):
+        return  # good, all sections are Optional.
+    raise TypeError("Wrong type annotation: multiple sections must be `Optional`")
 
 
 def validate_default_parameters(

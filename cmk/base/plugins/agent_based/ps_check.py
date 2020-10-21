@@ -14,9 +14,9 @@ from .utils import ps
 def check_ps(
     item: str,
     params: Parameters,
-    section_ps: ps.Section,
-    section_mem: ps.SectionMem,
-    section_cpu: ps.SectionCpu,
+    section_ps: Optional[ps.Section],
+    section_mem: Optional[ps.SectionMem],
+    section_cpu: Optional[ps.SectionCpu],
 ) -> CheckResult:
     if not section_ps:
         return

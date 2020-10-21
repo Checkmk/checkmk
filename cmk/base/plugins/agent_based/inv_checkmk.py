@@ -9,7 +9,7 @@
 # "omd_status" and "omd_info". As the new CheckAPI enables subscribing onto multiple
 # sections, this split-up is not necessary anymore and therefore the plugins were merged.
 
-from typing import Dict, List, Any
+from typing import Any, Dict, List, Optional
 
 import cmk.utils.version as cmk_version  # pylint: disable=cmk-module-layer-violation
 from .agent_based_api.v1.type_defs import InventoryResult
@@ -37,8 +37,11 @@ def _service_status(status: Dict[str, List[str]], service_name: str):
     return "running"
 
 
-def merge_sections(section_livestatus_status: Dict[str, Any], section_omd_status: Dict[str, Any],
-                   section_omd_info: Dict[str, Dict[str, Dict]]) -> Dict[str, Dict]:
+def merge_sections(
+    section_livestatus_status: Dict[str, Dict[str, str]],
+    section_omd_status: Dict[str, Dict],
+    section_omd_info: Dict[str, Dict[str, Dict]],
+) -> Dict[str, Dict]:
 
     merged_section: Dict[str, Dict] = {"check_mk": {}, "sites": {}, "versions": {}}
 
@@ -164,14 +167,16 @@ def generate_inventory(merged_sections: Dict[str, Any]) -> InventoryResult:
                      })
 
 
-def inventory_checkmk(section_livestatus_status: Dict[str, Dict[str, str]],
-                      section_omd_status: Dict[str, Dict],
-                      section_omd_info: Dict[str, Dict[str, Dict]]) -> InventoryResult:
+def inventory_checkmk(
+    section_livestatus_status: Optional[Dict[str, Dict[str, str]]],
+    section_omd_status: Optional[Dict[str, Dict]],
+    section_omd_info: Optional[Dict[str, Dict[str, Dict]]],
+) -> InventoryResult:
 
     merged_sections = merge_sections(
-        section_livestatus_status,
-        section_omd_status,
-        section_omd_info,
+        section_livestatus_status or {},
+        section_omd_status or {},
+        section_omd_info or {},
     )
     yield from generate_inventory(merged_sections)
 

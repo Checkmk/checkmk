@@ -108,9 +108,12 @@ register.agent_section(
 )
 
 
-def discovery_livestatus_status(section_livestatus_status: ParsedSection,
-                                section_livestatus_ssl_certs: ParsedSection) -> DiscoveryResult:
-
+def discovery_livestatus_status(
+    section_livestatus_status: Optional[ParsedSection],
+    section_livestatus_ssl_certs: Optional[ParsedSection],
+) -> DiscoveryResult:
+    if section_livestatus_status is None:
+        return
     for site, status in section_livestatus_status.items():
         if status is not None:
             yield Service(item=site)

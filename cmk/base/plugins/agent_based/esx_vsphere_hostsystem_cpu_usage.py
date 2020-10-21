@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from .agent_based_api.v1.type_defs import (
     CheckResult,
@@ -15,10 +15,10 @@ from .utils import cpu_util
 
 
 def discover_esx_vsphere_hostsystem_cpu_usage(
-    section_esx_vsphere_hostsystem: Dict[str, List[str]],
-    section_winperf_processor: Any,
+        section_esx_vsphere_hostsystem: Optional[Dict[str, List[str]]],
+        section_winperf_processor: Optional[List],  # currently no parse function
 ) -> DiscoveryResult:
-    if section_winperf_processor:
+    if section_winperf_processor or not section_esx_vsphere_hostsystem:
         return
 
     required_keys = {
@@ -33,7 +33,7 @@ def discover_esx_vsphere_hostsystem_cpu_usage(
 def check_esx_vsphere_hostsystem_cpu(
     params: Parameters,
     section_esx_vsphere_hostsystem: Optional[Dict[str, List[str]]],
-    section_winperf_processor: Any,
+    section_winperf_processor: Optional[List],
 ) -> CheckResult:
     if not section_esx_vsphere_hostsystem:
         return

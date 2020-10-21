@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, Optional
 from .utils.liebert import (
     DETECT_LIEBERT,
     parse_liebert,
@@ -46,17 +46,22 @@ def parse_liebert_temp_air(string_table: SNMPStringTable) -> ParsedSection:
 
 
 def discover_liebert_temp_air(
-    section_liebert_temp_air: ParsedSection,
-    section_liebert_system: Dict[str, str],
+    section_liebert_temp_air: Optional[ParsedSection],
+    section_liebert_system: Optional[Dict[str, str]],
 ) -> DiscoveryResult:
+    if not section_liebert_temp_air:
+        return
     for key, (value, _unit) in section_liebert_temp_air.items():
         if "Unavailable" not in value:
             yield Service(item=_get_item_from_key(key))
 
 
-def check_liebert_temp_air(item: str, params: TempParamType,
-                           section_liebert_temp_air: ParsedSection,
-                           section_liebert_system: Dict[str, str]) -> CheckResult:
+def check_liebert_temp_air(
+    item: str,
+    params: TempParamType,
+    section_liebert_temp_air: Optional[ParsedSection],
+    section_liebert_system: Optional[Dict[str, str]],
+) -> CheckResult:
 
     if section_liebert_temp_air is None or section_liebert_system is None:
         return

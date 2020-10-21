@@ -22,6 +22,13 @@ from cmk.gui.plugins.dashboard import (
     dashlet_registry,
 )
 
+from cmk.gui.plugins.dashboard.utils import (
+    DashboardConfig,
+    DashboardName,
+    DashletConfig,
+    DashletId,
+)
+
 from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options, transform_graph_render_options
 
@@ -64,6 +71,61 @@ class GraphDashlet(Dashlet):
     @classmethod
     def has_context(cls):
         return True
+
+    def __init__(self, dashboard_name: DashboardName, dashboard: DashboardConfig,
+                 dashlet_id: DashletId, dashlet: DashletConfig) -> None:
+        super().__init__(dashboard_name=dashboard_name,
+                         dashboard=dashboard,
+                         dashlet_id=dashlet_id,
+                         dashlet=dashlet)
+        # Be compatible to pre 1.5.0i2 format
+        if "graph_render_options" not in self._dashlet_spec:
+            self._dashlet_spec["graph_render_options"] = transform_graph_render_options({
+                "show_legend": self._dashlet_spec.pop("show_legend", False),
+                "show_service": self._dashlet_spec.pop("show_service", True),
+            })
+
+        title_format = self._dashlet_spec.setdefault(
+            "title_format", default_dashlet_graph_render_options["title_format"])
+        self._dashlet_spec["graph_render_options"].setdefault("title_format", title_format)
+
+        self._dashlet_spec["_graph_identification"] = self.graph_identification()
+
+        # New graphs which have been added via "add to visual" option don't have a timerange
+        # configured. So we assume the default timerange here by default.
+        self._dashlet_spec.setdefault('timerange', '1')
+
+    @staticmethod
+    def _resolve_site(host):
+        # When the site is available via URL context, use it. Otherwise it is needed
+        # to check all sites for the requested host
+        if html.request.has_var('site'):
+            return html.request.var('site')
+
+        with sites.prepend_site():
+            query = "GET hosts\nFilter: name = %s\nColumns: name" % livestatus.lqencode(host)
+            try:
+                return sites.live().query_value(query)
+            except livestatus.MKLivestatusNotFoundError:
+                raise MKUserError("host", _("The host could not be found on any active site."))
+
+    def graph_identification(self):
+        host = self._dashlet_spec['context'].get('host', html.request.var("host"))
+        if not host:
+            raise MKUserError('host', _('Missing needed host parameter.'))
+
+        service = self._dashlet_spec['context'].setdefault('service')
+        if not service:
+            service = "_HOST_"
+
+        site = self._resolve_site(host)
+
+        return ("template", {
+            "site": site,
+            "host_name": host,
+            "service_description": service,
+            "graph_index": self._dashlet_spec["source"] - 1,
+        })
 
     @classmethod
     def vs_parameters(cls):
@@ -153,54 +215,12 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
         return self._reload_js()
 
     def _reload_js(self):
-        host = self._dashlet_spec['context'].get('host', html.request.var("host"))
-        if not host:
-            raise MKUserError('host', _('Missing needed host parameter.'))
-
-        service = self._dashlet_spec['context'].get('service')
-        if not service:
-            service = "_HOST_"
-
-        # When the site is available via URL context, use it. Otherwise it is needed
-        # to check all sites for the requested host
-        if html.request.has_var('site'):
-            site = html.request.var('site')
-        else:
-            with sites.prepend_site():
-                query = "GET hosts\nFilter: name = %s\nColumns: name" % livestatus.lqencode(host)
-                try:
-                    site = sites.live().query_value(query)
-                except livestatus.MKLivestatusNotFoundError:
-                    raise MKUserError("host", _("The host could not be found on any active site."))
-
-        # New graphs which have been added via "add to visual" option don't have a timerange
-        # configured. So we assume the default timerange here by default.
-        timerange = self._dashlet_spec.get('timerange', '1')
-
-        graph_identification = ("template", {
-            "site": site,
-            "host_name": host,
-            "service_description": service,
-            "graph_index": self._dashlet_spec["source"] - 1,
-        })
-
-        # Be compatible to pre 1.5.0i2 format
-        # TODO: Do this conversion during __init__() or during config loading
-        if "graph_render_options" not in self._dashlet_spec:
-            self._dashlet_spec["graph_render_options"] = transform_graph_render_options({
-                "show_legend": self._dashlet_spec.pop("show_legend", False),
-                "show_service": self._dashlet_spec.pop("show_service", True),
-            })
-
-        graph_render_options = self._dashlet_spec["graph_render_options"]
-        graph_render_options.setdefault(
-            "title_format",
-            self._dashlet_spec.get("title_format",
-                                   default_dashlet_graph_render_options["title_format"]))
-
-        return "dashboard_render_graph(%d, %s, %s, '%s')" % \
-                (self._dashlet_id, json.dumps(graph_identification),
-                 json.dumps(graph_render_options), timerange)
+        return "dashboard_render_graph(%d, %s, %s, '%s')" % (
+            self._dashlet_id,
+            json.dumps(self._dashlet_spec["_graph_identification"]),
+            json.dumps(self._dashlet_spec["graph_render_options"]),
+            self._dashlet_spec['timerange'],
+        )
 
     def show(self):
         html.div("", id_="dashlet_graph_%d" % self._dashlet_id)

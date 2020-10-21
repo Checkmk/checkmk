@@ -103,6 +103,8 @@ def test_dashlet_refresh_intervals(register_builtin_html, type_name, expected_re
     }
     if dashlet_type.has_context():
         dashlet_spec["context"] = {}
+    if type_name in ["pnpgraph", "custom_graph"]:
+        monkeypatch.setattr(dashlet_type, "graph_identification", lambda s: ("template", {}))
 
     monkeypatch.setattr(dashboard.Dashlet, "_get_context", lambda s: {})
 

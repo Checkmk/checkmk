@@ -425,7 +425,6 @@ class Site:
             paths += [
                 cmc_path() + "/bin",
                 cmc_path() + "/agents/plugins",
-                cmc_path() + "/agents/bakery",
                 cmc_path() + "/modules",
                 cmc_path() + "/cmk/base",
                 cmc_path() + "/cmk",

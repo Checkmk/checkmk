@@ -25,8 +25,6 @@ check_paths = [
     "inventory",
     "notifications",
     "active_checks",
-    # CMC specific
-    "agents/bakery",
     # TODO: Update all agent plugins to use sys.stdout.write instead of print
     "agents/plugins",
 ]

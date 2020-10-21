@@ -1167,8 +1167,8 @@ class MenuSearchResultsRenderer:
                     self._render_result(result)
                 # TODO: Remove this as soon as the index search does limit its search results
                 if len(list(search_results)) >= self._max_num_displayed_results:
-                    html.write_text(
-                        _(f"Showing only first {self._max_num_displayed_results} results."))
+                    html.div(
+                        content=_(f"Showing only first {self._max_num_displayed_results} results."))
                 html.close_ul()
                 html.close_div()
             html.div(None, class_=["topic", "sentinel"])

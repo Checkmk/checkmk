@@ -3,13 +3,13 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from .agent_based_api.v1.type_defs import AgentStringTable, CheckResult, DiscoveryResult, Parameters
+from .agent_based_api.v1.type_defs import StringTable, CheckResult, DiscoveryResult, Parameters
 
 from .agent_based_api.v1 import check_levels, register, Service
 from .utils.tcp_connections import empty_stats, TCPConnections, MAP_COUNTER_KEYS
 
 
-def parse_tcp_conn_stats(string_table: AgentStringTable) -> TCPConnections:
+def parse_tcp_conn_stats(string_table: StringTable) -> TCPConnections:
     """
         >>> from pprint import pprint
         >>> pprint(parse_tcp_conn_stats([

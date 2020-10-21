@@ -26,7 +26,7 @@ _HPUX_FIELDS_TO_IF_FIELDS = {
 }
 
 
-def parse_hpux_if(string_table: type_defs.AgentStringTable) -> interfaces.Section:
+def parse_hpux_if(string_table: type_defs.StringTable) -> interfaces.Section:
     r"""
     >>> from pprint import pprint
     >>> pprint(parse_hpux_if([

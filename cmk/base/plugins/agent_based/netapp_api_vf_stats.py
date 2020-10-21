@@ -27,7 +27,7 @@ from .utils import cpu_util, netapp_api
 
 
 def parse_netapp_api_vf_stats(
-        string_table: type_defs.AgentStringTable) -> netapp_api.SectionSingleInstance:
+        string_table: type_defs.StringTable) -> netapp_api.SectionSingleInstance:
     return netapp_api.parse_netapp_api_single_instance(string_table)
 
 

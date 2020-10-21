@@ -13,13 +13,13 @@ from cmk.base.plugins.agent_based.utils.liebert import (
 
 def parse_liebert_wrapper(info, type_func=float):
     # This function is needed to convert the info data type
-    # to the target data type of the new check API, SNMPStringTable
+    # to the target data type of the new check API, StringTable
     return parse_liebert([info], type_func)
 
 
 def parse_liebert_without_unit_wrapper(info, type_func=float):
     # This function is needed to convert the info data type
-    # to the target data type of the new check API, SNMPStringTable
+    # to the target data type of the new check API, StringTable
     return parse_liebert_without_unit([info], type_func)
 
 

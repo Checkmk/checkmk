@@ -12,7 +12,7 @@
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5028 21.0
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.30.1.2.1.5028 % RH
 
-from typing import Any, Dict, Tuple, Optional
+from typing import Any, Dict, List, Tuple, Optional
 from .utils.liebert import (
     DETECT_LIEBERT,
     parse_liebert,
@@ -26,7 +26,7 @@ from .agent_based_api.v1 import (
     State as state,
 )
 from .agent_based_api.v1.type_defs import (
-    SNMPStringTable,
+    StringTable,
     CheckResult,
     DiscoveryResult,
     Parameters,
@@ -54,7 +54,7 @@ def _get_item_data(
     return (None, None)
 
 
-def parse_liebert_humidity_air(string_table: SNMPStringTable) -> ParsedSection:
+def parse_liebert_humidity_air(string_table: List[StringTable]) -> ParsedSection:
     return parse_liebert(string_table, str)
 
 

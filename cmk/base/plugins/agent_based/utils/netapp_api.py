@@ -22,7 +22,7 @@ ItemFunc = Optional[Callable[[str, Instance], str]]
 
 
 def parse_netapp_api_multiple_instances(
-    string_table: type_defs.AgentStringTable,
+    string_table: type_defs.StringTable,
     custom_keys: CustomKeys = None,
     item_func: ItemFunc = None,
 ) -> SectionMultipleInstances:
@@ -103,7 +103,7 @@ def parse_netapp_api_multiple_instances(
 
 
 def parse_netapp_api_single_instance(
-    string_table: type_defs.AgentStringTable,
+    string_table: type_defs.StringTable,
     custom_keys: CustomKeys = None,
     item_func: ItemFunc = None,
 ) -> SectionSingleInstance:

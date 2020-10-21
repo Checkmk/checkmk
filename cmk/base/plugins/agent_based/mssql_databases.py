@@ -7,7 +7,7 @@
 from typing import Dict
 
 from .agent_based_api.v1.type_defs import (
-    AgentStringTable,
+    StringTable,
     CheckResult,
     DiscoveryResult,
     Parameters,
@@ -17,7 +17,7 @@ from .agent_based_api.v1 import IgnoreResults, register, Result, Service, State 
 SectionDatabases = Dict[str, Dict[str, str]]
 
 
-def parse_mssql_databases(string_table: AgentStringTable) -> SectionDatabases:
+def parse_mssql_databases(string_table: StringTable) -> SectionDatabases:
     """
         >>> from pprint import pprint
         >>> pprint(parse_mssql_databases([

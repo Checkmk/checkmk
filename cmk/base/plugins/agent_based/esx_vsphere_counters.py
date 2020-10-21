@@ -53,7 +53,7 @@ from .utils import interfaces
 Section = Dict[str, Dict[str, List[Tuple[List[str], str]]]]
 
 
-def parse_esx_vsphere_counters(string_table: type_defs.AgentStringTable) -> Section:
+def parse_esx_vsphere_counters(string_table: type_defs.StringTable) -> Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_esx_vsphere_counters([

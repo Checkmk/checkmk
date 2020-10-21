@@ -36,7 +36,7 @@ from .agent_based_api.v1 import (
 from .utils import diskstat
 
 
-def parse_aix_diskiod(string_table: type_defs.AgentStringTable) -> Optional[diskstat.Section]:
+def parse_aix_diskiod(string_table: type_defs.StringTable) -> Optional[diskstat.Section]:
 
     section = {}
 

@@ -6,7 +6,7 @@
 
 from typing import Dict, List, Optional, Tuple
 
-from .agent_based_api.v1.type_defs import AgentStringTable
+from .agent_based_api.v1.type_defs import StringTable
 
 from .agent_based_api.v1 import register
 from .utils import ps
@@ -156,7 +156,7 @@ def parse_process_entries(pre_parsed) -> List[Tuple[ps.ps_info, List[str]]]:
     return parsed
 
 
-def parse_ps(string_table: AgentStringTable,) -> ps.Section:
+def parse_ps(string_table: StringTable,) -> ps.Section:
     # Produces a list of Tuples where each sub list is built as follows:
     # [
     #     [(u'root', u'35156', u'4372', u'00:00:05/2-14:14:49', u'1'), u'/sbin/init'],
@@ -175,7 +175,7 @@ register.agent_section(
 )
 
 
-def parse_ps_lnx(string_table: AgentStringTable,) -> Optional[ps.Section]:
+def parse_ps_lnx(string_table: StringTable,) -> Optional[ps.Section]:
     """
         >>> cpu_cores, lines = parse_ps_lnx([
         ...     ["[header]", "CGROUP", "USER", "VSZ", "RSS", "TIME", "ELAPSED", "PID", "COMMAND"],

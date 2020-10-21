@@ -32,7 +32,7 @@
 # CISCO-REMOTE-ACCESS-MONITOR-MIB::crasWebvpnCumulateSessions.0 = Counter32: 0 Sessions
 # CISCO-REMOTE-ACCESS-MONITOR-MIB::crasWebvpnPeakConcurrentSessions.0 = Gauge32: 0 Sessions
 
-from typing import Dict
+from typing import Dict, List
 from .agent_based_api.v1 import (
     any_of,
     contains,
@@ -45,7 +45,8 @@ SESSION_TYPES = ['IPsec RA', 'IPsec L2L', 'AnyConnect SVC', 'WebVPN']
 METRICS_PER_SESSION_TYPE = ['active_sessions', 'cumulative_sessions', 'peak_sessions']
 
 
-def parse_cisco_vpn_sessions(string_table: type_defs.SNMPStringTable) -> Dict[str, Dict[str, int]]:
+def parse_cisco_vpn_sessions(
+        string_table: List[type_defs.StringTable]) -> Dict[str, Dict[str, int]]:
 
     raw_data = string_table[0][0]
     parsed = {}

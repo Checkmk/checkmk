@@ -20,7 +20,7 @@ from .agent_based_api.v1 import (
 Section = Dict[str, Dict[str, Mapping[str, int]]]
 
 
-def parse_site_object_counts(string_table: type_defs.AgentStringTable) -> Section:
+def parse_site_object_counts(string_table: type_defs.StringTable) -> Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_site_object_counts([

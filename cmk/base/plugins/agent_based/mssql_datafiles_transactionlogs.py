@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Literal, Mapping, Optional, Tuple, TypedDict
 from contextlib import suppress
 
 from .agent_based_api.v1.type_defs import (
-    AgentStringTable,
+    StringTable,
     CheckResult,
     DiscoveryResult,
     Parameters,
@@ -34,7 +34,7 @@ class MSSQLInstanceData(TypedDict):
 SectionDatafiles = Dict[Tuple[Optional[str], str, str], MSSQLInstanceData]
 
 
-def parse_mssql_datafiles(string_table: AgentStringTable) -> SectionDatafiles:
+def parse_mssql_datafiles(string_table: StringTable) -> SectionDatafiles:
     """
         >>> from pprint import pprint
         >>> pprint(parse_mssql_datafiles([

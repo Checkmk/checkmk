@@ -5,12 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Dict, List, Any, Tuple
-from ..agent_based_api.v1.type_defs import AgentStringTable
+from ..agent_based_api.v1.type_defs import StringTable
 
 ParsedSection = Dict[str, Dict]
 
 
-def parse_sap_hana(info: AgentStringTable):
+def parse_sap_hana(info: StringTable):
     parsed: Dict[str, List[Any]] = {}
     instance = None
     for line in info:

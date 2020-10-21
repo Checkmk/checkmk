@@ -11,7 +11,7 @@ from .utils import interfaces
 Section = Mapping[str, str]
 
 
-def parse_fritz(string_table: type_defs.AgentStringTable) -> Section:
+def parse_fritz(string_table: type_defs.StringTable) -> Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_fritz([

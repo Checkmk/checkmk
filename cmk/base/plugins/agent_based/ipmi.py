@@ -140,7 +140,7 @@ from cmk.base.api.agent_based.register import add_discovery_ruleset, get_discove
 # PS3_Inpu
 
 
-def parse_ipmi(string_table: type_defs.AgentStringTable) -> ipmi.Section:
+def parse_ipmi(string_table: type_defs.StringTable) -> ipmi.Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_ipmi([

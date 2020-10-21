@@ -11,7 +11,7 @@ from .agent_based_api.v1 import (
 from .utils import interfaces, if64
 
 
-def parse_aix_if(string_table: type_defs.AgentStringTable) -> interfaces.Section:
+def parse_aix_if(string_table: type_defs.StringTable) -> interfaces.Section:
     r"""
     >>> from pprint import pprint
     >>> pprint(parse_aix_if([

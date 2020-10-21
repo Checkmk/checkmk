@@ -19,7 +19,7 @@ from cmk.base.api.agent_based.type_defs import (
     SNMPParseFunction,
     SNMPSectionPlugin,
 )
-from cmk.base.api.agent_based.type_defs import AgentStringTable
+from cmk.base.api.agent_based.type_defs import StringTable
 
 from .convert_scan_functions import create_detect_spec
 
@@ -38,7 +38,7 @@ def _create_agent_parse_function(
         return lambda string_table: string_table
 
     # do not use functools.wraps, the point is the new argument name!
-    def parse_function(string_table: AgentStringTable) -> Any:
+    def parse_function(string_table: StringTable) -> Any:
         return original_parse_function(string_table)  # type: ignore
 
     parse_function.__name__ = original_parse_function.__name__

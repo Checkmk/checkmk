@@ -85,7 +85,7 @@ def _job_parse_key_values(line: List[str]) -> Tuple[str, float]:
     return key, int(val)
 
 
-def parse_job(string_table: type_defs.AgentStringTable) -> Section:
+def parse_job(string_table: type_defs.StringTable) -> Section:
     parsed: Section = {}
     job: Job = {}
     for line in string_table:

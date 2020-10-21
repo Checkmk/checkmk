@@ -6,9 +6,9 @@
 
 from dataclasses import dataclass
 import time
-from typing import Dict, Iterable, Optional, Sequence, Union
+from typing import Dict, Iterable, List, Optional, Sequence, Union
 
-from .agent_based_api.v1.type_defs import InventoryResult, Parameters, SNMPStringByteTable
+from .agent_based_api.v1.type_defs import InventoryResult, Parameters, StringByteTable
 from .agent_based_api.v1 import (
     Attributes,
     matches,
@@ -99,7 +99,7 @@ def _process_sub_table(sub_table: Sequence[Union[str, Sequence[int]]]) -> Iterab
     )
 
 
-def parse_inv_if(string_table: SNMPStringByteTable) -> SectionInvIf:
+def parse_inv_if(string_table: List[StringByteTable]) -> SectionInvIf:
     return SectionInvIf(
         [
             iface_and_last_change for interface_data in string_table[0]

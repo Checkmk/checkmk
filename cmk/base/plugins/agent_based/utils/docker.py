@@ -6,7 +6,7 @@
 from typing import Any, Dict, Optional, Sequence
 import json
 
-from ..agent_based_api.v1.type_defs import AgentStringTable
+from ..agent_based_api.v1.type_defs import StringTable
 
 
 def json_get_obj(line: Sequence[str]) -> Any:
@@ -17,7 +17,7 @@ def json_get_obj(line: Sequence[str]) -> Any:
         return None
 
 
-def get_version(string_table: AgentStringTable) -> Optional[Dict]:
+def get_version(string_table: StringTable) -> Optional[Dict]:
     try:
         if string_table[0][0] == '@docker_version_info':
             version_info = json.loads(string_table[0][1])

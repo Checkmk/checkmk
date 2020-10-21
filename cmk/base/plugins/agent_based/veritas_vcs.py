@@ -128,7 +128,7 @@ Section = MutableMapping[str, SubSection]
 ClusterSection = Mapping[str, Section]
 
 
-def parse_veritas_vcs(string_table: type_defs.AgentStringTable) -> Optional[Section]:
+def parse_veritas_vcs(string_table: type_defs.StringTable) -> Optional[Section]:
     parsed: Section = {}
 
     for line in string_table:

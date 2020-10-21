@@ -22,7 +22,7 @@ from .agent_based_api.v1 import (
     check_levels,
 )
 from .agent_based_api.v1.type_defs import (
-    AgentStringTable,
+    StringTable,
     CheckResult,
     DiscoveryResult,
     Parameters,
@@ -63,7 +63,7 @@ livestatus_status_default_levels = {
 ParsedSection = Dict[str, Any]
 
 
-def parse_livestatus_status(string_table: AgentStringTable):
+def parse_livestatus_status(string_table: StringTable):
     parsed: ParsedSection = {}
     site, headers = None, None
     for line in string_table:
@@ -87,7 +87,7 @@ register.agent_section(
 )
 
 
-def parse_livestatus_ssl_certs(string_table: AgentStringTable):
+def parse_livestatus_ssl_certs(string_table: StringTable):
     parsed: Dict[str, Dict[str, str]] = {}
     site = None
     for line in string_table:

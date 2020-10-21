@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Dict, NamedTuple, Optional
-from .agent_based_api.v1.type_defs import AgentStringTable
+from .agent_based_api.v1.type_defs import StringTable
 
 from .agent_based_api.v1 import register
 
@@ -36,7 +36,7 @@ def _ntp_fmt_time(raw: str) -> int:
     return int(raw)
 
 
-def parse_ntp(string_table: AgentStringTable) -> Section:
+def parse_ntp(string_table: StringTable) -> Section:
     section: Section = {}
     for line in string_table:
         if len(line) != 11:

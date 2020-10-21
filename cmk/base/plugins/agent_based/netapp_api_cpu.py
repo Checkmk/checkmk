@@ -34,7 +34,7 @@ Section = TypedDict(
 )
 
 
-def parse_netapp_api_cpu(string_table: type_defs.AgentStringTable) -> Section:
+def parse_netapp_api_cpu(string_table: type_defs.StringTable) -> Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_netapp_api_cpu([

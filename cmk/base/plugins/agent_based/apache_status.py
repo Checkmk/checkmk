@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Dict, Final
-from .agent_based_api.v1.type_defs import AgentStringTable, CheckResult, DiscoveryResult, Parameters
+from .agent_based_api.v1.type_defs import StringTable, CheckResult, DiscoveryResult, Parameters
 
 import time
 import collections
@@ -79,7 +79,7 @@ _SCOREBOARD_LABEL_MAP: Final = {  # order is relevant!
 }
 
 
-def apache_status_parse_legacy(info: AgentStringTable) -> Section:
+def apache_status_parse_legacy(info: StringTable) -> Section:
     # This parse function is required for compatibility with agents older than the 1.6 release.
     data: Section = {}
     for line in info:
@@ -118,7 +118,7 @@ def apache_status_parse_legacy(info: AgentStringTable) -> Section:
     return data
 
 
-def apache_status_parse(string_table: AgentStringTable) -> Section:
+def apache_status_parse(string_table: StringTable) -> Section:
     if len(frozenset(len(_) for _ in string_table)) != 1:
         # The separator was changed in 1.6 so that the elements of `info`
         # have a constant length.

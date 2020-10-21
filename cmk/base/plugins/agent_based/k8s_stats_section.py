@@ -6,7 +6,7 @@
 from typing import Dict, List, Any
 import json
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import AgentStringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 from .agent_based_api.v1 import register
 
@@ -19,7 +19,7 @@ from .utils.k8s import (
 )
 
 
-def parse_k8s(string_table: AgentStringTable) -> Section:
+def parse_k8s(string_table: StringTable) -> Section:
     """Basically we return the JSON parsed input -
     but for easier processing and better type safety we also convert the `network/interface` and
     `filesystem` lists into dicts

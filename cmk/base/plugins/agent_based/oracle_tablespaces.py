@@ -15,7 +15,7 @@ from .utils import (
     db,
 )
 from .agent_based_api.v1.type_defs import (
-    AgentStringTable,
+    StringTable,
     DiscoveryResult,
     CheckResult,
     Parameters,
@@ -74,7 +74,7 @@ ORACLE_TABLESPACES_DEFAULTS = {
 # 13 Tablespace-Type (PERMANENT, UNDO, TEMPORARY)
 
 
-def parse_oracle_tablespaces(string_table: AgentStringTable) -> oracle.SectionTableSpaces:
+def parse_oracle_tablespaces(string_table: StringTable) -> oracle.SectionTableSpaces:
     tablespaces: Dict[Tuple[str, str], oracle.TableSpaces] = {}
     error_sids: oracle.ErrorSids = {}
 

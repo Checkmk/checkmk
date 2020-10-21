@@ -16,12 +16,12 @@ from .agent_based_api.v1 import (
 
 from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
-    AgentStringTable,
+    StringTable,
     CheckResult,
 )
 
 
-def parse_sap_hana_status(string_table: AgentStringTable) -> sap_hana.ParsedSection:
+def parse_sap_hana_status(string_table: StringTable) -> sap_hana.ParsedSection:
     section: sap_hana.ParsedSection = {}
     for sid_instance, lines in sap_hana.parse_sap_hana(string_table).items():
         for line in lines:

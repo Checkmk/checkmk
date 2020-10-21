@@ -6,6 +6,7 @@
 
 from typing import (
     Iterable,
+    List,
     Mapping,
     Sequence,
     Tuple,
@@ -124,7 +125,7 @@ def _to_vserver(line: Iterable[str]) -> Tuple[str, VServer]:
     return full_name or name, vserver
 
 
-def parse_netscaler_vserver(string_table: type_defs.SNMPStringTable) -> Section:
+def parse_netscaler_vserver(string_table: List[type_defs.StringTable]) -> Section:
     """
     >>> import pprint
     >>> pprint.pprint(parse_netscaler_vserver([[

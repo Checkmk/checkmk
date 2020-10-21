@@ -13,7 +13,7 @@ from cmk.snmplib.type_defs import SNMPTree
 
 import cmk.base.api.agent_based.register.section_plugins_legacy as section_plugins_legacy
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
-from cmk.base.api.agent_based.type_defs import AgentStringTable
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.check_api_utils import Service
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 
@@ -57,7 +57,7 @@ def test_create_agent_parse_function():
 
     section_plugins._validate_parse_function(
         compliant_parse_function,
-        expected_annotation=(AgentStringTable, "AgentStringTable"),
+        expected_annotation=(StringTable, "StringTable"),
     )
 
     assert old_school_parse_function([]) == compliant_parse_function([])

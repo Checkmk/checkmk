@@ -12,7 +12,7 @@ from .agent_based_api.v1 import (
 from .utils import if64, interfaces
 
 
-def parse_statgrab_net(string_table: type_defs.AgentStringTable) -> interfaces.Section:
+def parse_statgrab_net(string_table: type_defs.StringTable) -> interfaces.Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_statgrab_net([

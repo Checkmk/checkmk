@@ -6,12 +6,12 @@
 
 from typing import Dict
 from .agent_based_api.v1 import register
-from .agent_based_api.v1.type_defs import AgentStringTable
+from .agent_based_api.v1.type_defs import StringTable
 
 Section = Dict[str, Dict[str, str]]
 
 
-def parse_omd_info(string_table: AgentStringTable) -> Section:
+def parse_omd_info(string_table: StringTable) -> Section:
     """
     >>> for k, v in parse_omd_info([
     ...         ['[versions]'],

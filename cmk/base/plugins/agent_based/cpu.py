@@ -5,14 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Dict, List, Optional, Union
-from .agent_based_api.v1.type_defs import AgentStringTable
+from .agent_based_api.v1.type_defs import StringTable
 
 from .agent_based_api.v1 import register
 
 Section = Dict[str, Union[float, List[float]]]
 
 
-def parse_cpu(string_table: AgentStringTable) -> Optional[Section]:
+def parse_cpu(string_table: StringTable) -> Optional[Section]:
     """
         Output is taken from /proc/loadavg plus the number of cores:
 

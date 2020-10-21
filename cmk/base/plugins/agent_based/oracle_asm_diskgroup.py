@@ -22,7 +22,7 @@ from .agent_based_api.v1 import (
 
 from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
-    AgentStringTable,
+    StringTable,
     CheckResult,
     Parameters,
 )
@@ -62,7 +62,7 @@ ASM_DISKGROUP_DEFAULT_LEVELS = {
 }
 
 
-def parse_oracle_asm_diskgroup(string_table: AgentStringTable):
+def parse_oracle_asm_diskgroup(string_table: StringTable):
     section: Dict[str, Dict[str, Union[str, List, None]]] = {}
 
     for line in string_table:

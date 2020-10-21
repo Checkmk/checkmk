@@ -15,7 +15,7 @@ Object = Dict[str, str]
 Section = Dict[str, Object]
 
 
-def _parse_hp_msa_objects(string_table: type_defs.AgentStringTable) -> Section:
+def _parse_hp_msa_objects(string_table: type_defs.StringTable) -> Section:
     """
     >>> from pprint import pprint
     >>> pprint(_parse_hp_msa_objects([
@@ -59,7 +59,7 @@ def _get_hp_msa_object_item(
     return item.rsplit("_", 1)[-1].strip()
 
 
-def parse_hp_msa(string_table: type_defs.AgentStringTable) -> Section:
+def parse_hp_msa(string_table: type_defs.StringTable) -> Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_hp_msa([

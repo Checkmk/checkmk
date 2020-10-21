@@ -6,7 +6,7 @@
 """F5-BIGIP-Cluster-Status SNMP Sections and Checks
 """
 
-from typing import Mapping
+from typing import List, Mapping
 
 from .agent_based_api.v1 import (
     SNMPTree,
@@ -18,7 +18,7 @@ from .agent_based_api.v1 import (
 )
 from .agent_based_api.v1.type_defs import (
     Parameters,
-    SNMPStringTable,
+    StringTable,
     CheckResult,
     DiscoveryResult,
 )
@@ -37,7 +37,7 @@ STATE_NAMES = {
 }
 
 
-def parse_f5_bigip_cluster_status(string_table: SNMPStringTable) -> NodeState:
+def parse_f5_bigip_cluster_status(string_table: List[StringTable]) -> NodeState:
     """Read a node status encoded as stringified int
     >>> parse_f5_bigip_cluster_status([[['4']]])
     4

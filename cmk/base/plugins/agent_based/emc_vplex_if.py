@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+from typing import List
 from .agent_based_api.v1 import (
     all_of,
     equals,
@@ -16,7 +16,7 @@ from .agent_based_api.v1 import (
 from .utils import if64, interfaces
 
 
-def parse_emc_vplex_if(string_table: type_defs.SNMPStringTable) -> interfaces.Section:
+def parse_emc_vplex_if(string_table: List[type_defs.StringTable]) -> interfaces.Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_emc_vplex_if([

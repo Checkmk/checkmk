@@ -91,7 +91,7 @@ from .utils import diskstat
 SectionMultipath = Mapping[str, Any]
 
 
-def parse_diskstat(string_table: type_defs.AgentStringTable) -> diskstat.Section:
+def parse_diskstat(string_table: type_defs.StringTable) -> diskstat.Section:
     timestamp, proc_diskstat, name_info = diskstat_extract_name_info(string_table)
     assert timestamp is not None
 
@@ -209,8 +209,8 @@ def parse_diskstat(string_table: type_defs.AgentStringTable) -> diskstat.Section
 #     (None, 253, 6): 'LVM vgappl-applvol',
 # }
 def diskstat_extract_name_info(
-    string_table: type_defs.AgentStringTable
-) -> Tuple[Optional[int], type_defs.AgentStringTable, Mapping[Tuple[int, int], str]]:
+    string_table: type_defs.StringTable
+) -> Tuple[Optional[int], type_defs.StringTable, Mapping[Tuple[int, int], str]]:
     name_info = {}  # dict from (major, minor) to itemname
     timestamp = None
 

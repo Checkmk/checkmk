@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Dict, Final, List, Optional, Tuple, Union
-from .agent_based_api.v1.type_defs import AgentStringTable
+from .agent_based_api.v1.type_defs import StringTable
 
 from .agent_based_api.v1 import register
 
@@ -25,7 +25,7 @@ KERNEL_COUNTER_NAMES: Final[Dict[str, str]] = {  # order determines the service 
 }
 
 
-def parse_kernel(string_table: AgentStringTable) -> Section:
+def parse_kernel(string_table: StringTable) -> Section:
     """
         >>> from pprint import pprint
         >>> pprint(parse_kernel([

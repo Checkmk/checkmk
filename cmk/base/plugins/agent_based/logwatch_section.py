@@ -15,7 +15,7 @@
 #########################################################################################
 
 from typing import Optional, Tuple
-from .agent_based_api.v1.type_defs import AgentStringTable
+from .agent_based_api.v1.type_defs import StringTable
 from .utils.logwatch import ItemData, Section
 
 from .agent_based_api.v1 import register
@@ -45,7 +45,7 @@ def _extract_item_attribute(line: str) -> Optional[Tuple[str, str]]:
     return logfile_name, attribute
 
 
-def parse_logwatch(string_table: AgentStringTable) -> Section:
+def parse_logwatch(string_table: StringTable) -> Section:
     """
         >>> import pprint
         >>> pprint.pprint(parse_logwatch([

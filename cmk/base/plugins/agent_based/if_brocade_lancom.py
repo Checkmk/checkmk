@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable
+from typing import Iterable, List
 from .agent_based_api.v1 import (
     all_of,
     any_of,
@@ -37,7 +37,7 @@ SNMP_TREES = [
 
 
 def parse_if_brocade_lancom(
-    string_table: type_defs.SNMPStringByteTable,
+    string_table: List[type_defs.StringByteTable],
     descriptions_to_ignore: Iterable[str],
 ) -> interfaces.Section:
     """
@@ -88,14 +88,14 @@ def parse_if_brocade_lancom(
     return if64.generic_parse_if64([new_info])
 
 
-def parse_if_brocade(string_table: type_defs.SNMPStringByteTable) -> interfaces.Section:
+def parse_if_brocade(string_table: List[type_defs.StringByteTable]) -> interfaces.Section:
     return parse_if_brocade_lancom(
         string_table,
         ["Point-2-Point"],
     )
 
 
-def parse_if_lancom(string_table: type_defs.SNMPStringByteTable) -> interfaces.Section:
+def parse_if_lancom(string_table: List[type_defs.StringByteTable]) -> interfaces.Section:
     return parse_if_brocade_lancom(
         string_table,
         ["P2P", "Point-2-Point"],

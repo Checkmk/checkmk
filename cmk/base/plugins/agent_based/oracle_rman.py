@@ -22,7 +22,7 @@ from .agent_based_api.v1 import (
 )
 from .agent_based_api.v1.type_defs import (
     Parameters,
-    AgentStringTable,
+    StringTable,
     DiscoveryResult,
     CheckResult,
 )
@@ -58,7 +58,7 @@ SectionSidOracleRman = TypedDict(
 SectionOracleRman = Dict[str, SectionSidOracleRman]
 
 
-def parse_oracle_rman(string_table: AgentStringTable) -> SectionOracleRman:
+def parse_oracle_rman(string_table: StringTable) -> SectionOracleRman:
     section: SectionOracleRman = {}
     error_sids = {}
 

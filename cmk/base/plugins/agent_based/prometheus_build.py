@@ -17,7 +17,7 @@ from .agent_based_api.v1.type_defs import (
 Section = Dict[str, Any]
 
 
-def parse_prometheus_build(string_table: type_defs.AgentStringTable) -> Optional[Section]:
+def parse_prometheus_build(string_table: type_defs.StringTable) -> Optional[Section]:
     section = {}
     try:
         prometheus_section = json.loads(string_table[0][0])

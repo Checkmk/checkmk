@@ -19,13 +19,13 @@ from .agent_based_api.v1 import (
 
 from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
-    AgentStringTable,
+    StringTable,
     CheckResult,
     Parameters,
 )
 
 
-def parse_sap_hana_data_volume(string_table: AgentStringTable) -> sap_hana.ParsedSection:
+def parse_sap_hana_data_volume(string_table: StringTable) -> sap_hana.ParsedSection:
     section: sap_hana.ParsedSection = {}
 
     MB = 1024**2

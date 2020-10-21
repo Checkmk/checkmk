@@ -14,7 +14,7 @@
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.1.5074 Unit Operating State Reason
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5074 Reason Unknown
 
-from typing import Dict
+from typing import Dict, List
 
 from .utils.liebert import (
     DETECT_LIEBERT,
@@ -28,7 +28,7 @@ from .agent_based_api.v1 import (
     State as state,
 )
 from .agent_based_api.v1.type_defs import (
-    SNMPStringTable,
+    StringTable,
     CheckResult,
     DiscoveryResult,
 )
@@ -36,7 +36,7 @@ from .agent_based_api.v1.type_defs import (
 ParsedSection = Dict[str, str]
 
 
-def parse_liebert_system(string_table: SNMPStringTable) -> ParsedSection:
+def parse_liebert_system(string_table: List[StringTable]) -> ParsedSection:
     return parse_liebert_without_unit(string_table, str)
 
 

@@ -69,7 +69,7 @@ _LINE_TO_METRIC = {
 }
 
 
-def parse_winperf_phydisk(string_table: type_defs.AgentStringTable) -> Optional[diskstat.Section]:
+def parse_winperf_phydisk(string_table: type_defs.StringTable) -> Optional[diskstat.Section]:
 
     section: Dict[str, Dict[str, float]] = {}
 

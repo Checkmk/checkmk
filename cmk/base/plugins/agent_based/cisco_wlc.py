@@ -31,7 +31,7 @@ True
 False
 """
 
-from typing import Dict, Mapping, Optional
+from typing import Dict, List, Mapping, Optional
 
 from .agent_based_api.v1 import (
     SNMPTree,
@@ -43,7 +43,7 @@ from .agent_based_api.v1 import (
 )
 from .agent_based_api.v1.type_defs import (
     Parameters,
-    SNMPStringTable,
+    StringTable,
     CheckResult,
     DiscoveryResult,
 )
@@ -74,7 +74,7 @@ map_states = {
 }
 
 
-def parse_cisco_wlc(string_table: SNMPStringTable) -> Section:
+def parse_cisco_wlc(string_table: List[StringTable]) -> Section:
     """
     >>> parse_cisco_wlc([[['AP19', '1'], ['AP02', '1']]])
     {'AP19': '1', 'AP02': '1'}

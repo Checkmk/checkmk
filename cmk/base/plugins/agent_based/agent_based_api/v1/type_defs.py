@@ -12,7 +12,7 @@ Example:
     For a parse function that creates a dictionary for every item, for instance,
     you could use
 
-        def parse_my_plugin(string_table: AgentStringTable)= -> Dict[str, Dict[str, str]]:
+        def parse_my_plugin(string_table: StringTable)= -> Dict[str, Dict[str, str]]:
             pass
 
     A check function handling such data should be annotated
@@ -32,22 +32,20 @@ from cmk.base.api.agent_based.checking_classes import (
     DiscoveryResult,
 )
 from cmk.base.api.agent_based.type_defs import (
-    AgentStringTable,
     HostLabelGenerator,
     Parameters,
-    SNMPStringByteTable,
-    SNMPStringTable,
+    StringByteTable,
+    StringTable,
     ValueStore,
 )
 
 __all__ = [
-    "AgentStringTable",
     "CheckResult",
     "DiscoveryResult",
     "HostLabelGenerator",
     "InventoryResult",
     "Parameters",
-    "SNMPStringByteTable",
-    "SNMPStringTable",
+    "StringByteTable",
+    "StringTable",
     "ValueStore",
 ]

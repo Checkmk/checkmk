@@ -26,7 +26,7 @@ from contextlib import suppress
 from datetime import datetime, timezone
 
 from .agent_based_api.v1 import register
-from .agent_based_api.v1.type_defs import AgentStringTable
+from .agent_based_api.v1.type_defs import StringTable
 
 from .utils.mssql_counters import Section
 
@@ -58,7 +58,7 @@ def to_timestamp(values: Sequence[str]) -> float:
     return to_datetime(values).replace(tzinfo=timezone.utc).timestamp()
 
 
-def parse_mssql_counters(string_table: AgentStringTable) -> Section:
+def parse_mssql_counters(string_table: StringTable) -> Section:
     """
     >>> for k, v in parse_mssql_counters([
     ...     ['None', 'utc_time', 'None', '19.08.2020 14:25:04'],

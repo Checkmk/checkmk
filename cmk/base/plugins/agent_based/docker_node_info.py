@@ -9,7 +9,7 @@ from typing import (
 from .utils import docker, legacy_docker
 
 from .agent_based_api.v1.type_defs import (
-    AgentStringTable,
+    StringTable,
     HostLabelGenerator,
 )
 
@@ -21,7 +21,7 @@ from .agent_based_api.v1 import (
 Section = Dict  # either dict, or the inherited class to indicate legacy agent plugin
 
 
-def parse_docker_node_info(string_table: AgentStringTable) -> Section:
+def parse_docker_node_info(string_table: StringTable) -> Section:
     version = docker.get_version(string_table)
     if version is None:
         return legacy_docker.parse_node_info(string_table)

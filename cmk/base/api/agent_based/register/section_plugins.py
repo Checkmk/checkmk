@@ -19,12 +19,11 @@ from cmk.snmplib.type_defs import OIDBytes, OIDSpec, SNMPDetectSpec, SNMPTree  #
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
     AgentSectionPlugin,
-    AgentStringTable,
     HostLabelFunction,
     SNMPParseFunction,
     SNMPSectionPlugin,
-    SNMPStringByteTable,
-    SNMPStringTable,
+    StringByteTable,
+    StringTable,
 )
 from cmk.base.api.agent_based.register.utils import validate_function_arguments
 
@@ -183,7 +182,7 @@ def create_agent_section_plugin(
         if parse_function is not None:
             _validate_parse_function(
                 parse_function,
-                expected_annotation=(AgentStringTable, "AgentStringTable"),
+                expected_annotation=(StringTable, "StringTable"),
             )
 
         if host_label_function is not None:
@@ -237,8 +236,8 @@ def create_snmp_section_plugin(
             _validate_parse_function(
                 parse_function,
                 expected_annotation=(  #
-                    (SNMPStringByteTable, "SNMPStringByteTable") if needs_bytes else
-                    (SNMPStringTable, "SNMPStringTable")),
+                    (List[StringByteTable], "List[StringByteTable]") if needs_bytes else
+                    (List[StringTable], "List[StringTable]")),
             )
 
         if host_label_function is not None:

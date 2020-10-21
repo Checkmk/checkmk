@@ -310,7 +310,7 @@ def fix_if_64_highspeed(highspeed: str) -> str:
     return str(interfaces.saveint(highspeed) * 1000000)
 
 
-def generic_parse_if64(string_table: type_defs.SNMPStringByteTable) -> interfaces.Section:
+def generic_parse_if64(string_table: List[type_defs.StringByteTable]) -> interfaces.Section:
     """
     >>> from pprint import pprint
     >>> pprint(generic_parse_if64([[
@@ -345,7 +345,7 @@ def generic_parse_if64(string_table: type_defs.SNMPStringByteTable) -> interface
     ]
 
 
-def parse_if64(string_table: type_defs.SNMPStringByteTable) -> interfaces.Section:
+def parse_if64(string_table: List[type_defs.StringByteTable]) -> interfaces.Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_if64([[
@@ -357,7 +357,7 @@ def parse_if64(string_table: type_defs.SNMPStringByteTable) -> interfaces.Sectio
     [Interface(index='2', descr='GigabitEthernet1/1', alias='** Trunk to main switch **', type='6', speed=1000000000, oper_status='1', in_octets=615170130480, in_ucast=468482397, in_mcast=1439303, in_bcast=3279788, in_discards=0, in_errors=0, out_octets=163344362761, out_ucast=394389414, out_mcast=54227, out_bcast=36274, out_discards=0, out_errors=0, out_qlen=0, phys_address=[0, 12, 206, 149, 55, 128], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None),
      Interface(index='240', descr='unrouted VLAN 400', alias='', type='53', speed=0, oper_status='1', in_octets=0, in_ucast=0, in_mcast=0, in_bcast=0, in_discards=0, in_errors=0, out_octets=0, out_ucast=0, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address=[0, 12, 206, 149, 55, 143], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None)]
     """
-    preprocessed_lines: type_defs.SNMPStringByteTable = [[]]
+    preprocessed_lines: List[type_defs.StringByteTable] = [[]]
     for line in string_table[0]:
         # some DLINK switches apparently report a broken interface with index 0, filter that out
         if interfaces.saveint(line[0]) > 0:

@@ -28,12 +28,12 @@ from .agent_based_api.v1 import (
     Result,
     State as state,
 )
-from .agent_based_api.v1.type_defs import AgentStringTable, DiscoveryResult, CheckResult
+from .agent_based_api.v1.type_defs import StringTable, DiscoveryResult, CheckResult
 
 Section = Dict[str, Dict[str, Any]]
 
 
-def parse_omd_status(string_table: AgentStringTable) -> Optional[Section]:
+def parse_omd_status(string_table: StringTable) -> Optional[Section]:
     """
     >>> for site, status in parse_omd_status([
     ...     ['[heute]'],

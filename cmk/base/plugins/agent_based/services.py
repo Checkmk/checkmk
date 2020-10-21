@@ -21,7 +21,7 @@ from .agent_based_api.v1 import (
 )
 
 from .agent_based_api.v1.type_defs import (
-    AgentStringTable,
+    StringTable,
     CheckResult,
     DiscoveryResult,
     Parameters,
@@ -71,7 +71,7 @@ class WinService(NamedTuple):
 Section = List[WinService]  # deterministic order!
 
 
-def parse_windows_services(string_table: AgentStringTable) -> Section:
+def parse_windows_services(string_table: StringTable) -> Section:
     def to_service(name: str, status: str, description: str) -> WinService:
         cur_state, start_type = status.split('/', 1) if "/" in status else (status, "unknown")
         return WinService(name, cur_state, start_type, description)

@@ -18,8 +18,8 @@ import cmk.base.api.agent_based.register.section_plugins as section_plugins
 from cmk.base.api.agent_based.type_defs import (
     AgentSectionPlugin,
     SNMPSectionPlugin,
-    SNMPStringTable,
-    SNMPStringByteTable,
+    StringTable,
+    StringByteTable,
 )
 
 
@@ -64,18 +64,18 @@ def test_validate_parse_function_value(parse_function):
 
 
 def test_validate_parse_function_annotation_string_table():
-    def _parse_function(string_table: SNMPStringTable):
+    def _parse_function(string_table: List[StringTable]):
         return string_table
 
     with pytest.raises(TypeError):
         section_plugins._validate_parse_function(
             _parse_function,
-            expected_annotation=(SNMPStringByteTable, "SNMPStringByteTable"),
+            expected_annotation=(StringByteTable, "StringByteTable"),
         )
 
     section_plugins._validate_parse_function(
         _parse_function,
-        expected_annotation=(SNMPStringTable, "SNMPStringTable"),
+        expected_annotation=(List[StringTable], "List[StringTable]"),
     )
 
 

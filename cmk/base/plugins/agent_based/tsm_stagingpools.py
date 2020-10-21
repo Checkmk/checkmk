@@ -36,7 +36,7 @@ TSM_STAGINGPOOLS_DEFAULT_LEVELS = {
 SECTION = Dict[str, List[str]]
 
 
-def parse_tsm_stagingpools(string_table: type_defs.AgentStringTable) -> SECTION:
+def parse_tsm_stagingpools(string_table: type_defs.StringTable) -> SECTION:
     """
     >>> string_table = [
     ...     ["tsmfarm2", "SL8500_STGPOOL_05", "99.9"],

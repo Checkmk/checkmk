@@ -39,7 +39,7 @@ Section = Tuple[interfaces.Section, ExtraInfo]
 # interface clu1-01_clus2 use-failover-group unused       address 222.254.110.12  dns-domain-name none    is-auto-revert true     lif-uuid 3d6817c9-4bd1-11e5-a02c-0050569628b6   vserver Cluster role cluster    netmask-length 24       data-protocols.data-protocol none       operational-status up   netmask 255.255.255.0   failover-policy local_only      home-node clu1-01       address-family ipv4     current-port e0b        current-node clu1-01    routing-group-name c222.254.110.0/24    listen-for-dns-query false      administrative-status up        failover-group Cluster  home-port e0b   is-home true    send_data 4389886  send_errors 0   recv_errors 0   instance_name clu1-01_clus2     recv_data 6113182
 
 
-def parse_netapp_api_if(string_table: type_defs.AgentStringTable) -> Section:
+def parse_netapp_api_if(string_table: type_defs.StringTable) -> Section:
     ifaces = netapp_api.parse_netapp_api_single_instance(string_table)
 
     # Dictionary with lists of common mac addresses

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Dict, List, Optional, Tuple
-from .agent_based_api.v1.type_defs import SNMPStringTable
+from .agent_based_api.v1.type_defs import StringTable
 
 from .agent_based_api.v1 import register, SNMPTree
 from .utils import ucd_hr_detection
@@ -12,7 +12,7 @@ from .utils import ucd_hr_detection
 PreParsed = Dict[str, List[Tuple[str, int, int]]]
 
 
-def pre_parse_hr_mem(string_table: SNMPStringTable) -> PreParsed:
+def pre_parse_hr_mem(string_table: List[StringTable]) -> PreParsed:
     info = string_table[0]
 
     map_types = {
@@ -94,7 +94,7 @@ def aggregate_meminfo(parsed: PreParsed) -> Dict[str, float]:
     return meminfo
 
 
-def parse_hr_mem(string_table: SNMPStringTable) -> Optional[Dict[str, float]]:
+def parse_hr_mem(string_table: List[StringTable]) -> Optional[Dict[str, float]]:
     pre_parsed = pre_parse_hr_mem(string_table)
 
     # Do we find at least one entry concerning memory?

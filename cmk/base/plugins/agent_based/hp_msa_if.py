@@ -111,7 +111,7 @@ from .utils import (
 # host-port-statistics 2 stop-sample-time-numeric 1440157920
 
 
-def parse_hp_msa_if(string_table: type_defs.AgentStringTable) -> interfaces.Section:
+def parse_hp_msa_if(string_table: type_defs.StringTable) -> interfaces.Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_hp_msa_if([

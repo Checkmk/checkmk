@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping
+from typing import List, Mapping
 from .agent_based_api.v1 import (
     equals,
     Metric,
@@ -18,7 +18,7 @@ from .agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
     Parameters,
-    SNMPStringTable,
+    StringTable,
 )
 
 Section = Mapping[str, Mapping[str, str]]
@@ -32,7 +32,7 @@ _KEYS = [
 ]
 
 
-def parse_adva_fsp_if(string_table: SNMPStringTable) -> Section:
+def parse_adva_fsp_if(string_table: List[StringTable]) -> Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_adva_fsp_if([[

@@ -5,13 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections import OrderedDict
 
-from .agent_based_api.v1.type_defs import AgentStringTable
+from .agent_based_api.v1.type_defs import StringTable
 from .agent_based_api.v1 import register
 
 Section = OrderedDict
 
 
-def parse_esx_vsphere_hostsystem(string_table: AgentStringTable) -> Section:
+def parse_esx_vsphere_hostsystem(string_table: StringTable) -> Section:
     """
         >>> from pprint import pprint
         >>> pprint(parse_esx_vsphere_hostsystem([

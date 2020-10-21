@@ -102,7 +102,7 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
     return ip_stats
 
 
-def _parse_lnx_if_sections(string_table: type_defs.AgentStringTable):
+def _parse_lnx_if_sections(string_table: type_defs.StringTable):
     ip_stats = {}
     ethtool_stats: Dict[str, Dict[str, Union[str, int, Sequence[int]]]] = {}
     iface = None
@@ -140,7 +140,7 @@ def _parse_lnx_if_sections(string_table: type_defs.AgentStringTable):
     return ip_stats, ethtool_stats
 
 
-def parse_lnx_if(string_table: type_defs.AgentStringTable) -> Section:
+def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
     ip_stats, ethtool_stats = _parse_lnx_if_sections(string_table)
 
     nic_info = []

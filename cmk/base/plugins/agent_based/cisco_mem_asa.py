@@ -25,7 +25,7 @@ True
 False
 """
 
-from typing import Sequence, Dict
+from typing import Dict, List, Sequence
 from contextlib import suppress
 
 from .utils.size_trend import size_trend
@@ -47,7 +47,7 @@ from .agent_based_api.v1 import (
     GetRateError,
 )
 from .agent_based_api.v1.type_defs import (
-    SNMPStringTable,
+    StringTable,
     Parameters,
     CheckResult,
     DiscoveryResult,
@@ -63,7 +63,7 @@ CISCO_MEM_CHECK_DEFAULT_PARAMETERS = {
 }
 
 
-def parse_cisco_mem_asa(string_table: SNMPStringTable) -> Section:
+def parse_cisco_mem_asa(string_table: List[StringTable]) -> Section:
     """
     >>> for item, values in parse_cisco_mem_asa([
     ...         [['System memory', '319075344', '754665920', '731194056']],
@@ -78,7 +78,7 @@ def parse_cisco_mem_asa(string_table: SNMPStringTable) -> Section:
     }
 
 
-def parse_cisco_mem_asa64(string_table: SNMPStringTable) -> Section:
+def parse_cisco_mem_asa64(string_table: List[StringTable]) -> Section:
     """
     >>> for item, values in parse_cisco_mem_asa64([[
     ...         ['System memory', '1251166290', '3043801006'],

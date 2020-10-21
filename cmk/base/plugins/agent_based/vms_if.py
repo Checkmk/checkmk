@@ -34,7 +34,7 @@ _VMS_IF_COUNTERS_ORDER = [
 ]
 
 
-def parse_vms_if(string_table: type_defs.AgentStringTable) -> interfaces.Section:
+def parse_vms_if(string_table: type_defs.StringTable) -> interfaces.Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_vms_if([

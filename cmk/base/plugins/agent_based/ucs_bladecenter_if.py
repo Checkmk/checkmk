@@ -132,7 +132,7 @@ _UCS_FIELDS_TO_IF_FIELDS = {
 }
 
 
-def parse_ucs_bladecenter_if(string_table: type_defs.AgentStringTable) -> interfaces.Section:
+def parse_ucs_bladecenter_if(string_table: type_defs.StringTable) -> interfaces.Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_ucs_bladecenter_if([

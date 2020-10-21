@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Infoblox services and node services
 """
-from typing import Dict, Tuple, Mapping
+from typing import Dict, List, Mapping, Tuple
 
 from .agent_based_api.v1 import (
     SNMPTree,
@@ -18,7 +18,7 @@ from .agent_based_api.v1 import (
     contains,
 )
 from .agent_based_api.v1.type_defs import (
-    SNMPStringTable,
+    StringTable,
     CheckResult,
     DiscoveryResult,
 )
@@ -105,7 +105,7 @@ STATE = {
 }
 
 
-def parse_infoblox_services(string_table: SNMPStringTable) -> Section:
+def parse_infoblox_services(string_table: List[StringTable]) -> Section:
     """
     >>> for item, status in parse_infoblox_services([[
     ...         ['9', '1', 'Running'],

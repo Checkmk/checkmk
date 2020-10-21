@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import namedtuple
-from typing import Mapping
+from typing import List, Mapping
 from ..agent_based_api.v1 import (
     equals,
     Metric,
@@ -36,7 +36,7 @@ _OPER_STATE_MAP = {
 }
 
 
-def parse_bluecat(string_table: type_defs.SNMPStringTable) -> Section:
+def parse_bluecat(string_table: List[type_defs.StringTable]) -> Section:
     """
     >>> parse_bluecat([[['1', '2']]])
     {'oper_state': 1, 'leases': 2}

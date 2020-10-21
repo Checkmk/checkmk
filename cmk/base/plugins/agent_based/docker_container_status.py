@@ -14,7 +14,7 @@ from .utils import docker, uptime
 from .utils.legacy_docker import DeprecatedDict
 from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
-    AgentStringTable,
+    StringTable,
     CheckResult,
     HostLabelGenerator,
     Parameters,
@@ -45,7 +45,7 @@ def _is_active_container(section: Dict[str, Any]) -> bool:
     return restart_policy_name in RESTART_POLICIES_TO_DISCOVER
 
 
-def parse_docker_container_status(string_table: AgentStringTable) -> Dict[str, Any]:
+def parse_docker_container_status(string_table: StringTable) -> Dict[str, Any]:
     '''process the first line to a JSON object
 
     In case there are multiple lines of output sent by the agent only process the first

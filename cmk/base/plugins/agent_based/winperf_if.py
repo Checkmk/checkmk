@@ -187,7 +187,7 @@ def _parse_winperf_if_agent_section_timestamp_and_instance_names(
 
 
 def _parse_winperf_if_section(
-    string_table: type_defs.AgentStringTable
+    string_table: type_defs.StringTable
 ) -> Tuple[AgentTimestamp, NICNames, AgentSection, RawSubSection, RawSubSection, RawSubSection]:
     agent_timestamp = None
     raw_nic_names: NICNames = []
@@ -395,7 +395,7 @@ def _parse_winperf_if_nic_attrs(
     return nic_attrs
 
 
-def parse_winperf_if(string_table: type_defs.AgentStringTable) -> Section:
+def parse_winperf_if(string_table: type_defs.StringTable) -> Section:
     (agent_timestamp, raw_nic_names, agent_section, plugin_section, dhcp_section,
      teaming_section) = _parse_winperf_if_section(string_table)
 

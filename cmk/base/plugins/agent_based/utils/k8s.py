@@ -7,10 +7,10 @@
 from typing import TypedDict, Dict, List
 import json
 
-from ..agent_based_api.v1.type_defs import AgentStringTable
+from ..agent_based_api.v1.type_defs import StringTable
 
 
-def parse_json(string_table: AgentStringTable) -> Dict:
+def parse_json(string_table: StringTable) -> Dict:
     data = json.loads(string_table[0][0])
     assert isinstance(data, dict)
     return data

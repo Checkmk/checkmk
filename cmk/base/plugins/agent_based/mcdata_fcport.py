@@ -6,6 +6,7 @@
 
 from typing import (
     Iterable,
+    List,
     Sequence,
     Union,
 )
@@ -72,7 +73,7 @@ def _line_to_interface(line: Iterable[Union[str, Sequence[int]]]) -> interfaces.
     )
 
 
-def parse_mcdata_fcport(string_table: type_defs.SNMPStringByteTable) -> interfaces.Section:
+def parse_mcdata_fcport(string_table: List[type_defs.StringByteTable]) -> interfaces.Section:
     return [_line_to_interface(line) for line in string_table[0]]
 
 

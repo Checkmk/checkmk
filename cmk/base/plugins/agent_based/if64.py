@@ -6,6 +6,7 @@
 
 from typing import (
     Dict,
+    List,
     Mapping,
     Optional,
     Sequence,
@@ -20,7 +21,7 @@ from .utils import if64, interfaces
 If64AdmSection = Sequence[str]
 
 
-def parse_if64adm(string_table: type_defs.SNMPStringTable) -> If64AdmSection:
+def parse_if64adm(string_table: List[type_defs.StringTable]) -> If64AdmSection:
     return [sub_table[0] for sub_table in string_table[0]]
 
 

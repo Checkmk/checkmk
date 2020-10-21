@@ -6,6 +6,7 @@
 
 from typing import (
     Dict,
+    List,
     Mapping,
     Optional,
     Sequence,
@@ -136,7 +137,7 @@ def _parse_value(value_string: str) -> ValueAndStatus:
         return None, None
 
 
-def parse_brocade_optical(string_table: type_defs.SNMPStringTable) -> Section:
+def parse_brocade_optical(string_table: List[type_defs.StringTable]) -> Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_brocade_optical([

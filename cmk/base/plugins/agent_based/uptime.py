@@ -12,7 +12,7 @@ from typing import Optional
 import re
 import datetime
 
-from .agent_based_api.v1.type_defs import AgentStringTable
+from .agent_based_api.v1.type_defs import StringTable
 from .agent_based_api.v1 import register
 from .utils import uptime
 
@@ -101,7 +101,7 @@ unix:0:system_misc:snaptime     1131.467157594                     # snaptime
     )
 
 
-def parse_uptime(string_table: AgentStringTable) -> Optional[uptime.Section]:
+def parse_uptime(string_table: StringTable) -> Optional[uptime.Section]:
     if not string_table:
         return None
 

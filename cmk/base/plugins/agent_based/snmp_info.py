@@ -4,12 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import NamedTuple
+from typing import List, NamedTuple
 from .agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
     HostLabelGenerator,
-    SNMPStringTable,
+    StringTable,
     InventoryResult,
 )
 
@@ -32,7 +32,7 @@ class SNMPInfo(NamedTuple):
     location: str
 
 
-def parse_snmp_info(string_table: SNMPStringTable) -> SNMPInfo:
+def parse_snmp_info(string_table: List[StringTable]) -> SNMPInfo:
     return SNMPInfo(*string_table[0][0])
 
 

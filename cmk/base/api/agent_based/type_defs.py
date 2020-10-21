@@ -52,15 +52,18 @@ class Parameters(Mapping):
         return "%s(%s)" % (self.__class__.__name__, pprint.pformat(self._data))
 
 
-AgentStringTable = List[List[str]]
-AgentParseFunction = Callable[[AgentStringTable], Any]
+StringTable = List[List[str]]
+StringByteTable = List[List[Union[str, List[int]]]]
+
+AgentParseFunction = Callable[[StringTable], Any]
 
 HostLabelGenerator = Generator[HostLabel, None, None]
 HostLabelFunction = Callable[..., HostLabelGenerator]
 
-SNMPStringTable = List[List[List[str]]]
-SNMPStringByteTable = List[List[List[Union[str, List[int]]]]]
-SNMPParseFunction = Union[Callable[[SNMPStringTable], Any], Callable[[SNMPStringByteTable], Any],]
+SNMPParseFunction = Union[  #
+    Callable[[List[StringTable]], Any],  #
+    Callable[[List[StringByteTable]], Any],  #
+]
 
 AgentSectionPlugin = NamedTuple(
     "AgentSectionPlugin",

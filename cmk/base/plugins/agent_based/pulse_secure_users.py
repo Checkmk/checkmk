@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Generator, Mapping, Union
+from typing import Generator, List, Mapping, Union
 from .agent_based_api.v1 import (
     check_levels,
     clusterize,
@@ -21,7 +21,7 @@ Section = Mapping[str, int]
 CheckOutput = Generator[Union[Result, Metric], None, None]
 
 
-def parse_pulse_secure_users(string_table: type_defs.SNMPStringTable) -> Section:
+def parse_pulse_secure_users(string_table: List[type_defs.StringTable]) -> Section:
     raw_data = string_table[0][0][0]
     try:
         return {'n_users': int(raw_data)}

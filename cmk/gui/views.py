@@ -754,6 +754,7 @@ class GUIViewRenderer(ABCViewRenderer):
             self._page_menu_dropdowns_context(rows) + self._page_menu_dropdown_add_to() +
             export_dropdown,
             breadcrumb=breadcrumb,
+            filter_bar=self._page_menu_filter_bar(show_filters),
         )
 
         self._extend_display_dropdown(menu, show_filters)
@@ -850,25 +851,6 @@ class GUIViewRenderer(ABCViewRenderer):
                     entries=list(self._page_menu_entries_view_format()),
                 ))
 
-        if display_options.enabled(display_options.F):
-            display_dropdown.topics.insert(
-                0,
-                PageMenuTopic(
-                    title=_("Filter"),
-                    entries=list(self._page_menu_entries_filter(show_filters)),
-                ))
-
-    def _page_menu_entries_filter(self, show_filters: List[Filter]) -> Iterator[PageMenuEntry]:
-        is_filter_set = html.request.var("filled_in") == "filter"
-
-        yield PageMenuEntry(
-            title=_("Filter view"),
-            icon_name="filters_set" if is_filter_set else "filters",
-            item=PageMenuSidePopup(self._render_filter_form(show_filters)),
-            name="filters",
-            is_shortcut=True,
-        )
-
     def _page_menu_entries_view_format(self) -> Iterator[PageMenuEntry]:
         painter_options = PainterOptions.get_instance()
         yield PageMenuEntry(
@@ -953,6 +935,16 @@ class GUIViewRenderer(ABCViewRenderer):
         #menu.add_youtube_reference(title=_("Episode 3: Monitoring Windows"),
         #                           youtube_id="iz8S9TGGklQ")
         pass
+
+    def _page_menu_filter_bar(self, show_filters: List[Filter]) -> Optional[PageMenuEntry]:
+        if display_options.enabled(display_options.F):
+            return PageMenuEntry(
+                title=_("Filter view"),
+                icon_name="filter_line",
+                item=PageMenuSidePopup(self._render_filter_form(show_filters)),
+                name="filters",
+            )
+        return None
 
 
 # Load all view plugins

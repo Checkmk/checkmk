@@ -42,8 +42,7 @@ from cmk.gui.breadcrumb import (
     make_topic_breadcrumb,
 )
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.page_menu import (make_display_options_dropdown, PageMenu, PageMenuEntry,
-                               PageMenuSidePopup, PageMenuTopic)
+from cmk.gui.page_menu import PageMenu, PageMenuEntry, PageMenuSidePopup
 from cmk.gui.pagetypes import PagetypeTopics
 
 TopologyConfig = Dict[str, Any]
@@ -150,8 +149,8 @@ class ParentChildTopologyPage(Page):
         breadcrumb = make_topic_breadcrumb(mega_menu_registry.menu_monitoring(),
                                            PagetypeTopics.get_topic(visual_spec["topic"]))
         breadcrumb.append(make_current_page_breadcrumb_item(visual_spec["title"]))
-        page_menu = PageMenu(breadcrumb=breadcrumb)
-        self._extend_display_dropdown(page_menu, visual_spec["name"])
+        page_menu = PageMenu(breadcrumb=breadcrumb,
+                             filter_bar=self._page_menu_filter_bar(visual_spec["name"]))
         html.header(visual_spec["title"], breadcrumb, page_menu)
         self.show_topology_content(hostnames,
                                    mode,
@@ -191,28 +190,20 @@ class ParentChildTopologyPage(Page):
         view, filters = get_topology_view_and_filters()
         return cmk.gui.views.get_livestatus_filter_headers(view, filters)
 
-    def _extend_display_dropdown(self, menu: PageMenu, page_name: str) -> None:
+    def _page_menu_filter_bar(self, page_name: str) -> PageMenuEntry:
         _view, show_filters = get_topology_view_and_filters()
-        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
-        display_dropdown.topics.insert(
-            0,
-            PageMenuTopic(
-                title=_("Filter"),
-                entries=[
-                    PageMenuEntry(
-                        title=_("Filter"),
-                        icon_name="filters",
-                        item=PageMenuSidePopup(
-                            cmk.gui.visuals.render_filter_form(
-                                info_list=["host", "service"],
-                                mandatory_filters=[],
-                                context={f.ident: {} for f in show_filters if f.available()},
-                                page_name=page_name,
-                                reset_ajax_page="ajax_initial_topology_filters")),
-                        name="filters",
-                        is_shortcut=True,
-                    ),
-                ]))
+        return PageMenuEntry(
+            title=_("Filter"),
+            icon_name="filter_line",
+            item=PageMenuSidePopup(
+                cmk.gui.visuals.render_filter_form(
+                    info_list=["host", "service"],
+                    mandatory_filters=[],
+                    context={f.ident: {} for f in show_filters if f.available()},
+                    page_name=page_name,
+                    reset_ajax_page="ajax_initial_topology_filters")),
+            name="filters",
+        )
 
 
 def get_topology_view_and_filters() -> Tuple[View, List[Filter]]:

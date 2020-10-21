@@ -53,7 +53,6 @@ from cmk.gui.page_menu import (
     make_simple_link,
     make_simple_form_page_menu,
     make_javascript_link,
-    make_display_options_dropdown,
 )
 
 from cmk.gui.exceptions import (
@@ -782,10 +781,26 @@ def _page_menu(breadcrumb: Breadcrumb, name: DashboardName, board: DashboardConf
             ),
         ],
         breadcrumb=breadcrumb,
+        filter_bar=_page_menu_filter_bar(board, board_context, unconfigured_single_infos),
     )
-    _extend_display_dropdown(menu, board, board_context, unconfigured_single_infos)
 
     return menu
+
+
+def _page_menu_filter_bar(board: DashboardConfig, board_context: VisualContext,
+                          unconfigured_single_infos: Set[str]) -> PageMenuEntry:
+    mandatory_filters = _get_mandatory_filters(board, unconfigured_single_infos)
+    # Like _dashboard_info_handler we assume that only host / service filters are relevant
+    info_list = ["host", "service"]
+
+    return PageMenuEntry(
+        title=_("Filter"),
+        icon_name="filter_line",
+        item=PageMenuSidePopup(
+            visuals.render_filter_form(info_list, mandatory_filters, board_context, board["name"],
+                                       "ajax_initial_dashboard_filters")),
+        name="filters",
+    )
 
 
 def _dashboard_edit_entries(name: DashboardName, board: DashboardConfig,
@@ -825,31 +840,6 @@ def _dashboard_edit_entries(name: DashboardName, board: DashboardConfig,
                 filename="edit_dashboard.py",
             )),
     )
-
-
-def _extend_display_dropdown(menu: PageMenu, board: DashboardConfig, board_context: VisualContext,
-                             unconfigured_single_infos: Set[str]) -> None:
-    display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
-
-    mandatory_filters = _get_mandatory_filters(board, unconfigured_single_infos)
-    # Like _dashboard_info_handler we assume that only host / service filters are relevant
-    info_list = ["host", "service"]
-
-    display_dropdown.topics.insert(
-        0,
-        PageMenuTopic(title=_("Filter"),
-                      entries=[
-                          PageMenuEntry(
-                              title=_("Filter"),
-                              icon_name="filters",
-                              item=PageMenuSidePopup(
-                                  visuals.render_filter_form(info_list, mandatory_filters,
-                                                             board_context, board["name"],
-                                                             "ajax_initial_dashboard_filters")),
-                              name="filters",
-                              is_shortcut=True,
-                          ),
-                      ]))
 
 
 @page_registry.register_page("ajax_initial_dashboard_filters")

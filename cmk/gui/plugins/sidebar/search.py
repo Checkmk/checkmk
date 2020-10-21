@@ -473,6 +473,9 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
 
 class QuicksearchManager:
     """Producing the results for the given search query"""
+    def __init__(self, raise_too_many_rows_error: bool = True):
+        self.raise_too_many_rows_error = raise_too_many_rows_error
+
     def generate_results(self, query: SearchQuery) -> SearchResultsByTopic:
         search_objects = self._determine_search_objects(query)
         self._conduct_search(search_objects)
@@ -596,12 +599,14 @@ class QuicksearchManager:
 
             if total_rows > config.quicksearch_dropdown_limit:
                 search_object.remove_rows_from_end(total_rows - config.quicksearch_dropdown_limit)
-                raise TooManyRowsError(
-                    _("More than %d results") % config.quicksearch_dropdown_limit)
+                if self.raise_too_many_rows_error:
+                    raise TooManyRowsError(
+                        _("More than %d results") % config.quicksearch_dropdown_limit)
 
             if search_object.row_limit_exceeded():
-                raise TooManyRowsError(
-                    _("More than %d results") % config.quicksearch_dropdown_limit)
+                if self.raise_too_many_rows_error:
+                    raise TooManyRowsError(
+                        _("More than %d results") % config.quicksearch_dropdown_limit)
 
             if (search_object.num_rows() > 0 and
                     search_object.filter_behaviour is not FilterBehaviour.CONTINUE):
@@ -1150,7 +1155,8 @@ class MenuSearchResultsRenderer:
 
         # TODO: In the future, we should separate the rendering and the generation of the results
         if search_type == "monitoring":
-            self._generate_results = QuicksearchManager().generate_results
+            self._generate_results = QuicksearchManager(
+                raise_too_many_rows_error=False).generate_results
         elif search_type == "setup":
             self._generate_results = IndexSearcher(get_index_store()).search
         else:

@@ -43,27 +43,19 @@ def check_prism_container(item, params, parsed):
         if row['name'] == item:
             usage, capacity = map(int, (row['usage'], row['capacity']))
 
+            yield 0, "Total: %s" % get_bytes_human_readable(capacity)
+
             warn, crit = params['levels']
             if isinstance(warn, float):
-                warn, crit = [x * capacity for x in (warn, crit)]
+                warn, crit = [x * capacity * 0.01 for x in (warn, crit)]
 
-            if usage >= crit:
-                status = 2
-            elif usage >= warn:
-                status = 1
-            else:
-                status = 0
-
-            if status != 0:
-                warntxt = " (warn/crit at %s/%s)" %\
-                    (get_bytes_human_readable(warn), get_bytes_human_readable(crit))
-            else:
-                warntxt = ""
-
-            return status, "%s of %s used%s" %\
-                (get_bytes_human_readable(usage),
-                 get_bytes_human_readable(capacity),
-                 warntxt), [('fs_used', usage, warn, crit, 0, capacity)]
+            yield check_levels(
+                usage,
+                'fs_used',
+                (warn, crit),
+                infoname='Used',
+                human_readable_func=get_bytes_human_readable,
+            )
 
 
 check_info['prism_containers'] = {

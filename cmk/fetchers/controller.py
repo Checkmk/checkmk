@@ -9,6 +9,7 @@
 
 import abc
 import contextlib
+import copy
 import enum
 import json
 import logging
@@ -18,14 +19,14 @@ import signal
 import struct
 from pathlib import Path
 from types import FrameType
-from typing import Any, Dict, Final, Iterator, List, NamedTuple, Optional, Type, Union
+from typing import Any, Dict, Final, Iterator, List, Mapping, NamedTuple, Optional, Type, Union
 
 import cmk.utils.cleanup
+import cmk.utils.cpu_tracking as cpu_tracking
 import cmk.utils.log as log
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.paths import core_helper_config_dir
 from cmk.utils.type_defs import ConfigSerial, HostName, Protocol, result, SectionName
-import cmk.utils.cpu_tracking as cpu_tracking
 
 from cmk.snmplib.type_defs import AbstractRawData, SNMPRawData
 
@@ -76,6 +77,29 @@ class L3Message(Protocol):
     @abc.abstractmethod
     def result(self) -> result.Result[AbstractRawData, Exception]:
         raise NotImplementedError
+
+
+class L3Stats(Protocol):
+    def __init__(self, value: Mapping[str, cpu_tracking.Snapshot]) -> None:
+        self._value: Final = copy.copy(value)
+
+    def __repr__(self) -> str:
+        return "%s(%r)" % (type(self).__name__, self._value)
+
+    def __bytes__(self) -> bytes:
+        return json.dumps({phase: snapshot.serialize() for phase, snapshot in self._value.items()
+                          }).encode("ascii")
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> "L3Stats":
+        return L3Stats({
+            phase: cpu_tracking.Snapshot.deserialize(snapshot)
+            for phase, snapshot in json.loads(data.decode("ascii")).items()
+        })
+
+    @property
+    def cpu_times(self):
+        return self._value
 
 
 class PayloadType(enum.Enum):
@@ -200,13 +224,13 @@ class ErrorPayload(L3Message):
 class FetcherHeader(Header):
     """Header is fixed size bytes in format:
 
-    <FETCHER_TYPE><PAYLOAD_TYPE><STATUS><PAYLOAD_SIZE>
+    <FETCHER_TYPE><PAYLOAD_TYPE><STATUS><PAYLOAD_SIZE><STATS_SIZE>
 
     This is an application layer protocol used to transmit data
     from the fetcher to the checker.
 
     """
-    fmt = "!HHHI"
+    fmt = "!HHHII"
     length = struct.calcsize(fmt)
 
     def __init__(
@@ -216,23 +240,26 @@ class FetcherHeader(Header):
         *,
         status: int,
         payload_length: int,
+        stats_length: int,
     ) -> None:
         self.fetcher_type: Final[FetcherType] = fetcher_type
         self.payload_type: Final[PayloadType] = payload_type
         self.status: Final[int] = status
         self.payload_length: Final[int] = payload_length
+        self.stats_length: Final[int] = stats_length
 
     @property
     def name(self) -> str:
         return self.fetcher_type.name
 
     def __repr__(self) -> str:
-        return "%s(%r, %r, status=%r, payload_length=%r)" % (
+        return "%s(%r, %r, status=%r, payload_length=%r, stats_length=%r)" % (
             type(self).__name__,
             self.fetcher_type,
             self.payload_type,
             self.status,
             self.payload_length,
+            self.stats_length,
         )
 
     def __len__(self) -> int:
@@ -245,12 +272,13 @@ class FetcherHeader(Header):
             self.payload_type.value,
             self.status,
             self.payload_length,
+            self.stats_length,
         )
 
     @classmethod
     def from_bytes(cls, data: bytes) -> 'FetcherHeader':
         try:
-            fetcher_type, payload_type, status, payload_length = struct.unpack(
+            fetcher_type, payload_type, status, payload_length, stats_length = struct.unpack(
                 FetcherHeader.fmt,
                 data[:cls.length],
             )
@@ -259,33 +287,43 @@ class FetcherHeader(Header):
                 PayloadType(payload_type),
                 status=status,
                 payload_length=payload_length,
+                stats_length=stats_length,
             )
         except struct.error as exc:
             raise ValueError(data) from exc
 
 
 class FetcherMessage(Protocol):
-    def __init__(self, header: FetcherHeader, payload: L3Message) -> None:
+    def __init__(
+        self,
+        header: FetcherHeader,
+        payload: L3Message,
+        stats: L3Stats,
+    ) -> None:
         self.header: Final[FetcherHeader] = header
         self.payload: Final[L3Message] = payload
+        self.stats: Final[L3Stats] = stats
 
     def __repr__(self) -> str:
-        return "%s(%r, %r)" % (type(self).__name__, self.header, self.payload)
+        return "%s(%r, %r, %r)" % (type(self).__name__, self.header, self.payload, self.stats)
 
     def __bytes__(self) -> bytes:
-        return self.header + self.payload
+        return self.header + self.payload + self.stats
 
     @classmethod
     def from_bytes(cls, data: bytes) -> "FetcherMessage":
         header = FetcherHeader.from_bytes(data)
         payload = header.payload_type.make().from_bytes(
             data[len(header):len(header) + header.payload_length],)
-        return cls(header, payload)
+        stats = L3Stats.from_bytes(data[len(header) + header.payload_length:len(header) +
+                                        header.payload_length + header.stats_length])
+        return cls(header, payload, stats)
 
     @classmethod
     def from_raw_data(
         cls,
         raw_data: result.Result[AbstractRawData, Exception],
+        stats: L3Stats,
         fetcher_type: FetcherType,
     ) -> "FetcherMessage":
         if raw_data.is_error():
@@ -296,8 +334,10 @@ class FetcherMessage(Protocol):
                     payload_type=PayloadType.ERROR,
                     status=50,
                     payload_length=len(error_payload),
+                    stats_length=len(stats),
                 ),
                 error_payload,
+                stats,
             )
 
         if fetcher_type is FetcherType.SNMP:
@@ -309,8 +349,10 @@ class FetcherMessage(Protocol):
                     payload_type=PayloadType.SNMP,
                     status=0,
                     payload_length=len(snmp_payload),
+                    stats_length=len(stats),
                 ),
                 snmp_payload,
+                stats,
             )
 
         assert isinstance(raw_data.ok, bytes)
@@ -321,8 +363,10 @@ class FetcherMessage(Protocol):
                 payload_type=PayloadType.AGENT,
                 status=0,
                 payload_length=len(agent_payload),
+                stats_length=len(stats),
             ),
             agent_payload,
+            stats,
         )
 
     @property
@@ -535,6 +579,7 @@ def run_fetcher(entry: Dict[str, Any], mode: Mode) -> FetcherMessage:
 
     log.logger.debug("Executing fetcher: %s", entry["fetcher_type"])
 
+    stats = L3Stats({})  # TODO(ml): We should actually measure here.
     try:
         fetcher_params = entry["fetcher_params"]
     except KeyError as exc:
@@ -545,8 +590,10 @@ def run_fetcher(entry: Dict[str, Any], mode: Mode) -> FetcherMessage:
                 PayloadType.ERROR,
                 status=logging.CRITICAL,
                 payload_length=len(payload),
+                stats_length=len(stats),
             ),
             payload,
+            stats,
         )
 
     try:
@@ -555,10 +602,14 @@ def run_fetcher(entry: Dict[str, Any], mode: Mode) -> FetcherMessage:
     except Exception as exc:
         raw_data = result.Error(exc)
 
-    return FetcherMessage.from_raw_data(raw_data, fetcher_type)
+    return FetcherMessage.from_raw_data(raw_data, stats, fetcher_type)
 
 
-def _make_fetcher_timeout_message(fetcher_type: FetcherType, exc: MKTimeout) -> FetcherMessage:
+def _make_fetcher_timeout_message(
+    fetcher_type: FetcherType,
+    stats: L3Stats,
+    exc: MKTimeout,
+) -> FetcherMessage:
     payload = ErrorPayload(exc)
     return FetcherMessage(
         FetcherHeader(
@@ -566,21 +617,31 @@ def _make_fetcher_timeout_message(fetcher_type: FetcherType, exc: MKTimeout) -> 
             PayloadType.ERROR,
             status=logging.ERROR,
             payload_length=len(payload),
+            stats_length=len(stats),
         ),
         payload,
+        stats,
     )
 
 
 def _append_cpu_message(messages: List[FetcherMessage]) -> None:
-    json_times = json.dumps({
-        "cpu_times": {
-            phase: snapshot.serialize() for phase, snapshot in cpu_tracking.get_times().items()
-        }
-    })
+    payload = AgentPayload(b"")
+    stats = L3Stats(cpu_tracking.get_times())
 
     messages.append(
-        FetcherMessage.from_raw_data(result.OK(json_times.encode("utf-8")), FetcherType.CPU))
-    log.logger.debug("CPU timings: %s", json_times)
+        FetcherMessage(
+            FetcherHeader(
+                FetcherType.CPU,
+                PayloadType.AGENT,
+                status=0,
+                payload_length=len(payload),
+                stats_length=len(stats),
+            ),
+            payload,
+            stats,
+        ))
+
+    log.logger.debug("CPU timings: %s", stats)
 
 
 def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
@@ -615,8 +676,9 @@ def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
                     messages.append(run_fetcher(entry, mode))
         except MKTimeout as exc:
             # fill missing entries with timeout errors
+            stats = L3Stats({})  # TODO(ml): Get the actual value from the tracker.
             messages.extend([
-                _make_fetcher_timeout_message(FetcherType[entry["fetcher_type"]], exc)
+                _make_fetcher_timeout_message(FetcherType[entry["fetcher_type"]], stats, exc)
                 for entry in fetchers[len(messages):]
             ])
 

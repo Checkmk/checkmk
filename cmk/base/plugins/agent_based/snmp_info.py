@@ -56,7 +56,7 @@ register.snmp_section(
     name="snmp_info",
     parse_function=parse_snmp_info,
     host_label_function=host_label_snmp_info,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.1",
             oids=["1", "4", "5", "6"],

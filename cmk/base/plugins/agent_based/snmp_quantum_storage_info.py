@@ -12,7 +12,7 @@ from .agent_based_api.v1 import (
 
 register.snmp_section(
     name="snmp_quantum_storage_info",
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2036.2.1.1",  # qSystemInfo
             oids=[

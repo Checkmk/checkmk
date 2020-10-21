@@ -13,7 +13,7 @@ from .agent_based_api.v1 import (
 
 register.snmp_section(
     name="snmp_extended_info",
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.47.1.1.1.1",
             oids=[

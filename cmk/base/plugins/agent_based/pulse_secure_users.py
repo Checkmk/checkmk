@@ -32,7 +32,7 @@ def parse_pulse_secure_users(string_table: type_defs.SNMPStringTable) -> Section
 register.snmp_section(
     name="pulse_secure_users",
     parse_function=parse_pulse_secure_users,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.12532",
             oids=[

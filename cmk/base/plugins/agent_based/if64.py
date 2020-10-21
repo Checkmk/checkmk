@@ -27,7 +27,7 @@ def parse_if64adm(string_table: type_defs.SNMPStringTable) -> If64AdmSection:
 register.snmp_section(
     name="if64",
     parse_function=if64.parse_if64,
-    trees=[
+    fetch=[
         SNMPTree(
             base=if64.BASE_OID,
             oids=if64.END_OIDS,
@@ -43,7 +43,7 @@ register.snmp_section(
 register.snmp_section(
     name="if64adm",
     parse_function=parse_if64adm,
-    trees=[
+    fetch=[
         SNMPTree(
             base=if64.BASE_OID,
             oids=["2.2.1.7"],  # ifAdminStatus

@@ -62,7 +62,7 @@ def parse_datapower_tcp(string_table: SNMPStringTable) -> tcp_connections.TCPCon
 register.snmp_section(
     name='datapower_tcp',
     parse_function=parse_datapower_tcp,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.14685.3.1",
             oids=[

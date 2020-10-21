@@ -112,7 +112,7 @@ def parse_inv_if(string_table: SNMPStringByteTable) -> SectionInvIf:
 register.snmp_section(
     name="inv_if",
     parse_function=parse_inv_if,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1",
             oids=[

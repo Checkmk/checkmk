@@ -49,7 +49,7 @@ def parse_hitachi_hnas_fc_if(string_table: type_defs.SNMPStringTable) -> interfa
 register.snmp_section(
     name="hitachi_hnas_fc_if",
     parse_function=parse_hitachi_hnas_fc_if,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.11096.6.1.1.1.3.6.25.1",
             oids=[

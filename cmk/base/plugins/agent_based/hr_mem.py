@@ -110,7 +110,7 @@ register.snmp_section(
     name="hr_mem",
     parsed_section_name="mem",
     parse_function=parse_hr_mem,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.25.2.3.1",
             oids=[

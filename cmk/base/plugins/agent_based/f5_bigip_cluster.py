@@ -97,7 +97,7 @@ register.snmp_section(
     name="f5_bigip_cluster",
     detect=all_of(F5_BIGIP, VERSION_PRE_V11),
     parse_function=parse_f5_bigip_config_sync_pre_v11,
-    trees=[
+    fetch=[
         SNMPTree(base=".1.3.6.1.4.1.3375.2.1.1.1.1", oids=["6"]),  # sysAttrConfigsyncState
     ],
 )
@@ -146,7 +146,7 @@ register.snmp_section(
     name="f5_bigip_cluster_v11",
     detect=all_of(F5_BIGIP, VERSION_V11_PLUS),
     parse_function=parse_f5_bigip_config_sync_v11_plus,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.3375.2.1.14.1",
             oids=[

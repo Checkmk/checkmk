@@ -55,7 +55,7 @@ def parse_huawei_osn_if(string_table: SNMPStringTable) -> Section:
 register.snmp_section(
     name="huawei_osn_if",
     parse_function=parse_huawei_osn_if,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2011.2.25.3.40.50.96.50.1",
             oids=[

@@ -254,7 +254,7 @@ register.snmp_section(
     detect=any_of(startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14525.3.1"),
                   startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14525.3.3")),
     parse_function=parse_juniper_trpz_aps_sessions,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.14525.4.5.1.1.2.1",
             oids=[

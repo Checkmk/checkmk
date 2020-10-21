@@ -12,7 +12,7 @@ from .agent_based_api.v1 import (
 
 register.snmp_section(
     name="hp_proliant_systeminfo",
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.232.2.2.2",
             oids=[

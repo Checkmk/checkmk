@@ -108,7 +108,7 @@ register.snmp_section(
     name='liebert_humidity_air',
     detect=DETECT_LIEBERT,
     parse_function=parse_liebert_humidity_air,
-    trees=[
+    fetch=[
         SNMPTree(
             base='.1.3.6.1.4.1.476.1.42.3.9.20.1',
             oids=[

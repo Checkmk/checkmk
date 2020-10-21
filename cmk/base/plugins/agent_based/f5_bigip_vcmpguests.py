@@ -55,7 +55,7 @@ register.snmp_section(
     name="f5_bigip_vcmpguests",
     detect=all_of(F5_BIGIP, VERSION_V11_2_PLUS),
     parse_function=parse_f5_bigip_vcmpguests,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.3375.2.1.13.4.2.1",
             oids=[

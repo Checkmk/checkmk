@@ -86,7 +86,7 @@ def parse_apc_rackpdu_power(string_table: type_defs.SNMPStringTable) -> Parsed:
 register.snmp_section(
     name="apc_rackpdu_power",
     parse_function=parse_apc_rackpdu_power,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.318.1.1.12.1",
             oids=[

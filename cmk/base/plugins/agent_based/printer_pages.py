@@ -29,7 +29,7 @@ register.snmp_section(
     name="printer_pages",
     detect=DETECT_GENERIC,
     parse_function=parse_printer_pages,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.43.10.2.1.4.1",
             oids=[

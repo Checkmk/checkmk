@@ -14,7 +14,7 @@ from .agent_based_api.v1 import (
 
 register.snmp_section(
     name="infoblox_osinfo",
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2021.100",
             oids=[

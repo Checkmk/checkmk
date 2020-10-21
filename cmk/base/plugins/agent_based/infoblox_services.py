@@ -196,7 +196,7 @@ register.snmp_section(
     name="infoblox_services",
     detect=DETECT_INFOBLOX,
     parse_function=parse_infoblox_services,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.7779.3.1.1.2.1.9.1",
             oids=[
@@ -219,7 +219,7 @@ register.snmp_section(
     name="infoblox_node_services",
     detect=DETECT_INFOBLOX,
     parse_function=parse_infoblox_services,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.7779.3.1.1.2.1.10.1",
             oids=[

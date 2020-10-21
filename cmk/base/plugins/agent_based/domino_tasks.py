@@ -43,7 +43,7 @@ def parse_domino_tasks(string_table: SNMPStringTable) -> ps.Section:
 register.snmp_section(
     name='domino_tasks',
     parse_function=parse_domino_tasks,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.334.72.1.1.6.1.2.1",
             oids=["4"],  # InTaskName

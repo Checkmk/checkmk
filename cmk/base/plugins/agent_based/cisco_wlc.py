@@ -142,7 +142,7 @@ register.snmp_section(
     name="cisco_wlc",
     detect=matches(OID_sysObjectID, VERSION_CISCO_WLC_PATTERN),
     parse_function=parse_cisco_wlc,
-    trees=[
+    fetch=[
         SNMPTree(base=".1.3.6.1.4.1.14179.2.2.1.1", oids=[
             "3",
             "6",

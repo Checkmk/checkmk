@@ -12,7 +12,7 @@ from .utils import checkpoint
 
 register.snmp_section(
     name="checkpoint_inv_tunnels",
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2620.500.9002.1",
             oids=[

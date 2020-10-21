@@ -56,7 +56,7 @@ def parse_adva_fsp_if(string_table: SNMPStringTable) -> Section:
 register.snmp_section(
     name="adva_fsp_if",
     parse_function=parse_adva_fsp_if,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1",
             oids=[

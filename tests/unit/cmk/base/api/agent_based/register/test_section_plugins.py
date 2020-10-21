@@ -129,7 +129,7 @@ def test_create_snmp_section_plugin():
         name="norris",
         parsed_section_name="chuck",
         parse_function=_parse_dummy,
-        trees=trees,
+        fetch=trees,
         detect_spec=detect,
         supersedes=["foo", "bar"],
     )

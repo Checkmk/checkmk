@@ -23,7 +23,7 @@ from .utils.bluecat import (
 register.snmp_section(
     name='bluecat_dhcp',
     parse_function=parse_bluecat,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.13315.3.1.1.2.1",
             oids=[

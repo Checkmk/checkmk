@@ -160,7 +160,7 @@ def test_make_snmp_section_detects(monkeypatch, hostname, ipaddress):
     plugin = section_plugins.create_snmp_section_plugin(
         name="norris",
         parse_function=lambda string_table: None,
-        trees=[
+        fetch=[
             SNMPTree(
                 base='.1.2.3',
                 oids=['2.3'],
@@ -200,7 +200,7 @@ def test_make_snmp_section_detects_for_inventory(monkeypatch, hostname, ipaddres
     plugin = section_plugins.create_snmp_section_plugin(
         name="norris",
         parse_function=lambda string_table: None,
-        trees=[
+        fetch=[
             SNMPTree(
                 base='.1.2.3',
                 oids=['2.3'],

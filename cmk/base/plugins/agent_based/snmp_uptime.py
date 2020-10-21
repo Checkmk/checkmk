@@ -51,7 +51,7 @@ register.snmp_section(
     name="snmp_uptime",
     parsed_section_name="uptime",
     parse_function=parse_snmp_uptime,
-    trees=[
+    fetch=[
         SNMPTree(
             base='.1.3.6.1.2.1',
             oids=[

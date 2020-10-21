@@ -105,7 +105,7 @@ def parse_if_lancom(string_table: type_defs.SNMPStringByteTable) -> interfaces.S
 register.snmp_section(
     name="if_brocade",
     parse_function=parse_if_brocade,
-    trees=SNMP_TREES,
+    fetch=SNMP_TREES,
     detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "Brocade VDX Switch"), if64.HAS_ifHCInOctets),
     supersedes=['if', 'if64'],
 )
@@ -113,7 +113,7 @@ register.snmp_section(
 register.snmp_section(
     name="if_lancom",
     parse_function=parse_if_lancom,
-    trees=SNMP_TREES,
+    fetch=SNMP_TREES,
     detect=any_of(
         any_of(
             *(contains(".1.3.6.1.2.1.1.1.0", name) for name in ("LANCOM", "ELSA", "T-Systems")),),

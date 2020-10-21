@@ -213,7 +213,7 @@ def create_snmp_section_plugin(
     *,
     name: str,
     detect_spec: SNMPDetectSpec,
-    trees: List[SNMPTree],
+    fetch: List[SNMPTree],
     parsed_section_name: Optional[str] = None,
     parse_function: Optional[SNMPParseFunction] = None,
     host_label_function: Optional[HostLabelFunction] = None,
@@ -230,10 +230,10 @@ def create_snmp_section_plugin(
 
     if validate_creation_kwargs:
         _validate_detect_spec(detect_spec)
-        _validate_snmp_trees(trees)
+        _validate_snmp_trees(fetch)
 
         if parse_function is not None:
-            needs_bytes = any(isinstance(oid, OIDBytes) for tree in trees for oid in tree.oids)
+            needs_bytes = any(isinstance(oid, OIDBytes) for tree in fetch for oid in tree.oids)
             _validate_parse_function(
                 parse_function,
                 expected_annotation=(  #
@@ -253,11 +253,11 @@ def create_snmp_section_plugin(
     return SNMPSectionPlugin(
         section_name,
         ParsedSectionName(parsed_section_name if parsed_section_name else str(section_name)),
-        _create_snmp_parse_function(parse_function, trees),
+        _create_snmp_parse_function(parse_function, fetch),
         _create_host_label_function(host_label_function),
         _create_supersedes(section_name, supersedes),
         detect_spec,
-        trees,
+        fetch,
         module,
     )
 

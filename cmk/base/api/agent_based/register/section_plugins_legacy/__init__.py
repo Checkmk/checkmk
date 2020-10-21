@@ -242,7 +242,7 @@ def create_snmp_section_plugin_from_legacy(
     return create_snmp_section_plugin(
         name=get_section_name(check_plugin_name),
         parse_function=parse_function,
-        trees=trees,
+        fetch=trees,
         detect_spec=detect_spec,
         validate_creation_kwargs=validate_creation_kwargs,
     )

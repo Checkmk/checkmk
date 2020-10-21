@@ -79,7 +79,7 @@ def parse_mcdata_fcport(string_table: type_defs.SNMPStringByteTable) -> interfac
 register.snmp_section(
     name="mcdata_fcport",
     parse_function=parse_mcdata_fcport,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.289.2.1.1.2.3.1.1",
             oids=[

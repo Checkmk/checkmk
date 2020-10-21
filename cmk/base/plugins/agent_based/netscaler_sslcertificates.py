@@ -45,7 +45,7 @@ def parse_netscaler_sslcertificates(string_table: SNMPStringTable) -> Section:
 register.snmp_section(
     name="netscaler_sslcertificates",
     parse_function=parse_netscaler_sslcertificates,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.5951.4.1.1.56.1.1",
             oids=[

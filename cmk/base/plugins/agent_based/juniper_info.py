@@ -12,7 +12,7 @@ from .agent_based_api.v1 import (
 
 register.snmp_section(
     name="juniper_info",
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2636.3.1",
             oids=[

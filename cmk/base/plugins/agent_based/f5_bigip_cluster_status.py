@@ -139,7 +139,7 @@ register.snmp_section(
     name="f5_bigip_cluster_status",
     detect=all_of(F5_BIGIP, VERSION_PRE_V11_2),
     parse_function=parse_f5_bigip_cluster_status,
-    trees=[
+    fetch=[
         SNMPTree(base=".1.3.6.1.4.1.3375.2.1.1.1.1.19", oids=["0"]),  # sysAttrFailoverUnitMask
     ],
 )
@@ -172,7 +172,7 @@ register.snmp_section(
     name="f5_bigip_cluster_status_v11_2",
     detect=all_of(F5_BIGIP, VERSION_V11_2_PLUS),
     parse_function=parse_f5_bigip_cluster_status,
-    trees=[
+    fetch=[
         SNMPTree(base=".1.3.6.1.4.1.3375.2.1.14.3.1", oids=["0"]),  # sysCmFailoverStatusId
     ],
 )

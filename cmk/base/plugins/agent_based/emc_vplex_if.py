@@ -45,7 +45,7 @@ def parse_emc_vplex_if(string_table: type_defs.SNMPStringTable) -> interfaces.Se
 register.snmp_section(
     name="emc_vplex_if",
     parse_function=parse_emc_vplex_if,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.1139.21.2.2",
             oids=[

@@ -42,7 +42,7 @@ from .agent_based_api.v1 import (
 
 register.snmp_section(
     name="inv_cisco_vlans",
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.68.1.2.2.1",
             oids=[

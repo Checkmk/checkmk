@@ -20,5 +20,5 @@ register.snmp_section(
     name="checkpoint_connections",
     parse_function=parse_checkpoint_connections,
     detect=checkpoint.DETECT,
-    trees=[SNMPTree(base=".1.3.6.1.4.1.2620.1.1.25", oids=['3'])],
+    fetch=[SNMPTree(base=".1.3.6.1.4.1.2620.1.1.25", oids=['3'])],
 )

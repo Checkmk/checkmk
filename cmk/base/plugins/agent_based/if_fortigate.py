@@ -19,7 +19,7 @@ END_OIDS = if64.END_OIDS[:18] + ["31.1.1.1.1"] + if64.END_OIDS[19:]
 register.snmp_section(
     name="if_fortigate",
     parse_function=if64.parse_if64,
-    trees=[
+    fetch=[
         SNMPTree(
             base=if64.BASE_OID,
             oids=END_OIDS,

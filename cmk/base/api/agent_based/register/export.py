@@ -86,7 +86,7 @@ def snmp_section(
     parse_function: Optional[SNMPParseFunction] = None,
     host_label_function: Optional[HostLabelFunction] = None,
     detect: SNMPDetectSpec,
-    trees: List[SNMPTree],
+    fetch: List[SNMPTree],
     supersedes: Optional[List[str]] = None,
 ) -> None:
     """Register an snmp section to checkmk
@@ -108,7 +108,7 @@ def snmp_section(
     :params detect: The conditions on single OIDs that will result in the attempt to
         fetch snmp data and discover services. This should only match devices to which
         the section is applicable.
-    :params trees: The specification of snmp data that should be fetched from the device.
+    :params fetch: The specification of snmp data that should be fetched from the device.
         It must be a list of SNMPTree objects. The parse function will be passed a list of
         one SNMP table per specified Tree, where an SNMP tree is a list of lists of strings.
     :params supersedes: not yet implemented.
@@ -119,7 +119,7 @@ def snmp_section(
         parse_function=parse_function,
         host_label_function=host_label_function,
         detect_spec=detect,
-        trees=trees,
+        fetch=fetch,
         supersedes=supersedes,
         module=get_validated_plugin_module_name(),
     )

@@ -46,7 +46,7 @@ register.snmp_section(
     detect=DETECT_CANON_HAS_TOTAL,
     supersedes=["printer_pages"],
     parse_function=parse_printer_pages_canon,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.1602.1.11.1.3.1",
             oids=[

@@ -42,7 +42,7 @@ def parse_if64_tplink(string_table: type_defs.SNMPStringByteTable) -> interfaces
 register.snmp_section(
     name="if64_tplink",
     parse_function=parse_if64_tplink,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1",
             oids=[

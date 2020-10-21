@@ -97,7 +97,7 @@ register.snmp_section(
     detect=all_of(startswith(OID_SysDesc, "cisco adaptive security"),
                   matches(OID_SysDesc, VERSION_PRE_V9_PATTERN)),
     parse_function=parse_cisco_mem_asa,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.48.1.1.1",
             oids=["2.1", "5.1", "6.1", "7.1"],
@@ -118,7 +118,7 @@ register.snmp_section(
     detect=all_of(startswith(OID_SysDesc, "cisco adaptive security"),
                   not_matches(OID_SysDesc, VERSION_PRE_V9_PATTERN)),
     parse_function=parse_cisco_mem_asa64,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.221.1.1.1.1",
             oids=[

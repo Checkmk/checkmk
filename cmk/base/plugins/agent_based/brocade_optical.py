@@ -233,7 +233,7 @@ def parse_brocade_optical(string_table: type_defs.SNMPStringTable) -> Section:
 register.snmp_section(
     name="brocade_optical",
     parse_function=parse_brocade_optical,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.2.2.1",
             oids=[

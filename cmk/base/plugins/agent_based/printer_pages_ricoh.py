@@ -46,7 +46,7 @@ register.snmp_section(
     detect=DETECT_RICOH,
     supersedes=["printer_pages"],
     parse_function=parse_printer_pages_ricoh,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.367.3.2.1.2.19.5.1",
             oids=[

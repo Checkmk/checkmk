@@ -87,7 +87,7 @@ register.snmp_section(
         contains('.1.3.6.1.2.1.1.1.0', 'cisco adaptive security'),
         contains('.1.3.6.1.2.1.1.1.0', 'cisco firepower threat defense'),
     ),
-    trees=[
+    fetch=[
         SNMPTree(
             base='.1.3.6.1.4.1.9.9.392.1',
             oids=[

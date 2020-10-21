@@ -51,7 +51,7 @@ def parse_if(string_table: type_defs.SNMPStringByteTable) -> interfaces.Section:
 register.snmp_section(
     name="if",
     parse_function=parse_if,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.2.2.1",
             oids=[

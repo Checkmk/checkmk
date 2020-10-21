@@ -658,8 +658,36 @@ def _valuespec_generic_metrics_prometheus():
                                        allow_empty=False,
                                        size=80,
                                        help=_("Example PromQL query: up{job=\"node_exporter\"}"))),
+                                  ("levels",
+                                   Dictionary(
+                                       elements=[
+                                           ("lower_levels",
+                                            Tuple(title=_("Lower levels"),
+                                                  elements=[
+                                                      Float(title=_("Warning below")),
+                                                      Float(title=_("Critical below")),
+                                                  ])),
+                                           ("upper_levels",
+                                            Tuple(
+                                                title=_("Upper levels"),
+                                                elements=[
+                                                    Float(title=_("Warning at")),
+                                                    Float(title=_("Critical at"))
+                                                ],
+                                            )),
+                                       ],
+                                       title="Metric levels",
+                                       validate=_verify_prometheus_empty,
+                                       help=
+                                       _("Specify upper and/or lower levels for the queried PromQL value. This option "
+                                         "should be used for simple cases where levels are only required once. You "
+                                         "should use the Prometheus custom services monitoring rule if you want to "
+                                         "specify a rule which applies to multiple Prometheus custom services at once. "
+                                         "The custom rule always has priority over the rule specified here "
+                                         "if the two overlap."),
+                                   )),
                               ],
-                              optional_keys=["metric_name"],
+                              optional_keys=["metric_name", "levels"],
                           ),
                           title=_('PromQL queries for Service'),
                           add_label=_("Add new PromQL query"),
@@ -676,6 +704,11 @@ def _valuespec_generic_metrics_prometheus():
         title=_("Prometheus"),
         optional_keys=[],
     )
+
+
+def _verify_prometheus_empty(value, varprefix):
+    if not value:
+        raise MKUserError(varprefix, _("Please specify at least one type of levels"))
 
 
 def _validate_prometheus_service_metrics(value, _varprefix):

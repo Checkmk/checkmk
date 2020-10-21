@@ -219,7 +219,7 @@ class UpdateConfig:
         if ruleset_name not in all_rulesets.get_rulesets():
             return None
         ruleset = all_rulesets.get_rulesets()[ruleset_name]
-        new_params = ruleset.valuespec().transform_value(params)
+        new_params = {} if params is None else ruleset.valuespec().transform_value(params)
         if params and not new_params:
             self._logger.warning("Transforming %r returned empty (plugin=%s, ruleset=%r" %
                                  (params, plugin_name, ruleset_name))
@@ -241,6 +241,8 @@ class UpdateConfig:
                 all_rulesets,
             )
         except Exception as exc:
+            if self._arguments.debug:
+                raise
             self._logger.error("Transforming params for %r resulted in an error: %r" %
                                (service.check_plugin_name, exc))
             new_params = service.parameters

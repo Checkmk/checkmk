@@ -33,7 +33,9 @@ import socket
 import time
 import uuid
 import urllib.parse
-from typing import Any, Callable, Dict, Generic, List, Optional as _Optional, Pattern, Set, SupportsFloat, Tuple as _Tuple, Type, TypeVar, Union, Sequence, NamedTuple, Protocol
+from typing import (Any, Callable, Dict, Generic, List, Optional as _Optional, Pattern, Set,
+                    SupportsFloat, Tuple as _Tuple, Type, TypeVar, Union, Sequence, NamedTuple,
+                    Protocol)
 
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzlocal
@@ -451,8 +453,15 @@ class Integer(ValueSpec):
     def canonical_value(self) -> int:
         return self._bounds.lower(0)
 
-    def render_input(self, varprefix: str, value: int) -> None:
-        self._renderer.render_input(varprefix, self._render_value(value))
+    def render_input(self, varprefix: str, value: _Optional[int]) -> None:
+        # This is needed for displaying the "empty field" when using Integer valuespecs in
+        # ListOfStrings()
+        if value is None:
+            text: str = ""
+        else:
+            text = self._render_value(value)
+
+        self._renderer.render_input(varprefix, text)
 
     def _render_value(self, value: int) -> str:
         return self._display_format % utils.saveint(value)
@@ -487,7 +496,9 @@ class Filesize(Integer):
                 return exp, int(value / count)  # fixed: true-division
         raise ValueError("Invalid value: %r" % value)
 
-    def render_input(self, varprefix: str, value: int) -> None:
+    def render_input(self, varprefix: str, value: _Optional[int]) -> None:
+        # The value type is only Optional to be compatible with the base class
+        assert value is not None
         exp, count = self.get_exponent(value)
         self._renderer.text_input(varprefix + '_size', str(count))
         html.nbsp()
@@ -1694,7 +1705,10 @@ class ListOfStrings(ValueSpec):
             class_.append("horizontal")
         html.open_div(id_=varprefix, class_=class_)
 
-        for nr, s in enumerate(value + [""]):
+        elements: List[_Optional[str]] = []
+        elements += value
+        elements.append(None)
+        for nr, s in enumerate(elements):
             html.open_div()
             self._valuespec.render_input(varprefix + "_%d" % nr, s)
             if not self._vertical and self._separator:

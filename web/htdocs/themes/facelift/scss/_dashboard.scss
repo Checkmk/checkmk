@@ -296,6 +296,14 @@ body.main.dashlet {
       border-top-color: $color-table-border !important;
     }
   }
+
+  /* warning messages in view dashlets */
+  div.warning {
+    margin: 0;
+    margin-bottom: 10px;
+    border-radius: 0;
+    box-shadow: 0;
+  }
 }
 
 div[id^="dashlet"] div.dashlet_inner > div {

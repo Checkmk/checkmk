@@ -10,6 +10,7 @@ from typing import (
     Dict,
     List,
     Mapping,
+    Optional,
     TypedDict,
     Tuple,
 )
@@ -156,7 +157,7 @@ def _check_job_levels(job: Job, metric: str, notice_only: bool = True):
 
 def _process_job_stats(
     job: Job,
-    age_levels: Tuple[int, int],
+    age_levels: Optional[Tuple[int, int]],
     exit_code_to_state_map: Dict[int, state],
 ) -> type_defs.CheckResult:
 
@@ -195,7 +196,13 @@ def _process_job_stats(
     yield from check_levels(
         time.time() - used_start_time,
         label=f"Job age{currently_running}",
-        levels_upper=age_levels,
+        # In pre-2.0 versions of this check plugin, we had
+        # check_default_parameters={"age": (0, 0)}
+        # However, these levels were only applied if they were not zero. We still need to keep this
+        # check because many old autocheck files still have
+        # 'parameters': {'age': (0, 0)}
+        # which must not result in actually applying these levels.
+        levels_upper=age_levels if age_levels != (0, 0) else None,
         render_func=render.timespan,
     )
 
@@ -222,7 +229,7 @@ def check_job(
 
     yield from _process_job_stats(
         job,
-        params['age'],
+        params.get('age'),
         {
             0: state.OK,
             **{k: state(v) for k, v in params.get('exit_code_to_state_map', [])}
@@ -285,9 +292,7 @@ register.check_plugin(
     name='job',
     service_name='Job %s',
     discovery_function=discover_job,
-    check_default_parameters={
-        "age": (0, 0)  # disabled as default
-    },
+    check_default_parameters={},
     check_ruleset_name="job",
     check_function=check_job,
     cluster_check_function=cluster_check_job,

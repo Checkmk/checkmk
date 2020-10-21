@@ -202,7 +202,7 @@ RESULTS_SHREK: List[Union[Metric, Result]] = [
     Metric('real_time', 120.0),
     Result(state=state.OK, notice='Latest job started at Jan 12 2019 14:53:21'),
     Metric('start_time', 1547301201.0),
-    Result(state=state.CRIT, summary='Job age: 1 year 178 days (warn/crit at 0 seconds/0 seconds)'),
+    Result(state=state.OK, summary='Job age: 1 year 178 days'),
     Result(state=state.OK, notice='Avg. memory: 1000 B'),
     Metric('avg_mem_bytes', 1000.0),
     Result(state=state.OK, notice='Invol. context switches: 12'),
@@ -347,9 +347,7 @@ def test_process_job_stats(
                 Metric('real_time', 9.9),
                 Result(state=state.OK, notice='Latest job started at Nov 05 2014 03:10:30'),
                 Metric('start_time', 1415153430.0),
-                Result(state=state.CRIT,
-                       summary='Job age: 5 years 248 days (warn/crit at 0 seconds/0 seconds)',
-                       details='Job age: 5 years 248 days (warn/crit at 0 seconds/0 seconds)'),
+                Result(state=state.OK, summary='Job age: 5 years 248 days'),
                 Result(state=state.OK, notice='Avg. memory: 0 B'),
                 Metric('avg_mem_bytes', 0.0),
                 Result(state=state.OK, notice='Invol. context switches: 15'),
@@ -426,9 +424,9 @@ def test_check_job(item, params, section, expected_results):
             [
                 _aggr_shrek_result('node1'),
                 Result(
-                    state=state.CRIT,
+                    state=state.OK,
                     summary=
-                    '0 nodes in state OK, 0 nodes in state WARN, 1 node in state CRIT, 0 nodes in state UNKNOWN',
+                    '1 node in state OK, 0 nodes in state WARN, 0 nodes in state CRIT, 0 nodes in state UNKNOWN',
                 ),
             ],
         ),
@@ -443,9 +441,9 @@ def test_check_job(item, params, section, expected_results):
                 _aggr_shrek_result('node1'),
                 _aggr_shrek_result('node2'),
                 Result(
-                    state=state.CRIT,
+                    state=state.OK,
                     summary=
-                    '0 nodes in state OK, 0 nodes in state WARN, 2 nodes in state CRIT, 0 nodes in state UNKNOWN',
+                    '2 nodes in state OK, 0 nodes in state WARN, 0 nodes in state CRIT, 0 nodes in state UNKNOWN',
                 ),
             ],
         ),

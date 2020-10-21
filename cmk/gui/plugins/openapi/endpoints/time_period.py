@@ -3,7 +3,15 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Time periods"""
+"""Time periods
+
+With time periods the monitoring with Checkmk can be adapted to recurring conditions, for
+example, to the working rhythms of humans.
+Rules can be defined in dependency of time periods, for example, to avoid senseless notifications.
+
+You can find an introduction to time periods in the
+[Checkmk guide](https://checkmk.com/cms_timeperiods.html).
+"""
 
 import http.client
 import datetime as dt

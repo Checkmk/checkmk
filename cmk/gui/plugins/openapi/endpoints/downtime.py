@@ -3,7 +3,15 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Scheduled downtimes"""
+"""Downtimes
+
+A (scheduled) downtime is a planned maintenance period.
+Hosts and services are handled differently by Checkmk during a downtime, for example,
+notifications are disabled.
+
+You can find an introduction to downtimes in the
+[Checkmk guide](https://checkmk.com/cms_basics_downtimes.html).
+"""
 
 import json
 import http.client

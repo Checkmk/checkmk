@@ -2345,38 +2345,191 @@ info:
     email: feedback@checkmk.com
     name: Contact the Checkmk Team
     url: https://checkmk.com/contact.php
-  description: "# Introduction\n\nThis API is documented in **OpenAPI format**. This\
-    \ means there is a formal specification for the\nwhole API surface. This documentation\
-    \ is generated from this specification.\n\n# Authentication\n\nTo use this API\
-    \ you have to create an *Automation User* via WATO. The resulting username and\n\
-    password have to be sent in the `Authentication` HTTP-Header in the *Bearer* format.\
-    \ Example here:\n\n## Security definitions\n\n<SecurityDefinitions />\n\n# How\
-    \ does it work?\n\nThis API follows the [HATEOAS](https://en.wikipedia.org/wiki/HATEOAS)\
-    \ principle. While it can be\nused in a traditional way, using the elements that\
-    \ enable HATEOAS make it way more powerful and\nflexible.\n\n## Text and payload\
-    \ encoding\n\nAs specified by the `Content-Type` of `application/json`, the response\
-    \ payload is serialized with\nJSON and encoded in UTF-8. Other formats are possible\
-    \ in principle but currently not supported.\n\n## Links\n\n* Every response comes\
-    \ with a collection of `links`. These links are used to provide the consumer\n\
-    \  of the API with follow-up actions. For example a Folder response can have links\
-    \ to resources for\n  editing, deleting, moving the folder. The client doesn't\
-    \ have to know about the URL structure,\n  it just needs to follow the link.\n\
-    * (TBD) Every `Action` comes with an endpoint which describes all possible parameters\
-    \ to itself.\n\n## Response format\n\n* Every response is well-formed according\
-    \ to the\n  [Restful-Objects standard](https://en.wikipedia.org/wiki/Restful_Objects)\
-    \ and can be treated in\n  the same way.\n* There are a limited number key concepts\
-    \ in the standard (e.g. object, action, collection, etc.)\n  which enables the\
-    \ use of this API without having to understand the details of the implementation\n\
-    \  of each endpoint.\n\n# Client compatibility issues\n\n## Overriding Request\
-    \ Methods\n\nIf you have a client which can't do the HTTP PUT or DELETE methods,\
-    \ then you can use the\n`X-HTTP-Method-Override` HTTP Header to force the server\
-    \ into believing the client actually sent\nsuch a method. In these cases the HTTP\
-    \ method to use has to be POST. You can't override from GET.\n\n## Backwards compatibility\n\
-    \nFuture versions of this API may add additional fields in the responses. Clients\
-    \ must be written\nin a way to NOT expect the absence of a field, as we don't\
-    \ guarantee that.\nFor backwards compatibility reasons we only keep the fields\
-    \ that have already been there in older\nversions. You can consult the documentation\
-    \ to see what changed in each API revision."
+  description: '# Introduction
+
+
+    With the Checkmk REST-API you can transfer and execute the tasks you normally
+    perform
+
+    manually in Checkmk''s GUI to the Checkmk server via command or script.
+
+
+    REST stands for REpresentational State Transfer and describes an architecture
+    for the exchange of
+
+    data on distributed systems - especially for Web services. The implementation
+    of this REST-API is
+
+    done via the HTTP/1.1 protocol, where resources are addressed via URIs and accessed
+    with HTTP
+
+    methods (GET, POST, PUT, DELETE).
+
+
+    The API is documented in a machine-readable schema and a human-readable format
+    in English, with all
+
+    resources, their input and output parameters and the associated value ranges.
+    The API is created
+
+    with the OpenAPI specification 3.x, an API description format especially for REST
+    APIs.
+
+
+    The API documentation created with this specification is displayed to you with
+    ReDoc, a responsive
+
+    Web design for OpenAPI documents.
+
+
+
+    # Prerequisites
+
+
+    * You are experienced in using an API, preferably a REST-API.
+
+    * You are familiar with at least one of the applications for which sample code
+    is available.
+
+    * You know Checkmk and its principles of setup and configuration.
+
+
+
+    # Using the API documentation
+
+
+    The API documentation''s Web design provides 3 panes.
+
+
+    The left navigation pane is used for orientation, search and quick jump to the
+    exact description of
+
+    the entries in the middle content pane. The table of contents contains one entry
+    for each API endpoint.
+
+    An endpoint uses a URL to refer to the resource that the API provides (e.g., to
+    collect hosts),
+
+    along with the method used to access the resource (e.g., GET to display a host).
+
+    The endpoints are organized in several folders.
+
+
+    The middle content pane contains all information about the definition of a request
+    (with parameters,
+
+    value ranges, default values and descriptions) and the corresponding answers (also
+    with all details).
+
+    The possible answers are displayed in different colors, depending on whether the
+    returned HTTP status
+
+    code signals success or an error.
+
+
+    The right example pane shows the method and URL for the endpoint selected in the
+    content pane,
+
+    followed by several examples of requests: the payload in JSON format (if relevant
+    to the endpoint) and
+
+    code examples, such as cURL, HTTPie, Python Requests, or Python Urllib. Then follow
+    the responses
+
+    according to the HTTP status. All code examples can be copied to the clipboard
+    with the Copy button.
+
+
+
+    # Responses
+
+
+    As specified by the `Content-Type` of `application/json`, the response payload
+    is serialized with
+
+    JSON and encoded in UTF-8.
+
+
+    All responses are well-formed according to the
+
+    [Restful-Objects standard](https://en.wikipedia.org/wiki/Restful_Objects).
+
+    There are a limited number of key concepts in the standard (e.g. object, action,
+    collection, etc.)
+
+    which enables the use of this API without having to understand the details of
+    the implementation of
+
+    each endpoint.
+
+
+    Every response comes with a collection of `links` to inform the API client on
+    possible
+
+    follow-up actions. For example, a folder response can have links to resources
+    for updating,
+
+    deleting and moving the folder. The client does not have to know about the URL
+    structure, it
+
+    just needs to follow the link. In this sense, the API is quasi self-documenting.
+
+    This provision of additional information as a REST-API principle is also called
+
+    [HATEOAS](https://en.wikipedia.org/wiki/HATEOAS).
+
+
+
+    # Authentication
+
+
+    To use this API from a client, an *automation* user must be set up in Checkmk.
+    Only this user is
+
+    authorized to perform actions via the API. For a newly created site the automation
+    user is
+
+    already created. You can find it, like other users, in Checkmk at *Setup* > *Users*.
+
+
+    Username and password of the automation user must be transmitted in the HTTP header
+    in the
+
+    `Bearer` format in every request to the Checkmk server.
+
+
+    <SecurityDefinitions />
+
+
+
+    # Client compatibility issues
+
+
+    ## Overriding request methods
+
+
+    If you have a client which cannot do the HTTP PUT or DELETE methods, you can use
+    the
+
+    `X-HTTP-Method-Override` HTTP header to force the server into believing the client
+    actually sent
+
+    such a method. In these cases the HTTP method to use has to be POST. You cannot
+    override from GET.
+
+
+    ## Backwards compatibility
+
+
+    Future versions of this API may add additional fields in the responses. Clients
+    must be written
+
+    in a way to NOT expect the absence of a field, as we don''t guarantee that.
+
+    For backwards compatibility reasons we only keep the fields that have already
+    been there in older
+
+    versions. You can consult the documentation to see what changed in each API revision.'
   license:
     name: GNU General Public License version 2
     url: https://checkmk.com/gpl.html
@@ -2669,13 +2822,6 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.acknowledgement.set_acknowledgement_on_host_service
       parameters:
-      - description: The service description.
-        in: path
-        name: service_description
-        required: true
-        schema:
-          example: Memory
-          type: string
       - description: A hostname.
         in: path
         name: host_name
@@ -2683,6 +2829,13 @@ paths:
         schema:
           example: example.com
           pattern: '[-0-9a-zA-Z_.]+'
+          type: string
+      - description: The service description.
+        in: path
+        name: service_description
+        required: true
+        schema:
+          example: Memory
           type: string
       requestBody:
         content:
@@ -3213,11 +3366,11 @@ paths:
           \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/bi_rule/rule1\"\
           ,\n    json={\n        'id': 'rule1',\n        'nodes': [],\n        'params':\
           \ [{\n            'arguments': ['foo', 'bar']\n        }],\n        'node_visualization':\
-          \ {\n            'type': 'block',\n            'config': {}\n        },\n\
-          \        'properties': {\n            'comment': '',\n            'state_messages':\
-          \ {},\n            'icon': '',\n            'docu_url': '',\n          \
-          \  'title': ''\n        },\n        'aggregation_function': {\n        \
-          \    'type': 'best',\n            'count': 1,\n            'restrict_state':\
+          \ {\n            'config': {},\n            'type': 'block'\n        },\n\
+          \        'properties': {\n            'icon': '',\n            'title':\
+          \ '',\n            'state_messages': {},\n            'docu_url': '',\n\
+          \            'comment': ''\n        },\n        'aggregation_function':\
+          \ {\n            'type': 'best',\n            'count': 1,\n            'restrict_state':\
           \ 2\n        },\n        'computation_options': {\n            'disabled':\
           \ False\n        },\n        'pack_id': 'pack1'\n    },\n)\nresp.raise_for_status()\n\
           data = resp.json()"
@@ -3231,11 +3384,11 @@ paths:
           \ \"Accept\": \"application/json\",\n    },\n    data=json.dumps({\n   \
           \     'id': 'rule1',\n        'nodes': [],\n        'params': [{\n     \
           \       'arguments': ['foo', 'bar']\n        }],\n        'node_visualization':\
-          \ {\n            'type': 'block',\n            'config': {}\n        },\n\
-          \        'properties': {\n            'comment': '',\n            'state_messages':\
-          \ {},\n            'icon': '',\n            'docu_url': '',\n          \
-          \  'title': ''\n        },\n        'aggregation_function': {\n        \
-          \    'type': 'best',\n            'count': 1,\n            'restrict_state':\
+          \ {\n            'config': {},\n            'type': 'block'\n        },\n\
+          \        'properties': {\n            'icon': '',\n            'title':\
+          \ '',\n            'state_messages': {},\n            'docu_url': '',\n\
+          \            'comment': ''\n        },\n        'aggregation_function':\
+          \ {\n            'type': 'best',\n            'count': 1,\n            'restrict_state':\
           \ 2\n        },\n        'computation_options': {\n            'disabled':\
           \ False\n        },\n        'pack_id': 'pack1'\n    }).encode('utf-8'),\n\
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
@@ -3265,10 +3418,11 @@ paths:
           \n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept: application/json\"\
           \ \\\n    aggregation_function='{\"type\": \"best\", \"count\": 1, \"restrict_state\"\
           : 2}' \\\n    computation_options='{\"disabled\": false}' \\\n    id='rule1'\
-          \ \\\n    node_visualization='{\"type\": \"block\", \"config\": {}}' \\\n\
+          \ \\\n    node_visualization='{\"config\": {}, \"type\": \"block\"}' \\\n\
           \    nodes='[]' \\\n    pack_id='pack1' \\\n    params='[{\"arguments\"\
-          : [\"foo\", \"bar\"]}]' \\\n    properties='{\"comment\": \"\", \"state_messages\"\
-          : {}, \"icon\": \"\", \"docu_url\": \"\", \"title\": \"\"}' \\\n    --json"
+          : [\"foo\", \"bar\"]}]' \\\n    properties='{\"icon\": \"\", \"title\":\
+          \ \"\", \"state_messages\": {}, \"docu_url\": \"\", \"comment\": \"\"}'\
+          \ \\\n    --json"
   /objects/bi_aggregation/{aggregation_id}:
     get:
       description: ''
@@ -3379,8 +3533,8 @@ paths:
           \ ''\n            }\n        },\n        'aggregation_visualization': {\n\
           \            'layout_id': 'builtin_default',\n            'ignore_rule_styles':\
           \ False,\n            'line_style': 'round'\n        },\n        'computation_options':\
-          \ {\n            'escalate_downtimes_as_warn': False,\n            'use_hard_states':\
-          \ False,\n            'disabled': False\n        },\n        'pack_id':\
+          \ {\n            'escalate_downtimes_as_warn': False,\n            'disabled':\
+          \ False,\n            'use_hard_states': False\n        },\n        'pack_id':\
           \ 'pack1'\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
@@ -3399,8 +3553,8 @@ paths:
           \      },\n        'aggregation_visualization': {\n            'layout_id':\
           \ 'builtin_default',\n            'ignore_rule_styles': False,\n       \
           \     'line_style': 'round'\n        },\n        'computation_options':\
-          \ {\n            'escalate_downtimes_as_warn': False,\n            'use_hard_states':\
-          \ False,\n            'disabled': False\n        },\n        'pack_id':\
+          \ {\n            'escalate_downtimes_as_warn': False,\n            'disabled':\
+          \ False,\n            'use_hard_states': False\n        },\n        'pack_id':\
           \ 'pack1'\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
           data = json.loads(response.read())"
       - label: curl
@@ -3435,7 +3589,7 @@ paths:
           \ application/json\" \\\n    aggregation_visualization='{\"layout_id\":\
           \ \"builtin_default\", \"ignore_rule_styles\": false, \"line_style\": \"\
           round\"}' \\\n    computation_options='{\"escalate_downtimes_as_warn\":\
-          \ false, \"use_hard_states\": false, \"disabled\": false}' \\\n    customer='customer1'\
+          \ false, \"disabled\": false, \"use_hard_states\": false}' \\\n    customer='customer1'\
           \ \\\n    groups='{\"names\": [\"groupA\", \"groupB\"], \"paths\": [[\"\
           path\", \"group\", \"a\"], [\"path\", \"group\", \"b\"]]}' \\\n    id='aggr1'\
           \ \\\n    node='{\"search\": {\"type\": \"empty\"}, \"action\": {\"type\"\
@@ -4112,13 +4266,6 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.downtime.list_service_downtimes
       parameters:
-      - description: The service description.
-        in: query
-        name: service_description
-        required: false
-        schema:
-          example: Memory
-          type: string
       - description: A hostname.
         in: query
         name: host_name
@@ -4126,6 +4273,13 @@ paths:
         schema:
           example: example.com
           pattern: '[-0-9a-zA-Z_.]+'
+          type: string
+      - description: The service description.
+        in: query
+        name: service_description
+        required: false
+        schema:
+          example: Memory
           type: string
       responses:
         default:
@@ -4264,13 +4418,6 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.downtime.delete_downtime
       parameters:
-      - description: The id of the downtime
-        in: path
-        name: downtime_id
-        required: true
-        schema:
-          example: '54'
-          type: string
       - description: A hostname.
         in: path
         name: host_name
@@ -4278,6 +4425,13 @@ paths:
         schema:
           example: example.com
           pattern: '[-0-9a-zA-Z_.]+'
+          type: string
+      - description: The id of the downtime
+        in: path
+        name: downtime_id
+        required: true
+        schema:
+          example: '54'
           type: string
       responses:
         default:
@@ -6814,6 +6968,16 @@ paths:
       description: This list is filterable by various parameters.
       operationId: cmk.gui.plugins.openapi.endpoints.service._list_host_services
       parameters:
+      - description: An query expression in nested dictionary form. If you want to
+          use multiple expressions, nest them with the AND/OR operators.
+        in: query
+        name: query
+        required: false
+        schema:
+          allOf:
+          - $ref: '#/components/schemas/Expr'
+          example: '{"op": "not", "expr": {"op": "=", "left": "hosts.name", "right":
+            "example.com"}}'
       - description: The desired columns of the services table. If left empty, a default
           set of columns is used.
         explode: true
@@ -6828,16 +6992,6 @@ paths:
             type: string
           type: array
         style: form
-      - description: An query expression in nested dictionary form. If you want to
-          use multiple expressions, nest them with the AND/OR operators.
-        in: query
-        name: query
-        required: false
-        schema:
-          allOf:
-          - $ref: '#/components/schemas/Expr'
-          example: '{"op": "not", "expr": {"op": "=", "left": "hosts.name", "right":
-            "example.com"}}'
       - description: Restrict the query to this particular site.
         in: query
         name: site
@@ -6917,6 +7071,16 @@ paths:
       description: This list is filterable by various parameters.
       operationId: cmk.gui.plugins.openapi.endpoints.service._list_all_services
       parameters:
+      - description: An query expression in nested dictionary form. If you want to
+          use multiple expressions, nest them with the AND/OR operators.
+        in: query
+        name: query
+        required: false
+        schema:
+          allOf:
+          - $ref: '#/components/schemas/Expr'
+          example: '{"op": "not", "expr": {"op": "=", "left": "hosts.name", "right":
+            "example.com"}}'
       - description: The desired columns of the services table. If left empty, a default
           set of columns is used.
         explode: true
@@ -6931,22 +7095,6 @@ paths:
             type: string
           type: array
         style: form
-      - description: Restrict the query to this particular site.
-        in: query
-        name: site
-        required: false
-        schema:
-          type: string
-      - description: An query expression in nested dictionary form. If you want to
-          use multiple expressions, nest them with the AND/OR operators.
-        in: query
-        name: query
-        required: false
-        schema:
-          allOf:
-          - $ref: '#/components/schemas/Expr'
-          example: '{"op": "not", "expr": {"op": "=", "left": "hosts.name", "right":
-            "example.com"}}'
       - description: A hostname.
         in: query
         name: host_name
@@ -6954,6 +7102,12 @@ paths:
         schema:
           example: example.com
           pattern: '[-0-9a-zA-Z_.]+'
+          type: string
+      - description: Restrict the query to this particular site.
+        in: query
+        name: site
+        required: false
+        schema:
           type: string
       responses:
         default:
@@ -7117,14 +7271,6 @@ paths:
           example: monitored
           pattern: active|active_ignored|clustered_ignored|clustered_monitored|clustered_undecided|clustered_vanished|custom|custom_ignored|ignored|legacy|legacy_ignored|manual|monitored|removed|undecided|vanished
           type: string
-      - description: A name used as an identifier. Can be of arbitrary length
-        in: path
-        name: service_hash
-        required: true
-        schema:
-          example: asoidjfo2jifa09
-          pattern: '[a-zA-Z][a-zA-Z0-9_-]+'
-          type: string
       - description: A hostname.
         in: path
         name: host_name
@@ -7132,6 +7278,14 @@ paths:
         schema:
           example: example.com
           pattern: '[-0-9a-zA-Z_.]+'
+          type: string
+      - description: A name used as an identifier. Can be of arbitrary length
+        in: path
+        name: service_hash
+        required: true
+        schema:
+          example: asoidjfo2jifa09
+          pattern: '[a-zA-Z][a-zA-Z0-9_-]+'
           type: string
       responses:
         default:
@@ -7183,6 +7337,14 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.service_discovery.execute
       parameters:
+      - description: A hostname.
+        in: path
+        name: host_name
+        required: true
+        schema:
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
+          type: string
       - description: 'The mode of the discovery action. May be one of the following:
           tabula-rasa'
         in: path
@@ -7191,14 +7353,6 @@ paths:
         schema:
           example: tabula-rasa
           pattern: tabula-rasa
-          type: string
-      - description: A hostname.
-        in: path
-        name: host_name
-        required: true
-        schema:
-          example: example.com
-          pattern: '[-0-9a-zA-Z_.]+'
           type: string
       responses:
         default:
@@ -8144,41 +8298,228 @@ paths:
 security:
 - BearerAuth: []
 tags:
-- name: cmk.gui.plugins.openapi.endpoints.acknowledgement
-  x-displayName: Acknowledge problems
-- name: cmk.gui.plugins.openapi.endpoints.activate_changes
-  x-displayName: Activate changes
-- name: cmk.gui.plugins.openapi.endpoints.bi
-  x-displayName: Business intelligence
-- name: cmk.gui.plugins.openapi.endpoints.contact_group_config
-  x-displayName: Contact groups
-- name: cmk.gui.plugins.openapi.endpoints.downtime
-  x-displayName: Scheduled downtimes
-- name: cmk.gui.cee.plugins.openapi.endpoints.agent
-  x-displayName: Agents
-- name: cmk.gui.plugins.openapi.endpoints.folder_config
-  x-displayName: Folders
-- name: cmk.gui.plugins.openapi.endpoints.host
-  x-displayName: Monitored hosts
-- description: 'Hosts can only exist in conjunction with Folders. To get a list of
-    hosts
+- description: 'A problem occurs if a host is not UP or a service ist not OK.
 
-    you need to access the folder API endpoints.'
+    The acknowledgement of the problem is the indication that the reported issue is
+    known and that
+
+    somebody is attending to it.
+
+
+    You can find an introduction to the acknowledgement of problems in the
+
+    [Checkmk guide](https://checkmk.com/cms_basics_ackn.html).'
+  name: cmk.gui.plugins.openapi.endpoints.acknowledgement
+  x-displayName: Acknowledge problems
+- description: 'When changes are activated, Checkmk transfers the current configuration
+    status to the ongoing
+
+    monitoring.
+
+
+    Checkmk differentiates between the configuration environment in which you manage
+    the hosts,
+
+    services and settings, and the actual monitoring environment.
+
+
+    Changes in the configuration - adding a new host, for example - will initially
+    have no effect
+
+    on the monitoring. Changes must first be activated, which will bring all changes
+    that you have
+
+    accumulated since the last activation as a "bundle" into the operational monitoring.
+
+
+    You can find an introduction to the configuration of Checkmk including activation
+    of changes in the
+
+    [Checkmk guide](https://checkmk.com/cms_wato.html).'
+  name: cmk.gui.plugins.openapi.endpoints.activate_changes
+  x-displayName: Activate changes
+- description: 'BI is used in Checkmk to setup a tree based on the status of hosts
+    and services as branches and to
+
+    extend with higher level nodes summarizing (or aggregating) the status of the
+    contained objects.
+
+    A BI pack defines the complete tree, consisting of BI aggregations.
+
+    Within a BI aggregation a BI rule is used to define the node and its status.
+
+
+    You can find an introduction to BI in the
+
+    [Checkmk guide](https://checkmk.com/cms_bi.html).'
+  name: cmk.gui.plugins.openapi.endpoints.bi
+  x-displayName: Business intelligence (BI)
+- description: 'Contact groups are the link between hosts and services on one side
+    and users on the other.
+
+    Every contact group represents a responsibility for a specific area in the IT
+    landscape.
+
+
+    You can find an introduction to user management including contact groups in the
+
+    [Checkmk guide](https://checkmk.com/cms_wato_user.html).'
+  name: cmk.gui.plugins.openapi.endpoints.contact_group_config
+  x-displayName: Contact groups
+- description: 'A (scheduled) downtime is a planned maintenance period.
+
+    Hosts and services are handled differently by Checkmk during a downtime, for example,
+
+    notifications are disabled.
+
+
+    You can find an introduction to downtimes in the
+
+    [Checkmk guide](https://checkmk.com/cms_basics_downtimes.html).'
+  name: cmk.gui.plugins.openapi.endpoints.downtime
+  x-displayName: Downtimes
+- description: 'An agent is a small program that is installed on a host in order for
+    Checkmk to be able query
+
+    data from the host.
+
+
+    Servers running Windows, Linux or Unix can only be monitored by Checkmk if you
+    install one
+
+    of the Checkmk agents.
+
+
+    Checkmk can update its agent automatically. In this way you can take advantage
+    of the Agent
+
+    Bakery function to apply individual configurations to hosts.
+
+
+    You can find an introduction to agent deployment in the
+
+    [Checkmk guide](https://checkmk.com/cms_agent_deployment.html).'
+  name: cmk.gui.cee.plugins.openapi.endpoints.agent
+  x-displayName: Agents
+- description: 'Folders are used in Checkmk to organize the hosts in a tree structure.
+
+    The root (or main) folder is always existing, other folders can be created manually.
+
+    If you build the tree cleverly you can use it to pass on attributes in a meaningful
+    manner.
+
+
+    You can find an introduction to hosts including folders in the
+
+    [Checkmk guide](https://checkmk.com/cms_wato_hosts.html).'
+  name: cmk.gui.plugins.openapi.endpoints.folder_config
+  x-displayName: Folders
+- description: 'The host status provides the host''s "health" information.
+
+
+    You can find an introduction to basic monitoring principles including host status
+    in the
+
+    [Checkmk guide](https://checkmk.com/cms_monitoring_basics.html).'
+  name: cmk.gui.plugins.openapi.endpoints.host
+  x-displayName: Host status
+- description: 'A host is typically a server, a virtual machine (VM), a network device,
+    a measuring device with
+
+    an IP connection (thermometer, hygrometer) or anything else with an IP address
+    which is
+
+    being monitored by Checkmk.
+
+    However, there are also hosts without an IP address, such as Docker containers.
+
+
+    A host belongs to a certain folder.
+
+
+    You can find an introduction to hosts in the
+
+    [Checkmk guide](https://checkmk.com/cms_wato_hosts.html).'
   name: cmk.gui.plugins.openapi.endpoints.host_config
   x-displayName: Hosts
-- name: cmk.gui.plugins.openapi.endpoints.host_group_config
+- description: 'Host groups are, besides the folder structure, another way to organize
+    hosts in Checkmk.
+
+    By using a host group you can generate, among others, suitable views.
+
+
+    You can find an introduction to hosts including host groups in the
+
+    [Checkmk guide](https://checkmk.com/cms_wato_hosts.html).'
+  name: cmk.gui.plugins.openapi.endpoints.host_group_config
   x-displayName: Host groups
-- name: cmk.gui.plugins.openapi.endpoints.password
+- description: 'The passwords in question here are those that are stored in the CMK
+    password store and are needed
+
+    to authenticate certain checks, for example, when accessing certain databases.'
+  name: cmk.gui.plugins.openapi.endpoints.password
   x-displayName: Passwords
-- name: cmk.gui.plugins.openapi.endpoints.service
-  x-displayName: Service status endpoints
-- name: cmk.gui.plugins.openapi.endpoints.service_discovery
+- description: 'A service is a property of a certain host that is monitored by Checkmk.
+
+    A service can be almost anything - for example, a file system, a process, a hardware
+    sensor,
+
+    a switchport - but it can also just be a specific metric like CPU usage or RAM
+    usage.
+
+
+    The service status provides the service''s "health" information.
+
+
+    You can find an introduction to services in the
+
+    [Checkmk guide](https://checkmk.com/cms_wato_services.html).'
+  name: cmk.gui.plugins.openapi.endpoints.service
+  x-displayName: Service status
+- description: 'A service discovery is the automatic and reliable detection of all
+    services to be monitored on
+
+    a host.
+
+
+    You can find an introduction to services including service discovery in the
+
+    [Checkmk guide](https://checkmk.com/cms_wato_services.html).'
+  name: cmk.gui.plugins.openapi.endpoints.service_discovery
   x-displayName: Service discovery
-- name: cmk.gui.plugins.openapi.endpoints.service_group_config
+- description: 'Service groups are a way to organize services in Checkmk and to bring
+    order to monitoring.
+
+    By using a service group you can generate, among others, suitable views.
+
+    For example, if you want to view all file system services or update services together,
+    you can
+
+    simply assemble service groups in a similar way as you can with host groups.
+
+
+    You can find an introduction to services including service groups in the
+
+    [Checkmk guide](https://checkmk.com/cms_wato_services.html).'
+  name: cmk.gui.plugins.openapi.endpoints.service_group_config
   x-displayName: Service groups
-- name: cmk.gui.plugins.openapi.endpoints.time_period
+- description: 'With time periods the monitoring with Checkmk can be adapted to recurring
+    conditions, for
+
+    example, to the working rhythms of humans.
+
+    Rules can be defined in dependency of time periods, for example, to avoid senseless
+    notifications.
+
+
+    You can find an introduction to time periods in the
+
+    [Checkmk guide](https://checkmk.com/cms_timeperiods.html).'
+  name: cmk.gui.plugins.openapi.endpoints.time_period
   x-displayName: Time periods
-- name: cmk.gui.plugins.openapi.endpoints.version
+- description: This folder collects individual endpoints not fitting into the other
+    endpoint folders.
+  name: cmk.gui.plugins.openapi.endpoints.version
   x-displayName: Miscellaneous
 x-ignoredHeaderParameters:
 - User-Agent

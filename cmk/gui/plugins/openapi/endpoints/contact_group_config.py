@@ -3,7 +3,14 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Contact groups"""
+"""Contact groups
+
+Contact groups are the link between hosts and services on one side and users on the other.
+Every contact group represents a responsibility for a specific area in the IT landscape.
+
+You can find an introduction to user management including contact groups in the
+[Checkmk guide](https://checkmk.com/cms_wato_user.html).
+"""
 from cmk.gui import watolib
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.utils import (

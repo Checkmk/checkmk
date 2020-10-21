@@ -3,7 +3,11 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Passwords"""
+"""Passwords
+
+The passwords in question here are those that are stored in the CMK password store and are needed
+to authenticate certain checks, for example, when accessing certain databases.
+"""
 
 import json
 

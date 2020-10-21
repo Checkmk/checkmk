@@ -3,8 +3,14 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Monitored hosts
+"""Host status
+
+The host status provides the host's "health" information.
+
+You can find an introduction to basic monitoring principles including host status in the
+[Checkmk guide](https://checkmk.com/cms_monitoring_basics.html).
 """
+
 import json
 
 from cmk.gui import sites

@@ -3,7 +3,14 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Host groups"""
+"""Host groups
+
+Host groups are, besides the folder structure, another way to organize hosts in Checkmk.
+By using a host group you can generate, among others, suitable views.
+
+You can find an introduction to hosts including host groups in the
+[Checkmk guide](https://checkmk.com/cms_wato_hosts.html).
+"""
 from cmk.gui import watolib
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.utils import (

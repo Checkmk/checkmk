@@ -3,7 +3,17 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Service groups"""
+"""Service groups
+
+Service groups are a way to organize services in Checkmk and to bring order to monitoring.
+By using a service group you can generate, among others, suitable views.
+For example, if you want to view all file system services or update services together, you can
+simply assemble service groups in a similar way as you can with host groups.
+
+You can find an introduction to services including service groups in the
+[Checkmk guide](https://checkmk.com/cms_wato_services.html).
+"""
+
 from cmk.gui import watolib
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.utils import (

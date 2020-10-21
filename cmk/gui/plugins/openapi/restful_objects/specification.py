@@ -6,53 +6,88 @@
 """
 # Introduction
 
-This API is documented in **OpenAPI format**. This means there is a formal specification for the
-whole API surface. This documentation is generated from this specification.
+With the Checkmk REST-API you can transfer and execute the tasks you normally perform
+manually in Checkmk's GUI to the Checkmk server via command or script.
+
+REST stands for REpresentational State Transfer and describes an architecture for the exchange of
+data on distributed systems - especially for Web services. The implementation of this REST-API is
+done via the HTTP/1.1 protocol, where resources are addressed via URIs and accessed with HTTP
+methods (GET, POST, PUT, DELETE).
+
+The API is documented in a machine-readable schema and a human-readable format in English, with all
+resources, their input and output parameters and the associated value ranges. The API is created
+with the OpenAPI specification 3.x, an API description format especially for REST APIs.
+
+The API documentation created with this specification is displayed to you with ReDoc, a responsive
+Web design for OpenAPI documents.
+
+
+# Prerequisites
+
+* You are experienced in using an API, preferably a REST-API.
+* You are familiar with at least one of the applications for which sample code is available.
+* You know Checkmk and its principles of setup and configuration.
+
+
+# Using the API documentation
+
+The API documentation's Web design provides 3 panes.
+
+The left navigation pane is used for orientation, search and quick jump to the exact description of
+the entries in the middle content pane. The table of contents contains one entry for each API endpoint.
+An endpoint uses a URL to refer to the resource that the API provides (e.g., to collect hosts),
+along with the method used to access the resource (e.g., GET to display a host).
+The endpoints are organized in several folders.
+
+The middle content pane contains all information about the definition of a request (with parameters,
+value ranges, default values and descriptions) and the corresponding answers (also with all details).
+The possible answers are displayed in different colors, depending on whether the returned HTTP status
+code signals success or an error.
+
+The right example pane shows the method and URL for the endpoint selected in the content pane,
+followed by several examples of requests: the payload in JSON format (if relevant to the endpoint) and
+code examples, such as cURL, HTTPie, Python Requests, or Python Urllib. Then follow the responses
+according to the HTTP status. All code examples can be copied to the clipboard with the Copy button.
+
+
+# Responses
+
+As specified by the `Content-Type` of `application/json`, the response payload is serialized with
+JSON and encoded in UTF-8.
+
+All responses are well-formed according to the
+[Restful-Objects standard](https://en.wikipedia.org/wiki/Restful_Objects).
+There are a limited number of key concepts in the standard (e.g. object, action, collection, etc.)
+which enables the use of this API without having to understand the details of the implementation of
+each endpoint.
+
+Every response comes with a collection of `links` to inform the API client on possible
+follow-up actions. For example, a folder response can have links to resources for updating,
+deleting and moving the folder. The client does not have to know about the URL structure, it
+just needs to follow the link. In this sense, the API is quasi self-documenting.
+This provision of additional information as a REST-API principle is also called
+[HATEOAS](https://en.wikipedia.org/wiki/HATEOAS).
+
 
 # Authentication
 
-To use this API you have to create an *Automation User* via WATO. The resulting username and
-password have to be sent in the `Authentication` HTTP-Header in the *Bearer* format. Example here:
+To use this API from a client, an *automation* user must be set up in Checkmk. Only this user is
+authorized to perform actions via the API. For a newly created site the automation user is
+already created. You can find it, like other users, in Checkmk at *Setup* > *Users*.
 
-## Security definitions
+Username and password of the automation user must be transmitted in the HTTP header in the
+`Bearer` format in every request to the Checkmk server.
 
 <SecurityDefinitions />
 
-# How does it work?
-
-This API follows the [HATEOAS](https://en.wikipedia.org/wiki/HATEOAS) principle. While it can be
-used in a traditional way, using the elements that enable HATEOAS make it way more powerful and
-flexible.
-
-## Text and payload encoding
-
-As specified by the `Content-Type` of `application/json`, the response payload is serialized with
-JSON and encoded in UTF-8. Other formats are possible in principle but currently not supported.
-
-## Links
-
-* Every response comes with a collection of `links`. These links are used to provide the consumer
-  of the API with follow-up actions. For example a Folder response can have links to resources for
-  editing, deleting, moving the folder. The client doesn't have to know about the URL structure,
-  it just needs to follow the link.
-* (TBD) Every `Action` comes with an endpoint which describes all possible parameters to itself.
-
-## Response format
-
-* Every response is well-formed according to the
-  [Restful-Objects standard](https://en.wikipedia.org/wiki/Restful_Objects) and can be treated in
-  the same way.
-* There are a limited number key concepts in the standard (e.g. object, action, collection, etc.)
-  which enables the use of this API without having to understand the details of the implementation
-  of each endpoint.
 
 # Client compatibility issues
 
-## Overriding Request Methods
+## Overriding request methods
 
-If you have a client which can't do the HTTP PUT or DELETE methods, then you can use the
-`X-HTTP-Method-Override` HTTP Header to force the server into believing the client actually sent
-such a method. In these cases the HTTP method to use has to be POST. You can't override from GET.
+If you have a client which cannot do the HTTP PUT or DELETE methods, you can use the
+`X-HTTP-Method-Override` HTTP header to force the server into believing the client actually sent
+such a method. In these cases the HTTP method to use has to be POST. You cannot override from GET.
 
 ## Backwards compatibility
 

@@ -3,7 +3,14 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Service discovery"""
+"""Service discovery
+
+A service discovery is the automatic and reliable detection of all services to be monitored on
+a host.
+
+You can find an introduction to services including service discovery in the
+[Checkmk guide](https://checkmk.com/cms_wato_services.html).
+"""
 import json
 
 from cmk.gui import watolib

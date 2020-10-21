@@ -3,8 +3,15 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Acknowledge problems"""
+"""Acknowledge problems
 
+A problem occurs if a host is not UP or a service ist not OK.
+The acknowledgement of the problem is the indication that the reported issue is known and that
+somebody is attending to it.
+
+You can find an introduction to the acknowledgement of problems in the
+[Checkmk guide](https://checkmk.com/cms_basics_ackn.html).
+"""
 # TODO: List acknowledgments
 # TODO: Acknowledge service problem
 from urllib.parse import unquote

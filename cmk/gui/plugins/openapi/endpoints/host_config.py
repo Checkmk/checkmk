@@ -5,8 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Hosts
 
-Hosts can only exist in conjunction with Folders. To get a list of hosts
-you need to access the folder API endpoints.
+A host is typically a server, a virtual machine (VM), a network device, a measuring device with
+an IP connection (thermometer, hygrometer) or anything else with an IP address which is
+being monitored by Checkmk.
+However, there are also hosts without an IP address, such as Docker containers.
+
+A host belongs to a certain folder.
+
+You can find an introduction to hosts in the
+[Checkmk guide](https://checkmk.com/cms_wato_hosts.html).
 """
 import itertools
 import json

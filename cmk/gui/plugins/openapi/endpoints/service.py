@@ -3,7 +3,16 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Service status endpoints
+"""Service status
+
+A service is a property of a certain host that is monitored by Checkmk.
+A service can be almost anything - for example, a file system, a process, a hardware sensor,
+a switchport - but it can also just be a specific metric like CPU usage or RAM usage.
+
+The service status provides the service's "health" information.
+
+You can find an introduction to services in the
+[Checkmk guide](https://checkmk.com/cms_wato_services.html).
 """
 import json
 

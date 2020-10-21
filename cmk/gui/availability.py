@@ -2020,7 +2020,7 @@ def create_bi_timeline_entry(tree, aggr_group, from_time, until_time, tree_state
     }
 
 
-def _compute_bi_tree_state(timeline_container, bi_manager) -> BITreeState:
+def _compute_bi_tree_state(timeline_container, bi_manager: BIManager) -> BITreeState:
     # Convert our status format into that needed by BI
     #
     status = timeline_container.states
@@ -2053,7 +2053,7 @@ def _compute_bi_tree_state(timeline_container, bi_manager) -> BITreeState:
     bi_manager.status_fetcher.states = _compute_status_info(hosts, services_by_host)
     compiled_aggregation = timeline_container.aggr_compiled_aggregation
     branch = timeline_container.aggr_compiled_branch
-    results = compiled_aggregation.compute_branches([branch])
+    results = compiled_aggregation.compute_branches([branch], bi_manager.status_fetcher)
 
     if not results:
         # The aggregation did not found any hosts/svcs

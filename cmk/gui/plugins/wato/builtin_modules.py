@@ -345,7 +345,7 @@ class MainModuleNetworkingServices(MainModule):
 
 
 @main_module_registry.register
-class MainModuleIntegrateNagiosPlugins(MainModule):
+class MainModuleOtherServices(MainModule):
     @property
     def mode_or_url(self):
         return "wato.py?mode=rulesets&group=custom_checks"
@@ -356,7 +356,7 @@ class MainModuleIntegrateNagiosPlugins(MainModule):
 
     @property
     def title(self):
-        return _("Integrate Nagios plugins")
+        return _("Other Services")
 
     @property
     def icon(self):

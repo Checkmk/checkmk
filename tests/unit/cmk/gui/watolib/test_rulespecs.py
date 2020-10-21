@@ -1292,7 +1292,7 @@ def _expected_rulespec_group_choices():
         ('monconf/service_checks', u'&nbsp;&nbsp;\u2319 Service Checks'),
         ('monconf/various', u'&nbsp;&nbsp;\u2319 Various'),
         ('bi', 'Check state of BI aggregations'),
-        ('custom_checks', 'Integrate Nagios plugins'),
+        ('custom_checks', 'Other services'),
         ('datasource_programs/apps', '&nbsp;&nbsp;⌙ Applications'),
         ('datasource_programs/cloud', '&nbsp;&nbsp;⌙ Cloud based environments'),
         ('datasource_programs/custom', '&nbsp;&nbsp;⌙ Custom integrations'),

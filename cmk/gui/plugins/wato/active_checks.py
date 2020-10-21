@@ -49,18 +49,19 @@ from cmk.gui.exceptions import MKUserError
 
 
 @rulespec_group_registry.register
-class RulespecGroupIntegrateNagiosPlugins(RulespecGroup):
+class RulespecGroupIntegrateOtherServices(RulespecGroup):
     @property
     def name(self):
         return "custom_checks"
 
     @property
     def title(self):
-        return _("Integrate Nagios plugins")
+        return _("Other services")
 
     @property
     def help(self):
-        return _("Integrate custom nagios plugins (so called active checks)")
+        return _("This services are provided by so called active checks. "
+                 "You can also integrate custom nagios plugins.")
 
 
 @rulespec_group_registry.register
@@ -266,7 +267,7 @@ def _valuespec_active_checks_ssh():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupActiveChecks,
+        group=RulespecGroupIntegrateOtherServices,
         match_type="all",
         name="active_checks:ssh",
         valuespec=_valuespec_active_checks_ssh,
@@ -870,7 +871,7 @@ def _valuespec_active_checks_uniserv():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupActiveChecks,
+        group=RulespecGroupIntegrateOtherServices,
         name="active_checks:uniserv",
         valuespec=_valuespec_active_checks_uniserv,
     ))
@@ -1668,7 +1669,7 @@ def _valuespec_custom_checks():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupIntegrateNagiosPlugins,
+        group=RulespecGroupIntegrateOtherServices,
         match_type="all",
         name="custom_checks",
         valuespec=_valuespec_custom_checks,
@@ -1929,7 +1930,7 @@ def _valuespec_active_checks_notify_count():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupActiveChecks,
+        group=RulespecGroupIntegrateOtherServices,
         match_type="all",
         name="active_checks:notify_count",
         valuespec=_valuespec_active_checks_notify_count,
@@ -2375,7 +2376,7 @@ def _valuespec_active_checks_by_ssh():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupIntegrateNagiosPlugins,
+        group=RulespecGroupIntegrateOtherServices,
         match_type="all",
         name="active_checks:by_ssh",
         valuespec=_valuespec_active_checks_by_ssh,
@@ -2491,7 +2492,7 @@ def _valuespec_active_checks_elasticsearch_query():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupActiveChecks,
+        group=RulespecGroupIntegrateOtherServices,
         match_type="all",
         name="active_checks:elasticsearch_query",
         valuespec=_valuespec_active_checks_elasticsearch_query,

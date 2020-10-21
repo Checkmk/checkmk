@@ -967,7 +967,11 @@ def draw_dashlet(dashlet: Dashlet, content: str, title: Union[str, HTML]) -> Non
     div there is an inner div containing the actual dashlet content. This content
     is updated later using the dashboard_dashlet.py ajax call.
     """
-    if dashlet.type_name() not in ['single_metric'] and title is not None and dashlet.show_title():
+    if all((
+            dashlet.type_name() not in ['single_metric', 'gauge'],
+            title is not None,
+            dashlet.show_title(),
+    )):
         html.div(html.render_span(title),
                  id_="dashlet_title_%d" % dashlet.dashlet_id,
                  class_=["title"])

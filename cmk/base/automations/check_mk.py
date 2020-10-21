@@ -256,7 +256,7 @@ class AutomationUpdateHostLabels(DiscoveryAutomation):
     """Set the new collection of discovered host labels"""
     cmd = "update-host-labels"
     needs_config = True
-    needs_checks = True  # TODO: Can we change this?
+    needs_checks = False
 
     def execute(self, args: List[str]) -> None:
         hostname = args[0]

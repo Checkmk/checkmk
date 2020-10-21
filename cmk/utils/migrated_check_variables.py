@@ -54,6 +54,8 @@ services_default_levels = {
 }
 services_summary_default_levels = {"ignored": [], "state_if_stopped": 0}
 
+tcp_conn_stats_default_levels = {}  # type: ignore[var-annotated]
+
 # oracle_tablespaces
 oracle_tablespaces_default_levels = (10.0, 5.0)
 oracle_tablespaces_check_autoext = True

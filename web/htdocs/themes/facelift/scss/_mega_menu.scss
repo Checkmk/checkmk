@@ -38,7 +38,7 @@
 
   #mk_side_search_monitoring,
   #mk_side_search_setup {
-    width: auto;
+    max-width: 250px;
     padding: (2 * $spacing) $spacing;
     box-sizing: border-box;
   }
@@ -142,7 +142,6 @@
           display: flex;
           align-items: center;
           flex-grow: 1;
-          justify-content: center;
 
           + div {
             position: relative;

@@ -431,6 +431,10 @@ div.spacertop {
 /*
  * Admin mini snapin (WATO)
  */
+#snapin_container_admin_mini.more a.show_more_mode {
+  display: inline;
+}
+
 #snapin_admin_mini {
   padding-top: 6px;
   clear: right;
@@ -454,6 +458,10 @@ div.spacertop {
   div.clear {
     clear: right;
   }
+}
+
+#snapin_container_admin.less li.sidebar.show_more_mode {
+  display: none;
 }
 
 #snapin_admin {

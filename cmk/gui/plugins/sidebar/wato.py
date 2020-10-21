@@ -46,6 +46,7 @@ def render_wato(mini):
         for topic in menu:
             for item in topic.items:
                 html.icon_button(url=item.url,
+                                 class_="show_more_mode" if item.is_show_more else None,
                                  title=item.title,
                                  icon=item.icon or "wato",
                                  target="main")
@@ -114,6 +115,10 @@ class SidebarSnapinWATO(SidebarSnapin):
         return _("Setup")
 
     @classmethod
+    def has_show_more_items(cls):
+        return True
+
+    @classmethod
     def description(cls):
         return _("Direct access to the setup menu")
 
@@ -139,6 +144,10 @@ class SidebarSnapinWATOMini(SidebarSnapin):
     @classmethod
     def title(cls):
         return _("Quick setup")
+
+    @classmethod
+    def has_show_more_items(cls):
+        return True
 
     @classmethod
     def description(cls):

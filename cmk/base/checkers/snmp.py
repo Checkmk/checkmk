@@ -147,7 +147,7 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
             },
             snmp_section_detects=self._make_snmp_section_detects(),
             configured_snmp_sections=self._make_configured_snmp_sections(),
-            structured_data_snmp_sections=self._make_structured_data_snmp_sections(),
+            structured_data_snmp_sections=self._make_inventory_snmp_sections(),
             on_error=self.on_snmp_scan_error,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(
                 self.snmp_config.hostname,
@@ -171,6 +171,14 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
     def _make_snmp_section_detects(self) -> Mapping[SectionName, SNMPDetectSpec]:
         """Create list of all SNMP scan specifications"""
         disabled_sections = self.host_config.disabled_snmp_sections()
+
+        if self.mode is Mode.INVENTORY:
+            return {
+                section_name: agent_based_register.get_snmp_section_plugin(section_name).detect_spec
+                for section_name in self._make_inventory_snmp_sections()
+                if section_name not in disabled_sections
+            }
+
         return {
             snmp_section_plugin.name: snmp_section_plugin.detect_spec
             for snmp_section_plugin in agent_based_register.iter_all_snmp_sections()
@@ -188,11 +196,12 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
                 consider_inventory_plugins=False,
             ))
 
-    def _make_structured_data_snmp_sections(self) -> Set[SectionName]:
+    def _make_inventory_snmp_sections(self) -> Set[SectionName]:
         return self._enabled_snmp_sections.intersection(
             agent_based_register.get_relevant_raw_sections(
                 check_plugin_names=(),
-                consider_inventory_plugins=self.host_config.do_status_data_inventory,
+                consider_inventory_plugins=self.mode is Mode.INVENTORY or
+                self.host_config.do_status_data_inventory,
             ))
 
     # TODO: filter out disabled sections in fetcher. They need to known them anyway.

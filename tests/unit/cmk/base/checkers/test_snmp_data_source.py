@@ -11,14 +11,16 @@ import pytest  # type: ignore[import]
 from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.utils.exceptions import MKIPAddressLookupError
-from cmk.utils.type_defs import result, SourceType
+from cmk.utils.type_defs import result, SourceType, CheckPluginName, ParsedSectionName
 
 from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.api.agent_based import register
+from cmk.base.api.agent_based.register import _config
 from cmk.base.api.agent_based.register import section_plugins
+from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.checkers import Mode
 from cmk.base.checkers.agent import AgentHostSections
 from cmk.base.checkers.snmp import SNMPSource
@@ -173,4 +175,42 @@ def test_make_snmp_section_detects(monkeypatch, hostname, ipaddress):
     )
     Scenario().add_host(hostname).apply(monkeypatch)
     source = SNMPSource.snmp(hostname, ipaddress, mode=Mode.DISCOVERY)
+    assert source._make_snmp_section_detects() == {plugin.name: plugin.detect_spec}
+
+
+@pytest.fixture(name="check_plugin")
+def fixture_check_plugin(monkeypatch):
+    return CheckPlugin(
+        CheckPluginName("unit_test_check_plugin"),
+        [ParsedSectionName("norris")],
+        "Unit Test",
+        None,  # type: ignore[arg-type]  # irrelevant for test
+        None,  # type: ignore[arg-type]  # irrelevant for test
+        None,  # type: ignore[arg-type]  # irrelevant for test
+        None,  # type: ignore[arg-type]  # irrelevant for test
+        None,  # type: ignore[arg-type]  # irrelevant for test
+        None,  # type: ignore[arg-type]  # irrelevant for test
+        None,  # type: ignore[arg-type]  # irrelevant for test
+        None,  # type: ignore[arg-type]  # irrelevant for test
+        None,  # type: ignore[arg-type]  # irrelevant for test
+    )
+
+
+def test_make_snmp_section_detects_for_inventory(monkeypatch, hostname, ipaddress, check_plugin):
+    plugin = section_plugins.create_snmp_section_plugin(
+        name="norris",
+        parse_function=lambda string_table: None,
+        trees=[
+            SNMPTree(
+                base='.1.2.3',
+                oids=['2.3'],
+            ),
+        ],
+        detect_spec=SNMPDetectSpec([[('.1.2.3.4.5', 'Foo.*', True)]]),
+    )
+    monkeypatch.setattr(_config, 'registered_snmp_sections', {plugin.name: plugin})
+    monkeypatch.setattr(_config, 'registered_inventory_plugins', {check_plugin.name: check_plugin})
+
+    Scenario().add_host(hostname).apply(monkeypatch)
+    source = SNMPSource.snmp(hostname, ipaddress, mode=Mode.INVENTORY)
     assert source._make_snmp_section_detects() == {plugin.name: plugin.detect_spec}

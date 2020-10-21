@@ -137,6 +137,10 @@ def get_section_plugin(section_name: SectionName) -> SectionPlugin:
             registered_snmp_sections.get(section_name) or trivial_section_factory(section_name))
 
 
+def get_snmp_section_plugin(section_name: SectionName) -> SNMPSectionPlugin:
+    return registered_snmp_sections[section_name]
+
+
 def is_registered_check_plugin(check_plugin_name: CheckPluginName) -> bool:
     return check_plugin_name in registered_check_plugins
 

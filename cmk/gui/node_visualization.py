@@ -391,12 +391,16 @@ class NodeVisualizationBIDataMapper:
         raise ValueError("Invalid treestate")
 
     def _get_node_data_of_bi_aggregator(self, node: Dict[str, Any]) -> Dict[str, Any]:
+        bi_packs = bi.get_cached_bi_packs()
         node_data: Dict[str, Any] = {}
         node_data["node_type"] = "bi_aggregator"
+        bi_rule = bi_packs.get_rule_mandatory(node["rule_id"])
+
         node_data["rule_id"] = {
-            "pack": node["rule_id"][0],
-            "rule": node["rule_id"][1],
-            "function": node["rule_id"][2]
+            "pack": bi_rule.pack_id,
+            "rule": bi_rule.id,
+            "function":
+                node["rule_id"][2]  # TODO: fix visualization of function
         }
         if "rule_layout_style" in node:
             node_data["rule_layout_style"] = node["rule_layout_style"]

@@ -10,13 +10,11 @@ import posix
 import time
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any, DefaultDict, Dict, Iterable, Iterator
+from typing import Any, DefaultDict, Dict, Iterable, Iterator, Mapping, MutableMapping, Optional
 
 from cmk.utils.log import console
 
-# TODO: Move state out of module scope
-# TODO: This should be rewritten to a context manager object. See cmk.utils.profile for
-#       an example how it could look like.
+__all__ = ["CPUTracker", "phase", "Snapshot", "times_result"]
 
 
 def times_result(seq: Iterable[float]) -> posix.times_result:
@@ -70,52 +68,51 @@ class Snapshot:
         )
 
 
-times: DefaultDict[str, Snapshot] = defaultdict(Snapshot.null)
-_running: bool = False
+class CPUTracker(MutableMapping[str, Snapshot]):
+    def __init__(self, tracker: Optional[Mapping[str, Snapshot]] = None) -> None:
+        super().__init__()
+        self._times: DefaultDict[str, Snapshot] = defaultdict(Snapshot.null)
+        for phase_name, snapshot in tracker.items() if tracker else ():
+            self._times[phase_name] = snapshot
 
+    def __repr__(self) -> str:
+        return "%s(%r)" % (type(self).__name__, dict(self._times))
 
-def reset():
-    global times
-    times.clear()
+    def serialize(self) -> Dict[str, Any]:
+        return {phase_name: snapshot.serialize() for phase_name, snapshot in self.items()}
 
+    @classmethod
+    def deserialize(cls, serialized: Dict[str, Any]) -> "CPUTracker":
+        return cls({
+            phase_name: Snapshot.deserialize(snapshot)
+            for phase_name, snapshot in serialized.items()
+        })
 
-def get_times() -> Dict[str, Snapshot]:
-    return times
+    def __getitem__(self, phase_name: str) -> Snapshot:
+        return self._times.__getitem__(phase_name)
 
+    def __setitem__(self, phase_name: str, snapshot: Snapshot) -> None:
+        return self._times.__setitem__(phase_name, snapshot)
 
-def is_tracking() -> bool:
-    return _running
+    def __delitem__(self, phase_name: str) -> None:
+        return self._times.__delitem__(phase_name)
 
+    def __iter__(self) -> Iterator[str]:
+        return self._times.__iter__()
 
-def update(cpu_times: Dict[str, Snapshot]):
-    for name, value_list in cpu_times.items():
-        times[name] += value_list
+    def __len__(self) -> int:
+        return self._times.__len__()
+
+    def clear(self) -> None:
+        return self._times.clear()
 
 
 @contextlib.contextmanager
-def phase(phase_name: str) -> Iterator[None]:
-    console.vverbose("[cpu_tracking] Push phase %r\n", phase_name)
+def phase(tracker: CPUTracker, phase_name: str) -> Iterator[None]:
+    console.vverbose("[cpu_tracking] Start %r\n", phase_name)
     start = Snapshot.take()
     try:
         yield
     finally:
-        console.vverbose("[cpu_tracking] Pop phase %r\n", phase_name)
-        delta = Snapshot.take() - start
-        if is_tracking():
-            times[phase_name] += delta
-
-
-@contextlib.contextmanager
-def execute() -> Iterator[None]:
-    assert not is_tracking(), "tracking already started"
-    console.vverbose("[cpu_tracking] Start")
-
-    global _running
-    _running = True
-    reset()
-    times.clear()
-    try:
-        yield
-    finally:
-        console.vverbose("[cpu_tracking] End\n")
-        _running = False
+        console.vverbose("[cpu_tracking] Stop %r\n", phase_name)
+        tracker[phase_name] += Snapshot.take() - start

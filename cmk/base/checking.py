@@ -130,8 +130,9 @@ def do_check(
     infotexts: List[ServiceDetails] = []
     long_infotexts: List[ServiceAdditionalDetails] = []
     perfdata: List[str] = []
+    cpu_tracker = cpu_tracking.CPUTracker()
     try:
-        with cpu_tracking.execute(), cpu_tracking.phase("busy"):
+        with cpu_tracking.phase(cpu_tracker, "busy"):
             license_usage.try_history_update()
 
             # In case of keepalive we always have an ipaddress (can be 0.0.0.0 or :: when
@@ -231,10 +232,9 @@ def do_check(
                 infotexts.append(missing_data_infotext)
 
         for msg in fetcher_messages if fetcher_messages else ():
-            cpu_tracking.update(msg.stats.cpu_times)
+            cpu_tracker["busy"] += msg.stats.cpu_times["busy"]
 
-        phase_times = cpu_tracking.get_times()
-        total_times = phase_times["busy"]
+        total_times = cpu_tracker["busy"]
 
         infotexts.append("execution time %.1f sec" % total_times.run_time)
         if config.check_mk_perfdata_with_times:
@@ -246,7 +246,7 @@ def do_check(
                 "children_system_time=%.3f" % total_times.process.children_system,
             ]
 
-            for phase, times in phase_times.items():
+            for phase, times in cpu_tracker.items():
                 if phase in ["agent", "snmp", "ds"]:
                     t = times.run_time - sum(times.process[:4])  # real time - CPU time
                     perfdata.append("cmk_time_%s=%.3f" % (phase, t))

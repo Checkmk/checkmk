@@ -106,6 +106,7 @@ class TestControllerApi:
                 "trash": 1
             },
             Mode.CHECKING,
+            cpu_tracking.CPUTracker(),
         )
         assert message.header.fetcher_type is FetcherType.SNMP
         assert message.header.status == 50
@@ -116,7 +117,7 @@ class TestControllerApi:
 
     def test_run_fetcher_with_exception(self):
         with pytest.raises(RuntimeError):
-            run_fetcher({"trash": 1}, Mode.CHECKING)
+            run_fetcher({"trash": 1}, Mode.CHECKING, cpu_tracking.CPUTracker())
 
     def test_write_bytes(self, capfdbinary):
         write_bytes(b"123")

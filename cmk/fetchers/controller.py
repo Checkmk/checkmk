@@ -81,25 +81,17 @@ class L3Message(Protocol):
 
 class L3Stats(Protocol):
     def __init__(self, value: Mapping[str, cpu_tracking.Snapshot]) -> None:
-        self._value: Final = copy.copy(value)
+        self.cpu_times: Final[cpu_tracking.CPUTracker] = cpu_tracking.CPUTracker(copy.copy(value))
 
     def __repr__(self) -> str:
-        return "%s(%r)" % (type(self).__name__, self._value)
+        return "%s(%r)" % (type(self).__name__, self.cpu_times)
 
     def __bytes__(self) -> bytes:
-        return json.dumps({phase: snapshot.serialize() for phase, snapshot in self._value.items()
-                          }).encode("ascii")
+        return json.dumps(self.cpu_times.serialize()).encode("ascii")
 
     @classmethod
     def from_bytes(cls, data: bytes) -> "L3Stats":
-        return L3Stats({
-            phase: cpu_tracking.Snapshot.deserialize(snapshot)
-            for phase, snapshot in json.loads(data.decode("ascii")).items()
-        })
-
-    @property
-    def cpu_times(self):
-        return self._value
+        return L3Stats(cpu_tracking.CPUTracker.deserialize(json.loads(data.decode("ascii"))))
 
 
 class PayloadType(enum.Enum):
@@ -569,7 +561,11 @@ def load_global_config(serial: ConfigSerial) -> None:
         log.logger.setLevel(config["log_level"])
 
 
-def run_fetcher(entry: Dict[str, Any], mode: Mode) -> FetcherMessage:
+def run_fetcher(
+    entry: Dict[str, Any],
+    mode: Mode,
+    cpu_tracker: cpu_tracking.CPUTracker,
+) -> FetcherMessage:
     """ Entrypoint to obtain data from fetcher objects.    """
 
     try:
@@ -598,14 +594,16 @@ def run_fetcher(entry: Dict[str, Any], mode: Mode) -> FetcherMessage:
 
     try:
         with cpu_tracking.phase(
-                fetcher_type.name), fetcher_type.from_json(fetcher_params) as fetcher:
+                cpu_tracker,
+                fetcher_type.name,
+        ), fetcher_type.from_json(fetcher_params) as fetcher:
             raw_data = fetcher.fetch(mode)
     except Exception as exc:
         raw_data = result.Error(exc)
 
     return FetcherMessage.from_raw_data(
         raw_data,
-        L3Stats(cpu_tracking.get_times()),
+        L3Stats(cpu_tracker),
         fetcher_type,
     )
 
@@ -653,14 +651,15 @@ def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
     # functionality of the Microcore.
 
     messages: List[FetcherMessage] = []
-    with cpu_tracking.execute(), cpu_tracking.phase("fetchers"), timeout_control(timeout):
+    cpu_tracker = cpu_tracking.CPUTracker()
+    with cpu_tracking.phase(cpu_tracker, "fetchers"), timeout_control(timeout):
         try:
             # fill as many messages as possible before timeout exception raised
             for entry in fetchers:
-                messages.append(run_fetcher(entry, mode))
+                messages.append(run_fetcher(entry, mode, cpu_tracker))
         except MKTimeout as exc:
             # fill missing entries with timeout errors
-            stats = L3Stats(cpu_tracking.get_times())
+            stats = L3Stats(cpu_tracker)
             messages.extend([
                 _make_fetcher_timeout_message(FetcherType[entry["fetcher_type"]], stats, exc)
                 for entry in fetchers[len(messages):]

@@ -298,6 +298,7 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
 
         self.host_config: Final[HostConfig] = HostConfig.make_host_config(hostname)
         self._logger: Final[logging.Logger] = logging.getLogger("cmk.base.data_source.%s" % id_)
+        self._tracker: Final[cpu_tracking.CPUTracker] = cpu_tracking.CPUTracker()
 
         self.exit_spec = self.host_config.exit_code_spec(id_)
 
@@ -330,7 +331,7 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         self,
         raw_data: result.Result[TRawData, Exception],
     ) -> result.Result[THostSections, Exception]:
-        with cpu_tracking.phase(self.cpu_tracking_id):
+        with cpu_tracking.phase(self._tracker, self.cpu_tracking_id):
             try:
                 return raw_data.map(self._make_parser().parse)
             except Exception as exc:

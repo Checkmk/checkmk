@@ -979,7 +979,7 @@ class Overridable(Base):
             ],
         )
 
-        page_menu = configure_page_menu(breadcrumb, current_type_dropdown, cls.type_name())
+        page_menu = customize_page_menu(breadcrumb, current_type_dropdown, cls.type_name())
         html.header(cls.phrase("title_plural"), breadcrumb, page_menu)
 
         # Deletion
@@ -1309,7 +1309,7 @@ class Overridable(Base):
         html.footer()
 
 
-def configure_page_menu(breadcrumb: Breadcrumb, current_type_dropdown: PageMenuDropdown,
+def customize_page_menu(breadcrumb: Breadcrumb, current_type_dropdown: PageMenuDropdown,
                         current_type_name: str) -> PageMenu:
     return PageMenu(
         dropdowns=[
@@ -1319,7 +1319,7 @@ def configure_page_menu(breadcrumb: Breadcrumb, current_type_dropdown: PageMenuD
                 title=_("Related"),
                 topics=[
                     PageMenuTopic(
-                        title=_("Configure"),
+                        title=_("Customize"),
                         entries=list(_page_menu_entries_related(current_type_name)),
                     ),
                 ],
@@ -1887,9 +1887,9 @@ def _customize_menu_topics() -> List[TopicMenuTopic]:
             items=general_items,
         ),
         TopicMenuTopic(
-            name="monitoring",
-            title=_("Monitoring"),
-            icon="topic_configure",
+            name="visualization",
+            title=_("Visualization"),
+            icon="topic_visualization",
             items=monitoring_items,
         ),
         TopicMenuTopic(

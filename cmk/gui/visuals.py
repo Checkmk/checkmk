@@ -473,7 +473,7 @@ def page_list(what,
         ],
     )
 
-    page_menu = pagetypes.configure_page_menu(breadcrumb, current_type_dropdown, what)
+    page_menu = pagetypes.customize_page_menu(breadcrumb, current_type_dropdown, what)
     html.header(title, breadcrumb, page_menu)
 
     # Deletion of visuals

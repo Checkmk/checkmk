@@ -6,24 +6,25 @@
 
 from typing import (
     Any,
-    List,
-    Tuple,
     Dict,
     Generator,
+    List,
     Mapping,
     MutableMapping,
     Optional,
+    Set,
+    Tuple,
     Union,
 )
 import fnmatch
 from cmk.utils.render import fmt_number_with_precision  # pylint: disable=cmk-module-layer-violation
 from ..agent_based_api.v1.type_defs import CheckResult
 from ..agent_based_api.v1 import (
-    render,
+    check_levels,
     Metric,
+    render,
     Result,
     State as state,
-    check_levels,
 )
 from .size_trend import size_trend
 
@@ -45,6 +46,20 @@ def savefloat(raw: Any) -> float:
         return float(raw)
     except (TypeError, ValueError):
         return 0.
+
+
+def ungrouped_mountpoints_and_groups(
+    mount_points: Dict[str, Dict],
+    group_patterns: Mapping[str, Tuple[List[str], List[str]]],
+) -> Tuple[Set[str], Dict[str, bytes]]:
+    ungrouped_mountpoints = set(mount_points)
+    groups = {}
+    for group_name, (patterns_inlcude, patterns_exclude) in group_patterns.items():
+        mp_groups = mountpoints_in_group(mount_points, patterns_inlcude, patterns_exclude)
+        if mp_groups:
+            groups[group_name] = mp_groups
+            ungrouped_mountpoints = ungrouped_mountpoints.difference(mp_groups)
+    return ungrouped_mountpoints, groups
 
 
 def get_filesystem_levels(size_gb: float, params: Mapping[str, Any]) -> Dict[str, Any]:

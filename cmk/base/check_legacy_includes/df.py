@@ -10,13 +10,19 @@
 from typing import Dict, List, Tuple
 from cmk.base.config import factory_settings
 from cmk.base.check_api import get_number_with_precision
-import fnmatch
+
 from cmk.base.check_api import host_name
 from cmk.base.check_api import get_bytes_human_readable
 from cmk.base.check_api import savefloat
 from cmk.base.check_api import host_extra_conf
 from cmk.base.check_api import get_percent_human_readable
 from cmk.base.check_api import check_levels
+
+from cmk.base.plugins.agent_based.utils.df import (
+    mountpoints_in_group,
+    FILESYSTEM_DEFAULT_LEVELS as _FILESYSTEM_DEFAULT_LEVELS,
+    ungrouped_mountpoints_and_groups,
+)
 
 from .size_trend import size_trend
 
@@ -40,71 +46,7 @@ inventory_df_exclude_mountpoints = ['/dev']
 # ]
 filesystem_groups = []
 
-# Alternative syntax for parameters:
-# {  "levels"         : (80, 90),  # levels in percent
-#    "magic"          : 0.5,       # magic factor
-#    "magic_normsize" : 20,        # normsize in GB
-#    "levels_low"     : (50, 60),  # magic never lowers levels below this (percent)
-#    "trend_range"    : 24,        # hours
-#    "trend_mb"       : (10, 20),  # MB of change during trend_range
-#    "trend_perc"     : (1, 2),    # Percent change during trend_range
-#    "trend_timeleft" : (72, 48)   # run time left in hours until full
-# }
-
-# ==================================================================================================
-# THIS VARIABLE DEFINED HERE IS IN THE PROCESS OF OR HAS ALREADY BEEN MIGRATED TO
-# THE NEW CHECK API. PLEASE DO NOT MODIFY THIS FUNCTION ANYMORE. INSTEAD, MODIFY THE MIGRATED CODE
-# RESIDING IN
-# cmk/base/plugins/agent_based/utils/df.py
-# IF YOU CANNOT FIND THE MIGRATED COUNTERPART OF A FUNCTION, PLEASE TALK TO TIMI BEFORE DOING
-# ANYTHING ELSE.
-# ==================================================================================================
-_FILESYSTEM_DEFAULT_LEVELS = {
-    "levels": (80.0, 90.0),  # warn/crit in percent
-    "magic_normsize": 20,  # Standard size if 20 GB
-    "levels_low": (50.0, 60.0),  # Never move warn level below 50% due to magic factor
-    "trend_range": 24,
-    "trend_perfdata": True,  # do send performance data for trends
-    "show_levels": "onmagic",
-    "inodes_levels": (10.0, 5.0),
-    "show_inodes": "onlow",
-    "show_reserved": False,
-}
-
 factory_settings["filesystem_default_levels"] = _FILESYSTEM_DEFAULT_LEVELS
-
-
-# ==================================================================================================
-# THIS FUNCTION DEFINED HERE IS IN THE PROCESS OF OR HAS ALREADY BEEN MIGRATED TO
-# THE NEW CHECK API. PLEASE DO NOT MODIFY THIS FUNCTION ANYMORE. INSTEAD, MODIFY THE MIGRATED CODE
-# RESIDING IN
-# cmk/base/plugins/agent_based/utils/df.py
-# IF YOU CANNOT FIND THE MIGRATED COUNTERPART OF A FUNCTION, PLEASE TALK TO TIMI BEFORE DOING
-# ANYTHING ELSE.
-# ==================================================================================================
-def mountpoints_in_group(mplist, patterns_include, patterns_exclude):
-    matching_mountpoints = set()
-    for mountpoint in mplist:
-        if any(
-                fnmatch.fnmatch(mountpoint, pattern_exclude)
-                for pattern_exclude in patterns_exclude):
-            continue
-        if any(
-                fnmatch.fnmatch(mountpoint, pattern_include)
-                for pattern_include in patterns_include):
-            matching_mountpoints.add(mountpoint)
-    return matching_mountpoints
-
-
-def ungrouped_mountpoints_and_groups(mplist, group_patterns):
-    ungrouped_mountpoints = set(mplist)
-    groups = {}
-    for group_name, (patterns_inlcude, patterns_exclude) in group_patterns.items():
-        mp_groups = mountpoints_in_group(mplist, patterns_inlcude, patterns_exclude)
-        if mp_groups:
-            groups[group_name] = mp_groups
-            ungrouped_mountpoints = ungrouped_mountpoints.difference(mp_groups)
-    return ungrouped_mountpoints, groups
 
 
 def transform_filesystem_groups(groups):
@@ -132,7 +74,7 @@ def transform_filesystem_groups(groups):
 
 
 def df_inventory(mplist):
-    group_patterns: Dict[str, Tuple[List[str]]] = {}
+    group_patterns: Dict[str, Tuple[List[str], List[str]]] = {}
     for groups in host_extra_conf(host_name(), filesystem_groups):
         for group in transform_filesystem_groups(groups):
             grouping_entry = group_patterns.setdefault(group['group_name'], ([], []))

@@ -1,0 +1,21 @@
+Title: Dynamic host configuration: Fix config activation on WATO enabled remote sites
+Level: 1
+Component: dcd
+Compatible: compat
+Edition: cee
+Version: 1.6.0p19
+Date: 1603353465
+Class: fix
+
+The dynamic host configuration is working in a special mode in distributed
+setups. The dcd on the remote site is executed to collect the information about
+the hosts locally and the dcd on the central site is processing this
+information and applies the changes in the central configuration.
+
+There was a case where the remote DCD operated in central mode, instead of
+remote site mode which made the DCD activate change on the remote site. This
+might result in pending changes on the remote site which in turn prevents an
+activation of changes from the central site.
+
+Technical details: This was caused by a "config reload" command being sent to
+the DCD before the DCD configuration was completely synchronized.

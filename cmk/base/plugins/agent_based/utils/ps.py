@@ -238,54 +238,6 @@ def parse_ps_time(text):
     return 86400 * days + day_secs
 
 
-# TODO: remove this function once CMK-5847 is done
-# This function is repeated in cmk/gui/plugins/wato/check_parameters/ps.py
-# Update that function too until we can import them
-def ps_cleanup_params(params):
-    # New parameter format: dictionary. Example:
-    # {
-    #    "user" : "foo",
-    #    "process" : "/usr/bin/food",
-    #    "warnmin" : 1,
-    #    "okmin"   : 1,
-    #    "okmax"   : 1,
-    #    "warnmax" : 1,
-    # }
-
-    # Even newer format:
-    # {
-    #   "user" : "foo",
-    #   "levels" : (1, 1, 99999, 99999)
-    # }
-    if isinstance(params, (list, tuple)):
-        if len(params) == 5:
-            procname, warnmin, okmin, okmax, warnmax = params
-            user = None
-        elif len(params) == 6:
-            procname, user, warnmin, okmin, okmax, warnmax = params
-
-        params = {
-            "process": procname,
-            "levels": (warnmin, okmin, okmax, warnmax),
-            "user": user,
-        }
-
-    else:
-        params = dict(params)
-        if any(k in params for k in ['okmin', 'warnmin', 'okmax', 'warnmax']):
-            params["levels"] = (
-                params.pop("warnmin", 1),
-                params.pop("okmin", 1),
-                params.pop("okmax", 99999),
-                params.pop("warnmax", 99999),
-            )
-
-    if "cpu_rescale_max" not in params:
-        params["cpu_rescale_max"] = 'cpu_rescale_max_unspecified'
-
-    return Parameters(params)
-
-
 def cpu_rate(value_store, counter, now, lifetime):
     try:
         return get_rate(value_store, counter, now, lifetime)
@@ -543,8 +495,6 @@ def check_ps_common(
     cpu_cores: int,
     total_ram: Optional[float],
 ) -> CheckResult:
-    params = ps_cleanup_params(params)
-
     with unused_value_remover(get_value_store(), "collective") as value_store:
         processes = process_capture(process_lines, params, cpu_cores, value_store)
 

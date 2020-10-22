@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from testlib import ActiveCheck  # type: ignore[import]
 
 pytestmark = pytest.mark.checks
 
@@ -160,9 +161,10 @@ pytestmark = pytest.mark.checks
         ['--sni', '$_HOSTADDRESS_4$', 'virtual.host'],
     ),
 ])
-def test_check_http_argument_parsing(check_manager, params, expected_args):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_check_http_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
-    active_check = check_manager.get_active_check('check_http')
+    active_check = ActiveCheck('check_http')
     assert active_check.run_argument_function(params) == expected_args
 
 
@@ -182,6 +184,7 @@ def test_check_http_argument_parsing(check_manager, params, expected_args):
         u'No Prefix Test',
     ),
 ])
-def test_check_http_service_description(check_manager, params, expected_description):
-    active_check = check_manager.get_active_check('check_http')
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_check_http_service_description(params, expected_description):
+    active_check = ActiveCheck('check_http')
     assert active_check.run_service_description(params) == expected_description

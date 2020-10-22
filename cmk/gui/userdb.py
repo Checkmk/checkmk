@@ -694,6 +694,8 @@ def load_users(lock: bool = False) -> Users:
                     ('enforce_pw_change', lambda x: bool(utils.saveint(x))),
                     ('idle_timeout', _convert_idle_timeout),
                     ('session_info', _convert_session_info),
+                    ('ui_theme', lambda x: x),
+                    ('ui_sidebar_position', lambda x: x),
                 ]:
                     val = load_custom_attr(uid, attr, conv_func)
                     if val is not None:

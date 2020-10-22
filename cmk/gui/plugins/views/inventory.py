@@ -993,6 +993,11 @@ def _register_info_class(infoname, title_singular, title_plural):
 
 
 def _declare_views(infoname, title_plural, painters, filters, invpaths):
+    is_show_more = True
+    if len(invpaths) == 1:
+        hint = _inv_display_hint(invpaths[0])
+        is_show_more = hint.get("is_show_more", True)
+
     # Declare two views: one for searching globally. And one
     # for the items of one host.
     view_spec = {
@@ -1010,6 +1015,7 @@ def _declare_views(infoname, title_plural, painters, filters, invpaths):
         'mobile': False,
         'group_painters': [],
         'sorters': [],
+        'is_show_more': is_show_more,
     }
 
     # View for searching for items
@@ -1293,6 +1299,7 @@ multisite_builtin_views["inv_hosts_cpu"] = {
     'description': _('A list of all hosts with some CPU related inventory data'),
     'public': True,
     'hidden': False,
+    'is_show_more': True,
 
     # Layout options
     'layout': 'table',
@@ -1341,6 +1348,7 @@ multisite_builtin_views["inv_hosts_ports"] = {
         _('A list of all hosts with statistics about total, used and free networking interfaces'),
     'public': True,
     'hidden': False,
+    'is_show_more': False,
 
     # Layout options
     'layout': 'table',

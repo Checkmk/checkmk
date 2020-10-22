@@ -419,6 +419,7 @@ inventory_displayhints.update({
         "icon": "packages",
         "keyorder": ["name", "version", "arch", "package_type", "summary"],
         "view": "invswpac_of_host",
+        "is_show_more": False,
     },
     ".software.packages:*.name": {"title": _("Name")},
     ".software.packages:*.arch": {"title": _("Architecture")},
@@ -521,6 +522,7 @@ inventory_displayhints.update({
         "title": _("Images"),
         "keyorder": ["id", "creation", "size", "labels", "amount_containers", "repotags", "repodigests"],
         "view": "invdockerimages_of_host",
+        "is_show_more": False,
     },
     ".software.applications.docker.images:*.id": {"title": _("ID")},
     ".software.applications.docker.images:*.size": {"paint": "size"},
@@ -534,6 +536,7 @@ inventory_displayhints.update({
         "title": _("Containers"),
         "keyorder": ["id", "creation", "name", "labels", "status", "image"],
         "view": "invdockercontainers_of_host",
+        "is_show_more": False,
     },
     ".software.applications.docker.containers:*.id": {"title": _("ID")},
     ".software.applications.docker.containers:*.labels": {"paint": "csv_labels"},
@@ -909,6 +912,7 @@ inventory_displayhints.update({
             "speed",
         ],
         "view": "invinterface_of_host",
+        "is_show_more": False,
     },
     ".networking.interfaces:*.index": {
         "title": _("Index"), "paint": "number", "filter": FilterInvtableIDRange

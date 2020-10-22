@@ -495,7 +495,7 @@ export function mega_menu_hide_entries(menu_id) {
             let counter = 0;
             entries.forEach(entry => {
                 if (
-                    (!more_is_active && entry.classList.contains("advanced")) ||
+                    (!more_is_active && entry.classList.contains("show_more_mode")) ||
                     entry == show_all_items_entry
                 )
                     return;

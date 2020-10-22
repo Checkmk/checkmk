@@ -25,6 +25,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.popups import MethodInline
 from cmk.gui.type_defs import CSSSpec
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.config import user
 
 
 def enable_page_menu_entry(name: str):
@@ -487,7 +488,9 @@ class PageMenuRenderer:
 
     def _show_dropdown_area(self, dropdown: PageMenuDropdown) -> None:
         id_ = "menu_%s" % dropdown.name
-        show_more = html.foldable_container_is_open("more_buttons", id_, isopen=False)
+        show_more_mode = user.get_attribute("show_mode") == "enforce_show_more"
+        show_more = html.foldable_container_is_open("more_buttons", id_,
+                                                    isopen=False) or show_more_mode
         html.open_div(class_=["menu", ("more" if show_more else "less")], id_=id_)
 
         if dropdown.any_show_more_entries:

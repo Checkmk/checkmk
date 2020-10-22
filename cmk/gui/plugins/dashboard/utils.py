@@ -14,7 +14,7 @@ import urllib.parse
 
 import cmk.utils.plugin_registry
 from cmk.utils.type_defs import UserId
-from cmk.gui.type_defs import VisualContext
+from cmk.gui.type_defs import HTTPVariables, VisualContext
 
 import cmk.gui.sites as sites
 
@@ -39,7 +39,6 @@ from cmk.gui.plugins.views.utils import (
     get_all_views,
     transform_painter_spec,
 )
-from cmk.gui.utils.url_encoder import HTTPVariables
 from cmk.gui.metrics import translate_perf_data
 from cmk.gui.plugins.metrics.rrd_fetch import merge_multicol
 from cmk.gui.plugins.metrics.valuespecs import vs_title_infos

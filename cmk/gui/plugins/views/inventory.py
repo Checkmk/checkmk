@@ -20,7 +20,6 @@ import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.inventory as inventory
-from cmk.gui.type_defs import PaintResult
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
@@ -61,6 +60,8 @@ from cmk.gui.plugins.views import (
 )
 
 from cmk.gui.utils.urls import makeuri_contextless
+
+PaintResult = Tuple[str, Union[str, HTML]]
 
 
 def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):

@@ -11,12 +11,12 @@ from typing import TYPE_CHECKING, Optional, Tuple, Union, List, Any, Dict
 from livestatus import SiteId
 
 from cmk.utils.type_defs import Labels, LabelSources, TagGroups, TagID, TagValue
+from cmk.gui.type_defs import HTTPVariables
 
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
-from cmk.gui.utils.url_encoder import HTTPVariables
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 CSSClass = str

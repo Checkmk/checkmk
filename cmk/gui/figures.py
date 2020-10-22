@@ -10,7 +10,7 @@ import abc
 import json
 from typing import cast, Type, Dict, Any
 
-from cmk.gui.utils.url_encoder import HTTPVariables
+from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.plugins.dashboard.utils import Dashlet, dashlet_vs_general_settings, dashlet_registry
 from cmk.gui.i18n import _
 from cmk.gui.globals import html

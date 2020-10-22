@@ -8,7 +8,6 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, Iterable, List, Mapping, NamedTuple, Optional, Tuple, TypedDict, Union
 from cmk.utils.type_defs import UserId
-from cmk.gui.htmllib import HTML
 
 HTTPVariables = List[Tuple[str, Union[None, int, str]]]
 LivestatusQuery = str
@@ -16,9 +15,6 @@ PermissionName = str
 RoleName = str
 
 CSSSpec = Union[None, str, List[str], List[Optional[str]], str]
-
-# Inventory paint helper
-PaintResult = Tuple[str, Union[str, HTML]]
 
 # View specific
 Row = Dict[str, Any]  # TODO: Improve this type

@@ -3,14 +3,19 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import json
+import functools
 import io
+import json
 import logging
+import mimetypes
+import os.path
+import re
 import shutil
 import urllib.parse
 from typing import Dict, Type, TextIO
 
 import yaml
+from swagger_ui_bundle import swagger_ui_3_path  # type: ignore[import]
 from werkzeug import Response
 from werkzeug.exceptions import HTTPException
 
@@ -110,6 +115,54 @@ class Authenticate:
             return wsgi_app(environ, start_response)
 
 
+@functools.lru_cache
+def serve_file(file_path):
+    with open(file_path, "r") as fh:
+        file_size = os.path.getsize(file_path)
+        return serve_file_handle(fh, file_path, file_size)
+
+
+def serve_file_handle(fh, file_path, file_size=None):
+    resp = Response(fh)
+    resp.direct_passthrough = True
+    if file_size is not None:
+        resp.headers['Content-Length'] = file_size
+    content_type, _ = mimetypes.guess_type(file_path)
+    if content_type is not None:
+        resp.headers['Content-Type'] = content_type
+    resp.freeze()
+    return resp
+
+
+class ServeSwaggerUI:
+    def __init__(self, prefix=''):
+        self.prefix = prefix
+
+    def __call__(self, environ, start_response):
+        path_info = environ['PATH_INFO']
+        path = re.sub(self.prefix, '', path_info)
+        prefix = path_info[:-len(path)]
+        if prefix.endswith("/ui"):
+            prefix = prefix[:-3]
+
+        if path == "/":
+            path = "/index.html"
+
+        if path == "/index.html":
+            with open(swagger_ui_3_path + path) as fh:
+                content = fh.read()
+            content = content.replace("https://petstore.swagger.io/v2/swagger.json",
+                                      prefix + "/openapi.yaml")
+            resp = Response()
+            resp.content_type = 'text/html'
+            resp.status_code = 200
+            resp.data = content
+            resp.freeze()
+            return resp(environ, start_response)
+
+        return serve_file(swagger_ui_3_path + path)(environ, start_response)
+
+
 class CheckmkRESTAPI:
     def __init__(self, debug: bool = False):
         self.debug = debug
@@ -127,12 +180,15 @@ class CheckmkRESTAPI:
                      endpoint=Authenticate(endpoint.wrapped)))
 
         spec_file_buffer = spec_file()
+        swagger_ui = ServeSwaggerUI(prefix="^/[^/]+/check_mk/api/[^/]+/ui")
+
         self.url_map = Map([
             Submount(
                 "/<path:_path>",
                 [
-                    #Rule("/ui/<path:file>", endpoint=ServeFile),
-                    #Rule("/doc/<path:file>", endpoint=ServeFile),
+                    Rule("/ui/", endpoint=swagger_ui),
+                    Rule("/ui/<path:path>", endpoint=swagger_ui),
+                    # Rule("/doc/<path:file>", endpoint=serve_content()),
                     Rule(
                         "/openapi.yaml",
                         endpoint=serve_content(
@@ -147,7 +203,7 @@ class CheckmkRESTAPI:
                             content_type='application/json',
                         ),
                     ),
-                    *rules
+                    *rules,
                 ],
             ),
         ])

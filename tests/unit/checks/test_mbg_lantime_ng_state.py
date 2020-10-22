@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from testlib import Check  # type: ignore[import]
 
 pytestmark = pytest.mark.checks
 
@@ -35,7 +36,8 @@ pytestmark = pytest.mark.checks
                 ('offset', 0.9, 0.9, 0.9)
             ])),
     ])
-def test_mbg_lantime_ng_state_ref_clock(check_manager, params, result):
-    check = check_manager.get_check('mbg_lantime_ng_state')
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_mbg_lantime_ng_state_ref_clock(params, result):
+    check = Check('mbg_lantime_ng_state')
     ref_clock_result = list(check.run_check(None, params, [[u'2', u'1', u'GPS', u'0.0009']]))[-1]
     assert ref_clock_result == result

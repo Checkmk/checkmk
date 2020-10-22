@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from testlib import Check  # type: ignore[import]
 
 # Mark all tests in this file as check related tests
 pytestmark = pytest.mark.checks
@@ -36,6 +37,7 @@ pytestmark = pytest.mark.checks
     (['orabase.lun50', '(360a9800043346937686f456f59386741)', 'dm-15', 'NETAPP,LUN'
      ], '360a9800043346937686f456f59386741')
 ])
-def test_multipath_parse_groups(check_manager, group, result):
-    check = check_manager.get_check("multipath")
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_multipath_parse_groups(group, result):
+    check = Check("multipath")
     assert result in check.run_parse([group])

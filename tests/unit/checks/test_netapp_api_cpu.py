@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from testlib import Check  # type: ignore[import]
 from cmk.base.check_api import MKCounterWrapped
 
 pytestmark = pytest.mark.checks
@@ -70,9 +71,10 @@ result_parsed_over_time = [
         ]),
     ),
 ])
-def test_cluster_mode_check_function(check_manager, monkeypatch, params, first_result_change,
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_cluster_mode_check_function(monkeypatch, params, first_result_change,
                                      second_result_change):
-    check = check_manager.get_check("netapp_api_cpu")
+    check = Check("netapp_api_cpu")
     monkeypatch.setattr('time.time', lambda: 0)
     try:
         check.run_check('clu1-01', params, result_parsed_over_time[0])

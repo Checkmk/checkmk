@@ -5,7 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import namedtuple
-import pytest  # type: ignore[import]
+from testlib import Check  # type: ignore[import]
+import pytest  #type: ignore[import]
 from checktestlib import (
     BasicCheckResult,
     CheckResult,
@@ -90,9 +91,10 @@ size2 = Size(
                 #BasicCheckResult(0, "server is responding", [PerfValue('fs_size', 0), PerfValue('fs_used', 0)]))]
                 BasicCheckResult(2, "Stale fs handle", None))]),
     ])
-def test_nfsmounts(check_manager, info, discovery_expected, check_expected):
-    check_nfs = check_manager.get_check("nfsmounts")
-    check_cifs = check_manager.get_check("cifsmounts")
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_nfsmounts(info, discovery_expected, check_expected):
+    check_nfs = Check("nfsmounts")
+    check_cifs = Check("cifsmounts")
 
     # assure that the code of both checks is identical
     assert (check_nfs.info['parse_function'].__code__.co_code ==

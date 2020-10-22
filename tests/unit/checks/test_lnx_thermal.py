@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from testlib import Check  # type: ignore[import]
 
 from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual
 
@@ -36,8 +37,9 @@ result_discovery = [  # type: ignore
 
 
 @pytest.mark.parametrize("info, result", list(zip(agent_info, result_discovery)))
-def test_parse_and_discovery_function(check_manager, info, result):
-    check = check_manager.get_check("lnx_thermal")
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_parse_and_discovery_function(info, result):
+    check = Check("lnx_thermal")
     parsed = check.run_parse(info)
     discovery = DiscoveryResult(check.run_discovery(parsed))
     assertDiscoveryResultsEqual(check, discovery, DiscoveryResult(result))
@@ -62,8 +64,9 @@ result_check = [
 
 @pytest.mark.parametrize("info, discovered, checked",
                          list(zip(agent_info, result_discovery, result_check)))
-def test_check_functions_perfdata(check_manager, info, discovered, checked):
-    check = check_manager.get_check("lnx_thermal")
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_check_functions_perfdata(info, discovered, checked):
+    check = Check("lnx_thermal")
     parsed = check.run_parse(info)
     for (item, _params), result in zip(discovered, checked):
         assert check.run_check(item, {}, parsed) == result

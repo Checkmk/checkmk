@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import collections
+from testlib import Check  # type: ignore[import]
 import pytest  # type: ignore[import]
 
 pytestmark = pytest.mark.checks
@@ -126,8 +127,9 @@ UnitEntry = collections.namedtuple(
         },
     ),
 ])
-def test_services_split(check_manager, services, blacklist, expected):
-    check = check_manager.get_check('systemd_units')
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_services_split(services, blacklist, expected):
+    check = Check('systemd_units')
     services_split = check.context['_services_split']
     actual = services_split(services, blacklist)
     assert actual == expected

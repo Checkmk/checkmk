@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from testlib import Check  # type: ignore[import]
 from cmk.base.check_api import MKCounterWrapped
 from checktestlib import CheckResult, assertCheckResultsEqual
 
@@ -61,8 +62,9 @@ def reference_result(deviation):
         (1, 'cpu-b is under high load for: 10.0 s (warn/crit at 5.00 s/20.0 s)', []),
     ])),
 ])
-def test_kernel_util_check(check_manager, monkeypatch, params, change):
-    check = check_manager.get_check("kernel.util")
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_kernel_util_check(monkeypatch, params, change):
+    check = Check("kernel.util")
     assert check.run_discovery(cpu_info(0)) == [(None, {})]
 
     monkeypatch.setattr('time.time', lambda: 0)

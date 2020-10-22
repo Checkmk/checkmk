@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from testlib import Check  # type: ignore[import]
 
 pytestmark = pytest.mark.checks
 
@@ -22,6 +23,7 @@ pytestmark = pytest.mark.checks
         ([['udp', '-', '-', '*.*', '0.0.0.0:*']], [('UDP', ['*', '*'], ['0.0.0.0', '*'
                                                                        ], 'LISTENING')]),
     ])
-def test_parse_netstat(check_manager, info, expected_parsed):
-    parsed = check_manager.get_check('netstat').run_parse(info)
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_parse_netstat(info, expected_parsed):
+    parsed = Check('netstat').run_parse(info)
     assert parsed == expected_parsed

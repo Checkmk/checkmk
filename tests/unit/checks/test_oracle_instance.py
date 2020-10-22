@@ -8,6 +8,7 @@
 # type: ignore
 
 import pytest  # type: ignore[import]
+from testlib import Check  # type: ignore[import]
 from cmk.base.check_api import MKCounterWrapped
 
 pytestmark = pytest.mark.checks
@@ -22,17 +23,19 @@ _broken_info = [
 @pytest.mark.parametrize('info', [
     _broken_info,
 ])
-def test_oracle_intance_uptime_discovery(check_manager, info):
-    main_check = check_manager.get_check('oracle_instance')
-    check = check_manager.get_check('oracle_instance.uptime')
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_oracle_intance_uptime_discovery(info):
+    main_check = Check('oracle_instance')
+    check = Check('oracle_instance.uptime')
     assert list(check.run_discovery(main_check.run_parse(info))) == []
 
 
 @pytest.mark.parametrize('info', [
     _broken_info,
 ])
-def test_oracle_instance_uptime_check_error(check_manager, info):
-    main_check = check_manager.get_check('oracle_instance')
-    check = check_manager.get_check('oracle_instance.uptime')
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_oracle_instance_uptime_check_error(info):
+    main_check = Check('oracle_instance')
+    check = Check('oracle_instance.uptime')
     with pytest.raises(MKCounterWrapped):
         check.run_check("+ASM", {}, main_check.run_parse(info))

@@ -23,7 +23,7 @@ from cmk.gui.page_menu import (
 
 from cmk.gui.plugins.wato import (
     main_module_registry,
-    MainModule,
+    ABCMainModule,
     MainModuleTopicMaintenance,
     WatoMode,
     mode_registry,
@@ -33,7 +33,7 @@ from cmk.gui.utils.urls import makeuri_contextless
 
 
 @main_module_registry.register
-class MainModuleBackgroundJobs(MainModule):
+class MainModuleBackgroundJobs(ABCMainModule):
     @property
     def mode_or_url(self):
         return "background_jobs_overview"

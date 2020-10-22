@@ -121,7 +121,7 @@ from cmk.gui.plugins.wato.utils import (
     HostRulespec,
     ServiceRulespec,
     main_module_registry,
-    MainModule,
+    ABCMainModule,
     MainModuleTopicEvents,
     wato_confirm,
     site_neutral_path,
@@ -3047,7 +3047,7 @@ permission_registry.register(
 
 
 @main_module_registry.register
-class MainModuleEventConsole(MainModule):
+class MainModuleEventConsole(ABCMainModule):
     @property
     def mode_or_url(self):
         return "mkeventd_rule_packs"

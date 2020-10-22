@@ -53,7 +53,7 @@ from cmk.gui.plugins.wato import (
     MainMenu,
     MenuItem,
     main_module_registry,
-    MainModule,
+    ABCMainModule,
     MainModuleTopicBI,
     add_change,
     wato_confirm,
@@ -94,7 +94,7 @@ from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 
 @main_module_registry.register
-class MainModuleBI(MainModule):
+class MainModuleBI(ABCMainModule):
     @property
     def mode_or_url(self):
         return "bi_packs"

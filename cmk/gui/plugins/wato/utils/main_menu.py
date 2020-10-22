@@ -10,7 +10,7 @@ from typing import List
 from cmk.gui.i18n import _l
 from cmk.gui.globals import html
 from cmk.gui.watolib.main_menu import (
-    MainModule,
+    ABCMainModule,
     MainModuleTopic,
     MenuItem,
     main_module_registry,
@@ -54,7 +54,7 @@ def register_modules(*args):
         internal_name = re.sub("[^a-zA-Z]", "", wato_module.mode_or_url)
 
         cls = type(
-            "LegacyMainModule%s" % internal_name.title(), (MainModule,), {
+            "LegacyMainModule%s" % internal_name.title(), (ABCMainModule,), {
                 "mode_or_url": wato_module.mode_or_url,
                 "topic": MainModuleTopicCustom,
                 "title": wato_module.title,
@@ -67,7 +67,7 @@ def register_modules(*args):
         main_module_registry.register(cls)
 
 
-def get_modules() -> List[MainModule]:
+def get_modules() -> List[ABCMainModule]:
     return sorted([m() for m in main_module_registry.values()],
                   key=lambda m: (m.sort_index, m.title))
 

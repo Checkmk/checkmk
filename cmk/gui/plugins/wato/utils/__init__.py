@@ -48,7 +48,7 @@ from cmk.gui.plugins.wato.utils.html_elements import (  # noqa: F401 # pylint: d
     search_form, wato_confirm,
 )
 from cmk.gui.plugins.wato.utils.main_menu import (  # noqa: F401 # pylint: disable=unused-import
-    MainMenu, MainModule, MenuItem, WatoModule, main_module_registry, register_modules,
+    MainMenu, ABCMainModule, MenuItem, WatoModule, main_module_registry, register_modules,
     MainModuleTopic, MainModuleTopicHosts, MainModuleTopicServices, MainModuleTopicBI,
     MainModuleTopicAgents, MainModuleTopicEvents, MainModuleTopicUsers, MainModuleTopicGeneral,
     MainModuleTopicMaintenance, MainModuleTopicCustom,

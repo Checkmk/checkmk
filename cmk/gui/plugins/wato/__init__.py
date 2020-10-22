@@ -94,7 +94,7 @@ from cmk.gui.plugins.wato.utils import (
     MainModuleTopicGeneral,
     MainModuleTopicMaintenance,
     MainModuleTopicCustom,
-    MainModule,
+    ABCMainModule,
     WatoModule,
     register_modules,
     register_notification_parameters,

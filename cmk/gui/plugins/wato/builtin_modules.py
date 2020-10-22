@@ -15,7 +15,7 @@ from cmk.gui.i18n import _
 
 from cmk.gui.plugins.wato import (
     main_module_registry,
-    MainModule,
+    ABCMainModule,
     MainModuleTopicHosts,
     MainModuleTopicServices,
     MainModuleTopicUsers,
@@ -27,7 +27,7 @@ from cmk.gui.plugins.wato import (
 
 
 @main_module_registry.register
-class MainModuleFolder(MainModule):
+class MainModuleFolder(ABCMainModule):
     @property
     def mode_or_url(self):
         return "folder"
@@ -62,7 +62,7 @@ class MainModuleFolder(MainModule):
 
 
 @main_module_registry.register
-class MainModuleTags(MainModule):
+class MainModuleTags(ABCMainModule):
     @property
     def mode_or_url(self):
         return "tags"
@@ -99,7 +99,7 @@ class MainModuleTags(MainModule):
 
 
 @main_module_registry.register
-class MainModuleGlobalSettings(MainModule):
+class MainModuleGlobalSettings(ABCMainModule):
     @property
     def mode_or_url(self):
         return "globalvars"
@@ -134,7 +134,7 @@ class MainModuleGlobalSettings(MainModule):
 
 
 @main_module_registry.register
-class MainModuleReadOnly(MainModule):
+class MainModuleReadOnly(ABCMainModule):
     @property
     def mode_or_url(self):
         return "read_only"
@@ -169,7 +169,7 @@ class MainModuleReadOnly(MainModule):
 
 
 @main_module_registry.register
-class MainModuleRuleSearch(MainModule):
+class MainModuleRuleSearch(ABCMainModule):
     @property
     def mode_or_url(self):
         return "rule_search"
@@ -204,7 +204,7 @@ class MainModuleRuleSearch(MainModule):
 
 
 @main_module_registry.register
-class MainModulePredefinedConditions(MainModule):
+class MainModulePredefinedConditions(ABCMainModule):
     @property
     def mode_or_url(self):
         return "predefined_conditions"
@@ -239,7 +239,7 @@ class MainModulePredefinedConditions(MainModule):
 
 
 @main_module_registry.register
-class MainModuleHostAndServiceParameters(MainModule):
+class MainModuleHostAndServiceParameters(ABCMainModule):
     @property
     def mode_or_url(self):
         return "wato.py?mode=rulesets&group=host_monconf"
@@ -274,7 +274,7 @@ class MainModuleHostAndServiceParameters(MainModule):
 
 
 @main_module_registry.register
-class MainModuleHWSWInventory(MainModule):
+class MainModuleHWSWInventory(ABCMainModule):
     @property
     def mode_or_url(self):
         return "wato.py?mode=rulesets&group=inventory"
@@ -309,7 +309,7 @@ class MainModuleHWSWInventory(MainModule):
 
 
 @main_module_registry.register
-class MainModuleNetworkingServices(MainModule):
+class MainModuleNetworkingServices(ABCMainModule):
     @property
     def mode_or_url(self):
         return "wato.py?mode=rulesets&group=activechecks"
@@ -345,7 +345,7 @@ class MainModuleNetworkingServices(MainModule):
 
 
 @main_module_registry.register
-class MainModuleOtherServices(MainModule):
+class MainModuleOtherServices(ABCMainModule):
     @property
     def mode_or_url(self):
         return "wato.py?mode=rulesets&group=custom_checks"
@@ -381,7 +381,7 @@ class MainModuleOtherServices(MainModule):
 
 
 @main_module_registry.register
-class MainModuleCheckPlugins(MainModule):
+class MainModuleCheckPlugins(ABCMainModule):
     @property
     def mode_or_url(self):
         return "check_plugins"
@@ -416,7 +416,7 @@ class MainModuleCheckPlugins(MainModule):
 
 
 @main_module_registry.register
-class MainModuleHostGroups(MainModule):
+class MainModuleHostGroups(ABCMainModule):
     @property
     def mode_or_url(self):
         return "host_groups"
@@ -451,7 +451,7 @@ class MainModuleHostGroups(MainModule):
 
 
 @main_module_registry.register
-class MainModuleHostCustomAttributes(MainModule):
+class MainModuleHostCustomAttributes(ABCMainModule):
     @property
     def mode_or_url(self):
         return "host_attrs"
@@ -486,7 +486,7 @@ class MainModuleHostCustomAttributes(MainModule):
 
 
 @main_module_registry.register
-class MainModuleServiceGroups(MainModule):
+class MainModuleServiceGroups(ABCMainModule):
     @property
     def mode_or_url(self):
         return "service_groups"
@@ -521,7 +521,7 @@ class MainModuleServiceGroups(MainModule):
 
 
 @main_module_registry.register
-class MainModuleUsers(MainModule):
+class MainModuleUsers(ABCMainModule):
     @property
     def mode_or_url(self):
         return "users"
@@ -556,7 +556,7 @@ class MainModuleUsers(MainModule):
 
 
 @main_module_registry.register
-class MainModuleRoles(MainModule):
+class MainModuleRoles(ABCMainModule):
     @property
     def mode_or_url(self):
         return "roles"
@@ -591,7 +591,7 @@ class MainModuleRoles(MainModule):
 
 
 @main_module_registry.register
-class MainModuleLDAP(MainModule):
+class MainModuleLDAP(ABCMainModule):
     @property
     def mode_or_url(self):
         return "ldap_config"
@@ -626,7 +626,7 @@ class MainModuleLDAP(MainModule):
 
 
 @main_module_registry.register
-class MainModuleUserCustomAttributes(MainModule):
+class MainModuleUserCustomAttributes(ABCMainModule):
     @property
     def mode_or_url(self):
         return "user_attrs"
@@ -661,7 +661,7 @@ class MainModuleUserCustomAttributes(MainModule):
 
 
 @main_module_registry.register
-class MainModuleContactGroups(MainModule):
+class MainModuleContactGroups(ABCMainModule):
     @property
     def mode_or_url(self):
         return "contact_groups"
@@ -696,7 +696,7 @@ class MainModuleContactGroups(MainModule):
 
 
 @main_module_registry.register
-class MainModuleNotifications(MainModule):
+class MainModuleNotifications(ABCMainModule):
     @property
     def mode_or_url(self):
         return "notifications"
@@ -731,7 +731,7 @@ class MainModuleNotifications(MainModule):
 
 
 @main_module_registry.register
-class MainModuleTimeperiods(MainModule):
+class MainModuleTimeperiods(ABCMainModule):
     @property
     def mode_or_url(self):
         return "timeperiods"
@@ -767,7 +767,7 @@ class MainModuleTimeperiods(MainModule):
 
 
 @main_module_registry.register
-class MainModuleSites(MainModule):
+class MainModuleSites(ABCMainModule):
     @property
     def mode_or_url(self):
         return "sites"
@@ -802,7 +802,7 @@ class MainModuleSites(MainModule):
 
 
 @main_module_registry.register
-class MainModuleBackup(MainModule):
+class MainModuleBackup(ABCMainModule):
     @property
     def mode_or_url(self):
         return "backup"
@@ -837,7 +837,7 @@ class MainModuleBackup(MainModule):
 
 
 @main_module_registry.register
-class MainModulePasswords(MainModule):
+class MainModulePasswords(ABCMainModule):
     @property
     def mode_or_url(self):
         return "passwords"
@@ -872,7 +872,7 @@ class MainModulePasswords(MainModule):
 
 
 @main_module_registry.register
-class MainModuleAuditLog(MainModule):
+class MainModuleAuditLog(ABCMainModule):
     @property
     def mode_or_url(self):
         return "auditlog"
@@ -907,7 +907,7 @@ class MainModuleAuditLog(MainModule):
 
 
 @main_module_registry.register
-class MainModuleIcons(MainModule):
+class MainModuleIcons(ABCMainModule):
     @property
     def mode_or_url(self):
         return "icons"
@@ -942,7 +942,7 @@ class MainModuleIcons(MainModule):
 
 
 @main_module_registry.register
-class MainModuleAnalyzeConfig(MainModule):
+class MainModuleAnalyzeConfig(ABCMainModule):
     @property
     def mode_or_url(self):
         return "analyze_config"
@@ -977,7 +977,7 @@ class MainModuleAnalyzeConfig(MainModule):
 
 
 @main_module_registry.register
-class MainModuleReleaseNotes(MainModule):
+class MainModuleReleaseNotes(ABCMainModule):
     @property
     def mode_or_url(self):
         return "version.py"
@@ -1012,7 +1012,7 @@ class MainModuleReleaseNotes(MainModule):
 
 
 @main_module_registry.register
-class MainModuleDiagnostics(MainModule):
+class MainModuleDiagnostics(ABCMainModule):
     @property
     def mode_or_url(self):
         return "diagnostics"
@@ -1050,7 +1050,7 @@ class MainModuleDiagnostics(MainModule):
 
 
 @main_module_registry.register
-class MainModuleMonitoringRules(MainModule):
+class MainModuleMonitoringRules(ABCMainModule):
     @property
     def mode_or_url(self):
         return "wato.py?mode=rulesets&group=monconf"
@@ -1085,7 +1085,7 @@ class MainModuleMonitoringRules(MainModule):
 
 
 @main_module_registry.register
-class MainModuleDiscoveryRules(MainModule):
+class MainModuleDiscoveryRules(ABCMainModule):
     @property
     def mode_or_url(self):
         return "wato.py?mode=rulesets&group=checkparams"
@@ -1120,7 +1120,7 @@ class MainModuleDiscoveryRules(MainModule):
 
 
 @main_module_registry.register
-class MainModuleEnforcedServices(MainModule):
+class MainModuleEnforcedServices(ABCMainModule):
     @property
     def mode_or_url(self):
         return "wato.py?mode=rulesets&group=static"
@@ -1154,7 +1154,7 @@ class MainModuleEnforcedServices(MainModule):
         return True
 
 
-class MainModuleAgentsWindows(MainModule):
+class MainModuleAgentsWindows(ABCMainModule):
     @property
     def mode_or_url(self):
         return "download_agents_windows"
@@ -1188,7 +1188,7 @@ class MainModuleAgentsWindows(MainModule):
         return False
 
 
-class MainModuleAgentsLinux(MainModule):
+class MainModuleAgentsLinux(ABCMainModule):
     @property
     def mode_or_url(self):
         return "download_agents_linux"
@@ -1230,7 +1230,7 @@ if cmk_version.is_raw_edition():
 
 
 @main_module_registry.register
-class MainModuleOtherAgents(MainModule):
+class MainModuleOtherAgents(ABCMainModule):
     @property
     def mode_or_url(self):
         return "download_agents"
@@ -1265,7 +1265,7 @@ class MainModuleOtherAgents(MainModule):
 
 
 @main_module_registry.register
-class MainModuleAgentAccessRules(MainModule):
+class MainModuleAgentAccessRules(ABCMainModule):
     @property
     def mode_or_url(self):
         return "wato.py?mode=rulesets&group=agent"
@@ -1300,7 +1300,7 @@ class MainModuleAgentAccessRules(MainModule):
 
 
 @main_module_registry.register
-class MainModuleSNMPRules(MainModule):
+class MainModuleSNMPRules(ABCMainModule):
     @property
     def mode_or_url(self):
         return "wato.py?mode=rulesets&group=snmp"
@@ -1335,7 +1335,7 @@ class MainModuleSNMPRules(MainModule):
 
 
 @main_module_registry.register
-class MainModuleVMCloudContainer(MainModule):
+class MainModuleVMCloudContainer(ABCMainModule):
     @property
     def mode_or_url(self):
         return "wato.py?mode=rulesets&group=vm_cloud_container"
@@ -1370,7 +1370,7 @@ class MainModuleVMCloudContainer(MainModule):
 
 
 @main_module_registry.register
-class MainModuleOtherIntegrations(MainModule):
+class MainModuleOtherIntegrations(ABCMainModule):
     @property
     def mode_or_url(self):
         return "wato.py?mode=rulesets&group=datasource_programs"

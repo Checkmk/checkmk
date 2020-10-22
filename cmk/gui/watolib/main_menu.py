@@ -92,51 +92,60 @@ class MainModuleTopicRegistry(cmk.utils.plugin_registry.Registry[MainModuleTopic
 main_module_topic_registry = MainModuleTopicRegistry()
 
 
-# TODO: Rename to ABCMainModule
-class MainModule(MenuItem, metaclass=abc.ABCMeta):
+class ABCMainModule(MenuItem, metaclass=abc.ABCMeta):
     def __init__(self):
         # TODO: Cleanup hierarchy
-        super(MainModule, self).__init__(mode_or_url=None,
-                                         title=None,
-                                         icon=None,
-                                         permission=None,
-                                         description=None,
-                                         sort_index=None)
+        super().__init__(
+            mode_or_url=None,
+            title=None,
+            icon=None,
+            permission=None,
+            description=None,
+            sort_index=None,
+        )
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def topic(self) -> MainModuleTopic:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def mode_or_url(self) -> str:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title(self) -> str:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def icon(self) -> Icon:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def permission(self) -> Optional[str]:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def description(self) -> str:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def sort_index(self) -> int:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def is_show_more(self) -> bool:
         raise NotImplementedError()
 
 
-class ModuleRegistry(cmk.utils.plugin_registry.Registry[Type[MainModule]]):
+class ModuleRegistry(cmk.utils.plugin_registry.Registry[Type[ABCMainModule]]):
     def plugin_name(self, instance):
         return instance().mode_or_url
 

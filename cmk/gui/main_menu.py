@@ -82,6 +82,22 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                     icon=None,  # TODO(CMK-5773): add an icon
                 ),
                 TopicMenuItem(
+                    name="rest_api_redoc",
+                    title=_("REST-API Documentation"),
+                    url="openapi/",
+                    target="_blank",
+                    sort_index=30,
+                    icon=None,  # TODO(CMK-5773): add an icon
+                ),
+                TopicMenuItem(
+                    name="rest_api_swagger_ui",
+                    title=_("REST-API Interactive GUI"),
+                    url="api/v0/ui/",
+                    target="_blank",
+                    sort_index=30,
+                    icon=None,  # TODO(CMK-5773): add an icon
+                ),
+                TopicMenuItem(
                     name="youtube_channel",
                     title=_("Youtube"),
                     url="https://www.youtube.com/checkmk-channel",

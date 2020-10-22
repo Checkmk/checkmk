@@ -18,7 +18,6 @@ from cmk.gui.plugins.openapi.restful_objects import (
 from cmk.gui.plugins.openapi.restful_objects.parameters import IDENT_FIELD
 from cmk.gui.plugins.openapi.utils import ProblemException
 from cmk.gui.watolib import CREFolder
-from cmk.gui.wsgi.type_defs import DomainObject
 
 # TODO: Remove all hard-coded response creation in favour of a generic one
 # TODO: Implement formal description (GET endpoint) of move action
@@ -212,7 +211,7 @@ def _serve_folder(folder, profile=None):
     return response
 
 
-def _serialize_folder(folder: CREFolder) -> DomainObject:
+def _serialize_folder(folder: CREFolder):
     uri = constructors.object_href('folder_config', folder.id())
     return constructors.domain_object(
         domain_type='folder_config',

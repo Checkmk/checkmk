@@ -19,7 +19,6 @@ import apispec  # type: ignore[import]
 import apispec.utils  # type: ignore[import]
 from marshmallow import Schema, ValidationError
 from marshmallow.schema import SchemaMeta
-from werkzeug.routing import Rule
 from werkzeug.utils import import_string
 
 from cmk.gui.globals import request
@@ -225,8 +224,8 @@ class Endpoint:
 
         params = _mandatory_parameter_names(header_schema, path_schema, query_schema)
 
-        # Call to see if a Rule can be constructed. Will throw an ValueError if not possible.
-        _ = self.werkzeug_rule()
+        # Call to see if a Rule can be constructed. Will throw an AttributeError if not possible.
+        _ = self.default_path
 
         ENDPOINT_REGISTRY.add_endpoint(self, params)
 
@@ -335,7 +334,8 @@ class Endpoint:
 
         return _validating_wrapper
 
-    def werkzeug_rule(self) -> Rule:
+    @property
+    def default_path(self):
         replace = {}
         if self.path_params is not None:
             parameters = to_openapi(self.path_params, 'path')
@@ -345,13 +345,9 @@ class Endpoint:
         try:
             path = self.path.format(**replace)
         except KeyError:
-            raise ValueError(f"Endpoint {self.path} has unspecified path parameters. "
-                             f"Specified: {replace}")
-        return Rule(
-            path,
-            methods=[self.method],
-            endpoint=self.wrapped,
-        )
+            raise AttributeError(f"Endpoint {self.path} has unspecified path parameters. "
+                                 f"Specified: {replace}")
+        return path
 
     def make_url(self, parameter_values: Dict[str, Any]):
         return self.path.format(**parameter_values)

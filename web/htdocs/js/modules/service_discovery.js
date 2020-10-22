@@ -158,21 +158,60 @@ function lock_controls(lock, elements) {
     }
 }
 
-export function execute_active_check(site, folder_path, hostname, checktype, item, divid) {
-    var oDiv = document.getElementById(divid);
+var g_delayed_active_checks = [];
+
+export function register_delayed_active_check(site, folder_path, hostname, checktype, item, divid) {
+    // Register event listeners on first call
+    if (g_delayed_active_checks.length == 0) {
+        utils
+            .content_scrollbar()
+            .getScrollElement()
+            .addEventListener("scroll", trigger_delayed_active_checks);
+        utils.add_event_handler("resize", trigger_delayed_active_checks);
+    }
+
+    g_delayed_active_checks.push({
+        site: site,
+        folder_path: folder_path,
+        hostname: hostname,
+        checktype: checktype,
+        item: item,
+        divid: divid,
+    });
+}
+
+// Is executed on scroll / resize events in case at least one graph is
+// using the delayed graph rendering mechanism
+function trigger_delayed_active_checks() {
+    var num_delayed = g_delayed_active_checks.length;
+    if (num_delayed == 0) return; // no delayed graphs: Nothing to do
+
+    var i = num_delayed;
+    while (i--) {
+        var entry = g_delayed_active_checks[i];
+        if (utils.is_in_viewport(document.getElementById(entry.divid))) {
+            execute_active_check(entry);
+            g_delayed_active_checks.splice(i, 1);
+        }
+    }
+    return true;
+}
+
+export function execute_active_check(entry) {
+    var div = document.getElementById(entry.divid);
     var url =
         "wato_ajax_execute_check.py?" +
         "site=" +
-        encodeURIComponent(site) +
+        encodeURIComponent(entry.site) +
         "&folder=" +
-        encodeURIComponent(folder_path) +
+        encodeURIComponent(entry.folder_path) +
         "&host=" +
-        encodeURIComponent(hostname) +
+        encodeURIComponent(entry.hostname) +
         "&checktype=" +
-        encodeURIComponent(checktype) +
+        encodeURIComponent(entry.checktype) +
         "&item=" +
-        encodeURIComponent(item);
-    ajax.get_url(url, handle_execute_active_check, oDiv);
+        encodeURIComponent(entry.item);
+    ajax.get_url(url, handle_execute_active_check, div);
 }
 
 function handle_execute_active_check(oDiv, response_json) {

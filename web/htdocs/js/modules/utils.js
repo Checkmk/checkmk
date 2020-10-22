@@ -181,6 +181,20 @@ export function page_width() {
     return null;
 }
 
+// Whether or not an element is partially in the the visible viewport
+export function is_in_viewport(element) {
+    var rect = element.getBoundingClientRect(),
+        window_height = window.innerHeight || document.documentElement.clientHeight,
+        window_width = window.innerWidth || document.documentElement.clientWidth;
+
+    return (
+        rect.top <= window_height &&
+        rect.top + rect.height >= 0 &&
+        rect.left <= window_width &&
+        rect.left + rect.width >= 0
+    );
+}
+
 export function update_header_timer() {
     var container = document.getElementById("headertime");
     if (!container) return;

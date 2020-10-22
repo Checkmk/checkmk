@@ -670,14 +670,15 @@ class DiscoveryPageRenderer:
 
         div_id = "activecheck_%s" % descr
         html.div(html.render_icon("reload", cssclass="reloading"), id_=div_id)
-        html.javascript("cmk.service_discovery.execute_active_check(%s, %s, %s, %s, %s, %s);" % (
-            json.dumps(self._host.site_id() or ''),
-            json.dumps(self._host.folder().path()),
-            json.dumps(self._host.name()),
-            json.dumps(check_type),
-            json.dumps(item),
-            json.dumps(div_id),
-        ))
+        html.javascript(
+            "cmk.service_discovery.register_delayed_active_check(%s, %s, %s, %s, %s, %s);" % (
+                json.dumps(self._host.site_id() or ''),
+                json.dumps(self._host.folder().path()),
+                json.dumps(self._host.name()),
+                json.dumps(check_type),
+                json.dumps(item),
+                json.dumps(div_id),
+            ))
 
     def _show_check_parameters(self, table_source, check_type, checkgroup, params):
         varname = self._get_ruleset_name(table_source, check_type, checkgroup)

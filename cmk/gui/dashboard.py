@@ -968,7 +968,7 @@ def draw_dashlet(dashlet: Dashlet, content: str, title: Union[str, HTML]) -> Non
     is updated later using the dashboard_dashlet.py ajax call.
     """
     if all((
-            dashlet.type_name() not in ['single_metric', 'gauge'],
+            dashlet.type_name() not in ['single_metric', 'gauge', 'barplot'],
             title is not None,
             dashlet.show_title(),
     )):

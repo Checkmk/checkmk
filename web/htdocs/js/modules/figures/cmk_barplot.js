@@ -14,7 +14,7 @@ class BarplotFigure extends cmk_figures.FigureBase {
 
     constructor(div_selector, fixed_size = null) {
         super(div_selector, fixed_size);
-        this.margin = {top: 28, right: 10, bottom: 150, left: 70};
+        this.margin = {top: 20, right: 10, bottom: 150, left: 70};
 
         this._time_dimension = this._crossfilter.dimension(d => d.timestamp);
         this._tag_dimension = this._crossfilter.dimension(d => d.tag);
@@ -24,9 +24,7 @@ class BarplotFigure extends cmk_figures.FigureBase {
 
     initialize() {
         this.svg = this._div_selection.append("svg");
-        this.plot = this.svg
-            .append("g")
-            .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")");
+        this.plot = this.svg.append("g");
 
         // X axis
         this.scale_x = d3.scaleBand().padding(0.2);
@@ -42,10 +40,16 @@ class BarplotFigure extends cmk_figures.FigureBase {
     }
 
     resize() {
+        if (this._data.title) {
+            this.margin.top = 20 + 24; // 24 from UX project
+        } else {
+            this.margin.top = 20;
+        }
         cmk_figures.FigureBase.prototype.resize.call(this);
         this.svg.attr("width", this.figure_size.width).attr("height", this.figure_size.height);
         this.scale_x.range([0, this.plot_size.width]);
         this.scale_y.range([this.plot_size.height, 0]);
+        this.plot.attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")");
         this.plot
             .select("g.x_axis")
             .attr("transform", "translate(0," + this.plot_size.height + ")");
@@ -99,6 +103,9 @@ class BarplotFigure extends cmk_figures.FigureBase {
         this._render_levels();
         this._render_bar_tilers();
         this._render_bar_gradients();
+        let plot = this._data.plot_definitions.filter(d => d.plot_type == "single_value")[0];
+        if (!plot) return;
+        cmk_figures.state_component(this, plot.svc_state);
     }
 
     _render_bar_containers() {

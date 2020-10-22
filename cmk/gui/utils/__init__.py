@@ -184,7 +184,7 @@ def validate_regex(value: str, varname: Optional[str]) -> None:
     except re.error:
         raise MKUserError(
             varname,
-            _('You search statement is not valid. You need to provide a regular '
+            _('Your search statement is not valid. You need to provide a regular '
               'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
               'if you like to search for a single backslash.'))
 
@@ -193,5 +193,5 @@ def validate_regex(value: str, varname: Optional[str]) -> None:
     lookahead_pattern = r'\((\?!|\?=|\?<)'
 
     if re.search(lookahead_pattern, value):
-        raise MKUserError(varname,
-                          _('You search statement is not valid. You can not use a lookahead here.'))
+        raise MKUserError(
+            varname, _('Your search statement is not valid. You can not use a lookahead here.'))

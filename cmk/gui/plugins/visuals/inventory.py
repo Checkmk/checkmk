@@ -61,7 +61,7 @@ class FilterInvtableText(Filter):
         except re.error:
             raise MKUserError(
                 htmlvar,
-                _('You search statement is not valid. You need to provide a regular '
+                _('Your search statement is not valid. You need to provide a regular '
                   'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
                   'if you like to search for a single backslash.'))
 
@@ -378,7 +378,7 @@ class FilterInvText(Filter):
         except re.error:
             raise MKUserError(
                 self.htmlvars[0],
-                _('You search statement is not valid. You need to provide a regular '
+                _('Your search statement is not valid. You need to provide a regular '
                   'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
                   'if you like to search for a single backslash.'))
 
@@ -575,7 +575,7 @@ class FilterInvHasSoftwarePackage(Filter):
             except re.error:
                 raise MKUserError(
                     self._varprefix + "name",
-                    _('You search statement is not valid. You need to provide a regular '
+                    _('Your search statement is not valid. You need to provide a regular '
                       'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
                       'if you like to search for a single backslash.'))
 

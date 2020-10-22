@@ -495,7 +495,7 @@ def _disable_timeout() -> None:
 def _enable_timeout(timeout: int) -> None:
     """ Raises MKTimeout exception after timeout seconds"""
     def _handler(signum: int, frame: Optional[FrameType]) -> None:
-        raise MKTimeout("Fetcher timed out")
+        raise MKTimeout(f"Fetcher timed out after {timeout} seconds")
 
     signal.signal(signal.SIGALRM, _handler)
     signal.alarm(timeout)

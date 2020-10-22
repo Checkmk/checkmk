@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """All objects defined here are intended to be exposed in the API
 """
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree  # pylint: disable=cmk-module-layer-violation
 from cmk.base.api.agent_based.inventory_classes import InventoryFunction
@@ -41,8 +41,8 @@ from cmk.base.api.agent_based.register import (
 def agent_section(
     *,
     name: str,
-    parsed_section_name: Optional[str] = None,
     parse_function: Optional[AgentParseFunction] = None,
+    parsed_section_name: Optional[str] = None,
     host_label_function: Optional[HostLabelFunction] = None,
     supersedes: Optional[List[str]] = None,
 ) -> None:
@@ -51,18 +51,30 @@ def agent_section(
     The section marked by '<<<name>>>' in the raw agent output will be processed
     according to the functions and options given to this function:
 
-    :param name: The name of the section to be processed. It must be unique, and match
-        the section header of the agent oufput ('<<<name>>>').
-    :params parsed_section_name: not yet implemented.
-    :params parse_function: The function responsible for parsing the raw agent data.
-        It must accept exactly one argument by the name 'string_table'.
-        It may return an arbitrary object. Note that if the return value is falsey,
-        no forther processing will take place.
-    :params host_label_function: The function responsible for extracting HostLabels from
-        the parsed data. It must accept exactly one argument by the name 'section'. When
-        the function is called, it will be passed the parsed data as returned by the
-        parse function. It is expected to yield objects of type 'HostLabel'.
-    :params supersedes: not yet implemented.
+    Args:
+
+      name:                The unique name of the section to be registered.
+                           It must match the section header of the agent output ('<<<name>>>').
+
+      parse_function:      The function responsible for parsing the raw agent data.
+                           It must accept exactly one argument by the name 'string_table'.
+                           It may return an arbitrary object. Note that if the return value is
+                           `None`, no forther processing will take place (just as if the agent had
+                           not sent any data).
+
+      parsed_section_name: The name under which the parsed section will be available to the plugins.
+                           Defaults to the original name.
+
+      host_label_function: The function responsible for extracting host labels from the parsed data.
+                           It must accept exactly one argument by the name 'section'.
+                           When the function is called, it will be passed the parsed data as
+                           returned by the parse function.
+                           It is expected to yield objects of type :class:`HostLabel`.
+
+      supersedes:          A list of section names which are superseded by this sections. If this
+                           section will be parsed to something that is not `None` (see above) all
+                           superseded section will not be considered at all.
+
     """
     section_plugin = create_agent_section_plugin(
         name=name,
@@ -82,11 +94,11 @@ def agent_section(
 def snmp_section(
     *,
     name: str,
-    parsed_section_name: Optional[str] = None,
-    parse_function: Optional[SNMPParseFunction] = None,
-    host_label_function: Optional[HostLabelFunction] = None,
     detect: SNMPDetectSpec,
-    fetch: List[SNMPTree],
+    fetch: Union[SNMPTree, List[SNMPTree]],
+    parse_function: Optional[SNMPParseFunction] = None,
+    parsed_section_name: Optional[str] = None,
+    host_label_function: Optional[HostLabelFunction] = None,
     supersedes: Optional[List[str]] = None,
 ) -> None:
     """Register an snmp section to checkmk
@@ -94,24 +106,41 @@ def snmp_section(
     The snmp information will be gathered and parsed according to the functions and
     options given to this function:
 
-    :param name: The name of the section to be processed. It must be unique, and match
-        the section header of the agent oufput ('<<<name>>>').
-    :params parsed_section_name: not yet implemented.
-    :params parse_function: The function responsible for parsing the raw snmp data.
-        It must accept exactly one argument by the name 'string_table'.
-        It may return an arbitrary object. Note that if the return value is falsey,
-        no forther processing will take place.
-    :params host_label_function: The function responsible for extracting HostLabels from
-        the parsed data. It must accept exactly one argument by the name 'section'. When
-        the function is called, it will be passed the parsed data as returned by the
-        parse function. It is expected to yield objects of type 'HostLabel'.
-    :params detect: The conditions on single OIDs that will result in the attempt to
-        fetch snmp data and discover services. This should only match devices to which
-        the section is applicable.
-    :params fetch: The specification of snmp data that should be fetched from the device.
-        It must be a list of SNMPTree objects. The parse function will be passed a list of
-        one SNMP table per specified Tree, where an SNMP tree is a list of lists of strings.
-    :params supersedes: not yet implemented.
+    Args:
+
+      name:                The unique name of the section to be registered.
+
+      detect:              The conditions on single OIDs that will result in the attempt to
+                           fetch snmp data and discover services.
+                           This should only match devices to which the section is applicable.
+                           It is higly recomended to check the system description OID at the very
+                           first, as this will make the discovery much more resposive and consume
+                           less resources.
+
+      fetch:               The specification of snmp data that should be fetched from the device.
+                           It must be an :class:`SNMPTree` object, or a non-empty list of them.
+                           The parse function will be passed a single :class:`StringTable` or a
+                           list of them accordingly.
+
+      parse_function:      The function responsible for parsing the raw snmp data.
+                           It must accept exactly one argument by the name 'string_table'.
+                           It may return an arbitrary object. Note that if the return value is
+                           `None`, no forther processing will take place (just as if the agent had
+                           not sent any data).
+
+      parsed_section_name: The name under which the parsed section will be available to the plugins.
+                           Defaults to the original name.
+
+      host_label_function: The function responsible for extracting host labels from the parsed data.
+                           It must accept exactly one argument by the name 'section'.
+                           When the function is called, it will be passed the parsed data as
+                           returned by the parse function.
+                           It is expected to yield objects of type :class:`HostLabel`.
+
+      supersedes:          A list of section names which are superseded by this sections. If this
+                           section will be parsed to something that is not `None` (see above) all
+                           superseded section will not be considered at all.
+
     """
     section_plugin = create_snmp_section_plugin(
         name=name,
@@ -146,27 +175,49 @@ def check_plugin(
 ) -> None:
     """Register a check plugin to checkmk.
 
-    :param name: The name of the check plugin. It must be unique. And contain only the characters
-                 A-Z, a-z, 0-9 and the underscore.
-    :param sections: An optional list of section names that this plugin subscribes to. The
-                     corresponding sections are passed to the discovery and check function. The
-                     functions arguments must be called 'section_<name1>, section_<name2>' ect.
-                     Default: [<name>]
-    :param service_name: The template for the service. The check function must accept 'item' as
-                         first argument if and only if "%s" is present in the value of
-                         "service_name".
-    :param discovery_function: The discovery_function. Arguments must be 'params' (if discovery
-                               parameters are defined) and 'section_<name1>, section_<name2>' ect.
-                               corresponding to the `sections`.
-    :param discovery_parameters: Default parameters for the discovery function. Must match the
-                                 ValueSpec of the corresponding WATO ruleset.
-    :param discovery_ruleset_name: The name of the discovery ruleset.
-    :param check_function: The check_function. Arguments must be 'item' (if the service has an item)
-                           'params' (if check parameters are defined) and 'section_<name1>,
-                           section_<name2>' ect. corresponding to the `sections`.
-    :param check_parameters: Default parameters for the check function. Must match the
-                             ValueSpec of the corresponding WATO ruleset.
-    :param check_ruleset_name: The name of the check ruleset.
+    Args:
+
+      name:                     The unique name of the check plugin. It must only contain the
+                                characters 'A-Z', 'a-z', '0-9' and the underscore.
+
+      sections:                 An optional list of section names that this plugin subscribes to.
+                                They correspond to the 'parsed_section_name' specified in
+                                :meth:`agent_section` and :meth:`snmp_section`.
+                                The corresponding sections are passed to the discovery and check
+                                function. The functions arguments must be called 'section_<name1>,
+                                section_<name2>' ect. Defaults to al list containing the check
+                                plugins name.
+
+      service_name:             The template for the service name. The check function must accept
+                                'item' as first argument if and only if "%s" is present in the value
+                                of "service_name".
+
+      discovery_function:       The discovery_function. Arguments must be 'params' (if discovery
+                                parameters are defined) and 'section_<name1>, section_<name2>' ect.
+                                corresponding to the `sections`.
+                                It is expected to be a generator of :class:`Service` instances.
+
+      discovery_parameters:     Default parameters for the discovery function. Must match the
+                                ValueSpec of the corresponding WATO ruleset, if it exists.
+
+      discovery_ruleset_name:   The name of the discovery ruleset.
+
+      check_function:           The check_function. Arguments must be 'item' (if the service has an
+                                item), 'params' (if check default parameters are defined) and
+                                'section_<name1>, section_<name2>' ect. corresponding to the
+                                `sections`.
+
+      check_default_parameters: Default parameters for the check function.
+                                Must match the ValueSpec of the corresponding WATO ruleset, if it
+                                exists.
+
+      check_ruleset_name:       The name of the check ruleset.
+
+      cluster_check_function:   The cluster check function. If this function is not specified, the
+                                corresponding services will not be available for clusters.
+                                The arguments are the same as the ones for the check function,
+                                except that the sections are dicts (node name -> node section).
+
     """
     plugin = create_check_plugin(
         name=name,
@@ -231,7 +282,7 @@ def inventory_plugin(
 
 __all__ = [
     "agent_section",
+    "snmp_section",
     "check_plugin",
     "inventory_plugin",
-    "snmp_section",
 ]

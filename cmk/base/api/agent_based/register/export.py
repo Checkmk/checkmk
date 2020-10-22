@@ -114,7 +114,7 @@ def snmp_section(
                            fetch snmp data and discover services.
                            This should only match devices to which the section is applicable.
                            It is higly recomended to check the system description OID at the very
-                           first, as this will make the discovery much more resposive and consume
+                           first, as this will make the discovery much more responsive and consume
                            less resources.
 
       fetch:               The specification of snmp data that should be fetched from the device.
@@ -124,6 +124,8 @@ def snmp_section(
 
       parse_function:      The function responsible for parsing the raw snmp data.
                            It must accept exactly one argument by the name 'string_table'.
+                           It will be passed either a single :class:`StringTable`, or a list
+                           of them, depending on the value type of the `fetch` argument.
                            It may return an arbitrary object. Note that if the return value is
                            `None`, no forther processing will take place (just as if the agent had
                            not sent any data).
@@ -185,8 +187,8 @@ def check_plugin(
                                 :meth:`agent_section` and :meth:`snmp_section`.
                                 The corresponding sections are passed to the discovery and check
                                 function. The functions arguments must be called 'section_<name1>,
-                                section_<name2>' ect. Defaults to al list containing the check
-                                plugins name.
+                                section_<name2>' ect. Defaults to a list containing as only element
+                                a name equal to the name of the check plugin.
 
       service_name:             The template for the service name. The check function must accept
                                 'item' as first argument if and only if "%s" is present in the value
@@ -197,7 +199,7 @@ def check_plugin(
                                 corresponding to the `sections`.
                                 It is expected to be a generator of :class:`Service` instances.
 
-      discovery_parameters:     Default parameters for the discovery function. Must match the
+      discovery_default_parameters: Default parameters for the discovery function. Must match the
                                 ValueSpec of the corresponding WATO ruleset, if it exists.
 
       discovery_ruleset_name:   The name of the discovery ruleset.
@@ -250,20 +252,32 @@ def inventory_plugin(
     inventory_default_parameters: Optional[Dict[str, Any]] = None,
     inventory_ruleset_name: Optional[str] = None,
 ) -> None:
-    """Register a check plugin to checkmk.
+    """Register an inventory plugin to checkmk.
 
-    :param name: The name of the check plugin. It must be unique. And contain only the characters
-                 A-Z, a-z, 0-9 and the underscore.
-    :param sections: An optional list of section names that this plugin subscribes to. The
-                     corresponding sections are passed to the inventory function. The
-                     functions arguments must be called 'section_<name1>, section_<name2>' ect.
-                     Default: [<name>]
-    :param inventory_function: The check_function. Arguments must be 'params' (if inventory
-                               parameters are defined) and 'section_<name1>,
-                               section_<name2>' ect. corresponding to the `sections`.
-    :param inventory_parameters: Default parameters for the inventory function. Must match the
-                             ValueSpec of the corresponding WATO ruleset.
-    :param inventory_ruleset_name: The name of the inventory ruleset.
+    Args:
+
+      name:                     The unique name of the check plugin. It must only contain the
+                                characters 'A-Z', 'a-z', '0-9' and the underscore.
+
+      sections:                 An optional list of section names that this plugin subscribes to.
+                                They correspond to the 'parsed_section_name' specified in
+                                :meth:`agent_section` and :meth:`snmp_section`.
+                                The corresponding sections are passed to the discovery and check
+                                function. The functions arguments must be called 'section_<name1>,
+                                section_<name2>' ect. Defaults to a list containing as only element
+                                a name equal to the name of the inventory plugin.
+
+      inventoy_function:        The inventory_function. Arguments must be 'params' (if inventory
+                                parameters are defined) and 'section_<name1>, section_<name2>' ect.
+                                corresponding to the `sections`.
+                                It is expected to be a generator of :class:`Attributes` or
+                                :class:`TableRow` instances.
+
+      inventory_default_parameters: Default parameters for the inventory function. Must match the
+                                ValueSpec of the corresponding WATO ruleset, if it exists.
+
+      inventory_ruleset_name:   The name of the inventory ruleset.
+
     """
     plugin = create_inventory_plugin(
         name=name,

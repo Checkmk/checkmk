@@ -16,7 +16,6 @@ import pytest  # type: ignore[import]
 
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
 
-import cmk.utils.store as store
 from cmk.utils.type_defs import AgentRawData, result, SectionName
 
 from cmk.snmplib import snmp_table
@@ -530,4 +529,3 @@ class TestFetcherType:
         assert FetcherType.PROGRAM.make() is ProgramFetcher
         assert FetcherType.SNMP.make() is SNMPFetcher
         assert FetcherType.TCP.make() is TCPFetcher
-        assert FetcherType.CPU.make() is TCPFetcher

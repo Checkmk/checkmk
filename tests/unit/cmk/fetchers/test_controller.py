@@ -442,7 +442,7 @@ class TestFetcherMessage:
     def test_len(self, message, header, payload, stats):
         assert len(message) == len(header) + len(payload) + len(stats)
 
-    @pytest.mark.parametrize("fetcher_type", [FetcherType.TCP, FetcherType.CPU])
+    @pytest.mark.parametrize("fetcher_type", [FetcherType.TCP])
     def test_from_raw_data_standard(self, agent_raw_data, stats, fetcher_type):
         raw_data: result.Result[AgentRawData, Exception] = result.OK(agent_raw_data)
         message = FetcherMessage.from_raw_data(raw_data, stats, fetcher_type)
@@ -466,7 +466,7 @@ class TestFetcherMessage:
         assert type(message.raw_data.error) is type(error.error)
         assert message.raw_data.error.args == error.error.args
 
-    @pytest.mark.parametrize("fetcher_type", [FetcherType.TCP, FetcherType.CPU])
+    @pytest.mark.parametrize("fetcher_type", [FetcherType.TCP])
     def test_raw_data_tcp_standard(self, agent_raw_data, stats, fetcher_type):
         raw_data: result.Result[AgentRawData, Exception] = result.OK(agent_raw_data)
         message = FetcherMessage.from_raw_data(raw_data, stats, fetcher_type)

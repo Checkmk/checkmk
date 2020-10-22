@@ -230,6 +230,9 @@ def do_check(
                 status = max(status, missing_data_status)
                 infotexts.append(missing_data_infotext)
 
+        for msg in fetcher_messages if fetcher_messages else ():
+            cpu_tracking.update(msg.stats.cpu_times)
+
         phase_times = cpu_tracking.get_times()
         total_times = phase_times["busy"]
 

@@ -41,7 +41,6 @@ class FetcherType(enum.Enum):
     PROGRAM = enum.auto()
     SNMP = enum.auto()
     TCP = enum.auto()
-    CPU = enum.auto()
 
     def make(self) -> Type[ABCFetcher]:
         """The fetcher factory."""
@@ -52,13 +51,6 @@ class FetcherType(enum.Enum):
             FetcherType.PROGRAM: ProgramFetcher,
             FetcherType.SNMP: SNMPFetcher,
             FetcherType.TCP: TCPFetcher,
-
-            # We need special fetchers to gather data about running bin/fetcher.
-            # 1. Adding dummy fetchers is quite expensive and meaningless.
-            # 2. Using None is also bad idea because current design not support optionality and
-            # adding optionality to hierarchy means big and not simple CL.
-            # 3. Use first best fetcher we are not going to create anyway
-            FetcherType.CPU: TCPFetcher,  # TODO (ml) Fix this trash: either DummyFetcher or None
         }[self]
 
     def from_json(self, serialized: Dict[str, Any]) -> ABCFetcher:

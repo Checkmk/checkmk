@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any, Dict, Tuple
+from testlib import Check  # type: ignore[import]
 import freezegun  # type: ignore[import]
 
 import pytest  # type: ignore[import]
@@ -16,39 +17,43 @@ pytestmark = pytest.mark.checks
 # ##### hp_msa_volume (health) #########
 
 
-def test_health_parse_yields_with_volume_name_as_items(check_manager):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_health_parse_yields_with_volume_name_as_items():
     info = [["volume", "1", "volume-name", "Foo"]]
     expected_yield = {'Foo': {'volume-name': 'Foo'}}
-    check = check_manager.get_check("hp_msa_volume")
+    check = Check("hp_msa_volume")
     parse_result = check.run_parse(info)
     assert parse_result == expected_yield
 
 
-def test_health_parse_yields_volume_name_as_items_despite_of_durable_id(check_manager):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_health_parse_yields_volume_name_as_items_despite_of_durable_id():
     info = [["volume", "1", "durable-id", "Foo 1"], ["volume", "1", "volume-name", "Bar 1"],
             ["volume", "1", "any-key-1", "abc"], ["volume-statistics", "1", "volume-name", "Bar 1"],
             ["volume-statistics", "1", "any-key-2", "ABC"], ["volume", "2", "durable-id", "Foo 2"],
             ["volume", "2", "volume-name", "Bar 2"], ["volume", "2", "any-key-2", "abc"],
             ["volume-statistics", "2", "volume-name", "Bar 2"],
             ["volume-statistics", "2", "any-key-2", "ABC"]]
-    check = check_manager.get_check("hp_msa_volume")
+    check = Check("hp_msa_volume")
     parse_result = check.run_parse(info)
     parsed_items = sorted(parse_result.keys())
     expected_items = ['Bar 1', 'Bar 2']
     assert parsed_items == expected_items
 
 
-def test_health_discovery_forwards_info(check_manager):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_health_discovery_forwards_info():
     info = [["volume", "1", "volume-name", "Foo"]]
-    check = check_manager.get_check("hp_msa_volume")
+    check = Check("hp_msa_volume")
     discovery_result = check.run_discovery(info)
     assert discovery_result == [(info[0], None)]
 
 
-def test_health_check_accepts_volume_name_and_durable_id_as_item(check_manager):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_health_check_accepts_volume_name_and_durable_id_as_item():
     item_1st = "VMFS_01"
     item_2nd = "V4"
-    check = check_manager.get_check("hp_msa_volume")
+    check = Check("hp_msa_volume")
     parsed = {
         u'VMFS_01': {
             u'durable-id': u'V3',
@@ -74,18 +79,20 @@ def test_health_check_accepts_volume_name_and_durable_id_as_item(check_manager):
 # ##### hp_msa_volume.df ######
 
 
-def test_df_discovery_yields_volume_name_as_item(check_manager):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_df_discovery_yields_volume_name_as_item():
     parsed = {'Foo': {'durable-id': 'Bar'}}
     expected_yield: Tuple[str, Dict[Any, Any]] = ('Foo', {})
-    check = check_manager.get_check("hp_msa_volume.df")
+    check = Check("hp_msa_volume.df")
     for item in check.run_discovery(parsed):
         assert item == expected_yield
 
 
-def test_df_check(check_manager):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_df_check():
     item_1st = 'VMFS_01'
     params = {'flex_levels': 'irrelevant'}
-    check = check_manager.get_check("hp_msa_volume.df")
+    check = Check("hp_msa_volume.df")
     parsed = {
         u'VMFS_01': {
             u'durable-id': u'V3',
@@ -119,18 +126,20 @@ def test_df_check(check_manager):
 # #### hp_msa_io.io  #####
 
 
-def test_io_discovery_yields_summary(check_manager):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_io_discovery_yields_summary():
     parsed = {'Foo': {'durable-id': 'Bar'}}
     expected_yield = ('SUMMARY', 'diskstat_default_levels')
-    check = check_manager.get_check("hp_msa_volume.io")
+    check = Check("hp_msa_volume.io")
     for item in check.run_discovery(parsed):
         assert item == expected_yield
 
 
-def test_io_check(check_manager):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_io_check():
     item_1st = 'VMFS_01'
     params = {'flex_levels': 'irrelevant'}
-    check = check_manager.get_check("hp_msa_volume.io")
+    check = Check("hp_msa_volume.io")
     parsed = {
         u'VMFS_01': {
             u'durable-id': u'V3',

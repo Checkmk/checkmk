@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from testlib import Check  # type: ignore[import]
 from test_ibm_mq_include import parse_info
 
 pytestmark = pytest.mark.checks
@@ -12,14 +13,15 @@ pytestmark = pytest.mark.checks
 CHECK_NAME = "ibm_mq_plugin"
 
 
-def test_parse(check_manager):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_parse():
     lines = """\
 version: 2.0.4
 dspmq: OK
 runmqsc: Not executable
 """
     section = parse_info(lines, chr(58))
-    check = check_manager.get_check(CHECK_NAME)
+    check = Check(CHECK_NAME)
     actual = check.run_parse(section)
     expected = {
         'version': '2.0.4',
@@ -86,7 +88,8 @@ runmqsc: Not executable
         id="version_mismatch",
     ),
 ])
-def test_check(check_manager, params, parsed, expected):
-    check = check_manager.get_check(CHECK_NAME)
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_check(params, parsed, expected):
+    check = Check(CHECK_NAME)
     actual = list(check.run_check(None, params, parsed))
     assert actual == expected

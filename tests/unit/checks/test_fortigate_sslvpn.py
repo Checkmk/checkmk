@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 
+from testlib import Check  # type: ignore[import]
+import pytest
 
-def test_fortigate_sslvpn_old_params(check_manager):
-    check = check_manager.get_check("fortigate_sslvpn")
+
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_fortigate_sslvpn_old_params():
+    check = Check("fortigate_sslvpn")
     parsed = {
         "domain": {
             "state": "1",

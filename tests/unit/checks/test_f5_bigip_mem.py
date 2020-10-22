@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from testlib import Check  # type: ignore[import]
 
 pytestmark = pytest.mark.checks
 
@@ -16,9 +17,10 @@ pytestmark = pytest.mark.checks
     ([[0, 0, "", ""]], (0.0, 0.0, [("total", {})])),
     ([[1, 0, "", ""]], (1.0, 0.0, [("total", {})])),
 ])
-def test_f5_bigip_mem_discovery(check_manager, info, result):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_f5_bigip_mem_discovery(info, result):
     mem_total, mem_used, items = result
-    check = check_manager.get_check("f5_bigip_mem")
+    check = Check("f5_bigip_mem")
     parsed = check.run_parse(info)
 
     assert check.run_discovery(parsed) == items
@@ -34,9 +36,10 @@ def test_f5_bigip_mem_discovery(check_manager, info, result):
     ([["", "", 0, 0]], []),
     ([["", "", 1, 0]], [("TMM", {})]),
 ])
-def test_f5_bigip_mem_tmm_discovery(check_manager, info, result):
-    parsed = check_manager.get_check("f5_bigip_mem").run_parse(info)
-    check = check_manager.get_check("f5_bigip_mem.tmm")
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_f5_bigip_mem_tmm_discovery(info, result):
+    parsed = Check("f5_bigip_mem").run_parse(info)
+    check = Check("f5_bigip_mem.tmm")
 
     assert list(check.run_discovery(parsed)) == result
 

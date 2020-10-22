@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from testlib import Check  # type: ignore[import]
 
 pytestmark = pytest.mark.checks
 
@@ -35,8 +36,9 @@ pytestmark = pytest.mark.checks
         'horizon': 90
     }),
 ])
-def test_get_conn_rate_params(check_manager, config, result):
-    check = check_manager.get_check("f5_bigip_conns")
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_get_conn_rate_params(config, result):
+    check = Check("f5_bigip_conns")
     assert check.context["get_conn_rate_params"](config) == result
 
 
@@ -52,7 +54,8 @@ def test_get_conn_rate_params(check_manager, config, result):
     "connections per second is setup in predictive levels. Please use the given "
     "lower bound specified in the maximum connections, or set maximum "
     "connections to use fixed levels."))])
-def test_get_conn_rate_params_exception(check_manager, config, exception_msg):
-    check = check_manager.get_check("f5_bigip_conns")
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_get_conn_rate_params_exception(config, exception_msg):
+    check = Check("f5_bigip_conns")
     with pytest.raises(ValueError, match=exception_msg):
         check.context["get_conn_rate_params"](config)

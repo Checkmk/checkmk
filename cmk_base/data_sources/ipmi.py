@@ -27,6 +27,7 @@
 import pyghmi.ipmi.command as ipmi_cmd
 import pyghmi.ipmi.sdr as ipmi_sdr
 import pyghmi.constants as ipmi_const
+import pyghmi.ipmi.private.session as ipmi_session
 from pyghmi.exceptions import IpmiException
 
 import cmk.utils.debug
@@ -110,15 +111,36 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         finally:
             if connection:
                 connection.ipmi_session.logout()
-                # This should not be our task, but seems pyghmi is not cleaning up good
-                # enough. There are some class level caches in
-                # pyghmi.ipmi.private.session.Session that are kept after logout which
-                # should not be kept.
-                # These session objects and sockets lead to problems in our keepalive
-                # helper processes because they make the process reuse invalid sessions.
-                # Instead of reusing, we want to initialize a new session every cycle.
-                connection.ipmi_session.__class__.socketpool.clear()
-                connection.ipmi_session.__class__.initting_sessions.clear()
+                # This should not be our task, but seems pyghmi is not cleaning
+                # up good enough.  There are some module and class level caches
+                # in pyghmi.ipmi.private.session that are kept after logout
+                # which should not be kept.
+                # These session objects and sockets lead to problems in our
+                # keepalive helper processes because they make the process
+                # reuse invalid sessions.  Instead of reusing, we want to
+                # initialize a new session every cycle.
+                # We also don't want to reuse sockets or other things from
+                # previous calls.
+
+                ipmi_session.iothread.join()
+                ipmi_session.iothread = None
+                ipmi_session.iothreadready = False
+                del ipmi_session.iothreadwaiters[:]
+
+                for socket in ipmi_session.iosockets:
+                    socket.close()
+                del ipmi_session.iosockets[:]
+
+                ipmi_session.Session.socketpool.clear()
+                ipmi_session.Session.initting_sessions.clear()
+                ipmi_session.Session.bmc_handlers.clear()
+                ipmi_session.Session.waiting_sessions.clear()
+                ipmi_session.Session.initting_sessions.clear()
+                ipmi_session.Session.keepalive_sessions.clear()
+                ipmi_session.Session.peeraddr_to_nodes.clear()
+                del ipmi_session.Session.iterwaiters[:]
+
+                self._command = None
 
     def _create_ipmi_connection(self):
         # Do not use the (custom) ipaddress for the host. Use the management board

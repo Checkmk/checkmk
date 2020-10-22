@@ -10,6 +10,7 @@ from typing import Any, Dict, Final, List, Optional
 import pyghmi.constants as ipmi_const  # type: ignore[import]
 import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import]
 import pyghmi.ipmi.sdr as ipmi_sdr  # type: ignore[import]
+import pyghmi.ipmi.private.session as ipmi_session  # type: ignore[import]
 from six import ensure_binary
 
 from cmk.utils.log import VERBOSE
@@ -68,6 +69,7 @@ class IPMIFetcher(AgentFetcher):
             self.address,
             self.username,
         )
+
         self._command = ipmi_cmd.Command(
             bmc=self.address,
             userid=self.username,
@@ -80,16 +82,34 @@ class IPMIFetcher(AgentFetcher):
             return
 
         self._logger.debug("Closing connection to %s:623", self._command.bmc)
-        self._command.ipmi_session.logout()
-        # This should not be our task, but seems pyghmi is not cleaning up good
-        # enough. There are some class level caches in
-        # pyghmi.ipmi.private.session.Session that are kept after logout which
-        # should not be kept.
-        # These session objects and sockets lead to problems in our keepalive
-        # helper processes because they make the process reuse invalid sessions.
-        # Instead of reusing, we want to initialize a new session every cycle.
-        self._command.ipmi_session.__class__.socketpool.clear()
-        self._command.ipmi_session.__class__.initting_sessions.clear()
+
+        # This should not be our task, but seems pyghmi is not cleaning up good enough.
+        # There are some module and class level caches in pyghmi.ipmi.private.session that
+        # are kept after logout which should not be kept.
+        # These session objects and sockets lead to problems in our keepalive helper processes
+        # because they make the process reuse invalid sessions.  Instead of reusing, we want to
+        # initialize a new session every cycle.
+        # We also don't want to reuse sockets or other things from previous calls.
+
+        ipmi_session.iothread.join()
+        ipmi_session.iothread = None
+        ipmi_session.iothreadready = False
+        ipmi_session.iothreadwaiters.clear()
+
+        for socket in ipmi_session.iosockets:
+            socket.close()
+        ipmi_session.iosockets.clear()
+
+        ipmi_session.Session.socketpool.clear()
+        ipmi_session.Session.initting_sessions.clear()
+        ipmi_session.Session.bmc_handlers.clear()
+        ipmi_session.Session.waiting_sessions.clear()
+        ipmi_session.Session.initting_sessions.clear()
+        ipmi_session.Session.keepalive_sessions.clear()
+        ipmi_session.Session.peeraddr_to_nodes.clear()
+        ipmi_session.Session.iterwaiters.clear()
+
+        self._command = None
 
     def _sensors_section(self) -> AgentRawData:
         if self._command is None:

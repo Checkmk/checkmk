@@ -607,3 +607,39 @@ export class FigureLegend {
             d3.event.subject.migrate_to(target_renderer);
     }
 }
+
+// Figure which inherited from FigureBase. Needs access to svg and size
+export function state_component(figurebase, state) {
+    //hard fix for the moment
+    var border_width = 2;
+    let font_size = 16;
+
+    let state_component = figurebase.svg
+        .selectAll(".state_component")
+        .data([state])
+        .join("g")
+        .attr("class", d => d.style)
+        .classed("state_component", true);
+    let the_rect = state_component
+        .selectAll("rect")
+        .data(d => [d])
+        .join("rect");
+    the_rect
+        .attr("x", border_width / 2)
+        .attr("y", border_width / 2)
+        .attr("width", figurebase.figure_size.width - 2 * border_width)
+        .attr("height", figurebase.figure_size.height - 2 * border_width)
+        .style("fill", "none")
+        .style("stroke-width", border_width);
+
+    let the_text = state_component
+        .selectAll("text")
+        .data(d => [d])
+        .join("text");
+    the_text
+        .attr("x", figurebase.figure_size.width / 2)
+        .attr("y", figurebase.figure_size.height - font_size)
+        .attr("text-anchor", "middle")
+        .style("font-size", font_size + "px")
+        .text(d => d.msg);
+}

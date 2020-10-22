@@ -7,40 +7,7 @@ import * as crossfilter from "crossfilter2";
 //var dc = dc; /*eslint-disable-line no-undef*/
 //var d3 = d3; /*eslint-disable-line no-undef*/
 //var crossfilter = crossfilter; /*eslint-disable-line no-undef*/
-function state_component(figure, state) {
-    //hard fix for the moment
-    var border_width = 2;
-    let font_size = 20;
 
-    let state_component = figure.svg
-        .selectAll(".state_component")
-        .data([state])
-        .join("g")
-        .attr("class", d => d.style)
-        .classed("state_component", true);
-    let the_rect = state_component
-        .selectAll("rect")
-        .data(d => [d])
-        .join("rect");
-    the_rect
-        .attr("x", border_width / 2)
-        .attr("y", border_width / 2)
-        .attr("width", figure.figure_size.width - 2 * border_width)
-        .attr("height", figure.figure_size.height - 2 * border_width)
-        .style("fill", "none")
-        .style("stroke-width", border_width);
-
-    let the_text = state_component
-        .selectAll("text")
-        .data(d => [d])
-        .join("text");
-    the_text
-        .attr("x", figure.figure_size.width / 2)
-        .attr("y", figure.figure_size.height - font_size)
-        .attr("text-anchor", "middle")
-        .style("font-size", font_size + "px")
-        .text(d => d.msg);
-}
 // The TimeseriesFigure provides a renderer mechanic. It does not actually render the bars/dot/lines/areas.
 // Instead, it manages a list of subplots. Each subplot receives a drawing area and render its data when when
 // being told by the TimeseriesFigure
@@ -1174,7 +1141,7 @@ class SingleValuePlot extends SubPlot {
             .style("font-size", font_size + "px")
             .attr("x", plot_size.width / 2)
             .attr("y", plot_size.height / 2 + font_size / 3);
-        state_component(this._renderer, this.definition.svc_state);
+        cmk_figures.state_component(this._renderer, this.definition.svc_state);
     }
 
     get_color() {

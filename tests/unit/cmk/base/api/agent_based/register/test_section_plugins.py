@@ -145,6 +145,24 @@ def test_create_snmp_section_plugin():
     assert plugin.supersedes == {SectionName("bar"), SectionName("foo")}
 
 
+def test_create_snmp_section_plugin_single_tree():
+
+    single_tree = SNMPTree(base='.1.2.3', oids=[OIDEnd(), '2.3'])
+
+    plugin = section_plugins.create_snmp_section_plugin(
+        name="norris",
+        parse_function=lambda string_table: string_table,
+        # just one, no list:
+        fetch=single_tree,
+        detect_spec=SNMPDetectSpec([[('.1.2.3.4.5', 'Foo.*', True)]]),
+    )
+
+    assert plugin.trees == [single_tree]
+    # the plugin only specified a single tree (not a list),
+    # so a wrapper should unpack the argument:
+    assert plugin.parse_function([[['A', 'B']]]) == [['A', 'B']]
+
+
 def test_validate_supersedings_raise_implicit():
     all_supersedes_invalid = {
         SectionName("foo"): {SectionName("bar")},

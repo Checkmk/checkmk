@@ -30,6 +30,21 @@ from cmk.base.api.agent_based.register.utils import validate_function_arguments
 from cmk.base.discovered_labels import HostLabel  # pylint: disable=cmk-module-layer-violation
 
 
+def _create_parse_annotation(
+    *,
+    needs_bytes: bool = False,
+    is_list: bool = False,
+) -> Tuple[Type, str]:
+    # this is dumb, but other approaches are not understood by mypy
+    if is_list:
+        if needs_bytes:
+            return List[StringByteTable], "List[StringByteTable]"
+        return List[StringTable], "List[StringTable]"
+    if needs_bytes:
+        return StringByteTable, "StringByteTable"
+    return StringTable, "StringTable"
+
+
 def _validate_parse_function(parse_function: Union[AgentParseFunction, SNMPParseFunction], *,
                              expected_annotation: Tuple[Type, str]) -> None:
     """Validate the parse functions signature and type"""
@@ -62,15 +77,16 @@ def _create_agent_parse_function(
 
 
 def _create_snmp_parse_function(
-        parse_function: Optional[SNMPParseFunction],
-        # NOTE: `trees` is not needed at the moment, and this function is identical
-        # to _create_agent_parse_function. If this hasn't changed before 2.0 is released,
-        # we can simplify this.
-        trees: List[SNMPTree],  # not needed
+    parse_function: Optional[SNMPParseFunction],
+    needs_unpacking: bool,
 ) -> SNMPParseFunction:
     if parse_function is None:
+        if needs_unpacking:
+            return lambda string_table: string_table[0]
         return lambda string_table: string_table
 
+    if needs_unpacking:
+        return lambda string_table: parse_function(string_table[0])
     return parse_function
 
 
@@ -112,7 +128,8 @@ def _validate_detect_spec(detect_spec: SNMPDetectSpec) -> None:
 
 
 def _validate_snmp_trees(trees: List[SNMPTree]) -> None:
-    type_error = TypeError("value of 'trees' keyword must be a non-empty list of SNMPTrees")
+    type_error = TypeError(
+        "value of 'fetch' keyword must be SNMPTree or non-empty list of SNMPTrees")
     if not isinstance(trees, list):
         raise type_error
     if not trees:
@@ -182,7 +199,7 @@ def create_agent_section_plugin(
         if parse_function is not None:
             _validate_parse_function(
                 parse_function,
-                expected_annotation=(StringTable, "StringTable"),
+                expected_annotation=_create_parse_annotation(),
             )
 
         if host_label_function is not None:
@@ -212,7 +229,7 @@ def create_snmp_section_plugin(
     *,
     name: str,
     detect_spec: SNMPDetectSpec,
-    fetch: List[SNMPTree],
+    fetch: Union[SNMPTree, List[SNMPTree]],
     parsed_section_name: Optional[str] = None,
     parse_function: Optional[SNMPParseFunction] = None,
     host_label_function: Optional[HostLabelFunction] = None,
@@ -227,17 +244,21 @@ def create_snmp_section_plugin(
     """
     section_name = SectionName(name)
 
+    # normalize to List[SNMPTree]
+    tree_list = [fetch] if isinstance(fetch, SNMPTree) else fetch
+
     if validate_creation_kwargs:
         _validate_detect_spec(detect_spec)
-        _validate_snmp_trees(fetch)
+        _validate_snmp_trees(tree_list)
 
         if parse_function is not None:
-            needs_bytes = any(isinstance(oid, OIDBytes) for tree in fetch for oid in tree.oids)
+            needs_bytes = any(isinstance(oid, OIDBytes) for tree in tree_list for oid in tree.oids)
             _validate_parse_function(
                 parse_function,
-                expected_annotation=(  #
-                    (List[StringByteTable], "List[StringByteTable]") if needs_bytes else
-                    (List[StringTable], "List[StringTable]")),
+                expected_annotation=_create_parse_annotation(
+                    needs_bytes=needs_bytes,
+                    is_list=isinstance(fetch, list),
+                ),
             )
 
         if host_label_function is not None:
@@ -252,11 +273,11 @@ def create_snmp_section_plugin(
     return SNMPSectionPlugin(
         section_name,
         ParsedSectionName(parsed_section_name if parsed_section_name else str(section_name)),
-        _create_snmp_parse_function(parse_function, fetch),
+        _create_snmp_parse_function(parse_function, isinstance(fetch, SNMPTree)),
         _create_host_label_function(host_label_function),
         _create_supersedes(section_name, supersedes),
         detect_spec,
-        fetch,
+        tree_list,
         module,
     )
 

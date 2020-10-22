@@ -42,7 +42,7 @@ from cmk.gui.watolib.utils import (
     format_config_value,
     ALL_HOSTS,
     ALL_SERVICES,
-    has_agent_bakery,
+    try_bake_agents_for_hosts,
 )
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.automations import check_mk_automation
@@ -58,7 +58,6 @@ from cmk.gui.watolib.search import (
     MatchItems,
     match_item_generator_registry,
 )
-from cmk.gui.background_job import BackgroundJobAlreadyRunning
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.utils import urls
 
@@ -369,7 +368,7 @@ class BaseFolder:
     def locked(self):
         raise NotImplementedError()
 
-    def create_hosts(self, entries):
+    def create_hosts(self, entries, bake_hosts=True):
         raise NotImplementedError()
 
     def site_id(self):
@@ -1790,7 +1789,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         cgconf = convert_cgroups_from_tuple(v)
         return cgconf
 
-    def create_hosts(self, entries):
+    def create_hosts(self, entries, bake_hosts=True):
         # 1. Check preconditions
         config.user.need_permission("wato.manage_hosts")
         self.need_unlocked_hosts()
@@ -1816,13 +1815,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         self.save_hosts()
 
         # 3. Prepare agents for the new hosts
-        if has_agent_bakery():
-            import cmk.gui.cee.plugins.wato.agent_bakery.misc as agent_bakery  # pylint: disable=import-error,no-name-in-module
-            try:
-                agent_bakery.start_bake_agents(host_names=[e[0] for e in entries],
-                                               signing_credentials=None)
-            except BackgroundJobAlreadyRunning:
-                pass
+        if bake_hosts:
+            try_bake_agents_for_hosts([e[0] for e in entries])
 
         folder_path = self.path()
         Folder.add_hosts_to_lookup_cache([(x[0], folder_path) for x in entries])
@@ -2723,13 +2717,13 @@ class CMEFolder(CREFolder):
         # The site attribute is not explicitely set. The new inheritance might brake something..
         super(CMEFolder, self).move_subfolder_to(subfolder, target_folder)
 
-    def create_hosts(self, entries):
+    def create_hosts(self, entries, bake_hosts=True):
         customer_id = self._get_customer_id()
         if customer_id != managed.default_customer_id():
             for hostname, attributes, _cluster_nodes in entries:
                 self.check_modify_host(hostname, attributes)
 
-        super(CMEFolder, self).create_hosts(entries)
+        super(CMEFolder, self).create_hosts(entries, bake_hosts=bake_hosts)
 
     def check_modify_host(self, hostname, attributes):
         if "site" not in attributes:

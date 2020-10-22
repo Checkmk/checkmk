@@ -9,16 +9,18 @@ import re
 import pprint
 import base64
 import pickle
-from typing import Any, Union
+from typing import Any, Union, List
 
 from six import ensure_binary, ensure_str
 
 from livestatus import SiteId
+from cmk.utils.type_defs import HostName
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.rulesets.tuple_rulesets
 
 import cmk.gui.config as config
+from cmk.gui.background_job import BackgroundJobAlreadyRunning
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
@@ -122,6 +124,15 @@ def mk_eval(s: Union[bytes, str]) -> Any:
 
 def has_agent_bakery():
     return not cmk_version.is_raw_edition()
+
+
+def try_bake_agents_for_hosts(hosts: List[HostName]) -> None:
+    if has_agent_bakery():
+        import cmk.gui.cee.plugins.wato.agent_bakery.misc as agent_bakery  # pylint: disable=import-error,no-name-in-module
+        try:
+            agent_bakery.start_bake_agents(host_names=hosts, signing_credentials=None)
+        except BackgroundJobAlreadyRunning:
+            pass
 
 
 def site_neutral_path(path):

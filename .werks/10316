@@ -1,0 +1,12 @@
+Title: Add support for Ubuntu 20.10
+Class: feature
+Compatible: compat
+Component: distros
+Date: 1603970049
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i2
+
+Added support for Ubuntu 20.10
+

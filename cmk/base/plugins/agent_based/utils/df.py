@@ -9,11 +9,15 @@ from typing import (
     List,
     Tuple,
     Dict,
+    Generator,
+    Mapping,
+    MutableMapping,
     Optional,
+    Union,
 )
 import fnmatch
 from cmk.utils.render import fmt_number_with_precision  # pylint: disable=cmk-module-layer-violation
-from .size_trend import size_trend
+from ..agent_based_api.v1.type_defs import CheckResult
 from ..agent_based_api.v1 import (
     render,
     Metric,
@@ -21,10 +25,7 @@ from ..agent_based_api.v1 import (
     State as state,
     check_levels,
 )
-from ..agent_based_api.v1.type_defs import (
-    Parameters,
-    ValueStore,
-)
+from .size_trend import size_trend
 
 FILESYSTEM_DEFAULT_LEVELS = {
     "levels": (80.0, 90.0),  # warn/crit in percent
@@ -46,7 +47,7 @@ def savefloat(raw: Any) -> float:
         return 0.
 
 
-def get_filesystem_levels(size_gb: float, params):
+def get_filesystem_levels(size_gb: float, params: Mapping[str, Any]) -> Dict[str, Any]:
     """
     >>> from pprint import pprint as pp
     >>> pp(get_filesystem_levels(1234, FILESYSTEM_DEFAULT_LEVELS))
@@ -204,8 +205,11 @@ def mountpoints_in_group(mplist: Dict[str, Dict], patterns_include: List, patter
     return matching_mountpoints
 
 
-def _check_inodes(levels: Dict[str, Any], inodes_total: Optional[float],
-                  inodes_avail: Optional[float]):
+def _check_inodes(
+    levels: Dict[str, Any],
+    inodes_total: Optional[float],
+    inodes_avail: Optional[float],
+) -> Generator[Union[Metric, Result], None, None]:
     """
     >>> from pprint import pprint as pp
     >>> levels={"inodes_levels":(10, 5),"show_inodes":"onproblem"}
@@ -285,16 +289,16 @@ inodes available: 20.00 /25.0%'),
 
 
 def df_check_filesystem_single(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     mountpoint: str,
     size_mb: float,
     avail_mb: float,
     reserved_mb: float,
     inodes_total: Optional[float],
     inodes_avail: Optional[float],
-    params: Parameters,
+    params: Mapping[str, Any],
     this_time=None,
-):
+) -> CheckResult:
     if size_mb == 0:
         yield Result(state=state.WARN, summary="Size of filesystem is 0 MB")
         return
@@ -372,13 +376,13 @@ def df_check_filesystem_single(
 
 
 def df_check_filesystem_list(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     fslist_blocks: List[Tuple[str, float, float, float]],
     fslist_inodes=None,
     this_time=None,
-):
+) -> CheckResult:
     """Wrapper for `df_check_filesystem_single` supporting groups"""
     def group_sum(metric_name, info, mountpoints_group):
         """Calculate sum of named values for matching mount points"""

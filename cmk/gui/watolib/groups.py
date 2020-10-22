@@ -18,10 +18,11 @@ import cmk.gui.userdb as userdb
 import cmk.gui.plugins.userdb.utils as userdb_utils
 from cmk.gui.groups import load_group_information, load_contact_group_information
 import cmk.gui.hooks as hooks
-from cmk.gui.globals import html, g
+from cmk.gui.globals import html, g, request
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.urls import makeuri_contextless_ruleset_group
 
 from cmk.gui.watolib.utils import convert_cgroups_from_tuple
 from cmk.gui.watolib.changes import add_change
@@ -404,7 +405,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
         return True
 
     def help(self):
-        url = "wato.py?mode=rulesets&group=grouping"
+        url = makeuri_contextless_ruleset_group(request, 'grouping')
         return _("Only members of the contact groups listed here have WATO permission "
                  "to the host / folder. If you want, you can make those contact groups "
                  "automatically also <b>monitoring contacts</b>. This is completely "

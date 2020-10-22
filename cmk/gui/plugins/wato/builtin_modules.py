@@ -12,6 +12,8 @@ import time
 import cmk.utils.version as cmk_version
 
 from cmk.gui.i18n import _
+from cmk.gui.globals import request
+from cmk.gui.utils.urls import makeuri_contextless_ruleset_group
 
 from cmk.gui.plugins.wato import (
     main_module_registry,
@@ -242,7 +244,7 @@ class MainModulePredefinedConditions(ABCMainModule):
 class MainModuleHostAndServiceParameters(ABCMainModule):
     @property
     def mode_or_url(self):
-        return "wato.py?mode=rulesets&group=host_monconf"
+        return makeuri_contextless_ruleset_group(request, 'host_monconf')
 
     @property
     def topic(self):
@@ -277,7 +279,7 @@ class MainModuleHostAndServiceParameters(ABCMainModule):
 class MainModuleHWSWInventory(ABCMainModule):
     @property
     def mode_or_url(self):
-        return "wato.py?mode=rulesets&group=inventory"
+        return makeuri_contextless_ruleset_group(request, 'inventory')
 
     @property
     def topic(self):
@@ -312,7 +314,7 @@ class MainModuleHWSWInventory(ABCMainModule):
 class MainModuleNetworkingServices(ABCMainModule):
     @property
     def mode_or_url(self):
-        return "wato.py?mode=rulesets&group=activechecks"
+        return makeuri_contextless_ruleset_group(request, 'activechecks')
 
     @property
     def topic(self):
@@ -348,7 +350,7 @@ class MainModuleNetworkingServices(ABCMainModule):
 class MainModuleOtherServices(ABCMainModule):
     @property
     def mode_or_url(self):
-        return "wato.py?mode=rulesets&group=custom_checks"
+        return makeuri_contextless_ruleset_group(request, 'custom_checks')
 
     @property
     def topic(self):
@@ -1053,7 +1055,7 @@ class MainModuleDiagnostics(ABCMainModule):
 class MainModuleMonitoringRules(ABCMainModule):
     @property
     def mode_or_url(self):
-        return "wato.py?mode=rulesets&group=monconf"
+        return makeuri_contextless_ruleset_group(request, 'monconf')
 
     @property
     def topic(self):
@@ -1088,7 +1090,7 @@ class MainModuleMonitoringRules(ABCMainModule):
 class MainModuleDiscoveryRules(ABCMainModule):
     @property
     def mode_or_url(self):
-        return "wato.py?mode=rulesets&group=checkparams"
+        return makeuri_contextless_ruleset_group(request, 'checkparams')
 
     @property
     def topic(self):
@@ -1123,7 +1125,7 @@ class MainModuleDiscoveryRules(ABCMainModule):
 class MainModuleEnforcedServices(ABCMainModule):
     @property
     def mode_or_url(self):
-        return "wato.py?mode=rulesets&group=static"
+        return makeuri_contextless_ruleset_group(request, 'static')
 
     @property
     def topic(self):
@@ -1268,7 +1270,7 @@ class MainModuleOtherAgents(ABCMainModule):
 class MainModuleAgentAccessRules(ABCMainModule):
     @property
     def mode_or_url(self):
-        return "wato.py?mode=rulesets&group=agent"
+        return makeuri_contextless_ruleset_group(request, 'agent')
 
     @property
     def topic(self):
@@ -1303,7 +1305,7 @@ class MainModuleAgentAccessRules(ABCMainModule):
 class MainModuleSNMPRules(ABCMainModule):
     @property
     def mode_or_url(self):
-        return "wato.py?mode=rulesets&group=snmp"
+        return makeuri_contextless_ruleset_group(request, 'snmp')
 
     @property
     def topic(self):
@@ -1338,7 +1340,7 @@ class MainModuleSNMPRules(ABCMainModule):
 class MainModuleVMCloudContainer(ABCMainModule):
     @property
     def mode_or_url(self):
-        return "wato.py?mode=rulesets&group=vm_cloud_container"
+        return makeuri_contextless_ruleset_group(request, 'vm_cloud_container')
 
     @property
     def topic(self):
@@ -1373,7 +1375,7 @@ class MainModuleVMCloudContainer(ABCMainModule):
 class MainModuleOtherIntegrations(ABCMainModule):
     @property
     def mode_or_url(self):
-        return "wato.py?mode=rulesets&group=datasource_programs"
+        return makeuri_contextless_ruleset_group(request, 'datasource_programs')
 
     @property
     def topic(self):

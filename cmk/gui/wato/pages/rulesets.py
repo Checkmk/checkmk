@@ -82,7 +82,7 @@ from cmk.gui.plugins.wato import (
 
 from cmk.gui.plugins.wato.utils import LabelCondition
 
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, makeuri_contextless_ruleset_group
 
 if watolib.has_agent_bakery():
     import cmk.gui.cee.plugins.wato.agent_bakery.misc as agent_bakery  # pylint: disable=import-error,no-name-in-module
@@ -401,7 +401,7 @@ class ModeRulesetGroup(ABCRulesetMode):
     def _topic_breadcrumb_item(self) -> Optional[BreadcrumbItem]:
         """Return the BreadcrumbItem for the topic of this mode"""
 
-        url = "wato.py?mode=rulesets&group=%s" % self._group_name
+        url = makeuri_contextless_ruleset_group(request, str(self._group_name))
         main_module = main_module_registry.get(url)
         if main_module is None:
             # Anomaly: We should not reach this, but currently we do for some pages. Best we can do

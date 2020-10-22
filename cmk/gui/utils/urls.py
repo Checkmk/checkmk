@@ -92,3 +92,14 @@ def makeactionuri_contextless(
         addvars + [("_transid", transaction_manager.get())],
         filename=filename,
     )
+
+
+def makeuri_contextless_ruleset_group(
+    request: Request,
+    group_name: str,
+):
+    return makeuri_contextless(
+        request,
+        [('group', group_name), ('mode', 'rulesets')],
+        filename='wato.py',
+    )

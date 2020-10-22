@@ -26,10 +26,10 @@ def expected_items() -> Dict[str, List[str]]:
 
     agents_items += [
         'download_agents',
-        'wato.py?mode=rulesets&group=vm_cloud_container',
-        'wato.py?mode=rulesets&group=datasource_programs',
-        'wato.py?mode=rulesets&group=agent',
-        'wato.py?mode=rulesets&group=snmp',
+        'wato.py?group=vm_cloud_container&mode=rulesets',
+        'wato.py?group=datasource_programs&mode=rulesets',
+        'wato.py?group=agent&mode=rulesets',
+        'wato.py?group=snmp&mode=rulesets',
     ]
 
     events_items = [
@@ -55,7 +55,7 @@ def expected_items() -> Dict[str, List[str]]:
 
     hosts_items = [
         'folder',
-        'wato.py?mode=rulesets&group=host_monconf',
+        'wato.py?group=host_monconf&mode=rulesets',
         'tags',
     ]
 
@@ -65,7 +65,7 @@ def expected_items() -> Dict[str, List[str]]:
     hosts_items += [
         'host_groups',
         'host_attrs',
-        'wato.py?mode=rulesets&group=inventory',
+        'wato.py?group=inventory&mode=rulesets',
     ]
 
     users_items = [
@@ -96,11 +96,11 @@ def expected_items() -> Dict[str, List[str]]:
         'hosts': hosts_items,
         'maintenance': maintenance_items,
         'services': [
-            'wato.py?mode=rulesets&group=monconf',
-            'wato.py?mode=rulesets&group=checkparams',
-            'wato.py?mode=rulesets&group=static',
-            'wato.py?mode=rulesets&group=activechecks',
-            'wato.py?mode=rulesets&group=custom_checks',
+            'wato.py?group=monconf&mode=rulesets',
+            'wato.py?group=checkparams&mode=rulesets',
+            'wato.py?group=static&mode=rulesets',
+            'wato.py?group=activechecks&mode=rulesets',
+            'wato.py?group=custom_checks&mode=rulesets',
             'service_groups',
             'check_plugins',
         ],

@@ -281,10 +281,17 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         if performed_action == DiscoveryAction.UPDATE_HOST_LABELS:
             return _("The discovered host labels have been updated.")
 
+        cmk_check_entries = [
+            e for e in discovery_result.check_table if DiscoveryState.is_discovered(e[0])
+        ]
+
         if discovery_result.job_status["state"] == JobStatusStates.INITIALIZED:
             if self._is_active(discovery_result):
                 return _("Initializing discovery...")
-            return _("No discovery information available. Please perform a full scan.")
+            if not cmk_check_entries:
+                return _("No discovery information available. Please perform a full scan.")
+            return _("No fresh discovery information available. Using latest cached information. "
+                     "Please perform a full scan in case you want to discover the current state.")
 
         job_title = discovery_result.job_status.get("title", _("Service discovery"))
         duration_txt = cmk.utils.render.Age(discovery_result.job_status["duration"])
@@ -308,9 +315,6 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             messages.append(
                 _("%s finished after %s at %s.") % (job_title, duration_txt, finished_txt))
 
-        cmk_check_entries = [
-            e for e in discovery_result.check_table if DiscoveryState.is_discovered(e[0])
-        ]
         if cmk_check_entries:
             no_data = all(e[7] == 3 and e[8] == "Received no data" for e in cmk_check_entries)
             if no_data:

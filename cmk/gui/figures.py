@@ -10,6 +10,7 @@ import abc
 import json
 from typing import cast, Type, Dict, Any
 
+from cmk.gui.valuespec import ValueSpec
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.plugins.dashboard.utils import Dashlet, dashlet_vs_general_settings, dashlet_registry
 from cmk.gui.i18n import _
@@ -57,6 +58,21 @@ class ABCDataGenerator(metaclass=abc.ABCMeta):
         context = json.loads(html.request.get_str_input_mandatory("context", "{}"))
         response_data = cls.generate_response_data(properties, context, settings)
         return create_figures_response(response_data)
+
+
+def dashlet_http_variables(dashlet: Dashlet) -> HTTPVariables:
+    vs_general_settings = dashlet_vs_general_settings(dashlet, dashlet.single_infos())
+    dashlet_settings = vs_general_settings.value_to_json(dashlet._dashlet_spec)
+    dashlet_params = dashlet.vs_parameters()
+    assert isinstance(dashlet_params, ValueSpec)  # help mypy
+    dashlet_properties = dashlet_params.value_to_json(dashlet._dashlet_spec)
+
+    args: HTTPVariables = []
+    args.append(("settings", json.dumps(dashlet_settings)))
+    args.append(("context", json.dumps(dashlet._dashlet_spec["context"])))
+    args.append(("properties", json.dumps(dashlet_properties)))
+
+    return args
 
 
 class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
@@ -126,14 +142,7 @@ class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
         div_id = "%s_dashlet_%d" % (self.type_name(), self._dashlet_id)
         html.div("", id_=div_id)
 
-        vs_general_settings = dashlet_vs_general_settings(self, self.single_infos())
-        dashlet_settings = vs_general_settings.value_to_json(self._dashlet_spec)
-        dashlet_properties = self.vs_parameters().value_to_json(self._dashlet_spec)
-
-        args: HTTPVariables = []
-        args.append(("settings", json.dumps(dashlet_settings)))
-        args.append(("context", json.dumps(self._dashlet_spec["context"])))
-        args.append(("properties", json.dumps(dashlet_properties)))
+        args = dashlet_http_variables(self)
         body = html.urlencode_vars(args)
 
         html.javascript(

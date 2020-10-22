@@ -16,7 +16,7 @@ from cmk.gui.visuals import get_filter_headers
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.plugins.dashboard import dashlet_registry
 from cmk.gui.plugins.dashboard.bar_chart_dashlet import BarBarChartDataGenerator
-from cmk.gui.figures import ABCFigureDashlet
+from cmk.gui.figures import ABCFigureDashlet, dashlet_http_variables
 from cmk.gui.exceptions import MKTimeout, MKGeneralException
 from cmk.gui.valuespec import Dictionary, DropdownChoice
 from cmk.gui.utils.urls import makeuri_contextless
@@ -130,10 +130,7 @@ class ABCEventBarChartDashlet(ABCFigureDashlet):
         raise NotImplementedError()
 
     def show(self):
-        args: HTTPVariables = []
-        args.append(("context", json.dumps(self._dashlet_spec["context"])))
-        args.append(
-            ("properties", json.dumps(self.vs_parameters().value_to_json(self._dashlet_spec))))
+        args = dashlet_http_variables(self)
         args.append(("log_type", self.data_generator().log_type()))
         body = html.urlencode_vars(args)
 

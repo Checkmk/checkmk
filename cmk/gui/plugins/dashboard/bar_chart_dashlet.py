@@ -4,14 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import List
 import time
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
-    CascadingDropdown,
     DropdownChoice,
-    TextUnicode,
     Timerange,
 )
 from cmk.gui.figures import ABCDataGenerator
@@ -25,7 +24,7 @@ class BarChartDataGenerator(ABCDataGenerator):
     def generate_response_data(cls, properties, context, settings):
         data_rows = cls._get_data(properties, context)
         bar_elements = cls._create_bar_elements(data_rows, properties, context)
-        return cls._create_bar_chart_config(bar_elements, properties, context)
+        return cls._create_bar_chart_config(bar_elements, properties, context, settings)
 
     @classmethod
     def _get_data(cls, properties, context):
@@ -45,39 +44,27 @@ class BarChartDataGenerator(ABCDataGenerator):
                  choices=[("h", _("Show per hour")), ("d", _("Show per day"))],
                  default_value="h",
              )),
-            ("bar_chart_title",
-             CascadingDropdown(
-                 title=_("Bar chart title"),
-                 orientation="horizontal",
-                 choices=[
-                     ("show", _("Show default title")),
-                     ("hide", _("Hide title")),
-                     ("custom", _("Set a custom title"), TextUnicode(default_value="")),
-                 ],
-                 default_value="show",
-             )),
         ]
 
     @classmethod
-    def bar_chart_title(cls, properties, context):
-        title_config = properties["bar_chart_title"]
-        if title_config == "show":
-            return cls.default_bar_chart_title(properties, context)
-        if title_config == "hide":
-            return ""
-        if isinstance(title_config, tuple) and title_config[0] == "custom" and isinstance(
-                title_config[1], str):
-            return title_config[1]
-        raise MKUserError("bar_chart_title",
-                          _("Invalid bar chart title config \"%r\" given" % (title_config,)))
+    def bar_chart_title(cls, properties, context, settings) -> str:
+        title: List[str] = []
+        if settings.get("show_title", True):
+            if "plain" in settings.get("title_format", ["plain"]):
+                title.append(
+                    settings.get("title") or cls.default_bar_chart_title(properties, context))
+        return " / ".join(txt for txt in title)
 
     @classmethod
     def default_bar_chart_title(cls, properties, context):
         raise NotImplementedError()
 
     @classmethod
-    def _create_bar_chart_config(cls, bar_elements, properties, context):
-        return {"title": cls.bar_chart_title(properties, context), "elements": bar_elements}
+    def _create_bar_chart_config(cls, bar_elements, properties, context, settings):
+        return {
+            "title": cls.bar_chart_title(properties, context, settings),
+            "elements": bar_elements
+        }
 
     @classmethod
     def _int_time_range_from_rangespec(cls, rangespec):

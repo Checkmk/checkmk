@@ -616,8 +616,8 @@ class DiscoveryPageRenderer:
         enable_page_menu_entry("bulk_%s_%s" % (source, target))
 
     def _show_check_row(self, table, discovery_result, request, check, show_bulk_actions):
-        table_source, check_type, checkgroup, item, _paramstring, params, \
-            descr, state, output, _perfdata, service_labels = check
+        (table_source, check_type, checkgroup, item, _discovered_params, check_params, descr, state,
+         output, _perfdata, service_labels) = check
 
         statename = short_service_state_name(state, "")
         if statename == "":
@@ -650,7 +650,7 @@ class DiscoveryPageRenderer:
 
         if self._options.show_parameters:
             table.cell(_("Check parameters"))
-            self._show_check_parameters(table_source, check_type, checkgroup, params)
+            self._show_check_parameters(table_source, check_type, checkgroup, check_params)
 
         if self._options.show_discovered_labels:
             table.cell(_("Discovered labels"))
@@ -755,8 +755,8 @@ class DiscoveryPageRenderer:
         if self._is_active(discovery_result):
             button_classes.append("disabled")
 
-        table_source, check_type, checkgroup, item, _paramstring, _params, \
-            descr, _state, _output, _perfdata, _service_labels = check
+        (table_source, check_type, checkgroup, item, _discovered_params, _check_params, descr,
+         _state, _output, _perfdata, _service_labels) = check
         checkbox_name = checkbox_id(check_type, item)
 
         num_buttons = 0

@@ -1796,8 +1796,7 @@ def get_check_preview(
                 str(service.check_plugin_name),
                 ruleset_name,
                 service.item,
-                # this `repr` is a result of various refactorings, I'm not sure it is needed.
-                repr(service.parameters),
+                service.parameters,
                 params,
                 service.description,
                 exitcode,

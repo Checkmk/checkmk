@@ -133,10 +133,12 @@ class Discovery:
         autochecks_to_save: SetAutochecksTable = {}
         remove_disabled_rule, add_disabled_rule, saved_services = set(), set(), set()
         apply_changes = False
-        for table_source, check_type, _checkgroup, item, _paramstring, params, \
-            descr, _state, _output, _perfdata, service_labels in discovery_result.check_table:
+        for (table_source, check_type, _checkgroup, item, discovered_params, _check_params, descr,
+             _state, _output, _perfdata, service_labels) in discovery_result.check_table:
 
             table_target = self._get_table_target(table_source, check_type, item)
+            key = check_type, item
+            value = descr, discovered_params, service_labels
 
             if table_source != table_target:
                 if table_target == DiscoveryState.UNDECIDED:
@@ -156,14 +158,14 @@ class Discovery:
 
             if table_source == DiscoveryState.UNDECIDED:
                 if table_target == DiscoveryState.MONITORED:
-                    autochecks_to_save[(check_type, item)] = (descr, params, service_labels)
+                    autochecks_to_save[key] = value
                     saved_services.add(descr)
                 elif table_target == DiscoveryState.IGNORED:
                     add_disabled_rule.add(descr)
 
             elif table_source == DiscoveryState.VANISHED:
                 if table_target != DiscoveryState.REMOVED:
-                    autochecks_to_save[(check_type, item)] = (descr, params, service_labels)
+                    autochecks_to_save[key] = value
                     saved_services.add(descr)
                 if table_target == DiscoveryState.IGNORED:
                     add_disabled_rule.add(descr)
@@ -173,7 +175,7 @@ class Discovery:
                         DiscoveryState.MONITORED,
                         DiscoveryState.IGNORED,
                 ]:
-                    autochecks_to_save[(check_type, item)] = (descr, params, service_labels)
+                    autochecks_to_save[key] = value
 
                 if table_target == DiscoveryState.IGNORED:
                     add_disabled_rule.add(descr)
@@ -191,7 +193,7 @@ class Discovery:
                         DiscoveryState.MONITORED,
                         DiscoveryState.IGNORED,
                 ]:
-                    autochecks_to_save[(check_type, item)] = (descr, params, service_labels)
+                    autochecks_to_save[key] = value
                     saved_services.add(descr)
                 if table_target == DiscoveryState.IGNORED:
                     add_disabled_rule.add(descr)
@@ -200,7 +202,7 @@ class Discovery:
                     DiscoveryState.CLUSTERED_NEW,
                     DiscoveryState.CLUSTERED_OLD,
             ]:
-                autochecks_to_save[(check_type, item)] = (descr, params, service_labels)
+                autochecks_to_save[key] = value
                 saved_services.add(descr)
 
             elif table_source in [
@@ -212,7 +214,7 @@ class Discovery:
                 # for adding, removing, etc. of this service on the cluster. Therefore we
                 # do not allow any operation for this clustered service on the related node.
                 # We just display the clustered service state (OLD, NEW, VANISHED).
-                autochecks_to_save[(check_type, item)] = (descr, params, service_labels)
+                autochecks_to_save[key] = value
                 saved_services.add(descr)
 
         if apply_changes:

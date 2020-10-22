@@ -267,7 +267,7 @@ def test_agent_aws_s3_requests_without_limits(get_s3_sections, names, tags, amou
     assert s3_requests.name == "s3_requests"
 
     assert s3_limits.cache_interval == 55800
-    assert s3_limits.period == 111600
+    assert s3_limits.period == 172800
 
     if amount_buckets:
         assert len(s3_requests_results) == 1

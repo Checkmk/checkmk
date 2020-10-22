@@ -1,0 +1,15 @@
+Title: agent_aws: set granularity of reported data correctly
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1603392891
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+The AWS REST API allows the configuration of different levels of granularity of
+the returned data points (e.g. data shown per day, hour, minute, etc.). The AWS
+agent configured the granularity based on its caching interval, leading to
+lower granularity than expected. The setting of the granularity has been
+amended to use fixed values.

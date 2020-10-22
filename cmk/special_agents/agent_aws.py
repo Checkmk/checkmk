@@ -402,14 +402,22 @@ class AWSSection(DataCache):
         The default resolution of AWS S3 metrics is 1 day (86400 sec)
         We use interval property for cached section.
         """
+        raise NotImplementedError
 
     @property
     def region(self):
         return self._region
 
     @property
+    def granularity(self) -> int:
+        """
+        The granularity of the returned data in seconds.
+        """
+        raise NotImplementedError
+
+    @property
     def period(self):
-        return self.validate_period(2 * self.cache_interval)
+        return self.validate_period(2 * self.granularity)
 
     def _floor_to_minutes_since_midnight(self) -> int:
         return self._floor_to_multiple_minutes(get_seconds_since_midnight(NOW))
@@ -554,6 +562,7 @@ class AWSSection(DataCache):
         - '<KEY>'
         Return raw_result['<KEY>'].
         """
+        raise NotImplementedError
 
     @abc.abstractmethod
     def _compute_content(self, raw_content: AWSRawContent,
@@ -740,18 +749,22 @@ class CostsAndUsage(AWSSectionGeneric):
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
+    @property
+    def granularity(self):
+        return 86400
+
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, *args):
-        granularity, interval = 'DAILY', 86400
+        granularity_name, granularity_interval = 'DAILY', self.granularity
         fmt = "%Y-%m-%d"
         response = self._client.get_cost_and_usage(
             TimePeriod={
-                'Start': datetime.strftime(NOW - timedelta(seconds=interval), fmt),
+                'Start': datetime.strftime(NOW - timedelta(seconds=granularity_interval), fmt),
                 'End': datetime.strftime(NOW, fmt),
             },
-            Granularity=granularity,
+            Granularity=granularity_name,
             Metrics=['UnblendedCost'],
             GroupBy=[{
                 'Type': 'DIMENSION',
@@ -788,6 +801,10 @@ class EC2Limits(AWSSectionLimits):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -1059,6 +1076,10 @@ class EC2Summary(AWSSectionGeneric):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('ec2_limits')
         if colleague and colleague.content:
@@ -1138,6 +1159,10 @@ class EC2Labels(AWSSectionLabels):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('ec2_summary')
         if colleague and colleague.content:
@@ -1187,6 +1212,10 @@ class EC2SecurityGroups(AWSSectionGeneric):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -1240,6 +1269,10 @@ class EC2(AWSSectionCloudwatch):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -1318,6 +1351,10 @@ class EBSLimits(AWSSectionLimits):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -1429,6 +1466,10 @@ class EBSSummary(AWSSectionGeneric):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('ebs_limits')
         volumes = []
@@ -1524,6 +1565,10 @@ class EBS(AWSSectionCloudwatch):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -1647,6 +1692,10 @@ class S3Limits(AWSSectionLimits):
 
         return cache_interval
 
+    @property
+    def granularity(self):
+        return 86400
+
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
 
@@ -1684,6 +1733,10 @@ class S3Summary(AWSSectionGeneric):
         cache_interval = self._floor_to_minutes_since_midnight()
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
+
+    @property
+    def granularity(self):
+        return 86400
 
     def _get_colleague_contents(self):
         colleague = self._received_results.get('s3_limits')
@@ -1765,6 +1818,10 @@ class S3(AWSSectionCloudwatch):
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
+    @property
+    def granularity(self):
+        return 86400
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('s3_summary')
         if colleague and colleague.content:
@@ -1824,6 +1881,10 @@ class S3Requests(AWSSectionCloudwatch):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -1914,6 +1975,10 @@ class GlacierLimits(AWSSectionLimits):
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
+    @property
+    def granularity(self):
+        return 86400
+
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
 
@@ -1955,6 +2020,10 @@ class GlacierSummary(AWSSectionGeneric):
         cache_interval = self._floor_to_minutes_since_midnight()
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
+
+    @property
+    def granularity(self):
+        return 86400
 
     def _get_colleague_contents(self):
         colleague = self._received_results.get('glacier_limits')
@@ -2041,6 +2110,10 @@ class Glacier(AWSSectionGeneric):
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
+    @property
+    def granularity(self):
+        return 86400
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('glacier_summary')
         if colleague and colleague.content:
@@ -2077,6 +2150,10 @@ class ELBLimits(AWSSectionLimits):
     def cache_interval(self):
         # If you change this, you might have to adjust factory_settings['levels_spillover'] in
         # checks/aws_elb
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2159,6 +2236,10 @@ class ELBSummaryGeneric(AWSSectionGeneric):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('%s_limits' % self._resource)
         if colleague and colleague.content:
@@ -2237,6 +2318,10 @@ class ELBLabelsGeneric(AWSSectionLabels):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('%s_summary' % self._resource)
         if colleague and colleague.content:
@@ -2262,6 +2347,10 @@ class ELBHealth(AWSSectionGeneric):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2298,6 +2387,10 @@ class ELB(AWSSectionCloudwatch):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2375,6 +2468,10 @@ class ELBv2Limits(AWSSectionLimits):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2521,6 +2618,10 @@ class ELBv2TargetGroups(AWSSectionGeneric):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('elbv2_summary')
         if colleague and colleague.content:
@@ -2587,6 +2688,10 @@ class ELBv2Application(AWSSectionCloudwatch):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2666,6 +2771,10 @@ class ELBv2ApplicationTargetGroupsResponses(AWSSectionCloudwatch):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2782,6 +2891,10 @@ class ELBv2Network(AWSSectionCloudwatch):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('elbv2_summary')
         if colleague and colleague.content:
@@ -2884,6 +2997,10 @@ class RDSLimits(AWSSectionLimits):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
 
@@ -2923,6 +3040,10 @@ class RDSSummary(AWSSectionGeneric):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2993,6 +3114,10 @@ class RDS(AWSSectionCloudwatch):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -3086,6 +3211,10 @@ class CloudwatchAlarmsLimits(AWSSectionLimits):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
 
@@ -3115,6 +3244,10 @@ class CloudwatchAlarms(AWSSectionGeneric):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -3164,6 +3297,10 @@ class DynamoDBLimits(AWSSectionLimits):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -3258,6 +3395,10 @@ class DynamoDBSummary(AWSSectionGeneric):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('dynamodb_limits')
         if colleague and colleague.content:
@@ -3329,6 +3470,10 @@ class DynamoDBTable(AWSSectionCloudwatch):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -3437,6 +3582,10 @@ class WAFV2Limits(AWSSectionLimits):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
 
@@ -3512,6 +3661,10 @@ class WAFV2Summary(AWSSectionGeneric):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -3600,6 +3753,10 @@ class WAFV2WebACL(AWSSectionCloudwatch):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):

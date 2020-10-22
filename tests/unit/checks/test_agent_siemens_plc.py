@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from testlib import SpecialAgent  # type: ignore[import]
 
 pytestmark = pytest.mark.checks
 
@@ -29,8 +30,9 @@ pytestmark = pytest.mark.checks
         }]
     }, ['device1;host;2;2;102', 'device2;hostaddress;2;1;22']),
 ])
-def test_siemens_plc_argument_parsing(check_manager, params, expected_args):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_siemens_plc_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
-    agent = check_manager.get_special_agent('agent_siemens_plc')
+    agent = SpecialAgent('agent_siemens_plc')
     arguments = agent.argument_func(params, "host", "address")
     assert arguments == expected_args

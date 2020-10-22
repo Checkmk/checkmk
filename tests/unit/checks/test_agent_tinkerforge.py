@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from testlib import SpecialAgent  # type: ignore[import]
 
 pytestmark = pytest.mark.checks
 
@@ -20,8 +21,9 @@ pytestmark = pytest.mark.checks
         "--segment_display_brightness", "5"
     ]),
 ])
-def test_tinkerforge_argument_parsing(check_manager, params, expected_args):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_tinkerforge_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
-    agent = check_manager.get_special_agent('agent_tinkerforge')
+    agent = SpecialAgent('agent_tinkerforge')
     arguments = agent.argument_func(params, "host", "address")
     assert arguments == expected_args

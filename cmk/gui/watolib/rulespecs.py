@@ -33,9 +33,16 @@ from cmk.gui.watolib.search import (
     MatchItems,
     match_item_generator_registry,
 )
+from cmk.gui.watolib.main_menu import (
+    ModuleRegistry,
+    main_module_registry,
+)
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.utils.urls import makeuri
+from cmk.gui.utils.urls import (
+    makeuri,
+    makeuri_contextless_ruleset_group,
+)
 
 
 class RulespecBaseGroup(metaclass=abc.ABCMeta):
@@ -1229,15 +1236,37 @@ class MatchItemGeneratorRules(ABCMatchItemGenerator):
     def __init__(
         self,
         name: str,
+        main_module_reg: ModuleRegistry,
+        rulesepc_group_reg: RulespecGroupRegistry,
         rulespec_reg: RulespecRegistry,
     ) -> None:
         super().__init__(name)
+        self._main_module_registry = main_module_reg
+        self._rulespec_group_registry = rulesepc_group_reg
         self._rulespec_registry = rulespec_reg
+
+    def _topic_from_group_name(self, group_name: str) -> str:
+
+        main_group = self._rulespec_group_registry[group_name]()
+        if isinstance(main_group, RulespecSubGroup):
+            main_group = main_group.main_group()
+
+        main_module_cls = self._main_module_registry.get(
+            makeuri_contextless_ruleset_group(
+                request,
+                main_group.name,
+            ))
+        if main_module_cls:
+            topic_prefix = main_module_cls().topic.title
+        else:
+            topic_prefix = _('Rules')
+
+        return f"{topic_prefix} > {main_group.title}"
 
     def generate_match_items(self) -> MatchItems:
         yield from (MatchItem(
             title=rulespec.title,
-            topic="Rules",
+            topic=self._topic_from_group_name(group),
             url="wato.py?mode=edit_ruleset&varname=%s" % rulespec.name,
             match_texts=[rulespec.title, rulespec.name],
         )
@@ -1251,4 +1280,10 @@ class MatchItemGeneratorRules(ABCMatchItemGenerator):
 
 rulespec_registry = RulespecRegistry(rulespec_group_registry)
 
-match_item_generator_registry.register(MatchItemGeneratorRules('rules', rulespec_registry))
+match_item_generator_registry.register(
+    MatchItemGeneratorRules(
+        'rules',
+        main_module_registry,
+        rulespec_group_registry,
+        rulespec_registry,
+    ))

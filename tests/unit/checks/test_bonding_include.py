@@ -83,5 +83,5 @@ pytestmark = pytest.mark.checks
         ],
     ),
 ])
-def test_check_ieee_302_3ad_specific(check_manager, params, status, result):
+def test_check_ieee_302_3ad_specific(params, status, result):
     assert list(_check_ieee_302_3ad_specific(params, status)) == result

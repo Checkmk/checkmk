@@ -12,7 +12,7 @@ from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual, \
                          CheckResult, assertCheckResultsEqual, \
                          MockHostExtraConf, MockItemState, \
                          Immutables, assertEqual
-from testlib import MissingCheckInfoError
+from testlib import MissingCheckInfoError, Check  # type: ignore[import]
 from generictests.checkhandler import checkhandler
 
 from cmk.utils.type_defs import CheckPluginName
@@ -154,7 +154,7 @@ def validate_discovered_params(check, params):
     # spec.validate_value(params, "")
 
 
-def run_test_on_parse(check_manager, dataset, immu):
+def run_test_on_parse(dataset, immu):
     """Test parse function
 
     If dataset has .info attribute and the check has parse function defined,
@@ -170,7 +170,7 @@ def run_test_on_parse(check_manager, dataset, immu):
 
     immu.register(dataset.info, 'info')
     try:
-        main_check = check_manager.get_check(dataset.checkname)
+        main_check = Check(dataset.checkname)
         parse_function = main_check.info.get("parse_function")
     except MissingCheckInfoError:
         # this could be ok -
@@ -238,7 +238,7 @@ def optional_freeze_time(dataset):
         yield
 
 
-def run(check_info, check_manager, dataset, write=False):
+def run(check_info, dataset, write=False):
     """Run all possible tests on 'dataset'"""
     print("START: %r" % (dataset,))
     checklist = checkhandler.get_applicables(dataset.checkname, check_info)
@@ -248,12 +248,12 @@ def run(check_info, check_manager, dataset, write=False):
 
     with optional_freeze_time(dataset):
 
-        parsed = run_test_on_parse(check_manager, dataset, immu)
+        parsed = run_test_on_parse(dataset, immu)
 
         # LOOP OVER ALL (SUB)CHECKS
         for sname in checklist:
             subcheck = (sname + '.').split('.')[1]
-            check = check_manager.get_check(sname)
+            check = Check(sname)
 
             info_arg = get_info_argument(dataset, subcheck, parsed)
             immu.test(' after get_info_argument ')

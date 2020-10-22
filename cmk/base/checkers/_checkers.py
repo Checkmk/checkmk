@@ -9,16 +9,17 @@
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
 import itertools
-from typing import Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Dict, Iterable, Iterator, List, Optional, Sequence, Tuple
 
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.piggyback
 import cmk.utils.tty as tty
+from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.log import console
 from cmk.utils.type_defs import HostAddress, HostName, result, SourceType
 
-from cmk.fetchers.controller import FetcherMessage
+from cmk.fetchers.controller import FetcherMessage, L3Stats
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_table as check_table
@@ -35,7 +36,7 @@ from .programs import DSProgramSource, SpecialAgentSource
 from .snmp import SNMPSource
 from .tcp import TCPSource
 
-__all__ = ["update_host_sections", "make_sources", "make_nodes"]
+__all__ = ["fetch_all", "update_host_sections", "make_sources", "make_nodes"]
 
 
 class _Builder:
@@ -211,14 +212,44 @@ def _make_piggybacked_sections(host_config) -> SelectedRawSections:
     )
 
 
+def fetch_all(
+    nodes: Iterable[Tuple[HostName, Optional[HostAddress], Sequence[Source]]],
+    *,
+    max_cachefile_age: int,
+    host_config: HostConfig,
+    selected_raw_sections: Optional[SelectedRawSections],
+) -> Iterator[FetcherMessage]:
+    console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
+    # TODO(ml): It is not clear to me in which case it is possible for the following to hold true
+    #           for any source in nodes:
+    #             - hostname != source.hostname
+    #             - ipaddress != source.ipaddress
+    #           If this is impossible, then we do not need the Tuple[HostName, HostAddress, ...].
+    for _hostname, _ipaddress, sources in nodes:
+        for source in sources:
+            console.vverbose("  Source: %s/%s\n" % (source.source_type, source.fetcher_type))
+            if host_config.nodes is None:
+                source.selected_raw_sections = selected_raw_sections
+            else:
+                source.selected_raw_sections = _make_piggybacked_sections(host_config)
+            source.file_cache_max_age = max_cachefile_age
+            with CPUTracker() as tracker:
+                raw_data = source.fetch()
+            yield FetcherMessage.from_raw_data(
+                raw_data,
+                L3Stats(tracker),
+                source.fetcher_type,
+            )
+
+
 def update_host_sections(
     multi_host_sections: MultiHostSections,
     nodes: Iterable[Tuple[HostName, Optional[HostAddress], Sequence[Source]]],
     *,
     max_cachefile_age: int,
-    selected_raw_sections: Optional[SelectedRawSections],
     host_config: HostConfig,
-    fetcher_messages: Optional[Sequence[FetcherMessage]] = None,
+    fetcher_messages: Sequence[FetcherMessage],
+    selected_raw_sections: Optional[SelectedRawSections],
 ) -> Sequence[Tuple[Source, result.Result[HostSections, Exception]]]:
     """Gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
 
@@ -227,11 +258,7 @@ def update_host_sections(
     use source.get_summary_result() to get the state, output and perfdata of the agent excecution
     or source.exception to get the exception object.
     """
-    if fetcher_messages is None:
-        console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
-    else:
-        console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Parse fetcher results".upper())
-
+    console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Parse fetcher results".upper())
     # Special agents can produce data for the same check_plugin_name on the same host, in this case
     # the section lines need to be extended
     data: List[Tuple[Source, result.Result[HostSections, Exception]]] = []
@@ -250,18 +277,13 @@ def update_host_sections(
                 source.default_host_sections,
             )
 
-            if fetcher_messages is None:
-                # We don't have raw_data yet (from the previously executed fetcher), execute the
-                # fetcher here.
-                raw_data = source.fetch()
-            else:
-                # The Microcore has handed over results from the previously executed fetcher.
-                # Extract the raw_data for the source we currently
-                fetcher_message = fetcher_messages[source_index]
-                # TODO (ml): Can we somehow verify that this is correct?
-                #if fetcher_message["fetcher_type"] != source.id:
-                #    raise LookupError("Checker and fetcher missmatch")
-                raw_data = fetcher_message.raw_data
+            # The Microcore has handed over results from the previously executed fetcher.
+            # Extract the raw_data for the source we currently
+            fetcher_message = fetcher_messages[source_index]
+            # TODO (ml): Can we somehow verify that this is correct?
+            #if fetcher_message["fetcher_type"] != source.id:
+            #    raise LookupError("Checker and fetcher missmatch")
+            raw_data = fetcher_message.raw_data
 
             source_result = source.parse(raw_data)
             data.append((source, source_result))

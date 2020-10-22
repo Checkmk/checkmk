@@ -113,8 +113,10 @@ CHECK_NOT_IMPLEMENTED: ServiceCheckResult = (3, 'Check plugin not implemented', 
 def do_check(
     hostname: HostName,
     ipaddress: Optional[HostAddress],
+    # The next two *must* remain optional for Nagios and the `DiscoCheckExecutor`.
+    #   See Also: `cmk.base.discovery.check_discovery()`
     only_check_plugin_names: Optional[Set[CheckPluginName]] = None,
-    fetcher_messages: Optional[Sequence[FetcherMessage]] = None
+    fetcher_messages: Sequence[FetcherMessage] = (),
 ) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[str]]:
     console.verbose("Checkmk version %s\n", cmk_version.__version__)
 
@@ -175,17 +177,31 @@ def do_check(
                 ipaddress,
                 mode=checkers.Mode.CHECKING,
             )
-            mhs = MultiHostSections()
+            nodes = checkers.make_nodes(
+                config_cache,
+                host_config,
+                ipaddress,
+                checkers.Mode.CHECKING,
+                sources,
+            )
 
+            if not fetcher_messages:
+                # Note: `fetch_all(sources)` is almost always called in similar
+                #       code in discovery and inventory.  The only other exception
+                #       is `cmk.base.discovery.check_discovery(...)`.  This does
+                #       not seem right.
+                fetcher_messages = list(
+                    checkers.fetch_all(
+                        nodes,
+                        max_cachefile_age=host_config.max_cachefile_age,
+                        host_config=host_config,
+                        selected_raw_sections=selected_raw_sections,
+                    ))
+
+            mhs = MultiHostSections()
             result = checkers.update_host_sections(
                 mhs,
-                checkers.make_nodes(
-                    config_cache,
-                    host_config,
-                    ipaddress,
-                    checkers.Mode.CHECKING,
-                    sources,
-                ),
+                nodes,
                 selected_raw_sections=selected_raw_sections,
                 max_cachefile_age=host_config.max_cachefile_age,
                 host_config=host_config,

@@ -215,19 +215,27 @@ def _fetch_multi_host_sections_for_inv(
     for source in sources:
         _configure_source_for_inv(source)
 
+    nodes = checkers.make_nodes(
+        config_cache,
+        host_config,
+        ipaddress,
+        checkers.Mode.INVENTORY,
+        sources,
+    )
     multi_host_sections = MultiHostSections()
     results = checkers.update_host_sections(
         multi_host_sections,
-        checkers.make_nodes(
-            config_cache,
-            host_config,
-            ipaddress,
-            checkers.Mode.INVENTORY,
-            sources,
-        ),
+        nodes,
         max_cachefile_age=host_config.max_cachefile_age,
         selected_raw_sections=None,
         host_config=host_config,
+        fetcher_messages=list(
+            checkers.fetch_all(
+                nodes,
+                max_cachefile_age=host_config.max_cachefile_age,
+                host_config=host_config,
+                selected_raw_sections=None,
+            )),
     )
 
     return multi_host_sections, results

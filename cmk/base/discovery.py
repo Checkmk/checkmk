@@ -352,20 +352,29 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
             )
             for source in sources:
                 _configure_sources(source, discovery_parameters=discovery_parameters)
+            nodes = checkers.make_nodes(
+                config_cache,
+                host_config,
+                ipaddress,
+                checkers.Mode.DISCOVERY,
+                sources,
+            )
+            max_cachefile_age = config.discovery_max_cachefile_age(use_caches)
 
             multi_host_sections = MultiHostSections()
             checkers.update_host_sections(
                 multi_host_sections,
-                checkers.make_nodes(
-                    config_cache,
-                    host_config,
-                    ipaddress,
-                    checkers.Mode.DISCOVERY,
-                    sources,
-                ),
+                nodes,
                 selected_raw_sections=selected_raw_sections,
-                max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
+                max_cachefile_age=max_cachefile_age,
                 host_config=host_config,
+                fetcher_messages=list(
+                    checkers.fetch_all(
+                        nodes,
+                        max_cachefile_age=max_cachefile_age,
+                        host_config=host_config,
+                        selected_raw_sections=selected_raw_sections,
+                    )),
             )
 
             _do_discovery_for(
@@ -530,19 +539,28 @@ def discover_on_host(
         for source in sources:
             _configure_sources(source, discovery_parameters=discovery_parameters)
 
+        nodes = checkers.make_nodes(
+            config_cache,
+            host_config,
+            ipaddress,
+            checkers.Mode.DISCOVERY,
+            sources,
+        )
+        max_cachefile_age = config.discovery_max_cachefile_age(use_caches)
         multi_host_sections = MultiHostSections()
         checkers.update_host_sections(
             multi_host_sections,
-            checkers.make_nodes(
-                config_cache,
-                host_config,
-                ipaddress,
-                checkers.Mode.DISCOVERY,
-                sources,
-            ),
-            max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
+            nodes,
+            max_cachefile_age=max_cachefile_age,
             selected_raw_sections=None,
             host_config=host_config,
+            fetcher_messages=list(
+                checkers.fetch_all(
+                    nodes,
+                    max_cachefile_age=max_cachefile_age,
+                    host_config=host_config,
+                    selected_raw_sections=None,
+                )),
         )
 
         # Compute current state of new and existing checks
@@ -666,7 +684,9 @@ def _get_post_discovery_services(
 def check_discovery(
     hostname: HostName,
     ipaddress: Optional[HostAddress],
-    fetcher_messages: Optional[Sequence[FetcherMessage]] = None,
+    # The next argument *must* remain optional for the DiscoCheckExecutor.
+    #   See Also: `cmk.base.checking.do_check()`.
+    fetcher_messages: Sequence[FetcherMessage] = (),
 ) -> Tuple[int, List[str], List[str], List[Tuple]]:
 
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:
@@ -710,21 +730,34 @@ def check_discovery(
             disable_snmp_caches=params['inventory_check_do_scan'],
         )
 
+    nodes = checkers.make_nodes(
+        config_cache,
+        host_config,
+        ipaddress,
+        checkers.Mode.DISCOVERY,
+        sources,
+    )
     use_caches = checkers.FileCacheFactory.maybe
+    max_cachefile_age = config.discovery_max_cachefile_age(use_caches)
+    if not fetcher_messages:
+        # Note: *Not* calling `fetch_all(sources)` here is probably buggy.
+        #       Also See: `cmk.base.checking.do_check()`
+        fetcher_messages = list(
+            checkers.fetch_all(
+                nodes,
+                max_cachefile_age=max_cachefile_age,
+                host_config=host_config,
+                selected_raw_sections=None,
+            ))
+
     multi_host_sections = MultiHostSections()
     result = checkers.update_host_sections(
         multi_host_sections,
-        checkers.make_nodes(
-            config_cache,
-            host_config,
-            ipaddress,
-            checkers.Mode.DISCOVERY,
-            sources,
-        ),
-        max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
-        selected_raw_sections=None,
+        nodes,
+        max_cachefile_age=max_cachefile_age,
         host_config=host_config,
         fetcher_messages=fetcher_messages,
+        selected_raw_sections=None,
     )
 
     services, host_label_discovery_result = _get_host_services(
@@ -1716,6 +1749,7 @@ def _get_cluster_services(
 
 def get_check_preview(
     host_name: HostName,
+    *,
     use_caches: bool,
     on_error: str,
 ) -> Tuple[CheckPreviewTable, DiscoveredHostLabels]:
@@ -1741,19 +1775,29 @@ def get_check_preview(
     for source in sources:
         _configure_sources(source, discovery_parameters=discovery_parameters)
 
+    nodes = checkers.make_nodes(
+        config_cache,
+        host_config,
+        ip_address,
+        mode,
+        sources,
+    )
+    max_cachefile_age = config.discovery_max_cachefile_age(use_caches)
+
     multi_host_sections = MultiHostSections()
     checkers.update_host_sections(
         multi_host_sections,
-        checkers.make_nodes(
-            config_cache,
-            host_config,
-            ip_address,
-            mode,
-            sources,
-        ),
-        max_cachefile_age=config.discovery_max_cachefile_age(use_caches),
+        nodes,
+        max_cachefile_age=max_cachefile_age,
         selected_raw_sections=None,
         host_config=host_config,
+        fetcher_messages=list(
+            checkers.fetch_all(
+                nodes,
+                max_cachefile_age=max_cachefile_age,
+                host_config=host_config,
+                selected_raw_sections=None,
+            )),
     )
 
     grouped_services, host_label_discovery_result = _get_host_services(

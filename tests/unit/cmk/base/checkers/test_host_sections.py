@@ -14,14 +14,18 @@ import pytest  # type: ignore[import]
 from testlib.base import Scenario  # type: ignore[import]
 
 import cmk.utils.piggyback
-from cmk.utils.type_defs import (
-    result,
-    ParsedSectionName,
-    SectionName,
-    SourceType,
-)
+from cmk.utils.cpu_tracking import CPUTracker
+from cmk.utils.type_defs import ParsedSectionName, result, SectionName, SourceType
 
-from cmk.fetchers import IPMIFetcher, PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher
+from cmk.fetchers import (
+    FetcherType,
+    IPMIFetcher,
+    PiggybackFetcher,
+    ProgramFetcher,
+    SNMPFetcher,
+    TCPFetcher,
+)
+from cmk.fetchers.controller import FetcherMessage, L3Stats
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api_utils as check_api_utils
@@ -489,11 +493,12 @@ class TestMakeHostSectionsHosts:
                 host_config,
                 ipaddress,
                 mode=mode,
-                sources=[],
+                sources=(),
             ),
             max_cachefile_age=0,
             selected_raw_sections=None,
             host_config=host_config,
+            fetcher_messages=(),
         )
         # The length is not zero because the function always sets,
         # at least, a piggy back section.
@@ -531,6 +536,13 @@ class TestMakeHostSectionsHosts:
             max_cachefile_age=0,
             selected_raw_sections=None,
             host_config=host_config,
+            fetcher_messages=[
+                FetcherMessage.from_raw_data(
+                    result.OK({}),
+                    L3Stats(CPUTracker()),
+                    FetcherType.SNMP,
+                ),
+            ],
         )
         assert len(mhs) == 1
 
@@ -581,6 +593,13 @@ class TestMakeHostSectionsHosts:
             max_cachefile_age=0,
             selected_raw_sections=None,
             host_config=host_config,
+            fetcher_messages=[
+                FetcherMessage.from_raw_data(
+                    result.OK(source.default_raw_data),
+                    L3Stats(CPUTracker()),
+                    source.fetcher_type,
+                ),
+            ],
         )
         assert len(mhs) == 1
 
@@ -628,6 +647,13 @@ class TestMakeHostSectionsHosts:
             max_cachefile_age=0,
             selected_raw_sections=None,
             host_config=host_config,
+            fetcher_messages=[
+                FetcherMessage.from_raw_data(
+                    result.OK(source.default_raw_data),
+                    L3Stats(CPUTracker()),
+                    source.fetcher_type,
+                ) for source in sources
+            ],
         )
         assert len(mhs) == 1
 
@@ -664,6 +690,14 @@ class TestMakeHostSectionsHosts:
             max_cachefile_age=0,
             selected_raw_sections=None,
             host_config=host_config,
+            fetcher_messages=[
+                FetcherMessage.from_raw_data(
+                    result.OK(source.default_raw_data),
+                    L3Stats(CPUTracker()),
+                    source.fetcher_type,
+                )
+                for source in sources
+            ],
         )
         assert len(mhs) == 1
 
@@ -752,11 +786,19 @@ class TestMakeHostSectionsClusters:
                 host_config,
                 None,
                 mode=mode,
-                sources=[],
+                sources=(),
             ),
             max_cachefile_age=0,
             selected_raw_sections=None,
             host_config=host_config,
+            fetcher_messages=[
+                # We do not pass sources explicitly but still append Piggyback.
+                FetcherMessage.from_raw_data(
+                    result.OK(b""),
+                    L3Stats(CPUTracker()),
+                    FetcherType.PIGGYBACK,
+                ),
+            ],
         )
         assert len(mhs) == len(nodes)
 
@@ -830,6 +872,7 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
     host_config.nodes = list(hosts.keys())
 
     mhs = MultiHostSections()
+    sources = make_sources(host_config, address, mode=mode)
     update_host_sections(
         mhs,
         make_nodes(
@@ -837,11 +880,19 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
             host_config,
             address,
             mode=mode,
-            sources=make_sources(host_config, address, mode=mode),
+            sources=sources,
         ),
         max_cachefile_age=host_config.max_cachefile_age,
         selected_raw_sections=None,
         host_config=host_config,
+        fetcher_messages=[
+                FetcherMessage.from_raw_data(
+                    result.OK(source.default_raw_data),
+                    L3Stats(CPUTracker()),
+                    source.fetcher_type,
+                )
+                for source in sources
+            ],
     )
     assert len(mhs) == len(hosts) == 3
     cmk.utils.piggyback._store_status_file_of.assert_not_called()  # type: ignore[attr-defined]

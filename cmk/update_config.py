@@ -201,7 +201,7 @@ class UpdateConfig:
                 failed_hosts.append(hostname)
                 continue
 
-            autochecks = [self._fix_service(s, all_rulesets) for s in autochecks]
+            autochecks = [self._fix_service(s, all_rulesets, hostname) for s in autochecks]
             cmk.base.autochecks.save_autochecks_file(hostname, autochecks)
 
         if failed_hosts:
@@ -212,43 +212,51 @@ class UpdateConfig:
     def _transformed_params(
         self,
         plugin_name: CheckPluginName,
-        params,
+        params: Any,
         all_rulesets: cmk.gui.watolib.rulesets.AllRulesets,
+        hostname: str,
     ) -> Any:
         check_plugin = register.get_check_plugin(plugin_name)
         if check_plugin is None:
             return None
+
         ruleset_name = "checkgroup_parameters:%s" % check_plugin.check_ruleset_name
         if ruleset_name not in all_rulesets.get_rulesets():
             return None
-        ruleset = all_rulesets.get_rulesets()[ruleset_name]
-        new_params = {} if params is None else ruleset.valuespec().transform_value(params)
-        if params and not new_params:
-            self._logger.warning("Transforming %r returned empty (plugin=%s, ruleset=%r" %
-                                 (params, plugin_name, ruleset_name))
-        assert not isinstance(params, dict) or isinstance(new_params, dict), (
-            "if params had been a dict transformed params should be a dict, too.")
-        return {**params, **new_params} if isinstance(params, dict) else new_params
+
+        debug_info = "host=%r, plugin=%r, ruleset=%r, params=%r" % (
+            hostname, str(plugin_name), str(check_plugin.check_ruleset_name), params)
+
+        try:
+            ruleset = all_rulesets.get_rulesets()[ruleset_name]
+            new_params = {} if params is None else ruleset.valuespec().transform_value(params)
+            assert new_params or not params, "non-empty params vanished"
+            assert not isinstance(params, dict) or isinstance(
+                new_params, dict), ("transformed params down-graded from dict: %r" % new_params)
+
+            return {**params, **new_params} if isinstance(params, dict) else new_params
+        except Exception as exc:
+            msg = ("Transform failed: %s, error=%r" % (debug_info, exc))
+            if self._arguments.debug:
+                raise RuntimeError(msg) from exc
+            self._logger.error(msg)
+
+        return None
 
     def _fix_service(
         self,
         service: Service,
         all_rulesets: cmk.gui.watolib.rulesets.AllRulesets,
+        hostname: str,
     ) -> Service:
         """Change names of removed plugins to the new ones and transform parameters"""
         new_plugin_name = REMOVED_CHECK_PLUGIN_MAP.get(service.check_plugin_name)
-        try:
-            new_params = self._transformed_params(
-                new_plugin_name or service.check_plugin_name,
-                service.parameters,
-                all_rulesets,
-            )
-        except Exception as exc:
-            if self._arguments.debug:
-                raise
-            self._logger.error("Transforming params for %r resulted in an error: %r" %
-                               (service.check_plugin_name, exc))
-            new_params = service.parameters
+        new_params = self._transformed_params(
+            new_plugin_name or service.check_plugin_name,
+            service.parameters,
+            all_rulesets,
+            hostname,
+        )
 
         if new_plugin_name is None and new_params is None:
             # don't create a new service if nothing has changed

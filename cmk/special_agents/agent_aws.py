@@ -10,6 +10,7 @@ Special agent for monitoring Amazon web services (AWS) with Check_MK.
 import abc
 import argparse
 import errno
+import hashlib
 import json
 import logging
 from pathlib import Path
@@ -4316,7 +4317,10 @@ class AWSConfig:
         filtered_sys_argv = [
             arg for arg in sys_argv if arg not in ['--debug', '--verbose', '--no-cache']
         ]
-        return hash(tuple(sorted(filtered_sys_argv)))
+        # Be careful to use a hashing mechanism that generates the same hash across
+        # different python processes! Otherwise the config file will always be
+        # out-of-date
+        return hashlib.sha256(''.join(sorted(filtered_sys_argv)).encode()).hexdigest()
 
     def is_up_to_date(self):
         old_config_hash = self._load_config_hash()
@@ -4339,7 +4343,7 @@ class AWSConfig:
     def _load_config_hash(self):
         try:
             with self._config_hash_file.open(mode='r', encoding="utf-8") as f:
-                return int(f.read().strip())
+                return f.read().strip()
         except IOError as e:
             if e.errno != errno.ENOENT:
                 # No such file or directory

@@ -14,8 +14,8 @@ factory_settings["nimble_latency_default_levels"] = {
     # taken as a percentage of the total number of operations.
     'range_reference': '20',
     # These are percentage values!
-    'read': (1.0, 2.0),
-    'write': (1.0, 2.0),
+    'read': (10.0, 20.0),
+    'write': (10.0, 20.0),
 }
 
 NimbleReadsType = "read"

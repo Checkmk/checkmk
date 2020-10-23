@@ -36,9 +36,9 @@ def _parameter_valuespec_nimble_latency():
                "tape, etc.), it is possible to select the starting point at which values should "
                "be considered. "
                "For example, for some devices, you may only want to be notified with a WARN if "
-               "1% of operations have a latency of 10-20 ms or above, and a CRIT if 2% of "
+               "10% of operations have a latency of 10-20 ms or above, and a CRIT if 20% of "
                "operations reach this threshold. You can achieve this by setting the \"Range "
-               "Reference\" parameter to 10-20 ms, and warning and critical levels to 1% and 2% "
+               "Reference\" parameter to 10-20 ms, and warning and critical levels to 10% and 20% "
                "respectively."),
         elements=[
             ("range_reference",
@@ -64,43 +64,51 @@ def _parameter_valuespec_nimble_latency():
              )),
             (
                 "read",
-                Tuple(title=_("Read Latency"),
-                      elements=[
-                          Percentage(
-                              title=_("Warning at"),
-                              unit="%",
-                              minvalue=0.0,
-                              maxvalue=100.0,
-                              default_value=1.0,
-                          ),
-                          Percentage(
-                              title=_("Critical at"),
-                              unit="%",
-                              minvalue=0.0,
-                              maxvalue=100.0,
-                              default_value=2.0,
-                          ),
-                      ]),
+                Tuple(
+                    title=_("Read Latency"),
+                    elements=[
+                        Percentage(
+                            title=_("Warning at"),
+                            unit="%",
+                            minvalue=0.0,
+                            maxvalue=100.0,
+                            default_value=10.0,
+                        ),
+                        Percentage(
+                            title=_("Critical at"),
+                            unit="%",
+                            minvalue=0.0,
+                            maxvalue=100.0,
+                            default_value=20.0,
+                        ),
+                    ],
+                    help=_("The default levels are suitable for hybrid storage systems. "
+                           "Please consider lowering them if your storage system is all-flash."),
+                ),
             ),
             (
                 "write",
-                Tuple(title=_("Write Latency"),
-                      elements=[
-                          Percentage(
-                              title=_("Warning at"),
-                              unit="%",
-                              minvalue=0.0,
-                              maxvalue=100.0,
-                              default_value=1.0,
-                          ),
-                          Percentage(
-                              title=_("Critical at"),
-                              unit="%",
-                              minvalue=0.0,
-                              maxvalue=100.0,
-                              default_value=2.0,
-                          ),
-                      ]),
+                Tuple(
+                    title=_("Write Latency"),
+                    elements=[
+                        Percentage(
+                            title=_("Warning at"),
+                            unit="%",
+                            minvalue=0.0,
+                            maxvalue=100.0,
+                            default_value=10.0,
+                        ),
+                        Percentage(
+                            title=_("Critical at"),
+                            unit="%",
+                            minvalue=0.0,
+                            maxvalue=100.0,
+                            default_value=20.0,
+                        ),
+                    ],
+                    help=_("The default levels are suitable for hybrid storage systems. "
+                           "Please consider lowering them if your storage system is all-flash."),
+                ),
             ),
         ],
     )

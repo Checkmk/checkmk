@@ -38,6 +38,7 @@ from cmk.gui.groups import (
     load_service_group_information,
 )
 from cmk.gui.watolib.groups import load_contact_group_information
+from cmk.gui.watolib.utils import try_bake_agents_for_hosts
 
 import cmk.gui.bi as bi
 
@@ -231,7 +232,7 @@ class APICallHosts(APICallCollection):
             },
         }
 
-    def _add(self, request):
+    def _add(self, request, bake_hosts=True):
         create_parent_folders_var = request.get("create_parent_folders",
                                                 request.get("create_folders", "1"))
         create_parent_folders = bool(int(create_parent_folders_var))
@@ -271,7 +272,8 @@ class APICallHosts(APICallCollection):
         # Add host
         if cluster_nodes:
             cluster_nodes = list(map(str, cluster_nodes))
-        watolib.Folder.folder(folder_path).create_hosts([(hostname, attributes, cluster_nodes)])
+        watolib.Folder.folder(folder_path).create_hosts([(hostname, attributes, cluster_nodes)],
+                                                        bake_hosts=bake_hosts)
 
     def _add_hosts(self, request):
         return self._bulk_action(request, "add")
@@ -284,7 +286,7 @@ class APICallHosts(APICallCollection):
         for host_request in request["hosts"]:
             try:
                 if action_name == "add":
-                    self._add(host_request)
+                    self._add(host_request, bake_hosts=False)
                 elif action_name == "edit":
                     self._edit(host_request)
                 else:
@@ -293,6 +295,8 @@ class APICallHosts(APICallCollection):
                 result["succeeded_hosts"].append(host_request["hostname"])
             except Exception as e:
                 result["failed_hosts"][host_request["hostname"]] = "%s" % e
+
+        try_bake_agents_for_hosts(result["succeeded_hosts"])
 
         return result
 

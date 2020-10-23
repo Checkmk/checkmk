@@ -1081,7 +1081,7 @@ class ConfigHostname(TextAsciiAutocomplete):
 
     Renders an input field for entering a host name while providing an auto completion dropdown field.
     Fetching the choices from the current WATO config"""
-    ident = "monitored_hostname"
+    ident = "config_hostname"
 
     def __init__(self, **kwargs):
         super(ConfigHostname, self).__init__(completion_ident=self.ident,

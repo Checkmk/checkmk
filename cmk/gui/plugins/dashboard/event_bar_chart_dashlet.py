@@ -174,7 +174,7 @@ class NotificationsBarChartDashlet(ABCEventBarChartDashlet):
 
     @classmethod
     def title(cls):
-        return _("Host and service notifications")
+        return _("Notification timeline")
 
     @classmethod
     def description(cls):
@@ -226,7 +226,7 @@ class AlertsBarChartDashlet(ABCEventBarChartDashlet):
 
     @classmethod
     def title(cls):
-        return _("Host and service alerts")
+        return _("Alert timeline")
 
     @classmethod
     def description(cls):

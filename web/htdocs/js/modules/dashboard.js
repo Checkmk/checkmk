@@ -415,12 +415,10 @@ export function toggle_dashboard_edit() {
         utils.add_class(toggle_suggestion, "edit");
         utils.add_class(toggle_shortcut, "edit");
         utils.add_class(toggle_entry, "edit");
-        page_menu.enable_dropdown("add_dashlets");
     } else {
         utils.remove_class(toggle_suggestion, "edit");
         utils.remove_class(toggle_shortcut, "edit");
         utils.remove_class(toggle_entry, "edit");
-        page_menu.disable_dropdown("add_dashlets");
     }
 
     var dashlet_divs = document.getElementsByClassName("dashlet");

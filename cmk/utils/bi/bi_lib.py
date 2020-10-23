@@ -326,6 +326,15 @@ class ABCBISearcher(metaclass=abc.ABCMeta):
                                         pattern: str) -> List[BIServiceSearchMatch]:
         raise NotImplementedError()
 
+    @abc.abstractmethod
+    def filter_host_choice(self, hosts: List[BIHostData],
+                           condition: Dict) -> Tuple[List[BIHostData], Dict]:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def filter_host_tags(self, hosts: List[BIHostData], condition: Dict) -> List[BIHostData]:
+        raise NotImplementedError()
+
 
 class ABCBIStatusFetcher(metaclass=abc.ABCMeta):
     def __init__(self, sites_callback: SitesCallback):

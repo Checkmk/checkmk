@@ -4,11 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Dict, Type, Any, Union
+from typing import List, Dict, Type, Any, Union, Set
 
 from marshmallow import Schema, validate, fields
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
+from cmk.utils.type_defs import HostName
 from cmk.utils.bi.bi_lib import (
     MacroMappings,
     replace_macros,
@@ -20,6 +21,7 @@ from cmk.utils.bi.bi_lib import (
     ReqString,
     ReqNested,
     ABCBISearcher,
+    BIHostData,
     BIHostSearchMatch,
     BIServiceSearchMatch,
 )
@@ -129,9 +131,13 @@ class BIHostSearch(ABCBISearch):
             return self._refer_to_children_results(search_matches, bi_searcher)
         if self.refer_to == "parent":
             return self._refer_to_parent_results(search_matches)
-        # TODO: child with, will be done in later commit
+        if isinstance(self.refer_to, tuple):
+            refer_type, refer_config = self.refer_to
+            if refer_type == "child_with":
+                return self._refer_to_children_with_results(search_matches, bi_searcher,
+                                                            refer_config)
 
-        raise NotImplementedError("Invalid refer to type %r" % self.refer_to)
+        raise NotImplementedError("Invalid refer to type %r" % (self.refer_to,))
 
     def _refer_to_host_results(self, search_matches: List[BIHostSearchMatch]) -> List[Dict]:
         search_results = []
@@ -181,6 +187,33 @@ class BIHostSearch(ABCBISearch):
 
         return search_results
 
+    def _refer_to_children_with_results(self, search_matches: List[BIHostSearchMatch],
+                                        bi_searcher: ABCBISearcher,
+                                        refer_config: dict) -> List[Dict]:
+        referred_tags, referred_host_choice = refer_config
+        all_children: Set[HostName] = set()
+
+        # Determine pool of childrens
+        for search_match in search_matches:
+            all_children.update(search_match.host.children)
+
+        # Filter childrens known to bi_searcher
+        children_host_data: List[BIHostData] = [
+            bi_searcher.hosts[x] for x in all_children if x in bi_searcher.hosts
+        ]
+
+        # Apply host choice and host tags search
+        matched_hosts, _matched_re_groups = bi_searcher.filter_host_choice(
+            children_host_data, referred_host_choice)
+        matched_hosts = bi_searcher.filter_host_tags(matched_hosts, referred_tags)
+
+        search_results = []
+        for host in matched_hosts:
+            search_result = {"$1$": host.name, "$HOSTNAME$": host.name, "$HOSTALIAS$": host.alias}
+            search_results.append(search_result)
+
+        return search_results
+
 
 class BIHostSearchSchema(Schema):
     type = ReqConstant(BIHostSearch.type())
@@ -218,6 +251,7 @@ class BIServiceSearch(ABCBISearch):
         search_results = []
         for search_match in sorted(search_matches, key=lambda x: x.service_description):
             search_result = {
+                "$1$": search_match.host.name,
                 "$HOSTNAME$": search_match.host.name,
                 "$HOSTALIAS$": search_match.host.alias
             }

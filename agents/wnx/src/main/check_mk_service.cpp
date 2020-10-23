@@ -510,7 +510,7 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
     if (param == wtools::ConvertToUTF16(kUpdaterParam) ||
         param == wtools::ConvertToUTF16(kCmkUpdaterParam)) {
         std::vector<std::wstring> params;
-        for (int k = 1; k < argc; k++) {
+        for (int k = 2; k < argc; k++) {
             params.emplace_back(Argv[k]);
         }
 

@@ -1,6 +1,6 @@
-Title: Remove Support for SLES SP1, SP2 and SP3
+Title: Remove Support for SLES 12 SP1, SP2 and SP3
 Class: feature
-Compatible: compat
+Compatible: incomp
 Component: distros
 Date: 1603443902
 Edition: cre
@@ -8,4 +8,6 @@ Knowledge: undoc
 Level: 3
 Version: 2.0.0i1
 
-
+Starting with Checkmk 2.0 we will remove support for older service packs
+of SLES 12. If you want to update from an older Checkmk version to 2.0,
+please Update your SLES 12 system to SP4 or SP5 first.

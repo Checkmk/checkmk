@@ -1140,7 +1140,7 @@ class SingleValuePlot extends SubPlot {
 
     render() {
         let plot_size = this._renderer.plot_size;
-        let value = split_unit(this.transformed_data[0]);
+        let value = split_unit(this.transformed_data.find(element => element.formatted_value));
         let value_text = this.svg.selectAll("a.single_value").data([value]);
         let font_size = Math.min(plot_size.width / 5, (plot_size.height * 2) / 3);
         let link = value_text

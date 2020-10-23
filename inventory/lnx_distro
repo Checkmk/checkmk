@@ -41,8 +41,6 @@ def inv_lnx_distro(info, inventory_tree):
     ]:
         if file_name in parsed:
             handler(node, parsed[file_name])
-            break
-
 
 def _parse_lnx_distro(info):
     parsed = {}

@@ -3,9 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import List, Mapping, MutableMapping, NamedTuple, Optional, Tuple
-
-import time
+from typing import Any, List, Mapping, MutableMapping, NamedTuple, Optional, Tuple
 
 from ..agent_based_api.v1.type_defs import CheckResult, ValueStore
 
@@ -107,22 +105,14 @@ def core_name(orig: str, core_index: int) -> Tuple[str, str]:
 
 
 def check_cpu_util(
-    value_store: ValueStore,
+    *,
     util: float,
-    params: Mapping,
-    this_time: Optional[float] = None,
-    cores=None,
-    perf_max=100,
+    params: Mapping[str, Any],
+    cores: Optional[List[Tuple[str, float]]] = None,
+    perf_max: Optional[float] = 100,
+    value_store: MutableMapping[str, Any],
+    this_time: float,
 ) -> CheckResult:
-    # Convert legacy param style to new dict style
-    if params is None:
-        params = {}
-    elif isinstance(params, tuple):
-        params = {"util": params}
-
-    if this_time is None:
-        this_time = time.time()
-
     # Old/mixed config may look like:
     # {'util': (80.0, 90.0), 'levels': None}
     # 'levels is None' means: Do not impose levels
@@ -134,12 +124,14 @@ def check_cpu_util(
         if levels is None:  # legacy rules before 1.6
             levels = params.get("levels")
 
-    warn, crit = levels if isinstance(levels, tuple) else (None, None)  # only for perfdata
-    perfdata = [("util", util, warn, crit, 0, perf_max)]
-
     # Averaging
     if "average" in params:
-        yield Metric("util", util, levels=(warn, crit), boundaries=(0, perf_max))
+        yield Metric(
+            "util",
+            util,
+            levels=levels if isinstance(levels, tuple) else None,  # type: ignore[arg-type]
+            boundaries=(0, perf_max),
+        )
         value_checked = get_average(
             value_store,
             "cpu_utilization.avg",
@@ -148,8 +140,7 @@ def check_cpu_util(
             params["average"],
         )
         metric_name = "util_average"
-        label = "Total CPU (%dmin average)" % params["average"]
-        perfdata.append(("util_average", value_checked, warn, crit, 0, perf_max))
+        label = "Total CPU (%d min average)" % params["average"]
     else:
         value_checked = util
         metric_name = "util"
@@ -173,7 +164,14 @@ def check_cpu_util(
 
     if "core_util_time_total" in params:
         threshold, warn, crit = params["core_util_time_total"]
-        yield from cpu_util_time(this_time, "total", util, threshold, warn, crit)
+        yield from cpu_util_time(
+            core="total",
+            perc=util,
+            threshold=threshold,
+            levels=(warn, crit),
+            value_store=value_store,
+            this_time=this_time,
+        )
 
     if cores and any([
             x in params for x in [
@@ -184,7 +182,14 @@ def check_cpu_util(
             ]
     ]):
         for core_index, (core, total_perc) in enumerate(cores):
-            yield from _util_perfdata(core, total_perc, core_index, this_time, params, value_store)
+            yield from _util_perfdata(
+                core=core,
+                core_index=core_index,
+                total_perc=total_perc,
+                params=params,
+                value_store=value_store,
+                this_time=this_time,
+            )
 
 
 def check_cpu_util_unix(
@@ -287,12 +292,29 @@ def _check_single_core_util(
     )
 
 
-def _util_perfdata(core: str, total_perc: float, core_index: int, this_time: float, params: Mapping,
-                   value_store: ValueStore) -> CheckResult:
+def _util_perfdata(
+    *,
+    core: str,
+    core_index: int,
+    total_perc: float,
+    params: Mapping,
+    value_store: ValueStore,
+    this_time: float,
+) -> CheckResult:
+    """Check a single cores performance.
 
+    Only sends `notice` output.
+    """
     if "core_util_time" in params:
         threshold, warn, crit = params["core_util_time"]
-        yield from cpu_util_time(this_time, core, total_perc, threshold, (warn, crit), value_store)
+        yield from cpu_util_time(
+            core=core,
+            perc=total_perc,
+            threshold=threshold,
+            levels=(warn, crit),
+            value_store=value_store,
+            this_time=this_time,
+        )
 
     config_single_avg = params.get('average_single', {})
 
@@ -344,13 +366,18 @@ def _util_perfdata(core: str, total_perc: float, core_index: int, this_time: flo
 
 
 def cpu_util_time(
-    this_time: float,
+    *,
     core: str,
     perc: float,
     threshold: float,
     levels: Optional[Tuple[float, float]],
     value_store: ValueStore,
+    this_time: float,
 ) -> CheckResult:
+    """Check for how long a CPU was under high load.
+
+    Only sends `notice` output .
+    """
     core_states = value_store.get("cpu.util.core.high", {})
     if perc <= threshold:
         # drop core from states

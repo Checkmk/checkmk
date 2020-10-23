@@ -5,6 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Dict, List, Optional
 
+import time
+
 from .agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -49,7 +51,12 @@ def check_esx_vsphere_hostsystem_cpu(
     total_mhz = mhz_per_core * num_cores
     usage = used_mhz / total_mhz * 100
 
-    yield from cpu_util.check_cpu_util(get_value_store(), usage, params)
+    yield from cpu_util.check_cpu_util(
+        util=usage,
+        params=params,
+        value_store=get_value_store(),
+        this_time=time.time(),
+    )
     yield Result(
         state=state.OK,
         notice="%s/%s" % (

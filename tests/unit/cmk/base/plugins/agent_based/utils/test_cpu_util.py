@@ -41,7 +41,7 @@ def test_check_cpu_util():
             Metric('util', 123.0, levels=(80.0, 90.0), boundaries=(0.0, 200.0)),
             Result(
                 state=State.CRIT,
-                summary='Total CPU (3min average): 123% (warn/crit at 80.0%/90.0%)',
+                summary='Total CPU (3 min average): 123% (warn/crit at 80.0%/90.0%)',
             ),
             Metric('util_average', 123.0, levels=(80.0, 90.0), boundaries=(0.0, None)),
             Result(

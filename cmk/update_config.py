@@ -229,7 +229,7 @@ class UpdateConfig:
 
         try:
             ruleset = all_rulesets.get_rulesets()[ruleset_name]
-            new_params = {} if params is None else ruleset.valuespec().transform_value(params)
+            new_params = ruleset.valuespec().transform_value(params) if params else {}
             assert new_params or not params, "non-empty params vanished"
             assert not isinstance(params, dict) or isinstance(
                 new_params, dict), ("transformed params down-graded from dict: %r" % new_params)

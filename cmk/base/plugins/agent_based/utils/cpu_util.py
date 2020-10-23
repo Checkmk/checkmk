@@ -220,12 +220,14 @@ def check_cpu_util_unix(
         metric_name='user',
         render_func=render.percent,
         label="User",
+        notice_only=True,
     )
     yield from check_levels(
         system_perc,
         metric_name='system',
         render_func=render.percent,
         label="System",
+        notice_only=True,
     )
     yield from check_levels(
         wait_perc,
@@ -233,6 +235,7 @@ def check_cpu_util_unix(
         levels_upper=params.get('iowait'),
         render_func=render.percent,
         label="Wait",
+        notice_only=True,
     )
 
     # Compute values used in virtualized environments (Xen, etc.)
@@ -246,6 +249,7 @@ def check_cpu_util_unix(
             levels_upper=params.get('steal'),
             render_func=render.percent,
             label="Steal",
+            notice_only=True,
         )
 
     if cpu_info.guest:
@@ -254,6 +258,7 @@ def check_cpu_util_unix(
             metric_name='guest',
             render_func=render.percent,
             label="Guest",
+            notice_only=True,
         )
 
     summary_cores = []

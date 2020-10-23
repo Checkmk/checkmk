@@ -62,11 +62,11 @@ SECTION: kernel.Section = (11238, {
 })
 
 BASIC_RESULT = [
-    Result(state=State.OK, summary='User: 6.49%'),
+    Result(state=State.OK, notice='User: 6.49%'),
     Metric('user', 6.48547647710549),
-    Result(state=State.OK, summary='System: 2.87%'),
+    Result(state=State.OK, notice='System: 2.87%'),
     Metric('system', 2.868503817100648),
-    Result(state=State.OK, summary='Wait: 0.04%'),
+    Result(state=State.OK, notice='Wait: 0.04%'),
     Metric('wait', 0.03648018320959447),
     Result(state=State.OK, summary='Total CPU: 9.39%'),
     Metric('util', 9.390460477415733, boundaries=(0.0, None)),

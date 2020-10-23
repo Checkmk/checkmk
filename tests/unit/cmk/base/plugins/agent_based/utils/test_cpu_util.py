@@ -46,11 +46,11 @@ def test_check_cpu_util():
             Metric('util_average', 123.0, levels=(80.0, 90.0), boundaries=(0.0, None)),
             Result(
                 state=State.WARN,
-                summary='Core my_core: 12.0% (warn/crit at 12.0%/13.0%)',
+                notice='Core my_core: 12.0% (warn/crit at 12.0%/13.0%)',
             ),
             Result(
                 state=State.CRIT,
-                summary='Core your_core: 42.0% (warn/crit at 12.0%/13.0%)',
+                notice='Core your_core: 42.0% (warn/crit at 12.0%/13.0%)',
             ),
         ]
 
@@ -66,15 +66,15 @@ def test_check_cpu_util_unix():
             cores=[],
             values_counter=False,
         )) == [
-            Result(state=State.OK, summary='User: 10.0%'),
+            Result(state=State.OK, notice='User: 10.0%'),
             Metric("user", 10.),
-            Result(state=State.OK, summary='System: 6.00%'),
+            Result(state=State.OK, notice='System: 6.00%'),
             Metric("system", 6.),
-            Result(state=State.OK, summary='Wait: 5.00%'),
+            Result(state=State.OK, notice='Wait: 5.00%'),
             Metric("wait", 5.),
-            Result(state=State.OK, summary='Steal: 6.00%'),
+            Result(state=State.OK, notice='Steal: 6.00%'),
             Metric("steal", 6.),
-            Result(state=State.OK, summary='Guest: 2.00%'),
+            Result(state=State.OK, notice='Guest: 2.00%'),
             Metric("guest", 2.),
             Result(state=State.OK, summary='Total CPU: 42.0%'),
             Metric("util", 42., boundaries=(0.0, None)),

@@ -127,50 +127,10 @@ parsed = smart.parse_raw_values(
      [u'Temperature', u'Sensor', u'1:', u'39', u'Celsius']])
 
 discovery = {
-    'stats': [(u'/dev/nvme0n1', {
-        'Critical_Warning': 0
-    }),
-              (u'/dev/sda', {
-                  'Current_Pending_Sector': 0,
-                  'End-to-End_Error': 0,
-                  'Reallocated_Sector_Ct': 0,
-                  'Reported_Uncorrect': 0,
-                  'UDMA_CRC_Error_Count': 0
-              })],
     'temp': [(u'/dev/nvme0n1', {}), (u'/dev/sda', {})]
 }
 
 checks = {
-    'stats': [
-        (u'/dev/nvme0n1', {
-            'Critical_Warning': 0
-        }, [
-            (0, 'Powered on: 1609 hours', [('Power_On_Hours', 1609)]),
-            (0, '\nPower cycles: 8', [('Power_Cycles', 8)]),
-            (0, '\nCritical warning: 0', [('Critical_Warning', 0)]),
-            (0, '\nAvailable spare: 100%', [('Available_Spare', 100)]),
-            (0, '\nPercentage used: 0%', [('Percentage_Used', 0)]),
-            (0, '\nMedia and data integrity errors: 0', [('Media_and_Data_Integrity_Errors', 0)]),
-            (0, '\nError information log entries: 0', [('Error_Information_Log_Entries', 0)]),
-            (0, '\nData units read: 2.39 TB', [('Data_Units_Read', 2624356352000)]),
-            (0, '\nData units written: 2.13 TB', [('Data_Units_Written', 2337980928000)]),
-        ]),
-        (u'/dev/sda', {
-            'Current_Pending_Sector': 0,
-            'End-to-End_Error': 0,
-            'Reallocated_Sector_Ct': 0,
-            'Reported_Uncorrect': 0,
-            'UDMA_CRC_Error_Count': 0,
-        }, [
-            (0, 'Powered on: 1609 hours', [('Power_On_Hours', 1609)]),
-            (0, 'Uncorrectable errors: 0', [('Reported_Uncorrect', 0)]),
-            (0, '\nPower cycles: 9', [('Power_Cycle_Count', 9)]),
-            (0, '\nReallocated sectors: 0', [('Reallocated_Sector_Ct', 0)]),
-            (0, '\nPending sectors: 0', [('Current_Pending_Sector', 0)]),
-            (0, '\nEnd-to-End errors: 0', [('End-to-End_Error', 0)]),
-            (0, '\nUDMA CRC errors: 0', [('UDMA_CRC_Error_Count', 0)]),
-        ]),
-    ],
     'temp': [(u'/dev/nvme0n1', {
         'levels': (35, 40)
     }, [

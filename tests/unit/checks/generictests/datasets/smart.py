@@ -7,12 +7,12 @@
 # yapf: disable
 # type: ignore
 
-
+from cmk.base.plugins.agent_based import smart
 
 checkname = 'smart'
 
 
-info = [[u'/dev/sdd',
+parsed = smart.parse_raw_values([[u'/dev/sdd',
          u'ATA',
          u'SAMSUNG_MZ7LM3T8',
          u'5',
@@ -2011,7 +2011,7 @@ info = [[u'/dev/sdd',
         [u'Error', u'Information', u'Log', u'Entries:', u'0'],
         [u'Warning', u'Comp.', u'Temperature', u'Time:', u'0'],
         [u'Critical', u'Comp.', u'Temperature', u'Time:', u'0'],
-        [u'Temperature', u'Sensor', u'1:', u'40', u'Celsius']]
+        [u'Temperature', u'Sensor', u'1:', u'40', u'Celsius']])
 
 
 discovery = {'stats': [(u'/dev/nvme0n1', {'Critical_Warning': 0}),

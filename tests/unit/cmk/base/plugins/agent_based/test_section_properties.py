@@ -182,7 +182,6 @@ def test_section_parse_function_does_something():
         'nvidia',
         'sap',
         'siemens_plc',
-        'smart',
         'vms_diskstat',
         'vms_system',
         'winperf',

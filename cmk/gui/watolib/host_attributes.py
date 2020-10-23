@@ -525,9 +525,14 @@ def undeclare_host_tag_attribute(tag_id):
     undeclare_host_attribute(attrname)
 
 
-def _update_config_based_host_attributes():
-    def _compute_config_hash():
-        return hash(repr(config.tags.get_dict_format()) + repr(config.wato_host_attrs))
+_update_config_based_host_attributes_config_hash: Optional[str] = None
+
+
+def _update_config_based_host_attributes() -> None:
+    global _update_config_based_host_attributes_config_hash
+
+    def _compute_config_hash() -> str:
+        return str(hash(repr(config.tags.get_dict_format()))) + repr(config.wato_host_attrs)
 
     # The topic conversion needs to take place before the _compute_config_hash runs
     # The actual generated topics may be pre-1.5 converted topics
@@ -535,8 +540,7 @@ def _update_config_based_host_attributes():
     # If we do not convert the topics here, the config_hash comparison will always fail
     transform_pre_16_host_topics(config.wato_host_attrs)
 
-    if getattr(_update_config_based_host_attributes, "_config_hash",
-               None) == _compute_config_hash():
+    if _update_config_based_host_attributes_config_hash == _compute_config_hash():
         return  # No re-register needed :-)
 
     _clear_config_based_host_attributes()
@@ -546,7 +550,7 @@ def _update_config_based_host_attributes():
     from cmk.gui.watolib.hosts_and_folders import Folder  # pylint: disable=import-outside-toplevel
     Folder.invalidate_caches()
 
-    setattr(_update_config_based_host_attributes, "._config_hash", _compute_config_hash())
+    _update_config_based_host_attributes_config_hash = _compute_config_hash()
 
 
 # Make the config module initialize the host attributes after loading the config

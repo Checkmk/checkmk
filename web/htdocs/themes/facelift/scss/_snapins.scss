@@ -221,7 +221,7 @@ table.performance {
   font-size: 24px;
   font-weight: bold;
   letter-spacing: $letter-spacing-table;
-  color: $font-color;
+  color: $font-color-sidebar;
   text-align: center;
   border-spacing: 4px;
 }
@@ -340,12 +340,7 @@ body.main .popup_menu table.tacticaloverview td span {
   font-size: $font-size-default;
   font-weight: $font-weight-bold;
   letter-spacing: 0;
-  color: $font-color;
-}
-
-table.tacticaloverview td a.link,
-table.tacticaloverview td a:hover {
-  color: $font-color;
+  color: $font-color-sidebar;
 }
 
 div.tacticalalert {
@@ -511,7 +506,7 @@ div.spacertop {
  */
 #snapin_container_wiki div.content {
   font-weight: bold;
-  color: $font-color;
+  color: $font-color-sidebar;
 
   p {
     font-weight: normal;

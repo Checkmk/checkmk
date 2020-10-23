@@ -35,6 +35,7 @@ $img-color: $white;
 
 $font-color: $white;
 $font-color-light: $lightgrey; // light grey
+$font-color-sidebar: $white;
 $color-background: $bg-color;
 
 // -----------------------------------------------------------------------------
@@ -392,7 +393,7 @@ $snapin-margin: 4px 0;
 $main-body-padding: 0 0 0 $spacing;
 
 $snapin-cmc-table-width: 100%;
-$snapin-list-color: $white;
+$snapin-list-color: $font-color-sidebar;
 
 $performance-table-shared-padding: 8px 0;
 
@@ -486,7 +487,6 @@ $navigation-bg-color: $navbar-color;
 $page-menu-bg-color: $navbar-color;
 $snapin-bg-color: $navbar-color;
 $sidebar-border-color: $headline-color;
-$form-bg-color: $button-bg-color-default;
 $form-font-color: rgb(234, 234, 234);
 $filter-group-title-font-color: $white;
 $popup-filters-border-radius: 2px;

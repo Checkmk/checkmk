@@ -117,8 +117,8 @@ input[type="checkbox"] {
     margin: -2px 4px 0 0;
     font-size: 12px;
     vertical-align: middle;
-    background-color: $form-bg-color;
-    border: 1px $form-bg-color solid;
+    background-color: $button-bg-color-default;
+    border: 1px $button-bg-color-default solid;
     content: "\00a0";
   }
 

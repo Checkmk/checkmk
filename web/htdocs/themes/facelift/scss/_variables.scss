@@ -26,7 +26,7 @@ $yellow: rgb(255, 215, 3); // yellow
 $lightgrey: $grey-1; // light grey
 
 // UX colors
-$navbar-color: rgb(221, 222, 223);
+$navbar-color: rgb(53, 63, 74);
 $bg-color: rgb(241, 241, 241);
 $base-color: rgb(248, 248, 248);
 $headline-color: $base-color;
@@ -35,6 +35,7 @@ $img-color: rgb(80, 88, 98);
 
 $font-color: $grey-4;
 $font-color-light: rgb(230, 230, 230); // light grey
+$font-color-sidebar: $white;
 $color-background: $bg-color;
 
 // -----------------------------------------------------------------------------
@@ -219,7 +220,7 @@ $toggle-button-search-img-filter: null;
 $success-bg-color: rgb(157, 190, 205);
 
 $treeangle-img-filter: invert(100%);
-$treeangle-img-filter-sidebar: null;
+$treeangle-img-filter-sidebar: none;
 
 $color-div-border-color: $black;
 
@@ -391,7 +392,7 @@ $snapin-margin: 8px 0;
 $main-body-padding: 0 0 0 $spacing;
 
 $snapin-cmc-table-width: 228px;
-$snapin-list-color: $font-color;
+$snapin-list-color: $font-color-sidebar;
 
 $performance-table-shared-padding: 8px;
 
@@ -480,23 +481,22 @@ $page-header-height: 58px;
 $popup-shadow-color: rgba(255, 255, 255, 0.2);
 $button-font-color-default: $black;
 $button-bg-color-default: rgb(53, 63, 74);
-$button-bg-color-secondary: $navbar-color;
+$button-bg-color-secondary: rgb(221, 222, 223);
 $button-bg-color-secondary-hover: $base-color;
 $navigation-bg-color: $navbar-color;
 $page-menu-bg-color: $white;
 $snapin-bg-color: $navbar-color;
-$sidebar-border-color: $color-nuance-13;
-$form-bg-color: $snapin-bg-color;
+$sidebar-border-color: rgb(38, 47, 56);
 $form-font-color: $font-color;
 $filter-group-title-font-color: $black;
 $popup-filters-border-radius: 2px;
 $popup-button-border: 1px solid $grey-2;
 $popup-trigger-active-bg-color: null;
-$tactical-overview-th-font-color: rgba($font-color, 0.4);
-$tactical-overview-td-bg-color: $base-color;
-$snapin-heading-border-color: rgba($font-color, 0.2);
+$tactical-overview-th-font-color: $white;
+$tactical-overview-td-bg-color: $sidebar-border-color;
+$snapin-heading-border-color: rgba($font-color-sidebar, 0.2);
 $snapin-description-font-color: $font-color;
-$simplebar-scrollbar-color: $navbar-color;
+$simplebar-scrollbar-color: rgb(38, 47, 56);
 $simplebar-scrollbar-width: 5px;
 $select2-dropdown-bg-color: $bg-color;
 $select2-dropdown-highlight-color: $bg-color-secondary;

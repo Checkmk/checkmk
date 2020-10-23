@@ -33,6 +33,10 @@ body.side {
     background-image: url("");
   }
 
+  b.treeangle.title {
+    color: $font-color-sidebar;
+  }
+
   img.treeangle {
     filter: $treeangle-img-filter-sidebar;
   }
@@ -71,11 +75,16 @@ body.side {
       flex: 1 0 auto;
       font-size: $font-size-small;
       line-height: 1.7;
+      color: $font-color-sidebar;
       text-align: center;
       text-decoration: none;
 
       &:hover img {
         opacity: 0.5;
+      }
+
+      &:visited {
+        color: $font-color-sidebar;
       }
     }
 
@@ -149,7 +158,7 @@ body.main .popup_menu #side_header > span {
 #side_fold {
   margin: $spacing 0;
   font-size: $font-size-small;
-  color: $font-color;
+  color: $font-color-sidebar;
   text-align: center;
   cursor: pointer;
 
@@ -179,7 +188,7 @@ body.main .popup_menu #side_header > span {
   font-size: 8px;
   font-weight: $font-weight-bold;
   letter-spacing: $letter-spacing-table;
-  color: $font-color-light;
+  color: $font-color-sidebar;
   text-align: center;
 
   a {
@@ -188,6 +197,10 @@ body.main .popup_menu #side_header > span {
 
     &:hover {
       text-decoration: underline;
+    }
+
+    &:visited {
+      color: $font-color-sidebar;
     }
   }
 
@@ -236,7 +249,7 @@ div.snapin {
     position: relative;
     height: auto;
     line-height: 10px; /* affects height of snapin title bar */
-    color: $font-color;
+    color: $font-color-sidebar;
     text-align: left;
     background: transparent;
 
@@ -307,7 +320,7 @@ div.snapin {
     top: 64px;
     width: 100%;
     padding: $spacing 0 0;
-    color: $font-color;
+    color: $font-color-sidebar;
     box-sizing: border-box;
   }
 
@@ -324,7 +337,7 @@ div.snapin {
    */
 
   td {
-    color: $font-color;
+    color: $font-color-sidebar;
   }
 
   h3 {
@@ -336,7 +349,7 @@ div.snapin {
   /* Normal link in snapins */
   a {
     font-weight: normal;
-    color: $font-color;
+    color: $font-color-sidebar;
     text-decoration: none;
 
     &:hover {

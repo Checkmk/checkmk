@@ -39,7 +39,7 @@ def parse_azure_agent_info(info):
     parsed = {}
     for row in info:
         key = row[0]
-        value = _AZURE_AGENT_SEPARATOR.join(row[1:])  # pylint: disable=undefined-variable
+        value = AZURE_AGENT_SEPARATOR.join(row[1:])  # pylint: disable=undefined-variable
 
         if key == 'remaining-reads':
             _update_remaining_reads(parsed, value)

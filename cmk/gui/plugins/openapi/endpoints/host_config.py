@@ -31,6 +31,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.plugins.webapi import check_hostname
+from cmk.gui.watolib.utils import try_bake_agents_for_hosts
 
 
 @endpoint_schema(constructors.collection_href('host_config'),
@@ -71,9 +72,11 @@ def bulk_create_hosts(params):
     entries = body['entries']
 
     for folder, grouped_hosts in itertools.groupby(body['entries'], operator.itemgetter('folder')):
-        folder.create_hosts([
-            (host['host_name'], host['attributes'], host['nodes']) for host in grouped_hosts
-        ])
+        folder.create_hosts(
+            [(host['host_name'], host['attributes'], host['nodes']) for host in grouped_hosts],
+            bake_hosts=False)
+
+    try_bake_agents_for_hosts([host["host_name"] for host in body["entries"]])
 
     hosts = [watolib.Host.host(entry['host_name']) for entry in entries]
     return _host_collection(hosts)

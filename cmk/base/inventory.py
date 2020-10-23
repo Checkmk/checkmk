@@ -26,6 +26,7 @@ from cmk.utils.type_defs import (
     HostName,
     InventoryPluginName,
     MetricTuple,
+    result,
     ServiceAdditionalDetails,
     ServiceDetails,
     ServiceState,
@@ -41,7 +42,7 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.section as section
 
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow, InventoryResult
-from cmk.base.checkers import ABCSource, SourceResult
+from cmk.base.checkers import ABCHostSections, ABCSource
 from cmk.base.checkers.host_sections import HostKey, MultiHostSections
 
 
@@ -52,7 +53,7 @@ class InventoryTrees(NamedTuple):
 
 class ActiveInventoryResult(NamedTuple):
     trees: InventoryTrees
-    source_results: Sequence[SourceResult]
+    source_results: Sequence[Tuple[ABCSource, result.Result[ABCHostSections, Exception]]]
     safe_to_write: bool
 
 
@@ -202,7 +203,8 @@ def _fetch_multi_host_sections_for_inv(
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
-) -> Tuple[MultiHostSections, Sequence[SourceResult]]:
+) -> Tuple[MultiHostSections, Sequence[Tuple[ABCSource, result.Result[ABCHostSections,
+                                                                      Exception]]]]:
     if host_config.is_cluster:
         return MultiHostSections(), []
 
@@ -239,7 +241,8 @@ def _configure_source_for_inv(source: checkers.ABCSource):
         checkers.FileCacheFactory.snmp_disabled = True
 
 
-def _safe_to_write_tree(results: Sequence[SourceResult]) -> bool:
+def _safe_to_write_tree(
+    results: Sequence[Tuple[ABCSource, result.Result[ABCHostSections, Exception]]],) -> bool:
     """Check if data sources of a host failed
 
     If a data source failed, we may have incomlete data. In that case we

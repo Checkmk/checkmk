@@ -57,7 +57,7 @@ import cmk.gui.escaping as escaping
 import cmk.gui.sites as sites
 import cmk.gui.config as config
 from cmk.gui.i18n import _
-from cmk.gui.pages import page_registry, Page, AjaxPage
+from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.globals import html, request as global_request
 from cmk.gui.htmllib import HTML
 from cmk.gui.htmllib import Choices, GroupedChoices, ChoiceGroup
@@ -1074,24 +1074,19 @@ class TextAsciiAutocomplete(TextAscii):
         return idents
 
     @classmethod
-    def ajax_handler(cls) -> None:
-        ident = html.request.var("ident")
+    def ajax_handler(cls, request) -> Choices:
+        ident = request["ident"]
         if not ident:
             raise MKUserError("ident", _("You need to set the \"%s\" parameter.") % "ident")
 
         if ident not in cls.idents():
             raise MKUserError("ident", _("Invalid ident: %s") % ident)
 
-        raw_params = html.request.var("params")
-        if not raw_params:
+        params = request.get("params")
+        if params is None:
             raise MKUserError("params", _("You need to set the \"%s\" parameter.") % "params")
 
-        try:
-            params = json.loads(raw_params)
-        except ValueError as e:  # Python 3: json.JSONDecodeError
-            raise MKUserError("params", _("Invalid parameters: %s") % e)
-
-        value = html.request.var("value")
+        value = request.get("value")
         if value is None:
             raise MKUserError("params", _("You need to set the \"%s\" parameter.") % "value")
 
@@ -1103,7 +1098,7 @@ class TextAsciiAutocomplete(TextAscii):
             assert isinstance(result_data[0], (list, tuple))
             assert len(result_data[0]) == 2
 
-        html.write(json.dumps(result_data))
+        return result_data
 
     #@abc.abstractclassmethod
     @classmethod
@@ -1129,17 +1124,17 @@ class MonitoredHostname(TextAsciiAutocomplete):
         query = ("GET hosts\n"
                  "Columns: host_name\n"
                  "Filter: host_name ~~ %s" % livestatus.lqencode(value))
+
         hosts = sorted(sites.live().query_column_unique(query))
 
         return [(h, h) for h in hosts]
 
 
 @page_registry.register_page("ajax_vs_autocomplete")
-class PageVsAutocomplete(Page):
-    def page(self) -> None:
-        html.set_output_format("json")
+class PageVsAutocomplete(AjaxPage):
+    def page(self):
         # TODO: Move ajax_handler to this class? Should we also move the autocomplete_choices()?
-        TextAsciiAutocomplete.ajax_handler()
+        return {"choices": TextAsciiAutocomplete.ajax_handler(self.webapi_request())}
 
 
 def Hostname(  # pylint: disable=redefined-builtin

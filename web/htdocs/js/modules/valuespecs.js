@@ -716,46 +716,49 @@ export function autocomplete(input, completion_ident, completion_params, on_chan
         g_autocomplete_ajax.abort();
     }
 
-    g_autocomplete_ajax = ajax.call_ajax(
-        "ajax_vs_autocomplete.py?ident=" + encodeURIComponent(completion_ident),
-        {
-            response_handler: autocomplete_handle_response,
-            error_handler: autocomplete_handle_error,
-            handler_data: [input.id, on_change],
-            method: "POST",
-            post_data:
-                "params=" +
-                encodeURIComponent(JSON.stringify(completion_params)) +
-                "&value=" +
-                encodeURIComponent(input.value) +
-                "&_plain_error=1",
-            add_ajax_id: false,
-        }
-    );
+    var post_data =
+        "request=" +
+        encodeURIComponent(
+            JSON.stringify({
+                ident: completion_ident,
+                params: completion_params,
+                value: input.value,
+            })
+        );
+
+    g_autocomplete_ajax = ajax.call_ajax("ajax_vs_autocomplete.py", {
+        response_handler: autocomplete_handle_response,
+        error_handler: autocomplete_handle_error,
+        handler_data: [input.id, on_change],
+        method: "POST",
+        post_data: post_data,
+        add_ajax_id: false,
+    });
 }
 
-function autocomplete_handle_response(handler_data, response_text) {
-    var input_id = handler_data[0];
-    var on_change = handler_data[1];
+function autocomplete_handle_response(handler_data, ajax_response) {
+    let input_id = handler_data[0];
+    let on_change = handler_data[1];
 
-    try {
-        var response = eval(response_text);
-    } catch (e) {
-        autocomplete_show_error(input_id, response_text);
+    let response = JSON.parse(ajax_response);
+    if (response.result_code != 0) {
+        autocomplete_show_error(input_id, response.result + " (" + response.result_code + ")");
         return;
     }
 
-    if (response.length == 0) {
+    let choices = response.result.choices;
+
+    if (choices.length == 0) {
         autocomplete_close(input_id);
     } else {
         // When only one result and values equal, hide the menu
         var input = document.getElementById(input_id);
-        if (response.length == 1 && input && response[0][0] == input.value) {
+        if (choices.length == 1 && input && choices[0][0] == input.value) {
             autocomplete_close(input_id);
             return;
         }
 
-        autocomplete_show_choices(input_id, on_change, response);
+        autocomplete_show_choices(input_id, on_change, choices);
     }
 }
 

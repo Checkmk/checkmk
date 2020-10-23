@@ -98,27 +98,39 @@ class IndexBuilder:
 
 
 class IndexStore:
+    _cached_index: Index = {}
+    _cached_mtime = 0.
+
     def __init__(self, path: pathlib.Path) -> None:
         self._path = path
         self._path.parent.mkdir(
-            # TODO: permissions?
-            # mode=
             parents=True,
             exist_ok=True,
         )
 
     def store_index(self, index: Index) -> None:
-        with open(self._path, mode='wb') as index_file:
+        with self._path.open(mode='wb') as index_file:
             pickle.dump(index, index_file)
 
     def load_index(self, launch_rebuild_if_missing: bool = True) -> Index:
         try:
-            with open(self._path, mode='rb') as index_file:
-                return pickle.load(index_file)
+            current_mtime = self._path.stat().st_mtime
+            if self._is_cache_valid(current_mtime):
+                return self._cached_index
+            self.__class__._cached_index = self._load_index_from_file()
+            self.__class__._cached_mtime = current_mtime
+            return self._cached_index
         except FileNotFoundError:
             if launch_rebuild_if_missing:
                 build_and_store_index_background()
             raise IndexNotFoundException
+
+    def _is_cache_valid(self, current_mtime: float) -> bool:
+        return bool(self._cached_index) and self._cached_mtime >= current_mtime
+
+    def _load_index_from_file(self) -> Index:
+        with self._path.open(mode="rb") as index_file:
+            return pickle.load(index_file)
 
     def all_match_items(self) -> MatchItems:
         yield from (

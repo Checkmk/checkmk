@@ -1116,6 +1116,21 @@ class BarPlot extends SubPlot {
     }
 }
 
+function split_unit(recipe) {
+    if (!recipe) return {};
+    if (!recipe.formatted_value) return {};
+    let text = recipe.formatted_value;
+    // Separated by space, most rendered quantities
+    let splitted_text = text.split(" ");
+    if (splitted_text.length == 2)
+        return {value: splitted_text[0], unit: splitted_text[1], url: recipe.url};
+
+    // Percentages have no space
+    if (text.endsWith("%")) return {value: text.slice(0, -1), unit: "%", url: recipe.url};
+
+    // It's a counter, unitless
+    return {value: text, unit: "", url: recipe.url};
+}
 // Renders a single value
 // Per default, the latest timestamp of the given timeline is used
 class SingleValuePlot extends SubPlot {
@@ -1125,22 +1140,29 @@ class SingleValuePlot extends SubPlot {
 
     render() {
         let plot_size = this._renderer.plot_size;
-        let value = this.transformed_data[0];
-        let value_text = this.svg.selectAll("a.single_value text").data([value]);
-        value_text.exit().remove();
+        let value = split_unit(this.transformed_data[0]);
+        let value_text = this.svg.selectAll("a.single_value").data([value]);
         let font_size = Math.min(plot_size.width / 5, (plot_size.height * 2) / 3);
-        value_text
-            .enter()
-            .append("a")
+        let link = value_text
+            .join("a")
             .classed("single_value", true)
-            .attr("xlink:href", d => d.url || "")
-            .append("text")
-            .merge(value_text)
-            .text(d => d.formatted_value)
-            .attr("text-anchor", "middle")
-            .style("font-size", font_size + "px")
+            .attr("xlink:href", d => d.url || "");
+        let text = link
+            .selectAll("text")
+            .data(d => [d])
+            .join("text")
+            .text(d => d.value)
             .attr("x", plot_size.width / 2)
-            .attr("y", plot_size.height / 2 + font_size / 3);
+            .attr("y", plot_size.height / 2 + font_size / 3)
+            .attr("text-anchor", "middle")
+            .style("font-size", font_size + "px");
+
+        let unit = text
+            .selectAll("tspan")
+            .data(d => [d])
+            .join("tspan")
+            .style("font-size", font_size / 2 + "px")
+            .text(d => d.unit);
         cmk_figures.state_component(this._renderer, this.definition.svc_state);
     }
 

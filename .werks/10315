@@ -1,0 +1,11 @@
+Title: Remove Support for SLES SP1, SP2 and SP3
+Class: feature
+Compatible: compat
+Component: distros
+Date: 1603443902
+Edition: cre
+Knowledge: undoc
+Level: 3
+Version: 2.0.0i1
+
+

@@ -176,9 +176,13 @@ def _set_user_attribute(key: str, value: Optional[str]):
     if cached_profile is None:
         raise MKUserError(None, _("Could not load cached user profile."))
 
+    if value is None:
+        userdb.remove_custom_attr(user_id, key)
+    else:
+        userdb.save_custom_attr(user_id, key, value)
+
     cached_profile[key] = value
     save_cached_profile(user_id, cached_profile)
-    userdb.save_custom_attr(user_id, key, value)
 
 
 def user_profile_async_replication_page() -> None:

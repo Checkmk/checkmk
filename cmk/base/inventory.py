@@ -42,7 +42,7 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.section as section
 
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow, InventoryResult
-from cmk.base.checkers import ABCHostSections, ABCSource
+from cmk.base.checkers import HostSections, Source
 from cmk.base.checkers.host_sections import HostKey, MultiHostSections
 
 
@@ -53,7 +53,7 @@ class InventoryTrees(NamedTuple):
 
 class ActiveInventoryResult(NamedTuple):
     trees: InventoryTrees
-    source_results: Sequence[Tuple[ABCSource, result.Result[ABCHostSections, Exception]]]
+    source_results: Sequence[Tuple[Source, result.Result[HostSections, Exception]]]
     safe_to_write: bool
 
 
@@ -203,8 +203,7 @@ def _fetch_multi_host_sections_for_inv(
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
-) -> Tuple[MultiHostSections, Sequence[Tuple[ABCSource, result.Result[ABCHostSections,
-                                                                      Exception]]]]:
+) -> Tuple[MultiHostSections, Sequence[Tuple[Source, result.Result[HostSections, Exception]]]]:
     if host_config.is_cluster:
         return MultiHostSections(), []
 
@@ -234,7 +233,7 @@ def _fetch_multi_host_sections_for_inv(
     return multi_host_sections, results
 
 
-def _configure_source_for_inv(source: checkers.ABCSource):
+def _configure_source_for_inv(source: checkers.Source):
     if isinstance(source, checkers.snmp.SNMPSource):
         source.use_snmpwalk_cache = False
         source.ignore_check_interval = True
@@ -242,7 +241,7 @@ def _configure_source_for_inv(source: checkers.ABCSource):
 
 
 def _safe_to_write_tree(
-    results: Sequence[Tuple[ABCSource, result.Result[ABCHostSections, Exception]]],) -> bool:
+    results: Sequence[Tuple[Source, result.Result[HostSections, Exception]]],) -> bool:
     """Check if data sources of a host failed
 
     If a data source failed, we may have incomlete data. In that case we
@@ -258,7 +257,7 @@ def do_inventory_actions_during_checking_for(
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
     *,
-    sources: Sequence[ABCSource],
+    sources: Sequence[Source],
     multi_host_sections: MultiHostSections,
 ) -> None:
 

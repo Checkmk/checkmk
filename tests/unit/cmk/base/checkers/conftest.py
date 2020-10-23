@@ -8,7 +8,7 @@ from contextlib import suppress
 
 import pytest  # type: ignore[import]
 
-from cmk.base.checkers import ABCSource, FileCacheFactory
+from cmk.base.checkers import Source, FileCacheFactory
 from cmk.base.checkers.agent import AgentSource
 from cmk.base.checkers.snmp import SNMPSource
 from cmk.base.checkers.tcp import TCPSource
@@ -32,5 +32,5 @@ def reset_mutable_global_state():
     reset(FileCacheFactory, "disabled", False)
     reset(FileCacheFactory, "maybe", False)
     reset(FileCacheFactory, "use_outdated", False)
-    reset(ABCSource, "use_outdated_persisted_sections", False)
+    reset(Source, "use_outdated_persisted_sections", False)
     reset(TCPSource, "use_only_cache", False)

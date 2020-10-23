@@ -1410,7 +1410,7 @@ def _discover_services(
 
 
 def _configure_sources(
-    source: checkers.ABCSource,
+    source: checkers.Source,
     *,
     discovery_parameters: DiscoveryParameters,
     disable_snmp_caches: bool = False,

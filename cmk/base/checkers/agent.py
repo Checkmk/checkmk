@@ -44,10 +44,10 @@ from cmk.base.exceptions import MKGeneralException
 from cmk.base.ip_lookup import normalize_ip_addresses
 
 from ._abstract import (
-    ABCSource,
-    ABCHostSections,
-    ABCParser,
-    ABCSummarizer,
+    Source,
+    HostSections,
+    Parser,
+    Summarizer,
     FileCacheFactory,
     Mode,
 )
@@ -55,8 +55,8 @@ from ._abstract import (
 __all__ = ["AgentSource", "AgentHostSections"]
 
 
-class AgentHostSections(ABCHostSections[AgentRawData, AgentSections, AgentPersistedSections,
-                                        AgentSectionContent]):
+class AgentHostSections(HostSections[AgentRawData, AgentSections, AgentPersistedSections,
+                                     AgentSectionContent]):
     pass
 
 
@@ -82,7 +82,7 @@ class NoCacheFactory(FileCacheFactory[AgentRawData]):
         )
 
 
-class AgentSource(ABCSource[AgentRawData, AgentHostSections]):
+class AgentSource(Source[AgentRawData, AgentHostSections]):
     """Configure agent checkers and fetchers.
 
     Args:
@@ -133,7 +133,7 @@ class AgentSource(ABCSource[AgentRawData, AgentHostSections]):
         )
 
 
-class AgentSummarizer(ABCSummarizer[AgentHostSections]):
+class AgentSummarizer(Summarizer[AgentHostSections]):
     pass
 
 
@@ -316,7 +316,7 @@ class AgentSummarizerDefault(AgentSummarizer):
                 (agent_version, expected_version, e))
 
 
-class AgentParser(ABCParser[AgentRawData, AgentHostSections]):
+class AgentParser(Parser[AgentRawData, AgentHostSections]):
     """A parser for agent data."""
     def __init__(
         self,

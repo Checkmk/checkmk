@@ -29,8 +29,8 @@ import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.checkers import (
     _checkers,
-    ABCHostSections,
-    ABCSource,
+    HostSections,
+    Source,
     make_nodes,
     make_sources,
     Mode,
@@ -438,7 +438,7 @@ class TestMakeHostSectionsHosts:
 
     @pytest.fixture(autouse=True)
     def patch_io(self, monkeypatch):
-        class DummyHostSection(ABCHostSections):
+        class DummyHostSection(HostSections):
             def _extend_section(self, section_name, section_content):
                 pass
 
@@ -451,7 +451,7 @@ class TestMakeHostSectionsHosts:
             )
 
         monkeypatch.setattr(
-            ABCSource,
+            Source,
             "parse",
             lambda self, raw_data: result.OK(
                 DummyHostSection(
@@ -505,7 +505,7 @@ class TestMakeHostSectionsHosts:
         section = mhs[key]
         assert isinstance(section, AgentHostSections)
 
-        # Public attributes from ABCHostSections:
+        # Public attributes from HostSections:
         assert not section.sections
         assert not section.cache_info
         assert not section.piggybacked_raw_data
@@ -689,7 +689,7 @@ class TestMakeHostSectionsClusters:
 
     @pytest.fixture(autouse=True)
     def patch_io(self, monkeypatch):
-        class DummyHostSection(ABCHostSections):
+        class DummyHostSection(HostSections):
             def _extend_section(self, section_name, section_content):
                 pass
 
@@ -698,7 +698,7 @@ class TestMakeHostSectionsClusters:
             monkeypatch.setattr(fetcher, "fetch", lambda self, mode, fetcher=fetcher: {} if fetcher is SNMPFetcher else b"",)
 
         monkeypatch.setattr(
-            ABCSource,
+            Source,
             "parse",
             lambda self, *args, **kwargs: result.OK(DummyHostSection(
                 sections={SectionName("section_name_%s" % self.hostname): [["section_content"]]},
@@ -811,7 +811,7 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
         make_piggybacked_sections,
     )
     monkeypatch.setattr(
-        ABCSource,
+        Source,
         "parse",
         check,
     )

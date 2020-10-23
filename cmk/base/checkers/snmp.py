@@ -27,11 +27,11 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_table as check_table
 import cmk.base.config as config
 
-from ._abstract import ABCHostSections, ABCParser, ABCSource, ABCSummarizer, FileCacheFactory, Mode
+from ._abstract import HostSections, Parser, Source, Summarizer, FileCacheFactory, Mode
 
 
-class SNMPHostSections(ABCHostSections[SNMPRawData, SNMPSections, SNMPPersistedSections,
-                                       SNMPSectionContent]):
+class SNMPHostSections(HostSections[SNMPRawData, SNMPSections, SNMPPersistedSections,
+                                    SNMPSectionContent]):
     pass
 
 
@@ -46,7 +46,7 @@ class SNMPFileCacheFactory(FileCacheFactory[SNMPRawData]):
         )
 
 
-class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
+class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
     def __init__(
         self,
         hostname: HostName,
@@ -247,7 +247,7 @@ class SNMPSource(ABCSource[SNMPRawData, SNMPHostSections]):
         )
 
 
-class SNMPParser(ABCParser[SNMPRawData, SNMPHostSections]):
+class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
     """A parser for SNMP data."""
     def __init__(
         self,
@@ -304,6 +304,6 @@ class SNMPParser(ABCParser[SNMPRawData, SNMPHostSections]):
         return persisted_sections
 
 
-class SNMPSummarizer(ABCSummarizer[SNMPHostSections]):
+class SNMPSummarizer(Summarizer[SNMPHostSections]):
     def summarize_success(self, host_sections: SNMPHostSections) -> ServiceCheckResult:
         return 0, "Success", []

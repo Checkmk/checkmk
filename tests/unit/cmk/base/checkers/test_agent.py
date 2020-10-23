@@ -22,7 +22,7 @@ from cmk.fetchers import FetcherType
 from cmk.fetchers.agent import NoCache
 
 import cmk.base.config as config
-from cmk.base.checkers._abstract import ABCHostSections
+from cmk.base.checkers._abstract import HostSections
 from cmk.base.checkers import Mode
 from cmk.base.checkers.agent import AgentParser, AgentSource, AgentSummarizer
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
@@ -50,7 +50,7 @@ class TestParser:
     @pytest.fixture
     def patch_io(self, monkeypatch):
         monkeypatch.setattr(
-            ABCHostSections,
+            HostSections,
             "add_persisted_sections",
             lambda *args, **kwargs: None,
         )

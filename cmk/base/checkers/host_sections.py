@@ -42,16 +42,16 @@ from cmk.base.check_api_utils import MGMT_ONLY as LEGACY_MGMT_ONLY
 from cmk.base.check_utils import AbstractSectionContent, FinalSectionContent, ParsedSectionContent
 from cmk.base.exceptions import MKParseFunctionError
 
-from ._abstract import ABCHostSections
+from ._abstract import HostSections
 
 
-class MultiHostSections(MutableMapping[HostKey, ABCHostSections]):
+class MultiHostSections(MutableMapping[HostKey, HostSections]):
     """Container object for wrapping the host sections of a host being processed
     or multiple hosts when a cluster is processed. Also holds the functionality for
     merging these information together for a check"""
-    def __init__(self, data: Optional[Dict[HostKey, ABCHostSections]] = None) -> None:
+    def __init__(self, data: Optional[Dict[HostKey, HostSections]] = None) -> None:
         super(MultiHostSections, self).__init__()
-        self._data: Dict[HostKey, ABCHostSections] = {} if data is None else data
+        self._data: Dict[HostKey, HostSections] = {} if data is None else data
         self._section_content_cache = caching.DictCache()
         # The following are not quite the same as section_content_cache.
         # They are introduced for the changed data handling with the migration
@@ -68,10 +68,10 @@ class MultiHostSections(MutableMapping[HostKey, ABCHostSections]):
     def __iter__(self) -> Iterator[HostKey]:
         return self._data.__iter__()
 
-    def __getitem__(self, key: HostKey) -> ABCHostSections:
+    def __getitem__(self, key: HostKey) -> HostSections:
         return self._data.__getitem__(key)
 
-    def __setitem__(self, key: HostKey, value: ABCHostSections) -> None:
+    def __setitem__(self, key: HostKey, value: HostSections) -> None:
         self._data.__setitem__(key, value)
 
     def __delitem__(self, key: HostKey) -> None:
@@ -83,10 +83,10 @@ class MultiHostSections(MutableMapping[HostKey, ABCHostSections]):
     def keys(self) -> KeysView[HostKey]:
         return self._data.keys()  # pylint: disable=dict-keys-not-iterating
 
-    def values(self) -> ValuesView[ABCHostSections]:
+    def values(self) -> ValuesView[HostSections]:
         return self._data.values()  # pylint: disable=dict-values-not-iterating
 
-    def items(self) -> ItemsView[HostKey, ABCHostSections]:
+    def items(self) -> ItemsView[HostKey, HostSections]:
         return self._data.items()  # pylint: disable=dict-items-not-iterating
 
     def get_section_kwargs(

@@ -26,7 +26,7 @@ import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.config import HostConfig, SelectedRawSections
 
-from ._abstract import ABCSource, Mode, ABCHostSections
+from ._abstract import Source, Mode, HostSections
 from .agent import AgentHostSections
 from .host_sections import HostKey, MultiHostSections
 from .ipmi import IPMISource
@@ -52,12 +52,12 @@ class _Builder:
         self._hostname = host_config.hostname
         self._ipaddress = ipaddress
         self._mode = mode
-        self._elems: Dict[str, ABCSource] = {}
+        self._elems: Dict[str, Source] = {}
 
         self._initialize()
 
     @property
-    def sources(self) -> Sequence[ABCSource]:
+    def sources(self) -> Sequence[Source]:
         # Always execute piggyback at the end
         return sorted(
             self._elems.values(),
@@ -131,14 +131,14 @@ class _Builder:
         else:
             raise LookupError()
 
-    def _add(self, source: ABCSource) -> None:
+    def _add(self, source: Source) -> None:
         self._elems[source.id] = source
 
     def _get_agent(
         self,
         ignore_special_agents: bool,
         main_data_source: bool,
-    ) -> ABCSource:
+    ) -> Source:
         if not ignore_special_agents:
             special_agents = self._get_special_agents()
             if special_agents:
@@ -161,7 +161,7 @@ class _Builder:
             main_data_source=main_data_source,
         )
 
-    def _get_special_agents(self) -> Sequence[ABCSource]:
+    def _get_special_agents(self) -> Sequence[Source]:
         return [
             SpecialAgentSource(
                 self._hostname,
@@ -178,7 +178,7 @@ def make_sources(
     ipaddress: Optional[HostAddress],
     *,
     mode: Mode,
-) -> Sequence[ABCSource]:
+) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
     return _Builder(host_config, ipaddress, mode=mode).sources
 
@@ -188,8 +188,8 @@ def make_nodes(
     host_config: HostConfig,
     ipaddress: Optional[HostAddress],
     mode: Mode,
-    sources: Sequence[ABCSource],
-) -> Sequence[Tuple[HostName, Optional[HostAddress], Sequence[ABCSource]]]:
+    sources: Sequence[Source],
+) -> Sequence[Tuple[HostName, Optional[HostAddress], Sequence[Source]]]:
     if host_config.nodes is None:
         return [(host_config.hostname, ipaddress, sources)]
     return _make_piggyback_nodes(mode, config_cache, host_config)
@@ -213,13 +213,13 @@ def _make_piggybacked_sections(host_config) -> SelectedRawSections:
 
 def update_host_sections(
     multi_host_sections: MultiHostSections,
-    nodes: Iterable[Tuple[HostName, Optional[HostAddress], Sequence[ABCSource]]],
+    nodes: Iterable[Tuple[HostName, Optional[HostAddress], Sequence[Source]]],
     *,
     max_cachefile_age: int,
     selected_raw_sections: Optional[SelectedRawSections],
     host_config: HostConfig,
     fetcher_messages: Optional[Sequence[FetcherMessage]] = None,
-) -> Sequence[Tuple[ABCSource, result.Result[ABCHostSections, Exception]]]:
+) -> Sequence[Tuple[Source, result.Result[HostSections, Exception]]]:
     """Gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
 
     Communication errors are not raised through by this functions. All agent related errors are
@@ -234,7 +234,7 @@ def update_host_sections(
 
     # Special agents can produce data for the same check_plugin_name on the same host, in this case
     # the section lines need to be extended
-    data: List[Tuple[ABCSource, result.Result[ABCHostSections, Exception]]] = []
+    data: List[Tuple[Source, result.Result[HostSections, Exception]]] = []
     for hostname, ipaddress, sources in nodes:
         for source_index, source in enumerate(sources):
             console.vverbose("  Source: %s/%s\n" % (source.source_type, source.fetcher_type))
@@ -290,7 +290,7 @@ def _make_piggyback_nodes(
     mode: Mode,
     config_cache: config.ConfigCache,
     host_config: HostConfig,
-) -> Sequence[Tuple[HostName, Optional[HostAddress], Sequence[ABCSource]]]:
+) -> Sequence[Tuple[HostName, Optional[HostAddress], Sequence[Source]]]:
     """Abstract clusters/nodes/hosts"""
     assert host_config.nodes is not None
 

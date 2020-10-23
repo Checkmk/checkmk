@@ -49,16 +49,16 @@ from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 from ._cache import SectionStore
 
 __all__ = [
-    "ABCHostSections",
-    "ABCSource",
+    "HostSections",
+    "Source",
     "FileCacheFactory",
     "Mode",
     "set_cache_opts",
 ]
 
 
-class ABCHostSections(Generic[TRawData, TSections, TPersistedSections, TSectionContent],
-                      metaclass=abc.ABCMeta):
+class HostSections(Generic[TRawData, TSections, TPersistedSections, TSectionContent],
+                   metaclass=abc.ABCMeta):
     """A wrapper class for the host information read by the data sources
 
     It contains the following information:
@@ -97,7 +97,7 @@ class ABCHostSections(Generic[TRawData, TSections, TPersistedSections, TSectionC
     # of the sections, but for the self.cache_info this is not done. Why?
     # TODO: checking.execute_check() is using the oldest cached_at and the largest interval.
     #       Would this be correct here?
-    def update(self, host_sections: "ABCHostSections") -> None:
+    def update(self, host_sections: "HostSections") -> None:
         """Update this host info object with the contents of another one"""
         for section_name, section_content in host_sections.sections.items():
             self._extend_section(section_name, section_content)
@@ -188,10 +188,10 @@ class ABCHostSections(Generic[TRawData, TSections, TPersistedSections, TSectionC
         self.sections[section_name] = section  # type: ignore[assignment]
 
 
-THostSections = TypeVar("THostSections", bound=ABCHostSections)
+THostSections = TypeVar("THostSections", bound=HostSections)
 
 
-class ABCParser(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
+class Parser(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
     """Parse raw data into host sections."""
     @abc.abstractmethod
     def parse(self, raw_data: TRawData) -> THostSections:
@@ -251,7 +251,7 @@ class FileCacheFactory(Generic[TRawData], abc.ABC):
         raise NotImplementedError
 
 
-class ABCSource(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
+class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
     """Hold the configuration to fetchers and checkers.
 
     At best, this should only hold static data, that is, every
@@ -360,12 +360,12 @@ class ABCSource(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def _make_parser(self) -> "ABCParser[TRawData, THostSections]":
+    def _make_parser(self) -> "Parser[TRawData, THostSections]":
         """Create a parser with this configuration."""
         raise NotImplementedError
 
     @abc.abstractmethod
-    def _make_summarizer(self) -> "ABCSummarizer[THostSections]":
+    def _make_summarizer(self) -> "Summarizer[THostSections]":
         """Create a summarizer with this configuration."""
         raise NotImplementedError
 
@@ -379,7 +379,7 @@ class ABCSource(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         self._logger.addHandler(handler)
 
 
-class ABCSummarizer(Generic[THostSections], metaclass=abc.ABCMeta):
+class Summarizer(Generic[THostSections], metaclass=abc.ABCMeta):
     """Class to summarize parsed data into a ServiceCheckResult."""
     def __init__(self, exit_spec: config.ExitSpec) -> None:
         super().__init__()

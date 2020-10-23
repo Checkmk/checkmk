@@ -18,7 +18,7 @@ from typing import (
     Tuple,
 )
 
-from cmk.utils.paths import omd_root
+from cmk.utils.paths import tmp_dir
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.plugin_registry import Registry
 from cmk.gui.background_job import BackgroundJobAlreadyRunning, BackgroundProcessInterface
@@ -157,7 +157,7 @@ class IndexSearcher:
 
 
 def get_index_store() -> IndexStore:
-    return IndexStore(pathlib.Path(omd_root / pathlib.Path('tmp/check_mk/wato/search_index.pkl')))
+    return IndexStore(pathlib.Path(tmp_dir / pathlib.Path('wato/search_index.pkl')))
 
 
 def build_and_store_index() -> None:

@@ -10,8 +10,6 @@ import queue
 import threading
 import time
 import traceback
-import shutil
-from pathlib import Path
 from typing import Set
 from urllib.parse import urlsplit, parse_qsl, urlunsplit, urljoin, urlencode
 
@@ -22,10 +20,6 @@ from testlib.web_session import CMKWebSession
 from testlib.version import CMKVersion
 
 logger = logging.getLogger()
-
-
-def _is_dockerized():
-    return Path("/.dockerenv").exists()
 
 
 class InvalidUrl(Exception):
@@ -328,17 +322,11 @@ class Crawler:
         self.todo.put(Url(site.internal_url))
         self.handled.add(site.internal_url)
 
-        if not os.path.exists(self.result_dir()):
-            os.makedirs(self.result_dir())
-
-    def result_dir(self):
-        return os.environ.get("RESULT_PATH", self.site.path("results"))
-
     #def stats_file(self):
     #    return self.result_dir() + "/crawl.stats"
 
     def report_file(self):
-        return self.result_dir() + "/crawl.report"
+        return self.site.result_dir() + "/crawl.report"
 
     #def load_stats(self):
     #    try:
@@ -376,7 +364,7 @@ class Crawler:
 
     # TODO: Better write it as report XML that can be parsed by jenkins?
     def report(self):
-        self._copy_site_files()
+        self.site.save_results()
         self._write_report_file()
 
         if self.errors:
@@ -384,16 +372,6 @@ class Crawler:
                             (len(self.visited), time.time() - self.started, "\n".join(self.errors)))
 
         logger.info("Done. Everything was OK.")
-
-    def _copy_site_files(self):
-        if not _is_dockerized():
-            return
-
-        shutil.copytree(self.site.path("var/log"), "%s/logs" % self.result_dir())
-
-        crash_dir = self.site.path("var/check_mk/crashes")
-        if os.path.exists(crash_dir):
-            shutil.copytree(crash_dir, "%s/crashes" % self.result_dir())
 
     def _write_report_file(self):
         with open(self.report_file() + ".tmp", "w") as f:

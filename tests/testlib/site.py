@@ -401,6 +401,9 @@ class Site:
         if self.update_from_git:
             self._update_with_f12_files()
 
+        if not os.path.exists(self.result_dir()):
+            os.makedirs(self.result_dir())
+
     def _update_with_f12_files(self):
         paths = [
             cmk_path() + "/omd/packages/omd",
@@ -725,6 +728,25 @@ class Site:
         logger.debug("Livestatus ports already in use: %r, using port: %d", used_ports, port)
         return port
 
+    def save_results(self):
+        if not _is_dockerized():
+            logger.info("Not dockerized: not copying results")
+            return
+        logger.info("Saving to %s", self.result_dir())
+
+        shutil.copytree(self.path("var/log"), "%s/logs" % self.result_dir())
+
+        crash_dir = self.path("var/check_mk/crashes")
+        if os.path.exists(crash_dir):
+            shutil.copytree(crash_dir, "%s/crashes" % self.result_dir())
+
+    def result_dir(self):
+        return os.path.join(os.environ.get("RESULT_PATH", self.path("results")), self.id)
+
+
+def _is_dockerized():
+    return Path("/.dockerenv").exists()
+
 
 class SiteFactory:
     def __init__(self,
@@ -803,7 +825,14 @@ class SiteFactory:
         self._sites[site.id] = site
         return site
 
+    def save_results(self):
+        logger.info("Saving results")
+        for _site_id, site in sorted(self._sites.items(), key=lambda x: x[0]):
+            logger.info("Saving results of site %s", site.id)
+            site.save_results()
+
     def cleanup(self):
+        logger.info("Removing sites")
         for site_id in list(self._sites.keys()):
             self.remove_site(site_id)
 

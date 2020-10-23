@@ -26,4 +26,5 @@ def site_factory():
                          prefix="comp_")
         yield sf
     finally:
+        sf.save_results()
         sf.cleanup()

@@ -49,27 +49,27 @@ def to_openapi(
     Examples:
 
         >>> class Params(Schema):
-        ...      field1 = fields.String()
-        ...      field2 = fields.String()
+        ...      field1 = fields.String(required=True, allow_none=True)
+        ...      field2 = fields.String(example="foo", required=False)
 
         >>> to_openapi([Params], 'query')
-        [{'name': 'field1', 'in': 'query', 'required': True, 'allowEmptyValue': False, \
+        [{'name': 'field1', 'in': 'query', 'required': True, 'allowEmptyValue': True, \
 'schema': {'type': 'string'}}, \
-{'name': 'field2', 'in': 'query', 'required': True, 'allowEmptyValue': False, \
-'schema': {'type': 'string'}}]
+{'name': 'field2', 'in': 'query', 'required': False, 'allowEmptyValue': False, \
+'example': 'foo', 'schema': {'type': 'string'}}]
 
         >>> to_openapi([{'field1': fields.String()}], 'query')
-        [{'name': 'field1', 'in': 'query', 'required': True, 'allowEmptyValue': False, \
+        [{'name': 'field1', 'in': 'query', 'required': False, 'allowEmptyValue': False, \
 'schema': {'type': 'string'}}]
 
         >>> to_openapi([{'field2': fields.String()}], 'query')
-        [{'name': 'field2', 'in': 'query', 'required': True, 'allowEmptyValue': False, \
+        [{'name': 'field2', 'in': 'query', 'required': False, 'allowEmptyValue': False, \
 'schema': {'type': 'string'}}]
 
         >>> to_openapi([{'field1': fields.String(), 'field2': fields.String()}], 'query')
-        [{'name': 'field1', 'in': 'query', 'required': True, 'allowEmptyValue': False, \
+        [{'name': 'field1', 'in': 'query', 'required': False, 'allowEmptyValue': False, \
 'schema': {'type': 'string'}}, \
-{'name': 'field2', 'in': 'query', 'required': True, 'allowEmptyValue': False, 'schema': \
+{'name': 'field2', 'in': 'query', 'required': False, 'allowEmptyValue': False, 'schema': \
 {'type': 'string'}}]
 
         >>> to_openapi([Schema], 'query')
@@ -124,8 +124,8 @@ def to_openapi(
             metadata = denilled({
                 'description': field.metadata.get('description'),
                 'example': field.metadata.get('example'),
-                'required': field.metadata.get('required'),
-                'allow_empty': field.metadata.get('allow_empty'),
+                'required': field.required,
+                'allow_empty': field.allow_none,
                 'schema_enum': field.metadata.get('enum'),
                 'schema_string_format': field.metadata.get('format'),
                 'schema_string_pattern': field.metadata.get('pattern'),

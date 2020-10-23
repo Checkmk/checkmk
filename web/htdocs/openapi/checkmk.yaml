@@ -6,7 +6,7 @@ components:
       example: application/json
       in: header
       name: Accept
-      required: true
+      required: false
       schema:
         type: string
   schemas:
@@ -2940,6 +2940,13 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.acknowledgement.set_acknowledgement_on_host_service
       parameters:
+      - description: The service description.
+        in: path
+        name: service_description
+        required: true
+        schema:
+          example: Memory
+          type: string
       - description: A hostname.
         in: path
         name: host_name
@@ -2947,13 +2954,6 @@ paths:
         schema:
           example: example.com
           pattern: '[-0-9a-zA-Z_.]+'
-          type: string
-      - description: The service description.
-        in: path
-        name: service_description
-        required: true
-        schema:
-          example: Memory
           type: string
       requestBody:
         content:
@@ -3485,9 +3485,9 @@ paths:
           ,\n    json={\n        'id': 'rule1',\n        'nodes': [],\n        'params':\
           \ [{\n            'arguments': ['foo', 'bar']\n        }],\n        'node_visualization':\
           \ {\n            'config': {},\n            'type': 'block'\n        },\n\
-          \        'properties': {\n            'icon': '',\n            'title':\
-          \ '',\n            'docu_url': '',\n            'state_messages': {},\n\
-          \            'comment': ''\n        },\n        'aggregation_function':\
+          \        'properties': {\n            'title': '',\n            'icon':\
+          \ '',\n            'comment': '',\n            'state_messages': {},\n \
+          \           'docu_url': ''\n        },\n        'aggregation_function':\
           \ {\n            'count': 1,\n            'restrict_state': 2,\n       \
           \     'type': 'best'\n        },\n        'computation_options': {\n   \
           \         'disabled': False\n        },\n        'pack_id': 'pack1'\n  \
@@ -3503,9 +3503,9 @@ paths:
           \     'id': 'rule1',\n        'nodes': [],\n        'params': [{\n     \
           \       'arguments': ['foo', 'bar']\n        }],\n        'node_visualization':\
           \ {\n            'config': {},\n            'type': 'block'\n        },\n\
-          \        'properties': {\n            'icon': '',\n            'title':\
-          \ '',\n            'docu_url': '',\n            'state_messages': {},\n\
-          \            'comment': ''\n        },\n        'aggregation_function':\
+          \        'properties': {\n            'title': '',\n            'icon':\
+          \ '',\n            'comment': '',\n            'state_messages': {},\n \
+          \           'docu_url': ''\n        },\n        'aggregation_function':\
           \ {\n            'count': 1,\n            'restrict_state': 2,\n       \
           \     'type': 'best'\n        },\n        'computation_options': {\n   \
           \         'disabled': False\n        },\n        'pack_id': 'pack1'\n  \
@@ -3539,8 +3539,8 @@ paths:
           type\": \"best\"}' \\\n    computation_options='{\"disabled\": false}' \\\
           \n    id='rule1' \\\n    node_visualization='{\"config\": {}, \"type\":\
           \ \"block\"}' \\\n    nodes='[]' \\\n    pack_id='pack1' \\\n    params='[{\"\
-          arguments\": [\"foo\", \"bar\"]}]' \\\n    properties='{\"icon\": \"\",\
-          \ \"title\": \"\", \"docu_url\": \"\", \"state_messages\": {}, \"comment\"\
+          arguments\": [\"foo\", \"bar\"]}]' \\\n    properties='{\"title\": \"\"\
+          , \"icon\": \"\", \"comment\": \"\", \"state_messages\": {}, \"docu_url\"\
           : \"\"}' \\\n    --json"
   /objects/bi_aggregation/{aggregation_id}:
     get:
@@ -3648,12 +3648,12 @@ paths:
           \       'paths': [['path', 'group', 'a'],\n                      ['path',\
           \ 'group', 'b']]\n        },\n        'node': {\n            'search': {\n\
           \                'type': 'empty'\n            },\n            'action':\
-          \ {\n                'host_regex': '',\n                'type': 'state_of_host'\n\
-          \            }\n        },\n        'aggregation_visualization': {\n   \
-          \         'layout_id': 'builtin_default',\n            'ignore_rule_styles':\
-          \ False,\n            'line_style': 'round'\n        },\n        'computation_options':\
-          \ {\n            'use_hard_states': False,\n            'escalate_downtimes_as_warn':\
-          \ False,\n            'disabled': False\n        },\n        'pack_id':\
+          \ {\n                'type': 'state_of_host',\n                'host_regex':\
+          \ ''\n            }\n        },\n        'aggregation_visualization': {\n\
+          \            'ignore_rule_styles': False,\n            'layout_id': 'builtin_default',\n\
+          \            'line_style': 'round'\n        },\n        'computation_options':\
+          \ {\n            'escalate_downtimes_as_warn': False,\n            'disabled':\
+          \ False,\n            'use_hard_states': False\n        },\n        'pack_id':\
           \ 'pack1'\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
@@ -3667,13 +3667,13 @@ paths:
           \ {\n            'names': ['groupA', 'groupB'],\n            'paths': [['path',\
           \ 'group', 'a'],\n                      ['path', 'group', 'b']]\n      \
           \  },\n        'node': {\n            'search': {\n                'type':\
-          \ 'empty'\n            },\n            'action': {\n                'host_regex':\
-          \ '',\n                'type': 'state_of_host'\n            }\n        },\n\
-          \        'aggregation_visualization': {\n            'layout_id': 'builtin_default',\n\
-          \            'ignore_rule_styles': False,\n            'line_style': 'round'\n\
-          \        },\n        'computation_options': {\n            'use_hard_states':\
-          \ False,\n            'escalate_downtimes_as_warn': False,\n           \
-          \ 'disabled': False\n        },\n        'pack_id': 'pack1'\n    }).encode('utf-8'),\n\
+          \ 'empty'\n            },\n            'action': {\n                'type':\
+          \ 'state_of_host',\n                'host_regex': ''\n            }\n  \
+          \      },\n        'aggregation_visualization': {\n            'ignore_rule_styles':\
+          \ False,\n            'layout_id': 'builtin_default',\n            'line_style':\
+          \ 'round'\n        },\n        'computation_options': {\n            'escalate_downtimes_as_warn':\
+          \ False,\n            'disabled': False,\n            'use_hard_states':\
+          \ False\n        },\n        'pack_id': 'pack1'\n    }).encode('utf-8'),\n\
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -3704,14 +3704,15 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/bi_aggregation/aggregation1\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    aggregation_visualization='{\"layout_id\":\
-          \ \"builtin_default\", \"ignore_rule_styles\": false, \"line_style\": \"\
-          round\"}' \\\n    computation_options='{\"use_hard_states\": false, \"escalate_downtimes_as_warn\"\
-          : false, \"disabled\": false}' \\\n    customer='customer1' \\\n    groups='{\"\
-          names\": [\"groupA\", \"groupB\"], \"paths\": [[\"path\", \"group\", \"\
-          a\"], [\"path\", \"group\", \"b\"]]}' \\\n    id='aggr1' \\\n    node='{\"\
-          search\": {\"type\": \"empty\"}, \"action\": {\"host_regex\": \"\", \"type\"\
-          : \"state_of_host\"}}' \\\n    pack_id='pack1' \\\n    --json"
+          \ application/json\" \\\n    aggregation_visualization='{\"ignore_rule_styles\"\
+          : false, \"layout_id\": \"builtin_default\", \"line_style\": \"round\"}'\
+          \ \\\n    computation_options='{\"escalate_downtimes_as_warn\": false, \"\
+          disabled\": false, \"use_hard_states\": false}' \\\n    customer='customer1'\
+          \ \\\n    groups='{\"names\": [\"groupA\", \"groupB\"], \"paths\": [[\"\
+          path\", \"group\", \"a\"], [\"path\", \"group\", \"b\"]]}' \\\n    id='aggr1'\
+          \ \\\n    node='{\"search\": {\"type\": \"empty\"}, \"action\": {\"type\"\
+          : \"state_of_host\", \"host_regex\": \"\"}}' \\\n    pack_id='pack1' \\\n\
+          \    --json"
   /domain-types/bi_pack/collections/all:
     get:
       description: ''
@@ -3907,7 +3908,7 @@ paths:
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
               example: a20ceacf346041dc
-              required: true
+              required: false
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -4060,7 +4061,9 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.delete(\n    f\"{API_URL}/objects/contact_group_config/pathname\"\
-          ,\n)\nresp.raise_for_status()\ndata = resp.json()"
+          ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
+          \ The ETag of the object to be modified.\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -4068,22 +4071,23 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
           \    f\"{API_URL}/objects/contact_group_config/pathname\",\n    method=\"\
           DELETE\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
-          \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n)\n\
-          response = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+          \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n        \"If-Match\"\
+          : \"a20ceacf346041dc\",  # (required) The ETag of the object to be modified.\n\
+          \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\\n    \"$API_URL/objects/contact_group_config/pathname\""
+          \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n    \"$API_URL/objects/contact_group_config/pathname\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/objects/contact_group_config/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    --json"
+          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    --json"
     get:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.contact_group_config.show
@@ -4117,7 +4121,7 @@ paths:
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
               example: a20ceacf346041dc
-              required: true
+              required: false
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -4204,7 +4208,7 @@ paths:
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
               example: a20ceacf346041dc
-              required: true
+              required: false
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -4219,8 +4223,9 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/contact_group_config/pathname\"\
-          ,\n    json={'name': 'OnCall', 'alias': 'Not on Sundays.'},\n)\nresp.raise_for_status()\n\
-          data = resp.json()"
+          ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
+          \ The ETag of the object to be modified.\n    },\n    json={'name': 'OnCall',\
+          \ 'alias': 'Not on Sundays.'},\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -4228,7 +4233,8 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
           \    f\"{API_URL}/objects/contact_group_config/pathname\",\n    method=\"\
           PUT\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
-          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({'name':\
+          ,\n        \"Accept\": \"application/json\",\n        \"If-Match\": \"a20ceacf346041dc\"\
+          ,  # (required) The ETag of the object to be modified.\n    },\n    data=json.dumps({'name':\
           \ 'OnCall', 'alias': 'Not on Sundays.'}).encode('utf-8'),\n)\nresponse =\
           \ urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
@@ -4237,16 +4243,17 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\ \\\n    --data '{\n          \"alias\": \"Not on Sundays.\",\n    \
-          \      \"name\": \"OnCall\"\n        }' \\\n    \"$API_URL/objects/contact_group_config/pathname\""
+          \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\ \\\n    --data '{\n\
+          \          \"alias\": \"Not on Sundays.\",\n          \"name\": \"OnCall\"\
+          \n        }' \\\n    \"$API_URL/objects/contact_group_config/pathname\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/contact_group_config/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    alias='Not on Sundays.' \\\n    name='OnCall'\
-          \ \\\n    --json"
+          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    alias='Not\
+          \ on Sundays.' \\\n    name='OnCall' \\\n    --json"
   /domain-types/contact_group_config/actions/bulk-delete/invoke:
     delete:
       description: ''
@@ -4383,6 +4390,13 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.downtime.list_service_downtimes
       parameters:
+      - description: The service description.
+        in: query
+        name: service_description
+        required: false
+        schema:
+          example: Memory
+          type: string
       - description: A hostname.
         in: query
         name: host_name
@@ -4390,13 +4404,6 @@ paths:
         schema:
           example: example.com
           pattern: '[-0-9a-zA-Z_.]+'
-          type: string
-      - description: The service description.
-        in: query
-        name: service_description
-        required: false
-        schema:
-          example: Memory
           type: string
       responses:
         default:
@@ -4424,17 +4431,16 @@ paths:
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/domain-types/downtime/collections/all\"\
           ,\n    params={  # goes into query string\n        \"host_name\": \"example.com\"\
-          ,  # (required) A hostname.\n        \"service_description\": \"Memory\"\
-          ,  # (required) The service description.\n    },\n)\nresp.raise_for_status()\n\
-          data = resp.json()"
+          ,  # A hostname.\n        \"service_description\": \"Memory\",  # The service\
+          \ description.\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.parse\nimport\
           \ urllib.request\n\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
           \ = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\n\nUSERNAME = \"\
           automation\"\nPASSWORD = \"test123\"\n\nquery_string = urllib.parse.urlencode({\n\
-          \    \"host_name\": \"example.com\",  # (required) A hostname.\n    \"service_description\"\
-          : \"Memory\",  # (required) The service description.\n})\n\nrequest = urllib.request.Request(\n\
+          \    \"host_name\": \"example.com\",  # A hostname.\n    \"service_description\"\
+          : \"Memory\",  # The service description.\n})\n\nrequest = urllib.request.Request(\n\
           \    f\"{API_URL}/domain-types/downtime/collections/all?{query_string}\"\
           ,\n    method=\"GET\",\n    headers={\n        \"Authorization\": f\"Bearer\
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
@@ -4535,13 +4541,6 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.downtime.delete_downtime
       parameters:
-      - description: The id of the downtime
-        in: path
-        name: downtime_id
-        required: true
-        schema:
-          example: '54'
-          type: string
       - description: A hostname.
         in: path
         name: host_name
@@ -4549,6 +4548,13 @@ paths:
         schema:
           example: example.com
           pattern: '[-0-9a-zA-Z_.]+'
+          type: string
+      - description: The id of the downtime
+        in: path
+        name: downtime_id
+        required: true
+        schema:
+          example: '54'
           type: string
       responses:
         default:
@@ -4738,7 +4744,7 @@ paths:
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
               example: a20ceacf346041dc
-              required: true
+              required: false
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -4829,7 +4835,9 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.delete(\n    f\"{API_URL}/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\"\
-          ,\n)\nresp.raise_for_status()\ndata = resp.json()"
+          ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
+          \ The ETag of the object to be modified.\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -4838,21 +4846,23 @@ paths:
           \    f\"{API_URL}/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\"\
           ,\n    method=\"DELETE\",\n    headers={\n        \"Authorization\": f\"\
           Bearer {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\"\
-          ,\n    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+          ,\n        \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of\
+          \ the object to be modified.\n    },\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\\n    \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\""
+          \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n    \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    --json"
+          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    --json"
     get:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.folder_config.show_folder
@@ -4887,7 +4897,7 @@ paths:
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
               example: a20ceacf346041dc
-              required: true
+              required: false
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -4976,7 +4986,7 @@ paths:
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
               example: a20ceacf346041dc
-              required: true
+              required: false
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -4991,9 +5001,10 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\"\
-          ,\n    json={\n        'title': 'Virtual Servers.',\n        'attributes':\
-          \ {},\n        'update_attributes': {}\n    },\n)\nresp.raise_for_status()\n\
-          data = resp.json()"
+          ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
+          \ The ETag of the object to be modified.\n    },\n    json={\n        'title':\
+          \ 'Virtual Servers.',\n        'attributes': {},\n        'update_attributes':\
+          \ {}\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -5002,26 +5013,29 @@ paths:
           \    f\"{API_URL}/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\"\
           ,\n    method=\"PUT\",\n    headers={\n        \"Authorization\": f\"Bearer\
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
-          \    },\n    data=json.dumps({\n        'title': 'Virtual Servers.',\n \
-          \       'attributes': {},\n        'update_attributes': {}\n    }).encode('utf-8'),\n\
-          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+          \        \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the\
+          \ object to be modified.\n    },\n    data=json.dumps({\n        'title':\
+          \ 'Virtual Servers.',\n        'attributes': {},\n        'update_attributes':\
+          \ {}\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\ \\\n    --data '{\n          \"attributes\": {},\n          \"title\"\
-          : \"Virtual Servers.\",\n          \"update_attributes\": {}\n        }'\
-          \ \\\n    \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\""
+          \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\ \\\n    --data '{\n\
+          \          \"attributes\": {},\n          \"title\": \"Virtual Servers.\"\
+          ,\n          \"update_attributes\": {}\n        }' \\\n    \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    attributes='{}' \\\n    title='Virtual Servers.'\
-          \ \\\n    update_attributes='{}' \\\n    --json"
+          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    attributes='{}'\
+          \ \\\n    title='Virtual Servers.' \\\n    update_attributes='{}' \\\n \
+          \   --json"
   /domain-types/folder_config/actions/bulk-update/invoke:
     put:
       description: ''
@@ -5135,7 +5149,7 @@ paths:
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
               example: a20ceacf346041dc
-              required: true
+              required: false
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -5150,7 +5164,9 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd/actions/move/invoke\"\
-          ,\n)\nresp.raise_for_status()\ndata = resp.json()"
+          ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
+          \ The ETag of the object to be modified.\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -5159,21 +5175,23 @@ paths:
           \    f\"{API_URL}/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd/actions/move/invoke\"\
           ,\n    method=\"POST\",\n    headers={\n        \"Authorization\": f\"Bearer\
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
-          \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+          \        \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the\
+          \ object to be modified.\n    },\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\\n    \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd/actions/move/invoke\""
+          \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n    \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd/actions/move/invoke\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd/actions/move/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    --json"
+          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    --json"
   /domain-types/host/collections/all:
     get:
       description: ''
@@ -5240,8 +5258,8 @@ paths:
           \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/domain-types/host/collections/all\"\
           ,\n    params={  # goes into query string\n        \"query\": \"{\"op\"\
           : \"not\", \"expr\": {\"op\": \"=\", \"left\": \"hosts.name\", \"right\"\
-          : \"example.com\"}}\",  # (required) An query expression in nested dictionary\
-          \ form.\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          : \"example.com\"}}\",  # An query expression in nested dictionary form.\n\
+          \    },\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.parse\nimport\
@@ -5249,8 +5267,8 @@ paths:
           \ = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\n\nUSERNAME = \"\
           automation\"\nPASSWORD = \"test123\"\n\nquery_string = urllib.parse.urlencode({\n\
           \    \"query\": \"{\"op\": \"not\", \"expr\": {\"op\": \"=\", \"left\":\
-          \ \"hosts.name\", \"right\": \"example.com\"}}\",  # (required) An query\
-          \ expression in nested dictionary form.\n})\n\nrequest = urllib.request.Request(\n\
+          \ \"hosts.name\", \"right\": \"example.com\"}}\",  # An query expression\
+          \ in nested dictionary form.\n})\n\nrequest = urllib.request.Request(\n\
           \    f\"{API_URL}/domain-types/host/collections/all?{query_string}\",\n\
           \    method=\"GET\",\n    headers={\n        \"Authorization\": f\"Bearer\
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
@@ -5355,7 +5373,7 @@ paths:
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
               example: a20ceacf346041dc
-              required: true
+              required: false
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -5520,7 +5538,9 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.delete(\n    f\"{API_URL}/objects/host_config/example.com\"\
-          ,\n)\nresp.raise_for_status()\ndata = resp.json()"
+          ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
+          \ The ETag of the object to be modified.\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -5528,22 +5548,23 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
           \    f\"{API_URL}/objects/host_config/example.com\",\n    method=\"DELETE\"\
           ,\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
-          ,\n        \"Accept\": \"application/json\",\n    },\n)\nresponse = urllib.request.urlopen(request)\n\
-          data = json.loads(response.read())"
+          ,\n        \"Accept\": \"application/json\",\n        \"If-Match\": \"a20ceacf346041dc\"\
+          ,  # (required) The ETag of the object to be modified.\n    },\n)\nresponse\
+          \ = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\\n    \"$API_URL/objects/host_config/example.com\""
+          \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n    \"$API_URL/objects/host_config/example.com\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/objects/host_config/example.com\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    --json"
+          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    --json"
     get:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.host_config.show_host
@@ -5576,7 +5597,7 @@ paths:
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
               example: a20ceacf346041dc
-              required: true
+              required: false
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -5662,7 +5683,7 @@ paths:
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
               example: a20ceacf346041dc
-              required: true
+              required: false
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -5677,10 +5698,12 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/host_config/example.com\"\
-          ,\n    json={\n        'attributes': {\n            'ipaddress': '192.168.0.123'\n\
-          \        },\n        'update_attributes': {\n            'ipaddress': '192.168.0.123'\n\
-          \        },\n        'nodes': ['host1', 'host2', 'host3']\n    },\n)\nresp.raise_for_status()\n\
-          data = resp.json()"
+          ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
+          \ The ETag of the object to be modified.\n    },\n    json={\n        'attributes':\
+          \ {\n            'ipaddress': '192.168.0.123'\n        },\n        'update_attributes':\
+          \ {\n            'ipaddress': '192.168.0.123'\n        },\n        'nodes':\
+          \ ['host1', 'host2', 'host3']\n    },\n)\nresp.raise_for_status()\ndata\
+          \ = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -5688,7 +5711,8 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
           \    f\"{API_URL}/objects/host_config/example.com\",\n    method=\"PUT\"\
           ,\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
-          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({\n\
+          ,\n        \"Accept\": \"application/json\",\n        \"If-Match\": \"a20ceacf346041dc\"\
+          ,  # (required) The ETag of the object to be modified.\n    },\n    data=json.dumps({\n\
           \        'attributes': {\n            'ipaddress': '192.168.0.123'\n   \
           \     },\n        'update_attributes': {\n            'ipaddress': '192.168.0.123'\n\
           \        },\n        'nodes': ['host1', 'host2', 'host3']\n    }).encode('utf-8'),\n\
@@ -5699,20 +5723,22 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\ \\\n    --data '{\n          \"attributes\": {\n            \"ipaddress\"\
-          : \"192.168.0.123\"\n          },\n          \"nodes\": [\n            \"\
-          host1\",\n            \"host2\",\n            \"host3\"\n          ],\n\
-          \          \"update_attributes\": {\n            \"ipaddress\": \"192.168.0.123\"\
-          \n          }\n        }' \\\n    \"$API_URL/objects/host_config/example.com\""
+          \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\ \\\n    --data '{\n\
+          \          \"attributes\": {\n            \"ipaddress\": \"192.168.0.123\"\
+          \n          },\n          \"nodes\": [\n            \"host1\",\n       \
+          \     \"host2\",\n            \"host3\"\n          ],\n          \"update_attributes\"\
+          : {\n            \"ipaddress\": \"192.168.0.123\"\n          }\n       \
+          \ }' \\\n    \"$API_URL/objects/host_config/example.com\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/host_config/example.com\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    attributes='{\"ipaddress\": \"192.168.0.123\"\
-          }' \\\n    nodes='[\"host1\", \"host2\", \"host3\"]' \\\n    update_attributes='{\"\
-          ipaddress\": \"192.168.0.123\"}' \\\n    --json"
+          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    attributes='{\"\
+          ipaddress\": \"192.168.0.123\"}' \\\n    nodes='[\"host1\", \"host2\", \"\
+          host3\"]' \\\n    update_attributes='{\"ipaddress\": \"192.168.0.123\"}'\
+          \ \\\n    --json"
   /domain-types/host_config/actions/bulk-update/invoke:
     put:
       description: ''
@@ -5920,7 +5946,7 @@ paths:
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
               example: a20ceacf346041dc
-              required: true
+              required: false
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -6073,7 +6099,9 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.delete(\n    f\"{API_URL}/objects/host_group_config/pathname\"\
-          ,\n)\nresp.raise_for_status()\ndata = resp.json()"
+          ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
+          \ The ETag of the object to be modified.\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -6081,22 +6109,23 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
           \    f\"{API_URL}/objects/host_group_config/pathname\",\n    method=\"DELETE\"\
           ,\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
-          ,\n        \"Accept\": \"application/json\",\n    },\n)\nresponse = urllib.request.urlopen(request)\n\
-          data = json.loads(response.read())"
+          ,\n        \"Accept\": \"application/json\",\n        \"If-Match\": \"a20ceacf346041dc\"\
+          ,  # (required) The ETag of the object to be modified.\n    },\n)\nresponse\
+          \ = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\\n    \"$API_URL/objects/host_group_config/pathname\""
+          \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n    \"$API_URL/objects/host_group_config/pathname\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/objects/host_group_config/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    --json"
+          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    --json"
     get:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.host_group_config.get
@@ -6130,7 +6159,7 @@ paths:
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
               example: a20ceacf346041dc
-              required: true
+              required: false
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -6217,7 +6246,7 @@ paths:
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
               example: a20ceacf346041dc
-              required: true
+              required: false
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -6232,8 +6261,9 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/host_group_config/pathname\"\
-          ,\n    json={'name': 'windows', 'alias': 'Windows Servers'},\n)\nresp.raise_for_status()\n\
-          data = resp.json()"
+          ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
+          \ The ETag of the object to be modified.\n    },\n    json={'name': 'windows',\
+          \ 'alias': 'Windows Servers'},\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -6241,7 +6271,8 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
           \    f\"{API_URL}/objects/host_group_config/pathname\",\n    method=\"PUT\"\
           ,\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
-          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({'name':\
+          ,\n        \"Accept\": \"application/json\",\n        \"If-Match\": \"a20ceacf346041dc\"\
+          ,  # (required) The ETag of the object to be modified.\n    },\n    data=json.dumps({'name':\
           \ 'windows', 'alias': 'Windows Servers'}).encode('utf-8'),\n)\nresponse\
           \ = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
@@ -6250,16 +6281,17 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\ \\\n    --data '{\n          \"alias\": \"Windows Servers\",\n    \
-          \      \"name\": \"windows\"\n        }' \\\n    \"$API_URL/objects/host_group_config/pathname\""
+          \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\ \\\n    --data '{\n\
+          \          \"alias\": \"Windows Servers\",\n          \"name\": \"windows\"\
+          \n        }' \\\n    \"$API_URL/objects/host_group_config/pathname\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/host_group_config/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    alias='Windows Servers' \\\n    name='windows'\
-          \ \\\n    --json"
+          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    alias='Windows\
+          \ Servers' \\\n    name='windows' \\\n    --json"
   /domain-types/host_group_config/actions/bulk-delete/invoke:
     delete:
       description: ''
@@ -6421,7 +6453,7 @@ paths:
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
               example: a20ceacf346041dc
-              required: true
+              required: false
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -6521,7 +6553,9 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.delete(\n    f\"{API_URL}/objects/host_tag_group/datasource\"\
-          ,\n    json={'repair': False},\n)\nresp.raise_for_status()\ndata = resp.json()"
+          ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
+          \ The ETag of the object to be modified.\n    },\n    json={'repair': False},\n\
+          )\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -6529,7 +6563,8 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
           \    f\"{API_URL}/objects/host_tag_group/datasource\",\n    method=\"DELETE\"\
           ,\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
-          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({'repair':\
+          ,\n        \"Accept\": \"application/json\",\n        \"If-Match\": \"a20ceacf346041dc\"\
+          ,  # (required) The ETag of the object to be modified.\n    },\n    data=json.dumps({'repair':\
           \ False}).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
           data = json.loads(response.read())"
       - label: curl
@@ -6538,15 +6573,16 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\ \\\n    --data '{\n          \"repair\": false\n        }' \\\n   \
-          \ \"$API_URL/objects/host_tag_group/datasource\""
+          \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\ \\\n    --data '{\n\
+          \          \"repair\": false\n        }' \\\n    \"$API_URL/objects/host_tag_group/datasource\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/objects/host_tag_group/datasource\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    repair='False' \\\n    --json"
+          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    repair='False'\
+          \ \\\n    --json"
     get:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.host_tag.show_host_tag_group
@@ -6578,7 +6614,7 @@ paths:
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
               example: a20ceacf346041dc
-              required: true
+              required: false
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -6663,7 +6699,7 @@ paths:
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
               example: a20ceacf346041dc
-              required: true
+              required: false
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -6678,10 +6714,12 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/host_tag_group/datasource\"\
-          ,\n    json={\n        'title': 'Kubernetes',\n        'topic': 'Data Sources',\n\
-          \        'help': 'Kubernetes Pods',\n        'tags': [{\n            'ident':\
-          \ 'pod',\n            'title': 'Pod'\n        }],\n        'repair': False\n\
-          \    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
+          \ The ETag of the object to be modified.\n    },\n    json={\n        'title':\
+          \ 'Kubernetes',\n        'topic': 'Data Sources',\n        'help': 'Kubernetes\
+          \ Pods',\n        'tags': [{\n            'ident': 'pod',\n            'title':\
+          \ 'Pod'\n        }],\n        'repair': False\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -6689,7 +6727,8 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
           \    f\"{API_URL}/objects/host_tag_group/datasource\",\n    method=\"PUT\"\
           ,\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
-          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({\n\
+          ,\n        \"Accept\": \"application/json\",\n        \"If-Match\": \"a20ceacf346041dc\"\
+          ,  # (required) The ETag of the object to be modified.\n    },\n    data=json.dumps({\n\
           \        'title': 'Kubernetes',\n        'topic': 'Data Sources',\n    \
           \    'help': 'Kubernetes Pods',\n        'tags': [{\n            'ident':\
           \ 'pod',\n            'title': 'Pod'\n        }],\n        'repair': False\n\
@@ -6701,20 +6740,22 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\ \\\n    --data '{\n          \"help\": \"Kubernetes Pods\",\n     \
-          \     \"repair\": false,\n          \"tags\": [\n            {\n       \
-          \       \"ident\": \"pod\",\n              \"title\": \"Pod\"\n        \
-          \    }\n          ],\n          \"title\": \"Kubernetes\",\n          \"\
-          topic\": \"Data Sources\"\n        }' \\\n    \"$API_URL/objects/host_tag_group/datasource\""
+          \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\ \\\n    --data '{\n\
+          \          \"help\": \"Kubernetes Pods\",\n          \"repair\": false,\n\
+          \          \"tags\": [\n            {\n              \"ident\": \"pod\"\
+          ,\n              \"title\": \"Pod\"\n            }\n          ],\n     \
+          \     \"title\": \"Kubernetes\",\n          \"topic\": \"Data Sources\"\n\
+          \        }' \\\n    \"$API_URL/objects/host_tag_group/datasource\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/host_tag_group/datasource\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    help='Kubernetes Pods' \\\n    repair='False'\
-          \ \\\n    tags='[{\"ident\": \"pod\", \"title\": \"Pod\"}]' \\\n    title='Kubernetes'\
-          \ \\\n    topic='Data Sources' \\\n    --json"
+          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    help='Kubernetes\
+          \ Pods' \\\n    repair='False' \\\n    tags='[{\"ident\": \"pod\", \"title\"\
+          : \"Pod\"}]' \\\n    title='Kubernetes' \\\n    topic='Data Sources' \\\n\
+          \    --json"
   /domain-types/password/collections/all:
     post:
       description: ''
@@ -6999,6 +7040,12 @@ paths:
             type: string
           type: array
         style: form
+      - description: Restrict the query to this particular site.
+        in: query
+        name: site
+        required: false
+        schema:
+          type: string
       - description: An query expression in nested dictionary form. If you want to
           use multiple expressions, nest them with the AND/OR operators.
         in: query
@@ -7009,12 +7056,6 @@ paths:
           - $ref: '#/components/schemas/Expr'
           example: '{"op": "not", "expr": {"op": "=", "left": "hosts.name", "right":
             "example.com"}}'
-      - description: Restrict the query to this particular site.
-        in: query
-        name: site
-        required: false
-        schema:
-          type: string
       - description: A hostname.
         in: path
         name: host_name
@@ -7050,8 +7091,8 @@ paths:
           \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/objects/host/example.com/collections/services\"\
           ,\n    params={  # goes into query string\n        \"query\": \"{\"op\"\
           : \"not\", \"expr\": {\"op\": \"=\", \"left\": \"hosts.name\", \"right\"\
-          : \"example.com\"}}\",  # (required) An query expression in nested dictionary\
-          \ form.\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          : \"example.com\"}}\",  # An query expression in nested dictionary form.\n\
+          \    },\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.parse\nimport\
@@ -7059,8 +7100,8 @@ paths:
           \ = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\n\nUSERNAME = \"\
           automation\"\nPASSWORD = \"test123\"\n\nquery_string = urllib.parse.urlencode({\n\
           \    \"query\": \"{\"op\": \"not\", \"expr\": {\"op\": \"=\", \"left\":\
-          \ \"hosts.name\", \"right\": \"example.com\"}}\",  # (required) An query\
-          \ expression in nested dictionary form.\n})\n\nrequest = urllib.request.Request(\n\
+          \ \"hosts.name\", \"right\": \"example.com\"}}\",  # An query expression\
+          \ in nested dictionary form.\n})\n\nrequest = urllib.request.Request(\n\
           \    f\"{API_URL}/objects/host/example.com/collections/services?{query_string}\"\
           ,\n    method=\"GET\",\n    headers={\n        \"Authorization\": f\"Bearer\
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
@@ -7088,6 +7129,26 @@ paths:
       description: This list is filterable by various parameters.
       operationId: cmk.gui.plugins.openapi.endpoints.service._list_all_services
       parameters:
+      - description: The desired columns of the services table. If left empty, a default
+          set of columns is used.
+        explode: true
+        in: query
+        name: columns
+        required: false
+        schema:
+          default:
+          - host_name
+          - description
+          items:
+            type: string
+          type: array
+        style: form
+      - description: Restrict the query to this particular site.
+        in: query
+        name: site
+        required: false
+        schema:
+          type: string
       - description: A hostname.
         in: query
         name: host_name
@@ -7106,26 +7167,6 @@ paths:
           - $ref: '#/components/schemas/Expr'
           example: '{"op": "not", "expr": {"op": "=", "left": "hosts.name", "right":
             "example.com"}}'
-      - description: Restrict the query to this particular site.
-        in: query
-        name: site
-        required: false
-        schema:
-          type: string
-      - description: The desired columns of the services table. If left empty, a default
-          set of columns is used.
-        explode: true
-        in: query
-        name: columns
-        required: false
-        schema:
-          default:
-          - host_name
-          - description
-          items:
-            type: string
-          type: array
-        style: form
       responses:
         default:
           content:
@@ -7152,20 +7193,20 @@ paths:
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/domain-types/service/collections/all\"\
           ,\n    params={  # goes into query string\n        \"host_name\": \"example.com\"\
-          ,  # (required) A hostname.\n        \"query\": \"{\"op\": \"not\", \"expr\"\
-          : {\"op\": \"=\", \"left\": \"hosts.name\", \"right\": \"example.com\"}}\"\
-          ,  # (required) An query expression in nested dictionary form.\n    },\n\
-          )\nresp.raise_for_status()\ndata = resp.json()"
+          ,  # A hostname.\n        \"query\": \"{\"op\": \"not\", \"expr\": {\"op\"\
+          : \"=\", \"left\": \"hosts.name\", \"right\": \"example.com\"}}\",  # An\
+          \ query expression in nested dictionary form.\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.parse\nimport\
           \ urllib.request\n\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
           \ = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\n\nUSERNAME = \"\
           automation\"\nPASSWORD = \"test123\"\n\nquery_string = urllib.parse.urlencode({\n\
-          \    \"host_name\": \"example.com\",  # (required) A hostname.\n    \"query\"\
-          : \"{\"op\": \"not\", \"expr\": {\"op\": \"=\", \"left\": \"hosts.name\"\
-          , \"right\": \"example.com\"}}\",  # (required) An query expression in nested\
-          \ dictionary form.\n})\n\nrequest = urllib.request.Request(\n    f\"{API_URL}/domain-types/service/collections/all?{query_string}\"\
+          \    \"host_name\": \"example.com\",  # A hostname.\n    \"query\": \"{\"\
+          op\": \"not\", \"expr\": {\"op\": \"=\", \"left\": \"hosts.name\", \"right\"\
+          : \"example.com\"}}\",  # An query expression in nested dictionary form.\n\
+          })\n\nrequest = urllib.request.Request(\n    f\"{API_URL}/domain-types/service/collections/all?{query_string}\"\
           ,\n    method=\"GET\",\n    headers={\n        \"Authorization\": f\"Bearer\
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
           \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
@@ -7192,16 +7233,6 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.service_discovery.show_services
       parameters:
-      - description: Optionally the hostname for which a certain agent has been configured.
-          If omitted you may only download this agent if you have the rights for all
-          agents.
-        in: query
-        name: host_name
-        required: true
-        schema:
-          example: example.com
-          pattern: '[a-zA-Z][a-zA-Z0-9_-]+'
-          type: string
       - description: 'The discovery state of the services. May be one of the following:
           active, active_ignored, clustered_ignored, clustered_monitored, clustered_undecided,
           clustered_vanished, custom, custom_ignored, ignored, legacy, legacy_ignored,
@@ -7212,6 +7243,16 @@ paths:
         schema:
           example: monitored
           pattern: active|active_ignored|clustered_ignored|clustered_monitored|clustered_undecided|clustered_vanished|custom|custom_ignored|ignored|legacy|legacy_ignored|manual|monitored|removed|undecided|vanished
+          type: string
+      - description: Optionally the hostname for which a certain agent has been configured.
+          If omitted you may only download this agent if you have the rights for all
+          agents.
+        in: query
+        name: host_name
+        required: true
+        schema:
+          example: example.com
+          pattern: '[a-zA-Z][a-zA-Z0-9_-]+'
           type: string
       responses:
         default:
@@ -7288,14 +7329,6 @@ paths:
           example: monitored
           pattern: active|active_ignored|clustered_ignored|clustered_monitored|clustered_undecided|clustered_vanished|custom|custom_ignored|ignored|legacy|legacy_ignored|manual|monitored|removed|undecided|vanished
           type: string
-      - description: A hostname.
-        in: path
-        name: host_name
-        required: true
-        schema:
-          example: example.com
-          pattern: '[-0-9a-zA-Z_.]+'
-          type: string
       - description: A name used as an identifier. Can be of arbitrary length
         in: path
         name: service_hash
@@ -7303,6 +7336,14 @@ paths:
         schema:
           example: asoidjfo2jifa09
           pattern: '[a-zA-Z][a-zA-Z0-9_-]+'
+          type: string
+      - description: A hostname.
+        in: path
+        name: host_name
+        required: true
+        schema:
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
           type: string
       responses:
         default:
@@ -7498,7 +7539,7 @@ paths:
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
               example: a20ceacf346041dc
-              required: true
+              required: false
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -7653,7 +7694,9 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.delete(\n    f\"{API_URL}/objects/service_group_config/pathname\"\
-          ,\n)\nresp.raise_for_status()\ndata = resp.json()"
+          ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
+          \ The ETag of the object to be modified.\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -7661,22 +7704,23 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
           \    f\"{API_URL}/objects/service_group_config/pathname\",\n    method=\"\
           DELETE\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
-          \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n)\n\
-          response = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+          \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n        \"If-Match\"\
+          : \"a20ceacf346041dc\",  # (required) The ETag of the object to be modified.\n\
+          \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\\n    \"$API_URL/objects/service_group_config/pathname\""
+          \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n    \"$API_URL/objects/service_group_config/pathname\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/objects/service_group_config/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    --json"
+          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    --json"
     get:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.service_group_config.show_group
@@ -7710,7 +7754,7 @@ paths:
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
               example: a20ceacf346041dc
-              required: true
+              required: false
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -7797,7 +7841,7 @@ paths:
                 current state of the object and needs to be sent along in the "If-Match"
                 request-header for subsequent modifications.
               example: a20ceacf346041dc
-              required: true
+              required: false
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
@@ -7812,8 +7856,10 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/service_group_config/pathname\"\
-          ,\n    json={\n        'name': 'windows',\n        'alias': 'Environment\
-          \ Sensors'\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
+          \ The ETag of the object to be modified.\n    },\n    json={\n        'name':\
+          \ 'windows',\n        'alias': 'Environment Sensors'\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -7821,7 +7867,8 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
           \    f\"{API_URL}/objects/service_group_config/pathname\",\n    method=\"\
           PUT\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
-          ,\n        \"Accept\": \"application/json\",\n    },\n    data=json.dumps({\n\
+          ,\n        \"Accept\": \"application/json\",\n        \"If-Match\": \"a20ceacf346041dc\"\
+          ,  # (required) The ETag of the object to be modified.\n    },\n    data=json.dumps({\n\
           \        'name': 'windows',\n        'alias': 'Environment Sensors'\n  \
           \  }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
           data = json.loads(response.read())"
@@ -7831,16 +7878,17 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\ \\\n    --data '{\n          \"alias\": \"Environment Sensors\",\n\
-          \          \"name\": \"windows\"\n        }' \\\n    \"$API_URL/objects/service_group_config/pathname\""
+          \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\ \\\n    --data '{\n\
+          \          \"alias\": \"Environment Sensors\",\n          \"name\": \"windows\"\
+          \n        }' \\\n    \"$API_URL/objects/service_group_config/pathname\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/service_group_config/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    alias='Environment Sensors' \\\n    name='windows'\
-          \ \\\n    --json"
+          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    alias='Environment\
+          \ Sensors' \\\n    name='windows' \\\n    --json"
   /domain-types/service_group_config/actions/bulk-delete/invoke:
     delete:
       description: ''
@@ -8658,14 +8706,6 @@ paths:
         needs to be specified.'
       operationId: cmk.gui.cee.plugins.openapi.endpoints.agent.download_agent
       parameters:
-      - description: A hostname.
-        in: query
-        name: host_name
-        required: false
-        schema:
-          example: example.com
-          pattern: '[-0-9a-zA-Z_.]+'
-          type: string
       - description: The type of the operating system. May be one of aix_tgz, linux_deb,
           linux_rpm, linux_tgz, solaris_pkg, solaris_tgz, windows_msi
         in: query
@@ -8674,6 +8714,14 @@ paths:
         schema:
           example: linux_tgz
           pattern: aix_tgz|linux_deb|linux_rpm|linux_tgz|solaris_pkg|solaris_tgz|windows_msi
+          type: string
+      - description: A hostname.
+        in: query
+        name: host_name
+        required: false
+        schema:
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
           type: string
       - description: The configuration hash representing an agent.
         in: path
@@ -8705,21 +8753,20 @@ paths:
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/objects/agent/80e99ba3a66d4880\"\
           ,\n    params={  # goes into query string\n        \"os_type\": \"linux_tgz\"\
-          ,  # (required) The type of the operating system.\n        \"host_name\"\
-          : \"example.com\",  # (required) A hostname.\n    },\n)\nresp.raise_for_status()\n\
-          data = resp.json()"
+          ,  # The type of the operating system.\n        \"host_name\": \"example.com\"\
+          ,  # A hostname.\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.parse\nimport\
           \ urllib.request\n\nHOST_NAME = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL\
           \ = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\n\nUSERNAME = \"\
           automation\"\nPASSWORD = \"test123\"\n\nquery_string = urllib.parse.urlencode({\n\
-          \    \"os_type\": \"linux_tgz\",  # (required) The type of the operating\
-          \ system.\n    \"host_name\": \"example.com\",  # (required) A hostname.\n\
-          })\n\nrequest = urllib.request.Request(\n    f\"{API_URL}/objects/agent/80e99ba3a66d4880?{query_string}\"\
-          ,\n    method=\"GET\",\n    headers={\n        \"Authorization\": f\"Bearer\
-          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
-          \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+          \    \"os_type\": \"linux_tgz\",  # The type of the operating system.\n\
+          \    \"host_name\": \"example.com\",  # A hostname.\n})\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/objects/agent/80e99ba3a66d4880?{query_string}\",\n   \
+          \ method=\"GET\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
+          \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n)\n\
+          response = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\

@@ -324,7 +324,7 @@ def _transform_params(param_list):
     }
 
 
-def code_samples(endpoint) -> List[CodeSample]:
+def code_samples(endpoint, header_params, path_params, query_params) -> List[CodeSample]:
     """Create a list of rendered code sample Objects
 
     These are not specified by OpenAPI but are specific to ReDoc."""
@@ -339,9 +339,9 @@ def code_samples(endpoint) -> List[CodeSample]:
             username='automation',
             password='test123',
             endpoint=endpoint,
-            path_params=to_openapi(endpoint.path_params, 'path'),
-            query_params=to_openapi(endpoint.query_params, 'query'),
-            header_params=to_openapi(endpoint.header_params, 'header'),
+            path_params=to_openapi(path_params, 'path'),
+            query_params=to_openapi(query_params, 'query'),
+            header_params=to_openapi(header_params, 'header'),
             request_endpoint=endpoint.path,
             request_method=endpoint.method,
             request_schema=_get_schema(endpoint.request_schema),

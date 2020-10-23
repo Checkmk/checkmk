@@ -162,7 +162,7 @@ def translate_to_openapi_keys(
     name: str,
     location: LocationType,
     description: Optional[str] = None,
-    required: Optional[bool] = True,
+    required: bool = True,
     example: Optional[str] = None,
     allow_empty: Optional[bool] = False,
     schema_enum: Optional[List[str]] = None,
@@ -206,9 +206,8 @@ def translate_to_openapi_keys(
     raw_values: OpenAPIParameter = {
         'name': name,
         'in': location,
+        'required': required,
     }
-    if required is not None:
-        raw_values['required'] = required
     if description is not None:
         raw_values['description'] = description
     if allow_empty is not None:

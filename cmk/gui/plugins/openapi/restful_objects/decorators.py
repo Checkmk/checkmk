@@ -452,7 +452,12 @@ class Endpoint:
                 }
             }
 
-        operation_spec['x-codeSamples'] = code_samples(self)
+        operation_spec['x-codeSamples'] = code_samples(
+            self,
+            header_params=header_params,
+            path_params=path_params,
+            query_params=query_params,
+        )
 
         # If we don't have any parameters we remove the empty list, so the spec will not have it.
         if not operation_spec['parameters']:

@@ -13,7 +13,6 @@
 #include <functional>  // IWYU pragma: keep
 #include <iosfwd>
 #include <iostream>
-#include <memory>
 #include <optional>
 #include <stdexcept>
 #include <unordered_set>
@@ -23,7 +22,6 @@
 #include "EventConsoleConnection.h"
 #include "ListColumn.h"
 #include "Logger.h"
-#include "MonitoringCore.h"
 #include "Query.h"
 #include "Row.h"
 #include "StringColumn.h"

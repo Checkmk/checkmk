@@ -6,10 +6,8 @@
 #include "CustomVarsDictColumn.h"
 
 #include <stdexcept>
-#include <utility>
 
 #include "CustomVarsDictFilter.h"
-#include "Filter.h"
 #include "Renderer.h"
 #include "Row.h"
 class Aggregator;

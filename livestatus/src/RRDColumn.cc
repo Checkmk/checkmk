@@ -16,9 +16,7 @@
 #include <ostream>
 #include <set>
 #include <type_traits>
-#include <utility>
 
-#include "DynamicRRDColumn.h"
 #include "Logger.h"
 #include "Metric.h"
 #include "MonitoringCore.h"

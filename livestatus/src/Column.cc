@@ -8,7 +8,6 @@
 #include <ostream>
 #include <utility>
 
-#include "Logger.h"
 #include "POSIXUtils.h"
 
 Column::Column(std::string name, std::string description, ColumnOffsets offsets)

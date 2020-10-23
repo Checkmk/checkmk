@@ -9,7 +9,6 @@
 #include <chrono>
 #include <cstdint>
 #include <map>
-#include <memory>
 #include <mutex>
 #include <optional>
 #include <stdexcept>
@@ -20,7 +19,6 @@
 #include "LogCache.h"
 #include "LogEntry.h"
 #include "LogEntryStringColumn.h"
-#include "Logfile.h"
 #include "MonitoringCore.h"
 #include "Query.h"
 #include "Row.h"

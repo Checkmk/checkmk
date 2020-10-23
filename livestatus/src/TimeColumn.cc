@@ -5,10 +5,7 @@
 
 #include "TimeColumn.h"
 
-#include <chrono>
-
 #include "Aggregator.h"
-#include "Filter.h"
 #include "Renderer.h"
 #include "Row.h"
 #include "TimeAggregator.h"

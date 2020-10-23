@@ -8,11 +8,9 @@
 #include <bitset>
 #include <cctype>
 #include <map>
-#include <memory>
 #include <ostream>
 #include <utility>
 
-#include "Filter.h"
 #include "IntFilter.h"
 #include "Logger.h"
 #include "Row.h"

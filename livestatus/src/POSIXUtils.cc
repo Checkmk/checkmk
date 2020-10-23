@@ -7,12 +7,9 @@
 // IWYU pragma: no_include <stdio.h>
 #include "POSIXUtils.h"
 
-#include <fcntl.h>
 #include <unistd.h>
 
-#include <cerrno>
 #include <thread>
-#include <utility>
 
 #include "Logger.h"
 

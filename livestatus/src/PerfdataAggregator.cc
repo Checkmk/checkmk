@@ -10,12 +10,10 @@
 #include <iterator>
 #include <sstream>
 #include <stdexcept>
-#include <utility>
 
 #include "Renderer.h"
 #include "Row.h"
 #include "StringColumn.h"
-#include "contact_fwd.h"
 
 void PerfdataAggregator::consume(Row row, const contact * /* auth_user */,
                                  std::chrono::seconds /* timezone_offset */) {

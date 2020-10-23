@@ -7,7 +7,6 @@
 
 #include <cstdlib>
 
-#include "Filter.h"
 #include "Row.h"
 #include "TimeColumn.h"
 

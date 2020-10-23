@@ -9,7 +9,6 @@
 #include <ostream>
 
 #include "DoubleColumn.h"
-#include "Filter.h"
 #include "Logger.h"
 #include "Row.h"
 

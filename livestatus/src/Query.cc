@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <cassert>
 #include <cctype>
-#include <chrono>
 #include <cmath>
 #include <cstdlib>
 #include <ratio>
@@ -16,20 +15,16 @@
 #include <stdexcept>
 #include <utility>
 
-#include "Aggregator.h"
 #include "AndingFilter.h"
 #include "ChronoUtils.h"
 #include "Column.h"
-#include "Filter.h"
 #include "Logger.h"
 #include "MonitoringCore.h"
 #include "NullColumn.h"
 #include "OringFilter.h"
 #include "OutputBuffer.h"
-#include "StatsColumn.h"
 #include "StringUtils.h"
 #include "Table.h"
-#include "Triggers.h"
 #include "auth.h"
 #include "opids.h"
 #include "strutil.h"

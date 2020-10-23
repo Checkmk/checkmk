@@ -6,7 +6,6 @@
 #include "LogwatchListColumn.h"
 
 #include <algorithm>
-#include <filesystem>
 #include <iterator>
 #include <ostream>
 

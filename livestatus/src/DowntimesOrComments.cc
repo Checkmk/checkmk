@@ -7,7 +7,6 @@
 
 #include <iosfwd>
 
-#include "DowntimeOrComment.h"
 #include "Logger.h"
 #include "MonitoringCore.h"
 

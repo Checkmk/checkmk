@@ -11,9 +11,7 @@
 
 #include "Aggregator.h"
 #include "AndingFilter.h"
-#include "Column.h"
 #include "CountAggregator.h"
-#include "Filter.h"
 #include "Logger.h"
 
 StatsColumnCount::StatsColumnCount(std::unique_ptr<Filter> filter)

@@ -6,7 +6,6 @@
 #include "IntColumn.h"
 
 #include "Aggregator.h"
-#include "Filter.h"
 #include "IntAggregator.h"
 #include "IntFilter.h"
 #include "Renderer.h"

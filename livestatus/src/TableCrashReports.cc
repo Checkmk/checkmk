@@ -7,7 +7,6 @@
 
 #include <filesystem>
 #include <memory>
-#include <string>
 
 #include "Column.h"
 #include "CrashReport.h"

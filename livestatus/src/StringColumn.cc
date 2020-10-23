@@ -7,7 +7,6 @@
 
 #include <stdexcept>
 
-#include "Filter.h"
 #include "Renderer.h"
 #include "Row.h"
 #include "StringFilter.h"

@@ -7,13 +7,11 @@
 
 #include <algorithm>
 #include <iterator>
-#include <memory>
 #include <ostream>
 #include <type_traits>
 #include <vector>
 
 #include "AndingFilter.h"
-#include "Filter.h"
 #include "Row.h"
 
 // static

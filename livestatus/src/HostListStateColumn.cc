@@ -5,7 +5,6 @@
 
 #include "HostListStateColumn.h"
 
-#include "LogEntry.h"
 #include "Row.h"
 
 #ifdef CMC

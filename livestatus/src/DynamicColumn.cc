@@ -7,8 +7,6 @@
 
 #include <utility>
 
-#include "Column.h"
-
 DynamicColumn::DynamicColumn(std::string name, std::string description,
                              ColumnOffsets offsets)
     : _name(std::move(name))

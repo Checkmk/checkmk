@@ -9,7 +9,6 @@
 #include "MonitoringCore.h"
 #include "Query.h"
 #include "Row.h"
-#include "Table.h"
 #include "TableHostGroups.h"
 #include "TableHosts.h"
 #include "auth.h"

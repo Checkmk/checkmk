@@ -5,7 +5,6 @@
 
 #include "FileColumn.h"
 
-#include <filesystem>
 #include <sstream>
 #include <utility>
 

@@ -23,7 +23,6 @@
 #include "Row.h"
 #include "StringLambdaColumn.h"
 #include "TimeLambdaColumn.h"
-#include "global_counters.h"
 #include "mk_inventory.h"
 #include "nagios.h"
 

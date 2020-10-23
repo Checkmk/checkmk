@@ -7,7 +7,6 @@
 
 #include <filesystem>
 #include <iosfwd>
-#include <memory>
 #include <stdexcept>
 #include <utility>
 #include <vector>

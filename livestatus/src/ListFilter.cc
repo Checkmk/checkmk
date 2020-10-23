@@ -6,13 +6,9 @@
 #include "ListFilter.h"
 
 #include <sstream>
-#include <string>
 
-#include "Filter.h"
-#include "ListColumn.h"
 #include "Logger.h"
 #include "RegExp.h"
-#include "Row.h"
 
 namespace {
 RelationalOperator relOpForElement(RelationalOperator relOp) {

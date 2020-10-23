@@ -23,7 +23,6 @@ from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
 from cmk.gui.config import SiteId, SiteConfiguration
 from cmk.gui.plugins.userdb.htpasswd import hash_password
-from cmk.gui.plugins.userdb.utils import load_cached_profile, save_cached_profile
 from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, MKAuthException
 from cmk.gui.i18n import _, _l, _u
 from cmk.gui.globals import html, request as global_request
@@ -52,10 +51,18 @@ def _get_current_theme_titel() -> str:
 
 
 def _get_sidebar_position() -> str:
-    if config.user.get_attribute("ui_sidebar_position"):
-        return _("left")
+    assert config.user.id is not None
+    sidebar_position = userdb.load_custom_attr(config.user.id, 'ui_sidebar_position', lambda x: None
+                                               if x == "None" else "left")
 
-    return _("right")
+    return _get_sidebar_position_title(sidebar_position or "right")
+
+
+def _get_sidebar_position_title(value: str) -> str:
+    return {
+        "left": _("left"),
+        "right": _("right"),
+    }[value]
 
 
 def _user_menu_topics() -> List[TopicMenuTopic]:
@@ -172,17 +179,11 @@ class ModeAjaxCycleSidebarPosition(AjaxPage):
 def _set_user_attribute(key: str, value: Optional[str]):
     assert config.user.id is not None
     user_id = config.user.id
-    cached_profile = load_cached_profile(config.user.id)
-    if cached_profile is None:
-        raise MKUserError(None, _("Could not load cached user profile."))
 
     if value is None:
         userdb.remove_custom_attr(user_id, key)
     else:
         userdb.save_custom_attr(user_id, key, value)
-
-    cached_profile[key] = value
-    save_cached_profile(user_id, cached_profile)
 
 
 def user_profile_async_replication_page() -> None:

@@ -348,8 +348,10 @@ class SidebarRenderer:
         self._show_sidebar_head()
         html.close_div()
 
-        html.open_div(id_="check_mk_sidebar",
-                      class_=["left" if config.user.get_attribute("ui_sidebar_position") else None])
+        assert config.user.id is not None
+        sidebar_position = cmk.gui.userdb.load_custom_attr(
+            config.user.id, 'ui_sidebar_position', lambda x: None if x == "None" else "left")
+        html.open_div(id_="check_mk_sidebar", class_=[sidebar_position])
 
         self._show_shortcut_bar()
         self._show_snapin_bar(user_config)

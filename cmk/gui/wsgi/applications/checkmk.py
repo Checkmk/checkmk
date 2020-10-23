@@ -52,8 +52,11 @@ def _auth(func):
         # has been initialized
         _localize_request()
 
-        # Update the UI theme with the attribute configured by the user
-        html.set_theme(config.user.get_attribute("ui_theme"))
+        # Update the UI theme with the attribute configured by the user.
+        # Returns None on first load
+        assert config.user.id is not None
+        theme = cmk.gui.userdb.load_custom_attr(config.user.id, 'ui_theme', lambda x: x)
+        html.set_theme(theme)
 
         func()
 

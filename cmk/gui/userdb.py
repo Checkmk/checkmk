@@ -695,7 +695,7 @@ def load_users(lock: bool = False) -> Users:
                     ('idle_timeout', _convert_idle_timeout),
                     ('session_info', _convert_session_info),
                     ('ui_theme', lambda x: x),
-                    ('ui_sidebar_position', lambda x: x),
+                    ('ui_sidebar_position', lambda x: None if x == "None" else x),
                 ]:
                     val = load_custom_attr(uid, attr, conv_func)
                     if val is not None:
@@ -843,7 +843,8 @@ def _save_user_profiles(updated_profiles: Users) -> None:
         else:
             remove_custom_attr(user_id, "idle_timeout")
 
-        if "ui_theme" in user:
+        # Is None on first load
+        if user.get("ui_theme") is not None:
             save_custom_attr(user_id, "ui_theme", user["ui_theme"])
         else:
             remove_custom_attr(user_id, "ui_theme")

@@ -42,8 +42,12 @@ class BIAggregation:
         if aggr_config is None:
             aggr_config = self.schema()().dump({})
         self.id = aggr_config["id"]
+
         # TODO: may be None -> SCOPE_GLOBAL
         self.customer = aggr_config.get("customer")
+        if self.customer is None:
+            self.customer = "@none@"
+
         self.pack_id = pack_id
         self.node = BINodeGenerator(aggr_config["node"])
         self.groups = BIAggregationGroups(aggr_config["groups"])

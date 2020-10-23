@@ -432,6 +432,7 @@ class DiscoveryPageRenderer:
     def render(self, discovery_result: DiscoveryResult, request: dict) -> str:
         with html.plugged():
             self._toggle_action_page_menu_entries(discovery_result)
+            enable_page_menu_entry("inline_help")
             host_labels_row_count = self._show_discovered_host_labels(discovery_result)
             details_row_count = self._show_discovery_details(discovery_result, request)
             self._update_header_info(host_labels_row_count + details_row_count)

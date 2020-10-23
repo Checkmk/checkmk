@@ -153,19 +153,27 @@ SERVICEGROUP_NAME = fields.String(
 )
 
 
+class CreateClusterHost(BaseSchema):
+    host_name = Hostname(
+        description="The hostname of the cluster host.",
+        required=True,
+        should_exist=False,
+    )
+    folder = EXISTING_FOLDER
+    attributes = AttributesField(
+        description="Attributes to set on the newly created host.",
+        example={'ipaddress': '192.168.0.123'},
+        missing=dict,
+    )
+    nodes = fields.List(
+        EXISTING_HOST_NAME,
+        description="Nodes where the newly created host should be the cluster-container of.",
+        required=True,
+        example=["host1", "host2", "host3"],
+    )
+
+
 class CreateHost(BaseSchema):
-    """Creating a new host
-
-    Required arguments:
-
-      * `host_name` - A host name with or without domain part. IP addresses are also allowed.
-      * `folder` - The folder identifier.
-
-    Optional arguments:
-
-      * `attributes`
-      * `nodes`
-    """
     host_name = Hostname(
         description="The hostname or IP address of the host to be created.",
         required=True,
@@ -177,12 +185,6 @@ class CreateHost(BaseSchema):
         example={'ipaddress': '192.168.0.123'},
         missing=dict,
     )
-    nodes = fields.List(EXISTING_HOST_NAME,
-                        description="Nodes where the newly created host should be the "
-                        "cluster-container of.",
-                        required=False,
-                        missing=list,
-                        example=["host1", "host2", "host3"])
 
 
 class BulkCreateHost(BaseSchema):
@@ -192,7 +194,6 @@ class BulkCreateHost(BaseSchema):
             "host_name": "example.com",
             "folder": "root",
             "attributes": {},
-            "nodes": ["host1", "host2"],
         }],
         uniqueItems=True,
     )
@@ -227,38 +228,17 @@ class UpdateHost(BaseSchema):
         missing=dict,
         required=False,
     )
-    nodes = fields.List(
-        EXISTING_HOST_NAME,
-        description="Nodes where the host should be the cluster-container of.",
-        example=["host1", "host2", "host3"],
-        missing=list,
+    remove_attributes = fields.List(
+        fields.String(),
+        description="A list of attributes which should be removed.",
+        example=["tag_foobar"],
+        missing=[],
         required=False,
     )
 
 
-class UpdateHostEntry(BaseSchema):
+class UpdateHostEntry(UpdateHost):
     host_name = EXISTING_HOST_NAME
-    attributes = AttributesField(
-        description=("Replace all currently set attributes on the host, with these attributes. "
-                     "Any previously set attributes which are not given here will be removed."),
-        example={'ipaddress': '192.168.0.123'},
-        missing=dict,
-        required=False,
-    )
-    update_attributes = AttributesField(
-        description=("Just update the hosts attributes with these attributes. The previously set "
-                     "attributes will not be touched."),
-        example={'ipaddress': '192.168.0.123'},
-        missing=dict,
-        required=False,
-    )
-    nodes = fields.List(
-        EXISTING_HOST_NAME,
-        description="Nodes where the host should be the cluster-container of.",
-        example=["host1", "host2", "host3"],
-        missing=list,
-        required=False,
-    )
 
 
 class BulkUpdateHost(BaseSchema):

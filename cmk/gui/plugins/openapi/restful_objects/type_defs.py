@@ -56,6 +56,7 @@ CmkEndpointName = Literal[
     'cmk/bulk_create',
     'cmk/bulk_update',
     'cmk/create',
+    'cmk/create_cluster',
     'cmk/download',
     'cmk/list',
     'cmk/move',

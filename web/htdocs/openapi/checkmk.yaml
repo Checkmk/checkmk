@@ -862,9 +862,6 @@ components:
           - attributes: {}
             folder: root
             host_name: example.com
-            nodes:
-            - host1
-            - host2
           items:
             $ref: '#/components/schemas/CreateHost'
           type: array
@@ -1209,6 +1206,42 @@ components:
       - domainType
       - links
       type: object
+    CreateClusterHost:
+      properties:
+        folder:
+          description: The folder-id of the folder under which this folder shall be
+            created. May be 'root' for the root-folder.
+          example: root
+          pattern: '[a-fA-F0-9]{32}|root'
+          type: string
+        host_name:
+          description: The hostname of the cluster host.
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
+          type: string
+        attributes:
+          description: Attributes to set on the newly created host.
+          example:
+            ipaddress: 192.168.0.123
+          type: object
+        nodes:
+          description: Nodes where the newly created host should be the cluster-container
+            of.
+          example:
+          - host1
+          - host2
+          - host3
+          items:
+            description: The hostname or IP address itself.
+            example: example.com
+            pattern: '[-0-9a-zA-Z_.]+'
+            type: string
+          type: array
+      required:
+      - folder
+      - host_name
+      - nodes
+      type: object
     CreateDowntime:
       discriminator:
         mapping:
@@ -1268,19 +1301,6 @@ components:
           example:
             ipaddress: 192.168.0.123
           type: object
-        nodes:
-          description: Nodes where the newly created host should be the cluster-container
-            of.
-          example:
-          - host1
-          - host2
-          - host3
-          items:
-            description: The hostname or IP address itself.
-            example: example.com
-            pattern: '[-0-9a-zA-Z_.]+'
-            type: string
-          type: array
       required:
       - folder
       - host_name
@@ -2272,60 +2292,49 @@ components:
           description: Replace all currently set attributes on the host, with these
             attributes. Any previously set attributes which are not given here will
             be removed.
-          example:
+          example: &id008
             ipaddress: 192.168.0.123
           type: object
         update_attributes:
           description: Just update the hosts attributes with these attributes. The
             previously set attributes will not be touched.
-          example:
+          example: &id009
             ipaddress: 192.168.0.123
           type: object
-        nodes:
-          description: Nodes where the host should be the cluster-container of.
-          example:
-          - host1
-          - host2
-          - host3
+        remove_attributes:
+          default: []
+          description: A list of attributes which should be removed.
+          example: &id010
+          - tag_foobar
           items:
-            description: The hostname or IP address itself.
-            example: example.com
-            pattern: '[-0-9a-zA-Z_.]+'
             type: string
           type: array
       type: object
     UpdateHostEntry:
       properties:
+        attributes:
+          description: Replace all currently set attributes on the host, with these
+            attributes. Any previously set attributes which are not given here will
+            be removed.
+          example: *id008
+          type: object
+        update_attributes:
+          description: Just update the hosts attributes with these attributes. The
+            previously set attributes will not be touched.
+          example: *id009
+          type: object
+        remove_attributes:
+          default: []
+          description: A list of attributes which should be removed.
+          example: *id010
+          items:
+            type: string
+          type: array
         host_name:
           description: The hostname or IP address itself.
           example: example.com
           pattern: '[-0-9a-zA-Z_.]+'
           type: string
-        attributes:
-          description: Replace all currently set attributes on the host, with these
-            attributes. Any previously set attributes which are not given here will
-            be removed.
-          example:
-            ipaddress: 192.168.0.123
-          type: object
-        update_attributes:
-          description: Just update the hosts attributes with these attributes. The
-            previously set attributes will not be touched.
-          example:
-            ipaddress: 192.168.0.123
-          type: object
-        nodes:
-          description: Nodes where the host should be the cluster-container of.
-          example:
-          - host1
-          - host2
-          - host3
-          items:
-            description: The hostname or IP address itself.
-            example: example.com
-            pattern: '[-0-9a-zA-Z_.]+'
-            type: string
-          type: array
       required:
       - host_name
       type: object
@@ -3485,13 +3494,13 @@ paths:
           ,\n    json={\n        'id': 'rule1',\n        'nodes': [],\n        'params':\
           \ [{\n            'arguments': ['foo', 'bar']\n        }],\n        'node_visualization':\
           \ {\n            'config': {},\n            'type': 'block'\n        },\n\
-          \        'properties': {\n            'title': '',\n            'icon':\
-          \ '',\n            'comment': '',\n            'state_messages': {},\n \
-          \           'docu_url': ''\n        },\n        'aggregation_function':\
-          \ {\n            'count': 1,\n            'restrict_state': 2,\n       \
-          \     'type': 'best'\n        },\n        'computation_options': {\n   \
-          \         'disabled': False\n        },\n        'pack_id': 'pack1'\n  \
-          \  },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          \        'properties': {\n            'docu_url': '',\n            'icon':\
+          \ '',\n            'title': '',\n            'comment': '',\n          \
+          \  'state_messages': {}\n        },\n        'aggregation_function': {\n\
+          \            'count': 1,\n            'type': 'best',\n            'restrict_state':\
+          \ 2\n        },\n        'computation_options': {\n            'disabled':\
+          \ False\n        },\n        'pack_id': 'pack1'\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -3503,14 +3512,13 @@ paths:
           \     'id': 'rule1',\n        'nodes': [],\n        'params': [{\n     \
           \       'arguments': ['foo', 'bar']\n        }],\n        'node_visualization':\
           \ {\n            'config': {},\n            'type': 'block'\n        },\n\
-          \        'properties': {\n            'title': '',\n            'icon':\
-          \ '',\n            'comment': '',\n            'state_messages': {},\n \
-          \           'docu_url': ''\n        },\n        'aggregation_function':\
-          \ {\n            'count': 1,\n            'restrict_state': 2,\n       \
-          \     'type': 'best'\n        },\n        'computation_options': {\n   \
-          \         'disabled': False\n        },\n        'pack_id': 'pack1'\n  \
-          \  }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
-          data = json.loads(response.read())"
+          \        'properties': {\n            'docu_url': '',\n            'icon':\
+          \ '',\n            'title': '',\n            'comment': '',\n          \
+          \  'state_messages': {}\n        },\n        'aggregation_function': {\n\
+          \            'count': 1,\n            'type': 'best',\n            'restrict_state':\
+          \ 2\n        },\n        'computation_options': {\n            'disabled':\
+          \ False\n        },\n        'pack_id': 'pack1'\n    }).encode('utf-8'),\n\
+          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -3535,13 +3543,13 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/bi_rule/rule1\" \\\
           \n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept: application/json\"\
-          \ \\\n    aggregation_function='{\"count\": 1, \"restrict_state\": 2, \"\
-          type\": \"best\"}' \\\n    computation_options='{\"disabled\": false}' \\\
-          \n    id='rule1' \\\n    node_visualization='{\"config\": {}, \"type\":\
-          \ \"block\"}' \\\n    nodes='[]' \\\n    pack_id='pack1' \\\n    params='[{\"\
-          arguments\": [\"foo\", \"bar\"]}]' \\\n    properties='{\"title\": \"\"\
-          , \"icon\": \"\", \"comment\": \"\", \"state_messages\": {}, \"docu_url\"\
-          : \"\"}' \\\n    --json"
+          \ \\\n    aggregation_function='{\"count\": 1, \"type\": \"best\", \"restrict_state\"\
+          : 2}' \\\n    computation_options='{\"disabled\": false}' \\\n    id='rule1'\
+          \ \\\n    node_visualization='{\"config\": {}, \"type\": \"block\"}' \\\n\
+          \    nodes='[]' \\\n    pack_id='pack1' \\\n    params='[{\"arguments\"\
+          : [\"foo\", \"bar\"]}]' \\\n    properties='{\"docu_url\": \"\", \"icon\"\
+          : \"\", \"title\": \"\", \"comment\": \"\", \"state_messages\": {}}' \\\n\
+          \    --json"
   /objects/bi_aggregation/{aggregation_id}:
     get:
       description: ''
@@ -3646,14 +3654,14 @@ paths:
           ,\n    json={\n        'id': 'aggr1',\n        'customer': 'customer1',\n\
           \        'groups': {\n            'names': ['groupA', 'groupB'],\n     \
           \       'paths': [['path', 'group', 'a'],\n                      ['path',\
-          \ 'group', 'b']]\n        },\n        'node': {\n            'search': {\n\
-          \                'type': 'empty'\n            },\n            'action':\
-          \ {\n                'type': 'state_of_host',\n                'host_regex':\
-          \ ''\n            }\n        },\n        'aggregation_visualization': {\n\
-          \            'ignore_rule_styles': False,\n            'layout_id': 'builtin_default',\n\
+          \ 'group', 'b']]\n        },\n        'node': {\n            'action': {\n\
+          \                'host_regex': '',\n                'type': 'state_of_host'\n\
+          \            },\n            'search': {\n                'type': 'empty'\n\
+          \            }\n        },\n        'aggregation_visualization': {\n   \
+          \         'ignore_rule_styles': False,\n            'layout_id': 'builtin_default',\n\
           \            'line_style': 'round'\n        },\n        'computation_options':\
-          \ {\n            'escalate_downtimes_as_warn': False,\n            'disabled':\
-          \ False,\n            'use_hard_states': False\n        },\n        'pack_id':\
+          \ {\n            'use_hard_states': False,\n            'disabled': False,\n\
+          \            'escalate_downtimes_as_warn': False\n        },\n        'pack_id':\
           \ 'pack1'\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
@@ -3666,13 +3674,13 @@ paths:
           \        'id': 'aggr1',\n        'customer': 'customer1',\n        'groups':\
           \ {\n            'names': ['groupA', 'groupB'],\n            'paths': [['path',\
           \ 'group', 'a'],\n                      ['path', 'group', 'b']]\n      \
-          \  },\n        'node': {\n            'search': {\n                'type':\
-          \ 'empty'\n            },\n            'action': {\n                'type':\
-          \ 'state_of_host',\n                'host_regex': ''\n            }\n  \
-          \      },\n        'aggregation_visualization': {\n            'ignore_rule_styles':\
+          \  },\n        'node': {\n            'action': {\n                'host_regex':\
+          \ '',\n                'type': 'state_of_host'\n            },\n       \
+          \     'search': {\n                'type': 'empty'\n            }\n    \
+          \    },\n        'aggregation_visualization': {\n            'ignore_rule_styles':\
           \ False,\n            'layout_id': 'builtin_default',\n            'line_style':\
-          \ 'round'\n        },\n        'computation_options': {\n            'escalate_downtimes_as_warn':\
-          \ False,\n            'disabled': False,\n            'use_hard_states':\
+          \ 'round'\n        },\n        'computation_options': {\n            'use_hard_states':\
+          \ False,\n            'disabled': False,\n            'escalate_downtimes_as_warn':\
           \ False\n        },\n        'pack_id': 'pack1'\n    }).encode('utf-8'),\n\
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
@@ -3706,13 +3714,12 @@ paths:
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    aggregation_visualization='{\"ignore_rule_styles\"\
           : false, \"layout_id\": \"builtin_default\", \"line_style\": \"round\"}'\
-          \ \\\n    computation_options='{\"escalate_downtimes_as_warn\": false, \"\
-          disabled\": false, \"use_hard_states\": false}' \\\n    customer='customer1'\
+          \ \\\n    computation_options='{\"use_hard_states\": false, \"disabled\"\
+          : false, \"escalate_downtimes_as_warn\": false}' \\\n    customer='customer1'\
           \ \\\n    groups='{\"names\": [\"groupA\", \"groupB\"], \"paths\": [[\"\
           path\", \"group\", \"a\"], [\"path\", \"group\", \"b\"]]}' \\\n    id='aggr1'\
-          \ \\\n    node='{\"search\": {\"type\": \"empty\"}, \"action\": {\"type\"\
-          : \"state_of_host\", \"host_regex\": \"\"}}' \\\n    pack_id='pack1' \\\n\
-          \    --json"
+          \ \\\n    node='{\"action\": {\"host_regex\": \"\", \"type\": \"state_of_host\"\
+          }, \"search\": {\"type\": \"empty\"}}' \\\n    pack_id='pack1' \\\n    --json"
   /domain-types/bi_pack/collections/all:
     get:
       description: ''
@@ -4541,6 +4548,13 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.downtime.delete_downtime
       parameters:
+      - description: The id of the downtime
+        in: path
+        name: downtime_id
+        required: true
+        schema:
+          example: '54'
+          type: string
       - description: A hostname.
         in: path
         name: host_name
@@ -4548,13 +4562,6 @@ paths:
         schema:
           example: example.com
           pattern: '[-0-9a-zA-Z_.]+'
-          type: string
-      - description: The id of the downtime
-        in: path
-        name: downtime_id
-        required: true
-        schema:
-          example: '54'
           type: string
       responses:
         default:
@@ -5390,8 +5397,7 @@ paths:
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/host_config/collections/all\"\
           ,\n    json={\n        'folder': 'root',\n        'host_name': 'example.com',\n\
           \        'attributes': {\n            'ipaddress': '192.168.0.123'\n   \
-          \     },\n        'nodes': ['host1', 'host2', 'host3']\n    },\n)\nresp.raise_for_status()\n\
-          data = resp.json()"
+          \     }\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -5402,7 +5408,88 @@ paths:
           \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
           \ data=json.dumps({\n        'folder': 'root',\n        'host_name': 'example.com',\n\
           \        'attributes': {\n            'ipaddress': '192.168.0.123'\n   \
-          \     },\n        'nodes': ['host1', 'host2', 'host3']\n    }).encode('utf-8'),\n\
+          \     }\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\ \\\n    --data '{\n          \"attributes\": {\n            \"ipaddress\"\
+          : \"192.168.0.123\"\n          },\n          \"folder\": \"root\",\n   \
+          \       \"host_name\": \"example.com\"\n        }' \\\n    \"$API_URL/domain-types/host_config/collections/all\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/host_config/collections/all\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    attributes='{\"ipaddress\": \"192.168.0.123\"\
+          }' \\\n    folder='root' \\\n    host_name='example.com' \\\n    --json"
+  /domain-types/host_config/collections/clusters:
+    post:
+      description: 'A cluster host groups many hosts (called nodes in this context)
+        into a conceptual cluster.
+
+        All the services of the individual nodes will be collated on the cluster host.'
+      operationId: cmk.gui.plugins.openapi.endpoints.host_config.create_cluster_host
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateClusterHost'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainObject'
+          description: ''
+          headers:
+            ETag:
+              allowEmptyValue: false
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along in the "If-Match"
+                request-header for subsequent modifications.
+              example: a20ceacf346041dc
+              required: false
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+      summary: Create a cluster host
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.host_config
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/host_config/collections/clusters\"\
+          ,\n    json={\n        'folder': 'root',\n        'host_name': 'example.com',\n\
+          \        'attributes': {\n            'ipaddress': '192.168.0.123'\n   \
+          \     },\n        'nodes': ['host1', 'host2', 'host3']\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/host_config/collections/clusters\",\n   \
+          \ method=\"POST\",\n    headers={\n        \"Authorization\": f\"Bearer\
+          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
+          \    },\n    data=json.dumps({\n        'folder': 'root',\n        'host_name':\
+          \ 'example.com',\n        'attributes': {\n            'ipaddress': '192.168.0.123'\n\
+          \        },\n        'nodes': ['host1', 'host2', 'host3']\n    }).encode('utf-8'),\n\
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -5414,12 +5501,12 @@ paths:
           : \"192.168.0.123\"\n          },\n          \"folder\": \"root\",\n   \
           \       \"host_name\": \"example.com\",\n          \"nodes\": [\n      \
           \      \"host1\",\n            \"host2\",\n            \"host3\"\n     \
-          \     ]\n        }' \\\n    \"$API_URL/domain-types/host_config/collections/all\""
+          \     ]\n        }' \\\n    \"$API_URL/domain-types/host_config/collections/clusters\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/host_config/collections/all\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/host_config/collections/clusters\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    attributes='{\"ipaddress\": \"192.168.0.123\"\
           }' \\\n    folder='root' \\\n    host_name='example.com' \\\n    nodes='[\"\
@@ -5460,9 +5547,8 @@ paths:
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/host_config/actions/bulk-create/invoke\"\
           ,\n    json={\n        'entries': [{\n            'host_name': 'example.com',\n\
-          \            'folder': 'root',\n            'attributes': {},\n        \
-          \    'nodes': ['host1', 'host2']\n        }]\n    },\n)\nresp.raise_for_status()\n\
-          data = resp.json()"
+          \            'folder': 'root',\n            'attributes': {}\n        }]\n\
+          \    },\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -5473,8 +5559,8 @@ paths:
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
           \    },\n    data=json.dumps({\n        'entries': [{\n            'host_name':\
           \ 'example.com',\n            'folder': 'root',\n            'attributes':\
-          \ {},\n            'nodes': ['host1', 'host2']\n        }]\n    }).encode('utf-8'),\n\
-          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+          \ {}\n        }]\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -5483,9 +5569,8 @@ paths:
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\ \\\n    --data '{\n          \"entries\": [\n            {\n      \
           \        \"attributes\": {},\n              \"folder\": \"root\",\n    \
-          \          \"host_name\": \"example.com\",\n              \"nodes\": [\n\
-          \                \"host1\",\n                \"host2\"\n              ]\n\
-          \            }\n          ]\n        }' \\\n    \"$API_URL/domain-types/host_config/actions/bulk-create/invoke\""
+          \          \"host_name\": \"example.com\"\n            }\n          ]\n\
+          \        }' \\\n    \"$API_URL/domain-types/host_config/actions/bulk-create/invoke\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -5493,8 +5578,7 @@ paths:
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/host_config/actions/bulk-create/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    entries='[{\"host_name\": \"example.com\",\
-          \ \"folder\": \"root\", \"attributes\": {}, \"nodes\": [\"host1\", \"host2\"\
-          ]}]' \\\n    --json"
+          \ \"folder\": \"root\", \"attributes\": {}}]' \\\n    --json"
   /objects/host_config/{host_name}:
     delete:
       description: ''
@@ -5701,9 +5785,8 @@ paths:
           ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
           \ The ETag of the object to be modified.\n    },\n    json={\n        'attributes':\
           \ {\n            'ipaddress': '192.168.0.123'\n        },\n        'update_attributes':\
-          \ {\n            'ipaddress': '192.168.0.123'\n        },\n        'nodes':\
-          \ ['host1', 'host2', 'host3']\n    },\n)\nresp.raise_for_status()\ndata\
-          \ = resp.json()"
+          \ {\n            'ipaddress': '192.168.0.123'\n        },\n        'remove_attributes':\
+          \ ['tag_foobar']\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -5715,7 +5798,7 @@ paths:
           ,  # (required) The ETag of the object to be modified.\n    },\n    data=json.dumps({\n\
           \        'attributes': {\n            'ipaddress': '192.168.0.123'\n   \
           \     },\n        'update_attributes': {\n            'ipaddress': '192.168.0.123'\n\
-          \        },\n        'nodes': ['host1', 'host2', 'host3']\n    }).encode('utf-8'),\n\
+          \        },\n        'remove_attributes': ['tag_foobar']\n    }).encode('utf-8'),\n\
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -5725,10 +5808,9 @@ paths:
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\ \\\n    --data '{\n\
           \          \"attributes\": {\n            \"ipaddress\": \"192.168.0.123\"\
-          \n          },\n          \"nodes\": [\n            \"host1\",\n       \
-          \     \"host2\",\n            \"host3\"\n          ],\n          \"update_attributes\"\
-          : {\n            \"ipaddress\": \"192.168.0.123\"\n          }\n       \
-          \ }' \\\n    \"$API_URL/objects/host_config/example.com\""
+          \n          },\n          \"remove_attributes\": [\n            \"tag_foobar\"\
+          \n          ],\n          \"update_attributes\": {\n            \"ipaddress\"\
+          : \"192.168.0.123\"\n          }\n        }' \\\n    \"$API_URL/objects/host_config/example.com\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -5736,9 +5818,9 @@ paths:
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/host_config/example.com\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    attributes='{\"\
-          ipaddress\": \"192.168.0.123\"}' \\\n    nodes='[\"host1\", \"host2\", \"\
-          host3\"]' \\\n    update_attributes='{\"ipaddress\": \"192.168.0.123\"}'\
-          \ \\\n    --json"
+          ipaddress\": \"192.168.0.123\"}' \\\n    remove_attributes='[\"tag_foobar\"\
+          ]' \\\n    update_attributes='{\"ipaddress\": \"192.168.0.123\"}' \\\n \
+          \   --json"
   /domain-types/host_config/actions/bulk-update/invoke:
     put:
       description: ''
@@ -7026,6 +7108,12 @@ paths:
       description: This list is filterable by various parameters.
       operationId: cmk.gui.plugins.openapi.endpoints.service._list_host_services
       parameters:
+      - description: Restrict the query to this particular site.
+        in: query
+        name: site
+        required: false
+        schema:
+          type: string
       - description: The desired columns of the services table. If left empty, a default
           set of columns is used.
         explode: true
@@ -7040,12 +7128,6 @@ paths:
             type: string
           type: array
         style: form
-      - description: Restrict the query to this particular site.
-        in: query
-        name: site
-        required: false
-        schema:
-          type: string
       - description: An query expression in nested dictionary form. If you want to
           use multiple expressions, nest them with the AND/OR operators.
         in: query
@@ -7129,6 +7211,12 @@ paths:
       description: This list is filterable by various parameters.
       operationId: cmk.gui.plugins.openapi.endpoints.service._list_all_services
       parameters:
+      - description: Restrict the query to this particular site.
+        in: query
+        name: site
+        required: false
+        schema:
+          type: string
       - description: The desired columns of the services table. If left empty, a default
           set of columns is used.
         explode: true
@@ -7143,20 +7231,6 @@ paths:
             type: string
           type: array
         style: form
-      - description: Restrict the query to this particular site.
-        in: query
-        name: site
-        required: false
-        schema:
-          type: string
-      - description: A hostname.
-        in: query
-        name: host_name
-        required: false
-        schema:
-          example: example.com
-          pattern: '[-0-9a-zA-Z_.]+'
-          type: string
       - description: An query expression in nested dictionary form. If you want to
           use multiple expressions, nest them with the AND/OR operators.
         in: query
@@ -7167,6 +7241,14 @@ paths:
           - $ref: '#/components/schemas/Expr'
           example: '{"op": "not", "expr": {"op": "=", "left": "hosts.name", "right":
             "example.com"}}'
+      - description: A hostname.
+        in: query
+        name: host_name
+        required: false
+        schema:
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
+          type: string
       responses:
         default:
           content:
@@ -7395,14 +7477,6 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.service_discovery.execute
       parameters:
-      - description: A hostname.
-        in: path
-        name: host_name
-        required: true
-        schema:
-          example: example.com
-          pattern: '[-0-9a-zA-Z_.]+'
-          type: string
       - description: 'The mode of the discovery action. May be one of the following:
           tabula-rasa'
         in: path
@@ -7411,6 +7485,14 @@ paths:
         schema:
           example: tabula-rasa
           pattern: tabula-rasa
+          type: string
+      - description: A hostname.
+        in: path
+        name: host_name
+        required: true
+        schema:
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
           type: string
       responses:
         default:
@@ -8706,6 +8788,14 @@ paths:
         needs to be specified.'
       operationId: cmk.gui.cee.plugins.openapi.endpoints.agent.download_agent
       parameters:
+      - description: A hostname.
+        in: query
+        name: host_name
+        required: false
+        schema:
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
+          type: string
       - description: The type of the operating system. May be one of aix_tgz, linux_deb,
           linux_rpm, linux_tgz, solaris_pkg, solaris_tgz, windows_msi
         in: query
@@ -8714,14 +8804,6 @@ paths:
         schema:
           example: linux_tgz
           pattern: aix_tgz|linux_deb|linux_rpm|linux_tgz|solaris_pkg|solaris_tgz|windows_msi
-          type: string
-      - description: A hostname.
-        in: query
-        name: host_name
-        required: false
-        schema:
-          example: example.com
-          pattern: '[-0-9a-zA-Z_.]+'
           type: string
       - description: The configuration hash representing an agent.
         in: path

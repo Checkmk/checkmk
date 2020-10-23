@@ -46,6 +46,28 @@ def create_host(params):
     body = params['body']
     host_name = body['host_name']
 
+    # is_cluster is defined as "cluster_hosts is not None"
+    body['folder'].create_hosts([(host_name, body['attributes'], None)])
+
+    host = watolib.Host.host(host_name)
+    return _serve_host(host)
+
+
+@endpoint_schema(constructors.collection_href('host_config', "clusters"),
+                 'cmk/create_cluster',
+                 method='post',
+                 etag='output',
+                 request_body_required=True,
+                 request_schema=request_schemas.CreateClusterHost,
+                 response_schema=response_schemas.DomainObject)
+def create_cluster_host(params):
+    """Create a cluster host
+
+    A cluster host groups many hosts (called nodes in this context) into a conceptual cluster.
+    All the services of the individual nodes will be collated on the cluster host."""
+    body = params['body']
+    host_name = body['host_name']
+
     body['folder'].create_hosts([(host_name, body['attributes'], body['nodes'])])
 
     host = watolib.Host.host(host_name)
@@ -73,7 +95,7 @@ def bulk_create_hosts(params):
 
     for folder, grouped_hosts in itertools.groupby(body['entries'], operator.itemgetter('folder')):
         folder.create_hosts(
-            [(host['host_name'], host['attributes'], host['nodes']) for host in grouped_hosts],
+            [(host['host_name'], host['attributes'], None) for host in grouped_hosts],
             bake_hosts=False)
 
     try_bake_agents_for_hosts([host["host_name"] for host in body["entries"]])
@@ -121,7 +143,6 @@ def update_host(params):
     """Update a host"""
     host_name = params['host_name']
     body = params['body']
-    nodes = body['nodes']
     new_attributes = body['attributes']
     update_attributes = body['attributes']
     check_hostname(host_name, should_exist=True)
@@ -129,7 +150,7 @@ def update_host(params):
     constructors.require_etag(constructors.etag_of_obj(host))
 
     if new_attributes:
-        host.edit(new_attributes, nodes)
+        host.edit(new_attributes, None)
 
     if update_attributes:
         host.update_attributes(update_attributes)
@@ -150,13 +171,12 @@ def bulk_update_hosts(params):
     hosts = []
     for update_detail in entries:
         host_name = update_detail['host_name']
-        nodes = update_detail['nodes']
         new_attributes = update_detail['attributes']
         update_attributes = update_detail['attributes']
         check_hostname(host_name)
         host: watolib.CREHost = watolib.Host.host(host_name)
         if new_attributes:
-            host.edit(new_attributes, nodes)
+            host.edit(new_attributes, None)
 
         if update_attributes:
             host.update_attributes(update_attributes)

@@ -1115,22 +1115,6 @@ class BarPlot extends SubPlot {
         return color != undefined ? color : d3.color(this._get_css("fill", "rect", classes));
     }
 }
-
-function split_unit(recipe) {
-    if (!recipe) return {};
-    if (!recipe.formatted_value) return {};
-    let text = recipe.formatted_value;
-    // Separated by space, most rendered quantities
-    let splitted_text = text.split(" ");
-    if (splitted_text.length == 2)
-        return {value: splitted_text[0], unit: splitted_text[1], url: recipe.url};
-
-    // Percentages have no space
-    if (text.endsWith("%")) return {value: text.slice(0, -1), unit: "%", url: recipe.url};
-
-    // It's a counter, unitless
-    return {value: text, unit: "", url: recipe.url};
-}
 // Renders a single value
 // Per default, the latest timestamp of the given timeline is used
 class SingleValuePlot extends SubPlot {
@@ -1140,29 +1124,17 @@ class SingleValuePlot extends SubPlot {
 
     render() {
         let plot_size = this._renderer.plot_size;
-        let value = split_unit(this.transformed_data.find(element => element.formatted_value));
-        let value_text = this.svg.selectAll("a.single_value").data([value]);
+        let value = cmk_figures.split_unit(
+            this.transformed_data.find(element => element.formatted_value)
+        );
         let font_size = Math.min(plot_size.width / 5, (plot_size.height * 2) / 3);
-        let link = value_text
-            .join("a")
-            .classed("single_value", true)
-            .attr("xlink:href", d => d.url || "");
-        let text = link
-            .selectAll("text")
-            .data(d => [d])
-            .join("text")
-            .text(d => d.value)
-            .attr("x", plot_size.width / 2)
-            .attr("y", plot_size.height / 2 + font_size / 3)
-            .attr("text-anchor", "middle")
-            .style("font-size", font_size + "px");
-
-        let unit = text
-            .selectAll("tspan")
-            .data(d => [d])
-            .join("tspan")
-            .style("font-size", font_size / 2 + "px")
-            .text(d => d.unit);
+        cmk_figures.metric_value_component(
+            this.svg,
+            value,
+            font_size,
+            plot_size.width / 2,
+            plot_size.height / 2 + font_size / 3
+        );
         cmk_figures.state_component(this._renderer, this.definition.svc_state);
     }
 

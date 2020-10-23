@@ -643,3 +643,46 @@ export function state_component(figurebase, state) {
         .style("font-size", font_size + "px")
         .text(d => d.msg);
 }
+
+// Adhoc hack to extract the unit from a formatted string, which has units
+// Once we migrate metric system to the frontend drop this
+export function split_unit(recipe) {
+    if (!recipe) return {};
+    if (!recipe.formatted_value) return {};
+    let text = recipe.formatted_value;
+    // Separated by space, most rendered quantities
+    let splitted_text = text.split(" ");
+    if (splitted_text.length == 2)
+        return {value: splitted_text[0], unit: splitted_text[1], url: recipe.url};
+
+    // Percentages have no space
+    if (text.endsWith("%")) return {value: text.slice(0, -1), unit: "%", url: recipe.url};
+
+    // It's a counter, unitless
+    return {value: text, unit: "", url: recipe.url};
+}
+
+export function metric_value_component(selection, value, font_size, x, y) {
+    let link = selection
+        .selectAll("a.single_value")
+        .data([value])
+        .join("a")
+        .classed("single_value", true)
+        .attr("xlink:href", d => d.url || "");
+    let text = link
+        .selectAll("text")
+        .data(d => [d])
+        .join("text")
+        .text(d => d.value)
+        .attr("x", x)
+        .attr("y", y)
+        .attr("text-anchor", "middle")
+        .style("font-size", font_size + "px");
+
+    let unit = text
+        .selectAll("tspan")
+        .data(d => [d])
+        .join("tspan")
+        .style("font-size", font_size / 2 + "px")
+        .text(d => d.unit);
+}

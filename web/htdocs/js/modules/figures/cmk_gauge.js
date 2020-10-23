@@ -216,16 +216,16 @@ class GaugeFigure extends cmk_figures.FigureBase {
 
     _render_text() {
         let data = this._crossfilter.allFiltered();
-        let value = "-";
-        if (data.length) value = data[data.length - 1].formatted_value;
-        this.plot
-            .selectAll("text.value")
-            .data([value])
-            .join(enter => enter.append("text").classed("value", true))
-            .attr("text-anchor", "middle")
-            .attr("y", -this.plot_size.height / 3)
-            .style("font-size", this._radius / 5 + "px")
-            .text(value);
+        if (data.length) {
+            let value = cmk_figures.split_unit(data[data.length - 1]);
+            cmk_figures.metric_value_component(
+                this.plot,
+                value,
+                this._radius / 5,
+                0,
+                -this.plot_size.height / 3
+            );
+        }
     }
 }
 

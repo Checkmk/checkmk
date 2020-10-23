@@ -173,6 +173,15 @@ class CreateClusterHost(BaseSchema):
     )
 
 
+class UpdateNodes(BaseSchema):
+    nodes = fields.List(
+        EXISTING_HOST_NAME,
+        description="Nodes where the newly created host should be the cluster-container of.",
+        required=True,
+        example=["host1", "host2", "host3"],
+    )
+
+
 class CreateHost(BaseSchema):
     host_name = Hostname(
         description="The hostname or IP address of the host to be created.",

@@ -175,6 +175,13 @@ class ObjectCollectionMember(ObjectMemberBase):
     name = fields.String(example="important_values")
 
 
+class ObjectProperty(Linkable):
+    id = fields.String()
+    # FIXME: This is the only use-case right now. Needs to be expanded when this is used more.
+    value = fields.List(fields.String())
+    extensions = fields.Dict()
+
+
 class ObjectPropertyMember(ObjectMemberBase):
     memberType = fields.Constant('property')
     name = fields.String(example="important_value")

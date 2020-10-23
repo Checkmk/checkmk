@@ -22,6 +22,7 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     EndpointName,
     HTTPMethod,
     LinkType,
+    ObjectProperty,
     PropertyFormat,
     ResultType,
     Serializable,
@@ -284,6 +285,43 @@ class DomainObjectMembers:
 
     def to_dict(self):
         return self.members
+
+
+def object_property_href(
+    domain_type: DomainType,
+    identifier: str,
+    property_name: str,
+):
+    return f"/objects/{domain_type}/{identifier}/properties/{property_name}"
+
+
+def object_sub_property(
+    domain_type: DomainType,
+    ident: str,
+    name: str,
+    value: Any,
+    disabled_reason: Optional[str] = None,
+    extensions: Optional[Dict[str, Any]] = None,
+) -> ObjectProperty:
+    if extensions is None:
+        extensions = {}
+    ret: ObjectProperty = {
+        'id': f"{ident}_{name}",
+        'value': value,
+        'extensions': extensions,
+    }
+    if disabled_reason is not None:
+        ret['disabledReason'] = disabled_reason
+
+    ret['links'] = [
+        link_rel(
+            rel='.../modify',
+            href=object_property_href(domain_type, ident, name),
+            method='put',
+        ),
+    ]
+
+    return ret
 
 
 def object_property(

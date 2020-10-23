@@ -2101,6 +2101,15 @@ components:
         $ref: '#/components/schemas/ObjectMember'
       properties: {}
       type: object
+    ObjectProperty:
+      properties:
+        id:
+          type: string
+        value:
+          items:
+            type: string
+          type: array
+      type: object
     ObjectPropertyMember:
       properties:
         links:
@@ -2378,6 +2387,24 @@ components:
             hosts.
           example: false
           type: boolean
+      type: object
+    UpdateNodes:
+      properties:
+        nodes:
+          description: Nodes where the newly created host should be the cluster-container
+            of.
+          example:
+          - host1
+          - host2
+          - host3
+          items:
+            description: The hostname or IP address itself.
+            example: example.com
+            pattern: '[-0-9a-zA-Z_.]+'
+            type: string
+          type: array
+      required:
+      - nodes
       type: object
     UpdatePassword:
       properties:
@@ -3493,14 +3520,14 @@ paths:
           \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/bi_rule/rule1\"\
           ,\n    json={\n        'id': 'rule1',\n        'nodes': [],\n        'params':\
           \ [{\n            'arguments': ['foo', 'bar']\n        }],\n        'node_visualization':\
-          \ {\n            'config': {},\n            'type': 'block'\n        },\n\
-          \        'properties': {\n            'docu_url': '',\n            'icon':\
-          \ '',\n            'title': '',\n            'comment': '',\n          \
+          \ {\n            'type': 'block',\n            'config': {}\n        },\n\
+          \        'properties': {\n            'title': '',\n            'comment':\
+          \ '',\n            'icon': '',\n            'docu_url': '',\n          \
           \  'state_messages': {}\n        },\n        'aggregation_function': {\n\
-          \            'count': 1,\n            'type': 'best',\n            'restrict_state':\
-          \ 2\n        },\n        'computation_options': {\n            'disabled':\
-          \ False\n        },\n        'pack_id': 'pack1'\n    },\n)\nresp.raise_for_status()\n\
-          data = resp.json()"
+          \            'restrict_state': 2,\n            'type': 'best',\n       \
+          \     'count': 1\n        },\n        'computation_options': {\n       \
+          \     'disabled': False\n        },\n        'pack_id': 'pack1'\n    },\n\
+          )\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -3511,13 +3538,13 @@ paths:
           \ \"Accept\": \"application/json\",\n    },\n    data=json.dumps({\n   \
           \     'id': 'rule1',\n        'nodes': [],\n        'params': [{\n     \
           \       'arguments': ['foo', 'bar']\n        }],\n        'node_visualization':\
-          \ {\n            'config': {},\n            'type': 'block'\n        },\n\
-          \        'properties': {\n            'docu_url': '',\n            'icon':\
-          \ '',\n            'title': '',\n            'comment': '',\n          \
+          \ {\n            'type': 'block',\n            'config': {}\n        },\n\
+          \        'properties': {\n            'title': '',\n            'comment':\
+          \ '',\n            'icon': '',\n            'docu_url': '',\n          \
           \  'state_messages': {}\n        },\n        'aggregation_function': {\n\
-          \            'count': 1,\n            'type': 'best',\n            'restrict_state':\
-          \ 2\n        },\n        'computation_options': {\n            'disabled':\
-          \ False\n        },\n        'pack_id': 'pack1'\n    }).encode('utf-8'),\n\
+          \            'restrict_state': 2,\n            'type': 'best',\n       \
+          \     'count': 1\n        },\n        'computation_options': {\n       \
+          \     'disabled': False\n        },\n        'pack_id': 'pack1'\n    }).encode('utf-8'),\n\
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -3543,12 +3570,12 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/bi_rule/rule1\" \\\
           \n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept: application/json\"\
-          \ \\\n    aggregation_function='{\"count\": 1, \"type\": \"best\", \"restrict_state\"\
-          : 2}' \\\n    computation_options='{\"disabled\": false}' \\\n    id='rule1'\
-          \ \\\n    node_visualization='{\"config\": {}, \"type\": \"block\"}' \\\n\
-          \    nodes='[]' \\\n    pack_id='pack1' \\\n    params='[{\"arguments\"\
-          : [\"foo\", \"bar\"]}]' \\\n    properties='{\"docu_url\": \"\", \"icon\"\
-          : \"\", \"title\": \"\", \"comment\": \"\", \"state_messages\": {}}' \\\n\
+          \ \\\n    aggregation_function='{\"restrict_state\": 2, \"type\": \"best\"\
+          , \"count\": 1}' \\\n    computation_options='{\"disabled\": false}' \\\n\
+          \    id='rule1' \\\n    node_visualization='{\"type\": \"block\", \"config\"\
+          : {}}' \\\n    nodes='[]' \\\n    pack_id='pack1' \\\n    params='[{\"arguments\"\
+          : [\"foo\", \"bar\"]}]' \\\n    properties='{\"title\": \"\", \"comment\"\
+          : \"\", \"icon\": \"\", \"docu_url\": \"\", \"state_messages\": {}}' \\\n\
           \    --json"
   /objects/bi_aggregation/{aggregation_id}:
     get:
@@ -3654,12 +3681,12 @@ paths:
           ,\n    json={\n        'id': 'aggr1',\n        'customer': 'customer1',\n\
           \        'groups': {\n            'names': ['groupA', 'groupB'],\n     \
           \       'paths': [['path', 'group', 'a'],\n                      ['path',\
-          \ 'group', 'b']]\n        },\n        'node': {\n            'action': {\n\
-          \                'host_regex': '',\n                'type': 'state_of_host'\n\
-          \            },\n            'search': {\n                'type': 'empty'\n\
+          \ 'group', 'b']]\n        },\n        'node': {\n            'search': {\n\
+          \                'type': 'empty'\n            },\n            'action':\
+          \ {\n                'host_regex': '',\n                'type': 'state_of_host'\n\
           \            }\n        },\n        'aggregation_visualization': {\n   \
-          \         'ignore_rule_styles': False,\n            'layout_id': 'builtin_default',\n\
-          \            'line_style': 'round'\n        },\n        'computation_options':\
+          \         'line_style': 'round',\n            'ignore_rule_styles': False,\n\
+          \            'layout_id': 'builtin_default'\n        },\n        'computation_options':\
           \ {\n            'use_hard_states': False,\n            'disabled': False,\n\
           \            'escalate_downtimes_as_warn': False\n        },\n        'pack_id':\
           \ 'pack1'\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
@@ -3674,12 +3701,12 @@ paths:
           \        'id': 'aggr1',\n        'customer': 'customer1',\n        'groups':\
           \ {\n            'names': ['groupA', 'groupB'],\n            'paths': [['path',\
           \ 'group', 'a'],\n                      ['path', 'group', 'b']]\n      \
-          \  },\n        'node': {\n            'action': {\n                'host_regex':\
-          \ '',\n                'type': 'state_of_host'\n            },\n       \
-          \     'search': {\n                'type': 'empty'\n            }\n    \
-          \    },\n        'aggregation_visualization': {\n            'ignore_rule_styles':\
-          \ False,\n            'layout_id': 'builtin_default',\n            'line_style':\
-          \ 'round'\n        },\n        'computation_options': {\n            'use_hard_states':\
+          \  },\n        'node': {\n            'search': {\n                'type':\
+          \ 'empty'\n            },\n            'action': {\n                'host_regex':\
+          \ '',\n                'type': 'state_of_host'\n            }\n        },\n\
+          \        'aggregation_visualization': {\n            'line_style': 'round',\n\
+          \            'ignore_rule_styles': False,\n            'layout_id': 'builtin_default'\n\
+          \        },\n        'computation_options': {\n            'use_hard_states':\
           \ False,\n            'disabled': False,\n            'escalate_downtimes_as_warn':\
           \ False\n        },\n        'pack_id': 'pack1'\n    }).encode('utf-8'),\n\
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
@@ -3712,14 +3739,14 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/bi_aggregation/aggregation1\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    aggregation_visualization='{\"ignore_rule_styles\"\
-          : false, \"layout_id\": \"builtin_default\", \"line_style\": \"round\"}'\
-          \ \\\n    computation_options='{\"use_hard_states\": false, \"disabled\"\
+          \ application/json\" \\\n    aggregation_visualization='{\"line_style\"\
+          : \"round\", \"ignore_rule_styles\": false, \"layout_id\": \"builtin_default\"\
+          }' \\\n    computation_options='{\"use_hard_states\": false, \"disabled\"\
           : false, \"escalate_downtimes_as_warn\": false}' \\\n    customer='customer1'\
           \ \\\n    groups='{\"names\": [\"groupA\", \"groupB\"], \"paths\": [[\"\
           path\", \"group\", \"a\"], [\"path\", \"group\", \"b\"]]}' \\\n    id='aggr1'\
-          \ \\\n    node='{\"action\": {\"host_regex\": \"\", \"type\": \"state_of_host\"\
-          }, \"search\": {\"type\": \"empty\"}}' \\\n    pack_id='pack1' \\\n    --json"
+          \ \\\n    node='{\"search\": {\"type\": \"empty\"}, \"action\": {\"host_regex\"\
+          : \"\", \"type\": \"state_of_host\"}}' \\\n    pack_id='pack1' \\\n    --json"
   /domain-types/bi_pack/collections/all:
     get:
       description: ''
@@ -5579,6 +5606,101 @@ paths:
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    entries='[{\"host_name\": \"example.com\",\
           \ \"folder\": \"root\", \"attributes\": {}}]' \\\n    --json"
+  /objects/host_config/{host_name}/properties/nodes:
+    put:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.host_config.update_nodes
+      parameters:
+      - description: The ETag of the object to be modified. This value comes from
+          the ETag HTTP header whenever the object is displayed. To update this object
+          the currently stored ETag needs to be the same as the one sent.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          example: a20ceacf346041dc
+          type: string
+      - description: A hostname.
+        in: path
+        name: host_name
+        required: true
+        schema:
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateNodes'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectProperty'
+          description: ''
+          headers:
+            ETag:
+              allowEmptyValue: false
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along in the "If-Match"
+                request-header for subsequent modifications.
+              example: a20ceacf346041dc
+              required: false
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+      summary: Update the nodes of a cluster host
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.host_config
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/host_config/example.com/properties/nodes\"\
+          ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
+          \ The ETag of the object to be modified.\n    },\n    json={'nodes': ['host1',\
+          \ 'host2', 'host3']},\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/objects/host_config/example.com/properties/nodes\",\n\
+          \    method=\"PUT\",\n    headers={\n        \"Authorization\": f\"Bearer\
+          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
+          \        \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the\
+          \ object to be modified.\n    },\n    data=json.dumps({'nodes': ['host1',\
+          \ 'host2', 'host3']}).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\ \\\n    --data '{\n\
+          \          \"nodes\": [\n            \"host1\",\n            \"host2\",\n\
+          \            \"host3\"\n          ]\n        }' \\\n    \"$API_URL/objects/host_config/example.com/properties/nodes\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/host_config/example.com/properties/nodes\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    nodes='[\"\
+          host1\", \"host2\", \"host3\"]' \\\n    --json"
   /objects/host_config/{host_name}:
     delete:
       description: ''
@@ -7114,6 +7236,16 @@ paths:
         required: false
         schema:
           type: string
+      - description: An query expression in nested dictionary form. If you want to
+          use multiple expressions, nest them with the AND/OR operators.
+        in: query
+        name: query
+        required: false
+        schema:
+          allOf:
+          - $ref: '#/components/schemas/Expr'
+          example: '{"op": "not", "expr": {"op": "=", "left": "hosts.name", "right":
+            "example.com"}}'
       - description: The desired columns of the services table. If left empty, a default
           set of columns is used.
         explode: true
@@ -7128,16 +7260,6 @@ paths:
             type: string
           type: array
         style: form
-      - description: An query expression in nested dictionary form. If you want to
-          use multiple expressions, nest them with the AND/OR operators.
-        in: query
-        name: query
-        required: false
-        schema:
-          allOf:
-          - $ref: '#/components/schemas/Expr'
-          example: '{"op": "not", "expr": {"op": "=", "left": "hosts.name", "right":
-            "example.com"}}'
       - description: A hostname.
         in: path
         name: host_name
@@ -7217,6 +7339,16 @@ paths:
         required: false
         schema:
           type: string
+      - description: An query expression in nested dictionary form. If you want to
+          use multiple expressions, nest them with the AND/OR operators.
+        in: query
+        name: query
+        required: false
+        schema:
+          allOf:
+          - $ref: '#/components/schemas/Expr'
+          example: '{"op": "not", "expr": {"op": "=", "left": "hosts.name", "right":
+            "example.com"}}'
       - description: The desired columns of the services table. If left empty, a default
           set of columns is used.
         explode: true
@@ -7231,16 +7363,6 @@ paths:
             type: string
           type: array
         style: form
-      - description: An query expression in nested dictionary form. If you want to
-          use multiple expressions, nest them with the AND/OR operators.
-        in: query
-        name: query
-        required: false
-        schema:
-          allOf:
-          - $ref: '#/components/schemas/Expr'
-          example: '{"op": "not", "expr": {"op": "=", "left": "hosts.name", "right":
-            "example.com"}}'
       - description: A hostname.
         in: query
         name: host_name
@@ -7400,17 +7522,6 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.service_discovery.move_service
       parameters:
-      - description: 'The discovery state of the services. May be one of the following:
-          active, active_ignored, clustered_ignored, clustered_monitored, clustered_undecided,
-          clustered_vanished, custom, custom_ignored, ignored, legacy, legacy_ignored,
-          manual, monitored, removed, undecided, vanished'
-        in: path
-        name: target_state
-        required: true
-        schema:
-          example: monitored
-          pattern: active|active_ignored|clustered_ignored|clustered_monitored|clustered_undecided|clustered_vanished|custom|custom_ignored|ignored|legacy|legacy_ignored|manual|monitored|removed|undecided|vanished
-          type: string
       - description: A name used as an identifier. Can be of arbitrary length
         in: path
         name: service_hash
@@ -7426,6 +7537,17 @@ paths:
         schema:
           example: example.com
           pattern: '[-0-9a-zA-Z_.]+'
+          type: string
+      - description: 'The discovery state of the services. May be one of the following:
+          active, active_ignored, clustered_ignored, clustered_monitored, clustered_undecided,
+          clustered_vanished, custom, custom_ignored, ignored, legacy, legacy_ignored,
+          manual, monitored, removed, undecided, vanished'
+        in: path
+        name: target_state
+        required: true
+        schema:
+          example: monitored
+          pattern: active|active_ignored|clustered_ignored|clustered_monitored|clustered_undecided|clustered_vanished|custom|custom_ignored|ignored|legacy|legacy_ignored|manual|monitored|removed|undecided|vanished
           type: string
       responses:
         default:
@@ -8788,14 +8910,6 @@ paths:
         needs to be specified.'
       operationId: cmk.gui.cee.plugins.openapi.endpoints.agent.download_agent
       parameters:
-      - description: A hostname.
-        in: query
-        name: host_name
-        required: false
-        schema:
-          example: example.com
-          pattern: '[-0-9a-zA-Z_.]+'
-          type: string
       - description: The type of the operating system. May be one of aix_tgz, linux_deb,
           linux_rpm, linux_tgz, solaris_pkg, solaris_tgz, windows_msi
         in: query
@@ -8804,6 +8918,14 @@ paths:
         schema:
           example: linux_tgz
           pattern: aix_tgz|linux_deb|linux_rpm|linux_tgz|solaris_pkg|solaris_tgz|windows_msi
+          type: string
+      - description: A hostname.
+        in: query
+        name: host_name
+        required: false
+        schema:
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
           type: string
       - description: The configuration hash representing an agent.
         in: path

@@ -131,6 +131,40 @@ def _host_collection(hosts) -> Response:
     return constructors.serve_json(host_collection)
 
 
+@endpoint_schema(constructors.object_property_href('host_config', '{host_name}', 'nodes'),
+                 '.../property',
+                 method='put',
+                 path_params=[HOST_NAME],
+                 etag='both',
+                 request_body_required=True,
+                 request_schema=request_schemas.UpdateNodes,
+                 response_schema=response_schemas.ObjectProperty)
+def update_nodes(params):
+    """Update the nodes of a cluster host"""
+    host_name = params['host_name']
+    body = params['body']
+    nodes = body['nodes']
+    check_hostname(host_name, should_exist=True)
+    for node in nodes:
+        check_hostname(node, should_exist=True)
+
+    host: watolib.CREHost = watolib.Host.host(host_name)
+    if not host.is_cluster():
+        return problem(status=400,
+                       title="Trying to change nodes of a regular host.",
+                       detail="nodes can only be changed on cluster hosts.")
+    constructors.require_etag(constructors.etag_of_obj(host))
+    host.edit(host.attributes(), nodes)
+
+    return constructors.serve_json(
+        constructors.object_sub_property(
+            domain_type='host_config',
+            ident=host_name,
+            name='nodes',
+            value=host.cluster_nodes(),
+        ))
+
+
 @endpoint_schema(constructors.object_href('host_config', '{host_name}'),
                  '.../update',
                  method='put',

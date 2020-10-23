@@ -151,7 +151,19 @@ CollectionObject = TypedDict('CollectionObject', {
     'value': Any,
     'extensions': Dict[str, str]
 })
-Serializable = Union[Dict[str, Any], CollectionObject]  # because TypedDict is stricter
+ObjectProperty = TypedDict(
+    'ObjectProperty',
+    {
+        'id': str,
+        'value': Any,
+        'disabledReason': str,
+        'choices': List[Any],
+        'links': List[LinkType],
+        'extensions': Dict[str, Any],
+    },
+    total=False,
+)
+Serializable = Union[Dict[str, Any], CollectionObject, ObjectProperty]
 ETagBehaviour = Literal["input", "output", "both"]
 
 SchemaClass = Type[Schema]

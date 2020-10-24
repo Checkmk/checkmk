@@ -864,7 +864,7 @@ class GUIViewRenderer(ABCViewRenderer):
     def _page_menu_entries_view_layout(self) -> Iterator[PageMenuEntry]:
         checkboxes_toggleable = self.view.layout.can_display_checkboxes and not self.view.checkboxes_enforced
         yield PageMenuEntry(
-            title=_("Toggle checkboxes"),
+            title=_("Hide checkboxes") if self.view.checkboxes_displayed else _("Show checkboxes"),
             icon_name="checkbox",
             item=make_simple_link(
                 makeuri(

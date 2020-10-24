@@ -370,7 +370,7 @@ def make_checkbox_selection_topic(is_enabled: bool = True) -> PageMenuTopic:
         title=_("Selection"),
         entries=[
             PageMenuEntry(
-                title=_("Toggle all checkboxes"),
+                title=_("Toggle checkboxes"),
                 icon_name="checkbox",
                 item=make_javascript_link("cmk.selection.toggle_all_rows();"),
                 is_enabled=is_enabled,

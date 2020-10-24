@@ -181,7 +181,6 @@ class PageMenu:
     """Representing the whole menu of the page"""
     dropdowns: List[PageMenuDropdown] = field(default_factory=list)
     breadcrumb: Optional[Breadcrumb] = None
-    filter_bar: Optional[PageMenuEntry] = None
 
     def __post_init__(self):
         # Add the display options dropdown
@@ -212,8 +211,6 @@ class PageMenu:
         for entry in self._entries:
             if isinstance(entry.item, PageMenuPopup):
                 yield entry
-        if self.filter_bar:
-            yield self.filter_bar
 
     @property
     def shortcuts(self) -> Iterator[PageMenuEntry]:
@@ -453,8 +450,6 @@ class PageMenuRenderer:
 
         html.open_tr()
         self._show_dropdowns(menu)
-        if menu.filter_bar:
-            self._show_filter_bar(menu.filter_bar)
         self._show_shortcuts(menu)
         html.close_tr()
 
@@ -531,17 +526,6 @@ class PageMenuRenderer:
         html.open_div(class_=classes, id_="menu_entry_%s" % entry.name)
         DropdownEntryRenderer().show(entry)
         html.close_div()
-
-    def _show_filter_bar(self, filter_bar: PageMenuEntry) -> None:
-        html.open_td(class_="filter_bar")
-        html.open_a(href="javascript:void(0)",
-                    onclick="cmk.page_menu.toggle_popup(%s)" %
-                    json.dumps("popup_%s" % filter_bar.name),
-                    id_=("menu_suggestion_%s" % filter_bar.name if filter_bar.name else None))
-        html.h2(filter_bar.title)
-        html.icon(filter_bar.icon_name)
-        html.close_a()
-        html.close_td()
 
     def _show_shortcuts(self, menu: PageMenu) -> None:
         html.open_td(class_="shortcuts")

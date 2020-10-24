@@ -33,6 +33,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuPopup,
     make_simple_link,
+    make_display_options_dropdown,
 )
 
 
@@ -90,9 +91,9 @@ class ModeAuditLog(WatoMode):
                 ),
             ],
             breadcrumb=breadcrumb,
-            filter_bar=self._page_menu_filter_bar(),
         )
 
+        self._extend_display_dropdown(menu)
         return menu
 
     def _page_menu_entries_setup(self) -> Iterator[PageMenuEntry]:
@@ -139,13 +140,23 @@ class ModeAuditLog(WatoMode):
             item=make_simple_link(html.makeactionuri([("_action", "csv")])),
         )
 
-    def _page_menu_filter_bar(self) -> PageMenuEntry:
-        return PageMenuEntry(
-            title=_("Filter view"),
-            icon_name="filter_line",
-            item=PageMenuPopup(self._render_filter_form()),
-            name="filters",
-        )
+    def _extend_display_dropdown(self, menu: PageMenu) -> None:
+        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+
+        display_dropdown.topics.insert(
+            0,
+            PageMenuTopic(
+                title=_("Filter"),
+                entries=[
+                    PageMenuEntry(
+                        title=_("Filter view"),
+                        icon_name="filters_set" if html.form_submitted("options") else "filters",
+                        item=PageMenuPopup(self._render_filter_form()),
+                        name="filters",
+                        is_shortcut=True,
+                    ),
+                ],
+            ))
 
     def _render_filter_form(self) -> str:
         with html.plugged():

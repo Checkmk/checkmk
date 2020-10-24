@@ -148,20 +148,12 @@ div#top_heading {
       }
     }
 
-    td.menues div.menucontainer,
-    td.filter_bar {
-      background-color: $page-menu-bg-color;
-      border-bottom: 2px solid $page-menu-bg-color;
-
-      &:hover {
-        border-bottom: 2px solid $success;
-      }
-    }
-
     td.menues div.menucontainer {
       position: relative;
       display: inline-block;
       padding: 0;
+      background-color: $page-menu-bg-color;
+      border-bottom: 2px solid $page-menu-bg-color;
 
       &.disabled {
         pointer-events: none;
@@ -170,6 +162,10 @@ div#top_heading {
 
       &:focus {
         outline: none;
+      }
+
+      &:hover {
+        border-bottom: 2px solid $success;
       }
 
       &:nth-child(1) {
@@ -306,32 +302,6 @@ div#top_heading {
 
       a#menu_shortcut_toggle_suggestions {
         transform: rotate(180deg);
-      }
-    }
-
-    td.filter_bar {
-      padding: 2px 10px 0;
-
-      a {
-        text-decoration: none;
-        border-radius: 2px;
-
-        h2 {
-          font-size: 12px;
-          display: inline;
-        }
-
-        img {
-          position: relative;
-          top: -1px;
-          width: 10px;
-          height: 10px;
-          margin-left: 4px;
-
-          &:hover {
-            opacity: 1;
-          }
-        }
       }
     }
   }

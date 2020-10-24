@@ -114,6 +114,7 @@ if (process.env.WEBPACK_MODE === "quick") {
         // Do not try to execute babel on all node_modules. But some d3 stuff seems to need it's help.
         include: [
             path.resolve(__dirname, "web/htdocs/js"),
+            path.resolve(__dirname, "enterprise/web/htdocs/js/modules"),
             path.resolve(__dirname, "node_modules/d3"),
             path.resolve(__dirname, "node_modules/d3-flextree"),
             path.resolve(__dirname, "node_modules/d3-sankey"),

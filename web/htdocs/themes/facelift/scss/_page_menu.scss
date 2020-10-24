@@ -345,7 +345,7 @@ div#top_heading {
 
       @keyframes easyhoverbg {
         from {
-          background-color: 1px solid $button-bg-color-secondary;
+          background-color: 1px solid $button-bg-color-suggestions;
         }
 
         to {
@@ -381,7 +381,7 @@ div#top_heading {
           line-height: 16px;
           color: $button-font-color-default;
           text-decoration: none;
-          background-color: $button-bg-color-secondary;
+          background-color: $button-bg-color-suggestions;
           border-radius: 4px;
 
           img {

@@ -22,7 +22,6 @@ bi_sample_config = {
                 'paths': []
             },
             'id': 'default_aggregation',
-            'customer': '',
             'node': {
                 'action': {
                     'params': {
@@ -61,7 +60,7 @@ bi_sample_config = {
             },
             'id': 'applications',
             'node_visualization': {
-                'config': {},
+                'style_config': {},
                 'type': 'none'
             },
             'nodes': [{
@@ -95,7 +94,7 @@ bi_sample_config = {
             },
             'id': 'checkmk',
             'node_visualization': {
-                'config': {},
+                'style_config': {},
                 'type': 'none'
             },
             'nodes': [{
@@ -129,7 +128,7 @@ bi_sample_config = {
             },
             'id': 'filesystem',
             'node_visualization': {
-                'config': {},
+                'style_config': {},
                 'type': 'none'
             },
             'nodes': [{
@@ -182,7 +181,7 @@ bi_sample_config = {
             },
             'id': 'filesystems',
             'node_visualization': {
-                'config': {},
+                'style_config': {},
                 'type': 'none'
             },
             'nodes': [{
@@ -271,7 +270,7 @@ bi_sample_config = {
             },
             'id': 'general',
             'node_visualization': {
-                'config': {},
+                'style_config': {},
                 'type': 'none'
             },
             'nodes': [{
@@ -324,7 +323,7 @@ bi_sample_config = {
             },
             'id': 'hardware',
             'node_visualization': {
-                'config': {},
+                'style_config': {},
                 'type': 'none'
             },
             'nodes': [{
@@ -358,7 +357,7 @@ bi_sample_config = {
             },
             'id': 'host',
             'node_visualization': {
-                'config': {},
+                'style_config': {},
                 'type': 'none'
             },
             'nodes': [{
@@ -471,7 +470,7 @@ bi_sample_config = {
             },
             'id': 'logfiles',
             'node_visualization': {
-                'config': {},
+                'style_config': {},
                 'type': 'none'
             },
             'nodes': [{
@@ -505,7 +504,7 @@ bi_sample_config = {
             },
             'id': 'multipathing',
             'node_visualization': {
-                'config': {},
+                'style_config': {},
                 'type': 'none'
             },
             'nodes': [{
@@ -539,7 +538,7 @@ bi_sample_config = {
             },
             'id': 'networking',
             'node_visualization': {
-                'config': {},
+                'style_config': {},
                 'type': 'none'
             },
             'nodes': [{
@@ -573,7 +572,7 @@ bi_sample_config = {
             },
             'id': 'other',
             'node_visualization': {
-                'config': {},
+                'style_config': {},
                 'type': 'none'
             },
             'nodes': [{
@@ -606,7 +605,7 @@ bi_sample_config = {
             },
             'id': 'performance',
             'node_visualization': {
-                'config': {},
+                'style_config': {},
                 'type': 'none'
             },
             'nodes': [{

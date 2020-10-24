@@ -60,11 +60,11 @@ class BIRuleSchemaConverter:
 
     def convert_node_visualization_old_to_new(self, node_vis_old):
         if node_vis_old is None:
-            return {"type": "none", "config": {}}
+            return {"type": "none", "style_config": {}}
 
         return {
-            "type": "none" if node_vis_old["style_type"] == "none" else node_vis_old["style_type"],
-            "config": node_vis_old["style_config"],
+            "type": node_vis_old["style_type"],
+            "style_config": node_vis_old.get("style_config", {}),
         }
 
     def convert_aggr_func_old_to_new(self, aggr_func_old):
@@ -211,7 +211,8 @@ class BIAggregationSchemaConverter:
         if node_vis is None or node_vis == {}:
             node_vis = self.default_node_visualiziation
         new_schema["aggregation_visualization"] = node_vis
-        new_schema["customer"] = old_schema.get("customer", "")
+        if "customer" in old_schema:
+            new_schema["customer"] = old_schema["customer"]
 
         rule_converter = BIRuleSchemaConverter()
         new_schema["node"] = rule_converter.convert_node_old_to_new(old_schema["node"])

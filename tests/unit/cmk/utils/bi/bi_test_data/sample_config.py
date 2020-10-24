@@ -307,7 +307,6 @@ bi_packs_config = {
                 'escalate_downtimes_as_warn': False,
                 'use_hard_states': False
             },
-            'customer': '',
             'groups': {
                 'names': ['Hosts'],
                 'paths': []
@@ -351,7 +350,7 @@ bi_packs_config = {
             },
             'id': 'applications',
             'node_visualization': {
-                'config': {},
+                'style_config': {},
                 'type': 'none'
             },
             'nodes': [{
@@ -385,7 +384,7 @@ bi_packs_config = {
             },
             'id': 'checkmk',
             'node_visualization': {
-                'config': {},
+                'style_config': {},
                 'type': 'none'
             },
             'nodes': [{
@@ -419,7 +418,7 @@ bi_packs_config = {
             },
             'id': 'filesystem',
             'node_visualization': {
-                'config': {},
+                'style_config': {},
                 'type': 'none'
             },
             'nodes': [{
@@ -472,7 +471,7 @@ bi_packs_config = {
             },
             'id': 'filesystems',
             'node_visualization': {
-                'config': {},
+                'style_config': {},
                 'type': 'none'
             },
             'nodes': [{
@@ -561,7 +560,7 @@ bi_packs_config = {
             },
             'id': 'general',
             'node_visualization': {
-                'config': {},
+                'style_config': {},
                 'type': 'none'
             },
             'nodes': [{
@@ -614,7 +613,7 @@ bi_packs_config = {
             },
             'id': 'hardware',
             'node_visualization': {
-                'config': {},
+                'style_config': {},
                 'type': 'none'
             },
             'nodes': [{
@@ -648,7 +647,7 @@ bi_packs_config = {
             },
             'id': 'host',
             'node_visualization': {
-                'config': {},
+                'style_config': {},
                 'type': 'none'
             },
             'nodes': [{
@@ -761,7 +760,7 @@ bi_packs_config = {
             },
             'id': 'logfiles',
             'node_visualization': {
-                'config': {},
+                'style_config': {},
                 'type': 'none'
             },
             'nodes': [{
@@ -795,7 +794,7 @@ bi_packs_config = {
             },
             'id': 'multipathing',
             'node_visualization': {
-                'config': {},
+                'style_config': {},
                 'type': 'none'
             },
             'nodes': [{
@@ -829,7 +828,7 @@ bi_packs_config = {
             },
             'id': 'networking',
             'node_visualization': {
-                'config': {},
+                'style_config': {},
                 'type': 'none'
             },
             'nodes': [{
@@ -863,7 +862,7 @@ bi_packs_config = {
             },
             'id': 'other',
             'node_visualization': {
-                'config': {},
+                'style_config': {},
                 'type': 'none'
             },
             'nodes': [{
@@ -896,7 +895,7 @@ bi_packs_config = {
             },
             'id': 'performance',
             'node_visualization': {
-                'config': {},
+                'style_config': {},
                 'type': 'none'
             },
             'nodes': [{

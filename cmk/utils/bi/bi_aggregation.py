@@ -26,6 +26,9 @@ from cmk.utils.bi.bi_node_generator import BINodeGenerator
 from cmk.utils.bi.bi_node_vis import BIAggregationVisualizationSchema
 from cmk.utils.bi.type_defs import AggrConfigDict
 
+# TODO: fix duplicate type def. the original type def is in gui-managed (module layer violation)
+SCOPE_GLOBAL = None
+
 #   .--Aggregation---------------------------------------------------------.
 #   |         _                                    _   _                   |
 #   |        / \   __ _  __ _ _ __ ___  __ _  __ _| |_(_) ___  _ __        |
@@ -43,11 +46,7 @@ class BIAggregation:
             aggr_config = self.schema()().dump({})
         self.id = aggr_config["id"]
 
-        # TODO: may be None -> SCOPE_GLOBAL
         self.customer = aggr_config.get("customer")
-        if self.customer is None:
-            self.customer = "@none@"
-
         self.pack_id = pack_id
         self.node = BINodeGenerator(aggr_config["node"])
         self.groups = BIAggregationGroups(aggr_config["groups"])
@@ -101,7 +100,11 @@ class BIAggregation:
 
 class BIAggregationSchema(Schema):
     id = ReqString(default="", example="aggr1")
-    customer = String(default="", missing="", example="customer1")
+    customer = String(
+        description="CME Edition only: The customer id for this aggregation.",
+        allow_none=True,
+        example="customer1",
+    )
     groups = create_nested_schema_for_class(
         BIAggregationGroups,
         example_config={

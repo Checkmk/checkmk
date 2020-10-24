@@ -20,6 +20,7 @@ from cmk.utils.bi.bi_lib import (
     ReqBoolean,
     ReqInteger,
     ReqString,
+    ReqNested,
 )
 
 
@@ -31,39 +32,47 @@ class BIAggregationVisualizationSchema(Schema):
 
 class BINodeVisNoneStyleSchema(Schema):
     type = ReqConstant("none")
-    config = ReqConstant({})
+    style_config = ReqConstant({})
 
 
 # 'layout_style': {'style_config': {}}
 class BINodeVisForceStyleSchema(Schema):
     type = ReqConstant("force")
-    config = ReqConstant({})
+    style_config = ReqConstant({})
 
 
 # 'layout_style': {'style_config': {'degree': 80,
 #                                   'radius': 25,
 #                                   'rotation': 270},
+class BINodeVisRadialStyleConfigSchema(Schema):
+    degree = ReqInteger(default=80)
+    radius = ReqInteger(default=25)
+    rotation = ReqInteger(default=270)
+
+
 class BINodeVisRadialStyleSchema(Schema):
     type = ReqConstant("radial")
-    degree = ReqInteger()
-    radius = ReqInteger()
-    rotation = ReqInteger()
+    style_config = ReqNested(BINodeVisRadialStyleConfigSchema)
 
 
 #
 # 'layout_style': {'style_config': {'layer_height': 80,
 #                                   'node_size': 25,
 #                                   'rotation': 270},
-class BINodeVisHierarchyStyleSchema(Schema):
-    type = ReqConstant("hierarchy")
+class BINodeVisHierarchyStyleConfigSchema(Schema):
     layer_height = ReqInteger(default=80, example=85)
     node_size = ReqInteger(default=25, example=40)
     rotation = ReqInteger(default=270, example=180)
 
 
+class BINodeVisHierarchyStyleSchema(Schema):
+    type = ReqConstant("hierarchy")
+    style_config = ReqNested(BINodeVisHierarchyStyleConfigSchema)
+
+
 class BINodeVisBlockStyleSchema(Schema):
     type = ReqConstant("block")
-    config = ReqConstant({})
+    style_config = ReqConstant({})
 
 
 class BINodeVisLayoutStyleSchema(OneOfSchema):

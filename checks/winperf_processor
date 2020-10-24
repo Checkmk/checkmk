@@ -4,10 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 import cmk.base.plugins.agent_based.winperf_processor
 
 Section = cmk.base.plugins.agent_based.winperf_processor.Section
+CoreTicks = cmk.base.plugins.agent_based.winperf_processor.CoreTicks
 
 winperf_cpu_default_levels = {}  # old discovery refered to variable by name!
 
@@ -17,7 +18,7 @@ def inventory_winperf_util(section: Section):
         yield None, {}
 
 
-def _clamp_percentage(value):
+def _clamp_percentage(value: float) -> float:
     '''clamp percentage to the range 0-100
 
     Due to timing invariancies the measured level can become > 100%.
@@ -26,24 +27,45 @@ def _clamp_percentage(value):
     return min(100.0, max(0.0, value))
 
 
-def _get_secs_per_sec(ticks, key, this_time, wrapped):
+def _ticks_to_percent(
+    ticks: CoreTicks,
+    this_time: float,
+    wrapped: bool,
+    index: Optional[int] = None,
+) -> Tuple[bool, float]:
+    """Convert ticks (100ns) to a number between 0 and 100
+    """
+    value = ticks.total if index is None else ticks.per_core[index]
+    key = f"{ticks.name}" if index is None else f"{ticks.name}.{index}"
     try:
-        ticks_per_sec =\
-            get_rate("winperf_util.%s" % key, this_time, ticks, onwrap=RAISE)
+        ticks_per_sec = get_rate(key, this_time, value, onwrap=RAISE)
     except MKCounterWrapped:
-        return True, 0.0
-    # 1 tick = 100ns, convert to seconds
-    return wrapped, ticks_per_sec / 10000000.0
+        wrapped, ticks_per_sec = True, 0.0
+
+    # 1 tick = 100ns, convert to seconds (*1e-7) and to percent (*1e2)
+    percentage = _clamp_percentage(ticks_per_sec * 1e-5)
+
+    # if name == "util"
+    # We get the value of the PERF_100NSEC_TIMER_INV.
+    # This counter type shows the average percentage of active time observed
+    # during the sample interval. This is an inverse counter. Counters of this
+    # type calculate active time by measuring the time that the service was
+    # inactive and then subtracting the percentage of active time from 100 percent.
+    return wrapped, 100.0 - percentage if ticks.name == "util" else percentage
 
 
 def check_winperf_util(_no_item, params, section: Section):
+    if not section.ticks:
+        return
+
     wrapped = False
     for ticks in section.ticks:
 
-        wrapped, cpusecs_per_sec = _get_secs_per_sec(ticks.total, ticks.name, section.time, wrapped)
+        wrapped, used_perc = _ticks_to_percent(ticks, section.time, wrapped)
+
         if ticks.name != "util":
             yield check_levels(
-                _clamp_percentage(100.0 * cpusecs_per_sec),
+                used_perc,
                 ticks.name,
                 None,
                 human_readable_func=get_percent_human_readable,
@@ -51,17 +73,9 @@ def check_winperf_util(_no_item, params, section: Section):
             )
             continue
 
-        # We get the value of the PERF_100NSEC_TIMER_INV here.
-        # This counter type shows the average percentage of active time observed
-        # during the sample interval. This is an inverse counter. Counters of this
-        # type calculate active time by measuring the time that the service was
-        # inactive and then subtracting the percentage of active time from 100 percent.
-        used_perc = _clamp_percentage(100.0 * (1 - cpusecs_per_sec))
         cores = []
-        for idx, core_ticks in enumerate(ticks.per_core):
-            wrapped, core_cpusecs_per_sec = _get_secs_per_sec(core_ticks, "core%d.util" % idx,
-                                                              section.time, wrapped)
-            core_used_perc = _clamp_percentage(100.0 * (1 - core_cpusecs_per_sec))
+        for idx in range(len(ticks.per_core)):
+            wrapped, core_used_perc = _ticks_to_percent(ticks, section.time, wrapped, idx)
             cores.append(("core%d" % idx, core_used_perc))
 
         if not wrapped:
@@ -76,10 +90,8 @@ def check_winperf_util(_no_item, params, section: Section):
         # all counters initialized, NOW we can raise the exception
         raise MKCounterWrapped("Counter wrap, skipping checks this time")
 
-    try:
-        yield 0, "%d CPUs" % len(cores), [('cpus', len(cores))]
-    except NameError:
-        pass
+    num_cpus = len(section.ticks[0].per_core)
+    yield 0, f"Number of processors: {num_cpus}", [('cpus', num_cpus)]
 
 
 check_info["winperf_processor.util"] = {

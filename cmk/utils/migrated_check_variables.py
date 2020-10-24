@@ -59,3 +59,5 @@ tcp_conn_stats_default_levels = {}  # type: ignore[var-annotated]
 # oracle_tablespaces
 oracle_tablespaces_default_levels = (10.0, 5.0)
 oracle_tablespaces_check_autoext = True
+
+winperf_cpu_default_levels = {}  # type: ignore[var-annotated]  # winperf_processor.util

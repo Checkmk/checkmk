@@ -51,19 +51,17 @@ parsed = winperf_processor.parse_winperf_processor([[u'1556221294.75', u'238', u
         [u'1520', u'0', u'0', u'0', u'0', u'0', u'bulk_count']])
 
 
-def mock_util(*args):
-    return {
-        ('winperf_util.util', None): (1556221234.75, 20905725624000),
-        ('winperf_util.core0.util', None): (1556221234.75, 20854932656100),
-        ('winperf_util.core1.util', None): (1556221234.75, 20941215937000),
-        ('winperf_util.core2.util', None): (1556221234.75, 20895696561500),
-        ('winperf_util.core3.util', None): (1556221234.75, 20931057343740),
-        ('winperf_util.user', None): (1556221234.75, 746619411062),
-        ('winperf_util.privileged', None): (1556221234.75, 91225078025),
-    }[args]  # type: ignore
-
-
-mock_item_state = {'util': mock_util}
+mock_item_state = {
+    'util': {
+        'util': (1556221234.75, 20905725624000),
+        'util.0': (1556221234.75, 20854932656100),
+        'util.1': (1556221234.75, 20941215937000),
+        'util.2': (1556221234.75, 20895696561500),
+        'util.3': (1556221234.75, 20931057343740),
+        'user': (1556221234.75, 746619411062),
+        'privileged': (1556221234.75, 91225078025),
+    },
+}
 
 discovery = {  # type: ignore
     'util': [(None, {}),],
@@ -79,7 +77,7 @@ checks = {
                 ('user', 0.0005063291139240507, None, None, None, None),
             ]),
             (0, 'Privileged: 0.00002%', [('privileged', 1.6877637130801688e-05)]),
-            (0, '4 CPUs', [('cpus', 4)]),
+            (0, 'Number of processors: 4', [('cpus', 4)]),
         ]),
         (None, {}, [
             (0, 'Total CPU: 100%', [
@@ -89,7 +87,7 @@ checks = {
                 ('user', 0.0005063291139240507, None, None, None, None),
             ]),
             (0, 'Privileged: 0.00002%', [('privileged', 1.6877637130801688e-05)]),
-            (0, '4 CPUs', [('cpus', 4)]),
+            (0, 'Number of processors: 4', [('cpus', 4)]),
         ]),
         (None, {'util': (90., 95.)}, [
             (2, 'Total CPU: 100% (warn/crit at 90.0%/95.0%)', [
@@ -99,7 +97,7 @@ checks = {
                 ('user', 0.0005063291139240507, None, None, None, None),
             ]),
             (0, 'Privileged: 0.00002%', [('privileged', 1.6877637130801688e-05)]),
-            (0, '4 CPUs', [('cpus', 4)]),
+            (0, 'Number of processors: 4', [('cpus', 4)]),
         ]),
     ],
 }

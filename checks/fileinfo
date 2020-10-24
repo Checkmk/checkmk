@@ -316,7 +316,9 @@ def _get_file_group_key(additional_rules, file_name):
 
 def check_fileinfo_groups(_item, params, parsed):
 
+    all_files = parsed.get('files', {})
     outof_range_txt = fileinfo_check_timeranges(params)
+    date_inclusion = None
     files_stat_failed = set()
     files_matching = {
         'default': {
@@ -332,7 +334,7 @@ def check_fileinfo_groups(_item, params, parsed):
     skip_ok_files = params.get('shorten_multiline_output', False)
 
     reftime = parsed.get('reftime')
-    if reftime is None:
+    if not reftime:
         yield 3, "Missing reference timestamp"
         return
 
@@ -346,7 +348,7 @@ def check_fileinfo_groups(_item, params, parsed):
     additional_rules = params.get('additional_rules', [])
 
     # Start counting values on all files
-    for file_stat in parsed['files'].values():
+    for file_stat in all_files.values():
         if file_stat.missing:
             continue
 
@@ -425,6 +427,10 @@ def check_fileinfo_groups(_item, params, parsed):
         long_output.append('Files matching %s:' % expression)
         long_output.extend(
             ['[%s] %s' % file_text for file_text in sorted(file_specs['file_text'].items())])
+
+    if not default_files['file_text']:
+        yield 0, '\n' + '\n'.join(long_output)
+        return
 
     long_output.append('(Remaining) files in file group:')
     long_output.extend(

@@ -1,5 +1,6 @@
 import pytest
 
+from collections import namedtuple
 from testlib import Check  # type: ignore[import]
 from checktestlib import (
     CheckResult,
@@ -9,6 +10,8 @@ from checktestlib import (
 )
 
 pytestmark = pytest.mark.checks
+
+FileinfoItem = namedtuple("FileinfoItem", "name missing failed size time")
 
 
 @pytest.mark.usefixtures("config_load_all_checks")
@@ -93,3 +96,128 @@ def test_fileinfo_min_max_age_levels():
                 ],
             ),
         ]))
+
+
+@pytest.mark.parametrize(
+    'info, parsed, expected_result',
+    [
+        (
+            [
+                # legacy format
+                [u"1563288717"],
+                [u"[[[header]]]"],
+                [u"name", u"status", u"size", u"time"],
+            ],
+            {
+                'reftime': 1563288717,
+                'files': {},
+            },
+            [
+                (0, 'Count: 0', [('count', 0, None, None)]),
+                (0, 'Size: 0 B', [('size', 0, None, None)]),
+                (0, '\nInclude patterns: /banana/*'),
+            ],
+        ),
+        (
+            [],
+            {},
+            [
+                (3, 'Missing reference timestamp'),
+            ],
+        ),
+        (
+            [
+                [u"1563288717"],
+            ],
+            {
+                'reftime': 1563288717,
+                'files': {},
+            },
+            [
+                (0, 'Count: 0', [('count', 0, None, None)]),
+                (0, 'Size: 0 B', [('size', 0, None, None)]),
+                (0, '\nInclude patterns: /banana/*'),
+            ],
+        ),
+    ])
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_check_fileinfo_group_no_files(info, parsed, expected_result):
+    '''Test that the check returns an OK status when there are no files.'''
+
+    fileinfo_groups_check = Check('fileinfo.groups')
+    fileinfo_single_check = Check('fileinfo')
+    assert fileinfo_single_check.run_parse(info) == parsed
+    assert not fileinfo_groups_check.run_discovery(parsed)
+    assert expected_result == list(
+        fileinfo_groups_check.run_check(
+            'banana',
+            {'group_patterns': [('/banana/*', '')]},
+            parsed,
+        ))
+
+
+@pytest.mark.parametrize(
+    'info, parsed, expected_result',
+    [
+        (
+            [
+                # legacy format
+                [u"1563288717"],
+                [u"[[[header]]]"],
+                [u"name", u"status", u"size", u"time"],
+                [u"[[[content]]]"],
+                [u'/bar/foo', 'ok', '384', '1465079135'],
+                [u'/foo/bar', 'ok', '384', '1465079135'],
+            ],
+            {
+                'reftime': 1563288717,
+                'files': {
+                    '/bar/foo': FileinfoItem(
+                        name='/bar/foo', missing=False, failed=False, size=348, time=1465079135),
+                    '/foo/bar': FileinfoItem(
+                        name='/foo/bar', missing=False, failed=False, size=348, time=1465079135),
+                }
+            },
+            [
+                (0, 'Count: 0', [('count', 0, None, None)]),
+                (0, 'Size: 0 B', [('size', 0, None, None)]),
+                (0, '\nInclude patterns: /banana/*'),
+            ],
+        ),
+        (
+            [
+                [u"1563288717"],
+                [u'/bar/foo', '384', '1465079135'],
+                [u'/foo/bar', '384', '1465079135'],
+            ],
+            {
+                'reftime': 1563288717,
+                'files': {
+                    '/bar/foo': FileinfoItem(
+                        name='/bar/foo', missing=False, failed=False, size=348, time=1465079135),
+                    '/foo/bar': FileinfoItem(
+                        name='/foo/bar', missing=False, failed=False, size=348, time=1465079135),
+                }
+            },
+            [
+                (0, 'Count: 0', [('count', 0, None, None)]),
+                (0, 'Size: 0 B', [('size', 0, None, None)]),
+                (0, '\nInclude patterns: /banana/*'),
+            ],
+        ),
+    ])
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_check_fileinfo_group_no_matching_files(info, parsed, expected_result):
+    '''Test that the check returns an OK status if there are no matching files.'''
+
+    fileinfo_groups_check = Check('fileinfo.groups')
+    fileinfo_single_check = Check('fileinfo')
+    actual_parsed = fileinfo_single_check.run_parse(info)
+    assert parsed['reftime'] == actual_parsed['reftime']
+    assert list(parsed['files']) == list(actual_parsed['files'])
+    assert expected_result == list(
+        fileinfo_groups_check.run_check(
+            'banana',
+            {'group_patterns': [('/banana/*', '')]},
+            parsed,
+        ))

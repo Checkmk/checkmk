@@ -347,6 +347,7 @@ def make_topic_menu(visuals: List[Tuple[str, Tuple[str, Visual]]]) -> List[Topic
                 title=topic.title(),
                 items=[],
                 icon=topic.icon_name(),
+                hide=topic.hide(),
             ))
         topic.items.append(
             TopicMenuItem(
@@ -363,7 +364,10 @@ def make_topic_menu(visuals: List[Tuple[str, Tuple[str, Visual]]]) -> List[Topic
         topic.items.sort(key=lambda i: (i.sort_index, i.title))
 
     # Return the sorted topics
-    return [v for k, v in sorted(by_topic.items(), key=lambda e: (e[0].sort_index(), e[0].title()))]
+    return [
+        v for k, v in sorted(by_topic.items(), key=lambda e: (e[0].sort_index(), e[0].title()))
+        if not v.hide
+    ]
 
 
 def _visual_url(visual_type_name: str, name: str) -> str:

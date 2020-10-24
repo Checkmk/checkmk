@@ -1769,6 +1769,7 @@ class PagetypeTopics(Overridable):
                 "icon_name": "topic_bi",
                 "description": "",
                 "sort_index": 60,
+                "hide": _no_bi_aggregate_active(),
             },
             "applications": {
                 "title": _("Applications"),
@@ -1797,6 +1798,9 @@ class PagetypeTopics(Overridable):
     def icon_name(self) -> str:
         return self._["icon_name"]
 
+    def hide(self) -> str:
+        return self._.get("hide", False)
+
     @classmethod
     def choices(cls):
         cls.load()
@@ -1816,6 +1820,13 @@ class PagetypeTopics(Overridable):
 
 
 declare(PagetypeTopics)
+
+
+def _no_bi_aggregate_active() -> bool:
+    enabled_info_file = "%s/num_enabled_aggregations" % os.path.join(cmk.utils.paths.var_dir,
+                                                                     "wato")
+    return bool(not store.load_object_from_file(enabled_info_file))
+
 
 #   .--Main menu-----------------------------------------------------------.
 #   |          __  __       _                                              |

@@ -129,6 +129,7 @@ class TopicMenuTopic(NamedTuple):
     title: "str"
     items: List[TopicMenuItem]
     icon: Optional[Icon] = None
+    hide: bool = False
 
 
 class MegaMenu(NamedTuple):

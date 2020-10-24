@@ -148,7 +148,8 @@ div#top_heading {
       }
     }
 
-    td.menues div.menucontainer, td.filter_bar {
+    td.menues div.menucontainer,
+    td.filter_bar {
       background-color: $page-menu-bg-color;
       border-bottom: 2px solid $page-menu-bg-color;
 
@@ -348,7 +349,7 @@ div#top_heading {
         }
 
         to {
-          background-color: 1px solid $button-bg-color-secondary-hover;
+          background-color: 1px solid $button-bg-color-default;
         }
       }
 
@@ -396,7 +397,7 @@ div#top_heading {
 
           &:hover {
             cursor: pointer;
-            background-color: $button-bg-color-secondary-hover;
+            background-color: $button-bg-color-default;
 
             animation-duration: 0.5s;
             animation-name: easyhoverbg;

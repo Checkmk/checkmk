@@ -27,7 +27,7 @@ module.exports = {
         // from HTML code to work with the modules. Until then we need to keep the old behaviour of loading
         // all JS code in the global namespace
         libraryTarget: "window",
-        libraryExport: "cmk_export"
+        libraryExport: "cmk_export",
     },
     resolve: {
         modules: [
@@ -37,7 +37,7 @@ module.exports = {
             path.resolve(__dirname, "web/htdocs/js/modules/node_visualization"),
             path.resolve(__dirname, "enterprise/web/htdocs/js/modules"),
             path.resolve(__dirname, "enterprise/web/htdocs/js/modules/ntop"),
-        ]
+        ],
     },
     module: {
         rules: [
@@ -50,55 +50,63 @@ module.exports = {
                         loader: "file-loader",
                         options: {
                             regExp: /\/([a-z0-9_-]+)\/([a-z0-9_-]+)\.scss$/,
-                            name: "../themes/[1]/[2].css"
-                        }
+                            name: "../themes/[1]/[2].css",
+                        },
                     },
                     // 4. Extract CSS definitions from JS wrapped CSS
                     {
-                        loader: "extract-loader"
+                        loader: "extract-loader",
                     },
                     // 3. Interpret and resolve @import / url()
                     {
                         loader: "css-loader",
                         options: {
                             url: false,
-                            importLoaders: 2
+                            importLoaders: 2,
                         },
                     },
                     // 2. Some postprocessing of CSS definitions (see postcss.config.js)
                     // - add browser vendor prefixes https://github.com/postcss/autoprefixer
                     // - minifies CSS with https://github.com/jakubpawlowicz/clean-css
                     {
-                        loader: "postcss-loader"
+                        loader: "postcss-loader",
                     },
                     // 1. Transform sass definitions into CSS
                     {
                         loader: "sass-loader",
                         options: {
-                            prependData: "$ENTERPRISE: " + process.env.ENTERPRISE + ";\n"
-                                + "$MANAGED: " + process.env.MANAGED + ";",
+                            prependData:
+                                "$ENTERPRISE: " +
+                                process.env.ENTERPRISE +
+                                ";\n" +
+                                "$MANAGED: " +
+                                process.env.MANAGED +
+                                ";",
                             sassOptions: {
                                 // Hand over build options from webpack to SASS
-                                "includePaths": ["node_modules"],
+                                includePaths: ["node_modules"],
                                 // See https://github.com/sass/node-sass/blob/master/README.md#options
                                 outputStyle: "expanded",
-                                precision: 10
-                            }
-                        }
-                    }
-                ]
+                                precision: 10,
+                            },
+                        },
+                    },
+                ],
             },
-        ]
+        ],
     },
     plugins: [
         new FixStyleOnlyEntriesPlugin(),
         new webpack.EnvironmentPlugin(["ENTERPRISE", "MANAGED"]),
-    ]
+    ],
 };
 
-
 if (process.env.WEBPACK_MODE === "quick") {
-    console.log("not using Babel in Webpack mode '" + process.env.WEBPACK_MODE + "', let's hope you know what your're doing...");
+    console.log(
+        "not using Babel in Webpack mode '" +
+            process.env.WEBPACK_MODE +
+            "', let's hope you know what your're doing..."
+    );
 } else {
     console.log("using Babel in Webpack mode '" + process.env.WEBPACK_MODE + "'");
     let babel_loader = {
@@ -115,17 +123,20 @@ if (process.env.WEBPACK_MODE === "quick") {
             loader: "babel-loader",
             options: {
                 presets: [
-                    ["@babel/preset-env", {
-                        //debug: true,
-                        // This adds polyfills when needed. Requires core-js dependency.
-                        // See https://babeljs.io/docs/en/babel-preset-env#usebuiltins
-                        useBuiltIns: "usage",
-                        corejs: 3
-                    }]
+                    [
+                        "@babel/preset-env",
+                        {
+                            //debug: true,
+                            // This adds polyfills when needed. Requires core-js dependency.
+                            // See https://babeljs.io/docs/en/babel-preset-env#usebuiltins
+                            useBuiltIns: "usage",
+                            corejs: 3,
+                        },
+                    ],
                 ],
                 plugins: ["@babel/plugin-transform-parameters"],
-            }
-        }
+            },
+        },
     };
     module.exports.module.rules.unshift(babel_loader);
 }

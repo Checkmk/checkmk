@@ -4,12 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based import winperf_processor
 # yapf: disable
 # type: ignore
 
 checkname = 'winperf_processor'
 
-info = [[u'1556221294.75', u'238', u'10000000'],
+parsed = winperf_processor.parse_winperf_processor([[u'1556221294.75', u'238', u'10000000'],
         [u'5', u'instances:', u'0', u'1', u'2', u'3', u'_Total'],
         [
             u'-232', u'20854932656250', u'20941215937500', u'20895696562500', u'20931057343750',
@@ -47,7 +48,7 @@ info = [[u'1556221294.75', u'238', u'10000000'],
             u'1516', u'393050574', u'290618823', u'401461357', u'296238855', u'1381369609',
             u'bulk_count'
         ], [u'1518', u'0', u'0', u'0', u'0', u'0', u'bulk_count'],
-        [u'1520', u'0', u'0', u'0', u'0', u'0', u'bulk_count']]
+        [u'1520', u'0', u'0', u'0', u'0', u'0', u'bulk_count']])
 
 
 def mock_util(*args):
@@ -59,12 +60,12 @@ def mock_util(*args):
         ('winperf_util.core3.util', None): (1556221234.75, 20931057343740),
         ('winperf_util.user', None): (1556221234.75, 746619411062),
         ('winperf_util.privileged', None): (1556221234.75, 91225078025),
-    }[args]
+    }[args]  # type: ignore
 
 
 mock_item_state = {'util': mock_util}
 
-discovery = {
+discovery = {  # type: ignore
     'util': [(None, {}),],
 }
 

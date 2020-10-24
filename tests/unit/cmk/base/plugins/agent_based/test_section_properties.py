@@ -185,7 +185,6 @@ def test_section_parse_function_does_something():
         'vms_diskstat',
         'vms_system',
         'winperf',
-        'winperf_processor',
     }
 
     for snmp_section in agent_based_register.iter_all_snmp_sections():

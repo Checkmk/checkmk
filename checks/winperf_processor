@@ -5,19 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+import cmk.base.plugins.agent_based.winperf_processor
+
+Section = cmk.base.plugins.agent_based.winperf_processor.Section
+
 winperf_cpu_default_levels = {}  # old discovery refered to variable by name!
 
 
-def inventory_winperf_util(info):
-    if len(info) <= 1:
-        return None
-
-    for line in info[1:]:
-        try:
-            if line[0] == '-232':
-                return [(None, {})]
-        except IndexError:
-            pass
+def inventory_winperf_util(section: Section):
+    if section.ticks:
+        yield None, {}
 
 
 def _clamp_percentage(value):
@@ -29,8 +26,7 @@ def _clamp_percentage(value):
     return min(100.0, max(0.0, value))
 
 
-def _get_secs_per_sec(raw_value, key, this_time, wrapped):
-    ticks = int(raw_value)
+def _get_secs_per_sec(ticks, key, this_time, wrapped):
     try:
         ticks_per_sec =\
             get_rate("winperf_util.%s" % key, this_time, ticks, onwrap=RAISE)
@@ -40,33 +36,18 @@ def _get_secs_per_sec(raw_value, key, this_time, wrapped):
     return wrapped, ticks_per_sec / 10000000.0
 
 
-def check_winperf_util(_no_item, params, info):
-    if not info:
-        return
-
-    this_time = int(float(info[0][0]))
-
-    what_map = {"-232": "util", "-96": "user", "-94": "privileged"}
-
-    winperf_lines = [l for l in info[1:] if l[0] in what_map]
-    if not winperf_lines:
-        return
-
+def check_winperf_util(_no_item, params, section: Section):
     wrapped = False
-    for line in winperf_lines:
+    for ticks in section.ticks:
 
-        what = what_map[line[0]]
-        # Windows sends one counter for each CPU plus one counter that
-        # sums up to total (called _Total). We only need that last value.
-        wrapped, cpusecs_per_sec = _get_secs_per_sec(line[-2], what, this_time, wrapped)
-
-        if what != "util":
+        wrapped, cpusecs_per_sec = _get_secs_per_sec(ticks.total, ticks.name, section.time, wrapped)
+        if ticks.name != "util":
             yield check_levels(
                 _clamp_percentage(100.0 * cpusecs_per_sec),
-                what,
+                ticks.name,
                 None,
                 human_readable_func=get_percent_human_readable,
-                infoname=what.capitalize(),
+                infoname=ticks.name.capitalize(),
             )
             continue
 
@@ -77,14 +58,14 @@ def check_winperf_util(_no_item, params, info):
         # inactive and then subtracting the percentage of active time from 100 percent.
         used_perc = _clamp_percentage(100.0 * (1 - cpusecs_per_sec))
         cores = []
-        for i, raw_core_ticks in enumerate(line[1:-2]):
-            wrapped, core_cpusecs_per_sec = _get_secs_per_sec(raw_core_ticks, "core%d.util" % i,
-                                                              this_time, wrapped)
+        for idx, core_ticks in enumerate(ticks.per_core):
+            wrapped, core_cpusecs_per_sec = _get_secs_per_sec(core_ticks, "core%d.util" % idx,
+                                                              section.time, wrapped)
             core_used_perc = _clamp_percentage(100.0 * (1 - core_cpusecs_per_sec))
-            cores.append(("core%d" % i, core_used_perc))
+            cores.append(("core%d" % idx, core_used_perc))
 
         if not wrapped:
-            for subresult in check_cpu_util(used_perc, params, this_time, cores):
+            for subresult in check_cpu_util(used_perc, params, section.time, cores):
                 if len(subresult) == 3 and subresult[2]:
                     perf = subresult[2]
                     if perf[0][0] == "util":

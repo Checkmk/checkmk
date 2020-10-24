@@ -1049,8 +1049,12 @@ class ModeEditUser(WatoMode):
         return rulebased_notifications_enabled()
 
     def _pw_suffix(self) -> str:
-        return 'new' if self._user_id is None else ensure_str(
-            base64.b64encode(self._user_id.encode("utf-8")))
+        if self._is_new_user:
+            return 'new'
+        # mypy complaines that None has no attribute "encode" and
+        # "bytes", expected "str"
+        assert self._user_id is not None
+        return str(base64.b64encode(self._user_id.encode("utf-8")))
 
     def _is_locked(self, attr):
         """Returns true if an attribute is locked and should be read only. Is only

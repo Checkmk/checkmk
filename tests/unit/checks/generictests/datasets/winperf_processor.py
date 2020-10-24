@@ -74,30 +74,30 @@ checks = {
             (2, 'Total CPU: 100% (warn/crit at 90.0%/95.0%)', [
                 ('util', 99.99983122362869, 90, 95, 0, 4),
             ]),
-            (0, 'user perc: 0.0 %', [
+            (0, 'User: 0.0005%', [
                 ('user', 0.0005063291139240507, None, None, None, None),
             ]),
-            (0, 'privileged perc: 0.0 %', [('privileged', 1.6877637130801688e-05)]),
+            (0, 'Privileged: 0.00002%', [('privileged', 1.6877637130801688e-05)]),
             (0, '4 CPUs', [('cpus', 4)]),
         ]),
         (None, {}, [
             (0, 'Total CPU: 100%', [
                 ('util', 99.99983122362869, None, None, 0, 4),
             ]),
-            (0, 'user perc: 0.0 %', [
+            (0, 'User: 0.0005%', [
                 ('user', 0.0005063291139240507, None, None, None, None),
             ]),
-            (0, 'privileged perc: 0.0 %', [('privileged', 1.6877637130801688e-05)]),
+            (0, 'Privileged: 0.00002%', [('privileged', 1.6877637130801688e-05)]),
             (0, '4 CPUs', [('cpus', 4)]),
         ]),
         (None, {'util': (90., 95.)}, [
             (2, 'Total CPU: 100% (warn/crit at 90.0%/95.0%)', [
                 ('util', 99.99983122362869, 90, 95, 0, 4),
             ]),
-            (0, 'user perc: 0.0 %', [
+            (0, 'User: 0.0005%', [
                 ('user', 0.0005063291139240507, None, None, None, None),
             ]),
-            (0, 'privileged perc: 0.0 %', [('privileged', 1.6877637130801688e-05)]),
+            (0, 'Privileged: 0.00002%', [('privileged', 1.6877637130801688e-05)]),
             (0, '4 CPUs', [('cpus', 4)]),
         ]),
     ],

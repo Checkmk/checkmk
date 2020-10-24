@@ -289,8 +289,8 @@ def test_check_fileinfo_group_no_matching_files(info, parsed, expected_result):
             ],
             {},
             [
-              (3, 'No group pattern found in autocheck. Please rediscover the services ' \
-                  'of this host to get this fixed automatically'),
+                (0, 'Count: 0', [('count', 0, None, None)]),
+                (0, 'Size: 0 B', [('size', 0, None, None)]),
             ],
         ),
         (

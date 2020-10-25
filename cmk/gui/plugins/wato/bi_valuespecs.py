@@ -421,9 +421,13 @@ class BIConfigCallARuleAction(bi_actions.BICallARuleAction, ABCBIConfigAction):
             if may_use_rules_in_pack(bi_pack):
                 pack_choices = [(rule_id, "%s (%s)" % (bi_rule.title, rule_id))
                                 for rule_id, bi_rule in bi_pack.get_rules().items()]
-                choices.append((pack_id, "%s (%s)" % (bi_pack.title, bi_pack.id),
-                                DropdownChoice(choices=sorted(pack_choices),
-                                               on_change="cmk.bi.update_argument_hints();")))
+                choices.append(
+                    (pack_id, "%s (%s)" % (bi_pack.title, bi_pack.id),
+                     DropdownChoice(
+                         choices=sorted(pack_choices),
+                         empty_text=_("There are no configured rules in this aggregation pack"),
+                         on_change="cmk.bi.update_argument_hints();",
+                     )))
 
         return choices
 

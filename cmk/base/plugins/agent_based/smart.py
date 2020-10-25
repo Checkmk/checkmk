@@ -22,7 +22,7 @@
 #/dev/sda ATA WDC_SSC-D0128SC- 170 Unknown_Attribute       0x0003   100   100   010    Pre-fail  Always       -       1769478
 #/dev/sda ATA WDC_SSC-D0128SC- 173 Unknown_Attribute       0x0012   100   100   000    Old_age   Always       -       4217788040605
 
-from typing import Any, Callable, Dict, Final, Mapping, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Final, Mapping, Tuple
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 from .agent_based_api.v1 import Metric, register, render, Result, State, Service
@@ -31,9 +31,16 @@ from .agent_based_api.v1 import Metric, register, render, Result, State, Service
 # descriptions! But be careful: There is no standard neither for IDs nor for
 # descriptions. Only use those, which are common sense.
 
-Disk = Dict[str, Union[int, Tuple[int, int]]]
+Disk = Dict[str, int]
 
 Section = Dict[str, Disk]
+
+
+def _set_int_or_zero(disk: Disk, key: str, value: Any) -> None:
+    try:
+        disk[key] = int(value)
+    except ValueError:
+        disk[key] = 0
 
 
 def parse_raw_values(string_table: StringTable) -> Section:
@@ -94,14 +101,12 @@ def parse_raw_values(string_table: StringTable) -> Section:
             field = line[4]
             if field == "Unknown_Attribute":
                 continue
-            try:
-                disk[field] = int(line[12])
-            except ValueError:
-                disk[field] = 0
+            _set_int_or_zero(disk, field, line[12])
 
             if field == "Reallocated_Event_Count":  # special case, see check function
                 try:
-                    disk["_normalized_Reallocated_Event_Count"] = int(line[6]), int(line[8])
+                    disk["_normalized_value_Reallocated_Event_Count"] = int(line[6])
+                    disk["_normalized_threshold_Reallocated_Event_Count"] = int(line[8])
                 except ValueError:
                     pass
 
@@ -112,19 +117,18 @@ def parse_raw_values(string_table: StringTable) -> Section:
                 continue
 
             field, value = [e.strip() for e in " ".join(line).split(":")]
+            key = field.replace(" ", "_")
             value = value.replace("%", "").replace(".", "").replace(",", "")
             if field == "Temperature":
-                value = value.split()[0]
-            if field == "Critical Warning":
-                value = int(value, 16)  # type: ignore[assignment]
-            if field == "Data Units Read":
-                value = (int(value.split()[0]) * 512000)  # type: ignore[assignment]
-            if field == "Data Units Written":
-                value = (int(value.split()[0]) * 512000)  # type: ignore[assignment]
-            try:
-                disk[field.replace(" ", "_")] = int(value)
-            except ValueError:
-                disk[field.replace(" ", "_")] = 0
+                _set_int_or_zero(disk, key, value.split()[0])
+            elif field == "Critical Warning":
+                disk[key] = int(value, 16)
+            elif field == "Data Units Read":
+                disk[key] = int(value.split()[0]) * 512000
+            elif field == "Data Units Written":
+                disk[key] = int(value.split()[0]) * 512000
+            else:
+                _set_int_or_zero(disk, key, value)
 
     return disks
 
@@ -182,7 +186,7 @@ OUTPUT_FIELDS: Tuple[Tuple[str, str, Callable], ...] = (
 )
 
 
-def check_smart_stats(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+def check_smart_stats(item: str, params: Mapping[str, int], section: Section) -> CheckResult:
     # params is a snapshot of all counters at the point of time of inventory
     disk = section.get(item)
     if disk is None:
@@ -196,11 +200,9 @@ def check_smart_stats(item: str, params: Mapping[str, Any], section: Section) ->
 
         infotext = "%s: %s" % (descr, renderer(value))
 
+        ref_value = params.get(field)
         if field == "Available_Spare":
-            ref_value: Optional[int] = int(
-                disk["Available_Spare_Threshold"])  # type: ignore[arg-type]
-        else:
-            ref_value = params.get(field)
+            ref_value = disk["Available_Spare_Threshold"]
 
         if ref_value is None:
             yield Result(state=State.OK, summary=infotext)
@@ -218,14 +220,15 @@ def check_smart_stats(item: str, params: Mapping[str, Any], section: Section) ->
         # aggregated value remained at it's initial/ok state. So we use the aggregated
         # value now. Only for this field.
         if field == "Reallocated_Event_Count":
-            norm_value, norm_threshold = disk.get(  # type: ignore[misc]
-                f"_normalized_{field}", (None, None))
-            if norm_value is None:
+            try:
+                norm_value = disk[f"_normalized_value_{field}"]
+                norm_threshold = disk[f"_normalized_threshold_{field}"]
+            except KeyError:
                 yield Result(state=State.OK, summary=infotext)
                 yield Metric(field, value)
                 continue
             hints.append("normalized value: %d" % norm_value)
-            if norm_value <= norm_threshold:  # type: ignore[operator]
+            if norm_value <= norm_threshold:
                 state = State.CRIT
                 hints[-1] += " (!!)"
 

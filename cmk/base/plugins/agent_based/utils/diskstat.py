@@ -9,6 +9,7 @@ import re
 from typing import (
     Callable,
     DefaultDict,
+    Generator,
     Iterable,
     Mapping,
     MutableMapping,
@@ -243,6 +244,42 @@ _METRICS: Tuple[Tuple[str, MetricSpecs], ...] = (
 )
 
 
+def _get_averaged_disk(
+    averaging: int,
+    disk: Disk,
+    value_store: MutableMapping,
+    this_time: float,
+) -> Generator[Result, None, Disk]:
+    """Yield a result indicating averaging and return averaged disk
+
+    Note: this check uses a simple method of averaging: As soon as averaging
+    is turned on the actual metrics are *replaced* by the averaged ones. No
+    duplication of performance data or check output here. This is because we
+    have so many metrics...
+    here, a value in seconds must be provided (preferably from the ruleset "diskstat"); note that
+    the deprecated ruleset "disk_io" uses minutes for this field and is therefore incompatible
+    with this function
+    """
+    yield Result(
+        state=State.OK,
+        notice="All values averaged over %s" % render.timespan(averaging),
+    )
+    return {
+        key: get_average(
+            value_store=value_store,
+            # We add 'check_diskstat_dict' to the key to avoid possible overlap with keys
+            # used in check plugins. For example, for the SUMMARY-item, the check plugin
+            # winperf_phydisk first computes all rates for all items using 'metric.item' as
+            # key and then summarizes the disks. Hence, for a disk called 'avg', these keys
+            # would be the same as the keys used here.
+            key="check_diskstat_dict.%s.avg" % key,
+            time=this_time,
+            value=value,
+            backlog_minutes=averaging / 60.,
+        ) for key, value in list(disk.items()) if isinstance(value, (int, float))
+    }
+
+
 # Example:
 # disks = { "sda" : {
 #       'average_read_request_size'  : 0.0,
@@ -270,34 +307,10 @@ def check_diskstat_dict(
 ) -> type_defs.CheckResult:
     if not disk:
         return
-    # Averaging
-    # Note: this check uses a simple method of averaging: As soon as averaging
-    # is turned on the actual metrics are *replaced* by the averaged ones. No
-    # duplication of performance data or check output here. This is because we
-    # have so many metrics...
-    # here, a value in seconds must be provided (preferably from the ruleset "diskstat"); note that
-    # the deprecated ruleset "disk_io" uses minutes for this field and is therefore incompatible
-    # with this function
+
     averaging = params.get("average")
     if averaging:
-        yield Result(
-            state=State.OK,
-            notice="All values averaged over %s" % render.timespan(averaging),
-        )
-        disk = {
-            key: get_average(
-                value_store=value_store,
-                # We add 'check_diskstat_dict' to the key to avoid possible overlap with keys
-                # used in check plugins. For example, for the SUMMARY-item, the check plugin
-                # winperf_phydisk first computes all rates for all items using 'metric.item' as
-                # key and then summarizes the disks. Hence, for a disk called 'avg', these keys
-                # would be the same as the keys used here.
-                key="check_diskstat_dict.%s.avg" % key,
-                time=this_time,
-                value=value,
-                backlog_minutes=averaging / 60.,
-            ) for key, value in list(disk.items()) if isinstance(value, (int, float))
-        }
+        disk = yield from _get_averaged_disk(averaging, disk, value_store, this_time)
 
     for key, specs in _METRICS:
         metric_val = disk.get(key)

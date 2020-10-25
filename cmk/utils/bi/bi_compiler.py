@@ -51,7 +51,6 @@ class BICompiler:
         self._logger = logger.getChild("bi.compiler")
         self._compiled_aggregations: Dict[str, BICompiledAggregation] = {}
         self._path_compilation_lock = Path(get_cache_dir(), "compilation.LOCK")
-        self._path_total_bi_branches = Path(get_cache_dir(), "total_bi_branches")
         self._path_compilation_timestamp = Path(get_cache_dir(), "last_compilation")
         self._path_compiled_aggregations = Path(get_cache_dir(), "compiled_aggregations")
         self._path_compiled_aggregations.mkdir(parents=True, exist_ok=True)
@@ -115,7 +114,6 @@ class BICompiler:
                 self._logger.debug("No compilation required. An other process already compiled it")
                 return
 
-            total_bi_branches = 0
             self.prepare_for_compilation(current_configstatus["online_sites"])
 
             # Compile the raw tree
@@ -128,7 +126,6 @@ class BICompiler:
             self._verify_aggregation_title_uniqueness(self._compiled_aggregations)
 
             for aggr_id, aggr in self._compiled_aggregations.items():
-                total_bi_branches += len(aggr.branches)
                 start = time.time()
                 result = BICompiledAggregationSchema().dump(aggr)
                 self._logger.debug("Schema dump took config took %f (%d branches)" %
@@ -142,7 +139,6 @@ class BICompiler:
 
         self._path_compilation_timestamp.write_text(
             str(current_configstatus["configfile_timestamp"]))
-        self._path_total_bi_branches.write_text("%d" % total_bi_branches)
 
     def _verify_aggregation_title_uniqueness(
             self, compiled_aggregations: Dict[str, BICompiledAggregation]) -> None:

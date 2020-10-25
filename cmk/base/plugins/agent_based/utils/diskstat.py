@@ -7,6 +7,7 @@
 from collections import defaultdict
 import re
 from typing import (
+    Any,
     Callable,
     DefaultDict,
     Generator,
@@ -300,7 +301,7 @@ def _get_averaged_disk(
 # }}
 def check_diskstat_dict(
     *,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     disk: Disk,
     value_store: MutableMapping,
     this_time: float,

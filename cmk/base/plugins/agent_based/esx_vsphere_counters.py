@@ -5,17 +5,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import (
+    Any,
     Dict,
     List,
+    Mapping,
     Sequence,
     Tuple,
 )
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, Parameters, StringTable
+
+import time
 from .agent_based_api.v1 import (
+    get_value_store,
     IgnoreResultsError,
     register,
-    type_defs,
+    Service,
 )
-from .utils import interfaces
+from .utils import interfaces, diskstat
 
 # Example output:
 # <<<esx_vsphere_counters:sep(124)>>>
@@ -53,7 +59,7 @@ from .utils import interfaces
 Section = Dict[str, Dict[str, List[Tuple[List[str], str]]]]
 
 
-def parse_esx_vsphere_counters(string_table: type_defs.StringTable) -> Section:
+def parse_esx_vsphere_counters(string_table: StringTable) -> Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_esx_vsphere_counters([
@@ -227,9 +233,9 @@ def convert_esx_counters_if(section: Section) -> interfaces.Section:
 
 
 def discover_esx_vsphere_counters_if(
-    params: Sequence[type_defs.Parameters],
+    params: Sequence[Parameters],
     section: Section,
-) -> type_defs.DiscoveryResult:
+) -> DiscoveryResult:
     yield from interfaces.discover_interfaces(
         params,
         convert_esx_counters_if(section),
@@ -238,9 +244,9 @@ def discover_esx_vsphere_counters_if(
 
 def check_esx_vsphere_counters_if(
     item: str,
-    params: type_defs.Parameters,
+    params: Parameters,
     section: Section,
-):
+) -> CheckResult:
     if "net.bytesRx" not in section:
         raise IgnoreResultsError("Counter data is missing")
     yield from interfaces.check_multiple_interfaces(
@@ -262,4 +268,59 @@ register.check_plugin(
     check_ruleset_name="if",
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
     check_function=check_esx_vsphere_counters_if,
+)
+
+
+def discover_esx_vsphere_counters_diskio(section: Section) -> DiscoveryResult:
+    if "" in section.get("disk.read", {}):
+        yield Service(item="SUMMARY")
+
+
+def _concat_instance_multivalues(parsed, key):
+    all_multivalues = []
+    for data in parsed.get(key, {}).values():
+        multivalues, _unit = data[0]
+        all_multivalues.extend(multivalues)
+    return all_multivalues
+
+
+def check_esx_vsphere_counters_diskio(
+    item: str,
+    params: Mapping[str, Any],
+    section: Section,
+) -> CheckResult:
+    summary = {}
+
+    for op_type in ("read", "write"):
+        # summed up in key ""
+        data = section.get("disk.%s" % op_type, {}).get("")
+        multivalues, _unit = data[0] if data else (None, None)
+        if multivalues is not None:
+            summary['%s_throughput' % op_type] = average_parsed_data(multivalues) * 1024
+
+        # sum up all instances
+        op_counts = _concat_instance_multivalues(section, "disk.number%s" % op_type.title())
+        if op_counts:
+            # these are absolute counts, every 20 seconds.
+            summary["%s_ios" % op_type] = average_parsed_data(op_counts) / 20.0
+
+    latencies = _concat_instance_multivalues(section, "disk.deviceLatency")
+    if latencies:
+        summary['latency'] = max(int(l) for l in latencies) / 1000.0
+
+    yield from diskstat.check_diskstat_dict(
+        params=params,
+        disk=summary,
+        value_store=get_value_store(),
+        this_time=time.time(),
+    )
+
+
+register.check_plugin(
+    name='esx_vsphere_counters_diskio',
+    service_name='Disk IO %s',
+    discovery_function=discover_esx_vsphere_counters_diskio,
+    check_function=check_esx_vsphere_counters_diskio,
+    check_default_parameters={},
+    check_ruleset_name='diskstat',
 )

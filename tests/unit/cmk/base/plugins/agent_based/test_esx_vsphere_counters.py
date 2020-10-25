@@ -4,8 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest  # type: ignore[import]
+
 from cmk.base.plugins.agent_based import esx_vsphere_counters
 from cmk.base.plugins.agent_based.utils.interfaces import Interface
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 
 
 def test_parse_esx_vsphere_counters():
@@ -392,3 +395,60 @@ def test_convert_esx_counters_if():
                   node=None,
                   admin_status=None),
     ]
+
+
+def test_discovery_counters_diskio():
+    assert list(
+        esx_vsphere_counters.discover_esx_vsphere_counters_diskio({
+            'disk.read': {
+                '': [(['11', '12', '13'], 'kiloBytesPerSecond')]
+            },
+            'disk.numberRead': {
+                '': [(['110', '140', '150'], 'number')]
+            },
+            'disk.write': {
+                '': [(['51', '49', '53'], 'kiloBytesPerSecond')]
+            },
+            'disk.numberWrite': {
+                '': [(['11', '102', '5'], 'kiloBytesPerSecond')]
+            },
+            'disk.deviceLatency': {
+                '': [(['700', '900', '23'], 'millisecond')]
+            },
+        })) == [Service(item="SUMMARY")]
+
+
+def test_check_counters_diskio():
+    assert list(
+        esx_vsphere_counters.check_esx_vsphere_counters_diskio(
+            "SUMMARY",
+            {},
+            {
+                'disk.read': {
+                    '': [(['11', '12', '13'], 'kiloBytesPerSecond')]
+                },
+                'disk.numberRead': {
+                    '': [(['110', '140', '150'], 'number')]
+                },
+                'disk.write': {
+                    '': [(['51', '49', '53'], 'kiloBytesPerSecond')]
+                },
+                'disk.numberWrite': {
+                    '': [(['11', '102', '5'], 'kiloBytesPerSecond')]
+                },
+                'disk.deviceLatency': {
+                    '': [(['700', '900', '23'], 'millisecond')]
+                },
+            },
+        )) == [
+            Result(state=State.OK, summary='Read: 12.3 kB/s'),
+            Metric('disk_read_throughput', 12288.0),
+            Result(state=State.OK, summary='Write: 52.2 kB/s'),
+            Metric('disk_write_throughput', 52224.0),
+            Result(state=State.OK, notice='Read operations: 6.67/s'),
+            Metric('disk_read_ios', 6.666666666666667),
+            Result(state=State.OK, notice='Write operations: 1.97/s'),
+            Metric('disk_write_ios', 1.9666666666666668),
+            Result(state=State.OK, summary='Latency: 900 milliseconds'),
+            Metric('disk_latency', 0.9),
+        ]

@@ -4,11 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
 from marshmallow import Schema, fields, pre_dump
 
 from pathlib import Path
 from cmk.utils.i18n import _
 import cmk.utils.store as store
+import cmk.utils.paths
 
 from typing import (
     List,
@@ -263,6 +265,16 @@ class BIAggregationPacks:
 
     def save_config(self) -> None:
         store.save_file(self._bi_configuration_file, repr(self.generate_config()))
+        enabled_aggregations = str(
+            len([
+                bi_aggr for bi_aggr in self.get_all_aggregations()
+                if not bi_aggr.computation_options.disabled
+            ]))
+
+        enabled_info_path = os.path.join(cmk.utils.paths.var_dir, "wato")
+        store.makedirs(enabled_info_path)
+        store.save_file(os.path.join(enabled_info_path, "num_enabled_aggregations"),
+                        enabled_aggregations)
 
     def generate_config(self) -> Dict[str, Any]:
         self._check_rule_cycles()

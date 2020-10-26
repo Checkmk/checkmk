@@ -848,7 +848,6 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
                     "aggr_name": node["title"],
                     "aggr_output": eff_state["output"],
                     "aggr_hosts": node["reqhosts"],
-                    "aggr_function": node["func"],
                     "aggr_group": html.request.var("aggr_group"),
                 }
 

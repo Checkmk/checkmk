@@ -79,6 +79,8 @@ class BICompiler:
 
     def _load_compiled_aggregations(self) -> None:
         for path_object in self._path_compiled_aggregations.iterdir():
+            if path_object.is_dir():
+                continue
             aggr_id = path_object.name
             if aggr_id in self._compiled_aggregations:
                 continue
@@ -135,10 +137,19 @@ class BICompiler:
                 self._logger.debug("Save dump to disk took %f" % (time.time() - start))
 
         known_sites = {kv[0]: kv[1] for kv in current_configstatus.get("known_sites", set())}
+        self._cleanup_vanished_aggregations()
         self._bi_structure_fetcher._cleanup_orphaned_files(known_sites)
 
         self._path_compilation_timestamp.write_text(
             str(current_configstatus["configfile_timestamp"]))
+
+    def _cleanup_vanished_aggregations(self):
+        valid_aggregations = list(self._compiled_aggregations.keys())
+        for path_object in self._path_compiled_aggregations.iterdir():
+            if path_object.is_dir():
+                continue
+            if path_object.name not in valid_aggregations:
+                path_object.unlink(missing_ok=True)
 
     def _verify_aggregation_title_uniqueness(
             self, compiled_aggregations: Dict[str, BICompiledAggregation]) -> None:

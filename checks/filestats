@@ -198,16 +198,19 @@ def check_filestats(_item, params, data):
         show_all_files,
     )
 
+    additional_rules_output = []
     for file_expression, (rules, files) in matching_files.items():
         yield 0, 'Files matching %r: %d' % (file_expression, len(files))
-        additional_rules_output = yield from check_filestats_extremes(
+        output = yield from check_filestats_extremes(
             files,
             rules,
             show_all_files,
         )
-        if additional_rules_output:
-            yield 0, '\nFiles matching %r:\n' % file_expression
-            yield 0, '\n'.join(additional_rules_output)
+        additional_rules_output.append('Files matching %r:' % file_expression)
+        additional_rules_output.append('\n'.join(output))
+
+    if additional_rules_output:
+        yield 0, '\n' + '\n'.join(additional_rules_output)
 
     if remaining_files_output:
         yield 0, '\n(Remaining) files in file group:\n' + '\n'.join(remaining_files_output)

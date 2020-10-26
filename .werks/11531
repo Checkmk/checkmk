@@ -1,0 +1,13 @@
+Title: filestats: missing information in service output
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1603704720
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+The filestats check did not show all results when the feature "Additional Rules
+for Files" was activated and multiple subgroups were defined within the file
+group with this feature. This has been fixed.

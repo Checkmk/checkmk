@@ -553,7 +553,7 @@ div.add_snapin {
 
     *,
     &:hover * {
-      color: $font-color;
+      color: $font-color-sidebar;
     }
 
     &:hover {
@@ -566,7 +566,6 @@ div.add_snapin {
       font-weight: $font-weight-default;
       line-height: 1.333;
       letter-spacing: $letter-spacing-table;
-      color: $snapin-description-font-color;
       text-rendering: optimizeLegibility;
     }
 
@@ -580,7 +579,7 @@ div.add_snapin {
     .head {
       height: auto;
       padding: 8px;
-      color: $font-color;
+      color: $font-color-sidebar;
       text-align: left;
       background: transparent;
 
@@ -598,7 +597,17 @@ div.add_snapin {
     }
 
     .content {
-      color: $font-color;
+      color: $font-color-sidebar;
+    }
+
+    div.foldable {
+      b.treeangle {
+        color: $font-color-sidebar;
+      }
+
+      img.treeangle {
+        filter: $treeangle-img-filter-sidebar;
+      }
     }
   }
 

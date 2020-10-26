@@ -70,6 +70,8 @@ def _create_inventory_function(
         global g_inv_tree
         g_inv_tree = local_inventory_tree
 
+        # Let the legacy plugin fill the newly created trees.
+        # Exceptions just raise through
         legacy_inventory_function(
             *args,
             **cmk.utils.misc.make_kwargs_for(
@@ -77,7 +79,13 @@ def _create_inventory_function(
                 inventory_tree=local_inventory_tree,
                 status_data_tree=local_status_data_tree,
             ))
-        yield from _generate_api_objects(local_status_data_tree, local_inventory_tree)
+
+        # Convert the content of the trees to the new API. Add a hint if this fails:
+        try:
+            yield from _generate_api_objects(local_status_data_tree, local_inventory_tree)
+        except (TypeError, ValueError) as exc:
+            raise RuntimeError(
+                "Unable to convert legacy results. Please migrate plugin to new API") from exc
 
     def _add_extra_info(section):
         if extra_sections_count == 0:

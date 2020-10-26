@@ -97,10 +97,6 @@ class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
         return (56, 40)
 
     @classmethod
-    def default_settings(cls):
-        return {"show_title": False}
-
-    @classmethod
     def infos(cls):
         return ["host", "service"]
 

@@ -140,12 +140,12 @@ class SingleMetricDataGenerator(ABCDataGenerator):
             "data": data,
         }
         title: List[Tuple[str, Optional[str]]] = []
-        if settings.get("show_title", False):
-            if settings.get("title") and "plain" in settings.get("title_format", []):
+        title_format = settings.get("title_format", ["plain"])
+
+        if settings.get("show_title", True):
+            if settings.get("title") and "plain" in title_format:
                 title.append((settings.get("title"), ""))
-            title.extend(
-                title_info_elements(row,
-                                    [f for f in settings.get("title_format", []) if f != "plain"]))
+            title.extend(title_info_elements(row, [f for f in title_format if f != "plain"]))
 
         response["title"] = " / ".join(txt for txt, _ in title)
 

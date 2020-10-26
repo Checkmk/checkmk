@@ -649,7 +649,7 @@ def _render_dashlet(board: DashboardConfig, dashlet: Dashlet, is_update: bool, m
 def _render_dashlet_title(dashlet: Dashlet) -> Union[str, HTML]:
     title = dashlet.display_title()
     title_elements = []
-    title_format = dashlet._dashlet_spec.get("title_format", [])
+    title_format = dashlet._dashlet_spec.get("title_format", ["plain"])
 
     if dashlet.show_title() and title and "plain" in title_format:
         title_elements.append((title, dashlet.title_url()))

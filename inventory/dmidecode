@@ -54,7 +54,8 @@ Converter = Union[str, Tuple[str, Callable[[str], Union[str, float, None]]]]
 # is done by :. On Windows the \t comes 1:1 and no splitting
 # is being done. So we need to split manually here
 def inv_dmidecode(info: StringTable) -> None:
-    # Note: we cannot use a dict here, we may have multiple subsections with the same title
+    # We cannot use a dict here, we may have multiple
+    # subsections with the same title and the order matters!
     subsections: List[Tuple[str, StringTable]] = []
     current_lines: StringTable = []  # these will not be used
     for line in info:
@@ -67,14 +68,21 @@ def inv_dmidecode(info: StringTable) -> None:
             current_lines = []
             subsections.append((line[0], current_lines))
         else:
-            current_lines.append(line[1:])
+            current_lines.append([w.strip() for w in line[1:]])
 
+    # There will be "Physical Memory Array" sections, each followed
+    # by multiple "Memory Device" sections. Keep track of which belongs where:
+    memory_array_number = 0
     for title, lines in subsections:
-        inv_dmidecode_parse_section(title, lines)
+        memory_array_number += (title == "Physical Memory Array")
+        inv_dmidecode_parse_section(title, memory_array_number, lines)
 
 
-def inv_dmidecode_parse_section(name: str, lines: List[List[str]]) -> None:
-    lines = [[w.strip() for w in words] for words in lines]
+def inv_dmidecode_parse_section(
+    name: str,
+    memory_array_number: int,
+    lines: List[List[str]],
+) -> None:
     if name == "BIOS Information":
         inv_dmidecode_parse_bios(lines)
     elif name == "System Information":
@@ -90,11 +98,9 @@ def inv_dmidecode_parse_section(name: str, lines: List[List[str]]) -> None:
 #    elif name == "Memory Module Information":
 #        inv_dmidecode_parse_mem_module(lines)
     elif name == "Physical Memory Array":
-        inv_dmidecode_parse_physical_mem_array(lines)
+        inv_dmidecode_parse_physical_mem_array(lines, memory_array_number)
     elif name == "Memory Device":
-        inv_dmidecode_parse_mem_device(lines)
-
-    # TODO: Summe ueber alle Arrays ausrechnen
+        inv_dmidecode_parse_mem_device(lines, memory_array_number)
 
 
 def inv_dmidecode_parse_date(value: str) -> Optional[float]:
@@ -190,19 +196,9 @@ def inv_dmidecode_parse_processor(lines: List[List[str]]) -> None:
 #             module["current_speed"] = speed
 
 
-def inv_dmidecode_parse_physical_mem_array(lines: List[List[str]]) -> None:
+def inv_dmidecode_parse_physical_mem_array(lines: List[List[str]], array_number: int) -> None:
     # We expect several possible arrays
-    node = inv_tree_list("hardware.memory.arrays:")
-
-    # If we have a dummy entry from previous Memory Devices (see below)
-    # then we fill that entry rather than creating a new one
-    if len(node) == 1 and list(node[0]) == ["devices"]:
-        array = node[0]
-    else:
-        array = {"devices": []}
-        node.append(array)
-
-    array.update(
+    inv_tree(f"hardware.memory.array_{array_number}.").update(
         _make_dict(
             lines, {
                 "Location": "location",
@@ -212,8 +208,7 @@ def inv_dmidecode_parse_physical_mem_array(lines: List[List[str]]) -> None:
             }))
 
 
-def inv_dmidecode_parse_mem_device(lines: List[List[str]]) -> None:
-
+def inv_dmidecode_parse_mem_device(lines: List[List[str]], array_number: int) -> None:
     device = _make_dict(
         lines,
         {
@@ -233,32 +228,15 @@ def inv_dmidecode_parse_mem_device(lines: List[List[str]]) -> None:
             "Size": "size",  # 2048 MB
         },
     )
+    if device["size"] == "No Module Installed":
+        return
 
-    # Do we already have an entry for a memory array? Then
-    # we assume that this device belongs to the most recently
-    # read array. Otherwise we create a dummy entry and replace
-    # that later with actual information
-    # If there are already arrays we try to find the right index of
-    # the phy. array
-    index = None
-    if device.get("locator") and device["locator"].startswith("PROC"):
-        index = device["locator"].split()[1]
+    devices_table = inv_tree_list(f"hardware.memory.array_{array_number}.devices:")
 
-    node = inv_tree_list("hardware.memory.arrays:")
-    if node:
-        try:
-            array = node[int(index) - 1]
-        except Exception:
-            array = node[-1]
-    else:
-        array = {"devices": []}
-        node.append(array)
-
-    if device["size"] != "No Module Installed":
-        # Convert speed and size into numbers
-        device["speed"] = dmidecode_parse_speed(device.get("speed", "Unknown"))
-        device["size"] = dmidecode_parse_size(device.get("size", "Unknown"))
-        array["devices"].append(device)
+    # Convert speed and size into numbers
+    device["speed"] = dmidecode_parse_speed(device.get("speed", "Unknown"))
+    device["size"] = dmidecode_parse_size(device.get("size", "Unknown"))
+    devices_table.append(device)
 
 
 def _make_dict(
@@ -328,8 +306,6 @@ def dmidecode_parse_time(v: str) -> float:  # 155 ns
     return float(parts[0])  # assume seconds
 
 
-# TODO: bring this back CMK-5976
-#
-#inv_info['dmidecode'] = {
-#    "inv_function": inv_dmidecode,
-#}
+inv_info['dmidecode'] = {
+    "inv_function": inv_dmidecode,
+}

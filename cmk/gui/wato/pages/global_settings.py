@@ -379,6 +379,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
         menu = PageMenu(
             dropdowns=dropdowns,
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(placeholder=_("Filter settings")),
         )
 
         self._extend_display_dropdown(menu)
@@ -399,13 +400,6 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
                 entries=list(self._page_menu_entries_details()),
             ))
 
-        display_dropdown.topics.insert(
-            0,
-            PageMenuTopic(
-                title=_("Filter settings"),
-                entries=list(self._page_menu_entries_filter()),
-            ))
-
     def _page_menu_entries_details(self) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(
             title=_("Show only modified settings"),
@@ -415,13 +409,6 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
                 check_url=makeuri(request, [("_show_only_modified", "1")]),
                 uncheck_url=makeuri(request, [("_show_only_modified", "0")]),
             ),
-        )
-
-    def _page_menu_entries_filter(self) -> Iterator[PageMenuEntry]:
-        yield PageMenuEntry(
-            title="",
-            icon_name="trans",
-            item=PageMenuSearch(),
         )
 
     def action(self):

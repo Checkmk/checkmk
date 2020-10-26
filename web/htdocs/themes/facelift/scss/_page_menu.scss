@@ -148,12 +148,15 @@ div#top_heading {
       }
     }
 
+    td.menues div.menucontainer, td.inpage_search {
+      background-color: $page-menu-bg-color;
+      border-bottom: 2px solid $page-menu-bg-color;
+    }
+
     td.menues div.menucontainer {
       position: relative;
       display: inline-block;
       padding: 0;
-      background-color: $page-menu-bg-color;
-      border-bottom: 2px solid $page-menu-bg-color;
 
       &.disabled {
         pointer-events: none;
@@ -303,6 +306,36 @@ div#top_heading {
       a#menu_shortcut_toggle_suggestions {
         transform: rotate(180deg);
       }
+    }
+
+    td.inpage_search {
+      padding: 2px 10px 0;
+
+      form {
+        padding: 0;
+        margin: 0;
+        background-color: $headline-color;
+        border-radius: 2px;
+      }
+
+      input, input:active, input:focus {
+        width: 100px !important;
+        height: 18px;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        box-sizing: border-box;
+      }
+
+      img {
+          width: 10px;
+          height: 10px;
+          margin: 0 4px;
+
+          &:hover {
+            opacity: 1;
+          }
+        }
     }
   }
 

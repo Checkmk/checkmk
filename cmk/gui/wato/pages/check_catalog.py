@@ -34,7 +34,6 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuSearch,
     make_simple_link,
-    make_display_options_dropdown,
 )
 
 from cmk.gui.valuespec import (
@@ -74,23 +73,9 @@ class ModeCheckPlugins(WatoMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = super().page_menu(breadcrumb)
-        self._extend_display_dropdown(menu)
+        menu.inpage_search = PageMenuSearch(target_mode="check_plugin_search",
+                                            placeholder=_("Search for check plugins"))
         return menu
-
-    def _extend_display_dropdown(self, menu: PageMenu) -> None:
-        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
-        display_dropdown.topics.insert(
-            0,
-            PageMenuTopic(
-                title=_("Search for check plugins"),
-                entries=[
-                    PageMenuEntry(
-                        title="",
-                        icon_name="trans",
-                        item=PageMenuSearch(target_mode="check_plugin_search"),
-                    ),
-                ],
-            ))
 
     def page(self):
         html.help(

@@ -874,21 +874,23 @@ def render_color_icon(color):
 @MemoizeCache
 def reverse_translate_metric_name(canonical_name: str) -> List[Tuple[str, float]]:
     "Return all known perf data names that are translated into canonical_name with corresponding scaling"
-    # We should get all metrics unified before Cmk 2.1
-    # 2.0 is version where metric migration started to happen
-    migration_end_version = parse_check_mk_version('2.1.0')
     current_version = parse_check_mk_version(cmk_version.__version__)
-
     possible_translations = []
+
     for trans in check_metrics.values():
         for metric, options in trans.items():
-            if "deprecated" in options:
-                migration_end = parse_check_mk_version(options["deprecated"])
-            else:
-                migration_end = migration_end_version
+            if options.get('name', '') == canonical_name:
+                if "deprecated" in options:
+                    # From version check used unified metric, and thus deprecates old translation
+                    # added a complete stable release, that gives the customer about a year of data
+                    # under the appropriate metric name.
+                    # We should however get all metrics unified before Cmk 2.1
+                    migration_end = parse_check_mk_version(options["deprecated"]) + 10000000
+                else:
+                    migration_end = current_version
 
-            if (options.get('name', '') == canonical_name and migration_end >= current_version):
-                possible_translations.append((metric, options.get('scale', 1.0)))
+                if migration_end >= current_version:
+                    possible_translations.append((metric, options.get('scale', 1.0)))
 
     return [(canonical_name, 1.0)] + sorted(set(possible_translations))
 

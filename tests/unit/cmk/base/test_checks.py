@@ -62,27 +62,6 @@ def test_deprecated_api_features(deprecated_pattern):
     )
 
 
-def _search_from_imports(check_file_path):
-    with open(check_file_path) as f_:
-        return [
-            "%s:%d:%s" % (Path(check_file_path).stem, line_no, repr(line.strip()))
-            for line_no, line in enumerate(f_.readlines(), 1)
-            if (re.search(r'from\s.*\simport\s', line.strip()) and
-                not line.startswith("from cmk.base.check_legacy_includes."))
-        ]
-
-
-def test_imports_in_checks():
-    check_files = config.get_plugin_paths(cmk.utils.paths.checks_dir)
-    with_from_imports = [
-        finding  #
-        for check_file_path in check_files  #
-        for finding in _search_from_imports(check_file_path)
-    ]
-    assert not with_from_imports, "Found %d from-imports:\n%s" % (len(with_from_imports),
-                                                                  "\n".join(with_from_imports))
-
-
 def test_includes_are_deprecated(config_check_info):
     for name, check_info in config_check_info.items():
         assert not check_info.get("includes"), f"Plugin {name}: includes are deprecated!"

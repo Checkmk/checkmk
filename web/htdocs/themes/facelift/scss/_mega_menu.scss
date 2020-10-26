@@ -318,24 +318,22 @@
         display: none;
       }
     }
+  }
 
-    #popup_shadow {
-      position: absolute;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 65px;
-      z-index: 100;
-      display: none;
-      cursor: default;
-      background-color: $popup-shadow-color;
-    }
+  #popup_shadow {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 65px;
+    z-index: 100;
+    display: none;
+    cursor: default;
+    background-color: $popup-shadow-color;
+  }
 
-    &.active {
-      #popup_shadow {
-        display: block;
-      }
-    }
+  div.popup_trigger.active + #popup_shadow {
+    display: block;
   }
 
   li {

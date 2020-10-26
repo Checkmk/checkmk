@@ -73,6 +73,7 @@ class MainMenuRenderer:
                 hover_switch_delay=150,  # ms
                 onopen=menu_item.onopen,
             )
+            html.div("", id_="popup_shadow", onclick="cmk.popup_menu.close_popup()")
             html.close_li()
 
     def _get_main_menu_items(self) -> List[MainMenuItem]:
@@ -94,7 +95,6 @@ class MainMenuRenderer:
             html.open_div(class_=["popup_menu", "main_menu_popup"])
             MegaMenuRenderer().show(menu)
             html.close_div()
-            html.div("", id_="popup_shadow", onclick="cmk.popup_menu.close_popup()")
             return html.drain()
 
 

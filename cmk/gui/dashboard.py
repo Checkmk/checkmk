@@ -1586,9 +1586,13 @@ def page_edit_dashlet() -> None:
             general_properties = vs_general.from_html_vars('general')
             vs_general.validate_value(general_properties, 'general')
             dashlet_spec.update(general_properties)
+
             # Remove unset optional attributes
-            if 'title' not in general_properties and 'title' in dashlet_spec:
-                del dashlet_spec['title']
+            optional_properties = set(e[0] for e in vs_general._get_elements()) - set(
+                vs_general._required_keys)
+            for option in optional_properties:
+                if option not in general_properties and option in dashlet_spec:
+                    del dashlet_spec[option]
 
             if vs_type:
                 type_properties = vs_type.from_html_vars('type')

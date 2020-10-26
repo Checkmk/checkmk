@@ -67,7 +67,6 @@ class TestDSProgramChecker:
         assert source.stdin is None
         assert source.description == "Program: "
         assert source.id == "agent"
-        assert source.cpu_tracking_id == "ds"
 
     @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
     def test_template_translation(self, ipaddress, mode, monkeypatch):
@@ -148,4 +147,3 @@ class TestSpecialAgentChecker:
             str(agent_dir / "special" / ("agent_%s" % special_agent_id)) + " " + expected_args)
         assert source.stdin == expected_stdin
         assert source.id == "special_%s" % special_agent_id
-        assert source.cpu_tracking_id == "ds"

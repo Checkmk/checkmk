@@ -31,7 +31,6 @@ class ProgramSource(AgentSource):
         *,
         mode: Mode,
         id_: str,
-        cpu_tracking_id: str,
         main_data_source: bool,
         cmdline: str,
         stdin: Optional[str],
@@ -47,7 +46,6 @@ class ProgramSource(AgentSource):
                 stdin,
             ),
             id_=id_,
-            cpu_tracking_id=cpu_tracking_id,
             main_data_source=main_data_source,
         )
         self.cmdline = cmdline
@@ -130,7 +128,6 @@ class DSProgramSource(ProgramSource):
             ipaddress,
             mode=mode,
             id_="agent",
-            cpu_tracking_id="ds",
             main_data_source=main_data_source,
             cmdline=DSProgramSource._translate(
                 template,
@@ -198,7 +195,6 @@ class SpecialAgentSource(ProgramSource):
             ipaddress,
             mode=mode,
             id_="special_%s" % special_agent_id,
-            cpu_tracking_id="ds",
             main_data_source=main_data_source,
             cmdline=SpecialAgentSource._make_cmdline(
                 hostname,

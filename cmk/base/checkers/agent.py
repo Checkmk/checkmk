@@ -103,7 +103,6 @@ class AgentSource(Source[AgentRawData, AgentHostSections]):
         description: str,
         id_: str,
         main_data_source: bool,
-        cpu_tracking_id: str,
     ):
         super().__init__(
             hostname,
@@ -115,7 +114,6 @@ class AgentSource(Source[AgentRawData, AgentHostSections]):
             default_raw_data=AgentRawData(),
             default_host_sections=AgentHostSections(),
             id_=id_,
-            cpu_tracking_id=cpu_tracking_id,
             cache_dir=Path(cmk.utils.paths.tcp_cache_dir) if main_data_source else None,
             persisted_section_dir=(Path(cmk.utils.paths.var_dir) /
                                    "persisted") if main_data_source else None,

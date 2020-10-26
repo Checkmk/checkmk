@@ -55,7 +55,6 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         mode: Mode,
         source_type: SourceType,
         id_: str,
-        cpu_tracking_id: str,
         cache_dir: Optional[Path] = None,
         persisted_section_dir: Optional[Path] = None,
         title: str,
@@ -71,7 +70,6 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             default_raw_data={},
             default_host_sections=SNMPHostSections(),
             id_=id_,
-            cpu_tracking_id=cpu_tracking_id,
             cache_dir=cache_dir,
             persisted_section_dir=persisted_section_dir,
         )
@@ -108,7 +106,6 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             mode=mode,
             source_type=SourceType.HOST,
             id_="snmp",
-            cpu_tracking_id="snmp",
             title="SNMP",
         )
 
@@ -128,7 +125,6 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             mode=mode,
             source_type=SourceType.MANAGEMENT,
             id_="mgmt_snmp",
-            cpu_tracking_id="snmp",
             title="Management board - SNMP",
         )
 

@@ -70,7 +70,6 @@ def test_attribute_defaults(source, hostname, ipaddress, monkeypatch):
     assert source.hostname == hostname
     assert source.ipaddress == ipaddress
     assert source.id == "snmp"
-    assert source.cpu_tracking_id == "snmp"
     assert source.on_snmp_scan_error == "raise"
 
 
@@ -143,7 +142,6 @@ class TestSNMPSummaryResult:
             mode=mode,
             source_type=SourceType.HOST,
             id_="snmp_id",
-            cpu_tracking_id="snmp_cpu_id",
             title="snmp title",
         )
 

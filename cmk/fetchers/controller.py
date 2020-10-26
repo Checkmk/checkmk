@@ -9,7 +9,6 @@
 
 import abc
 import contextlib
-import copy
 import enum
 import json
 import logging
@@ -19,11 +18,11 @@ import signal
 import struct
 from pathlib import Path
 from types import FrameType
-from typing import Any, Dict, Final, Iterator, List, Mapping, NamedTuple, Optional, Type, Union
+from typing import Any, Dict, Final, Iterator, List, NamedTuple, Optional, Type, Union
 
 import cmk.utils.cleanup
-import cmk.utils.cpu_tracking as cpu_tracking
 import cmk.utils.log as log
+from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.paths import core_helper_config_dir
 from cmk.utils.type_defs import ConfigSerial, HostName, Protocol, result, SectionName
@@ -80,18 +79,18 @@ class L3Message(Protocol):
 
 
 class L3Stats(Protocol):
-    def __init__(self, value: Mapping[str, cpu_tracking.Snapshot]) -> None:
-        self.cpu_times: Final[cpu_tracking.CPUTracker] = cpu_tracking.CPUTracker(copy.copy(value))
+    def __init__(self, cpu_tracker: CPUTracker) -> None:
+        self.cpu_tracker: Final = cpu_tracker
 
     def __repr__(self) -> str:
-        return "%s(%r)" % (type(self).__name__, self.cpu_times)
+        return "%s(%r)" % (type(self).__name__, self.cpu_tracker)
 
     def __bytes__(self) -> bytes:
-        return json.dumps(self.cpu_times.serialize()).encode("ascii")
+        return json.dumps({"cpu_tracker": self.cpu_tracker.serialize()}).encode("ascii")
 
     @classmethod
     def from_bytes(cls, data: bytes) -> "L3Stats":
-        return L3Stats(cpu_tracking.CPUTracker.deserialize(json.loads(data.decode("ascii"))))
+        return L3Stats(CPUTracker.deserialize(json.loads(data.decode("ascii"))["cpu_tracker"]))
 
 
 class PayloadType(enum.Enum):
@@ -362,6 +361,10 @@ class FetcherMessage(Protocol):
         )
 
     @property
+    def fetcher_type(self) -> FetcherType:
+        return self.header.fetcher_type
+
+    @property
     def raw_data(self) -> result.Result[AbstractRawData, Exception]:
         return self.payload.result()
 
@@ -561,11 +564,7 @@ def load_global_config(serial: ConfigSerial) -> None:
         log.logger.setLevel(config["log_level"])
 
 
-def run_fetcher(
-    entry: Dict[str, Any],
-    mode: Mode,
-    cpu_tracker: cpu_tracking.CPUTracker,
-) -> FetcherMessage:
+def run_fetcher(entry: Dict[str, Any], mode: Mode) -> FetcherMessage:
     """ Entrypoint to obtain data from fetcher objects.    """
 
     try:
@@ -578,7 +577,7 @@ def run_fetcher(
     try:
         fetcher_params = entry["fetcher_params"]
     except KeyError as exc:
-        stats = L3Stats({})
+        stats = L3Stats(CPUTracker())
         payload = ErrorPayload(exc)
         return FetcherMessage(
             FetcherHeader(
@@ -593,17 +592,14 @@ def run_fetcher(
         )
 
     try:
-        with cpu_tracking.phase(
-                cpu_tracker,
-                fetcher_type.name,
-        ), fetcher_type.from_json(fetcher_params) as fetcher:
+        with CPUTracker() as tracker, fetcher_type.from_json(fetcher_params) as fetcher:
             raw_data = fetcher.fetch(mode)
     except Exception as exc:
         raw_data = result.Error(exc)
 
     return FetcherMessage.from_raw_data(
         raw_data,
-        L3Stats(cpu_tracker),
+        L3Stats(tracker),
         fetcher_type,
     )
 
@@ -651,18 +647,19 @@ def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
     # functionality of the Microcore.
 
     messages: List[FetcherMessage] = []
-    cpu_tracker = cpu_tracking.CPUTracker()
-    with cpu_tracking.phase(cpu_tracker, "fetchers"), timeout_control(timeout):
+    with timeout_control(timeout):
         try:
             # fill as many messages as possible before timeout exception raised
             for entry in fetchers:
-                messages.append(run_fetcher(entry, mode, cpu_tracker))
+                messages.append(run_fetcher(entry, mode))
         except MKTimeout as exc:
             # fill missing entries with timeout errors
-            stats = L3Stats(cpu_tracker)
             messages.extend([
-                _make_fetcher_timeout_message(FetcherType[entry["fetcher_type"]], stats, exc)
-                for entry in fetchers[len(messages):]
+                _make_fetcher_timeout_message(
+                    FetcherType[entry["fetcher_type"]],
+                    L3Stats(CPUTracker()),
+                    exc,
+                ) for entry in fetchers[len(messages):]
             ])
 
     log.logger.debug("Produced %d messages:", len(messages))

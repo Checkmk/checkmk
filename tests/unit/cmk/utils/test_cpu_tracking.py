@@ -10,7 +10,6 @@ import json
 
 import pytest
 
-import cmk.utils.cpu_tracking as cpu_tracking
 from cmk.utils.cpu_tracking import Snapshot, CPUTracker
 
 
@@ -63,66 +62,52 @@ class TestCpuTracking:
 
 
 class TestCPUTracker:
-    @pytest.fixture
-    def tracker(self):
-        return CPUTracker()
-
-    def test_serialization(self, tracker):
-        tracker["phase0"] = Snapshot.take()
-        tracker["phase1"] = Snapshot.take()
-        tracker["phase2"] = Snapshot.take()
-        assert CPUTracker.deserialize(json_identity(tracker.serialize())) == tracker
-
-    def test_single_phase(self, tracker, set_time):
+    def test_single_phase(self, set_time):
         set_time(0.0)
-        with cpu_tracking.phase(tracker, "phase"):
+        with CPUTracker() as tracker:
             set_time(2.0)
 
-        assert len(tracker) == 1
-        assert tracker["phase"].run_time == 2.0
+        assert tracker.run_time == 2.0
 
-    def test_split_phase(self, tracker, set_time):
+    def test_split_phase(self, set_time):
         set_time(0.0)
-        with cpu_tracking.phase(tracker, "phase"):
+        with CPUTracker() as tracker0:
             set_time(3.0)
 
-        with cpu_tracking.phase(tracker, "phase"):
+        with CPUTracker() as tracker1:
             set_time(5.0)
 
-        with cpu_tracking.phase(tracker, "phase"):
+        with CPUTracker() as tracker2:
             set_time(11.0)
 
-        assert len(tracker) == 1
-        assert tracker["phase"].run_time == 11.0
+        assert sum(tracker.run_time for tracker in (tracker0, tracker1, tracker2)) == 11.0
 
-    def test_sequential_phases(self, tracker, set_time):
+    def test_sequential_phases(self, set_time):
         set_time(0.0)
-        with cpu_tracking.phase(tracker, "phase1"):
+        with CPUTracker() as tracker1:
             set_time(3.0)
 
-        with cpu_tracking.phase(tracker, "phase2"):
+        with CPUTracker() as tracker2:
             set_time(5.0)
 
-        with cpu_tracking.phase(tracker, "phase3"):
+        with CPUTracker() as tracker3:
             set_time(11.0)
 
-        assert len(tracker) == 3
-        assert tracker["phase1"].run_time == 3.0
-        assert tracker["phase2"].run_time == 5.0 - 3.0
-        assert tracker["phase3"].run_time == 11.0 - 5.0
+        assert tracker1.run_time == 3.0
+        assert tracker2.run_time == 5.0 - 3.0
+        assert tracker3.run_time == 11.0 - 5.0
 
-    def test_nested_phases(self, tracker, set_time):
+    def test_nested_phases(self, set_time):
         set_time(0.0)
-        with cpu_tracking.phase(tracker, "phase1"):
+        with CPUTracker() as tracker1:
             set_time(3.0)
 
-            with cpu_tracking.phase(tracker, "phase2"):
+            with CPUTracker() as tracker2:
                 set_time(5.0)
 
-                with cpu_tracking.phase(tracker, "phase3"):
+                with CPUTracker() as tracker3:
                     set_time(13.0)
 
-        assert len(tracker) == 3
-        assert tracker["phase1"].run_time == 13.0
-        assert tracker["phase2"].run_time == 13.0 - 3.0
-        assert tracker["phase3"].run_time == 13.0 - 5.0
+        assert tracker1.run_time == 13.0
+        assert tracker2.run_time == 13.0 - 3.0
+        assert tracker3.run_time == 13.0 - 5.0

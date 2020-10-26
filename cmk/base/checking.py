@@ -50,9 +50,9 @@ from cmk.utils.type_defs import (
     ServiceState,
     SourceType,
 )
-import cmk.utils.cpu_tracking as cpu_tracking
+from cmk.utils.cpu_tracking import CPUTracker
 
-from cmk.fetchers.controller import FetcherMessage
+from cmk.fetchers.controller import FetcherMessage, FetcherType
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api_utils as check_api_utils
@@ -128,9 +128,8 @@ def do_check(
     infotexts: List[ServiceDetails] = []
     long_infotexts: List[ServiceAdditionalDetails] = []
     perfdata: List[str] = []
-    cpu_tracker = cpu_tracking.CPUTracker()
     try:
-        with cpu_tracking.phase(cpu_tracker, "busy"):
+        with CPUTracker() as tracker:
             license_usage.try_history_update()
 
             # In case of keepalive we always have an ipaddress (can be 0.0.0.0 or :: when
@@ -229,10 +228,9 @@ def do_check(
                 status = max(status, missing_data_status)
                 infotexts.append(missing_data_infotext)
 
+        total_times = tracker.duration
         for msg in fetcher_messages if fetcher_messages else ():
-            cpu_tracker["busy"] += msg.stats.cpu_times["busy"]
-
-        total_times = cpu_tracker["busy"]
+            total_times += msg.stats.cpu_tracker.duration
 
         infotexts.append("execution time %.1f sec" % total_times.run_time)
         if config.check_mk_perfdata_with_times:
@@ -243,9 +241,20 @@ def do_check(
                 "children_user_time=%.3f" % total_times.process.children_user,
                 "children_system_time=%.3f" % total_times.process.children_system,
             ]
-
-            for phase, times in cpu_tracker.items():
-                if phase in ["agent", "snmp", "ds"]:
+            for msg in fetcher_messages if fetcher_messages else ():
+                if msg.fetcher_type in (
+                        FetcherType.PIGGYBACK,
+                        FetcherType.PROGRAM,
+                        FetcherType.SNMP,
+                        FetcherType.TCP,
+                ):
+                    phase = {
+                        FetcherType.PIGGYBACK: "agent",
+                        FetcherType.PROGRAM: "ds",
+                        FetcherType.SNMP: "snmp",
+                        FetcherType.TCP: "agent",
+                    }[msg.fetcher_type]
+                    times = msg.stats.cpu_tracker
                     t = times.run_time - sum(times.process[:4])  # real time - CPU time
                     perfdata.append("cmk_time_%s=%.3f" % (phase, t))
         else:

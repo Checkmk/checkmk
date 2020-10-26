@@ -26,7 +26,6 @@ from cmk.utils.type_defs import (
     ServiceCheckResult,
     SourceType,
 )
-import cmk.utils.cpu_tracking as cpu_tracking
 
 from cmk.snmplib.type_defs import TRawData
 
@@ -272,7 +271,6 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         default_raw_data: TRawData,
         default_host_sections: THostSections,
         id_: str,
-        cpu_tracking_id: str,
         cache_dir: Optional[Path] = None,
         persisted_section_dir: Optional[Path] = None,
     ) -> None:
@@ -285,7 +283,6 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         self.default_raw_data: Final = default_raw_data
         self.default_host_sections: Final[THostSections] = default_host_sections
         self.id: Final[str] = id_
-        self.cpu_tracking_id: Final[str] = cpu_tracking_id
         if not cache_dir:
             cache_dir = Path(cmk.utils.paths.data_source_cache_dir) / self.id
         if not persisted_section_dir:
@@ -298,7 +295,6 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
 
         self.host_config: Final[HostConfig] = HostConfig.make_host_config(hostname)
         self._logger: Final[logging.Logger] = logging.getLogger("cmk.base.data_source.%s" % id_)
-        self._tracker: Final[cpu_tracking.CPUTracker] = cpu_tracking.CPUTracker()
 
         self.exit_spec = self.host_config.exit_code_spec(id_)
 
@@ -331,14 +327,13 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         self,
         raw_data: result.Result[TRawData, Exception],
     ) -> result.Result[THostSections, Exception]:
-        with cpu_tracking.phase(self._tracker, self.cpu_tracking_id):
-            try:
-                return raw_data.map(self._make_parser().parse)
-            except Exception as exc:
-                self._logger.log(VERBOSE, "ERROR: %s", exc)
-                if cmk.utils.debug.enabled():
-                    raise
-                return result.Error(exc)
+        try:
+            return raw_data.map(self._make_parser().parse)
+        except Exception as exc:
+            self._logger.log(VERBOSE, "ERROR: %s", exc)
+            if cmk.utils.debug.enabled():
+                raise
+            return result.Error(exc)
 
     @final
     def summarize(

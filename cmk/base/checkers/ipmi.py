@@ -46,7 +46,6 @@ class IPMISource(AgentSource):
                      HostConfig.make_host_config(hostname).management_credentials),
             ),
             id_="mgmt_ipmi",
-            cpu_tracking_id="mgmt_ipmi",
             main_data_source=False,
         )
         self.credentials: Final[IPMICredentials] = cast(

@@ -37,7 +37,6 @@ def test_attribute_defaults(mode, monkeypatch):
     assert source.source_type is SourceType.MANAGEMENT
     assert source.summarize(result.OK(AgentHostSections())) == (0, "Version: unknown", [])
     assert source.id == "mgmt_ipmi"
-    assert source.cpu_tracking_id == "mgmt_ipmi"
 
 
 def test_summarizer():

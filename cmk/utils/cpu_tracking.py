@@ -4,17 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import contextlib
 import os
 import posix
 import time
-from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any, DefaultDict, Dict, Iterable, Iterator, Mapping, MutableMapping, Optional
+from typing import Any, Dict, Iterable
 
 from cmk.utils.log import console
 
-__all__ = ["CPUTracker", "phase", "Snapshot", "times_result"]
+__all__ = ["CPUTracker", "Snapshot", "times_result"]
 
 
 def times_result(seq: Iterable[float]) -> posix.times_result:
@@ -68,51 +66,48 @@ class Snapshot:
         )
 
 
-class CPUTracker(MutableMapping[str, Snapshot]):
-    def __init__(self, tracker: Optional[Mapping[str, Snapshot]] = None) -> None:
+class CPUTracker:
+    def __init__(self) -> None:
         super().__init__()
-        self._times: DefaultDict[str, Snapshot] = defaultdict(Snapshot.null)
-        for phase_name, snapshot in tracker.items() if tracker else ():
-            self._times[phase_name] = snapshot
+        self._start: Snapshot = Snapshot.null()
+        self._end: Snapshot = Snapshot.null()
 
     def __repr__(self) -> str:
-        return "%s(%r)" % (type(self).__name__, dict(self._times))
+        return "%s()" % type(self).__name__
+
+    def __enter__(self):
+        console.vverbose("[cpu_tracking] Start\n")
+        self._start = Snapshot.take()
+        return self
+
+    def __exit__(self, *exc_info):
+        console.vverbose("[cpu_tracking] Stop\n")
+        self._end = Snapshot.take()
 
     def serialize(self) -> Dict[str, Any]:
-        return {phase_name: snapshot.serialize() for phase_name, snapshot in self.items()}
+        return {
+            "start": self._start.serialize(),
+            "end": self._end.serialize(),
+        }
 
     @classmethod
     def deserialize(cls, serialized: Dict[str, Any]) -> "CPUTracker":
-        return cls({
-            phase_name: Snapshot.deserialize(snapshot)
-            for phase_name, snapshot in serialized.items()
-        })
+        try:
+            tracker = CPUTracker()
+            tracker._start = Snapshot.deserialize(serialized["start"])
+            tracker._end = Snapshot.deserialize(serialized["end"])
+            return tracker
+        except (LookupError, TypeError, ValueError) as exc:
+            raise ValueError(serialized) from exc
 
-    def __getitem__(self, phase_name: str) -> Snapshot:
-        return self._times.__getitem__(phase_name)
+    @property
+    def duration(self) -> Snapshot:
+        return self._end - self._start
 
-    def __setitem__(self, phase_name: str, snapshot: Snapshot) -> None:
-        return self._times.__setitem__(phase_name, snapshot)
+    @property
+    def process(self) -> posix.times_result:
+        return self.duration.process
 
-    def __delitem__(self, phase_name: str) -> None:
-        return self._times.__delitem__(phase_name)
-
-    def __iter__(self) -> Iterator[str]:
-        return self._times.__iter__()
-
-    def __len__(self) -> int:
-        return self._times.__len__()
-
-    def clear(self) -> None:
-        return self._times.clear()
-
-
-@contextlib.contextmanager
-def phase(tracker: CPUTracker, phase_name: str) -> Iterator[None]:
-    console.vverbose("[cpu_tracking] Start %r\n", phase_name)
-    start = Snapshot.take()
-    try:
-        yield
-    finally:
-        console.vverbose("[cpu_tracking] Stop %r\n", phase_name)
-        tracker[phase_name] += Snapshot.take() - start
+    @property
+    def run_time(self) -> float:
+        return self.duration.run_time

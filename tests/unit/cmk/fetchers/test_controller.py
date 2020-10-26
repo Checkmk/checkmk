@@ -10,8 +10,8 @@ import socket
 import pyghmi.exceptions  # type: ignore[import]
 import pytest  # type: ignore[import]
 
-import cmk.utils.cpu_tracking as cpu_tracking
 import cmk.utils.log as log
+from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.exceptions import (
     MKBailOut,
     MKException,
@@ -70,7 +70,7 @@ def test_status_to_log_level(status, log_level):
 class TestControllerApi:
     def test_controller_success(self):
         payload = AgentPayload(69 * b"\0")
-        stats = L3Stats({})
+        stats = L3Stats(CPUTracker())
         header = FetcherHeader(
             FetcherType.TCP,
             PayloadType.AGENT,
@@ -79,8 +79,7 @@ class TestControllerApi:
             stats_length=len(stats),
         )
         message = FetcherMessage(header, payload, stats)
-        assert len(message) == 95
-        assert make_payload_answer(message) == (b"fetch:SUCCESS:        :95      :" + header +
+        assert make_payload_answer(message) == (b"fetch:SUCCESS:        :240     :" + header +
                                                 payload + stats)
 
     def test_controller_failure(self):
@@ -106,7 +105,6 @@ class TestControllerApi:
                 "trash": 1
             },
             Mode.CHECKING,
-            cpu_tracking.CPUTracker(),
         )
         assert message.header.fetcher_type is FetcherType.SNMP
         assert message.header.status == 50
@@ -117,7 +115,7 @@ class TestControllerApi:
 
     def test_run_fetcher_with_exception(self):
         with pytest.raises(RuntimeError):
-            run_fetcher({"trash": 1}, Mode.CHECKING, cpu_tracking.CPUTracker())
+            run_fetcher({"trash": 1}, Mode.CHECKING)
 
     def test_write_bytes(self, capfdbinary):
         write_bytes(b"123")
@@ -301,7 +299,7 @@ class TestFetcherHeaderEq:
 
     @pytest.fixture
     def stats_length(self):
-        return len(L3Stats({}))
+        return len(L3Stats(CPUTracker()))
 
     @pytest.fixture
     def header(self, fetcher_type, payload_type, status, payload_length, stats_length):
@@ -386,12 +384,12 @@ class TestFetcherHeaderEq:
 
 class TestL3Stats:
     @pytest.fixture
-    def payload(self):
-        return {"busy": cpu_tracking.Snapshot.null()}
+    def tracker(self):
+        return CPUTracker()
 
     @pytest.fixture
-    def l3stats(self, payload):
-        return L3Stats(payload)
+    def l3stats(self, tracker):
+        return L3Stats(tracker)
 
     def test_encode_decode(self, l3stats):
         assert L3Stats.from_bytes(bytes(l3stats)) == l3stats
@@ -400,7 +398,7 @@ class TestL3Stats:
 class TestFetcherMessage:
     @pytest.fixture
     def stats(self):
-        return L3Stats({})
+        return L3Stats(CPUTracker())
 
     @pytest.fixture
     def header(self, stats):

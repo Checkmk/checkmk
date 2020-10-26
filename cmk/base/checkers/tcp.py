@@ -38,7 +38,6 @@ class TCPSource(AgentSource):
             fetcher_type=FetcherType.TCP,
             description=TCPSource._make_description(hostname, ipaddress),
             id_="agent",
-            cpu_tracking_id="agent",
             main_data_source=main_data_source,
         )
         self.port: Optional[int] = None

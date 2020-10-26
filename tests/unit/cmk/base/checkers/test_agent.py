@@ -246,7 +246,6 @@ class TestAgentSummaryResult:
             mode=mode,
             source_type=SourceType.HOST,
             id_="agent_id",
-            cpu_tracking_id="agent_cpu_id",
             description="agent description",
         )
 

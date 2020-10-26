@@ -69,18 +69,10 @@ mega_menu_registry = MegaMenuRegistry()
 def _help_menu_topics() -> List[TopicMenuTopic]:
     return [
         TopicMenuTopic(
-            name="help",
-            title=_("Help"),
-            icon=None,  # TODO(CMK-5773): add an icon
+            name="local_help",
+            title=_("Internal links"),
+            icon=None,
             items=[
-                TopicMenuItem(
-                    name="manual",
-                    title=_("Manual"),
-                    url="https://checkmk.com/cms.html",
-                    target="_blank",
-                    sort_index=30,
-                    icon=None,  # TODO(CMK-5773): add an icon
-                ),
                 TopicMenuItem(
                     name="rest_api_redoc",
                     title=_("REST-API Documentation"),
@@ -93,6 +85,20 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                     name="rest_api_swagger_ui",
                     title=_("REST-API Interactive GUI"),
                     url="api/v0/ui/",
+                    target="_blank",
+                    sort_index=30,
+                    icon=None,  # TODO(CMK-5773): add an icon
+                ),
+            ]),
+        TopicMenuTopic(
+            name="external_help",
+            title=_("External links"),
+            icon=None,  # TODO(CMK-5773): add an icon
+            items=[
+                TopicMenuItem(
+                    name="manual",
+                    title=_("Manual"),
+                    url="https://checkmk.com/cms.html",
                     target="_blank",
                     sort_index=30,
                     icon=None,  # TODO(CMK-5773): add an icon

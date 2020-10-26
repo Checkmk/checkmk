@@ -958,6 +958,14 @@ def _dashboard_add_metrics_dashlet_entries(name: DashboardName, board: Dashboard
     )
 
     yield PageMenuEntry(
+        title='Gauge',
+        icon_name='dashlet_gauge',
+        item=make_simple_link(
+            'edit_dashlet.py?name=%s&create=0&back=%s&type=gauge' %
+            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+    )
+
+    yield PageMenuEntry(
         title='Single metric',
         icon_name='dashlet_single_metric',
         item=make_simple_link(

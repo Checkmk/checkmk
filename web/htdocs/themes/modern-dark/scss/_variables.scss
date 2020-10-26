@@ -32,7 +32,6 @@ $base-color: rgb(32, 39, 46);
 $headline-color: rgb(38, 47, 56);
 $table-highlight-color: rgb(38, 45, 52);
 $img-color: $white;
-$inpage-highlight-color: rgb(48, 57, 70);
 
 $font-color: $white;
 $font-color-light: $lightgrey; // light grey
@@ -70,6 +69,7 @@ $primary-hover-font-color: $grey-1;
 // -----------------------------------------------------------------------------
 // Body
 // -----------------------------------------------------------------------------
+$bg-color-default: $bg-color;
 $bg-color-secondary: $base-color;
 $bg-color-tertiary: $grey-7;
 
@@ -217,7 +217,7 @@ $toggle-button-down-hover-bg-color: lighten($grey-3, 10%);
 $toggle-button-down-hover-border-color: null;
 $toggle-button-search-img-filter: invert(20%);
 
-$success-bg-color: $bg-color;
+$success-bg-color: $bg-color-default;
 
 $treeangle-img-filter: invert(20%);
 $treeangle-img-filter-sidebar: $treeangle-img-filter;
@@ -251,7 +251,6 @@ $tr-data-border-bottom: 1.8px solid $grey-7;
 
 $floatfilter-bg-color: null;
 
-$select2-bg-color: $inpage-highlight-color;
 $select2-border-color: $grey-7;
 $select2-rendered-color: $font-color;
 
@@ -272,7 +271,7 @@ $dashlet-bg-color: $bg-color-secondary;
 
 $state-border-top-color: $grey-6;
 
-$body-side-bg-color: $bg-color;
+$body-side-bg-color: $bg-color-default;
 
 $td-gap-bg-color: $bg-color-secondary;
 $td-border-left-right: none;
@@ -281,7 +280,7 @@ $td-text-overflow: ellipsis;
 
 $span-dots-color: $grey-1;
 
-$tr-odd3-bg-color: $bg-color;
+$tr-odd3-bg-color: $bg-color-default;
 $tr-even3-bg-color: $grey-6;
 
 $graph-bg-color: $bg-color-secondary !important;
@@ -349,12 +348,12 @@ $nform-table-hr-color: rgba($white, 0.1);
 
 $iconbutton-filter: invert(40%);
 
-$multiple-select-bg-color: $bg-color;
-$popup-menu-select-bg-color: $bg-color;
+$multiple-select-bg-color: $bg-color-default;
+$popup-menu-select-bg-color: $bg-color-default;
 
 $input-focus-box-shadow-color: $grey-2;
 
-$dragging-bg-color: $bg-color;
+$dragging-bg-color: $bg-color-default;
 
 $invtree-th-bg-color: $grey-3;
 $invtree-td-bg-color: rgb(100, 100, 100);
@@ -411,13 +410,13 @@ $node-vis-box-border: 1px solid $grey-3;
 $node-vis-toggle-hover-bg-color: rgb(94, 93, 93); // grey
 $node-vis-toggle-down-bg-color: null;
 $node-vis-toggle-down-border-color: null;
-$node-vis-menu-bg-color: $bg-color;
+$node-vis-menu-bg-color: $bg-color-default;
 $node-vis-history-bg-color: $grey-1;
 $node-vis-history-border-color: $grey-1;
 $node-vis-history-filter: invert(70%);
 $node-vis-growth-img-filter: invert(100%);
 $node-vis-growth-root-color: $node-vis-darkgrey; // blue
-$topology-filter-bg-color: $bg-color;
+$topology-filter-bg-color: $bg-color-default;
 $topology-filter-border-color: $grey-7;
 
 $host-folder-font-color: $font-color;
@@ -427,9 +426,9 @@ $if-state-up-font-color: $grey-7;
 $foldertree-snapin-bg-color: $grey-3;
 $foldertree-snapin-font-color: $font-color;
 
-$table-headerleft-border-bottom: 1px solid $bg-color;
+$table-headerleft-border-bottom: 1px solid $bg-color-default;
 
-$agent-config-inner-title-bg-color: $bg-color;
+$agent-config-inner-title-bg-color: $bg-color-default;
 $agent-config-td-color: $font-color;
 
 $pnp4nagios-img-filter: invert(84%);
@@ -446,7 +445,7 @@ $button-spacer-color: rgb(90, 90, 90);
 
 $timeline-hilite-border: 2px solid rgb(220, 220, 220) !important;
 $timetable-hilite-filter: null;
-$timetable-hilite-even-bg-color: lighten($bg-color, 15%);
+$timetable-hilite-even-bg-color: lighten($bg-color-default, 15%);
 $timetable-hilite-odd-bg-color: lighten($grey-7, 15%);
 
 $pnp-graph-img-border-color: rgb(240, 240, 240);
@@ -487,7 +486,6 @@ $navigation-bg-color: $navbar-color;
 $page-menu-bg-color: $navbar-color;
 $snapin-bg-color: $navbar-color;
 $sidebar-border-color: $headline-color;
-$checkbox-bg-color: $inpage-highlight-color;
 $form-font-color: rgb(234, 234, 234);
 $filter-group-title-font-color: $white;
 $popup-filters-border-radius: 2px;
@@ -497,10 +495,10 @@ $tactical-overview-th-font-color: $font-color;
 $tactical-overview-td-bg-color: $button-bg-color-default;
 $snapin-heading-border-color: rgba(255, 255, 255, 0.2);
 $snapin-description-font-color: $color-nuance-8;
-$simplebar-scrollbar-color: $inpage-highlight-color;
+$simplebar-scrollbar-color: rgb(48, 57, 68);
 $simplebar-scrollbar-width: 5px;
-$select2-dropdown-bg-color: $inpage-highlight-color;
-$select2-search-field-border: none;
+$select2-dropdown-bg-color: $button-bg-color-default;
+$select2-dropdown-highlight-color: $button-bg-color-suggestions;
 $popup-border: 4px solid rgb(66, 210, 136);
 $popup-inner-border: 1px solid $headline-color;
 $filter-add-button-hover-brightness: brightness(100);

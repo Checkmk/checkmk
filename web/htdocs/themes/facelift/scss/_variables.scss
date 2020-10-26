@@ -32,7 +32,6 @@ $base-color: rgb(248, 248, 248);
 $headline-color: $base-color;
 $table-highlight-color: rgb(238, 239, 240);
 $img-color: rgb(80, 88, 98);
-$inpage-highlight-color: rgb(48, 57, 70);
 
 $font-color: $grey-4;
 $font-color-light: rgb(230, 230, 230); // light grey
@@ -70,6 +69,7 @@ $primary-hover-font-color: $black;
 // -----------------------------------------------------------------------------
 // Body
 // -----------------------------------------------------------------------------
+$bg-color-default: $bg-color;
 $bg-color-secondary: $base-color;
 $bg-color-tertiary: $white;
 
@@ -251,7 +251,6 @@ $tr-data-border-bottom: null;
 
 $floatfilter-bg-color: rgba($white, 0.2);
 
-$select2-bg-color: $bg-color;
 $select2-border-color: $button-border;
 $select2-rendered-color: null;
 
@@ -487,7 +486,6 @@ $navigation-bg-color: $navbar-color;
 $page-menu-bg-color: $white;
 $snapin-bg-color: $navbar-color;
 $sidebar-border-color: rgb(38, 47, 56);
-$checkbox-bg-color: $button-bg-color-default;
 $form-font-color: $font-color;
 $filter-group-title-font-color: $black;
 $popup-filters-border-radius: 2px;
@@ -500,7 +498,7 @@ $snapin-description-font-color: $font-color;
 $simplebar-scrollbar-color: rgb(38, 47, 56);
 $simplebar-scrollbar-width: 5px;
 $select2-dropdown-bg-color: $bg-color;
-$select2-search-field-border: null;
+$select2-dropdown-highlight-color: $bg-color-secondary;
 $popup-border: 4px solid rgb(19, 211, 137);
 $popup-inner-border: 1px solid $navbar-color;
 $filter-add-button-hover-brightness: brightness(0);

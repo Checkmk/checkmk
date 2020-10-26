@@ -103,7 +103,7 @@ body {
       padding: 8px 20px;
       margin: 0 0 5px;
       color: rgb(255, 255, 255);
-      background: $bg-color;
+      background: $bg-color-default;
       border-spacing: 0;
 
       td {
@@ -825,7 +825,7 @@ div.snapin textarea,
   height: auto;
   padding: 3px 6px;
   color: $font-color;
-  background-color: $bg-color;
+  background: $bg-color-default;
   background-image: none;
   border: 1px solid $color-table-border;
   border-radius: $theme-border-radius;
@@ -838,7 +838,7 @@ div.snapin textarea,
 }
 
 span.select2 .select2-selection {
-  background-color: $select2-bg-color;
+  background-color: $bg-color-default;
   border-color: $select2-border-color;
 }
 

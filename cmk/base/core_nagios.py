@@ -1154,7 +1154,6 @@ def _get_needed_plugin_names(
 ) -> Tuple[Set[CheckPluginNameStr], Set[CheckPluginName], Set[InventoryPluginName]]:
     from cmk.base.check_table import get_needed_check_names  # pylint: disable=import-outside-toplevel
     needed_legacy_check_plugin_names: Set[CheckPluginNameStr] = set([])
-    needed_agent_based_check_plugin_names: Set[CheckPluginName] = set([])
 
     # In case the host is monitored as special agent, the check plugin for the special agent needs
     # to be loaded
@@ -1170,17 +1169,24 @@ def _get_needed_plugin_names(
         if isinstance(source, checkers.programs.SpecialAgentSource):
             needed_legacy_check_plugin_names.add(source.special_agent_plugin_file_name)
 
-    # Collect the needed check plugin names using the host check table
-    needed_check_plugins = get_needed_check_names(host_config.hostname,
-                                                  filter_mode="include_clustered",
-                                                  skip_ignored=False)
+    # Collect the needed check plugin names using the host check table.
+    # Even auto-migrated checks must be on the list of needed *agent based* plugins:
+    # In those cases, the module attribute will be `None`, so nothing will
+    # be imported; BUT: we need it in the list, because it must be considered
+    # when determining the needed *section* plugins.
+    # This matters in cases where the section is migrated, but the check
+    # plugins are not.
+    needed_agent_based_check_plugin_names = get_needed_check_names(
+        host_config.hostname,
+        filter_mode="include_clustered",
+        skip_ignored=False,
+    )
 
-    for check_plugin_name in needed_check_plugins:
-        if check_plugin_name not in config.legacy_check_plugin_names:
-            needed_agent_based_check_plugin_names.add(check_plugin_name)
+    for check_plugin_name in needed_agent_based_check_plugin_names:
+        legacy_name = config.legacy_check_plugin_names.get(check_plugin_name)
+        if legacy_name is None:
             continue
 
-        legacy_name = config.legacy_check_plugin_names[check_plugin_name]
         if config.check_info[legacy_name].get("extra_sections"):
             for section_name in config.check_info[legacy_name]["extra_sections"]:
                 if section_name in config.check_info:

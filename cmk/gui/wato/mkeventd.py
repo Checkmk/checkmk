@@ -93,6 +93,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     make_simple_link,
     make_simple_form_page_menu,
+    make_display_options_dropdown,
 )
 from cmk.gui.wato.pages.global_settings import (
     ABCGlobalSettingsMode,
@@ -1200,9 +1201,9 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 ),
             ],
             breadcrumb=breadcrumb,
-            inpage_search=PageMenuSearch(placeholder=_("Filter rule packs")),
         )
 
+        self._extend_display_dropdown(menu)
         return menu
 
     def _page_menu_topics_rules(self) -> Iterator[PageMenuTopic]:
@@ -1254,6 +1255,21 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 _page_menu_entry_snmp_mibs(),
             ],
         )
+
+    def _extend_display_dropdown(self, menu: PageMenu) -> None:
+        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+        display_dropdown.topics.insert(
+            0,
+            PageMenuTopic(
+                title=_("Filter rule packs"),
+                entries=[
+                    PageMenuEntry(
+                        title="",
+                        icon_name="trans",
+                        item=PageMenuSearch(),
+                    ),
+                ],
+            ))
 
     def action(self):
         action_outcome = self._event_simulation_action()
@@ -1622,9 +1638,9 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 ),
             ],
             breadcrumb=breadcrumb,
-            inpage_search=PageMenuSearch(placeholder=_("Filter rules")),
         )
 
+        self._extend_display_dropdown(menu)
         return menu
 
     def _page_menu_topics_rules(self) -> Iterator[PageMenuTopic]:
@@ -1662,6 +1678,21 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 ),
             ],
         )
+
+    def _extend_display_dropdown(self, menu: PageMenu) -> None:
+        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+        display_dropdown.topics.insert(
+            0,
+            PageMenuTopic(
+                title=_("Filter rules"),
+                entries=[
+                    PageMenuEntry(
+                        title="",
+                        icon_name="trans",
+                        item=PageMenuSearch(),
+                    ),
+                ],
+            ))
 
     def action(self):
         id_to_mkp = self._get_rule_pack_to_mkp_map()
@@ -2376,10 +2407,26 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
                 ),
             ],
             breadcrumb=breadcrumb,
-            inpage_search=PageMenuSearch(placeholder=_("Filter settings")),
         )
 
+        self._extend_display_dropdown(menu)
         return menu
+
+    def _extend_display_dropdown(self, menu: PageMenu) -> None:
+        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+        display_dropdown.topics.insert(
+            0,
+            PageMenuTopic(
+                title=_("Filter settings"),
+                entries=list(self._page_menu_entries_filter()),
+            ))
+
+    def _page_menu_entries_filter(self) -> Iterator[PageMenuEntry]:
+        yield PageMenuEntry(
+            title="",
+            icon_name="trans",
+            item=PageMenuSearch(),
+        )
 
     # TODO: Consolidate with ModeEditGlobals.action()
     def action(self):

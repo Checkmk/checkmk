@@ -44,6 +44,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     make_simple_link,
     make_simple_form_page_menu,
+    make_display_options_dropdown,
 )
 from cmk.gui.permissions import (
     permission_section_registry,
@@ -277,8 +278,22 @@ class ModeEditRole(RoleManagement, WatoMode):
             form_name="role",
             button_name="save",
         )
-        menu.inpage_search = PageMenuSearch(placeholder=_("Filter permissions"))
+        self._extend_display_dropdown(menu)
         return menu
+
+    def _extend_display_dropdown(self, menu: PageMenu) -> None:
+        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+
+        display_dropdown.topics.insert(
+            0,
+            PageMenuTopic(
+                title=_("Filter permissions"),
+                entries=[PageMenuEntry(
+                    title="",
+                    icon_name="trans",
+                    item=PageMenuSearch(),
+                )],
+            ))
 
     def action(self):
         if html.form_submitted("search"):

@@ -124,7 +124,6 @@ class PageMenuSearch(ABCPageMenuItem):
     """A text input box right in the menu, primarily for in page quick search"""
     target_mode: Optional[str] = None
     default_value: str = ""
-    placeholder: Optional[str] = None
 
 
 @dataclass
@@ -182,7 +181,6 @@ class PageMenu:
     """Representing the whole menu of the page"""
     dropdowns: List[PageMenuDropdown] = field(default_factory=list)
     breadcrumb: Optional[Breadcrumb] = None
-    inpage_search: Optional[PageMenuSearch] = None
 
     def __post_init__(self):
         # Add the display options dropdown
@@ -452,8 +450,6 @@ class PageMenuRenderer:
 
         html.open_tr()
         self._show_dropdowns(menu)
-        if menu.inpage_search:
-            self._show_inpage_search_field(menu.inpage_search)
         self._show_shortcuts(menu)
         html.close_tr()
 
@@ -559,13 +555,6 @@ class PageMenuRenderer:
             ("show_more_mode" if entry.is_show_more else "basic"),
         ] + html.normalize_css_spec(entry.css_classes)
 
-    def _show_inpage_search_field(self, item: PageMenuSearch) -> None:
-        html.open_td(class_="inpage_search")
-        inpage_search_form(mode=item.target_mode,
-                           default_value=item.default_value,
-                           placeholder=item.placeholder)
-        html.close_td()
-
 
 class SuggestedEntryRenderer:
     """Render the different item types for the suggestion area"""
@@ -644,6 +633,8 @@ class DropdownEntryRenderer:
             self._show_popup_link_item(entry, entry.item)
         elif isinstance(entry.item, PageMenuCheckbox):
             self._show_checkbox_link_item(entry, entry.item)
+        elif isinstance(entry.item, PageMenuSearch):
+            self._show_search_form_item(entry.item)
         else:
             raise NotImplementedError("Rendering not implemented for %s" % entry.item)
 
@@ -686,12 +677,16 @@ class DropdownEntryRenderer:
         html.span(title)
         html.close_a()
 
+    def _show_search_form_item(self, item: PageMenuSearch) -> None:
+        html.open_div(class_="searchform")
+        search_form(mode=item.target_mode, default_value=item.default_value)
+        html.close_div()
+
 
 # TODO: Cleanup all calls using title and remove the argument
 def search_form(title: Optional[str] = None,
                 mode: Optional[str] = None,
-                default_value: str = "",
-                placeholder: Optional[str] = None) -> None:
+                default_value: str = "") -> None:
     html.begin_form("search", add_transid=False)
     if title:
         html.write_text(title + ' ')
@@ -702,19 +697,6 @@ def search_form(title: Optional[str] = None,
     html.set_focus("search")
     html.write_text(" ")
     html.button("_do_seach", _("Search"))
-    html.end_form()
-
-
-# TODO: Mesh this function into one with the above search_form()
-def inpage_search_form(mode: Optional[str] = None,
-                       default_value: str = "",
-                       placeholder: Optional[str] = None) -> None:
-    html.begin_form("search", add_transid=False)
-    html.text_input("search", size=32, default_value=default_value, placeholder=placeholder)
-    html.hidden_fields()
-    if mode:
-        html.hidden_field("mode", mode, add_var=True)
-    html.icon("filter_line")
     html.end_form()
 
 

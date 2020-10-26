@@ -144,7 +144,6 @@ class ModeFolder(WatoMode):
                 ),
             ],
             breadcrumb=breadcrumb,
-            inpage_search=PageMenuSearch(placeholder=_("Filter hosts")),
         )
 
         self._extend_display_dropdown(menu)
@@ -165,6 +164,13 @@ class ModeFolder(WatoMode):
             PageMenuTopic(
                 title=_("Below this folder"),
                 entries=list(self._page_menu_entries_search()),
+            ))
+
+        display_dropdown.topics.insert(
+            0,
+            PageMenuTopic(
+                title=_("Filter hosts"),
+                entries=list(self._page_menu_entries_filter()),
             ))
 
     def _extend_help_dropdown(self, menu: PageMenu) -> None:
@@ -402,6 +408,13 @@ class ModeFolder(WatoMode):
                                                                      ])),
                 is_show_more=True,
             )
+
+    def _page_menu_entries_filter(self) -> Iterator[PageMenuEntry]:
+        yield PageMenuEntry(
+            title="",
+            icon_name="trans",
+            item=PageMenuSearch(),
+        )
 
     def _page_menu_entries_search(self) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(

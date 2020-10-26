@@ -162,7 +162,6 @@ SNMPConfig = SNMPHostConfig(
     character_encoding="ascii",
     is_usewalk_host=False,
     snmp_backend="classic",
-    record_stats=False,
 )
 
 

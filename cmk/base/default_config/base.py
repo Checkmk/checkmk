@@ -76,7 +76,6 @@ non_inline_snmp_hosts: _List = []
 snmp_limit_oid_range: _List = []
 # Ruleset to customize bulk size
 snmp_bulk_size: _List = []
-record_inline_snmp_stats = False
 snmp_default_community = 'public'
 snmp_communities: _List = []
 # override the rule based configuration

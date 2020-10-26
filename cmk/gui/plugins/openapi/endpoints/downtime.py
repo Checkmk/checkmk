@@ -44,6 +44,7 @@ DowntimeType = Literal['host', 'service', 'hostgroup', 'servicegroup']
 @endpoint_schema(constructors.collection_href('downtime'),
                  'cmk/create',
                  method='post',
+                 tag_group='Monitoring',
                  request_schema=request_schemas.CreateDowntime,
                  output_empty=True)
 def create_downtime(params):
@@ -109,6 +110,7 @@ def create_downtime(params):
 @endpoint_schema(constructors.collection_href('downtime'),
                  '.../collection',
                  method='get',
+                 tag_group='Monitoring',
                  query_params=[
                      HOST_NAME,
                      SERVICE_DESCRIPTION,
@@ -145,6 +147,7 @@ def list_service_downtimes(param):
 @endpoint_schema('/objects/host/{host_name}/objects/downtime/{downtime_id}',
                  '.../delete',
                  method='delete',
+                 tag_group='Monitoring',
                  path_params=[
                      HOST_NAME,
                      {

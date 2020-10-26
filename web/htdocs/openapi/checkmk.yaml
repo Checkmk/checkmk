@@ -2989,6 +2989,13 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.acknowledgement.set_acknowledgement_on_host_service
       parameters:
+      - description: The service description.
+        in: path
+        name: service_description
+        required: true
+        schema:
+          example: Memory
+          type: string
       - description: A hostname.
         in: path
         name: host_name
@@ -2996,13 +3003,6 @@ paths:
         schema:
           example: example.com
           pattern: '[-0-9a-zA-Z_.]+'
-          type: string
-      - description: The service description.
-        in: path
-        name: service_description
-        required: true
-        schema:
-          example: Memory
           type: string
       requestBody:
         content:
@@ -3533,11 +3533,11 @@ paths:
           \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/bi_rule/rule1\"\
           ,\n    json={\n        'id': 'rule1',\n        'nodes': [],\n        'params':\
           \ [{\n            'arguments': ['foo', 'bar']\n        }],\n        'node_visualization':\
-          \ {\n            'type': 'block',\n            'style_config': {}\n    \
+          \ {\n            'style_config': {},\n            'type': 'block'\n    \
           \    },\n        'properties': {\n            'comment': '',\n         \
-          \   'docu_url': '',\n            'icon': '',\n            'state_messages':\
-          \ {},\n            'title': ''\n        },\n        'aggregation_function':\
-          \ {\n            'restrict_state': 2,\n            'count': 1,\n       \
+          \   'title': '',\n            'state_messages': {},\n            'icon':\
+          \ '',\n            'docu_url': ''\n        },\n        'aggregation_function':\
+          \ {\n            'count': 1,\n            'restrict_state': 2,\n       \
           \     'type': 'best'\n        },\n        'computation_options': {\n   \
           \         'disabled': False\n        },\n        'pack_id': 'pack1'\n  \
           \  },\n)\nresp.raise_for_status()\ndata = resp.json()"
@@ -3551,11 +3551,11 @@ paths:
           \ \"Accept\": \"application/json\",\n    },\n    data=json.dumps({\n   \
           \     'id': 'rule1',\n        'nodes': [],\n        'params': [{\n     \
           \       'arguments': ['foo', 'bar']\n        }],\n        'node_visualization':\
-          \ {\n            'type': 'block',\n            'style_config': {}\n    \
+          \ {\n            'style_config': {},\n            'type': 'block'\n    \
           \    },\n        'properties': {\n            'comment': '',\n         \
-          \   'docu_url': '',\n            'icon': '',\n            'state_messages':\
-          \ {},\n            'title': ''\n        },\n        'aggregation_function':\
-          \ {\n            'restrict_state': 2,\n            'count': 1,\n       \
+          \   'title': '',\n            'state_messages': {},\n            'icon':\
+          \ '',\n            'docu_url': ''\n        },\n        'aggregation_function':\
+          \ {\n            'count': 1,\n            'restrict_state': 2,\n       \
           \     'type': 'best'\n        },\n        'computation_options': {\n   \
           \         'disabled': False\n        },\n        'pack_id': 'pack1'\n  \
           \  }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
@@ -3584,13 +3584,13 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/bi_rule/rule1\" \\\
           \n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept: application/json\"\
-          \ \\\n    aggregation_function='{\"restrict_state\": 2, \"count\": 1, \"\
+          \ \\\n    aggregation_function='{\"count\": 1, \"restrict_state\": 2, \"\
           type\": \"best\"}' \\\n    computation_options='{\"disabled\": false}' \\\
-          \n    id='rule1' \\\n    node_visualization='{\"type\": \"block\", \"style_config\"\
-          : {}}' \\\n    nodes='[]' \\\n    pack_id='pack1' \\\n    params='[{\"arguments\"\
-          : [\"foo\", \"bar\"]}]' \\\n    properties='{\"comment\": \"\", \"docu_url\"\
-          : \"\", \"icon\": \"\", \"state_messages\": {}, \"title\": \"\"}' \\\n \
-          \   --json"
+          \n    id='rule1' \\\n    node_visualization='{\"style_config\": {}, \"type\"\
+          : \"block\"}' \\\n    nodes='[]' \\\n    pack_id='pack1' \\\n    params='[{\"\
+          arguments\": [\"foo\", \"bar\"]}]' \\\n    properties='{\"comment\": \"\"\
+          , \"title\": \"\", \"state_messages\": {}, \"icon\": \"\", \"docu_url\"\
+          : \"\"}' \\\n    --json"
   /objects/bi_aggregation/{aggregation_id}:
     get:
       description: ''
@@ -3699,10 +3699,10 @@ paths:
           \                'host_regex': '',\n                'type': 'state_of_host'\n\
           \            },\n            'search': {\n                'type': 'empty'\n\
           \            }\n        },\n        'aggregation_visualization': {\n   \
-          \         'line_style': 'round',\n            'layout_id': 'builtin_default',\n\
-          \            'ignore_rule_styles': False\n        },\n        'computation_options':\
-          \ {\n            'use_hard_states': False,\n            'disabled': False,\n\
-          \            'escalate_downtimes_as_warn': False\n        },\n        'pack_id':\
+          \         'ignore_rule_styles': False,\n            'line_style': 'round',\n\
+          \            'layout_id': 'builtin_default'\n        },\n        'computation_options':\
+          \ {\n            'escalate_downtimes_as_warn': False,\n            'use_hard_states':\
+          \ False,\n            'disabled': False\n        },\n        'pack_id':\
           \ 'pack1'\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
@@ -3718,10 +3718,10 @@ paths:
           \  },\n        'node': {\n            'action': {\n                'host_regex':\
           \ '',\n                'type': 'state_of_host'\n            },\n       \
           \     'search': {\n                'type': 'empty'\n            }\n    \
-          \    },\n        'aggregation_visualization': {\n            'line_style':\
-          \ 'round',\n            'layout_id': 'builtin_default',\n            'ignore_rule_styles':\
-          \ False\n        },\n        'computation_options': {\n            'use_hard_states':\
-          \ False,\n            'disabled': False,\n            'escalate_downtimes_as_warn':\
+          \    },\n        'aggregation_visualization': {\n            'ignore_rule_styles':\
+          \ False,\n            'line_style': 'round',\n            'layout_id': 'builtin_default'\n\
+          \        },\n        'computation_options': {\n            'escalate_downtimes_as_warn':\
+          \ False,\n            'use_hard_states': False,\n            'disabled':\
           \ False\n        },\n        'pack_id': 'pack1'\n    }).encode('utf-8'),\n\
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
@@ -3753,10 +3753,10 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/bi_aggregation/aggregation1\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    aggregation_visualization='{\"line_style\"\
-          : \"round\", \"layout_id\": \"builtin_default\", \"ignore_rule_styles\"\
-          : false}' \\\n    computation_options='{\"use_hard_states\": false, \"disabled\"\
-          : false, \"escalate_downtimes_as_warn\": false}' \\\n    customer='customer1'\
+          \ application/json\" \\\n    aggregation_visualization='{\"ignore_rule_styles\"\
+          : false, \"line_style\": \"round\", \"layout_id\": \"builtin_default\"}'\
+          \ \\\n    computation_options='{\"escalate_downtimes_as_warn\": false, \"\
+          use_hard_states\": false, \"disabled\": false}' \\\n    customer='customer1'\
           \ \\\n    groups='{\"names\": [\"groupA\", \"groupB\"], \"paths\": [[\"\
           path\", \"group\", \"a\"], [\"path\", \"group\", \"b\"]]}' \\\n    id='aggr1'\
           \ \\\n    node='{\"action\": {\"host_regex\": \"\", \"type\": \"state_of_host\"\
@@ -4438,6 +4438,13 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.downtime.list_service_downtimes
       parameters:
+      - description: The service description.
+        in: query
+        name: service_description
+        required: false
+        schema:
+          example: Memory
+          type: string
       - description: A hostname.
         in: query
         name: host_name
@@ -4445,13 +4452,6 @@ paths:
         schema:
           example: example.com
           pattern: '[-0-9a-zA-Z_.]+'
-          type: string
-      - description: The service description.
-        in: query
-        name: service_description
-        required: false
-        schema:
-          example: Memory
           type: string
       responses:
         default:
@@ -4589,6 +4589,13 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.downtime.delete_downtime
       parameters:
+      - description: The id of the downtime
+        in: path
+        name: downtime_id
+        required: true
+        schema:
+          example: '54'
+          type: string
       - description: A hostname.
         in: path
         name: host_name
@@ -4596,13 +4603,6 @@ paths:
         schema:
           example: example.com
           pattern: '[-0-9a-zA-Z_.]+'
-          type: string
-      - description: The id of the downtime
-        in: path
-        name: downtime_id
-        required: true
-        schema:
-          example: '54'
           type: string
       responses:
         default:
@@ -7244,12 +7244,6 @@ paths:
       description: This list is filterable by various parameters.
       operationId: cmk.gui.plugins.openapi.endpoints.service._list_host_services
       parameters:
-      - description: Restrict the query to this particular site.
-        in: query
-        name: site
-        required: false
-        schema:
-          type: string
       - description: An query expression in nested dictionary form. If you want to
           use multiple expressions, nest them with the AND/OR operators.
         in: query
@@ -7260,6 +7254,12 @@ paths:
           - $ref: '#/components/schemas/Expr'
           example: '{"op": "not", "expr": {"op": "=", "left": "hosts.name", "right":
             "example.com"}}'
+      - description: Restrict the query to this particular site.
+        in: query
+        name: site
+        required: false
+        schema:
+          type: string
       - description: The desired columns of the services table. If left empty, a default
           set of columns is used.
         explode: true
@@ -7347,20 +7347,6 @@ paths:
       description: This list is filterable by various parameters.
       operationId: cmk.gui.plugins.openapi.endpoints.service._list_all_services
       parameters:
-      - description: A hostname.
-        in: query
-        name: host_name
-        required: false
-        schema:
-          example: example.com
-          pattern: '[-0-9a-zA-Z_.]+'
-          type: string
-      - description: Restrict the query to this particular site.
-        in: query
-        name: site
-        required: false
-        schema:
-          type: string
       - description: An query expression in nested dictionary form. If you want to
           use multiple expressions, nest them with the AND/OR operators.
         in: query
@@ -7371,6 +7357,14 @@ paths:
           - $ref: '#/components/schemas/Expr'
           example: '{"op": "not", "expr": {"op": "=", "left": "hosts.name", "right":
             "example.com"}}'
+      - description: A hostname.
+        in: query
+        name: host_name
+        required: false
+        schema:
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
+          type: string
       - description: The desired columns of the services table. If left empty, a default
           set of columns is used.
         explode: true
@@ -7385,6 +7379,12 @@ paths:
             type: string
           type: array
         style: form
+      - description: Restrict the query to this particular site.
+        in: query
+        name: site
+        required: false
+        schema:
+          type: string
       responses:
         default:
           content:
@@ -7536,14 +7536,6 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.service_discovery.move_service
       parameters:
-      - description: A hostname.
-        in: path
-        name: host_name
-        required: true
-        schema:
-          example: example.com
-          pattern: '[-0-9a-zA-Z_.]+'
-          type: string
       - description: 'The discovery state of the services. May be one of the following:
           active, active_ignored, clustered_ignored, clustered_monitored, clustered_undecided,
           clustered_vanished, custom, custom_ignored, ignored, legacy, legacy_ignored,
@@ -7562,6 +7554,14 @@ paths:
         schema:
           example: asoidjfo2jifa09
           pattern: '[a-zA-Z][a-zA-Z0-9_-]+'
+          type: string
+      - description: A hostname.
+        in: path
+        name: host_name
+        required: true
+        schema:
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
           type: string
       responses:
         default:
@@ -7613,14 +7613,6 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.service_discovery.execute
       parameters:
-      - description: A hostname.
-        in: path
-        name: host_name
-        required: true
-        schema:
-          example: example.com
-          pattern: '[-0-9a-zA-Z_.]+'
-          type: string
       - description: 'The mode of the discovery action. May be one of the following:
           tabula-rasa'
         in: path
@@ -7629,6 +7621,14 @@ paths:
         schema:
           example: tabula-rasa
           pattern: tabula-rasa
+          type: string
+      - description: A hostname.
+        in: path
+        name: host_name
+        required: true
+        schema:
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
           type: string
       responses:
         default:
@@ -8920,14 +8920,6 @@ paths:
         needs to be specified.'
       operationId: cmk.gui.cee.plugins.openapi.endpoints.agent.download_agent
       parameters:
-      - description: A hostname.
-        in: query
-        name: host_name
-        required: false
-        schema:
-          example: example.com
-          pattern: '[-0-9a-zA-Z_.]+'
-          type: string
       - description: The type of the operating system. May be one of aix_tgz, linux_deb,
           linux_rpm, linux_tgz, solaris_pkg, solaris_tgz, windows_msi
         in: query
@@ -8936,6 +8928,14 @@ paths:
         schema:
           example: linux_tgz
           pattern: aix_tgz|linux_deb|linux_rpm|linux_tgz|solaris_pkg|solaris_tgz|windows_msi
+          type: string
+      - description: A hostname.
+        in: query
+        name: host_name
+        required: false
+        schema:
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
           type: string
       - description: The configuration hash representing an agent.
         in: path
@@ -9234,15 +9234,15 @@ x-logo:
 x-tagGroups:
 - name: Monitoring
   tags:
+  - cmk.gui.plugins.openapi.endpoints.acknowledgement
+  - cmk.gui.plugins.openapi.endpoints.downtime
   - cmk.gui.plugins.openapi.endpoints.host
   - cmk.gui.plugins.openapi.endpoints.service
 - name: Setup
   tags:
-  - cmk.gui.plugins.openapi.endpoints.acknowledgement
   - cmk.gui.plugins.openapi.endpoints.activate_changes
   - cmk.gui.plugins.openapi.endpoints.bi
   - cmk.gui.plugins.openapi.endpoints.contact_group_config
-  - cmk.gui.plugins.openapi.endpoints.downtime
   - cmk.gui.plugins.openapi.endpoints.folder_config
   - cmk.gui.plugins.openapi.endpoints.host_config
   - cmk.gui.plugins.openapi.endpoints.host_group_config

@@ -47,6 +47,7 @@ SERVICE_DESCRIPTION = {
 @endpoint_schema(constructors.object_action_href('host', '{host_name}', 'acknowledge'),
                  'cmk/create',
                  method='post',
+                 tag_group='Monitoring',
                  path_params=[HOST_NAME],
                  request_schema=request_schemas.AcknowledgeHostProblem,
                  output_empty=True)
@@ -107,6 +108,7 @@ def set_acknowledgement_on_hostgroup(params):
 @endpoint_schema(constructors.domain_type_action_href('host', 'bulk-acknowledge'),
                  'cmk/create',
                  method='post',
+                 tag_group='Monitoring',
                  request_schema=request_schemas.BulkAcknowledgeHostProblem,
                  output_empty=True)
 def bulk_set_acknowledgement_on_hosts(params):
@@ -157,6 +159,7 @@ def bulk_set_acknowledgement_on_hosts(params):
 @endpoint_schema("/domain-types/service/{service_description}/actions/acknowledge/invoke",
                  'cmk/create',
                  method='post',
+                 tag_group='Monitoring',
                  path_params=[SERVICE_DESCRIPTION],
                  request_schema=request_schemas.AcknowledgeServiceProblem,
                  output_empty=True)
@@ -204,6 +207,7 @@ def set_acknowledgement_for_service(params):
     "/objects/host/{host_name}/objects/service/{service_description}/actions/acknowledge/invoke",
     'cmk/create',
     method='post',
+    tag_group='Monitoring',
     path_params=[
         HOST_NAME,
         SERVICE_DESCRIPTION,
@@ -248,6 +252,7 @@ def set_acknowledgement_on_host_service(params):
 @endpoint_schema(constructors.domain_type_action_href("service", "bulk-acknowledge"),
                  'cmk/service.bulk-acknowledge',
                  method='post',
+                 tag_group='Monitoring',
                  request_schema=request_schemas.BulkAcknowledgeServiceProblem,
                  output_empty=True)
 def bulk_set_acknowledgement_on_host_service(params):
@@ -305,6 +310,7 @@ def bulk_set_acknowledgement_on_host_service(params):
     constructors.object_action_href('servicegroup', '{servicegroup_name}', 'acknowledge'),
     'cmk/create',
     method='post',
+    tag_group='Monitoring',
     path_params=[{
         'servicegroup_name': fields.String(
             description='The name of the service group',

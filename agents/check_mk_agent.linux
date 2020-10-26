@@ -131,6 +131,13 @@ section_checkmk() {
     echo "SpoolDirectory: $SPOOLDIR"
     echo "PluginsDirectory: $PLUGINSDIR"
     echo "LocalDirectory: $LOCALDIR"
+
+    # If we are called via xinetd, try to find only_from configuration
+    if [ -n "$REMOTE_HOST" ]; then
+        echo -n 'OnlyFrom: '
+        sed -n '/^service[[:space:]]*'$XINETD_SERVICE_NAME'/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1
+        echo
+    fi
 }
 
 #
@@ -1303,14 +1310,8 @@ get_file_mtime() {
 }
 
 section_checkmk
-[ -z "$MK_SKIP_LABELS" ] && section_labels
 
-# If we are called via xinetd, try to find only_from configuration
-if [ -n "$REMOTE_HOST" ]; then
-    echo -n 'OnlyFrom: '
-    sed -n '/^service[[:space:]]*'$XINETD_SERVICE_NAME'/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1
-    echo
-fi
+[ -z "$MK_SKIP_LABELS" ] && section_labels
 
 [ -z "$MK_SKIP_DF" ] && section_df
 

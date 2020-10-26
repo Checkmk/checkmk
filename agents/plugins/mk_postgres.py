@@ -26,20 +26,16 @@ except ImportError:
     # We need typing only for testing
     pass
 
-try:
-    import psutil  # type: ignore[import]
-except ImportError:
-    sys.stderr.write(
-        "mk_postgres.py needs psutil python module. Please install it via 'pip install psutil'")
-    sys.exit(1)
-
-if psutil.LINUX:
-    import resource
-if psutil.WINDOWS:
-    import time
-
+OS = sys.platform
+IS_LINUX = OS == "linux"
+IS_WINDOWS = OS == "win32"
 LOGGER = logging.getLogger(__name__)
 ENCODING = "utf-8"
+
+if IS_LINUX:
+    import resource
+if IS_WINDOWS:
+    import time
 
 #   .--Postgres Base-------------------------------------------------------.
 #   |    ____           _                        ____                      |
@@ -355,11 +351,26 @@ class PostgresWin(PostgresBase):
         # type: () -> str
         """Gets all instances"""
 
-        # TODO: Clarify if this is really the windows pendant
+        procs_to_match = [
+            re.compile(pattern) for pattern in
+            [r"(.*)bin\\postgres(.*)", r"(.*)bin\\postmaster(.*)", r"(.*)bin\\edb-postgres(.*)"]
+        ]
+
+        taskslist = six.ensure_str(subprocess.check_output(
+            ["wmic", "process", "get", "processid,commandline", "/format:list"]),
+                                   encoding=ENCODING).split("\r\r\n\r\r\n\r\r\n")
+
         out = ""
-        for proc in psutil.win_service_iter():
-            if "postgres" in proc.name().lower() and proc.status() == "running":
-                out += "%s %s\n" % (proc.pid(), proc.binpath())
+        for task in taskslist:
+            task = task.lstrip().rstrip()
+            if len(task) == 0:
+                continue
+            cmd_line, PID = task.split("\r\r\n")
+            cmd_line = cmd_line.split("CommandLine=")[1]
+            PID = PID.split("ProcessId=")[1]
+            if any(pat.search(cmd_line) for pat in procs_to_match):
+                out += "%s %s\n" % (PID, cmd_line)
+
         return out.rstrip()
 
     def get_stats(self):
@@ -635,16 +646,23 @@ class PostgresLinux(PostgresBase):
 
     def get_instances(self):
         # type: () -> str
-        out = ""
 
         procs_to_match = [
             re.compile(pattern) for pattern in
             ["(.*)bin/postgres(.*)", "(.*)bin/postmaster(.*)", "(.*)bin/edb-postgres(.*)"]
         ]
-        for proc in psutil.process_iter():
-            joined_cmd_line = " ".join(proc.cmdline())
+
+        procs_list = six.ensure_str(subprocess.check_output(["ps", "h", "-eo", "pid:1,command:1"]),
+                                    encoding=ENCODING).split("\n")
+        out = ""
+        for proc in procs_list:
+            proc_list = proc.split(" ")
+            if len(proc_list) != 2:
+                continue
+            PID = proc_list[0]
+            joined_cmd_line = " ".join(proc_list[1])
             if any(pat.search(joined_cmd_line) for pat in procs_to_match):
-                out += "%s %s\n" % (proc.pid, joined_cmd_line)
+                out += "%s %s\n" % (PID, joined_cmd_line)
         return out.rstrip()
 
     def get_query_duration(self):
@@ -862,9 +880,9 @@ class PostgresLinux(PostgresBase):
 
 def postgres_factory(db_user, pg_instance=None):
     # type: (str, Dict[str, str]) -> PostgresBase
-    if psutil.LINUX:
+    if IS_LINUX:
         return PostgresLinux(db_user, pg_instance)
-    if psutil.WINDOWS:
+    if IS_WINDOWS:
         return PostgresWin(db_user, pg_instance)
 
     raise NotImplementedError("The OS type (%s) is not yet implemented." % os.name)
@@ -897,10 +915,10 @@ class PostgresConfig:
     def __init__(self):
 
         # Handle OS differences
-        if psutil.LINUX:
+        if IS_LINUX:
             default_path = self._default_linux
             conf_sep = ":"
-        if psutil.WINDOWS:
+        if IS_WINDOWS:
             default_path = self._default_win
             conf_sep = "|"
 
@@ -938,11 +956,11 @@ class PostgresConfig:
 
     def get_fall_back(self):
 
-        if psutil.WINDOWS:
+        if IS_WINDOWS:
             raise NotImplementedError(
                 "Fallback in case of missing cfg file on windows not implemented yet.\n"
                 "Please create a postgres.cfg under %s." % self.path_to_config)
-        if psutil.LINUX:
+        if IS_LINUX:
             for user_id in ("pgsql", "postgres"):
                 try:
                     proc = subprocess.Popen(["id", user_id],

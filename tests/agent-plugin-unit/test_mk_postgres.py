@@ -6,7 +6,7 @@
 
 # pylint: disable=protected-access,redefined-outer-name
 import sys
-import psutil  # type: ignore[import]
+import copy
 import pytest  # type: ignore[import]
 from mock import patch, Mock
 from utils import import_module
@@ -46,7 +46,19 @@ def mk_postgres():
     return import_module("mk_postgres.py")
 
 
-def test_postgres_linux_config_without_instance(mk_postgres, monkeypatch):
+@pytest.fixture()
+def is_linux(monkeypatch, mk_postgres):
+    monkeypatch.setattr(mk_postgres, 'IS_WINDOWS', False)
+    monkeypatch.setattr(mk_postgres, 'IS_LINUX', True)
+
+
+@pytest.fixture()
+def is_windows(monkeypatch, mk_postgres):
+    monkeypatch.setattr(mk_postgres, 'IS_WINDOWS', True)
+    monkeypatch.setattr(mk_postgres, 'IS_LINUX', False)
+
+
+def test_postgres_linux_config_without_instance(mk_postgres, monkeypatch, is_linux):
 
     monkeypatch.setattr(mk_postgres, "open_wrapper", lambda *_args: VALID_CONFIG_WITHOUT_INSTANCE)
     config = mk_postgres.PostgresConfig()
@@ -54,8 +66,8 @@ def test_postgres_linux_config_without_instance(mk_postgres, monkeypatch):
     assert config.dbuser == "user_xy"
 
 
-def test_postgres_linux_config_with_instance(mk_postgres, monkeypatch):
-    config = VALID_CONFIG_WITH_INSTANCES
+def test_postgres_linux_config_with_instance(mk_postgres, monkeypatch, is_linux):
+    config = copy.deepcopy(VALID_CONFIG_WITH_INSTANCES)
     config[-1] = config[-1].format(sep=SEP_LINUX)
     monkeypatch.setattr(mk_postgres, "open_wrapper", lambda *_args: config)
 
@@ -68,17 +80,8 @@ def test_postgres_linux_config_with_instance(mk_postgres, monkeypatch):
     assert pgconfig.instances[0]["pg_passfile"] == "/PATH/TO/.pgpass"
 
 
-def test_postgres_windows_config_without_instance(mk_postgres, monkeypatch):
-    monkeypatch.setattr(mk_postgres, "open_wrapper", lambda *_args: VALID_CONFIG_WITHOUT_INSTANCE)
-    monkeypatch.setattr(psutil, "WINDOWS", True)
-    monkeypatch.setattr(psutil, "LINUX", False)
-    config = mk_postgres.PostgresConfig()
-    assert len(config.instances) == 0
-    assert config.dbuser == "user_xy"
-
-
-def test_postgres_windows_config_with_instance(mk_postgres, monkeypatch):
-    config = VALID_CONFIG_WITH_INSTANCES
+def test_postgres_windows_config_with_instance(mk_postgres, monkeypatch, is_windows):
+    config = copy.deepcopy(VALID_CONFIG_WITH_INSTANCES)
     config[-1] = config[-1].format(sep=SEP_WINDOWS)
     monkeypatch.setattr(mk_postgres, "open_wrapper", lambda *_args: config)
     pgconfig = mk_postgres.PostgresConfig()
@@ -91,7 +94,7 @@ def test_postgres_windows_config_with_instance(mk_postgres, monkeypatch):
 
 
 @patch('subprocess.Popen')
-def test_postgres_factory_linux_without_instance(mock_Popen, mk_postgres):
+def test_postgres_factory_linux_without_instance(mock_Popen, mk_postgres, is_linux):
     process_mock = Mock()
     attrs = {
         'communicate.side_effect': [('/usr/lib/postgres/psql', None), ('postgres\ndb1', None),
@@ -109,11 +112,9 @@ def test_postgres_factory_linux_without_instance(mock_Popen, mk_postgres):
     assert myPostgresOnLinux.instance == {"pg_database": "postgres", "pg_port": "5432"}
 
 
-@patch('psutil.WINDOWS', True)
-@patch('psutil.LINUX', False)
 @patch('os.path.isfile', return_value=True)
 @patch('subprocess.Popen')
-def test_postgres_factory_win_without_instance(mock_Popen, mock_isfile, mk_postgres):
+def test_postgres_factory_win_without_instance(mock_Popen, mock_isfile, mk_postgres, is_windows):
     process_mock = Mock()
     attrs = {'communicate.side_effect': [(b'postgres\ndb1', b'ok'), (b'12.1', b'ok')]}
     process_mock.configure_mock(**attrs)
@@ -130,7 +131,7 @@ def test_postgres_factory_win_without_instance(mock_Popen, mock_isfile, mk_postg
 
 
 @patch('subprocess.Popen')
-def test_postgres_factory_linux_with_instance(mock_Popen, monkeypatch, mk_postgres):
+def test_postgres_factory_linux_with_instance(mock_Popen, monkeypatch, mk_postgres, is_linux):
     instance = {
         'env_file': '/home/postgres/mydb.env',
         'name': 'mydb',
@@ -170,11 +171,15 @@ def test_postgres_factory_linux_with_instance(mock_Popen, monkeypatch, mk_postgr
     }
 
 
-@patch('psutil.WINDOWS', True)
-@patch('psutil.LINUX', False)
 @patch('os.path.isfile', return_value=True)
 @patch('subprocess.Popen')
-def test_postgres_factory_windows_with_instance(mock_Popen, mock_isfile, monkeypatch, mk_postgres):
+def test_postgres_factory_windows_with_instance(
+    mock_Popen,
+    mock_isfile,
+    monkeypatch,
+    mk_postgres,
+    is_windows,
+):
     instance = {
         'env_file': 'c:\\User\\mydb.env',
         'name': 'mydb',

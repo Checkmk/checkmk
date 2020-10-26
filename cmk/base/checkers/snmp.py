@@ -221,6 +221,13 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         if snmp_config.is_usewalk_host:
             return "SNMP (use stored walk)"
 
+        if snmp_config.snmp_backend == "inline":
+            backend = "Inline"
+        elif snmp_config.snmp_backend == "pysnmp":
+            backend = "PySNMP"
+        else:
+            backend = "Classic"
+
         if snmp_config.is_snmpv3_host:
             credentials_text = "Credentials: '%s'" % ", ".join(snmp_config.credentials)
         else:
@@ -236,7 +243,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             credentials_text,
             bulk,
             snmp_config.port,
-            snmp_config.snmp_backend.value,
+            backend,
         )
 
 

@@ -19,16 +19,7 @@ from pyghmi.exceptions import IpmiException  # type: ignore[import]
 from cmk.utils.type_defs import AgentRawData, result, SectionName
 
 from cmk.snmplib import snmp_table
-from cmk.snmplib.type_defs import (
-    SNMPDetectSpec,
-    SNMPHostConfig,
-    SNMPRawData,
-    SNMPTable,
-    SNMPTree,
-    SNMPBackend,
-    SNMPEnumEncoder,
-    read_as_enum,
-)
+from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPHostConfig, SNMPRawData, SNMPTable, SNMPTree
 
 from cmk.fetchers import FetcherType, MKFetcherError, snmp
 from cmk.fetchers.agent import DefaultAgentFileCache, NoCache
@@ -45,7 +36,7 @@ SensorReading = namedtuple(
 
 
 def json_identity(data):
-    return json.loads(json.dumps(data, cls=SNMPEnumEncoder), object_hook=read_as_enum)
+    return json.loads(json.dumps(data))
 
 
 def clone_file_cache(file_cache):
@@ -275,7 +266,7 @@ class ABCTestSNMPFetcher(ABC):
                 snmpv3_contexts=[],
                 character_encoding=None,
                 is_usewalk_host=False,
-                snmp_backend=SNMPBackend.classic,
+                snmp_backend="classic",
                 record_stats=False,
             ),
         )

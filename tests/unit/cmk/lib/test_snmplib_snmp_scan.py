@@ -18,7 +18,7 @@ from cmk.utils.type_defs import SectionName
 
 import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_scan as snmp_scan
-from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPHostConfig, SNMPBackend
+from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPHostConfig
 from cmk.snmplib.utils import evaluate_snmp_detection
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -161,7 +161,7 @@ SNMPConfig = SNMPHostConfig(
     snmpv3_contexts=[],
     character_encoding="ascii",
     is_usewalk_host=False,
-    snmp_backend=SNMPBackend.classic,
+    snmp_backend="classic",
     record_stats=False,
 )
 

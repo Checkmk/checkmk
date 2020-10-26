@@ -11,15 +11,7 @@ from testlib.base import Scenario
 from cmk.utils.log import logger
 from cmk.utils.type_defs import SectionName
 import cmk.snmplib.snmp_table as snmp_table
-from cmk.snmplib.type_defs import (
-    ABCSNMPBackend,
-    OID_END,
-    OIDBytes,
-    OIDEnd,
-    SNMPHostConfig,
-    SNMPTree,
-    SNMPBackend,
-)
+from cmk.snmplib.type_defs import ABCSNMPBackend, OID_END, OIDBytes, OIDEnd, SNMPHostConfig, SNMPTree
 
 import cmk.base.config as config
 from cmk.base.api.agent_based.register.section_plugins_legacy import _create_snmp_trees
@@ -39,7 +31,7 @@ SNMPConfig = SNMPHostConfig(
     snmpv3_contexts=[],
     character_encoding="ascii",
     is_usewalk_host=False,
-    snmp_backend=SNMPBackend.classic,
+    snmp_backend="classic",
     record_stats=False,
 )
 

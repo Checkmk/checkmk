@@ -8,7 +8,6 @@ import json
 from typing import Any, Dict, IO, List, Literal, Optional
 
 from cmk.utils.type_defs import HostAddress, HostName
-from cmk.snmplib.type_defs import SNMPEnumEncoder
 
 import cmk.base.config as config
 
@@ -25,7 +24,7 @@ def dump(hostname: HostName, ipaddress: Optional[HostAddress], file_: IO[str]) -
 
 def dumps(hostname: HostName, ipaddress: Optional[HostAddress]) -> str:
     """Return the configuration to `hostname` fetchers."""
-    return json.dumps(_make(hostname, ipaddress), cls=SNMPEnumEncoder)
+    return json.dumps(_make(hostname, ipaddress))
 
 
 def _make(

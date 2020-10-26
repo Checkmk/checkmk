@@ -52,8 +52,6 @@ from cmk.utils.type_defs import (
 )
 import cmk.utils.cpu_tracking as cpu_tracking
 
-from cmk.snmplib.type_defs import SNMPBackend
-
 from cmk.fetchers.controller import FetcherMessage
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -265,7 +263,7 @@ def do_check(
         # stats feature is a very rarely used debugging feature, the analyzation and fix is
         # postponed now.
         if config.record_inline_snmp_stats and ipaddress is not None and host_config.snmp_config(
-                ipaddress).snmp_backend == SNMPBackend.inline:
+                ipaddress).snmp_backend == "inline":
             inline.snmp_stats_save()
 
 

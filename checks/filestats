@@ -89,6 +89,8 @@ def check_filestats_count(count, params):
 
 def check_filestats_extremes(files, params, show_all_files=False):
     '''common check result - used by main and extremes_only check'''
+    if not files:
+        return
     long_output = {}
     for key, hr_function, minlabel, maxlabel in (
         ('size', get_bytes_human_readable, 'smallest', 'largest'),

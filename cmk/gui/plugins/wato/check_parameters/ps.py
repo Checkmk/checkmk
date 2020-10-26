@@ -6,6 +6,7 @@
 
 import re
 from typing import Any, Dict
+import copy
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -250,6 +251,11 @@ def ps_cleanup_params(params):
     #   "user" : "foo",
     #   "levels" : (1, 1, 99999, 99999)
     # }
+
+    # TODO: This is a workaround which makes sure input arguments are not getting altered.
+    #       A nice implementation would return a new dict based on the input
+    params = copy.deepcopy(params)
+
     if isinstance(params, (list, tuple)):
         if len(params) == 5:
             procname, warnmin, okmin, okmax, warnmax = params

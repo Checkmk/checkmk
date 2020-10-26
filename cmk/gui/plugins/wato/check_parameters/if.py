@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any, List, Tuple as _Tuple, Union
-
+import copy
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
@@ -42,6 +42,11 @@ from cmk.gui.plugins.wato.check_parameters.utils import vs_interface_traffic
 
 
 def transform_if(v):
+
+    # TODO: This is a workaround which makes sure input arguments are not getting altered.
+    #       A nice implementation would return a new dict based on the input
+    v = copy.deepcopy(v)
+
     new_traffic: List[_Tuple[str, _Tuple[str, _Tuple[str, _Tuple[Union[int, float], Any]]]]] = []
 
     if 'traffic' in v and not isinstance(v['traffic'], list):

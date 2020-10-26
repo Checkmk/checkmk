@@ -181,6 +181,7 @@ def generate_product_version(version, revision_text):
     major, minor, build = '1', '0', '0'
     try:
         major, minor, build = [x.lstrip("0") for x in version.split("-")[0].split(".")[:3]]
+        minor = '0' if minor == '' else minor
         build = '0' if build == '' else build
         if len(major) > 3:
             # Looks like a daily build.. 2015.03.05

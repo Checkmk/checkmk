@@ -782,7 +782,9 @@ class ModeEditUser(WatoMode):
             html.write_html(vs_sites.value_to_text(authorized_sites))
         html.help(vs_sites.help())
 
-        self._show_custom_user_attributes('ident')
+        custom_user_attr_topics = userdb_utils.get_user_attributes_by_topic()
+
+        self._show_custom_user_attributes(custom_user_attr_topics.get('ident', []))
 
         forms.header(_("Security"))
         forms.section(_("Authentication"))
@@ -902,7 +904,7 @@ class ModeEditUser(WatoMode):
                 html.hidden_field("role_" + role_id, '1' if is_member else '')
         if self._is_locked('roles') and not is_member_of_at_least_one:
             html.i(_('No roles assigned.'))
-        self._show_custom_user_attributes('security')
+        self._show_custom_user_attributes(custom_user_attr_topics.get('security', []))
 
         # Contact groups
         forms.header(_("Contact Groups"), isopen=False)
@@ -1026,11 +1028,13 @@ class ModeEditUser(WatoMode):
                   "setting <a href=\"wato.py?mode=edit_configvar&varname=notification_fallback_email\">"
                   "Fallback email address for notifications</a>."))
 
-        self._show_custom_user_attributes('notify')
+        self._show_custom_user_attributes(custom_user_attr_topics.get('notify', []))
 
-        forms.header(_("Personal Settings"), isopen=False)
+        forms.header(_("Personal settings"), isopen=False)
         select_language(self._user)
-        self._show_custom_user_attributes('personal')
+        self._show_custom_user_attributes(custom_user_attr_topics.get('personal', []))
+        forms.header(_("Interface settings"), isopen=False)
+        self._show_custom_user_attributes(custom_user_attr_topics.get('interface', []))
 
         # Later we could add custom macros here, which then could be used
         # for notifications. On the other hand, if we implement some check_mk
@@ -1079,11 +1083,8 @@ class ModeEditUser(WatoMode):
             ],
         )
 
-    def _show_custom_user_attributes(self, topic):
-        for name, attr in userdb.get_user_attributes():
-            if topic is not None and topic != attr.topic():
-                continue  # skip attrs of other topics
-
+    def _show_custom_user_attributes(self, custom_attr):
+        for name, attr in custom_attr:
             vs = attr.valuespec()
             forms.section(_u(vs.title()))
             if not self._is_locked(name):

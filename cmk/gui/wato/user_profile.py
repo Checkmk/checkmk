@@ -23,6 +23,7 @@ from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
 from cmk.gui.config import SiteId, SiteConfiguration
 from cmk.gui.plugins.userdb.htpasswd import hash_password
+from cmk.gui.plugins.userdb.utils import get_user_attributes_by_topic
 from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, MKAuthException
 from cmk.gui.i18n import _, _l, _u
 from cmk.gui.globals import html, request as global_request
@@ -490,7 +491,7 @@ class UserProfile(ABCUserProfilePage):
         html.begin_form("profile", method="POST")
         html.prevent_password_auto_completion()
         html.open_div(class_="wato")
-        forms.header(self._page_title())
+        forms.header(_("Personal settings"))
 
         forms.section(_("Name"), simple=True)
         html.write_text(user.get("alias", config.user.id))
@@ -509,22 +510,29 @@ class UserProfile(ABCUserProfilePage):
                                                                  user.get("notification_method"))
 
         if config.user.may('general.edit_user_attributes'):
-            for name, attr in userdb.get_user_attributes():
-                if attr.user_editable():
-                    vs = attr.valuespec()
-                    forms.section(_u(vs.title()))
-                    value = user.get(name, vs.default_value())
-                    if not attr.permission() or config.user.may(attr.permission()):
-                        vs.render_input("ua_" + name, value)
-                        html.help(_u(vs.help()))
-                    else:
-                        html.write(vs.value_to_text(value))
+            custom_user_attr_topics = get_user_attributes_by_topic()
+            _show_custom_user_attr(user, custom_user_attr_topics.get("personal", []))
+            forms.header(_("Interface settings"), isopen=False)
+            _show_custom_user_attr(user, custom_user_attr_topics.get("interface", []))
 
         forms.end()
         html.close_div()
         html.hidden_fields()
         html.end_form()
         html.footer()
+
+
+def _show_custom_user_attr(user, custom_attr):
+    for name, attr in custom_attr:
+        if attr.user_editable():
+            vs = attr.valuespec()
+            forms.section(_u(vs.title()))
+            value = user.get(name, vs.default_value())
+            if not attr.permission() or config.user.may(attr.permission()):
+                vs.render_input("ua_" + name, value)
+                html.help(_u(vs.help()))
+            else:
+                html.write(vs.value_to_text(value))
 
 
 @page_registry.register_page("wato_ajax_profile_repl")

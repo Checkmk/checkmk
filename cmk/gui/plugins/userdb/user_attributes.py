@@ -142,7 +142,7 @@ class UIThemeUserAttribute(UserAttribute):
         return "ui_theme"
 
     def topic(self):
-        return "personal"
+        return "interface"
 
     def valuespec(self):
         return Alternative(
@@ -172,7 +172,7 @@ class UISidebarPosition(UserAttribute):
         return "ui_sidebar_position"
 
     def topic(self):
-        return "personal"
+        return "interface"
 
     def valuespec(self):
         return DropdownChoice(
@@ -192,7 +192,7 @@ class UIIconPlacement(UserAttribute):
         return "icons_per_item"
 
     def topic(self):
-        return "personal"
+        return "interface"
 
     def valuespec(self):
         return DropdownChoice(
@@ -212,7 +212,7 @@ class UIBasicAdvancedToggle(UserAttribute):
         return "show_mode"
 
     def topic(self):
-        return "personal"
+        return "interface"
 
     def valuespec(self):
         return DropdownChoice(

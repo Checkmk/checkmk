@@ -458,3 +458,12 @@ user_attribute_registry = UserAttributeRegistry()
 
 def get_user_attributes():
     return [(name, attribute_class()) for name, attribute_class in user_attribute_registry.items()]
+
+
+def get_user_attributes_by_topic():
+    topics: Dict = {}
+    for name, attr_class in user_attribute_registry.items():
+        topic = attr_class().topic()
+        topics.setdefault(topic, []).append((name, attr_class()))
+
+    return topics

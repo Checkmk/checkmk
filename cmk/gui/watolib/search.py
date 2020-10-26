@@ -263,7 +263,7 @@ class MatchItemGeneratorGlobalSettings(ABCMatchItemGenerator):
             title=title,
             topic="Global settings",
             url="wato.py?mode=edit_configvar&varname=%s" % ident,
-            match_texts=[title],
+            match_texts=[title, config_var.ident()],
         ) for ident, config_var_type in self._config_variable_registry.items()
                     for config_var in [config_var_type()]
                     for title in [config_var.valuespec().title()]

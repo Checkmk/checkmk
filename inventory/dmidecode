@@ -4,6 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Callable, Dict, List, Mapping, Optional, Tuple, Union
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+import time
+
+Converter = Union[str, Tuple[str, Callable[[str], Union[str, float, None]]]]
+
 # Example output:
 # BIOS Information
 # 	Vendor: LENOVO
@@ -46,26 +53,27 @@
 # Note: on Linux \t is replaced by : and then the split
 # is done by :. On Windows the \t comes 1:1 and no splitting
 # is being done. So we need to split manually here
-def inv_dmidecode(info):
-    section_name = None
-    section_lines = []
+def inv_dmidecode(info: StringTable) -> None:
+    # Note: we cannot use a dict here, we may have multiple subsections with the same title
+    subsections: List[Tuple[str, StringTable]] = []
+    current_lines: StringTable = []  # these will not be used
     for line in info:
         # Windows plugin keeps tabs and has no separator
         if len(line) == 1:
             parts = line[0].replace("\t", ":").split(":")
             line = [x.strip() for x in parts]
+
         if len(line) == 1:
-            if section_name:
-                inv_dmidecode_parse_section(section_name, section_lines)
-            section_name = line[0]
-            section_lines = []
+            current_lines = []
+            subsections.append((line[0], current_lines))
         else:
-            section_lines.append(line[1:])
-    if section_name:
-        inv_dmidecode_parse_section(section_name, section_lines)
+            current_lines.append(line[1:])
+
+    for title, lines in subsections:
+        inv_dmidecode_parse_section(title, lines)
 
 
-def inv_dmidecode_parse_section(name, lines):
+def inv_dmidecode_parse_section(name: str, lines: List[List[str]]) -> None:
     lines = [[w.strip() for w in words] for words in lines]
     if name == "BIOS Information":
         inv_dmidecode_parse_bios(lines)
@@ -89,67 +97,70 @@ def inv_dmidecode_parse_section(name, lines):
     # TODO: Summe ueber alle Arrays ausrechnen
 
 
-def inv_dmidecode_parse_date(value):
+def inv_dmidecode_parse_date(value: str) -> Optional[float]:
     try:
         # 10/17/2008
         return time.mktime(time.strptime(value, "%m/%d/%Y"))
     except Exception:
-        return
+        return None
 
 
-def inv_dmidecode_parse_bios(lines):
-    inv_dmidecode_parse_generic(
-        "software.bios.", lines, {
-            "Vendor": "vendor",
-            "Version": "version",
-            "Release Date": ("date", inv_dmidecode_parse_date),
-            "BIOS Revision": "revision",
-            "Firmware Revision": "firmware",
-        })
+def inv_dmidecode_parse_bios(lines: List[List[str]]) -> None:
+    inv_tree("software.bios.").update(
+        _make_dict(
+            lines, {
+                "Vendor": "vendor",
+                "Version": "version",
+                "Release Date": ("date", inv_dmidecode_parse_date),
+                "BIOS Revision": "revision",
+                "Firmware Revision": "firmware",
+            }))
 
 
-def inv_dmidecode_parse_system(lines):
-    inv_dmidecode_parse_generic(
-        "hardware.system.", lines, {
+def inv_dmidecode_parse_system(lines: List[List[str]]) -> None:
+    inv_tree("hardware.system.").update(
+        _make_dict(
+            lines, {
+                "Manufacturer": "manufacturer",
+                "Product Name": "product",
+                "Version": "version",
+                "Serial Number": "serial",
+                "UUID": "uuid",
+                "Family": "family",
+            }))
+
+
+def inv_dmidecode_parse_chassis(lines: List[List[str]]) -> None:
+    inv_tree("hardware.chassis.").update(
+        _make_dict(lines, {
             "Manufacturer": "manufacturer",
-            "Product Name": "product",
-            "Version": "version",
-            "Serial Number": "serial",
-            "UUID": "uuid",
-            "Family": "family",
-        })
-
-
-def inv_dmidecode_parse_chassis(lines):
-    inv_dmidecode_parse_generic("hardware.chassis.", lines, {
-        "Manufacturer": "manufacturer",
-        "Type": "type",
-    })
+            "Type": "type",
+        }))
 
 
 # Note: This node is also being filled by lnx_cpuinfo
-def inv_dmidecode_parse_processor(lines):
-    cpu_info = {}
-    for line in lines:
-        if line[0] == "Manufacturer":
-            cpu_info["vendor"] = {
-                "GenuineIntel": "intel",
-                "Intel(R) Corporation": "intel",
-                "AuthenticAMD": "amd",
-            }.get(line[1], line[1])
-        elif line[0] == "Max Speed":  # 2530 MHz
-            cpu_info["max_speed"] = dmidecode_parse_speed(line[1])
-        elif line[0] == "Voltage":
-            cpu_info["voltage"] = dmidecode_parse_voltage(line[1])
-        elif line[0] == "Status":
-            if line[1] == "Unpopulated":
-                return
+def inv_dmidecode_parse_processor(lines: List[List[str]]) -> None:
+    vendor_map = {
+        "GenuineIntel": "intel",
+        "Intel(R) Corporation": "intel",
+        "AuthenticAMD": "amd",
+    }
+    cpu_info = _make_dict(
+        lines, {
+            "Manufacturer": ("vendor", lambda v: vendor_map.get(v, v)),
+            "Max Speed": ("max_speed", dmidecode_parse_speed),
+            "Voltage": ("voltage", dmidecode_parse_voltage),
+            "Status": "status",
+        })
 
-    # Only update our CPU information if the socket is populated
+    if cpu_info.pop("Status", "") == "Unpopulated":
+        # Only update our CPU information if the socket is populated
+        return
+
     inv_tree("hardware.cpu.").update(cpu_info)
 
 
-# def inv_dmidecode_parse_mem_controller(lines):
+# def inv_dmidecode_parse_mem_controller(lines: List[List[str]]) -> None:
 #     # TODO: Can we have multiple memory controllers
 #     node = inv_tree("hardware.memory.")
 #     for line in lines:
@@ -160,7 +171,7 @@ def inv_dmidecode_parse_processor(lines):
 #         elif line[0] == "Memory Module Voltage":
 #             node["module_voltage"] = dmidecode_parse_voltage(line[1])
 #
-# def inv_dmidecode_parse_mem_module(lines):
+# def inv_dmidecode_parse_mem_module(lines: List[List[str]]) -> None:
 #     node = inv_tree_list("hardware.memory.modules:")
 #     module = {}
 #     node.append(module)
@@ -179,7 +190,7 @@ def inv_dmidecode_parse_processor(lines):
 #             module["current_speed"] = speed
 
 
-def inv_dmidecode_parse_physical_mem_array(lines):
+def inv_dmidecode_parse_physical_mem_array(lines: List[List[str]]) -> None:
     # We expect several possible arrays
     node = inv_tree_list("hardware.memory.arrays:")
 
@@ -191,23 +202,19 @@ def inv_dmidecode_parse_physical_mem_array(lines):
         array = {"devices": []}
         node.append(array)
 
-    for line in lines:
-        if line[0] == "Location":
-            array["location"] = line[1]
-        elif line[0] == "Use":
-            array["use"] = line[1]
-        elif line[0] == "Error Correction Type":
-            array["error_correction"] = line[1]
-        elif line[0] == "Maximum Capacity":
-            array["maximum_capacity"] = dmidecode_parse_size(line[1])
+    array.update(
+        _make_dict(
+            lines, {
+                "Location": "location",
+                "Use": "use",
+                "Error Correction Type": "error_correction",
+                "Maximum Capacity": ("maximum_capacity", dmidecode_parse_size),
+            }))
 
 
-def inv_dmidecode_parse_mem_device(lines):
-    node = inv_tree_list("hardware.memory.arrays:")
-    device = {}
+def inv_dmidecode_parse_mem_device(lines: List[List[str]]) -> None:
 
-    inv_dmidecode_parse_generic(
-        device,
+    device = _make_dict(
         lines,
         {
             "Total Width": "total_width",  # 64 bits
@@ -224,7 +231,8 @@ def inv_dmidecode_parse_mem_device(lines):
             "Part Number": "part_number",  # Not Specified
             "Speed": "speed",  # 667 MHz
             "Size": "size",  # 2048 MB
-        })
+        },
+    )
 
     # Do we already have an entry for a memory array? Then
     # we assume that this device belongs to the most recently
@@ -236,6 +244,7 @@ def inv_dmidecode_parse_mem_device(lines):
     if device.get("locator") and device["locator"].startswith("PROC"):
         index = device["locator"].split()[1]
 
+    node = inv_tree_list("hardware.memory.arrays:")
     if node:
         try:
             array = node[int(index) - 1]
@@ -252,60 +261,67 @@ def inv_dmidecode_parse_mem_device(lines):
         array["devices"].append(device)
 
 
-def inv_dmidecode_parse_generic(node, lines, keyinfo):
-    if isinstance(node, str):
-        node = inv_tree(node)
-    for line in lines:
-        if line[0] in keyinfo:
-            key = keyinfo[line[0]]
-            if line[1] != "Not Specified":
-                value = line[1]
-                if isinstance(key, tuple):
-                    key, transform = key
-                    value = transform(value)
-                    if value is None:
-                        continue
-                node[key] = value
+def _make_dict(
+    lines: List[List[str]],
+    converter_map: Mapping[str, Converter],
+) -> Dict[str, Union[float, str, None]]:
+    dict_: Dict[str, Union[float, str, None]] = {}
+    for name, raw_value, *_rest in lines:
+        if name not in converter_map or raw_value == "Not Specified":
+            continue
+
+        converter = converter_map[name]
+        if isinstance(converter, str):
+            dict_[converter] = raw_value
+            continue
+
+        label, transform = converter
+        value = transform(raw_value)
+        if value is not None:
+            dict_[label] = value
+
+    return dict_
 
 
-def dmidecode_parse_size(v):  # into Bytes (int)
+def dmidecode_parse_size(v: str) -> Optional[float]:  # into Bytes (int)
     if not v or v == "Unknown":
         return None
 
     parts = v.split()
     if parts[1].lower() == "tb":
         return int(parts[0]) * 1024 * 1024 * 1024 * 1024
-    elif parts[1].lower() == "gb":
+    if parts[1].lower() == "gb":
         return int(parts[0]) * 1024 * 1024 * 1024
-    elif parts[1].lower() == "mb":
+    if parts[1].lower() == "mb":
         return int(parts[0]) * 1024 * 1024
-    elif parts[1].lower() == "kb":
+    if parts[1].lower() == "kb":
         return int(parts[0]) * 1024
     return int(parts[0])
 
 
-def dmidecode_parse_speed(v):  # into Hz (float)
+def dmidecode_parse_speed(v: str) -> Optional[float]:  # into Hz (float)
     if not v or v == "Unknown":
         return None
 
     parts = v.split()
     if parts[1] == "GHz":
         return float(parts[0]) * 1000000000.0
-    elif parts[1] == "MHz":
+    if parts[1] == "MHz":
         return float(parts[0]) * 1000000.0
-    elif parts[1] == "kHz":
+    if parts[1] == "kHz":
         return float(parts[0]) * 1000.0
-    elif parts[1] == "Hz":
+    if parts[1] == "Hz":
         return float(parts[0])
+    return None
 
 
-def dmidecode_parse_voltage(v):
+def dmidecode_parse_voltage(v: str) -> Optional[float]:
     if not v or v == "Unknown":
         return None
     return float(v.split()[0])
 
 
-def dmidecode_parse_time(v):  # 155 ns
+def dmidecode_parse_time(v: str) -> float:  # 155 ns
     parts = v.split()
     if parts[1] == "ns":
         return float(parts[0]) / 1000000000.0

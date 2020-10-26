@@ -16,6 +16,7 @@ import errno
 from typing import List, Tuple, Any, Dict, Set
 import argparse
 import logging
+import copy
 
 from werkzeug.test import create_environ
 
@@ -229,12 +230,34 @@ class UpdateConfig:
 
         try:
             ruleset = all_rulesets.get_rulesets()[ruleset_name]
-            new_params = ruleset.valuespec().transform_value(params) if params else {}
+
+            # TODO: in order to keep the original input parameters and to identify misbehaving
+            #       transform_values() implementations we check the passed values for modifications
+            #       In that case we have to fix that transform_values() before using it
+            #       This hack chould vanish as soon as we know transform_values() works as expected
+            param_copy = copy.deepcopy(params)
+            new_params = ruleset.valuespec().transform_value(param_copy) if params else {}
+            if not param_copy == params:
+                self._logger.warning("transform_value() for ruleset '%s' altered input" %
+                                     check_plugin.check_ruleset_name)
+
             assert new_params or not params, "non-empty params vanished"
             assert not isinstance(params, dict) or isinstance(
                 new_params, dict), ("transformed params down-graded from dict: %r" % new_params)
 
+            # TODO: in case of known exceptions we don't want the transformed values be combined
+            #       with old keys. As soon as we can remove the workaround below we should not
+            #       handle any ruleset differently
+            if str(check_plugin.check_ruleset_name) in {"if"}:
+                return new_params
+
+            # TODO: some transform_value() implementations (e.g. 'ps') return parameter with
+            #       missing keys - so for safety-reasons we keep keys that don't exist in the
+            #       transformed values
+            #       On the flipside this can lead to problems with the check itself and should
+            #       be vanished as soon as we can be sure no keys are deleted accidentally
             return {**params, **new_params} if isinstance(params, dict) else new_params
+
         except Exception as exc:
             msg = ("Transform failed: %s, error=%r" % (debug_info, exc))
             if self._arguments.debug:

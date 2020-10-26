@@ -4,15 +4,49 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import NamedTuple, List
 from .agent_based_api.v1 import (
     exists,
     OIDEnd,
+    HostLabel,
     register,
     SNMPTree,
 )
 
+from .agent_based_api.v1.type_defs import (
+    StringTable,
+    HostLabelGenerator,
+    SNMPDeviceTypes,
+)
+
+
+class SNMPExtendedInfo(NamedTuple):
+    oid_end: str
+    entPhysDescr: str
+    entPhysContainedIn: str
+    entPhysClass: str
+    entPhysName: str
+    entPhysSoftwareRev: str
+    entPhysSerialNum: str
+    entPhysMfgName: str
+    entPhysModelName: str
+
+
+def parse_snmp_extended_info(string_table: List[StringTable]) -> List[SNMPExtendedInfo]:
+    return [SNMPExtendedInfo(*entry) for entry in string_table[0]]
+
+
+def host_label_snmp_extended_info(section: List[SNMPExtendedInfo]) -> HostLabelGenerator:
+    for device_type in SNMPDeviceTypes:
+        if device_type in section[0].entPhysDescr.lower():
+            yield HostLabel("cmk/device_type", device_type)
+            return
+
+
 register.snmp_section(
     name="snmp_extended_info",
+    parse_function=parse_snmp_extended_info,
+    host_label_function=host_label_snmp_extended_info,
     fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.47.1.1.1.1",

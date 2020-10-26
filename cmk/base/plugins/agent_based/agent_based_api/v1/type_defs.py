@@ -39,6 +39,8 @@ from cmk.base.api.agent_based.type_defs import (
     ValueStore,
 )
 
+from cmk.snmplib.type_defs import SNMPDeviceTypes  # pylint: disable=cmk-module-layer-violation
+
 __all__ = [
     "CheckResult",
     "DiscoveryResult",
@@ -48,4 +50,5 @@ __all__ = [
     "StringByteTable",
     "StringTable",
     "ValueStore",
+    "SNMPDeviceTypes",
 ]

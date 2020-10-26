@@ -31,7 +31,6 @@ def test_section_parse_function_does_something():
         'infoblox_systeminfo',
         'inv_cisco_vlans',
         'juniper_info',
-        'snmp_extended_info',
         'snmp_os',
         'snmp_quantum_storage_info',
         # agent sections

@@ -11,6 +11,7 @@ from .agent_based_api.v1.type_defs import (
     HostLabelGenerator,
     StringTable,
     InventoryResult,
+    SNMPDeviceTypes,
 )
 
 from .agent_based_api.v1 import (
@@ -37,16 +38,7 @@ def parse_snmp_info(string_table: List[StringTable]) -> SNMPInfo:
 
 
 def host_label_snmp_info(section: SNMPInfo) -> HostLabelGenerator:
-    for device_type in [
-            "appliance",
-            "firewall",
-            "printer",
-            "router",
-            "sensor",
-            "switch",
-            "ups",
-            "wlc",
-    ]:
+    for device_type in SNMPDeviceTypes:
         if device_type in section.description.lower():
             yield HostLabel("cmk/device_type", device_type)
             return

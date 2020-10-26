@@ -14,7 +14,6 @@ import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
-from cmk.gui.plugins.sidebar.search import QuicksearchSnapin
 from cmk.gui.utils.popups import MethodInline
 from cmk.gui.type_defs import (
     Icon,
@@ -88,15 +87,6 @@ class MainMenuRenderer:
                     onopen=menu.search.onopen if menu.search else None,
                 ))
         return items
-
-    # TODO(tb): can we use the MegaMenuRenderer here and move this code to mega_menu.py?
-    def _get_search_menu_content(self) -> str:
-        with html.plugged():
-            html.open_div(class_=["popup_menu", "main_menu_popup", "global_search"])
-            QuicksearchSnapin().show()
-            html.close_div()
-            html.div("", id_="popup_shadow", onclick="cmk.popup_menu.close_popup()")
-            return html.drain()
 
     def _get_mega_menu_content(self, menu_item: MainMenuItem) -> str:
         with html.plugged():

@@ -135,13 +135,9 @@ def delete(params):
     """Delete a folder"""
     ident = params['ident']
     folder = load_folder(ident, status=404)
-    _delete_specific(folder)
-    return Response(status=204)
-
-
-def _delete_specific(folder):
     parent = folder.parent()
     parent.delete_subfolder(folder.name())
+    return Response(status=204)
 
 
 @endpoint_schema(constructors.object_action_href('folder_config', '{ident}', action_name='move'),

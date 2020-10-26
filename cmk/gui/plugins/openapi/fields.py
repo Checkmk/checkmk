@@ -12,7 +12,10 @@ from typing import Any, Optional, Tuple, Callable
 from marshmallow import fields as _fields, ValidationError
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
+from cmk.gui import watolib
+
 from cmk.gui.plugins.openapi.utils import BaseSchema
+from cmk.utils.exceptions import MKException
 
 
 class String(_fields.String):
@@ -409,6 +412,49 @@ class Nested(_fields.Nested, UniqueFields):
             self._verify_unique_schema_entries(value, self.schema.fields)
 
         return value
+
+
+class FolderField(String):
+    """This field represents a WATO Folder.
+
+    It will return a Folder instance, ready to use.
+    """
+    default_error_messages = {
+        'not_found': "The folder {folder_id!r} could not be found.",
+    }
+
+    def __init__(
+        self,
+        pattern: str = "/|(/[ -_a-zA-Z0-9]+)+|[a-fA-F0-9]{32}",
+        **kwargs,
+    ):
+        super().__init__(pattern=pattern, **kwargs)
+
+    @classmethod
+    def load_folder(cls, folder_id: str) -> watolib.CREFolder:
+        def _ishexdigit(hex_string: str) -> bool:
+            try:
+                int(hex_string, 16)
+                return True
+            except ValueError:
+                return False
+
+        if folder_id == '/':
+            folder = watolib.Folder.root_folder()
+        elif _ishexdigit(folder_id):
+            folder = watolib.Folder.by_id(folder_id)
+        else:
+            folder = watolib.Folder.folder(folder_id[1:])
+
+        return folder
+
+    def _deserialize(self, value, attr, data, **kwargs):
+        value = super()._deserialize(value, attr, data)
+        try:
+            return self.load_folder(value)
+        except MKException:
+            if self.required:
+                self.fail("not_found", folder_id=value)
 
 
 class BinaryExprSchema(BaseSchema):

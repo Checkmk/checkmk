@@ -15,7 +15,7 @@ def test_openapi_cluster_host(wsgi_app, with_automation_user, suppress_automatio
     wsgi_app.call_method(
         'post',
         base + "/domain-types/host_config/collections/all",
-        params='{"host_name": "foobar", "folder": "root"}',
+        params='{"host_name": "foobar", "folder": "/"}',
         status=200,
         content_type='application/json',
     )
@@ -23,7 +23,7 @@ def test_openapi_cluster_host(wsgi_app, with_automation_user, suppress_automatio
     wsgi_app.call_method(
         'post',
         base + "/domain-types/host_config/collections/clusters",
-        params='{"host_name": "bazfoo", "folder": "root", "nodes": ["foobar"]}',
+        params='{"host_name": "bazfoo", "folder": "/", "nodes": ["foobar"]}',
         status=200,
         content_type='application/json',
     )
@@ -60,7 +60,7 @@ def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls
     resp = wsgi_app.call_method(
         'post',
         base + "/domain-types/host_config/collections/all",
-        params='{"host_name": "foobar", "folder": "root"}',
+        params='{"host_name": "foobar", "folder": "/"}',
         status=200,
         content_type='application/json',
     )
@@ -117,14 +117,14 @@ def test_openapi_bulk_hosts(wsgi_app, with_automation_user, suppress_automation_
             "entries": [
                 {
                     "host_name": "foobar",
-                    "folder": "root",
+                    "folder": "/",
                     "attributes": {
                         "ipaddress": "127.0.0.2"
                     }
                 },
                 {
                     "host_name": "sample",
-                    "folder": "root",
+                    "folder": "/",
                     "attributes": {
                         "ipaddress": "127.0.0.2"
                     }

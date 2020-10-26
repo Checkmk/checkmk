@@ -25,7 +25,7 @@ def test_openapi_activate_changes(
     host_created = wsgi_app.call_method(
         'post',
         base + "/domain-types/host_config/collections/all",
-        params='{"host_name": "foobar", "folder": "root"}',
+        params='{"host_name": "foobar", "folder": "/"}',
         status=200,
         content_type='application/json',
     )

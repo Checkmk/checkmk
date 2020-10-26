@@ -1264,18 +1264,20 @@ components:
     CreateFolder:
       properties:
         name:
-          description: The filesystem directory name of the folder.
+          description: The filesystem directory name (not path!) of the folder. No
+            slashes are allowed.
           example: production
+          pattern: '[^/]+'
           type: string
         title:
           description: The folder title as displayed in the user interface.
           example: Production Hosts
           type: string
         parent:
-          description: The folder-id of the folder under which this folder shall be
-            created. May be 'root' for the root-folder.
-          example: root
-          pattern: '[a-fA-F0-9]{32}|root'
+          description: The folder in which the new folder shall be placed in. The
+            root-folder is specified by '/'.
+          example: /
+          pattern: /|(/[ -_a-zA-Z0-9]+)+|[a-fA-F0-9]{32}
           type: string
         attributes:
           description: Specific attributes to apply for all hosts in this folder (among
@@ -1996,6 +1998,16 @@ components:
             - $ref: '#/components/schemas/Expr'
             description: A list of query expressions to combine.
           type: array
+      type: object
+    MoveFolder:
+      properties:
+        destination:
+          description: Where the folder has to be moved to.
+          example: '%2Fmy%2Ffine%2Ffolder'
+          pattern: /|(/[ -_a-zA-Z0-9]+)+|[a-fA-F0-9]{32}
+          type: string
+      required:
+      - destination
       type: object
     NotExpr:
       properties:
@@ -2989,13 +3001,6 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.acknowledgement.set_acknowledgement_on_host_service
       parameters:
-      - description: The service description.
-        in: path
-        name: service_description
-        required: true
-        schema:
-          example: Memory
-          type: string
       - description: A hostname.
         in: path
         name: host_name
@@ -3003,6 +3008,13 @@ paths:
         schema:
           example: example.com
           pattern: '[-0-9a-zA-Z_.]+'
+          type: string
+      - description: The service description.
+        in: path
+        name: service_description
+        required: true
+        schema:
+          example: Memory
           type: string
       requestBody:
         content:
@@ -3533,14 +3545,14 @@ paths:
           \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/bi_rule/rule1\"\
           ,\n    json={\n        'id': 'rule1',\n        'nodes': [],\n        'params':\
           \ [{\n            'arguments': ['foo', 'bar']\n        }],\n        'node_visualization':\
-          \ {\n            'style_config': {},\n            'type': 'block'\n    \
-          \    },\n        'properties': {\n            'comment': '',\n         \
-          \   'title': '',\n            'state_messages': {},\n            'icon':\
+          \ {\n            'type': 'block',\n            'style_config': {}\n    \
+          \    },\n        'properties': {\n            'state_messages': {},\n  \
+          \          'title': '',\n            'comment': '',\n            'icon':\
           \ '',\n            'docu_url': ''\n        },\n        'aggregation_function':\
-          \ {\n            'count': 1,\n            'restrict_state': 2,\n       \
-          \     'type': 'best'\n        },\n        'computation_options': {\n   \
-          \         'disabled': False\n        },\n        'pack_id': 'pack1'\n  \
-          \  },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          \ {\n            'count': 1,\n            'type': 'best',\n            'restrict_state':\
+          \ 2\n        },\n        'computation_options': {\n            'disabled':\
+          \ False\n        },\n        'pack_id': 'pack1'\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -3551,15 +3563,14 @@ paths:
           \ \"Accept\": \"application/json\",\n    },\n    data=json.dumps({\n   \
           \     'id': 'rule1',\n        'nodes': [],\n        'params': [{\n     \
           \       'arguments': ['foo', 'bar']\n        }],\n        'node_visualization':\
-          \ {\n            'style_config': {},\n            'type': 'block'\n    \
-          \    },\n        'properties': {\n            'comment': '',\n         \
-          \   'title': '',\n            'state_messages': {},\n            'icon':\
+          \ {\n            'type': 'block',\n            'style_config': {}\n    \
+          \    },\n        'properties': {\n            'state_messages': {},\n  \
+          \          'title': '',\n            'comment': '',\n            'icon':\
           \ '',\n            'docu_url': ''\n        },\n        'aggregation_function':\
-          \ {\n            'count': 1,\n            'restrict_state': 2,\n       \
-          \     'type': 'best'\n        },\n        'computation_options': {\n   \
-          \         'disabled': False\n        },\n        'pack_id': 'pack1'\n  \
-          \  }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
-          data = json.loads(response.read())"
+          \ {\n            'count': 1,\n            'type': 'best',\n            'restrict_state':\
+          \ 2\n        },\n        'computation_options': {\n            'disabled':\
+          \ False\n        },\n        'pack_id': 'pack1'\n    }).encode('utf-8'),\n\
+          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -3584,13 +3595,13 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/bi_rule/rule1\" \\\
           \n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept: application/json\"\
-          \ \\\n    aggregation_function='{\"count\": 1, \"restrict_state\": 2, \"\
-          type\": \"best\"}' \\\n    computation_options='{\"disabled\": false}' \\\
-          \n    id='rule1' \\\n    node_visualization='{\"style_config\": {}, \"type\"\
-          : \"block\"}' \\\n    nodes='[]' \\\n    pack_id='pack1' \\\n    params='[{\"\
-          arguments\": [\"foo\", \"bar\"]}]' \\\n    properties='{\"comment\": \"\"\
-          , \"title\": \"\", \"state_messages\": {}, \"icon\": \"\", \"docu_url\"\
-          : \"\"}' \\\n    --json"
+          \ \\\n    aggregation_function='{\"count\": 1, \"type\": \"best\", \"restrict_state\"\
+          : 2}' \\\n    computation_options='{\"disabled\": false}' \\\n    id='rule1'\
+          \ \\\n    node_visualization='{\"type\": \"block\", \"style_config\": {}}'\
+          \ \\\n    nodes='[]' \\\n    pack_id='pack1' \\\n    params='[{\"arguments\"\
+          : [\"foo\", \"bar\"]}]' \\\n    properties='{\"state_messages\": {}, \"\
+          title\": \"\", \"comment\": \"\", \"icon\": \"\", \"docu_url\": \"\"}' \\\
+          \n    --json"
   /objects/bi_aggregation/{aggregation_id}:
     get:
       description: ''
@@ -3699,10 +3710,10 @@ paths:
           \                'host_regex': '',\n                'type': 'state_of_host'\n\
           \            },\n            'search': {\n                'type': 'empty'\n\
           \            }\n        },\n        'aggregation_visualization': {\n   \
-          \         'ignore_rule_styles': False,\n            'line_style': 'round',\n\
+          \         'line_style': 'round',\n            'ignore_rule_styles': False,\n\
           \            'layout_id': 'builtin_default'\n        },\n        'computation_options':\
-          \ {\n            'escalate_downtimes_as_warn': False,\n            'use_hard_states':\
-          \ False,\n            'disabled': False\n        },\n        'pack_id':\
+          \ {\n            'use_hard_states': False,\n            'disabled': False,\n\
+          \            'escalate_downtimes_as_warn': False\n        },\n        'pack_id':\
           \ 'pack1'\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
@@ -3718,12 +3729,13 @@ paths:
           \  },\n        'node': {\n            'action': {\n                'host_regex':\
           \ '',\n                'type': 'state_of_host'\n            },\n       \
           \     'search': {\n                'type': 'empty'\n            }\n    \
-          \    },\n        'aggregation_visualization': {\n            'ignore_rule_styles':\
-          \ False,\n            'line_style': 'round',\n            'layout_id': 'builtin_default'\n\
-          \        },\n        'computation_options': {\n            'escalate_downtimes_as_warn':\
-          \ False,\n            'use_hard_states': False,\n            'disabled':\
-          \ False\n        },\n        'pack_id': 'pack1'\n    }).encode('utf-8'),\n\
-          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+          \    },\n        'aggregation_visualization': {\n            'line_style':\
+          \ 'round',\n            'ignore_rule_styles': False,\n            'layout_id':\
+          \ 'builtin_default'\n        },\n        'computation_options': {\n    \
+          \        'use_hard_states': False,\n            'disabled': False,\n   \
+          \         'escalate_downtimes_as_warn': False\n        },\n        'pack_id':\
+          \ 'pack1'\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -3753,10 +3765,10 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/bi_aggregation/aggregation1\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    aggregation_visualization='{\"ignore_rule_styles\"\
-          : false, \"line_style\": \"round\", \"layout_id\": \"builtin_default\"}'\
-          \ \\\n    computation_options='{\"escalate_downtimes_as_warn\": false, \"\
-          use_hard_states\": false, \"disabled\": false}' \\\n    customer='customer1'\
+          \ application/json\" \\\n    aggregation_visualization='{\"line_style\"\
+          : \"round\", \"ignore_rule_styles\": false, \"layout_id\": \"builtin_default\"\
+          }' \\\n    computation_options='{\"use_hard_states\": false, \"disabled\"\
+          : false, \"escalate_downtimes_as_warn\": false}' \\\n    customer='customer1'\
           \ \\\n    groups='{\"names\": [\"groupA\", \"groupB\"], \"paths\": [[\"\
           path\", \"group\", \"a\"], [\"path\", \"group\", \"b\"]]}' \\\n    id='aggr1'\
           \ \\\n    node='{\"action\": {\"host_regex\": \"\", \"type\": \"state_of_host\"\
@@ -4438,13 +4450,6 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.downtime.list_service_downtimes
       parameters:
-      - description: The service description.
-        in: query
-        name: service_description
-        required: false
-        schema:
-          example: Memory
-          type: string
       - description: A hostname.
         in: query
         name: host_name
@@ -4452,6 +4457,13 @@ paths:
         schema:
           example: example.com
           pattern: '[-0-9a-zA-Z_.]+'
+          type: string
+      - description: The service description.
+        in: query
+        name: service_description
+        required: false
+        schema:
+          example: Memory
           type: string
       responses:
         default:
@@ -4589,13 +4601,6 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.downtime.delete_downtime
       parameters:
-      - description: The id of the downtime
-        in: path
-        name: downtime_id
-        required: true
-        schema:
-          example: '54'
-          type: string
       - description: A hostname.
         in: path
         name: host_name
@@ -4603,6 +4608,13 @@ paths:
         schema:
           example: example.com
           pattern: '[-0-9a-zA-Z_.]+'
+          type: string
+      - description: The id of the downtime
+        in: path
+        name: downtime_id
+        required: true
+        schema:
+          example: '54'
           type: string
       responses:
         default:
@@ -4808,8 +4820,8 @@ paths:
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/folder_config/collections/all\"\
           ,\n    json={\n        'name': 'production',\n        'title': 'Production\
-          \ Hosts',\n        'parent': 'root',\n        'attributes': {}\n    },\n\
-          )\nresp.raise_for_status()\ndata = resp.json()"
+          \ Hosts',\n        'parent': '/',\n        'attributes': {}\n    },\n)\n\
+          resp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -4819,7 +4831,7 @@ paths:
           POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
           \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
           \ data=json.dumps({\n        'name': 'production',\n        'title': 'Production\
-          \ Hosts',\n        'parent': 'root',\n        'attributes': {}\n    }).encode('utf-8'),\n\
+          \ Hosts',\n        'parent': '/',\n        'attributes': {}\n    }).encode('utf-8'),\n\
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -4828,8 +4840,8 @@ paths:
           \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\ \\\n    --data '{\n          \"attributes\": {},\n          \"name\"\
-          : \"production\",\n          \"parent\": \"root\",\n          \"title\"\
-          : \"Production Hosts\"\n        }' \\\n    \"$API_URL/domain-types/folder_config/collections/all\""
+          : \"production\",\n          \"parent\": \"\\/\",\n          \"title\":\
+          \ \"Production Hosts\"\n        }' \\\n    \"$API_URL/domain-types/folder_config/collections/all\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -4837,8 +4849,8 @@ paths:
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/folder_config/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    attributes='{}' \\\n    name='production' \\\
-          \n    parent='root' \\\n    title='Production Hosts' \\\n    --json"
-  /objects/folder_config/{ident}:
+          \n    parent='/' \\\n    title='Production Hosts' \\\n    --json"
+  /objects/folder_config/{folder}:
     delete:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.folder_config.delete
@@ -4852,15 +4864,17 @@ paths:
         schema:
           example: a20ceacf346041dc
           type: string
-      - description: The identifier for this object. It's a 128bit uuid represented
-          in hexadecimal (32 characters). There are no fixed parts or parts derived
-          from the current hardware in this number.
+      - description: The folder identifier. This can be a path name or the folder-specific
+          128 bit identifier. This identifier is unique to the folder and stays the
+          same, even if the folder has been moved. The special value 'root' represents
+          the root-folder. The same root folder can also be accessed via '/'. The
+          folder value has to urlencoded.
         in: path
-        name: ident
+        name: folder
         required: true
         schema:
-          example: 49167bd012b44719a67956cf3ef7b3dd
-          pattern: '[a-fA-F0-9]{32}|root'
+          example: '%2Fmy%2Ffine%2Ffolder'
+          pattern: /|root|(/[ -_a-zA-Z0-9]+)+|[a-fA-F0-9]{32}
           type: string
       responses:
         default:
@@ -4882,7 +4896,7 @@ paths:
           \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
-          \ = 'application/json'\n\nresp = session.delete(\n    f\"{API_URL}/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\"\
+          \ = 'application/json'\n\nresp = session.delete(\n    f\"{API_URL}/objects/folder_config/%2Fmy%2Ffine%2Ffolder\"\
           ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
           \ The ETag of the object to be modified.\n    },\n)\nresp.raise_for_status()\n\
           data = resp.json()"
@@ -4891,39 +4905,40 @@ paths:
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
           \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
-          \    f\"{API_URL}/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\"\
-          ,\n    method=\"DELETE\",\n    headers={\n        \"Authorization\": f\"\
-          Bearer {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\"\
-          ,\n        \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of\
-          \ the object to be modified.\n    },\n)\nresponse = urllib.request.urlopen(request)\n\
-          data = json.loads(response.read())"
+          \    f\"{API_URL}/objects/folder_config/%2Fmy%2Ffine%2Ffolder\",\n    method=\"\
+          DELETE\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
+          \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n        \"If-Match\"\
+          : \"a20ceacf346041dc\",  # (required) The ETag of the object to be modified.\n\
+          \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n    \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\""
+          \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n    \"$API_URL/objects/folder_config/%2Fmy%2Ffine%2Ffolder\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\"\
+          \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/objects/folder_config/%2Fmy%2Ffine%2Ffolder\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    --json"
     get:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.folder_config.show_folder
       parameters:
-      - description: The identifier for this object. It's a 128bit uuid represented
-          in hexadecimal (32 characters). There are no fixed parts or parts derived
-          from the current hardware in this number.
+      - description: The folder identifier. This can be a path name or the folder-specific
+          128 bit identifier. This identifier is unique to the folder and stays the
+          same, even if the folder has been moved. The special value 'root' represents
+          the root-folder. The same root folder can also be accessed via '/'. The
+          folder value has to urlencoded.
         in: path
-        name: ident
+        name: folder
         required: true
         schema:
-          example: 49167bd012b44719a67956cf3ef7b3dd
-          pattern: '[a-fA-F0-9]{32}|root'
+          example: '%2Fmy%2Ffine%2Ffolder'
+          pattern: /|root|(/[ -_a-zA-Z0-9]+)+|[a-fA-F0-9]{32}
           type: string
       responses:
         default:
@@ -4959,34 +4974,33 @@ paths:
           \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
-          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\"\
+          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/objects/folder_config/%2Fmy%2Ffine%2Ffolder\"\
           ,\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
           \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
-          \    f\"{API_URL}/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\"\
-          ,\n    method=\"GET\",\n    headers={\n        \"Authorization\": f\"Bearer\
-          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
-          \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+          \    f\"{API_URL}/objects/folder_config/%2Fmy%2Ffine%2Ffolder\",\n    method=\"\
+          GET\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
+          ,\n        \"Accept\": \"application/json\",\n    },\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\\n    \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\""
+          \ \\\n    \"$API_URL/objects/folder_config/%2Fmy%2Ffine%2Ffolder\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\"\
+          \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/objects/folder_config/%2Fmy%2Ffine%2Ffolder\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    --json"
     put:
-      description: Title and attributes can be updated, but there is no checking of
-        the attributes done
+      description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.folder_config.update
       parameters:
       - description: The ETag of the object to be modified. This value comes from
@@ -4998,15 +5012,17 @@ paths:
         schema:
           example: a20ceacf346041dc
           type: string
-      - description: The identifier for this object. It's a 128bit uuid represented
-          in hexadecimal (32 characters). There are no fixed parts or parts derived
-          from the current hardware in this number.
+      - description: The folder identifier. This can be a path name or the folder-specific
+          128 bit identifier. This identifier is unique to the folder and stays the
+          same, even if the folder has been moved. The special value 'root' represents
+          the root-folder. The same root folder can also be accessed via '/'. The
+          folder value has to urlencoded.
         in: path
-        name: ident
+        name: folder
         required: true
         schema:
-          example: 49167bd012b44719a67956cf3ef7b3dd
-          pattern: '[a-fA-F0-9]{32}|root'
+          example: '%2Fmy%2Ffine%2Ffolder'
+          pattern: /|root|(/[ -_a-zA-Z0-9]+)+|[a-fA-F0-9]{32}
           type: string
       requestBody:
         content:
@@ -5048,7 +5064,7 @@ paths:
           \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
-          \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\"\
+          \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/folder_config/%2Fmy%2Ffine%2Ffolder\"\
           ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
           \ The ETag of the object to be modified.\n    },\n    json={\n        'title':\
           \ 'Virtual Servers.',\n        'attributes': {},\n        'update_attributes':\
@@ -5058,13 +5074,12 @@ paths:
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
           \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
-          \    f\"{API_URL}/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\"\
-          ,\n    method=\"PUT\",\n    headers={\n        \"Authorization\": f\"Bearer\
-          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
-          \        \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the\
-          \ object to be modified.\n    },\n    data=json.dumps({\n        'title':\
-          \ 'Virtual Servers.',\n        'attributes': {},\n        'update_attributes':\
-          \ {}\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          \    f\"{API_URL}/objects/folder_config/%2Fmy%2Ffine%2Ffolder\",\n    method=\"\
+          PUT\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
+          ,\n        \"Accept\": \"application/json\",\n        \"If-Match\": \"a20ceacf346041dc\"\
+          ,  # (required) The ETag of the object to be modified.\n    },\n    data=json.dumps({\n\
+          \        'title': 'Virtual Servers.',\n        'attributes': {},\n     \
+          \   'update_attributes': {}\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
           data = json.loads(response.read())"
       - label: curl
         lang: bash
@@ -5074,12 +5089,12 @@ paths:
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\ \\\n    --data '{\n\
           \          \"attributes\": {},\n          \"title\": \"Virtual Servers.\"\
-          ,\n          \"update_attributes\": {}\n        }' \\\n    \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\""
+          ,\n          \"update_attributes\": {}\n        }' \\\n    \"$API_URL/objects/folder_config/%2Fmy%2Ffine%2Ffolder\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd\"\
+          \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/folder_config/%2Fmy%2Ffine%2Ffolder\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    attributes='{}'\
           \ \\\n    title='Virtual Servers.' \\\n    update_attributes='{}' \\\n \
@@ -5153,7 +5168,7 @@ paths:
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    entries='[{\"ident\": \"root\", \"title\":\
           \ \"Virtual Servers\", \"attributes\": {\"key\": \"foo\"}}]' \\\n    --json"
-  /objects/folder_config/{ident}/actions/move/invoke:
+  /objects/folder_config/{folder}/actions/move/invoke:
     post:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.folder_config.move
@@ -5167,16 +5182,24 @@ paths:
         schema:
           example: a20ceacf346041dc
           type: string
-      - description: The identifier for this object. It's a 128bit uuid represented
-          in hexadecimal (32 characters). There are no fixed parts or parts derived
-          from the current hardware in this number.
+      - description: The folder identifier. This can be a path name or the folder-specific
+          128 bit identifier. This identifier is unique to the folder and stays the
+          same, even if the folder has been moved. The special value 'root' represents
+          the root-folder. The same root folder can also be accessed via '/'. The
+          folder value has to urlencoded.
         in: path
-        name: ident
+        name: folder
         required: true
         schema:
-          example: 49167bd012b44719a67956cf3ef7b3dd
-          pattern: '[a-fA-F0-9]{32}|root'
+          example: '%2Fmy%2Ffine%2Ffolder'
+          pattern: /|root|(/[ -_a-zA-Z0-9]+)+|[a-fA-F0-9]{32}
           type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoveFolder'
+        required: true
       responses:
         default:
           content:
@@ -5211,35 +5234,38 @@ paths:
           \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
-          \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd/actions/move/invoke\"\
+          \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/objects/folder_config/%2Fmy%2Ffine%2Ffolder/actions/move/invoke\"\
           ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
-          \ The ETag of the object to be modified.\n    },\n)\nresp.raise_for_status()\n\
-          data = resp.json()"
+          \ The ETag of the object to be modified.\n    },\n    json={'destination':\
+          \ '%2Fmy%2Ffine%2Ffolder'},\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
           \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
-          \    f\"{API_URL}/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd/actions/move/invoke\"\
+          \    f\"{API_URL}/objects/folder_config/%2Fmy%2Ffine%2Ffolder/actions/move/invoke\"\
           ,\n    method=\"POST\",\n    headers={\n        \"Authorization\": f\"Bearer\
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
           \        \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the\
-          \ object to be modified.\n    },\n)\nresponse = urllib.request.urlopen(request)\n\
-          data = json.loads(response.read())"
+          \ object to be modified.\n    },\n    data=json.dumps({'destination': '%2Fmy%2Ffine%2Ffolder'}).encode('utf-8'),\n\
+          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n    \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd/actions/move/invoke\""
+          \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\ \\\n    --data '{\n\
+          \          \"destination\": \"%2Fmy%2Ffine%2Ffolder\"\n        }' \\\n \
+          \   \"$API_URL/objects/folder_config/%2Fmy%2Ffine%2Ffolder/actions/move/invoke\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/objects/folder_config/49167bd012b44719a67956cf3ef7b3dd/actions/move/invoke\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/objects/folder_config/%2Fmy%2Ffine%2Ffolder/actions/move/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    --json"
+          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    destination='%2Fmy%2Ffine%2Ffolder'\
+          \ \\\n    --json"
   /domain-types/host/collections/all:
     get:
       description: ''
@@ -7244,16 +7270,6 @@ paths:
       description: This list is filterable by various parameters.
       operationId: cmk.gui.plugins.openapi.endpoints.service._list_host_services
       parameters:
-      - description: An query expression in nested dictionary form. If you want to
-          use multiple expressions, nest them with the AND/OR operators.
-        in: query
-        name: query
-        required: false
-        schema:
-          allOf:
-          - $ref: '#/components/schemas/Expr'
-          example: '{"op": "not", "expr": {"op": "=", "left": "hosts.name", "right":
-            "example.com"}}'
       - description: Restrict the query to this particular site.
         in: query
         name: site
@@ -7274,6 +7290,16 @@ paths:
             type: string
           type: array
         style: form
+      - description: An query expression in nested dictionary form. If you want to
+          use multiple expressions, nest them with the AND/OR operators.
+        in: query
+        name: query
+        required: false
+        schema:
+          allOf:
+          - $ref: '#/components/schemas/Expr'
+          example: '{"op": "not", "expr": {"op": "=", "left": "hosts.name", "right":
+            "example.com"}}'
       - description: A hostname.
         in: path
         name: host_name
@@ -7347,23 +7373,11 @@ paths:
       description: This list is filterable by various parameters.
       operationId: cmk.gui.plugins.openapi.endpoints.service._list_all_services
       parameters:
-      - description: An query expression in nested dictionary form. If you want to
-          use multiple expressions, nest them with the AND/OR operators.
+      - description: Restrict the query to this particular site.
         in: query
-        name: query
+        name: site
         required: false
         schema:
-          allOf:
-          - $ref: '#/components/schemas/Expr'
-          example: '{"op": "not", "expr": {"op": "=", "left": "hosts.name", "right":
-            "example.com"}}'
-      - description: A hostname.
-        in: query
-        name: host_name
-        required: false
-        schema:
-          example: example.com
-          pattern: '[-0-9a-zA-Z_.]+'
           type: string
       - description: The desired columns of the services table. If left empty, a default
           set of columns is used.
@@ -7379,12 +7393,24 @@ paths:
             type: string
           type: array
         style: form
-      - description: Restrict the query to this particular site.
+      - description: A hostname.
         in: query
-        name: site
+        name: host_name
         required: false
         schema:
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
           type: string
+      - description: An query expression in nested dictionary form. If you want to
+          use multiple expressions, nest them with the AND/OR operators.
+        in: query
+        name: query
+        required: false
+        schema:
+          allOf:
+          - $ref: '#/components/schemas/Expr'
+          example: '{"op": "not", "expr": {"op": "=", "left": "hosts.name", "right":
+            "example.com"}}'
       responses:
         default:
           content:
@@ -7451,16 +7477,6 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.service_discovery.show_services
       parameters:
-      - description: Optionally the hostname for which a certain agent has been configured.
-          If omitted you may only download this agent if you have the rights for all
-          agents.
-        in: query
-        name: host_name
-        required: true
-        schema:
-          example: example.com
-          pattern: '[a-zA-Z][a-zA-Z0-9_-]+'
-          type: string
       - description: 'The discovery state of the services. May be one of the following:
           active, active_ignored, clustered_ignored, clustered_monitored, clustered_undecided,
           clustered_vanished, custom, custom_ignored, ignored, legacy, legacy_ignored,
@@ -7471,6 +7487,16 @@ paths:
         schema:
           example: monitored
           pattern: active|active_ignored|clustered_ignored|clustered_monitored|clustered_undecided|clustered_vanished|custom|custom_ignored|ignored|legacy|legacy_ignored|manual|monitored|removed|undecided|vanished
+          type: string
+      - description: Optionally the hostname for which a certain agent has been configured.
+          If omitted you may only download this agent if you have the rights for all
+          agents.
+        in: query
+        name: host_name
+        required: true
+        schema:
+          example: example.com
+          pattern: '[a-zA-Z][a-zA-Z0-9_-]+'
           type: string
       responses:
         default:
@@ -7536,17 +7562,6 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.service_discovery.move_service
       parameters:
-      - description: 'The discovery state of the services. May be one of the following:
-          active, active_ignored, clustered_ignored, clustered_monitored, clustered_undecided,
-          clustered_vanished, custom, custom_ignored, ignored, legacy, legacy_ignored,
-          manual, monitored, removed, undecided, vanished'
-        in: path
-        name: target_state
-        required: true
-        schema:
-          example: monitored
-          pattern: active|active_ignored|clustered_ignored|clustered_monitored|clustered_undecided|clustered_vanished|custom|custom_ignored|ignored|legacy|legacy_ignored|manual|monitored|removed|undecided|vanished
-          type: string
       - description: A name used as an identifier. Can be of arbitrary length
         in: path
         name: service_hash
@@ -7562,6 +7577,17 @@ paths:
         schema:
           example: example.com
           pattern: '[-0-9a-zA-Z_.]+'
+          type: string
+      - description: 'The discovery state of the services. May be one of the following:
+          active, active_ignored, clustered_ignored, clustered_monitored, clustered_undecided,
+          clustered_vanished, custom, custom_ignored, ignored, legacy, legacy_ignored,
+          manual, monitored, removed, undecided, vanished'
+        in: path
+        name: target_state
+        required: true
+        schema:
+          example: monitored
+          pattern: active|active_ignored|clustered_ignored|clustered_monitored|clustered_undecided|clustered_vanished|custom|custom_ignored|ignored|legacy|legacy_ignored|manual|monitored|removed|undecided|vanished
           type: string
       responses:
         default:

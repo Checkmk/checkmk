@@ -316,6 +316,12 @@ class BaseFolder:
     def path(self):
         raise NotImplementedError()
 
+    def __eq__(self, other):
+        return id(self) == id(other) or self.path() == other.path()
+
+    def __hash__(self):
+        return id(self)
+
     def is_current_folder(self):
         return self.is_same_as(Folder.current())
 
@@ -1728,6 +1734,24 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 None,
                 _("Cannot move folder: A folder with this name already exists in the target folder."
                  ))
+
+        if subfolder.path() == target_folder.path():
+            raise MKUserError(
+                None,
+                _("Cannot move folder: A folder can not be moved into itself."),
+            )
+
+        if self.path() == target_folder.path():
+            raise MKUserError(
+                None,
+                _("Cannot move folder: A folder can not be moved to it's own parent folder."),
+            )
+
+        if subfolder in target_folder.parent_folder_chain():
+            raise MKUserError(
+                None,
+                _("Cannot move folder: A folder can not be moved to a folder within itself."),
+            )
 
         original_alias_path = subfolder.alias_path()
 

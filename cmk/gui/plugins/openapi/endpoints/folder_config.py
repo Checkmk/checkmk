@@ -12,25 +12,34 @@ If you build the tree cleverly you can use it to pass on attributes in a meaning
 You can find an introduction to hosts including folders in the
 [Checkmk guide](https://checkmk.com/cms_wato_hosts.html).
 """
-
-import http.client
+import urllib.parse
 
 from cmk.gui import watolib
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
+from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     endpoint_schema,
     request_schemas,
     response_schemas,
 )
-from cmk.gui.plugins.openapi.restful_objects.parameters import IDENT_FIELD
 from cmk.gui.plugins.openapi.utils import ProblemException
 from cmk.gui.watolib import CREFolder
 
 # TODO: Remove all hard-coded response creation in favour of a generic one
 # TODO: Implement formal description (GET endpoint) of move action
-# TODO: add redoc.js
+
+FOLDER_FIELD = {
+    'folder': fields.FolderField(
+        description=(
+            "The folder identifier. This can be a path name or the folder-specific 128 bit "
+            "identifier. This identifier is unique to the folder and stays the same, even if the "
+            "folder has been moved. The special value 'root' represents the root-folder. The same "
+            "root folder can also be accessed via '/'. The folder value has to urlencoded."),
+        example=urllib.parse.quote_plus('/my/fine/folder'),
+    )
+}
 
 
 @endpoint_schema(constructors.collection_href('folder_config'),
@@ -53,20 +62,18 @@ def create(params):
     return _serve_folder(folder)
 
 
-@endpoint_schema(constructors.object_href('folder_config', '{ident}'),
+@endpoint_schema(constructors.object_href('folder_config', '{folder}'),
                  '.../persist',
                  method='put',
-                 path_params=[IDENT_FIELD],
+                 path_params=[FOLDER_FIELD],
                  response_schema=response_schemas.ConcreteFolder,
                  etag='both',
                  request_body_required=True,
                  request_schema=request_schemas.UpdateFolder)
 def update(params):
     """Update a folder
-
-    Title and attributes can be updated, but there is no checking of the attributes done"""
-    ident = params['ident']
-    folder = load_folder(ident, status=404)
+    """
+    folder = params['folder']
     constructors.require_etag(constructors.etag_of_obj(folder))
 
     post_body = params['body']
@@ -123,47 +130,45 @@ def bulk_update(params):
     return constructors.serve_json(_folders_collection(folders))
 
 
-@endpoint_schema(constructors.object_href('folder_config', '{ident}'),
+@endpoint_schema(constructors.object_href('folder_config', '{folder}'),
                  '.../delete',
                  method='delete',
-                 path_params=[
-                     IDENT_FIELD,
-                 ],
+                 path_params=[FOLDER_FIELD],
                  output_empty=True,
                  etag='input')
 def delete(params):
     """Delete a folder"""
-    ident = params['ident']
-    folder = load_folder(ident, status=404)
+    folder = params['folder']
     parent = folder.parent()
     parent.delete_subfolder(folder.name())
     return Response(status=204)
 
 
-@endpoint_schema(constructors.object_action_href('folder_config', '{ident}', action_name='move'),
+@endpoint_schema(constructors.object_action_href('folder_config', '{folder}', action_name='move'),
                  'cmk/move',
                  method='post',
-                 path_params=[
-                     IDENT_FIELD,
-                 ],
+                 path_params=[FOLDER_FIELD],
                  response_schema=response_schemas.ConcreteFolder,
+                 request_schema=request_schemas.MoveFolder,
                  etag='both')
 def move(params):
     """Move a folder"""
-    ident = params['ident']
-    folder = load_folder(ident, status=404)
+    folder: watolib.CREFolder = params['folder']
+    folder_id = folder.id()
 
     constructors.require_etag(constructors.etag_of_obj(folder))
 
-    dest = params['body']['destination']
-    if dest == 'root':
-        dest_folder = watolib.Folder.root_folder()
-    else:
-        dest_folder = load_folder(dest, status=400)
+    dest_folder: watolib.CREFolder = params['body']['destination']
 
-    folder.parent().move_subfolder_to(folder, dest_folder)
-
-    folder = load_folder(ident, status=500)
+    try:
+        folder.parent().move_subfolder_to(folder, dest_folder)
+    except MKUserError as exc:
+        raise ProblemException(
+            title="Problem moving folder.",
+            detail=exc.message,
+            status=400,
+        )
+    folder = fields.FolderField.load_folder(folder_id)
     return _serve_folder(folder)
 
 
@@ -194,18 +199,15 @@ def _folders_collection(folders):
     return collection_object
 
 
-@endpoint_schema(constructors.object_href('folder_config', '{ident}'),
+@endpoint_schema(constructors.object_href('folder_config', '{folder}'),
                  'cmk/show',
                  method='get',
                  response_schema=response_schemas.ConcreteFolder,
                  etag='output',
-                 path_params=[
-                     IDENT_FIELD,
-                 ])
+                 path_params=[FOLDER_FIELD])
 def show_folder(params):
     """Show a folder"""
-    ident = params['ident']
-    folder = load_folder(ident, status=404)
+    folder = params['folder']
     return _serve_folder(folder)
 
 
@@ -241,14 +243,3 @@ def _serialize_folder(folder: CREFolder):
             'attributes': folder.attributes().copy(),
         },
     )
-
-
-def load_folder(ident, status=404, message=None):
-    try:
-        if ident == 'root':
-            return watolib.Folder.root_folder()
-        return watolib.Folder.by_id(ident)
-    except MKUserError as exc:
-        if message is None:
-            message = str(exc)
-        raise ProblemException(status, http.client.responses[status], message)

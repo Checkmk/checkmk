@@ -3,7 +3,9 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from marshmallow import ValidationError  # type: ignore[import]
+import urllib.parse
+
+from marshmallow import ValidationError
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from cmk.gui import watolib, config
@@ -86,33 +88,6 @@ MONITORED_HOST = fields.String(
 )
 
 
-class FolderField(fields.String):
-    """This field represents a WATO Folder.
-
-    It will return a Folder instance, ready to use.
-    """
-    default_error_messages = {
-        'not_found': "The folder {folder_id!r} could not be found.",
-    }
-    pattern = "[a-fA-F0-9]{32}|root"
-
-    def _deserialize(self, value, attr, data, **kwargs):
-        value = super()._deserialize(
-            value,
-            attr,
-            data,
-        )
-        try:
-            if value == 'root':
-                folder = watolib.Folder.root_folder()
-            else:
-                folder = watolib.Folder.by_id(value)
-            return folder
-        except MKUserError:
-            if self.required:
-                self.fail("not_found", folder_id=value)
-
-
 class AttributesField(fields.Dict):
     default_error_messages = {
         'attribute_forbidden': "Setting of attribute {attribute!r} is forbidden: {value!r}.",
@@ -131,11 +106,10 @@ class AttributesField(fields.Dict):
             raise ValidationError(str(exc))
 
 
-EXISTING_FOLDER = FolderField(
+EXISTING_FOLDER = fields.FolderField(
     description=("The folder-id of the folder under which this folder shall be created. May be "
                  "'root' for the root-folder."),
-    pattern="[a-fA-F0-9]{32}|root",
-    example="root",
+    example="/",
     required=True,
 )
 
@@ -446,20 +420,23 @@ class CreateFolder(BaseSchema):
         folder. For more information please have a look at the
         [Host Administration chapter of the handbook](https://checkmk.com/cms_wato_hosts.html#Introduction).
     """
-    name = fields.String(description="The filesystem directory name of the folder.",
-                         required=True,
-                         example="production")
+    name = fields.String(
+        description=("The filesystem directory name (not path!) of the folder."
+                     " No slashes are allowed."),
+        required=True,
+        pattern="[^/]+",
+        example="production",
+    )
     title = fields.String(
         required=True,
         description="The folder title as displayed in the user interface.",
         example="Production Hosts",
     )
-    parent = FolderField(
-        description=("The folder-id of the folder under which this folder shall be created. May be "
-                     "'root' for the root-folder."),
-        pattern="[a-fA-F0-9]{32}|root",
-        example="root",
+    parent = fields.FolderField(
         required=True,
+        description=("The folder in which the new folder shall be placed in. The root-folder is "
+                     "specified by '/'."),
+        example="/",
     )
     attributes = AttributesField(
         description=("Specific attributes to apply for all hosts in this folder "
@@ -534,6 +511,14 @@ class BulkUpdateFolder(BaseSchema):
                                     'key': 'foo'
                                 }
                             }])
+
+
+class MoveFolder(BaseSchema):
+    destination = fields.FolderField(
+        required=True,
+        description="Where the folder has to be moved to.",
+        example=urllib.parse.quote_plus('/my/fine/folder'),
+    )
 
 
 class CreateDowntimeBase(BaseSchema):

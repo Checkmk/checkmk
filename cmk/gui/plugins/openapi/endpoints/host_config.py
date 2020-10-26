@@ -21,7 +21,6 @@ import operator
 
 from cmk.gui import watolib
 from cmk.gui.http import Response
-from cmk.gui.plugins.openapi.endpoints.folder_config import load_folder
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     endpoint_schema,
@@ -72,14 +71,6 @@ def create_cluster_host(params):
 
     host = watolib.Host.host(host_name)
     return _serve_host(host)
-
-
-def _host_folder(folder_id):
-    if folder_id == 'root':
-        folder = watolib.Folder.root_folder()
-    else:
-        folder = load_folder(folder_id, status=400)
-    return folder
 
 
 @endpoint_schema(constructors.domain_type_action_href('host_config', 'bulk-create'),

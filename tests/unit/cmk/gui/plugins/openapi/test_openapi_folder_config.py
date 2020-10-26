@@ -24,8 +24,7 @@ def test_openapi_folder_validation(wsgi_app, with_automation_user):
     wsgi_app.call_method(
         'post',
         "/NO_SITE/check_mk/api/v0/domain-types/folder_config/collections/all",
-        params=
-        '{"name": "new_folder", "title": "foo", "parent": "root", "attributes": {"foo": "bar"}}',
+        params='{"name": "new_folder", "title": "foo", "parent": "/", "attributes": {"foo": "bar"}}',
         status=400,
         content_type='application/json',
     )
@@ -42,10 +41,26 @@ def test_openapi_folders(wsgi_app, with_automation_user):
     )
     assert resp.json['value'] == []
 
-    resp = wsgi_app.call_method(
+    other_folder = wsgi_app.call_method(
         'post',
         "/NO_SITE/check_mk/api/v0/domain-types/folder_config/collections/all",
-        params='{"name": "new_folder", "title": "foo", "parent": "root"}',
+        params='{"name": "other_folder", "title": "bar", "parent": "/"}',
+        status=200,
+        content_type='application/json',
+    )
+
+    resp = new_folder = wsgi_app.call_method(
+        'post',
+        "/NO_SITE/check_mk/api/v0/domain-types/folder_config/collections/all",
+        params='{"name": "new_folder", "title": "foo", "parent": "/"}',
+        status=200,
+        content_type='application/json',
+    )
+
+    wsgi_app.call_method(
+        'post',
+        "/NO_SITE/check_mk/api/v0/domain-types/folder_config/collections/all",
+        params='{"name": "sub_folder", "title": "foo", "parent": "/new_folder"}',
         status=200,
         content_type='application/json',
     )
@@ -83,15 +98,13 @@ def test_openapi_folders(wsgi_app, with_automation_user):
                                 params='{"title": "foobar"}',
                                 content_type='application/json')
 
-    # Invoke directly for now. Ideally this should be a 2-stage step:
-    #   1. fetch the resource description
-    #   2. send the argument as in the specification
+    # Move to the same source should give a 400
     wsgi_app.follow_link(resp,
                          '.../invoke;action="move"',
                          base=base,
                          status=400,
                          headers={'If-Match': resp.headers['ETag']},
-                         params=json.dumps({"destination": 'root'}),
+                         params=json.dumps({"destination": '/'}),
                          content_type='application/json')
 
     # Check that unknown folders also give a 400
@@ -101,6 +114,32 @@ def test_openapi_folders(wsgi_app, with_automation_user):
                          status=400,
                          headers={'If-Match': resp.headers['ETag']},
                          params=json.dumps({"destination": 'asdf'}),
+                         content_type='application/json')
+
+    # Check that moving onto itself gives a 400
+    wsgi_app.follow_link(other_folder,
+                         '.../invoke;action="move"',
+                         base=base,
+                         status=400,
+                         headers={'If-Match': other_folder.headers['ETag']},
+                         params=json.dumps({"destination": '/other_folder'}),
+                         content_type='application/json')
+
+    # Check that moving into it's own subfolder is not possible.
+    wsgi_app.follow_link(new_folder,
+                         '.../invoke;action="move"',
+                         base=base,
+                         status=400,
+                         headers={'If-Match': resp.headers['ETag']},
+                         params=json.dumps({"destination": '/new_folder/sub_folder'}),
+                         content_type='application/json')
+
+    wsgi_app.follow_link(new_folder,
+                         '.../invoke;action="move"',
+                         base=base,
+                         status=200,
+                         headers={'If-Match': resp.headers['ETag']},
+                         params=json.dumps({"destination": '/other_folder'}),
                          content_type='application/json')
 
     # Delete all folders.

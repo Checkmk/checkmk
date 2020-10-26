@@ -691,15 +691,23 @@ def perfometer_fileinfo(row, check_command, perf_data):
 
 
 def perfometer_fileinfo_groups(row, check_command, perf_data):
+    # No files found in file group yields metrics('count', 'size')
+    # Files found in file group yields metrics('count', 'size', 'size_largest', 'size_smallest',
+    #                                          'age_oldest', 'age_newest')
     h = '<div class="stacked">'
     texts = []
-    for i, color, base, scale, verbfunc in [
-        (2, "#aabb50", 10000, 10, lambda v: ("%d Tot") % v),  # count
-        (1, "#ccff50", 3600, 10, cmk.utils.render.approx_age)
-    ]:  # age_newest
-        val = float(perf_data[i][1])
-        h += perfometer_logarithmic(val, base, scale, color)
-        texts.append(verbfunc(val))
+    perfometer_values = {
+        'count': ("#aabb50", 10000, 10, lambda v: ("%d Tot") % v),
+        'age_newest': ("#ccff50", 3600, 10, cmk.utils.render.approx_age),
+    }
+    for name, value, _unit, _min, _max, _warn, _crit in perf_data:
+        try:
+            color, base, scale, verbfunc = perfometer_values[name]
+        except KeyError:
+            continue
+        value = float(value)
+        h += perfometer_logarithmic(value, base, scale, color)
+        texts.append(verbfunc(value))
     h += '</div>'
     return " / ".join(texts), h  # perfometer_logarithmic(100, 200, 2, "#883875")
 

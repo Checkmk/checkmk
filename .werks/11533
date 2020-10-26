@@ -1,0 +1,14 @@
+Title: fileinfo.groups: fix broken perfometer when no files are found
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1603728513
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+The fileinfo.groups check delivers fewer metrics when there are no files found
+by the agent (count of files and size of all files). This caused the perfometer
+of this check to break, which resulted in an error message displayed on the
+GUI. This has been fixed.

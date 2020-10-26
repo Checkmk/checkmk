@@ -161,28 +161,36 @@ def discover_smart_stats(section: Section) -> DiscoveryResult:
             yield Service(item=disk_name, parameters=cleaned)
 
 
-OUTPUT_FIELDS: Tuple[Tuple[str, str, Callable], ...] = (
-    ('Power_On_Hours', 'Powered on', lambda h: render.timespan(h * 3600)),
-    ('Reported_Uncorrect', 'Uncorrectable errors', str),
-    ('Uncorrectable_Error_Cnt', 'Uncorrectable errors', str),
-    ('Power_Cycle_Count', 'Power cycles', str),
-    ('Reallocated_Sector_Ct', 'Reallocated sectors', str),
-    ('Reallocated_Event_Count', 'Reallocated events', str),
-    ('Spin_Retry_Count', 'Spin retries', str),
-    ('Current_Pending_Sector', 'Pending sectors', str),
-    ('Command_Timeout', 'Command timeouts', str),
-    ('End-to-End_Error', 'End-to-End errors', str),
-    ('UDMA_CRC_Error_Count', 'UDMA CRC errors', str),
-    ('CRC_Error_Count', 'UDMA CRC errors', str),
-    #nvme
-    ('Power_Cycles', 'Power cycles', str),
-    ('Critical_Warning', 'Critical warning', str),
-    ('Available_Spare', 'Available spare', render.percent),
-    ('Percentage_Used', 'Percentage used', render.percent),
-    ('Media_and_Data_Integrity_Errors', 'Media and data integrity errors', str),
-    ('Error_Information_Log_Entries', 'Error information log entries', str),
-    ('Data_Units_Read', 'Data units read', render.bytes),
-    ('Data_Units_Written', 'Data units written', render.bytes),
+def _notice(state: State, text: str) -> Result:
+    return Result(state=state, notice=text)
+
+
+def _summary(state: State, text: str) -> Result:
+    return Result(state=state, summary=text)
+
+
+OUTPUT_FIELDS: Tuple[Tuple[Callable[[State, str], Result], str, str, Callable], ...] = (
+    (_summary, 'Power_On_Hours', 'Powered on', lambda h: render.timespan(h * 3600)),
+    (_summary, 'Power_Cycle_Count', 'Power cycles', str),
+    (_summary, 'Reported_Uncorrect', 'Uncorrectable errors', str),
+    (_summary, 'Uncorrectable_Error_Cnt', 'Uncorrectable errors', str),
+    (_notice, 'Reallocated_Sector_Ct', 'Reallocated sectors', str),
+    (_notice, 'Reallocated_Event_Count', 'Reallocated events', str),
+    (_notice, 'Spin_Retry_Count', 'Spin retries', str),
+    (_notice, 'Current_Pending_Sector', 'Pending sectors', str),
+    (_notice, 'Command_Timeout', 'Command timeouts', str),
+    (_notice, 'End-to-End_Error', 'End-to-End errors', str),
+    (_notice, 'UDMA_CRC_Error_Count', 'UDMA CRC errors', str),
+    (_notice, 'CRC_Error_Count', 'UDMA CRC errors', str),
+    # nvme
+    (_summary, 'Power_Cycles', 'Power cycles', str),
+    (_notice, 'Critical_Warning', 'Critical warning', str),
+    (_notice, 'Available_Spare', 'Available spare', render.percent),
+    (_notice, 'Percentage_Used', 'Percentage used', render.percent),
+    (_summary, 'Media_and_Data_Integrity_Errors', 'Media and data integrity errors', str),
+    (_notice, 'Error_Information_Log_Entries', 'Error information log entries', str),
+    (_notice, 'Data_Units_Read', 'Data units read', render.bytes),
+    (_notice, 'Data_Units_Written', 'Data units written', render.bytes),
 )
 
 
@@ -192,7 +200,7 @@ def check_smart_stats(item: str, params: Mapping[str, int], section: Section) ->
     if disk is None:
         return
 
-    for field, descr, renderer in OUTPUT_FIELDS:
+    for make_result, field, descr, renderer in OUTPUT_FIELDS:
         value = disk.get(field)
         if value is None:
             continue
@@ -205,7 +213,7 @@ def check_smart_stats(item: str, params: Mapping[str, int], section: Section) ->
             ref_value = disk["Available_Spare_Threshold"]
 
         if ref_value is None:
-            yield Result(state=State.OK, summary=infotext)
+            yield make_result(State.OK, infotext)
             yield Metric(field, value)
             continue
 
@@ -224,7 +232,7 @@ def check_smart_stats(item: str, params: Mapping[str, int], section: Section) ->
                 norm_value = disk[f"_normalized_value_{field}"]
                 norm_threshold = disk[f"_normalized_threshold_{field}"]
             except KeyError:
-                yield Result(state=State.OK, summary=infotext)
+                yield make_result(State.OK, infotext)
                 yield Metric(field, value)
                 continue
             hints.append("normalized value: %d" % norm_value)
@@ -232,10 +240,7 @@ def check_smart_stats(item: str, params: Mapping[str, int], section: Section) ->
                 state = State.CRIT
                 hints[-1] += " (!!)"
 
-        yield Result(
-            state=state,
-            summary=infotext + " (%s)" % ', '.join(hints) if hints else infotext,
-        )
+        yield make_result(state, infotext + " (%s)" % ', '.join(hints) if hints else infotext)
         yield Metric(field, value)
 
 

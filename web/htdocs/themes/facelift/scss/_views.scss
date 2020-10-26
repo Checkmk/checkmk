@@ -328,7 +328,7 @@ div.side_popup_content table.valuespec_listof.filter {
     a.delete_button img {
       position: absolute;
       top: 7px;
-      right: 16px;
+      right: $spacing;
       z-index: 5;
       width: 16px;
       height: 16px;

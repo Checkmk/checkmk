@@ -380,10 +380,11 @@ div#top_heading {
 }
 
 div#page_menu_popups {
+  margin: 0 $spacing $spacing 0;
+
   div.page_menu_popup {
     position: relative;
     display: none;
-    padding: 10px;
     background-color: $base-color;
     border: none;
     border-radius: $popup-filters-border-radius;
@@ -392,36 +393,37 @@ div#page_menu_popups {
       display: block;
     }
 
+    &.side_popup > .head {
+      background-color: inherit;
+    }
+
     > .head {
-      padding: 0;
+      padding: 6px 0 5px $spacing;
+      background-color: $headline-color;
 
       h3 {
         padding: 0;
-        margin: 8px 10px;
-        font-size: 14px;
-        font-weight: bold;
+        margin: 0;
+        font-size: $font-size-global;
+        font-weight: $font-weight-bold;
         color: $font-color;
       }
 
       a.close_popup img {
         position: absolute;
-        top: 1px;
-        right: 16px;
+        top: 4px;
+        right: $spacing;
         width: 16px;
         height: auto;
       }
     }
 
-    > .content {
+    &.side_popup > .content {
       padding: 0;
     }
 
-    form {
-      width: 456px;
-
-      span.checkbox {
-        white-space: initial;
-      }
+    form span.checkbox {
+      white-space: initial;
     }
 
     select,
@@ -435,10 +437,6 @@ div#page_menu_popups {
     input.submit {
       color: $black;
       background-color: $success;
-    }
-
-    input[type="submit"]:not(.submit) {
-      border: $popup-button-border;
     }
   }
 }

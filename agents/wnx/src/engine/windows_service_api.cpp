@@ -624,7 +624,11 @@ int ExecCmkUpdateAgent(const std::vector<std::wstring>& params) {
 
     cma::cfg::SetupPluginEnvironment();
 
+    XLOG::setup::ColoredOutputOnStdio(false);
+    XLOG::setup::DuplicateOnStdio(false);
     auto proc_id = cma::tools::RunStdCommand(to_run, true);
+    XLOG::setup::ColoredOutputOnStdio(true);
+    XLOG::setup::DuplicateOnStdio(true);
     if (proc_id > 0) {
         XLOG::l.i("Agent Updater process [{}] started\n", proc_id);
         return 0;

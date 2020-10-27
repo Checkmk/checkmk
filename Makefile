@@ -3,7 +3,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 #
-
 include defines.make
 
 NAME               := check_mk

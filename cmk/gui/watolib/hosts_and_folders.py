@@ -13,7 +13,7 @@ import time
 import re
 import shutil
 import uuid
-from typing import Any, Callable, Dict, List, Mapping, Optional, Set, Tuple, Type, Union
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Set, Tuple, Type, Union
 
 from livestatus import SiteId
 
@@ -68,8 +68,13 @@ from cmk.utils import store
 from cmk.utils.iterables import first
 from cmk.utils.memoize import MemoizeCache
 
+from cmk.utils.type_defs import HostName
+
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+
+HostAttributes = Mapping[str, Any]
+HostsWithAttributes = Mapping[HostName, HostAttributes]
 
 # Names:
 # folder_path: Path of the folders directory relative to etc/check_mk/conf.d/wato
@@ -2882,11 +2887,11 @@ def validate_all_hosts(hostnames, force_all=False):
     return {}
 
 
-def collect_all_hosts():
+def collect_all_hosts() -> HostsWithAttributes:
     return collect_hosts(Folder.root_folder())
 
 
-def collect_hosts(folder):
+def collect_hosts(folder) -> HostsWithAttributes:
     hosts_attributes = {}
     for host_name, host in Host.all().items():
         hosts_attributes[host_name] = host.effective_attributes()
@@ -2963,17 +2968,29 @@ class MatchItemGeneratorHosts(ABCMatchItemGenerator):
     def __init__(
         self,
         name: str,
-        host_collector: Callable[[], Mapping[str, Mapping[str, str]]],
+        host_collector: Callable[[], HostsWithAttributes],
     ) -> None:
         super().__init__(name)
         self._host_collector = host_collector
+
+    def _get_additional_match_texts(
+        self,
+        host_attributes: HostAttributes,
+    ) -> Iterable[str]:
+        yield from (val for key in ['alias', 'ipaddress', 'ipv6address']
+                    for val in [host_attributes[key]] if val)
+        yield from (ip_address for key in ['additional_ipv4addresses', 'additional_ipv6addresses']
+                    for ip_address in host_attributes[key])
 
     def generate_match_items(self) -> MatchItems:
         yield from (MatchItem(
             title=host_name,
             topic='Hosts',
             url=host_attributes["edit_url"],
-            match_texts=[host_name],
+            match_texts=[
+                host_name,
+                *self._get_additional_match_texts(host_attributes),
+            ],
         ) for host_name, host_attributes in self._host_collector().items())
 
     def is_affected_by_change(self, change_action_name: str) -> bool:

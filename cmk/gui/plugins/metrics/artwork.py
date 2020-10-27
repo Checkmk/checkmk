@@ -66,7 +66,7 @@ def get_default_graph_render_options():
 def _graph_colors(theme_id):
     return {
         "modern-dark": {
-            "background_color": "#282828",
+            "background_color": None,
             "foreground_color": "#ffffff",
             "canvas_color": None,
         },

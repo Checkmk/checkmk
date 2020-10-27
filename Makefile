@@ -554,7 +554,7 @@ format-shell:
 	$(MAKE)	-C tests format-shell
 
 format-js:
-	scripts/run-prettier --ignore-path ./.prettierignore --write "web/htdocs/js/**/*.js"
+	scripts/run-prettier --ignore-path ./.prettierignore --write "{enterprise/,}web/htdocs/js/**/*.js"
 
 # Note: You need the doxygen and graphviz packages.
 documentation: config.h

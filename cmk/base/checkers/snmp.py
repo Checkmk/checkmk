@@ -142,6 +142,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
                 s.name: s.trees for s in agent_based_register.iter_all_snmp_sections()
             },
             snmp_section_detects=self._make_snmp_section_detects(),
+            disabled_sections=self.host_config.disabled_snmp_sections(),
             configured_snmp_sections=self._make_configured_snmp_sections(),
             structured_data_snmp_sections=self._make_inventory_snmp_sections(),
             on_error=self.on_snmp_scan_error,

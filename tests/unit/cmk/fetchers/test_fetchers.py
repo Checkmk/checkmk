@@ -256,6 +256,7 @@ class ABCTestSNMPFetcher(ABC):
                 SectionName("pim"): SNMPDetectSpec([[("1.2.3.4", "pim device", True)]]),
                 SectionName("pam"): SNMPDetectSpec([[("1.2.3.4", "pam device", True)]]),
             },
+            disabled_sections=set(),
             configured_snmp_sections=set(),
             structured_data_snmp_sections=set(),
             on_error="raise",

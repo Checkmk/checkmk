@@ -7,7 +7,19 @@
 import ast
 import logging
 from functools import partial
-from typing import Any, cast, Collection, Dict, Final, Iterable, List, Mapping, Optional, Set, Tuple
+from typing import (
+    Any,
+    cast,
+    Collection,
+    Dict,
+    Final,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Set,
+    Tuple,
+)
 
 from cmk.utils.type_defs import SectionName
 
@@ -51,6 +63,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         *,
         snmp_section_trees: Mapping[SectionName, List[SNMPTree]],
         snmp_section_detects: Mapping[SectionName, SNMPDetectSpec],
+        disabled_sections: Set[SectionName],
         configured_snmp_sections: Set[SectionName],
         structured_data_snmp_sections: Set[SectionName],
         on_error: str,
@@ -61,6 +74,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         super().__init__(file_cache, logging.getLogger("cmk.fetchers.snmp"))
         self.snmp_section_trees: Final = snmp_section_trees
         self.snmp_section_detects: Final = snmp_section_detects
+        self.disabled_sections: Final = disabled_sections
         self.configured_snmp_sections: Final = configured_snmp_sections
         self.structured_data_snmp_sections: Final = structured_data_snmp_sections
         self.on_error: Final = on_error
@@ -92,6 +106,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
                     [[cast(SNMPDetectAtom, tuple(inner)) for inner in outer] for outer in specs])
                 for name, specs in serialized["snmp_section_detects"].items()
             },
+            disabled_sections={SectionName(name) for name in serialized["disabled_sections"]},
             configured_snmp_sections={
                 SectionName(name) for name in serialized["configured_snmp_sections"]
             },
@@ -112,6 +127,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
                         ] for n, trees in self.snmp_section_trees.items()
             },
             "snmp_section_detects": {str(n): d for n, d in self.snmp_section_detects.items()},
+            "disabled_sections": [str(s) for s in self.disabled_sections],
             "configured_snmp_sections": [str(s) for s in self.configured_snmp_sections],
             "structured_data_snmp_sections": [str(s) for s in self.structured_data_snmp_sections],
             "on_error": self.on_error,

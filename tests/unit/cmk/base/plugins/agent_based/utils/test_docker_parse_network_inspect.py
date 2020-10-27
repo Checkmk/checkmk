@@ -8,7 +8,7 @@ import os
 import re
 import pytest  # type: ignore[import]
 
-from cmk.base.check_legacy_includes.legacy_docker import *
+from cmk.base.plugins.agent_based.utils import legacy_docker
 
 pytestmark = pytest.mark.checks
 
@@ -163,5 +163,5 @@ regex = re.compile
     }]),
 ])
 def test_parse_legacy_docker_network_inspect(indata, outdata):
-    parsed = parse_legacy_docker_network_inspect(indata)  # type: ignore[name-defined] # pylint: disable=undefined-variable
+    parsed = legacy_docker.parse_network_inspect(indata)
     assert parsed == outdata, "expected: %r, got %r" % (outdata, parsed)

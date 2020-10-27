@@ -3,25 +3,29 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import cmk.base.plugins.agent_based.utils.docker as docker
-from cmk.base.check_legacy_includes.legacy_docker import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from typing import Any, Dict
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+from cmk.base.plugins.agent_based.utils import docker, legacy_docker
+
+Section = Dict[str, Any]
 
 
-def parse_docker_network(info):
-    version = docker.get_version(info)
+def parse_docker_network(string_table: StringTable) -> Section:
+    version = docker.get_version(string_table)
 
     if version is None:
-        networks = parse_legacy_docker_network_inspect(info)
-        return DeprecatedDict((n["Id"], n) for n in networks)
+        network_list = legacy_docker.parse_network_inspect(string_table)
+        return legacy_docker.DeprecatedDict((n["Id"], n) for n in network_list)
 
-    networks = (docker.json_get_obj(line) for line in info[1:])
+    networks = (docker.json_get_obj(line) for line in string_table[1:])
     return {n["Id"]: n for n in networks if n is not None}
 
 
 def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
-    parsed = parse_docker_network(info)
+    section = parse_docker_network(info)
 
-    for network_id, network in parsed.items():
+    for network_id, network in section.items():
 
         sorted_container_items = sorted(network["Containers"].items())
 

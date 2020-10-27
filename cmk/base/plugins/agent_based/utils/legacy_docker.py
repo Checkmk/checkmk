@@ -3,6 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import List
 
 import json
 
@@ -97,3 +98,12 @@ def parse_node_info(info):  # pylint: disable=too-many-branches
         parsed["IndexServerAddress"] = parsed.pop("Registry")
 
     return parsed
+
+
+def parse_network_inspect(info: List[List[str]]) -> List:
+    try:
+        networks = json.loads(''.join(row[0] for row in info if row))
+    except ValueError:
+        return []
+    assert isinstance(networks, list)
+    return networks

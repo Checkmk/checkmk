@@ -305,14 +305,6 @@ def parse_legacy_docker_node_images(subsections):
     return DeprecatedDict((("images", images), ("containers", containers)))
 
 
-def parse_legacy_docker_network_inspect(info):
-    try:
-        raw = json.loads(''.join(row[0] for row in info if row))
-    except ValueError:
-        raw = []
-    return DeprecatedList(raw)
-
-
 def parse_legacy_docker_container_node_name(info):
     try:
         return info[0][0]

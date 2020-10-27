@@ -813,7 +813,7 @@ class Painter(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def title(self, cell: 'Cell') -> str:
-        """Used as display string for the painter in the GUI (e.g. view editor)"""
+        """Used as display string for the painter in the GUI (e.g. views using this painter)"""
         raise NotImplementedError()
 
     @abc.abstractproperty
@@ -867,6 +867,11 @@ class Painter(metaclass=abc.ABCMeta):
 
     def short_title(self, cell: 'Cell') -> str:
         """Used as display string for the painter e.g. as table header
+        Falls back to the full title if no short title is given"""
+        return self.title(cell)
+
+    def list_title(self, cell: 'Cell') -> str:
+        """Override this to define a custom title for the painter in the view editor
         Falls back to the full title if no short title is given"""
         return self.title(cell)
 

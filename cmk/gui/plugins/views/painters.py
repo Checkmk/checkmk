@@ -453,8 +453,8 @@ class PainterSvcPluginOutput(Painter):
     def title(self, cell):
         return _("Summary")
 
-    def short_title(self, cell):
-        return _("Summary")
+    def list_title(self, cell):
+        return _("Summary (Previously named: Status details or plugin output)")
 
     @property
     def columns(self):
@@ -477,8 +477,8 @@ class PainterSvcLongPluginOutput(Painter):
     def title(self, cell):
         return _("Details")
 
-    def short_title(self, cell):
-        return _("Details")
+    def list_title(self, cell):
+        return _("Details (Previously named: long output)")
 
     @property
     def columns(self):
@@ -1774,8 +1774,8 @@ class PainterHostPluginOutput(Painter):
     def title(self, cell):
         return _("Summary")
 
-    def short_title(self, cell):
-        return _("Summary")
+    def list_title(self, cell):
+        return _("Summary (Previously named: Status details or plugin output)")
 
     @property
     def columns(self):

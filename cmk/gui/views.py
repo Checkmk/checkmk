@@ -2716,7 +2716,7 @@ def get_painter_title_for_choices(painter: Painter) -> str:
         info_title = _("Site")
 
     dummy_cell = Cell(View("", {}, {}), PainterSpec(painter.ident))
-    return u"%s: %s" % (info_title, painter.title(dummy_cell))
+    return u"%s: %s" % (info_title, painter.list_title(dummy_cell))
 
 
 #.

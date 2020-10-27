@@ -15,6 +15,7 @@ class Search {
         this.search_id = "content_inner_" + id + "_search";
         this.input_id = "mk_side_search_field_" + id + "_search";
         this.more_id = "more_main_menu_" + id;
+        this.previous_timeout_id = null;
     }
 
     execute_search() {
@@ -39,7 +40,8 @@ class Search {
     }
 
     has_search_query() {
-        return this.get_current_input().length > 0 ? true : false;
+        // Search only for 2 or more characters
+        return this.get_current_input().length > 1 ? true : false;
     }
 
     display_menu_items() {
@@ -93,7 +95,12 @@ const setup_search = new Search("setup");
 export function on_input_search(id) {
     let current_search = get_current_search(id);
     if (current_search) {
-        current_search.execute_search();
+        if (current_search.previous_timeout_id !== null) {
+            clearTimeout(current_search.previous_timeout_id);
+        }
+        current_search.previous_timeout_id = setTimeout(function () {
+            current_search.execute_search();
+        }, 300);
     }
 }
 

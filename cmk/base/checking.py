@@ -76,10 +76,8 @@ from cmk.base.checkers.host_sections import HostKey, MultiHostSections
 
 if not cmk_version.is_raw_edition():
     import cmk.base.cee.keepalive as keepalive  # type: ignore[import] # pylint: disable=no-name-in-module
-    from cmk.fetchers.cee.snmp_backend import inline  # type: ignore[import] # pylint: disable=no-name-in-module, import-error, cmk-module-layer-violation
 else:
     keepalive = None  # type: ignore[assignment]
-    inline = None  # type: ignore[assignment]
 
 # global variables used to cache temporary values that do not need
 # to be reset after a configuration change.
@@ -266,14 +264,6 @@ def do_check(
     finally:
         if _checkresult_file_fd is not None:
             _close_checkresult_file()
-
-        # "ipaddress is not None": At least when working with a cluster host it seems the ipaddress
-        # may be None.  This needs to be understood in detail and cleaned up. As the InlineSNMP
-        # stats feature is a very rarely used debugging feature, the analyzation and fix is
-        # postponed now.
-        if config.record_inline_snmp_stats and ipaddress is not None and host_config.snmp_config(
-                ipaddress).snmp_backend == "inline":
-            inline.snmp_stats_save()
 
 
 def _check_plugins_missing_data(

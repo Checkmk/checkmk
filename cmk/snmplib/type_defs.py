@@ -103,7 +103,6 @@ class SNMPHostConfig(
             ("character_encoding", Optional[str]),
             ("is_usewalk_host", bool),
             ("snmp_backend", str),
-            ("record_stats", bool),
         ])):
     @property
     def is_snmpv3_host(self) -> bool:

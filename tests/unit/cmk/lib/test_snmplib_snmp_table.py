@@ -11,11 +11,9 @@ from testlib.base import Scenario
 from cmk.utils.log import logger
 from cmk.utils.type_defs import SectionName
 import cmk.snmplib.snmp_table as snmp_table
-from cmk.snmplib.type_defs import ABCSNMPBackend, OID_END, OIDBytes, OIDEnd, SNMPHostConfig, SNMPTree
+from cmk.snmplib.type_defs import ABCSNMPBackend, OIDBytes, OIDEnd, SNMPHostConfig, SNMPTree
 
 import cmk.base.config as config
-from cmk.base.api.agent_based.register.section_plugins_legacy import _create_snmp_trees
-from cmk.base.check_api import BINARY
 
 SNMPConfig = SNMPHostConfig(
     is_ipv6_primary=False,
@@ -32,7 +30,6 @@ SNMPConfig = SNMPHostConfig(
     character_encoding="ascii",
     is_usewalk_host=False,
     snmp_backend="classic",
-    record_stats=False,
 )
 
 

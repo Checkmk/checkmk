@@ -818,16 +818,20 @@ def _dashboard_edit_entries(name: DashboardName, board: DashboardConfig,
         # edit mode using javascript, use the URL with edit=1. When this URL is opened,
         # the dashboard will be cloned for this user
         yield PageMenuEntry(
-            title=_("Edit dashboard"),
+            title=_("Customize builtin dashboard"),
             icon_name="edit",
             item=make_simple_link(makeuri(request, [("edit", 1)])),
         )
         return
 
+    edit_text = _("Leave layout mode")
+    display_text = _("Enter layout mode")
+
     yield PageMenuEntry(
-        title=_("Enter layout mode / Leave layout mode"),
+        title=edit_text if mode == "edit" else display_text,
         icon_name="trans",
-        item=make_javascript_link("cmk.dashboard.toggle_dashboard_edit()"),
+        item=make_javascript_link('cmk.dashboard.toggle_dashboard_edit("%s", "%s")' %
+                                  (edit_text, display_text)),
         is_shortcut=True,
         name="toggle_edit",
     )

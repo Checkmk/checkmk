@@ -404,13 +404,21 @@ function dashboard_update_contents(id, response_text) {
 
 var g_editing = false;
 
-export function toggle_dashboard_edit() {
+export function toggle_dashboard_edit(edit_text, display_text) {
     g_editing = !g_editing;
 
     // Toggle the page menu elements
     let toggle_suggestion = document.getElementById("menu_suggestion_toggle_edit");
     let toggle_shortcut = document.getElementById("menu_shortcut_toggle_edit");
     let toggle_entry = document.getElementById("menu_entry_toggle_edit");
+
+    if (edit_text && display_text) {
+        const title = g_editing ? edit_text : display_text;
+        toggle_suggestion.lastChild.textContent = title;
+        toggle_shortcut.title = title;
+        toggle_entry.firstChild.lastChild.textContent = title;
+    }
+
     if (g_editing) {
         utils.add_class(toggle_suggestion, "edit");
         utils.add_class(toggle_shortcut, "edit");

@@ -4,9 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 from .agent_based_api.v1.type_defs import StringTable
 
+import time
 from .agent_based_api.v1 import register
 
 Section = List[Tuple[str, StringTable]]
@@ -100,3 +101,65 @@ register.agent_section(
     name="dmidecode",
     parse_function=parse_dmidecode,
 )
+
+#                              _          _
+#  _ __   __ _ _ __ ___  ___  | |__   ___| |_ __   ___ _ __ ___
+# | '_ \ / _` | '__/ __|/ _ \ | '_ \ / _ \ | '_ \ / _ \ '__/ __|
+# | |_) | (_| | |  \__ \  __/ | | | |  __/ | |_) |  __/ |  \__ \
+# | .__/ \__,_|_|  |___/\___| |_| |_|\___|_| .__/ \___|_|  |___/
+# |_|                                      |_|
+#
+
+
+def _parse_date(value: str) -> Optional[float]:
+    try:
+        return time.mktime(time.strptime(value, "%m/%d/%Y"))
+    except ValueError:
+        return None
+
+
+def _parse_size(v: str) -> Optional[float]:  # into Bytes (int)
+    if not v or v == "Unknown":
+        return None
+
+    parts = v.split()
+    if parts[1].lower() == "tb":
+        return int(parts[0]) * 1024 * 1024 * 1024 * 1024
+    if parts[1].lower() == "gb":
+        return int(parts[0]) * 1024 * 1024 * 1024
+    if parts[1].lower() == "mb":
+        return int(parts[0]) * 1024 * 1024
+    if parts[1].lower() == "kb":
+        return int(parts[0]) * 1024
+    return int(parts[0])
+
+
+def _parse_speed(v: str) -> Optional[float]:  # into Hz (float)
+    if not v or v == "Unknown":
+        return None
+
+    parts = v.split()
+    if parts[1] == "GHz":
+        return float(parts[0]) * 1000000000.0
+    if parts[1] == "MHz":
+        return float(parts[0]) * 1000000.0
+    if parts[1] == "kHz":
+        return float(parts[0]) * 1000.0
+    if parts[1] == "Hz":
+        return float(parts[0])
+    return None
+
+
+def _parse_voltage(v: str) -> Optional[float]:
+    if not v or v == "Unknown":
+        return None
+
+    parts = v.split()
+    return float(parts[0])
+
+
+def _parse_time(v: str) -> float:  # 155 ns
+    parts = v.split()
+    if parts[1] == "ns":
+        return float(parts[0]) / 1000000000.0
+    return float(parts[0])  # assume seconds

@@ -108,18 +108,18 @@ node(NODE) {
 
                         sh('mkdir -p agents')
 
-                        build(job: WIN_PROJECT)
+                        def WIN_BUILD = build(job: WIN_PROJECT, parameters: [string(name: 'VERSION', value: VERSION)])
                         copyArtifacts(
                             projectName: WIN_PROJECT,
-                            selector: lastSuccessful(),
+                            selector: specific(WIN_BUILD.getId()),
                             target: 'agents',
                             fingerprintArtifacts: true
                         )
 
-                        build(job: WIN_PY_PROJECT)
+                        def WIN_PY_BUILD = build(job: WIN_PY_PROJECT, parameters: [string(name: 'VERSION', value: VERSION)])
                         copyArtifacts(
                             projectName: WIN_PY_PROJECT,
-                            selector: lastSuccessful(),
+                            selector: specific(WIN_PY_BUILD.getId()),
                             target: 'agents',
                             fingerprintArtifacts: true
                         )

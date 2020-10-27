@@ -2,16 +2,33 @@
 
 properties([
     buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
-    pipelineTriggers([pollSCM('H/2 * * * *')])
+    pipelineTriggers([pollSCM('H/2 * * * *')]),
+    parameters([
+      string(name: 'VERSION', defaultValue: 'daily', description: 'Version: "daily" for current state of the branch, e.g. "1.6.0b2" for building the git tag "v1.6.0b2".' ),
+    ])
 ])
 
 node ('windows') {
     stage('git checkout') {
-        checkout(scm)
+        checkout_git(scm, VERSION)
         windows = load 'buildscripts/scripts/lib/windows.groovy'
 
     }
     windows.build(
         TARGET: 'agent'
     )
+}
+
+def checkout_git(scm, VERSION) {
+    if (VERSION == 'daily') {
+        checkout(scm)
+    } else {
+        checkout([
+            $class: 'GitSCM',
+            userRemoteConfigs: scm.userRemoteConfigs,
+            branches: [
+                [name: 'refs/tags/v' + VERSION]
+            ]
+        ])
+    }
 }

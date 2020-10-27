@@ -52,8 +52,8 @@ checks = {
                 'additional_rules': [('/gw/ro-gr/do/wpgate/gwia/dsnhold/5753717f.*', {'maxsize_largest': (1, 2)}),],
                 'shorten_multiline_output': True,
             }, [
-                (0, 'Count: 3', [('count', 3, None, None, None, None)]),
-                (0, 'Size: 1152 B', [('size', 1152, None, None, None, None)]),
+                (0, 'Count: 4', [('count', 4, None, None, None, None)]),
+                (0, 'Size: 1536 B', [('size', 1536, None, None, None, None)]),
                 (
                     1, 'Largest size: 384 B (warn/crit at 300 B/400 B)', [
                         ('size_largest', 384, 300.0, 400.0, None, None)

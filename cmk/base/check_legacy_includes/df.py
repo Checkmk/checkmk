@@ -89,11 +89,24 @@ def df_inventory(mplist):
 
 # Users might have set filesystem_default_levels to old format like (80, 90)
 
-
 # needed by df, df_netapp and vms_df and maybe others in future:
 # compute warning and critical levels. Takes into account the size of
 # the filesystem and the magic number. Since the size is only known at
 # check time this function's result cannot be precompiled.
+
+
+def _get_update_from_params(params):
+    if isinstance(params, dict):
+        # If params is a dictionary, make that override the default values
+        return params
+
+    # simple format - explicitely override levels and magic
+    update_params = {"levels": (float(params[0]), float(params[1]))}
+    if len(params) >= 3:
+        update_params["magic"] = params[2]
+    return update_params
+
+
 # ==================================================================================================
 # THIS FUNCTION DEFINED HERE IS IN THE PROCESS OF OR HAS ALREADY BEEN MIGRATED TO
 # THE NEW CHECK API. PLEASE DO NOT MODIFY THIS FUNCTION ANYMORE. INSTEAD, MODIFY THE MIGRATED CODE
@@ -129,14 +142,7 @@ def get_filesystem_levels(mountpoint, size_gb, params):
         else:
             levels["magic"] = filesystem_default_levels[2]
 
-    # If params is a dictionary, make that override the default values
-    if isinstance(params, dict):
-        levels.update(params)
-
-    else:  # simple format - explicitely override levels and magic
-        levels["levels"] = convert_legacy_levels(params[:2])
-        if len(params) >= 3:
-            levels["magic"] = params[2]
+    levels.update(_get_update_from_params(params))
 
     # Determine real warn, crit levels
     if isinstance(levels["levels"], tuple):

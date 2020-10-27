@@ -1294,6 +1294,7 @@ class AutomationDiagHost(Automation):
             character_encoding=snmp_config.character_encoding,
             is_usewalk_host=snmp_config.is_usewalk_host,
             snmp_backend=snmp_config.snmp_backend,
+            record_stats=config.record_inline_snmp_stats,
         )
 
         data = snmp_table.get_snmp_table_cached(

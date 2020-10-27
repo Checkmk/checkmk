@@ -2524,6 +2524,7 @@ class HostConfig:
             character_encoding=self._snmp_character_encoding(),
             is_usewalk_host=self.is_usewalk_host,
             snmp_backend=self._get_snmp_backend(),
+            record_stats=record_inline_snmp_stats,
         )
 
     def _snmp_credentials(self) -> SNMPCredentials:
@@ -3018,6 +3019,7 @@ class HostConfig:
             character_encoding=self._snmp_character_encoding(),
             is_usewalk_host=self.is_usewalk_host,
             snmp_backend=self._get_snmp_backend(),
+            record_stats=record_inline_snmp_stats,
         )
 
     @property

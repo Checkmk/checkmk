@@ -267,6 +267,7 @@ class ABCTestSNMPFetcher(ABC):
                 character_encoding=None,
                 is_usewalk_host=False,
                 snmp_backend="classic",
+                record_stats=False,
             ),
         )
 

@@ -137,6 +137,7 @@ def test_registered_configvars():
         'profile',
         'quicksearch_dropdown_limit',
         'quicksearch_search_order',
+        'record_inline_snmp_stats',
         'remote_status',
         'replication',
         'reschedule_timeout',

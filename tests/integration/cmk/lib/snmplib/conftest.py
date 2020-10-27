@@ -180,6 +180,7 @@ def backend_fixture(request, snmp_data_dir):
         character_encoding=None,
         is_usewalk_host=backend is StoredWalkSNMPBackend,
         snmp_backend="inline" if backend is InlineSNMPBackend else "classic",
+        record_stats=False,
     )
 
     snmpwalks_dir = cmk.utils.paths.snmpwalks_dir

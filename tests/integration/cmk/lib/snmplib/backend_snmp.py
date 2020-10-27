@@ -221,6 +221,7 @@ def _create_configs_ipv4() -> List[SNMPHostConfig]:
             character_encoding=None,
             is_usewalk_host=False,
             snmp_backend="classic",
+            record_stats=False,
         ),
         SNMPHostConfig(
             is_ipv6_primary=False,
@@ -237,6 +238,7 @@ def _create_configs_ipv4() -> List[SNMPHostConfig]:
             character_encoding=None,
             is_usewalk_host=False,
             snmp_backend="classic",
+            record_stats=False,
         ),
         SNMPHostConfig(
             is_ipv6_primary=False,
@@ -260,6 +262,7 @@ def _create_configs_ipv4() -> List[SNMPHostConfig]:
             character_encoding=None,
             is_usewalk_host=False,
             snmp_backend="classic",
+            record_stats=False,
         ),
     ]
 
@@ -281,6 +284,7 @@ def _create_configs_ipv6() -> List[SNMPHostConfig]:
             character_encoding=None,
             is_usewalk_host=False,
             snmp_backend="classic",
+            record_stats=False,
         ),
         SNMPHostConfig(
             is_ipv6_primary=True,
@@ -297,6 +301,7 @@ def _create_configs_ipv6() -> List[SNMPHostConfig]:
             character_encoding=None,
             is_usewalk_host=False,
             snmp_backend="classic",
+            record_stats=False,
         ),
         SNMPHostConfig(
             is_ipv6_primary=True,
@@ -320,6 +325,7 @@ def _create_configs_ipv6() -> List[SNMPHostConfig]:
             character_encoding=None,
             is_usewalk_host=False,
             snmp_backend="classic",
+            record_stats=False,
         ),
     ]
 
@@ -344,6 +350,7 @@ def _create_configs_special_auth() -> List[SNMPHostConfig]:
             character_encoding=None,
             is_usewalk_host=False,
             snmp_backend="classic",
+            record_stats=False,
         ),
         SNMPHostConfig(
             is_ipv6_primary=False,
@@ -365,6 +372,7 @@ def _create_configs_special_auth() -> List[SNMPHostConfig]:
             character_encoding=None,
             is_usewalk_host=False,
             snmp_backend="classic",
+            record_stats=False,
         ),
     ]
 
@@ -386,6 +394,7 @@ def _create_configs_oidranges():
             character_encoding=None,
             is_usewalk_host=False,
             snmp_backend="classic",
+            record_stats=False,
         ),
         SNMPHostConfig(
             is_ipv6_primary=False,
@@ -402,6 +411,7 @@ def _create_configs_oidranges():
             character_encoding=None,
             is_usewalk_host=False,
             snmp_backend="classic",
+            record_stats=False,
         ),
         SNMPHostConfig(
             is_ipv6_primary=False,
@@ -418,6 +428,7 @@ def _create_configs_oidranges():
             character_encoding=None,
             is_usewalk_host=False,
             snmp_backend="classic",
+            record_stats=False,
         ),
         SNMPHostConfig(
             is_ipv6_primary=False,
@@ -434,5 +445,6 @@ def _create_configs_oidranges():
             character_encoding=None,
             is_usewalk_host=False,
             snmp_backend="classic",
+            record_stats=False,
         ),
     ]

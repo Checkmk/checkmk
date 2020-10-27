@@ -2522,6 +2522,30 @@ class ConfigVariableUseInlineSNMP(ConfigVariable):
 
 
 @config_variable_registry.register
+class ConfigVariableRecordInlineSNMPStats(ConfigVariable):
+    def group(self):
+        return ConfigVariableGroupCheckExecution
+
+    def domain(self):
+        return ConfigDomainCore
+
+    def ident(self):
+        return "record_inline_snmp_stats"
+
+    def valuespec(self):
+        return Checkbox(
+            title=_("Record statistics of Inline SNMP"),
+            label=_("Enable recording of Inline SNMP statistics"),
+            help=_(
+                "When you have enabled Inline SNMP, you can use this flag to enable recording of "
+                "some performance related values. The recorded values are stored in a single file "
+                "at <tt>var/check_mk/snmp.stats</tt>.<br><br>"
+                "<i>Please note:</i> Only enable this for a short period, because it will "
+                "decrease the performance of your monitoring."),
+        )
+
+
+@config_variable_registry.register
 class ConfigVariableHTTPProxies(ConfigVariable):
     def group(self):
         return ConfigVariableGroupCheckExecution

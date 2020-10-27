@@ -95,6 +95,25 @@ def df_inventory(mplist):
 # check time this function's result cannot be precompiled.
 
 
+def _get_update_from_user_config_default_levels(
+    user_default_levels,
+    convert_legacy_levels,
+):
+    # convert default levels to dictionary. This is in order support
+    # old style levels like (80, 90)
+    if isinstance(user_default_levels, dict):
+        fs_default_levels = user_default_levels.copy()
+        fs_levels = fs_default_levels.get("levels")
+        if fs_levels:
+            fs_default_levels["levels"] = convert_legacy_levels(fs_levels)
+        return fs_default_levels
+
+    return {
+        "levels": convert_legacy_levels(user_default_levels[:2]),
+        "magic": user_default_levels[2] if len(user_default_levels) >= 3 else None,
+    }
+
+
 def _get_update_from_params(params):
     if isinstance(params, dict):
         # If params is a dictionary, make that override the default values
@@ -126,22 +145,11 @@ def get_filesystem_levels(mountpoint, size_gb, params):
             return tuple(map(float, value))
         return value
 
-    # convert default levels to dictionary. This is in order support
-    # old style levels like (80, 90)
-    if isinstance(filesystem_default_levels, dict):
-        fs_default_levels = filesystem_default_levels.copy()
-        fs_levels = fs_default_levels.get("levels")
-        if fs_levels:
-            fs_default_levels["levels"] = convert_legacy_levels(fs_levels)
-        levels.update(filesystem_default_levels)
-    else:
-        levels = _FILESYSTEM_DEFAULT_LEVELS.copy()
-        levels["levels"] = convert_legacy_levels(filesystem_default_levels[:2])
-        if len(filesystem_default_levels) == 2:
-            levels["magic"] = None
-        else:
-            levels["magic"] = filesystem_default_levels[2]
-
+    levels.update(
+        _get_update_from_user_config_default_levels(
+            filesystem_default_levels,
+            convert_legacy_levels,
+        ))
     levels.update(_get_update_from_params(params))
 
     # Determine real warn, crit levels

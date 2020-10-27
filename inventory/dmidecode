@@ -5,75 +5,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Callable, Dict, List, Mapping, Optional, Tuple, Union
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.inventory_dmidecode import Section
 
 import time
 
 Converter = Union[str, Tuple[str, Callable[[str], Union[str, float, None]]]]
 
-# Example output:
-# BIOS Information
-# 	Vendor: LENOVO
-# 	Version: 6FET49WW (1.19 )
-# 	Release Date: 10/17/2008
-# 	Address: 0xE0000
-# 	Runtime Size: 128 kB
-# 	ROM Size: 8192 kB
-# 	Characteristics:
-# 		PCI is supported
-# 		PC Card (PCMCIA) is supported
-# 		PNP is supported
-# 		BIOS is upgradeable
-# 		BIOS shadowing is allowed
-# 		ESCD support is available
-# 		Boot from CD is supported
-# 		Selectable boot is supported
-# 		BIOS ROM is socketed
-# 		EDD is supported
-# 		ACPI is supported
-# 		USB legacy is supported
-# 		BIOS boot specification is supported
-# 		Targeted content distribution is supported
-# 	BIOS Revision: 1.25
-# 	Firmware Revision: 1.1
-#
-# System Information
-# 	Manufacturer: LENOVO
-# 	Product Name: 4061AR7
-# 	Version: ThinkPad W500
-# 	Serial Number: L3AFB3L
-# 	UUID: AD137E01-4A86-11CB-A580-BE0E287D2679
-# 	Wake-up Type: Power Switch
-# 	SKU Number: Not Specified
-# 	Family: ThinkPad W500
-#
-# ... any many other sections...
 
-
-# Note: on Linux \t is replaced by : and then the split
-# is done by :. On Windows the \t comes 1:1 and no splitting
-# is being done. So we need to split manually here
-def inv_dmidecode(info: StringTable) -> None:
-    # We cannot use a dict here, we may have multiple
-    # subsections with the same title and the order matters!
-    subsections: List[Tuple[str, StringTable]] = []
-    current_lines: StringTable = []  # these will not be used
-    for line in info:
-        # Windows plugin keeps tabs and has no separator
-        if len(line) == 1:
-            parts = line[0].replace("\t", ":").split(":")
-            line = [x.strip() for x in parts]
-
-        if len(line) == 1:
-            current_lines = []
-            subsections.append((line[0], current_lines))
-        else:
-            current_lines.append([w.strip() for w in line[1:]])
-
+def inv_dmidecode(section: Section) -> None:
     # There will be "Physical Memory Array" sections, each followed
     # by multiple "Memory Device" sections. Keep track of which belongs where:
     memory_array_number = 0
-    for title, lines in subsections:
+    for title, lines in section:
         memory_array_number += (title == "Physical Memory Array")
         inv_dmidecode_parse_section(title, memory_array_number, lines)
 
@@ -105,9 +48,8 @@ def inv_dmidecode_parse_section(
 
 def inv_dmidecode_parse_date(value: str) -> Optional[float]:
     try:
-        # 10/17/2008
         return time.mktime(time.strptime(value, "%m/%d/%Y"))
-    except Exception:
+    except ValueError:
         return None
 
 
@@ -307,5 +249,6 @@ def dmidecode_parse_time(v: str) -> float:  # 155 ns
 
 
 inv_info['dmidecode'] = {
+    # section already migrated!
     "inv_function": inv_dmidecode,
 }

@@ -577,11 +577,11 @@ def _render_availability_timeline(what: AVObjectType, av_entry: AVEntry, avoptio
             table.cell(_("State"), row["state_name"], css=row["css"] + " state narrow")
 
             if "omit_timeline_plugin_output" not in avoptions["labelling"]:
-                table.cell(_("Last Known Plugin Output"),
+                table.cell(_("Last known summary"),
                            format_plugin_output(row.get("log_output", ""), row))
 
             if "timeline_long_output" in avoptions["labelling"]:
-                table.cell(_("Last Known Long Output"),
+                table.cell(_("Last known details"),
                            format_plugin_output(row.get("long_log_output", ""), row))
 
     # Legend for timeline

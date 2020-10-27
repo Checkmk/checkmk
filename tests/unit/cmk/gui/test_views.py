@@ -1395,8 +1395,8 @@ def test_registered_painters():
         },
         'host_plugin_output': {
             'columns': ['host_plugin_output', 'host_custom_variables'],
-            'short': u'Status detail',
-            'title': u'Output of host check plugin'
+            'short': u'Summary',
+            'title': u'Summary'
         },
         'host_pnpgraph': {
             'columns': ['host_name', 'host_perf_data', 'host_metrics', 'host_check_command'],
@@ -2883,8 +2883,8 @@ def test_registered_painters():
         },
         'svc_long_plugin_output': {
             'columns': ['service_long_plugin_output', 'service_custom_variables'],
-            'short': u'Status detail',
-            'title': u'Long output of check plugin (multiline)'
+            'short': u'Details',
+            'title': u'Details',
         },
         'svc_metrics': {
             'columns': ['service_check_command', 'service_perf_data'],
@@ -2984,9 +2984,9 @@ def test_registered_painters():
         },
         'svc_plugin_output': {
             'columns': ['service_plugin_output', 'service_custom_variables'],
-            'short': u'Status detail',
+            'short': u'Summary',
             'sorter': 'svcoutput',
-            'title': u'Output of check plugin'
+            'title': u'Summary'
         },
         'svc_pnpgraph': {
             'columns': [

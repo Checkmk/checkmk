@@ -451,10 +451,10 @@ class PainterSvcPluginOutput(Painter):
         return "svc_plugin_output"
 
     def title(self, cell):
-        return _("Output of check plugin")
+        return _("Summary")
 
     def short_title(self, cell):
-        return _("Status detail")
+        return _("Summary")
 
     @property
     def columns(self):
@@ -475,10 +475,10 @@ class PainterSvcLongPluginOutput(Painter):
         return "svc_long_plugin_output"
 
     def title(self, cell):
-        return _("Long output of check plugin (multiline)")
+        return _("Details")
 
     def short_title(self, cell):
-        return _("Status detail")
+        return _("Details")
 
     @property
     def columns(self):
@@ -489,8 +489,8 @@ class PainterSvcLongPluginOutput(Painter):
         return Dictionary(elements=[
             ('max_len',
              Integer(
-                 title=_("Maximum number of characters in long Output"),
-                 help=_("Truncate long Output at this amount of characters."
+                 title=_("Maximum number of characters in to show"),
+                 help=_("Truncate content at this amount of characters."
                         "A zero value mean not to truncate"),
                  default_value=0,
                  minvalue=0,
@@ -1772,10 +1772,10 @@ class PainterHostPluginOutput(Painter):
         return "host_plugin_output"
 
     def title(self, cell):
-        return _("Output of host check plugin")
+        return _("Summary")
 
     def short_title(self, cell):
-        return _("Status detail")
+        return _("Summary")
 
     @property
     def columns(self):
@@ -4149,10 +4149,10 @@ class PainterLogPluginOutput(Painter):
         return "log_plugin_output"
 
     def title(self, cell):
-        return _("Log: Output")
+        return _("Log: Summary")
 
     def short_title(self, cell):
-        return _("Output")
+        return _("Summary")
 
     @property
     def columns(self):

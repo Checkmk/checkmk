@@ -866,11 +866,7 @@ input[type="checkbox"] {
 }
 
 input,
-select,
-textarea,
-div.snapin select,
-div.snapin textarea,
-#mk_side_search_field {
+select {
   &.number {
     text-align: left;
   }
@@ -906,12 +902,6 @@ input.button {
   &:not([type="text"]),
   &:not([type="password"]) {
     padding: 4px 8px;
-    border: 1px solid $input-button-bg-color;
-
-    &:hover,
-    &:active {
-      border: 1px solid $input-button-hover-bg-color;
-    }
   }
 }
 

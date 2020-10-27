@@ -30,7 +30,7 @@ from cmk.gui.plugins.dashboard.utils import (
 )
 
 from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options, resolve_graph_recipe
-from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options, transform_graph_render_options
+from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
 
 
 @dashlet_registry.register
@@ -81,16 +81,7 @@ class GraphDashlet(Dashlet):
                          dashboard=dashboard,
                          dashlet_id=dashlet_id,
                          dashlet=dashlet)
-        # Be compatible to pre 1.5.0i2 format
-        if "graph_render_options" not in self._dashlet_spec:
-            self._dashlet_spec["graph_render_options"] = transform_graph_render_options({
-                "show_legend": self._dashlet_spec.pop("show_legend", False),
-                "show_service": self._dashlet_spec.pop("show_service", True),
-            })
 
-        title_format = self._dashlet_spec.setdefault(
-            "title_format", default_dashlet_graph_render_options["title_format"])
-        self._dashlet_spec["graph_render_options"].setdefault("title_format", title_format)
         if any((
                 self.type_name() == 'pnpgraph' and not self._dashlet_spec["context"],
                 self.type_name() == 'custom_graph' and

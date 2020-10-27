@@ -41,7 +41,8 @@ from cmk.gui.plugins.views.utils import (
 )
 from cmk.gui.metrics import translate_perf_data
 from cmk.gui.plugins.metrics.rrd_fetch import merge_multicol
-from cmk.gui.plugins.metrics.valuespecs import vs_title_infos
+from cmk.gui.plugins.metrics.valuespecs import vs_title_infos, transform_graph_render_options
+from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.breadcrumb import (
@@ -384,7 +385,7 @@ def dashlet_vs_general_settings(dashlet: Dashlet, single_infos: List[str]):
     return Dictionary(
         title=_('General Settings'),
         render='form',
-        optional_keys=['title', 'title_format', 'title_url'],
+        optional_keys=['title', 'title_url'],
         elements=[
             ('type',
              FixedValue(
@@ -535,22 +536,46 @@ def _transform_dashboards(
 ) -> Dict[Tuple[UserId, DashboardName], DashboardConfig]:
     for dashboard in boards.values():
         visuals.transform_old_visual(dashboard)
-
-        # Also transform dashlets
         for dashlet in dashboard['dashlets']:
             visuals.transform_old_visual(dashlet)
-
-            if dashlet['type'] == 'view':
-                # abusing pass by reference to mutate dashlet
-                transform_painter_spec(dashlet)
-
-            if dashlet['type'] == 'pnpgraph':
-                if 'service' not in dashlet['single_infos']:
-                    dashlet['single_infos'].append('service')
-                if 'host' not in dashlet['single_infos']:
-                    dashlet['single_infos'].append('host')
+            _transform_dashlets_mut(dashlet)
 
     return boards
+
+
+def _transform_dashlets_mut(dashlet_spec):
+    # abusing pass by reference to mutate dashlet
+
+    if dashlet_spec['type'] == 'view':
+        transform_painter_spec(dashlet_spec)
+
+    # ->2014-10
+    if dashlet_spec['type'] == 'pnpgraph':
+        if 'service' not in dashlet_spec['single_infos']:
+            dashlet_spec['single_infos'].append('service')
+        if 'host' not in dashlet_spec['single_infos']:
+            dashlet_spec['single_infos'].append('host')
+
+    if dashlet_spec['type'] in ['pnpgraph', 'custom_graph']:
+        # -> 1.5.0i2
+        if "graph_render_options" not in dashlet_spec:
+            dashlet_spec["graph_render_options"] = {
+                "show_legend": dashlet_spec.pop("show_legend", False),
+                "show_service": dashlet_spec.pop("show_service", True),
+            }
+        # -> 2.0.0i1
+        dashlet_spec["graph_render_options"].setdefault(
+            "title_format", default_dashlet_graph_render_options["title_format"])
+        transform_graph_render_options(dashlet_spec["graph_render_options"])
+        title_format = dashlet_spec["graph_render_options"].pop("title_format")
+        dashlet_spec.setdefault(
+            "title_format", title_format or dashlet_spec["graph_render_options"]["title_format"])
+        dashlet_spec["graph_render_options"].pop("show_title", None)
+
+    # -> 2.0.0i1 All dashlets have new mandatory title_format
+    dashlet_spec.setdefault("title_format", ['plain'])
+
+    return dashlet_spec
 
 
 # be compatible to old definitions, where even internal dashlets were

@@ -135,22 +135,24 @@ def _get_update_from_params(params):
 # ANYTHING ELSE.
 # ==================================================================================================
 def get_filesystem_levels(mountpoint, size_gb, params):
-    mega = 1024 * 1024
-    giga = mega * 1024
-    # Start with factory settings
-    levels = _FILESYSTEM_DEFAULT_LEVELS.copy()
-
     def convert_legacy_levels(value):
         if isinstance(params, tuple) or not params.get("flex_levels"):
             return tuple(map(float, value))
         return value
 
-    levels.update(
-        _get_update_from_user_config_default_levels(
+    update_params = {
+        **_get_update_from_user_config_default_levels(
             filesystem_default_levels,
             convert_legacy_levels,
-        ))
-    levels.update(_get_update_from_params(params))
+        ),
+        **_get_update_from_params(params),
+    }
+
+    mega = 1024 * 1024
+    giga = mega * 1024
+
+    # Override default levels with params
+    levels = {**_FILESYSTEM_DEFAULT_LEVELS, **update_params}
 
     # Determine real warn, crit levels
     if isinstance(levels["levels"], tuple):

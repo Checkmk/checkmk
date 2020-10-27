@@ -175,7 +175,7 @@ try{
                         }
                     }
                     docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro") {
-                        def PACKAGE_NAME = get_package_name(WORKSPACE, DISTRO, CMK_VERS)
+                        def PACKAGE_NAME = get_package_name(WORKSPACE, DISTRO, CMK_VERS, DEMO)
                         def BUILD_PACKAGE_PATH = WORKSPACE + "/git/" + PACKAGE_NAME
                         def FINAL_PACKAGE_PATH = ARCHIVE_DIR + "/" + PACKAGE_NAME
 
@@ -396,18 +396,19 @@ def build_package(DISTRO, OMD_ENV_VARS) {
     }
 }
 
-def get_package_name(WORKSPACE, DISTRO, CMK_VERS) {
+def get_package_name(WORKSPACE, DISTRO, CMK_VERS, DEMO) {
     def BASE_DIR = WORKSPACE + "/git"
     def PACKAGE_NAME = sh(script: """
+        PATTERN_ROOT=check-mk-$EDITION-${CMK_VERS}${DEMO=="yes" ? ".demo" : ""}
         case ${DISTRO} in
             centos*|rh*|sles*|opensuse*)
-                RESULT_FILE_PATTERN=check-mk-$EDITION-${CMK_VERS}-*.rpm
+                RESULT_FILE_PATTERN=\${PATTERN_ROOT}-*.rpm
                 ;;
             cma*)
-                RESULT_FILE_PATTERN=check-mk-$EDITION-${CMK_VERS}-*.cma
+                RESULT_FILE_PATTERN=\${PATTERN_ROOT}-*.cma
                 ;;
             *)
-                RESULT_FILE_PATTERN=check-mk-$EDITION-${CMK_VERS}_*.deb
+                RESULT_FILE_PATTERN=\${PATTERN_ROOT}_*.deb
                 ;;
         esac
         cd ${BASE_DIR}

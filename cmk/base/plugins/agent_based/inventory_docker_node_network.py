@@ -4,14 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Any, Dict
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
-from cmk.base.plugins.agent_based.utils import docker, legacy_docker
+from .agent_based_api.v1 import Attributes, register, TableRow
+from .utils import docker, legacy_docker
 
 Section = Dict[str, Any]
 
 
-def parse_docker_network(string_table: StringTable) -> Section:
+def parse_docker_node_network(string_table: StringTable) -> Section:
     version = docker.get_version(string_table)
 
     if version is None:
@@ -22,24 +23,33 @@ def parse_docker_network(string_table: StringTable) -> Section:
     return {n["Id"]: n for n in networks if n is not None}
 
 
-def inventory_docker_node_network(info, inventory_tree, status_data_tree):
-    section = parse_docker_network(info)
+register.agent_section(
+    name="docker_node_network",
+    parse_function=parse_docker_node_network,
+)
+
+
+def inventory_docker_node_network(section: Section) -> InventoryResult:
 
     for network_id, network in section.items():
 
         network_name = network["Name"]
-        path = "software.applications.docker.networks.%s" % network_name
-
-        container_table = status_data_tree.get_list(f"{path}.containers")
+        network_path = ["software", "applications", "docker", "networks", network_name]
+        container_path = network_path + ["containers"]
 
         for container_id, container in sorted(network["Containers"].items()):
-            container_table.append({
-                "name": container["Name"],
-                "id": docker.get_short_id(container_id),
-                "ipv4_address": container["IPv4Address"],
-                "ipv6_address": container["IPv6Address"],
-                "mac_address": container["MacAddress"],
-            })
+            yield TableRow(
+                path=container_path,
+                key_columns={
+                    "id": docker.get_short_id(container_id),
+                },
+                status_columns={
+                    "name": container["Name"],
+                    "ipv4_address": container["IPv4Address"],
+                    "ipv6_address": container["IPv6Address"],
+                    "mac_address": container["MacAddress"],
+                },
+            )
 
         network_inventory_attributes = {
             "name": network_name,
@@ -53,9 +63,13 @@ def inventory_docker_node_network(info, inventory_tree, status_data_tree):
         except KeyError:
             pass
 
-        inventory_tree.get_dict(path).update(network_inventory_attributes)
+        yield Attributes(
+            path=network_path,
+            inventory_attributes=network_inventory_attributes,
+        )
 
 
-inv_info["docker_node_network"] = {
-    "inv_function": inventory_docker_node_network,
-}
+register.inventory_plugin(
+    name="docker_node_network",
+    inventory_function=inventory_docker_node_network,
+)

@@ -4,13 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Optional, Tuple
-from .agent_based_api.v1.type_defs import StringTable
+from typing import Callable, Dict, List, Generator, Mapping, Optional, Tuple, Union
+from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
 import time
-from .agent_based_api.v1 import register
+
+from .agent_based_api.v1 import Attributes, register, TableRow
 
 Section = List[Tuple[str, StringTable]]
+
+Converter = Union[str, Tuple[str, Callable[[str], Union[str, float, None]]]]
 
 
 def parse_dmidecode(string_table: StringTable) -> Section:
@@ -100,6 +103,188 @@ def parse_dmidecode(string_table: StringTable) -> Section:
 register.agent_section(
     name="dmidecode",
     parse_function=parse_dmidecode,
+)
+
+
+def inventory_dmidecode(section: Section) -> InventoryResult:
+    # There will be "Physical Memory Array" sections, each followed
+    # by multiple "Memory Device" sections. Keep track of which belongs where:
+    memory_array_number = 0
+    for title, lines in section:
+        memory_array_number += (title == "Physical Memory Array")
+        yield from _dispatch_subsection(title, lines, memory_array_number)
+
+
+def _dispatch_subsection(
+    title: str,
+    lines: List[List[str]],
+    memory_array_number: int,
+) -> InventoryResult:
+    if title == "BIOS Information":
+        yield _make_inventory_bios(lines)
+        return
+
+    if title == "System Information":
+        yield _make_inventory_system(lines)
+        return
+
+    if title == "Chassis Information":
+        yield _make_inventory_chassis(lines)
+        return
+
+    if title == "Processor Information":
+        yield from _make_inventory_processor(lines)
+        return
+
+    if title == "Physical Memory Array":
+        yield _make_inventory_physical_mem_array(lines, memory_array_number)
+        return
+
+    if title == "Memory Device":
+        yield from _make_inventory_mem_device(lines, memory_array_number)
+        return
+
+
+def _make_inventory_bios(lines: List[List[str]]) -> Attributes:
+    return Attributes(
+        path=["software", "bios"],
+        inventory_attributes=_make_dict(
+            lines, {
+                "Vendor": "vendor",
+                "Version": "version",
+                "Release Date": ("date", _parse_date),
+                "BIOS Revision": "revision",
+                "Firmware Revision": "firmware",
+            }),
+    )
+
+
+def _make_inventory_system(lines: List[List[str]]) -> Attributes:
+    return Attributes(
+        path=["hardware", "system"],
+        inventory_attributes=_make_dict(
+            lines, {
+                "Manufacturer": "manufacturer",
+                "Product Name": "product",
+                "Version": "version",
+                "Serial Number": "serial",
+                "UUID": "uuid",
+                "Family": "family",
+            }),
+    )
+
+
+def _make_inventory_chassis(lines: List[List[str]]) -> Attributes:
+    return Attributes(
+        path=["hardware", "chassis"],
+        inventory_attributes=_make_dict(lines, {
+            "Manufacturer": "manufacturer",
+            "Type": "type",
+        }),
+    )
+
+
+# Note: This node is also being filled by lnx_cpuinfo
+def _make_inventory_processor(lines: List[List[str]]) -> Generator[Attributes, None, None]:
+    vendor_map = {
+        "GenuineIntel": "intel",
+        "Intel(R) Corporation": "intel",
+        "AuthenticAMD": "amd",
+    }
+    cpu_info = _make_dict(
+        lines, {
+            "Manufacturer": ("vendor", lambda v: vendor_map.get(v, v)),
+            "Max Speed": ("max_speed", _parse_speed),
+            "Voltage": ("voltage", _parse_voltage),
+            "Status": "status",
+        })
+
+    if cpu_info.pop("Status", "") == "Unpopulated":
+        # Only update our CPU information if the socket is populated
+        return
+
+    yield Attributes(
+        path=["hardware", "cpu"],
+        inventory_attributes=cpu_info,
+    )
+
+
+def _make_inventory_physical_mem_array(lines: List[List[str]], array_number: int) -> Attributes:
+    # We expect several possible arrays
+    return Attributes(
+        path=["hardware", "memory", f"array_{array_number}"],
+        inventory_attributes=_make_dict(
+            lines, {
+                "Location": "location",
+                "Use": "use",
+                "Error Correction Type": "error_correction",
+                "Maximum Capacity": ("maximum_capacity", _parse_size),
+            }),
+    )
+
+
+def _make_inventory_mem_device(
+    lines: List[List[str]],
+    array_number: int,
+) -> Generator[TableRow, None, None]:
+    device = _make_dict(
+        lines,
+        {
+            "Total Width": "total_width",  # 64 bits
+            "Data Width": "data_width",  # 64 bits
+            "Form Factor": "form_factor",  # SODIMM
+            "Set": "set",  # None
+            "Locator": "locator",  # PROC 1 DIMM 2
+            "Bank Locator": "bank_locator",  # Bank 2/3
+            "Type": "type",  # DDR2
+            "Type Detail": "type_detail",  # Synchronous
+            "Manufacturer": "manufacturer",  # Not Specified
+            "Serial Number": "serial",  # Not Specified
+            "Asset Tag": "asset_tag",  # Not Specified
+            "Part Number": "part_number",  # Not Specified
+            "Speed": "speed",  # 667 MHz
+            "Size": "size",  # 2048 MB
+        },
+    )
+    if device["size"] == "No Module Installed":
+        return
+    # Convert speed and size into numbers
+    device["speed"] = _parse_speed(device.get("speed", "Unknown"))  # type: ignore[arg-type]
+    device["size"] = _parse_size(device.get("size", "Unknown"))  # type: ignore[arg-type]
+
+    key_keys = ['bank_locator']  # for now. needs revisiting when we migrate hp_proliant_mem
+    yield TableRow(
+        path=["hardware", "memory", f"array_{array_number}", "devices"],
+        key_columns={k: device.pop(k) for k in key_keys},
+        inventory_columns=device,
+    )
+
+
+def _make_dict(
+    lines: List[List[str]],
+    converter_map: Mapping[str, Converter],
+) -> Dict[str, Union[float, str, None]]:
+    dict_: Dict[str, Union[float, str, None]] = {}
+    for name, raw_value, *_rest in lines:
+        if name not in converter_map or raw_value == "Not Specified":
+            continue
+
+        converter = converter_map[name]
+        if isinstance(converter, str):
+            dict_[converter] = raw_value
+            continue
+
+        label, transform = converter
+        value = transform(raw_value)
+        if value is not None:
+            dict_[label] = value
+
+    return dict_
+
+
+register.inventory_plugin(
+    name="dmidecode",
+    inventory_function=inventory_dmidecode,
 )
 
 #                              _          _

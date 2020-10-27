@@ -22,47 +22,40 @@ def parse_docker_network(string_table: StringTable) -> Section:
     return {n["Id"]: n for n in networks if n is not None}
 
 
-def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
+def inventory_docker_node_network(info, inventory_tree, status_data_tree):
     section = parse_docker_network(info)
 
     for network_id, network in section.items():
 
-        sorted_container_items = sorted(network["Containers"].items())
-
-        containers = [{
-            "name": container["Name"],
-            "id": docker.get_short_id(container_id),
-            "ipv4_address": container["IPv4Address"],
-            "ipv6_address": container["IPv6Address"],
-            "mac_address": container["MacAddress"],
-        } for container_id, container in sorted_container_items]
-
         network_name = network["Name"]
-        path = "software.applications.docker.networks.%s." % network_name
-        inventory_network = inventory_tree.get_dict(path)
-        status_network = status_data_tree.get_dict(path)
+        path = "software.applications.docker.networks.%s" % network_name
 
-        status_network.update({
-            "name": network_name,
-            "containers": containers,
-        })
+        container_table = status_data_tree.get_list(f"{path}.containers")
 
-        inventory_network.update({
+        for container_id, container in sorted(network["Containers"].items()):
+            container_table.append({
+                "name": container["Name"],
+                "id": docker.get_short_id(container_id),
+                "ipv4_address": container["IPv4Address"],
+                "ipv6_address": container["IPv6Address"],
+                "mac_address": container["MacAddress"],
+            })
+
+        network_inventory_attributes = {
             "name": network_name,
             "network_id": docker.get_short_id(network_id),
             "scope": network["Scope"],
-        })
-
+            "labels": docker.format_labels(network),
+        }
         try:
-            inventory_network["host_ifname"] = network["Options"]["com.docker.network.bridge.name"]
+            network_inventory_attributes.update(
+                host_ifname=network["Options"]["com.docker.network.bridge.name"])
         except KeyError:
             pass
 
-        labels = docker.format_labels(network)
-        if labels:
-            inventory_network["labels"] = labels
+        inventory_tree.get_dict(path).update(network_inventory_attributes)
 
 
-inv_info["docker_node_network.networks"] = {
-    "inv_function": inv_docker_node_network_networks,
+inv_info["docker_node_network"] = {
+    "inv_function": inventory_docker_node_network,
 }

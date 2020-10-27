@@ -6,6 +6,8 @@
 
 import abc
 import collections
+import enum
+import json
 import logging
 import string
 from typing import (
@@ -77,6 +79,26 @@ AbstractRawData = Union[_AgentRawData, SNMPRawData]
 TRawData = TypeVar("TRawData", bound=AbstractRawData)
 
 
+class SNMPEnumEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, SNMPBackend):
+            return {"__snmpenum__": str(o)}
+        return json.JSONEncoder.default(self, o)
+
+
+def read_as_enum(data):
+    if "__snmpenum__" in data:
+        _type_enum, name = data["__snmpenum__"].split(".")
+        return getattr(SNMPBackend, name)
+    return data
+
+
+class SNMPBackend(enum.Enum):
+    inline = "Inline"
+    pysnmp = "PySNMP"
+    classic = "Classic"
+
+
 # make this a class in order to hide the List implementation from the sphinx doc!
 class SNMPDetectSpec(List[List[SNMPDetectAtom]]):
     """A specification for SNMP device detection
@@ -102,7 +124,7 @@ class SNMPHostConfig(
             ("snmpv3_contexts", list),
             ("character_encoding", Optional[str]),
             ("is_usewalk_host", bool),
-            ("snmp_backend", str),
+            ("snmp_backend", SNMPBackend),
         ])):
     @property
     def is_snmpv3_host(self) -> bool:

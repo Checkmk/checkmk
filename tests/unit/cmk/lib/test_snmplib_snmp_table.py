@@ -6,12 +6,19 @@
 
 import pytest  # type: ignore[import]
 
-from testlib.base import Scenario
+from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.utils.log import logger
 from cmk.utils.type_defs import SectionName
 import cmk.snmplib.snmp_table as snmp_table
-from cmk.snmplib.type_defs import ABCSNMPBackend, OIDBytes, OIDEnd, SNMPHostConfig, SNMPTree
+from cmk.snmplib.type_defs import (
+    ABCSNMPBackend,
+    OIDBytes,
+    OIDEnd,
+    SNMPHostConfig,
+    SNMPTree,
+    SNMPBackend,
+)
 
 import cmk.base.config as config
 
@@ -29,7 +36,7 @@ SNMPConfig = SNMPHostConfig(
     snmpv3_contexts=[],
     character_encoding="ascii",
     is_usewalk_host=False,
-    snmp_backend="classic",
+    snmp_backend=SNMPBackend.classic,
 )
 
 

@@ -11,7 +11,14 @@ from cmk.utils.type_defs import SectionName
 
 import cmk.snmplib.snmp_modes as snmp_modes
 import cmk.snmplib.snmp_table as snmp_table
-from cmk.snmplib.type_defs import OID_BIN, OIDEnd, OID_END_BIN, OID_STRING, SNMPTree
+from cmk.snmplib.type_defs import (
+    OID_BIN,
+    OIDEnd,
+    OID_END_BIN,
+    OID_STRING,
+    SNMPTree,
+    SNMPBackend,
+)
 
 
 # Found no other way to achieve this
@@ -64,7 +71,7 @@ def test_get_simple_snmp_table_not_resolvable(backend):
     )
 
     # TODO: Unify different error messages
-    if backend.config.snmp_backend == "inline":
+    if backend.config.snmp_backend == SNMPBackend.inline:
         exc_match = "Failed to initiate SNMP"
     else:
         exc_match = "Unknown host"
@@ -88,7 +95,7 @@ def test_get_simple_snmp_table_wrong_credentials(backend):
     )
 
     # TODO: Unify different error messages
-    if backend.config.snmp_backend == "inline":
+    if backend.config.snmp_backend == SNMPBackend.inline:
         exc_match = "SNMP query timed out"
     else:
         exc_match = "Timeout: No Response from"

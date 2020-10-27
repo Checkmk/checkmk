@@ -11,7 +11,7 @@ import pytest  # type: ignore[import]
 from cmk.utils.log import logger
 from cmk.utils.exceptions import MKGeneralException
 
-from cmk.snmplib.type_defs import SNMPHostConfig
+from cmk.snmplib.type_defs import SNMPHostConfig, SNMPBackend
 
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend
 import cmk.fetchers.snmp_backend.classic as classic_snmp
@@ -36,7 +36,7 @@ def test_snmp_port_spec(port, expected):
         snmpv3_contexts=[],
         character_encoding=None,
         is_usewalk_host=False,
-        snmp_backend="classic",
+        snmp_backend=SNMPBackend.classic,
     )
     assert ClassicSNMPBackend(snmp_config, logger)._snmp_port_spec() == expected
 
@@ -60,7 +60,7 @@ def test_snmp_proto_spec(monkeypatch, is_ipv6, expected):
         snmpv3_contexts=[],
         character_encoding=None,
         is_usewalk_host=False,
-        snmp_backend="classic",
+        snmp_backend=SNMPBackend.classic,
     )
     assert ClassicSNMPBackend(snmp_config, logger)._snmp_proto_spec() == expected
 
@@ -90,7 +90,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend="classic",
+            snmp_backend=SNMPBackend.classic,
         ),
         context_name=None,
     ), [
@@ -115,7 +115,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend="classic",
+            snmp_backend=SNMPBackend.classic,
         ),
         context_name="blabla",
     ), [
@@ -140,7 +140,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend="classic",
+            snmp_backend=SNMPBackend.classic,
         ),
         context_name="blabla",
     ), [
@@ -165,7 +165,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend="classic",
+            snmp_backend=SNMPBackend.classic,
         ),
         context_name=None,
     ), [
@@ -190,7 +190,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend="classic",
+            snmp_backend=SNMPBackend.classic,
         ),
         context_name=None,
     ), [

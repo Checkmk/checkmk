@@ -4,7 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict as _Dict, List as _List, Optional as _Optional, Union as _Union
+from typing import Dict as _Dict, List as _List, Optional as _Optional
+from cmk.snmplib.type_defs import SNMPBackend
 
 # This file contains the defaults settings for almost all configuration
 # variables that can be overridden in main.mk. Some configuration
@@ -63,9 +64,11 @@ http_proxies: _Dict = {}
 # the names of the rules are kept because of backwards compatibility.
 # Old value is True or False and new value is a string for the respective backend.
 # From version 2.0.0i1 upwards old values are no longer configurable.
-snmp_backend_default: _Union[bool, str] = "inline"
+
+# Global config for SNMP Backend
+snmp_backend_default: SNMPBackend = SNMPBackend.inline
 # Deprecated: Replaced by snmp_backend_hosts
-use_inline_snmp: _Union[bool, str] = True
+use_inline_snmp: bool = True
 
 # Ruleset to enable specific SNMP Backend for each host.
 snmp_backend_hosts: _List = []

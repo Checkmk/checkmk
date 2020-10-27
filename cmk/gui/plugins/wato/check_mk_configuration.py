@@ -20,6 +20,8 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import request
 
+from cmk.snmplib.type_defs import SNMPBackend  # pylint: disable=cmk-module-layer-violation
+
 from cmk.gui.valuespec import (
     Dictionary,
     TextAscii,
@@ -2475,9 +2477,9 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
             DropdownChoice(
                 title=_("Choose SNMP Backend"),
                 choices=[
-                    ("classic", _("Use Classic SNMP Backend")),
-                    ("inline", _("Use Inline SNMP Backend")),
-                    ("pysnmp", _("Use PySNMP Backend")),
+                    (SNMPBackend.classic, _("Use Classic SNMP Backend")),
+                    (SNMPBackend.inline, _("Use Inline SNMP Backend")),
+                    (SNMPBackend.pysnmp, _("Use PySNMP Backend")),
                 ],
                 help=
                 _("By default Checkmk uses command line calls of Net-SNMP tools like snmpget or "
@@ -2488,7 +2490,9 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
                   "SNMP modes are featurse which improve the performance for large installations and are "
                   "only available via our subscription."),
             ),
-            forth=lambda x: "inline" if x is True else ("classic" if x is False else x),
+            forth=lambda x: SNMPBackend.inline if x in [True, "inline"] else
+            (SNMPBackend.classic if x in [False, "classic"] else (SNMPBackend.pysnmp
+                                                                  if x == "pysnmp" else x)),
         )
 
 
@@ -4446,12 +4450,15 @@ def _valuespec_snmp_backend():
         DropdownChoice(
             title=_("Choose SNMP Backend"),
             choices=[
-                ("inline", _("Use Inline SNMP Backend")),
-                ("pysnmp", _("Use PySNMP Backend")),
-                ("classic", _("Use Classic Backend")),
+                (SNMPBackend.inline, _("Use Inline SNMP Backend")),
+                (SNMPBackend.pysnmp, _("Use PySNMP Backend")),
+                (SNMPBackend.classic, _("Use Classic Backend")),
             ],
         ),
-        forth=lambda x: "classic" if x is True else ("inline" if x is False else x),
+        forth=lambda x: SNMPBackend.inline
+        if x in [False, "inline"] else (SNMPBackend.classic
+                                        if x in [True, "classic"] else (SNMPBackend.pysnmp
+                                                                        if x == "pysnmp" else x)),
     )
 
 

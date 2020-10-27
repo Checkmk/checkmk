@@ -51,7 +51,6 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 from cmk.utils.cpu_tracking import CPUTracker
-
 from cmk.fetchers.controller import FetcherMessage, FetcherType
 
 import cmk.base.api.agent_based.register as agent_based_register

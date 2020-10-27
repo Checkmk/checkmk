@@ -31,3 +31,40 @@ def create_default_argument_parser(description: Optional[str]) -> argparse.Argum
                         "--tracefile",
                         action=vcrtrace(filter_headers=[('authorization', '****')]))
     return parser
+
+
+def parse_connection_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
+    """ Parse the connection command line arguments
+    """
+    parser.add_argument("--address",
+                        dest="address",
+                        help="address of the connection",
+                        metavar="ADDRESS")
+    parser.add_argument("--port",
+                        dest="port",
+                        type=int,
+                        help="port of the connection",
+                        metavar="PORT")
+    parser.add_argument("--protocol", dest="protocol", help="the protocol type", metavar="PROTOCOL")
+    parser.add_argument("--username",
+                        dest="username",
+                        help="the username for authentication",
+                        metavar="USERNAME")
+    parser.add_argument("--password",
+                        dest="password",
+                        help="the password for authentication",
+                        metavar="PASSWORD")
+    parser.add_argument("--token",
+                        dest="token",
+                        help="the API token for authentication",
+                        metavar="TOKEN")
+    parser.add_argument("--no-cert-check",
+                        dest="no_cert_check",
+                        help="if SSL certificate should be verified",
+                        metavar="SSL")
+    parser.add_argument("--url-custom",
+                        dest="url_custom",
+                        help="a custom URL to connect to the server",
+                        metavar="CUSTOM")
+
+    return parser

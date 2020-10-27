@@ -9,13 +9,18 @@ from typing import (
     Optional,
     Any,
     Dict,
+    Union,
 )
 import abc
+import os
 import base64
 import json
 import ssl
+import urllib
+
 from http.client import HTTPConnection, HTTPSConnection, HTTPResponse
 from urllib.request import build_opener, HTTPSHandler, Request
+from requests import Session
 
 StringMap = Dict[str, str]  # should be Mapping[] but we're not ready yet..
 
@@ -87,3 +92,140 @@ class HTTPSAuthRequester(Requester):
         request = Request(url, headers=self._req_headers)
         response = self._opener.open(request)
         return json.loads(response.read())
+
+
+def create_api_connect_session(
+    api_url: str,
+    no_cert_check: bool = False,
+    auth: Any = None,
+) -> 'ApiSession':
+    """Create a custom requests Session
+
+    Args:
+        api_url:
+            url address to the server api
+
+        no_cert_check:
+            option if ssl certificate should be verified. session.verify = False cannot be
+            used at this point due to a bug in requests.session
+
+        auth:
+            authentication option (either username & password or OAuth1 object)
+
+    """
+    ssl_verify = None
+    if not no_cert_check:
+        ssl_verify = os.environ.get('REQUEST_CA_BUNDLE')
+
+    session = ApiSession(api_url, ssl_verify)
+
+    if auth:
+        session.auth = auth
+
+    return session
+
+
+class ApiSession(Session):
+    """Adjusted requests.session class with a focus on multiple API calls
+
+        ApiSession behaves similar to the requests.session
+        with the exception that a base url is provided and persisted
+        all requests forms use the base url and append the actual request
+
+    """
+    def __init__(self,
+                 base_url: Optional[str] = None,
+                 ssl_verify: Optional[Union[str, bool]] = None):
+        super().__init__()
+        self._base_url = base_url if base_url else ""
+        self.ssl_verify = ssl_verify if ssl_verify else False
+
+    def request(self, method, url, **kwargs):  # pylint: disable=arguments-differ
+        url = urllib.parse.urljoin(self._base_url, url)
+        return super().request(method, url, verify=self.ssl_verify, **kwargs)
+
+
+def parse_api_url(
+    server_address,
+    api_path,
+    protocol="http",
+    port=None,
+    url_prefix=None,
+    path_prefix=None,
+) -> str:
+    """Parse the server api address
+
+    custom url always has priority over other options, if not specified the address contains
+    either the ip-address or the hostname in the url
+
+    the protocol should not be specified through the custom url
+
+    Args:
+        api_path:
+            the path to the api seen from the full server address. This is the address
+            where the API can be queried
+
+        server_address:
+            hostname or ip-address to the server
+
+        protocol:
+            the transfer protocol (http or https)
+
+        port:
+            TCP/Web port of the server
+
+        url_prefix:
+            custom url prefix for the server address
+
+        path_prefix:
+            custom path_prefix which is appended to the server address
+
+    Returns:
+        the full api url address
+
+    Examples:
+        >>> parse_api_url("localhost", "api/v1/", port=8080, path_prefix="extra")
+        'http://localhost:8080/extra/api/v1/'
+
+
+    """
+    if url_prefix is None:
+        url_prefix = ""
+
+    address_start = f"{protocol}://{url_prefix}{server_address}"
+    if port:
+        address = f"{address_start}:{port}/"
+    else:
+        address = f"{address_start}/"
+
+    path_prefix = f"{path_prefix}/" if path_prefix else ""
+    api_address = f"{address}{path_prefix}{api_path}"
+    return api_address
+
+
+def parse_api_custom_url(
+    url_custom: str,
+    api_path: str,
+    protocol: str = "http",
+) -> str:
+    """Parse API address with custom url
+
+    Args:
+        url_custom:
+            the custom url to connect to the server
+
+        api_path:
+            the api path which is appended to the custom url
+
+        protocol:
+            the transfer protocol (http or https)
+
+    Returns:
+        str representing the API url
+
+    Examples:
+        >>> parse_api_custom_url("localhost:8080", "api/v1/")
+        'http://localhost:8080/api/v1/'
+
+    """
+    return f"{protocol}://{url_custom}/{api_path}"

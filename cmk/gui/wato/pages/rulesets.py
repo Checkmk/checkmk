@@ -53,7 +53,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
     PageMenuEntry,
     PageMenuSearch,
-    make_display_options_dropdown,
     make_simple_link,
     make_form_submit_link,
     make_simple_form_page_menu,
@@ -451,8 +450,9 @@ class ModeRulesetGroup(ABCRulesetMode):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(default_value=self._search_options.get("fulltext", ""),
+                                         placeholder=_("Filter")),
         )
-        self._extend_display_dropdown(menu)
         return menu
 
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
@@ -486,21 +486,6 @@ class ModeRulesetGroup(ABCRulesetMode):
         yield _page_menu_entry_rule_search()
 
         yield from _page_menu_entries_predefined_searches()
-
-    def _extend_display_dropdown(self, menu: PageMenu) -> None:
-        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
-        display_dropdown.topics.insert(
-            0,
-            PageMenuTopic(
-                title=_("Filter"),
-                entries=[
-                    PageMenuEntry(
-                        title="",
-                        icon_name="trans",
-                        item=PageMenuSearch(default_value=self._search_options.get("fulltext", "")),
-                    )
-                ],
-            ))
 
 
 def _page_menu_entry_predefined_conditions() -> PageMenuEntry:

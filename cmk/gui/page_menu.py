@@ -24,7 +24,7 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.popups import MethodInline
 from cmk.gui.type_defs import CSSSpec
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_with_query
 from cmk.gui.config import user
 
 
@@ -124,6 +124,7 @@ class PageMenuSearch(ABCPageMenuItem):
     """A text input box right in the menu, primarily for in page quick search"""
     target_mode: Optional[str] = None
     default_value: str = ""
+    placeholder: Optional[str] = None
 
 
 @dataclass
@@ -181,6 +182,7 @@ class PageMenu:
     """Representing the whole menu of the page"""
     dropdowns: List[PageMenuDropdown] = field(default_factory=list)
     breadcrumb: Optional[Breadcrumb] = None
+    inpage_search: Optional[PageMenuSearch] = None
 
     def __post_init__(self):
         # Add the display options dropdown
@@ -450,6 +452,8 @@ class PageMenuRenderer:
 
         html.open_tr()
         self._show_dropdowns(menu)
+        if menu.inpage_search:
+            self._show_inpage_search_field(menu.inpage_search)
         self._show_shortcuts(menu)
         html.close_tr()
 
@@ -555,6 +559,13 @@ class PageMenuRenderer:
             ("show_more_mode" if entry.is_show_more else "basic"),
         ] + html.normalize_css_spec(entry.css_classes)
 
+    def _show_inpage_search_field(self, item: PageMenuSearch) -> None:
+        html.open_td(class_="inpage_search")
+        inpage_search_form(mode=item.target_mode,
+                           default_value=item.default_value,
+                           placeholder=item.placeholder)
+        html.close_td()
+
 
 class SuggestedEntryRenderer:
     """Render the different item types for the suggestion area"""
@@ -633,8 +644,6 @@ class DropdownEntryRenderer:
             self._show_popup_link_item(entry, entry.item)
         elif isinstance(entry.item, PageMenuCheckbox):
             self._show_checkbox_link_item(entry, entry.item)
-        elif isinstance(entry.item, PageMenuSearch):
-            self._show_search_form_item(entry.item)
         else:
             raise NotImplementedError("Rendering not implemented for %s" % entry.item)
 
@@ -677,11 +686,6 @@ class DropdownEntryRenderer:
         html.span(title)
         html.close_a()
 
-    def _show_search_form_item(self, item: PageMenuSearch) -> None:
-        html.open_div(class_="searchform")
-        search_form(mode=item.target_mode, default_value=item.default_value)
-        html.close_div()
-
 
 # TODO: Cleanup all calls using title and remove the argument
 def search_form(title: Optional[str] = None,
@@ -698,6 +702,27 @@ def search_form(title: Optional[str] = None,
     html.write_text(" ")
     html.button("_do_seach", _("Search"))
     html.end_form()
+
+
+# TODO: Mesh this function into one with the above search_form()
+def inpage_search_form(mode: Optional[str] = None,
+                       default_value: str = "",
+                       placeholder: Optional[str] = None) -> None:
+    form_name = "inpage_search_form"
+    reset_button_id = "%s_reset" % form_name
+    was_submitted = html.request.get_ascii_input("filled_in") == form_name
+    html.begin_form(form_name, add_transid=False)
+    html.text_input("search", size=32, default_value=default_value, placeholder=placeholder)
+    html.hidden_fields()
+    if mode:
+        html.hidden_field("mode", mode, add_var=True)
+    reset_url = html.request.get_ascii_input_mandatory("reset_url",
+                                                       requested_file_with_query(request))
+    html.hidden_field("reset_url", reset_url, add_var=True)
+    html.buttonlink(reset_url, "", obj_id=reset_button_id, title=_("Reset"))
+    html.end_form()
+    html.javascript("cmk.page_menu.inpage_search_init(%s, %s)" %
+                    (json.dumps(reset_button_id), json.dumps(was_submitted)))
 
 
 class PageMenuPopupsRenderer:

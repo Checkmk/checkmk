@@ -2065,6 +2065,7 @@ class html(ABCHTMLGenerator):
         self.form_vars.append(varname)
 
         # View
+        # TODO: Move styling away from py code
         style_size: Optional[str] = None
         field_size: Optional[str] = None
         if try_max_width:

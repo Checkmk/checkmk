@@ -332,6 +332,7 @@ div.side_popup_content table.valuespec_listof.filter {
       z-index: 5;
       width: 16px;
       height: 16px;
+      filter: $inpage-close-button-filter;
     }
   }
 

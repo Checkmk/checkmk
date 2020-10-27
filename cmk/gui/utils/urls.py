@@ -14,21 +14,18 @@ from cmk.gui.utils.url_encoder import URLEncoder
 
 def requested_file_name(request: Request) -> str:
     parts = request.requested_file.rstrip("/").split("/")
-
-    if len(parts) == 3 and parts[-1] == "check_mk":
-        # Load index page when accessing /[site]/check_mk
-        file_name = "index"
-
-    elif parts[-1].endswith(".py"):
-        # Regular pages end with .py - Stript it away to get the page name
+    file_name = "index"
+    if parts[-1].endswith(".py") and len(parts[-1]) > 3:
+        # Regular pages end with .py - Strip it away to get the page name
         file_name = parts[-1][:-3]
-        if file_name == "":
-            file_name = "index"
-
-    else:
-        file_name = "index"
 
     return file_name
+
+
+def requested_file_with_query(request: Request) -> str:
+    """Returns a string containing the requested file name and query to be used in hyperlinks"""
+    file_name, query = requested_file_name(request), request.query_string.decode(request.charset)
+    return f"{file_name}.py?{query}"
 
 
 def makeuri(

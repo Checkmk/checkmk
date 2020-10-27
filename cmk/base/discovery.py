@@ -684,6 +684,7 @@ def _get_post_discovery_services(
 def check_discovery(
     hostname: HostName,
     ipaddress: Optional[HostAddress],
+    *,
     # The next argument *must* remain optional for the DiscoCheckExecutor.
     #   See Also: `cmk.base.checking.do_check()`.
     fetcher_messages: Sequence[FetcherMessage] = (),

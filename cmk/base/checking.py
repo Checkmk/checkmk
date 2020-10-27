@@ -113,10 +113,11 @@ CHECK_NOT_IMPLEMENTED: ServiceCheckResult = (3, 'Check plugin not implemented', 
 def do_check(
     hostname: HostName,
     ipaddress: Optional[HostAddress],
+    *,
     # The next two *must* remain optional for Nagios and the `DiscoCheckExecutor`.
     #   See Also: `cmk.base.discovery.check_discovery()`
-    only_check_plugin_names: Optional[Set[CheckPluginName]] = None,
     fetcher_messages: Sequence[FetcherMessage] = (),
+    only_check_plugin_names: Optional[Set[CheckPluginName]] = None,
 ) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[str]]:
     console.verbose("Checkmk version %s\n", cmk_version.__version__)
 

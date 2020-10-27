@@ -344,12 +344,12 @@ def test_check_fileinfo_group_patterns(info, group_pattern, expected_result):
             (0, 'Oldest age: 3.1 y', [('age_oldest', 98209582, None, None)]),
             (0, 'Newest age: 3.1 y', [('age_newest', 98209582, None, None)]),
             (0, 'Files matching /var/log/sys*'),
-            (0, 'Count: 2', [('count', 2, None, None)]),
-            (0, 'Size: 768 B', [('size', 768, None, None)]),
-            (0, 'Largest size: 384 B', [('size_largest', 384, None, None)]),
-            (0, 'Smallest size: 384 B', [('size_smallest', 384, None, None)]),
-            (0, 'Oldest age: 3.1 y', [('age_oldest', 98209582, None, None)]),
-            (0, 'Newest age: 3.1 y', [('age_newest', 98209582, None, None)]),
+            (0, 'Count: 2', []),
+            (0, 'Size: 768 B', []),
+            (0, 'Largest size: 384 B', []),
+            (0, 'Smallest size: 384 B', []),
+            (0, 'Oldest age: 3.1 y', []),
+            (0, 'Newest age: 3.1 y', []),
             (0, '\nInclude patterns: /var/log/*'
              '\nFiles matching /var/log/sys*:'
              '\n[/var/log/syslog] Age: 3.1 y, Size: 384 B'
@@ -368,12 +368,12 @@ def test_check_fileinfo_group_patterns(info, group_pattern, expected_result):
             (0, 'Count: 2', [('count', 2, None, None)]),
             (0, 'Size: 768 B', [('size', 768, None, None)]),
             (0, 'Files matching /var/log/sys*'),
-            (0, 'Count: 2', [('count', 2, None, None)]),
-            (0, 'Size: 768 B', [('size', 768, None, None)]),
-            (0, 'Largest size: 384 B', [('size_largest', 384, None, None)]),
-            (0, 'Smallest size: 384 B', [('size_smallest', 384, None, None)]),
-            (0, 'Oldest age: 3.1 y', [('age_oldest', 98209582, None, None)]),
-            (0, 'Newest age: 3.1 y', [('age_newest', 98209582, None, None)]),
+            (0, 'Count: 2', []),
+            (0, 'Size: 768 B', []),
+            (0, 'Largest size: 384 B', []),
+            (0, 'Smallest size: 384 B', []),
+            (0, 'Oldest age: 3.1 y', []),
+            (0, 'Newest age: 3.1 y', []),
             (0, '\nInclude patterns: /var/log/*'
              '\nFiles matching /var/log/sys*:'
              '\n[/var/log/syslog] Age: 3.1 y, Size: 384 B'

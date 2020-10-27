@@ -4,9 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+import time
+
+from cmk.base.check_legacy_includes.df import df_check_filesystem_single_coroutine, df_inventory
+from cmk.base.plugins.agent_based.utils.df import mountpoints_in_group
+
 # <<<netapp_api_volumes:sep(9)>>>
 # volume vol0 size-available 556613632    state online    files-total 25876   files-used 8646 size-total 848203776    fcp_write_data 0    fcp_read_data 0cifs_write_data 0    iscsi_read_latency 0    iscsi_write_data 0  read_data 201265528798  nfs_write_latency 977623886 san_write_latency 0 san_write_data 0read_latency 1529821621 cifs_read_latency 0 fcp_write_latency 0 fcp_read_latency 0  iscsi_write_latency 0   nfs_read_latency 1491050012 iscsi_read_data 0   instance_name vol0  cifs_read_data 0    nfs_read_data 197072260981  write_latency 1528780977    san_read_data 0 san_read_latency 0  write_data 13926719804  nfs_write_data 2789744628   cifs_write_latency 0
 
@@ -42,7 +44,7 @@ def _create_key(protocol, mode, field):
 def _check_single_netapp_api_volume(item, params, volume):
     mega = 1024.0 * 1024.0
     inodes_total = volume["files-total"]
-    yield df_check_filesystem_single(
+    yield from df_check_filesystem_single_coroutine(
         item,
         volume["size-total"] / mega,
         volume["size-available"] / mega,
@@ -52,7 +54,7 @@ def _check_single_netapp_api_volume(item, params, volume):
         params,
     )
 
-    yield _generate_volume_metrics(params, volume)
+    yield 0, '', list(_generate_volume_metrics(params, volume))
 
 
 def _generate_volume_metrics(
@@ -63,7 +65,6 @@ def _generate_volume_metrics(
     base = {}
     metrics_map = {'write_ops': 'write_ops_s'}
 
-    perfdata = []
     for protocol in params.get("perfdata", []):
         for mode in ["read", "write", "other"]:
             for field in ["data", "ops", "latency"]:
@@ -120,9 +121,7 @@ def _generate_volume_metrics(
                         "ops",
                     )]  # fixed: true-division
 
-                perfdata.append((metrics_map.get(key, key), delta))
-
-    return 0, '', perfdata
+                yield metrics_map.get(key, key), delta
 
 
 def _combine_netapp_api_volumes(volumes_in_group, parsed):
@@ -166,27 +165,28 @@ def check_netapp_api_volumes(item, params, parsed):
             parsed,
         )
 
-        if combined_volumes:
-            yield from _check_single_netapp_api_volume(item, params, combined_volumes)
-
-        yield 0, "%d volume(s) in group" % len(volumes_in_group)
         for vol, state in volumes_not_online.items():
             yield 1, "Volume %s is %s" % (vol, state)
 
-    else:
-        volume = parsed.get(item)
+        if combined_volumes:
+            yield from _check_single_netapp_api_volume(item, params, combined_volumes)
 
-        if not volume:
-            if len(item.split("-")) > 4:
-                yield (3, "The service description with a UUID is no longer supported. Please do a "
-                       "rediscovery.")
-            return
+        yield 0, "\n%d volume(s) in group" % len(volumes_in_group)
 
-        if volume.get("state") != "online":
-            yield 1, "Volume is %s" % volume.get("state")
-            return
+        return
 
-        yield from _check_single_netapp_api_volume(item, params, volume)
+    volume = parsed.get(item)
+
+    if not volume:
+        if item.count("-") >= 4:
+            yield 3, "Service description with UUID is no longer supported. Please rediscover."
+        return
+
+    if volume.get("state") != "online":
+        yield 1, "Volume is %s" % volume.get("state")
+        return
+
+    yield from _check_single_netapp_api_volume(item, params, volume)
 
 
 check_info["netapp_api_volumes"] = {

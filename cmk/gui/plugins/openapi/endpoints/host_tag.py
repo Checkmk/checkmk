@@ -1,4 +1,4 @@
-# !/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -15,6 +15,7 @@ from cmk.gui.http import Response
 
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.utils import problem
+from cmk.gui.plugins.openapi.utils import ProblemException
 from cmk.utils.tags import TagGroup
 from cmk.gui.watolib.tags import (
     save_tag_group,
@@ -72,7 +73,7 @@ def create_host_tag_group(params):
     """Create a host tag group"""
     host_tag_group_details = params['body']
     save_tag_group(TagGroup(host_tag_group_details))
-    return _serve_host_tag_group(load_tag_group(host_tag_group_details['id']).get_dict_format())
+    return _serve_host_tag_group(_retrieve_group(host_tag_group_details['id']).get_dict_format())
 
 
 @endpoint_schema(
@@ -91,8 +92,7 @@ def show_host_tag_group(params):
             404, f'Host tag group "{ident}" is not known.',
             'The host tag group you asked for is not known. Please check for eventual misspellings.'
         )
-    tag_config = load_tag_config()
-    tag_group = tag_config.get_tag_group(tag_group_id=ident)
+    tag_group = _retrieve_group(ident=ident)
     return _serve_host_tag_group(tag_group.get_dict_format())
 
 
@@ -111,7 +111,7 @@ def update_host_tag_group(params):
     body = params['body']
     updated_details = {x: body[x] for x in body if x != "repair"}
     ident = params['name']
-    tag_group = load_tag_group(ident)
+    tag_group = _retrieve_group(ident)
     group_details = tag_group.get_dict_format()
     group_details.update(updated_details)
     try:
@@ -121,7 +121,7 @@ def update_host_tag_group(params):
             401, f'Updating this host tag group "{ident}" requires additional authorization',
             'The host tag group you intend to edit is used by other instances. You must authorize Checkmk '
             'to update the relevant instances using the repair parameter')
-    updated_tag_group = load_tag_group(ident)
+    updated_tag_group = _retrieve_group(ident)
     return _serve_host_tag_group(updated_tag_group.get_dict_format())
 
 
@@ -154,6 +154,16 @@ def delete_host_tag_group(params):
     tag_config.remove_tag_group(ident)
     update_tag_config(tag_config)
     return Response(status=204)
+
+
+def _retrieve_group(ident: str) -> TagGroup:
+    tag_group = load_tag_group(ident)
+    if tag_group is None:
+        raise ProblemException(
+            status=500,
+            title="The expected host tag group was not found",
+        )
+    return tag_group
 
 
 def _serve_host_tag_group(tag_details: Dict[str, Any]) -> Response:

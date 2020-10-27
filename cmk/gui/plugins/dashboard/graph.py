@@ -91,6 +91,12 @@ class GraphDashlet(Dashlet):
         title_format = self._dashlet_spec.setdefault(
             "title_format", default_dashlet_graph_render_options["title_format"])
         self._dashlet_spec["graph_render_options"].setdefault("title_format", title_format)
+        if any((
+                self.type_name() == 'pnpgraph' and not self._dashlet_spec["context"],
+                self.type_name() == 'custom_graph' and
+                self._dashlet_spec.get('custom_graph') is None,
+        )):
+            return  # The dashlet is not yet configured
 
         self._dashlet_spec["_graph_identification"] = self.graph_identification()
 

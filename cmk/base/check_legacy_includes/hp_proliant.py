@@ -8,7 +8,10 @@
 # pylint: disable=consider-using-in
 
 from .temperature import check_temperature
-from cmk.base.check_api import saveint
+from cmk.base.check_api import saveint, get_bytes_human_readable
+
+from cmk.base.plugins.agent_based.utils.hp_proliant import MAP_TYPES_MEMORY
+
 hp_proliant_status_map = {
     1: 'unknown',
     2: 'ok',
@@ -220,27 +223,6 @@ def check_hp_proliant_fans(item, params, info):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-hp_proliant_mem_type_map = {
-    1: 'other',
-    2: 'board',
-    3: 'cpqSingleWidthModule',
-    4: 'cpqDoubleWidthModule',
-    5: 'simm',
-    6: 'pcmcia',
-    7: 'compaq-specific',
-    8: 'DIMM',
-    9: 'smallOutlineDimm',
-    10: 'RIMM',
-    11: 'SRIMM',
-    12: 'FB-DIMM',
-    13: 'DIMM DDR',
-    14: 'DIMM DDR2',
-    15: 'DIMM DDR3',
-    16: 'DIMM FBD2',
-    17: 'FB-DIMM DDR2',
-    18: 'FB-DIMM DDR3',
-}
-
 hp_proliant_mem_status_map = {
     1: "other",
     2: "notPresent",
@@ -306,47 +288,27 @@ def check_hp_proliant_mem(item, params, info):
             board_index, module_index, module_size, module_type, \
             module_status, module_condition = line[:6]
 
-            module_size_mb = int(module_size) // 1024
+            yield 0, f"Board: {board_index}"
+            yield 0, f"Num: {module_index}"
 
-            type_ = 'n/a'
-            if int(module_type) in hp_proliant_mem_type_map:
-                type_ = hp_proliant_mem_type_map[int(module_type)]
+            type_ = MAP_TYPES_MEMORY.get(module_type, f"unknown({module_type})")
+            yield 0, f"Type: {type_}"
+
+            module_size = get_bytes_human_readable(int(module_size) * 1024)
+            yield 0, f"Size: {module_size}"
 
             snmp_status = 'n/a'
             if int(module_status) in hp_proliant_mem_status_map:
                 snmp_status = hp_proliant_mem_status_map[int(module_status)]
 
-            detail_output = ', Status: %s ' % snmp_status
-            status = hp_proliant_mem_status2nagios_map[snmp_status]
-            if status == 0:
-                detail_output += ''
-            elif status == 1:
-                detail_output += '(!) '
-            elif status == 2:
-                detail_output += '(!!) '
-            else:
-                detail_output += '(?) '
+            status_output = f"Status: {snmp_status}"
+            yield hp_proliant_mem_status2nagios_map[snmp_status], status_output
 
             condition = 'n/a'
             if saveint(module_condition) in hp_proliant_mem_condition_map:
                 condition = hp_proliant_mem_condition_map[saveint(module_condition)]
-            condition_status = hp_proliant_mem_condition_status2nagios_map[condition]
-
-            detail_output += ', Condition: %s ' % condition
-            if condition_status == 0:
-                detail_output += ''
-            elif condition_status == 1:
-                detail_output += '(!) '
-            elif condition_status == 2:
-                detail_output += '(!!) '
-            else:
-                detail_output += '(?) '
-            if condition_status > status:
-                status = condition_status
-
-            return (status, 'Board: %s, Num: %s, Type: %s, Size: %s MB%s' %
-                    (board_index, module_index, type_, module_size_mb, detail_output))
-    return (3, "item not found in snmp data")
+            condition_output = f"Condition: {condition}"
+            yield hp_proliant_mem_condition_status2nagios_map[condition], condition_output
 
 
 #.

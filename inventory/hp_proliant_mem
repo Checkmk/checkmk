@@ -4,29 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.utils.hp_proliant import MAP_TYPES_MEMORY
+
 
 def inv_hp_proliant_mem(info):
-    map_mem_types = {
-        "1": 'other',
-        "2": 'board',
-        "3": 'cpqSingleWidthModule',
-        "4": 'cpqDoubleWidthModule',
-        "5": 'simm',
-        "6": 'pcmcia',
-        "7": 'compaq-specific',
-        "8": 'DIMM',
-        "9": 'smallOutlineDimm',
-        "10": 'RIMM',
-        "11": 'SRIMM',
-        "12": 'FB-DIMM',
-        "13": 'DIMM DDR',
-        "14": 'DIMM DDR2',
-        "15": 'DIMM DDR3',
-        "16": 'DIMM FBD2',
-        "17": 'FB-DIMM DDR2',
-        "18": 'FB-DIMM DDR3',
-    }
-
     node = inv_tree_list("hardware.memory.arrays:")
 
     infos = {}
@@ -35,7 +16,7 @@ def inv_hp_proliant_mem(info):
         infos.setdefault(
             (int(cpu_num) - 1, module_index), {
                 "serial": module_serial,
-                "type": map_mem_types.get(module_type, "unknown(%s)" % module_type),
+                "type": MAP_TYPES_MEMORY.get(module_type, f"unknown({module_type})"),
             })
 
     # From dmidecode in case of dual host config we have to proof
@@ -53,7 +34,7 @@ def inv_hp_proliant_mem(info):
             array["devices"].append({
                 "size": float(module_size_str) * 1024,
                 "serial": module_serial,
-                "type": map_mem_types.get(module_type, "unknown(%s)" % module_type),
+                "type": MAP_TYPES_MEMORY.get(module_type, f"unknown({module_type})"),
                 "set": module_index,
                 "locator": cpu_num
             })

@@ -600,7 +600,6 @@ def test_all_check_variables_present(config_check_variables):
         'hp_proliant_mem_condition_status2nagios_map',
         'hp_proliant_mem_status2nagios_map',
         'hp_proliant_mem_status_map',
-        'hp_proliant_mem_type_map',
         'hp_proliant_psu_levels',
         'hp_proliant_speed_map',
         'hp_proliant_status2nagios_map',

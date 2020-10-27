@@ -25,84 +25,26 @@ info = [
 
 discovery = {
     '': [
-        ('0', None), ('1', None), ('10', None), ('2', None), ('4', None),
-        ('6', None), ('7', None), ('8', None)
+        ('0', None),
+        ('1', None),
+        ('10', None),
+        ('2', None),
+        ('4', None),
+        ('6', None),
+        ('7', None),
+        ('8', None)
     ]
 }
 
 checks = {
     '': [
-        (
-            '0', {}, [
-                (
-                    0,
-                    'Board: 0, Num: 0, Type: DIMM DDR3, Size: 4096 MB, Status: good , Condition: ok ',
-                    []
-                )
-            ]
-        ),
-        (
-            '1', {}, [
-                (
-                    0,
-                    'Board: 0, Num: 1, Type: DIMM DDR3, Size: 4096 MB, Status: good , Condition: ok ',
-                    []
-                )
-            ]
-        ),
-        (
-            '10', {}, [
-                (
-                    0,
-                    'Board: 0, Num: 10, Type: DIMM DDR3, Size: 4096 MB, Status: good , Condition: ok ',
-                    []
-                )
-            ]
-        ),
-        (
-            '2', {}, [
-                (
-                    0,
-                    'Board: 0, Num: 2, Type: DIMM DDR3, Size: 4096 MB, Status: good , Condition: ok ',
-                    []
-                )
-            ]
-        ),
-        (
-            '4', {}, [
-                (
-                    0,
-                    'Board: 0, Num: 4, Type: DIMM DDR3, Size: 4096 MB, Status: good , Condition: ok ',
-                    []
-                )
-            ]
-        ),
-        (
-            '6', {}, [
-                (
-                    0,
-                    'Board: 0, Num: 6, Type: DIMM DDR3, Size: 4096 MB, Status: good , Condition: ok ',
-                    []
-                )
-            ]
-        ),
-        (
-            '7', {}, [
-                (
-                    0,
-                    'Board: 0, Num: 7, Type: DIMM DDR3, Size: 4096 MB, Status: good , Condition: ok ',
-                    []
-                )
-            ]
-        ),
-        (
-            '8', {}, [
-                (
-                    0,
-                    'Board: 0, Num: 8, Type: DIMM DDR3, Size: 4096 MB, Status: good , Condition: ok ',
-                    []
-                )
-            ]
-        )
-    ]
+        ('0', {}, [
+            (0, 'Board: 0', []),
+            (0, 'Num: 0', []),
+            (0, 'Type: DIMM DDR3', []),
+            (0, 'Size: 4.00 GB', []),
+            (0, 'Status: good', []),
+            (0, 'Condition: ok', []),
+        ]),
+    ],
 }

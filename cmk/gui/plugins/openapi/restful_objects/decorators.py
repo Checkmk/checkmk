@@ -286,6 +286,7 @@ class Endpoint:
 
         @functools.wraps(self.func)
         def _validating_wrapper(param):
+            # TODO: Better error messages, pointing to the location where variables are missing
             try:
                 if path_schema:
                     param.update(path_schema().load(param))
@@ -297,7 +298,7 @@ class Endpoint:
                     param.update(header_schema().load(request.headers))
 
                 if request_schema:
-                    body = request_schema().load(request.json)
+                    body = request_schema().load(request.json or {})
                     param['body'] = body
             except ValidationError as exc:
 

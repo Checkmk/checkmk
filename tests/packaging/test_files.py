@@ -221,6 +221,19 @@ def test_src_not_contains_enterprise_sources(package_path):
     assert managed_files == []
 
 
+def test_src_windows_agent_has_correct_version(package_path, cmk_version):
+    if not package_path.endswith(".tar.gz"):
+        pytest.skip("%s is not a source package" % os.path.basename(package_path))
+
+    prefix = os.path.basename(package_path).replace(".tar.gz", "")
+    for file_path in [
+            prefix + "/agents/windows/check_mk_agent.exe",
+            prefix + "/agents/windows/check_mk_agent-64.exe",
+    ]:
+        exe_bytes = subprocess.check_output(["tar", "-xvOf", package_path, file_path])
+        assert cmk_version.encode("ascii") in exe_bytes
+
+
 def test_demo_modifications(package_path, cmk_version):
     if package_path.endswith(".tar.gz"):
         pytest.skip("%s do not test source packages" % os.path.basename(package_path))

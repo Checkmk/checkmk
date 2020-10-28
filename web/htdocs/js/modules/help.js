@@ -14,10 +14,13 @@ import * as ajax from "ajax";
 //#   |                      |_|                |___/ |___/                |
 //#   '--------------------------------------------------------------------'
 
-let is_help_active = false;
+function is_help_active() {
+    const helpdivs = document.getElementsByClassName("help");
+    return helpdivs.length !== 0 && helpdivs[0].style.display === "block";
+}
 
 export function toggle() {
-    if (is_help_active) {
+    if (is_help_active()) {
         switch_help(false);
     } else {
         switch_help(true);
@@ -25,8 +28,6 @@ export function toggle() {
 }
 
 function switch_help(how) {
-    is_help_active = how;
-
     // recursive scan for all div class=help elements
     var helpdivs = document.getElementsByClassName("help");
     var i;

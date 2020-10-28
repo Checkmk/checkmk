@@ -3,10 +3,11 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import contextlib
 import json
 import http.client
 
-from typing import Any, Dict, Literal, Sequence, List, Optional, Type
+from typing import Any, Dict, Literal, Sequence, List, Optional, Type, Union, Tuple
 
 from cmk.gui.http import Response
 from cmk.gui.groups import load_group_information, GroupSpecs, GroupSpec
@@ -186,3 +187,38 @@ def _retrieve_group(
             message = str(exc)
         raise ProblemException(status, http.client.responses[status], message)
     return group
+
+
+@contextlib.contextmanager
+def may_fail(
+    exc_type: Union[Type[Exception], Tuple[Type[Exception], ...]],
+    status: int,
+):
+    """Context manager to make Exceptions REST-API safe
+
+        Examples:
+            >>> try:
+            ...     with may_fail(ValueError, status=404):
+            ...          raise ValueError("Nothing to see here, move along.")
+            ... except Exception as exc:
+            ...     exc.to_problem().data
+            b'{"title": "The operation has failed.", \
+"status": 404, \
+"detail": "Nothing to see here, move along.", \
+"ext": null}'
+
+    """
+    def _get_message(e):
+        if hasattr(e, 'message'):
+            return e.message
+
+        return str(e)
+
+    try:
+        yield
+    except exc_type as exc:
+        raise ProblemException(
+            status=status,
+            title="The operation has failed.",
+            detail=_get_message(exc),
+        ) from exc

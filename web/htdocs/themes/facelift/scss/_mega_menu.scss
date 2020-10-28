@@ -112,9 +112,10 @@
     div.popup_menu {
       position: absolute;
       top: $page-header-height;
+      bottom: 0;
       left: 64px;
       z-index: 1000;
-      height: calc(100vh - #{$page-header-height});
+      padding-bottom: $megamenu-spacing-bottom;
       background-color: $base-color;
       border-right: $popup-border;
       visibility: hidden;
@@ -133,6 +134,7 @@
       div.navigation_bar {
         display: flex;
         height: $megamenu-navbar-height;
+        border-bottom: 1px solid $headline-color;
 
         div.search_bar {
           display: flex;
@@ -154,10 +156,11 @@
       div.content.inner {
         display: flex;
         flex-flow: column wrap;
-        height: calc(100vh - #{$page-header-height} - #{$megamenu-navbar-height});
+        height: calc(
+          100vh - #{$page-header-height} - #{$megamenu-navbar-height} - #{$megamenu-spacing-bottom}
+        );
         padding: 0;
         overflow-y: auto;
-        border-top: 1px solid $headline-color;
 
         &.hidden {
           display: none;

@@ -153,7 +153,6 @@ table.vs_duallist a.control,
   color: rgb(255, 255, 255);
   cursor: pointer;
   border-radius: $theme-border-radius;
-  box-shadow: 0 0 1.5px rgb(0, 0, 0);
 }
 
 table.vs_duallist a.control,
@@ -184,12 +183,8 @@ input.button:not([type="password"]) {
     &:hover,
     &:active {
       cursor: initial;
-      background-color: rgb(19, 211, 137);
-      filter: grayscale(100%);
-    }
-
-    &:active {
-      box-shadow: 0 0 1.5px rgb(0, 0, 0);
+      background-color: $input-button-hover-bg-color;
+      filter: grayscale(80%);
     }
   }
 }

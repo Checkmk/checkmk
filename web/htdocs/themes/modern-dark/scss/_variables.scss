@@ -240,8 +240,8 @@ $data-table-border-bottom: $secondary-table-border;
 $data-table-state-border-top: none !important;
 $data-table-state-border-bottom: $secondary-table-border !important;
 
-$input-button-bg-color: $grey-3;
-$input-button-hover-bg-color: lighten($grey-3, 10%);
+$input-button-bg-color: $navbar-color;
+$input-button-hover-bg-color: rgb(53, 63, 74);
 $input-button-color: $font-color;
 
 $odd-tr-bg-color: $bg-color-secondary;
@@ -480,7 +480,7 @@ $scatterdot-hilite-color: $yellow;
 $page-header-height: 58px;
 $popup-shadow-color: rgba(0, 0, 0, 0.1);
 $button-font-color-default: $white;
-$button-bg-color-default: rgb(53, 63, 74);
+$button-bg-color-default: $input-button-hover-bg-color;
 $button-bg-color-suggestions: $navbar-color;
 $navigation-bg-color: $navbar-color;
 $page-menu-bg-color: $navbar-color;

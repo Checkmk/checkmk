@@ -336,7 +336,12 @@ div#top_heading {
 
         &.disabled {
           pointer-events: none;
-          filter: grayscale(70%) brightness(125%);
+
+          a {
+            background-color: $input-button-hover-bg-color;
+            opacity: 0.5;
+            filter: grayscale(80%);
+          }
         }
 
         a {

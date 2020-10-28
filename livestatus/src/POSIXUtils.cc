@@ -7,13 +7,57 @@
 // IWYU pragma: no_include <stdio.h>
 #include "POSIXUtils.h"
 
+#include <fcntl.h>
+#include <sys/socket.h>
 #include <unistd.h>
 
+#include <array>
 #include <thread>
 
 #include "Logger.h"
 
 using namespace std::chrono_literals;
+
+FileDescriptorPair FileDescriptorPair::createSocketPair(Mode mode,
+                                                        Logger *logger) {
+    std::array<int, 2> fd{-1, -1};
+    int sock_type = SOCK_STREAM | SOCK_CLOEXEC;
+    if (::socketpair(AF_UNIX, sock_type, 0, &fd[0]) == -1) {
+        // socketpair(2) does not modify fd on failure.
+        generic_error ge{"cannot create socket pair"};
+        Alert(logger) << ge;
+        return {-1, -1};
+    }
+    // yes, we establish half-blocking channel
+    if (mode == Mode::nonblocking) {
+        if (fcntl(fd[0], F_SETFL, O_NONBLOCK) == -1) {
+            generic_error ge{"cannot make socket non-blocking"};
+            Alert(logger) << ge;
+            ::close(fd[0]);
+            ::close(fd[1]);
+            return {-1, -1};
+        }
+    }
+    return {fd[0], fd[1]};
+}
+
+// NOTE: *copy-pasted* from old Core code.
+// this function will be soon deprecated: We can use socket based transport.
+// not marked as [[deprecated]] to avoid warnings during compilation.
+FileDescriptorPair FileDescriptorPair::createPipePair(Mode mode,
+                                                      Logger *logger) {
+    std::array<int, 2> fd{-1, -1};
+    int pipe_mode = O_CLOEXEC;
+    if (mode == Mode::nonblocking) {
+        pipe_mode |= O_NONBLOCK;
+    }
+    if (::pipe2(&fd[0], pipe_mode) == -1) {
+        generic_error ge{"cannot create pipe pair"};
+        Alert(logger) << ge;
+        return {-1, -1};
+    }
+    return {fd[0], fd[1]};
+}
 
 namespace {
 thread_local std::string thread_name;

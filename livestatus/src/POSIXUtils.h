@@ -15,6 +15,26 @@
 #include <chrono>
 #include <string>
 #include <utility>
+class Logger;
+
+class FileDescriptorPair {
+public:
+    // ATTENTION: blocking is Alert, Notify, RRD, nonblocking - Check && Icmp
+    enum class Mode { blocking, nonblocking };
+
+    static FileDescriptorPair createSocketPair(Mode mode, Logger *logger);
+    static FileDescriptorPair createPipePair(Mode mode, Logger *logger);
+
+    [[nodiscard]] int local() const { return local_; }
+    [[nodiscard]] int remote() const { return remote_; }
+
+private:
+    FileDescriptorPair(int local, int remote)
+        : local_{local}, remote_{remote} {}
+
+    int local_;
+    int remote_;
+};
 
 void setThreadName(std::string name);
 std::string getThreadName();

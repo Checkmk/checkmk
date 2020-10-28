@@ -5,6 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Final
 
+from ..agent_based_api.v1 import any_of, contains
+
 MAP_TYPES_MEMORY: Final = {
     "1": 'other',
     "2": 'board',
@@ -25,3 +27,8 @@ MAP_TYPES_MEMORY: Final = {
     "17": 'FB-DIMM DDR2',
     "18": 'FB-DIMM DDR3',
 }
+
+DETECT = any_of(
+    contains(".1.3.6.1.4.1.232.2.2.4.2.0", "proliant"),
+    contains(".1.3.6.1.4.1.232.2.2.4.2.0", "storeeasy"),
+)

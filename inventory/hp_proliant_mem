@@ -4,20 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.plugins.agent_based.utils.hp_proliant import MAP_TYPES_MEMORY
+from cmk.base.plugins.agent_based.hp_proliant_mem import Section  # temporarily, during migration!
 
 
-def inv_hp_proliant_mem(info):
+def inv_hp_proliant_mem(section: Section):
     node = inv_tree_list("hardware.memory.arrays:")
 
     infos = {}
-    for _board_index, module_index, module_size_str, module_type, \
-        _module_status, _module_condition, module_serial, cpu_num in info:
-        infos.setdefault(
-            (int(cpu_num) - 1, module_index), {
-                "serial": module_serial,
-                "type": MAP_TYPES_MEMORY.get(module_type, f"unknown({module_type})"),
-            })
+    for module in section.values():
+        infos.setdefault((module.cpu_num - 1, module.number), {
+            "serial": module.serial,
+            "type": module.typ,
+        })
 
     # From dmidecode in case of dual host config we have to proof
     # if there's already an existing devices table
@@ -28,15 +26,14 @@ def inv_hp_proliant_mem(info):
                     entry.update(module_info)
     except Exception:
         array = {"devices": []}
-        for _board_index, module_index, module_size_str, module_type, \
-            _module_status, _module_condition, module_serial, cpu_num in info:
+        for module in section.values():
 
             array["devices"].append({
-                "size": float(module_size_str) * 1024,
-                "serial": module_serial,
-                "type": MAP_TYPES_MEMORY.get(module_type, f"unknown({module_type})"),
-                "set": module_index,
-                "locator": cpu_num
+                "size": module.size,
+                "serial": module.serial,
+                "type": module.typ,
+                "set": module.number,
+                "locator": module.cpu_num
             })
 
         node.append(array)

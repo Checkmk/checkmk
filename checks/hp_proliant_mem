@@ -6,22 +6,9 @@
 
 from cmk.base.check_legacy_includes.hp_proliant import *  # pylint: disable=wildcard-import,unused-wildcard-import
 check_info["hp_proliant_mem"] = {
+    # section already migrated!
     'inventory_function': inventory_hp_proliant_mem,
     'check_function': check_hp_proliant_mem,
     'service_description': 'HW Mem %s',
-    # If something changes here please adopt the related inventory plugin
-    'snmp_info': (
-        ".1.3.6.1.4.1.232.6.2.14.13.1",
-        [
-            "2",  # CPQHLTH-MIB::cpqHeResMem2BoardNum
-            "1",  # CPQHLTH-MIB::cpqHeResMem2Module
-            "6",  # CPQHLTH-MIB::cpqHeResMem2ModuleSize
-            "7",  # CPQHLTH-MIB::cpqHeResMem2ModuleType
-            "19",  # CPQHLTH-MIB::cpqHeResMem2ModuleStatus
-            "20",  # CPQHLTH-MIB::cpqHeResMem2ModuleCondition
-            "12",  # CPQHLTH-MIB::cpqHeResMem2SerialNo
-            "3",  # CPQHLTH-MIB::cpqHeResMem2CpuNum
-        ]),
-    'snmp_scan_function': hp_proliant_scan_function,
     'management_board': HOST_ONLY,
 }

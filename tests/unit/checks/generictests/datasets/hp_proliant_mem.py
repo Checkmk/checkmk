@@ -6,33 +6,25 @@
 
 # yapf: disable
 # type: ignore
+
+from cmk.base.plugins.agent_based.hp_proliant_mem import Module
+
 checkname = 'hp_proliant_mem'
 
-info = [
-    ['0', '0', '4194304', '15', '4', '2', '', '1'],
-    ['0', '1', '4194304', '15', '4', '2', '', '1'],
-    ['0', '2', '4194304', '15', '4', '2', '', '1'],
-    ['0', '3', '0', '15', '2', '1', '', '1'],
-    ['0', '4', '4194304', '15', '4', '2', '', '1'],
-    ['0', '5', '0', '15', '2', '1', '', '1'],
-    ['0', '6', '4194304', '15', '4', '2', '', '2'],
-    ['0', '7', '4194304', '15', '4', '2', '', '2'],
-    ['0', '8', '4194304', '15', '4', '2', '', '2'],
-    ['0', '9', '0', '15', '2', '1', '', '2'],
-    ['0', '10', '4194304', '15', '4', '2', '', '2'],
-    ['0', '11', '0', '15', '2', '1', '', '2']
-]
+parsed = {
+    '0': Module(number='0', board='0', cpu_num=1, size=4294967296,
+                typ='DIMM DDR3', serial='', status='good', condition='ok'),
+    '3': Module(number='3', board='0', cpu_num=1, size=0,
+                typ='DIMM DDR3', serial='', status='  notPresent', condition='other'),                 '8': Module(number='8', board='0', cpu_num=2, size=4294967296, typ='DIMM DDR3',
+                serial='',   status='good', condition='ok'),
+    '9': Module(number='9', board='0', cpu_num=2, size=0, typ='DIMM DDR3', serial='',
+                status='  notPresent', condition='other'),
+}
 
 discovery = {
     '': [
-        ('0', None),
-        ('1', None),
-        ('10', None),
-        ('2', None),
-        ('4', None),
-        ('6', None),
-        ('7', None),
-        ('8', None)
+        ('0', {}),
+        ('8', {}),
     ]
 }
 
@@ -40,7 +32,7 @@ checks = {
     '': [
         ('0', {}, [
             (0, 'Board: 0', []),
-            (0, 'Num: 0', []),
+            (0, 'Number: 0', []),
             (0, 'Type: DIMM DDR3', []),
             (0, 'Size: 4.00 GB', []),
             (0, 'Status: good', []),

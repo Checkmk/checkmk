@@ -8,9 +8,7 @@
 # pylint: disable=consider-using-in
 
 from .temperature import check_temperature
-from cmk.base.check_api import saveint, get_bytes_human_readable
-
-from cmk.base.plugins.agent_based.utils.hp_proliant import MAP_TYPES_MEMORY
+from cmk.base.check_api import get_bytes_human_readable
 
 hp_proliant_status_map = {
     1: 'unknown',
@@ -223,24 +221,7 @@ def check_hp_proliant_fans(item, params, info):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-hp_proliant_mem_status_map = {
-    1: "other",
-    2: "notPresent",
-    3: "present",
-    4: "good",
-    5: "add",
-    6: "upgrade",
-    7: "missing",
-    8: "doesNotMatch",
-    9: "notSupported",
-    10: "badConfig",
-    11: "degraded",
-    12: "spare",
-    13: "partial",
-}
-
 hp_proliant_mem_status2nagios_map = {
-    'n/a': 3,
     'other': 3,
     'notPresent': 3,
     'present': 1,
@@ -264,51 +245,32 @@ hp_proliant_mem_condition_status2nagios_map = {
     'degradedModuleIndexUnknown': 3
 }
 
-hp_proliant_mem_condition_map = {
-    0: 'n/a',
-    1: 'other',
-    2: 'ok',
-    3: 'degraded',
-    4: 'degradedModuleIndexUnknown',
-}
+
+def inventory_hp_proliant_mem(section):
+    for module in section.values():
+        if module.size > 0 and module.status != "notPresent":
+            yield module.number, {}
 
 
-def inventory_hp_proliant_mem(info):
-    if len(info) > 0:
-        return [ (line[1], None) for line in info if line[2].isdigit() and \
-                 int(line[2]) > 0 and int(line[4]) != 2 ]
+def check_hp_proliant_mem(item, params, section):
+    module = section.get(item)
+    if module is None:
+        return
 
+    yield 0, f"Board: {module.board}"
+    yield 0, f"Number: {module.number}"
+    yield 0, f"Type: {module.typ}"
+    yield 0, f"Size: {get_bytes_human_readable(module.size)}"
 
-def check_hp_proliant_mem(item, params, info):
-    for line in info:
-        if line[1] == item:
-            # Note: mgmt_hp_proliant_mem provides exact 6 values;
-            # hp_proliant provides 10 values because related inventory plugin
-            # needs the last 4.
-            board_index, module_index, module_size, module_type, \
-            module_status, module_condition = line[:6]
+    yield (
+        hp_proliant_mem_status2nagios_map.get(module.status, 3),
+        f"Status: {module.status}",
+    )
 
-            yield 0, f"Board: {board_index}"
-            yield 0, f"Num: {module_index}"
-
-            type_ = MAP_TYPES_MEMORY.get(module_type, f"unknown({module_type})")
-            yield 0, f"Type: {type_}"
-
-            module_size = get_bytes_human_readable(int(module_size) * 1024)
-            yield 0, f"Size: {module_size}"
-
-            snmp_status = 'n/a'
-            if int(module_status) in hp_proliant_mem_status_map:
-                snmp_status = hp_proliant_mem_status_map[int(module_status)]
-
-            status_output = f"Status: {snmp_status}"
-            yield hp_proliant_mem_status2nagios_map[snmp_status], status_output
-
-            condition = 'n/a'
-            if saveint(module_condition) in hp_proliant_mem_condition_map:
-                condition = hp_proliant_mem_condition_map[saveint(module_condition)]
-            condition_output = f"Condition: {condition}"
-            yield hp_proliant_mem_condition_status2nagios_map[condition], condition_output
+    yield (
+        hp_proliant_mem_condition_status2nagios_map.get(module.condition, 3),
+        f"Condition: {module.condition}",
+    )
 
 
 #.
@@ -378,6 +340,7 @@ def proliant_general_scan_function(oid):
 
 
 def hp_proliant_scan_function(oid):
+    # migrated!
     return ("proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower() or
             "storeeasy" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower())
 

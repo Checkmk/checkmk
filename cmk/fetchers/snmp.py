@@ -14,9 +14,12 @@ from typing import (
     Dict,
     Final,
     Iterable,
+    Iterator,
     List,
     Mapping,
+    NamedTuple,
     Optional,
+    Sequence,
     Set,
     Tuple,
 )
@@ -38,7 +41,58 @@ from . import factory
 from ._base import ABCFetcher, ABCFileCache, verify_ipaddress
 from .type_defs import Mode
 
-__all__ = ["SNMPFetcher", "SNMPFileCache"]
+__all__ = ["SNMPFetcher", "SNMPFileCache", "SNMPPluginStore", "SNMPPluginStoreItem"]
+
+
+class SNMPPluginStoreItem(NamedTuple):
+    trees: Sequence[SNMPTree]
+    detect_spec: SNMPDetectSpec
+
+    @classmethod
+    def deserialize(cls, serialized: Dict[str, Any]) -> "SNMPPluginStoreItem":
+        try:
+            return cls(
+                [SNMPTree.from_json(tree) for tree in serialized["trees"]],
+                SNMPDetectSpec.from_json(serialized["detect_spec"]),
+            )
+        except (LookupError, TypeError, ValueError) as exc:
+            raise ValueError(serialized) from exc
+
+    def serialize(self) -> Dict[str, Any]:
+        return {
+            "trees": [tree.to_json() for tree in self.trees],
+            "detect_spec": self.detect_spec.to_json(),
+        }
+
+
+class SNMPPluginStore(Mapping[SectionName, SNMPPluginStoreItem]):
+    def __init__(self, store: Mapping[SectionName, SNMPPluginStoreItem]) -> None:
+        self._store: Final = store
+
+    def __repr__(self):
+        return "%s(%r)" % (type(self).__name__, self._store)
+
+    def __getitem__(self, key: SectionName) -> SNMPPluginStoreItem:
+        return self._store.__getitem__(key)
+
+    def __iter__(self) -> Iterator[SectionName]:
+        return self._store.__iter__()
+
+    def __len__(self) -> int:
+        return self._store.__len__()
+
+    @classmethod
+    def deserialize(cls, serialized: Dict[str, Any]) -> "SNMPPluginStore":
+        try:
+            return cls({
+                SectionName(k): SNMPPluginStoreItem.deserialize(v)
+                for k, v in serialized["plugin_store"].items()
+            })
+        except (LookupError, TypeError, ValueError) as exc:
+            raise ValueError(serialized) from exc
+
+    def serialize(self) -> Dict[str, Any]:
+        return {"plugin_store": {str(k): v.serialize() for k, v in self.items()}}
 
 
 class SNMPFileCache(ABCFileCache[SNMPRawData]):

@@ -8,7 +8,15 @@ import json
 
 import pytest  # type: ignore[import]
 
-from cmk.snmplib.type_defs import OID_END, OIDBytes, OIDCached, OIDEnd, OIDSpec, SNMPTree
+from cmk.snmplib.type_defs import (
+    OID_END,
+    OIDBytes,
+    OIDCached,
+    OIDEnd,
+    OIDSpec,
+    SNMPDetectSpec,
+    SNMPTree,
+)
 
 
 def test_oid_end():
@@ -16,6 +24,19 @@ def test_oid_end():
     assert oide == OIDEnd()
     assert repr(oide) == "OIDEnd()"
     assert oide == OID_END
+
+
+class TestSNMPDetectSpec:
+    @pytest.fixture
+    def specs(self):
+        return SNMPDetectSpec([[
+            ("oid0", "regex0", True),
+            ("oid1", "regex1", True),
+            ("oid2", "regex2", False),
+        ]])
+
+    def test_serialization(self, specs):
+        assert SNMPDetectSpec.from_json(specs.to_json()) == specs
 
 
 @pytest.mark.parametrize(

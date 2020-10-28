@@ -14,6 +14,7 @@ from typing import (
     Any,
     AnyStr,
     Callable,
+    cast,
     Dict,
     Iterable,
     List,
@@ -117,6 +118,19 @@ class SNMPDetectSpec(List[List[SNMPDetectAtom]]):
     Note that the structure of this object is not part of the API,
     and may change at any time.
     """
+    @classmethod
+    def from_json(cls, serialized: Dict[str, Any]) -> "SNMPDetectSpec":
+        try:
+            # The cast is necessary as mypy does not infer types in a list comprehension.
+            # See https://github.com/python/mypy/issues/5068
+            return cls([[cast(SNMPDetectAtom, tuple(inner))
+                         for inner in outer]
+                        for outer in serialized["snmp_detect_spec"]])
+        except (LookupError, TypeError, ValueError) as exc:
+            raise ValueError(serialized) from exc
+
+    def to_json(self) -> Dict[str, Any]:
+        return {"snmp_detect_spec": self}
 
 
 # Wraps the configuration of a host into a single object for the SNMP code

@@ -1,4 +1,4 @@
 This is work in progress.
 To see the current state run `make apidoc html` and
-point your browser at the file build/index.html
+point your browser at the file build/html/index.html
 

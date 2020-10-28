@@ -35,7 +35,7 @@ from cmk.fetchers.agent import DefaultAgentFileCache, NoCache
 from cmk.fetchers.ipmi import IPMIFetcher
 from cmk.fetchers.piggyback import PiggybackFetcher
 from cmk.fetchers.program import ProgramFetcher
-from cmk.fetchers.snmp import SNMPFetcher, SNMPFileCache
+from cmk.fetchers.snmp import SNMPFetcher, SNMPFileCache, SNMPPluginStoreItem, SNMPPluginStore
 from cmk.fetchers.tcp import TCPFetcher
 from cmk.fetchers.type_defs import Mode
 
@@ -232,6 +232,34 @@ class TestProgramFetcher:
         assert other.cmdline == fetcher.cmdline
         assert other.stdin == fetcher.stdin
         assert other.is_cmc == fetcher.is_cmc
+
+
+class TestSNMPPluginStore:
+    @pytest.fixture
+    def store(self):
+        return SNMPPluginStore({
+            SectionName("section0"): SNMPPluginStoreItem(
+                [
+                    SNMPTree(base=".1.2.3", oids=["4.5", "9.7"]),
+                    SNMPTree(base=".8.9.0", oids=["1.2", "3.4"]),
+                ],
+                SNMPDetectSpec([[
+                    ("oid0", "regex0", True),
+                    ("oid1", "regex1", True),
+                    ("oid2", "regex2", False),
+                ]]),
+            ),
+            SectionName("section1"): SNMPPluginStoreItem(
+                [SNMPTree(base=".1.2.3", oids=["4.5", "6.7.8"])],
+                SNMPDetectSpec([[
+                    ("oid3", "regex3", True),
+                    ("oid4", "regex4", False),
+                ]]),
+            ),
+        })
+
+    def test_serialization(self, store):
+        assert SNMPPluginStore.deserialize(store.serialize()) == store
 
 
 class ABCTestSNMPFetcher(ABC):

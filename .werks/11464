@@ -1,0 +1,40 @@
+Title: Windows agent updater plugin is delivered as Python script
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1603870219
+Edition: cee
+Knowledge: undoc
+Level: 2
+Version: 2.0.0i1
+
+Since this release Windows Agent update plugin is delivered as a python file
+with name <tt>cmk_update_agent.checkmk.py</tt>
+
+This feature has next advantages:
+<ul>
+<li>eliminates false virus alarms for the plugin</li>
+<li>improves stability and performance</li>
+<li>speeds up development</li>
+<li>improves diagnostic</li>
+</ul>
+
+To use the plugin from the command line you may use provide next methods:
+
+1. Use Windows agent:
+C+:
+cd "%ProgramFiles(x86)%\checkmk\service"
+check_mk_agent updater [params]
+C-:
+2. Use provided with Windows agent Python module:
+C+:
+cd "%ProgramData%\checkmk\agent\plugins"
+..\modules\Python-3.8\.venv\Scripts\python cmk_update_agent.checkmk.py [params]
+C-:
+
+In both cases <tt>params</tt> means parametres of the Windows agent updater plugin.
+
+You could even execute the Agent updater with another Python installation, but it 
+is not recommended, because you would have to ensure that all module dependencies 
+are installed in your environment. We have solved this problem for you by providing 
+a standard Python environment for Windows, so it should be used.

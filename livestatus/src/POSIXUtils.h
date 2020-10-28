@@ -22,8 +22,18 @@ public:
     // ATTENTION: blocking is Alert, Notify, RRD, nonblocking - Check && Icmp
     enum class Mode { blocking, nonblocking };
 
+    static FileDescriptorPair invalid() { return FileDescriptorPair{-1, -1}; }
+    [[nodiscard]] bool isInvalid() const {
+        return local_ == -1 && remote_ == -1;
+    }
+
+    // TODO(sp) One of these pairs must die...
+
     static FileDescriptorPair createSocketPair(Mode mode, Logger *logger);
     static FileDescriptorPair createPipePair(Mode mode, Logger *logger);
+
+    static FileDescriptorPair makeSocketPair(Mode mode, Logger *logger);
+    static FileDescriptorPair makePipePair(Mode mode, Logger *logger);
 
     [[nodiscard]] int local() const { return local_; }
     [[nodiscard]] int remote() const { return remote_; }
@@ -67,9 +77,9 @@ public:
 
     file_lock() : fd_(-1) {}
     explicit file_lock(const char *name);
-    file_lock(file_lock &&moved) : fd_(-1) { this->swap(moved); }
+    file_lock(file_lock &&moved) noexcept : fd_(-1) { this->swap(moved); }
 
-    file_lock &operator=(file_lock &&moved) {
+    file_lock &operator=(file_lock &&moved) noexcept {
         file_lock tmp(std::move(moved));
         this->swap(tmp);
         return *this;

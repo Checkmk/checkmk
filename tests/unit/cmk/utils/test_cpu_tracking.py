@@ -20,7 +20,7 @@ def json_identity(serializable):
 @pytest.fixture
 def set_time(monkeypatch):
     def setter(value):
-        monkeypatch.setattr("time.time", lambda value=value: value)
+        monkeypatch.setattr("time.monotonic", lambda value=value: value)
 
     return setter
 

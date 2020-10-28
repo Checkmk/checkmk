@@ -34,7 +34,7 @@ class Snapshot:
 
     @classmethod
     def take(cls) -> "Snapshot":
-        return cls(os.times(), time.time())
+        return cls(os.times(), time.monotonic())
 
     @classmethod
     def deserialize(cls, serialized: Dict[str, Any]) -> "Snapshot":

@@ -129,7 +129,6 @@ CheckContext = Dict[str, Any]
 GetCheckApiContext = Callable[[], Dict[str, Any]]
 CheckIncludes = List[str]
 DiscoveryCheckParameters = Dict
-CheckCommandArguments = Union[str, Iterable[Union[int, float, str, Tuple[str, str, str]]]]
 SpecialAgentConfiguration = NamedTuple(
     "SpecialAgentConfiguration",
     [
@@ -1267,60 +1266,6 @@ def get_service_translations(hostname: HostName) -> cmk.utils.translations.Trans
 
     translations_cache[hostname] = translations
     return translations
-
-
-def prepare_check_command(command_spec: CheckCommandArguments, hostname: HostName,
-                          description: Optional[ServiceName]) -> str:
-    """Prepares a check command for execution by Check_MK.
-
-    This function either accepts a string or a list of arguments as
-    command_spec.  In case a list is given it quotes the single elements. It
-    also prepares password store entries for the command line. These entries
-    will be completed by the executed program later to get the password from
-    the password store.
-    """
-    if isinstance(command_spec, str):
-        return command_spec
-
-    if not isinstance(command_spec, list):
-        raise NotImplementedError()
-
-    passwords: List[Tuple[str, str, str]] = []
-    formated: List[str] = []
-    for arg in command_spec:
-        if isinstance(arg, (int, float)):
-            formated.append("%s" % arg)
-
-        elif isinstance(arg, str):
-            formated.append(cmk.utils.quote_shell_string(arg))
-
-        elif isinstance(arg, tuple) and len(arg) == 3:
-            pw_ident, preformated_arg = arg[1:]
-            try:
-                password = stored_passwords[pw_ident]["password"]
-            except KeyError:
-                if hostname and description:
-                    descr = " used by service \"%s\" on host \"%s\"" % (description, hostname)
-                elif hostname:
-                    descr = " used by host host \"%s\"" % (hostname)
-                else:
-                    descr = ""
-
-                console.warning("The stored password \"%s\"%s does not exist (anymore)." %
-                                (pw_ident, descr))
-                password = "%%%"
-
-            pw_start_index = str(preformated_arg.index("%s"))
-            formated.append(cmk.utils.quote_shell_string(preformated_arg % ("*" * len(password))))
-            passwords.append((str(len(formated)), pw_start_index, pw_ident))
-
-        else:
-            raise MKGeneralException("Invalid argument for command line: %r" % (arg,))
-
-    if passwords:
-        formated = ["--pwstore=%s" % ",".join(["@".join(p) for p in passwords])] + formated
-
-    return " ".join(formated)
 
 
 def get_http_proxy(http_proxy: Tuple[str, str]) -> Optional[str]:

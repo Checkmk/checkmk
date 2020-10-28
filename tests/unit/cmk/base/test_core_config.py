@@ -30,6 +30,35 @@ def test_do_create_config_nagios(core_scenario):
     assert config.PackedConfigStore(LATEST_SERIAL)._compiled_path.exists()
 
 
+def test_active_check_arguments_basics():
+    assert core_config.active_check_arguments("bla", "blub", u"args 123 -x 1 -y 2") \
+        == u"args 123 -x 1 -y 2"
+
+    assert core_config.active_check_arguments("bla", "blub", ["args", "123", "-x", "1", "-y", "2"]) \
+        == "'args' '123' '-x' '1' '-y' '2'"
+
+    assert core_config.active_check_arguments("bla", "blub", ["args", "1 2 3", "-d=2",
+        "--hallo=eins", 9]) \
+        == "'args' '1 2 3' '-d=2' '--hallo=eins' 9"
+
+    with pytest.raises(MKGeneralException):
+        core_config.active_check_arguments("bla", "blub", (1, 2))  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize("pw", ["abc", "123", "x'äd!?", u"aädg"])
+def test_active_check_arguments_password_store(monkeypatch, pw):
+    monkeypatch.setattr(config, "stored_passwords", {"pw-id": {"password": pw,}})
+    assert core_config.active_check_arguments("bla", "blub", ["arg1", ("store", "pw-id", "--password=%s"), "arg3"]) \
+        == "--pwstore=2@11@pw-id 'arg1' '--password=%s' 'arg3'" % ("*" * len(pw))
+
+
+def test_active_check_arguments_not_existing_password(capsys):
+    assert core_config.active_check_arguments("bla", "blub", ["arg1", ("store", "pw-id", "--password=%s"), "arg3"]) \
+        == "--pwstore=2@11@pw-id 'arg1' '--password=***' 'arg3'"
+    stderr = capsys.readouterr().err
+    assert "The stored password \"pw-id\" used by service \"blub\" on host \"bla\"" in stderr
+
+
 def test_active_check_arguments_wrong_types():
     with pytest.raises(MKGeneralException):
         core_config.active_check_arguments("bla", "blub", 1)  # type: ignore[arg-type]
@@ -38,29 +67,23 @@ def test_active_check_arguments_wrong_types():
         core_config.active_check_arguments("bla", "blub", (1, 2))  # type: ignore[arg-type]
 
 
-def test_active_check_arguments_str(mocker):
-    prepare_check_command = mocker.patch.object(config, "prepare_check_command")
-    core_config.active_check_arguments("bla", "blub", u"args 123 -x 1 -y 2")
-    prepare_check_command.assert_called_once_with('args 123 -x 1 -y 2', 'bla', 'blub')
+def test_active_check_arguments_str():
+    assert core_config.active_check_arguments("bla", "blub",
+                                              u"args 123 -x 1 -y 2") == 'args 123 -x 1 -y 2'
 
 
-def test_active_check_arguments_list(mocker):
-    prepare_check_command = mocker.patch.object(config, "prepare_check_command")
-    core_config.active_check_arguments("bla", "blub", ["a", "123"])
-    prepare_check_command.assert_called_once_with(["a", "123"], 'bla', 'blub')
+def test_active_check_arguments_list():
+    assert core_config.active_check_arguments("bla", "blub", ["a", "123"]) == "'a' '123'"
 
 
-def test_active_check_arguments_list_with_numbers(mocker):
-    prepare_check_command = mocker.patch.object(config, "prepare_check_command")
-    core_config.active_check_arguments("bla", "blub", [1, 1.2])
-    prepare_check_command.assert_called_once_with([1, 1.2], 'bla', 'blub')
+def test_active_check_arguments_list_with_numbers():
+    assert core_config.active_check_arguments("bla", "blub", [1, 1.2]) == "1 1.2"
 
 
-def test_active_check_arguments_list_with_pwstore_reference(mocker):
-    prepare_check_command = mocker.patch.object(config, "prepare_check_command")
-    core_config.active_check_arguments("bla", "blub", ["a", ("store", "pw1", "--password=%s")])
-    prepare_check_command.assert_called_once_with(['a', ('store', 'pw1', '--password=%s')], 'bla',
-                                                  'blub')
+def test_active_check_arguments_list_with_pwstore_reference():
+    assert core_config.active_check_arguments(
+        "bla", "blub",
+        ["a", ("store", "pw1", "--password=%s")]) == "--pwstore=2@11@pw1 'a' '--password=***'"
 
 
 def test_active_check_arguments_list_with_invalid_type():

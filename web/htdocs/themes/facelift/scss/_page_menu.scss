@@ -593,9 +593,7 @@ div#page_menu_popups div.side_popup {
         }
 
         input.reset {
-          margin-right: 8px;
-          background-color: transparent;
-          border-color: $font-color;
+          margin-right: $spacing;
 
           &:disabled {
             opacity: 0.5;

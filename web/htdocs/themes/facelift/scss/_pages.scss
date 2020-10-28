@@ -882,7 +882,6 @@ select {
     letter-spacing: $letter-spacing-table;
     color: $input-button-color;
     background-color: $input-button-bg-color;
-    border-color: $input-button-bg-color;
     box-shadow: none;
 
     &:hover,
@@ -901,7 +900,7 @@ select {
 input.button {
   &:not([type="text"]),
   &:not([type="password"]) {
-    padding: 4px 8px;
+    padding: 5px 8px;
   }
 }
 
@@ -1145,7 +1144,7 @@ table.nform {
     }
 
     &.button {
-      margin: 1px 5px 0 0;
+      margin-right: 5px;
     }
   }
 

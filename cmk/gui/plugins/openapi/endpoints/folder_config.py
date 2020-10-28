@@ -20,7 +20,7 @@ from cmk.gui.http import Response
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
-    endpoint_schema,
+    Endpoint,
     request_schemas,
     response_schemas,
 )
@@ -42,13 +42,13 @@ FOLDER_FIELD = {
 }
 
 
-@endpoint_schema(constructors.collection_href('folder_config'),
-                 'cmk/create',
-                 method='post',
-                 response_schema=response_schemas.ConcreteFolder,
-                 etag='output',
-                 request_body_required=True,
-                 request_schema=request_schemas.CreateFolder)
+@Endpoint(constructors.collection_href('folder_config'),
+          'cmk/create',
+          method='post',
+          response_schema=response_schemas.ConcreteFolder,
+          etag='output',
+          request_body_required=True,
+          request_schema=request_schemas.CreateFolder)
 def create(params):
     """Create a folder"""
     put_body = params['body']
@@ -62,14 +62,14 @@ def create(params):
     return _serve_folder(folder)
 
 
-@endpoint_schema(constructors.object_href('folder_config', '{folder}'),
-                 '.../persist',
-                 method='put',
-                 path_params=[FOLDER_FIELD],
-                 response_schema=response_schemas.ConcreteFolder,
-                 etag='both',
-                 request_body_required=True,
-                 request_schema=request_schemas.UpdateFolder)
+@Endpoint(constructors.object_href('folder_config', '{folder}'),
+          '.../persist',
+          method='put',
+          path_params=[FOLDER_FIELD],
+          response_schema=response_schemas.ConcreteFolder,
+          etag='both',
+          request_body_required=True,
+          request_schema=request_schemas.UpdateFolder)
 def update(params):
     """Update a folder
     """
@@ -97,11 +97,11 @@ def update(params):
     return _serve_folder(folder)
 
 
-@endpoint_schema(constructors.domain_type_action_href('folder_config', 'bulk-update'),
-                 'cmk/bulk_update',
-                 method='put',
-                 response_schema=response_schemas.FolderCollection,
-                 request_schema=request_schemas.BulkUpdateFolder)
+@Endpoint(constructors.domain_type_action_href('folder_config', 'bulk-update'),
+          'cmk/bulk_update',
+          method='put',
+          response_schema=response_schemas.FolderCollection,
+          request_schema=request_schemas.BulkUpdateFolder)
 def bulk_update(params):
     """Bulk update folders"""
     body = params['body']
@@ -130,12 +130,12 @@ def bulk_update(params):
     return constructors.serve_json(_folders_collection(folders))
 
 
-@endpoint_schema(constructors.object_href('folder_config', '{folder}'),
-                 '.../delete',
-                 method='delete',
-                 path_params=[FOLDER_FIELD],
-                 output_empty=True,
-                 etag='input')
+@Endpoint(constructors.object_href('folder_config', '{folder}'),
+          '.../delete',
+          method='delete',
+          path_params=[FOLDER_FIELD],
+          output_empty=True,
+          etag='input')
 def delete(params):
     """Delete a folder"""
     folder = params['folder']
@@ -144,13 +144,13 @@ def delete(params):
     return Response(status=204)
 
 
-@endpoint_schema(constructors.object_action_href('folder_config', '{folder}', action_name='move'),
-                 'cmk/move',
-                 method='post',
-                 path_params=[FOLDER_FIELD],
-                 response_schema=response_schemas.ConcreteFolder,
-                 request_schema=request_schemas.MoveFolder,
-                 etag='both')
+@Endpoint(constructors.object_action_href('folder_config', '{folder}', action_name='move'),
+          'cmk/move',
+          method='post',
+          path_params=[FOLDER_FIELD],
+          response_schema=response_schemas.ConcreteFolder,
+          request_schema=request_schemas.MoveFolder,
+          etag='both')
 def move(params):
     """Move a folder"""
     folder: watolib.CREFolder = params['folder']
@@ -172,10 +172,10 @@ def move(params):
     return _serve_folder(folder)
 
 
-@endpoint_schema(constructors.collection_href('folder_config'),
-                 '.../collection',
-                 method='get',
-                 response_schema=response_schemas.FolderCollection)
+@Endpoint(constructors.collection_href('folder_config'),
+          '.../collection',
+          method='get',
+          response_schema=response_schemas.FolderCollection)
 def list_folders(_params):
     """Show all folders"""
     folders = watolib.Folder.root_folder().subfolders()
@@ -199,12 +199,12 @@ def _folders_collection(folders):
     return collection_object
 
 
-@endpoint_schema(constructors.object_href('folder_config', '{folder}'),
-                 'cmk/show',
-                 method='get',
-                 response_schema=response_schemas.ConcreteFolder,
-                 etag='output',
-                 path_params=[FOLDER_FIELD])
+@Endpoint(constructors.object_href('folder_config', '{folder}'),
+          'cmk/show',
+          method='get',
+          response_schema=response_schemas.ConcreteFolder,
+          etag='output',
+          path_params=[FOLDER_FIELD])
 def show_folder(params):
     """Show a folder"""
     folder = params['folder']

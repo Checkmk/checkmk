@@ -40,7 +40,7 @@ The modules:
 
 """
 
-from cmk.gui.plugins.openapi.restful_objects.decorators import endpoint_schema
+from cmk.gui.plugins.openapi.restful_objects.decorators import Endpoint
 from cmk.gui.plugins.openapi.restful_objects.specification import SPEC
 
-__all__ = ['endpoint_schema', 'SPEC']
+__all__ = ['Endpoint', 'SPEC']

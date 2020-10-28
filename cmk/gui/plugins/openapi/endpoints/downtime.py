@@ -26,7 +26,7 @@ from cmk.gui.plugins.openapi.livestatus_helpers.expressions import And
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables.downtimes import Downtimes
 from cmk.gui.plugins.openapi.restful_objects import (
-    endpoint_schema,
+    Endpoint,
     request_schemas,
     constructors,
     response_schemas,
@@ -41,12 +41,12 @@ from cmk.gui.watolib.downtime import (
 DowntimeType = Literal['host', 'service', 'hostgroup', 'servicegroup']
 
 
-@endpoint_schema(constructors.collection_href('downtime'),
-                 'cmk/create',
-                 method='post',
-                 tag_group='Monitoring',
-                 request_schema=request_schemas.CreateDowntime,
-                 output_empty=True)
+@Endpoint(constructors.collection_href('downtime'),
+          'cmk/create',
+          method='post',
+          tag_group='Monitoring',
+          request_schema=request_schemas.CreateDowntime,
+          output_empty=True)
 def create_downtime(params):
     """Create a scheduled downtime"""
     body = params['body']
@@ -107,15 +107,15 @@ def create_downtime(params):
     return Response(status=204)
 
 
-@endpoint_schema(constructors.collection_href('downtime'),
-                 '.../collection',
-                 method='get',
-                 tag_group='Monitoring',
-                 query_params=[
-                     HOST_NAME,
-                     SERVICE_DESCRIPTION,
-                 ],
-                 response_schema=response_schemas.DomainObjectCollection)
+@Endpoint(constructors.collection_href('downtime'),
+          '.../collection',
+          method='get',
+          tag_group='Monitoring',
+          query_params=[
+              HOST_NAME,
+              SERVICE_DESCRIPTION,
+          ],
+          response_schema=response_schemas.DomainObjectCollection)
 def list_service_downtimes(param):
     """Show all scheduled downtimes"""
     live = sites.live()
@@ -144,21 +144,21 @@ def list_service_downtimes(param):
     return _serve_downtimes(gen_downtimes)
 
 
-@endpoint_schema('/objects/host/{host_name}/objects/downtime/{downtime_id}',
-                 '.../delete',
-                 method='delete',
-                 tag_group='Monitoring',
-                 path_params=[
-                     HOST_NAME,
-                     {
-                         'downtime_id': fields.String(
-                             description='The id of the downtime',
-                             example='54',
-                             required=True,
-                         ),
-                     },
-                 ],
-                 output_empty=True)
+@Endpoint('/objects/host/{host_name}/objects/downtime/{downtime_id}',
+          '.../delete',
+          method='delete',
+          tag_group='Monitoring',
+          path_params=[
+              HOST_NAME,
+              {
+                  'downtime_id': fields.String(
+                      description='The id of the downtime',
+                      example='54',
+                      required=True,
+                  ),
+              },
+          ],
+          output_empty=True)
 def delete_downtime(params):
     """Delete a scheduled downtime"""
     is_service = Query(
@@ -171,11 +171,11 @@ def delete_downtime(params):
     return Response(status=204)
 
 
-@endpoint_schema(constructors.domain_type_action_href('downtime', 'bulk-delete'),
-                 '.../delete',
-                 method='delete',
-                 request_schema=request_schemas.BulkDeleteDowntime,
-                 output_empty=True)
+@Endpoint(constructors.domain_type_action_href('downtime', 'bulk-delete'),
+          '.../delete',
+          method='delete',
+          request_schema=request_schemas.BulkDeleteDowntime,
+          output_empty=True)
 def bulk_delete_downtimes(params):
     """Bulk delete downtimes"""
     live = sites.live()

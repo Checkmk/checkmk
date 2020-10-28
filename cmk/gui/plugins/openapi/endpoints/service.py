@@ -23,7 +23,7 @@ from cmk.gui.plugins.openapi.livestatus_helpers.expressions import tree_to_expr
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables import Services
 from cmk.gui.plugins.openapi.restful_objects import (
-    endpoint_schema,
+    Endpoint,
     constructors,
     response_schemas,
 )
@@ -62,13 +62,13 @@ PARAMETERS = [{
 }]
 
 
-@endpoint_schema(constructors.domain_object_sub_collection_href('host', '{host_name}', 'services'),
-                 '.../collection',
-                 method='get',
-                 path_params=[HOST_NAME],
-                 query_params=PARAMETERS,
-                 tag_group='Monitoring',
-                 response_schema=response_schemas.DomainObjectCollection)
+@Endpoint(constructors.domain_object_sub_collection_href('host', '{host_name}', 'services'),
+          '.../collection',
+          method='get',
+          path_params=[HOST_NAME],
+          query_params=PARAMETERS,
+          tag_group='Monitoring',
+          response_schema=response_schemas.DomainObjectCollection)
 def _list_host_services(param):
     """List a host's monitored services.
 
@@ -76,7 +76,7 @@ def _list_host_services(param):
     return _list_services(param)
 
 
-@endpoint_schema(
+@Endpoint(
     constructors.collection_href('service'),
     '.../collection',
     method='get',

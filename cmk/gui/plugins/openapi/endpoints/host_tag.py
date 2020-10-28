@@ -30,7 +30,7 @@ from cmk.gui.watolib.tags import (
     RepairError,
 )
 from cmk.gui.plugins.openapi.restful_objects import (
-    endpoint_schema,
+    Endpoint,
     request_schemas,
     response_schemas,
     constructors,
@@ -61,7 +61,7 @@ HOST_TAG_GROUP_NAME = {
 }
 
 
-@endpoint_schema(
+@Endpoint(
     constructors.collection_href('host_tag_group'),
     'cmk/create',
     method='post',
@@ -76,7 +76,7 @@ def create_host_tag_group(params):
     return _serve_host_tag_group(_retrieve_group(host_tag_group_details['id']).get_dict_format())
 
 
-@endpoint_schema(
+@Endpoint(
     constructors.object_href('host_tag_group', '{name}'),
     'cmk/show',
     method='get',
@@ -96,7 +96,7 @@ def show_host_tag_group(params):
     return _serve_host_tag_group(tag_group.get_dict_format())
 
 
-@endpoint_schema(
+@Endpoint(
     constructors.object_href('host_tag_group', '{name}'),
     '.../update',
     method='put',
@@ -125,7 +125,7 @@ def update_host_tag_group(params):
     return _serve_host_tag_group(updated_tag_group.get_dict_format())
 
 
-@endpoint_schema(
+@Endpoint(
     constructors.object_href('host_tag_group', '{name}'),
     '.../delete',
     method='delete',

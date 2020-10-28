@@ -5,11 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Decorators to expose API endpoints.
 
-Decorating a function with `endpoint_schema` will result in a change of the SPEC object,
+Decorating a function with `Endpoint` will result in a change of the SPEC object,
 which then has to be dumped into the checkmk.yaml file.
 
 """
-import dataclasses
 import functools
 import hashlib
 from types import FunctionType
@@ -97,7 +96,6 @@ def coalesce_schemas(
     return rv
 
 
-@dataclasses.dataclass
 class Endpoint:
     """Mark the function as a REST-API endpoint.
 
@@ -168,25 +166,47 @@ class Endpoint:
             Various keys which will be directly applied to the OpenAPI operation object.
 
     """
-    path: str
-    name: EndpointName
-    method: HTTPMethod = 'get'
-    content_type: str = 'application/json'
-    output_empty: bool = False
-    response_schema: Optional[Type[Schema]] = None
-    request_schema: Optional[Type[Schema]] = None
-    path_params: Optional[Sequence[RawParameter]] = None
-    query_params: Optional[Sequence[RawParameter]] = None
-    header_params: Optional[Sequence[RawParameter]] = None
-    request_body_required: bool = True
-    error_schema: Type[Schema] = ApiError
-    etag: Optional[ETagBehaviour] = None
-    will_do_redirects: bool = False
-    options: Dict[str, str] = dataclasses.field(default_factory=dict)
-    tag_group: Literal['Monitoring', 'Setup'] = 'Setup'
-    func: Optional[FunctionType] = None
-    operation_id: Optional[str] = None
-    wrapped: Optional[Any] = None
+    def __init__(
+        self,
+        path: str,
+        name: EndpointName,
+        method: HTTPMethod = 'get',
+        content_type: str = 'application/json',
+        output_empty: bool = False,
+        response_schema: Optional[Type[Schema]] = None,
+        request_schema: Optional[Type[Schema]] = None,
+        path_params: Optional[Sequence[RawParameter]] = None,
+        query_params: Optional[Sequence[RawParameter]] = None,
+        header_params: Optional[Sequence[RawParameter]] = None,
+        request_body_required: bool = True,
+        error_schema: Type[Schema] = ApiError,
+        etag: Optional[ETagBehaviour] = None,
+        will_do_redirects: bool = False,
+        options: Optional[Dict[str, str]] = None,
+        tag_group: Literal['Monitoring', 'Setup'] = 'Setup',
+        func: Optional[FunctionType] = None,
+        operation_id: Optional[str] = None,
+        wrapped: Optional[Any] = None,
+    ):
+        self.path = path
+        self.name = name
+        self.method = method
+        self.content_type = content_type
+        self.output_empty = output_empty
+        self.response_schema = response_schema
+        self.request_schema = request_schema
+        self.path_params = path_params
+        self.query_params = query_params
+        self.header_params = header_params
+        self.request_body_required = request_body_required
+        self.error_schema = error_schema
+        self.etag = etag
+        self.will_do_redirects = will_do_redirects
+        self.options: Dict[str, str] = options if options is not None else {}
+        self.tag_group = tag_group
+        self.func = func
+        self.operation_id = operation_id
+        self.wrapped = wrapped
 
     def __call__(self, func):
         """This is the real decorator.
@@ -475,10 +495,6 @@ class Endpoint:
         apispec.utils.deepupdate(operation_spec, self.options)
 
         return {self.method: operation_spec}  # type: ignore[misc]
-
-
-# Compat
-endpoint_schema = Endpoint
 
 
 def _verify_parameters2(

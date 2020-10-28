@@ -13,13 +13,10 @@ import sys
 import cmk.utils.version as cmk_version
 from cmk.gui.globals import request
 
-from cmk.gui.plugins.openapi.restful_objects import endpoint_schema, response_schemas, constructors
+from cmk.gui.plugins.openapi.restful_objects import Endpoint, response_schemas, constructors
 
 
-@endpoint_schema('/version',
-                 'cmk/show',
-                 method='get',
-                 response_schema=response_schemas.InstalledVersions)
+@Endpoint('/version', 'cmk/show', method='get', response_schema=response_schemas.InstalledVersions)
 def search(param):
     """Display some version information"""
     if request.args.get('fail'):

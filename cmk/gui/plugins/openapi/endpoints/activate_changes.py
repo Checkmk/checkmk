@@ -25,7 +25,7 @@ from cmk.gui.http import Response
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
-    endpoint_schema,
+    Endpoint,
     response_schemas,
 )
 
@@ -38,10 +38,11 @@ ACTIVATION_ID = {
 }
 
 
-@endpoint_schema(constructors.domain_type_action_href('activation_run', 'activate-changes'),
-                 'cmk/activate',
-                 method='post',
-                 response_schema=response_schemas.DomainObject)
+@Endpoint(constructors.domain_type_action_href('activation_run', 'activate-changes'),
+          'cmk/activate',
+          method='post',
+          path_params=[],
+          response_schema=response_schemas.DomainObject)
 def activate_changes(params):
     """Activate pending changes"""
     body = params.get('body', {})
@@ -71,13 +72,13 @@ def _serve_activation_run(activation_id, is_running=False):
         ))
 
 
-@endpoint_schema(constructors.object_action_href('activation_run', '{activation_id}',
-                                                 'wait-for-completion'),
-                 'cmk/wait-for-completion',
-                 method='get',
-                 path_params=[ACTIVATION_ID],
-                 will_do_redirects=True,
-                 output_empty=True)
+@Endpoint(constructors.object_action_href('activation_run', '{activation_id}',
+                                          'wait-for-completion'),
+          'cmk/wait-for-completion',
+          method='get',
+          path_params=[ACTIVATION_ID],
+          will_do_redirects=True,
+          output_empty=True)
 def activate_changes_state(params):
     """Wait for an activation-run to complete.
 
@@ -96,11 +97,11 @@ def activate_changes_state(params):
     return Response(status=204)
 
 
-@endpoint_schema(constructors.object_href('activation_run', '{activation_id}'),
-                 'cmk/show',
-                 method='get',
-                 path_params=[ACTIVATION_ID],
-                 response_schema=response_schemas.DomainObject)
+@Endpoint(constructors.object_href('activation_run', '{activation_id}'),
+          'cmk/show',
+          method='get',
+          path_params=[ACTIVATION_ID],
+          response_schema=response_schemas.DomainObject)
 def show_activation(params):
     """Show the status of a particular activation-run.
     """
@@ -111,10 +112,10 @@ def show_activation(params):
     return _serve_activation_run(activation_id, is_running=manager.is_running())
 
 
-@endpoint_schema(constructors.collection_href('activation_run', 'running'),
-                 'cmk/run',
-                 method='get',
-                 response_schema=response_schemas.DomainObjectCollection)
+@Endpoint(constructors.collection_href('activation_run', 'running'),
+          'cmk/run',
+          method='get',
+          response_schema=response_schemas.DomainObjectCollection)
 def list_activations(params):
     """Show all currently running activations"""
     manager = watolib.ActivateChangesManager()

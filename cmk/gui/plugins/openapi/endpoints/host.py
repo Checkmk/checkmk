@@ -20,7 +20,7 @@ from cmk.gui.plugins.openapi.livestatus_helpers.expressions import tree_to_expr
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
 from cmk.gui.plugins.openapi.restful_objects import (
-    endpoint_schema,
+    Endpoint,
     constructors,
     response_schemas,
 )
@@ -73,12 +73,12 @@ class HostParameters(BaseSchema):
     )
 
 
-@endpoint_schema(constructors.collection_href('host'),
-                 '.../collection',
-                 method='get',
-                 tag_group='Monitoring',
-                 query_params=[HostParameters],
-                 response_schema=response_schemas.DomainObjectCollection)
+@Endpoint(constructors.collection_href('host'),
+          '.../collection',
+          method='get',
+          tag_group='Monitoring',
+          query_params=[HostParameters],
+          response_schema=response_schemas.DomainObjectCollection)
 def list_hosts(param):
     """Show hosts of specific condition"""
     live = sites.live()

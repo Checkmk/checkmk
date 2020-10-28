@@ -27,7 +27,7 @@ from cmk.gui.http import Response
 import cmk.utils.defines as defines
 from cmk.gui.watolib.timeperiods import save_timeperiod, load_timeperiod, load_timeperiods, save_timeperiods
 from cmk.gui.plugins.openapi.restful_objects import (
-    endpoint_schema,
+    Endpoint,
     request_schemas,
     response_schemas,
     constructors,
@@ -36,11 +36,11 @@ from cmk.gui.plugins.openapi.restful_objects import (
 TIME_RANGE = Tuple[str, str]
 
 
-@endpoint_schema(constructors.collection_href('time_period'),
-                 'cmk/create',
-                 method='post',
-                 request_schema=request_schemas.InputTimePeriod,
-                 output_empty=True)
+@Endpoint(constructors.collection_href('time_period'),
+          'cmk/create',
+          method='post',
+          request_schema=request_schemas.InputTimePeriod,
+          output_empty=True)
 def create_timeperiod(params):
     """Create a time period"""
     body = params['body']
@@ -54,12 +54,12 @@ def create_timeperiod(params):
     return Response(status=204)
 
 
-@endpoint_schema(constructors.object_href('time_period', '{name}'),
-                 '.../update',
-                 method='put',
-                 path_params=[NAME_FIELD],
-                 request_schema=request_schemas.UpdateTimePeriod,
-                 output_empty=True)
+@Endpoint(constructors.object_href('time_period', '{name}'),
+          '.../update',
+          method='put',
+          path_params=[NAME_FIELD],
+          request_schema=request_schemas.UpdateTimePeriod,
+          output_empty=True)
 def update_timeperiod(params):
     """Update a time period"""
 
@@ -88,12 +88,12 @@ def update_timeperiod(params):
     return Response(status=204)
 
 
-@endpoint_schema(constructors.object_href('time_period', '{name}'),
-                 '.../delete',
-                 method='delete',
-                 path_params=[NAME_FIELD],
-                 request_body_required=False,
-                 output_empty=True)
+@Endpoint(constructors.object_href('time_period', '{name}'),
+          '.../delete',
+          method='delete',
+          path_params=[NAME_FIELD],
+          request_body_required=False,
+          output_empty=True)
 def delete(params):
     """Delete a time period"""
     name = params['name']
@@ -105,11 +105,11 @@ def delete(params):
     return Response(status=204)
 
 
-@endpoint_schema(constructors.object_href('time_period', '{name}'),
-                 'cmk/show',
-                 method='get',
-                 path_params=[NAME_FIELD],
-                 response_schema=response_schemas.ConcreteTimePeriod)
+@Endpoint(constructors.object_href('time_period', '{name}'),
+          'cmk/show',
+          method='get',
+          path_params=[NAME_FIELD],
+          response_schema=response_schemas.ConcreteTimePeriod)
 def show_time_period(params):
     """Show a time period"""
     name = params['name']

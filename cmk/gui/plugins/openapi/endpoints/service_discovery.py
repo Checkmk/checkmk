@@ -25,7 +25,7 @@ from cmk.gui.watolib.services import (
 )
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects import (
-    endpoint_schema,
+    Endpoint,
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.constructors import (domain_object, object_property,
@@ -53,7 +53,7 @@ SERVICE_DISCOVERY_STATES = {
 DISCOVERY_ACTION = {"tabula-rasa": "refresh"}
 
 
-@endpoint_schema(
+@Endpoint(
     collection_href("service", "services"),
     '.../collection',
     method='get',
@@ -93,7 +93,7 @@ def show_services(params):
     return _serve_services(host, discovery_result.check_table, params["discovery_state"])
 
 
-@endpoint_schema(
+@Endpoint(
     '/objects/host/{host_name}/service/{service_hash}/action/move/{target_state}',
     '.../modify',
     method='put',
@@ -136,22 +136,21 @@ def move_service(params):
     return Response(status=204)
 
 
-@endpoint_schema(
-    '/objects/host/{host_name}/actions/discover-services/mode/{discover_mode}',
-    '.../update',
-    method='post',
-    output_empty=True,
-    tag_group='Setup',
-    path_params=[{
-        'discover_mode': fields.String(
-            description=('The mode of the discovery action. May be one of the following: ' +
-                         ', '.join(sorted(DISCOVERY_ACTION.keys()))),
-            pattern='|'.join(sorted(DISCOVERY_ACTION.keys())),
-            example='tabula-rasa',
-            required=True,
-        ),
-        **HOST_NAME,
-    }])
+@Endpoint('/objects/host/{host_name}/actions/discover-services/mode/{discover_mode}',
+          '.../update',
+          method='post',
+          output_empty=True,
+          tag_group='Setup',
+          path_params=[{
+              'discover_mode': fields.String(
+                  description=('The mode of the discovery action. May be one of the following: ' +
+                               ', '.join(sorted(DISCOVERY_ACTION.keys()))),
+                  pattern='|'.join(sorted(DISCOVERY_ACTION.keys())),
+                  example='tabula-rasa',
+                  required=True,
+              ),
+              **HOST_NAME,
+          }])
 def execute(params):
     """Execute a service discovery of a host"""
     host = watolib.Host.host(params["host_name"])

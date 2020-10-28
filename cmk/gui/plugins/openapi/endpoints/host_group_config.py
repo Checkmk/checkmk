@@ -24,7 +24,7 @@ from cmk.gui.plugins.openapi.endpoints.utils import (
 )
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
-    endpoint_schema,
+    Endpoint,
     response_schemas,
     request_schemas,
 )
@@ -33,13 +33,13 @@ from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
 from cmk.gui.watolib.groups import edit_group, add_group
 
 
-@endpoint_schema(constructors.collection_href('host_group_config'),
-                 'cmk/create',
-                 method='post',
-                 etag='output',
-                 request_body_required=True,
-                 request_schema=request_schemas.InputHostGroup,
-                 response_schema=response_schemas.HostGroup)
+@Endpoint(constructors.collection_href('host_group_config'),
+          'cmk/create',
+          method='post',
+          etag='output',
+          request_body_required=True,
+          request_schema=request_schemas.InputHostGroup,
+          response_schema=response_schemas.HostGroup)
 def create(params):
     """Create a host group"""
     body = params['body']
@@ -50,11 +50,11 @@ def create(params):
     return serve_group(group, serialize_group('host_group_config'))
 
 
-@endpoint_schema(constructors.domain_type_action_href('host_group_config', 'bulk-create'),
-                 'cmk/bulk_create',
-                 method='post',
-                 request_schema=request_schemas.BulkInputHostGroup,
-                 response_schema=response_schemas.DomainObjectCollection)
+@Endpoint(constructors.domain_type_action_href('host_group_config', 'bulk-create'),
+          'cmk/bulk_create',
+          method='post',
+          request_schema=request_schemas.BulkInputHostGroup,
+          response_schema=response_schemas.DomainObjectCollection)
 def bulk_create(params):
     """Bulk create host groups"""
     body = params['body']
@@ -70,22 +70,22 @@ def bulk_create(params):
     return constructors.serve_json(serialize_group_list('host_group_config', host_groups))
 
 
-@endpoint_schema(constructors.collection_href('host_group_config'),
-                 '.../collection',
-                 method='get',
-                 response_schema=response_schemas.DomainObjectCollection)
+@Endpoint(constructors.collection_href('host_group_config'),
+          '.../collection',
+          method='get',
+          response_schema=response_schemas.DomainObjectCollection)
 def list_groups(params):
     """Show all host groups"""
     return constructors.serve_json(
         serialize_group_list('service_group_config', list(load_host_group_information().values())))
 
 
-@endpoint_schema(constructors.object_href('host_group_config', '{name}'),
-                 '.../delete',
-                 method='delete',
-                 path_params=[NAME_FIELD],
-                 output_empty=True,
-                 etag='input')
+@Endpoint(constructors.object_href('host_group_config', '{name}'),
+          '.../delete',
+          method='delete',
+          path_params=[NAME_FIELD],
+          output_empty=True,
+          etag='input')
 def delete(params):
     """Delete a host group"""
     name = params['name']
@@ -95,11 +95,11 @@ def delete(params):
     return Response(status=204)
 
 
-@endpoint_schema(constructors.domain_type_action_href('host_group_config', 'bulk-delete'),
-                 '.../delete',
-                 method='delete',
-                 request_schema=request_schemas.BulkDeleteHostGroup,
-                 output_empty=True)
+@Endpoint(constructors.domain_type_action_href('host_group_config', 'bulk-delete'),
+          '.../delete',
+          method='delete',
+          request_schema=request_schemas.BulkDeleteHostGroup,
+          output_empty=True)
 def bulk_delete(params):
     """Bulk delete host groups"""
     # TODO: etag implementation
@@ -118,14 +118,14 @@ def bulk_delete(params):
     return Response(status=204)
 
 
-@endpoint_schema(constructors.object_href('host_group_config', '{name}'),
-                 '.../update',
-                 method='put',
-                 path_params=[NAME_FIELD],
-                 response_schema=response_schemas.HostGroup,
-                 etag='both',
-                 request_body_required=True,
-                 request_schema=request_schemas.InputHostGroup)
+@Endpoint(constructors.object_href('host_group_config', '{name}'),
+          '.../update',
+          method='put',
+          path_params=[NAME_FIELD],
+          response_schema=response_schemas.HostGroup,
+          etag='both',
+          request_body_required=True,
+          request_schema=request_schemas.InputHostGroup)
 def update(params):
     """Update a host group"""
     name = params['name']
@@ -136,11 +136,11 @@ def update(params):
     return serve_group(group, serialize_group('host_group_config'))
 
 
-@endpoint_schema(constructors.domain_type_action_href('host_group_config', 'bulk-update'),
-                 'cmk/bulk_update',
-                 method='put',
-                 request_schema=request_schemas.BulkUpdateHostGroup,
-                 response_schema=response_schemas.DomainObjectCollection)
+@Endpoint(constructors.domain_type_action_href('host_group_config', 'bulk-update'),
+          'cmk/bulk_update',
+          method='put',
+          request_schema=request_schemas.BulkUpdateHostGroup,
+          response_schema=response_schemas.DomainObjectCollection)
 def bulk_update(params):
     """Bulk update host groups"""
     body = params['body']
@@ -149,12 +149,12 @@ def bulk_update(params):
     return constructors.serve_json(serialize_group_list('host_group_config', updated_host_groups))
 
 
-@endpoint_schema(constructors.object_href('host_group_config', '{name}'),
-                 'cmk/show',
-                 method='get',
-                 response_schema=response_schemas.HostGroup,
-                 etag='output',
-                 path_params=[NAME_FIELD])
+@Endpoint(constructors.object_href('host_group_config', '{name}'),
+          'cmk/show',
+          method='get',
+          response_schema=response_schemas.HostGroup,
+          etag='output',
+          path_params=[NAME_FIELD])
 def get(params):
     """Show a host group"""
     name = params['name']

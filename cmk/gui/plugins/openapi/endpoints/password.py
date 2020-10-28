@@ -22,18 +22,18 @@ from cmk.gui.watolib.passwords import (
 )
 
 from cmk.gui.plugins.openapi.restful_objects import (
-    endpoint_schema,
+    Endpoint,
     request_schemas,
     response_schemas,
     constructors,
 )
 
 
-@endpoint_schema(constructors.collection_href('password'),
-                 'cmk/create',
-                 method='post',
-                 request_schema=request_schemas.InputPassword,
-                 output_empty=True)
+@Endpoint(constructors.collection_href('password'),
+          'cmk/create',
+          method='post',
+          request_schema=request_schemas.InputPassword,
+          output_empty=True)
 def create_password(params):
     """Create a password"""
     body = params['body']
@@ -43,12 +43,12 @@ def create_password(params):
     return Response(status=204)
 
 
-@endpoint_schema(constructors.object_href('password', '{name}'),
-                 '.../update',
-                 method='put',
-                 path_params=[NAME_FIELD],
-                 request_schema=request_schemas.UpdatePassword,
-                 output_empty=True)
+@Endpoint(constructors.object_href('password', '{name}'),
+          '.../update',
+          method='put',
+          path_params=[NAME_FIELD],
+          request_schema=request_schemas.UpdatePassword,
+          output_empty=True)
 def update_password(params):
     """Update a password"""
     body = params['body']
@@ -59,12 +59,12 @@ def update_password(params):
     return Response(status=204)
 
 
-@endpoint_schema(constructors.object_href('password', '{name}'),
-                 '.../delete',
-                 method='delete',
-                 path_params=[NAME_FIELD],
-                 request_body_required=False,
-                 output_empty=True)
+@Endpoint(constructors.object_href('password', '{name}'),
+          '.../delete',
+          method='delete',
+          path_params=[NAME_FIELD],
+          request_body_required=False,
+          output_empty=True)
 def delete_password(params):
     """Delete a password"""
     ident = params['name']
@@ -77,11 +77,11 @@ def delete_password(params):
     return Response(status=204)
 
 
-@endpoint_schema(constructors.object_href('password', '{name}'),
-                 'cmk/show',
-                 method='get',
-                 path_params=[NAME_FIELD],
-                 response_schema=response_schemas.ConcretePassword)
+@Endpoint(constructors.object_href('password', '{name}'),
+          'cmk/show',
+          method='get',
+          path_params=[NAME_FIELD],
+          response_schema=response_schemas.ConcretePassword)
 def show_password(params):
     """Show a password"""
     ident = params['name']

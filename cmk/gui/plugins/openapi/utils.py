@@ -64,6 +64,9 @@ class ProblemException(HTTPException):
         self.type = type_
         self.ext = ext
 
+    def __call__(self, environ, start_response):
+        return self.to_problem()(environ, start_response)
+
     def to_problem(self):
         return problem(
             status=self.code,

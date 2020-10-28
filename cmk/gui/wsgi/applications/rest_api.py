@@ -24,7 +24,7 @@ from werkzeug.routing import Map, Submount, Rule
 from cmk.gui import config
 from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.openapi import ENDPOINT_REGISTRY
-from cmk.gui.plugins.openapi.utils import problem, ProblemException
+from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.wsgi.auth import verify_user, bearer_auth
 from cmk.gui.wsgi.middleware import with_context_middleware, OverrideRequestMethod
 from cmk.gui.wsgi.wrappers import ParameterDict
@@ -166,8 +166,6 @@ class ServeSwaggerUI:
 class CheckmkRESTAPI:
     def __init__(self, debug: bool = False):
         self.debug = debug
-        # TODO: Add resources for swagger-ui and json/yaml endpoints.
-        # TODO: Add redoc.js endpoint.
         rules = []
         for endpoint in ENDPOINT_REGISTRY:
             if self.debug:
@@ -188,7 +186,6 @@ class CheckmkRESTAPI:
                 [
                     Rule("/ui/", endpoint=swagger_ui),
                     Rule("/ui/<path:path>", endpoint=swagger_ui),
-                    # Rule("/doc/<path:file>", endpoint=serve_content()),
                     Rule(
                         "/openapi.yaml",
                         endpoint=serve_content(
@@ -224,13 +221,10 @@ class CheckmkRESTAPI:
             # function at setup-time.
             environ[ARGS_KEY] = path_args
             return wsgi_app(environ, start_response)
-        except ProblemException as exc:
-            # ProblemException is derived from HTTPException, so we have to catch it first.
-            return exc.to_problem()(environ, start_response)
-        except HTTPException as e:
+        except HTTPException as exc:
             # We don't want to log explicit HTTPExceptions as these are intentional.
             # HTTPExceptions are WSGI apps
-            return e(environ, start_response)
+            return exc(environ, start_response)
         except MKException as exc:
             if self.debug:
                 raise

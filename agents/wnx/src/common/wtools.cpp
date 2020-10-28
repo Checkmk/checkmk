@@ -900,7 +900,7 @@ inline auto NextInstance(const PERF_INSTANCE_DEFINITION* Instance) {
 // DataSequence is primitive wrapper over data buffer
 // DataSequence takes ownership over buffer
 DataSequence ReadPerformanceDataFromRegistry(
-    const std::wstring& CounterName) noexcept {
+    const std::wstring& counter_name) noexcept {
     DWORD buf_size = 40000;
     BYTE* buffer = nullptr;
 
@@ -910,32 +910,36 @@ DataSequence ReadPerformanceDataFromRegistry(
         try {
             buffer = new BYTE[buf_size];
         } catch (...) {
-            return cma::tools::DataBlock<BYTE>();  // ups
+            XLOG::l(XLOG_FUNC + " Out of memory allocating [{}] bytes",
+                    buf_size);
+            return {};
         }
 
         DWORD type = 0;
         auto ret =
-            ::RegQueryValueExW(HKEY_PERFORMANCE_DATA, CounterName.c_str(),
+            ::RegQueryValueExW(HKEY_PERFORMANCE_DATA, counter_name.c_str(),
                                nullptr, &type, buffer, &buf_size);
-        RegCloseKey(HKEY_PERFORMANCE_DATA);  // MSDN requirement
+        ::RegCloseKey(HKEY_PERFORMANCE_DATA);  // MSDN requirement
 
         if (ret == ERROR_SUCCESS) break;  // normal exit
 
-        if (ret == ERROR_MORE_DATA) {
-            buf_size *= 2;    // :)
-            delete[] buffer;  // realloc part one
-            continue;         // to be safe
-        } else
+        if (ret != ERROR_MORE_DATA) {
+            XLOG::l("Can't read counter '{}' error [{}]",
+                    wtools::ConvertToUTF8(counter_name), ret);
             return {};
+        }
+
+        buf_size *= 2;    // this is not optimal, may be reworked
+        delete[] buffer;  // realloc part one
     }
 
-    return DataSequence((int)buf_size, buffer);
+    return DataSequence(static_cast<int>(buf_size), buffer);
 }
 
-const PERF_OBJECT_TYPE* FindPerfObject(const DataSequence& Db,
+const PERF_OBJECT_TYPE* FindPerfObject(const DataSequence& data_buffer,
                                        DWORD counter_index) noexcept {
-    auto data = Db.data_;
-    auto max_offset = Db.len_;
+    auto data = data_buffer.data_;
+    auto max_offset = data_buffer.len_;
     if (!data || !max_offset) return nullptr;
 
     auto data_block = reinterpret_cast<PERF_DATA_BLOCK*>(data);
@@ -946,10 +950,10 @@ const PERF_OBJECT_TYPE* FindPerfObject(const DataSequence& Db,
         // more than that in the buffer returned
         if (object->ObjectNameTitleIndex == counter_index) {
             return object;
-        } else {
-            object = FindNextObject(object);
         }
+        object = FindNextObject(object);
     }
+
     return nullptr;
 }
 
@@ -969,6 +973,7 @@ std::vector<const PERF_INSTANCE_DEFINITION*> GenerateInstances(
     } catch (const std::exception& e) {
         XLOG::l(XLOG_FLINE + " exception: '{}'", e.what());
     }
+
     return result;
 }
 
@@ -1028,21 +1033,24 @@ std::vector<const PERF_COUNTER_DEFINITION*> GenerateCounters(
 
 // used only in skype
 // build map of the <id:name>
-std::vector<std::wstring> GenerateCounterNames(const PERF_OBJECT_TYPE* Object,
-                                               const NameMap& Map) {
+std::vector<std::wstring> GenerateCounterNames(const PERF_OBJECT_TYPE* object,
+                                               const NameMap& name_map) {
     std::vector<std::wstring> result;
-    auto counter = FirstCounter(Object);
-    for (DWORD i = 0UL; i < Object->NumCounters; ++i) {
-        auto iter = Map.find(counter->CounterNameTitleIndex);
-        if (iter != Map.end()) {
-            result.push_back(iter->second);
+
+    auto counter = FirstCounter(object);
+    for (DWORD i = 0UL; i < object->NumCounters; ++i) {
+        auto index = counter->CounterNameTitleIndex;
+        auto iter = name_map.find(index);
+        if (iter != name_map.end()) {
+            result.emplace_back(iter->second);
         } else {
-            // not found in map
-            result.push_back(std::to_wstring(counter->CounterNameTitleIndex));
+            // use index as a name
+            result.emplace_back(std::to_wstring(index));
         }
 
         counter = NextCounter(counter);
     }
+
     return result;
 }
 

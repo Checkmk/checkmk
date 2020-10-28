@@ -301,7 +301,7 @@ def df_check_filesystem_single_coroutine(
     if subtract_reserved or show_reserved:
         perfdata.append(("reserved", reserved_mb))
 
-    yield status, ", ".join(infotext), perfdata
+    yield status, ", ".join(infotext).replace("), (", ", "), perfdata
 
     if levels.get("trend_range"):
         trend_state, trend_text, trend_perf = size_trend(

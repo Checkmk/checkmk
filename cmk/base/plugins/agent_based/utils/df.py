@@ -334,9 +334,9 @@ def df_check_filesystem_single(
     used_max_hr = render.bytes(used_max * 1024**2)
     used_perc_hr = render.percent(100.0 * used_mb / used_max)
 
-    # If both numbers end with the same unit, then drop the first one
-    if used_hr[-2:] == used_max_hr[-2:]:
-        used_hr = used_hr[:-3]
+    # If both strings end with the same unit, then drop the first one
+    if used_hr.split()[1] == used_max_hr.split()[1]:
+        used_hr = used_hr.split()[0]
 
     if warn_mb < 0.0:
         # Negative levels, so user configured thresholds based on space left. Calculate the
@@ -355,7 +355,7 @@ def df_check_filesystem_single(
         (show_levels == "onproblem" and status is not state.OK) or  #
         (show_levels == "onmagic" and (status is not state.OK or levels.get("magic", 1.0) != 1.0))):
         infotext.append(levels["levels_text"])
-    yield Result(state=status, summary=", ".join(infotext))
+    yield Result(state=status, summary=", ".join(infotext).replace('), (', ', '))
 
     if show_reserved:
         reserved_perc_hr = render.percent(100.0 * reserved_mb / size_mb)

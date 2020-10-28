@@ -174,6 +174,7 @@ class Endpoint:
         header_params: Optional[Sequence[RawParameter]] = None,
         etag: Optional[ETagBehaviour] = None,
         will_do_redirects: bool = False,
+        status_descriptions: Optional[Dict[int, str]] = None,
         options: Optional[Dict[str, str]] = None,
         tag_group: Literal['Monitoring', 'Setup'] = 'Setup',
         func: Optional[FunctionType] = None,
@@ -192,6 +193,7 @@ class Endpoint:
         self.header_params = header_params
         self.etag = etag
         self.will_do_redirects = will_do_redirects
+        self.status_descriptions = status_descriptions if status_descriptions is not None else {}
         self.options: Dict[str, str] = options if options is not None else {}
         self.tag_group = tag_group
         self.func = func
@@ -390,21 +392,29 @@ class Endpoint:
                         'schema': self.response_schema
                     },
                 },
-                'description': apispec.utils.dedent(self.response_schema.__doc__ or ''),
+                'description': self.status_descriptions.get(
+                    200,
+                    'The operation was done successfully.' if self.method != 'get' else '',
+                ),
                 'headers': headers,
             }
 
         if self.will_do_redirects:
             responses['302'] = {
-                'description':
-                    ('Either the resource has moved or has not yet completed. Please see this '
-                     'resource for further information.')
+                'description': self.status_descriptions.get(
+                    302,
+                    'Either the resource has moved or has not yet completed. Please see this '
+                    'resource for further information.',
+                )
             }
 
         # Actually, iff you don't want to give out anything, then we don't need a schema.
         if self.output_empty:
             responses['204'] = {
-                'description': 'Operation done successfully. No further output.',
+                'description': self.status_descriptions.get(
+                    204,
+                    'Operation done successfully. No further output.',
+                ),
                 'headers': headers,
             }
 

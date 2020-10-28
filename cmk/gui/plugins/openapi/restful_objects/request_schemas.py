@@ -1348,3 +1348,20 @@ class BulkDeleteContactGroup(BaseSchema):
         required=True,
         example=["windows", "panels"],
     )
+
+
+class ActivateChanges(BaseSchema):
+    redirect = fields.Boolean(
+        description="Redirect immediately to the 'Wait for completion' endpoint.",
+        required=False,
+        missing=False,
+        example=False,
+    )
+    sites = fields.List(
+        fields.String(),
+        description=("On which sites the configuration shall be activated. An empty list "
+                     "means all sites which have pending changes."),
+        required=False,
+        missing=[],
+        example=['production'],
+    )

@@ -655,7 +655,7 @@ def link_endpoint(
     module_name: str,
     rel: EndpointName,
     parameters: Dict[str, str],
-):
+) -> LinkType:
     """Link to a specific endpoint by name.
 
     Args:

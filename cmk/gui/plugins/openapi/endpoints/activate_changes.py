@@ -20,14 +20,18 @@ You can find an introduction to the configuration of Checkmk including activatio
 """
 
 from cmk.gui import watolib
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import request
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi import fields
+from cmk.gui.plugins.openapi.endpoints.utils import may_fail
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
     response_schemas,
+    request_schemas,
 )
+from cmk.gui.plugins.openapi.restful_objects.type_defs import LinkType
 
 ACTIVATION_ID = {
     'activation_id': fields.String(
@@ -41,14 +45,33 @@ ACTIVATION_ID = {
 @Endpoint(constructors.domain_type_action_href('activation_run', 'activate-changes'),
           'cmk/activate',
           method='post',
-          path_params=[],
+          status_descriptions={
+              200: "The activation has already been completed.",
+              302: ("The activation is still running. Redirecting to the "
+                    "'Wait for completion' endpoint."),
+          },
+          will_do_redirects=True,
+          request_schema=request_schemas.ActivateChanges,
           response_schema=response_schemas.DomainObject)
 def activate_changes(params):
     """Activate pending changes"""
-    body = params.get('body', {})
-    sites = body.get('sites', [])
-    activation_id = watolib.activate_changes_start(sites)
+    body = params['body']
+    sites = body['sites']
+    with may_fail(MKUserError, status=400):
+        activation_id = watolib.activate_changes_start(sites)
+    if body['redirect']:
+        wait_for = _completion_link(activation_id)
+        response = Response(status=301)
+        response.location = wait_for['href']
+        return response
+
     return _serve_activation_run(activation_id, is_running=True)
+
+
+def _completion_link(activation_id: str) -> LinkType:
+    return constructors.link_endpoint('cmk.gui.plugins.openapi.endpoints.activate_changes',
+                                      'cmk/wait-for-completion',
+                                      parameters={'activation_id': activation_id})
 
 
 def _serve_activation_run(activation_id, is_running=False):
@@ -57,10 +80,7 @@ def _serve_activation_run(activation_id, is_running=False):
     action = "has completed"
     if is_running:
         action = "was started"
-        links.append(
-            constructors.link_endpoint('cmk.gui.plugins.openapi.endpoints.activate_changes',
-                                       'cmk/wait-for-completion',
-                                       parameters={'activation_id': activation_id}))
+        links.append(_completion_link(activation_id))
     return constructors.serve_json(
         constructors.domain_object(
             domain_type='activation_run',

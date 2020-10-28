@@ -58,11 +58,6 @@
     border-left: 4px solid $navigation-bg-color;
     box-sizing: border-box;
 
-    &.user,
-    &.help_links {
-      position: relative;
-    }
-
     &:not(.delayed):hover,
     &.active {
       border-left-color: $success;
@@ -92,10 +87,9 @@
     /* artifacts will appear at the bottom of the menu. height: max-content */
     /* will not suffice, since we set the margin as well. */
     @mixin small-menu($height) {
-      top: unset;
-      left: 60px;
+      top: inherit;
+      bottom: 0;
       height: $height;
-      margin-top: -$height;
 
       div.navigation_bar {
         height: 0;
@@ -108,7 +102,7 @@
     }
 
     &.help_links > div.popup_menu {
-      @include small-menu(149px);
+      @include small-menu(200px);
     }
 
     &.user > div.popup_menu {

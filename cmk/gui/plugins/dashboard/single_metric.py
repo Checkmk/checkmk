@@ -189,7 +189,7 @@ class GaugeDashlet(ABCFigureDashlet):
 
     @classmethod
     def single_infos(cls):
-        return ["service"]
+        return ["service", "host"]
 
     def show(self):
         self.js_dashlet("single_metric_data.py")
@@ -267,7 +267,7 @@ class SingleMetricDashlet(ABCFigureDashlet):
 
     @classmethod
     def single_infos(cls):
-        return ["service"]
+        return ["service", "host"]
 
     def on_resize(self):
         return ("if (typeof %(instance)s != 'undefined') {"

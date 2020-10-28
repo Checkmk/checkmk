@@ -450,11 +450,9 @@ def _verify_non_duplicate_hosts() -> None:
 
 def active_check_arguments(hostname: HostName, description: Optional[ServiceName],
                            args: config.SpecialAgentInfoFunctionResult) -> str:
+    cmd_args: CheckCommandArguments = []
     if isinstance(args, config.SpecialAgentConfiguration):
-        # TODO: Silly dispatching because of broken types/variance.
-        if isinstance(args.args, str):
-            cmd_args: CheckCommandArguments = args.args
-        elif isinstance(args.args, list):
+        if isinstance(args.args, list):
             cmd_args = args.args
         else:
             raise MKGeneralException(

@@ -26,12 +26,12 @@ fun_args_stdin: Tuple[  #
 ] = (  #
     ("arg0 arg1", "arg0 arg1", None),
     (["arg0", "arg1"], "'arg0' 'arg1'", None),
-    (SpecialAgentConfiguration("arg0", None), "arg0", None),
-    (SpecialAgentConfiguration("arg0 arg1", None), "arg0 arg1", None),
+    (SpecialAgentConfiguration(["arg0"], None), "'arg0'", None),
+    (SpecialAgentConfiguration(["arg0", "arg1"], None), "'arg0' 'arg1'", None),
     (SpecialAgentConfiguration(["list0", "list1"], None), "'list0' 'list1'", None),
     (
-        SpecialAgentConfiguration("arg0 arg1", "stdin_blob"),
-        "arg0 arg1",
+        SpecialAgentConfiguration(["arg0", "arg1"], "stdin_blob"),
+        "'arg0' 'arg1'",
         "stdin_blob",
     ),
     (

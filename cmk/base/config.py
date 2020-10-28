@@ -132,8 +132,9 @@ DiscoveryCheckParameters = Dict
 SpecialAgentConfiguration = NamedTuple(
     "SpecialAgentConfiguration",
     [
-        ("args", Union[str, List[str]]),
-        ("stdin", Optional[str]),  # TODO: Why do we need to distinguish between "" and None???
+        ("args", List[str]),
+        # None makes the stdin of suprocess /dev/null
+        ("stdin", Optional[str]),
     ])
 SpecialAgentInfoFunctionResult = Union[str, List[Union[str, int, float, Tuple[str, str, str]]],
                                        SpecialAgentConfiguration]

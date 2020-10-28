@@ -146,9 +146,6 @@ class Endpoint:
         header_params:
             All parameters, which are expected via HTTP headers.
 
-        error_schema:
-            The Schema class with which to validate an HTTP error sent by the endpoint.
-
         etag:
             One of 'input', 'output', 'both'. When set to 'input' a valid ETag is required in
             the 'If-Match' request header. When set to 'output' a ETag is sent to the client
@@ -175,7 +172,6 @@ class Endpoint:
         path_params: Optional[Sequence[RawParameter]] = None,
         query_params: Optional[Sequence[RawParameter]] = None,
         header_params: Optional[Sequence[RawParameter]] = None,
-        error_schema: Type[Schema] = ApiError,
         etag: Optional[ETagBehaviour] = None,
         will_do_redirects: bool = False,
         options: Optional[Dict[str, str]] = None,
@@ -194,7 +190,6 @@ class Endpoint:
         self.path_params = path_params
         self.query_params = query_params
         self.header_params = header_params
-        self.error_schema = error_schema
         self.etag = etag
         self.will_do_redirects = will_do_redirects
         self.options: Dict[str, str] = options if options is not None else {}
@@ -433,7 +428,7 @@ class Endpoint:
                     'description': 'Any unsuccessful or unexpected result.',
                     'content': {
                         'application/problem+json': {
-                            'schema': self.error_schema,
+                            'schema': ApiError,
                         }
                     }
                 }

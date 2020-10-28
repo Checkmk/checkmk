@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# Disable unused variable error (needed to keep track of version)
+# shellcheck disable=SC2034
+VERSION="2.0.0i2"
+
 # SAP HANA Plugin for Checkmk Agent on Linux
 # Copyright Gerd Stolz - SVA - 2016
 # (c) 2017 Heinlein Support GmbH, Robert Sander <r.sander@heinlein-support.de>

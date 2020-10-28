@@ -40,7 +40,6 @@ from cmk.gui.watolib.groups import edit_group, add_group
           'cmk/create',
           method='post',
           etag='output',
-          request_body_required=True,
           request_schema=request_schemas.InputServiceGroup,
           response_schema=response_schemas.DomainObject)
 def create(params):
@@ -136,9 +135,8 @@ def bulk_delete(params):
           '.../update',
           method='put',
           path_params=[NAME_FIELD],
-          response_schema=response_schemas.ServiceGroup,
           etag='both',
-          request_body_required=True,
+          response_schema=response_schemas.ServiceGroup,
           request_schema=request_schemas.InputServiceGroup)
 def update(params):
     """Update a service group"""

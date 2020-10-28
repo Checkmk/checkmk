@@ -37,7 +37,6 @@ from cmk.gui.watolib.utils import try_bake_agents_for_hosts
           'cmk/create',
           method='post',
           etag='output',
-          request_body_required=True,
           request_schema=request_schemas.CreateHost,
           response_schema=response_schemas.DomainObject)
 def create_host(params):
@@ -56,7 +55,6 @@ def create_host(params):
           'cmk/create_cluster',
           method='post',
           etag='output',
-          request_body_required=True,
           request_schema=request_schemas.CreateClusterHost,
           response_schema=response_schemas.DomainObject)
 def create_cluster_host(params):
@@ -127,7 +125,6 @@ def _host_collection(hosts) -> Response:
           method='put',
           path_params=[HOST_NAME],
           etag='both',
-          request_body_required=True,
           request_schema=request_schemas.UpdateNodes,
           response_schema=response_schemas.ObjectProperty)
 def update_nodes(params):
@@ -161,7 +158,6 @@ def update_nodes(params):
           method='put',
           path_params=[HOST_NAME],
           etag='both',
-          request_body_required=True,
           request_schema=request_schemas.UpdateHost,
           response_schema=response_schemas.DomainObject)
 def update_host(params):
@@ -215,7 +211,6 @@ def bulk_update_hosts(params):
           method='delete',
           path_params=[HOST_NAME],
           etag='input',
-          request_body_required=False,
           output_empty=True)
 def delete(params):
     """Delete a host"""

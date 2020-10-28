@@ -63,7 +63,6 @@ def update_password(params):
           '.../delete',
           method='delete',
           path_params=[NAME_FIELD],
-          request_body_required=False,
           output_empty=True)
 def delete_password(params):
     """Delete a password"""

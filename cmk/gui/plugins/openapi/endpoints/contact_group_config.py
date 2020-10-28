@@ -36,7 +36,6 @@ from cmk.gui.watolib.groups import edit_group, add_group, load_contact_group_inf
           'cmk/create',
           method='post',
           etag='output',
-          request_body_required=True,
           request_schema=request_schemas.InputContactGroup,
           response_schema=response_schemas.DomainObject)
 def create(params):
@@ -136,7 +135,6 @@ def bulk_delete(params):
           path_params=[NAME_FIELD],
           response_schema=response_schemas.ContactGroup,
           etag='both',
-          request_body_required=True,
           request_schema=request_schemas.InputContactGroup)
 def update(params):
     """Update a contact group"""

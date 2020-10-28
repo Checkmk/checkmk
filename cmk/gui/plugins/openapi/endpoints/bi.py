@@ -58,7 +58,6 @@ class BIRuleEndpointSchema(BIRuleSchema):
           'cmk/get_bi_rule',
           method='get',
           path_params=[BI_RULE_ID],
-          request_body_required=False,
           response_schema=BIRuleEndpointSchema)
 def get_bi_rule(params):
     """Get BI Rule"""
@@ -78,7 +77,6 @@ def get_bi_rule(params):
           'cmk/put_bi_rule',
           method='put',
           path_params=[BI_RULE_ID],
-          request_body_required=True,
           request_schema=BIRuleEndpointSchema,
           response_schema=BIRuleEndpointSchema)
 def put_bi_rule(params):
@@ -121,7 +119,6 @@ class BIAggregationEndpointSchema(BIAggregationSchema):
           'cmk/get_bi_aggregation',
           method='get',
           path_params=[BI_AGGR_ID],
-          request_body_required=False,
           response_schema=BIAggregationEndpointSchema)
 def get_bi_aggregation(params):
     """Get BI Aggregation"""
@@ -141,7 +138,6 @@ def get_bi_aggregation(params):
           'cmk/put_bi_aggregation',
           method='put',
           path_params=[BI_AGGR_ID],
-          request_body_required=True,
           request_schema=BIAggregationEndpointSchema,
           response_schema=BIAggregationEndpointSchema)
 def put_bi_aggregation(params):
@@ -176,7 +172,6 @@ def put_bi_aggregation(params):
 @Endpoint(constructors.collection_href("bi_pack"),
           'cmk/get_bi_packs',
           method='get',
-          request_body_required=False,
           response_schema=response_schemas.DomainObjectCollection)
 def get_bi_packs(params):
     """Show all BI Packs"""
@@ -205,7 +200,6 @@ def get_bi_packs(params):
           'cmk/get_bi_pack',
           method='get',
           path_params=[BI_PACK_ID],
-          request_body_required=False,
           response_schema=response_schemas.DomainObject)
 def get_bi_pack(params):
     """Get BI Pack"""

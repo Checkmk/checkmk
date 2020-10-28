@@ -37,7 +37,6 @@ from cmk.gui.watolib.groups import edit_group, add_group
           'cmk/create',
           method='post',
           etag='output',
-          request_body_required=True,
           request_schema=request_schemas.InputHostGroup,
           response_schema=response_schemas.HostGroup)
 def create(params):
@@ -122,9 +121,8 @@ def bulk_delete(params):
           '.../update',
           method='put',
           path_params=[NAME_FIELD],
-          response_schema=response_schemas.HostGroup,
           etag='both',
-          request_body_required=True,
+          response_schema=response_schemas.HostGroup,
           request_schema=request_schemas.InputHostGroup)
 def update(params):
     """Update a host group"""

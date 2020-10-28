@@ -146,9 +146,6 @@ class Endpoint:
         header_params:
             All parameters, which are expected via HTTP headers.
 
-        request_body_required:
-            If set to True (default), a `response_schema` will be required.
-
         error_schema:
             The Schema class with which to validate an HTTP error sent by the endpoint.
 
@@ -178,7 +175,6 @@ class Endpoint:
         path_params: Optional[Sequence[RawParameter]] = None,
         query_params: Optional[Sequence[RawParameter]] = None,
         header_params: Optional[Sequence[RawParameter]] = None,
-        request_body_required: bool = True,
         error_schema: Type[Schema] = ApiError,
         etag: Optional[ETagBehaviour] = None,
         will_do_redirects: bool = False,
@@ -198,7 +194,6 @@ class Endpoint:
         self.path_params = path_params
         self.query_params = query_params
         self.header_params = header_params
-        self.request_body_required = request_body_required
         self.error_schema = error_schema
         self.etag = etag
         self.will_do_redirects = will_do_redirects
@@ -464,7 +459,7 @@ class Endpoint:
 
         if self.request_schema is not None:
             operation_spec['requestBody'] = {
-                'required': self.request_body_required,
+                'required': True,
                 'content': {
                     'application/json': {
                         'schema': self.request_schema,

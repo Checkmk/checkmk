@@ -45,9 +45,8 @@ FOLDER_FIELD = {
 @Endpoint(constructors.collection_href('folder_config'),
           'cmk/create',
           method='post',
-          response_schema=response_schemas.ConcreteFolder,
           etag='output',
-          request_body_required=True,
+          response_schema=response_schemas.ConcreteFolder,
           request_schema=request_schemas.CreateFolder)
 def create(params):
     """Create a folder"""
@@ -66,9 +65,8 @@ def create(params):
           '.../persist',
           method='put',
           path_params=[FOLDER_FIELD],
-          response_schema=response_schemas.ConcreteFolder,
           etag='both',
-          request_body_required=True,
+          response_schema=response_schemas.ConcreteFolder,
           request_schema=request_schemas.UpdateFolder)
 def update(params):
     """Update a folder

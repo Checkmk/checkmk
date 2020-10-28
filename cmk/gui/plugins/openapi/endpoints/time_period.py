@@ -92,7 +92,6 @@ def update_timeperiod(params):
           '.../delete',
           method='delete',
           path_params=[NAME_FIELD],
-          request_body_required=False,
           output_empty=True)
 def delete(params):
     """Delete a time period"""

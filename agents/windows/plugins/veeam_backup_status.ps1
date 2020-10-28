@@ -1,4 +1,4 @@
-$VERSION = "2.0.0i1"
+$VERSION = "2.0.0i2"
 ## VEEAM Backups
 ## This powershell script needs to be run with the 64bit powershell
 ## and thus from a 64bit check_mk agent

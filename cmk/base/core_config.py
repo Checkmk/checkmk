@@ -50,7 +50,7 @@ ConfigurationWarnings = List[str]
 ObjectMacros = Dict[str, AnyStr]
 CoreCommandName = str
 CoreCommand = str
-CheckCommandArguments = Union[str, Iterable[Union[int, float, str, Tuple[str, str, str]]]]
+CheckCommandArguments = Iterable[Union[int, float, str, Tuple[str, str, str]]]
 
 
 class HelperConfig:
@@ -450,21 +450,16 @@ def _verify_non_duplicate_hosts() -> None:
 
 def active_check_arguments(hostname: HostName, description: Optional[ServiceName],
                            args: config.SpecialAgentInfoFunctionResult) -> str:
+    if isinstance(args, str):
+        return args
+
     cmd_args: CheckCommandArguments = []
     if isinstance(args, config.SpecialAgentConfiguration):
-        if isinstance(args.args, list):
-            cmd_args = args.args
-        else:
-            raise MKGeneralException(
-                "The special agent function needs to return either a list of arguments, a "
-                "string of the concatenated arguments or a SpecialAgentConfiguration object (Host: %s, Service: %s)."
-                % (hostname, description))
-
-    elif isinstance(args, str):
-        cmd_args = args
-    elif isinstance(args, list):
-        cmd_args = args
+        cmd_args = args.args
     else:
+        cmd_args = args
+
+    if not isinstance(cmd_args, list):
         raise MKGeneralException(
             "The check argument function needs to return either a list of arguments or a "
             "string of the concatenated arguments (Host: %s, Service: %s)." %
@@ -475,20 +470,12 @@ def active_check_arguments(hostname: HostName, description: Optional[ServiceName
 
 def _prepare_check_command(command_spec: CheckCommandArguments, hostname: HostName,
                            description: Optional[ServiceName]) -> str:
-    """Prepares a check command for execution by Check_MK.
+    """Prepares a check command for execution by Checkmk
 
-    This function either accepts a string or a list of arguments as
-    command_spec.  In case a list is given it quotes the single elements. It
-    also prepares password store entries for the command line. These entries
-    will be completed by the executed program later to get the password from
-    the password store.
+    In case a list is given it quotes the single elements. It also prepares password store entries
+    for the command line. These entries will be completed by the executed program later to get the
+    password from the password store.
     """
-    if isinstance(command_spec, str):
-        return command_spec
-
-    if not isinstance(command_spec, list):
-        raise NotImplementedError()
-
     passwords: List[Tuple[str, str, str]] = []
     formated: List[str] = []
     for arg in command_spec:

@@ -129,13 +129,14 @@ CheckContext = Dict[str, Any]
 GetCheckApiContext = Callable[[], Dict[str, Any]]
 CheckIncludes = List[str]
 DiscoveryCheckParameters = Dict
+CheckCommandArguments = Union[str, Iterable[Union[int, float, str, Tuple[str, str, str]]]]
 SpecialAgentConfiguration = NamedTuple(
     "SpecialAgentConfiguration",
     [
         ("args", Union[str, List[str]]),
         ("stdin", Optional[str]),  # TODO: Why do we need to distinguish between "" and None???
     ])
-SpecialAgentInfoFunctionResult = Union[str, List[Union[str, Tuple[str, str, str]]],
+SpecialAgentInfoFunctionResult = Union[str, List[Union[str, int, float, Tuple[str, str, str]]],
                                        SpecialAgentConfiguration]
 SpecialAgentInfoFunction = Callable[[Dict[str, Any], HostName, Optional[HostAddress]],
                                     SpecialAgentInfoFunctionResult]
@@ -1268,10 +1269,8 @@ def get_service_translations(hostname: HostName) -> cmk.utils.translations.Trans
     return translations
 
 
-# TODO: Why do we include int and float in the signature/code below?
-def prepare_check_command(command_spec: Union[str, List[Union[int, float, str, Tuple[str, str,
-                                                                                     str]]]],
-                          hostname: HostName, description: Optional[ServiceName]) -> str:
+def prepare_check_command(command_spec: CheckCommandArguments, hostname: HostName,
+                          description: Optional[ServiceName]) -> str:
     """Prepares a check command for execution by Check_MK.
 
     This function either accepts a string or a list of arguments as

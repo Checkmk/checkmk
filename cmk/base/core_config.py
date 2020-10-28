@@ -452,15 +452,19 @@ def active_check_arguments(hostname: HostName, description: Optional[ServiceName
     if isinstance(args, config.SpecialAgentConfiguration):
         # TODO: Silly dispatching because of broken types/variance.
         if isinstance(args.args, str):
-            cmd_args: Union[str, List[Union[int, float, str, Tuple[str, str, str]]]] = args.args
+            cmd_args: config.CheckCommandArguments = args.args
         elif isinstance(args.args, list):
-            cmd_args = [arg for arg in args.args if isinstance(arg, str)]
+            cmd_args = args.args
         else:
-            raise Exception("funny SpecialAgentConfiguration args %r" % (args.args,))
+            raise MKGeneralException(
+                "The special agent function needs to return either a list of arguments, a "
+                "string of the concatenated arguments or a SpecialAgentConfiguration object (Host: %s, Service: %s)."
+                % (hostname, description))
+
     elif isinstance(args, str):
         cmd_args = args
     elif isinstance(args, list):
-        cmd_args = [arg for arg in args if isinstance(arg, (str, tuple))]
+        cmd_args = args
     else:
         raise MKGeneralException(
             "The check argument function needs to return either a list of arguments or a "

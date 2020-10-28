@@ -1,0 +1,17 @@
+Title: Active checks: Failed check caused by missing arguments
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1603897571
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+In Checkmk 2.0.0i1 several active checks failed with different error messages,
+because the command lines that were built to execute the active checks were
+missing required arguments.
+
+For example the SMTP checks failed when a custom network port was configured
+with a message like: "check_smtp: Port must be a positive integer". Since this
+was an error in a generic place, this affected multiple active checks.

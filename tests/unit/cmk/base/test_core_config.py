@@ -30,16 +30,42 @@ def test_do_create_config_nagios(core_scenario):
     assert config.PackedConfigStore(LATEST_SERIAL)._compiled_path.exists()
 
 
-def test_active_check_arguments(mocker):
+def test_active_check_arguments_wrong_types():
     with pytest.raises(MKGeneralException):
         core_config.active_check_arguments("bla", "blub", 1)  # type: ignore[arg-type]
 
     with pytest.raises(MKGeneralException):
         core_config.active_check_arguments("bla", "blub", (1, 2))  # type: ignore[arg-type]
 
+
+def test_active_check_arguments_str(mocker):
     prepare_check_command = mocker.patch.object(config, "prepare_check_command")
     core_config.active_check_arguments("bla", "blub", u"args 123 -x 1 -y 2")
-    assert prepare_check_command.called_once()
+    prepare_check_command.assert_called_once_with('args 123 -x 1 -y 2', 'bla', 'blub')
+
+
+def test_active_check_arguments_list(mocker):
+    prepare_check_command = mocker.patch.object(config, "prepare_check_command")
+    core_config.active_check_arguments("bla", "blub", ["a", "123"])
+    prepare_check_command.assert_called_once_with(["a", "123"], 'bla', 'blub')
+
+
+def test_active_check_arguments_list_with_numbers(mocker):
+    prepare_check_command = mocker.patch.object(config, "prepare_check_command")
+    core_config.active_check_arguments("bla", "blub", [1, 1.2])
+    prepare_check_command.assert_called_once_with([1, 1.2], 'bla', 'blub')
+
+
+def test_active_check_arguments_list_with_pwstore_reference(mocker):
+    prepare_check_command = mocker.patch.object(config, "prepare_check_command")
+    core_config.active_check_arguments("bla", "blub", ["a", ("store", "pw1", "--password=%s")])
+    prepare_check_command.assert_called_once_with(['a', ('store', 'pw1', '--password=%s')], 'bla',
+                                                  'blub')
+
+
+def test_active_check_arguments_list_with_invalid_type():
+    with pytest.raises(MKGeneralException):
+        core_config.active_check_arguments("bla", "blub", [None])  # type: ignore[list-item]
 
 
 def test_get_host_attributes(fixup_ip_lookup, monkeypatch):

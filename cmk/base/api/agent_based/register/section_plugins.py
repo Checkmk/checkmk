@@ -20,6 +20,7 @@ from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
     AgentSectionPlugin,
     HostLabelFunction,
+    SimpleSNMPParseFunction,
     SNMPParseFunction,
     SNMPSectionPlugin,
     StringByteTable,
@@ -45,8 +46,11 @@ def _create_parse_annotation(
     return StringTable, "StringTable"
 
 
-def _validate_parse_function(parse_function: Union[AgentParseFunction, SNMPParseFunction], *,
-                             expected_annotation: Tuple[Type, str]) -> None:
+def _validate_parse_function(
+    parse_function: Union[AgentParseFunction, SimpleSNMPParseFunction, SNMPParseFunction],
+    *,
+    expected_annotation: Tuple[Type, str],
+) -> None:
     """Validate the parse functions signature and type"""
 
     if not inspect.isfunction(parse_function):
@@ -77,7 +81,7 @@ def _create_agent_parse_function(
 
 
 def _create_snmp_parse_function(
-    parse_function: Optional[SNMPParseFunction],
+    parse_function: Union[SimpleSNMPParseFunction, SNMPParseFunction, None],
     needs_unpacking: bool,
 ) -> SNMPParseFunction:
     if parse_function is None:
@@ -87,7 +91,8 @@ def _create_snmp_parse_function(
 
     if needs_unpacking:
         return lambda string_table: parse_function(string_table[0])
-    return parse_function
+    # _validate_parse_function should have ensured this is the correct type:
+    return parse_function  # type: ignore[return-value]
 
 
 def _validate_supersedings(own_name: SectionName, supersedes: List[SectionName]) -> None:
@@ -231,7 +236,7 @@ def create_snmp_section_plugin(
     detect_spec: SNMPDetectSpec,
     fetch: Union[SNMPTree, List[SNMPTree]],
     parsed_section_name: Optional[str] = None,
-    parse_function: Optional[SNMPParseFunction] = None,
+    parse_function: Union[SimpleSNMPParseFunction, SNMPParseFunction, None] = None,
     host_label_function: Optional[HostLabelFunction] = None,
     supersedes: Optional[List[str]] = None,
     module: Optional[str] = None,

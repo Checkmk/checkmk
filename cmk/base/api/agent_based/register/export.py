@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """All objects defined here are intended to be exposed in the API
 """
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, overload, Union
 
 from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree  # pylint: disable=cmk-module-layer-violation
 from cmk.base.api.agent_based.inventory_classes import InventoryFunction
@@ -17,6 +17,7 @@ from cmk.base.api.agent_based.checking_classes import (
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
     HostLabelFunction,
+    SimpleSNMPParseFunction,
     SNMPParseFunction,
 )
 
@@ -91,12 +92,40 @@ def agent_section(
     add_section_plugin(section_plugin)
 
 
+@overload  # no List of trees -> SimpleSNMPParseFunction
+def snmp_section(
+    *,
+    name: str,
+    detect: SNMPDetectSpec,
+    fetch: SNMPTree,
+    parse_function: Optional[SimpleSNMPParseFunction] = None,
+    parsed_section_name: Optional[str] = None,
+    host_label_function: Optional[HostLabelFunction] = None,
+    supersedes: Optional[List[str]] = None,
+) -> None:
+    pass
+
+
+@overload
+def snmp_section(
+    *,
+    name: str,
+    detect: SNMPDetectSpec,
+    fetch: List[SNMPTree],
+    parse_function: Optional[SNMPParseFunction] = None,
+    parsed_section_name: Optional[str] = None,
+    host_label_function: Optional[HostLabelFunction] = None,
+    supersedes: Optional[List[str]] = None,
+) -> None:
+    pass
+
+
 def snmp_section(
     *,
     name: str,
     detect: SNMPDetectSpec,
     fetch: Union[SNMPTree, List[SNMPTree]],
-    parse_function: Optional[SNMPParseFunction] = None,
+    parse_function: Union[SimpleSNMPParseFunction, SNMPParseFunction, None] = None,
     parsed_section_name: Optional[str] = None,
     host_label_function: Optional[HostLabelFunction] = None,
     supersedes: Optional[List[str]] = None,

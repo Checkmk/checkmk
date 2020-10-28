@@ -65,6 +65,11 @@ SNMPParseFunction = Union[  #
     Callable[[List[StringByteTable]], Any],  #
 ]
 
+SimpleSNMPParseFunction = Union[  #
+    Callable[[StringTable], Any],  #
+    Callable[[StringByteTable], Any],  #
+]
+
 AgentSectionPlugin = NamedTuple(
     "AgentSectionPlugin",
     [

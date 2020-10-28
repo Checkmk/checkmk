@@ -103,11 +103,3 @@ class CPUTracker:
     @property
     def duration(self) -> Snapshot:
         return self._end - self._start
-
-    @property
-    def process(self) -> posix.times_result:
-        return self.duration.process
-
-    @property
-    def run_time(self) -> float:
-        return self.duration.run_time

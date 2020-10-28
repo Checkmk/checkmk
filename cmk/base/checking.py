@@ -10,6 +10,7 @@ import errno
 import os
 import signal
 import time
+from collections import defaultdict
 from random import Random
 from types import FrameType
 from typing import (
@@ -17,6 +18,7 @@ from typing import (
     AnyStr,
     Callable,
     cast,
+    DefaultDict,
     Dict,
     IO,
     Iterable,
@@ -50,7 +52,7 @@ from cmk.utils.type_defs import (
     ServiceState,
     SourceType,
 )
-from cmk.utils.cpu_tracking import CPUTracker
+from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.fetchers.controller import FetcherMessage, FetcherType
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -257,6 +259,7 @@ def do_check(
                 "children_user_time=%.3f" % total_times.process.children_user,
                 "children_system_time=%.3f" % total_times.process.children_system,
             ]
+            summary: DefaultDict[str, Snapshot] = defaultdict(Snapshot.null)
             for msg in fetcher_messages if fetcher_messages else ():
                 if msg.fetcher_type in (
                         FetcherType.PIGGYBACK,
@@ -264,15 +267,15 @@ def do_check(
                         FetcherType.SNMP,
                         FetcherType.TCP,
                 ):
-                    phase = {
+                    summary[{
                         FetcherType.PIGGYBACK: "agent",
                         FetcherType.PROGRAM: "ds",
                         FetcherType.SNMP: "snmp",
                         FetcherType.TCP: "agent",
-                    }[msg.fetcher_type]
-                    times = msg.stats.cpu_tracker
-                    t = times.run_time - sum(times.process[:4])  # real time - CPU time
-                    perfdata.append("cmk_time_%s=%.3f" % (phase, t))
+                    }[msg.fetcher_type]] += msg.stats.cpu_tracker.duration
+            for phase, duration in summary.items():
+                t = duration.run_time - sum(duration.process[:4])  # real time - CPU time
+                perfdata.append("cmk_time_%s=%.3f" % (phase, t))
         else:
             perfdata.append("execution_time=%.3f" % total_times.run_time)
 

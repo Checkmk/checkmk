@@ -283,50 +283,6 @@ def create_linux_test_host(request, web_fixture, site, hostname):
 #   '----------------------------------------------------------------------'
 
 
-class CheckManager:
-    _CHECK_FILES_LOADED: Set[str] = set()
-
-    def load(self, file_names=None):
-        """Load either all check plugins or the given file_names"""
-        import cmk.base.config as config  # pylint: disable=import-outside-toplevel
-        import cmk.base.check_api as check_api  # pylint: disable=import-outside-toplevel
-        import cmk.utils.paths  # pylint: disable=import-outside-toplevel
-
-        if config.all_checks_loaded():
-            return self  # No need to load more
-
-        if file_names is None:
-            raise RuntimeError("Loading all checks is not supported. Use the fixture "
-                               "\"config_load_all_checks\" instead")
-
-        if not set(file_names) - CheckManager._CHECK_FILES_LOADED:
-            return self  # Everything needed is already loaded
-
-        # On first call, initialize the basic data structures
-        if not CheckManager._CHECK_FILES_LOADED:
-            config._initialize_data_structures()
-
-        CheckManager._CHECK_FILES_LOADED.update(set(file_names))
-
-        config.load_checks(check_api.get_check_api_context,
-                           [os.path.join(cmk.utils.paths.checks_dir, f) for f in file_names])
-
-        return self
-
-    def get_check(self, name):
-        main_check = name.split(".", 1)[0]
-        self.load([main_check])
-        return Check(name)
-
-    def get_active_check(self, name):
-        self.load([name])
-        return ActiveCheck(name)
-
-    def get_special_agent(self, name):
-        self.load([name])
-        return SpecialAgent(name)
-
-
 class MissingCheckInfoError(KeyError):
     pass
 

@@ -9,15 +9,13 @@
 
 from typing import Dict, List, Tuple
 from cmk.base.config import factory_settings
-from cmk.base.check_api import get_number_with_precision
-
-from cmk.base.check_api import host_name
 from cmk.base.check_api import get_bytes_human_readable
-from cmk.base.check_api import host_extra_conf
 from cmk.base.check_api import get_percent_human_readable
-from cmk.base.check_api import check_levels
+from cmk.base.check_api import host_extra_conf
+from cmk.base.check_api import host_name
 
 from cmk.base.plugins.agent_based.utils.df import (
+    _check_inodes,
     get_filesystem_levels as _get_filesystem_levels,
     mountpoints_in_group,
     FILESYSTEM_DEFAULT_LEVELS as _FILESYSTEM_DEFAULT_LEVELS,
@@ -232,61 +230,6 @@ def df_check_filesystem_list_coroutine(
 # IF YOU CANNOT FIND THE MIGRATED COUNTERPART OF A FUNCTION, PLEASE TALK TO TIMI BEFORE DOING
 # ANYTHING ELSE.
 # ==================================================================================================
-def _check_inodes(levels, inodes_total, inodes_avail):
-    if not inodes_total:
-        return
-
-    inodes_warn_variant, inodes_crit_variant = levels["inodes_levels"]
-    inodes_warn_abs, inodes_crit_abs, human_readable_func = (
-        # Levels in absolute numbers
-        (
-            inodes_total - inodes_warn_variant,
-            inodes_total - inodes_crit_variant,
-            get_number_with_precision,
-        ) if isinstance(inodes_warn_variant, int) else
-        # Levels in percent
-        (
-            (100 - inodes_warn_variant) / 100.0 * inodes_total,
-            (100 - inodes_crit_variant) / 100.0 * inodes_total,
-            lambda x: get_percent_human_readable(100.0 * x / inodes_total),
-        ) if isinstance(inodes_warn_variant, float) else  #
-        (None, None, get_number_with_precision))
-
-    inode_status, inode_text, inode_perf = check_levels(
-        inodes_total - inodes_avail,
-        'inodes_used',
-        (inodes_warn_abs, inodes_crit_abs),
-        boundaries=(0, inodes_total),
-        human_readable_func=human_readable_func,
-        infoname="Inodes Used",
-    )
-
-    # Only show inodes if they are at less then 50%
-    show_inodes = levels["show_inodes"]
-    inodes_avail_perc = 100.0 * inodes_avail / inodes_total
-    infotext = (
-        "%s, inodes available: %s/%s" % (
-            inode_text,
-            get_number_with_precision(inodes_avail),
-            get_percent_human_readable(inodes_avail_perc),
-        )  #
-        if any((
-            show_inodes == "always",
-            show_inodes == "onlow" and (inode_status or inodes_avail_perc < 50),
-            show_inodes == "onproblem" and inode_status,
-        )) else "")
-
-    yield inode_status, infotext, inode_perf
-
-
-# ==================================================================================================
-# THIS FUNCTION DEFINED HERE IS IN THE PROCESS OF OR HAS ALREADY BEEN MIGRATED TO
-# THE NEW CHECK API. PLEASE DO NOT MODIFY THIS FUNCTION ANYMORE. INSTEAD, MODIFY THE MIGRATED CODE
-# RESIDING IN
-# cmk/base/plugins/agent_based/utils/df.py
-# IF YOU CANNOT FIND THE MIGRATED COUNTERPART OF A FUNCTION, PLEASE TALK TO TIMI BEFORE DOING
-# ANYTHING ELSE.
-# ==================================================================================================
 def df_check_filesystem_single_coroutine(
     mountpoint,
     size_mb,
@@ -375,7 +318,13 @@ def df_check_filesystem_single_coroutine(
         if trend_state or trend_text or trend_perf:
             yield trend_state, trend_text.strip(" ,"), trend_perf or []
 
-    yield from _check_inodes(levels, inodes_total, inodes_avail)
+    if not inodes_total or not inodes_avail:
+        return
+
+    metric, result = _check_inodes(levels, inodes_total, inodes_avail)
+    yield int(result.state), result.summary, [
+        (metric.name, metric.value) + metric.levels + metric.boundaries
+    ]
 
 
 def _aggregate(generator):

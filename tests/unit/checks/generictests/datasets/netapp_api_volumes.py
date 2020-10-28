@@ -388,7 +388,7 @@ checks = {
                      ('trend', 124195.93898073, 100.0, 200.0, 0, 12800.0),
                      ('trend_hoursleft', 23.719475746763944),
                 ]),
-                (0, 'Inodes Used: 0.04%, inodes available: 9.34 M/99.96%', [
+                (0, 'Inodes used: 0.04%, Inodes available: 9,335,461 (99.96%)', [
                      ('inodes_used', 3414, 8404987.5, 8871931.25, 0.0, 9338875.0),
                  ]),
                 (
@@ -478,7 +478,7 @@ checks = {
                 ),
                 (
                     0,
-                    'Inodes Used: 0.001%, inodes available: 31.88 M/100%',
+                    'Inodes used: 0.00%, Inodes available: 31,876,381 (99.9990%)',
                     [
                         ('inodes_used', 315, 28689026.400000002, 30282861.2, 0.0, 31876696.0),
                     ],

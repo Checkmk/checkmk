@@ -228,8 +228,8 @@ def _render_integer(number: float):
 
 def _check_inodes(
     levels: Dict[str, Any],
-    inodes_total: Optional[float],
-    inodes_avail: Optional[float],
+    inodes_total: float,
+    inodes_avail: float,
 ) -> Generator[Union[Metric, Result], None, None]:
     """
     >>> levels = {
@@ -237,26 +237,20 @@ def _check_inodes(
     ...     "show_inodes": "onproblem",
     ... }
     >>> for r in _check_inodes(levels, 80, 60): print(r)
-    Result(state=<State.OK: 0>, summary='Inodes used: 20')
     Metric('inodes_used', 20.0, levels=(70.0, 75.0), boundaries=(0.0, 80.0))
-    Result(state=<State.OK: 0>, summary='', details='Inodes available: 60 (75.0%)')
+    Result(state=<State.OK: 0>, summary='', details='Inodes used: 20, Inodes available: 60 (75.0%)')
 
     >>> levels["show_inodes"] = "always"
     >>> for r in _check_inodes(levels, 80, 20): print(r)
-    Result(state=<State.OK: 0>, summary='Inodes used: 60')
     Metric('inodes_used', 60.0, levels=(70.0, 75.0), boundaries=(0.0, 80.0))
-    Result(state=<State.OK: 0>, summary='Inodes available: 20 (25.0%)')
+    Result(state=<State.OK: 0>, summary='Inodes used: 60, Inodes available: 20 (25.0%)')
 
     >>> levels["show_inodes"]="onlow"
     >>> levels["inodes_levels"]= (40, 35)
     >>> for r in _check_inodes(levels, 80, 20): print(r)
-    Result(state=<State.CRIT: 2>, summary='Inodes used: 60 (warn/crit at 40/45)')
     Metric('inodes_used', 60.0, levels=(40.0, 45.0), boundaries=(0.0, 80.0))
-    Result(state=<State.OK: 0>, summary='Inodes available: 20 (25.0%)')
+    Result(state=<State.CRIT: 2>, summary='Inodes used: 60 (warn/crit at 40/45), Inodes available: 20 (25.0%)')
     """
-    if not inodes_total or not inodes_avail:
-        return
-
     inodes_warn_variant, inodes_crit_variant = levels["inodes_levels"]
 
     inodes_abs: Optional[Tuple[float, float]] = None
@@ -283,26 +277,25 @@ def _check_inodes(
         boundaries=(0, inodes_total),
         label="Inodes used",
     )
-    yield inode_result
+    assert isinstance(inode_result, Result)
     yield inode_metric
 
     # Only show inodes if they are at less then 50%
     show_inodes = levels["show_inodes"]
     inodes_avail_perc = 100.0 * inodes_avail / inodes_total
-    inodes_info = "Inodes available: %s (%s)" % (
+    inodes_info = "%s, Inodes available: %s (%s)" % (
+        inode_result.summary,
         _render_integer(inodes_avail),
         render.percent(inodes_avail_perc),
     )
 
-    is_problem = inode_result.state != State.OK  # type: ignore[union-attr]
     if any((
             show_inodes == "always",
-            show_inodes == "onlow" and (is_problem or inodes_avail_perc < 50),
-            show_inodes == "onproblem" and is_problem,
+            show_inodes == "onlow" and inodes_avail_perc < 50,
     )):
-        yield Result(state=state.OK, summary=inodes_info)
+        yield Result(state=inode_result.state, summary=inodes_info)
     else:
-        yield Result(state=state.OK, notice=inodes_info)
+        yield Result(state=inode_result.state, notice=inodes_info)
 
 
 def df_check_filesystem_single(
@@ -389,7 +382,8 @@ def df_check_filesystem_single(
         timestamp=this_time,
     )
 
-    yield from _check_inodes(levels, inodes_total, inodes_avail)
+    if inodes_total and inodes_avail is not None:
+        yield from _check_inodes(levels, inodes_total, inodes_avail)
 
 
 def df_check_filesystem_list(

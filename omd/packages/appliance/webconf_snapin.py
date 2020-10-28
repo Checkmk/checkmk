@@ -4,6 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import ast
+import subprocess
+
+import cmk.utils.version as cmk_version
+
 # Does not detect the module hierarchy correctly. Imports are fine.
 from cmk.gui.i18n import _  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.globals import html  # pylint: disable=cmk-module-layer-violation
@@ -31,19 +36,36 @@ class SidebarSnapinCMAWebconf(SidebarSnapin):
         return ["admin"]
 
     def show(self):
-
-        import imp
-        try:
-            cma_nav = imp.load_source("cma_nav", "/usr/lib/python2.7/cma_nav.py")
-        except IOError:
-            html.show_error(_("Unable to import cma_nav module"))
+        if not cmk_version.is_cma():
             return
+
+        # The cma_nav-Module is a Python 2.7 module that is already installed by the CMA OS.  For
+        # the future we should change this to some structured file format, but for the moment we
+        # have to deal with existing firmwares. Use some py27 wrapper to produce the needed output.
+        p = subprocess.Popen(["/usr/bin/python2.7"],
+                             stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE,
+                             encoding="utf-8",
+                             shell=False,
+                             close_fds=True)
+        stdout, stderr = p.communicate("\n".join([
+            'import imp',
+            'cma_nav = imp.load_source("cma_nav", "/usr/lib/python2.7/cma_nav.py")',
+            'print(cma_nav.modules())',
+        ]))
+
+        if stderr:
+            html.show_error(_("Failed to render navigation: %s") % stderr)
+            return
+
+        nav_modules = ast.literal_eval(stdout)
 
         base_url = "/webconf/"
 
         self._iconlink(_("Main Menu"), base_url, "home")
 
-        for url, icon, title, _descr in cma_nav.modules():  # type: ignore[attr-defined]
+        for url, icon, title, _descr in nav_modules:
             url = base_url + url
             self._iconlink(title, url, icon)
 

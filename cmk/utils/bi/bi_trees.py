@@ -19,6 +19,7 @@ from cmk.utils.type_defs import (
 )
 
 from cmk.utils.bi.bi_lib import (
+    BIStates,
     BIServiceWithFullState,
     BIHostStatusInfoRow,
     BIHostSpec,
@@ -115,9 +116,11 @@ class BICompiledLeaf(ABCBICompiledNode):
         # State
         if entity.has_been_checked:
             state = entity.hard_state if computation_options.use_hard_states else entity.state
+            # Since we need an equalized state mapping, map host state DOWN to CRIT
+            if self.service_description is None and state == BIStates.HOST_DOWN:
+                state = BIStates.CRIT
         else:
-            # TODO: -1 will be replaced with PENDING on a followup commit
-            state = -1
+            state = BIStates.PENDING
 
         # Assumed
         assumed_result = None

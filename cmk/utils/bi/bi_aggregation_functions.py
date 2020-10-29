@@ -9,6 +9,7 @@ from marshmallow import Schema, validate
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from cmk.utils.bi.bi_lib import (
+    BIStates,
     bi_aggregation_function_registry,
     ABCBIAggregationFunction,
     ReqConstant,
@@ -18,13 +19,13 @@ from cmk.utils.bi.bi_lib import (
 )
 
 # State weight. OK, PENDING, WARN, UNKNOWN, CRIT
+# TODO: mapping will be reworked in later commit
 _state_mappings = {
-    0: 0.0,  # OK/UP
-    -1: 0.5,  # PENDING
-    1: 1.0,  # WARN/DOWN
-    3: 3.0,  # UNKNOWN
-    4: 4.0,  # UNAVAILABLE
-    2: 10.0,  # CRIT
+    BIStates.OK: 0.0,
+    BIStates.PENDING: 0.5,
+    BIStates.WARN: 1.0,
+    BIStates.CRIT: 10.0,
+    BIStates.UNKNOWN: 3.0,
 }
 
 # The reversed mapping is used for generating the return value

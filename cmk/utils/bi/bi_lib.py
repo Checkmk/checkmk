@@ -52,6 +52,17 @@ from cmk.utils.type_defs import (
     ServiceDetails,
 )
 
+
+class BIStates:
+    OK = 0
+    WARN = 1
+    CRIT = 2
+    UNKNOWN = 3
+    PENDING = -1
+    HOST_UP = 0
+    HOST_DOWN = 1
+
+
 NodeComputeResult = NamedTuple("NodeComputeResult", [
     ("state", int),
     ("downtime_state", int),

@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
 
         // Make sure it is at the correct FD
         if (syslog_sock != 0 && syslog_sock != syslog_fd) {
-            dup2(syslog_sock, syslog_fd);
+            ::dup2(syslog_sock, syslog_fd);
             close(syslog_sock);
         }
     }
@@ -125,7 +125,7 @@ int main(int argc, char **argv) {
 
         // Make sure it is at the correct FD
         if (syslog_tcp_sock != 0 && syslog_tcp_sock != syslog_tcp_fd) {
-            dup2(syslog_tcp_sock, syslog_tcp_fd);
+            ::dup2(syslog_tcp_sock, syslog_tcp_fd);
             close(syslog_tcp_sock);
         }
     }
@@ -162,7 +162,7 @@ int main(int argc, char **argv) {
 
         // Make sure it is at the correct FD
         if (snmptrap_sock != 0 && snmptrap_sock != snmptrap_fd) {
-            dup2(snmptrap_sock, snmptrap_fd);
+            ::dup2(snmptrap_sock, snmptrap_fd);
             close(snmptrap_sock);
         }
     }
@@ -194,6 +194,6 @@ int main(int argc, char **argv) {
 
     memcpy(newpath, argv[0], len_to_copy);
     strncpy(newpath + len_to_copy, PROGRAM, 511 - len_to_copy);
-    execv(newpath, argv);
+    ::execv(newpath, argv);
     perror("Cannot execute mkeventd");
 }

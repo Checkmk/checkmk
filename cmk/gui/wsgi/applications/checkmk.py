@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Callable
 import functools
 import http.client as http_client
 import traceback
@@ -30,12 +31,13 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.utils.urls import makeuri
+from cmk.gui.http import Response
 
 # TODO
 #  * derive all exceptions from werkzeug's http exceptions.
 
 
-def _auth(func):
+def _auth(func: pages.PageHandlerFunc) -> Callable[[], Response]:
     # Ensure the user is authenticated. This call is wrapping all the different
     # authentication modes the Checkmk GUI supports and initializes the logged
     # in user objects.
@@ -65,7 +67,7 @@ def _auth(func):
     return _call_auth
 
 
-def _noauth(func):
+def _noauth(func: pages.PageHandlerFunc) -> Callable[[], Response]:
     #
     # We don't have to set up anything because we assume this is only used for special calls. We
     # however have to make sure all errors get written out in plaintext, without HTML.
@@ -81,7 +83,7 @@ def _noauth(func):
         try:
             func()
         except Exception as e:
-            html.write_text("%s" % e)
+            html.write_text(str(e))
             if config.debug:
                 html.write_text(traceback.format_exc())
 
@@ -90,7 +92,7 @@ def _noauth(func):
     return _call_noauth
 
 
-def get_and_wrap_page(script_name):
+def get_and_wrap_page(script_name: str) -> Callable[[], Response]:
     """Get the page handler and wrap authentication logic when needed.
 
     For all "noauth" page handlers the wrapping part is skipped. In the `_auth` wrapper
@@ -112,19 +114,19 @@ def get_and_wrap_page(script_name):
     return _auth(_handler)
 
 
-def _plain_error():
+def _plain_error() -> bool:
     """Webservice functions may decide to get a normal result code
     but a text with an error message in case of an error"""
     return html.request.has_var("_plain_error") or html.myfile == "webapi"
 
 
-def _fail_silently():
+def _fail_silently() -> bool:
     """Ajax-Functions want no HTML output in case of an error but
     just a plain server result code of 500"""
     return html.request.has_var("_ajaxid")
 
 
-def _page_not_found():
+def _page_not_found() -> Response:
     # TODO: This is a page handler. It should not be located in generic application
     # object. Move it to another place
     if html.request.has_var("_plain_error"):
@@ -149,7 +151,7 @@ def _page_not_found():
     return html.response
 
 
-def _ensure_general_access():
+def _ensure_general_access() -> None:
     if config.user.may("general.use"):
         return
 
@@ -176,7 +178,7 @@ def _ensure_general_access():
     raise MKAuthException(" ".join(reason))
 
 
-def _handle_not_authenticated():
+def _handle_not_authenticated() -> Response:
     if _fail_silently():
         # While api call don't show the login dialog
         raise MKUnauthenticatedException(_('You are not authenticated.'))
@@ -197,7 +199,7 @@ def _handle_not_authenticated():
     return html.response
 
 
-def _load_all_plugins():
+def _load_all_plugins() -> None:
     # Optimization: in case of the graph ajax call only check the metrics module. This
     # improves the performance for these requests.
     # TODO: CLEANUP: Move this to the pagehandlers if this concept works out.
@@ -206,7 +208,7 @@ def _load_all_plugins():
     modules.load_all_plugins(only_modules=only_modules)
 
 
-def _localize_request():
+def _localize_request() -> None:
     previous_language = cmk.gui.i18n.get_current_language()
     user_language = html.request.get_ascii_input("lang", config.user.language)
 
@@ -220,7 +222,7 @@ def _localize_request():
         _load_all_plugins()
 
 
-def _render_exception(e, title=""):
+def _render_exception(e: Exception, title: str = "") -> Response:
     if title:
         title = "%s: " % title
 
@@ -230,7 +232,7 @@ def _render_exception(e, title=""):
 
     elif not _fail_silently():
         html.header(title, Breadcrumb())
-        html.show_error(e)
+        html.show_error(str(e))
         html.footer()
 
     return html.response
@@ -251,7 +253,7 @@ class CheckmkApp:
             return _process_request(environ, start_response)
 
 
-def _process_request(environ, start_response):  # pylint: disable=too-many-branches
+def _process_request(environ, start_response) -> Response:  # pylint: disable=too-many-branches
     try:
         html.init_modes()
 
@@ -308,7 +310,8 @@ def _process_request(environ, start_response):  # pylint: disable=too-many-branc
         logger.error("MKGeneralException: %s", e)
 
     except Exception:
-        crash_reporting.handle_exception_as_gui_crash_report(_plain_error(), _fail_silently())
+        crash_reporting.handle_exception_as_gui_crash_report(plain_error=_plain_error(),
+                                                             fail_silently=_fail_silently())
         # This needs to be cleaned up.
         response = html.response
 

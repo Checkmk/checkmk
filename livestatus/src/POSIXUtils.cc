@@ -25,8 +25,8 @@ std::optional<FileDescriptorPair> FileDescriptorPair::createSocketPair(
     // NOTE: Things are a bit tricky here: The close-on-exec flag is a file
     // descriptor flag, i.e. it is kept in the entries of the per-process table
     // of file descriptors. It is *not* part of the entries in the system-wide
-    // table of open file descriptors, so it is *not* shared between different
-    // file descriptors.
+    // table of open files, so it is *not* shared between different file
+    // descriptors.
     //
     // Although it is necessary to avoid race conditions, specifying the
     // SOCK_CLOEXEC flag in the socketpair() call is not part of the POSIX spec,
@@ -41,14 +41,25 @@ std::optional<FileDescriptorPair> FileDescriptorPair::createSocketPair(
         Alert(logger) << ge;
         return {};
     }
-    if (mode == Mode::nonblocking) {
-        if (::fcntl(fd[0], F_SETFL, O_NONBLOCK) == -1) {
-            generic_error ge{"cannot make socket non-blocking"};
-            Alert(logger) << ge;
-            ::close(fd[0]);
-            ::close(fd[1]);
-            return {};
-        }
+    // NOTE: Again, things are a bit tricky: The non-blocking flag is kept in
+    // the entries of the system-wide table of open files, so it is *shared*
+    // between different file descriptors pointing to the same open file.
+    // Nevertheless, socketpair() returns two file descriptors pointing to two
+    // *different* open files. Therefore, changing the non-blocking flag via a
+    // fcntl() on one of these file descriptors does *not* affect the
+    // non-blocking flag of the other one.
+    //
+    // The subprocesses we create always expect a standard blocking file, so we
+    // cannot use SOCK_NONBLOCK in the socketpair() call above: This would make
+    // *both* files non-blocking. We only want our own, local file to be
+    // non-blocking, so we have to use the separate fcntl() below.
+    if (mode == Mode::local_non_blocking &&
+        ::fcntl(fd[0], F_SETFL, O_NONBLOCK) == -1) {
+        generic_error ge{"cannot make socket non-blocking"};
+        Alert(logger) << ge;
+        ::close(fd[0]);
+        ::close(fd[1]);
+        return {};
     }
     return FileDescriptorPair{fd[0], fd[1]};
 }
@@ -64,14 +75,14 @@ std::optional<FileDescriptorPair> FileDescriptorPair::createPipePair(
         Alert(logger) << ge;
         return {};
     }
-    if (mode == FileDescriptorPair::Mode::nonblocking) {
-        if (::fcntl(fd[0], F_SETFL, O_NONBLOCK) == -1) {
-            generic_error ge{"cannot make pipe non-blocking"};
-            Alert(logger) << ge;
-            ::close(fd[0]);
-            ::close(fd[1]);
-            return {};
-        }
+    // NOTE: See the comment in createSocketPair().
+    if (mode == FileDescriptorPair::Mode::local_non_blocking &&
+        ::fcntl(fd[0], F_SETFL, O_NONBLOCK) == -1) {
+        generic_error ge{"cannot make pipe non-blocking"};
+        Alert(logger) << ge;
+        ::close(fd[0]);
+        ::close(fd[1]);
+        return {};
     }
     return FileDescriptorPair{fd[0], fd[1]};
 }

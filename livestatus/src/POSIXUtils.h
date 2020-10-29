@@ -20,8 +20,7 @@ class Logger;
 
 class FileDescriptorPair {
 public:
-    // ATTENTION: blocking is Alert, Notify, RRD, nonblocking - Check && Icmp
-    enum class Mode { blocking, nonblocking };
+    enum class Mode { blocking, local_non_blocking };
 
     static FileDescriptorPair invalid() { return FileDescriptorPair{-1, -1}; }
     static std::optional<FileDescriptorPair> createSocketPair(Mode mode,

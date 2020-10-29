@@ -6,6 +6,7 @@
 
 from typing import (
     Any,
+    Callable,
     Dict,
     Generator,
     List,
@@ -17,16 +18,17 @@ from typing import (
     Union,
 )
 import fnmatch
-from cmk.utils.render import fmt_number_with_precision  # pylint: disable=cmk-module-layer-violation
 from ..agent_based_api.v1.type_defs import CheckResult
 from ..agent_based_api.v1 import (
     check_levels,
     Metric,
     render,
     Result,
-    State as state,
+    State,
 )
 from .size_trend import size_trend
+
+state = State  # TODO: clean this up
 
 FILESYSTEM_DEFAULT_LEVELS = {
     "levels": (80.0, 90.0),  # warn/crit in percent
@@ -220,85 +222,87 @@ def mountpoints_in_group(mplist: Dict[str, Dict], patterns_include: List, patter
     return matching_mountpoints
 
 
+def _render_integer(number: float):
+    return render.filesize(number).strip(' B')
+
+
 def _check_inodes(
     levels: Dict[str, Any],
     inodes_total: Optional[float],
     inodes_avail: Optional[float],
 ) -> Generator[Union[Metric, Result], None, None]:
     """
-    >>> from pprint import pprint as pp
-    >>> levels={"inodes_levels":(10, 5),"show_inodes":"onproblem"}
-    >>> pp(list(_check_inodes(levels, 80, 60)))
-    [Result(state=<State.OK: 0>, summary='Inodes Used: 20.00 '),
-     Metric('inodes_used', 20.0, levels=(70.0, 75.0), boundaries=(0.0, 80.0))]
+    >>> levels = {
+    ...     "inodes_levels": (10, 5),
+    ...     "show_inodes": "onproblem",
+    ... }
+    >>> for r in _check_inodes(levels, 80, 60): print(r)
+    Result(state=<State.OK: 0>, summary='Inodes used: 20')
+    Metric('inodes_used', 20.0, levels=(70.0, 75.0), boundaries=(0.0, 80.0))
+    Result(state=<State.OK: 0>, summary='', details='Inodes available: 60 (75.0%)')
 
     >>> levels["show_inodes"] = "always"
-    >>> pp(list(_check_inodes(levels, 80, 20)))
-    [Result(state=<State.OK: 0>, summary='Inodes Used: 60.00 , inodes available: 20.00 /25.0%'),
-     Metric('inodes_used', 60.0, levels=(70.0, 75.0), boundaries=(0.0, 80.0))]
+    >>> for r in _check_inodes(levels, 80, 20): print(r)
+    Result(state=<State.OK: 0>, summary='Inodes used: 60')
+    Metric('inodes_used', 60.0, levels=(70.0, 75.0), boundaries=(0.0, 80.0))
+    Result(state=<State.OK: 0>, summary='Inodes available: 20 (25.0%)')
 
     >>> levels["show_inodes"]="onlow"
     >>> levels["inodes_levels"]= (40, 35)
-    >>> pp(list(_check_inodes(levels, 80, 20)))
-    [Result(state=<State.CRIT: 2>, summary='Inodes Used: 60.00  (warn/crit at 40.00 /45.00 ), \
-inodes available: 20.00 /25.0%'),
-     Metric('inodes_used', 60.0, levels=(40.0, 45.0), boundaries=(0.0, 80.0))]
+    >>> for r in _check_inodes(levels, 80, 20): print(r)
+    Result(state=<State.CRIT: 2>, summary='Inodes used: 60 (warn/crit at 40/45)')
+    Metric('inodes_used', 60.0, levels=(40.0, 45.0), boundaries=(0.0, 80.0))
+    Result(state=<State.OK: 0>, summary='Inodes available: 20 (25.0%)')
     """
     if not inodes_total or not inodes_avail:
         return
 
     inodes_warn_variant, inodes_crit_variant = levels["inodes_levels"]
 
+    inodes_abs: Optional[Tuple[float, float]] = None
+    human_readable_func: Callable[[Any], str] = _render_integer
     if isinstance(inodes_warn_variant, int):
         # Levels in absolute numbers
         inodes_abs = (
             inodes_total - inodes_warn_variant,
             inodes_total - inodes_crit_variant,
         )
-        human_readable_func = lambda x: fmt_number_with_precision(x)  # pylint: disable=unnecessary-lambda
     elif isinstance(inodes_warn_variant, float):
         # Levels in percent
         inodes_abs = (
             (100 - inodes_warn_variant) / 100.0 * inodes_total,
             (100 - inodes_crit_variant) / 100.0 * inodes_total,
         )
-        human_readable_func = lambda x: render.percent(100.0 * x / inodes_total
-                                                      )  # type: ignore[misc]
-    else:
-        inodes_abs = None  # type: ignore[assignment] # check_levels excepts levels as tuple or None
-        human_readable_func = fmt_number_with_precision
+        human_readable_func = lambda x: render.percent(100.0 * x / inodes_total)
 
-    inode_results = check_levels(
+    inode_result, inode_metric = check_levels(
         value=inodes_total - inodes_avail,
         levels_upper=inodes_abs,
         metric_name='inodes_used',
         render_func=human_readable_func,
         boundaries=(0, inodes_total),
-        label="Inodes Used",
+        label="Inodes used",
     )
+    yield inode_result
+    yield inode_metric
 
     # Only show inodes if they are at less then 50%
     show_inodes = levels["show_inodes"]
     inodes_avail_perc = 100.0 * inodes_avail / inodes_total
-    for inode_result in inode_results:
+    inodes_info = "Inodes available: %s (%s)" % (
+        _render_integer(inodes_avail),
+        render.percent(inodes_avail_perc),
+    )
 
-        # Modify yielded summary if it is a Result (and not a Metric, which has no summary)
-        if isinstance(inode_result, Result):
-            infotext = (
-                "%s, inodes available: %s/%s" % (
-                    inode_result.summary,
-                    fmt_number_with_precision(inodes_avail),
-                    render.percent(inodes_avail_perc),
-                )  #
-                if any((
-                    show_inodes == "always",
-                    show_inodes == "onlow" and
-                    (int(inode_result.state) > int(state.OK) or inodes_avail_perc < 50),
-                    show_inodes == "onproblem" and int(inode_result.state) > int(state.OK),
-                )) else inode_result.summary)
-            yield Result(state=inode_result.state, summary=infotext)
-        else:
-            yield inode_result
+    is_problem = inode_result.state != State.OK  # type: ignore[union-attr]
+    if any((
+            show_inodes == "always",
+            show_inodes == "onlow" and (is_problem or inodes_avail_perc < 50),
+            show_inodes == "onproblem" and is_problem,
+    )):
+        yield Result(state=state.OK, summary=inodes_info)
+    else:
+        yield Result(state=state.OK, notice=inodes_info)
 
 
 def df_check_filesystem_single(

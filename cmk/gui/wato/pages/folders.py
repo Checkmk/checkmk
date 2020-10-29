@@ -194,6 +194,17 @@ class ModeFolder(WatoMode):
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(
+                    name="hosts",
+                    title=_("Hosts"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("On selected hosts"),
+                            entries=list(self._page_menu_entries_selected_hosts()),
+                        ),
+                        make_checkbox_selection_topic(),
+                    ],
+                ),
+                PageMenuDropdown(
                     name="search",
                     title=_("Search"),
                     topics=[

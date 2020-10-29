@@ -1,0 +1,13 @@
+Title: Fix error when editing host configuration
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1603963418
+Edition: cme
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+When editing the CME configuration while having folders with explicit site
+configurations, an error like this occured in 2.0.0i1: "FileExistsError ((17,
+'File exists'))"

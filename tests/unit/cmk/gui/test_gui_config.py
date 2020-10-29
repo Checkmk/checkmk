@@ -7,6 +7,7 @@
 # pylint: disable=redefined-outer-name
 
 import json
+from pathlib import Path
 from flask_babel.speaklater import LazyString  # type: ignore[import]
 
 import pytest  # type: ignore[import]
@@ -1119,8 +1120,8 @@ MONITORING_USER_BUTTONCOUNTS = {
 MONITORING_USER_FAVORITES = ['heute;CPU load']
 
 
-@pytest.fixture
-def monitoring_user(tmp_path, mocker):
+@pytest.fixture(name="monitoring_user")
+def fixture_monitoring_user(tmp_path, mocker):
     """Returns a "Normal monitoring user" object."""
     config_dir = tmp_path / 'config_dir'
     user_dir = config_dir / 'test'
@@ -1184,6 +1185,13 @@ def test_monitoring_user(monitoring_user):
     timestamp = 1578479929
     monitoring_user.acknowledged_notifications = timestamp
     assert monitoring_user.acknowledged_notifications == timestamp
+
+
+def test_monitoring_user_read_broken_file(monitoring_user, tmp_path):
+    with Path(monitoring_user.confdir, "asd.mk").open("w") as f:
+        f.write("%#%#%")
+
+    assert monitoring_user.load_file("asd", deflt="xyz") == "xyz"
 
 
 def test_monitoring_user_permissions(mocker, monitoring_user):

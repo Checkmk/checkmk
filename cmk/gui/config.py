@@ -741,7 +741,14 @@ class LoggedInUser:
             return deflt
 
         path = self.confdir + "/" + name + ".mk"
-        return store.load_object_from_file(path, default=deflt, lock=lock)
+
+        # The user files we load with this function are mostly some kind of persisted states.  In
+        # case a file is corrupted for some reason we rather start over with the default instead of
+        # failing at some random places.
+        try:
+            return store.load_object_from_file(path, default=deflt, lock=lock)
+        except (ValueError, SyntaxError):
+            return deflt
 
     def save_file(self, name: str, content: Any) -> None:
         save_user_file(name, content, self.id)

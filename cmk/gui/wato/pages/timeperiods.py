@@ -50,6 +50,7 @@ from cmk.gui.page_menu import (
 
 from cmk.gui.plugins.wato import (
     WatoMode,
+    ActionResult,
     wato_confirm,
     mode_registry,
     make_action_link,
@@ -115,7 +116,7 @@ class ModeTimeperiods(WatoMode):
             breadcrumb=breadcrumb,
         )
 
-    def action(self):
+    def action(self) -> ActionResult:
         delname = html.request.var("_delete")
         if delname and html.transaction_valid():
             if delname in watolib.timeperiods.builtin_timeperiods():
@@ -141,6 +142,7 @@ class ModeTimeperiods(WatoMode):
                 watolib.add_change("edit-timeperiods", _("Deleted timeperiod %s") % delname)
             elif c is False:
                 return ""
+        return None
 
     # Check if a timeperiod is currently in use and cannot be deleted
     # Returns a list of two element tuples (title, url) that refer to the single occurrances.
@@ -404,9 +406,9 @@ class ModeTimeperiodImportICal(WatoMode):
         if not content.startswith('END:VCALENDAR'):
             raise MKUserError(varprefix, _('The file does not seem to be a valid iCalendar file.'))
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.check_transaction():
-            return
+            return None
 
         vs_ical = self._vs_ical()
         ical = vs_ical.from_html_vars("ical")
@@ -796,9 +798,9 @@ class ModeEditTimeperiod(WatoMode):
 
         return False
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.check_transaction():
-            return
+            return None
 
         vs = self._valuespec()  # returns a Dictionary object
         vs_spec = vs.from_html_vars("timeperiod")

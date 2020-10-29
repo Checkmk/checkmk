@@ -26,6 +26,7 @@ from cmk.gui.plugins.wato import (
     ABCMainModule,
     MainModuleTopicMaintenance,
     WatoMode,
+    ActionResult,
     mode_registry,
 )
 
@@ -92,9 +93,11 @@ class ModeBackgroundJobsOverview(WatoMode):
                 for c in gui_background_job.job_registry.values()):
             html.immediate_browser_redirect(0.8, "")
 
-    def action(self):
+    # Mypy requires the explicit return, pylint does not like it.
+    def action(self) -> ActionResult:  # pylint: disable=useless-return
         action_handler = gui_background_job.ActionHandler(self.breadcrumb())
         action_handler.handle_actions()
+        return None
 
 
 @mode_registry.register
@@ -167,10 +170,11 @@ class ModeBackgroundJobDetails(WatoMode):
         if job_snapshot.is_active():
             html.immediate_browser_redirect(1, "")
 
-    def action(self):
+    def action(self) -> ActionResult:
         action_handler = gui_background_job.ActionHandler(self.breadcrumb())
         action_handler.handle_actions()
         if action_handler.did_delete_job():
             if self._back_url():
                 raise HTTPRedirect(self._back_url())
             return "background_jobs_overview"
+        return None

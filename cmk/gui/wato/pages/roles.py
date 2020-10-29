@@ -53,6 +53,7 @@ from cmk.gui.permissions import (
 
 from cmk.gui.plugins.wato import (
     WatoMode,
+    ActionResult,
     mode_registry,
     wato_confirm,
     make_action_link,
@@ -131,7 +132,7 @@ class ModeRoles(RoleManagement, WatoMode):
         )
         return menu
 
-    def action(self):
+    def action(self) -> ActionResult:
         if html.request.var("_delete"):
             delid = html.request.get_ascii_input_mandatory("_delete")
 
@@ -190,6 +191,7 @@ class ModeRoles(RoleManagement, WatoMode):
                 watolib.add_change("edit-roles",
                                    _("Created new role '%s'") % newid,
                                    sites=config.get_login_sites())
+        return None
 
     def page(self):
         with table_element("roles") as table:
@@ -295,9 +297,9 @@ class ModeEditRole(RoleManagement, WatoMode):
                 )],
             ))
 
-    def action(self):
+    def action(self) -> ActionResult:
         if html.form_submitted("search"):
-            return
+            return None
 
         alias = html.request.get_unicode_input("alias")
 

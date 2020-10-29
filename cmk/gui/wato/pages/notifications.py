@@ -60,7 +60,7 @@ from cmk.gui.watolib.notifications import (
     load_notification_rules,
     load_user_notification_rules,
 )
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult
 from cmk.gui.wato.pages.users import ModeEditUser
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.breadcrumb import Breadcrumb
@@ -509,7 +509,7 @@ class ModeNotifications(ABCNotificationsMode):
                 ],
             ))
 
-    def action(self):
+    def action(self) -> ActionResult:
         if html.request.has_var("_show_user"):
             if html.check_transaction():
                 self._show_user_rules = bool(html.request.var("_show_user"))
@@ -534,6 +534,7 @@ class ModeNotifications(ABCNotificationsMode):
         else:
             return self._generic_rule_list_actions(self._get_notification_rules(), "notification",
                                                    _("notification rule"), save_notification_rules)
+        return None
 
     def _get_notification_rules(self):
         return load_notification_rules()
@@ -796,7 +797,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
     def title(self):
         return _("Custom notification table for user %s") % self._user_id()
 
-    def action(self):
+    def action(self) -> ActionResult:
         if html.request.has_var("_delete"):
             nr = html.request.get_integer_input_mandatory("_delete")
             rule = self._rules[nr]
@@ -814,7 +815,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
             elif c is False:
                 return ""
             else:
-                return
+                return None
 
         elif html.request.has_var("_move"):
             if html.check_transaction():
@@ -829,6 +830,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
                     "notification-move-user-rule",
                     _("Changed position of notification rule %d of user %s") %
                     (from_pos, self._user_id()))
+        return None
 
     def page(self):
         if self._start_async_repl:
@@ -1353,7 +1355,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(breadcrumb, form_name="rule", button_name="save")
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.check_transaction():
             return self._back_mode()
 

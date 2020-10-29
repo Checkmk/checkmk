@@ -107,6 +107,7 @@ from cmk.gui.plugins.wato.utils import (
     ConfigVariable,
     ConfigDomainGUI,
     WatoMode,
+    ActionResult,
     mode_registry,
     SNMPCredentials,
     HostnameTranslation,
@@ -1079,7 +1080,7 @@ class ABCEventConsoleMode(WatoMode, metaclass=abc.ABCMeta):
             return self._vs_mkeventd_event().from_html_vars("event")
         return None
 
-    def _event_simulation_action(self):
+    def _event_simulation_action(self) -> ActionResult:
         # Validation of input for rule simulation (no further action here)
         if html.request.var("simulate") or html.request.var("_generate"):
             vs = self._vs_mkeventd_event()
@@ -1097,6 +1098,7 @@ class ABCEventConsoleMode(WatoMode, metaclass=abc.ABCMeta):
                           + html.render_br() \
                           + html.render_pre(rfc) \
                           + html.render_reload_sidebar()
+        return None
 
     def _add_change(self, what, message):
         add_change(what,
@@ -1271,7 +1273,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 ],
             ))
 
-    def action(self):
+    def action(self) -> ActionResult:
         action_outcome = self._event_simulation_action()
         if action_outcome:
             return action_outcome
@@ -1384,6 +1386,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
         # Update data strcuture after actions
         self._rule_packs = load_mkeventd_rules()
+        return None
 
     def _copy_rules_from_master(self):
         answer = cmk.gui.mkeventd.query_ec_directly("REPLICATE 0")
@@ -1694,7 +1697,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 ],
             ))
 
-    def action(self):
+    def action(self) -> ActionResult:
         id_to_mkp = self._get_rule_pack_to_mkp_map()
         type_ = ec.RulePackType.type_of(self._rule_pack, id_to_mkp)
 
@@ -1725,8 +1728,8 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         self._add_change(
                             "move-rule-to-pack",
                             _("Moved rule %s to pack %s") % (rule["id"], other_pack["id"]))
-                        return None, html.render_text(
-                            _("Moved rule %s to pack %s") % (rule["id"], other_pack["title"]))
+                        return None, _("Moved rule %s to pack %s") % (rule["id"],
+                                                                      other_pack["title"])
 
         action_outcome = self._event_simulation_action()
         if action_outcome:
@@ -1754,7 +1757,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             elif c is False:
                 return ""
             else:
-                return
+                return None
 
         if html.check_transaction():
             if html.request.has_var("_move"):
@@ -1775,6 +1778,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 save_mkeventd_rules(self._rule_packs)
 
                 self._add_change("move-rule", _("Changed position of rule %s") % rule["id"])
+        return None
 
     def page(self):
         self._verify_ec_enabled()
@@ -2018,7 +2022,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
             ))
         return menu
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.check_transaction():
             return "mkeventd_rule_packs"
 
@@ -2149,7 +2153,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
             ))
         return menu
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.check_transaction():
             return "mkeventd_rules"
 
@@ -2287,9 +2291,9 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
             breadcrumb=breadcrumb,
         )
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not config.user.may("mkeventd.switchmode"):
-            return
+            return None
 
         if html.request.has_var("_switch_sync"):
             new_mode = "sync"
@@ -2304,7 +2308,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
             return None, _("Switched to %s mode") % new_mode
         if c is False:
             return ""
-        return
+        return None
 
     def page(self):
         self._verify_ec_enabled()
@@ -2429,11 +2433,11 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
         )
 
     # TODO: Consolidate with ModeEditGlobals.action()
-    def action(self):
+    def action(self) -> ActionResult:
         varname = html.request.var("_varname")
         action = html.request.var("_action")
         if not varname:
-            return
+            return None
 
         try:
             config_variable = config_variable_registry[varname]()
@@ -2450,7 +2454,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
                 (varname, config_variable.valuespec().value_to_text(def_value)))
         else:
             if not html.check_transaction():
-                return
+                return None
             c = True  # no confirmation for direct toggle
 
         if c:
@@ -2470,6 +2474,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
             return "mkeventd_config"
         if c is False:
             return ""
+        return None
 
     def _edit_mode(self):
         return "mkeventd_edit_configvar"
@@ -2594,7 +2599,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
             breadcrumb=breadcrumb,
         )
 
-    def action(self):
+    def action(self) -> ActionResult:
         if html.request.has_var("_delete"):
             filename = html.request.var("_delete")
             mibs = self._load_snmp_mibs(cmk.gui.mkeventd.mib_upload_dir())
@@ -2607,9 +2612,10 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                 elif c is False:
                     return ""
                 else:
-                    return
+                    return None
         elif html.request.var("_bulk_delete_custom_mibs"):
             return self._bulk_delete_custom_mibs_after_confirm()
+        return None
 
     def _bulk_delete_custom_mibs_after_confirm(self):
         custom_mibs = self._load_snmp_mibs(cmk.gui.mkeventd.mib_upload_dir())
@@ -2770,9 +2776,9 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
             ))
         return menu
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.request.uploaded_file("_upload_mib"):
-            return
+            return None
 
         uploaded_mib = html.request.uploaded_file("_upload_mib")
         filename, mimetype, content = uploaded_mib
@@ -2784,6 +2790,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
                 if config.debug:
                     raise
                 raise MKUserError("_upload_mib", "%s" % e)
+        return None
 
     def _upload_mib(self, filename, mimetype, content):
         self._validate_mib_file_name(filename)

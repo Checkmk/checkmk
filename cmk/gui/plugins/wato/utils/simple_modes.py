@@ -14,7 +14,7 @@ b) A edit mode which can be used to create and edit an object.
 
 import abc
 import copy
-from typing import Optional, List, Type, Union, Tuple, Dict
+from typing import Optional, List, Type, Dict
 
 from cmk.gui.table import table_element, Table
 import cmk.gui.watolib as watolib
@@ -22,7 +22,7 @@ import cmk.gui.forms as forms
 from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult
 from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 from cmk.gui.valuespec import (
@@ -142,7 +142,7 @@ class SimpleListMode(SimpleWatoModeBase):
         """Shows the HTML code for the cells of an object row"""
         raise NotImplementedError()
 
-    def _handle_custom_action(self, action: str) -> Union[None, bool, Tuple[Optional[str], str]]:
+    def _handle_custom_action(self, action: str) -> ActionResult:
         """Gives the mode the option to implement custom actions
 
         This function is called when the action phase is triggered. The action name is given
@@ -186,13 +186,13 @@ class SimpleListMode(SimpleWatoModeBase):
     def _new_button_label(self) -> str:
         return _("Add %s") % self._mode_type.name_singular()
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.transaction_valid():
-            return
+            return None
 
         action_var = html.request.get_str_input("_action")
         if action_var is None:
-            return
+            return None
 
         if action_var != "delete":
             return self._handle_custom_action(action_var)
@@ -201,7 +201,7 @@ class SimpleListMode(SimpleWatoModeBase):
         if confirm is False:
             return False
         if not confirm:
-            return
+            return None
         html.check_transaction()  # invalidate transid
 
         entries = self._store.load_for_modification()
@@ -396,7 +396,7 @@ class SimpleEditMode(SimpleWatoModeBase, metaclass=abc.ABCMeta):
     def _vs_optional_keys(self):
         return []
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.transaction_valid():
             return self._mode_type.list_mode_name()
 

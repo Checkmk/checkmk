@@ -22,7 +22,7 @@ from cmk.gui.plugins.watolib.utils import (
     ABCConfigDomain,
 )
 from cmk.gui.plugins.wato.utils import mode_registry, get_search_expression
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult
 from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
 
 from cmk.gui.i18n import _
@@ -234,7 +234,7 @@ class ABCEditGlobalSettingMode(WatoMode):
 
         return menu
 
-    def action(self):
+    def action(self) -> ActionResult:
         if html.request.var("_reset"):
             if not is_a_checkbox(self._valuespec):
                 c = wato_confirm(
@@ -246,7 +246,7 @@ class ABCEditGlobalSettingMode(WatoMode):
                 if c is None:
                     return None
             elif not html.check_transaction():
-                return
+                return None
 
             try:
                 del self._current_settings[self._varname]
@@ -424,10 +424,10 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
             item=PageMenuSearch(),
         )
 
-    def action(self):
+    def action(self) -> ActionResult:
         varname = html.request.var("_varname")
         if not varname:
-            return
+            return None
 
         action = html.request.var("_action")
 
@@ -442,7 +442,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
                 (varname, config_variable.valuespec().value_to_text(def_value)))
         else:
             if not html.check_transaction():
-                return
+                return None
             c = True  # no confirmation for direct toggle
 
         if c:
@@ -464,6 +464,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
             return "globalvars"
         if c is False:
             return ""
+        return None
 
     def page(self):
         self._show_configuration_variables(self._groups())

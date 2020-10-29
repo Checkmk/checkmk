@@ -52,7 +52,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
 from cmk.gui.plugins.watolib.utils import config_variable_registry
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head, wato_confirm
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
@@ -182,7 +182,7 @@ class ModeEditSite(WatoMode):
                 1, _page_menu_dropdown_site_details(self._site_id, self._site, self.name()))
         return menu
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.check_transaction():
             return "sites"
 
@@ -499,7 +499,7 @@ class ModeDistributedMonitoring(WatoMode):
             breadcrumb=breadcrumb,
         )
 
-    def action(self):
+    def action(self) -> ActionResult:
         delete_id = html.request.get_ascii_input("_delete")
         if delete_id and html.transaction_valid():
             self._action_delete(delete_id)
@@ -511,6 +511,7 @@ class ModeDistributedMonitoring(WatoMode):
         login_id = html.request.get_ascii_input("_login")
         if login_id:
             return self._action_login(login_id)
+        return None
 
     def _action_delete(self, delete_id):
         # TODO: Can we delete this ancient code? The site attribute is always available
@@ -556,7 +557,7 @@ class ModeDistributedMonitoring(WatoMode):
 
         return None
 
-    def _action_logout(self, logout_id):
+    def _action_logout(self, logout_id: str) -> ActionResult:
         configured_sites = self._site_mgmt.load_sites()
         site = configured_sites[logout_id]
         c = wato_confirm(
@@ -577,13 +578,13 @@ class ModeDistributedMonitoring(WatoMode):
 
         return None
 
-    def _action_login(self, login_id):
+    def _action_login(self, login_id: str) -> ActionResult:
         configured_sites = self._site_mgmt.load_sites()
         if html.request.get_ascii_input("_abort"):
             return "sites"
 
         if not html.check_transaction():
-            return
+            return None
 
         site = configured_sites[login_id]
         error = None
@@ -977,11 +978,11 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         )
 
     # TODO: Consolidate with ModeEditGlobals.action()
-    def action(self):
+    def action(self) -> ActionResult:
         varname = html.request.get_ascii_input("_varname")
         action = html.request.get_ascii_input("_action")
         if not varname:
-            return
+            return None
 
         config_variable = config_variable_registry[varname]()
         def_value = self._global_settings.get(varname, self._default_values[varname])
@@ -996,7 +997,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
 
         else:
             if not html.check_transaction():
-                return
+                return None
             # No confirmation for direct toggle
             c = True
 
@@ -1152,13 +1153,13 @@ class ModeSiteLivestatusEncryption(WatoMode):
             breadcrumb=breadcrumb,
         )
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.check_transaction():
-            return
+            return None
 
         action = html.request.get_ascii_input_mandatory("_action")
         if action != "trust":
-            return
+            return None
 
         digest_sha256 = html.request.get_ascii_input("_digest")
 
@@ -1167,7 +1168,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         except Exception as e:
             logger.exception("Failed to fetch peer certificate")
             html.show_error(_("Failed to fetch peer certificate (%s)") % e)
-            return
+            return None
 
         cert_pem = None
         for cert_detail in cert_details:

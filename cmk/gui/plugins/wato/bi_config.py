@@ -48,6 +48,7 @@ from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.plugins.wato import (
     WatoMode,
+    ActionResult,
     mode_registry,
     ContactGroupSelection,
     MainMenu,
@@ -263,7 +264,7 @@ class ModeBIEditPack(ABCBIMode):
             return super().title() + " - " + _("Edit BI Pack %s") % self.bi_pack.title
         return super().title() + " - " + _("Add BI Pack")
 
-    def action(self):
+    def action(self) -> ActionResult:
         if html.check_transaction():
             vs_config = self._vs_pack().from_html_vars("bi_pack")
             self._vs_pack().validate_value(vs_config, 'bi_pack')
@@ -442,9 +443,9 @@ class ModeBIPacks(ABCBIMode):
             breadcrumb=breadcrumb,
         )
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.request.has_var("_delete"):
-            return
+            return None
 
         config.user.need_permission("wato.bi_admin")
 
@@ -467,6 +468,7 @@ class ModeBIPacks(ABCBIMode):
             self._bi_packs.save_config()
         elif c is False:
             return ""
+        return None
 
     def page(self):
         with table_element(title=_("BI Configuration Packs")) as table:
@@ -640,7 +642,7 @@ class ModeBIRules(ABCBIMode):
             breadcrumb=breadcrumb,
         )
 
-    def action(self):
+    def action(self) -> ActionResult:
         self.verify_pack_permission(self.bi_pack)
 
         if html.request.var("_del_rule"):
@@ -651,8 +653,9 @@ class ModeBIRules(ABCBIMode):
 
         if html.request.var("_bulk_move_bi_rules"):
             return self._bulk_move_after_confirm()
+        return None
 
-    def _delete_after_confirm(self):
+    def _delete_after_confirm(self) -> ActionResult:
         rule_id = html.request.get_str_input_mandatory("_del_rule")
         self._check_delete_rule_id_permission(rule_id)
         c = wato_confirm(
@@ -665,8 +668,9 @@ class ModeBIRules(ABCBIMode):
             self._bi_packs.save_config()
         elif c is False:  # not yet confirmed
             return ""
+        return None
 
-    def _bulk_delete_after_confirm(self):
+    def _bulk_delete_after_confirm(self) -> ActionResult:
         selection = self._get_selection("rule")
         for rule_id in selection:
             self._check_delete_rule_id_permission(rule_id)
@@ -682,6 +686,8 @@ class ModeBIRules(ABCBIMode):
                 self._bi_packs.save_config()
             elif c is False:
                 return ""
+            return None
+        return None
 
     def _check_delete_rule_id_permission(self, rule_id):
         aggr_refs, rule_refs, _level = self._bi_packs.count_rule_references(rule_id)
@@ -692,7 +698,7 @@ class ModeBIRules(ABCBIMode):
             raise MKUserError(None,
                               _("You cannot delete this rule: it is still used by other rules."))
 
-    def _bulk_move_after_confirm(self):
+    def _bulk_move_after_confirm(self) -> ActionResult:
         target_pack_id = None
         if html.request.has_var('bulk_moveto'):
             target_pack_id = html.request.get_str_input_mandatory('bulk_moveto', '')
@@ -724,6 +730,7 @@ class ModeBIRules(ABCBIMode):
                 self._bi_packs.save_config()
             elif c is False:
                 return ""
+        return None
 
     def page(self):
         self.verify_pack_permission(self.bi_pack)
@@ -957,7 +964,7 @@ class ModeBIEditRule(ABCBIMode):
                                           save_is_enabled=bi_valuespecs.is_contact_for_pack(
                                               self.bi_pack))
 
-    def action(self):
+    def action(self) -> ActionResult:
         self.verify_pack_permission(self.bi_pack)
         vs_rule = self.valuespec()
         vs_rule_config = vs_rule.from_html_vars('rule')
@@ -1457,7 +1464,7 @@ class BIModeEditAggregation(ABCBIMode):
                 ids[bi_aggregation.id] = (bi_pack, bi_aggregation)
         return ids
 
-    def action(self):
+    def action(self) -> ActionResult:
         self.verify_pack_permission(self.bi_pack)
         if not html.check_transaction():
             return "bi_aggregations"
@@ -1681,7 +1688,7 @@ class BIModeAggregations(ABCBIMode):
     def have_rules(self):
         return sum(x.num_rules() for x in self._bi_packs.get_packs().values()) > 0
 
-    def action(self):
+    def action(self) -> ActionResult:
         self.verify_pack_permission(self.bi_pack)
 
         if html.request.var("_del_aggr"):
@@ -1692,8 +1699,9 @@ class BIModeAggregations(ABCBIMode):
 
         if html.request.var("_bulk_move_bi_aggregations"):
             return self._bulk_move_after_confirm()
+        return None
 
-    def _delete_after_confirm(self):
+    def _delete_after_confirm(self) -> ActionResult:
         aggregation_id = html.request.get_str_input_mandatory("_del_aggr")
         c = wato_confirm(
             _("Confirm aggregation deletion"),
@@ -1705,8 +1713,9 @@ class BIModeAggregations(ABCBIMode):
             self._bi_packs.save_config()
         elif c is False:  # not yet confirmed
             return ""
+        return None
 
-    def _bulk_delete_after_confirm(self):
+    def _bulk_delete_after_confirm(self) -> ActionResult:
         selection = sorted(map(str, self._get_selection("aggregation")))
         if selection:
             c = wato_confirm(
@@ -1721,8 +1730,9 @@ class BIModeAggregations(ABCBIMode):
 
             elif c is False:
                 return ""
+        return None
 
-    def _bulk_move_after_confirm(self):
+    def _bulk_move_after_confirm(self) -> ActionResult:
         target = None
         if html.request.has_var('bulk_moveto'):
             target = html.request.var('bulk_moveto', '')
@@ -1751,6 +1761,7 @@ class BIModeAggregations(ABCBIMode):
                 self._bi_packs.save_config()
             elif c is False:
                 return ""
+        return None
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         aggr_entries = []

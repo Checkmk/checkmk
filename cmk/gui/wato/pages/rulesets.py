@@ -69,6 +69,7 @@ from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
 from cmk.gui.plugins.wato import (
     WatoMode,
+    ActionResult,
     mode_registry,
     wato_confirm,
     make_action_link,
@@ -768,7 +769,7 @@ class ModeEditRuleset(WatoMode):
                 is_suggested=True,
             )
 
-    def action(self):
+    def action(self) -> ActionResult:
         rule_folder = watolib.Folder.folder(html.request.var("_folder", html.request.var("folder")))
         rule_folder.need_permission("write")
         rulesets = watolib.FolderRulesets(rule_folder)
@@ -793,7 +794,7 @@ class ModeEditRuleset(WatoMode):
             if c:
                 ruleset.delete_rule(rule)
                 rulesets.save()
-                return
+                return None
             if c is False:  # not yet confirmed
                 return ""
             return None  # browser reload
@@ -812,6 +813,7 @@ class ModeEditRuleset(WatoMode):
         else:
             ruleset.move_rule_to_bottom(rule)
         rulesets.save()
+        return None
 
     def page(self):
         if not config.wato_hide_varnames:
@@ -1413,7 +1415,7 @@ class ABCEditRuleMode(WatoMode):
             html.request.set_var("group", self._ruleset.rulespec.main_group_name)
             return super().breadcrumb()
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.check_transaction():
             return self._back_mode
 

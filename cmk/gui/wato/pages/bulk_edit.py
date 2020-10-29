@@ -27,7 +27,7 @@ from cmk.gui.plugins.wato.utils import (
     get_hostnames_from_checkboxes,
     get_hosts_from_checkboxes,
 )
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult
 from cmk.gui.watolib.host_attributes import host_attribute_registry
 
 
@@ -55,9 +55,9 @@ class ModeBulkEdit(WatoMode):
             button_name="_save",
         )
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.check_transaction():
-            return
+            return None
 
         config.user.need_permission("wato.edit_hosts")
 
@@ -134,9 +134,9 @@ class ModeBulkCleanup(WatoMode):
             save_is_enabled=bool(self._get_attributes_for_bulk_cleanup(hosts)),
         )
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.check_transaction():
-            return
+            return None
 
         config.user.need_permission("wato.edit_hosts")
         to_clean = self._bulk_collect_cleaned_attributes()

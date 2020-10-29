@@ -1349,7 +1349,7 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
     def _add_change(self, log_what, log_text):
         raise NotImplementedError()
 
-    def _generic_rule_list_actions(self, rules, what, what_title, save_rules):
+    def _generic_rule_list_actions(self, rules, what, what_title, save_rules) -> ActionResult:
         if html.request.has_var("_delete"):
             nr = html.request.get_integer_input_mandatory("_delete")
             rule = rules[nr]
@@ -1364,7 +1364,7 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
             elif c is False:
                 return ""
             else:
-                return
+                return None
 
         elif html.request.has_var("_move"):
             if html.check_transaction():
@@ -1376,6 +1376,7 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
                 save_rules(rules)
                 self._add_change(what + "-move-rule",
                                  _("Changed position of %s %d") % (what_title, from_pos))
+        return None
 
 
 def sort_sites(sites: SiteConfigurations) -> List[_Tuple[SiteId, SiteConfiguration]]:

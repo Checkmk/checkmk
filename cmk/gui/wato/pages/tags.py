@@ -67,6 +67,7 @@ from cmk.gui.plugins.wato.utils.html_elements import (
 
 from cmk.gui.plugins.wato import (
     WatoMode,
+    ActionResult,
     mode_registry,
     wato_confirm,
     make_action_link,
@@ -164,7 +165,7 @@ class ModeTags(ABCTagMode):
             breadcrumb=breadcrumb,
         )
 
-    def action(self):
+    def action(self) -> ActionResult:
         if html.request.has_var("_delete"):
             return self._delete_tag_group()
 
@@ -173,8 +174,9 @@ class ModeTags(ABCTagMode):
 
         if html.request.var("_move") and html.check_transaction():
             return self._move_tag_group()
+        return None
 
-    def _delete_tag_group(self):
+    def _delete_tag_group(self) -> ActionResult:
         del_id = html.get_item_input("_delete", dict(self._tag_config.get_tag_group_choices()))[1]
 
         if not html.request.has_var("_repair") and self._is_cleaning_up_user_tag_group_to_builtin(
@@ -201,7 +203,8 @@ class ModeTags(ABCTagMode):
                 raise MKUserError(None, "%s" % e)
             self._save_tags_and_update_hosts(self._tag_config.get_dict_format())
             add_change("edit-tags", _("Removed tag group %s (%s)") % (message, del_id))
-            return "tags", message is not True and message or None
+            return "tags", message if isinstance(message, str) else None
+        return None
 
     def _is_cleaning_up_user_tag_group_to_builtin(self, del_id):
         """The "Agent type" tag group was user defined in previous versions
@@ -228,7 +231,7 @@ class ModeTags(ABCTagMode):
         # simply allow removal without confirm
         return builtin_tg.get_tag_ids() == user_tg.get_tag_ids()
 
-    def _delete_aux_tag(self):
+    def _delete_aux_tag(self) -> ActionResult:
         del_id = html.get_item_input("_del_aux",
                                      dict(self._tag_config.aux_tag_list.get_choices()))[1]
 
@@ -259,9 +262,11 @@ class ModeTags(ABCTagMode):
                 raise MKUserError(None, "%s" % e)
             self._save_tags_and_update_hosts(self._tag_config.get_dict_format())
             add_change("edit-tags", _("Removed auxiliary tag %s (%s)") % (message, del_id))
-            return "tags", message if message is not True else None
+            return "tags", message if isinstance(message, str) else None
+        return None
 
-    def _move_tag_group(self):
+    # Mypy wants the explicit return, pylint does not like it.
+    def _move_tag_group(self) -> ActionResult:  # pylint: disable=useless-return
         move_nr = html.request.get_integer_input_mandatory("_move")
         move_to = html.request.get_integer_input_mandatory("_index")
 
@@ -275,6 +280,7 @@ class ModeTags(ABCTagMode):
         self._tag_config_file.save(self._tag_config.get_dict_format())
         self._load_effective_config()
         watolib.add_change("edit-tags", _("Changed order of tag groups"))
+        return None
 
     def page(self):
         if not self._tag_config.tag_groups + self._tag_config.get_aux_tags():
@@ -599,7 +605,7 @@ class ModeEditAuxtag(ABCEditTagMode):
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(breadcrumb, form_name="aux_tag", button_name="save")
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.check_transaction():
             return "tags"
 
@@ -676,7 +682,7 @@ class ModeEditTagGroup(ABCEditTagMode):
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(breadcrumb, form_name="tag_group", button_name="save")
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.check_transaction():
             return "tags"
 
@@ -720,7 +726,7 @@ class ModeEditTagGroup(ABCEditTagMode):
         if message:
             self._save_tags_and_update_hosts(changed_hosttags_config.get_dict_format())
             add_change("edit-hosttags", _("Edited host tag group %s (%s)") % (message, self._id))
-            return "tags", message is not True and message or None
+            return "tags", message if isinstance(message, str) else None
 
         return "tags"
 

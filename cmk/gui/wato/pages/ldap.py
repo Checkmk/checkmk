@@ -37,6 +37,7 @@ from cmk.gui.page_menu import (
 
 from cmk.gui.plugins.wato import (
     WatoMode,
+    ActionResult,
     mode_registry,
     add_change,
     make_action_link,
@@ -121,7 +122,7 @@ class ModeLDAPConfig(LDAPMode):
                 )),
         )
 
-    def action(self):
+    def action(self) -> ActionResult:
         connections = load_connection_config(lock=True)
         if html.request.has_var("_delete"):
             index = html.request.get_integer_input_mandatory("_delete")
@@ -138,11 +139,11 @@ class ModeLDAPConfig(LDAPMode):
             elif c is False:
                 return ""
             else:
-                return
+                return None
 
         elif html.request.has_var("_move"):
             if not html.check_transaction():
-                return
+                return None
 
             from_pos = html.request.get_integer_input_mandatory("_move")
             to_pos = html.request.get_integer_input_mandatory("_index")
@@ -153,6 +154,7 @@ class ModeLDAPConfig(LDAPMode):
             del connections[from_pos]  # make to_pos now match!
             connections[to_pos:to_pos] = [connection]
             save_connection_config(connections)
+        return None
 
     def page(self):
         with table_element() as table:
@@ -256,9 +258,9 @@ class ModeEditLDAPConnection(LDAPMode):
 
         return menu
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.check_transaction():
-            return
+            return None
 
         vs = self._valuespec()
         self._connection_cfg = vs.from_html_vars("connection")
@@ -289,6 +291,7 @@ class ModeEditLDAPConnection(LDAPMode):
             return "ldap_config"
         # Fix the case where a user hit "Save & Test" during creation
         html.request.set_var('id', self._connection_id)
+        return None
 
     def page(self):
         html.open_div(id_="ldap")

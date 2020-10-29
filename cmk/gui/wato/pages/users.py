@@ -57,6 +57,7 @@ from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 
 from cmk.gui.plugins.wato import (
     WatoMode,
+    ActionResult,
     mode_registry,
     wato_confirm,
     make_action_link,
@@ -169,7 +170,7 @@ class ModeUsers(WatoMode):
             item=make_simple_link(watolib.folder_preserving_link([("mode", "ldap_config")])),
         )
 
-    def action(self):
+    def action(self) -> ActionResult:
         if html.request.var('_delete'):
             delid = html.request.get_unicode_input("_delete")
             c = wato_confirm(
@@ -210,8 +211,9 @@ class ModeUsers(WatoMode):
             if action_handler.did_acknowledge_job():
                 self._job_snapshot = userdb.UserSyncBackgroundJob().get_status_snapshot()
                 return None, _("Synchronization job acknowledged")
+        return None
 
-    def _bulk_delete_users_after_confirm(self):
+    def _bulk_delete_users_after_confirm(self) -> ActionResult:
         selected_users = []
         users = userdb.load_users()
         for varname, _value in html.request.itervars(prefix="_c_user_"):
@@ -229,6 +231,7 @@ class ModeUsers(WatoMode):
                 delete_users(selected_users)
             elif c is False:
                 return ""
+        return None
 
     def page(self):
         if not self._job_snapshot.exists():
@@ -574,7 +577,7 @@ class ModeEditUser(WatoMode):
                                                     ("user", self._user_id)])),
             )
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.check_transaction():
             return "users"
 

@@ -32,6 +32,7 @@ from cmk.gui.valuespec import (
 
 from cmk.gui.plugins.wato import (
     WatoMode,
+    ActionResult,
     mode_registry,
 )
 
@@ -60,7 +61,7 @@ class ModeManageReadOnly(WatoMode):
             button_name="_save",
         )
 
-    def action(self):
+    def action(self) -> ActionResult:
         settings = self._vs().from_html_vars("_read_only")
         self._vs().validate_value(settings, "_read_only")
         self._settings = settings

@@ -21,6 +21,7 @@ from cmk.gui.page_menu import PageMenu, make_simple_form_page_menu
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.plugins.wato import (
     WatoMode,
+    ActionResult,
     mode_registry,
 )
 
@@ -50,7 +51,7 @@ class ModeRandomHosts(WatoMode):
             save_title=_("Start!"),
         )
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.check_transaction():
             return "folder"
 

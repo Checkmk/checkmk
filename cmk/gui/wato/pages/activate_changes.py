@@ -21,7 +21,7 @@ import cmk.gui.forms as forms
 import cmk.utils.render as render
 
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult
 from cmk.gui.watolib.changes import activation_sites
 import cmk.gui.watolib.snapshots
 import cmk.gui.watolib.changes
@@ -163,18 +163,18 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
         return True
 
-    def action(self):
+    def action(self) -> ActionResult:
         if html.request.var("_action") != "discard":
-            return
+            return None
 
         if not html.check_transaction():
-            return
+            return None
 
         if not self._may_discard_changes():
-            return
+            return None
 
         if not self.has_changes():
-            return
+            return None
 
         # Now remove all currently pending changes by simply restoring the last automatically
         # taken snapshot. Then activate the configuration. This should revert all pending changes.

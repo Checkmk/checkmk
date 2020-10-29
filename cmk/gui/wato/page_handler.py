@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import inspect
-from typing import List, Tuple, Type, Optional
+from typing import List, Tuple, Type, Union
 
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
@@ -17,6 +17,7 @@ from cmk.gui.display_options import display_options
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError
+from cmk.gui.utils.html import HTML
 from cmk.gui.plugins.wato.utils.html_elements import (
     wato_html_head,
     wato_html_footer,
@@ -111,7 +112,7 @@ def _wato_page_handler(current_mode: str, mode_permissions: List[PermissionName]
     mode = mode_class()
 
     # Do actions (might switch mode)
-    action_message: Optional[str] = None
+    action_message: Union[None, str, HTML] = None
     if html.is_transaction():
         try:
             config.user.need_permission("wato.edit")

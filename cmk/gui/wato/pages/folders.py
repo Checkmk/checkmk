@@ -29,7 +29,7 @@ from cmk.gui.plugins.wato.utils import (
     configure_attributes,
     get_hostnames_from_checkboxes,
 )
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult
 from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
 from cmk.gui.plugins.wato.utils.context_buttons import make_folder_status_link
@@ -450,23 +450,23 @@ class ModeFolder(WatoMode):
                 ),
             )
 
-    def action(self):
+    def action(self) -> ActionResult:
         if html.request.var("_search"):  # just commit to search form
-            return
+            return None
 
         # Operations on SUBFOLDERS
 
         if html.request.var("_delete_folder"):
             if html.transaction_valid():
                 return self._delete_subfolder_after_confirm(html.request.var("_delete_folder"))
-            return
+            return None
 
         if html.request.has_var("_move_folder_to"):
             if html.check_transaction():
                 what_folder = watolib.Folder.folder(html.request.var("_ident"))
                 target_folder = watolib.Folder.folder(html.request.var("_move_folder_to"))
                 watolib.Folder.current().move_subfolder_to(what_folder, target_folder)
-            return
+            return None
 
         # Operations on HOSTS
 
@@ -481,15 +481,15 @@ class ModeFolder(WatoMode):
             if hostname:
                 target_folder = watolib.Folder.folder(html.request.var("_move_host_to"))
                 watolib.Folder.current().move_hosts([hostname], target_folder)
-                return
+                return None
 
         # bulk operation on hosts
         if not html.transaction_valid():
-            return
+            return None
 
         # Host table: No error message on search filter reset
         if html.request.var("_hosts_reset_sorting") or html.request.var("_hosts_sort"):
-            return
+            return None
 
         selected_host_names = get_hostnames_from_checkboxes()
         if not selected_host_names:
@@ -527,7 +527,9 @@ class ModeFolder(WatoMode):
         if html.request.var("_bulk_cleanup"):
             return "bulkcleanup"
 
-    def _delete_subfolder_after_confirm(self, subfolder_name):
+        return None
+
+    def _delete_subfolder_after_confirm(self, subfolder_name) -> ActionResult:
         subfolder = self._folder.subfolder(subfolder_name)
         msg = _("Do you really want to delete the folder %s?") % subfolder.title()
         if not config.wato_hide_filenames:
@@ -915,7 +917,7 @@ class ModeFolder(WatoMode):
                                                        ("_delete_host", host.name())])
                 html.icon_button(delete_url, _("Delete this host"), "delete")
 
-    def _delete_hosts_after_confirm(self, host_names):
+    def _delete_hosts_after_confirm(self, host_names) -> ActionResult:
         c = wato_confirm(
             _("Confirm deletion of %d hosts") % len(host_names),
             _("Do you really want to delete the %d selected hosts?") % len(host_names))
@@ -945,7 +947,7 @@ class ModeFolder(WatoMode):
 
             return html.drain()
 
-    def _move_to_imported_folders(self, host_names_to_move):
+    def _move_to_imported_folders(self, host_names_to_move) -> ActionResult:
         c = wato_confirm(
             _("Confirm moving hosts"),
             _('You are going to move the selected hosts to folders '
@@ -1003,7 +1005,7 @@ class ModeFolder(WatoMode):
 
 
 # TODO: Move to WatoHostFolderMode() once mode_edit_host has been migrated
-def delete_host_after_confirm(delname):
+def delete_host_after_confirm(delname) -> ActionResult:
     c = wato_confirm(_("Confirm host deletion"),
                      _("Do you really want to delete the host <tt>%s</tt>?") % delname)
     if c:
@@ -1112,7 +1114,7 @@ class ABCFolderMode(WatoMode, metaclass=abc.ABCMeta):
                                           button_name="save",
                                           save_is_enabled=is_enabled)
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.check_transaction():
             return "folder"
 

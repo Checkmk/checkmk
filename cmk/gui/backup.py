@@ -62,6 +62,7 @@ from cmk.gui.page_menu import (
     make_simple_form_page_menu,
 )
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.plugins.wato.utils.base_modes import ActionResult
 
 #.
 #   .--Config--------------------------------------------------------------.
@@ -609,7 +610,7 @@ class PageBackup:
     def _may_edit_config(self):
         return True
 
-    def action(self):
+    def action(self) -> ActionResult:
         ident = html.request.var("_job")
         jobs = self.jobs()
         try:
@@ -621,10 +622,10 @@ class PageBackup:
 
         if action == "delete":
             if not html.transaction_valid():
-                return
+                return None
         else:
             if not html.check_transaction():
-                return
+                return None
 
         if action == "delete" and self._may_edit_config():
             return self._delete_job(job)
@@ -637,7 +638,7 @@ class PageBackup:
 
         raise NotImplementedError()
 
-    def _delete_job(self, job):
+    def _delete_job(self, job) -> ActionResult:
         if job.is_running():
             raise MKUserError("_job", _("This job is currently running."))
 
@@ -648,12 +649,13 @@ class PageBackup:
             jobs.remove(job)
             jobs.save()
             return None, _("The job has been deleted.")
+        return None
 
-    def _start_job(self, job):
+    def _start_job(self, job) -> ActionResult:
         job.start()
         return None, _("The backup has been started.")
 
-    def _stop_job(self, job):
+    def _stop_job(self, job) -> ActionResult:
         job.stop()
         return None, _("The backup has been stopped.")
 
@@ -816,7 +818,7 @@ class PageEditBackupJob:
     def backup_target_choices(self):
         return sorted(self.targets().choices(), key=lambda x_y1: x_y1[1].title())
 
-    def action(self):
+    def action(self) -> ActionResult:
         if html.transaction_valid():
             vs = self.vs_backup_job()
 
@@ -1125,7 +1127,7 @@ class PageBackupTargets:
             breadcrumb=breadcrumb,
         )
 
-    def action(self):
+    def action(self) -> ActionResult:
         if html.transaction_valid():
             ident = html.request.var("target")
             targets = self.targets()
@@ -1146,6 +1148,7 @@ class PageBackupTargets:
                 targets.remove(target)
                 targets.save()
                 return None, _("The target has been deleted.")
+        return None
 
     def _verify_not_used(self, target):
         job_titles = [j.title() for j in self.jobs().jobs_using_target(target)]
@@ -1239,7 +1242,7 @@ class PageEditBackupTarget:
         if value in self.targets().objects:
             raise MKUserError(varprefix, _("This ID is already used by another backup target."))
 
-    def action(self):
+    def action(self) -> ActionResult:
         if html.transaction_valid():
             vs = self.vs_backup_target()
 
@@ -1676,15 +1679,15 @@ class PageBackupRestore:
             breadcrumb=breadcrumb,
         )
 
-    def action(self):
+    def action(self) -> ActionResult:
         action = html.request.var("_action")
         backup_ident = html.request.var("_backup")
 
         if action is None:
-            return  # Only choosen the target
+            return None  # Only choosen the target
 
         if not html.transaction_valid():
-            return
+            return None
 
         if action == "delete":
             return self._delete_backup(backup_ident)
@@ -1700,7 +1703,7 @@ class PageBackupRestore:
 
         raise NotImplementedError()
 
-    def _delete_backup(self, backup_ident):
+    def _delete_backup(self, backup_ident) -> ActionResult:
         if self._restore_is_running():
             raise MKUserError(
                 None,
@@ -1723,6 +1726,7 @@ class PageBackupRestore:
             html.check_transaction()  # invalidate transid
             self._target.remove_backup(backup_ident)
             return None, _("The backup has been deleted.")
+        return None
 
     def _restore_was_started(self):
         return RestoreJob(self._target_ident, None).was_started()
@@ -1730,7 +1734,7 @@ class PageBackupRestore:
     def _restore_is_running(self):
         return RestoreJob(self._target_ident, None).is_running()
 
-    def _start_restore(self, backup_ident):
+    def _start_restore(self, backup_ident) -> ActionResult:
         if self._target is None:
             raise Exception("no backup target")
         backup_info = self._target.get_backup(backup_ident)
@@ -1738,8 +1742,10 @@ class PageBackupRestore:
             return self._start_encrypted_restore(backup_ident, backup_info)
         return self._start_unencrypted_restore(backup_ident)
 
-    def _complete_restore(self, backup_ident):
+    # Mypy requires the explicit return, pylint does not like it.
+    def _complete_restore(self, backup_ident) -> ActionResult:  # pylint: disable=useless-return
         RestoreJob(self._target_ident, None).complete()
+        return None
 
     def _start_encrypted_restore(self, backup_ident, backup_info):
         key_digest = backup_info["config"]["encrypt"]
@@ -1817,7 +1823,7 @@ class PageBackupRestore:
             RestoreJob(self._target_ident, backup_ident).start()
             return None, _("The restore has been started.")
 
-    def _stop_restore(self, backup_ident):
+    def _stop_restore(self, backup_ident) -> ActionResult:
         confirm = html.confirm(_("Do you really want to stop the restore of this backup? This will "
                                  "leave your environment in an undefined state."),
                                add_header=self.title(),
@@ -1830,6 +1836,7 @@ class PageBackupRestore:
             html.check_transaction()  # invalidate transid
             RestoreJob(self._target_ident, backup_ident).stop()
             return None, _("The restore has been stopped.")
+        return None
 
     def page(self):
         if self._restore_was_started():

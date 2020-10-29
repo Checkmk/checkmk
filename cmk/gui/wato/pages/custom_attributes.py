@@ -35,7 +35,7 @@ from cmk.gui.watolib.host_attributes import (
     transform_pre_16_host_topics,
 )
 from cmk.gui.watolib.hosts_and_folders import Folder
-from cmk.gui.plugins.wato import WatoMode, add_change, mode_registry, wato_confirm
+from cmk.gui.plugins.wato import WatoMode, ActionResult, add_change, mode_registry, wato_confirm
 from cmk.gui.utils.urls import makeuri_contextless
 
 
@@ -154,10 +154,10 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
     def _add_extra_form_sections(self):
         pass
 
-    def action(self):
+    def action(self) -> ActionResult:
         # TODO: remove subclass specific things specifict things (everything with _type == 'user')
         if not html.check_transaction():
-            return
+            return None
 
         title = html.request.get_unicode_input_mandatory("title").strip()
         if not title:
@@ -460,7 +460,7 @@ class ModeCustomAttrs(WatoMode, metaclass=abc.ABCMeta):
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
         raise NotImplementedError()
 
-    def action(self):
+    def action(self) -> ActionResult:
         if html.request.var('_delete'):
             delname = html.request.var("_delete")
 
@@ -478,6 +478,7 @@ class ModeCustomAttrs(WatoMode, metaclass=abc.ABCMeta):
                 add_change("edit-%sattrs" % self._type, _("Deleted attribute %s") % (delname))
             elif c is False:
                 return ""
+        return None
 
     def page(self):
         if not self._attrs:

@@ -55,6 +55,7 @@ from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 from cmk.gui.watolib.automations import check_mk_automation
 from cmk.gui.plugins.wato import (
     WatoMode,
+    ActionResult,
     mode_registry,
 )
 from cmk.gui.pages import page_registry, Page
@@ -110,9 +111,9 @@ class ModeDiagnostics(WatoMode):
             ))
         return menu
 
-    def action(self) -> None:
+    def action(self) -> ActionResult:
         if not html.check_transaction():
-            return
+            return None
 
         if self._job.is_active() or self._diagnostics_parameters is None:
             raise HTTPRedirect(self._job.detail_url())

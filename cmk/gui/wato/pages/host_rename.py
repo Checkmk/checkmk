@@ -57,6 +57,7 @@ from cmk.gui.valuespec import (
 
 from cmk.gui.plugins.wato import (
     WatoMode,
+    ActionResult,
     mode_registry,
     add_change,
     wato_confirm,
@@ -154,7 +155,7 @@ class ModeBulkRenameHost(WatoMode):
 
         return menu
 
-    def action(self):
+    def action(self) -> ActionResult:
         renaming_config = self._vs_renaming_config().from_html_vars("")
         self._vs_renaming_config().validate_value(renaming_config, "")
         renamings = self._collect_host_renamings(renaming_config)
@@ -431,7 +432,7 @@ class ModeRenameHost(WatoMode):
 
         return menu
 
-    def action(self):
+    def action(self) -> ActionResult:
         if watolib.get_pending_changes_info():
             raise MKUserError("newname",
                               _("You cannot rename a host while you have pending changes."))
@@ -460,6 +461,7 @@ class ModeRenameHost(WatoMode):
 
         if c is False:  # not yet confirmed
             return ""
+        return None
 
     def _check_new_host_name(self, varname, host_name):
         if not host_name:

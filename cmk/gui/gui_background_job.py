@@ -601,7 +601,7 @@ class ActionHandler:
                 return True
         return False
 
-    def handle_actions(self):
+    def handle_actions(self) -> bool:
         if html.request.var(self.acknowledge_job_var):
             self.acknowledge_job()
             return True

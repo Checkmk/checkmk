@@ -22,6 +22,7 @@ from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.plugins.wato import (
     mode_registry,
     WatoMode,
+    ActionResult,
     get_hosts_from_checkboxes,
 )
 
@@ -284,7 +285,7 @@ class ModeParentScan(WatoMode):
         )
         self._job = ParentScanBackgroundJob()
 
-    def action(self):
+    def action(self) -> ActionResult:
         try:
             html.check_transaction()
             config.user.save_file("parentscan", dict(self._settings._asdict()))

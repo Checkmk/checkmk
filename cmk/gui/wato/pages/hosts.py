@@ -35,7 +35,7 @@ from cmk.gui.plugins.wato.utils import (
     configure_attributes,
     ConfigHostname,
 )
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
 from cmk.gui.watolib.hosts_and_folders import CREHost
 from cmk.gui.wato.pages.folders import delete_host_after_confirm, ModeFolder
@@ -305,7 +305,7 @@ class ModeEditHost(ABCHostMode):
             breadcrumb=breadcrumb,
         )
 
-    def action(self):
+    def action(self) -> ActionResult:
         if html.request.var("_update_dns_cache"):
             if not html.check_transaction():
                 return None
@@ -454,7 +454,7 @@ class CreateHostMode(ABCHostMode):
         self._verify_host_type(host)
         return host
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.transaction_valid():
             return "folder"
 

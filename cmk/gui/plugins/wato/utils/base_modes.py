@@ -18,9 +18,10 @@ from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
 
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.html import HTML
 
 NewMode = Union[None, bool, str]
-ActionResult = Union[NewMode, Tuple[NewMode, str]]
+ActionResult = Union[NewMode, Tuple[NewMode, Union[None, str, HTML]]]
 
 
 class WatoMode(metaclass=abc.ABCMeta):

@@ -36,6 +36,7 @@ from cmk.gui.page_menu import (
     make_simple_form_page_menu,
 )
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.plugins.wato.utils.base_modes import ActionResult
 
 
 class KeypairStore:
@@ -134,14 +135,14 @@ class PageKeyManagement:
     def _may_edit_config(self):
         return True
 
-    def action(self):
+    def action(self) -> ActionResult:
         if self._may_edit_config() and html.request.has_var("_delete"):
             key_id_as_str = html.request.var("_delete")
             if key_id_as_str is None:
                 raise Exception("cannot happen")
             key_id = int(key_id_as_str)
             if key_id not in self.keys:
-                return
+                return None
 
             key = self.keys[key_id]
 
@@ -159,6 +160,7 @@ class PageKeyManagement:
 
             elif c is False:
                 return ""
+        return None
 
     def delete(self, key_id):
         del self.keys[key_id]
@@ -214,7 +216,7 @@ class PageEditKey:
             save_title=_("Create"),
         )
 
-    def action(self):
+    def action(self) -> ActionResult:
         if html.check_transaction():
             value = self._vs_key().from_html_vars("key")
             # Remove the secret key from known URL vars. Otherwise later constructed URLs
@@ -224,6 +226,7 @@ class PageEditKey:
             self._vs_key().validate_value(value, "key")
             self._create_key(value)
             return self.back_mode
+        return None
 
     def _create_key(self, value):
         keys = self.load()
@@ -302,7 +305,7 @@ class PageUploadKey:
             save_title=_("Upload"),
         )
 
-    def action(self):
+    def action(self) -> ActionResult:
         if html.check_transaction():
             value = self._vs_key().from_html_vars("key")
             html.request.del_var("key_p_passphrase")
@@ -320,6 +323,7 @@ class PageUploadKey:
 
             self._upload_key(key_file, value)
             return self.back_mode
+        return None
 
     def _get_uploaded(self, cert_spec, key):
         if key in cert_spec:
@@ -428,7 +432,7 @@ class PageDownloadKey:
             save_title=_("Download"),
         )
 
-    def action(self):
+    def action(self) -> ActionResult:
         if html.check_transaction():
             keys = self.load()
 
@@ -451,6 +455,7 @@ class PageDownloadKey:
 
             self._send_download(keys, key_id)
             return False
+        return None
 
     def _send_download(self, keys, key_id):
         key = keys[key_id]

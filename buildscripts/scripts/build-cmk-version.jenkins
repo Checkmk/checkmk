@@ -87,9 +87,7 @@ node(NODE) {
                         DOCKER_TAG = versioning.select_docker_tag(BRANCH, DOCKER_TAG_BUILD, DOCKER_TAG_DEFAULT)
                     }
 
-                    patch_themes(EDITION)
-                    patch_demo(DEMO)
-                    set_version(CMK_VERS)
+                    versioning.patch_git_after_checkout(EDITION, DEMO, CMK_VERS)
                     BRANCH_VERSION = versioning.get_branch_version()
 
                     DOCKER_REGISTRY_NO_HTTP = str_mod.strip_protocol_from_url(DOCKER_REGISTRY)

@@ -60,4 +60,52 @@ def print_image_tag() {
     sh "cat /version.txt"
 }
 
+def patch_themes(EDITION) {
+    def THEME_LIST = ["classic", "facelift", "modern-dark"]
+    switch(EDITION) {
+        case 'raw':
+            sh 'rm -rf enterprise managed'
+            // Workaround since scss does not support conditional includes
+            THEME_LIST.each { THEME ->
+                sh """
+                    rm -rf web/htdocs/themes/${THEME}/scss/{cme,cee}
+                    mkdir -p web/htdocs/themes/${THEME}/scss/{cme,cee}
+                    echo '@mixin graphs {}' > web/htdocs/themes/${THEME}/scss/cee/_graphs.scss
+                    echo '@mixin reporting {}' > web/htdocs/themes/${THEME}/scss/cee/_reporting.scss
+                    echo '@mixin managed {}' > web/htdocs/themes/${THEME}/scss/cme/_managed.scss
+                """
+            }
+            break
+        case 'enterprise':
+            sh 'rm -rf  managed'
+            // Workaround since scss does not support conditional includes
+            THEME_LIST.each { THEME ->
+                sh """
+                    rm -rf web/htdocs/themes/${THEME}/scss/cme
+                    mkdir -p web/htdocs/themes/${THEME}/scss/cme
+                    echo '@mixin managed {}' > web/htdocs/themes/${THEME}/scss/cme/_managed.scss
+                """
+            }
+            break
+    }
+}
+
+def patch_demo(DEMO) {
+    if (DEMO == 'yes') {
+        sh '''sed -ri 's/^(DEMO_SUFFIX[[:space:]]*:?= *).*/\\1'" .demo/" defines.make'''
+        sh 'mv omd/packages/nagios/{9999-demo-version.dif,patches/9999-demo-version.dif}'
+        sh '''sed -i 's/#ifdef DEMOVERSION/#if 1/g' enterprise/core/src/{Core,World}.cc'''
+    }
+}
+
+def set_version(CMK_VERS) {
+    sh "make NEW_VERSION=${CMK_VERS} setversion"
+}
+
+def patch_git_after_checkout(EDITION, DEMO, CMK_VERS) {
+    patch_themes(EDITION)
+    patch_demo(DEMO)
+    set_version(CMK_VERS)
+}
+
 return this

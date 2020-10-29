@@ -4,9 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Dict, Final, NamedTuple
-from .agent_based_api.v1.type_defs import StringTable
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
-from .agent_based_api.v1 import register, SNMPTree
+from .agent_based_api.v1 import register, render, Result, Service, SNMPTree, State
 from .utils.hp_proliant import MAP_TYPES_MEMORY, DETECT
 
 _STATUS_MAP: Final = {
@@ -101,4 +101,63 @@ register.snmp_section(
         ],
     ),
     detect=DETECT,
+)
+
+_MEM_TEXT2STATE_MAP: Final = {
+    'other': State.UNKNOWN,
+    'notPresent': State.UNKNOWN,
+    'present': State.WARN,
+    'good': State.OK,
+    'add': State.WARN,
+    'upgrade': State.WARN,
+    'missing': State.CRIT,
+    'doesNotMatch': State.CRIT,
+    'notSupported': State.CRIT,
+    'badConfig': State.CRIT,
+    'degraded': State.CRIT,
+    'spare': State.OK,
+    'partial': State.WARN,
+}
+
+_COND_TEXT2STATE_MAP: Final = {
+    'other': State.UNKNOWN,
+    'ok': State.OK,
+    'degraded': State.CRIT,
+    'failed': State.CRIT,
+    'degradedModuleIndexUnknown': State.UNKNOWN
+}
+
+
+def discovery_hp_proliant_mem(section: Section) -> DiscoveryResult:
+    for module in section.values():
+        if module.size > 0 and module.status != "notPresent":
+            yield Service(item=module.number)
+
+
+def check_hp_proliant_mem(item, section) -> CheckResult:
+    module = section.get(item)
+    if module is None:
+        return
+
+    yield Result(state=State.OK, summary=f"Board: {module.board}")
+    yield Result(state=State.OK, summary=f"Number: {module.number}")
+    yield Result(state=State.OK, summary=f"Type: {module.typ}")
+    yield Result(state=State.OK, summary=f"Size: {render.bytes(module.size)}")
+
+    yield Result(
+        state=_MEM_TEXT2STATE_MAP.get(module.status, State.UNKNOWN),
+        summary=f"Status: {module.status}",
+    )
+
+    yield Result(
+        state=_COND_TEXT2STATE_MAP.get(module.condition, State.UNKNOWN),
+        summary=f"Condition: {module.condition}",
+    )
+
+
+register.check_plugin(
+    name="hp_proliant_mem",
+    service_name="HW Mem %s",
+    discovery_function=discovery_hp_proliant_mem,
+    check_function=check_hp_proliant_mem,
 )

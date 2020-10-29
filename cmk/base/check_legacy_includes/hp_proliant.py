@@ -8,7 +8,6 @@
 # pylint: disable=consider-using-in
 
 from .temperature import check_temperature
-from cmk.base.check_api import get_bytes_human_readable
 
 hp_proliant_status_map = {
     1: 'unknown',
@@ -209,68 +208,6 @@ def check_hp_proliant_fans(item, params, info):
                     (index, label, hp_proliant_speed_map[int(speed)], snmp_status, detailOutput),
                     perfdata)
     return (3, "item not found in snmp data")
-
-
-#.
-#   .--mem-----------------------------------------------------------------.
-#   |                                                                      |
-#   |                      _ __ ___   ___ _ __ ___                         |
-#   |                     | '_ ` _ \ / _ \ '_ ` _ \                        |
-#   |                     | | | | | |  __/ | | | | |                       |
-#   |                     |_| |_| |_|\___|_| |_| |_|                       |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-hp_proliant_mem_status2nagios_map = {
-    'other': 3,
-    'notPresent': 3,
-    'present': 1,
-    'good': 0,
-    'add': 1,
-    'upgrade': 1,
-    'missing': 2,
-    'doesNotMatch': 2,
-    'notSupported': 2,
-    'badConfig': 2,
-    'degraded': 2,
-    'spare': 0,
-    'partial': 1,
-}
-
-hp_proliant_mem_condition_status2nagios_map = {
-    'other': 3,
-    'ok': 0,
-    'degraded': 2,
-    'failed': 2,
-    'degradedModuleIndexUnknown': 3
-}
-
-
-def inventory_hp_proliant_mem(section):
-    for module in section.values():
-        if module.size > 0 and module.status != "notPresent":
-            yield module.number, {}
-
-
-def check_hp_proliant_mem(item, params, section):
-    module = section.get(item)
-    if module is None:
-        return
-
-    yield 0, f"Board: {module.board}"
-    yield 0, f"Number: {module.number}"
-    yield 0, f"Type: {module.typ}"
-    yield 0, f"Size: {get_bytes_human_readable(module.size)}"
-
-    yield (
-        hp_proliant_mem_status2nagios_map.get(module.status, 3),
-        f"Status: {module.status}",
-    )
-
-    yield (
-        hp_proliant_mem_condition_status2nagios_map.get(module.condition, 3),
-        f"Condition: {module.condition}",
-    )
 
 
 #.

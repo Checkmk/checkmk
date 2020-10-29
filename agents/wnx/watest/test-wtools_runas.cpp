@@ -13,10 +13,8 @@
 
 namespace wtools::runas {  // to become friendly for cma::cfg classes
 
-extern void test();
-
 static bool WaitForExit(uint32_t pid) {
-    for (int i = 0; i < 30; i++) {
+    for (int i = 0; i < 300; i++) {
         auto [code, error] = GetProcessExitCode(pid);
         if (code == 0) return true;
         cma::tools::sleep(100);
@@ -86,11 +84,18 @@ TEST(WtoolsRunAs, TestUser) {
                         "@powershell  Start-Sleep -Milliseconds 150\n"
                         "@echo marker %1");
 
+    // Allow Users to use the file
+    wtools::ChangeAccessRights((in / "runc.cmd").wstring().c_str(),
+                               SE_FILE_OBJECT, L"a1", TRUSTEE_IS_NAME,
+                               STANDARD_RIGHTS_ALL | GENERIC_ALL, GRANT_ACCESS,
+                               OBJECT_INHERIT_ACE);
+
     wtools::AppRunner ar;
 
     auto ret =
         ar.goExecAsJobAndUser(user, pwd, (in / "runc.cmd").wstring() + L" 1");
-    ASSERT_TRUE(ret) << "probably password is invalid or expired";
+    ASSERT_TRUE(ret)
+        << "password is invalid or expired or you have problems with Access rights";
     auto b = WaitForExit(ar.processId());
     if (!b) {
         XLOG::SendStringToStdio("Retry waiting for the process\n",

@@ -13,6 +13,7 @@
 #define wtools_h__
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
+#include <aclapi.h>
 #include <comdef.h>
 
 #include "windows.h"
@@ -1099,6 +1100,24 @@ bool ProtectPathFromUserAccess(const std::filesystem::path& entry);
 ///  Normally called once on the start of the service.
 ///  Removes Users Access Writes to the specified file
 bool ProtectFileFromUserWrite(const std::filesystem::path& path);
+
+/// \brief Changes Access Rights in Windows crazy manner
+///
+/// Example of usage is
+/// ChangeAccessRights( L"c:\\txt", SE_FILE_OBJECT,        // what
+///                     L"a1", TRUSTEE_IS_NAME,            // who
+///                     STANDARD_RIGHTS_ALL | GENERIC_ALL, // how
+///                     GRANT_ACCESS, OBJECT_INHERIT_ACE);
+bool ChangeAccessRights(
+    const wchar_t* object_name,   // name of object
+    SE_OBJECT_TYPE object_type,   // type of object
+    const wchar_t* trustee_name,  // trustee for new ACE
+    TRUSTEE_FORM trustee_form,    // format of trustee structure
+    DWORD access_rights,          // access mask for new ACE
+    ACCESS_MODE access_mode,      // type of ACE
+    DWORD inheritance             // inheritance flags for new ACE ???
+);
+
 }  // namespace wtools
 
 #endif  // wtools_h__

@@ -31,6 +31,63 @@
 #include "upgrade.h"
 
 namespace wtools {
+bool ChangeAccessRights(
+    const wchar_t* object_name,   // name of object
+    SE_OBJECT_TYPE object_type,   // type of object
+    const wchar_t* trustee_name,  // trustee for new ACE
+    TRUSTEE_FORM trustee_form,    // format of trustee structure
+    DWORD access_rights,          // access mask for new ACE
+    ACCESS_MODE access_mode,      // type of ACE
+    DWORD inheritance             // inheritance flags for new ACE ???
+) {
+    PACL old_dacl = nullptr;
+    PSECURITY_DESCRIPTOR sd = nullptr;
+
+    if (nullptr == object_name) return false;
+
+    // Get a pointer to the existing DACL.
+    auto result = ::GetNamedSecurityInfo(object_name, object_type,
+                                         DACL_SECURITY_INFORMATION, nullptr,
+                                         nullptr, &old_dacl, nullptr, &sd);
+    if (ERROR_SUCCESS != result) {
+        XLOG::l("GetNamedSecurityInfo Error {}", result);
+        return false;
+    }
+    ON_OUT_OF_SCOPE(if (sd != nullptr) LocalFree((HLOCAL)sd));
+
+    // Initialize an EXPLICIT_ACCESS structure for the new ACE.
+
+    EXPLICIT_ACCESS ea;
+    ZeroMemory(&ea, sizeof(EXPLICIT_ACCESS));
+    ea.grfAccessPermissions = access_rights;
+    ea.grfAccessMode = access_mode;
+    ea.grfInheritance = inheritance;
+    ea.Trustee.TrusteeForm = trustee_form;
+    ea.Trustee.ptstrName = const_cast<wchar_t*>(trustee_name);
+
+    // Create a new ACL that merges the new ACE
+    // into the existing DACL.
+    PACL new_dacl = nullptr;
+    result = ::SetEntriesInAcl(1, &ea, old_dacl, &new_dacl);
+    if (ERROR_SUCCESS != result) {
+        XLOG::l("SetEntriesInAcl Error {}", result);
+        return false;
+    }
+
+    ON_OUT_OF_SCOPE(if (new_dacl != nullptr) LocalFree((HLOCAL)new_dacl));
+    // Attach the new ACL as the object's DACL.
+
+    result = ::SetNamedSecurityInfo(const_cast<wchar_t*>(object_name),
+                                    object_type, DACL_SECURITY_INFORMATION,
+                                    nullptr, nullptr, new_dacl, nullptr);
+    if (ERROR_SUCCESS != result) {
+        XLOG::l("SetNamedSecurityInfo Error {}", result);
+        return false;
+    }
+
+    return true;
+}
+
 std::pair<uint32_t, uint32_t> GetProcessExitCode(uint32_t pid) {
     auto h = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION,  // not on XP
                            FALSE, pid);

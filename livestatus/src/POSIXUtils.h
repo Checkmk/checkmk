@@ -32,7 +32,6 @@ public:
     static FileDescriptorPair createSocketPair(Mode mode, Logger *logger);
     static FileDescriptorPair createPipePair(Mode mode, Logger *logger);
 
-    static FileDescriptorPair makeSocketPair(Mode mode, Logger *logger);
     static FileDescriptorPair makePipePair(Mode mode, Logger *logger);
 
     [[nodiscard]] int local() const { return local_; }

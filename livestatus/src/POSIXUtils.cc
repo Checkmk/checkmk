@@ -22,46 +22,26 @@ using namespace std::chrono_literals;
 FileDescriptorPair FileDescriptorPair::createSocketPair(Mode mode,
                                                         Logger *logger) {
     std::array<int, 2> fd{-1, -1};
+    // NOTE: Things are a bit tricky here: The close-on-exec flag is a file
+    // descriptor flag, i.e. it is kept in the entries of the per-process table
+    // of file descriptors. It is *not* part of the entries in the system-wide
+    // table of open file descriptors, so it is *not* shared between different
+    // file descriptors.
+    //
+    // Although it is necessary to avoid race conditions, specifying the
+    // SOCK_CLOEXEC flag in the socketpair() call is not part of the POSIX spec,
+    // but it is possible in Linux since kernel 2.6.27 and the various BSD
+    // flavors. It sets the close-on-exec flag on *both* file descriptors, which
+    // is fine: Before doing an execv(), we duplicate the wanted file
+    // descriptors via dup2(), which clears the flag in the duplicate, see
+    // Process::run().
     int sock_type = SOCK_STREAM | SOCK_CLOEXEC;
     if (::socketpair(AF_UNIX, sock_type, 0, &fd[0]) == -1) {
         generic_error ge{"cannot create socket pair"};
         Alert(logger) << ge;
         return invalid();
     }
-    // yes, we establish half-blocking channel
     if (mode == Mode::nonblocking) {
-        if (fcntl(fd[0], F_SETFL, O_NONBLOCK) == -1) {
-            generic_error ge{"cannot make socket non-blocking"};
-            Alert(logger) << ge;
-            ::close(fd[0]);
-            ::close(fd[1]);
-            return invalid();
-        }
-    }
-    return {fd[0], fd[1]};
-}
-
-// static
-FileDescriptorPair FileDescriptorPair::makeSocketPair(
-    FileDescriptorPair::Mode mode, Logger *logger) {
-    std::array<int, 2> fd{-1, -1};
-    // TODO(ml): Set cloexec and nonblock in `type` param.
-    int sock_type = SOCK_STREAM;
-    if (::socketpair(AF_UNIX, sock_type, 0, &fd[0]) == -1) {
-        generic_error ge{"cannot create socket pair"};
-        Alert(logger) << ge;
-        return invalid();
-    }
-
-    if (::fcntl(fd[0], F_SETFD, FD_CLOEXEC) == -1) {
-        generic_error ge{"cannot close-on-exec bit on socket"};
-        Alert(logger) << ge;
-        ::close(fd[0]);
-        ::close(fd[1]);
-        return invalid();
-    }
-
-    if (mode == FileDescriptorPair::Mode::nonblocking) {
         if (::fcntl(fd[0], F_SETFL, O_NONBLOCK) == -1) {
             generic_error ge{"cannot make socket non-blocking"};
             Alert(logger) << ge;
@@ -70,7 +50,6 @@ FileDescriptorPair FileDescriptorPair::makeSocketPair(
             return invalid();
         }
     }
-
     return {fd[0], fd[1]};
 }
 

@@ -465,7 +465,7 @@ export class FigureBase {
             .attr("y", 0)
             .attr("width", this.figure_size.width)
             .attr("height", 24)
-            .style("fill", "#262f38"); // fill gets toggled in UX project
+            .classed("highlighted", true);
 
         title_component
             .selectAll("text")

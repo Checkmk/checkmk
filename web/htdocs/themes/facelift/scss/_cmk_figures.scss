@@ -251,6 +251,10 @@ div.cmk_figure {
       }
     }
   }
+
+  g.title rect.highlighted {
+    fill: $headline-color;
+  }
 }
 
 circle.scatterdot {

@@ -27,12 +27,8 @@ public:
         return local_ == -1 && remote_ == -1;
     }
 
-    // TODO(sp) One of these pairs must die...
-
     static FileDescriptorPair createSocketPair(Mode mode, Logger *logger);
     static FileDescriptorPair createPipePair(Mode mode, Logger *logger);
-
-    static FileDescriptorPair makePipePair(Mode mode, Logger *logger);
 
     [[nodiscard]] int local() const { return local_; }
     [[nodiscard]] int remote() const { return remote_; }

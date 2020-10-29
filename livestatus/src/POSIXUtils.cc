@@ -54,41 +54,16 @@ FileDescriptorPair FileDescriptorPair::createSocketPair(Mode mode,
 }
 
 // static
-FileDescriptorPair FileDescriptorPair::createPipePair(Mode mode,
-                                                      Logger *logger) {
-    std::array<int, 2> fd{-1, -1};
-    int pipe_mode = O_CLOEXEC;
-    if (mode == Mode::nonblocking) {
-        pipe_mode |= O_NONBLOCK;
-    }
-    if (::pipe2(&fd[0], pipe_mode) == -1) {
-        generic_error ge{"cannot create pipe pair"};
-        Alert(logger) << ge;
-        return invalid();
-    }
-    return {fd[0], fd[1]};
-}
-
-// static
-FileDescriptorPair FileDescriptorPair::makePipePair(
+FileDescriptorPair FileDescriptorPair::createPipePair(
     FileDescriptorPair::Mode mode, Logger *logger) {
     std::array<int, 2> fd{-1, -1};
-    // TODO(ml): Set cloexec and nonblock in `flag` param to `pipe2`.
-    int pipe_mode = 0;
+    // NOTE: See the comment in createSocketPair().
+    int pipe_mode = O_CLOEXEC;
     if (::pipe2(&fd[0], pipe_mode) == -1) {
         generic_error ge{"cannot create pipe pair"};
         Alert(logger) << ge;
         return invalid();
     }
-
-    if (::fcntl(fd[0], F_SETFD, FD_CLOEXEC) == -1) {
-        generic_error ge{"cannot close-on-exec bit on pipe"};
-        Alert(logger) << ge;
-        ::close(fd[0]);
-        ::close(fd[1]);
-        return invalid();
-    }
-
     if (mode == FileDescriptorPair::Mode::nonblocking) {
         if (::fcntl(fd[0], F_SETFL, O_NONBLOCK) == -1) {
             generic_error ge{"cannot make pipe non-blocking"};
@@ -98,7 +73,6 @@ FileDescriptorPair FileDescriptorPair::makePipePair(
             return invalid();
         }
     }
-
     return {fd[0], fd[1]};
 }
 

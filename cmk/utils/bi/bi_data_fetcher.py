@@ -349,6 +349,7 @@ class BIStatusFetcher(ABCBIStatusFetcher):
     @classmethod
     def get_status_columns(cls) -> List[LivestatusColumn]:
         return [
-            "name", "state", "hard_state", "plugin_output", "scheduled_downtime_depth",
-            "in_service_period", "acknowledged", "services_with_fullstate"
+            "name", "state", "has_been_checked", "hard_state", "plugin_output",
+            "scheduled_downtime_depth", "in_service_period", "acknowledged",
+            "services_with_fullstate"
         ]

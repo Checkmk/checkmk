@@ -76,7 +76,7 @@ bi_structure_states = {
 
 bi_status_rows = [
     [
-        'heute', 'heute', 0, 0, 'Packet received via smart PING', 0, 1, 0,
+        'heute', 'heute', 0, 1, 0, 'Packet received via smart PING', 0, 1, 0,
         [[
             'Check_MK Discovery', 1, 1,
             'WARN - 38 unmonitored services (timesyncd:1, tcp_conn_stats:1, '
@@ -148,7 +148,7 @@ bi_status_rows = [
          ]]
     ],
     [
-        'heute', 'heute_clone', 0, 0, 'Packet received via smart PING', 0, 1, 0,
+        'heute', 'heute_clone', 0, 1, 0, 'Packet received via smart PING', 0, 1, 0,
         [[
             'Check_MK Discovery', 1, 1,
             'WARN - 37 unmonitored services (timesyncd:1, tcp_conn_stats:1, '
@@ -214,7 +214,7 @@ bi_status_rows = [
 ]
 
 bi_acknowledgment_status_rows = [[
-    'heute', 'heute', 0, 0, 'Packet received via smart PING', 0, 1, 0,
+    'heute', 'heute', 0, 1, 0, 'Packet received via smart PING', 0, 1, 0,
     [
         [
             'Check_MK Discovery', 1, 1,
@@ -241,7 +241,7 @@ bi_acknowledgment_status_rows = [[
 ]]
 
 bi_downtime_status_rows = [[
-    'heute', 'heute', 0, 0, 'Packet received via smart PING', 0, 1, 0,
+    'heute', 'heute', 0, 1, 0, 'Packet received via smart PING', 0, 1, 0,
     [
         [
             'Check_MK Discovery', 1, 1,
@@ -268,7 +268,7 @@ bi_downtime_status_rows = [[
 ]]
 
 bi_service_period_status_rows = [[
-    'heute', 'heute', 0, 0, 'Packet received via smart PING', 0, 1, 0,
+    'heute', 'heute', 0, 1, 0, 'Packet received via smart PING', 0, 1, 0,
     [
         [
             'Check_MK Discovery', 1, 1,

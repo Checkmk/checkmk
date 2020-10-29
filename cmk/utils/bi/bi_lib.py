@@ -111,6 +111,7 @@ BIServiceWithFullState = NamedTuple("BIServiceFullState", [
 ])
 BIHostStatusInfoRow = NamedTuple("BIStatusInfoRow", [
     ("state", Optional[HostState]),
+    ("has_been_checked", bool),
     ("hard_state", Optional[HostState]),
     ("plugin_output", str),
     ("scheduled_downtime_depth", int),

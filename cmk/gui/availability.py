@@ -2090,6 +2090,7 @@ def _compute_status_info(
 
         status_info[site_host] = BIHostStatusInfoRow(
             state,  # state
+            True,  # has_been_checked
             state,  # host hard state
             state_output[1],  # plugin output
             state_output[2],  # in_downtime

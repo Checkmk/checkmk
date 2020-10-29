@@ -21,6 +21,7 @@ from cmk.gui.exceptions import (
 )
 from cmk.gui.i18n import _, _u
 from cmk.gui.globals import html
+from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import (
     ListChoice,
     Foldable,
@@ -833,7 +834,7 @@ def _rename_tags_after_confirmation(breadcrumb: Breadcrumb,
         return _("Modified folders: %d, modified hosts: %d, modified rulesets: %d") % \
                (len(affected_folders), len(affected_hosts), len(affected_rulesets))
 
-    message = u""
+    message = HTML()
     affected_folders, affected_hosts, affected_rulesets = \
         change_host_tags_in_folders(operation, TagCleanupMode.CHECK, watolib.Folder.root_folder())
 
@@ -842,20 +843,20 @@ def _rename_tags_after_confirmation(breadcrumb: Breadcrumb,
                      "group and that are affected by the change") + ":"
         with html.plugged():
             _show_affected_folders(affected_folders)
-            message += html.drain()
+            message += HTML(html.drain())
 
     if affected_hosts:
         message += _("Hosts where this tag group is explicitely set "
                      "and that are effected by the change") + ":"
         with html.plugged():
             _show_affected_hosts(affected_hosts)
-            message += html.drain()
+            message += HTML(html.drain())
 
     if affected_rulesets:
         message += _("Rulesets that contain rules with references to the changed tags") + ":"
         with html.plugged():
             _show_affected_rulesets(affected_rulesets)
-            message += html.drain()
+            message += HTML(html.drain())
 
     if message:
         wato_html_head(title=operation.confirm_title(), breadcrumb=breadcrumb)

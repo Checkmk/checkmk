@@ -42,7 +42,7 @@ class TCPFetcher(AgentFetcher):
         self._socket: Optional[socket.socket] = None
 
     @classmethod
-    def from_json(cls, serialized: Dict[str, Any]) -> "TCPFetcher":
+    def _from_json(cls, serialized: Dict[str, Any]) -> "TCPFetcher":
         address: Tuple[HostAddress, int] = serialized.pop("address")
         return cls(
             DefaultAgentFileCache.from_json(serialized.pop("file_cache")),

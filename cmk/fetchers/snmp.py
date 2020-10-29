@@ -138,7 +138,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         self._backend = factory.backend(self.snmp_config, self._logger)
 
     @classmethod
-    def from_json(cls, serialized: Dict[str, Any]) -> 'SNMPFetcher':
+    def _from_json(cls, serialized: Dict[str, Any]) -> 'SNMPFetcher':
         # The SNMPv3 configuration is represented by a tuple of different lengths (see
         # SNMPCredentials). Since we just deserialized from JSON, we have to convert the
         # list used by JSON back to a tuple.

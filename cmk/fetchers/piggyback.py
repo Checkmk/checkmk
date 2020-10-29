@@ -31,7 +31,7 @@ class PiggybackFetcher(AgentFetcher):
         self._sources: List[PiggybackRawDataInfo] = []
 
     @classmethod
-    def from_json(cls, serialized: Dict[str, Any]) -> "PiggybackFetcher":
+    def _from_json(cls, serialized: Dict[str, Any]) -> "PiggybackFetcher":
         return cls(
             NoCache.from_json(serialized.pop("file_cache")),
             **serialized,

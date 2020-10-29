@@ -154,10 +154,18 @@ class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
         self.file_cache: Final[ABCFileCache[TRawData]] = file_cache
         self._logger = logger
 
+    @final
     @classmethod
-    @abc.abstractmethod
     def from_json(cls: Type[TFetcher], serialized: Dict[str, Any]) -> TFetcher:
         """Deserialize from JSON."""
+        try:
+            return cls._from_json(serialized)
+        except (LookupError, TypeError, ValueError) as exc:
+            raise ValueError(serialized) from exc
+
+    @classmethod
+    @abc.abstractmethod
+    def _from_json(cls: Type[TFetcher], serialized: Dict[str, Any]) -> TFetcher:
         raise NotImplementedError()
 
     @abc.abstractmethod

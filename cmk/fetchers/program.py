@@ -36,7 +36,7 @@ class ProgramFetcher(AgentFetcher):
         self._process: Optional[subprocess.Popen] = None
 
     @classmethod
-    def from_json(cls, serialized: Dict[str, Any]) -> "ProgramFetcher":
+    def _from_json(cls, serialized: Dict[str, Any]) -> "ProgramFetcher":
         return cls(
             DefaultAgentFileCache.from_json(serialized.pop("file_cache")),
             **serialized,

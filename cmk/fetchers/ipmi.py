@@ -37,7 +37,7 @@ class IPMIFetcher(AgentFetcher):
         self._command: Optional[ipmi_cmd.Command] = None
 
     @classmethod
-    def from_json(cls, serialized: Dict[str, Any]) -> "IPMIFetcher":
+    def _from_json(cls, serialized: Dict[str, Any]) -> "IPMIFetcher":
         return cls(
             DefaultAgentFileCache.from_json(serialized.pop("file_cache")),
             **serialized,

@@ -76,13 +76,13 @@ class CPUTracker:
         return "%s()" % type(self).__name__
 
     def __enter__(self):
-        console.vverbose("[cpu_tracking] Start\n")
         self._start = Snapshot.take()
+        console.vverbose("[cpu_tracking] Start [%x]\n", id(self))
         return self
 
     def __exit__(self, *exc_info):
-        console.vverbose("[cpu_tracking] Stop\n")
         self._end = Snapshot.take()
+        console.vverbose("[cpu_tracking] Stop [%x - %s]\n", id(self), self.duration)
 
     def serialize(self) -> Dict[str, Any]:
         return {

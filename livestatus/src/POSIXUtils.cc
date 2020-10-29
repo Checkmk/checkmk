@@ -19,8 +19,8 @@
 using namespace std::chrono_literals;
 
 // static
-FileDescriptorPair FileDescriptorPair::createSocketPair(Mode mode,
-                                                        Logger *logger) {
+std::optional<FileDescriptorPair> FileDescriptorPair::createSocketPair(
+    Mode mode, Logger *logger) {
     std::array<int, 2> fd{-1, -1};
     // NOTE: Things are a bit tricky here: The close-on-exec flag is a file
     // descriptor flag, i.e. it is kept in the entries of the per-process table
@@ -39,7 +39,7 @@ FileDescriptorPair FileDescriptorPair::createSocketPair(Mode mode,
     if (::socketpair(AF_UNIX, sock_type, 0, &fd[0]) == -1) {
         generic_error ge{"cannot create socket pair"};
         Alert(logger) << ge;
-        return invalid();
+        return {};
     }
     if (mode == Mode::nonblocking) {
         if (::fcntl(fd[0], F_SETFL, O_NONBLOCK) == -1) {
@@ -47,14 +47,14 @@ FileDescriptorPair FileDescriptorPair::createSocketPair(Mode mode,
             Alert(logger) << ge;
             ::close(fd[0]);
             ::close(fd[1]);
-            return invalid();
+            return {};
         }
     }
-    return {fd[0], fd[1]};
+    return FileDescriptorPair{fd[0], fd[1]};
 }
 
 // static
-FileDescriptorPair FileDescriptorPair::createPipePair(
+std::optional<FileDescriptorPair> FileDescriptorPair::createPipePair(
     FileDescriptorPair::Mode mode, Logger *logger) {
     std::array<int, 2> fd{-1, -1};
     // NOTE: See the comment in createSocketPair().
@@ -62,7 +62,7 @@ FileDescriptorPair FileDescriptorPair::createPipePair(
     if (::pipe2(&fd[0], pipe_mode) == -1) {
         generic_error ge{"cannot create pipe pair"};
         Alert(logger) << ge;
-        return invalid();
+        return {};
     }
     if (mode == FileDescriptorPair::Mode::nonblocking) {
         if (::fcntl(fd[0], F_SETFL, O_NONBLOCK) == -1) {
@@ -70,10 +70,24 @@ FileDescriptorPair FileDescriptorPair::createPipePair(
             Alert(logger) << ge;
             ::close(fd[0]);
             ::close(fd[1]);
-            return invalid();
+            return {};
         }
     }
-    return {fd[0], fd[1]};
+    return FileDescriptorPair{fd[0], fd[1]};
+}
+
+namespace {
+void closeFD(int &fd) {
+    if (fd != -1) {
+        ::close(fd);
+    }
+    fd = -1;
+}
+}  // namespace
+
+void FileDescriptorPair::close() {
+    closeFD(local_);
+    closeFD(remote_);
 }
 
 namespace {

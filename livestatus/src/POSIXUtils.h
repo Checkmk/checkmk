@@ -13,6 +13,7 @@
 
 #include <cerrno>
 #include <chrono>
+#include <optional>
 #include <string>
 #include <utility>
 class Logger;
@@ -23,12 +24,11 @@ public:
     enum class Mode { blocking, nonblocking };
 
     static FileDescriptorPair invalid() { return FileDescriptorPair{-1, -1}; }
-    [[nodiscard]] bool isInvalid() const {
-        return local_ == -1 && remote_ == -1;
-    }
-
-    static FileDescriptorPair createSocketPair(Mode mode, Logger *logger);
-    static FileDescriptorPair createPipePair(Mode mode, Logger *logger);
+    static std::optional<FileDescriptorPair> createSocketPair(Mode mode,
+                                                              Logger *logger);
+    static std::optional<FileDescriptorPair> createPipePair(Mode mode,
+                                                            Logger *logger);
+    void close();
 
     [[nodiscard]] int local() const { return local_; }
     [[nodiscard]] int remote() const { return remote_; }
@@ -37,6 +37,7 @@ private:
     FileDescriptorPair(int local, int remote)
         : local_{local}, remote_{remote} {}
 
+    // We do not own these FDs.
     int local_;
     int remote_;
 };

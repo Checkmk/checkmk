@@ -342,8 +342,7 @@ def test_process_job_stats(
             [
                 Result(state=state.OK, summary='Latest exit code: 0',
                        details='Latest exit code: 0'),
-                Result(
-                    state=state.OK, summary='Real time: 9 seconds', details='Real time: 9 seconds'),
+                Result(state=state.OK, summary='Real time: 9 seconds'),
                 Metric('real_time', 9.9),
                 Result(state=state.OK, notice='Latest job started at Nov 05 2014 03:10:30'),
                 Metric('start_time', 1415153430.0),

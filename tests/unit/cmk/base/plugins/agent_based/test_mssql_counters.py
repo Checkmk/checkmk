@@ -657,7 +657,7 @@ def test_discovery_mssql_counters_transactions(section, expected_services):
         IgnoreResults(value="Cannot calculate rates yet"),
         IgnoreResults(value="Cannot calculate rates yet"),
         IgnoreResults(value="Cannot calculate rates yet"),
-        Result(state=state.OK, summary='Transactions: 0.0/s', details='Transactions: 0.0/s'),
+        Result(state=state.OK, summary='Transactions: 0.0/s'),
         Metric('transactions_per_second', 0.0),
         Result(state=state.OK, summary='Write Transactions: 0.0/s'),
         Metric('write_transactions_per_second', 0.0),

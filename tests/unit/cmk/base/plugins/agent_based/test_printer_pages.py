@@ -79,7 +79,7 @@ def test_parse_printer_pages_ricoh(string_table, expected_parsed_data):
     }, [
         Result(state=state.OK, summary='total prints: 75891'),
         Metric('pages_total', 75891.0),
-        Result(state=state.OK, summary='b/w: 54198', details='b/w: 54198'),
+        Result(state=state.OK, summary='b/w: 54198'),
         Metric('pages_bw', 54198.0),
         Result(state=state.OK, summary='color: 21693'),
         Metric('pages_color', 21693.0),

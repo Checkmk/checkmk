@@ -134,7 +134,7 @@ def test_check_windows_services(item, params, yielded_results):
 @pytest.mark.parametrize("item, params, yielded_results", [
     ("app", services.WINDOWS_SERVICES_CHECK_DEFAULT_PARAMETERS, [
         Result(state=state.OK, summary='Windows App Update: running (start type is unknown)'),
-        Result(state=state.OK, summary='Running on: node2', details='Running on: node2')
+        Result(state=state.OK, summary='Running on: node2')
     ]),
     ("app", {
         "states": [("running", None, 2)]
@@ -142,7 +142,7 @@ def test_check_windows_services(item, params, yielded_results):
         Result(state=state.CRIT, summary='Windows App Update: running (start type is unknown)'),
     ]),
     ("non-existant-service", services.WINDOWS_SERVICES_CHECK_DEFAULT_PARAMETERS, [
-        Result(state=state.CRIT, summary='service not found', details='service not found'),
+        Result(state=state.CRIT, summary='service not found'),
     ]),
 ])
 def test_cluster_windows_services(item, params, yielded_results):

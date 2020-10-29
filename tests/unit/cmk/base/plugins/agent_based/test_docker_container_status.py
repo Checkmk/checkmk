@@ -102,9 +102,7 @@ def test_discovery_docker_container_status():
 
 
 def test_check_docker_container_status():
-    expected_results = [
-        Result(state=state.OK, summary='Container running', details='Container running')
-    ]
+    expected_results = [Result(state=state.OK, summary='Container running')]
     assert list(docker.check_docker_container_status(PARSED)) == expected_results
 
 
@@ -171,7 +169,7 @@ def test_discover_docker_container_status_health():
         Result(state=state.OK,
                summary='Last health report: mysqld is alive',
                details='Last health report: mysqld is alive'),
-        Result(state=state.CRIT, summary='Failing streak: 0', details='Failing streak: 0'),
+        Result(state=state.CRIT, summary='Failing streak: 0'),
         Result(state=state.OK,
                summary='Health test: CMD-SHELL /healthcheck.sh',
                details='Health test: CMD-SHELL /healthcheck.sh')

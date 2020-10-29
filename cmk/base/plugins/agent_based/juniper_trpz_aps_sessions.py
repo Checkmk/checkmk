@@ -141,9 +141,9 @@ def _check_common_juniper_trpz_aps_sessions(
     ...           '2': ([0, 0, 0, 0, 0, 0, 0, 0, 0], 0, 0)}
     ...       })}):
     ...     if i: print(result)
-    Result(state=<State.OK: 0>, summary='Status: operational', details='Status: operational')
-    Result(state=<State.OK: 0>, summary='Radio 1: Input: 0.00 Bit/s, Output: 0.00 Bit/s, Errors: 0, Resets: 0, Retries: 0, Sessions: 0, Noise: 0 dBm', details='Radio 1: Input: 0.00 Bit/s, Output: 0.00 Bit/s, Errors: 0, Resets: 0, Retries: 0, Sessions: 0, Noise: 0 dBm')
-    Result(state=<State.OK: 0>, summary='Radio 2: Input: 0.00 Bit/s, Output: 0.00 Bit/s, Errors: 0, Resets: 0, Retries: 0, Sessions: 0, Noise: 0 dBm', details='Radio 2: Input: 0.00 Bit/s, Output: 0.00 Bit/s, Errors: 0, Resets: 0, Retries: 0, Sessions: 0, Noise: 0 dBm')
+    Result(state=<State.OK: 0>, summary='Status: operational')
+    Result(state=<State.OK: 0>, summary='Radio 1: Input: 0.00 Bit/s, Output: 0.00 Bit/s, Errors: 0, Resets: 0, Retries: 0, Sessions: 0, Noise: 0 dBm')
+    Result(state=<State.OK: 0>, summary='Radio 2: Input: 0.00 Bit/s, Output: 0.00 Bit/s, Errors: 0, Resets: 0, Retries: 0, Sessions: 0, Noise: 0 dBm')
     Metric('if_out_unicast', 0.0)
     Metric('if_out_unicast_octets', 0.0)
     Metric('if_out_non_unicast', 0.0)

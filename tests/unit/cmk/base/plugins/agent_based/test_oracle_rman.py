@@ -113,7 +113,7 @@ def test_discovery():
             Result(state=state.OK,
                    summary='Incremental SCN 545791334',
                    details='Incremental SCN 545791334'),
-            Result(state=state.OK, summary='Last DB_INCR_0 used', details='Last DB_INCR_0 used'),
+            Result(state=state.OK, summary='Last DB_INCR_0 used'),
         ],
     ),
 ])

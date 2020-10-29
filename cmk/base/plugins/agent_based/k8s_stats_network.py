@@ -172,19 +172,19 @@ def _check__k8s_stats_network__proxy_results(
     run 0
     Counters initialized
     run 1
-    Result(state=<State.OK: 0>, summary='In: 0.00 Bit/s', details='In: 0.00 Bit/s')
+    Result(state=<State.OK: 0>, summary='In: 0.00 Bit/s')
     Metric('in', 0.0)
-    Result(state=<State.OK: 0>, summary='Out: 0.00 Bit/s', details='Out: 0.00 Bit/s')
+    Result(state=<State.OK: 0>, summary='Out: 0.00 Bit/s')
     Metric('out', 0.0)
     Metric('if_in_pkts', 0.0)
     Metric('if_in_errors', 0.0)
-    Result(state=<State.OK: 0>, summary='Input error rate: 0.00/s', details='Input error rate: 0.00/s')
+    Result(state=<State.OK: 0>, summary='Input error rate: 0.00/s')
     Metric('if_out_pkts', 0.0)
     Metric('if_out_errors', 0.0)
-    Result(state=<State.OK: 0>, summary='Output error rate: 0.00/s', details='Output error rate: 0.00/s')
-    Result(state=<State.OK: 0>, summary='Input Discards: 0.00/s', details='Input Discards: 0.00/s')
+    Result(state=<State.OK: 0>, summary='Output error rate: 0.00/s')
+    Result(state=<State.OK: 0>, summary='Input Discards: 0.00/s')
     Metric('if_in_discards', 0.0)
-    Result(state=<State.OK: 0>, summary='Output Discards: 0.00/s', details='Output Discards: 0.00/s')
+    Result(state=<State.OK: 0>, summary='Output Discards: 0.00/s')
     Metric('if_out_discards', 0.0)
     """
     if section_k8s_stats is None:

@@ -170,7 +170,7 @@ def _idem_check_cisco_mem(
     ...          'MEMPOOL_DMA': ['429262192', '378092176'],
     ...          'MEMPOOL_GLOBAL_SHARED': ['1092814800', '95541296']}):
     ...     print(result)
-    Result(state=<State.OK: 0>, summary='Usage: 53.2% - 409 MiB of 770 MiB', details='Usage: 53.2% - 409 MiB of 770 MiB')
+    Result(state=<State.OK: 0>, summary='Usage: 53.2% - 409 MiB of 770 MiB')
     Metric('mem_used_percent', 53.16899356888102, boundaries=(0.0, None))
     """
     if item not in section:

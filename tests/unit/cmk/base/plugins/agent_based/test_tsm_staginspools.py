@@ -52,7 +52,7 @@ def test_check(item, params, expected):
 @pytest.mark.parametrize("item, params, expected", [
     ("not-existant", tsm_stagingpools.TSM_STAGINGPOOLS_DEFAULT_LEVELS, []),
     ("foo", tsm_stagingpools.TSM_STAGINGPOOLS_DEFAULT_LEVELS, [
-        Result(state=state.OK, summary='node1/node2/node3: ', details='node1/node2/node3: '),
+        Result(state=state.OK, summary='node1/node2/node3: '),
         Result(state=state.OK,
                summary='Total tapes: 1, Utilization: 0.1 tapes, Tapes less then 70% full: 1',
                details='Total tapes: 1, Utilization: 0.1 tapes, Tapes less then 70% full: 1'),
@@ -67,7 +67,7 @@ def test_check(item, params, expected):
         "levels": (2, 1),
         "free_below": 70
     }, [
-        Result(state=state.OK, summary='node1/node2: ', details='node1/node2: '),
+        Result(state=state.OK, summary='node1/node2: '),
         Result(
             state=state.CRIT,
             summary=

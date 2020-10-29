@@ -92,43 +92,42 @@ def test_sap_hana_license_discovery():
     ]
 
 
-@pytest.mark.parametrize(
-    "cur_item, result",
-    [("Y04 10", [
-        Result(state=state.OK, summary='Status: unlimited', details='Status: unlimited'),
-        Result(state=state.WARN, summary='License: not FALSE', details='License: not FALSE'),
-        Result(state=state.WARN,
-               summary='Expiration date: 2020-08-02 23:59:59.999999000',
-               details='Expiration date: 2020-08-02 23:59:59.999999000'),
-    ]),
-     ("H62 10", [
-         Result(state=state.OK, summary='Status: unlimited', details='Status: unlimited'),
-         Result(state=state.OK, summary='License: TRUE', details='License: TRUE'),
-     ]),
-     ("X04 55", [
-         Result(state=state.OK, summary='Size: 5 B', details='Size: 5 B'),
-         Metric('license_size', 5.0),
-         Result(state=state.OK, summary='Usage: 50.0%', details='Usage: 50.0%'),
-         Metric('license_usage_perc', 50.0),
-         Result(state=state.WARN, summary='License: not FALSE', details='License: not FALSE'),
-         Result(state=state.WARN,
-                summary='Expiration date: 2020-08-02 23:59:59.999999000',
-                details='Expiration date: 2020-08-02 23:59:59.999999000'),
-     ]),
-     (
-         "X00 00",
-         [
-             Result(state=state.OK, summary='Size: 5 B', details='Size: 5 B'),
-             Metric('license_size', 5.0),
-             Result(state=state.WARN,
-                    summary='Usage: cannot calculate',
-                    details='Usage: cannot calculate'),
-             Result(state=state.WARN, summary='License: not FALSE', details='License: not FALSE'),
-             Result(state=state.WARN,
-                    summary='Expiration date: 2020-08-02 23:59:59.999999000',
-                    details='Expiration date: 2020-08-02 23:59:59.999999000'),
-         ],
-     )])
+@pytest.mark.parametrize("cur_item, result",
+                         [("Y04 10", [
+                             Result(state=state.OK, summary='Status: unlimited'),
+                             Result(state=state.WARN, summary='License: not FALSE'),
+                             Result(state=state.WARN,
+                                    summary='Expiration date: 2020-08-02 23:59:59.999999000',
+                                    details='Expiration date: 2020-08-02 23:59:59.999999000'),
+                         ]),
+                          ("H62 10", [
+                              Result(state=state.OK, summary='Status: unlimited'),
+                              Result(state=state.OK, summary='License: TRUE'),
+                          ]),
+                          ("X04 55", [
+                              Result(state=state.OK, summary='Size: 5 B'),
+                              Metric('license_size', 5.0),
+                              Result(state=state.OK, summary='Usage: 50.0%'),
+                              Metric('license_usage_perc', 50.0),
+                              Result(state=state.WARN, summary='License: not FALSE'),
+                              Result(state=state.WARN,
+                                     summary='Expiration date: 2020-08-02 23:59:59.999999000',
+                                     details='Expiration date: 2020-08-02 23:59:59.999999000'),
+                          ]),
+                          (
+                              "X00 00",
+                              [
+                                  Result(state=state.OK, summary='Size: 5 B'),
+                                  Metric('license_size', 5.0),
+                                  Result(state=state.WARN,
+                                         summary='Usage: cannot calculate',
+                                         details='Usage: cannot calculate'),
+                                  Result(state=state.WARN, summary='License: not FALSE'),
+                                  Result(state=state.WARN,
+                                         summary='Expiration date: 2020-08-02 23:59:59.999999000',
+                                         details='Expiration date: 2020-08-02 23:59:59.999999000'),
+                              ],
+                          )])
 def test_sap_hana_license_check(cur_item, result):
     yielded_results = list(
         sap_hana_license.check_sap_hana_license(cur_item, Parameters({}), SECTION))

@@ -216,15 +216,15 @@ def _check_netscaler_vservers(
     ...         'tx_bytes': 0,
     ...     }]):
     ...     print(result)
-    Result(state=<State.OK: 0>, summary='Status: up', details='Status: up')
-    Result(state=<State.OK: 0>, summary='Health: 100%', details='Health: 100%')
+    Result(state=<State.OK: 0>, summary='Status: up')
+    Result(state=<State.OK: 0>, summary='Health: 100%')
     Metric('health_perc', 100.0, boundaries=(0.0, 100.0))
-    Result(state=<State.OK: 0>, summary='Type: loadbalancing, Protocol: ssl, Socket: 0.0.0.0:0', details='Type: loadbalancing, Protocol: ssl, Socket: 0.0.0.0:0')
-    Result(state=<State.OK: 0>, summary='Request rate: 0/s', details='Request rate: 0/s')
+    Result(state=<State.OK: 0>, summary='Type: loadbalancing, Protocol: ssl, Socket: 0.0.0.0:0')
+    Result(state=<State.OK: 0>, summary='Request rate: 0/s')
     Metric('request_rate', 0.0)
-    Result(state=<State.OK: 0>, summary='In: 0.00 Bit/s', details='In: 0.00 Bit/s')
+    Result(state=<State.OK: 0>, summary='In: 0.00 Bit/s')
     Metric('if_in_octets', 0.0)
-    Result(state=<State.OK: 0>, summary='Out: 0.00 Bit/s', details='Out: 0.00 Bit/s')
+    Result(state=<State.OK: 0>, summary='Out: 0.00 Bit/s')
     Metric('if_out_octets', 0.0)
     """
     if not vsevers:

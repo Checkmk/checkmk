@@ -133,7 +133,7 @@ def check_f5_bigip_config_sync_v11_plus(params: Parameters, section: State) -> C
     ...         params=Parameters(CONFIG_SYNC_DEFAULT_PARAMETERS),
     ...         section={"node1": 0, "node2": 3}):
     ...     print(r)
-    Result(state=<state.OK: 0>, summary='Node [node1] is standby', details='Node [node1] is standby')
+    Result(state=<state.OK: 0>, summary='Node [node1] is standby')
     """
     status = params[section.state]
     status_name = CONFIG_SYNC_STATE_NAMES[section.state]

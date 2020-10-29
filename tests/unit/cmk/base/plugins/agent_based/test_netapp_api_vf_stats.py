@@ -53,7 +53,7 @@ SECTION_NETAPP_API_CPU: netapp_api_cpu.Section = {
                 "levels": (90.0, 95.0)
             },
             [
-                Result(state=state.OK, summary='Total CPU: 0%', details='Total CPU: 0%'),
+                Result(state=state.OK, summary='Total CPU: 0%'),
                 Metric('util', 0.0, levels=(90.0, 95.0), boundaries=(0.0, None)),
                 Result(state=state.OK, notice='Number of processors: 2'),
             ],

@@ -398,13 +398,13 @@ def check_brocade_optical(
     ...           'type': '10GE LR 10km SFP+'}}
     ... ):
     ...     pprint(output)
-    Result(state=<State.OK: 0>, summary='[S/N ADF2094300014UN, P/N 57-0000076-01] Operational down', details='[S/N ADF2094300014UN, P/N 57-0000076-01] Operational down')
+    Result(state=<State.OK: 0>, summary='[S/N ADF2094300014UN, P/N 57-0000076-01] Operational down')
     Metric('temp', 31.4882)
-    Result(state=<State.OK: 0>, summary='Temperature: 31.5°C', details='Temperature: 31.5°C')
+    Result(state=<State.OK: 0>, summary='Temperature: 31.5°C')
     Result(state=<State.OK: 0>, summary='', details='Configuration: prefer user levels over device levels (no levels found)')
-    Result(state=<State.OK: 0>, summary='TX Light -1.5 dBm (Normal)', details='TX Light -1.5 dBm (Normal)')
+    Result(state=<State.OK: 0>, summary='TX Light -1.5 dBm (Normal)')
     Metric('tx_light', -1.4508)
-    Result(state=<State.OK: 0>, summary='RX Light -37.0 dBm (Low-Alarm)', details='RX Light -37.0 dBm (Low-Alarm)')
+    Result(state=<State.OK: 0>, summary='RX Light -37.0 dBm (Low-Alarm)')
     Metric('rx_light', -36.9897)
     >>> for output in check_brocade_optical(
     ... '1409',
@@ -423,10 +423,10 @@ def check_brocade_optical(
     ...           'type': '10GE LR 10km SFP+'}}
     ... ):
     ...     pprint(output)
-    Result(state=<State.OK: 0>, summary='[S/N ADF2094300014TL, P/N 57-0000076-01] Operational up', details='[S/N ADF2094300014TL, P/N 57-0000076-01] Operational up')
-    Result(state=<State.OK: 0>, summary='TX Light -1.6 dBm (Normal)', details='TX Light -1.6 dBm (Normal)')
+    Result(state=<State.OK: 0>, summary='[S/N ADF2094300014TL, P/N 57-0000076-01] Operational up')
+    Result(state=<State.OK: 0>, summary='TX Light -1.6 dBm (Normal)')
     Metric('tx_light', -1.6045)
-    Result(state=<State.OK: 0>, summary='RX Light -2.3 dBm (Normal)', details='RX Light -2.3 dBm (Normal)')
+    Result(state=<State.OK: 0>, summary='RX Light -2.3 dBm (Normal)')
     Metric('rx_light', -2.2504)
     Result(state=<State.OK: 0>, summary='', details='Temperature (Lane 1) Temperature: 31.5°C')
     Metric('port_temp_1', 31.4531)

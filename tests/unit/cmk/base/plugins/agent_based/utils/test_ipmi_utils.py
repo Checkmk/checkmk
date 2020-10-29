@@ -29,7 +29,7 @@ from cmk.base.plugins.agent_based.utils import ipmi
             False,
             lambda txt: state.OK,
             [
-                Result(state=state.OK, summary='Status: ok', details='Status: ok'),
+                Result(state=state.OK, summary='Status: ok'),
             ],
         ),
         (
@@ -45,8 +45,8 @@ from cmk.base.plugins.agent_based.utils import ipmi
             False,
             lambda txt: state.OK,
             [
-                Result(state=state.OK, summary='Status: ok', details='Status: ok'),
-                Result(state=state.OK, summary='1.04 Volts', details='1.04 Volts'),
+                Result(state=state.OK, summary='Status: ok'),
+                Result(state=state.OK, summary='1.04 Volts'),
                 Metric('PCH_1.05V', 1.04, levels=(None, 1.13)),
             ],
         ),
@@ -63,8 +63,8 @@ from cmk.base.plugins.agent_based.utils import ipmi
             False,
             lambda txt: state.CRIT,
             [
-                Result(state=state.CRIT, summary='Status: ok', details='Status: ok'),
-                Result(state=state.OK, summary='1.04 Volts', details='1.04 Volts'),
+                Result(state=state.CRIT, summary='Status: ok'),
+                Result(state=state.OK, summary='1.04 Volts'),
                 Metric('PCH_1.05V', 1.04, levels=(None, 1.13)),
             ],
         ),
@@ -81,8 +81,8 @@ from cmk.base.plugins.agent_based.utils import ipmi
             True,
             lambda txt: state.OK,
             [
-                Result(state=state.OK, summary='Status: ok', details='Status: ok'),
-                Result(state=state.OK, summary='1.04 Volts', details='1.04 Volts'),
+                Result(state=state.OK, summary='Status: ok'),
+                Result(state=state.OK, summary='1.04 Volts'),
             ],
         ),
         (
@@ -98,8 +98,8 @@ from cmk.base.plugins.agent_based.utils import ipmi
             True,
             lambda txt: state.OK,
             [
-                Result(state=state.OK, summary='Status: ok', details='Status: ok'),
-                Result(state=state.OK, summary='1.04 C', details='1.04 C'),
+                Result(state=state.OK, summary='Status: ok'),
+                Result(state=state.OK, summary='1.04 C'),
                 Metric('value', 1.04, levels=(None, 1.13)),
             ],
         ),
@@ -116,8 +116,8 @@ from cmk.base.plugins.agent_based.utils import ipmi
             False,
             lambda txt: state.OK,
             [
-                Result(state=state.OK, summary='Status: nc', details='Status: nc'),
-                Result(state=state.OK, summary='1.04 Volts', details='1.04 Volts'),
+                Result(state=state.OK, summary='Status: nc'),
+                Result(state=state.OK, summary='1.04 Volts'),
                 Metric('PCH_1.05V', 1.04, levels=(None, 1.13)),
                 Result(state=state.WARN,
                        summary='Sensor is non-critical',
@@ -137,7 +137,7 @@ from cmk.base.plugins.agent_based.utils import ipmi
             False,
             lambda txt: state.OK,
             [
-                Result(state=state.OK, summary='Status: ok', details='Status: ok'),
+                Result(state=state.OK, summary='Status: ok'),
                 Result(state=state.CRIT,
                        summary='2.10 Volts (warn/crit at 1.13 Volts/1.13 Volts)',
                        details='2.10 Volts (warn/crit at 1.13 Volts/1.13 Volts)'),
@@ -157,7 +157,7 @@ from cmk.base.plugins.agent_based.utils import ipmi
             False,
             lambda txt: state.OK,
             [
-                Result(state=state.OK, summary='Status: ok', details='Status: ok'),
+                Result(state=state.OK, summary='Status: ok'),
                 Result(state=state.CRIT,
                        summary='0.50 Volts (warn/crit below 0.97 Volts/0.97 Volts)',
                        details='0.50 Volts (warn/crit below 0.97 Volts/0.97 Volts)'),
@@ -182,8 +182,8 @@ from cmk.base.plugins.agent_based.utils import ipmi
             False,
             lambda txt: state.OK,
             [
-                Result(state=state.OK, summary='Status: ok', details='Status: ok'),
-                Result(state=state.OK, summary='1.04 Volts', details='1.04 Volts'),
+                Result(state=state.OK, summary='Status: ok'),
+                Result(state=state.OK, summary='1.04 Volts'),
                 Metric('PCH_1.05V', 1.04, levels=(None, 1.13)),
                 Result(state=state.CRIT,
                        summary='PCH_1.05V: 1.04 Volts (warn/crit below 1.00 Volts/2.00 Volts)',
@@ -207,8 +207,8 @@ from cmk.base.plugins.agent_based.utils import ipmi
             False,
             lambda txt: state.OK,
             [
-                Result(state=state.OK, summary='Status: ok', details='Status: ok'),
-                Result(state=state.OK, summary='1.04 Volts', details='1.04 Volts'),
+                Result(state=state.OK, summary='Status: ok'),
+                Result(state=state.OK, summary='1.04 Volts'),
                 Metric('PCH_1.05V', 1.04, levels=(None, 1.13)),
                 Result(state=state.WARN,
                        summary='PCH_1.05V: 1.04 Volts (warn/crit at 1.00 Volts/4.00 Volts)',
@@ -228,8 +228,8 @@ from cmk.base.plugins.agent_based.utils import ipmi
             False,
             lambda txt: state.OK,
             [
-                Result(state=state.OK, summary='Status: ok', details='Status: ok'),
-                Result(state=state.OK, summary='1.04 Volts', details='1.04 Volts'),
+                Result(state=state.OK, summary='Status: ok'),
+                Result(state=state.OK, summary='1.04 Volts'),
                 Metric('PCH_1.05V', 1.04, levels=(None, 1.13)),
                 Result(state=state.UNKNOWN,
                        summary='User-defined state',
@@ -336,7 +336,7 @@ SECTION = {
         lambda txt: state.OK,
         [
             Metric('ambient_temp', 18.5),
-            Result(state=state.OK, summary='10 sensors OK', details='10 sensors OK'),
+            Result(state=state.OK, summary='10 sensors OK'),
         ],
     ),
     (

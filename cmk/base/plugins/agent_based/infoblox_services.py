@@ -152,7 +152,7 @@ def check_infoblox_services(item: str, section: Section) -> CheckResult:
     ...         'discovery-capacity': ('working', '0% - Discovery capacity usage is OK.'),
     ... }):
     ...     print(result)
-    Result(state=<State.OK: 0>, summary='Status: working (14% - System memory usage is OK.)', details='Status: working (14% - System memory usage is OK.)')
+    Result(state=<State.OK: 0>, summary='Status: working (14% - System memory usage is OK.)')
     """
     if not item in section:
         return
@@ -177,7 +177,7 @@ def cluster_check_infoblox_services(item: str, section: Mapping[str, Section]) -
     ...         'replication': ('working', 'Online'),
     ... }}):
     ...     print(result)
-    Result(state=<State.OK: 0>, summary='Status: working (14% - System memory usage is OK.)', details='Status: working (14% - System memory usage is OK.)')
+    Result(state=<State.OK: 0>, summary='Status: working (14% - System memory usage is OK.)')
     """
     try:
         status, description = min(

@@ -51,8 +51,8 @@ def test_check_netscaler_vservers_clustered_best(clustered_vservers):
             }),
             clustered_vservers,
         )) == [
-            Result(state=state.OK, summary='Status: up (node1)', details='Status: up (node1)'),
-            Result(state=state.OK, summary='Status: busy (node2)', details='Status: busy (node2)'),
+            Result(state=state.OK, summary='Status: up (node1)'),
+            Result(state=state.OK, summary='Status: busy (node2)'),
             Result(state=state.WARN,
                    summary='Health: 75.2% (warn/crit below 100%/0.10%)',
                    details='Health: 75.2% (warn/crit below 100%/0.10%)'),
@@ -60,11 +60,11 @@ def test_check_netscaler_vservers_clustered_best(clustered_vservers):
             Result(state=state.OK,
                    summary='Type: loadbalancing, Protocol: ssl, Socket: 0.0.0.0:0',
                    details='Type: loadbalancing, Protocol: ssl, Socket: 0.0.0.0:0'),
-            Result(state=state.OK, summary='Request rate: 1/s', details='Request rate: 1/s'),
+            Result(state=state.OK, summary='Request rate: 1/s'),
             Metric('request_rate', 1.0),
-            Result(state=state.OK, summary='In: 16.0 Bit/s', details='In: 16.0 Bit/s'),
+            Result(state=state.OK, summary='In: 16.0 Bit/s'),
             Metric('if_in_octets', 2.0),
-            Result(state=state.OK, summary='Out: 40.0 Bit/s', details='Out: 40.0 Bit/s'),
+            Result(state=state.OK, summary='Out: 40.0 Bit/s'),
             Metric('if_out_octets', 5.0),
         ]
 

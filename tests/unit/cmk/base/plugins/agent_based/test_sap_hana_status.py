@@ -73,16 +73,14 @@ def test_sap_hana_status_discovery():
 
 @pytest.mark.parametrize(
     "section, check_type, results",
-    [(SECTION, "Status", Result(state=state.OK, summary='Status: OK', details='Status: OK')),
+    [(SECTION, "Status", Result(state=state.OK, summary='Status: OK')),
      (
          SECTION,
          "Version",
          Result(state=state.OK,
                 summary='Version: 1.00.122.22.1543461992 (fa/hana1sp12)',
                 details='Version: 1.00.122.22.1543461992 (fa/hana1sp12)'),
-     ),
-     (SECTION_WARNING, "Status",
-      Result(state=state.WARN, summary='Status: WARNING', details='Status: WARNING'))])
+     ), (SECTION_WARNING, "Status", Result(state=state.WARN, summary='Status: WARNING'))])
 def test_sap_hana_status_check(check_type, results, section):
 
     yielded_results = list(
@@ -95,6 +93,6 @@ def test_sap_hana_status_cluster_check():
     yielded_results = list(
         sap_hana_status.cluster_check_sap_hana_status("Status %s" % ITEM, section))
     assert yielded_results == [
-        Result(state=state.OK, summary='Nodes: node 1, node 2', details='Nodes: node 1, node 2'),
-        Result(state=state.OK, summary='Status: OK', details='Status: OK')
+        Result(state=state.OK, summary='Nodes: node 1, node 2'),
+        Result(state=state.OK, summary='Status: OK')
     ]

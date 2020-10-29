@@ -57,9 +57,9 @@ def _node_result(
 ) -> Result:
     """Turn given node details into
     >>> _node_result("", 4, True, Parameters({'type': 'active_standby'}))
-    Result(state=<State.OK: 0>, summary='Node is active', details='Node is active')
+    Result(state=<State.OK: 0>, summary='Node is active')
     >>> _node_result("", 3, False, Parameters({'type': 'active_standby'}))
-    Result(state=<State.OK: 0>, summary='Node is active', details='Node is active')
+    Result(state=<State.OK: 0>, summary='Node is active')
     """
     state_mapping_from_params = {int(k): v for k, v in params.get("v11_2_states", {})}
     state_mapping = {**{0: 3, 1: 2, 2: 2, 3: 0, 4: 0}, **state_mapping_from_params}
@@ -91,9 +91,9 @@ def _cluster_check_f5_bigip_cluster_status_common(
     ...         section={'f5-bigip-5': 3, 'f5-bigip-6': 0},
     ...         is_gt_v11_2=True):
     ...     print(r)
-    Result(state=<State.CRIT: 2>, summary='No active node found: ', details='No active node found: ')
-    Result(state=<State.OK: 0>, summary='Node [f5-bigip-5] is standby', details='Node [f5-bigip-5] is standby')
-    Result(state=<State.UNKNOWN: 3>, summary='Node [f5-bigip-6] is unknown', details='Node [f5-bigip-6] is unknown')
+    Result(state=<State.CRIT: 2>, summary='No active node found: ')
+    Result(state=<State.OK: 0>, summary='Node [f5-bigip-5] is standby')
+    Result(state=<State.UNKNOWN: 3>, summary='Node [f5-bigip-6] is unknown')
     """
     num_active_nodes = sum(x == STATE_NAMES[is_gt_v11_2].index("active") for x in section.values())
 
@@ -115,7 +115,7 @@ def check_f5_bigip_cluster_status(params: Parameters, section: int) -> CheckResu
     """
     >>> for r in check_f5_bigip_cluster_status(Parameters({"type": "active_standby"}), 3):
     ...     print(r)
-    Result(state=<State.OK: 0>, summary='Node is active', details='Node is active')
+    Result(state=<State.OK: 0>, summary='Node is active')
     """
     yield from _check_f5_bigip_cluster_status_common(params, section, False)
 
@@ -129,8 +129,8 @@ def cluster_check_f5_bigip_cluster_status(
     ...         params=Parameters({"type": "active_standby"}),
     ...         section={"node1": 0, "node2": 3}):
     ...     print(r)
-    Result(state=<State.OK: 0>, summary='Node [node1] is standby', details='Node [node1] is standby')
-    Result(state=<State.OK: 0>, summary='Node [node2] is active', details='Node [node2] is active')
+    Result(state=<State.OK: 0>, summary='Node [node1] is standby')
+    Result(state=<State.OK: 0>, summary='Node [node2] is active')
     """
     yield from _cluster_check_f5_bigip_cluster_status_common(params, section, False)
 

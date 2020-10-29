@@ -59,11 +59,11 @@ def check_printer_pages_types(section: Section) -> CheckResult:
     >>> for result in check_printer_pages_types(
     ...     {'pages_color': 21693, 'pages_bw': 54198}):
     ...   print(result)
-    Result(state=<State.OK: 0>, summary='total prints: 75891', details='total prints: 75891')
+    Result(state=<State.OK: 0>, summary='total prints: 75891')
     Metric('pages_total', 75891.0)
-    Result(state=<State.OK: 0>, summary='b/w: 54198', details='b/w: 54198')
+    Result(state=<State.OK: 0>, summary='b/w: 54198')
     Metric('pages_bw', 54198.0)
-    Result(state=<State.OK: 0>, summary='color: 21693', details='color: 21693')
+    Result(state=<State.OK: 0>, summary='color: 21693')
     Metric('pages_color', 21693.0)
     """
     if 'pages_total' not in section:

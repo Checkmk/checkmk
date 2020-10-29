@@ -296,6 +296,10 @@ class Result(
             details=details,
         )
 
+    def __repr__(self) -> str:
+        details = f", details={self.details!r}" if self.summary != self.details else ""
+        return f"{self.__class__.__name__}(state={self.state!r}, summary={self.summary!r}{details})"
+
 
 def _create_result_fields(
     *,

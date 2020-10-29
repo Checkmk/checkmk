@@ -77,8 +77,7 @@ def test_discover_adva_fsp_if():
             Result(state=State.OK,
                    summary='Admin/Operational State: up/up',
                    details='Admin/Operational State: up/up'),
-            Result(
-                state=State.OK, summary='Output power: -3.1 dBm', details='Output power: -3.1 dBm'),
+            Result(state=State.OK, summary='Output power: -3.1 dBm'),
             Metric('output_power', -3.1),
             Result(state=State.OK, summary='Input power: -2.7 dBm',
                    details='Input power: -2.7 dBm'),
@@ -95,8 +94,7 @@ def test_discover_adva_fsp_if():
             Result(state=State.OK,
                    summary='Admin/Operational State: up/up',
                    details='Admin/Operational State: up/up'),
-            Result(
-                state=State.CRIT, summary='Output power: 2.2 dBm', details='Output power: 2.2 dBm'),
+            Result(state=State.CRIT, summary='Output power: 2.2 dBm'),
             Metric('output_power', 2.2, levels=(None, 1.0)),
             Result(state=State.CRIT,
                    summary='Input power: -12.0 dBm',
@@ -122,8 +120,8 @@ def test_discover_adva_fsp_if():
             Result(state=State.WARN,
                    summary='Admin/Operational State: up/dormant',
                    details='Admin/Operational State: up/dormant'),
-            Result(state=State.WARN, summary='Output power: n.a.', details='Output power: n.a.'),
-            Result(state=State.WARN, summary='Input power: n.a.', details='Input power: n.a.'),
+            Result(state=State.WARN, summary='Output power: n.a.'),
+            Result(state=State.WARN, summary='Input power: n.a.'),
         ],
     ),
 ])

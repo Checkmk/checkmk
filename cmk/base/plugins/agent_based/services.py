@@ -139,7 +139,7 @@ def check_windows_services_single(
     ...    params={'additional_servicenames': [], 'else': 0, 'states': [('running', 'auto', 0)]},
     ...    section=[WinService(name='GoodService', state='stopped', start_type='demand', description='nixda')]):
     ...   print(result)
-    Result(state=<State.OK: 0>, summary='nixda: stopped (start type is demand)', details='nixda: stopped (start type is demand)')
+    Result(state=<State.OK: 0>, summary='nixda: stopped (start type is demand)')
     """
     # allow to match agains the internal name or agains the display name of the service
     additional_names = params.get("additional_servicenames", [])

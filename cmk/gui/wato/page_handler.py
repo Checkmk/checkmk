@@ -126,6 +126,20 @@ def _wato_page_handler(current_mode: str, mode_permissions: List[PermissionName]
             ) and not cmk.gui.watolib.read_only.may_override():
                 raise MKUserError(None, cmk.gui.watolib.read_only.message())
 
+            # TODO: Cleanup this special API. We could make things a lot clearer if we'd replace
+            # the type dispatching with something more meaningful.
+            #
+            # * result=False could be replaced with raising a FinalizeRequest() exception.
+            # * result='newmode' could be replaced with raising a HTTPRedirect() exception.
+            # * result=('newmode', 'msg') could be replaced with raising a HTTPRedirect()
+            #   exception. But we also need to transport the result message to the destination
+            #   page somehow. Flask uses signed session cookies for that, check whether or not
+            #   this could be an approach for us.
+            #
+            # Using exceptions here is still not ideal, but better than before, because it
+            # clarifies the intend using a generic mechanism. Better would be to use a result type
+            # and return it, like flask is doing it. But that would need a larger refactoring of
+            # the GUI page processing logic.
             result = mode.action()
             if isinstance(result, tuple):
                 newmode, action_message = result

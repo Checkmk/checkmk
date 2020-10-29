@@ -70,10 +70,12 @@ class BIAggregationFunctionBest(ABCBIAggregationFunction):
         super().__init__(aggr_function_config)
         self.count = aggr_function_config["count"]
         self.restrict_state = aggr_function_config["restrict_state"]
+        self.mapped_restricted_state = _state_mappings[self.restrict_state]
 
     @mapped_states
     def aggregate(self, states: List[float]) -> Union[int, float]:
-        return float(min(self.restrict_state, states[min(len(states) - 1, self.count - 1)]))
+        return float(min(self.mapped_restricted_state, states[min(len(states) - 1,
+                                                                  self.count - 1)]))
 
 
 class BIAggregationFunctionBestSchema(Schema):
@@ -110,10 +112,11 @@ class BIAggregationFunctionWorst(ABCBIAggregationFunction):
         super().__init__(aggr_function_config)
         self.count = aggr_function_config["count"]
         self.restrict_state = aggr_function_config["restrict_state"]
+        self.mapped_restricted_state = _state_mappings[self.restrict_state]
 
     @mapped_states
     def aggregate(self, states: List[float]) -> Union[int, float]:
-        return float(min(self.restrict_state, states[max(0, len(states) - self.count)]))
+        return float(min(self.mapped_restricted_state, states[max(0, len(states) - self.count)]))
 
 
 class BIAggregationFunctionWorstSchema(Schema):

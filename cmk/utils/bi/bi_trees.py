@@ -117,8 +117,8 @@ class BICompiledLeaf(ABCBICompiledNode):
         if entity.has_been_checked:
             state = entity.hard_state if computation_options.use_hard_states else entity.state
             # Since we need an equalized state mapping, map host state DOWN to CRIT
-            if self.service_description is None and state == BIStates.HOST_DOWN:
-                state = BIStates.CRIT
+            if self.service_description is None:
+                state = self._map_hoststate_to_bistate(state)
         else:
             state = BIStates.PENDING
 
@@ -146,6 +146,15 @@ class BICompiledLeaf(ABCBICompiledNode):
             [],
             self,
         )
+
+    def _map_hoststate_to_bistate(self, host_state: HostState):
+        if host_state == BIStates.HOST_UP:
+            return BIStates.OK
+        if host_state == BIStates.HOST_DOWN:
+            return BIStates.CRIT
+        if host_state == BIStates.HOST_UNREACHABLE:
+            return BIStates.UNKNOWN
+        return BIStates.UNKNOWN
 
     def _get_state_name(self, state: Union[HostState, ServiceState]) -> str:
         if self.service_description:

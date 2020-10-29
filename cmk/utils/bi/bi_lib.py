@@ -61,6 +61,7 @@ class BIStates:
     PENDING = -1
     HOST_UP = 0
     HOST_DOWN = 1
+    HOST_UNREACHABLE = 2
 
 
 NodeComputeResult = NamedTuple("NodeComputeResult", [

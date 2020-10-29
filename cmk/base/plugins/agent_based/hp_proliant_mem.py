@@ -4,9 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Dict, Final, NamedTuple
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    InventoryResult,
+    StringTable,
+)
 
-from .agent_based_api.v1 import register, render, Result, Service, SNMPTree, State
+from .agent_based_api.v1 import register, render, Result, Service, SNMPTree, State, TableRow
 from .utils.hp_proliant import MAP_TYPES_MEMORY, DETECT
 
 _STATUS_MAP: Final = {
@@ -160,4 +165,27 @@ register.check_plugin(
     service_name="HW Mem %s",
     discovery_function=discovery_hp_proliant_mem,
     check_function=check_hp_proliant_mem,
+)
+
+
+def inventory_hp_proliant_mem(section: Section) -> InventoryResult:
+
+    for module in section.values():
+        yield TableRow(
+            path=["hardware", "memory", f"array_{module.cpu_num}", "devices"],
+            key_columns={
+                "set": module.number,
+            },
+            inventory_columns={
+                "size": module.size,
+                "serial": module.serial,
+                "type": module.typ,
+                "locator": module.cpu_num
+            },
+        )
+
+
+register.inventory_plugin(
+    name="hp_proliant_mem",
+    inventory_function=inventory_hp_proliant_mem,
 )

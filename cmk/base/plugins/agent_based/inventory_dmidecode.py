@@ -252,7 +252,7 @@ def _make_inventory_mem_device(
     device["speed"] = _parse_speed(device.get("speed", "Unknown"))  # type: ignore[arg-type]
     device["size"] = _parse_size(device.get("size", "Unknown"))  # type: ignore[arg-type]
 
-    key_keys = ['bank_locator']  # for now. needs revisiting when we migrate hp_proliant_mem
+    key_keys = ['set']  # match hp_proliant_mem!
     yield TableRow(
         path=["hardware", "memory", f"array_{array_number}", "devices"],
         key_columns={k: device.pop(k) for k in key_keys},

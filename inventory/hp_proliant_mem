@@ -7,36 +7,30 @@
 from cmk.base.plugins.agent_based.hp_proliant_mem import Section  # temporarily, during migration!
 
 
-def inv_hp_proliant_mem(section: Section):
-    node = inv_tree_list("hardware.memory.arrays:")
-
-    infos = {}
-    for module in section.values():
-        infos.setdefault((module.cpu_num - 1, module.number), {
-            "serial": module.serial,
-            "type": module.typ,
-        })
-
+def _find_or_create_device(device_table, module):
     # From dmidecode in case of dual host config we have to proof
     # if there's already an existing devices table
-    try:
-        for (cpu_num, module_index), module_info in infos.items():
-            for entry in node[cpu_num].get("devices", []):
-                if entry["set"] == module_index:
-                    entry.update(module_info)
-    except Exception:
-        array = {"devices": []}
-        for module in section.values():
+    for device in device_table:
+        if device.get("set") == module.number:
+            return device
 
-            array["devices"].append({
-                "size": module.size,
-                "serial": module.serial,
-                "type": module.typ,
-                "set": module.number,
-                "locator": module.cpu_num
-            })
+    device_table.append({})
+    return device_table[-1]
 
-        node.append(array)
+
+def inv_hp_proliant_mem(section: Section):
+
+    for module in section.values():
+        device_table = inv_tree_list("hardware.memory.array_{module.cpu_num}.devices")
+
+        device = _find_or_create_device(device_table, module)
+        device.update({
+            "size": module.size,
+            "serial": module.serial,
+            "type": module.typ,
+            "set": module.number,
+            "locator": module.cpu_num
+        })
 
 
 # TODO: bring this back CMK-5976

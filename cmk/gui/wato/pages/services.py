@@ -213,7 +213,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
         # Reuse the discovery result already known to the GUI or fetch a new one?
         previous_discovery_result = DiscoveryResult(*ast.literal_eval(request["discovery_result"])) \
-                                        if request.get("discovery_result") else None
+            if request.get("discovery_result") else None
 
         if self._use_previous_discovery_result(request, previous_discovery_result):
             assert previous_discovery_result is not None
@@ -304,7 +304,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
         if discovery_result.job_status["state"] == JobStatusStates.EXCEPTION:
             return _("%s failed after %s: %s (see <tt>var/log/web.log</tt> for further information)") % \
-                                (job_title, duration_txt, "\n".join(discovery_result.job_status["loginfo"]["JobException"]))
+                (job_title, duration_txt, "\n".join(discovery_result.job_status["loginfo"]["JobException"]))
 
         messages = []
         if discovery_result.job_status["state"] == JobStatusStates.STOPPED:
@@ -351,7 +351,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             (config.user.may("wato.service_discovery_to_undecided")
             and config.user.may("wato.service_discovery_to_monitored")
             and config.user.may("wato.service_discovery_to_ignored")
-            and config.user.may("wato.service_discovery_to_removed")):
+             and config.user.may("wato.service_discovery_to_removed")):
             options = options._replace(action=DiscoveryAction.NONE)
 
         return options
@@ -362,7 +362,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
         if self._options.action in [DiscoveryAction.REFRESH, DiscoveryAction.SCAN,
                                     DiscoveryAction.STOP] \
-            and html.transaction_manager.check_transaction():
+                and html.transaction_manager.check_transaction():
             return False
 
         if self._is_active(previous_discovery_result):
@@ -417,7 +417,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
     def _do_update_host_labels(self, discovery_result):
         message = _("Updated discovered host labels of '%s' with %d labels") % \
-                    (self._host.name(), len(discovery_result.host_labels))
+            (self._host.name(), len(discovery_result.host_labels))
         watolib.add_service_change(self._host, "update-host-labels", message)
         check_mk_automation(self._host.site_id(), "update-host-labels", [self._host.name()],
                             discovery_result.host_labels)
@@ -740,7 +740,7 @@ class DiscoveryPageRenderer:
             css="checkbox")
         name = checkbox_id(check_type, item)
         checked = self._options.action == DiscoveryAction.BULK_UPDATE \
-                    and name in request["update_services"]
+            and name in request["update_services"]
         html.checkbox(varname=name, deflt=checked, class_=css_classes)
 
     def _show_actions(self, table, discovery_result, check):
@@ -1251,7 +1251,7 @@ def _checkbox_js_url(host: watolib.CREHost, options: DiscoveryOptions) -> str:
 def _page_menu_entry_show_discovered_labels(host: watolib.CREHost,
                                             options: DiscoveryOptions) -> PageMenuEntry:
     return PageMenuEntry(
-        title=_("Show discovered labels"),
+        title=_("Show discovered service labels"),
         icon_name="trans",
         item=PageMenuCheckbox(
             is_checked=options.show_discovered_labels,

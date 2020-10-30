@@ -55,22 +55,26 @@ def authenticate(request: Request) -> Iterator[bool]:
     automation secret authentication."""
 
     user_id = _check_auth(request)
+    if not user_id:
+        yield False
+        return
 
+    with UserContext(user_id):
+        yield True
+
+
+@contextlib.contextmanager
+def UserContext(user_id: UserId) -> Iterator[None]:
+    """Managing authenticated user context
+
+    After the user has been authenticated, initialize the global user object.
+    Also cleanup when leaving"""
     try:
-        if user_id:
-            login(user_id)
-            yield True
-        else:
-            yield False
+        config.set_user_by_id(user_id)
+        yield
     finally:
         html.transaction_manager.store_new()
         config.clear_user_login()
-
-
-def login(user_id: UserId) -> None:
-    """After the user has been authenticated, tell the different components
-    of the GUI which user is authenticated."""
-    config.set_user_by_id(user_id)
 
 
 def auth_cookie_name() -> str:

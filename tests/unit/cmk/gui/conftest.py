@@ -160,9 +160,8 @@ def with_user(register_builtin_html, load_config):
 @pytest.fixture(scope='function')
 def with_user_login(with_user):
     user_id = with_user[0]
-    login.login(user_id)
-    yield user_id
-    config.clear_user_login()
+    with login.UserContext(user_id):
+        yield user_id
 
 
 @pytest.fixture(scope='function')
@@ -174,9 +173,8 @@ def with_admin(register_builtin_html, load_config):
 @pytest.fixture(scope='function')
 def with_admin_login(with_admin):
     user_id = with_admin[0]
-    login.login(user_id)
-    yield user_id
-    config.clear_user_login()
+    with login.UserContext(user_id):
+        yield user_id
 
 
 # noinspection PyDefaultArgument

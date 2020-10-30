@@ -74,6 +74,7 @@ def UserContext(user_id: UserId) -> Iterator[None]:
         yield
     finally:
         html.transaction_manager.store_new()
+        userdb.on_end_of_request(user_id)
         config.clear_user_login()
 
 

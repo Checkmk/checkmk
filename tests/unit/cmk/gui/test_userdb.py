@@ -72,12 +72,14 @@ def user_idle_timeout_enabled(monkeypatch, user_id):
 def fixture_session_timed_out(monkeypatch, user_id, fix_time):
     session_id = "sess1"
     now = int(time.time()) - 20
-    userdb._save_session_infos(
-        user_id, {session_id: userdb.SessionInfo(
+    userdb._save_session_infos(user_id, {
+        session_id: userdb.SessionInfo(
             session_id,
             started_at=now,
             last_activity=now,
-        )})
+            flashes=[],
+        )
+    })
     return session_id
 
 
@@ -85,12 +87,14 @@ def fixture_session_timed_out(monkeypatch, user_id, fix_time):
 def fixture_session_valid(monkeypatch, user_id, fix_time):
     session_id = "sess2"
     now = int(time.time()) - 5
-    userdb._save_session_infos(
-        user_id, {session_id: userdb.SessionInfo(
+    userdb._save_session_infos(user_id, {
+        session_id: userdb.SessionInfo(
             session_id,
             started_at=now,
             last_activity=now,
-        )})
+            flashes=[],
+        )
+    })
     return session_id
 
 
@@ -125,6 +129,7 @@ def test_on_succeeded_login(user_id):
             session_id=session_id,
             started_at=int(time.time()),
             last_activity=int(time.time()),
+            flashes=[],
         )
     }
 
@@ -219,6 +224,7 @@ def test_on_access_update_valid_session(user_id, session_valid):
     old_session = old_session_infos[session_valid]
 
     userdb.on_access(user_id, session_valid)
+    userdb.on_end_of_request(user_id)
 
     new_session_infos = userdb._load_session_infos(user_id)
     new_session = new_session_infos[session_valid]
@@ -234,6 +240,7 @@ def test_on_access_update_idle_session(user_id, session_timed_out):
     old_session = old_session_infos[session_timed_out]
 
     userdb.on_access(user_id, session_timed_out)
+    userdb.on_end_of_request(user_id)
 
     new_session_infos = userdb._load_session_infos(user_id)
     new_session = new_session_infos[session_timed_out]
@@ -322,6 +329,7 @@ def test_initialize_session_single_user_session(user_id):
         session_id=session_id,
         started_at=int(time.time()),
         last_activity=int(time.time()),
+        flashes=[],
     )
 
 
@@ -336,11 +344,13 @@ def test_cleanup_old_sessions_remove_outdated():
                 session_id="outdated",
                 started_at=int(time.time()) - (86400 * 10),
                 last_activity=int(time.time()) - (86400 * 8),
+                flashes=[],
             ),
             "keep": userdb.SessionInfo(
                 session_id="keep",
                 started_at=int(time.time()) - (86400 * 10),
                 last_activity=int(time.time()) - (86400 * 5),
+                flashes=[],
             ),
         }).keys()) == ["keep"]
 
@@ -351,6 +361,7 @@ def test_cleanup_old_sessions_too_many():
             session_id=f"keep_{num}",
             started_at=int(time.time()) - (86400 * 10),
             last_activity=int(time.time()) - (86400 * 5) + num,
+            flashes=[],
         ) for num in range(20)
     }
 
@@ -372,7 +383,9 @@ def test_refresh_session_success(user_id, session_valid):
     old_session = userdb.SessionInfo(**asdict(session_infos[session_valid]))
 
     with on_time("2019-09-05 00:00:30", "UTC"):
-        userdb._refresh_session(user_id, session_infos, session_valid)
+        userdb._set_session(user_id, session_infos[session_valid])
+        userdb._refresh_session(user_id, session_infos[session_valid])
+        userdb.on_end_of_request(user_id)
 
         new_session_infos = userdb._load_session_infos(user_id)
 
@@ -394,6 +407,7 @@ def test_get_last_activity(with_user, session_valid):
     assert userdb.get_last_activity(user_id, user) == 0
 
     userdb.on_access(user_id, session_valid)
+    userdb.on_end_of_request(user_id)
 
     user = _load_users_uncached(lock=False)[user_id]
     assert "session_info" in user

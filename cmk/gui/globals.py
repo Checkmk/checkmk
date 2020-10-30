@@ -10,7 +10,7 @@
 from functools import partial
 import logging
 
-from typing import Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, Optional, List
 
 from werkzeug.local import LocalProxy, LocalStack
 
@@ -19,7 +19,7 @@ from werkzeug.local import LocalProxy, LocalStack
 # Cyclical import
 
 if TYPE_CHECKING:
-    from cmk.gui import htmllib, http, config
+    from cmk.gui import htmllib, http, config, userdb
 
 _sentinel = object()
 
@@ -104,6 +104,8 @@ class RequestContext:
     def __init__(self, html_obj=None, req=None, resp=None):
         self.html = html_obj
         self.auth_type = None
+        self.session: Optional["userdb.SessionInfo"] = None
+        self.flashes: Optional[List[str]] = None
 
         if req is None and html_obj:
             req = html_obj.request
@@ -162,5 +164,6 @@ local = request_local_attr()  # None as name will get the whole object.
 # tools in general.
 user: 'config.LoggedInUser' = request_local_attr('user')
 request: 'http.Request' = request_local_attr('request')
+session: 'userdb.Session' = request_local_attr('session')
 
 html: 'htmllib.html' = request_local_attr('html')

@@ -12,7 +12,7 @@ import os
 import traceback
 import copy
 import ast
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from pathlib import Path
 from contextlib import suppress
 
@@ -38,7 +38,7 @@ from cmk.gui.valuespec import (
 )
 import cmk.gui.i18n
 from cmk.gui.i18n import _
-from cmk.gui.globals import g, html, request
+from cmk.gui.globals import g, html, request, local, session
 import cmk.gui.plugins.userdb
 from cmk.gui.plugins.userdb.htpasswd import Htpasswd
 from cmk.gui.plugins.userdb.ldap_connector import MKLDAPException
@@ -327,7 +327,7 @@ def on_logout(username: UserId, session_id: str) -> None:
 
 
 def on_access(username: UserId, session_id: str) -> None:
-    session_infos = _load_session_infos(username, lock=True)
+    session_infos = _load_session_infos(username)
 
     if not _is_valid_user_session(username, session_infos, session_id):
         raise MKAuthException("Invalid user session")
@@ -340,7 +340,18 @@ def on_access(username: UserId, session_id: str) -> None:
         raise MKAuthException("%s login timed out (Inactivity exceeded %r)" %
                               (username, config.user_idle_timeout))
 
-    _refresh_session(username, session_infos, session_id)
+    _set_session(username, session_info)
+
+
+def on_end_of_request(user_id: UserId) -> None:
+    if not session:
+        return  # Nothing to be done in case there is no session
+
+    assert user_id == session.user_id
+    session_infos = _load_session_infos(user_id, lock=True)
+    _refresh_session(user_id, session.session_info)
+    session_infos[session.session_info.session_id] = session.session_info
+    _save_session_infos(user_id, session_infos)
 
 
 #.
@@ -372,9 +383,17 @@ class SessionInfo:
     session_id: str
     started_at: int
     last_activity: int
+    flashes: List[str] = field(default_factory=list)
 
     def to_json(self):
         return asdict(self)
+
+
+@dataclass
+class Session:
+    """Container object for encapsulating the session of the currently logged in user"""
+    user_id: UserId
+    session_info: SessionInfo
 
 
 def _is_valid_user_session(username: UserId, session_infos: Dict[str, SessionInfo],
@@ -417,15 +436,25 @@ def _initialize_session(username: UserId) -> str:
 
     session_id = _create_session_id()
     now = int(time.time())
-    session_infos[session_id] = SessionInfo(
+    session_info = SessionInfo(
         session_id=session_id,
         started_at=now,
         last_activity=now,
+        flashes=[],
     )
 
+    _set_session(username, session_info)
+    session_infos[session_id] = session_info
+
+    # Save once right after initialization. It may be saved another time later, in case something
+    # was modified during the request (e.g. flashes were added)
     _save_session_infos(username, session_infos)
 
     return session_id
+
+
+def _set_session(user_id: UserId, session_info: SessionInfo):
+    local.session = Session(user_id=user_id, session_info=session_info)
 
 
 def _cleanup_old_sessions(session_infos: Dict[str, SessionInfo]) -> Dict[str, SessionInfo]:
@@ -451,11 +480,9 @@ def _create_session_id() -> str:
     return utils.gen_id()
 
 
-def _refresh_session(username: UserId, session_infos: Dict[str, SessionInfo],
-                     session_id: str) -> None:
+def _refresh_session(username: UserId, session_info: SessionInfo) -> None:
     """Updates the current session of the user"""
-    session_infos[session_id].last_activity = int(time.time())
-    _save_session_infos(username, session_infos)
+    session_info.last_activity = int(time.time())
 
 
 def _invalidate_session(username: UserId, session_id: str) -> None:
@@ -491,6 +518,7 @@ def _convert_session_info(value: str) -> Dict[str, SessionInfo]:
             # We don't have that information. The best guess is to use the last activitiy
             started_at=int(last_activity),
             last_activity=int(last_activity),
+            flashes=[],
         ),
     }
 

@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include <semaphore.h>
 
+#include <array>
 #include <cerrno>
 #include <chrono>
 #include <optional>
@@ -18,27 +19,22 @@
 #include <utility>
 class Logger;
 
-class FileDescriptorPair {
+class SocketPair {
 public:
     enum class Mode { blocking, local_non_blocking };
+    enum class Direction { bidirectional, remote_to_local };
 
-    static FileDescriptorPair invalid() { return FileDescriptorPair{-1, -1}; }
-    static std::optional<FileDescriptorPair> createSocketPair(Mode mode,
-                                                              Logger *logger);
-    static std::optional<FileDescriptorPair> createPipePair(Mode mode,
-                                                            Logger *logger);
+    static std::optional<SocketPair> make(Mode mode, Direction direction,
+                                          Logger *logger);
     void close();
 
-    [[nodiscard]] int local() const { return local_; }
-    [[nodiscard]] int remote() const { return remote_; }
+    [[nodiscard]] int local() const { return fd_[0]; }
+    [[nodiscard]] int remote() const { return fd_[1]; }
 
 private:
-    FileDescriptorPair(int local, int remote)
-        : local_{local}, remote_{remote} {}
+    std::array<int, 2> fd_;  // We do not own these FDs.
 
-    // We do not own these FDs.
-    int local_;
-    int remote_;
+    SocketPair(int local, int remote) : fd_{local, remote} {}
 };
 
 void setThreadName(std::string name);

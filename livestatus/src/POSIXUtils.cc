@@ -18,10 +18,26 @@
 
 using namespace std::chrono_literals;
 
+namespace {
+std::optional<SocketPair> fail(const std::string &message, Logger *logger,
+                               SocketPair &sp) {
+    generic_error ge{message};
+    Alert(logger) << ge;
+    sp.close();
+    return {};
+}
+
+void closeFD(int &fd) {
+    if (fd != -1) {
+        ::close(fd);
+    }
+    fd = -1;
+}
+}  // namespace
+
 // static
-std::optional<FileDescriptorPair> FileDescriptorPair::createSocketPair(
-    Mode mode, Logger *logger) {
-    std::array<int, 2> fd{-1, -1};
+std::optional<SocketPair> SocketPair::make(Mode mode, Direction direction,
+                                           Logger *logger) {
     // NOTE: Things are a bit tricky here: The close-on-exec flag is a file
     // descriptor flag, i.e. it is kept in the entries of the per-process table
     // of file descriptors. It is *not* part of the entries in the system-wide
@@ -35,11 +51,10 @@ std::optional<FileDescriptorPair> FileDescriptorPair::createSocketPair(
     // is fine: Before doing an execv(), we duplicate the wanted file
     // descriptors via dup2(), which clears the flag in the duplicate, see
     // Process::run().
-    int sock_type = SOCK_STREAM | SOCK_CLOEXEC;
-    if (::socketpair(AF_UNIX, sock_type, 0, &fd[0]) == -1) {
-        generic_error ge{"cannot create socket pair"};
-        Alert(logger) << ge;
-        return {};
+    SocketPair sp{-1, -1};
+    if (::socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, sp.fd_.data()) ==
+        -1) {
+        return fail("cannot create socket pair", logger, sp);
     }
     // NOTE: Again, things are a bit tricky: The non-blocking flag is kept in
     // the entries of the system-wide table of open files, so it is *shared*
@@ -53,40 +68,30 @@ std::optional<FileDescriptorPair> FileDescriptorPair::createSocketPair(
     // cannot use SOCK_NONBLOCK in the socketpair() call above: This would make
     // *both* files non-blocking. We only want our own, local file to be
     // non-blocking, so we have to use the separate fcntl() below.
-    if (mode == Mode::local_non_blocking &&
-        ::fcntl(fd[0], F_SETFL, O_NONBLOCK) == -1) {
-        generic_error ge{"cannot make socket non-blocking"};
-        Alert(logger) << ge;
-        ::close(fd[0]);
-        ::close(fd[1]);
-        return {};
+    switch (mode) {
+        case Mode::blocking:
+            break;
+        case Mode::local_non_blocking:
+            if (::fcntl(sp.local(), F_SETFL, O_NONBLOCK) == -1) {
+                return fail("cannot make socket non-blocking", logger, sp);
+            }
+            break;
     }
-    return FileDescriptorPair{fd[0], fd[1]};
-}
-
-// static
-std::optional<FileDescriptorPair> FileDescriptorPair::createPipePair(
-    FileDescriptorPair::Mode mode, Logger *logger) {
-    // We emulate a pipe via a socket pair where we shut down one direction.
-    auto sp = createSocketPair(mode, logger);
-    if (sp) {
-        ::shutdown(sp->local(), SHUT_WR);
+    switch (direction) {
+        case Direction::bidirectional:
+            break;
+        case Direction::remote_to_local:
+            if (::shutdown(sp.local(), SHUT_WR) == -1) {
+                return fail("cannot make socket one-directional", logger, sp);
+            }
+            break;
     }
     return sp;
 }
 
-namespace {
-void closeFD(int &fd) {
-    if (fd != -1) {
-        ::close(fd);
-    }
-    fd = -1;
-}
-}  // namespace
-
-void FileDescriptorPair::close() {
-    closeFD(local_);
-    closeFD(remote_);
+void SocketPair::close() {
+    closeFD(fd_[0]);
+    closeFD(fd_[1]);
 }
 
 namespace {

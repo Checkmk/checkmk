@@ -8,12 +8,11 @@ import logging
 import time
 from functools import cached_property
 from pathlib import Path
-from typing import Final, Mapping, Optional, Set
+from typing import Final, Optional, Set
 
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
 
 from cmk.snmplib.type_defs import (
-    SNMPDetectSpec,
     SNMPPersistedSections,
     SNMPRawData,
     SNMPSectionContent,
@@ -138,7 +137,6 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
     def _make_fetcher(self) -> SNMPFetcher:
         return SNMPFetcher(
             self._make_file_cache(),
-            snmp_section_detects=self._make_snmp_section_detects(),
             snmp_plugin_store=SNMPPluginStore({
                 s.name: SNMPPluginStoreItem(s.trees, s.detect_spec)
                 for s in agent_based_register.iter_all_snmp_sections()
@@ -166,23 +164,6 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
 
     def _make_summarizer(self) -> "SNMPSummarizer":
         return SNMPSummarizer(self.exit_spec)
-
-    def _make_snmp_section_detects(self) -> Mapping[SectionName, SNMPDetectSpec]:
-        """Create list of all SNMP scan specifications"""
-        disabled_sections = self.host_config.disabled_snmp_sections()
-
-        if self.mode is Mode.INVENTORY:
-            return {
-                section_name: agent_based_register.get_snmp_section_plugin(section_name).detect_spec
-                for section_name in self._make_inventory_snmp_sections()
-                if section_name not in disabled_sections
-            }
-
-        return {
-            snmp_section_plugin.name: snmp_section_plugin.detect_spec
-            for snmp_section_plugin in agent_based_register.iter_all_snmp_sections()
-            if snmp_section_plugin.name not in disabled_sections
-        }
 
     def _make_configured_snmp_sections(self) -> Set[SectionName]:
         return self._enabled_snmp_sections.intersection(

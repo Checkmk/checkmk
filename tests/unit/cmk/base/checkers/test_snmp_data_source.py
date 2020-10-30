@@ -154,28 +154,6 @@ class TestSNMPSummaryResult:
         assert source.summarize(result.Error(Exception())) == (3, "(?)", [])
 
 
-def test_make_snmp_section_detects(monkeypatch, hostname, ipaddress):
-    plugin = section_plugins.create_snmp_section_plugin(
-        name="norris",
-        parse_function=lambda string_table: None,
-        fetch=[
-            SNMPTree(
-                base='.1.2.3',
-                oids=['2.3'],
-            ),
-        ],
-        detect_spec=SNMPDetectSpec([[('.1.2.3.4.5', 'Foo.*', True)]]),
-    )
-    monkeypatch.setattr(
-        register,
-        'iter_all_snmp_sections',
-        lambda: [plugin],
-    )
-    Scenario().add_host(hostname).apply(monkeypatch)
-    source = SNMPSource.snmp(hostname, ipaddress, mode=Mode.DISCOVERY)
-    assert source._make_snmp_section_detects() == {plugin.name: plugin.detect_spec}
-
-
 @pytest.fixture(name="check_plugin")
 def fixture_check_plugin(monkeypatch):
     return CheckPlugin(
@@ -192,23 +170,3 @@ def fixture_check_plugin(monkeypatch):
         None,  # type: ignore[arg-type]  # irrelevant for test
         None,  # type: ignore[arg-type]  # irrelevant for test
     )
-
-
-def test_make_snmp_section_detects_for_inventory(monkeypatch, hostname, ipaddress, check_plugin):
-    plugin = section_plugins.create_snmp_section_plugin(
-        name="norris",
-        parse_function=lambda string_table: None,
-        fetch=[
-            SNMPTree(
-                base='.1.2.3',
-                oids=['2.3'],
-            ),
-        ],
-        detect_spec=SNMPDetectSpec([[('.1.2.3.4.5', 'Foo.*', True)]]),
-    )
-    monkeypatch.setattr(_config, 'registered_snmp_sections', {plugin.name: plugin})
-    monkeypatch.setattr(_config, 'registered_inventory_plugins', {check_plugin.name: check_plugin})
-
-    Scenario().add_host(hostname).apply(monkeypatch)
-    source = SNMPSource.snmp(hostname, ipaddress, mode=Mode.INVENTORY)
-    assert source._make_snmp_section_detects() == {plugin.name: plugin.detect_spec}

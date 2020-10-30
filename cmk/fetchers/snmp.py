@@ -9,7 +9,6 @@ import logging
 from functools import partial
 from typing import (
     Any,
-    cast,
     Collection,
     Dict,
     Final,
@@ -17,6 +16,7 @@ from typing import (
     Iterator,
     List,
     Mapping,
+    MutableMapping,
     NamedTuple,
     Sequence,
     Set,
@@ -28,7 +28,6 @@ from cmk.utils.type_defs import SectionName
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.snmp_scan import gather_available_raw_section_names
 from cmk.snmplib.type_defs import (
-    SNMPDetectAtom,
     SNMPDetectSpec,
     SNMPHostConfig,
     SNMPRawData,
@@ -114,7 +113,6 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         self,
         file_cache: SNMPFileCache,
         *,
-        snmp_section_detects: Mapping[SectionName, SNMPDetectSpec],
         snmp_plugin_store: SNMPPluginStore,
         disabled_sections: Set[SectionName],
         configured_snmp_sections: Set[SectionName],
@@ -126,7 +124,6 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         snmp_config: SNMPHostConfig,
     ) -> None:
         super().__init__(file_cache, logging.getLogger("cmk.fetchers.snmp"))
-        self.snmp_section_detects: Final = snmp_section_detects
         self.snmp_plugin_store: Final = snmp_plugin_store
         self.disabled_sections: Final = disabled_sections
         self.configured_snmp_sections: Final = configured_snmp_sections
@@ -150,13 +147,6 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
 
         return cls(
             file_cache=SNMPFileCache.from_json(serialized.pop("file_cache")),
-            snmp_section_detects={
-                SectionName(name): SNMPDetectSpec(
-                    # The cast is necessary as mypy does not infer types in a list comprehension.
-                    # See https://github.com/python/mypy/issues/5068
-                    [[cast(SNMPDetectAtom, tuple(inner)) for inner in outer] for outer in specs])
-                for name, specs in serialized["snmp_section_detects"].items()
-            },
             snmp_plugin_store=SNMPPluginStore.deserialize(serialized["snmp_plugin_store"]),
             disabled_sections={SectionName(name) for name in serialized["disabled_sections"]},
             configured_snmp_sections={
@@ -175,7 +165,6 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
     def to_json(self) -> Dict[str, Any]:
         return {
             "file_cache": self.file_cache.to_json(),
-            "snmp_section_detects": {str(n): d for n, d in self.snmp_section_detects.items()},
             "snmp_plugin_store": self.snmp_plugin_store.serialize(),
             "disabled_sections": [str(s) for s in self.disabled_sections],
             "configured_snmp_sections": [str(s) for s in self.configured_snmp_sections],
@@ -194,6 +183,20 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         pass
 
     def _detect(self, mode: Mode) -> Set[SectionName]:
+        snmp_section_detects: MutableMapping[SectionName, SNMPDetectSpec]
+        if mode is Mode.INVENTORY:
+            snmp_section_detects = {
+                name: self.snmp_plugin_store[name].detect_spec
+                for name in self.structured_data_snmp_sections
+                if name not in self.disabled_sections
+            }
+        else:
+            snmp_section_detects = {
+                name: item.detect_spec
+                for name, item in self.snmp_plugin_store.items()
+                if name not in self.disabled_sections
+            }
+
         restrict_to: Collection[SectionName]
         if mode is Mode.INVENTORY or self.do_status_data_inventory:
             restrict_to = self.structured_data_snmp_sections
@@ -202,11 +205,11 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
 
         sections: Collection[Tuple[SectionName, SNMPDetectSpec]]
         if mode in {Mode.DISCOVERY, Mode.CACHED_DISCOVERY}:
-            sections = self.snmp_section_detects.items()
+            sections = snmp_section_detects.items()
         else:
-            sections = [(n, self.snmp_section_detects[n])
-                        for n in restrict_to
-                        if n in self.snmp_section_detects]
+            sections = [
+                (n, snmp_section_detects[n]) for n in restrict_to if n in snmp_section_detects
+            ]
 
         return gather_available_raw_section_names(
             sections=sections,

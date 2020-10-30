@@ -289,10 +289,6 @@ class ABCTestSNMPFetcher(ABC):
                     detect_spec=SNMPDetectSpec([[]]),
                 ),
             }),
-            snmp_section_detects={
-                SectionName("pim"): SNMPDetectSpec([[("1.2.3.4", "pim device", True)]]),
-                SectionName("pam"): SNMPDetectSpec([[("1.2.3.4", "pam device", True)]]),
-            },
             disabled_sections=set(),
             configured_snmp_sections=set(),
             structured_data_snmp_sections=set(),
@@ -337,7 +333,6 @@ class TestSNMPFetcherDeserialization(ABCTestSNMPFetcher):
         other = type(fetcher).from_json(json_identity(fetcher.to_json()))
         assert isinstance(other, SNMPFetcher)
         assert other.snmp_plugin_store == fetcher.snmp_plugin_store
-        assert other.snmp_section_detects == fetcher.snmp_section_detects
         assert other.configured_snmp_sections == fetcher.configured_snmp_sections
         assert other.on_error == fetcher.on_error
         assert other.missing_sys_description == fetcher.missing_sys_description

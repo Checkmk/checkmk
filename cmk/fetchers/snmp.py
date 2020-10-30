@@ -115,8 +115,8 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         self,
         file_cache: SNMPFileCache,
         *,
-        snmp_section_trees: Mapping[SectionName, List[SNMPTree]],
         snmp_section_detects: Mapping[SectionName, SNMPDetectSpec],
+        snmp_plugin_store: SNMPPluginStore,
         disabled_sections: Set[SectionName],
         configured_snmp_sections: Set[SectionName],
         structured_data_snmp_sections: Set[SectionName],
@@ -127,8 +127,8 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         snmp_config: SNMPHostConfig,
     ) -> None:
         super().__init__(file_cache, logging.getLogger("cmk.fetchers.snmp"))
-        self.snmp_section_trees: Final = snmp_section_trees
         self.snmp_section_detects: Final = snmp_section_detects
+        self.snmp_plugin_store: Final = snmp_plugin_store
         self.disabled_sections: Final = disabled_sections
         self.configured_snmp_sections: Final = configured_snmp_sections
         self.structured_data_snmp_sections: Final = structured_data_snmp_sections
@@ -151,10 +151,6 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
 
         return cls(
             file_cache=SNMPFileCache.from_json(serialized.pop("file_cache")),
-            snmp_section_trees={
-                SectionName(name): [SNMPTree.from_json(tree) for tree in trees
-                                   ] for name, trees in serialized["snmp_section_trees"].items()
-            },
             snmp_section_detects={
                 SectionName(name): SNMPDetectSpec(
                     # The cast is necessary as mypy does not infer types in a list comprehension.
@@ -162,6 +158,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
                     [[cast(SNMPDetectAtom, tuple(inner)) for inner in outer] for outer in specs])
                 for name, specs in serialized["snmp_section_detects"].items()
             },
+            snmp_plugin_store=SNMPPluginStore.deserialize(serialized["snmp_plugin_store"]),
             disabled_sections={SectionName(name) for name in serialized["disabled_sections"]},
             configured_snmp_sections={
                 SectionName(name) for name in serialized["configured_snmp_sections"]
@@ -179,11 +176,8 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
     def to_json(self) -> Dict[str, Any]:
         return {
             "file_cache": self.file_cache.to_json(),
-            "snmp_section_trees": {
-                str(n): [tree.to_json() for tree in trees
-                        ] for n, trees in self.snmp_section_trees.items()
-            },
             "snmp_section_detects": {str(n): d for n, d in self.snmp_section_detects.items()},
+            "snmp_plugin_store": self.snmp_plugin_store.serialize(),
             "disabled_sections": [str(s) for s in self.disabled_sections],
             "configured_snmp_sections": [str(s) for s in self.configured_snmp_sections],
             "structured_data_snmp_sections": [str(s) for s in self.structured_data_snmp_sections],
@@ -250,7 +244,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
 
             self._logger.debug("%s: Fetching data (%s)", section_name, walk_cache_msg)
 
-            oid_info = self.snmp_section_trees[section_name]
+            oid_info = self.snmp_plugin_store[section_name].trees
             # oid_info is a list: Each element of that list is interpreted as one real oid_info
             # and fetches a separate snmp table.
             get_snmp = partial(snmp_table.get_snmp_table_cached

@@ -21,7 +21,7 @@ from cmk.snmplib.type_defs import (
 )
 
 from cmk.fetchers import FetcherType, SNMPFetcher
-from cmk.fetchers.snmp import SNMPFileCache
+from cmk.fetchers.snmp import SNMPFileCache, SNMPPluginStore, SNMPPluginStoreItem
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_table as check_table
@@ -138,10 +138,11 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
     def _make_fetcher(self) -> SNMPFetcher:
         return SNMPFetcher(
             self._make_file_cache(),
-            snmp_section_trees={
-                s.name: s.trees for s in agent_based_register.iter_all_snmp_sections()
-            },
             snmp_section_detects=self._make_snmp_section_detects(),
+            snmp_plugin_store=SNMPPluginStore({
+                s.name: SNMPPluginStoreItem(s.trees, s.detect_spec)
+                for s in agent_based_register.iter_all_snmp_sections()
+            }),
             disabled_sections=self.host_config.disabled_snmp_sections(),
             configured_snmp_sections=self._make_configured_snmp_sections(),
             structured_data_snmp_sections=self._make_inventory_snmp_sections(),

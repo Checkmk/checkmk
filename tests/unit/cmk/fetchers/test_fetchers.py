@@ -272,14 +272,23 @@ class ABCTestSNMPFetcher(ABC):
     def fetcher_fixture(self, file_cache):
         return SNMPFetcher(
             file_cache,
-            snmp_section_trees={
-                SectionName("pim"): [SNMPTree(base=".1.1.1", oids=["1.2", "3.4"])],
-                SectionName("pam"): [SNMPTree(base=".1.2.3", oids=["4.5", "6.7", "8.9"])],
-                SectionName("pum"): [
-                    SNMPTree(base=".2.2.2", oids=["2.2"]),
-                    SNMPTree(base=".3.3.3", oids=["2.2"]),
-                ],
-            },
+            snmp_plugin_store=SNMPPluginStore({
+                SectionName("pim"): SNMPPluginStoreItem(
+                    trees=[SNMPTree(base=".1.1.1", oids=["1.2", "3.4"])],
+                    detect_spec=SNMPDetectSpec([[("1.2.3.4", "pim device", True)]]),
+                ),
+                SectionName("pam"): SNMPPluginStoreItem(
+                    trees=[SNMPTree(base=".1.2.3", oids=["4.5", "6.7", "8.9"])],
+                    detect_spec=SNMPDetectSpec([[("1.2.3.4", "pam device", True)]]),
+                ),
+                SectionName("pum"): SNMPPluginStoreItem(
+                    trees=[
+                        SNMPTree(base=".2.2.2", oids=["2.2"]),
+                        SNMPTree(base=".3.3.3", oids=["2.2"]),
+                    ],
+                    detect_spec=SNMPDetectSpec([[]]),
+                ),
+            }),
             snmp_section_detects={
                 SectionName("pim"): SNMPDetectSpec([[("1.2.3.4", "pim device", True)]]),
                 SectionName("pam"): SNMPDetectSpec([[("1.2.3.4", "pam device", True)]]),
@@ -327,7 +336,7 @@ class TestSNMPFetcherDeserialization(ABCTestSNMPFetcher):
     def test_fetcher_deserialization(self, fetcher):
         other = type(fetcher).from_json(json_identity(fetcher.to_json()))
         assert isinstance(other, SNMPFetcher)
-        assert other.snmp_section_trees == fetcher.snmp_section_trees
+        assert other.snmp_plugin_store == fetcher.snmp_plugin_store
         assert other.snmp_section_detects == fetcher.snmp_section_detects
         assert other.configured_snmp_sections == fetcher.configured_snmp_sections
         assert other.on_error == fetcher.on_error
@@ -371,7 +380,7 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
             snmp_table,
             "get_snmp_table",
             lambda _, oid_info, **__: table
-            if oid_info.base == fetcher.snmp_section_trees[section_name][0].base else [],
+            if oid_info.base == fetcher.snmp_plugin_store[section_name].trees[0].base else [],
         )
         fetcher.configured_snmp_sections = {section_name}
         assert fetcher.fetch(Mode.CHECKING) == result.OK({section_name: [table, []]})

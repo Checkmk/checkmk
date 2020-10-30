@@ -340,7 +340,7 @@ def test_discovery_mssql_counters_cache_hits(params, section, expected_services)
 
 @pytest.mark.parametrize("item,section,expected_results", [
     ('MSSQL_VEEAMSQL2012:Catalog_Metadata tempdb cache_hit_ratio', big_parsed_data, [
-        Result(state=state.OK, summary='99.5%'),
+        Result(state=state.OK, summary='99.51%'),
         Metric('cache_hit_ratio', 99.50596864711571),
     ]),
 ])
@@ -354,7 +354,7 @@ def test_check_mssql_counters_cache_hits(item, section, expected_results):
     ('MSSQL_VEEAMSQL2012:Catalog_Metadata tempdb cache_hit_ratio', {
         "node1": big_parsed_data
     }, [
-        Result(state=state.OK, summary='[node1] 99.5%'),
+        Result(state=state.OK, summary='[node1] 99.51%'),
         Metric('cache_hit_ratio', 99.50596864711571),
     ]),
 ])

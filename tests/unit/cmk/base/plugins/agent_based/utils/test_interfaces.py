@@ -708,7 +708,7 @@ ITEM_PARAMS_RESULTS = (
             Metric('outerr', 0.0, levels=(0.01, 0.1)),
             Metric('outqlen', 0.0),
             Result(state=state.WARN,
-                   summary='In: 800 kB/s (warn/crit at 625 kB/s/2.50 MB/s) (6.40%)'),
+                   summary='In: 800 kB/s (warn/crit at 625 kB/s/2.50 MB/s) (6.4%)'),
             Result(state=state.CRIT,
                    summary='Out: 3.20 MB/s (warn/crit at 625 kB/s/2.50 MB/s) (25.6%)'),
             Result(state=state.OK, summary='Speed: 100 MBit/s (assumed)'),
@@ -872,7 +872,7 @@ def test_check_single_interface_ignore_state(value_store, item, params, result):
             Metric('in_avg_5', 800000.0, levels=(625000.0, 2500000.0),
                    boundaries=(0.0, 12500000.0)),
             Result(state=state.WARN,
-                   summary='In average 5min: 800 kB/s (warn/crit at 625 kB/s/2.50 MB/s) (6.40%)'),
+                   summary='In average 5min: 800 kB/s (warn/crit at 625 kB/s/2.50 MB/s) (6.4%)'),
             Metric(
                 'out_avg_5', 3200000.0, levels=(625000.0, 2500000.0), boundaries=(0.0, 12500000.0)),
             Result(state=state.CRIT,

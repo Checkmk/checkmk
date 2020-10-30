@@ -33,7 +33,7 @@ checks = {
             'quality_levels': (200.0, 500.0),
             'stratum_level': 10
          }, [
-             (0, u'Offset: 53 microseconds', [('time_offset', 5.3991e-05, 0.2, 0.5)]),
+             (0, u'Offset: 54 microseconds', [('time_offset', 5.3991e-05, 0.2, 0.5)]),
              (2, ('Time since last sync: 22 hours 1 minute '
                  '(warn/crit at 1 hour 0 minutes/2 hours 0 minutes)'), []),
              (0, 'Stratum: 2.00', []),

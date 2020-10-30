@@ -266,7 +266,7 @@ checks = {
                 ),
                 (
                     2,
-                    'Inodes used: 1,654,272 (warn/crit at ,600,000/1,000,000), Inodes available: 7,488,000 (81.9%)',
+                    'Inodes used: 1,654,272 (warn/crit at 600,000/1,000,000), Inodes available: 7,488,000 (81.9%)',
                     [
                         ('inodes_used', 1654272, 600000.0, 1000000.0, 0.0, 9142272.0),
                     ],

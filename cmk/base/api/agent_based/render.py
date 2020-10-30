@@ -35,6 +35,8 @@ _SIZE_PREFIXES_SI = ['', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y']
 _SIZE_PREFIXES_IEC = _SIZE_PREFIXES_SI[:]
 _SIZE_PREFIXES_IEC[1] = 'K'
 
+_PERCENT_MAX_DIGITS = 12  # arbitrarily chosen, and borderline ridiculous.
+
 
 def date(epoch: Optional[float]) -> str:
     """Render seconds since epoch as date
@@ -66,9 +68,10 @@ def _gen_timespan_chunks(seconds: float, nchunks: int) -> Iterable[str]:
         start = len(_TIME_UNITS) - 1
 
     for unit, scale in _TIME_UNITS[start:start + nchunks]:
-        value = int(seconds / scale)
+        last_chunk = unit.endswith("seconds")
+        value = (round if last_chunk else int)(seconds / scale)  # type: ignore[operator]
         yield "%.0f %s" % (value, unit if value != 1 else unit[:-1])
-        if unit.endswith("seconds"):
+        if last_chunk:
             break
         seconds %= scale
 
@@ -83,7 +86,12 @@ def timespan(seconds: float) -> str:
 
 
 def _digits_left(value: float) -> int:
-    """Return the number of didgits left of the decimal point"""
+    """Return the number of didgits left of the decimal point
+
+        >>> _digits_left(42.23)
+        2
+
+    """
     try:
         return max(int(math.log10(abs(value)) + 1), 1)
     except ValueError:
@@ -147,12 +155,10 @@ def filesize(bytes_: float) -> str:
       '12,345,678 B'
     """
     val_str = "%.0f" % float(bytes_)
-    if len(val_str) <= 3:
-        return "%s B" % val_str
-
     offset = len(val_str) % 3
+
     groups = [val_str[0:offset]] + [val_str[i:i + 3] for i in range(offset, len(val_str), 3)]
-    return "%s B" % ','.join(groups)
+    return "%s B" % ','.join(groups).strip(',')
 
 
 def networkbandwidth(octets_per_sec: float) -> str:
@@ -173,21 +179,36 @@ def iobandwidth(bytes_: float) -> str:
     return "%s %s/s" % _auto_scale(float(bytes_), use_si_units=True)
 
 
+def _show_right(value: float):
+    """Digits to the right of the decimal point, that we want to show
+
+        >>> _show_right(0.0023)
+        4
+
+    """
+    # zeros to the right of decimal point: - 1 - math.floor(math.log10(value))
+    non_zero_plus_2 = 1 - math.floor(math.log10(value))
+    return min(_PERCENT_MAX_DIGITS, non_zero_plus_2)
+
+
 def percent(percentage: float) -> str:
     """Render percentage"""
     # There is another render.percent in cmk.utils. However, that deals extensively with
     # the rendering of small percentages (as is required for graphing applications)
-    # However, we assume that if a percentage value is smaller that 0.01%, we can display
-    # it as 0.00%.
-    # If this is the case regularly, you probably want to display something different,
-    # "parts per million" for instance.
-    # Also, this way this module is completely stand alone.
     value = float(percentage)  # be nice
-    if not value:
+    if value < 0.0:
+        return f"-{percent(-value)}"
+
+    if value == 0.0:
         return "0%"
-    digits_int = _digits_left(value)
-    digits_frac = max(3 - digits_int, 0)
-    if 99 < value < 100:  # be more precise in this case
-        digits_frac = _digits_left(1. / (100.0 - value))
-    fmt = "%%.%df%%%%" % digits_frac
-    return fmt % value
+
+    if value < 1.0:
+        return ("%%.%df%%%%" % _show_right(value)) % value
+
+    if value < 99.0:
+        return f"{value:.1f}%"
+
+    if value < 100.0:
+        return ("%%.%df%%%%" % _show_right(100.0 - value)) % value
+
+    return f"{value:.0f}%"

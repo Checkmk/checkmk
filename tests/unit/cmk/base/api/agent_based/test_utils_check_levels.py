@@ -30,7 +30,7 @@ def test_boundaries(value, levels_upper, levels_lower, render_func, result):
         "metric_name": "battery",
         "render_func": render.percent,
     }, [
-        Result(state=State.OK, summary="5.00%"),
+        Result(state=State.OK, summary="5.0%"),
         Metric("battery", 5.0),
     ]),
     (6, {

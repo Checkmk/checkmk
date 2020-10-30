@@ -43,8 +43,8 @@ from cmk.fetchers.controller import (
     FetcherHeader,
     FetcherMessage,
     L3Stats,
-    make_logging_answer,
-    make_payload_answer,
+    make_log_answer,
+    make_result_answer,
     make_waiting_answer,
     PayloadType,
     run_fetcher,
@@ -68,7 +68,7 @@ def test_status_to_log_level(status, log_level):
 
 
 class TestControllerApi:
-    def test_controller_success(self):
+    def test_controller_result(self):
         payload = AgentPayload(69 * b"\0")
         stats = L3Stats(CPUTracker())
         header = FetcherHeader(
@@ -79,12 +79,12 @@ class TestControllerApi:
             stats_length=len(stats),
         )
         message = FetcherMessage(header, payload, stats)
-        assert make_payload_answer(message) == (b"fetch:SUCCESS:        :240     :" + header +
-                                                payload + stats)
+        assert make_result_answer(message) == (b"fetch:RESULT :        :240     :" + header +
+                                               payload + stats)
 
-    def test_controller_failure(self):
-        assert make_logging_answer(
-            "payload", log_level=CmcLogLevel.WARNING) == b"fetch:FAILURE:warning :7       :payload"
+    def test_controller_log(self):
+        assert make_log_answer(
+            "payload", log_level=CmcLogLevel.WARNING) == b"fetch:LOG    :warning :7       :payload"
 
     def test_controller_waiting(self):
         assert make_waiting_answer() == b"fetch:WAITING:        :0       :"
@@ -125,44 +125,44 @@ class TestControllerApi:
 
 
 class TestCMCHeader:
-    @pytest.mark.parametrize("state", [CMCHeader.State.SUCCESS, "SUCCESS"])
-    def test_success_header(self, state):
+    @pytest.mark.parametrize("state", [CMCHeader.State.RESULT, "RESULT "])
+    def test_result_header(self, state):
         header = CMCHeader("name", state, "crit", 41)
-        assert header == b"name :SUCCESS:crit    :41      :"
+        assert header == b"name :RESULT :crit    :41      :"
 
-    @pytest.mark.parametrize("state", [CMCHeader.State.FAILURE, "FAILURE"])
-    def test_failure_header(self, state):
+    @pytest.mark.parametrize("state", [CMCHeader.State.LOG, "LOG    "])
+    def test_log_header(self, state):
         header = CMCHeader("fetch", state, "crit", 42)
-        assert header == b"fetch:FAILURE:crit    :42      :"
+        assert header == b"fetch:LOG    :crit    :42      :"
 
     def test_from_bytes(self):
-        header = CMCHeader("fetch", "SUCCESS", "crit", 42)
+        header = CMCHeader("fetch", "RESULT ", "crit", 42)
         assert CMCHeader.from_bytes(bytes(header) + 42 * b"*") == header
 
     def test_clone(self):
-        header = CMCHeader("name", CMCHeader.State.SUCCESS, "crit", 42)
+        header = CMCHeader("name", CMCHeader.State.RESULT, "crit", 42)
         other = header.clone()
         assert other is not header
         assert other == header
 
     def test_eq(self):
-        header = CMCHeader("name", CMCHeader.State.SUCCESS, "crit", 42)
+        header = CMCHeader("name", CMCHeader.State.RESULT, "crit", 42)
         assert header == bytes(header)
         assert bytes(header) == header
 
     def test_neq(self):
-        header = CMCHeader("name", CMCHeader.State.SUCCESS, "crit", 42)
+        header = CMCHeader("name", CMCHeader.State.RESULT, "crit", 42)
 
         other_name = header.clone()
         other_name.name = "toto"
         assert header != other_name
 
         other_state = header.clone()
-        other_state.state = CMCHeader.State.FAILURE
+        other_state.state = CMCHeader.State.LOG
         assert header != other_state
 
         other_crit = header.clone()
-        other_crit.severity = "tnih"
+        other_crit.log_level = "tnih"
         assert header != other_crit
 
         other_len = header.clone()
@@ -170,23 +170,23 @@ class TestCMCHeader:
         assert header != other_len
 
     def test_repr(self):
-        header = CMCHeader("name", "SUCCESS", "crit", 42)
+        header = CMCHeader("name", "RESULT ", "crit", 42)
         assert isinstance(repr(header), str)
 
     def test_hash(self):
-        header = CMCHeader("name", "SUCCESS", "crit", 42)
+        header = CMCHeader("name", "RESULT ", "crit", 42)
         assert hash(header) == hash(bytes(header))
 
     def test_len(self):
-        header = CMCHeader("name", "SUCCESS", "crit", 42)
+        header = CMCHeader("name", "RESULT ", "crit", 42)
         assert len(header) == len(bytes(header))
 
     def test_critical_constants(self):
         """ ATTENTION: Changing of those constants may require changing of C++ code"""
         assert CMCHeader.length == 32
-        assert CMCHeader.State.FAILURE == "FAILURE"
-        assert CMCHeader.State.SUCCESS == "SUCCESS"
-        assert CMCHeader.State.WAITING == "WAITING"
+        assert CMCHeader.State.LOG.value == "LOG    "
+        assert CMCHeader.State.RESULT.value == "RESULT "
+        assert CMCHeader.State.WAITING.value == "WAITING"
         assert CMCHeader.default_protocol_name() == "fetch"
 
 

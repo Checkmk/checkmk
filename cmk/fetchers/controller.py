@@ -34,6 +34,8 @@ from .type_defs import Mode
 
 
 class CmcLogLevel(str, enum.Enum):
+    EMERGENCY = "emergenc"  # truncated!
+    ALERT = "alert"
     CRITICAL = "critical"
     ERROR = "error"
     WARNING = "warning"
@@ -372,23 +374,25 @@ class FetcherMessage(Protocol):
 class CMCHeader(Header):
     """Header is fixed size(6+8+9+9 = 32 bytes) bytes in format
 
-      header: <ID>:<'SUCCESS'|'FAILURE'>:<HINT>:<SIZE>:
-      ID   - 5 bytes protocol id, "base0" at the start
-      HINT - 8 bytes ascii text. Arbitrary data, usually some error info
-      SIZE - 8 bytes text 0..9
+      header: <ID>:<'RESULT '|'LOG    '|'WAITING'>:<LOGLEVEL>:<SIZE>:
+      ID       - 5 bytes protocol id, "fetch" at the start
+      LOGLEVEL - 8 bytes log level, '        ' for 'RESULT' and 'WAITING',
+                 for 'LOG' one of 'emergenc', 'alert   ', 'critical',
+                 'error   ', 'warning ', 'notice  ', 'info    ', 'debug   '
+      SIZE     - 8 bytes text 0..9
 
     Example:
-        b"base0:SUCCESS:        :12345678:"
+        b"base0:RESULT :        :12345678:"
 
     This is first(transport) layer protocol.
     Used to
     - transmit data (as opaque payload) from fetcher through Microcore to the checker.
-    - provide centralized logging facility if the field severity is not empty
+    - provide centralized logging facility if the field loglevel is not empty
     ATTENTION: This protocol must 100% of time synchronised with microcore code.
     """
     class State(str, enum.Enum):
-        SUCCESS = "SUCCESS"
-        FAILURE = "FAILURE"
+        RESULT = "RESULT "
+        LOG = "LOG    "
         WAITING = "WAITING"
 
     fmt = "{:<5}:{:<7}:{:<8}:{:<8}:"
@@ -398,12 +402,12 @@ class CMCHeader(Header):
         self,
         name: str,
         state: Union['CMCHeader.State', str],
-        severity: str,
+        log_level: str,
         payload_length: int,
     ) -> None:
         self.name = name
         self.state = CMCHeader.State(state) if isinstance(state, str) else state
-        self.severity = severity  # contains either log_level or empty field
+        self.log_level = log_level  # contains either log_level or empty field
         self.payload_length = payload_length
 
     def __repr__(self) -> str:
@@ -411,7 +415,7 @@ class CMCHeader(Header):
             type(self).__name__,
             self.name,
             self.state,
-            self.severity,
+            self.log_level,
             self.payload_length,
         )
 
@@ -423,7 +427,7 @@ class CMCHeader(Header):
         return CMCHeader.fmt.format(
             self.name[:5],
             self.state[:7],
-            self.severity[:8],
+            self.log_level[:8],
             self.payload_length,
         ).encode("ascii")
 
@@ -431,41 +435,41 @@ class CMCHeader(Header):
     def from_bytes(cls, data: bytes) -> 'CMCHeader':
         try:
             # to simplify parsing we are using ':' as a splitter
-            name, state, hint, payload_length = data[:CMCHeader.length].split(b":")[:4]
+            name, state, log_level, payload_length = data[:CMCHeader.length].split(b":")[:4]
             return cls(
                 name.decode("ascii"),
                 state.decode("ascii"),
-                hint.decode("ascii"),
+                log_level.decode("ascii"),
                 int(payload_length.decode("ascii"), base=10),
             )
         except ValueError as exc:
             raise ValueError(data) from exc
 
     def clone(self) -> 'CMCHeader':
-        return CMCHeader(self.name, self.state, self.severity, self.payload_length)
+        return CMCHeader(self.name, self.state, self.log_level, self.payload_length)
 
     @staticmethod
     def default_protocol_name() -> str:
         return "fetch"
 
 
-def make_payload_answer(*messages: FetcherMessage) -> bytes:
+def make_result_answer(*messages: FetcherMessage) -> bytes:
     """ Provides valid binary payload to be send from fetcher to checker"""
     payload = b"".join(bytes(msg) for msg in messages)
     return CMCHeader(
         name=CMCHeader.default_protocol_name(),
-        state=CMCHeader.State.SUCCESS,
-        severity=" ",
+        state=CMCHeader.State.RESULT,
+        log_level=" ",
         payload_length=len(payload),
     ) + payload
 
 
-def make_logging_answer(message: str, log_level: CmcLogLevel) -> bytes:
+def make_log_answer(message: str, log_level: CmcLogLevel) -> bytes:
     """ Logs data using logging facility of the microcore """
     return CMCHeader(
         name=CMCHeader.default_protocol_name(),
-        state=CMCHeader.State.FAILURE,
-        severity=log_level,
+        state=CMCHeader.State.LOG,
+        log_level=log_level,
         payload_length=len(message),
     ) + message.encode("utf-8")
 
@@ -475,7 +479,7 @@ def make_waiting_answer() -> bytes:
         CMCHeader(
             name=CMCHeader.default_protocol_name(),
             state=CMCHeader.State.WAITING,
-            severity=" ",
+            log_level=" ",
             payload_length=0,
         ))
 
@@ -666,7 +670,7 @@ def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
     for message in messages:
         log.logger.debug("  message: %s", message.header)
 
-    write_bytes(make_payload_answer(*messages))
+    write_bytes(make_result_answer(*messages))
     for msg in filter(
             lambda msg: msg.header.payload_type is PayloadType.ERROR,
             messages,

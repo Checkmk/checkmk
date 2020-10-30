@@ -53,8 +53,9 @@ node (NODE) {
         // Gather the list of changed livestatus / core files
         def CHANGED_CORE_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep -e '^livestatus' -e '^enterprise/core' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
 
-        // Gather the list of changed JavaScript files in raw and enterprise edition
+        // Gather the list of changed JavaScript and CSS files in raw and enterprise edition
         def CHANGED_JS_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep '^web/htdocs/js/' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
+        def CHANGED_CSS_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep '^web/htdocs/themes/' | sed '/\\.scss\$/!d' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
 
         // this variable is needed as long as we have base plugins that are
         // concantenated for pylint (See tests/pylint/test_pylint.py)
@@ -63,6 +64,8 @@ node (NODE) {
         print "Changed Python files: ${CHANGED_PYTHON_FILES}"
         print "Changed agent plugins: ${CHANGED_AGENT_PLUGINS}"
         print "Changed core files: ${CHANGED_CORE_FILES}"
+        print "Changed JS files: ${CHANGED_JS_FILES}"
+        print "Changed CSS files: ${CHANGED_CSS_FILES}"
 
         //Add description to the build
         gerrit_stages.desc_init()
@@ -131,6 +134,15 @@ node (NODE) {
             ENV_VARS: [],
             COMMAND: "make --quiet test-format-js-docker &> ${RESULTS}/js-prettier.txt",
             TEXT_ON_SKIP: 'No JavaScript files changed. Skipping.'
+         )
+
+        gerrit_stages.run(
+            NAME: 'CSS Format',
+            CONDITION: CHANGED_CSS_FILES != "",
+            DIR: 'tests',
+            ENV_VARS: [],
+            COMMAND: "make --quiet test-format-css-docker &> ${RESULTS}/css-prettier.txt",
+            TEXT_ON_SKIP: 'No CSS files changed. Skipping.'
          )
 
          PYTHON_VERSIONS.each { PYTHON_VERSION ->

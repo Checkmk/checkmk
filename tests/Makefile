@@ -39,13 +39,14 @@ endif
 .PHONY: clean format-shell help prepare-node-modules \
 	$(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-composition test-composition-docker test-composition-docker-debug \
-	test-docker test-format-python test-format-python-docker test-format-shell test-format-js \
-        test-gui-crawl test-gui-crawl-docker test-integration test-integration-docker \
-        test-integration-docker-debug test-mypy test-mypy-raw itest-mypy-docker \
-        test-packaging test-pipenv-deps test-pylint test-pylint-docker test-shellcheck \
-        test-unit test-unit-docker test-unit-coverage-html test-unit-sh test-unit-sh-docker \
-        test-cppcheck-livestatus test-cppcheck-core test-cppcheck-docker test-tidy-livestatus \
-        test-tidy-core test-tidy-docker test-iwyu-livestatus test-iwyu-core test-iwyu-docker \
+	test-docker test-format-python test-format-python-docker test-format-shell \
+	test-format-js test-format-js-docker test-format-css test-format-css-docker \
+	test-gui-crawl test-gui-crawl-docker test-integration test-integration-docker \
+	test-integration-docker-debug test-mypy test-mypy-raw itest-mypy-docker \
+	test-packaging test-pipenv-deps test-pylint test-pylint-docker test-shellcheck \
+	test-unit test-unit-docker test-unit-coverage-html test-unit-sh test-unit-sh-docker \
+	test-cppcheck-livestatus test-cppcheck-core test-cppcheck-docker test-tidy-livestatus \
+	test-tidy-core test-tidy-docker test-iwyu-livestatus test-iwyu-core test-iwyu-docker \
 	test-unit-livestatus test-unit-core %-livestatus-docker %-core-docker
 
 clean:
@@ -64,7 +65,10 @@ help:
 	@echo "test-format-python                  - Run formatting tests"
 	@echo "test-format-python-docker           - Run formatting tests in docker"
 	@echo "test-format-shell                   - Run the shell formatting"
-	@echo "test-format-prettier                - Run the JavaScript formatting"
+	@echo "test-format-js                      - Run the JavaScript formatting"
+	@echo "test-format-js-docker               - Run the JavaScript formatting in docker"
+	@echo "test-format-css                     - Run the CSS formatting"
+	@echo "test-format-css-docker              - Run the CSS formatting in docker"
 	@echo "test-gui-crawl                      - Run GUI crawl locally"
 	@echo "test-gui-crawl-docker               - Run GUI crawl in container"
 	@echo "test-integration                    - Run integration tests locally"
@@ -180,6 +184,11 @@ test-format-js:
 test-format-js-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-js
 
+test-format-css:
+	cd ..; scripts/run-prettier --check "web/htdocs/themes/**/*.scss"
+
+test-format-css-docker:
+	../scripts/run-in-docker.sh make --quiet test-format-css
 
 test-gui-crawl: prepare-node-modules
 	$(PYTEST) -T gui_crawl $(realpath gui_crawl/test_gui_crawl.py)

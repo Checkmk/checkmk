@@ -27,3 +27,7 @@ msi_patch: $(MSI_STATE_FILE)
 	@type $(MSI_STATE_FILE)
 	@exit /b 0
 
+
+setversion:
+	@python patch_windows_agent_version.py src\common\wnx_version.h $(NEW_VERSION)
+

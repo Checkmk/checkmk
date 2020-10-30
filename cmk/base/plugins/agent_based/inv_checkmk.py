@@ -13,7 +13,7 @@ from typing import Any, Dict, List, Optional
 
 import cmk.utils.version as cmk_version  # pylint: disable=cmk-module-layer-violation
 from .agent_based_api.v1.type_defs import InventoryResult
-from .agent_based_api.v1 import Attributes, register, render, TableRow
+from .agent_based_api.v1 import Attributes, register, TableRow
 
 
 def _service_status(status: Dict[str, List[str]], service_name: str):
@@ -71,11 +71,11 @@ def merge_sections(
         })["status_columns"] = {
             'num_hosts': status['num_hosts'],
             'num_services': status['num_services'],
-            'check_helper_usage': render.percent(helper_usage_generic),
-            'check_mk_helper_usage': render.percent(helper_usage_cmk),
-            'fetcher_helper_usage': render.percent(helper_usage_fetcher),
-            'checker_helper_usage': render.percent(helper_usage_checker),
-            'livestatus_usage': render.percent(livestatus_usage),
+            'check_helper_usage': helper_usage_generic,
+            'check_mk_helper_usage': helper_usage_cmk,
+            'fetcher_helper_usage': helper_usage_fetcher,
+            'checker_helper_usage': helper_usage_checker,
+            'livestatus_usage': livestatus_usage,
         }
 
     # SECTION: omd_status

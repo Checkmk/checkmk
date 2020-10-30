@@ -9,7 +9,17 @@ while the inventory is performed for one host.
 In the future all inventory code should be moved to this module."""
 
 import os
-from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Sequence, Tuple
+from typing import (
+    Dict,
+    Hashable,
+    List,
+    Literal,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 from contextlib import suppress
 
 import cmk.utils.cleanup
@@ -41,7 +51,12 @@ import cmk.base.decorator
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.section as section
 
-from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow, InventoryResult
+from cmk.base.api.agent_based.inventory_classes import (
+    AttrDict,
+    Attributes,
+    TableRow,
+    InventoryResult,
+)
 from cmk.base.checkers import HostSections, Source
 from cmk.base.checkers.host_sections import HostKey, MultiHostSections
 
@@ -398,8 +413,27 @@ class _TreeAggregator:
             self.trees.status_data.get_dict(leg_path).update(attributes.status_attributes)
 
     @staticmethod
-    def _make_row_key(key_columns: Mapping[str, Any],) -> Tuple[Any, ...]:
+    def _make_row_key(key_columns: AttrDict) -> Hashable:
         return tuple(v for k, v in sorted(key_columns.items()))
+
+    def _get_row(
+        self,
+        path: str,
+        tree_name: Literal["inventory", "status_data"],
+        row_key: Hashable,
+        key_columns: AttrDict,
+    ) -> Dict[str, Union[None, int, float, str]]:
+        """Find matching table row or create one"""
+        table = getattr(self.trees, tree_name).get_list(path)
+
+        new_row_index = len(table)  # index should we need to create a new row
+        use_index = self._index_cache.setdefault((path, tree_name, row_key), new_row_index)
+
+        if use_index == new_row_index:
+            row = {**key_columns}
+            table.append(row)
+
+        return table[use_index]
 
     def _integrate_table_row(
         self,
@@ -408,22 +442,11 @@ class _TreeAggregator:
         leg_path = ".".join(table_row.path) + ":"
         row_key = self._make_row_key(table_row.key_columns)
 
-        inv_rows = self.trees.inventory.get_list(leg_path)
+        self._get_row(leg_path, "inventory", row_key,
+                      table_row.key_columns).update(table_row.inventory_columns)
 
-        next_inv_idx = len(inv_rows)
-        inv_idx = self._index_cache.setdefault((leg_path, 'inv', row_key), next_inv_idx)
-        if inv_idx == next_inv_idx:
-            inv_rows.append({**table_row.key_columns, **table_row.inventory_columns})
-        else:
-            inv_rows[inv_idx].update(table_row.inventory_columns)
-
-        sd_rows = self.trees.status_data.get_list(leg_path)
-        next_sd_idx = len(sd_rows)
-        sd_idx = self._index_cache.setdefault((leg_path, 'sd', row_key), next_sd_idx)
-        if sd_idx == next_sd_idx:
-            sd_rows.append({**table_row.key_columns, **table_row.status_columns})
-        else:
-            sd_rows[sd_idx].update(table_row.status_columns)
+        self._get_row(leg_path, "status_data", row_key,
+                      table_row.key_columns).update(table_row.status_columns)
 
 
 #.

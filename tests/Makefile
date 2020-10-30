@@ -179,13 +179,13 @@ test-format-shell:
 	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES)
 
 test-format-js:
-	cd ..; scripts/run-prettier --check "web/htdocs/js/**/*.js"
+	cd ..; scripts/run-prettier --check --no-color --loglevel warn "web/htdocs/js/**/*.js"
 
 test-format-js-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-js
 
 test-format-css:
-	cd ..; scripts/run-prettier --check "web/htdocs/themes/**/*.scss"
+	cd ..; scripts/run-prettier --check --no-color --loglevel warn "web/htdocs/themes/**/*.scss"
 
 test-format-css-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-css

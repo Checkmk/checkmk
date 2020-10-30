@@ -25,7 +25,7 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     TextUnicode,
 )
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKUserError, FinalizeRequest
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
@@ -454,7 +454,7 @@ class PageDownloadKey:
             decrypt_private_key(private_key, value["passphrase"])
 
             self._send_download(keys, key_id)
-            return False
+            return FinalizeRequest(code=200)
         return None
 
     def _send_download(self, keys, key_id):

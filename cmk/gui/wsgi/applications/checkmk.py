@@ -276,7 +276,6 @@ def _process_request(environ, start_response) -> Response:  # pylint: disable=to
         response.headers["Location"] = e.url
 
     except FinalizeRequest as e:
-        # This doesn't seem to serve much purpose anymore.
         # TODO: Remove all FinalizeRequest exceptions from all pages and replace it with a `return`.
         #       It may be necessary to rewire the control-flow a bit as this exception could have
         #       been used to short-circuit some code and jump directly to the response. This

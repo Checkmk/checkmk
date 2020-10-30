@@ -48,7 +48,7 @@ from cmk.gui.valuespec import (
     Timeofday,
     ValueSpec,
 )
-from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException
+from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, FinalizeRequest
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
 from cmk.gui.main_menu import mega_menu_registry
@@ -1142,7 +1142,7 @@ class PageBackupTargets:
                                    add_header=self.title())
 
             if confirm is False:
-                return False
+                return FinalizeRequest(code=200)
 
             if confirm:
                 targets.remove(target)
@@ -1720,7 +1720,7 @@ class PageBackupRestore:
                                method="GET")
 
         if confirm is False:
-            return False
+            return FinalizeRequest(code=200)
 
         if confirm:
             html.check_transaction()  # invalidate transid
@@ -1830,7 +1830,7 @@ class PageBackupRestore:
                                method="GET")
 
         if confirm is False:
-            return False
+            return FinalizeRequest(code=200)
 
         if confirm:
             html.check_transaction()  # invalidate transid

@@ -22,6 +22,7 @@ from cmk.gui.valuespec import (
     Integer,
     AbsoluteDate,
 )
+from cmk.gui.exceptions import FinalizeRequest
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import WatoMode, ActionResult, mode_registry, wato_confirm
@@ -464,7 +465,7 @@ class ModeAuditLog(WatoMode):
 
             html.write_text(','.join((render.date(int(t)), render.time_of_day(int(t)), linkinfo,
                                       user, action, '"' + text + '"')) + '\n')
-        return False
+        return FinalizeRequest(code=200)
 
     def _parse_audit_log(self) -> List[Tuple[int, str, str, str, str]]:
         if not self.log_path.exists():

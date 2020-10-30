@@ -16,7 +16,7 @@ from cmk.gui.type_defs import PermissionName
 from cmk.gui.display_options import display_options
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError
+from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError, FinalizeRequest
 from cmk.gui.utils.html import HTML
 from cmk.gui.plugins.wato.utils.html_elements import (
     wato_html_head,
@@ -130,7 +130,6 @@ def _wato_page_handler(current_mode: str, mode_permissions: List[PermissionName]
             # TODO: Cleanup this special API. We could make things a lot clearer if we'd replace
             # the type dispatching with something more meaningful.
             #
-            # * result=False could be replaced with raising a FinalizeRequest() exception.
             # * result='newmode' could be replaced with raising a HTTPRedirect() exception.
             # * result=('newmode', 'msg') could be replaced with raising a HTTPRedirect()
             #   exception. But we also need to transport the result message to the destination
@@ -150,16 +149,14 @@ def _wato_page_handler(current_mode: str, mode_permissions: List[PermissionName]
             # We assume something has been modified and increase the config generation ID by one.
             update_config_generation()
 
-            # If newmode is False, then we shall immediately abort.
-            # This is e.g. the case, if the page outputted non-HTML
-            # data, such as a tarball (in the export function). We must
-            # be sure not to output *any* further data in that case.
-            if newmode is False:
-                return
+            # Immediately abort.  This is e.g. the case, if the page outputted non-HTML data, such
+            # as a tarball (in the export function). We must be sure not to output *any* further
+            # data in that case.
+            if isinstance(newmode, FinalizeRequest):
+                raise newmode
 
             # if newmode is not None, then the mode has been changed
             if newmode is not None:
-                assert not isinstance(newmode, bool)
                 if newmode == "":  # no further information: configuration dialog, etc.
                     if action_message:
                         html.show_message(action_message)

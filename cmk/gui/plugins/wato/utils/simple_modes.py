@@ -21,7 +21,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKUserError, FinalizeRequest
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult
 from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
@@ -199,7 +199,7 @@ class SimpleListMode(SimpleWatoModeBase):
 
         confirm = wato_confirm(_("Confirm deletion"), self._delete_confirm_message())
         if confirm is False:
-            return False
+            return FinalizeRequest(code=200)
         if not confirm:
             return None
         html.check_transaction()  # invalidate transid

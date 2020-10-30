@@ -31,7 +31,7 @@ from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.display_options import display_options
 from cmk.gui.globals import html, request as global_request
 from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKUserError, FinalizeRequest
 from cmk.gui.valuespec import Checkbox, Dictionary, TextAreaUnicode
 from cmk.gui.valuespec import DictionaryEntry
 from cmk.gui.breadcrumb import Breadcrumb
@@ -207,8 +207,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         html.show_message(_("Successfully discarded all pending changes."))
         html.javascript("hide_changes_buttons();")
         html.footer()
-
-        return False
+        return FinalizeRequest(code=200)
 
     def _extract_snapshot(self, snapshot_file):
         self._extract_from_file(cmk.gui.watolib.snapshots.snapshot_dir + snapshot_file,

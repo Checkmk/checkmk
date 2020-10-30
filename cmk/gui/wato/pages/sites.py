@@ -56,7 +56,7 @@ from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head, wato_confirm
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
-from cmk.gui.exceptions import MKUserError, MKGeneralException
+from cmk.gui.exceptions import MKUserError, MKGeneralException, FinalizeRequest
 from cmk.gui.log import logger
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
@@ -654,7 +654,7 @@ class ModeDistributedMonitoring(WatoMode):
         html.hidden_fields()
         html.end_form()
         html.footer()
-        return False
+        return FinalizeRequest(code=200)
 
     def page(self):
         sites = sort_sites(self._site_mgmt.load_sites())

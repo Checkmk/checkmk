@@ -5,9 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from marshmallow import Schema, fields, pre_dump
+from marshmallow import fields, pre_dump
 
 from pathlib import Path
+
+from cmk.utils.bi.bi_schema import Schema
 from cmk.utils.i18n import _
 import cmk.utils.store as store
 import cmk.utils.paths

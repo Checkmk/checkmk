@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import List, Union, Dict, Type, Any
-from marshmallow import Schema, validate
+from marshmallow import validate
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from cmk.utils.bi.bi_lib import (
@@ -17,6 +17,7 @@ from cmk.utils.bi.bi_lib import (
     ReqInteger,
     ReqNested,
 )
+from cmk.utils.bi.bi_schema import Schema
 
 _bi_criticality_level = {
     BIStates.OK: 0,

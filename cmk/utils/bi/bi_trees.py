@@ -5,8 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import List, Optional, Any, Set, Dict, Tuple, Union
-from marshmallow import Schema, fields, pre_dump
+from marshmallow import fields, pre_dump
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
+
 from livestatus import SiteId
 
 from cmk.gui.i18n import _  # pylint: disable=cmk-module-layer-violation
@@ -46,6 +47,7 @@ from cmk.utils.bi.bi_node_vis import (
     BIAggregationVisualizationSchema,
     BINodeVisBlockStyleSchema,
 )
+from cmk.utils.bi.bi_schema import Schema
 
 #   .--Leaf----------------------------------------------------------------.
 #   |                         _                __                          |

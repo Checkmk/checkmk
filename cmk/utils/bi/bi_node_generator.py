@@ -13,7 +13,6 @@
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-from marshmallow import Schema  # type: ignore[import]
 from typing import List, Type
 
 from cmk.utils.bi.bi_lib import (
@@ -30,6 +29,7 @@ from cmk.utils.bi.bi_actions import (
 )
 
 from cmk.utils.bi.bi_node_generator_interface import ABCBINodeGenerator
+from cmk.utils.bi.bi_schema import Schema
 from cmk.utils.bi.bi_search import BISearchSchema, BIEmptySearchSchema
 
 

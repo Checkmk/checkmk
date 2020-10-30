@@ -19,10 +19,16 @@ from typing import (
     Tuple,
 )
 
+from cmk.utils.bi.bi_schema import Schema
 from livestatus import SiteId
-from marshmallow import Schema  # type: ignore[import]
-from marshmallow.fields import (  # type: ignore[import]
-    List as MList, Dict as MDict, Constant, Integer, String, Nested, Boolean,
+from marshmallow.fields import (
+    List as MList,
+    Dict as MDict,
+    Constant,
+    Integer,
+    String,
+    Nested,
+    Boolean,
 )
 
 from functools import partial

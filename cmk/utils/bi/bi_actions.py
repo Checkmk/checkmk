@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from marshmallow import Schema
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 from typing import List, Dict, Type, Any, Union
 from cmk.utils.bi.bi_lib import (
@@ -23,6 +22,7 @@ from cmk.utils.bi.bi_lib import (
 )
 
 from cmk.utils.bi.bi_rule_interface import bi_rule_id_registry
+from cmk.utils.bi.bi_schema import Schema
 from cmk.utils.bi.bi_trees import (
     BICompiledLeaf,
     BIRemainingResult,

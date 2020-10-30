@@ -127,6 +127,23 @@ components:
       - links
       - value
       type: object
+    ActivateChanges:
+      properties:
+        redirect:
+          default: false
+          description: Redirect immediately to the 'Wait for completion' endpoint.
+          example: false
+          type: boolean
+        sites:
+          default: []
+          description: On which sites the configuration shall be activated. An empty
+            list means all sites which have pending changes.
+          example:
+          - production
+          items:
+            type: string
+          type: array
+      type: object
     AgentSign:
       properties:
         key_id:
@@ -189,10 +206,10 @@ components:
         disabled:
           example: false
           type: boolean
-        escalate_downtimes_as_warn:
+        use_hard_states:
           example: false
           type: boolean
-        use_hard_states:
+        escalate_downtimes_as_warn:
           example: false
           type: boolean
       required:
@@ -202,20 +219,9 @@ components:
       type: object
     BIAggregationEndpoint:
       properties:
-        aggregation_visualization:
-          allOf:
-          - $ref: '#/components/schemas/BIAggregationVisualization'
-          example:
-            ignore_rule_styles: false
-            layout_id: builtin_default
-            line_style: round
-        computation_options:
-          allOf:
-          - $ref: '#/components/schemas/BIAggregationComputationOptions'
-          example:
-            disabled: false
-            escalate_downtimes_as_warn: false
-            use_hard_states: false
+        id:
+          example: aggr1
+          type: string
         customer:
           description: 'CME Edition only: The customer id for this aggregation.'
           example: customer1
@@ -235,9 +241,6 @@ components:
             - - path
               - group
               - b
-        id:
-          example: aggr1
-          type: string
         node:
           allOf:
           - $ref: '#/components/schemas/BINodeGenerator'
@@ -247,6 +250,20 @@ components:
               type: state_of_host
             search:
               type: empty
+        aggregation_visualization:
+          allOf:
+          - $ref: '#/components/schemas/BIAggregationVisualization'
+          example:
+            ignore_rule_styles: false
+            layout_id: builtin_default
+            line_style: round
+        computation_options:
+          allOf:
+          - $ref: '#/components/schemas/BIAggregationComputationOptions'
+          example:
+            disabled: false
+            escalate_downtimes_as_warn: false
+            use_hard_states: false
         pack_id:
           example: pack1
           type: string
@@ -273,6 +290,8 @@ components:
       type: object
     BIAggregationFunctionBest:
       properties:
+        type:
+          default: best
         count:
           format: int32
           type: integer
@@ -283,8 +302,6 @@ components:
           - 2
           format: int32
           type: integer
-        type:
-          default: best
       required:
       - count
       - restrict_state
@@ -292,12 +309,12 @@ components:
       type: object
     BIAggregationFunctionCountOK:
       properties:
+        type:
+          default: count_ok
         levels_ok:
           $ref: '#/components/schemas/BIAggregationFunctionCountSettings'
         levels_warn:
           $ref: '#/components/schemas/BIAggregationFunctionCountSettings'
-        type:
-          default: count_ok
       required:
       - levels_ok
       - levels_warn
@@ -319,6 +336,8 @@ components:
       type: object
     BIAggregationFunctionWorst:
       properties:
+        type:
+          default: worst
         count:
           example: 2
           format: int32
@@ -330,8 +349,6 @@ components:
           - 2
           format: int32
           type: integer
-        type:
-          default: worst
       required:
       - count
       - restrict_state
@@ -382,16 +399,16 @@ components:
       type: object
     BICallARuleAction:
       properties:
+        type:
+          default: call_a_rule
+        rule_id:
+          example: test_rule_1
+          type: string
         params:
           allOf:
           - $ref: '#/components/schemas/BIParams'
           example:
             arguments: []
-        rule_id:
-          example: test_rule_1
-          type: string
-        type:
-          default: call_a_rule
       required:
       - params
       - rule_id
@@ -406,12 +423,12 @@ components:
       type: object
     BIFixedArgumentsSearch:
       properties:
+        type:
+          default: fixed_arguments
         arguments:
           items:
             $ref: '#/components/schemas/BIFixedArgumentsSearchToken'
           type: array
-        type:
-          default: fixed_arguments
       required:
       - arguments
       - type
@@ -430,11 +447,11 @@ components:
       type: object
     BIHostAliasRegexChoice:
       properties:
+        type:
+          default: host_alias_regex
         pattern:
           example: testali.*
           type: string
-        type:
-          default: host_alias_regex
       required:
       - pattern
       - type
@@ -454,17 +471,19 @@ components:
       type: object
     BIHostNameRegexChoice:
       properties:
+        type:
+          default: host_name_regex
         pattern:
           example: testhostn.*
           type: string
-        type:
-          default: host_name_regex
       required:
       - pattern
       - type
       type: object
     BIHostSearch:
       properties:
+        type:
+          default: host_search
         conditions:
           $ref: '#/components/schemas/HostConditions'
         refer_to:
@@ -473,8 +492,6 @@ components:
           - child
           - parent
           type: string
-        type:
-          default: host_search
       required:
       - conditions
       - refer_to
@@ -482,47 +499,47 @@ components:
       type: object
     BINodeGenerator:
       properties:
+        search:
+          allOf:
+          - $ref: '#/components/schemas/BISearch'
+          example:
+            type: empty
         action:
           allOf:
           - $ref: '#/components/schemas/BIAction'
           example:
             host_regex: ''
             type: state_of_host
-        search:
-          allOf:
-          - $ref: '#/components/schemas/BISearch'
-          example:
-            type: empty
       required:
       - action
       - search
       type: object
     BINodeVisBlockStyle:
       properties:
-        style_config:
-          default: &id002 {}
         type:
           default: block
+        style_config:
+          default: &id002 {}
       required:
       - style_config
       - type
       type: object
     BINodeVisForceStyle:
       properties:
-        style_config:
-          default: {}
         type:
           default: force
+        style_config:
+          default: {}
       required:
       - style_config
       - type
       type: object
     BINodeVisHierarchyStyle:
       properties:
-        style_config:
-          $ref: '#/components/schemas/BINodeVisHierarchyStyleConfig'
         type:
           default: hierarchy
+        style_config:
+          $ref: '#/components/schemas/BINodeVisHierarchyStyleConfig'
       required:
       - style_config
       - type
@@ -565,20 +582,20 @@ components:
       type: object
     BINodeVisNoneStyle:
       properties:
-        style_config:
-          default: {}
         type:
           default: none
+        style_config:
+          default: {}
       required:
       - style_config
       - type
       type: object
     BINodeVisRadialStyle:
       properties:
-        style_config:
-          $ref: '#/components/schemas/BINodeVisRadialStyleConfig'
         type:
           default: radial
+        style_config:
+          $ref: '#/components/schemas/BINodeVisRadialStyleConfig'
       required:
       - style_config
       - type
@@ -620,6 +637,36 @@ components:
       type: object
     BIRuleEndpoint:
       properties:
+        id:
+          example: rule1
+          type: string
+        nodes:
+          example: []
+          items:
+            $ref: '#/components/schemas/BINodeGenerator'
+          type: array
+        params:
+          allOf:
+          - $ref: '#/components/schemas/BIParams'
+          example:
+          - arguments:
+            - foo
+            - bar
+        node_visualization:
+          allOf:
+          - $ref: '#/components/schemas/BINodeVisLayoutStyle'
+          example:
+            style_config: *id002
+            type: block
+        properties:
+          allOf:
+          - $ref: '#/components/schemas/BIRuleProperties'
+          example:
+            comment: ''
+            docu_url: ''
+            icon: ''
+            state_messages: {}
+            title: ''
         aggregation_function:
           allOf:
           - $ref: '#/components/schemas/BIAggregationFunction'
@@ -632,39 +679,9 @@ components:
           - $ref: '#/components/schemas/BIRuleComputationOptions'
           example:
             disabled: false
-        id:
-          example: rule1
-          type: string
-        node_visualization:
-          allOf:
-          - $ref: '#/components/schemas/BINodeVisLayoutStyle'
-          example:
-            style_config: *id002
-            type: block
-        nodes:
-          example: []
-          items:
-            $ref: '#/components/schemas/BINodeGenerator'
-          type: array
         pack_id:
           example: pack1
           type: string
-        params:
-          allOf:
-          - $ref: '#/components/schemas/BIParams'
-          example:
-          - arguments:
-            - foo
-            - bar
-        properties:
-          allOf:
-          - $ref: '#/components/schemas/BIRuleProperties'
-          example:
-            comment: ''
-            docu_url: ''
-            icon: ''
-            state_messages: {}
-            title: ''
       required:
       - aggregation_function
       - computation_options
@@ -677,6 +694,9 @@ components:
       type: object
     BIRuleProperties:
       properties:
+        title:
+          example: Rule title
+          type: string
         comment:
           example: Rule comment
           type: string
@@ -689,9 +709,6 @@ components:
         state_messages:
           example: {}
           type: object
-        title:
-          example: Rule title
-          type: string
       required:
       - comment
       - docu_url
@@ -716,46 +733,46 @@ components:
       type: object
     BIServiceSearch:
       properties:
-        conditions:
-          $ref: '#/components/schemas/ServiceConditions'
         type:
           default: service_search
+        conditions:
+          $ref: '#/components/schemas/ServiceConditions'
       required:
       - conditions
       - type
       type: object
     BIStateOfHostAction:
       properties:
+        type:
+          default: state_of_host
         host_regex:
           example: testhost
           type: string
-        type:
-          default: state_of_host
       required:
       - host_regex
       - type
       type: object
     BIStateOfRemainingServicesAction:
       properties:
+        type:
+          default: state_of_remaining_services
         host_regex:
           example: testhost
           type: string
-        type:
-          default: state_of_remaining_services
       required:
       - host_regex
       - type
       type: object
     BIStateOfServiceAction:
       properties:
+        type:
+          default: state_of_service
         host_regex:
           example: testhost
           type: string
         service_regex:
           example: testservice
           type: string
-        type:
-          default: state_of_service
       required:
       - host_regex
       - service_regex
@@ -1215,8 +1232,8 @@ components:
         folder:
           description: The folder-id of the folder under which this folder shall be
             created. May be 'root' for the root-folder.
-          example: root
-          pattern: '[a-fA-F0-9]{32}|root'
+          example: /
+          pattern: /|(/[ -_a-zA-Z0-9]+)+|[a-fA-F0-9]{32}
           type: string
         host_name:
           description: The hostname of the cluster host.
@@ -1294,8 +1311,8 @@ components:
         folder:
           description: The folder-id of the folder under which this folder shall be
             created. May be 'root' for the root-folder.
-          example: root
-          pattern: '[a-fA-F0-9]{32}|root'
+          example: /
+          pattern: /|(/[ -_a-zA-Z0-9]+)+|[a-fA-F0-9]{32}
           type: string
         host_name:
           description: The hostname or IP address of the host to be created.
@@ -1688,21 +1705,21 @@ components:
       type: object
     HostConditions:
       properties:
-        host_choice:
-          allOf:
-          - $ref: '#/components/schemas/BIHostChoice'
-          example: &id005
-            type: all_hosts
         host_folder:
           example: servers/groupA
           type: string
         host_labels:
-          example: &id006
+          example: &id005
             db: mssql
           type: object
         host_tags:
-          example: &id007 {}
+          example: &id006 {}
           type: object
+        host_choice:
+          allOf:
+          - $ref: '#/components/schemas/BIHostChoice'
+          example: &id007
+            type: all_hosts
       required:
       - host_choice
       - host_folder
@@ -2174,26 +2191,26 @@ components:
       type: object
     ServiceConditions:
       properties:
-        host_choice:
-          allOf:
-          - $ref: '#/components/schemas/BIHostChoice'
-          example: *id005
         host_folder:
           example: servers/groupA
           type: string
         host_labels:
-          example: *id006
+          example: *id005
           type: object
         host_tags:
-          example: *id007
+          example: *id006
           type: object
+        host_choice:
+          allOf:
+          - $ref: '#/components/schemas/BIHostChoice'
+          example: *id007
+        service_regex:
+          example: Filesystem.*
+          type: string
         service_labels:
           example:
             db: mssql
           type: object
-        service_regex:
-          example: Filesystem.*
-          type: string
       required:
       - host_choice
       - host_folder
@@ -2313,8 +2330,8 @@ components:
         folder:
           description: The folder-id of the folder under which this folder shall be
             created. May be 'root' for the root-folder.
-          example: root
-          pattern: '[a-fA-F0-9]{32}|root'
+          example: /
+          pattern: /|(/[ -_a-zA-Z0-9]+)+|[a-fA-F0-9]{32}
           type: string
       required:
       - folder
@@ -2786,8 +2803,8 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/objects/host/example.com/actions/acknowledge/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    comment='This was expected.' \\\n    notify='False'\
-          \ \\\n    persistent='False' \\\n    sticky='False' \\\n    --json"
+          \ application/json\" \\\n    sticky='False' \\\n    persistent='False' \\\
+          \n    notify='False' \\\n    comment='This was expected.' \\\n    --json"
   /objects/hostgroup/{hostgroup_name}/actions/acknowledge/invoke:
     post:
       description: ''
@@ -2857,8 +2874,8 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/objects/hostgroup/samples/actions/acknowledge/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    comment='This was expected.' \\\n    notify='False'\
-          \ \\\n    persistent='False' \\\n    sticky='False' \\\n    --json"
+          \ application/json\" \\\n    sticky='False' \\\n    persistent='False' \\\
+          \n    notify='False' \\\n    comment='This was expected.' \\\n    --json"
   /domain-types/host/actions/bulk-acknowledge/invoke:
     post:
       description: ''
@@ -2922,9 +2939,9 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/host/actions/bulk-acknowledge/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    comment='This was expected.' \\\n    entries='[\"\
-          example.com\", \"sample.com\"]' \\\n    notify='False' \\\n    persistent='False'\
-          \ \\\n    sticky='False' \\\n    --json"
+          \ application/json\" \\\n    sticky='False' \\\n    persistent='False' \\\
+          \n    notify='False' \\\n    comment='This was expected.' \\\n    entries='['example.com',\
+          \ 'sample.com']' \\\n    --json"
   /domain-types/service/{service_description}/actions/acknowledge/invoke:
     post:
       description: ''
@@ -2994,8 +3011,8 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/service/Memory/actions/acknowledge/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    comment='This was expected.' \\\n    notify='False'\
-          \ \\\n    persistent='False' \\\n    sticky='False' \\\n    --json"
+          \ application/json\" \\\n    sticky='False' \\\n    persistent='False' \\\
+          \n    notify='False' \\\n    comment='This was expected.' \\\n    --json"
   /objects/host/{host_name}/objects/service/{service_description}/actions/acknowledge/invoke:
     post:
       description: ''
@@ -3073,8 +3090,8 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/objects/host/example.com/objects/service/Memory/actions/acknowledge/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    comment='This was expected.' \\\n    notify='False'\
-          \ \\\n    persistent='False' \\\n    sticky='False' \\\n    --json"
+          \ application/json\" \\\n    sticky='False' \\\n    persistent='False' \\\
+          \n    notify='False' \\\n    comment='This was expected.' \\\n    --json"
   /domain-types/service/actions/bulk-acknowledge/invoke:
     post:
       description: ''
@@ -3140,10 +3157,9 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/service/actions/bulk-acknowledge/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    comment='This was expected.' \\\n    entries='[\"\
-          CPU utilization\", \"Memory\"]' \\\n    host_name='example.com' \\\n   \
-          \ notify='False' \\\n    persistent='False' \\\n    sticky='False' \\\n\
-          \    --json"
+          \ application/json\" \\\n    sticky='False' \\\n    persistent='False' \\\
+          \n    notify='False' \\\n    comment='This was expected.' \\\n    host_name='example.com'\
+          \ \\\n    entries='['CPU utilization', 'Memory']' \\\n    --json"
   /objects/servicegroup/{servicegroup_name}/actions/acknowledge/invoke:
     post:
       description: ''
@@ -3213,12 +3229,18 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/objects/servicegroup/windows/actions/acknowledge/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    comment='This was expected.' \\\n    notify='False'\
-          \ \\\n    persistent='False' \\\n    sticky='False' \\\n    --json"
+          \ application/json\" \\\n    sticky='False' \\\n    persistent='False' \\\
+          \n    notify='False' \\\n    comment='This was expected.' \\\n    --json"
   /domain-types/activation_run/actions/activate-changes/invoke:
     post:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.activate_changes.activate_changes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivateChanges'
+        required: true
       responses:
         default:
           content:
@@ -3231,8 +3253,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DomainObject'
-          description: ''
+          description: The activation has already been completed.
           headers: {}
+        '302':
+          description: The activation is still running. Redirecting to the 'Wait for
+            completion' endpoint.
       summary: Activate pending changes
       tags:
       - cmk.gui.plugins.openapi.endpoints.activate_changes
@@ -3244,7 +3269,8 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/activation_run/actions/activate-changes/invoke\"\
-          ,\n)\nresp.raise_for_status()\ndata = resp.json()"
+          ,\n    json={'redirect': False, 'sites': ['production']},\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
@@ -3253,21 +3279,24 @@ paths:
           \    f\"{API_URL}/domain-types/activation_run/actions/activate-changes/invoke\"\
           ,\n    method=\"POST\",\n    headers={\n        \"Authorization\": f\"Bearer\
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
-          \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+          \    },\n    data=json.dumps({'redirect': False, 'sites': ['production']}).encode('utf-8'),\n\
+          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\\n    \"$API_URL/domain-types/activation_run/actions/activate-changes/invoke\""
+          \ \\ \\\n    --data '{\n          \"redirect\": false,\n          \"sites\"\
+          : [\n            \"production\"\n          ]\n        }' \\\n    \"$API_URL/domain-types/activation_run/actions/activate-changes/invoke\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/activation_run/actions/activate-changes/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    --json"
+          \ application/json\" \\\n    redirect='False' \\\n    sites='['production']'\
+          \ \\\n    --json"
   /objects/activation_run/{activation_id}/actions/wait-for-completion/invoke:
     get:
       description: This endpoint will periodically redirect on itself to prevent timeouts.
@@ -3530,7 +3559,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BIRuleEndpoint'
-          description: ''
+          description: The operation was done successfully.
           headers: {}
       summary: Save BI Rule
       tags:
@@ -3546,10 +3575,10 @@ paths:
           ,\n    json={\n        'id': 'rule1',\n        'nodes': [],\n        'params':\
           \ [{\n            'arguments': ['foo', 'bar']\n        }],\n        'node_visualization':\
           \ {\n            'type': 'block',\n            'style_config': {}\n    \
-          \    },\n        'properties': {\n            'state_messages': {},\n  \
-          \          'title': '',\n            'comment': '',\n            'icon':\
-          \ '',\n            'docu_url': ''\n        },\n        'aggregation_function':\
-          \ {\n            'count': 1,\n            'type': 'best',\n            'restrict_state':\
+          \    },\n        'properties': {\n            'title': '',\n           \
+          \ 'comment': '',\n            'docu_url': '',\n            'icon': '',\n\
+          \            'state_messages': {}\n        },\n        'aggregation_function':\
+          \ {\n            'type': 'best',\n            'count': 1,\n            'restrict_state':\
           \ 2\n        },\n        'computation_options': {\n            'disabled':\
           \ False\n        },\n        'pack_id': 'pack1'\n    },\n)\nresp.raise_for_status()\n\
           data = resp.json()"
@@ -3564,10 +3593,10 @@ paths:
           \     'id': 'rule1',\n        'nodes': [],\n        'params': [{\n     \
           \       'arguments': ['foo', 'bar']\n        }],\n        'node_visualization':\
           \ {\n            'type': 'block',\n            'style_config': {}\n    \
-          \    },\n        'properties': {\n            'state_messages': {},\n  \
-          \          'title': '',\n            'comment': '',\n            'icon':\
-          \ '',\n            'docu_url': ''\n        },\n        'aggregation_function':\
-          \ {\n            'count': 1,\n            'type': 'best',\n            'restrict_state':\
+          \    },\n        'properties': {\n            'title': '',\n           \
+          \ 'comment': '',\n            'docu_url': '',\n            'icon': '',\n\
+          \            'state_messages': {}\n        },\n        'aggregation_function':\
+          \ {\n            'type': 'best',\n            'count': 1,\n            'restrict_state':\
           \ 2\n        },\n        'computation_options': {\n            'disabled':\
           \ False\n        },\n        'pack_id': 'pack1'\n    }).encode('utf-8'),\n\
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
@@ -3595,13 +3624,12 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/bi_rule/rule1\" \\\
           \n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept: application/json\"\
-          \ \\\n    aggregation_function='{\"count\": 1, \"type\": \"best\", \"restrict_state\"\
-          : 2}' \\\n    computation_options='{\"disabled\": false}' \\\n    id='rule1'\
-          \ \\\n    node_visualization='{\"type\": \"block\", \"style_config\": {}}'\
-          \ \\\n    nodes='[]' \\\n    pack_id='pack1' \\\n    params='[{\"arguments\"\
-          : [\"foo\", \"bar\"]}]' \\\n    properties='{\"state_messages\": {}, \"\
-          title\": \"\", \"comment\": \"\", \"icon\": \"\", \"docu_url\": \"\"}' \\\
-          \n    --json"
+          \ \\\n    id='rule1' \\\n    nodes='[]' \\\n    params='[{'arguments': ['foo',\
+          \ 'bar']}]' \\\n    node_visualization='{'type': 'block', 'style_config':\
+          \ {}}' \\\n    properties='{'title': '', 'comment': '', 'docu_url': '',\
+          \ 'icon': '', 'state_messages': {}}' \\\n    aggregation_function='{'type':\
+          \ 'best', 'count': 1, 'restrict_state': 2}' \\\n    computation_options='{'disabled':\
+          \ False}' \\\n    pack_id='pack1' \\\n    --json"
   /objects/bi_aggregation/{aggregation_id}:
     get:
       description: ''
@@ -3690,7 +3718,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BIAggregationEndpoint'
-          description: ''
+          description: The operation was done successfully.
           headers: {}
       summary: Save BI Aggregation
       tags:
@@ -3706,13 +3734,13 @@ paths:
           ,\n    json={\n        'id': 'aggr1',\n        'customer': 'customer1',\n\
           \        'groups': {\n            'names': ['groupA', 'groupB'],\n     \
           \       'paths': [['path', 'group', 'a'],\n                      ['path',\
-          \ 'group', 'b']]\n        },\n        'node': {\n            'action': {\n\
-          \                'host_regex': '',\n                'type': 'state_of_host'\n\
-          \            },\n            'search': {\n                'type': 'empty'\n\
-          \            }\n        },\n        'aggregation_visualization': {\n   \
-          \         'line_style': 'round',\n            'ignore_rule_styles': False,\n\
-          \            'layout_id': 'builtin_default'\n        },\n        'computation_options':\
-          \ {\n            'use_hard_states': False,\n            'disabled': False,\n\
+          \ 'group', 'b']]\n        },\n        'node': {\n            'search': {\n\
+          \                'type': 'empty'\n            },\n            'action':\
+          \ {\n                'type': 'state_of_host',\n                'host_regex':\
+          \ ''\n            }\n        },\n        'aggregation_visualization': {\n\
+          \            'ignore_rule_styles': False,\n            'layout_id': 'builtin_default',\n\
+          \            'line_style': 'round'\n        },\n        'computation_options':\
+          \ {\n            'disabled': False,\n            'use_hard_states': False,\n\
           \            'escalate_downtimes_as_warn': False\n        },\n        'pack_id':\
           \ 'pack1'\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
@@ -3726,16 +3754,15 @@ paths:
           \        'id': 'aggr1',\n        'customer': 'customer1',\n        'groups':\
           \ {\n            'names': ['groupA', 'groupB'],\n            'paths': [['path',\
           \ 'group', 'a'],\n                      ['path', 'group', 'b']]\n      \
-          \  },\n        'node': {\n            'action': {\n                'host_regex':\
-          \ '',\n                'type': 'state_of_host'\n            },\n       \
-          \     'search': {\n                'type': 'empty'\n            }\n    \
-          \    },\n        'aggregation_visualization': {\n            'line_style':\
-          \ 'round',\n            'ignore_rule_styles': False,\n            'layout_id':\
-          \ 'builtin_default'\n        },\n        'computation_options': {\n    \
-          \        'use_hard_states': False,\n            'disabled': False,\n   \
-          \         'escalate_downtimes_as_warn': False\n        },\n        'pack_id':\
-          \ 'pack1'\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
-          data = json.loads(response.read())"
+          \  },\n        'node': {\n            'search': {\n                'type':\
+          \ 'empty'\n            },\n            'action': {\n                'type':\
+          \ 'state_of_host',\n                'host_regex': ''\n            }\n  \
+          \      },\n        'aggregation_visualization': {\n            'ignore_rule_styles':\
+          \ False,\n            'layout_id': 'builtin_default',\n            'line_style':\
+          \ 'round'\n        },\n        'computation_options': {\n            'disabled':\
+          \ False,\n            'use_hard_states': False,\n            'escalate_downtimes_as_warn':\
+          \ False\n        },\n        'pack_id': 'pack1'\n    }).encode('utf-8'),\n\
+          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -3765,14 +3792,13 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/bi_aggregation/aggregation1\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    aggregation_visualization='{\"line_style\"\
-          : \"round\", \"ignore_rule_styles\": false, \"layout_id\": \"builtin_default\"\
-          }' \\\n    computation_options='{\"use_hard_states\": false, \"disabled\"\
-          : false, \"escalate_downtimes_as_warn\": false}' \\\n    customer='customer1'\
-          \ \\\n    groups='{\"names\": [\"groupA\", \"groupB\"], \"paths\": [[\"\
-          path\", \"group\", \"a\"], [\"path\", \"group\", \"b\"]]}' \\\n    id='aggr1'\
-          \ \\\n    node='{\"action\": {\"host_regex\": \"\", \"type\": \"state_of_host\"\
-          }, \"search\": {\"type\": \"empty\"}}' \\\n    pack_id='pack1' \\\n    --json"
+          \ application/json\" \\\n    id='aggr1' \\\n    customer='customer1' \\\n\
+          \    groups='{'names': ['groupA', 'groupB'], 'paths': [['path', 'group',\
+          \ 'a'], ['path', 'group', 'b']]}' \\\n    node='{'search': {'type': 'empty'},\
+          \ 'action': {'type': 'state_of_host', 'host_regex': ''}}' \\\n    aggregation_visualization='{'ignore_rule_styles':\
+          \ False, 'layout_id': 'builtin_default', 'line_style': 'round'}' \\\n  \
+          \  computation_options='{'disabled': False, 'use_hard_states': False, 'escalate_downtimes_as_warn':\
+          \ False}' \\\n    pack_id='pack1' \\\n    --json"
   /domain-types/bi_pack/collections/all:
     get:
       description: ''
@@ -3960,7 +3986,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DomainObject'
-          description: ''
+          description: The operation was done successfully.
           headers:
             ETag:
               allowEmptyValue: false
@@ -4009,7 +4035,7 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/contact_group_config/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    alias='Not on Sundays.' \\\n    name='OnCall'\
+          \ application/json\" \\\n    name='OnCall' \\\n    alias='Not on Sundays.'\
           \ \\\n    --json"
   /domain-types/contact_group_config/actions/bulk-create/invoke:
     post:
@@ -4033,7 +4059,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DomainObjectCollection'
-          description: ''
+          description: The operation was done successfully.
           headers: {}
       summary: Bulk create host groups
       tags:
@@ -4075,8 +4101,8 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/contact_group_config/actions/bulk-create/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    entries='[{\"name\": \"OnCall\", \"alias\"\
-          : \"Not on Sundays\"}]' \\\n    --json"
+          \ application/json\" \\\n    entries='[{'name': 'OnCall', 'alias': 'Not\
+          \ on Sundays'}]' \\\n    --json"
   /objects/contact_group_config/{name}:
     delete:
       description: ''
@@ -4260,7 +4286,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ContactGroup'
-          description: ''
+          description: The operation was done successfully.
           headers:
             ETag:
               allowEmptyValue: false
@@ -4312,8 +4338,8 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/contact_group_config/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    alias='Not\
-          \ on Sundays.' \\\n    name='OnCall' \\\n    --json"
+          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    name='OnCall'\
+          \ \\\n    alias='Not on Sundays.' \\\n    --json"
   /domain-types/contact_group_config/actions/bulk-delete/invoke:
     delete:
       description: ''
@@ -4371,8 +4397,7 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/domain-types/contact_group_config/actions/bulk-delete/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    entries='[\"windows\", \"panels\"]' \\\n  \
-          \  --json"
+          \ application/json\" \\\n    entries='['windows', 'panels']' \\\n    --json"
   /domain-types/contact_group_config/actions/bulk-update/invoke:
     put:
       description: ''
@@ -4395,7 +4420,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DomainObjectCollection'
-          description: ''
+          description: The operation was done successfully.
           headers: {}
       summary: Bulk update contact groups
       tags:
@@ -4442,9 +4467,8 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/domain-types/contact_group_config/actions/bulk-update/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    entries='[{\"name\": \"OnCall\", \"attributes\"\
-          : {\"name\": \"OnCall updated\", \"alias\": \"Not on Sundays\"}}]' \\\n\
-          \    --json"
+          \ application/json\" \\\n    entries='[{'name': 'OnCall', 'attributes':\
+          \ {'name': 'OnCall updated', 'alias': 'Not on Sundays'}}]' \\\n    --json"
   /domain-types/downtime/collections/all:
     get:
       description: ''
@@ -4592,10 +4616,10 @@ paths:
           \nPASSWORD=\"test123\"\n\n# This schema has multiple variations. Please\
           \ refer to the\n# 'Payload' section for details.\nhttp POST \"$API_URL/domain-types/downtime/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    comment='Security updates' \\\n    downtime_type='host'\
-          \ \\\n    duration='3600' \\\n    end_time='2017-07-21T17:32:28Z' \\\n \
-          \   host_name='example.com' \\\n    recur='hour' \\\n    start_time='2017-07-21T17:32:28Z'\
-          \ \\\n    --json"
+          \ application/json\" \\\n    downtime_type='host' \\\n    start_time='2017-07-21T17:32:28Z'\
+          \ \\\n    end_time='2017-07-21T17:32:28Z' \\\n    recur='hour' \\\n    duration='3600'\
+          \ \\\n    comment='Security updates' \\\n    host_name='example.com' \\\n\
+          \    --json"
   /objects/host/{host_name}/objects/downtime/{downtime_id}:
     delete:
       description: ''
@@ -4720,8 +4744,8 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/domain-types/downtime/actions/bulk-delete/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    entries='[1120, 1121]' \\\n    host_name='example.com'\
-          \ \\\n    --json"
+          \ application/json\" \\\n    host_name='example.com' \\\n    entries='[1120,\
+          \ 1121]' \\\n    --json"
   /domain-types/folder_config/collections/all:
     get:
       description: ''
@@ -4796,7 +4820,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ConcreteFolder'
-          description: ''
+          description: The operation was done successfully.
           headers:
             ETag:
               allowEmptyValue: false
@@ -4848,8 +4872,8 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/folder_config/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    attributes='{}' \\\n    name='production' \\\
-          \n    parent='/' \\\n    title='Production Hosts' \\\n    --json"
+          \ application/json\" \\\n    name='production' \\\n    title='Production\
+          \ Hosts' \\\n    parent='/' \\\n    attributes='{}' \\\n    --json"
   /objects/folder_config/{folder}:
     delete:
       description: ''
@@ -4874,7 +4898,7 @@ paths:
         required: true
         schema:
           example: '%2Fmy%2Ffine%2Ffolder'
-          pattern: /|root|(/[ -_a-zA-Z0-9]+)+|[a-fA-F0-9]{32}
+          pattern: /|(/[ -_a-zA-Z0-9]+)+|[a-fA-F0-9]{32}
           type: string
       responses:
         default:
@@ -4938,7 +4962,7 @@ paths:
         required: true
         schema:
           example: '%2Fmy%2Ffine%2Ffolder'
-          pattern: /|root|(/[ -_a-zA-Z0-9]+)+|[a-fA-F0-9]{32}
+          pattern: /|(/[ -_a-zA-Z0-9]+)+|[a-fA-F0-9]{32}
           type: string
       responses:
         default:
@@ -5022,7 +5046,7 @@ paths:
         required: true
         schema:
           example: '%2Fmy%2Ffine%2Ffolder'
-          pattern: /|root|(/[ -_a-zA-Z0-9]+)+|[a-fA-F0-9]{32}
+          pattern: /|(/[ -_a-zA-Z0-9]+)+|[a-fA-F0-9]{32}
           type: string
       requestBody:
         content:
@@ -5042,7 +5066,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ConcreteFolder'
-          description: ''
+          description: The operation was done successfully.
           headers:
             ETag:
               allowEmptyValue: false
@@ -5096,9 +5120,9 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/folder_config/%2Fmy%2Ffine%2Ffolder\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    attributes='{}'\
-          \ \\\n    title='Virtual Servers.' \\\n    update_attributes='{}' \\\n \
-          \   --json"
+          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    title='Virtual\
+          \ Servers.' \\\n    attributes='{}' \\\n    update_attributes='{}' \\\n\
+          \    --json"
   /domain-types/folder_config/actions/bulk-update/invoke:
     put:
       description: ''
@@ -5121,7 +5145,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FolderCollection'
-          description: ''
+          description: The operation was done successfully.
           headers: {}
       summary: Bulk update folders
       tags:
@@ -5166,8 +5190,8 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/domain-types/folder_config/actions/bulk-update/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    entries='[{\"ident\": \"root\", \"title\":\
-          \ \"Virtual Servers\", \"attributes\": {\"key\": \"foo\"}}]' \\\n    --json"
+          \ application/json\" \\\n    entries='[{'ident': 'root', 'title': 'Virtual\
+          \ Servers', 'attributes': {'key': 'foo'}}]' \\\n    --json"
   /objects/folder_config/{folder}/actions/move/invoke:
     post:
       description: ''
@@ -5192,7 +5216,7 @@ paths:
         required: true
         schema:
           example: '%2Fmy%2Ffine%2Ffolder'
-          pattern: /|root|(/[ -_a-zA-Z0-9]+)+|[a-fA-F0-9]{32}
+          pattern: /|(/[ -_a-zA-Z0-9]+)+|[a-fA-F0-9]{32}
           type: string
       requestBody:
         content:
@@ -5212,7 +5236,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ConcreteFolder'
-          description: ''
+          description: The operation was done successfully.
           headers:
             ETag:
               allowEmptyValue: false
@@ -5439,7 +5463,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DomainObject'
-          description: ''
+          description: The operation was done successfully.
           headers:
             ETag:
               allowEmptyValue: false
@@ -5462,7 +5486,7 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/host_config/collections/all\"\
-          ,\n    json={\n        'folder': 'root',\n        'host_name': 'example.com',\n\
+          ,\n    json={\n        'folder': '/',\n        'host_name': 'example.com',\n\
           \        'attributes': {\n            'ipaddress': '192.168.0.123'\n   \
           \     }\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
@@ -5473,7 +5497,7 @@ paths:
           \    f\"{API_URL}/domain-types/host_config/collections/all\",\n    method=\"\
           POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
           \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
-          \ data=json.dumps({\n        'folder': 'root',\n        'host_name': 'example.com',\n\
+          \ data=json.dumps({\n        'folder': '/',\n        'host_name': 'example.com',\n\
           \        'attributes': {\n            'ipaddress': '192.168.0.123'\n   \
           \     }\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
           data = json.loads(response.read())"
@@ -5484,16 +5508,16 @@ paths:
           \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\ \\\n    --data '{\n          \"attributes\": {\n            \"ipaddress\"\
-          : \"192.168.0.123\"\n          },\n          \"folder\": \"root\",\n   \
-          \       \"host_name\": \"example.com\"\n        }' \\\n    \"$API_URL/domain-types/host_config/collections/all\""
+          : \"192.168.0.123\"\n          },\n          \"folder\": \"\\/\",\n    \
+          \      \"host_name\": \"example.com\"\n        }' \\\n    \"$API_URL/domain-types/host_config/collections/all\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/host_config/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    attributes='{\"ipaddress\": \"192.168.0.123\"\
-          }' \\\n    folder='root' \\\n    host_name='example.com' \\\n    --json"
+          \ application/json\" \\\n    folder='/' \\\n    host_name='example.com'\
+          \ \\\n    attributes='{'ipaddress': '192.168.0.123'}' \\\n    --json"
   /domain-types/host_config/collections/clusters:
     post:
       description: 'A cluster host groups many hosts (called nodes in this context)
@@ -5519,7 +5543,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DomainObject'
-          description: ''
+          description: The operation was done successfully.
           headers:
             ETag:
               allowEmptyValue: false
@@ -5542,7 +5566,7 @@ paths:
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
           \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/host_config/collections/clusters\"\
-          ,\n    json={\n        'folder': 'root',\n        'host_name': 'example.com',\n\
+          ,\n    json={\n        'folder': '/',\n        'host_name': 'example.com',\n\
           \        'attributes': {\n            'ipaddress': '192.168.0.123'\n   \
           \     },\n        'nodes': ['host1', 'host2', 'host3']\n    },\n)\nresp.raise_for_status()\n\
           data = resp.json()"
@@ -5554,7 +5578,7 @@ paths:
           \    f\"{API_URL}/domain-types/host_config/collections/clusters\",\n   \
           \ method=\"POST\",\n    headers={\n        \"Authorization\": f\"Bearer\
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
-          \    },\n    data=json.dumps({\n        'folder': 'root',\n        'host_name':\
+          \    },\n    data=json.dumps({\n        'folder': '/',\n        'host_name':\
           \ 'example.com',\n        'attributes': {\n            'ipaddress': '192.168.0.123'\n\
           \        },\n        'nodes': ['host1', 'host2', 'host3']\n    }).encode('utf-8'),\n\
           )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
@@ -5565,19 +5589,19 @@ paths:
           \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\ \\\n    --data '{\n          \"attributes\": {\n            \"ipaddress\"\
-          : \"192.168.0.123\"\n          },\n          \"folder\": \"root\",\n   \
-          \       \"host_name\": \"example.com\",\n          \"nodes\": [\n      \
-          \      \"host1\",\n            \"host2\",\n            \"host3\"\n     \
-          \     ]\n        }' \\\n    \"$API_URL/domain-types/host_config/collections/clusters\""
+          : \"192.168.0.123\"\n          },\n          \"folder\": \"\\/\",\n    \
+          \      \"host_name\": \"example.com\",\n          \"nodes\": [\n       \
+          \     \"host1\",\n            \"host2\",\n            \"host3\"\n      \
+          \    ]\n        }' \\\n    \"$API_URL/domain-types/host_config/collections/clusters\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/host_config/collections/clusters\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    attributes='{\"ipaddress\": \"192.168.0.123\"\
-          }' \\\n    folder='root' \\\n    host_name='example.com' \\\n    nodes='[\"\
-          host1\", \"host2\", \"host3\"]' \\\n    --json"
+          \ application/json\" \\\n    folder='/' \\\n    host_name='example.com'\
+          \ \\\n    attributes='{'ipaddress': '192.168.0.123'}' \\\n    nodes='['host1',\
+          \ 'host2', 'host3']' \\\n    --json"
   /domain-types/host_config/actions/bulk-create/invoke:
     post:
       description: ''
@@ -5600,7 +5624,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DomainObjectCollection'
-          description: ''
+          description: The operation was done successfully.
           headers: {}
       summary: Bulk create hosts
       tags:
@@ -5644,8 +5668,8 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/host_config/actions/bulk-create/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    entries='[{\"host_name\": \"example.com\",\
-          \ \"folder\": \"root\", \"attributes\": {}}]' \\\n    --json"
+          \ application/json\" \\\n    entries='[{'host_name': 'example.com', 'folder':\
+          \ 'root', 'attributes': {}}]' \\\n    --json"
   /objects/host_config/{host_name}/properties/nodes:
     put:
       description: ''
@@ -5686,7 +5710,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ObjectProperty'
-          description: ''
+          description: The operation was done successfully.
           headers:
             ETag:
               allowEmptyValue: false
@@ -5739,8 +5763,8 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/host_config/example.com/properties/nodes\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    nodes='[\"\
-          host1\", \"host2\", \"host3\"]' \\\n    --json"
+          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    nodes='['host1',\
+          \ 'host2', 'host3']' \\\n    --json"
   /objects/host_config/{host_name}:
     delete:
       description: ''
@@ -5921,7 +5945,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DomainObject'
-          description: ''
+          description: The operation was done successfully.
           headers:
             ETag:
               allowEmptyValue: false
@@ -5979,10 +6003,9 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/host_config/example.com\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    attributes='{\"\
-          ipaddress\": \"192.168.0.123\"}' \\\n    remove_attributes='[\"tag_foobar\"\
-          ]' \\\n    update_attributes='{\"ipaddress\": \"192.168.0.123\"}' \\\n \
-          \   --json"
+          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    attributes='{'ipaddress':\
+          \ '192.168.0.123'}' \\\n    update_attributes='{'ipaddress': '192.168.0.123'}'\
+          \ \\\n    remove_attributes='['tag_foobar']' \\\n    --json"
   /domain-types/host_config/actions/bulk-update/invoke:
     put:
       description: ''
@@ -6005,7 +6028,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DomainObjectCollection'
-          description: ''
+          description: The operation was done successfully.
           headers: {}
       summary: Bulk update hosts
       tags:
@@ -6047,8 +6070,8 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/domain-types/host_config/actions/bulk-update/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    entries='[{\"host_name\": \"example.com\",\
-          \ \"attributes\": {}}]' \\\n    --json"
+          \ application/json\" \\\n    entries='[{'host_name': 'example.com', 'attributes':\
+          \ {}}]' \\\n    --json"
   /domain-types/host_config/actions/bulk-delete/invoke:
     delete:
       description: ''
@@ -6106,8 +6129,7 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/domain-types/host_config/actions/bulk-delete/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    entries='[\"example\", \"sample\"]' \\\n  \
-          \  --json"
+          \ application/json\" \\\n    entries='['example', 'sample']' \\\n    --json"
   /domain-types/host_group_config/collections/all:
     get:
       description: ''
@@ -6182,7 +6204,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HostGroup'
-          description: ''
+          description: The operation was done successfully.
           headers:
             ETag:
               allowEmptyValue: false
@@ -6231,7 +6253,7 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/host_group_config/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    alias='Windows Servers' \\\n    name='windows'\
+          \ application/json\" \\\n    name='windows' \\\n    alias='Windows Servers'\
           \ \\\n    --json"
   /domain-types/host_group_config/actions/bulk-create/invoke:
     post:
@@ -6255,7 +6277,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DomainObjectCollection'
-          description: ''
+          description: The operation was done successfully.
           headers: {}
       summary: Bulk create host groups
       tags:
@@ -6297,8 +6319,8 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/host_group_config/actions/bulk-create/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    entries='[{\"name\": \"windows\", \"alias\"\
-          : \"Windows Servers\"}]' \\\n    --json"
+          \ application/json\" \\\n    entries='[{'name': 'windows', 'alias': 'Windows\
+          \ Servers'}]' \\\n    --json"
   /objects/host_group_config/{name}:
     delete:
       description: ''
@@ -6482,7 +6504,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HostGroup'
-          description: ''
+          description: The operation was done successfully.
           headers:
             ETag:
               allowEmptyValue: false
@@ -6534,8 +6556,8 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/host_group_config/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    alias='Windows\
-          \ Servers' \\\n    name='windows' \\\n    --json"
+          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    name='windows'\
+          \ \\\n    alias='Windows Servers' \\\n    --json"
   /domain-types/host_group_config/actions/bulk-delete/invoke:
     delete:
       description: ''
@@ -6593,8 +6615,7 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/domain-types/host_group_config/actions/bulk-delete/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    entries='[\"windows\", \"panels\"]' \\\n  \
-          \  --json"
+          \ application/json\" \\\n    entries='['windows', 'panels']' \\\n    --json"
   /domain-types/host_group_config/actions/bulk-update/invoke:
     put:
       description: ''
@@ -6617,7 +6638,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DomainObjectCollection'
-          description: ''
+          description: The operation was done successfully.
           headers: {}
       summary: Bulk update host groups
       tags:
@@ -6664,9 +6685,8 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/domain-types/host_group_config/actions/bulk-update/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    entries='[{\"name\": \"windows\", \"attributes\"\
-          : {\"name\": \"windows updated\", \"alias\": \"Windows Servers\"}}]' \\\n\
-          \    --json"
+          \ application/json\" \\\n    entries='[{'name': 'windows', 'attributes':\
+          \ {'name': 'windows updated', 'alias': 'Windows Servers'}}]' \\\n    --json"
   /domain-types/host_tag_group/collections/all:
     post:
       description: ''
@@ -6689,7 +6709,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DomainObject'
-          description: ''
+          description: The operation was done successfully.
           headers:
             ETag:
               allowEmptyValue: false
@@ -6746,9 +6766,9 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/host_tag_group/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    help='Kubernetes Pods' \\\n    ident='group_id'\
-          \ \\\n    tags='[{\"ident\": \"pod\", \"title\": \"Pod\"}]' \\\n    title='Kubernetes'\
-          \ \\\n    topic='Data Sources' \\\n    --json"
+          \ application/json\" \\\n    ident='group_id' \\\n    title='Kubernetes'\
+          \ \\\n    topic='Data Sources' \\\n    help='Kubernetes Pods' \\\n    tags='[{'ident':\
+          \ 'pod', 'title': 'Pod'}]' \\\n    --json"
   /objects/host_tag_group/{name}:
     delete:
       description: ''
@@ -6935,7 +6955,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ConcreteHostTagGroup'
-          description: ''
+          description: The operation was done successfully.
           headers:
             ETag:
               allowEmptyValue: false
@@ -6996,10 +7016,9 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/host_tag_group/datasource\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    help='Kubernetes\
-          \ Pods' \\\n    repair='False' \\\n    tags='[{\"ident\": \"pod\", \"title\"\
-          : \"Pod\"}]' \\\n    title='Kubernetes' \\\n    topic='Data Sources' \\\n\
-          \    --json"
+          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    title='Kubernetes'\
+          \ \\\n    topic='Data Sources' \\\n    help='Kubernetes Pods' \\\n    tags='[{'ident':\
+          \ 'pod', 'title': 'Pod'}]' \\\n    repair='False' \\\n    --json"
   /domain-types/password/collections/all:
     post:
       description: ''
@@ -7065,9 +7084,10 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/password/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    comment='Kommentar' \\\n    documentation_url='localhost'\
-          \ \\\n    ident='pass' \\\n    owner='admin' \\\n    password='password'\
-          \ \\\n    shared='[\"all\"]' \\\n    title='Kubernetes login' \\\n    --json"
+          \ application/json\" \\\n    ident='pass' \\\n    title='Kubernetes login'\
+          \ \\\n    comment='Kommentar' \\\n    documentation_url='localhost' \\\n\
+          \    password='password' \\\n    owner='admin' \\\n    shared='['all']'\
+          \ \\\n    --json"
   /objects/password/{name}:
     delete:
       description: ''
@@ -7262,9 +7282,9 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/password/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    comment='Kommentar' \\\n    documentation_url='localhost'\
-          \ \\\n    owner='admin' \\\n    password='password' \\\n    shared='[\"\
-          all\"]' \\\n    title='Kubernetes login' \\\n    --json"
+          \ application/json\" \\\n    title='Kubernetes login' \\\n    comment='Kommentar'\
+          \ \\\n    documentation_url='localhost' \\\n    password='password' \\\n\
+          \    owner='admin' \\\n    shared='['all']' \\\n    --json"
   /objects/host/{host_name}/collections/services:
     get:
       description: This list is filterable by various parameters.
@@ -7276,6 +7296,16 @@ paths:
         required: false
         schema:
           type: string
+      - description: An query expression in nested dictionary form. If you want to
+          use multiple expressions, nest them with the AND/OR operators.
+        in: query
+        name: query
+        required: false
+        schema:
+          allOf:
+          - $ref: '#/components/schemas/Expr'
+          example: '{"op": "not", "expr": {"op": "=", "left": "hosts.name", "right":
+            "example.com"}}'
       - description: The desired columns of the services table. If left empty, a default
           set of columns is used.
         explode: true
@@ -7290,16 +7320,6 @@ paths:
             type: string
           type: array
         style: form
-      - description: An query expression in nested dictionary form. If you want to
-          use multiple expressions, nest them with the AND/OR operators.
-        in: query
-        name: query
-        required: false
-        schema:
-          allOf:
-          - $ref: '#/components/schemas/Expr'
-          example: '{"op": "not", "expr": {"op": "=", "left": "hosts.name", "right":
-            "example.com"}}'
       - description: A hostname.
         in: path
         name: host_name
@@ -7373,12 +7393,30 @@ paths:
       description: This list is filterable by various parameters.
       operationId: cmk.gui.plugins.openapi.endpoints.service._list_all_services
       parameters:
+      - description: A hostname.
+        in: query
+        name: host_name
+        required: false
+        schema:
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
+          type: string
       - description: Restrict the query to this particular site.
         in: query
         name: site
         required: false
         schema:
           type: string
+      - description: An query expression in nested dictionary form. If you want to
+          use multiple expressions, nest them with the AND/OR operators.
+        in: query
+        name: query
+        required: false
+        schema:
+          allOf:
+          - $ref: '#/components/schemas/Expr'
+          example: '{"op": "not", "expr": {"op": "=", "left": "hosts.name", "right":
+            "example.com"}}'
       - description: The desired columns of the services table. If left empty, a default
           set of columns is used.
         explode: true
@@ -7393,24 +7431,6 @@ paths:
             type: string
           type: array
         style: form
-      - description: A hostname.
-        in: query
-        name: host_name
-        required: false
-        schema:
-          example: example.com
-          pattern: '[-0-9a-zA-Z_.]+'
-          type: string
-      - description: An query expression in nested dictionary form. If you want to
-          use multiple expressions, nest them with the AND/OR operators.
-        in: query
-        name: query
-        required: false
-        schema:
-          allOf:
-          - $ref: '#/components/schemas/Expr'
-          example: '{"op": "not", "expr": {"op": "=", "left": "hosts.name", "right":
-            "example.com"}}'
       responses:
         default:
           content:
@@ -7477,6 +7497,16 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.service_discovery.show_services
       parameters:
+      - description: Optionally the hostname for which a certain agent has been configured.
+          If omitted you may only download this agent if you have the rights for all
+          agents.
+        in: query
+        name: host_name
+        required: true
+        schema:
+          example: example.com
+          pattern: '[a-zA-Z][a-zA-Z0-9_-]+'
+          type: string
       - description: 'The discovery state of the services. May be one of the following:
           active, active_ignored, clustered_ignored, clustered_monitored, clustered_undecided,
           clustered_vanished, custom, custom_ignored, ignored, legacy, legacy_ignored,
@@ -7487,16 +7517,6 @@ paths:
         schema:
           example: monitored
           pattern: active|active_ignored|clustered_ignored|clustered_monitored|clustered_undecided|clustered_vanished|custom|custom_ignored|ignored|legacy|legacy_ignored|manual|monitored|removed|undecided|vanished
-          type: string
-      - description: Optionally the hostname for which a certain agent has been configured.
-          If omitted you may only download this agent if you have the rights for all
-          agents.
-        in: query
-        name: host_name
-        required: true
-        schema:
-          example: example.com
-          pattern: '[a-zA-Z][a-zA-Z0-9_-]+'
           type: string
       responses:
         default:
@@ -7562,14 +7582,6 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.service_discovery.move_service
       parameters:
-      - description: A name used as an identifier. Can be of arbitrary length
-        in: path
-        name: service_hash
-        required: true
-        schema:
-          example: asoidjfo2jifa09
-          pattern: '[a-zA-Z][a-zA-Z0-9_-]+'
-          type: string
       - description: A hostname.
         in: path
         name: host_name
@@ -7577,6 +7589,14 @@ paths:
         schema:
           example: example.com
           pattern: '[-0-9a-zA-Z_.]+'
+          type: string
+      - description: A name used as an identifier. Can be of arbitrary length
+        in: path
+        name: service_hash
+        required: true
+        schema:
+          example: asoidjfo2jifa09
+          pattern: '[a-zA-Z][a-zA-Z0-9_-]+'
           type: string
       - description: 'The discovery state of the services. May be one of the following:
           active, active_ignored, clustered_ignored, clustered_monitored, clustered_undecided,
@@ -7639,6 +7659,14 @@ paths:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.service_discovery.execute
       parameters:
+      - description: A hostname.
+        in: path
+        name: host_name
+        required: true
+        schema:
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
+          type: string
       - description: 'The mode of the discovery action. May be one of the following:
           tabula-rasa'
         in: path
@@ -7647,14 +7675,6 @@ paths:
         schema:
           example: tabula-rasa
           pattern: tabula-rasa
-          type: string
-      - description: A hostname.
-        in: path
-        name: host_name
-        required: true
-        schema:
-          example: example.com
-          pattern: '[-0-9a-zA-Z_.]+'
           type: string
       responses:
         default:
@@ -7775,7 +7795,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DomainObject'
-          description: ''
+          description: The operation was done successfully.
           headers:
             ETag:
               allowEmptyValue: false
@@ -7825,7 +7845,7 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/service_group_config/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    alias='Environment Sensors' \\\n    name='windows'\
+          \ application/json\" \\\n    name='windows' \\\n    alias='Environment Sensors'\
           \ \\\n    --json"
   /domain-types/service_group_config/actions/bulk-create/invoke:
     post:
@@ -7849,7 +7869,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DomainObjectCollection'
-          description: ''
+          description: The operation was done successfully.
           headers: {}
       summary: Bulk create service groups
       tags:
@@ -7892,8 +7912,8 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/service_group_config/actions/bulk-create/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    entries='[{\"name\": \"environment\", \"alias\"\
-          : \"Environment Sensors\"}]' \\\n    --json"
+          \ application/json\" \\\n    entries='[{'name': 'environment', 'alias':\
+          \ 'Environment Sensors'}]' \\\n    --json"
   /objects/service_group_config/{name}:
     delete:
       description: ''
@@ -8077,7 +8097,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceGroup'
-          description: ''
+          description: The operation was done successfully.
           headers:
             ETag:
               allowEmptyValue: false
@@ -8131,8 +8151,8 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/service_group_config/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    alias='Environment\
-          \ Sensors' \\\n    name='windows' \\\n    --json"
+          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    name='windows'\
+          \ \\\n    alias='Environment Sensors' \\\n    --json"
   /domain-types/service_group_config/actions/bulk-delete/invoke:
     delete:
       description: ''
@@ -8190,8 +8210,7 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/domain-types/service_group_config/actions/bulk-delete/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    entries='[\"windows\", \"panels\"]' \\\n  \
-          \  --json"
+          \ application/json\" \\\n    entries='['windows', 'panels']' \\\n    --json"
   /domain-types/service_group_config/actions/bulk-update/invoke:
     put:
       description: ''
@@ -8214,7 +8233,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DomainObjectCollection'
-          description: ''
+          description: The operation was done successfully.
           headers: {}
       summary: Bulk update service groups
       tags:
@@ -8261,9 +8280,8 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/domain-types/service_group_config/actions/bulk-update/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    entries='[{\"name\": \"windows\", \"attributes\"\
-          : {\"name\": \"windows updated\", \"alias\": \"Windows Servers\"}}]' \\\n\
-          \    --json"
+          \ application/json\" \\\n    entries='[{'name': 'windows', 'attributes':\
+          \ {'name': 'windows updated', 'alias': 'Windows Servers'}}]' \\\n    --json"
   /domain-types/time_period/collections/all:
     post:
       description: ''
@@ -8342,11 +8360,11 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/time_period/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    active_time_ranges='[{\"day\": \"monday\",\
-          \ \"time_ranges\": [{\"start\": \"12:00\", \"end\": \"14:00\"}]}]' \\\n\
-          \    alias='alias' \\\n    exceptions='[{\"date\": \"2020-01-01\", \"time_ranges\"\
-          : [{\"start\": \"14:00\", \"end\": \"18:00\"}]}]' \\\n    exclude='[\"alias\"\
-          ]' \\\n    name='first' \\\n    --json"
+          \ application/json\" \\\n    name='first' \\\n    alias='alias' \\\n   \
+          \ active_time_ranges='[{'day': 'monday', 'time_ranges': [{'start': '12:00',\
+          \ 'end': '14:00'}]}]' \\\n    exceptions='[{'date': '2020-01-01', 'time_ranges':\
+          \ [{'start': '14:00', 'end': '18:00'}]}]' \\\n    exclude='['alias']' \\\
+          \n    --json"
   /objects/time_period/{name}:
     delete:
       description: ''
@@ -8547,10 +8565,9 @@ paths:
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/time_period/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    active_time_ranges='{\"start\": \"12:00\",\
-          \ \"end\": \"14:00\"}' \\\n    alias='alias' \\\n    exceptions='[{\"date\"\
-          : \"2020-01-01\", \"time_ranges\": [{\"start\": \"14:00\", \"end\": \"18:00\"\
-          }]}]' \\\n    --json"
+          \ application/json\" \\\n    alias='alias' \\\n    active_time_ranges='{'start':\
+          \ '12:00', 'end': '14:00'}' \\\n    exceptions='[{'date': '2020-01-01',\
+          \ 'time_ranges': [{'start': '14:00', 'end': '18:00'}]}]' \\\n    --json"
   /version:
     get:
       description: ''
@@ -8732,7 +8749,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ActionResultScalar'
-          description: ''
+          description: The operation was done successfully.
           headers: {}
       summary: Bake all agents
       tags:
@@ -8791,7 +8808,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ActionResultScalar'
-          description: ''
+          description: The operation was done successfully.
           headers: {}
       summary: Bake and sign all agents
       tags:
@@ -8946,6 +8963,14 @@ paths:
         needs to be specified.'
       operationId: cmk.gui.cee.plugins.openapi.endpoints.agent.download_agent
       parameters:
+      - description: A hostname.
+        in: query
+        name: host_name
+        required: false
+        schema:
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
+          type: string
       - description: The type of the operating system. May be one of aix_tgz, linux_deb,
           linux_rpm, linux_tgz, solaris_pkg, solaris_tgz, windows_msi
         in: query
@@ -8954,14 +8979,6 @@ paths:
         schema:
           example: linux_tgz
           pattern: aix_tgz|linux_deb|linux_rpm|linux_tgz|solaris_pkg|solaris_tgz|windows_msi
-          type: string
-      - description: A hostname.
-        in: query
-        name: host_name
-        required: false
-        schema:
-          example: example.com
-          pattern: '[-0-9a-zA-Z_.]+'
           type: string
       - description: The configuration hash representing an agent.
         in: path

@@ -14,7 +14,7 @@
 #   +----------------------------------------------------------------------+
 
 from typing import List, Dict, Type, Sequence, Optional, Any
-from marshmallow import Schema, fields
+from marshmallow import fields
 
 from cmk.utils.bi.bi_lib import (
     bi_aggregation_function_registry,
@@ -40,6 +40,7 @@ from cmk.utils.bi.bi_rule_interface import (
 from cmk.utils.bi.bi_aggregation_functions import BIAggregationFunctionSchema, BIAggregationFunctionBest
 from cmk.utils.bi.bi_node_vis import BINodeVisLayoutStyleSchema, BINodeVisBlockStyleSchema
 from cmk.utils.bi.bi_node_generator import BINodeGenerator, BINodeGeneratorSchema
+from cmk.utils.bi.bi_schema import Schema
 from cmk.utils.bi.bi_trees import (
     BICompiledRule,
     BICompiledLeaf,
@@ -158,6 +159,9 @@ class BIRule(ABCBIRule, ABCWithSchema):
 
 
 class BIRuleSchema(Schema):
+    class Meta:
+        ordered = True
+
     id = ReqString(default="", example="rule1")
     nodes = ReqList(fields.Nested(BINodeGeneratorSchema), default=[], example=[])
     params = create_nested_schema_for_class(BIParams,

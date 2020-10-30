@@ -19,6 +19,7 @@ import yapf.yapflib.yapf_api  # type: ignore[import]
 from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[import]
 from marshmallow import Schema  # type: ignore[import]
 
+from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.restful_objects.params import to_openapi, fill_out_path_template
 from cmk.gui.plugins.openapi.restful_objects.specification import SPEC
 from cmk.gui.plugins.openapi.restful_objects.type_defs import (
@@ -172,8 +173,8 @@ http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parame
  {%- endfor %}
 {%- endif %}
 {%- if request_schema %}
- {%- for key, value in (request_schema | to_dict).items() | sort %}
-    {{ key }}='{{ value | to_env }}' \\
+ {%- for key, field in request_schema.declared_fields.items() %}
+    {{ key }}='{{ field | field_value }}' \\
  {%- endfor %}
 {%- endif %}
     --json
@@ -264,24 +265,29 @@ def first_sentence(text: str) -> str:
     return ''.join(re.split(r'(\w\.)', text)[:2])
 
 
+def field_value(field: fields.Field) -> str:
+    return field.metadata['example']
+
+
 def to_dict(schema: Schema) -> Dict[str, str]:
     """Convert a Schema-class to a dict-representation.
 
     Examples:
 
-        >>> from marshmallow import Schema, fields
-        >>> class SayHello(Schema):
+        >>> from marshmallow import fields
+        >>> from cmk.gui.plugins.openapi.utils import BaseSchema
+        >>> class SayHello(BaseSchema):
         ...      message = fields.String(example="Hello world!")
         ...      message2 = fields.String(example="Hello Bob!")
         >>> to_dict(SayHello())
         {'message': 'Hello world!', 'message2': 'Hello Bob!'}
 
-        >>> class Nobody(Schema):
+        >>> class Nobody(BaseSchema):
         ...      expects = fields.String()
         >>> to_dict(Nobody())
         Traceback (most recent call last):
         ...
-        KeyError: "Schema 'Nobody.expects' has no example."
+        KeyError: "Field 'Nobody.expects' has no 'example'"
 
     Args:
         schema:
@@ -291,11 +297,15 @@ def to_dict(schema: Schema) -> Dict[str, str]:
         A dict with the field-names as a key and their example as value.
 
     """
+    if not getattr(schema.Meta, 'ordered', False):
+        # NOTE: We need this to make sure our checkmk.yaml spec file is always predictably sorted.
+        raise Exception(f"Schema '{schema.__module__}.{schema.__class__.__name__}' is not ordered.")
     ret = {}
     for name, field in schema.declared_fields.items():
-        if 'example' not in field.metadata:
-            raise KeyError(f"Schema '{schema.__class__.__name__}.{name}' has no example.")
-        ret[name] = field.metadata['example']
+        try:
+            ret[name] = field.metadata['example']
+        except KeyError as exc:
+            raise KeyError(f"Field '{schema.__class__.__name__}.{name}' has no {exc}")
     return ret
 
 
@@ -453,6 +463,7 @@ def _jinja_environment() -> jinja2.Environment:
         fill_out_parameters=fill_out_parameters,
         first_sentence=first_sentence,
         indent=indent,
+        field_value=field_value,
         to_dict=to_dict,
         to_env=_to_env,
         to_json=json.dumps,

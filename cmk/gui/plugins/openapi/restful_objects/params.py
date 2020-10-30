@@ -5,9 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from typing import List, Optional, Union, Sequence, Type, Dict, ItemsView
+from typing import Dict, ItemsView, List, Optional, Sequence, Type, Union
 
-from marshmallow import Schema, fields
+from marshmallow import fields, Schema
 from marshmallow.schema import SchemaMeta
 
 from cmk.gui.plugins.openapi.restful_objects.datastructures import denilled
@@ -17,6 +17,7 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     RawParameter,
     translate_to_openapi_keys,
 )
+from cmk.gui.plugins.openapi.utils import BaseSchema
 
 PARAM_RE = re.compile(r"{([a-z][a-z0-9_]*)}")
 
@@ -155,7 +156,7 @@ def to_schema(
         >>> class Foo(Schema):
         ...       field = fields.String()
 
-        >>> to_schema([Foo])().declared_fields  # doctest: +ELLIPSIS
+        >>> dict(to_schema([Foo])().declared_fields)  # doctest: +ELLIPSIS
         {'field': <fields.String(...)>}
 
         >>> to_schema(to_openapi([{'name': fields.String()}], 'path'))
@@ -189,7 +190,7 @@ def to_schema(
         return params
 
     def _from_dict(dict_):
-        return Schema.from_dict(dict_)
+        return BaseSchema.from_dict(dict_)
 
     if isinstance(params, list):
         p = {}

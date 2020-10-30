@@ -13,7 +13,6 @@
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-from marshmallow import Schema
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 from cmk.utils.bi.bi_lib import (
     ReqConstant,
@@ -22,6 +21,7 @@ from cmk.utils.bi.bi_lib import (
     ReqString,
     ReqNested,
 )
+from cmk.utils.bi.bi_schema import Schema
 
 
 class BIAggregationVisualizationSchema(Schema):

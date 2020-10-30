@@ -6,9 +6,10 @@
 
 from typing import List, Dict, Type, Any, Union, Set
 
-from marshmallow import Schema, validate, fields
+from marshmallow import validate, fields
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
+from cmk.utils.bi.bi_schema import Schema
 from cmk.utils.type_defs import HostName
 from cmk.utils.bi.bi_lib import (
     MacroMappings,

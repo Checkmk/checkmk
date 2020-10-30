@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from marshmallow import Schema
 from typing import Dict, Type, Optional, Any, List
 
 from cmk.utils.bi.bi_lib import (
@@ -21,6 +20,7 @@ from cmk.utils.bi.bi_lib import (
 )
 
 from cmk.utils.bi.bi_rule import BIRule
+from cmk.utils.bi.bi_schema import Schema
 from cmk.utils.bi.bi_trees import BICompiledAggregation, BICompiledRule
 from cmk.utils.bi.bi_node_generator import BINodeGenerator
 from cmk.utils.bi.bi_node_vis import BIAggregationVisualizationSchema
@@ -99,6 +99,9 @@ class BIAggregation:
 
 
 class BIAggregationSchema(Schema):
+    class Meta:
+        ordered = True
+
     id = ReqString(default="", example="aggr1")
     customer = String(
         description="CME Edition only: The customer id for this aggregation.",

@@ -581,7 +581,7 @@ builtin_dashboards['cmk_host'] = {
         'mustsearch': False
     }],
     'name': 'cmk_host',
-    'topic': u'Applications',
+    'topic': 'applications',
     'context': {},
     'mtime': 0,
     'owner': '',

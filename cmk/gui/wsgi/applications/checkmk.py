@@ -43,26 +43,27 @@ def _auth(func: pages.PageHandlerFunc) -> Callable[[], Response]:
     # in user objects.
     @functools.wraps(func)
     def _call_auth():
-        if not login.authenticate(request):
-            return _handle_not_authenticated()
+        with login.authenticate(request) as authenticated:
+            if not authenticated:
+                return _handle_not_authenticated()
 
-        # This may raise an exception with error messages, which will then be displayed to the user.
-        _ensure_general_access()
+            # This may raise an exception with error messages, which will then be displayed to the user.
+            _ensure_general_access()
 
-        # Initialize the multisite cmk.gui.i18n. This will be replaced by
-        # language settings stored in the user profile after the user
-        # has been initialized
-        _localize_request()
+            # Initialize the multisite cmk.gui.i18n. This will be replaced by
+            # language settings stored in the user profile after the user
+            # has been initialized
+            _localize_request()
 
-        # Update the UI theme with the attribute configured by the user.
-        # Returns None on first load
-        assert config.user.id is not None
-        theme = cmk.gui.userdb.load_custom_attr(config.user.id, 'ui_theme', lambda x: x)
-        html.set_theme(theme)
+            # Update the UI theme with the attribute configured by the user.
+            # Returns None on first load
+            assert config.user.id is not None
+            theme = cmk.gui.userdb.load_custom_attr(config.user.id, 'ui_theme', lambda x: x)
+            html.set_theme(theme)
 
-        func()
+            func()
 
-        return html.response
+            return html.response
 
     return _call_auth
 

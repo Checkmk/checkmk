@@ -15,8 +15,31 @@ import cmk.gui.htmllib as htmllib
 import cmk.gui.login as login
 import cmk.gui.http as http
 import cmk.gui.userdb as userdb
-from cmk.gui.globals import AppContext, RequestContext
+from cmk.gui.globals import AppContext, RequestContext, user, request
 from cmk.gui.exceptions import MKAuthException
+
+
+@pytest.fixture(name="user_id")
+def fixture_user_id(with_user):
+    return UserId(with_user[0])
+
+
+def test_authenticate_success(module_wide_request_context, monkeypatch, user_id):
+    monkeypatch.setattr(login, "_check_auth", lambda r: user_id)
+    assert user.id is None
+    with login.authenticate(request) as authenticated:
+        assert authenticated is True
+        assert user.id == user_id
+    assert user.id is None
+
+
+def test_authenticate_fails(module_wide_request_context, monkeypatch, user_id):
+    monkeypatch.setattr(login, "_check_auth", lambda r: None)
+    assert user.id is None
+    with login.authenticate(request) as authenticated:
+        assert authenticated is False
+        assert user.id is None
+    assert user.id is None
 
 
 @pytest.fixture(name="pre_16_cookie")

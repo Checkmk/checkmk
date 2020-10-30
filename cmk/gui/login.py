@@ -7,8 +7,9 @@
 import http.client
 import os
 import traceback
+import contextlib
 from hashlib import sha256
-from typing import List, Union, Optional, Tuple
+from typing import List, Union, Optional, Tuple, Iterator
 from pathlib import Path
 from contextlib import suppress
 
@@ -39,7 +40,8 @@ from cmk.gui.utils.urls import makeuri
 auth_logger = logger.getChild("auth")
 
 
-def authenticate(request: Request) -> bool:
+@contextlib.contextmanager
+def authenticate(request: Request) -> Iterator[bool]:
     """Perform the user authentication
 
     This is called by index.py to ensure user
@@ -51,12 +53,17 @@ def authenticate(request: Request) -> bool:
 
     Otherwise we check / ask for the cookie authentication or eventually the
     automation secret authentication."""
-    # Check whether or not already authenticated
+
     user_id = _check_auth(request)
-    if user_id:
-        login(user_id)
-        return True
-    return False
+
+    try:
+        if user_id:
+            login(user_id)
+            yield True
+        else:
+            yield False
+    finally:
+        config.clear_user_login()
 
 
 def login(user_id: UserId) -> None:

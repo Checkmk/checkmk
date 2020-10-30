@@ -290,6 +290,7 @@ class ABCTestSNMPFetcher(ABC):
             on_error="raise",
             missing_sys_description=False,
             use_snmpwalk_cache=False,
+            do_status_data_inventory=False,
             snmp_config=SNMPHostConfig(
                 is_ipv6_primary=False,
                 hostname="bob",

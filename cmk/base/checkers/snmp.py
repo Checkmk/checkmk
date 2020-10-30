@@ -151,6 +151,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
                 config.snmp_without_sys_descr,
             ),
             use_snmpwalk_cache=self.use_snmpwalk_cache,
+            do_status_data_inventory=self.host_config.do_status_data_inventory,
             snmp_config=self.snmp_config,
         )
 
@@ -197,8 +198,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         return self._enabled_snmp_sections.intersection(
             agent_based_register.get_relevant_raw_sections(
                 check_plugin_names=(),
-                consider_inventory_plugins=self.mode is Mode.INVENTORY or
-                self.host_config.do_status_data_inventory,
+                consider_inventory_plugins=True,
             ))
 
     # TODO: filter out disabled sections in fetcher. They need to known them anyway.

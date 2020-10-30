@@ -123,6 +123,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         on_error: str,
         missing_sys_description: bool,
         use_snmpwalk_cache: bool,
+        do_status_data_inventory: bool,
         snmp_config: SNMPHostConfig,
     ) -> None:
         super().__init__(file_cache, logging.getLogger("cmk.fetchers.snmp"))
@@ -134,6 +135,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         self.on_error: Final = on_error
         self.missing_sys_description: Final = missing_sys_description
         self.use_snmpwalk_cache: Final = use_snmpwalk_cache
+        self.do_status_data_inventory: Final = do_status_data_inventory
         self.snmp_config: Final = snmp_config
         self._backend = factory.backend(self.snmp_config, self._logger)
 
@@ -170,6 +172,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
             on_error=serialized["on_error"],
             missing_sys_description=serialized["missing_sys_description"],
             use_snmpwalk_cache=serialized["use_snmpwalk_cache"],
+            do_status_data_inventory=serialized["do_status_data_inventory"],
             snmp_config=SNMPHostConfig(**serialized["snmp_config"]),
         )
 
@@ -187,6 +190,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
             "on_error": self.on_error,
             "missing_sys_description": self.missing_sys_description,
             "use_snmpwalk_cache": self.use_snmpwalk_cache,
+            "do_status_data_inventory": self.do_status_data_inventory,
             "snmp_config": self.snmp_config._asdict(),
         }
 
@@ -231,9 +235,11 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         return mode not in (Mode.DISCOVERY, Mode.CHECKING)
 
     def _fetch_from_io(self, mode: Mode) -> SNMPRawData:
-        selected_sections = (self._detect() if mode in (Mode.DISCOVERY, Mode.CACHED_DISCOVERY) else
-                             (self.configured_snmp_sections |
-                              self._detect(restrict_to=self.structured_data_snmp_sections)))
+        selected_sections = (
+            self._detect() if mode in (Mode.DISCOVERY, Mode.CACHED_DISCOVERY) else
+            (self.configured_snmp_sections |
+             self._detect(restrict_to=(self.structured_data_snmp_sections if mode is Mode.INVENTORY
+                                       or self.do_status_data_inventory else ()))))
 
         fetched_data: SNMPRawData = {}
         for section_name in self._sort_section_names(selected_sections):

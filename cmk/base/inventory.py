@@ -414,7 +414,7 @@ class _TreeAggregator:
 
     @staticmethod
     def _make_row_key(key_columns: AttrDict) -> Hashable:
-        return tuple(v for k, v in sorted(key_columns.items()))
+        return tuple(sorted(key_columns.items()))
 
     def _get_row(
         self,

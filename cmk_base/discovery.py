@@ -235,14 +235,18 @@ def _perform_host_label_discovery(hostname, discovered_host_labels, check_plugin
 
     # Take over old items if -I is selected or if -II is selected with
     # --checks= and the check type is not one of the listed ones
+    label_texts = []
     for existing_label in existing_host_labels.itervalues():
         if only_new or (check_plugin_names and
                         existing_label.plugin_name not in check_plugin_names):
             new_host_labels.add_label(existing_label)
+            label_texts.append(existing_label.label)
 
     host_labels_per_plugin = {}  # type: Dict[check_table.CheckPluginName, int]
     for discovered_label in discovered_host_labels.itervalues():
-        if discovered_label.name not in new_host_labels:
+        if discovered_label.label not in label_texts:
+            # Add label overrides any existing label with the same plugin_name
+            # For example foo:bar1 -> foo:bar2
             new_host_labels.add_label(discovered_label)
             host_labels_per_plugin.setdefault(discovered_label.plugin_name, 0)
             host_labels_per_plugin[discovered_label.plugin_name] += 1

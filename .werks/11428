@@ -1,0 +1,11 @@
+Title: Label discovery: now able to detect changes in label value, not just label names
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1604061765
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.6.0p19
+
+Label changes from foo:bar1 to foo:bar2 where not detected properly.

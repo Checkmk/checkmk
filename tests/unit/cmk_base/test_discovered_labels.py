@@ -15,6 +15,8 @@ from cmk_base.discovered_labels import (
     ServiceLabel,
 )
 
+from cmk_base.discovery import _perform_host_label_discovery
+
 
 @pytest.fixture(params=["host", "service"])
 def labels(request):
@@ -158,3 +160,52 @@ def test_label_validation(cls):
 
     with pytest.raises(MKGeneralException, match="Invalid label value"):
         cls(u"äbc", "übc")
+
+
+@pytest.mark.parametrize(["existing_labels", "new_labels", "expected_labels", "only_new"], [
+    [
+        [(u"ding", u"1.5")],
+        [(u"ding", u"1.6")],
+        [(u"ding", u"1.6")],
+        False,
+    ],
+    [
+        [(u"ding", u"1.5")],
+        [(u"ding", u"1.6"), (u"ding", u"1.7")],
+        [(u"ding", u"1.7")],
+        False,
+    ],
+    [
+        [(u"ding", u"1.5"), (u"dong", u"2.0"), (u"dung", u"3.0")],
+        [(u"ding", u"1.6"), (u"dong", u"2.0")],
+        [(u"ding", u"1.6"), (u"dong", u"2.0")],
+        False,
+    ],
+    [
+        [(u"ding", u"1.5"), (u"dong", u"1.5")],
+        [(u"ding", u"1.6")],
+        [(u"ding", u"1.6"), (u"dong", u"1.5")],
+        True,
+    ],
+    [
+        [(u"ding", u"1.5"), (u"dong", u"1.5")],
+        [(u"ding", u"1.6"), (u"deng", u"3.0")],
+        [(u"ding", u"1.6"), (u"deng", u"3.0"), (u"dong", u"1.5")],
+        True,
+    ],
+])
+def test_perform_host_label_discovery(discovered_host_labels_dir, existing_labels, new_labels,
+                                      expected_labels, only_new):
+    hostname = "testhost"
+    store = DiscoveredHostLabelsStore(hostname)
+    store.save(DiscoveredHostLabels(*[HostLabel(*x) for x in existing_labels]).to_dict())
+
+    new_host_labels, _host_labels_per_plugin = _perform_host_label_discovery(
+        hostname,
+        DiscoveredHostLabels(*[HostLabel(*x) for x in new_labels]),
+        None,
+        only_new,
+    )
+
+    labels_expected = DiscoveredHostLabels(*[HostLabel(*x) for x in expected_labels])
+    assert new_host_labels.to_dict() == labels_expected.to_dict()

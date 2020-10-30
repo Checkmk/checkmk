@@ -109,7 +109,7 @@ def get_availability_options_from_request(what: AVObjectType) -> AVOptions:
     # trick will merge their options with our default options.
     avoptions.update(config.user.load_file("avoptions", {}))
 
-    avoption_entries = availability.get_avoption_entries(what)
+    avoption_entries = availability.get_av_display_options(what)
     if html.request.var("avoptions") == "set":
         for name, _height, _show_in_reporting, vs in avoption_entries:
             try:

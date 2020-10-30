@@ -1,0 +1,15 @@
+Title: Fix empty page on editing availability display options
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1604062556
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+If the display options on the availability page were edited, the page was empty
+after saving the new options.
+
+This resulted from the separation of display and computation options and has
+now been fixed.

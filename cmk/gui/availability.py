@@ -189,10 +189,6 @@ class AvailabilityColumns:
 # 4. the valuespec
 
 
-def get_avoption_entries(what) -> AVOptionValueSpecs:
-    return get_av_display_options(what) + get_av_computation_options()
-
-
 def get_av_display_options(what) -> AVOptionValueSpecs:
     if what == "bi":
         grouping_choices = [

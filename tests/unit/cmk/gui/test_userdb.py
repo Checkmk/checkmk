@@ -557,3 +557,24 @@ def test_check_credentials_managed_wrong_customer_user_is_denied(with_user):
 
     user_id, password = with_user
     assert userdb.check_credentials(user_id, password) is False
+
+
+def test_load_custom_attr_not_existing(user_id):
+    assert userdb.load_custom_attr(user_id, "a", conv_func=str) is None
+
+
+def test_load_custom_attr_not_existing_with_default(user_id):
+    assert userdb.load_custom_attr(user_id, "a", conv_func=str, default="deflt") == "deflt"
+
+
+def test_load_custom_attr_from_file(user_id):
+    with Path(userdb.custom_attr_path(user_id, "a")).open("w") as f:
+        f.write("xyz\n")
+    assert userdb.load_custom_attr(user_id, "a", conv_func=str) == "xyz"
+
+
+def test_load_custom_attr_convert(user_id):
+    with Path(userdb.custom_attr_path(user_id, "a")).open("w") as f:
+        f.write("xyz\n")
+    assert userdb.load_custom_attr(user_id, "a", conv_func=lambda x: "a"
+                                   if x == "xyz" else "b") == "a"

@@ -63,6 +63,7 @@ def authenticate(request: Request) -> Iterator[bool]:
         else:
             yield False
     finally:
+        html.transaction_manager.store_new()
         config.clear_user_login()
 
 

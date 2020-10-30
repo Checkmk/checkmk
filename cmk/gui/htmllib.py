@@ -1375,7 +1375,6 @@ class html(ABCHTMLGenerator):
 
     def finalize(self) -> None:
         """Finish the HTTP request processing before handing over to the application server"""
-        self.transaction_manager.store_new()
         self.disable_request_timeout()
 
     #

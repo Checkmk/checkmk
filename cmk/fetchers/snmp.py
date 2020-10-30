@@ -9,18 +9,15 @@ import logging
 from functools import partial
 from typing import (
     Any,
-    Collection,
     Dict,
     Final,
     Iterable,
     Iterator,
     List,
     Mapping,
-    MutableMapping,
     NamedTuple,
     Sequence,
     Set,
-    Tuple,
 )
 
 from cmk.utils.type_defs import SectionName
@@ -116,7 +113,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         snmp_plugin_store: SNMPPluginStore,
         disabled_sections: Set[SectionName],
         configured_snmp_sections: Set[SectionName],
-        structured_data_snmp_sections: Set[SectionName],
+        inventory_snmp_sections: Set[SectionName],
         on_error: str,
         missing_sys_description: bool,
         use_snmpwalk_cache: bool,
@@ -127,7 +124,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         self.snmp_plugin_store: Final = snmp_plugin_store
         self.disabled_sections: Final = disabled_sections
         self.configured_snmp_sections: Final = configured_snmp_sections
-        self.structured_data_snmp_sections: Final = structured_data_snmp_sections
+        self.inventory_snmp_sections: Final = inventory_snmp_sections
         self.on_error: Final = on_error
         self.missing_sys_description: Final = missing_sys_description
         self.use_snmpwalk_cache: Final = use_snmpwalk_cache
@@ -152,8 +149,8 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
             configured_snmp_sections={
                 SectionName(name) for name in serialized["configured_snmp_sections"]
             },
-            structured_data_snmp_sections={
-                SectionName(name) for name in serialized["structured_data_snmp_sections"]
+            inventory_snmp_sections={
+                SectionName(name) for name in serialized["inventory_snmp_sections"]
             },
             on_error=serialized["on_error"],
             missing_sys_description=serialized["missing_sys_description"],
@@ -168,7 +165,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
             "snmp_plugin_store": self.snmp_plugin_store.serialize(),
             "disabled_sections": [str(s) for s in self.disabled_sections],
             "configured_snmp_sections": [str(s) for s in self.configured_snmp_sections],
-            "structured_data_snmp_sections": [str(s) for s in self.structured_data_snmp_sections],
+            "inventory_snmp_sections": [str(s) for s in self.inventory_snmp_sections],
             "on_error": self.on_error,
             "missing_sys_description": self.missing_sys_description,
             "use_snmpwalk_cache": self.use_snmpwalk_cache,
@@ -183,36 +180,17 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         pass
 
     def _detect(self, mode: Mode) -> Set[SectionName]:
-        snmp_section_detects: MutableMapping[SectionName, SNMPDetectSpec]
-        if mode is Mode.INVENTORY:
-            snmp_section_detects = {
-                name: self.snmp_plugin_store[name].detect_spec
-                for name in self.structured_data_snmp_sections
-                if name not in self.disabled_sections
-            }
-        else:
-            snmp_section_detects = {
-                name: item.detect_spec
-                for name, item in self.snmp_plugin_store.items()
-                if name not in self.disabled_sections
-            }
+        sections: Set[SectionName] = set()
 
-        restrict_to: Collection[SectionName]
+        if mode is not Mode.INVENTORY:
+            sections |= set(self.snmp_plugin_store)
+
         if mode is Mode.INVENTORY or self.do_status_data_inventory:
-            restrict_to = self.structured_data_snmp_sections
-        else:
-            restrict_to = ()
+            sections |= set(self.inventory_snmp_sections)
 
-        sections: Collection[Tuple[SectionName, SNMPDetectSpec]]
-        if mode in {Mode.DISCOVERY, Mode.CACHED_DISCOVERY}:
-            sections = snmp_section_detects.items()
-        else:
-            sections = [
-                (n, snmp_section_detects[n]) for n in restrict_to if n in snmp_section_detects
-            ]
-
+        sections -= self.disabled_sections
         return gather_available_raw_section_names(
-            sections=sections,
+            sections=[(name, self.snmp_plugin_store[name].detect_spec) for name in sections],
             on_error=self.on_error,
             missing_sys_description=self.missing_sys_description,
             backend=self._backend,

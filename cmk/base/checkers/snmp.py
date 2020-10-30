@@ -143,7 +143,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             }),
             disabled_sections=self.host_config.disabled_snmp_sections(),
             configured_snmp_sections=self._make_configured_snmp_sections(),
-            structured_data_snmp_sections=self._make_inventory_snmp_sections(),
+            inventory_snmp_sections=self._make_inventory_snmp_sections(),
             on_error=self.on_snmp_scan_error,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(
                 self.snmp_config.hostname,

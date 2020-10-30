@@ -85,7 +85,7 @@ def parse_cisco_wlc(string_table: List[StringTable]) -> Section:
 def discovery_cisco_wlc(section: Section) -> DiscoveryResult:
     """
     >>> list(discovery_cisco_wlc({'AP19': '1', 'AP02': '1'}))
-    [Service(item='AP19', parameters={}, labels=[]), Service(item='AP02', parameters={}, labels=[])]
+    [Service(item='AP19'), Service(item='AP02')]
     """
     yield from (Service(item=item) for item in section)
 

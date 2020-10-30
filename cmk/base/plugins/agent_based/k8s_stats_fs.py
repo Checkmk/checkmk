@@ -38,7 +38,7 @@ def discover_k8s_stats_fs(section: Section) -> DiscoveryResult:
     ...     'timestamp': 1553765630.0,
     ... }):
     ...   print(service)
-    Service(item='/dev/sda1', parameters={}, labels=[])
+    Service(item='/dev/sda1')
     """
     yield from (
         Service(item=device)

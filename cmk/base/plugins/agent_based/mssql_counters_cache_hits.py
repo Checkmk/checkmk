@@ -34,8 +34,8 @@ def discovery_mssql_counters_cache_hits(
     ...     ('MSSQL_VEEAMSQL2012:Catalog_Metadata', 'tempdb'): {'cache_hit_ratio': 29305065, 'cache_hit_ratio_base': 29450560},
     ... }):
     ...   print(result)
-    Service(item='MSSQL_VEEAMSQL2012:Buffer_Manager None buffer_cache_hit_ratio', parameters={}, labels=[])
-    Service(item='MSSQL_VEEAMSQL2012:Catalog_Metadata tempdb cache_hit_ratio', parameters={}, labels=[])
+    Service(item='MSSQL_VEEAMSQL2012:Buffer_Manager None buffer_cache_hit_ratio')
+    Service(item='MSSQL_VEEAMSQL2012:Catalog_Metadata tempdb cache_hit_ratio')
     """
     want_counters = {'cache_hit_ratio', 'log_cache_hit_ratio', 'buffer_cache_hit_ratio'}
     yield from (

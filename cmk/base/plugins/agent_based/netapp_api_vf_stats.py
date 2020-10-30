@@ -43,11 +43,11 @@ def discover_netapp_api_vf_stats(
 ) -> type_defs.DiscoveryResult:
     """
     >>> list(discover_netapp_api_vf_stats({'vfiler0': {}}, None))
-    [Service(item='vfiler0', parameters={}, labels=[])]
+    [Service(item='vfiler0')]
     >>> list(discover_netapp_api_vf_stats(
     ... {'vfiler0': {}},
     ... {'7mode': {'num_processors': '2', 'cpu_busy': '153993540928'}}))
-    [Service(item='vfiler0', parameters={}, labels=[])]
+    [Service(item='vfiler0')]
     """
     yield from discover_netapp_api_vf_stats_common(section_netapp_api_vf_stats or {})
 
@@ -56,7 +56,7 @@ def discover_netapp_api_vf_stats_common(
         section: netapp_api.SectionSingleInstance) -> type_defs.DiscoveryResult:
     """
     >>> list(discover_netapp_api_vf_stats_common({'vfiler0': {}}))
-    [Service(item='vfiler0', parameters={}, labels=[])]
+    [Service(item='vfiler0')]
     """
     yield from (Service(item=key) for key in section)
 

@@ -38,7 +38,7 @@ register.snmp_section(
 def discover_bluecat_dns(section: Section) -> type_defs.DiscoveryResult:
     """
     >>> list(discover_bluecat_dns({'oper_state': 1}))
-    [Service(item=None, parameters={}, labels=[])]
+    [Service()]
     """
     yield Service()
 

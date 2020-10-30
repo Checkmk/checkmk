@@ -96,9 +96,12 @@ def test_service_features():
     assert service.item is None
     assert service.parameters == {}
     assert service.labels == []
-    assert repr(service) == "Service(item=None, parameters={}, labels=[])"
+    assert repr(service) == "Service()"
 
-    assert service != Service(item="foo")
+    service_foo = Service(item="foo")
+    assert repr(service_foo) == "Service(item='foo')"
+
+    assert service != service_foo
 
 
 def test_state():

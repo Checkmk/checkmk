@@ -62,7 +62,7 @@ register.snmp_section(
 def discover_netscaler_sslcertificates(section: Section) -> DiscoveryResult:
     """
     >>> list(discover_netscaler_sslcertificates({'cert1': 3, 'cert2': 100, '': 4}))
-    [Service(item='cert1', parameters={}, labels=[]), Service(item='cert2', parameters={}, labels=[])]
+    [Service(item='cert1'), Service(item='cert2')]
     """
     for certname in section:
         if certname:

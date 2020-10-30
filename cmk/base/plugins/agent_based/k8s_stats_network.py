@@ -43,9 +43,9 @@ def discover_k8s_stats_network(
     ...     'timestamp': 1553765630.0,
     ... }, None):
     ...   print(service)
-    Service(item='eth1', parameters={}, labels=[])
-    Service(item='eth0', parameters={}, labels=[])
-    Service(item='sit0', parameters={}, labels=[])
+    Service(item='eth1')
+    Service(item='eth0')
+    Service(item='sit0')
     """
     # don't use the k8s check if the check_mk_agent delivers interface data
     if section_lnx_if is not None:

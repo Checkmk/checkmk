@@ -39,7 +39,7 @@ register.snmp_section(
 def discover_bluecat_dhcp(section: Section) -> type_defs.DiscoveryResult:
     """
     >>> list(discover_bluecat_dhcp({'oper_state': 1, 'leases': 2}))
-    [Service(item=None, parameters={}, labels=[])]
+    [Service()]
     >>> list(discover_bluecat_dhcp({'oper_state': 2, 'leases': 2}))
     []
     """

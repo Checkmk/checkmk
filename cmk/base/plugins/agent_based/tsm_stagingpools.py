@@ -78,8 +78,8 @@ def discovery_tsm_stagingpools(section: SECTION) -> type_defs.DiscoveryResult:
     """
     >>> section={'tsmfarm2 / SL8500_STGPOOL_05': ['99.9', '97.9'], 'foo': ['7.1']}
     >>> for service in discovery_tsm_stagingpools(section): print(service)
-    Service(item='tsmfarm2 / SL8500_STGPOOL_05', parameters={}, labels=[])
-    Service(item='foo', parameters={}, labels=[])
+    Service(item='tsmfarm2 / SL8500_STGPOOL_05')
+    Service(item='foo')
     """
     for item in section:
         yield Service(item=item)

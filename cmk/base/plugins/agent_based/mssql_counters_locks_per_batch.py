@@ -34,7 +34,7 @@ def discovery_mssql_counters_locks_per_batch(section: Section) -> DiscoveryResul
     ...     ('MSSQL_VEEAMSQL2012:Locks', '_Total'): { 'lock_requests/sec': 3900449701, 'lock_timeouts/sec': 86978, 'number_of_deadlocks/sec': 19, 'lock_waits/sec': 938, 'lock_wait_time_(ms)': 354413, 'average_wait_time_(ms)': 354413, 'average_wait_time_base': 938, 'lock_timeouts_(timeout_>_0)/sec': 0},
     ... }):
     ...   print(result)
-    Service(item='MSSQL_VEEAMSQL2012', parameters={}, labels=[])
+    Service(item='MSSQL_VEEAMSQL2012')
     """
     db_names = (
         db_name  #

@@ -191,8 +191,7 @@ def discover_netscaler_vserver(section: Section) -> type_defs.DiscoveryResult:
     ... 'cag.erwinhymergroup.com': {},
     ... 'citrix.ehg.directory': {},
     ... })))
-    [Service(item='cag.erwinhymergroup.com', parameters={}, labels=[]),
-     Service(item='citrix.ehg.directory', parameters={}, labels=[])]
+    [Service(item='cag.erwinhymergroup.com'), Service(item='citrix.ehg.directory')]
     """
     for srv_name in section:
         yield Service(item=srv_name)

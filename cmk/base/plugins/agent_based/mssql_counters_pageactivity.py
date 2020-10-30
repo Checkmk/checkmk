@@ -36,7 +36,7 @@ def discovery_mssql_counters_pageactivity(section: Section) -> DiscoveryResult:
     ...     ('MSSQL_VEEAMSQL2012:Buffer_Manager', 'None'): { 'page_lookups/sec': 6649047653, 'readahead_pages/sec': 1424319, 'page_reads/sec': 3220650, 'page_writes/sec': 3066377},
     ... }):
     ...   print(result)
-    Service(item='MSSQL_VEEAMSQL2012:Buffer_Manager None', parameters={}, labels=[])
+    Service(item='MSSQL_VEEAMSQL2012:Buffer_Manager None')
     """
     yield from discovery_mssql_counters_generic(
         section,

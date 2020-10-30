@@ -138,8 +138,8 @@ def discovery_infoblox_services(section: Section) -> DiscoveryResult:
     ...         'discovery-capacity': ('working', '0% - Discovery capacity usage is OK.'),
     ... }):
     ...     print(result)
-    Service(item='node-status', parameters={}, labels=[])
-    Service(item='discovery-capacity', parameters={}, labels=[])
+    Service(item='node-status')
+    Service(item='discovery-capacity')
     """
     yield from (Service(item=item) for item in section)
 

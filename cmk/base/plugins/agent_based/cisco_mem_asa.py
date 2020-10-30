@@ -138,9 +138,9 @@ def discovery_cisco_mem(section: Section) -> DiscoveryResult:
     ...         'MEMPOOL_DMA':           ['0', '0'],
     ...         'MEMPOOL_GLOBAL_SHARED': ['0', '0']}):
     ...     print(elem)
-    Service(item='System memory', parameters={}, labels=[])
-    Service(item='MEMPOOL_DMA', parameters={}, labels=[])
-    Service(item='MEMPOOL_GLOBAL_SHARED', parameters={}, labels=[])
+    Service(item='System memory')
+    Service(item='MEMPOOL_DMA')
+    Service(item='MEMPOOL_GLOBAL_SHARED')
     """
     yield from (Service(item=item) for item in section if item != "Driver text")
 

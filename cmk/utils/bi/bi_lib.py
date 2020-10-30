@@ -489,7 +489,7 @@ class ABCBIAggregationFunction(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def aggregate(self, states: List[float]) -> Union[int, float]:
+    def aggregate(self, states: List[int]) -> int:
         raise NotImplementedError()
 
     @classmethod

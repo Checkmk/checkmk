@@ -18,30 +18,22 @@ from cmk.utils.bi.bi_lib import (
     ReqNested,
 )
 
-# State weight. OK, PENDING, WARN, UNKNOWN, CRIT
-# TODO: mapping will be reworked in later commit
-_state_mappings = {
-    BIStates.OK: 0.0,
-    BIStates.PENDING: 0.5,
-    BIStates.WARN: 1.0,
-    BIStates.CRIT: 10.0,
-    BIStates.UNKNOWN: 3.0,
+_bi_criticality_level = {
+    BIStates.OK: 0,
+    BIStates.PENDING: 2,
+    BIStates.WARN: 4,
+    BIStates.UNKNOWN: 6,
+    BIStates.CRIT: 8,
 }
 
-# The reversed mapping is used for generating the return value
-# Possible return values are OK(0), WARN(1), CRIT(2), UNKNOWN(3)
-# Since the original CRIT value was mapped to 10.0, there is no
-# reverse mapping of 2.0 -> 2 available.
-# A 2.0 can be introduced by the restrict_to_state mechanism
-_reversed_mappings = {v: k for k, v in _state_mappings.items()}
-_reversed_mappings[2.0] = 2
+# The reversed mapping is used to generate aggregation function return value
+_reversed_bi_criticality_level = {v: k for k, v in _bi_criticality_level.items()}
 
 
 def mapped_states(func):
     def wrap(self, states: List[int]) -> int:
-        new_states = sorted(map(lambda x: _state_mappings[x], states))
-        aggr_state = float(func(self, new_states))
-        return _reversed_mappings.get(aggr_state, 3)
+        new_states = sorted(map(lambda x: _bi_criticality_level[x], states))
+        return _reversed_bi_criticality_level.get(func(self, new_states), BIStates.UNKNOWN)
 
     return wrap
 
@@ -70,12 +62,11 @@ class BIAggregationFunctionBest(ABCBIAggregationFunction):
         super().__init__(aggr_function_config)
         self.count = aggr_function_config["count"]
         self.restrict_state = aggr_function_config["restrict_state"]
-        self.mapped_restricted_state = _state_mappings[self.restrict_state]
+        self.restricted_bi_level = _bi_criticality_level[self.restrict_state]
 
     @mapped_states
-    def aggregate(self, states: List[float]) -> Union[int, float]:
-        return float(min(self.mapped_restricted_state, states[min(len(states) - 1,
-                                                                  self.count - 1)]))
+    def aggregate(self, states: List[int]) -> int:
+        return min(self.restricted_bi_level, states[min(len(states) - 1, self.count - 1)])
 
 
 class BIAggregationFunctionBestSchema(Schema):
@@ -112,11 +103,11 @@ class BIAggregationFunctionWorst(ABCBIAggregationFunction):
         super().__init__(aggr_function_config)
         self.count = aggr_function_config["count"]
         self.restrict_state = aggr_function_config["restrict_state"]
-        self.mapped_restricted_state = _state_mappings[self.restrict_state]
+        self.restricted_bi_level = _bi_criticality_level[self.restrict_state]
 
     @mapped_states
-    def aggregate(self, states: List[float]) -> Union[int, float]:
-        return float(min(self.mapped_restricted_state, states[max(0, len(states) - self.count)]))
+    def aggregate(self, states: List[int]) -> int:
+        return min(self.restricted_bi_level, states[max(0, len(states) - self.count)])
 
 
 class BIAggregationFunctionWorstSchema(Schema):
@@ -154,14 +145,13 @@ class BIAggregationFunctionCountOK(ABCBIAggregationFunction):
         self.levels_ok = aggr_function_config["levels_ok"]
         self.levels_warn = aggr_function_config["levels_warn"]
 
-    @mapped_states
-    def aggregate(self, states: List[float]) -> Union[int, float]:
-        ok_nodes = len([x for x in states if x == 0.0])
+    def aggregate(self, states: List[int]) -> int:
+        ok_nodes = states.count(0)
         if self._check_levels(ok_nodes, len(states), self.levels_ok):
-            return 0.0
+            return BIStates.OK
         if self._check_levels(ok_nodes, len(states), self.levels_warn):
-            return 1.0
-        return 2.0
+            return BIStates.WARN
+        return BIStates.CRIT
 
     def _check_levels(self, ok_nodes: int, total_nodes: int, levels: Dict) -> bool:
         if levels["type"] == "count":

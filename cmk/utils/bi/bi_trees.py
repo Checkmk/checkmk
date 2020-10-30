@@ -278,11 +278,10 @@ class BICompiledRule(ABCBICompiledNode):
     def _process_node_compute_result(
             self, results: List[NodeComputeResult],
             computation_options: BIAggregationComputationOptions) -> NodeComputeResult:
-        # TODO: resolve int casting, bypasses float/int type conflict
-        state = int(self.aggregation_function.aggregate([result.state for result in results]))
+        state = self.aggregation_function.aggregate([result.state for result in results])
 
-        downtime_state = int(
-            self.aggregation_function.aggregate([result.downtime_state for result in results]))
+        downtime_state = self.aggregation_function.aggregate(
+            [result.downtime_state for result in results])
         if downtime_state > 0:
             downtime_state = 2 if computation_options.escalate_downtimes_as_warn else 1
 

@@ -15,8 +15,13 @@ import logging
 import traceback
 from typing import List, Dict, Any, Mapping, DefaultDict, Optional, Iterator, Tuple, Callable, Union
 from collections import OrderedDict, defaultdict
+from cmk.special_agents.utils.request_helper import (
+    create_api_connect_session,
+    parse_api_url,
+    parse_api_custom_url,
+)
 import math
-from urllib.parse import quote, urljoin
+from urllib.parse import quote
 import requests
 
 PromQLMetric = Dict[str, Any]
@@ -1255,10 +1260,8 @@ class PrometheusAPI:
     """
     Realizes communication with the Prometheus API
     """
-    def __init__(self, server_address: str) -> None:
-
-        self.server_address = "http://%s" % server_address
-        self.api_endpoint = "%s/api/v1/" % self.server_address
+    def __init__(self, session) -> None:
+        self.session = session
         self.scrape_targets_dict = self._connected_scrape_targets()
 
     def scrape_targets_attributes(self) -> Iterator[Tuple[str, Dict[str, Any]]]:
@@ -1327,8 +1330,7 @@ class PrometheusAPI:
         Returns:
             Returns a response object containing the status code and description
         """
-        endpoint_request = "%s%s" % (self.server_address, endpoint)
-        response = requests.get(endpoint_request)
+        response = self.session.get(endpoint)
         response.raise_for_status()
         return response
 
@@ -1346,15 +1348,13 @@ class PrometheusAPI:
     def _query_promql(self, promql: str) -> List[Dict[str, Any]]:
 
         api_query_expression = "query?query=%s" % quote(promql)
-        promql_request = urljoin(self.api_endpoint, api_query_expression)
-        result = self._process_json_request(promql_request)["data"]["result"]
+        result = self._process_json_request(api_query_expression)["data"]["result"]
         return result
 
     def _query_json_endpoint(self, endpoint: str) -> Dict[str, Any]:
         """Query the given endpoint of the Prometheus API expecting a json response
         """
-        endpoint_request = "%s%s" % (self.server_address, endpoint)
-        result = self._process_json_request(endpoint_request)
+        result = self._process_json_request(endpoint)
         return result
 
     def _connected_scrape_targets(self) -> Dict[str, Any]:
@@ -1364,10 +1364,8 @@ class PrometheusAPI:
         scrape_targets = self.test(result)
         return scrape_targets
 
-    @staticmethod
-    def _process_json_request(request: str) -> Dict[str, Any]:
-
-        response = requests.get(request)
+    def _process_json_request(self, api_request: str) -> Dict[str, Any]:
+        response = self.session.get(api_request)
         response.raise_for_status()
         return response.json()
 
@@ -1732,8 +1730,6 @@ class ApiData:
 
 
 def _extract_config_args(config: Dict[str, Any]) -> Dict[str, Any]:
-    connection = _extract_connection(config)
-
     exporter_options = {}
     for exporter in config["exporter"]:
         exporter_name, exporter_info = exporter
@@ -1755,22 +1751,9 @@ def _extract_config_args(config: Dict[str, Any]) -> Dict[str, Any]:
             exporter_options[exporter_name] = exporter_info
 
     return {
-        "connection": connection,
         "custom_services": config.get("promql_checks", []),
         "exporter_options": exporter_options
     }
-
-
-def _extract_connection(config: Dict[str, Any]):
-    connection_type = config["connection"]
-    if connection_type == "host_name":
-        server_address = config['host_name']
-    else:
-        server_address = config["host_address"]
-
-    if "port" in config:
-        server_address += ":%s" % config["port"]
-    return server_address
 
 
 def _get_host_label(labels):
@@ -1781,17 +1764,46 @@ class ApiError(Exception):
     pass
 
 
+def _extract_connection_args(config):
+    connection_args = {"protocol": config.get("protocol"), "port": config.get("port", "")}
+    if config["connection"] == "ip_address":
+        connection_args.update({"address": config["host_address"]})
+    elif config["connection"] == "host_name":
+        connection_args.update({"address": config["host_name"]})
+    else:
+        connection_args.update({"url_custom": config["connection"][1]['url_address']})
+
+    return connection_args
+
+
+def _generate_api_session(connection_options):
+    if "url_custom" in connection_options:
+        api_url = parse_api_custom_url(
+            url_custom=connection_options["url_custom"],
+            api_path="api/v1/",
+            protocol=connection_options['protocol'],
+        )
+    else:
+        api_url = parse_api_url(
+            server_address=connection_options["address"],
+            api_path="api/v1/",
+            protocol=connection_options['protocol'],
+            port=connection_options['port'],
+        )
+    return create_api_connect_session(api_url)
+
+
 def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
     args = parse_arguments(argv)
-
     try:
         config = ast.literal_eval(sys.stdin.read())
         config_args = _extract_config_args(config)
+        session = _generate_api_session(_extract_connection_args(config))
         exporter_options = config_args["exporter_options"]
         # default cases always must be there
-        api_client = PrometheusAPI(config_args["connection"])
+        api_client = PrometheusAPI(session)
         api_data = ApiData(api_client, exporter_options)
         print(api_data.prometheus_build_section())
         print(api_data.promql_section(config_args["custom_services"]))

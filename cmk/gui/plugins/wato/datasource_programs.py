@@ -573,6 +573,20 @@ def _valuespec_generic_metrics_prometheus():
                  choices=[
                      ("ip_address", _("IP Address")),
                      ("host_name", _("Host name")),
+                     ("url_custom", _("Custom URL"),
+                      Dictionary(
+                          elements=[("url_address",
+                                     TextAscii(
+                                         title=_("Custom URL server address"),
+                                         help=_("Specify a custom URL to connect to "
+                                                "your server. Do not include the "
+                                                "protocol. This option overwrites "
+                                                "all available options such as port and "
+                                                "other URL prefixes."),
+                                         allow_empty=False,
+                                     ))],
+                          optional_keys=[],
+                      )),
                  ],
                  title=_("Prometheus connection option"),
              )),
@@ -580,6 +594,11 @@ def _valuespec_generic_metrics_prometheus():
                 title=_('Prometheus web port'),
                 default_value=9090,
             )),
+            ("protocol",
+             DropdownChoice(title=_("Protocol"), choices=[
+                 ("http", "HTTP"),
+                 ("https", "HTTPS"),
+             ])),
             ("exporter",
              ListOf(
                  CascadingDropdown(choices=[

@@ -653,6 +653,27 @@ section_mailqueue() {
         mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
     fi
 
+    # Postfix status monitoring. Can handle multiple instances.
+    if inpath postfix; then
+        echo "<<<postfix_mailq_status:sep(58)>>>"
+        for i in /var/spool/postfix*/; do
+            if [ -e "$i/pid/master.pid" ]; then
+                if [ -r "$i/pid/master.pid" ]; then
+                    postfix_pid=$(sed 's/ //g' <"$i/pid/master.pid") # handle possible spaces in output
+                    if readlink -- "/proc/${postfix_pid}/exe" | grep -q ".*postfix/\(s\?bin/\)\?master.*"; then
+                        echo "$i:the Postfix mail system is running:PID:$postfix_pid" | sed 's/\/var\/spool\///g'
+                    else
+                        echo "$i:PID file exists but instance is not running!" | sed 's/\/var\/spool\///g'
+                    fi
+                else
+                    echo "$i:PID file exists but is not readable"
+                fi
+            else
+                echo "$i:the Postfix mail system is not running" | sed 's/\/var\/spool\///g'
+            fi
+        done
+    fi
+
     # Check status of qmail mailqueue
     if inpath qmail-qstat; then
         echo "<<<qmail_stats>>>"

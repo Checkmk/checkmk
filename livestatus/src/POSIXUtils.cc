@@ -67,24 +67,12 @@ std::optional<FileDescriptorPair> FileDescriptorPair::createSocketPair(
 // static
 std::optional<FileDescriptorPair> FileDescriptorPair::createPipePair(
     FileDescriptorPair::Mode mode, Logger *logger) {
-    std::array<int, 2> fd{-1, -1};
-    // NOTE: See the comment in createSocketPair().
-    int pipe_mode = O_CLOEXEC;
-    if (::pipe2(&fd[0], pipe_mode) == -1) {
-        generic_error ge{"cannot create pipe pair"};
-        Alert(logger) << ge;
-        return {};
+    // We emulate a pipe via a socket pair where we shut down one direction.
+    auto sp = createSocketPair(mode, logger);
+    if (sp) {
+        ::shutdown(sp->local(), SHUT_WR);
     }
-    // NOTE: See the comment in createSocketPair().
-    if (mode == FileDescriptorPair::Mode::local_non_blocking &&
-        ::fcntl(fd[0], F_SETFL, O_NONBLOCK) == -1) {
-        generic_error ge{"cannot make pipe non-blocking"};
-        Alert(logger) << ge;
-        ::close(fd[0]);
-        ::close(fd[1]);
-        return {};
-    }
-    return FileDescriptorPair{fd[0], fd[1]};
+    return sp;
 }
 
 namespace {

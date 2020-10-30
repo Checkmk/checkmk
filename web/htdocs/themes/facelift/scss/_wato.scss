@@ -1056,7 +1056,7 @@ table.data tr.data.dcd_log_entries {
 .wato table.progress {
   width: 50%;
   color: rgb(0, 0, 0);
-  background: $bg-color-tertiary;
+  background: $bg-color-secondary;
   border: 1px solid $color-table-border;
   border-radius: $theme-border-radius;
 
@@ -1431,7 +1431,7 @@ table.nform.rulesettings td.legend {
     padding: 2px;
     margin: 0 5px 5px 0;
     text-overflow: ellipsis;
-    background: $bg-color-tertiary;
+    background: $bg-color-secondary;
     border: 1px solid $color-table-border;
     border-radius: 6px;
     box-shadow: none;

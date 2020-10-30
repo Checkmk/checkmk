@@ -776,7 +776,7 @@ table.data.headerleft {
     &:nth-child(even) {
       padding: 5px 16px;
       vertical-align: top;
-      background: $bg-color-tertiary;
+      background: $bg-color-secondary;
       border-top: 1px solid $color-table-border;
       border-bottom: $table-headerleft-border-bottom;
       border-left: 1px solid $color-table-border;
@@ -1333,7 +1333,7 @@ body.main .popup_menu {
   min-width: 300px;
   color: rgb(255, 255, 255);
   white-space: normal;
-  background-color: $bg-color-tertiary;
+  background-color: $bg-color-secondary;
   border: 1px solid $color-table-border;
   border-radius: 5px;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
@@ -1513,8 +1513,8 @@ div.log_output,
   font-family: monospace;
   font-weight: $font-weight-default;
   color: $lightgrey;
-  background: $navigation-bg-color;
-  border: 1px solid $color-table-border-dark;
+  background: $log-output-color;
+  border: 1px solid $color-table-border;
   border-radius: $theme-border-radius;
   box-shadow: none;
 }

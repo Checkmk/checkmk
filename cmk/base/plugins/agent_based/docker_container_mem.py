@@ -89,5 +89,5 @@ def parse_docker_container_mem(string_table: StringTable) -> Dict[str, int]:
 register.agent_section(
     name="docker_container_mem",
     parse_function=parse_docker_container_mem,
-    parsed_section_name="mem",
+    parsed_section_name="mem_used",
 )

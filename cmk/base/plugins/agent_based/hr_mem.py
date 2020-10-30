@@ -108,7 +108,7 @@ def parse_hr_mem(string_table: List[StringTable]) -> Optional[Dict[str, float]]:
 
 register.snmp_section(
     name="hr_mem",
-    parsed_section_name="mem",
+    parsed_section_name="mem_used",
     parse_function=parse_hr_mem,
     fetch=[
         SNMPTree(

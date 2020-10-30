@@ -213,7 +213,7 @@ def parse_aix_memory(string_table: type_defs.StringTable) -> Optional[Dict[str, 
 
 register.agent_section(
     name="aix_memory",
-    parsed_section_name="mem",
+    parsed_section_name="mem_used",
     parse_function=parse_aix_memory,
 )
 
@@ -255,7 +255,7 @@ def parse_solaris_mem(string_table: type_defs.StringTable) -> Optional[Dict[str,
 
 register.agent_section(
     name="solaris_mem",
-    parsed_section_name="mem",
+    parsed_section_name="mem_used",
     parse_function=parse_solaris_mem,
 )
 
@@ -309,6 +309,6 @@ def parse_statgrab_mem(string_table: type_defs.StringTable) -> Optional[Dict[str
 
 register.agent_section(
     name="statgrab_mem",
-    parsed_section_name="mem",
+    parsed_section_name="mem_used",
     parse_function=parse_statgrab_mem,
 )

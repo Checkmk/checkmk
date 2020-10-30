@@ -188,7 +188,6 @@ def check_mem_used(params: Mapping, section: Dict[str, int]) -> CheckResult:
 register.check_plugin(
     name="mem_used",
     service_name="Memory",
-    sections=["mem"],
     discovery_function=discover_mem_used,
     check_function=check_mem_used,
     check_default_parameters={

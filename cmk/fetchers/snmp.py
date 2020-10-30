@@ -18,7 +18,6 @@ from typing import (
     List,
     Mapping,
     NamedTuple,
-    Optional,
     Sequence,
     Set,
     Tuple,
@@ -194,16 +193,16 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
     def close(self) -> None:
         pass
 
-    def _detect(
-        self,
-        *,
-        restrict_to: Optional[Collection[SectionName]] = None,
-    ) -> Set[SectionName]:
-        if restrict_to is None:
-            # TODO: disabled sections must be considered here, once
-            # snmp_section_detects is a global configuration.
-            sections: Collection[Tuple[SectionName,
-                                       SNMPDetectSpec]] = self.snmp_section_detects.items()
+    def _detect(self, mode: Mode) -> Set[SectionName]:
+        restrict_to: Collection[SectionName]
+        if mode is Mode.INVENTORY or self.do_status_data_inventory:
+            restrict_to = self.structured_data_snmp_sections
+        else:
+            restrict_to = ()
+
+        sections: Collection[Tuple[SectionName, SNMPDetectSpec]]
+        if mode in {Mode.DISCOVERY, Mode.CACHED_DISCOVERY}:
+            sections = self.snmp_section_detects.items()
         else:
             sections = [(n, self.snmp_section_detects[n])
                         for n in restrict_to
@@ -229,11 +228,9 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         return mode not in (Mode.DISCOVERY, Mode.CHECKING)
 
     def _fetch_from_io(self, mode: Mode) -> SNMPRawData:
-        selected_sections = (
-            self._detect() if mode in (Mode.DISCOVERY, Mode.CACHED_DISCOVERY) else
-            (self.configured_snmp_sections |
-             self._detect(restrict_to=(self.structured_data_snmp_sections if mode is Mode.INVENTORY
-                                       or self.do_status_data_inventory else ()))))
+        selected_sections = self._detect(mode)
+        if mode not in {Mode.DISCOVERY, Mode.CACHED_DISCOVERY}:
+            selected_sections |= self.configured_snmp_sections
 
         fetched_data: SNMPRawData = {}
         for section_name in self._sort_section_names(selected_sections):

@@ -7,6 +7,7 @@
 import time
 import pytest
 from pathlib import Path
+from dataclasses import asdict
 
 from testlib import on_time, is_managed_repo
 
@@ -269,23 +270,27 @@ def test_on_succeeded_login_already_existing_session(user_id, session_valid):
 
 def test_is_valid_user_session_single_user_session_disabled(user_id):
     assert config.single_user_session is None
-    assert userdb._is_valid_user_session(user_id, "session1") is False
+    assert userdb._is_valid_user_session(user_id, userdb._load_session_infos(user_id),
+                                         "session1") is False
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_is_valid_user_session_not_existing(user_id):
-    assert userdb._is_valid_user_session(user_id, "not-existing-session") is False
+    assert userdb._is_valid_user_session(user_id, userdb._load_session_infos(user_id),
+                                         "not-existing-session") is False
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_is_valid_user_session_still_valid_when_last_activity_extends_timeout(
         user_id, session_timed_out):
-    assert userdb._is_valid_user_session(user_id, session_timed_out) is True
+    assert userdb._is_valid_user_session(user_id, userdb._load_session_infos(user_id),
+                                         session_timed_out) is True
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_is_valid_user_session_valid(user_id, session_valid):
-    assert userdb._is_valid_user_session(user_id, session_valid) is True
+    assert userdb._is_valid_user_session(user_id, userdb._load_session_infos(user_id),
+                                         session_valid) is True
 
 
 def test_ensure_user_can_init_no_single_user_session(user_id):
@@ -364,10 +369,10 @@ def test_create_session_id_changes():
 def test_refresh_session_success(user_id, session_valid):
     session_infos = userdb._load_session_infos(user_id)
     assert session_infos
-    old_session = session_infos[session_valid]
+    old_session = userdb.SessionInfo(**asdict(session_infos[session_valid]))
 
     with on_time("2019-09-05 00:00:30", "UTC"):
-        userdb._refresh_session(user_id, session_valid)
+        userdb._refresh_session(user_id, session_infos, session_valid)
 
         new_session_infos = userdb._load_session_infos(user_id)
 

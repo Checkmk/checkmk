@@ -183,7 +183,7 @@ def _user_exists_according_to_profile(username: UserId) -> bool:
             or os.path.exists(base_path + "serial.mk")
 
 
-def login_timed_out(username: UserId, last_activity: int) -> bool:
+def _login_timed_out(username: UserId, last_activity: int) -> bool:
     idle_timeout = load_custom_attr(username, "idle_timeout", _convert_idle_timeout, None)
     if idle_timeout is None:
         idle_timeout = config.user_idle_timeout
@@ -327,18 +327,20 @@ def on_logout(username: UserId, session_id: str) -> None:
 
 
 def on_access(username: UserId, session_id: str) -> None:
-    if not _is_valid_user_session(username, session_id):
+    session_infos = _load_session_infos(username, lock=True)
+
+    if not _is_valid_user_session(username, session_infos, session_id):
         raise MKAuthException("Invalid user session")
 
     # Check whether or not there is an idle timeout configured, delete cookie and
     # require the user to renew the log when the timeout exceeded.
-    session_info = _load_session_infos(username)[session_id]
-    timed_out = login_timed_out(username, session_info.last_activity)
+    session_info = session_infos[session_id]
+    timed_out = _login_timed_out(username, session_info.last_activity)
     if timed_out:
         raise MKAuthException("%s login timed out (Inactivity exceeded %r)" %
                               (username, config.user_idle_timeout))
 
-    _refresh_session(username, session_id)
+    _refresh_session(username, session_infos, session_id)
 
 
 #.
@@ -375,9 +377,9 @@ class SessionInfo:
         return asdict(self)
 
 
-def _is_valid_user_session(username: UserId, session_id: str) -> bool:
+def _is_valid_user_session(username: UserId, session_infos: Dict[str, SessionInfo],
+                           session_id: str) -> bool:
     """Return True in case this request is done with a currently valid user session"""
-    session_infos = _load_session_infos(username)
     if not session_infos:
         return False  # no session active
 
@@ -411,7 +413,7 @@ def _ensure_user_can_init_session(username: UserId) -> bool:
 def _initialize_session(username: UserId) -> str:
     """Creates a new user login session (if single user session mode is enabled) and
     returns the session_id of the new session."""
-    session_infos = _cleanup_old_sessions(_load_session_infos(username))
+    session_infos = _cleanup_old_sessions(_load_session_infos(username, lock=True))
 
     session_id = _create_session_id()
     now = int(time.time())
@@ -449,18 +451,15 @@ def _create_session_id() -> str:
     return utils.gen_id()
 
 
-def _refresh_session(username: UserId, session_id: str) -> None:
+def _refresh_session(username: UserId, session_infos: Dict[str, SessionInfo],
+                     session_id: str) -> None:
     """Updates the current session of the user"""
-    session_infos = _load_session_infos(username)
-    if session_id not in session_infos:
-        return  # Don't refresh. Session is not valid anymore
-
     session_infos[session_id].last_activity = int(time.time())
     _save_session_infos(username, session_infos)
 
 
 def _invalidate_session(username: UserId, session_id: str) -> None:
-    session_infos = _load_session_infos(username)
+    session_infos = _load_session_infos(username, lock=True)
     with suppress(KeyError):
         del session_infos[session_id]
         _save_session_infos(username, session_infos)
@@ -472,9 +471,9 @@ def _save_session_infos(username: UserId, session_infos: Dict[str, SessionInfo])
                      repr({k: asdict(v) for k, v in session_infos.items()}))
 
 
-def _load_session_infos(username: UserId) -> Dict[str, SessionInfo]:
+def _load_session_infos(username: UserId, lock: bool = False) -> Dict[str, SessionInfo]:
     """Returns the stored sessions of the given user"""
-    return load_custom_attr(username, "session_info", _convert_session_info) or {}
+    return load_custom_attr(username, "session_info", _convert_session_info, lock=lock) or {}
 
 
 def _convert_session_info(value: str) -> Dict[str, SessionInfo]:
@@ -732,13 +731,13 @@ def custom_attr_path(userid: UserId, key: str) -> str:
 def load_custom_attr(userid: UserId,
                      key: str,
                      conv_func: Callable[[str], Any],
-                     default: Any = None) -> Any:
+                     default: Any = None,
+                     lock: bool = False) -> Any:
     path = Path(custom_attr_path(userid, key))
-    try:
-        with path.open(encoding="utf-8") as f:
-            return conv_func(ensure_str(f.read().strip()))
-    except IOError:
-        return default
+    result = store.load_text_from_file(path, default=default, lock=lock)
+    if result == default:
+        return result
+    return conv_func(result.strip())
 
 
 def save_custom_attr(userid: UserId, key: str, val: Any) -> None:

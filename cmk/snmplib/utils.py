@@ -7,15 +7,16 @@
 import re
 from typing import Callable, List, Optional, Tuple
 
+from cmk.utils.type_defs import SNMPDetectBaseType
 from cmk.utils.regex import regex
-from .type_defs import OID, SNMPDetectAtom, SNMPDetectSpec
+from .type_defs import OID, SNMPDetectAtom
 
 SNMPRowInfoForStoredWalk = List[Tuple[OID, str]]
 
 
 def evaluate_snmp_detection(
     *,
-    detect_spec: SNMPDetectSpec,
+    detect_spec: SNMPDetectBaseType,
     oid_value_getter: Callable[[str], Optional[str]],
 ) -> bool:
     """Evaluate a SNMP detection specification

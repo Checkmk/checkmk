@@ -14,11 +14,10 @@ from typing import Any, Callable, Dict, Generator, Optional, overload, Tuple, Un
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
 
-from cmk.snmplib.type_defs import SNMPDetectSpec  # pylint: disable=cmk-module-layer-violation
-
 import cmk.base.check_api_utils as check_api_utils  # pylint: disable=cmk-module-layer-violation
 import cmk.base.prediction  # pylint: disable=cmk-module-layer-violation
 from cmk.base.api.agent_based.checking_classes import IgnoreResultsError, Metric, Result, State
+from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification
 from cmk.base.api.agent_based.type_defs import ValueStore
 
 #     ____       _            _
@@ -29,8 +28,8 @@ from cmk.base.api.agent_based.type_defs import ValueStore
 #                                      |_|
 
 
-def all_of(spec_0: SNMPDetectSpec, spec_1: SNMPDetectSpec,
-           *specs: SNMPDetectSpec) -> SNMPDetectSpec:
+def all_of(spec_0: SNMPDetectSpecification, spec_1: SNMPDetectSpecification,
+           *specs: SNMPDetectSpecification) -> SNMPDetectSpecification:
     """Detect the device if all passed specifications are met
 
     Args:
@@ -45,13 +44,13 @@ def all_of(spec_0: SNMPDetectSpec, spec_1: SNMPDetectSpec,
         >>> DETECT = all_of(exists("1.2.3.4"), contains("1.2.3.5", "foo"))
 
     """
-    reduced = SNMPDetectSpec(l0 + l1 for l0, l1 in itertools.product(spec_0, spec_1))
+    reduced = SNMPDetectSpecification(l0 + l1 for l0, l1 in itertools.product(spec_0, spec_1))
     if not specs:
         return reduced
     return all_of(reduced, *specs)
 
 
-def any_of(*specs: SNMPDetectSpec) -> SNMPDetectSpec:
+def any_of(*specs: SNMPDetectSpecification) -> SNMPDetectSpecification:
     """Detect the device if any of the passed specifications are met
 
     Args:
@@ -65,16 +64,16 @@ def any_of(*specs: SNMPDetectSpec) -> SNMPDetectSpec:
         >>> DETECT = any_of(exists("1.2.3.4"), exists("1.2.3.5"))
 
     """
-    return SNMPDetectSpec(sum(specs, []))
+    return SNMPDetectSpecification(sum(specs, []))
 
 
-def _negate(spec: SNMPDetectSpec) -> SNMPDetectSpec:
+def _negate(spec: SNMPDetectSpecification) -> SNMPDetectSpecification:
     assert len(spec) == 1
     assert len(spec[0]) == 1
-    return SNMPDetectSpec([[(spec[0][0][0], spec[0][0][1], not spec[0][0][2])]])
+    return SNMPDetectSpecification([[(spec[0][0][0], spec[0][0][1], not spec[0][0][2])]])
 
 
-def matches(oidstr: str, value: str) -> SNMPDetectSpec:
+def matches(oidstr: str, value: str) -> SNMPDetectSpecification:
     """Detect the device if the value of the OID matches the expression
 
     Args:
@@ -89,10 +88,10 @@ def matches(oidstr: str, value: str) -> SNMPDetectSpec:
         >>> DETECT = matches("1.2.3.4", ".* Server")
 
     """
-    return SNMPDetectSpec([[(oidstr, value, True)]])
+    return SNMPDetectSpecification([[(oidstr, value, True)]])
 
 
-def contains(oidstr: str, value: str) -> SNMPDetectSpec:
+def contains(oidstr: str, value: str) -> SNMPDetectSpecification:
     """Detect the device if the value of the OID contains the given string
 
     Args:
@@ -107,10 +106,10 @@ def contains(oidstr: str, value: str) -> SNMPDetectSpec:
         >>> DETECT = contains("1.2.3", "isco")
 
     """
-    return SNMPDetectSpec([[(oidstr, '.*%s.*' % re.escape(value), True)]])
+    return SNMPDetectSpecification([[(oidstr, '.*%s.*' % re.escape(value), True)]])
 
 
-def startswith(oidstr: str, value: str) -> SNMPDetectSpec:
+def startswith(oidstr: str, value: str) -> SNMPDetectSpecification:
     """Detect the device if the value of the OID starts with the given string
 
     Args:
@@ -125,10 +124,10 @@ def startswith(oidstr: str, value: str) -> SNMPDetectSpec:
         >>> DETECT = startswith("1.2.3", "Sol")
 
     """
-    return SNMPDetectSpec([[(oidstr, '%s.*' % re.escape(value), True)]])
+    return SNMPDetectSpecification([[(oidstr, '%s.*' % re.escape(value), True)]])
 
 
-def endswith(oidstr: str, value: str) -> SNMPDetectSpec:
+def endswith(oidstr: str, value: str) -> SNMPDetectSpecification:
     """Detect the device if the value of the OID ends with the given string
 
     Args:
@@ -143,10 +142,10 @@ def endswith(oidstr: str, value: str) -> SNMPDetectSpec:
         >>> DETECT = endswith("1.2.3", "nix")
 
     """
-    return SNMPDetectSpec([[(oidstr, '.*%s' % re.escape(value), True)]])
+    return SNMPDetectSpecification([[(oidstr, '.*%s' % re.escape(value), True)]])
 
 
-def equals(oidstr: str, value: str) -> SNMPDetectSpec:
+def equals(oidstr: str, value: str) -> SNMPDetectSpecification:
     """Detect the device if the value of the OID equals the given string
 
     Args:
@@ -161,10 +160,10 @@ def equals(oidstr: str, value: str) -> SNMPDetectSpec:
         >>> DETECT = equals("1.2.3", "MySwitch")
 
     """
-    return SNMPDetectSpec([[(oidstr, '%s' % re.escape(value), True)]])
+    return SNMPDetectSpecification([[(oidstr, '%s' % re.escape(value), True)]])
 
 
-def exists(oidstr: str) -> SNMPDetectSpec:
+def exists(oidstr: str) -> SNMPDetectSpecification:
     """Detect the device if the OID exists at all
 
     Args:
@@ -178,35 +177,35 @@ def exists(oidstr: str) -> SNMPDetectSpec:
         >>> DETECT = exists("1.2.3")
 
     """
-    return SNMPDetectSpec([[(oidstr, '.*', True)]])
+    return SNMPDetectSpecification([[(oidstr, '.*', True)]])
 
 
-def not_matches(oidstr: str, value: str) -> SNMPDetectSpec:
+def not_matches(oidstr: str, value: str) -> SNMPDetectSpecification:
     """The negation of :func:`matches`"""
     return _negate(matches(oidstr, value))
 
 
-def not_contains(oidstr: str, value: str) -> SNMPDetectSpec:
+def not_contains(oidstr: str, value: str) -> SNMPDetectSpecification:
     """The negation of :func:`contains`"""
     return _negate(contains(oidstr, value))
 
 
-def not_startswith(oidstr: str, value: str) -> SNMPDetectSpec:
+def not_startswith(oidstr: str, value: str) -> SNMPDetectSpecification:
     """The negation of :func:`startswith`"""
     return _negate(startswith(oidstr, value))
 
 
-def not_endswith(oidstr: str, value: str) -> SNMPDetectSpec:
+def not_endswith(oidstr: str, value: str) -> SNMPDetectSpecification:
     """The negation of :func:`endswith`"""
     return _negate(endswith(oidstr, value))
 
 
-def not_equals(oidstr: str, value: str) -> SNMPDetectSpec:
+def not_equals(oidstr: str, value: str) -> SNMPDetectSpecification:
     """The negation of :func:`equals`"""
     return _negate(equals(oidstr, value))
 
 
-def not_exists(oidstr: str) -> SNMPDetectSpec:
+def not_exists(oidstr: str) -> SNMPDetectSpecification:
     """The negation of :func:`exists`"""
     return _negate(exists(oidstr))
 

@@ -7,13 +7,14 @@
 """
 from typing import Any, Callable, Dict, List, Optional, overload, Union
 
-from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree  # pylint: disable=cmk-module-layer-violation
+from cmk.snmplib.type_defs import SNMPTree  # pylint: disable=cmk-module-layer-violation
 from cmk.base.api.agent_based.inventory_classes import InventoryFunction
 from cmk.base.api.agent_based.checking_classes import (
     CheckFunction,
     DiscoveryFunction,
     DiscoveryRuleSetType,
 )
+from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
     HostLabelFunction,
@@ -96,7 +97,7 @@ def agent_section(
 def snmp_section(
     *,
     name: str,
-    detect: SNMPDetectSpec,
+    detect: SNMPDetectSpecification,
     fetch: SNMPTree,
     parse_function: Optional[SimpleSNMPParseFunction] = None,
     parsed_section_name: Optional[str] = None,
@@ -110,7 +111,7 @@ def snmp_section(
 def snmp_section(
     *,
     name: str,
-    detect: SNMPDetectSpec,
+    detect: SNMPDetectSpecification,
     fetch: List[SNMPTree],
     parse_function: Optional[SNMPParseFunction] = None,
     parsed_section_name: Optional[str] = None,
@@ -123,7 +124,7 @@ def snmp_section(
 def snmp_section(
     *,
     name: str,
-    detect: SNMPDetectSpec,
+    detect: SNMPDetectSpecification,
     fetch: Union[SNMPTree, List[SNMPTree]],
     parse_function: Union[SimpleSNMPParseFunction, SNMPParseFunction, None] = None,
     parsed_section_name: Optional[str] = None,

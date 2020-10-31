@@ -88,6 +88,10 @@ LATEST_SERIAL: Final[Literal["latest"]] = "latest"
 ConfigSerial = NewType("ConfigSerial", str)
 OptionalConfigSerial = Union[ConfigSerial, Literal["latest"]]
 
+# This def is used to keep the API-exposed object in sync with our
+# implementation.
+SNMPDetectBaseType = List[List[Tuple[str, str, bool]]]
+
 
 class AgentPackagePlatform(enum.Enum):
     LINUX_DEB = "linux_deb"

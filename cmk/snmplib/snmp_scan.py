@@ -10,14 +10,14 @@ from typing import Collection, Iterable, Tuple, Set
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError
 from cmk.utils.log import console
-from cmk.utils.type_defs import SectionName
+from cmk.utils.type_defs import SectionName, SNMPDetectBaseType
 
 import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_modes as snmp_modes
-from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPDetectSpec
+from cmk.snmplib.type_defs import ABCSNMPBackend
 from cmk.snmplib.utils import evaluate_snmp_detection
 
-SNMPScanSection = Tuple[SectionName, SNMPDetectSpec]
+SNMPScanSection = Tuple[SectionName, SNMPDetectBaseType]
 
 
 # gather auto_discovered check_plugin_names for this host

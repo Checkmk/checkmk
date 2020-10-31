@@ -11,8 +11,7 @@ import os.path
 import ast
 import inspect
 
-from cmk.snmplib.type_defs import SNMPDetectSpec  # pylint: disable=cmk-module-layer-violation
-
+from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification
 from cmk.base.api.agent_based.utils import (
     all_of,
     any_of,
@@ -31,7 +30,7 @@ from .detect_specs import PRECONVERTED_DETECT_SPECS
 
 DetectSpecKey = Tuple[bytes, Tuple, Tuple]
 
-MIGRATED_SCAN_FUNCTIONS: Dict[str, SNMPDetectSpec] = {
+MIGRATED_SCAN_FUNCTIONS: Dict[str, SNMPDetectSpecification] = {
     # I am not sure why the following suppressions are needed.
     # 'reveal_type(DETECT)' in checkpoint shows that mypy does know the type in principle
     # If I add an explicit typehint to 'DETECT' in checkpoint, these suppressions are not needed.
@@ -56,7 +55,7 @@ def _is_false(expr: ast.AST) -> bool:
     return isinstance(expr, ast.NameConstant) and expr.value is False
 
 
-def _explicit_conversions(function_name: str) -> SNMPDetectSpec:
+def _explicit_conversions(function_name: str) -> SNMPDetectSpecification:
     if function_name in MIGRATED_SCAN_FUNCTIONS:
         return MIGRATED_SCAN_FUNCTIONS[function_name]
 
@@ -187,7 +186,7 @@ def _ast_convert_to_str(arg: ast.AST) -> str:
     raise ValueError(ast.dump(arg))
 
 
-def _ast_convert_compare(comp_ast: ast.Compare) -> SNMPDetectSpec:
+def _ast_convert_compare(comp_ast: ast.Compare) -> SNMPDetectSpecification:
     assert len(comp_ast.ops) == 1
     if isinstance(comp_ast.ops[0], ast.In):
         assert len(comp_ast.comparators) == 1
@@ -243,7 +242,7 @@ def _ast_convert_compare(comp_ast: ast.Compare) -> SNMPDetectSpec:
     raise ValueError(ast.dump(comp_ast))
 
 
-def _ast_convert_bool(bool_ast: ast.BoolOp) -> SNMPDetectSpec:
+def _ast_convert_bool(bool_ast: ast.BoolOp) -> SNMPDetectSpecification:
     if isinstance(bool_ast.op, ast.And):
         return all_of(*(_ast_convert_dispatcher(v) for v in bool_ast.values))
 
@@ -253,19 +252,19 @@ def _ast_convert_bool(bool_ast: ast.BoolOp) -> SNMPDetectSpec:
     raise ValueError(ast.dump(bool_ast))
 
 
-def _ast_convert_unary(unop_ast: ast.UnaryOp) -> SNMPDetectSpec:
+def _ast_convert_unary(unop_ast: ast.UnaryOp) -> SNMPDetectSpecification:
     if isinstance(unop_ast.op, ast.Not):
         operand = _ast_convert_dispatcher(unop_ast.operand)
         _validate_detect_spec(operand)
         # We can only negate atomic specs, for now
         if len(operand) == 1 and len(operand[0]) == 1:
             oidstr, pattern, result = operand[0][0]
-            return SNMPDetectSpec([[(oidstr, pattern, not result)]])
+            return SNMPDetectSpecification([[(oidstr, pattern, not result)]])
         raise NotImplementedError("cannot negate operand")
     raise ValueError(ast.dump(unop_ast))
 
 
-def _ast_convert_call(call_ast: ast.Call) -> SNMPDetectSpec:
+def _ast_convert_call(call_ast: ast.Call) -> SNMPDetectSpecification:
     if isinstance(call_ast.func, ast.Name):
         if call_ast.func.id == 'bool':
             assert _is_oid_function(call_ast.args[0])
@@ -312,7 +311,7 @@ def _ast_convert_call(call_ast: ast.Call) -> SNMPDetectSpec:
     raise ValueError(ast.dump(call_ast))
 
 
-def _ast_convert_dispatcher(arg: ast.AST) -> SNMPDetectSpec:
+def _ast_convert_dispatcher(arg: ast.AST) -> SNMPDetectSpecification:
 
     if isinstance(arg, ast.UnaryOp):
         return _ast_convert_unary(arg)
@@ -329,7 +328,7 @@ def _ast_convert_dispatcher(arg: ast.AST) -> SNMPDetectSpec:
     raise ValueError(ast.dump(arg))
 
 
-def _lookup_migrated(snmp_scan_function: Callable) -> Optional[SNMPDetectSpec]:
+def _lookup_migrated(snmp_scan_function: Callable) -> Optional[SNMPDetectSpecification]:
     """Look in the dict of functions that have been migrated
 
       * a spec is explicitily listed
@@ -361,14 +360,14 @@ def _compute_detect_spec(
     section_name: str,
     scan_function: Callable,
     fallback_files: List[str],
-) -> SNMPDetectSpec:
+) -> SNMPDetectSpecification:
 
     scan_func_ast = _get_scan_function_ast(section_name, scan_function, fallback_files)
 
     expression_ast = _get_expression_from_function(section_name, scan_func_ast)
 
     if _is_false(expression_ast):
-        return SNMPDetectSpec()
+        return SNMPDetectSpecification()
 
     return _ast_convert_dispatcher(expression_ast)
 
@@ -377,7 +376,7 @@ def create_detect_spec(
     name: str,
     snmp_scan_function: Callable,
     fallback_files: List[str],
-) -> SNMPDetectSpec:
+) -> SNMPDetectSpecification:
 
     migrated = _lookup_migrated(snmp_scan_function)
     if migrated is not None:
@@ -386,9 +385,9 @@ def create_detect_spec(
     key = _lookup_key_from_code(snmp_scan_function.__code__)
     preconverted = PRECONVERTED_DETECT_SPECS.get(key)
     if preconverted is not None:
-        return SNMPDetectSpec(preconverted)
+        return SNMPDetectSpecification(preconverted)
 
-    return SNMPDetectSpec(
+    return SNMPDetectSpecification(
         PRECONVERTED_DETECT_SPECS.setdefault(
             key,
             _compute_detect_spec(

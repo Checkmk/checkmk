@@ -24,8 +24,9 @@ import pprint
 from cmk.utils.type_defs import (
     ParsedSectionName,
     SectionName,
+    SNMPDetectBaseType,
 )
-from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree  # pylint: disable=cmk-module-layer-violation
+from cmk.snmplib.type_defs import SNMPTree  # pylint: disable=cmk-module-layer-violation
 
 from cmk.base.discovered_labels import HostLabel  # pylint: disable=cmk-module-layer-violation
 
@@ -90,7 +91,7 @@ SNMPSectionPlugin = NamedTuple(
         ("parse_function", SNMPParseFunction),
         ("host_label_function", HostLabelFunction),
         ("supersedes", Set[SectionName]),
-        ("detect_spec", SNMPDetectSpec),
+        ("detect_spec", SNMPDetectBaseType),
         ("trees", List[SNMPTree]),
         ("module", Optional[str]),  # not available for auto migrated plugins.
     ],

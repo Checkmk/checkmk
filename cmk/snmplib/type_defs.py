@@ -32,6 +32,7 @@ from cmk.utils.type_defs import CheckPluginNameStr as _CheckPluginName
 from cmk.utils.type_defs import HostAddress as _HostAddress
 from cmk.utils.type_defs import HostName as _HostName
 from cmk.utils.type_defs import SectionName as _SectionName
+from cmk.utils.type_defs import SNMPDetectBaseType as _SNMPDetectBaseType
 
 SNMPContextName = str
 SNMPDecodedString = str
@@ -111,13 +112,8 @@ class SNMPBackend(enum.Enum):
     classic = "Classic"
 
 
-# make this a class in order to hide the List implementation from the sphinx doc!
-class SNMPDetectSpec(List[List[SNMPDetectAtom]]):
-    """A specification for SNMP device detection
-
-    Note that the structure of this object is not part of the API,
-    and may change at any time.
-    """
+class SNMPDetectSpec(_SNMPDetectBaseType):
+    """A specification for SNMP device detection"""
     @classmethod
     def from_json(cls, serialized: Dict[str, Any]) -> "SNMPDetectSpec":
         try:

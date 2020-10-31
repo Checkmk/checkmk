@@ -13,6 +13,7 @@ from typing import Final, Optional, Set
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
 
 from cmk.snmplib.type_defs import (
+    SNMPDetectSpec,
     SNMPPersistedSections,
     SNMPRawData,
     SNMPSectionContent,
@@ -138,7 +139,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         return SNMPFetcher(
             self._make_file_cache(),
             snmp_plugin_store=SNMPPluginStore({
-                s.name: SNMPPluginStoreItem(s.trees, s.detect_spec)
+                s.name: SNMPPluginStoreItem(s.trees, SNMPDetectSpec(s.detect_spec))
                 for s in agent_based_register.iter_all_snmp_sections()
             }),
             disabled_sections=self.host_config.disabled_snmp_sections(),

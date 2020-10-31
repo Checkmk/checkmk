@@ -12,9 +12,9 @@ from typing import Any, Dict, Generator, List, Optional, Set, Tuple, Type, Union
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
-from cmk.utils.type_defs import ParsedSectionName, SectionName
+from cmk.utils.type_defs import ParsedSectionName, SectionName, SNMPDetectBaseType
 
-from cmk.snmplib.type_defs import OIDBytes, OIDSpec, SNMPDetectSpec, SNMPTree  # pylint: disable=cmk-module-layer-violation
+from cmk.snmplib.type_defs import OIDBytes, OIDSpec, SNMPTree  # pylint: disable=cmk-module-layer-violation
 
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
@@ -103,7 +103,7 @@ def _validate_supersedings(own_name: SectionName, supersedes: List[SectionName])
         raise ValueError("duplicate supersedes entry")
 
 
-def _validate_detect_spec(detect_spec: SNMPDetectSpec) -> None:
+def _validate_detect_spec(detect_spec: SNMPDetectBaseType) -> None:
     if not (isinstance(detect_spec, list) and
             all(isinstance(element, list) for element in detect_spec)):
         raise TypeError("value of 'detect' keyword must be a list of lists of 3-tuples")
@@ -233,7 +233,7 @@ def create_agent_section_plugin(
 def create_snmp_section_plugin(
     *,
     name: str,
-    detect_spec: SNMPDetectSpec,
+    detect_spec: SNMPDetectBaseType,
     fetch: Union[SNMPTree, List[SNMPTree]],
     parsed_section_name: Optional[str] = None,
     parse_function: Union[SimpleSNMPParseFunction, SNMPParseFunction, None] = None,

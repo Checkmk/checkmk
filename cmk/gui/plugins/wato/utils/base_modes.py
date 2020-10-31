@@ -7,6 +7,8 @@
 import abc
 from typing import Union, Tuple, List, Optional, Type
 
+from cmk.utils.plugin_registry import Registry
+
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
 from cmk.gui.type_defs import PermissionName
@@ -149,3 +151,11 @@ class WatoMode(metaclass=abc.ABCMeta):
 
     def handle_page(self) -> None:
         return self.page()
+
+
+class ModeRegistry(Registry[Type[WatoMode]]):
+    def plugin_name(self, instance):
+        return instance.name()
+
+
+mode_registry = ModeRegistry()

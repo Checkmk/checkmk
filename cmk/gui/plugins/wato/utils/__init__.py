@@ -39,7 +39,7 @@ from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
     rule_option_elements, SingleLabel,
 )
 from cmk.gui.plugins.wato.utils.base_modes import (  # noqa: F401 # pylint: disable=unused-import
-    ActionResult, WatoMode,
+    ActionResult, WatoMode, mode_registry,
 )
 from cmk.gui.plugins.wato.utils.simple_modes import (  # noqa: F401 # pylint: disable=unused-import
     SimpleEditMode, SimpleListMode, SimpleModeType,
@@ -1384,14 +1384,6 @@ def sort_sites(sites: SiteConfigurations) -> List[_Tuple[SiteId, SiteConfigurati
     return sorted(sites.items(),
                   key=lambda sid_s:
                   (sid_s[1].get("replication") or "", sid_s[1].get("alias", ""), sid_s[0]))
-
-
-class ModeRegistry(cmk.utils.plugin_registry.Registry[Type[WatoMode]]):
-    def plugin_name(self, instance):
-        return instance.name()
-
-
-mode_registry = ModeRegistry()
 
 
 # Show HTML form for editing attributes.

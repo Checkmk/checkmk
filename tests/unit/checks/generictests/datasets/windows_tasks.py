@@ -28,12 +28,18 @@ info = [[u'TaskName             ',
         ['Last Run Time        ', ' 10/26/2020 4', '23', '10 AM'],
         ['Next Run Time        ', ' N/A'],
         ['Last Result          ', ' 0'],
-        ['Scheduled Task State ', ' Disabled']]
+        ['Scheduled Task State ', ' Disabled'],
+        ['TaskName             ', ' task-unknown-exit-code'],
+        ['Last Run Time        ', ' 10/26/2020 4', '23', '10 AM'],
+        ['Next Run Time        ', ' N/A'],
+        ['Last Result          ', ' -2147024630'],
+        ['Scheduled Task State ', ' Enabled']]
 
 
 discovery = {'': [(u'Monitoring - Content Replication get failed and outdated items', None),
                   (u'Monitoring - Content Replicaton status reporting overall', None),
-                  (u'Monitoring - Delete old IIS logs', None)]}
+                  (u'Monitoring - Delete old IIS logs', None),
+                  ('task-unknown-exit-code', None)]}
 
 
 checks = {'': [(u'Monitoring - Content Replication get failed and outdated items',
@@ -122,6 +128,59 @@ checks = {'': [(u'Monitoring - Content Replication get failed and outdated items
                        (
                            3,
                            'Task not enabled',
+                       ),
+                       (
+                           0,
+                           'Last run time: 10/26/2020 4:23:10 AM, Next run time: N/A',
+                       ),
+                   ],
+               ),
+               (
+                   'task-unknown-exit-code',
+                   {},
+                   [
+                       (
+                           2,
+                           'Got exit code 0x8007010a',
+                       ),
+                       (
+                           0,
+                           'Last run time: 10/26/2020 4:23:10 AM, Next run time: N/A',
+                       ),
+                   ],
+               ),
+               (
+                   'task-unknown-exit-code',
+                   {
+                       "exit_code_to_state": [{
+                           "exit_code": "0x8007010a",
+                           "monitoring_state": 0,
+                       }]
+                   },
+                   [
+                       (
+                           0,
+                           'Got exit code 0x8007010a',
+                       ),
+                       (
+                           0,
+                           'Last run time: 10/26/2020 4:23:10 AM, Next run time: N/A',
+                       ),
+                   ],
+               ),
+               (
+                   'task-unknown-exit-code',
+                   {
+                       "exit_code_to_state": [{
+                           "exit_code": "0x8007010a",
+                           "monitoring_state": 0,
+                           "info_text": "Give me your boots and your motorcycle!",
+                       }]
+                   },
+                   [
+                       (
+                           0,
+                           'Give me your boots and your motorcycle! (0x8007010a)',
                        ),
                        (
                            0,

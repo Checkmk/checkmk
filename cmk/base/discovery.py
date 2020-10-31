@@ -26,7 +26,6 @@ from typing import (
     Sequence,
     Set,
     Tuple,
-    Union,
 )
 
 from six import ensure_binary
@@ -79,14 +78,13 @@ import cmk.base.utils
 from cmk.base.api.agent_based import checking_classes
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.caching import config_cache as _config_cache
-from cmk.base.check_utils import FinalSectionContent, LegacyCheckParameters, Service, ServiceID
+from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
 from cmk.base.config import SelectedRawSections
 from cmk.base.core_config import MonitoringCore
 from cmk.base.checkers.host_sections import HostKey, MultiHostSections
 from cmk.base.discovered_labels import (
     DiscoveredHostLabels,
     DiscoveredServiceLabels,
-    HostLabel,
     ServiceLabel,
 )
 
@@ -100,10 +98,6 @@ CheckPreviewEntry = Tuple[str, CheckPluginNameStr, Optional[RulesetName], Item,
                           LegacyCheckParameters, LegacyCheckParameters, str, Optional[int], str,
                           List[MetricTuple], Dict[str, str]]
 CheckPreviewTable = List[CheckPreviewEntry]
-DiscoveryEntry = Union[check_api_utils.Service, DiscoveredHostLabels, HostLabel,
-                       Tuple[Item, LegacyCheckParameters]]
-DiscoveryResult = List[DiscoveryEntry]
-DiscoveryFunction = Callable[[FinalSectionContent], DiscoveryResult]
 ServiceFilter = Callable[[HostName, Service], bool]
 ServiceFilters = NamedTuple("ServiceFilters", [
     ("new", ServiceFilter),

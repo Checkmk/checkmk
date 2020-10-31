@@ -39,7 +39,7 @@ import cmk.base.item_state as item_state
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.check_api_utils import HOST_PRECEDENCE as LEGACY_HOST_PRECEDENCE
 from cmk.base.check_api_utils import MGMT_ONLY as LEGACY_MGMT_ONLY
-from cmk.base.check_utils import AbstractSectionContent, FinalSectionContent, ParsedSectionContent
+from cmk.base.check_utils import AbstractSectionContent, ParsedSectionContent
 from cmk.base.exceptions import MKParseFunctionError
 
 from ._abstract import HostSections
@@ -253,7 +253,7 @@ class MultiHostSections(MutableMapping[HostKey, HostSections]):
         *,
         cluster_node_keys: Optional[List[HostKey]] = None,
         check_legacy_info: Dict[str, Dict[str, Any]],
-    ) -> FinalSectionContent:
+    ) -> Union[None, ParsedSectionContent, List[ParsedSectionContent]]:
         """Prepares the section_content construct for a Check_MK check on ANY host
 
         The section_content construct is then handed over to the check, inventory or

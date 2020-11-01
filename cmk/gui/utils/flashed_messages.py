@@ -10,15 +10,25 @@ Flask uses a generic session cookie store which we don't want to implement here 
 simplicity. In case we have such a generic thing, it will be easy to switch to it.
 """
 
-from typing import List
+from typing import List, Union
 from cmk.gui.globals import session, _request_ctx_stack
+from cmk.gui.escaping import escape_text
+from cmk.gui.utils.html import HTML
 
 
-def flash(message: str) -> None:
-    session.session_info.flashes.append(message)
+def flash(message: Union[str, HTML]) -> None:
+    """To handle both, HTML and str, correctly we need to a) escape the given str for HTML and
+    cast the HTML objects to str. Before handing back the messages to the consumer, all need to
+    converted back to HTML (see get_flashed_messages())
+    """
+    if isinstance(message, str):
+        normalized = escape_text(message)
+    else:
+        normalized = str(message)
+    session.session_info.flashes.append(normalized)
 
 
-def get_flashed_messages() -> List[str]:
+def get_flashed_messages() -> List[HTML]:
     """Return the messages flashed from the previous request to this one
 
     Move the flashes from the session object to the current request once and
@@ -32,4 +42,4 @@ def get_flashed_messages() -> List[str]:
             _request_ctx_stack.top.flashes = session.session_info.flashes
             session.session_info.flashes = []
 
-    return _request_ctx_stack.top.flashes
+    return [HTML(s) for s in _request_ctx_stack.top.flashes]

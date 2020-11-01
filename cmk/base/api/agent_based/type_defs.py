@@ -31,6 +31,23 @@ from cmk.snmplib.type_defs import SNMPTree  # pylint: disable=cmk-module-layer-v
 from cmk.base.discovered_labels import HostLabel  # pylint: disable=cmk-module-layer-violation
 
 
+class PluginSuppliedLabel(NamedTuple("_LabelTuple", [("name", str), ("value", str)])):
+    """A user friendly variant of our internally used labels
+
+    This is a tiny bit redundant, but it helps decoupling API
+    code from internal representations.
+    """
+    def __init__(self, name, value):
+        super().__init__()
+        if not isinstance(name, str):
+            raise TypeError(f"Invalid label name given: Expected string (got {name!r})")
+        if not isinstance(value, str):
+            raise TypeError(f"Invalid label value given: Expected string (got {value!r})")
+
+    def __repr__(self):
+        return "%s(%r, %r)" % (self.__class__.__name__, self.name, self.value)
+
+
 class Parameters(Mapping):
     """Parameter objects are used to pass parameters to plugin functions"""
     def __init__(self, data):

@@ -23,11 +23,13 @@ from typing import (
 from cmk.utils import pnp_cleanup as quote_pnp_string
 from cmk.utils.type_defs import CheckPluginName, EvalableFloat, ParsedSectionName, RuleSetName
 
+from cmk.base.api.agent_based.type_defs import PluginSuppliedLabel
+
 # we may have 0/None for min/max for instance.
 _OptionalPair = Optional[Tuple[Optional[float], Optional[float]]]
 
 
-class ServiceLabel(NamedTuple("_ServiceLabelTuple", [("name", str), ("value", str)])):
+class ServiceLabel(PluginSuppliedLabel):
     """Representing a service label in Checkmk
 
     This class creates a service label that can be passed to a 'Service' object.
@@ -36,19 +38,6 @@ class ServiceLabel(NamedTuple("_ServiceLabelTuple", [("name", str), ("value", st
         >>> my_label = ServiceLabel("my_key", "my_value")
 
     """
-
-    # A user friendly variant of our ServiceLabel
-    # This is a tiny bit redundant, but it helps decoupling API
-    # code from internal representations.
-    def __init__(self, *_args, **_kwargs):
-        super().__init__()
-        if not isinstance(self.name, str):
-            raise TypeError("Invalid label name given: Only unicode strings are allowed")
-        if not isinstance(self.value, str):
-            raise TypeError("Invalid label value given: Only unicode strings are allowed")
-
-    def __repr__(self):
-        return "%s(%r, %r)" % (self.__class__.__name__, self.name, self.value)
 
 
 class Service(

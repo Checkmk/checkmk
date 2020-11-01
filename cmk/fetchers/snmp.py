@@ -13,7 +13,6 @@ from typing import (
     Final,
     Iterable,
     Iterator,
-    List,
     Mapping,
     NamedTuple,
     Sequence,
@@ -28,7 +27,6 @@ from cmk.snmplib.type_defs import (
     SNMPDetectSpec,
     SNMPHostConfig,
     SNMPRawData,
-    SNMPTable,
     SNMPTree,
 )
 
@@ -213,25 +211,21 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         if mode not in {Mode.DISCOVERY, Mode.CACHED_DISCOVERY}:
             selected_sections |= self.configured_snmp_sections
 
+        if self.use_snmpwalk_cache:
+            walk_cache_msg = "SNMP walk cache is enabled: Use any locally cached information"
+            get_snmp = partial(snmp_table.get_snmp_table_cached, backend=self._backend)
+        else:
+            walk_cache_msg = "SNMP walk cache is disabled"
+            get_snmp = partial(snmp_table.get_snmp_table, backend=self._backend)
+
         fetched_data: SNMPRawData = {}
         for section_name in self._sort_section_names(selected_sections):
-            if self.use_snmpwalk_cache:
-                walk_cache_msg = "SNMP walk cache is enabled: Use any locally cached information"
-            else:
-                walk_cache_msg = "SNMP walk cache is disabled"
-
             self._logger.debug("%s: Fetching data (%s)", section_name, walk_cache_msg)
 
-            oid_info = self.snmp_plugin_store[section_name].trees
-            # oid_info is a list: Each element of that list is interpreted as one real oid_info
-            # and fetches a separate snmp table.
-            get_snmp = partial(snmp_table.get_snmp_table_cached
-                               if self.use_snmpwalk_cache else snmp_table.get_snmp_table,
-                               backend=self._backend)
-            # branch: List[SNMPTree]
-            fetched_section_data: List[SNMPTable] = []
-            for entry in oid_info:
-                fetched_section_data.append(get_snmp(section_name, entry))
+            fetched_section_data = [
+                get_snmp(section_name, entry)
+                for entry in self.snmp_plugin_store[section_name].trees
+            ]
 
             if any(fetched_section_data):
                 fetched_data[section_name] = fetched_section_data

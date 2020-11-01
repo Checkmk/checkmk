@@ -30,7 +30,7 @@ from cmk.base.api.agent_based.checking_classes import (
     State,
 )
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
-from cmk.base.api.agent_based.type_defs import SNMPTree
+from cmk.base.api.agent_based.type_defs import HostLabel, SNMPTree
 from cmk.base.api.agent_based.utils import (
     all_of,
     any_of,
@@ -53,7 +53,6 @@ from cmk.base.api.agent_based.utils import (
     GetRateError,
 )
 from cmk.base.api.agent_based.value_store import get_value_store
-from cmk.base.discovered_labels import HostLabel  # pylint: disable=cmk-module-layer-violation
 
 from . import register, render, clusterize, type_defs
 

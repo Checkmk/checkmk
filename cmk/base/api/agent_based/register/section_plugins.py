@@ -19,6 +19,7 @@ from cmk.snmplib.type_defs import OIDBytes, OIDSpec, SNMPTree  # pylint: disable
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
     AgentSectionPlugin,
+    HostLabel,
     HostLabelFunction,
     SimpleSNMPParseFunction,
     SNMPParseFunction,
@@ -27,8 +28,6 @@ from cmk.base.api.agent_based.type_defs import (
     StringTable,
 )
 from cmk.base.api.agent_based.register.utils import validate_function_arguments
-
-from cmk.base.discovered_labels import HostLabel  # pylint: disable=cmk-module-layer-violation
 
 
 def _create_parse_annotation(

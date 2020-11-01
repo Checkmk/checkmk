@@ -84,6 +84,7 @@ from cmk.base.core_config import MonitoringCore
 from cmk.base.checkers.host_sections import HostKey, MultiHostSections
 from cmk.base.discovered_labels import (
     DiscoveredHostLabels,
+    DiscoveredHostLabelsDict,
     DiscoveredServiceLabels,
     ServiceLabel,
 )
@@ -1190,13 +1191,13 @@ def _discover_host_labels_for_source_type(
     multi_host_sections: MultiHostSections,
     discovery_parameters: DiscoveryParameters,
 ) -> DiscoveredHostLabels:
-    discovered_host_labels = DiscoveredHostLabels()
 
     try:
         host_data = multi_host_sections[host_key]
     except KeyError:
-        return discovered_host_labels
+        return DiscoveredHostLabels()
 
+    discovered_host_labels: DiscoveredHostLabelsDict = {}
     try:
         # We do *not* process all available raw sections. Instead we see which *parsed*
         # sections would result from them, and then process those.
@@ -1231,11 +1232,11 @@ def _discover_host_labels_for_source_type(
 
             try:
                 for label in section_plugin.host_label_function(**kwargs):
-                    label.plugin_name = str(section_plugin.name)
-
-                    discovered_host_labels.add_label(label)
-                    console.vverbose("  %s: %s (%s)\n" %
-                                     (label.name, label.value, label.plugin_name))
+                    console.vverbose(f"  {label.name}: {label.value} ({section_plugin.name})\n")
+                    discovered_host_labels[label.name] = {
+                        "plugin_name": str(section_plugin.name),
+                        "value": label.value,
+                    }
             except (KeyboardInterrupt, MKTimeout):
                 raise
             except Exception as exc:
@@ -1248,7 +1249,7 @@ def _discover_host_labels_for_source_type(
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")
 
-    return discovered_host_labels
+    return DiscoveredHostLabels.from_dict(discovered_host_labels)
 
 
 # snmp_info.include sets a couple of host labels for device type but should not

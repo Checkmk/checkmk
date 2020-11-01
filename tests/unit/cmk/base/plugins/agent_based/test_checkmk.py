@@ -10,7 +10,7 @@ from cmk.base.plugins.agent_based.check_mk import (
     parse_checkmk_labels,
     host_label_function_labels,
 )
-from cmk.base.discovered_labels import HostLabel
+from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel
 
 
 @pytest.mark.parametrize("string_table,expected_parsed_data", [
@@ -20,7 +20,7 @@ from cmk.base.discovered_labels import HostLabel
          ['SpoolDirectory:', '/var/lib/check_mk_agent/spool'],
          ['PluginsDirectory:', '/usr/lib/check_mk_agent/plugins'],
          ['LocalDirectory:', '/usr/lib/check_mk_agent/local']],
-        [HostLabel('cmk/os_family', 'linux', plugin_name=None)],
+        [HostLabel('cmk/os_family', 'linux')],
     ),
 ])
 def test_checkmk_labels(string_table, expected_parsed_data):

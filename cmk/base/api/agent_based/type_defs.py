@@ -28,8 +28,6 @@ from cmk.utils.type_defs import (
 )
 from cmk.snmplib.type_defs import SNMPTree  # pylint: disable=cmk-module-layer-violation
 
-from cmk.base.discovered_labels import HostLabel  # pylint: disable=cmk-module-layer-violation
-
 
 class PluginSuppliedLabel(NamedTuple("_LabelTuple", [("name", str), ("value", str)])):
     """A user friendly variant of our internally used labels
@@ -46,6 +44,17 @@ class PluginSuppliedLabel(NamedTuple("_LabelTuple", [("name", str), ("value", st
 
     def __repr__(self):
         return "%s(%r, %r)" % (self.__class__.__name__, self.name, self.value)
+
+
+class HostLabel(PluginSuppliedLabel):
+    """Representing a host label in Checkmk
+
+    This class creates a host label that can be yielded by a host_label_function as regisitered
+    with the section.
+
+        >>> my_label = HostLabel("my_key", "my_value")
+
+    """
 
 
 class Parameters(Mapping):

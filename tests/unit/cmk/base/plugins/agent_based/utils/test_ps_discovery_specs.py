@@ -13,6 +13,17 @@ from cmk.base.plugins.agent_based.utils import ps
 
 pytestmark = pytest.mark.checks
 
+TEST_LABELS = DiscoveredHostLabels.from_dict({
+    "marco": {
+        "value": "polo",
+        "plugin_name": None
+    },
+    "peter": {
+        "value": "pan",
+        "plugin_name": None
+    }
+})
+
 
 def test_get_discovery_specs():
     assert ps.get_discovery_specs([
@@ -56,8 +67,7 @@ def test_get_discovery_specs():
                 "match": "~.*(fire)fox",
                 "descr": "firefox is on %s",
                 "user": None,
-                "label": DiscoveredHostLabels(HostLabel(u'marco', u'polo'),
-                                              HostLabel(u'peter', u'pan')),
+                "label": TEST_LABELS,
             },
             {
                 "default_params": {
@@ -147,11 +157,10 @@ def test_get_discovery_specs():
             "process_info": "text",
             'cpu_rescale_max': 'cpu_rescale_max_unspecified',
         }),
-        ("firefox is on %s", "~.*(fire)fox", None, (None, False),
-         DiscoveredHostLabels(HostLabel(u'marco', u'polo'), HostLabel(u'peter', u'pan')), {
-             "process_info": "text",
-             'cpu_rescale_max': 'cpu_rescale_max_unspecified',
-         }),
+        ("firefox is on %s", "~.*(fire)fox", None, (None, False), TEST_LABELS, {
+            "process_info": "text",
+            'cpu_rescale_max': 'cpu_rescale_max_unspecified',
+        }),
         ("emacs %u", "emacs", False, (None, False), {}, {
             "cpu_average": 15,
             'cpu_rescale_max': True,

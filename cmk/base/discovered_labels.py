@@ -6,12 +6,17 @@
 
 import abc
 from collections.abc import MutableMapping
-from typing import Iterator, Any, Union, Optional, List, Dict
+from typing import Any, Dict, Iterator, List, Optional, TypedDict
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import Labels, CheckPluginNameStr
 
-HostLabelValueDict = Dict[str, Union[str, Optional[CheckPluginNameStr]]]
+
+class HostLabelValueDict(TypedDict):
+    value: str
+    plugin_name: Optional[CheckPluginNameStr]
+
+
 DiscoveredHostLabelsDict = Dict[str, HostLabelValueDict]
 
 

@@ -36,7 +36,7 @@ from cmk.gui.page_menu import (
     make_simple_form_page_menu,
 )
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.plugins.wato.utils.base_modes import ActionResult
+from cmk.gui.plugins.wato.utils.base_modes import ActionResult, mode_url, redirect
 
 
 class KeypairStore:
@@ -159,7 +159,7 @@ class PageKeyManagement:
                 self.save(self.keys)
 
             elif c is False:
-                return ""
+                return FinalizeRequest(code=200)
         return None
 
     def delete(self, key_id):
@@ -225,7 +225,7 @@ class PageEditKey:
             html.request.del_var("key_p_passphrase")
             self._vs_key().validate_value(value, "key")
             self._create_key(value)
-            return self.back_mode
+            return redirect(mode_url(self.back_mode))
         return None
 
     def _create_key(self, value):
@@ -322,7 +322,7 @@ class PageUploadKey:
                 raise MKUserError(None, _("The file does not look like a valid key file."))
 
             self._upload_key(key_file, value)
-            return self.back_mode
+            return redirect(mode_url(self.back_mode))
         return None
 
     def _get_uploaded(self, cert_spec, key):

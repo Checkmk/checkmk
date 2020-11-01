@@ -32,7 +32,7 @@ import cmk.gui.view_utils
 from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 from cmk.gui.htmllib import HTML
-from cmk.gui.exceptions import MKUserError, MKAuthException
+from cmk.gui.exceptions import MKUserError, MKAuthException, FinalizeRequest
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
 from cmk.gui.valuespec import (
@@ -586,6 +586,21 @@ class ModeEditRuleset(WatoMode):
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeRulesetGroup
 
+    # pylint does not understand this overloading
+    @overload
+    @classmethod
+    def mode_url(cls, *, varname: str) -> str:  # pylint: disable=arguments-differ
+        ...
+
+    @overload
+    @classmethod
+    def mode_url(cls, **kwargs: str) -> str:
+        ...
+
+    @classmethod
+    def mode_url(cls, **kwargs: str) -> str:
+        return super().mode_url(**kwargs)
+
     def breadcrumb(self) -> Breadcrumb:
         # To be able to calculate the breadcrumb with the ModeRulesetGroup as parent, we need to
         # ensure that the group identity is available.
@@ -695,11 +710,7 @@ class ModeEditRuleset(WatoMode):
             pass
 
     def _breadcrumb_url(self) -> str:
-        return makeuri_contextless(
-            request,
-            [("mode", self.name()), ("varname", self._name)],
-            filename="wato.py",
-        )
+        return self.mode_url(varname=self._name)
 
     def title(self) -> str:
         assert self._rulespec.title is not None
@@ -796,7 +807,7 @@ class ModeEditRuleset(WatoMode):
                 rulesets.save()
                 return None
             if c is False:  # not yet confirmed
-                return ""
+                return FinalizeRequest(code=200)
             return None  # browser reload
 
         if not html.check_transaction():
@@ -1417,7 +1428,7 @@ class ABCEditRuleMode(WatoMode):
 
     def action(self) -> ActionResult:
         if not html.check_transaction():
-            return self._back_mode
+            return redirect(mode_url(self._back_mode, folder=watolib.Folder.current().path()))
 
         self._update_rule_from_vars()
 
@@ -1428,7 +1439,8 @@ class ABCEditRuleMode(WatoMode):
         new_rule_folder.need_permission("write")
 
         if html.request.has_var("_export_rule"):
-            return "edit_rule"
+            return redirect(
+                mode_url("edit_rule", varname=self._name, folder=watolib.Folder.current().path()))
 
         if new_rule_folder == self._folder:
             self._rule.folder = new_rule_folder
@@ -1456,7 +1468,7 @@ class ABCEditRuleMode(WatoMode):
                 sites=affected_sites)
 
         flash(self._success_message())
-        return redirect(mode_url(self._back_mode))
+        return redirect(mode_url(self._back_mode, folder=watolib.Folder.current().path()))
 
     def _update_rule_from_vars(self):
         # Additional options

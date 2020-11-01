@@ -57,6 +57,7 @@ from cmk.gui.plugins.wato import (
     WatoMode,
     ActionResult,
     mode_registry,
+    redirect,
 )
 from cmk.gui.pages import page_registry, Page
 
@@ -116,12 +117,12 @@ class ModeDiagnostics(WatoMode):
             return None
 
         if self._job.is_active() or self._diagnostics_parameters is None:
-            raise HTTPRedirect(self._job.detail_url())
+            return redirect(self._job.detail_url())
 
         self._job.set_function(self._job.do_execute, self._diagnostics_parameters)
         self._job.start()
 
-        raise HTTPRedirect(self._job.detail_url())
+        return redirect(self._job.detail_url())
 
     def page(self) -> None:
         job_status_snapshot = self._job.get_status_snapshot()

@@ -6,7 +6,7 @@
 
 import abc
 import http.client
-from typing import Union, Tuple, List, Optional, Type
+from typing import List, Optional, Type
 
 from cmk.utils.plugin_registry import Registry
 
@@ -21,11 +21,9 @@ from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
 
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.utils.html import HTML
 from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect
 
-NewMode = Union[None, FinalizeRequest, str]
-ActionResult = Union[NewMode, Tuple[NewMode, Union[None, str, HTML]]]
+ActionResult = Optional[FinalizeRequest]
 
 
 class WatoMode(metaclass=abc.ABCMeta):

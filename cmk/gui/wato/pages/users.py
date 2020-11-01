@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Modes for managing users and contacts"""
 
-from typing import Iterator, Optional, Type
+from typing import Iterator, Optional, Type, overload
 import base64
 import traceback
 import time
@@ -32,7 +32,7 @@ from cmk.gui.plugins.userdb.utils import (
     get_connection,
 )
 from cmk.gui.log import logger
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKUserError, FinalizeRequest
 from cmk.gui.i18n import _, _u, get_languages, get_language_alias
 from cmk.gui.globals import html, request
 from cmk.gui.valuespec import (
@@ -61,6 +61,9 @@ from cmk.gui.plugins.wato import (
     mode_registry,
     wato_confirm,
     make_action_link,
+    flash,
+    redirect,
+    mode_url,
 )
 
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
@@ -179,7 +182,7 @@ class ModeUsers(WatoMode):
             if c:
                 delete_users([delid])
             elif c is False:
-                return ""
+                return FinalizeRequest(code=200)
 
         elif html.request.var('_sync') and html.check_transaction():
             try:
@@ -210,7 +213,7 @@ class ModeUsers(WatoMode):
             action_handler.handle_actions()
             if action_handler.did_acknowledge_job():
                 self._job_snapshot = userdb.UserSyncBackgroundJob().get_status_snapshot()
-                return None, _("Synchronization job acknowledged")
+                flash(_("Synchronization job acknowledged"))
         return None
 
     def _bulk_delete_users_after_confirm(self) -> ActionResult:
@@ -230,7 +233,7 @@ class ModeUsers(WatoMode):
             if c:
                 delete_users(selected_users)
             elif c is False:
-                return ""
+                return FinalizeRequest(code=200)
         return None
 
     def page(self):
@@ -502,12 +505,24 @@ class ModeEditUser(WatoMode):
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeUsers
 
+    # pylint does not understand this overloading
+    @overload
+    @classmethod
+    def mode_url(cls, *, edit: str) -> str:  # pylint: disable=arguments-differ
+        ...
+
+    @overload
+    @classmethod
+    def mode_url(cls, **kwargs: str) -> str:
+        ...
+
+    @classmethod
+    def mode_url(cls, **kwargs: str) -> str:
+        return super().mode_url(**kwargs)
+
     def _breadcrumb_url(self) -> str:
-        return makeuri_contextless(
-            request,
-            [("mode", self.name()), ("edit", self._user_id)],
-            filename="wato.py",
-        )
+        assert self._user_id is not None
+        return self.mode_url(edit=self._user_id)
 
     def __init__(self):
         super(ModeEditUser, self).__init__()
@@ -579,7 +594,7 @@ class ModeEditUser(WatoMode):
 
     def action(self) -> ActionResult:
         if not html.check_transaction():
-            return "users"
+            return redirect(mode_url("users"))
 
         if self._user_id is None:  # same as self._is_new_user
             self._user_id = UserID(allow_empty=False).from_html_vars("user_id")
@@ -720,7 +735,7 @@ class ModeEditUser(WatoMode):
         user_object = {self._user_id: {"attributes": user_attrs, "is_new_user": self._is_new_user}}
         # The following call validates and updated the users
         edit_users(user_object)
-        return "users"
+        return redirect(mode_url("users"))
 
     def page(self):
         # Let exceptions from loading notification scripts happen now

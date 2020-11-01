@@ -22,12 +22,12 @@ from cmk.gui.plugins.watolib.utils import (
     ABCConfigDomain,
 )
 from cmk.gui.plugins.wato.utils import mode_registry, get_search_expression
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect, mode_url
 from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
-from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError
+from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError, FinalizeRequest
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
 from cmk.gui.breadcrumb import Breadcrumb
@@ -45,6 +45,7 @@ from cmk.gui.page_menu import (
 )
 
 from cmk.gui.utils.urls import makeuri
+from cmk.gui.utils.flashed_messages import flash
 
 
 class ABCGlobalSettingsMode(WatoMode):
@@ -242,7 +243,7 @@ class ABCEditGlobalSettingMode(WatoMode):
                     _("Do you really want to reset this configuration variable "
                       "back to its default value?"))
                 if c is False:
-                    return ""
+                    return FinalizeRequest(code=200)
                 if c is None:
                     return None
             elif not html.check_transaction():
@@ -273,7 +274,7 @@ class ABCEditGlobalSettingMode(WatoMode):
 
         page_menu = self.parent_mode()
         assert page_menu is not None
-        return page_menu.name()
+        return redirect(mode_url(page_menu.name()))
 
     def _save(self):
         watolib.save_global_settings(self._current_settings)
@@ -447,10 +448,10 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
                                need_restart=config_variable.need_restart())
 
             if action == "_reset":
-                return "globalvars", msg
-            return "globalvars"
+                flash(msg)
+            return redirect(mode_url("globalvars"))
         if c is False:
-            return ""
+            return FinalizeRequest(code=200)
         return None
 
     def page(self):

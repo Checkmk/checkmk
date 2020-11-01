@@ -7,7 +7,8 @@
 
 import abc
 import time
-from typing import List, NamedTuple, Tuple as _Tuple, Union, Iterator, Dict, Any, Optional, Type
+from typing import (List, NamedTuple, Tuple as _Tuple, Union, Iterator, Dict, Any, Optional, Type,
+                    overload)
 
 import cmk.utils.store as store
 
@@ -19,7 +20,7 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
 import cmk.gui.forms as forms
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKUserError, FinalizeRequest
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
 from cmk.gui.valuespec import (
@@ -53,6 +54,7 @@ from cmk.gui.plugins.wato import (
     make_action_link,
     add_change,
     notification_parameter_registry,
+    flash,
 )
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.watolib.notifications import (
@@ -74,7 +76,7 @@ from cmk.gui.page_menu import (
     make_simple_form_page_menu,
     make_display_options_dropdown,
 )
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.utils.urls import makeuri
 
 NotificationRule = Dict[str, Any]
 
@@ -529,7 +531,8 @@ class ModeNotifications(ABCNotificationsMode):
             if html.check_transaction():
                 nr = html.request.get_integer_input_mandatory("_replay")
                 watolib.check_mk_local_automation("notification-replay", [str(nr)], None)
-                return None, _("Replayed notifiation number %d") % (nr + 1)
+                flash(_("Replayed notifiation number %d") % (nr + 1))
+                return None
 
         else:
             return self._generic_rule_list_actions(self._get_notification_rules(), "notification",
@@ -813,7 +816,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
                     "notification-delete-user-rule",
                     _("Deleted notification rule %d of user %s") % (nr, self._user_id()))
             elif c is False:
-                return ""
+                return FinalizeRequest(code=200)
             else:
                 return None
 
@@ -865,12 +868,23 @@ class ModeUserNotifications(ABCUserNotificationsMode):
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeEditUser
 
+    # pylint does not understand this overloading
+    @overload
+    @classmethod
+    def mode_url(cls, *, user: str) -> str:  # pylint: disable=arguments-differ
+        ...
+
+    @overload
+    @classmethod
+    def mode_url(cls, **kwargs: str) -> str:
+        ...
+
+    @classmethod
+    def mode_url(cls, **kwargs: str) -> str:
+        return super().mode_url(**kwargs)
+
     def _breadcrumb_url(self) -> str:
-        return makeuri_contextless(
-            request,
-            [("mode", self.name()), ("user", self._user_id())],
-            filename="wato.py",
-        )
+        return self.mode_url(user=self._user_id())
 
     def _user_id(self):
         return html.request.get_unicode_input("user")

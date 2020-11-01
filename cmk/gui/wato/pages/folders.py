@@ -29,7 +29,7 @@ from cmk.gui.plugins.wato.utils import (
     configure_attributes,
     get_hostnames_from_checkboxes,
 )
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect, mode_url
 from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
 from cmk.gui.plugins.wato.utils.context_buttons import make_folder_status_link
@@ -39,8 +39,9 @@ from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.globals import html, request as global_request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKUserError, FinalizeRequest
 from cmk.gui.utils.popups import MethodAjax
+from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.valuespec import (
     DropdownChoice,
     TextUnicode,
@@ -484,10 +485,10 @@ class ModeFolder(WatoMode):
                               _("Please select some hosts before doing bulk operations on hosts."))
 
         if html.request.var("_bulk_inventory"):
-            return "bulkinventory"
+            return redirect(mode_url("bulkinventory", folder=watolib.Folder.current().path()))
 
         if html.request.var("_parentscan"):
-            return "parentscan"
+            return redirect(mode_url("parentscan", folder=watolib.Folder.current().path()))
 
         # Deletion
         if html.request.var("_bulk_delete"):
@@ -501,18 +502,18 @@ class ModeFolder(WatoMode):
                 raise MKUserError("_bulk_moveto", _("Please select the destination folder"))
             target_folder = watolib.Folder.folder(target_folder_path)
             watolib.Folder.current().move_hosts(selected_host_names, target_folder)
-            return None, _("Moved %d hosts to %s") % (len(selected_host_names),
-                                                      target_folder.title())
+            flash(_("Moved %d hosts to %s") % (len(selected_host_names), target_folder.title()))
+            return None
 
         # Move to target folder (from import)
         if html.request.var("_bulk_movetotarget"):
             return self._move_to_imported_folders(selected_host_names)
 
         if html.request.var("_bulk_edit"):
-            return "bulkedit"
+            return redirect(mode_url("bulkedit", folder=watolib.Folder.current().path()))
 
         if html.request.var("_bulk_cleanup"):
-            return "bulkcleanup"
+            return redirect(mode_url("bulkcleanup", folder=watolib.Folder.current().path()))
 
         return None
 
@@ -529,9 +530,9 @@ class ModeFolder(WatoMode):
 
         if c:
             self._folder.delete_subfolder(subfolder_name)
-            return "folder"
+            return redirect(mode_url("folder", folder=self._folder.path()))
         if c is False:  # not yet confirmed
-            return ""
+            return FinalizeRequest(code=200)
         return None  # browser reload
 
     def page(self):
@@ -910,9 +911,10 @@ class ModeFolder(WatoMode):
             _("Do you really want to delete the %d selected hosts?") % len(host_names))
         if c:
             self._folder.delete_hosts(host_names)
-            return "folder", _("Successfully deleted %d hosts") % len(host_names)
+            flash(_("Successfully deleted %d hosts") % len(host_names))
+            return redirect(mode_url("folder", folder=self._folder.path()))
         if c is False:  # not yet confirmed
-            return ""
+            return FinalizeRequest(code=200)
         return None  # browser reload
 
     def _render_bulk_move_form(self) -> str:
@@ -942,7 +944,7 @@ class ModeFolder(WatoMode):
               'you did the import from. Please make sure that you have '
               'done an <b>inventory</b> before moving the hosts.'))
         if c is False:  # not yet confirmed
-            return ""
+            return FinalizeRequest(code=200)
         if not c:
             return None  # browser reload
 
@@ -967,7 +969,8 @@ class ModeFolder(WatoMode):
             target_folder = self._create_target_folder_from_aliaspath(imported_folder)
             self._folder.move_hosts(host_names, target_folder)
 
-        return None, _("Successfully moved hosts to their original folder destinations.")
+        flash(_("Successfully moved hosts to their original folder destinations."))
+        return None
 
     def _create_target_folder_from_aliaspath(self, aliaspath):
         # The alias path is a '/' separated path of folder titles.
@@ -998,9 +1001,9 @@ def delete_host_after_confirm(delname) -> ActionResult:
     if c:
         watolib.Folder.current().delete_hosts([delname])
         # Delete host files
-        return "folder"
+        return redirect(mode_url("folder", folder=watolib.Folder.current().path()))
     if c is False:  # not yet confirmed
-        return ""
+        return FinalizeRequest(code=200)
     return None  # browser reload
 
 
@@ -1102,8 +1105,14 @@ class ABCFolderMode(WatoMode, metaclass=abc.ABCMeta):
                                           save_is_enabled=is_enabled)
 
     def action(self) -> ActionResult:
+        if html.request.has_var("backfolder"):
+            # Edit icon on subfolder preview should bring user back to parent folder
+            folder = watolib.Folder.folder(html.request.var("backfolder"))
+        else:
+            folder = watolib.Folder.current()
+
         if not html.check_transaction():
-            return "folder"
+            return redirect(mode_url("folder", folder=folder.path()))
 
         # Title
         title = TextUnicode().from_html_vars("title")
@@ -1112,10 +1121,7 @@ class ABCFolderMode(WatoMode, metaclass=abc.ABCMeta):
         attributes = watolib.collect_attributes("folder", new=self._folder.name() is None)
         self._save(title, attributes)
 
-        # Edit icon on subfolder preview should bring user back to parent folder
-        if html.request.has_var("backfolder"):
-            watolib.Folder.set_current(watolib.Folder.folder(html.request.var("backfolder")))
-        return "folder"
+        return redirect(mode_url("folder", folder=folder.path()))
 
     # TODO: Clean this method up! Split new/edit handling to sub classes
     def page(self):

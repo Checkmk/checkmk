@@ -6,14 +6,14 @@
 """Modes for creating and editing hosts"""
 
 import abc
-from typing import Iterator, Optional, Type
+from typing import Iterator, Optional, Type, overload
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html
 from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKUserError, MKAuthException, MKGeneralException, HTTPRedirect
+from cmk.gui.exceptions import MKUserError, MKAuthException, MKGeneralException
 from cmk.gui.valuespec import (
     ListOfStrings,
     Hostname,
@@ -35,11 +35,11 @@ from cmk.gui.plugins.wato.utils import (
     configure_attributes,
     ConfigHostname,
 )
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect, mode_url
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
 from cmk.gui.watolib.hosts_and_folders import CREHost
 from cmk.gui.wato.pages.folders import delete_host_after_confirm, ModeFolder
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.flashed_messages import flash
 
 
 class ABCHostMode(WatoMode, metaclass=abc.ABCMeta):
@@ -255,12 +255,23 @@ class ModeEditHost(ABCHostMode):
     def permissions(cls):
         return ["hosts"]
 
+    # pylint does not understand this overloading
+    @overload
+    @classmethod
+    def mode_url(cls, *, host: str) -> str:  # pylint: disable=arguments-differ
+        ...
+
+    @overload
+    @classmethod
+    def mode_url(cls, **kwargs: str) -> str:
+        ...
+
+    @classmethod
+    def mode_url(cls, **kwargs: str) -> str:
+        return super().mode_url(**kwargs)
+
     def _breadcrumb_url(self) -> str:
-        return makeuri_contextless(
-            request,
-            [("mode", self.name()), ("host", self._host.name())],
-            filename="wato.py",
-        )
+        return self.mode_url(host=self._host.name())
 
     def _init_host(self):
         hostname = html.request.get_ascii_input_mandatory("host")
@@ -316,25 +327,31 @@ class ModeEditHost(ABCHostMode):
             if failed_hosts:
                 infotext += "<br><br><b>Hostnames failed to lookup:</b> " \
                           + ", ".join(["<tt>%s</tt>" % h for h in failed_hosts])
-            return None, infotext
+            flash(infotext)
+            return None
+
+        folder = watolib.Folder.current()
 
         if html.request.var("delete"):  # Delete this host
             if not html.transaction_valid():
-                return "folder"
+                return redirect(mode_url("folder", folder=folder.path()))
             return delete_host_after_confirm(self._host.name())
 
         if html.check_transaction():
             attributes = watolib.collect_attributes("host" if not self._is_cluster() else "cluster",
                                                     new=False)
             watolib.Host.host(self._host.name()).edit(attributes, self._get_cluster_nodes())
-            self._host = watolib.Folder.current().host(self._host.name())
+            self._host = folder.host(self._host.name())
 
         if html.request.var("services"):
-            return "inventory"
+            return redirect(mode_url("inventory", folder=folder.path(), host=self._host.name()))
         if html.request.var("diag_host"):
-            html.request.set_var("_start_on_load", "1")
-            return "diag_host"
-        return "folder"
+            return redirect(
+                mode_url("diag_host",
+                         folder=folder.path(),
+                         host=self._host.name(),
+                         _start_on_load="1"))
+        return redirect(mode_url("folder", folder=folder.path()))
 
     def _vs_host_name(self):
         return FixedValue(
@@ -456,7 +473,7 @@ class CreateHostMode(ABCHostMode):
 
     def action(self) -> ActionResult:
         if not html.transaction_valid():
-            return "folder"
+            return redirect(mode_url("folder"))
 
         attributes = watolib.collect_attributes(self._host_type_name(), new=True)
         cluster_nodes = self._get_cluster_nodes()
@@ -464,10 +481,12 @@ class CreateHostMode(ABCHostMode):
         hostname = html.request.get_ascii_input_mandatory("host")
         Hostname().validate_value(hostname, "host")
 
-        if html.check_transaction():
-            watolib.Folder.current().create_hosts([(hostname, attributes, cluster_nodes)])
+        folder = watolib.Folder.current()
 
-        self._host = watolib.Folder.current().host(hostname)
+        if html.check_transaction():
+            folder.create_hosts([(hostname, attributes, cluster_nodes)])
+
+        self._host = folder.host(hostname)
 
         inventory_url = watolib.folder_preserving_link([
             ("mode", "inventory"),
@@ -481,13 +500,17 @@ class CreateHostMode(ABCHostMode):
               'all services to be checked on this host.') % inventory_url)
 
         if html.request.var("services"):
-            raise HTTPRedirect(inventory_url)
+            raise redirect(inventory_url)
 
         if html.request.var("diag_host"):
-            html.request.set_var("_try", "1")
-            return "diag_host", create_msg
+            if create_msg:
+                flash(create_msg)
+            return redirect(
+                mode_url("diag_host", folder=folder.path(), host=self._host.name(), _try="1"))
 
-        return "folder", create_msg
+        if create_msg:
+            flash(create_msg)
+        return redirect(mode_url("folder", folder=folder.path()))
 
     def _vs_host_name(self):
         return Hostname(title=_("Hostname"),)

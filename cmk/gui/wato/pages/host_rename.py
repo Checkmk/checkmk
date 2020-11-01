@@ -22,7 +22,7 @@ import cmk.gui.forms as forms
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.htmllib import HTML
-from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, MKAuthException
+from cmk.gui.exceptions import (MKUserError, MKGeneralException, MKAuthException, FinalizeRequest)
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
 from cmk.gui.breadcrumb import Breadcrumb
@@ -61,6 +61,8 @@ from cmk.gui.plugins.wato import (
     mode_registry,
     add_change,
     wato_confirm,
+    redirect,
+    flash,
 )
 
 import cmk.gui.bi
@@ -161,11 +163,13 @@ class ModeBulkRenameHost(WatoMode):
         renamings = self._collect_host_renamings(renaming_config)
 
         if not renamings:
-            return None, _("No matching host names")
+            flash(_("No matching host names"))
+            return None
 
         warning = self._renaming_collision_error(renamings)
         if warning:
-            return None, warning
+            flash(warning)
+            return None
 
         message = _(
             "<b>Do you really want to rename to following hosts? This involves a restart of the monitoring core!</b>"
@@ -186,9 +190,9 @@ class ModeBulkRenameHost(WatoMode):
             except background_job.BackgroundJobAlreadyRunning as e:
                 raise MKGeneralException(_("Another host renaming job is already running: %s") % e)
 
-            raise HTTPRedirect(host_renaming_job.detail_url())
+            return redirect(host_renaming_job.detail_url())
         if c is False:  # not yet confirmed
-            return ""
+            return FinalizeRequest(code=200)
         return None  # browser reload
 
     def _renaming_collision_error(self, renamings):
@@ -457,10 +461,10 @@ class ModeRenameHost(WatoMode):
             except background_job.BackgroundJobAlreadyRunning as e:
                 raise MKGeneralException(_("Another host renaming job is already running: %s") % e)
 
-            raise HTTPRedirect(host_renaming_job.detail_url())
+            return redirect(host_renaming_job.detail_url())
 
         if c is False:  # not yet confirmed
-            return ""
+            return FinalizeRequest(code=200)
         return None
 
     def _check_new_host_name(self, varname, host_name):

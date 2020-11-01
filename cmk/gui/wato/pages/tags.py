@@ -15,10 +15,7 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element, Table
 import cmk.gui.forms as forms
-from cmk.gui.exceptions import (
-    MKUserError,
-    MKGeneralException,
-)
+from cmk.gui.exceptions import (MKUserError, MKGeneralException, FinalizeRequest)
 from cmk.gui.i18n import _, _u
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
@@ -72,6 +69,9 @@ from cmk.gui.plugins.wato import (
     wato_confirm,
     make_action_link,
     add_change,
+    redirect,
+    mode_url,
+    flash,
 )
 
 
@@ -191,7 +191,7 @@ class ModeTags(ABCTagMode):
                     _("Confirm deletion of the tag group '%s'") % del_id,
                     _("Do you really want to delete the tag group '%s'?") % del_id)
                 if c is False:
-                    return ""
+                    return FinalizeRequest(code=200)
                 if c is None:
                     return None
 
@@ -203,7 +203,9 @@ class ModeTags(ABCTagMode):
                 raise MKUserError(None, "%s" % e)
             self._save_tags_and_update_hosts(self._tag_config.get_dict_format())
             add_change("edit-tags", _("Removed tag group %s (%s)") % (message, del_id))
-            return "tags", message if isinstance(message, str) else None
+            if isinstance(message, str):
+                flash(message)
+            return redirect(mode_url("tags"))
         return None
 
     def _is_cleaning_up_user_tag_group_to_builtin(self, del_id):
@@ -250,7 +252,7 @@ class ModeTags(ABCTagMode):
                 _("Confirm deletion of the auxiliary tag '%s'") % del_id,
                 _("Do you really want to delete the auxiliary tag '%s'?") % del_id)
             if c is False:
-                return ""
+                return FinalizeRequest(code=200)
             if c is None:
                 return None
 
@@ -262,7 +264,9 @@ class ModeTags(ABCTagMode):
                 raise MKUserError(None, "%s" % e)
             self._save_tags_and_update_hosts(self._tag_config.get_dict_format())
             add_change("edit-tags", _("Removed auxiliary tag %s (%s)") % (message, del_id))
-            return "tags", message if isinstance(message, str) else None
+            if isinstance(message, str):
+                flash(message)
+            return redirect(mode_url("tags"))
         return None
 
     # Mypy wants the explicit return, pylint does not like it.
@@ -607,7 +611,7 @@ class ModeEditAuxtag(ABCEditTagMode):
 
     def action(self) -> ActionResult:
         if not html.check_transaction():
-            return "tags"
+            return redirect(mode_url("tags"))
 
         vs = self._valuespec()
         aux_tag_spec = vs.from_html_vars("aux_tag")
@@ -630,7 +634,7 @@ class ModeEditAuxtag(ABCEditTagMode):
 
         self._tag_config_file.save(changed_hosttags_config.get_dict_format())
 
-        return "tags"
+        return redirect(mode_url("tags"))
 
     def page(self):
         html.begin_form("aux_tag")
@@ -684,7 +688,7 @@ class ModeEditTagGroup(ABCEditTagMode):
 
     def action(self) -> ActionResult:
         if not html.check_transaction():
-            return "tags"
+            return redirect(mode_url("tags"))
 
         vs = self._valuespec()
         tag_group_spec = vs.from_html_vars("tag_group")
@@ -705,7 +709,8 @@ class ModeEditTagGroup(ABCEditTagMode):
                 raise MKUserError(None, "%s" % e)
             self._save_tags_and_update_hosts(changed_hosttags_config.get_dict_format())
             add_change("edit-hosttags", _("Created new host tag group '%s'") % changed_tag_group.id)
-            return "tags", _("Created new host tag group '%s'") % changed_tag_group.title
+            flash(_("Created new host tag group '%s'") % changed_tag_group.title)
+            return redirect(mode_url("tags"))
 
         # Updates and verifies changed tag group
         changed_hosttags_config.update_tag_group(changed_tag_group)
@@ -726,9 +731,9 @@ class ModeEditTagGroup(ABCEditTagMode):
         if message:
             self._save_tags_and_update_hosts(changed_hosttags_config.get_dict_format())
             add_change("edit-hosttags", _("Edited host tag group %s (%s)") % (message, self._id))
-            return "tags", message if isinstance(message, str) else None
-
-        return "tags"
+            if isinstance(message, str):
+                flash(message)
+        return redirect(mode_url("tags"))
 
     def page(self):
         html.begin_form("tag_group", method='POST')

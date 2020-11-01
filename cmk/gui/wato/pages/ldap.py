@@ -20,7 +20,7 @@ from cmk.gui.plugins.userdb.ldap_connector import (
 )
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKUserError, FinalizeRequest
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
 from cmk.gui.plugins.userdb.utils import load_connection_config, save_connection_config
@@ -42,6 +42,8 @@ from cmk.gui.plugins.wato import (
     add_change,
     make_action_link,
     wato_confirm,
+    mode_url,
+    redirect,
 )
 
 from cmk.gui.utils.urls import makeuri_contextless
@@ -137,7 +139,7 @@ class ModeLDAPConfig(LDAPMode):
                 del connections[index]
                 save_connection_config(connections)
             elif c is False:
-                return ""
+                return FinalizeRequest(code=200)
             else:
                 return None
 
@@ -288,7 +290,7 @@ class ModeEditLDAPConnection(LDAPMode):
         save_connection_config(self._connections)
         config.user_connections = self._connections  # make directly available on current page
         if html.request.var("_save"):
-            return "ldap_config"
+            return redirect(mode_url("ldap_config"))
         # Fix the case where a user hit "Save & Test" during creation
         html.request.set_var('id', self._connection_id)
         return None

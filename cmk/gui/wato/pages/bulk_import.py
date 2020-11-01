@@ -52,6 +52,9 @@ from cmk.gui.plugins.wato import (
     WatoMode,
     ActionResult,
     mode_registry,
+    redirect,
+    mode_url,
+    flash,
 )
 
 # Was not able to get determine the type of csv._reader / _csv.reader
@@ -259,11 +262,9 @@ class ModeBulkImport(WatoMode):
             config.user.set_rowselection(weblib.selection_id(),
                                          'wato-folder-/' + watolib.Folder.current().path(),
                                          selected, 'set')
-            html.request.set_var('mode', 'bulkinventory')
-            html.request.set_var('_bulk_inventory', '1')
-            html.request.set_var('show_checkboxes', '1')
-            return "bulkinventory"
-        return "folder", msg
+            return redirect(mode_url("bulkinventory", _bulk_inventory='1', show_checkboxes='1'))
+        flash(msg)
+        return redirect(mode_url("folder"))
 
     def _delete_csv_file(self) -> None:
         self._file_path().unlink()

@@ -33,7 +33,7 @@ import cmk.gui.hooks as hooks
 from cmk.gui.table import table_element
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKUserError, FinalizeRequest
 from cmk.gui.htmllib import HTML, Choices
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
@@ -57,6 +57,8 @@ from cmk.gui.plugins.wato import (
     wato_confirm,
     make_action_link,
     get_search_expression,
+    redirect,
+    mode_url,
 )
 
 
@@ -158,7 +160,7 @@ class ModeRoles(RoleManagement, WatoMode):
                                    _("Deleted role '%s'") % delid,
                                    sites=config.get_login_sites())
             elif c is False:
-                return ""
+                return FinalizeRequest(code=200)
 
         elif html.request.var("_clone"):
             if html.check_transaction():
@@ -337,7 +339,7 @@ class ModeEditRole(RoleManagement, WatoMode):
         watolib.add_change("edit-roles",
                            _("Modified user role '%s'") % new_id,
                            sites=config.get_login_sites())
-        return "roles"
+        return redirect(mode_url("roles"))
 
     def page(self):
         search = get_search_expression()

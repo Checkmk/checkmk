@@ -62,6 +62,7 @@ from cmk.gui.page_menu import (
     make_simple_form_page_menu,
 )
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.plugins.wato.utils.base_modes import ActionResult
 
 #.
@@ -638,7 +639,7 @@ class PageBackup:
 
         raise NotImplementedError()
 
-    def _delete_job(self, job) -> ActionResult:
+    def _delete_job(self, job):
         if job.is_running():
             raise MKUserError("_job", _("This job is currently running."))
 
@@ -648,16 +649,15 @@ class PageBackup:
             jobs = self.jobs()
             jobs.remove(job)
             jobs.save()
-            return None, _("The job has been deleted.")
-        return None
+            flash(_("The job has been deleted."))
 
-    def _start_job(self, job) -> ActionResult:
+    def _start_job(self, job):
         job.start()
-        return None, _("The backup has been started.")
+        flash(_("The backup has been started."))
 
-    def _stop_job(self, job) -> ActionResult:
+    def _stop_job(self, job):
         job.stop()
-        return None, _("The backup has been stopped.")
+        flash(_("The backup has been stopped."))
 
     def page(self):
         show_key_download_warning(self.keys().load())
@@ -1147,7 +1147,7 @@ class PageBackupTargets:
             if confirm:
                 targets.remove(target)
                 targets.save()
-                return None, _("The target has been deleted.")
+                flash(_("The target has been deleted."))
         return None
 
     def _verify_not_used(self, target):
@@ -1703,7 +1703,7 @@ class PageBackupRestore:
 
         raise NotImplementedError()
 
-    def _delete_backup(self, backup_ident) -> ActionResult:
+    def _delete_backup(self, backup_ident):
         if self._restore_is_running():
             raise MKUserError(
                 None,
@@ -1725,8 +1725,7 @@ class PageBackupRestore:
         if confirm:
             html.check_transaction()  # invalidate transid
             self._target.remove_backup(backup_ident)
-            return None, _("The backup has been deleted.")
-        return None
+            flash(_("The backup has been deleted."))
 
     def _restore_was_started(self):
         return RestoreJob(self._target_ident, None).was_started()
@@ -1835,7 +1834,7 @@ class PageBackupRestore:
         if confirm:
             html.check_transaction()  # invalidate transid
             RestoreJob(self._target_ident, backup_ident).stop()
-            return None, _("The restore has been stopped.")
+            flash(_("The restore has been stopped."))
         return None
 
     def page(self):

@@ -12,7 +12,8 @@ import socket
 import contextlib
 import binascii
 import queue
-from typing import Dict, List, NamedTuple, Union, Tuple as _Tuple, Optional, Type, Iterator
+from typing import (Dict, List, NamedTuple, Union, Tuple as _Tuple, Optional, Type, Iterator,
+                    overload)
 
 from six import ensure_binary, ensure_str
 from OpenSSL import crypto  # type: ignore[import]
@@ -52,8 +53,9 @@ from cmk.gui.valuespec import (
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
 from cmk.gui.plugins.watolib.utils import config_variable_registry
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect, mode_url
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head, wato_confirm
+from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
 from cmk.gui.exceptions import MKUserError, MKGeneralException, FinalizeRequest
@@ -113,6 +115,21 @@ class ModeEditSite(WatoMode):
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeDistributedMonitoring
 
+    # pylint does not understand this overloading
+    @overload
+    @classmethod
+    def mode_url(cls, *, site: str) -> str:  # pylint: disable=arguments-differ
+        ...
+
+    @overload
+    @classmethod
+    def mode_url(cls, **kwargs: str) -> str:
+        ...
+
+    @classmethod
+    def mode_url(cls, **kwargs: str) -> str:
+        return super().mode_url(**kwargs)
+
     def __init__(self):
         super().__init__()
         self._site_mgmt = watolib.SiteManagementFactory().factory()
@@ -169,11 +186,8 @@ class ModeEditSite(WatoMode):
         return _("Edit site connection %s") % self._site_id
 
     def _breadcrumb_url(self) -> str:
-        return makeuri_contextless(
-            request,
-            [("mode", self.name()), ("site", self._site_id)],
-            filename="wato.py",
-        )
+        assert self._site_id is not None
+        return self.mode_url(site=self._site_id)
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(breadcrumb, form_name="site", button_name="save")
@@ -184,7 +198,7 @@ class ModeEditSite(WatoMode):
 
     def action(self) -> ActionResult:
         if not html.check_transaction():
-            return "sites"
+            return redirect(mode_url("sites"))
 
         vs = self._valuespec()
         site_spec = vs.from_html_vars("site")
@@ -231,7 +245,8 @@ class ModeEditSite(WatoMode):
                                sites=[config.omd_site()],
                                domains=[watolib.ConfigDomainGUI])
 
-        return "sites", msg
+        flash(msg)
+        return redirect(mode_url("sites"))
 
     def page(self):
         html.begin_form("site")
@@ -571,17 +586,18 @@ class ModeDistributedMonitoring(WatoMode):
                                _("Logged out of remote site %s") % html.render_tt(site["alias"]),
                                domains=[watolib.ConfigDomainGUI],
                                sites=[watolib.default_site()])
-            return None, _("Logged out.")
+            flash(_("Logged out."))
+            return None
 
         if c is False:
-            return ""
+            return FinalizeRequest(code=200)
 
         return None
 
     def _action_login(self, login_id: str) -> ActionResult:
         configured_sites = self._site_mgmt.load_sites()
         if html.request.get_ascii_input("_abort"):
-            return "sites"
+            return redirect(mode_url("sites"))
 
         if not html.check_transaction():
             return None
@@ -606,7 +622,8 @@ class ModeDistributedMonitoring(WatoMode):
                 message = _("Successfully logged into remote site %s.") % html.render_tt(
                     site["alias"])
                 watolib.log_audit(None, "edit-site", message)
-                return None, message
+                flash(message)
+                return None
 
             except watolib.MKAutomationException as e:
                 error = _("Cannot connect to remote site: %s") % e
@@ -939,6 +956,21 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeEditSite
 
+    # pylint does not understand this overloading
+    @overload
+    @classmethod
+    def mode_url(cls, *, site: str) -> str:  # pylint: disable=arguments-differ
+        ...
+
+    @overload
+    @classmethod
+    def mode_url(cls, **kwargs: str) -> str:
+        ...
+
+    @classmethod
+    def mode_url(cls, **kwargs: str) -> str:
+        return super().mode_url(**kwargs)
+
     def __init__(self):
         super().__init__()
         self._site_id = html.request.get_ascii_input_mandatory("site")
@@ -963,11 +995,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         return _("Edit site specific global settings of %s") % self._site_id
 
     def _breadcrumb_url(self) -> str:
-        return makeuri_contextless(
-            request,
-            [("mode", self.name()), ("site", self._site_id)],
-            filename="wato.py",
-        )
+        return self.mode_url(site=self._site_id)
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
@@ -1021,11 +1049,11 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
             )
 
             if action == "_reset":
-                return "edit_site_globals", msg
-            return "edit_site_globals"
+                flash(msg)
+            return redirect(mode_url("edit_site_globals"))
 
         if c is False:
-            return ""
+            return FinalizeRequest(code=200)
 
         return None
 
@@ -1202,8 +1230,8 @@ class ModeSiteLivestatusEncryption(WatoMode):
                            need_restart=config_variable.need_restart())
         watolib.save_global_settings(global_settings)
 
-        return None, _(
-            "Added CA with fingerprint %s to trusted certificate authorities") % digest_sha256
+        flash(_("Added CA with fingerprint %s to trusted certificate authorities") % digest_sha256)
+        return None
 
     def page(self):
         if not is_livestatus_encrypted(self._site):

@@ -7,7 +7,7 @@
 
 import json
 import copy
-from typing import Dict, Any, List, Type, Tuple as _Tuple, Optional as _Optional
+from typing import Dict, Any, List, Type, Tuple as _Tuple, Optional as _Optional, overload
 
 import cmk.utils.version as cmk_version
 import cmk.gui.escaping as escaping
@@ -22,7 +22,7 @@ import cmk.gui.config as config
 from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
-from cmk.gui.exceptions import MKUserError, MKGeneralException, MKAuthException
+from cmk.gui.exceptions import MKUserError, MKGeneralException, MKAuthException, FinalizeRequest
 from cmk.gui.valuespec import (
     ValueSpec,
     Transform,
@@ -59,6 +59,8 @@ from cmk.gui.plugins.wato import (
     add_change,
     wato_confirm,
     PermissionSectionWATO,
+    redirect,
+    mode_url,
 )
 
 from cmk.gui.page_menu import (
@@ -282,7 +284,7 @@ class ModeBIEditPack(ABCBIMode):
                 self._bi_packs.add_pack(BIAggregationPack(vs_config))
             self._bi_packs.save_config()
 
-        return "bi_packs"
+        return redirect(mode_url("bi_packs"))
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(breadcrumb,
@@ -467,7 +469,7 @@ class ModeBIPacks(ABCBIMode):
             self._bi_packs.delete_pack(pack_id)
             self._bi_packs.save_config()
         elif c is False:
-            return ""
+            return FinalizeRequest(code=200)
         return None
 
     def page(self):
@@ -525,6 +527,21 @@ class ModeBIRules(ABCBIMode):
     def permissions(cls):
         return ["bi_rules"]
 
+    # pylint does not understand this overloading
+    @overload
+    @classmethod
+    def mode_url(cls, *, pack: str) -> str:  # pylint: disable=arguments-differ
+        ...
+
+    @overload
+    @classmethod
+    def mode_url(cls, **kwargs: str) -> str:
+        ...
+
+    @classmethod
+    def mode_url(cls, **kwargs: str) -> str:
+        return super().mode_url(**kwargs)
+
     def __init__(self):
         super().__init__()
         self._view_type = html.request.var("view", "list")
@@ -534,11 +551,7 @@ class ModeBIRules(ABCBIMode):
         return ModeBIPacks
 
     def _breadcrumb_url(self) -> str:
-        return makeuri_contextless(
-            request,
-            [("mode", self.name()), ("pack", self.bi_pack.id)],
-            filename="wato.py",
-        )
+        return self.mode_url(pack=self.bi_pack.id)
 
     def title(self):
         if self._view_type == "list":
@@ -667,7 +680,7 @@ class ModeBIRules(ABCBIMode):
             self._add_change("bi-delete-rule", _("Deleted BI rule with ID %s") % rule_id)
             self._bi_packs.save_config()
         elif c is False:  # not yet confirmed
-            return ""
+            return FinalizeRequest(code=200)
         return None
 
     def _bulk_delete_after_confirm(self) -> ActionResult:
@@ -685,7 +698,7 @@ class ModeBIRules(ABCBIMode):
                     self._add_change("bi-delete-rule", _("Deleted BI rule with ID %s") % rule_id)
                 self._bi_packs.save_config()
             elif c is False:
-                return ""
+                return FinalizeRequest(code=200)
             return None
         return None
 
@@ -729,7 +742,7 @@ class ModeBIRules(ABCBIMode):
                         _("Moved BI rule with ID %s to BI pack %s") % (rule_id, target_pack_id))
                 self._bi_packs.save_config()
             elif c is False:
-                return ""
+                return FinalizeRequest(code=200)
         return None
 
     def page(self):
@@ -977,7 +990,7 @@ class ModeBIEditRule(ABCBIMode):
         if html.check_transaction():
             return self._action_modify_rule(new_bi_rule)
 
-        return "bi_rules"
+        return redirect(mode_url("bi_rules"))
 
     def _action_rename_rule(self, new_bi_rule):
         forbidden_packs = self._get_forbidden_packs_using_rule()
@@ -997,7 +1010,7 @@ class ModeBIEditRule(ABCBIMode):
             self._add_change("bi-edit-rule",
                              _("Renamed BI rule from %s to %s") % (self.rule_id, new_rule_id))
             self._bi_packs.save_config()
-            return "bi_rules"
+            return redirect(mode_url("bi_rules", pack=self.bi_pack.id))
 
         return False
 
@@ -1030,7 +1043,7 @@ class ModeBIEditRule(ABCBIMode):
         else:
             self._add_change("bi-edit-rule", _("Modified BI rule %s") % new_bi_rule.id)
 
-        return "bi_rules"
+        return redirect(mode_url("bi_rules", pack=self.bi_pack.id))
 
     def _get_forbidden_packs_using_rule(self):
         forbidden_packs = set()
@@ -1467,7 +1480,7 @@ class BIModeEditAggregation(ABCBIMode):
     def action(self) -> ActionResult:
         self.verify_pack_permission(self.bi_pack)
         if not html.check_transaction():
-            return "bi_aggregations"
+            return redirect(mode_url("bi_aggregations", pack=self.bi_pack.id))
 
         vs_aggregation = self.get_vs_aggregation()
         vs_aggregation_config = vs_aggregation.from_html_vars('aggr')
@@ -1498,7 +1511,7 @@ class BIModeEditAggregation(ABCBIMode):
         else:
             self._add_change("bi-edit-aggregation",
                              _("Modified BI aggregation %s") % (new_bi_aggregation.id))
-        return "bi_aggregations"
+        return redirect(mode_url("bi_aggregations", pack=self.bi_pack.id))
 
     def page(self):
         html.begin_form("biaggr", method="POST")
@@ -1675,12 +1688,23 @@ class BIModeAggregations(ABCBIMode):
     def parent_mode(cls) -> _Optional[Type[WatoMode]]:
         return ModeBIPacks
 
+    # pylint does not understand this overloading
+    @overload
+    @classmethod
+    def mode_url(cls, *, pack: str) -> str:  # pylint: disable=arguments-differ
+        ...
+
+    @overload
+    @classmethod
+    def mode_url(cls, **kwargs: str) -> str:
+        ...
+
+    @classmethod
+    def mode_url(cls, **kwargs: str) -> str:
+        return super().mode_url(**kwargs)
+
     def _breadcrumb_url(self) -> str:
-        return makeuri_contextless(
-            request,
-            [("mode", self.name()), ("pack", self.bi_pack.id)],
-            filename="wato.py",
-        )
+        return self.mode_url(pack=self.bi_pack.id)
 
     def title(self):
         return self.title_for_pack(self.bi_pack) + " - " + _("Aggregations")
@@ -1712,7 +1736,7 @@ class BIModeAggregations(ABCBIMode):
                              _("Deleted BI aggregation %s") % (aggregation_id))
             self._bi_packs.save_config()
         elif c is False:  # not yet confirmed
-            return ""
+            return FinalizeRequest(code=200)
         return None
 
     def _bulk_delete_after_confirm(self) -> ActionResult:
@@ -1729,7 +1753,7 @@ class BIModeAggregations(ABCBIMode):
                 self._bi_packs.save_config()
 
             elif c is False:
-                return ""
+                return FinalizeRequest(code=200)
         return None
 
     def _bulk_move_after_confirm(self) -> ActionResult:
@@ -1760,7 +1784,7 @@ class BIModeAggregations(ABCBIMode):
                         (aggregation_id, target))
                 self._bi_packs.save_config()
             elif c is False:
-                return ""
+                return FinalizeRequest(code=200)
         return None
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

@@ -14,7 +14,7 @@ import cmk.utils.store as store
 
 import cmk.gui.config as config
 from cmk.gui.table import table_element
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKUserError, FinalizeRequest
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (
@@ -103,7 +103,7 @@ class ModeIcons(WatoMode):
                     os.remove("%s/local/share/check_mk/web/htdocs/images/icons/%s.png" %
                               (cmk.utils.paths.omd_root, icon_name))
                 elif c is False:
-                    return ""
+                    return FinalizeRequest(code=200)
                 else:
                     return None
 

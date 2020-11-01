@@ -18,7 +18,7 @@ from cmk.gui.table import table_element
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 import cmk.utils.store as store
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKUserError, FinalizeRequest
 from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 from cmk.gui.breadcrumb import Breadcrumb
@@ -35,7 +35,8 @@ from cmk.gui.watolib.host_attributes import (
     transform_pre_16_host_topics,
 )
 from cmk.gui.watolib.hosts_and_folders import Folder
-from cmk.gui.plugins.wato import WatoMode, ActionResult, add_change, mode_registry, wato_confirm
+from cmk.gui.plugins.wato import (WatoMode, ActionResult, add_change, mode_registry, wato_confirm,
+                                  redirect, mode_url)
 from cmk.gui.utils.urls import makeuri_contextless
 
 
@@ -216,7 +217,7 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
         save_custom_attrs_to_mk_file(self._all_attrs)
         self._update_config()
 
-        return self._type + "_attrs"
+        return redirect(mode_url(self._type + "_attrs"))
 
     def page(self):
         # TODO: remove subclass specific things specifict things (everything with _type == 'user')
@@ -477,7 +478,7 @@ class ModeCustomAttrs(WatoMode, metaclass=abc.ABCMeta):
                 self._update_config()
                 add_change("edit-%sattrs" % self._type, _("Deleted attribute %s") % (delname))
             elif c is False:
-                return ""
+                return FinalizeRequest(code=200)
         return None
 
     def page(self):

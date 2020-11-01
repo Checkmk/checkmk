@@ -16,7 +16,7 @@ import cmk.gui.escaping as escaping
 from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 from cmk.gui.htmllib import HTML
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKUserError, FinalizeRequest
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (
@@ -46,9 +46,11 @@ from cmk.gui.watolib.groups import (
     GroupType,
 )
 
-from cmk.gui.plugins.wato import ActionResult
 from cmk.gui.plugins.wato import (
     WatoMode,
+    ActionResult,
+    redirect,
+    mode_url,
     mode_registry,
     wato_confirm,
 )
@@ -147,7 +149,7 @@ class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
                 watolib.delete_group(delname, self.type_name)
                 self._groups = self._load_groups()
             elif c is False:
-                return ""
+                return FinalizeRequest(code=200)
 
         return None
 
@@ -229,7 +231,7 @@ class ABCModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
 
     def action(self) -> ActionResult:
         if not html.check_transaction():
-            return "%s_groups" % self.type_name
+            return redirect(mode_url("%s_groups" % self.type_name))
 
         alias = html.request.get_unicode_input_mandatory("alias").strip()
         self.group = {"alias": alias}
@@ -242,7 +244,7 @@ class ABCModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
         else:
             watolib.edit_group(self._name, self.type_name, self.group)
 
-        return "%s_groups" % self.type_name
+        return redirect(mode_url("%s_groups" % self.type_name))
 
     def _show_extra_page_elements(self):
         pass

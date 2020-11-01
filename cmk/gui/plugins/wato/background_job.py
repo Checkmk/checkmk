@@ -8,7 +8,6 @@ from typing import Optional, Type, Iterator
 import traceback
 
 import cmk.gui.gui_background_job as gui_background_job
-from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
 from cmk.gui.log import logger
@@ -28,6 +27,8 @@ from cmk.gui.plugins.wato import (
     WatoMode,
     ActionResult,
     mode_registry,
+    redirect,
+    mode_url,
 )
 
 from cmk.gui.utils.urls import makeuri_contextless
@@ -175,6 +176,6 @@ class ModeBackgroundJobDetails(WatoMode):
         action_handler.handle_actions()
         if action_handler.did_delete_job():
             if self._back_url():
-                raise HTTPRedirect(self._back_url())
-            return "background_jobs_overview"
+                raise redirect(self._back_url())
+            return redirect(mode_url("background_jobs_overview"))
         return None

@@ -20,7 +20,7 @@ import cmk.gui.forms as forms
 import cmk.gui.plugins.wato.utils
 import cmk.gui.wato.mkeventd
 from cmk.gui.watolib.notifications import load_notification_rules
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKUserError, FinalizeRequest
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (
@@ -54,6 +54,8 @@ from cmk.gui.plugins.wato import (
     wato_confirm,
     mode_registry,
     make_action_link,
+    mode_url,
+    redirect,
 )
 
 TimeperiodUsage = _Tuple[str, str]
@@ -141,7 +143,7 @@ class ModeTimeperiods(WatoMode):
                 watolib.timeperiods.save_timeperiods(self._timeperiods)
                 watolib.add_change("edit-timeperiods", _("Deleted timeperiod %s") % delname)
             elif c is False:
-                return ""
+                return FinalizeRequest(code=200)
         return None
 
     # Check if a timeperiod is currently in use and cannot be deleted
@@ -423,39 +425,34 @@ class ModeTimeperiodImportICal(WatoMode):
                 raise
             raise MKUserError('ical_file', _('Failed to parse file: %s') % e)
 
-        # TODO: This is kind of a hack that we "fake" a HTTP request structure here.
-        # Find a better way to hand over the whole data structure directly to the
-        # edit_timeperiod code
-
-        html.request.set_var('timeperiod_p_alias', data.get('descr', data.get('name', filename)))
+        get_vars = {
+            'timeperiod_p_alias': data.get('descr', data.get('name', filename)),
+        }
 
         for day in defines.weekday_ids():
-            html.request.set_var('%s_0_from' % day, '')
-            html.request.set_var('%s_0_until' % day, '')
+            get_vars['%s_0_from' % day] = ''
+            get_vars['%s_0_until' % day] = ''
 
         # Default to whole day
         if not ical["times"]:
             ical["times"] = [((0, 0), (24, 0))]
 
-        html.request.set_var('timeperiod_p_exceptions_count', "%d" % len(data['events']))
+        get_vars['timeperiod_p_exceptions_count'] = "%d" % len(data['events'])
         for index, event in enumerate(data['events']):
             index += 1
-            html.request.set_var('timeperiod_p_exceptions_%d_0' % index, event['date'])
-            html.request.set_var('timeperiod_p_exceptions_indexof_%d' % index, "%d" % index)
+            get_vars['timeperiod_p_exceptions_%d_0' % index] = event['date']
+            get_vars['timeperiod_p_exceptions_indexof_%d' % index] = "%d" % index
 
-            html.request.set_var('timeperiod_p_exceptions_%d_1_count' % index,
-                                 "%d" % len(ical["times"]))
+            get_vars['timeperiod_p_exceptions_%d_1_count' % index] = "%d" % len(ical["times"])
             for n, time_spec in enumerate(ical["times"]):
                 n += 1
                 start_time = ":".join("%02d" % x for x in time_spec[0])
                 end_time = ":".join("%02d" % x for x in time_spec[1])
-                html.request.set_var('timeperiod_p_exceptions_%d_1_%d_from' % (index, n),
-                                     start_time)
-                html.request.set_var('timeperiod_p_exceptions_%d_1_%d_until' % (index, n), end_time)
-                html.request.set_var('timeperiod_p_exceptions_%d_1_indexof_%d' % (index, n),
-                                     "%d" % index)
+                get_vars['timeperiod_p_exceptions_%d_1_%d_from' % (index, n)] = start_time
+                get_vars['timeperiod_p_exceptions_%d_1_%d_until' % (index, n)] = end_time
+                get_vars['timeperiod_p_exceptions_%d_1_indexof_%d' % (index, n)] = "%d" % index
 
-        return "edit_timeperiod"
+        return redirect(mode_url("edit_timeperiod", **get_vars))
 
     # Returns a dictionary in the format:
     # {
@@ -815,7 +812,7 @@ class ModeEditTimeperiod(WatoMode):
 
         self._timeperiods[self._name] = self._timeperiod
         watolib.timeperiods.save_timeperiods(self._timeperiods)
-        return "timeperiods"
+        return redirect(mode_url("timeperiods"))
 
     def page(self):
         html.begin_form("timeperiod", method="POST")

@@ -25,7 +25,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.exceptions import FinalizeRequest
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import WatoMode, ActionResult, mode_registry, wato_confirm
+from cmk.gui.plugins.wato import WatoMode, ActionResult, mode_registry, wato_confirm, flash
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
@@ -390,9 +390,10 @@ class ModeAuditLog(WatoMode):
                          _("Do you really want to clear the audit log?"))
         if c:
             self._clear_audit_log()
-            return None, _("Cleared audit log.")
+            flash(_("Cleared audit log."))
+            return None
         if c is False:  # not yet confirmed
-            return ""
+            return FinalizeRequest(code=200)
         return None  # browser reload
 
     def _clear_audit_log(self):

@@ -34,6 +34,9 @@ from cmk.gui.plugins.wato import (
     WatoMode,
     ActionResult,
     mode_registry,
+    flash,
+    redirect,
+    mode_url,
 )
 
 
@@ -67,7 +70,8 @@ class ModeManageReadOnly(WatoMode):
         self._settings = settings
 
         self._save()
-        return "read_only", _("Saved read only settings")
+        flash(_("Saved read only settings"))
+        return redirect(mode_url("read_only"))
 
     def _save(self):
         store.save_to_mk_file(watolib.multisite_dir() + "read_only.mk",

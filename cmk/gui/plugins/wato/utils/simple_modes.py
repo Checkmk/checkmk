@@ -400,7 +400,7 @@ class SimpleEditMode(SimpleWatoModeBase, metaclass=abc.ABCMeta):
 
     def action(self) -> ActionResult:
         if not html.transaction_valid():
-            return self._mode_type.list_mode_name()
+            return redirect(mode_url(self._mode_type.list_mode_name()))
 
         vs = self.valuespec()
 
@@ -434,7 +434,7 @@ class SimpleEditMode(SimpleWatoModeBase, metaclass=abc.ABCMeta):
 
         self._save(entries)
 
-        return self._mode_type.list_mode_name()
+        return redirect(mode_url(self._mode_type.list_mode_name()))
 
     def _save(self, entries):
         self._store.save(entries)

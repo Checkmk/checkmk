@@ -366,7 +366,8 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
         )
         section_name = SectionName('pim')
         fetcher.configured_snmp_sections = {section_name}
-        assert fetcher.fetch(Mode.INVENTORY) == result.OK({section_name: [table]})
+        assert fetcher.fetch(Mode.INVENTORY) == result.OK({})  # 'pim' is not an inventory section
+        assert fetcher.fetch(Mode.CHECKING) == result.OK({section_name: [table]})
 
     @pytest.mark.skip
     def test_fetch_from_io_partially_empty(self, monkeypatch, fetcher):

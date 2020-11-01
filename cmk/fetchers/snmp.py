@@ -177,16 +177,9 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
     def close(self) -> None:
         pass
 
-    def _detect(self, mode: Mode) -> Set[SectionName]:
-        sections: Set[SectionName] = set()
-
-        if mode is not Mode.INVENTORY:
-            sections |= set(self.snmp_plugin_store)
-
-        if mode is Mode.INVENTORY or self.do_status_data_inventory:
-            sections |= set(self.inventory_snmp_sections)
-
-        sections -= self.disabled_sections
+    def _detect(self, *, select_from: Set[SectionName]) -> Set[SectionName]:
+        """Detect the applicable sections for the device in question"""
+        sections = select_from - self.disabled_sections
         return gather_available_raw_section_names(
             sections=[(name, self.snmp_plugin_store[name].detect_spec) for name in sections],
             on_error=self.on_error,
@@ -204,12 +197,39 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         in the cache), but all sections for which the detection spec evaluates to true,
         which can be many more.
         """
-        return mode not in (Mode.DISCOVERY, Mode.CHECKING)
+        return mode is Mode.CACHED_DISCOVERY
 
     def _fetch_from_io(self, mode: Mode) -> SNMPRawData:
-        selected_sections = self._detect(mode)
-        if mode not in {Mode.DISCOVERY, Mode.CACHED_DISCOVERY}:
-            selected_sections |= self.configured_snmp_sections
+        """Select the sections we need to fetch and do that
+
+        Detection:
+
+         * Mode.DISCOVERY / CACHED_DISCOVERY:
+           In this straight forward case we must determine all applicable sections for
+           the device in question.
+           Should the fetcher make it to this IO function in *CACHED_*DISCOVERY mode, it
+           should behave in the same way as DISCOVERY mode.
+
+         * Mode.INVENTORY
+           There is no need to try to detect all sections: For the inventory we have a
+           set of sections known to be relevant for inventory plugins, and we can restrict
+           detection to those.
+
+         * Mode.CHECKING
+           Sections needed for checking are known without detection. If the status data
+           inventory is enabled, we detect from the inventory sections; but not those,
+           which are fetched for checking anyway.
+
+        """
+        if mode == Mode.CHECKING:
+            selected_sections = self.configured_snmp_sections
+            if self.do_status_data_inventory:
+                selected_sections |= self._detect(select_from=set(self.inventory_snmp_sections) -
+                                                  selected_sections,)
+        elif mode == Mode.INVENTORY:
+            selected_sections = self._detect(select_from=set(self.inventory_snmp_sections))
+        else:
+            selected_sections = self._detect(select_from=set(self.snmp_plugin_store))
 
         if self.use_snmpwalk_cache:
             walk_cache_msg = "SNMP walk cache is enabled: Use any locally cached information"
@@ -239,13 +259,10 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
     ) -> Iterable[SectionName]:
         # In former Checkmk versions (<=1.4.0) CPU check plugins were
         # checked before other check plugins like interface checks.
-        # In Checkmk versions >= 1.5.0 the order is random and
-        # interface check plugins are executed before CPU check plugins.
-        # This leads to high CPU utilization sent by device. Thus we have
-        # to re-order the check plugin names.
-        # There are some nested check plugin names which have to be considered, too.
-        #   for f in $(grep "service_description.*CPU [^lL]" -m1 * | cut -d":" -f1); do
-        #   if grep -q "snmp_info" $f; then echo $f; fi done
+        # In Checkmk 1.5 the order was random and
+        # interface sections where executed before CPU check plugins.
+        # This lead to high CPU utilization sent by device. Thus we have
+        # to re-order the section names.
         return sorted(
             section_names,
             key=lambda x: (not ('cpu' in str(x) or x in cls.CPU_SECTIONS_WITHOUT_CPU_IN_NAME), x),

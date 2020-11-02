@@ -310,9 +310,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
         "average_runnable_checker_tasks",
         "The average count of queued replies which have not yet been delivered to the checker helpers",
-        offsets, [](const TableStatus& /*ts*/) {
-            return 0.0;
-        }));
+        offsets, [](const TableStatus & /*ts*/) { return 0.0; }));
 }
 
 void TableStatus::addCounterColumns(const std::string &name,

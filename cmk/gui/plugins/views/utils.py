@@ -1775,7 +1775,8 @@ class Cell:
                 params.append(('display_options', display_options.title_options))
 
             classes += ["sort"]
-            onclick = "location.href=\'%s\'" % makeuri(request, params, 'sort')
+            onclick = "location.href=\'%s\'" % makeuri(
+                request, addvars=params, remove_prefix='sort')
             title = _('Sort by %s') % self.title()
 
         if is_last_column_header:

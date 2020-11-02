@@ -154,6 +154,10 @@ class LinkedViewDashlet(ABCViewDashlet):
         if not view_spec:
             raise MKUserError("name", _("No view defined with the name '%s'.") % view_name)
 
+        # Override some view dashlet specific options
+        view_spec = view_spec.copy()
+        view_spec["user_sortable"] = False
+
         return view_spec
 
     def display_title(self):

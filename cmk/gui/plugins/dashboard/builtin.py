@@ -569,14 +569,6 @@ builtin_dashboards['cmk_host'] = {
             }
         },
         'position': (-1, 1),
-        'view': {
-            'layout': 'table',
-            'browser_reload': 0,
-            'datasource': 'services',
-            'num_columns': 1,
-            'column_headers': 'pergroup',
-            'options': []
-        },
         'single_infos': ['host'],
         'mustsearch': False
     }],

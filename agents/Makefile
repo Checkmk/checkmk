@@ -34,10 +34,15 @@ waitmax: waitmax.c
 	@echo "Fine. Typing 'make install' as root now will install into /usr/bin"
 
 setversion:
-	sed -i 's/^$$VERSION = ".*/$$VERSION = "$(NEW_VERSION)"\r/' windows/plugins/*.ps1 ; \
+	sed -i 's/$$VERSION = ".*/$$VERSION = "$(NEW_VERSION)"\r/' windows/plugins/*.ps1 ; \
 	sed -i 's/^set VERSION=".*/set VERSION="$(NEW_VERSION)"\r/' windows/plugins/*.bat ; \
 	sed -i 's/^Const CMK_VERSION = ".*/Const CMK_VERSION = "$(NEW_VERSION)"\r/' windows/plugins/*.vbs ; \
-	sed -i -e 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' -e 's/^__version__ = ".*/__version__ = "$(NEW_VERSION)"/' -e 's/^$$VERSION=".*/$$VERSION="$(NEW_VERSION)"/' plugins/* ; \
+	sed -i\
+	-e 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/'\
+	-e 's/^__version__ = ".*/__version__ = "$(NEW_VERSION)"/'\
+	-e 's/^$$VERSION=".*/$$VERSION="$(NEW_VERSION)"/'\
+	-e 's/^$$VERSION = ".*/$$VERSION = "$(NEW_VERSION)"/'\
+	$(shell find plugins/ -maxdepth 1 -type f) ; \
 	sed -i 's/say "Version: .*"/say "Version: $(NEW_VERSION)"/' check_mk_agent.openvms
 	sed -i 's/echo "Version: [0-9.a-z-]*"/echo "Version: $(NEW_VERSION)"/g' check_mk_agent.*
 	sed -i "s/^#define CMK_WIN_AGENT_VERSION .*/#define CMK_WIN_AGENT_VERSION \"$(NEW_VERSION)\"/" wnx/src/common/wnx_version.h

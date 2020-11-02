@@ -39,7 +39,6 @@ import cmk.utils
 from cmk.utils.type_defs import CheckPluginName, UserId
 from cmk.utils.bi.bi_legacy_config_converter import BILegacyPacksConverter
 from cmk.gui.bi import BIManager  # pylint: disable=cmk-module-layer-violation
-from cmk.snmplib.type_defs import SNMPBackend  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.pagetypes as pagetypes  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.visuals as visuals  # pylint: disable=cmk-module-layer-violation
@@ -78,8 +77,8 @@ REMOVED_CHECK_PLUGIN_MAP = {
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]
 REMOVED_GLOBALS_MAP: List[Tuple[str, str, Dict]] = [
     ("use_inline_snmp", "snmp_backend_default", {
-        True: SNMPBackend.inline,
-        False: SNMPBackend.classic
+        True: "inline",
+        False: "classic"
     }),
     ("config", "notification_spooler_config", {}),
 ]

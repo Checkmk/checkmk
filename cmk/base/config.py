@@ -2533,17 +2533,17 @@ class HostConfig:
         if host_backend_config:
             # If more backends are configured for this host take the first one
             host_backend = host_backend_config[0]
-            if has_inline_snmp and host_backend == SNMPBackend.inline:
+            if has_inline_snmp and host_backend == "inline":
                 return SNMPBackend.inline
-            if has_pysnmp and host_backend == SNMPBackend.pysnmp:
+            if has_pysnmp and host_backend == "pysnmp":
                 return SNMPBackend.pysnmp
-            if host_backend == SNMPBackend.classic:
+            if host_backend == "classic":
                 return SNMPBackend.classic
-            raise MKGeneralException("Bad Host SNMP Backend configuration: %s" % host_backend.value)
+            raise MKGeneralException("Bad Host SNMP Backend configuration: %s" % host_backend)
 
-        if has_inline_snmp and snmp_backend_default == SNMPBackend.inline:
+        if has_inline_snmp and snmp_backend_default == "inline":
             return SNMPBackend.inline
-        if has_pysnmp and snmp_backend_default == SNMPBackend.pysnmp:
+        if has_pysnmp and snmp_backend_default == "pysnmp":
             return SNMPBackend.pysnmp
         return SNMPBackend.classic
 

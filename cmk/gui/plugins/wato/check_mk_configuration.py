@@ -16,7 +16,7 @@ import cmk.gui.sites as sites
 import cmk.gui.config as config
 import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.utils as utils
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKUserError, MKConfigError
 from cmk.gui.i18n import _
 from cmk.gui.globals import request
 
@@ -2461,6 +2461,26 @@ class ConfigVariableUseDNSCache(ConfigVariable):
         )
 
 
+def transform_snmp_backend_default_forth(backend):
+    if backend in [True, "inline"]:
+        return SNMPBackend.inline
+    if backend in [False, "classic"]:
+        return SNMPBackend.classic
+    if backend == "pysnmp":
+        return SNMPBackend.pysnmp
+    raise MKConfigError("SNMPBackend %r not implemented" % backend)
+
+
+def transform_snmp_backend_back(backend):
+    if backend == SNMPBackend.inline:
+        return "inline"
+    if backend == SNMPBackend.classic:
+        return "classic"
+    if backend == SNMPBackend.pysnmp:
+        return "pysnmp"
+    raise MKConfigError("SNMPBackend %r not implemented" % backend)
+
+
 @config_variable_registry.register
 class ConfigVariableChooseSNMPBackend(ConfigVariable):
     def group(self):
@@ -2490,9 +2510,8 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
                   "SNMP modes are featurse which improve the performance for large installations and are "
                   "only available via our subscription."),
             ),
-            forth=lambda x: SNMPBackend.inline if x in [True, "inline"] else
-            (SNMPBackend.classic if x in [False, "classic"] else (SNMPBackend.pysnmp
-                                                                  if x == "pysnmp" else x)),
+            forth=transform_snmp_backend_default_forth,
+            back=transform_snmp_backend_back,
         )
 
 
@@ -4445,6 +4464,16 @@ def _help_snmp_backend():
         "You can use this rule to select the SNMP Backend for these hosts.")
 
 
+def transform_snmp_backend_hosts_forth(backend):
+    if backend in [False, "inline"]:
+        return SNMPBackend.inline
+    if backend in [True, "classic"]:
+        return SNMPBackend.classic
+    if backend == "pysnmp":
+        return SNMPBackend.pysnmp
+    raise MKConfigError("SNMPBackend %r not implemented" % backend)
+
+
 def _valuespec_snmp_backend():
     return Transform(
         DropdownChoice(
@@ -4455,10 +4484,8 @@ def _valuespec_snmp_backend():
                 (SNMPBackend.classic, _("Use Classic Backend")),
             ],
         ),
-        forth=lambda x: SNMPBackend.inline
-        if x in [False, "inline"] else (SNMPBackend.classic
-                                        if x in [True, "classic"] else (SNMPBackend.pysnmp
-                                                                        if x == "pysnmp" else x)),
+        forth=transform_snmp_backend_hosts_forth,
+        back=transform_snmp_backend_back,
     )
 
 

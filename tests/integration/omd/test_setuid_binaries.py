@@ -11,11 +11,11 @@ import pytest  # type: ignore[import]
 
 
 @pytest.mark.parametrize("rel_path,expected_capability", [
-    ("bin/mkeventd_open514", "cap_net_bind_service+ep"),
-    ("lib/nagios/plugins/check_icmp", "cap_net_raw+ep"),
-    ("lib/nagios/plugins/check_dhcp", "cap_net_bind_service,cap_net_raw+ep"),
-    ("lib/cmc/icmpsender", "cap_net_raw+ep"),
-    ("lib/cmc/icmpreceiver", "cap_net_raw+ep"),
+    ("bin/mkeventd_open514", "cap_net_bind_service=ep"),
+    ("lib/nagios/plugins/check_icmp", "cap_net_raw=ep"),
+    ("lib/nagios/plugins/check_dhcp", "cap_net_bind_service,cap_net_raw=ep"),
+    ("lib/cmc/icmpsender", "cap_net_raw=ep"),
+    ("lib/cmc/icmpreceiver", "cap_net_raw=ep"),
 ])
 def test_binary_capability(site, rel_path, expected_capability):
     path = site.path(rel_path)
@@ -36,4 +36,16 @@ def test_binary_capability(site, rel_path, expected_capability):
     stdout = p.stdout.read()
 
     assert oct(stat.S_IMODE(os.stat(path).st_mode)) == '0o750'
-    assert stdout == "%s = %s\n" % (path, expected_capability)
+
+    # getcap 2.41 introduced a new output format. As long as we have distros with newer and older
+    # versions, we need to support both formats.
+    if "%s =" % path in stdout:
+        # pre 2.41 format:
+        # > getcap test
+        # test = cap_net_raw+ep
+        assert stdout == "%s = %s\n" % (path, expected_capability.replace("=", "+"))
+    else:
+        # 2.41 format:
+        # > getcap test
+        # test cap_net_raw=ep
+        assert stdout == "%s %s\n" % (path, expected_capability)

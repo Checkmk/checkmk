@@ -30,6 +30,7 @@ from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html, g
 from cmk.gui.htmllib import Choices, HTML
 from cmk.gui.exceptions import MKUserError, MKGeneralException
+from cmk.gui.utils.flashed_messages import flash  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
     ABCPageListOfMultipleGetChoice, Alternative, CascadingDropdown, Checkbox, Dictionary,
     DocumentationURL, DropdownChoice, DualListChoice, ElementSelection, FixedValue, Float, Integer,
@@ -39,7 +40,7 @@ from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
     rule_option_elements, SingleLabel,
 )
 from cmk.gui.plugins.wato.utils.base_modes import (  # noqa: F401 # pylint: disable=unused-import
-    ActionResult, WatoMode, mode_registry,
+    ActionResult, WatoMode, mode_registry, mode_url, redirect,
 )
 from cmk.gui.plugins.wato.utils.simple_modes import (  # noqa: F401 # pylint: disable=unused-import
     SimpleEditMode, SimpleListMode, SimpleModeType,

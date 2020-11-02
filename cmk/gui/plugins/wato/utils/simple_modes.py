@@ -22,7 +22,7 @@ import cmk.gui.forms as forms
 from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError, FinalizeRequest
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult
+from cmk.gui.plugins.wato.utils.base_modes import (WatoMode, ActionResult, redirect, mode_url)
 from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 from cmk.gui.valuespec import (
@@ -45,6 +45,7 @@ from cmk.gui.page_menu import (
     make_simple_form_page_menu,
 )
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.flashed_messages import flash
 
 
 class SimpleModeType(metaclass=abc.ABCMeta):
@@ -223,7 +224,8 @@ class SimpleListMode(SimpleWatoModeBase):
                          _("Removed the %s '%s'") % (self._mode_type.name_singular(), ident))
         self._store.save(entries)
 
-        return None, _("The %s has been deleted.") % self._mode_type.name_singular()
+        flash(_("The %s has been deleted.") % self._mode_type.name_singular())
+        return redirect(mode_url(self._mode_type.list_mode_name()))
 
     def _validate_deletion(self, ident, entry):
         """Override this to implement custom validations"""

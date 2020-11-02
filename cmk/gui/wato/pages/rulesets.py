@@ -11,7 +11,7 @@ import pprint
 import re
 import json
 from enum import Enum, auto
-from typing import Dict, Generator, List, Optional, Union, Any, Iterable, Type
+from typing import Dict, Generator, List, Optional, Union, Any, Iterable, Type, overload
 
 from six import ensure_str
 
@@ -78,6 +78,9 @@ from cmk.gui.plugins.wato import (
     ConfigHostname,
     HostTagCondition,
     DictHostTagCondition,
+    mode_url,
+    flash,
+    redirect,
 )
 
 from cmk.gui.plugins.wato.utils import LabelCondition
@@ -393,6 +396,21 @@ class ModeRulesetGroup(ABCRulesetMode):
     def name(cls):
         return "rulesets"
 
+    # pylint does not understand this overloading
+    @overload
+    @classmethod
+    def mode_url(cls, *, group: str) -> str:  # pylint: disable=arguments-differ
+        ...
+
+    @overload
+    @classmethod
+    def mode_url(cls, **kwargs: str) -> str:
+        ...
+
+    @classmethod
+    def mode_url(cls, **kwargs: str) -> str:
+        return super().mode_url(**kwargs)
+
     def _from_vars(self):
         super()._from_vars()
         if not self._group_name:
@@ -414,11 +432,8 @@ class ModeRulesetGroup(ABCRulesetMode):
         )
 
     def _breadcrumb_url(self) -> str:
-        return makeuri_contextless(
-            request,
-            [("mode", self.name()), ("group", self._group_name)],
-            filename="wato.py",
-        )
+        assert self._group_name is not None
+        return self.mode_url(group=self._group_name)
 
     def _get_page_type(self, search_options: Dict[str, str]) -> PageType:
         return PageType.RulesetGroup
@@ -1440,7 +1455,8 @@ class ABCEditRuleMode(WatoMode):
                 (self._ruleset.title(), self._folder.alias_path(), new_rule_folder.alias_path()),
                 sites=affected_sites)
 
-        return (self._back_mode, self._success_message())
+        flash(self._success_message())
+        return redirect(mode_url(self._back_mode))
 
     def _update_rule_from_vars(self):
         # Additional options

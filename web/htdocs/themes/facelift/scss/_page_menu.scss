@@ -399,7 +399,7 @@ div#top_heading {
           a {
             background-color: $input-button-hover-bg-color;
             opacity: 0.5;
-            filter: grayscale(80%);
+            filter: $button-inactive-filter;
           }
         }
 

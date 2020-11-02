@@ -480,6 +480,7 @@ $scatterdot-hilite-color: $yellow;
 $page-header-height: 58px;
 $popup-shadow-color: rgba(0, 0, 0, 0.1);
 $button-font-color-default: $white;
+$button-inactive-filter: grayscale(80%);
 $button-bg-color-default: $input-button-hover-bg-color;
 $button-bg-color-suggestions: $navbar-color;
 $navigation-bg-color: $navbar-color;

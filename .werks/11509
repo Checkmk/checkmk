@@ -1,0 +1,16 @@
+Title: Fix password change confirm dialog
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1604321275
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+When trying to change the login password using the GUI, the error message
+"Invalid credentials" was shown and the user was logged out. After that, the
+user could login with the new password.
+
+This has now been fixed: After changing the password, a confirmation is shown
+and the user does not need to login again.

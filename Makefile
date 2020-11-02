@@ -532,7 +532,7 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src cppcheck-xml
 endif
 
-format: format-python format-c format-shell format-js
+format: format-python format-c format-shell format-js format-css
 
 # TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in
 # src/configure.ac, but this needs at least automake-1.13, which in turn is only
@@ -554,7 +554,10 @@ format-shell:
 	$(MAKE)	-C tests format-shell
 
 format-js:
-	scripts/run-prettier --ignore-path ./.prettierignore --write "{enterprise/,}web/htdocs/js/**/*.js"
+	scripts/run-prettier --no-color --ignore-path ./.prettierignore --write "{enterprise/,}web/htdocs/js/**/*.js"
+
+format-css:
+	scripts/run-prettier --no-color --ignore-path ./.prettierignore --write "web/htdocs/themes/**/*.scss"
 
 # Note: You need the doxygen and graphviz packages.
 documentation: config.h

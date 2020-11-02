@@ -14,13 +14,15 @@ pytestmark = pytest.mark.checks
     ({
         "use_piggyback": False,
         'servername': 'testserver',
-        'port': 8161
-    }, ["--servername", "testserver", "--port", "8161"]),
+        'port': 8161,
+        'protocol': 'http'
+    }, ["--servername", "testserver", "--port", "8161", '--protocol', 'http']),
     ({
         'use_piggyback': True,
         'servername': 'testserver',
-        'port': 8161
-    }, ["--servername", "testserver", "--port", "8161", "--piggyback"]),
+        'port': 8161,
+        'protocol': 'https'
+    }, ["--servername", "testserver", "--port", "8161", '--protocol', 'https', "--piggyback"]),
 ])
 @pytest.mark.usefixtures("config_load_all_checks")
 def test_activemq_argument_parsing(params, expected_args):

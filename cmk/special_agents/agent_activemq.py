@@ -8,8 +8,11 @@ import getopt
 import sys
 import xml.etree.ElementTree as ET
 
-import requests
 from requests.auth import HTTPBasicAuth
+from cmk.special_agents.utils.request_helper import (
+    create_api_connect_session,
+    parse_api_url,
+)
 
 
 def usage():
@@ -38,6 +41,7 @@ def main(sys_argv=None):
     opt_username = None
     opt_password = None
     opt_piggyback_mode = False
+    opt_protocol = "http"
 
     for o, a in opts:
         if o in ['--piggyback']:
@@ -50,19 +54,28 @@ def main(sys_argv=None):
             opt_username = a
         elif o in ['--password']:
             opt_password = a
+        elif o in ['--protocol']:
+            opt_protocol = a
 
     if not opt_servername or not opt_port:
         usage()
         return 1
 
-    url = "http://%s:%s/admin/xml/queues.jsp" % (opt_servername, opt_port)
+    api_url = parse_api_url(
+        server_address=opt_servername,
+        api_path="/admin/xml/",
+        port=opt_port,
+        protocol=opt_protocol,
+    )
 
     auth = None
     if opt_username:
         auth = HTTPBasicAuth(opt_username, opt_password)
 
+    session = create_api_connect_session(api_url, auth=auth)
+
     try:
-        response = requests.get(url, auth=auth)
+        response = session.get("queues.jsp")
         if response.status_code == 401:
             raise Exception("Unauthorized")
 

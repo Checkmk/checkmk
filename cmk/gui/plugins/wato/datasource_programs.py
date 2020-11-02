@@ -1219,7 +1219,11 @@ def _valuespec_special_agents_activemq():
                 title=_("Server Name"),
                 allow_empty=False,
             )), ("port", Integer(title=_("Port Number"), default_value=8161)),
-            ("use_piggyback", Checkbox(title=_("Use Piggyback"), label=_("Enable"))),
+            ("protocol",
+             DropdownChoice(title=_("Protocol"), choices=[
+                 ("http", "HTTP"),
+                 ("https", "HTTPS"),
+             ])), ("use_piggyback", Checkbox(title=_("Use Piggyback"), label=_("Enable"))),
             ("basicauth",
              Tuple(title=_("BasicAuth settings (optional)"),
                    elements=[TextAscii(title=_("Username")),

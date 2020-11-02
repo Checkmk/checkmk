@@ -45,7 +45,7 @@ from cmk.fetchers.controller import (
     L3Stats,
     make_log_answer,
     make_result_answer,
-    make_waiting_answer,
+    make_end_of_reply_answer,
     PayloadType,
     run_fetcher,
     SNMPPayload,
@@ -86,8 +86,8 @@ class TestControllerApi:
         assert make_log_answer(
             "payload", log_level=CmcLogLevel.WARNING) == b"fetch:LOG    :warning :7       :payload"
 
-    def test_controller_waiting(self):
-        assert make_waiting_answer() == b"fetch:WAITING:        :0       :"
+    def test_controller_end_of_reply(self):
+        assert make_end_of_reply_answer() == b"fetch:ENDREPL:        :0       :"
 
     def test_build_json_file_path(self):
         assert build_json_file_path(serial=ConfigSerial("_serial_"),
@@ -186,7 +186,7 @@ class TestCMCHeader:
         assert CMCHeader.length == 32
         assert CMCHeader.State.LOG.value == "LOG    "
         assert CMCHeader.State.RESULT.value == "RESULT "
-        assert CMCHeader.State.WAITING.value == "WAITING"
+        assert CMCHeader.State.END_OF_REPLY.value == "ENDREPL"
         assert CMCHeader.default_protocol_name() == "fetch"
 
 

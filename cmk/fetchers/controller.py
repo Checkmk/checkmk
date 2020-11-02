@@ -374,9 +374,9 @@ class FetcherMessage(Protocol):
 class CMCHeader(Header):
     """Header is fixed size(6+8+9+9 = 32 bytes) bytes in format
 
-      header: <ID>:<'RESULT '|'LOG    '|'WAITING'>:<LOGLEVEL>:<SIZE>:
+      header: <ID>:<'RESULT '|'LOG    '|'ENDREPL'>:<LOGLEVEL>:<SIZE>:
       ID       - 5 bytes protocol id, "fetch" at the start
-      LOGLEVEL - 8 bytes log level, '        ' for 'RESULT' and 'WAITING',
+      LOGLEVEL - 8 bytes log level, '        ' for 'RESULT' and 'ENDREPL',
                  for 'LOG' one of 'emergenc', 'alert   ', 'critical',
                  'error   ', 'warning ', 'notice  ', 'info    ', 'debug   '
       SIZE     - 8 bytes text 0..9
@@ -393,7 +393,7 @@ class CMCHeader(Header):
     class State(str, enum.Enum):
         RESULT = "RESULT "
         LOG = "LOG    "
-        WAITING = "WAITING"
+        END_OF_REPLY = "ENDREPL"
 
     fmt = "{:<5}:{:<7}:{:<8}:{:<8}:"
     length = 32
@@ -474,11 +474,11 @@ def make_log_answer(message: str, log_level: CmcLogLevel) -> bytes:
     ) + message.encode("utf-8")
 
 
-def make_waiting_answer() -> bytes:
+def make_end_of_reply_answer() -> bytes:
     return bytes(
         CMCHeader(
             name=CMCHeader.default_protocol_name(),
-            state=CMCHeader.State.WAITING,
+            state=CMCHeader.State.END_OF_REPLY,
             log_level=" ",
             payload_length=0,
         ))
@@ -538,7 +538,7 @@ def _confirm_command_processed() -> Iterator[None]:
         yield
     finally:
         log.logger.info("Command done")
-        write_bytes(make_waiting_answer())
+        write_bytes(make_end_of_reply_answer())
 
 
 def run_fetchers(serial: ConfigSerial, host_name: HostName, mode: Mode, timeout: int) -> None:
@@ -629,11 +629,11 @@ def _make_fetcher_timeout_message(
 
 def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
     """ Writes to the stdio next data:
-    Count Type            Content                     Action
-    ----- -----           -------                     ------
-    1     Success Answer  Fetcher Blob                Send to the checker
-    0..n  Failure Answer  Exception of failed fetcher Log
-    1     Waiting Answer  empty                       End IO
+    Count Answer        Content               Action
+    ----- ------        -------               ------
+    1     Result        Fetcher Blob          Send to the checker
+    0..n  Log           Message to be logged  Log
+    1     End of reply  empty                 End IO
     *) Fetcher blob contains all answers from all fetcher objects including failed
     **) file_name is serial/host_name.json
     ***) timeout is not used at the moment"""

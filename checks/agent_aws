@@ -50,6 +50,15 @@ def _get_services_config(services):
     return service_args
 
 
+def _get_proxy_args(details):
+    proxy_args = ["--proxy-host", details["proxy_host"]]
+
+    for entry in ("proxy_port", "proxy_user", "proxy_password"):
+        if entry in details:
+            proxy_args += [f"--{entry.replace('_', '-')}", str(details[entry])]
+    return proxy_args
+
+
 def agent_aws_arguments(params, hostname, ipaddress):
     args = [
         "--access-key-id",
@@ -57,6 +66,9 @@ def agent_aws_arguments(params, hostname, ipaddress):
         "--secret-access-key",
         passwordstore_get_cmdline("%s", params["secret_access_key"]),
     ]
+
+    if "proxy_details" in params:
+        args += _get_proxy_args(params["proxy_details"])
 
     if params.get("assume_role"):
         args += ["--assume-role"]

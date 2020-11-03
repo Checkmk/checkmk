@@ -16,7 +16,7 @@ import logging
 from pathlib import Path
 import sys
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, NamedTuple, Set, Tuple, Union, Callable
+from typing import Any, Dict, List, NamedTuple, Set, Tuple, Union, Callable, Optional
 
 import boto3  # type: ignore[import]
 import botocore  # type: ignore[import]
@@ -3797,11 +3797,12 @@ class WAFV2WebACL(AWSSectionCloudwatch):
 
 
 class AWSSections(abc.ABC):
-    def __init__(self, hostname, session, debug=False):
+    def __init__(self, hostname, session, debug=False, config=None):
         self._hostname = hostname
         self._session = session
         self._debug = debug
         self._sections = []
+        self.config = config
 
     @abc.abstractmethod
     def init_sections(self, services, region, config, s3_limits_distributor=None):
@@ -3809,7 +3810,7 @@ class AWSSections(abc.ABC):
 
     def _init_client(self, client_key):
         try:
-            return self._session.client(client_key)
+            return self._session.client(client_key, config=self.config)
         except (ValueError, botocore.exceptions.ClientError,
                 botocore.exceptions.UnknownServiceError) as e:
             # If region name is not valid we get a ValueError
@@ -4306,6 +4307,11 @@ def parse_arguments(argv):
     parser.add_argument("--secret-access-key",
                         required=True,
                         help="The secret access key for your AWS account.")
+    parser.add_argument("--proxy-host", help="The address of the proxy server")
+    parser.add_argument("--proxy-port", help="The port of the proxy server")
+    parser.add_argument("--proxy-user", help="The username for authentication of the proxy server")
+    parser.add_argument("--proxy-password",
+                        help="The password for authentication of the proxy server")
     parser.add_argument("--assume-role",
                         action="store_true",
                         help="Use STS AssumeRole to assume a different IAM role")
@@ -4529,6 +4535,21 @@ def _sanitize_aws_services_params(g_aws_services, r_aws_services, r_and_g_aws_se
     return global_services, regional_services
 
 
+def _proxy_address(
+    server_address: str,
+    port: Optional[str] = None,
+    username: Optional[str] = None,
+    password: Optional[str] = None,
+) -> str:
+    address = server_address
+    authentication = ""
+    if port:
+        address += f":{port}"
+    if username and password:
+        authentication = f"{username}:{password}@"
+    return f"{authentication}{address}"
+
+
 def main(sys_argv=None):
     if sys_argv is None:
         cmk.utils.password_store.replace_passwords()
@@ -4537,6 +4558,17 @@ def main(sys_argv=None):
     args = parse_arguments(sys_argv)
     setup_logging(args.debug, args.verbose)
     hostname = args.hostname
+    proxy_config = None
+    if args.proxy_host:
+        proxy_config = botocore.config.Config(
+            proxies={
+                'https': _proxy_address(
+                    args.proxy_host,
+                    args.proxy_port,
+                    args.proxy_user,
+                    args.proxy_password,
+                )
+            })
 
     aws_config = AWSConfig(hostname, sys_argv, (args.overall_tag_key, args.overall_tag_values))
     for service_key, service_names, service_tags, service_limits in [
@@ -4583,7 +4615,7 @@ def main(sys_argv=None):
                 else:
                     session = create_session(args.access_key_id, args.secret_access_key, region)
 
-                sections = aws_sections(hostname, session, debug=args.debug)
+                sections = aws_sections(hostname, session, debug=args.debug, config=proxy_config)
                 sections.init_sections(aws_services,
                                        region,
                                        aws_config,

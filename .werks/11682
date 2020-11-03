@@ -1,0 +1,13 @@
+Title: agent_aws: addition of support for proxy server
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1604936657
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i2
+
+This werk introduces the possibility to configure proxy server
+details for the AWS agent. The details can be specified in the
+respective AWS rule in the Datasource Programs section.

@@ -2549,6 +2549,20 @@ def _valuespec_special_agents_aws():
                  title=_("The secret access key for your AWS account"),
                  allow_empty=False,
              )),
+            ("proxy_details",
+             Dictionary(
+                 title=_("Proxy server details"),
+                 elements=[
+                     ("proxy_host", TextAscii(title=_("Proxy host"), allow_empty=False)),
+                     ("proxy_port", Integer(title=_("Port"))),
+                     ("proxy_user", TextAscii(
+                         title=_("Username"),
+                         size=32,
+                     )),
+                     ("proxy_password", TextAscii(title=_("Password"))),
+                 ],
+                 optional_keys=["proxy_port", "proxy_user", "proxy_password"],
+             )),
             ("assume_role",
              Dictionary(
                  title=_("Assume a different IAM role"),
@@ -2719,7 +2733,7 @@ def _valuespec_special_agents_aws():
             ("overall_tags",
              _vs_aws_tags(_("Restrict monitoring services by one of these AWS tags"))),
         ],
-        optional_keys=["overall_tags"],
+        optional_keys=["overall_tags", "proxy_details"],
     ),
                      forth=_transform_aws)
 

@@ -72,6 +72,7 @@ def patch_themes(EDITION) {
                     mkdir -p web/htdocs/themes/${THEME}/scss/{cme,cee}
                     echo '@mixin graphs {}' > web/htdocs/themes/${THEME}/scss/cee/_graphs.scss
                     echo '@mixin reporting {}' > web/htdocs/themes/${THEME}/scss/cee/_reporting.scss
+                    echo '@mixin ntop {}' > web/htdocs/themes/${THEME}/scss/cee/_ntop.scss
                     echo '@mixin managed {}' > web/htdocs/themes/${THEME}/scss/cme/_managed.scss
                 """
             }

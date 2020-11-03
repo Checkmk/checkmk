@@ -1,0 +1,12 @@
+Title: prism_alerts: alert sorting was compromized
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1604407736
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+Sorting alerts was buggy leading to random alerts being chosen to be the worst of all.
+This fix now takes the real worst of all alerts, which might lead to less optimistic check results.

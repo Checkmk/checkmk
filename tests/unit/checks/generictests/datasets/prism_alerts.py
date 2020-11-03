@@ -25,7 +25,7 @@ discovery = {'': [(None, None)]}
 
 checks = {'': [(None,
                 {},
-                [(0, '3 alerts', []),
+                [(2, '3 alerts', []),
                  (0,
-                  'Last worst on Mon Feb 29 13:36:53 2016: "Some info message."',
+                  'Last worst on Mon Feb 29 13:36:53 2016: "DIMM fault detected on host 172.25.209.110. The node is running with 384 GB whereas 512 GB was installed."',
                   [])])]}

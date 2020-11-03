@@ -3,7 +3,10 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Place for common code shared among different Check_MK special agents"""
+"""Place for common code shared among different Check_MK special agents
+
+Please don't add code to this file and allow new components to have a module for their own.
+"""
 
 import abc
 import argparse

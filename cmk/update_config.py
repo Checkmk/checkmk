@@ -76,11 +76,12 @@ REMOVED_CHECK_PLUGIN_MAP = {
 }
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]
-REMOVED_GLOBALS_MAP = [
+REMOVED_GLOBALS_MAP: List[Tuple[str, str, Dict]] = [
     ("use_inline_snmp", "snmp_backend_default", {
         True: SNMPBackend.inline,
         False: SNMPBackend.classic
     }),
+    ("config", "notification_spooler_config", {}),
 ]
 
 REMOVED_WATO_RULESETS_MAP = {

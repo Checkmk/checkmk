@@ -13,10 +13,12 @@ from cmk.gui.plugins.watolib.utils import (
 )
 
 
-def load_configuration_settings(site_specific=False, custom_site_path=None):
+def load_configuration_settings(site_specific=False, custom_site_path=None, full_config=False):
     settings = {}
     for domain in ABCConfigDomain.enabled_domains():
-        if site_specific:
+        if full_config:
+            settings.update(domain().load_full_config())
+        elif site_specific:
             settings.update(domain().load_site_globals(custom_site_path=custom_site_path))
         else:
             settings.update(domain().load())

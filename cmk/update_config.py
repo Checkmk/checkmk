@@ -46,6 +46,7 @@ import cmk.gui.visuals as visuals  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.plugins.views.utils import get_all_views  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.plugins.dashboard.utils import get_all_dashboards  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.plugins.userdb.utils import save_connection_config, load_connection_config  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.plugins.watolib.utils import filter_unknown_settings  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.tags  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.hosts_and_folders  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.rulesets  # pylint: disable=cmk-module-layer-violation
@@ -164,13 +165,26 @@ class UpdateConfig:
         root_folder.rewrite_hosts_files()
 
     def _rewrite_removed_global_settings(self):
-        global_config = cmk.gui.watolib.global_settings.load_configuration_settings()
+        # Load full config (with undefined settings)
+        global_config = cmk.gui.watolib.global_settings.load_configuration_settings(
+            full_config=True)
+        # Replace old settings with new ones
         for old_config_name, new_config_name, replacement in REMOVED_GLOBALS_MAP:
             if old_config_name in global_config:
-                self._logger.log(VERBOSE, "Replacing %s with %s", old_config_name, new_config_name)
+                self._logger.log(VERBOSE,
+                                 "Replacing %s with %s" % (old_config_name, new_config_name))
                 old_value = global_config[old_config_name]
-                global_config[new_config_name] = replacement[old_value]
+                if replacement:
+                    global_config.setdefault(new_config_name, replacement[old_value])
+                else:
+                    global_config.setdefault(new_config_name, old_value)
+
                 del global_config[old_config_name]
+
+        # Delete unused settings
+        global_config = filter_unknown_settings(global_config)
+
+        # Write updated settings
         cmk.gui.watolib.global_settings.save_global_settings(global_config)
 
     def _rewrite_autochecks(self):

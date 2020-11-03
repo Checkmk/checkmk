@@ -128,8 +128,8 @@ def _wato_page_handler(current_mode: str, mode_permissions: List[PermissionName]
 
             result = mode.action()
             if isinstance(result, (tuple, str, bool)):
-                raise MKGeneralException("WatoMode %s returns unsupported return value: %s" %
-                                         result)
+                raise MKGeneralException(
+                    f"WatoMode \"{current_mode}\" returns unsupported return value: {result!r}")
 
             # We assume something has been modified and increase the config generation ID by one.
             update_config_generation()

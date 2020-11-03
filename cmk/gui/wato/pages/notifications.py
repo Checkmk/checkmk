@@ -62,7 +62,7 @@ from cmk.gui.watolib.notifications import (
     load_notification_rules,
     load_user_notification_rules,
 )
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect, mode_url
 from cmk.gui.wato.pages.users import ModeEditUser
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.breadcrumb import Breadcrumb
@@ -1014,7 +1014,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _back_mode(self):
+    def _back_mode(self) -> ActionResult:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -1430,8 +1430,8 @@ class ModeEditNotificationRule(ABCEditNotificationRuleMode):
     def _user_id(self):
         return None
 
-    def _back_mode(self):
-        return "notifications"
+    def _back_mode(self) -> ActionResult:
+        return redirect(mode_url("notifications"))
 
     def title(self) -> str:
         if self._new:
@@ -1489,8 +1489,8 @@ class ModeEditUserNotificationRule(ABCEditUserNotificationRuleMode):
     def _user_id(self):
         return html.request.get_unicode_input_mandatory("user")
 
-    def _back_mode(self):
-        return "user_notifications"
+    def _back_mode(self) -> ActionResult:
+        return redirect(mode_url("user_notifications", user=self._user_id()))
 
     def title(self) -> str:
         if self._new:
@@ -1526,10 +1526,10 @@ class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
         else:
             super()._add_change(log_what, log_text)
 
-    def _back_mode(self):
+    def _back_mode(self) -> ActionResult:
         if config.has_wato_slave_sites():
-            return
-        return "user_notifications_p"
+            return None
+        return redirect(mode_url("user_notifications_p"))
 
     def title(self):
         if self._new:

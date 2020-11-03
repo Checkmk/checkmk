@@ -97,6 +97,7 @@ class BIAggregationPack:
         self.rules[bi_rule.id] = bi_rule
 
     def delete_rule(self, rule_id: str) -> None:
+        """ Deletes a rule without rule tree integrity check """
         del self.rules[rule_id]
 
     def get_rule(self, rule_id: str) -> Optional[BIRule]:
@@ -164,6 +165,15 @@ class BIAggregationPacks:
         assert False
 
     def delete_rule(self, rule_id: str) -> None:
+        # Only delete a rule if it is not referenced by other rules/aggregations
+        references = self.count_rule_references(rule_id)
+        if references.aggr_refs:
+            raise MKGeneralException(
+                _("You cannot delete this rule: it is still used by other aggregations."))
+        if references.rule_refs:
+            raise MKGeneralException(
+                _("You cannot delete this rule: it is still used by other rules."))
+
         for bi_pack in self.packs.values():
             bi_rule = bi_pack.get_rule(rule_id)
             if bi_rule:

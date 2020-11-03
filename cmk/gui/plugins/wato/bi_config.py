@@ -676,7 +676,7 @@ class ModeBIRules(ABCBIMode):
             _("Do you really want to delete the rule with "
               "the ID <b>%s</b>?") % rule_id)
         if c:
-            self.bi_pack.delete_rule(rule_id)
+            self._bi_packs.delete_rule(rule_id)
             self._add_change("bi-delete-rule", _("Deleted BI rule with ID %s") % rule_id)
             self._bi_packs.save_config()
         elif c is False:  # not yet confirmed
@@ -694,7 +694,7 @@ class ModeBIRules(ABCBIMode):
                 _("Do you really want to delete %d rules?") % len(selection))
             if c:
                 for rule_id in selection:
-                    self.bi_pack.delete_rule(rule_id)
+                    self._bi_packs.delete_rule(rule_id)
                     self._add_change("bi-delete-rule", _("Deleted BI rule with ID %s") % rule_id)
                 self._bi_packs.save_config()
             elif c is False:
@@ -736,7 +736,7 @@ class ModeBIRules(ABCBIMode):
                 for rule_id in selection:
                     bi_rule = self.bi_pack.get_rule_mandatory(rule_id)
                     target_pack.add_rule(bi_rule)
-                    self.bi_pack.delete_rule(bi_rule.id)
+                    self._bi_packs.delete_rule(bi_rule.id)
                     self._add_change(
                         "bi-move-rule",
                         _("Moved BI rule with ID %s to BI pack %s") % (rule_id, target_pack_id))
@@ -1731,7 +1731,7 @@ class BIModeAggregations(ABCBIMode):
             _("Confirm aggregation deletion"),
             _("Do you really want to delete the aggregation <b>%s</b>?") % (aggregation_id))
         if c:
-            self.bi_pack.delete_aggregation(aggregation_id)
+            self._bi_packs.delete_aggregation(aggregation_id)
             self._add_change("bi-delete-aggregation",
                              _("Deleted BI aggregation %s") % (aggregation_id))
             self._bi_packs.save_config()
@@ -1747,7 +1747,7 @@ class BIModeAggregations(ABCBIMode):
                 _("Do you really want to delete %d aggregations?") % len(selection))
             if c:
                 for aggregation_id in selection[::-1]:
-                    self.bi_pack.delete_aggregation(aggregation_id)
+                    self._bi_packs.delete_aggregation(aggregation_id)
                     self._add_change("bi-delete-aggregation",
                                      _("Deleted BI aggregation with ID %s") % (aggregation_id))
                 self._bi_packs.save_config()
@@ -1776,7 +1776,7 @@ class BIModeAggregations(ABCBIMode):
             if c:
                 for aggregation_id in selection[::-1]:
                     bi_aggregation = self.bi_pack.get_aggregation_mandatory(aggregation_id)
-                    self.bi_pack.delete_aggregation(aggregation_id)
+                    self._bi_packs.delete_aggregation(aggregation_id)
                     target_pack.add_aggregation(bi_aggregation)
                     self._add_change(
                         "bi-move-aggregation",

@@ -1,0 +1,12 @@
+Title: Optional package: Update Cisco Webex Teams notifications to 1.1 (fix issue with timeperiods)
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.6.0p19
+Date: 1604391235
+Class: fix
+
+This werk updates the optional extension package for sending notifications
+to Cisco Webex Teams. The previous version contained a bug which prevented
+users from being able to delete timeperiods.

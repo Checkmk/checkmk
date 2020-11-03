@@ -17,6 +17,7 @@ You can find an introduction to BI in the
 import http
 import http.client
 
+from cmk.gui.http import Response
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
@@ -39,6 +40,11 @@ BI_AGGR_ID = {
 BI_PACK_ID = {
     'pack_id': fields.String(example="pack1"),
 }
+
+
+def _bailout_with_message(message):
+    raise ProblemException(404, http.client.responses[404], message)
+
 
 #   .--Rules---------------------------------------------------------------.
 #   |                       ____        _                                  |
@@ -63,10 +69,10 @@ def get_bi_rule(params):
     """Get BI Rule"""
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
-    bi_rule = bi_packs.get_rule(params["rule_id"])
-    if bi_rule is None:
+    try:
+        bi_rule = bi_packs.get_rule_mandatory(params["rule_id"])
+    except KeyError:
         _bailout_with_message("Unknown bi_rule: %s" % params["rule_id"])
-    assert bi_rule is not None
 
     data = {"pack_id": bi_rule.pack_id}
     data.update(BIRuleSchema().dump(bi_rule))
@@ -83,10 +89,10 @@ def put_bi_rule(params):
     """Save BI Rule"""
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
-    target_pack = bi_packs.get_pack(params["body"]["pack_id"])
-    if target_pack is None:
+    try:
+        target_pack = bi_packs.get_pack_mandatory(params["body"]["pack_id"])
+    except KeyError:
         _bailout_with_message("Unknown bi_pack: %s" % params["body"]["pack_id"])
-    assert target_pack is not None
 
     bi_rule = BIRule(params["body"])
     target_pack.add_rule(bi_rule)
@@ -97,8 +103,23 @@ def put_bi_rule(params):
     return constructors.serve_json(data)
 
 
-def _bailout_with_message(message):
-    raise ProblemException(404, http.client.responses[404], message)
+@Endpoint(constructors.object_href("bi_rule", "{rule_id}"),
+          'cmk/delete_bi_rule',
+          method='delete',
+          path_params=[BI_RULE_ID],
+          output_empty=True)
+def delete_bi_rule(params):
+    """Delete BI Rule"""
+    bi_packs = get_cached_bi_packs()
+    bi_packs.load_config()
+    try:
+        bi_rule = bi_packs.get_rule_mandatory(params["rule_id"])
+    except KeyError:
+        _bailout_with_message("Unknown bi_rule: %s" % params["rule_id"])
+
+    bi_packs.delete_rule(bi_rule.id)
+    bi_packs.save_config()
+    return Response(status=204)
 
 
 #   .--Aggregations--------------------------------------------------------.
@@ -124,10 +145,10 @@ def get_bi_aggregation(params):
     """Get BI Aggregation"""
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
-    bi_aggregation = bi_packs.get_aggregation(params["aggregation_id"])
-    if bi_aggregation is None:
+    try:
+        bi_aggregation = bi_packs.get_aggregation_mandatory(params["aggregation_id"])
+    except KeyError:
         _bailout_with_message("Unknown bi_aggregation: %s" % params["aggregation_id"])
-    assert bi_aggregation is not None
 
     data = {"pack_id": bi_aggregation.pack_id}
     data.update(BIAggregationSchema().dump(bi_aggregation))
@@ -146,17 +167,36 @@ def put_bi_aggregation(params):
     bi_packs.load_config()
     bi_aggregation = BIAggregation(params["body"])
 
-    target_pack = bi_packs.get_pack(params["body"]["pack_id"])
-    if target_pack is None:
+    try:
+        target_pack = bi_packs.get_pack_mandatory(params["body"]["pack_id"])
+    except KeyError:
         _bailout_with_message("Unknown bi_pack: %s" % params["body"]["pack_id"])
 
-    assert target_pack is not None
     target_pack.add_aggregation(bi_aggregation)
     bi_packs.save_config()
 
     data = {"pack_id": bi_aggregation.pack_id}
     data.update(bi_aggregation.schema()().dump(bi_aggregation))
     return constructors.serve_json(data)
+
+
+@Endpoint(constructors.object_href("bi_aggregation", "{aggregation_id}"),
+          'cmk/delete_bi_aggregation',
+          method='delete',
+          path_params=[BI_AGGR_ID],
+          output_empty=True)
+def delete_bi_aggregation(params):
+    """Delete BI Aggregation"""
+    bi_packs = get_cached_bi_packs()
+    bi_packs.load_config()
+    try:
+        bi_aggregation = bi_packs.get_aggregation_mandatory(params["aggregation_id"])
+    except KeyError:
+        _bailout_with_message("Unknown bi_aggregation: %s" % params["aggregation_id"])
+
+    bi_packs.delete_aggregation(bi_aggregation.id)
+    bi_packs.save_config()
+    return Response(status=204)
 
 
 #   .--Packs---------------------------------------------------------------.

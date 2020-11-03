@@ -14,6 +14,7 @@ class Search {
         this.content_id = "content_inner_" + id;
         this.search_id = "content_inner_" + id + "_search";
         this.input_id = "mk_side_search_field_" + id + "_search";
+        this.clear_id = "mk_side_search_field_clear_" + id + "_search";
         this.more_id = "more_main_menu_" + id;
         this.previous_timeout_id = null;
     }
@@ -21,6 +22,7 @@ class Search {
     execute_search() {
         if (this.has_search_query()) {
             Search.kill_previous_search();
+            add_class(document.getElementById(this.clear_id), "clearable");
             this.display_search_results();
             const obj = document.getElementById(this.search_id);
             g_call_ajax_obj = call_ajax(
@@ -31,6 +33,7 @@ class Search {
                 }
             );
         } else {
+            remove_class(document.getElementById(this.clear_id), "clearable");
             this.display_menu_items();
         }
     }
@@ -120,6 +123,14 @@ function get_current_search(id) {
     }
 
     return current_search;
+}
+export function on_click_reset(id) {
+    let current_search = get_current_search(id);
+    if (current_search.has_search_query()) {
+        document.getElementById(current_search.input_id).value = "";
+        current_search.display_menu_items();
+        remove_class(document.getElementById(current_search.clear_id), "clearable");
+    }
 }
 export function on_key_down(id) {
     let current_search = get_current_search(id);

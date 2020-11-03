@@ -1363,30 +1363,11 @@ class ABCEditRuleMode(WatoMode):
         return _("Edit rule: %s") % self._rulespec.title
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        # TODO: Is this still needed + for which case?
-        if self._back_mode == 'edit_ruleset':
-            var_list: HTTPVariables = [
-                ("mode", "edit_ruleset"),
-                ("varname", self._name),
-                ("host", html.request.get_ascii_input_mandatory("host", "")),
-            ]
-            if html.request.has_var("item"):
-                var_list.append(("item", html.request.get_unicode_input_mandatory("item")))
-            if html.request.has_var("service"):
-                var_list.append(("service", html.request.get_unicode_input_mandatory("service")))
-            backurl = watolib.folder_preserving_link(var_list)
-
-        else:
-            backurl = watolib.folder_preserving_link([
-                ('mode', self._back_mode),
-                ("host", html.request.get_ascii_input_mandatory("host", ""))
-            ])
-
         menu = make_simple_form_page_menu(breadcrumb,
                                           form_name="rule_editor",
                                           button_name="save",
                                           add_abort_link=True,
-                                          abort_url=backurl)
+                                          abort_url=self._back_url())
 
         action_dropdown = menu.dropdowns[0]
         action_dropdown.topics.append(
@@ -1426,9 +1407,28 @@ class ABCEditRuleMode(WatoMode):
             html.request.set_var("group", self._ruleset.rulespec.main_group_name)
             return super().breadcrumb()
 
+    def _back_url(self):
+        # TODO: Is this still needed + for which case?
+        if self._back_mode == 'edit_ruleset':
+            var_list: HTTPVariables = [
+                ("mode", "edit_ruleset"),
+                ("varname", self._name),
+                ("host", html.request.get_ascii_input_mandatory("host", "")),
+            ]
+            if html.request.has_var("item"):
+                var_list.append(("item", html.request.get_unicode_input_mandatory("item")))
+            if html.request.has_var("service"):
+                var_list.append(("service", html.request.get_unicode_input_mandatory("service")))
+            return watolib.folder_preserving_link(var_list)
+
+        return watolib.folder_preserving_link([('mode', self._back_mode),
+                                               ("host",
+                                                html.request.get_ascii_input_mandatory("host",
+                                                                                       ""))])
+
     def action(self) -> ActionResult:
         if not html.check_transaction():
-            return redirect(mode_url(self._back_mode, folder=watolib.Folder.current().path()))
+            return redirect(self._back_url())
 
         self._update_rule_from_vars()
 
@@ -1468,7 +1468,7 @@ class ABCEditRuleMode(WatoMode):
                 sites=affected_sites)
 
         flash(self._success_message())
-        return redirect(mode_url(self._back_mode, folder=watolib.Folder.current().path()))
+        return redirect(self._back_url())
 
     def _update_rule_from_vars(self):
         # Additional options

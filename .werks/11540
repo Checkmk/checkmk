@@ -1,0 +1,16 @@
+Title: Nutanix Prism Agent/prism_alerts check: add capability to filter for Prism Central
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1603899303
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i2
+
+In case a Nutanix Prism Cluster was configured to use the alert check ({prism_alerts}) an alert
+addressing a certain VM could have been reported twice since it would have also been reported
+with the Prism Central instance (which would then always have the worst state of all monitored
+VMs).
+This change introduces a check option {prism_central_only} which set to True would consider only
+alerts addressing Prism Central VM (set in {vm_type} element of the alert context).

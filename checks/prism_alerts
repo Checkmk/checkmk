@@ -56,14 +56,18 @@ def to_string(timestamp: str) -> str:
 
 
 def check_prism_alerts(_no_item: str, params: StringMap, parsed: Section) -> Any:
-    if not parsed:
+    valid_alerts = (
+        [e for e in parsed if e.get("context", {}).get("vm_type") == "Prism Central VM"]  #
+        if params.get("prism_central_only") else parsed)
+
+    if not valid_alerts:
         yield 0, "No alerts"
         return
 
     # find the newest alert among those with the highest severity
-    immediate_alert = max(parsed, key=lambda x: (severity(x['severity'])[0], x['timestamp']))
+    immediate_alert = max(valid_alerts, key=lambda x: (severity(x['severity'])[0], x['timestamp']))
 
-    yield severity(immediate_alert['severity'])[1], "%d alerts" % len(parsed)
+    yield severity(immediate_alert['severity'])[1], "%d alerts" % len(valid_alerts)
 
     message = immediate_alert['message']
     state = 1 if "has the following problems" in message else 0  # see werk #7203
@@ -74,6 +78,7 @@ check_info['prism_alerts'] = {
     'check_function': check_prism_alerts,
     'inventory_function': inventory_prism_alerts,
     'parse_function': parse_prism_alerts,
+    'group': "prism_alerts",
     'has_perfdata': True,
     'service_description': "Prism Alerts",
 }

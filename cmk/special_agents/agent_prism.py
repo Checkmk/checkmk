@@ -85,6 +85,8 @@ def output_containers(requester: Requester) -> None:
 
 
 def output_alerts(requester: Requester) -> Generator[SectionLine, None, None]:
+    needed_context_keys = {'vm_type'}
+
     LOGGING.debug("do request..")
     obj = requester.get(
         "alerts",
@@ -103,6 +105,10 @@ def output_alerts(requester: Requester) -> Generator[SectionLine, None, None]:
         # context_types
         full_context = dict(zip(entity['contextTypes'], entity['contextValues']))
 
+        # create a thinned out context we can provide together with the alert data in order to
+        # provide more sophisticated checks in the future (this could be made a cli option, too)
+        thin_context = {k: v for k, v in full_context.items() if k in needed_context_keys}
+
         # We have seen informational messages in format:
         # {dev_type} drive {dev_name} on host {ip_address} has the following problems: {err_msg}
         # In this case the keys have no values so we can not assign it to the message
@@ -112,7 +118,7 @@ def output_alerts(requester: Requester) -> Generator[SectionLine, None, None]:
         except KeyError:
             message = entity['message']
 
-        yield (entity['createdTimeStampInUsecs'], entity['severity'], message)
+        yield (entity['createdTimeStampInUsecs'], entity['severity'], message, thin_context)
 
 
 # TODO: get rid of CSV and write JSON

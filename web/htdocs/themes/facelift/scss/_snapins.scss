@@ -542,9 +542,7 @@ div.spacertop {
 /*
  * Quicksearch snapin
  */
-#mk_side_search,
-#mk_side_search_setup,
-#mk_side_search_monitoring {
+#mk_side_search {
   @extend %search-shared;
 
   input {

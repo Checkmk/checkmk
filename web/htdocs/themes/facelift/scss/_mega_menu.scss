@@ -41,6 +41,28 @@
     max-width: 250px;
     padding: (2 * $spacing) $spacing;
     box-sizing: border-box;
+
+    input {
+      width: 100%;
+      padding: 6px 0 6px $spacing;
+      font-size: 14px;
+      background-image: url("images/icon_quicksearch.png");
+      background-position: right $spacing bottom 6px;
+      background-repeat: no-repeat;
+      background-size: 15px;
+    }
+
+    input::placeholder {
+      font-size: $font-size-global;
+      line-height: 16px;
+      letter-spacing: 0;
+      color: $font-color;
+    }
+
+    div.topic {
+      margin: 3px 0 3px 2px;
+      font-size: 125%;
+    }
   }
 
   #mk_side_search_field {

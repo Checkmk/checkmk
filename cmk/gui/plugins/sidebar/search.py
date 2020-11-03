@@ -1211,11 +1211,6 @@ class MonitoringSearch(ABCMegaMenuSearch):
                    placeholder=_("Search in Monitoring"),
                    onkeydown="cmk.search.on_key_down('monitoring')",
                    oninput="cmk.search.on_input_search('monitoring')")
-        # TODO: Check if this icon button can be removed
-        html.icon_button("#",
-                         _("Search"),
-                         "quicksearch",
-                         onclick="cmk.quicksearch.on_search_click();")
         html.close_div()
         html.div('', id_="mk_side_clear")
 
@@ -1241,11 +1236,6 @@ class SetupSearch(ABCMegaMenuSearch):
                    placeholder=_("Search in Setup"),
                    onkeydown="cmk.search.on_key_down('setup')",
                    oninput="cmk.search.on_input_search('setup');")
-        # TODO: Check if this icon button can be removed
-        html.icon_button("#",
-                         _("Search"),
-                         "quicksearch",
-                         onclick="cmk.quicksearch.on_search_click();")
         html.close_div()
         html.div('', id_="mk_side_clear")
 

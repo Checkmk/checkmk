@@ -13,8 +13,6 @@ from testlib.base import Scenario  # type: ignore[import]
 from cmk.utils.exceptions import MKIPAddressLookupError
 from cmk.utils.type_defs import result, SourceType, CheckPluginName, ParsedSectionName
 
-from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree
-
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.api.agent_based import register

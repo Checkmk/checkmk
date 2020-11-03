@@ -7,8 +7,6 @@
 """
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from cmk.snmplib.type_defs import SNMPTree  # pylint: disable=cmk-module-layer-violation
-
 from cmk.base.api.agent_based.register.section_plugins import (
     create_agent_section_plugin,
     create_snmp_section_plugin,
@@ -18,6 +16,7 @@ from cmk.base.api.agent_based.type_defs import (
     AgentSectionPlugin,
     SNMPParseFunction,
     SNMPSectionPlugin,
+    SNMPTree,
 )
 from cmk.base.api.agent_based.type_defs import StringTable
 

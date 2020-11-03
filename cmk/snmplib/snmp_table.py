@@ -26,7 +26,7 @@ from .type_defs import (
     SNMPRawValue,
     SNMPRowInfo,
     SNMPTable,
-    SNMPTree,
+    BackendSNMPTree,
     SNMPValueEncoding,
     SpecialColumn,
 )
@@ -36,18 +36,31 @@ ResultColumnsSanitized = List[Tuple[List[SNMPRawValue], SNMPValueEncoding]]
 ResultColumnsDecoded = List[List[SNMPDecodedValues]]
 
 
-def get_snmp_table(section_name: Optional[SectionName], oid_info: SNMPTree, *,
-                   backend: ABCSNMPBackend) -> SNMPTable:
+def get_snmp_table(
+    section_name: Optional[SectionName],
+    oid_info: BackendSNMPTree,
+    *,
+    backend: ABCSNMPBackend,
+) -> SNMPTable:
     return _get_snmp_table(section_name, oid_info, False, backend=backend)
 
 
-def get_snmp_table_cached(section_name: Optional[SectionName], oid_info: SNMPTree, *,
-                          backend: ABCSNMPBackend) -> SNMPTable:
+def get_snmp_table_cached(
+    section_name: Optional[SectionName],
+    oid_info: BackendSNMPTree,
+    *,
+    backend: ABCSNMPBackend,
+) -> SNMPTable:
     return _get_snmp_table(section_name, oid_info, True, backend=backend)
 
 
-def _get_snmp_table(section_name: Optional[SectionName], tree: SNMPTree, use_snmpwalk_cache: bool,
-                    *, backend: ABCSNMPBackend) -> SNMPTable:
+def _get_snmp_table(
+    section_name: Optional[SectionName],
+    tree: BackendSNMPTree,
+    use_snmpwalk_cache: bool,
+    *,
+    backend: ABCSNMPBackend,
+) -> SNMPTable:
 
     index_column = -1
     index_format: Optional[SpecialColumn] = None
@@ -172,7 +185,7 @@ def _key_oid_pairs(pair1: Tuple[OID, SNMPRawValue]) -> List[int]:
 
 def _get_snmpwalk(
     section_name: Optional[SectionName],
-    base: OIDSpec,
+    base: str,
     fetchoid: OID,
     use_snmpwalk_cache: bool,
     *,
@@ -191,7 +204,7 @@ def _get_snmpwalk(
 
 def _perform_snmpwalk(
     section_name: Optional[SectionName],
-    base_oid: OIDSpec,
+    base_oid: str,
     fetchoid: OID,
     *,
     backend: ABCSNMPBackend,
@@ -205,7 +218,7 @@ def _perform_snmpwalk(
             # revert back to legacy "possilbly-empty-string"-Type
             # TODO: pass Optional[SectionName] along!
             check_plugin_name=str(section_name) if section_name else "",
-            table_base_oid=str(base_oid),
+            table_base_oid=base_oid,
             context_name=context_name,
         )
 

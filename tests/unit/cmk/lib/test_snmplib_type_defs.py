@@ -9,11 +9,11 @@ import json
 import pytest  # type: ignore[import]
 
 from cmk.snmplib.type_defs import (
+    BackendSNMPTree,
     OIDBytes,
     OIDCached,
     OIDSpec,
     SNMPDetectSpec,
-    SNMPTree,
     SpecialColumn,
 )
 
@@ -31,19 +31,6 @@ class TestSNMPDetectSpec:
         assert SNMPDetectSpec.from_json(specs.to_json()) == specs
 
 
-@pytest.mark.parametrize(
-    "base, oids",
-    [
-        ('1.2', ['1', '2']),  # base no leading dot
-        ('.1.2', '12'),  # oids not a list
-        ('.1.2', ['1', 2]),  # int in list
-        ('.1.2', ['42.1', '42.2']),  # 42 should be in base
-    ])
-def test_snmptree_valid(base, oids):
-    with pytest.raises((ValueError, TypeError)):
-        SNMPTree(base=base, oids=oids)
-
-
 @pytest.mark.parametrize("base, oids", [
     ('.1.2', ['1', '2']),
     ('.1.2', ['1', OIDCached('2')]),
@@ -51,21 +38,19 @@ def test_snmptree_valid(base, oids):
     ('.1.2', ['1', SpecialColumn.END]),
 ])
 def test_snmptree(base, oids):
-    tree = SNMPTree(base=base, oids=oids)
+    tree = BackendSNMPTree.from_frontend(base=base, oids=oids)
 
-    assert tree.base == OIDSpec(base)
+    assert tree.base == base
     assert isinstance(tree.oids, list)
     for oid in tree.oids:
         assert isinstance(oid, (OIDSpec, SpecialColumn))
 
 
 @pytest.mark.parametrize("tree", [
-    SNMPTree(base=".1.2.3", oids=["4.5.6", "7.8.9"]),
-    SNMPTree(base=".1.2.3", oids=[OIDSpec("4.5.6"), OIDSpec("7.8.9")]),
-    SNMPTree(base=".1.2.3", oids=[OIDCached("4.5.6"), OIDBytes("7.8.9")]),
-    SNMPTree(base=".1.2.3", oids=[OIDSpec("4.5.6"), SpecialColumn.END]),
-    SNMPTree(base=OIDSpec(".1.2.3"), oids=[OIDBytes("4.5.6"), SpecialColumn.END]),
-    SNMPTree(base=".1.2.3", oids=[-3]),
+    BackendSNMPTree(base=".1.2.3", oids=[OIDSpec("4.5.6"), OIDSpec("7.8.9")]),
+    BackendSNMPTree(base=".1.2.3", oids=[OIDCached("4.5.6"), OIDBytes("7.8.9")]),
+    BackendSNMPTree(base=".1.2.3", oids=[OIDSpec("4.5.6"), SpecialColumn.END]),
+    BackendSNMPTree(base=".1.2.3", oids=[OIDBytes("4.5.6"), SpecialColumn.END]),
 ])
 def test_serialize_snmptree(tree):
     assert tree.from_json(json.loads(json.dumps(tree.to_json()))) == tree

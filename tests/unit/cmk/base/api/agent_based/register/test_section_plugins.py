@@ -12,16 +12,16 @@ import pytest  # type: ignore[import]
 
 from cmk.utils.type_defs import ParsedSectionName, SectionName
 
-from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree
-
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
 from cmk.base.api.agent_based.type_defs import (
     AgentSectionPlugin,
     OIDEnd,
     SNMPSectionPlugin,
+    SNMPTree,
     StringTable,
     StringByteTable,
 )
+from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification
 
 
 def _generator_function():
@@ -122,7 +122,7 @@ def test_create_snmp_section_plugin():
         ),
     ]
 
-    detect = SNMPDetectSpec([
+    detect = SNMPDetectSpecification([
         [('.1.2.3.4.5', 'Foo.*', True)],
     ])
 
@@ -155,7 +155,7 @@ def test_create_snmp_section_plugin_single_tree():
         parse_function=lambda string_table: string_table,
         # just one, no list:
         fetch=single_tree,
-        detect_spec=SNMPDetectSpec([[('.1.2.3.4.5', 'Foo.*', True)]]),
+        detect_spec=SNMPDetectSpecification([[('.1.2.3.4.5', 'Foo.*', True)]]),
     )
 
     assert plugin.trees == [single_tree]

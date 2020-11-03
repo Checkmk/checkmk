@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import collections
 import enum
 import json
 import logging
@@ -20,6 +19,7 @@ from typing import (
     List,
     NamedTuple,
     Optional,
+    Sequence,
     Tuple,
     TypeVar,
     Union,
@@ -273,105 +273,38 @@ class OIDBytes(OIDSpec):
     pass
 
 
-# FIXME: Needed for deserialization. This is exactly what we do *not* want.
-# see SNMPTree._sanitize_oids.
-SNMPTreeInputOIDs = Iterable[Union[str, OIDSpec, int]]
+class BackendSNMPTree(NamedTuple):
+    """The 'working class' pentant to the check APIs 'SNMPTree'
 
-
-class SNMPTree:
-    """Specify an OID table to fetch
-
-    For every SNMPTree that is specified, the parse function will
-    be handed a list of lists with the values of the corresponding
-    OIDs.
+    It mainly features (de)serialization. Validation is done during
+    section registration, so we can assume sane values here.
     """
-    def __init__(
-        self,
-        *,
-        base: Union[OIDSpec, str],
-        oids: SNMPTreeInputOIDs,
-    ) -> None:
-        super(SNMPTree, self).__init__()
-        self._base = self._sanitize_base(base)
-        self._oids = self._sanitize_oids(oids)
+    base: str
+    oids: Sequence[Union[OIDSpec, SpecialColumn]]
+
+    @classmethod
+    def from_frontend(cls, *, base: str, oids: Iterable[Union[str, OIDSpec,
+                                                              int]]) -> 'BackendSNMPTree':
+        return cls(
+            base=base,
+            oids=[
+                oid if isinstance(oid, OIDSpec) else
+                (SpecialColumn(oid) if isinstance(oid, int) else OIDSpec(oid)) for oid in oids
+            ],
+        )
 
     def to_json(self) -> Dict[str, Any]:
         return {
-            "base": SNMPTree._serialize_oid(self.base),
-            "oids": [SNMPTree._serialize_oid(oid) for oid in self.oids],
+            "base": self.base,
+            "oids": [BackendSNMPTree._serialize_oid(oid) for oid in self.oids],
         }
 
     @classmethod
-    def from_json(cls, serialized: Dict[str, Any]) -> "SNMPTree":
+    def from_json(cls, serialized: Dict[str, Any]) -> "BackendSNMPTree":
         return cls(
-            base=SNMPTree._deserialize_base(*serialized["base"]),
-            oids=[SNMPTree._deserialize_oid(*oid) for oid in serialized["oids"]],
+            base=serialized["base"],
+            oids=[BackendSNMPTree._deserialize_oid(*oid) for oid in serialized["oids"]],
         )
-
-    @staticmethod
-    def _sanitize_base(base: Union[OIDSpec, str]) -> OIDSpec:
-        oid_base = OIDSpec(base)
-        if not str(oid_base).startswith('.'):
-            raise ValueError("%r must start with '.'" % (oid_base,))
-        return oid_base
-
-    @staticmethod
-    def _sanitize_single_oid(oid: Union[int, str, OIDSpec]) -> Union[OIDSpec, SpecialColumn]:
-        if isinstance(oid, OIDSpec):
-            return oid
-        if isinstance(oid, int):
-            return SpecialColumn(oid)
-        return OIDSpec(oid)
-
-    def _sanitize_oids(self, oids: SNMPTreeInputOIDs) -> List[Union[OIDSpec, SpecialColumn]]:
-        """Sanitize OIDs
-
-        Note that in fact, this function can deal with, and may return integers.
-        The old check_api not only allowed zero to be passed (which currently is the
-        same as OIDEnd()), but also three more special values, represented by the integers
-        -1 to -4. For the time being, we allow those.
-
-        However, we deliberately do not allow them in the type annotation of the __init__
-        method.
-        """
-
-        # This check is stricter than the typization of oids. We do not want oids to be a str,
-        # however, unfortunately, str == Iterable[str], so it is currently not possible to exclude
-        # str by typization. Therefore, for now, we simply keep the check if oids is a list.
-        if not isinstance(oids, list):
-            raise TypeError("oids must be a list")
-
-        # We curently still handle the _LEGACY_SPECIAL_OIDS, for legacy check plugins.
-        # Typing should prevent us from adding new cases (and those are not part of the
-        # new API).
-        typed_oids: List[Union[OIDSpec, SpecialColumn]] = [  #
-            self._sanitize_single_oid(oid) for oid in oids
-        ]
-
-        # remaining validations only regard true OIDSpec objects
-        oid_specs = [o for o in typed_oids if isinstance(o, OIDSpec)]
-        if len(oid_specs) < 2:
-            return typed_oids
-
-        for oid in oid_specs:
-            if str(oid).startswith('.'):
-                raise ValueError("column %r must not start with '.'" % (oid,))
-
-        # make sure the base is as long as possible
-        heads_counter = collections.Counter(str(oid).split('.', 1)[0] for oid in oid_specs)
-        head, count = max(heads_counter.items(), key=lambda x: x[1])
-        if count == len(oid_specs) and all(str(o) != head for o in oid_specs):
-            raise ValueError("base can be extended by '.%s'" % head)
-
-        return typed_oids
-
-    @property
-    def base(self) -> OIDSpec:
-        return self._base
-
-    @property
-    def oids(self) -> List[Union[OIDSpec, SpecialColumn]]:
-        return self._oids
 
     @staticmethod
     def _serialize_oid(oid: Union[OIDSpec, SpecialColumn]) -> Tuple[str, Union[str, int]]:
@@ -380,18 +313,6 @@ class SNMPTree:
         if isinstance(oid, SpecialColumn):
             return "SpecialColumn", oid.value
         raise TypeError(oid)
-
-    @staticmethod
-    def _deserialize_base(type_: str, value: str) -> OIDSpec:
-        # Note: base *cannot* be OIDEnd.
-        try:
-            return {
-                "OIDSpec": OIDSpec,
-                "OIDBytes": OIDBytes,
-                "OIDCached": OIDCached,
-            }[type_](value)
-        except LookupError as exc:
-            raise TypeError(type_) from exc
 
     @staticmethod
     def _deserialize_oid(type_: str, value: Union[str, int]) -> Union[OIDSpec, SpecialColumn]:
@@ -404,11 +325,3 @@ class SNMPTree:
             }[type_](value)
         except LookupError as exc:
             raise TypeError(type_) from exc
-
-    def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, self.__class__):
-            return False
-        return self.__dict__ == other.__dict__
-
-    def __repr__(self) -> str:
-        return "%s(base=%r, oids=%r)" % (self.__class__.__name__, self.base, self.oids)

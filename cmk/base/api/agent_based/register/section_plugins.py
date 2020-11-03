@@ -14,7 +14,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import ParsedSectionName, SectionName, SNMPDetectBaseType
 
-from cmk.snmplib.type_defs import OIDBytes, OIDSpec, SNMPTree  # pylint: disable=cmk-module-layer-violation
+from cmk.snmplib.type_defs import OIDBytes, OIDSpec  # pylint: disable=cmk-module-layer-violation
 
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
@@ -24,6 +24,7 @@ from cmk.base.api.agent_based.type_defs import (
     SimpleSNMPParseFunction,
     SNMPParseFunction,
     SNMPSectionPlugin,
+    SNMPTree,
     StringByteTable,
     StringTable,
 )
@@ -140,7 +141,8 @@ def _validate_type_list_snmp_trees(trees: List[SNMPTree]) -> None:
 
 def _validate_fetch_spec(trees: List[SNMPTree]) -> None:
     _validate_type_list_snmp_trees(trees)
-    # TODO: move validation of the elements of every tree here.
+    for tree in trees:
+        tree.validate()
 
 
 def _noop_host_label_function(section: Any) -> Generator[HostLabel, None, None]:

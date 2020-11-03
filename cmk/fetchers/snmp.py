@@ -27,7 +27,7 @@ from cmk.snmplib.type_defs import (
     SNMPDetectSpec,
     SNMPHostConfig,
     SNMPRawData,
-    SNMPTree,
+    BackendSNMPTree,
 )
 
 from . import factory
@@ -38,14 +38,14 @@ __all__ = ["SNMPFetcher", "SNMPFileCache", "SNMPPluginStore", "SNMPPluginStoreIt
 
 
 class SNMPPluginStoreItem(NamedTuple):
-    trees: Sequence[SNMPTree]
+    trees: Sequence[BackendSNMPTree]
     detect_spec: SNMPDetectSpec
 
     @classmethod
     def deserialize(cls, serialized: Dict[str, Any]) -> "SNMPPluginStoreItem":
         try:
             return cls(
-                [SNMPTree.from_json(tree) for tree in serialized["trees"]],
+                [BackendSNMPTree.from_json(tree) for tree in serialized["trees"]],
                 SNMPDetectSpec.from_json(serialized["detect_spec"]),
             )
         except (LookupError, TypeError, ValueError) as exc:

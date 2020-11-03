@@ -7,7 +7,6 @@
 """
 from typing import Any, Callable, Dict, List, Optional, overload, Union
 
-from cmk.snmplib.type_defs import SNMPTree  # pylint: disable=cmk-module-layer-violation
 from cmk.base.api.agent_based.inventory_classes import InventoryFunction
 from cmk.base.api.agent_based.checking_classes import (
     CheckFunction,
@@ -20,6 +19,7 @@ from cmk.base.api.agent_based.type_defs import (
     HostLabelFunction,
     SimpleSNMPParseFunction,
     SNMPParseFunction,
+    SNMPTree,
 )
 
 from cmk.base.api.agent_based.register.utils import get_validated_plugin_module_name

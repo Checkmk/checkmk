@@ -9,11 +9,10 @@
 import pytest  # type: ignore[import]
 
 from cmk.utils.type_defs import ParsedSectionName, SectionName
-from cmk.snmplib.type_defs import SNMPTree
 
 import cmk.base.api.agent_based.register.section_plugins_legacy as section_plugins_legacy
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
-from cmk.base.api.agent_based.type_defs import StringTable
+from cmk.base.api.agent_based.type_defs import SNMPTree, StringTable
 from cmk.base.check_api_utils import Service
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 

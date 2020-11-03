@@ -16,6 +16,7 @@ from typing import (
     MutableMapping,
     NamedTuple,
     Optional,
+    Sequence,
     Set,
     Union,
 )
@@ -26,7 +27,7 @@ from cmk.utils.type_defs import (
     SectionName,
     SNMPDetectBaseType,
 )
-from cmk.snmplib.type_defs import SNMPTree  # pylint: disable=cmk-module-layer-violation
+from cmk.snmplib.type_defs import OIDSpec  # pylint: disable=cmk-module-layer-violation
 
 
 class PluginSuppliedLabel(NamedTuple("_LabelTuple", [("name", str), ("value", str)])):
@@ -92,6 +93,81 @@ class Parameters(Mapping):
     def __repr__(self):
         # use pformat to be testable.
         return "%s(%s)" % (self.__class__.__name__, pprint.pformat(self._data))
+
+
+class SNMPTree(NamedTuple):
+    """Specify an OID table to fetch
+
+    For every SNMPTree that is specified, the parse function will
+    be handed a list of lists with the values of the corresponding
+    OIDs.
+
+    Args:
+        base: The OID base string, starting with a dot.
+        oids: A list of OID specifications.
+
+    Example:
+
+        >>> _ = SNMPTree(
+        ...     base=".1.2.3.4.5.6",
+        ...     oids=[
+        ...         OIDEnd(),  # get the end oids of every entry
+        ...         "7.8",  # just a regular entry
+        ...     ],
+        ... )
+    """
+    base: str
+    oids: Sequence[Union[str, OIDSpec, OIDEnd]]
+
+    def validate(self) -> None:
+        self._validate_base(self.base)
+        self._validate_oids(self.oids)
+
+    @staticmethod
+    def _validate_common_oid_properties(raw: str) -> None:
+        _ = OIDSpec(raw)  # TODO: move validation here
+
+    def _validate_base(self, base: str) -> None:
+        self._validate_common_oid_properties(base)
+        if not base.startswith('.'):
+            raise ValueError(f"{base!r} must start with '.'")
+
+    def _validate_oids(self, oid_list: Sequence[Union[str, OIDSpec, OIDEnd]]) -> None:
+        """Validate OIDs
+
+        Note that in fact, this function can deal with, and may return integers.
+        The old check_api not only allowed zero to be passed (which currently is the
+        same as OIDEnd()), but also three more special values, represented by the integers
+        -1 to -4. For the time being, we allow those.
+
+        However, we deliberately do not allow them in the type annotations.
+        """
+
+        if not isinstance(oid_list, list):
+            raise TypeError(f"'oids' argument to SNMPTree must be a list, got {type(oid_list)}")
+
+        # collect beginnings of OIDs to ensure base is as long as possible:
+        heads: List[str] = []
+
+        for oid in oid_list:
+            if isinstance(oid, OIDEnd):
+                continue
+            if oid in (0, -1, -2, -3, -4):  # alowed for legacy checks. Remove some day (tm).
+                continue
+
+            # creating the object currently does most of the validation
+            if not isinstance(oid, OIDSpec):
+                self._validate_common_oid_properties(oid)
+
+            raw_oid = str(oid)
+            if raw_oid.startswith('.'):
+                raise ValueError(f"column {oid!r} must not start with '.'")
+
+            heads.append(raw_oid.split('.', 1)[0])
+
+        # make sure the base is as long as possible
+        if len(heads) > 1 and len(set(heads)) == 1:
+            raise ValueError("base can be extended by '.%s'" % heads[0])
 
 
 StringTable = List[List[str]]

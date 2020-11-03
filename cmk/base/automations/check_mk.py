@@ -40,7 +40,7 @@ from cmk.utils.type_defs import (
 
 import cmk.snmplib.snmp_modes as snmp_modes
 import cmk.snmplib.snmp_table as snmp_table
-from cmk.snmplib.type_defs import SNMPCredentials, SNMPHostConfig, SNMPTree
+from cmk.snmplib.type_defs import SNMPCredentials, SNMPHostConfig, BackendSNMPTree, OIDSpec
 
 from cmk.fetchers import factory
 
@@ -1298,7 +1298,7 @@ class AutomationDiagHost(Automation):
 
         data = snmp_table.get_snmp_table_cached(
             None,
-            SNMPTree(base='.1.3.6.1.2.1.1', oids=['1.0', '4.0', '5.0', '6.0']),
+            BackendSNMPTree(base='.1.3.6.1.2.1.1', oids=[OIDSpec(c) for c in '1456']),
             backend=factory.backend(snmp_config, log.logger),
         )
 

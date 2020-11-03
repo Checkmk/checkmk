@@ -20,6 +20,9 @@ from cmk.base.discovered_labels import (
     ServiceLabel,
 )
 
+from cmk.base.discovery import _perform_host_label_discovery, DiscoveryParameters
+import cmk.base.config as config
+
 
 @pytest.fixture(name="labels", params=["host", "service"])
 def labels_fixture(request):
@@ -246,3 +249,55 @@ def test_label_validation(cls):
 
     with pytest.raises(MKGeneralException, match="Invalid label value"):
         cls(u"äbc", b"\xc3\xbcbc")
+
+
+@pytest.mark.parametrize(["existing_labels", "new_labels", "expected_labels", "load_labels"], [
+    [
+        [("foo", "1.5")],
+        [("foo", "1.6")],
+        [("foo", "1.6")],
+        False,
+    ],
+    [
+        [("foo", "1.5")],
+        [("foo", "1.6"), ("foo", "1.7")],
+        [("foo", "1.7")],
+        False,
+    ],
+    [
+        [("foo", "1.5"), ("bar", "2.0"), ("dung", "3.0")],
+        [("foo", "1.6"), ("bar", "2.0")],
+        [("foo", "1.6"), ("bar", "2.0")],
+        False,
+    ],
+    [
+        [("foo", "1.5"), ("bar", "1.5")],
+        [("foo", "1.6")],
+        [("foo", "1.6"), ("bar", "1.5")],
+        True,
+    ],
+    [
+        [("foo", "1.5"), ("bar", "1.5")],
+        [("foo", "1.6"), ("batz", "3.0")],
+        [("foo", "1.6"), ("batz", "3.0"), ("bar", "1.5")],
+        True,
+    ],
+])
+def test_perform_host_label_discovery(discovered_host_labels_dir, existing_labels, new_labels,
+                                      expected_labels, load_labels):
+    hostname = "testhost"
+    config.get_config_cache().initialize()
+    store = DiscoveredHostLabelsStore(hostname)
+    store.save(DiscoveredHostLabels(*[HostLabel(*x) for x in existing_labels]).to_dict())
+
+    discovery_parameters = DiscoveryParameters(
+        on_error="raise",
+        load_labels=load_labels,
+        save_labels=False,
+    )
+
+    new_host_labels, _host_labels_per_plugin = _perform_host_label_discovery(
+        hostname, DiscoveredHostLabels(*[HostLabel(*x) for x in new_labels]), discovery_parameters)
+
+    labels_expected = DiscoveredHostLabels(*[HostLabel(*x) for x in expected_labels])
+    assert new_host_labels.to_dict() == labels_expected.to_dict()

@@ -1169,12 +1169,14 @@ class MenuSearchResultsRenderer:
                 html.open_div(id_=topic, class_="topic")
                 self._render_topic(topic)
                 html.open_ul()
-                for result in list(search_results)[:self._max_num_displayed_results]:
-                    self._render_result(result)
+                for count, result in enumerate(list(search_results)):
+                    self._render_result(result, hidden=count >= self._max_num_displayed_results)
                 # TODO: Remove this as soon as the index search does limit its search results
                 if len(list(search_results)) >= self._max_num_displayed_results:
-                    html.div(
-                        content=_(f"Showing only first {self._max_num_displayed_results} results."))
+                    html.input(name="show_all_results",
+                               value=_("Show all results"),
+                               type_="button",
+                               onclick=f"cmk.search.on_click_show_all_results('{topic}');")
                 html.close_ul()
                 html.close_div()
             html.div(None, class_=["topic", "sentinel"])
@@ -1189,9 +1191,12 @@ class MenuSearchResultsRenderer:
         html.span(topic)
         html.close_h2()
 
-    def _render_result(self, result):
+    def _render_result(self, result, hidden=False):
         html.open_li()
-        html.open_a(href=result.url, target="main", onclick="cmk.popup_menu.close_popup()")
+        html.open_a(href=result.url,
+                    target="main",
+                    onclick="cmk.popup_menu.close_popup()",
+                    class_="hidden" if hidden else "")
         html.write_text(result.title)
         html.close_a()
         html.close_li()

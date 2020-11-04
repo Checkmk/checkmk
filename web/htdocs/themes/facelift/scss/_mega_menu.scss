@@ -206,6 +206,19 @@
           border-right: 1px solid $headline-color;
           box-sizing: border-box;
 
+          input[type="button"] {
+            cursor: pointer;
+
+            &:hover {
+              color: $success;
+              text-decoration: none;
+            }
+
+            &.hidden {
+              display: none;
+            }
+          }
+
           h2 {
             padding-bottom: 4px;
             margin: 0;
@@ -260,6 +273,10 @@
 
             a.active {
               color: $success;
+            }
+
+            a.hidden {
+              display: none;
             }
 
             img.icon {

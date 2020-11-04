@@ -107,6 +107,15 @@ export function on_input_search(id) {
     }
 }
 
+export function on_click_show_all_results(topic) {
+    let topic_results = document.getElementById(topic).getElementsByTagName("li");
+    add_class(window.event.target, "hidden");
+    topic_results.forEach(li => {
+        let link = li.getElementsByTagName("a")[0];
+        link.className == "hidden" && remove_class(link, "hidden");
+    });
+}
+
 function get_current_search(id) {
     let current_search = null;
 

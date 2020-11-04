@@ -2100,3 +2100,45 @@ class TestPackedConfigStore:
         assert store.read() == {
             "abc": 1,
         }
+
+
+@pytest.mark.parametrize("params, expected_result", [
+    (
+        None,
+        False,
+    ),
+    (
+        {},
+        False,
+    ),
+    (
+        {
+            'x': 'y'
+        },
+        False,
+    ),
+    (
+        [1, (2, 3)],
+        False,
+    ),
+    (
+        4,
+        False,
+    ),
+    (
+        {
+            'tp_default_value': 1,
+            'tp_values': [('24X7', 2)]
+        },
+        True,
+    ),
+    (
+        ['abc', {
+            'tp_default_value': 1,
+            'tp_values': [('24X7', 2)]
+        }],
+        True,
+    ),
+])
+def test_has_timespecific_params(params, expected_result):
+    assert config.has_timespecific_params(params) is expected_result

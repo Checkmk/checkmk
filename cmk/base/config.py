@@ -2195,9 +2195,12 @@ def has_timespecific_params(entries: Any) -> bool:
         return False
     if isinstance(entries, dict) and "tp_default_value" in entries:
         return True
-    for entry in entries:
-        if isinstance(entry, dict) and "tp_default_value" in entry:
-            return True
+    try:
+        for entry in entries:
+            if isinstance(entry, dict) and "tp_default_value" in entry:
+                return True
+    except TypeError:
+        return False
     return False
 
 

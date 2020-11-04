@@ -57,6 +57,21 @@ class HostLabel(PluginSuppliedLabel):
     """
 
 
+# We must make sure that `SpecialColumn(OIDEnd()) == SpecialColumn.END`
+class OIDEnd(int):
+    """OID specification to get the end of the OID string
+
+    When specifying an OID in an SNMPTree object, the parse function
+    will be handed the corresponding value of that OID. If you use OIDEnd()
+    instead, the parse function will be given the tailing portion of the
+    OID (the part that you not already know).
+    """
+
+    # NOTE: The default constructor already does the right thing for our "glorified 0".
+    def __repr__(self):
+        return "OIDEnd()"
+
+
 class Parameters(Mapping):
     """Parameter objects are used to pass parameters to plugin functions"""
     def __init__(self, data):

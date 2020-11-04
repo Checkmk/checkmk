@@ -14,7 +14,6 @@ import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.type_defs import (
     ABCSNMPBackend,
     OIDBytes,
-    OIDEnd,
     SNMPHostConfig,
     SNMPTree,
     SNMPBackend,
@@ -59,7 +58,7 @@ def test_value_encoding(column):
         SNMPTree(
             base='.1.3.6.1.4.1.13595.2.2.3.1',
             oids=[
-                OIDEnd(),
+                SpecialColumn.END,
                 OIDBytes("16"),
             ],
         ),

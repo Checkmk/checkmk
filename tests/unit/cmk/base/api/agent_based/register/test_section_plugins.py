@@ -12,11 +12,12 @@ import pytest  # type: ignore[import]
 
 from cmk.utils.type_defs import ParsedSectionName, SectionName
 
-from cmk.snmplib.type_defs import OIDEnd, SNMPDetectSpec, SNMPTree
+from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree
 
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
 from cmk.base.api.agent_based.type_defs import (
     AgentSectionPlugin,
+    OIDEnd,
     SNMPSectionPlugin,
     StringTable,
     StringByteTable,

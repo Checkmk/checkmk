@@ -7,8 +7,9 @@
 import pytest  # type: ignore[import]
 
 from cmk.base.check_api import OID_END, OID_STRING
-from cmk.snmplib.type_defs import OIDEnd, SNMPTree, SpecialColumn
+from cmk.snmplib.type_defs import SNMPTree, SpecialColumn
 
+from cmk.base.api.agent_based.type_defs import OIDEnd
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
     _create_layout_recover_function,
     _create_snmp_trees_from_tuple,

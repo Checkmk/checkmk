@@ -273,24 +273,6 @@ class OIDBytes(OIDSpec):
     pass
 
 
-# We inherit from int because we must be compatible with the
-# old APIs OID_END, OID_STRING and so on (in particular OID_END = 0).
-# We must make sure that `OIDEnd() == SpecialColumn.END.value`
-# TODO: move this to the API
-class OIDEnd(int):
-    """OID specification to get the end of the OID string
-
-    When specifying an OID in an SNMPTree object, the parse function
-    will be handed the corresponding value of that OID. If you use OIDEnd()
-    instead, the parse function will be given the tailing portion of the
-    OID (the part that you not already know).
-    """
-
-    # NOTE: The default constructor already does the right thing for our "glorified 0".
-    def __repr__(self):
-        return "OIDEnd()"
-
-
 # FIXME: Needed for deserialization. This is exactly what we do *not* want.
 # see SNMPTree._sanitize_oids.
 SNMPTreeInputOIDs = Iterable[Union[str, OIDSpec, int]]

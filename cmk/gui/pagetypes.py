@@ -1275,24 +1275,26 @@ class Overridable(Base):
             page_dict["owner"] = owner
             new_page = cls(page_dict)
 
-            cls.add_page(new_page)
-            cls.save_user_instances(owner)
-            if mode == "create":
-                redirect_url = new_page.after_create_url() or back_url
-            else:
-                redirect_url = back_url
+            if not html.has_user_errors():
+                cls.add_page(new_page)
+                cls.save_user_instances(owner)
+                if mode == "create":
+                    redirect_url = new_page.after_create_url() or back_url
+                else:
+                    redirect_url = back_url
 
-            html.immediate_browser_redirect(0.5, redirect_url)
-            html.show_message(_('Your changes haven been saved.'))
-            # Reload sidebar.TODO: This code logically belongs to PageRenderer. How
-            # can we simply move it there?
-            # TODO: This is not true for all cases. e.g. the BookmarkList is not
-            # of type PageRenderer but has a dedicated sidebar snapin. Maybe
-            # the best option would be to make a dedicated method to decide whether
-            # or not to reload the sidebar.
-            if (not page_dict.get("hidden") or
-                    new_page_dict.get("hidden") != page_dict.get("hidden")):
-                html.reload_sidebar()
+                html.show_message(_('Your changes haven been saved.'))
+                html.immediate_browser_redirect(0.5, redirect_url)
+
+                # Reload sidebar.TODO: This code logically belongs to PageRenderer. How
+                # can we simply move it there?
+                # TODO: This is not true for all cases. e.g. the BookmarkList is not
+                # of type PageRenderer but has a dedicated sidebar snapin. Maybe
+                # the best option would be to make a dedicated method to decide whether
+                # or not to reload the sidebar.
+                if (not page_dict.get("hidden") or
+                        new_page_dict.get("hidden") != page_dict.get("hidden")):
+                    html.reload_sidebar()
 
         else:
             html.show_localization_hint()

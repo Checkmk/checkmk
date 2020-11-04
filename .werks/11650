@@ -1,0 +1,14 @@
+Title: Fix validation of input fields on different pages
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1604476907
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+On some pages in the mega menu "Customize", it was possible to enter invalid
+values in input fields like "Unique ID" or "Title".
+
+This pages now handle the validation correctly.

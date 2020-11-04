@@ -1,0 +1,21 @@
+title: Vutlan EMS: Humidity
+agents: snmp
+catalog: hw/environment/tinkerforge
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the humidity sensors of Vutlan EMS devices
+ which support vutlan.mib.
+
+ The check returns a WARN or CRIT state if the readings are at or fall below
+ the configurable levels. By default, upper limits are set to 60% and 70% for
+ WARN and CRIT states, and lower limits are set to 30% and 15% for WARN and
+ CRIT states.
+
+ The corresponding ruleset is the "Humidity Levels" ruleset.
+
+item:
+ The name of the humidity sensor.
+
+inventory:
+ One service is created for each humdity sensor.

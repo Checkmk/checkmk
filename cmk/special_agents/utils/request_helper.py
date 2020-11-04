@@ -10,6 +10,7 @@ from typing import (
     Any,
     Dict,
     Union,
+    TypedDict,
 )
 import abc
 import os
@@ -23,6 +24,22 @@ from urllib.request import build_opener, HTTPSHandler, Request
 from requests import Session
 
 StringMap = Dict[str, str]  # should be Mapping[] but we're not ready yet..
+
+
+class TokenDict(TypedDict):
+    access_token: str
+    refresh_token: str
+    expires_in: float
+    expires_in_abs: Optional[str]
+
+
+def to_token_dict(data: Any) -> TokenDict:
+    return {
+        "access_token": str(data["access_token"]),
+        "refresh_token": str(data["refresh_token"]),
+        "expires_in": float(data["expires_in"]),
+        "expires_in_abs": str(data["expires_in_abs"]) if "expires_in_abs" in data else None,
+    }
 
 
 class Requester(abc.ABC):

@@ -2419,8 +2419,7 @@ def _make_page_menu_entry_for_visual(visual_type: VisualType, visual: Visual,
             filename=filename,
         )
 
-    linktitle = visual.get("linktitle") or visual["title"]
-    return PageMenuEntry(title=_u(linktitle),
+    return PageMenuEntry(title=visual["title"],
                          icon_name=visual.get("icon") or "trans",
                          item=make_simple_link(uri),
                          name="cb_" + name)

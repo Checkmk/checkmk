@@ -1449,7 +1449,6 @@ multisite_builtin_views['ec_events_of_host'] = mkeventd_view({
 multisite_builtin_views['ec_event'] = mkeventd_view({
     'title': _('Event Details'),
     'description': _('Details about one event'),
-    'linktitle': 'Event Details',
     'datasource': 'mkeventd_events',
     'layout': 'dataset',
     'hidden': True,
@@ -1685,7 +1684,6 @@ multisite_builtin_views['ec_event_mobile'] = {
     'hidebutton': False,
     'icon': 'event',
     'layout': 'mobiledataset',
-    'linktitle': u'Event Details',
     'mobile': True,
     'name': 'ec_event_mobile',
     'num_columns': 1,
@@ -1807,7 +1805,6 @@ multisite_builtin_views['ec_events_mobile'] = {
     'hidebutton': False,
     'icon': 'event',
     'layout': 'mobilelist',
-    'linktitle': u'Events',
     'mobile': True,
     'name': 'ec_events_mobile',
     'num_columns': 1,

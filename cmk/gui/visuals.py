@@ -321,7 +321,7 @@ def load_visuals_of_a_user(what, builtin_visuals, skip_func, lock, path, user):
         # attributes get the attributes from their builtin visual.
         builtin_visual = builtin_visuals.get(name)
         if builtin_visual:
-            for attr in ['title', 'linktitle', 'topic', 'description']:
+            for attr in ['title', 'topic', 'description']:
                 if attr not in visual and attr in builtin_visual:
                     visual[attr] = builtin_visual[attr]
 
@@ -873,13 +873,13 @@ def page_edit_visual(what,
         ('hidden',
          FixedValue(
              True,
-             title=_('Hide this %s from the sidebar') % visual_type.title,
+             title=_('Hide this %s in the monitor menu') % visual_type.title,
              totext="",
          )),
         ('hidebutton',
          FixedValue(
              True,
-             title=_('Do not show a context button to this %s') % visual_type.title,
+             title=_('Hide this %s in dropdown menus') % visual_type.title,
              totext="",
          )),
     ]
@@ -912,9 +912,13 @@ def page_edit_visual(what,
                  size=50,
                  allow_empty=False)),
             ('title', TextUnicode(title=_('Title') + '<sup>*</sup>', size=50, allow_empty=False)),
+            ('description', TextAreaUnicode(title=_('Description') + '<sup>*</sup>',
+                                            rows=4,
+                                            cols=50)),
             ('add_context_to_title',
              Checkbox(
-                 title=_('Add context information to title'),
+                 title=_('Context information'),
+                 label=_('Add context information to title'),
                  help=_("Whether or not additional information from the page context "
                         "(filters) should be added to the title given above."),
              )),
@@ -941,16 +945,7 @@ def page_edit_visual(what,
                         "not this %s should only be shown with show more %s.") %
                  (visual_type.title, visual_type.title),
              )),
-            ('description', TextAreaUnicode(title=_('Description') + '<sup>*</sup>',
-                                            rows=4,
-                                            cols=50)),
-            ('linktitle',
-             TextUnicode(title=_('Button Text') + '<sup>*</sup>',
-                         help=_('If you define a text here, then it will be used in '
-                                'context buttons linking to the %s instead of the regular title.') %
-                         visual_type.title,
-                         size=26)),
-            ('icon', IconSelector(title=_('Button Icon'))),
+            ('icon', IconSelector(title=_('Icon'))),
             ('visibility', Dictionary(
                 title=_('Visibility'),
                 elements=visibility_elements,
@@ -971,8 +966,6 @@ def page_edit_visual(what,
             general_properties = vs_general.from_html_vars('general')
             vs_general.validate_value(general_properties, 'general')
 
-            if not general_properties['linktitle']:
-                general_properties['linktitle'] = general_properties['title']
             if not general_properties['topic']:
                 general_properties['topic'] = "other"
 
@@ -990,7 +983,6 @@ def page_edit_visual(what,
                     'sort_index',
                     'is_show_more',
                     'description',
-                    'linktitle',
                     'icon',
                     'add_context_to_title',
             ]:

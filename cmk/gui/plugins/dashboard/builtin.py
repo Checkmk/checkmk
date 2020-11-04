@@ -166,7 +166,6 @@ builtin_dashboards["main"] = {
             },
             'hidden': True,
             'layout': 'table',
-            'linktitle': 'Events',
             'mustsearch': False,
             'name': 'dashlet_4',
             'num_columns': 1,
@@ -302,7 +301,6 @@ builtin_dashboards["cmk_overview"] = {
     'context': {},
     'hidden': False,
     "mtime": 0,
-    'linktitle': u'Checkmk',
     'show_title': True,
     'dashlets': [{
         'background': True,
@@ -578,7 +576,6 @@ builtin_dashboards['cmk_host'] = {
     'mtime': 0,
     'owner': '',
     'hidden': True,
-    'linktitle': u'Checkmk',
     'show_title': True,
     'public': False,
     'single_infos': ['host'],

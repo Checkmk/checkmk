@@ -244,7 +244,7 @@ def page_index() -> None:
             topic = view_spec.get("topic")
             if topic is None:
                 topic = ""
-            this_title = '%s %s' % (view_spec.get("linktitle", view_spec["title"]), count)
+            this_title = '%s %s' % (view_spec["title"], count)
             items.append((topic, url, this_title))
 
     jqm_page_index(_("Checkmk Mobile"), items)

@@ -123,7 +123,6 @@ multisite_builtin_views.update({
         'hidden': True,
         'hide_filters': [],
         'layout': 'table',
-        'linktitle': 'Events',
         'mustsearch': False,
         'name': 'events_dash',
         'num_columns': 1,

@@ -81,6 +81,7 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):  # pylint: disable=too-many-anc
         return sorted(self._labels.values(), key=lambda x: x.name)
 
     def __add__(self, other: 'DiscoveredHostLabels') -> 'DiscoveredHostLabels':
+        """ Adding [foo:bar2] to [foo:bar1] results in [foo:bar2]. The label value is updated """
         if not isinstance(other, DiscoveredHostLabels):
             raise TypeError('%s not type DiscoveredHostLabels' % other)
         data = self.to_dict().copy()
@@ -88,6 +89,7 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):  # pylint: disable=too-many-anc
         return DiscoveredHostLabels.from_dict(data)
 
     def __sub__(self, other: 'DiscoveredHostLabels') -> 'DiscoveredHostLabels':
+        """ Removing [foo:bar2] from [foo:bar1] results in []. The label key is removed """
         if not isinstance(other, DiscoveredHostLabels):
             raise TypeError('%s not type DiscoveredHostLabels' % other)
         data = self.to_dict()

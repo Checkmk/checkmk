@@ -214,6 +214,8 @@ OID_BIN = -2  # Complete OID as binary string "\x01\x03\x06\x01..."
 OID_END_BIN = -3  # Same, but just the end part
 OID_END_OCTET_STRING = -4  # yet same, but omit first byte (assuming that is the length byte)
 
+_LEGACY_SPECIAL_OIDS = (OID_END, OID_STRING, OID_BIN, OID_END_BIN, OID_END_OCTET_STRING)
+
 
 class OIDSpec:
     """Basic class for OID spec of the form ".1.2.3.4.5" or "2.3"
@@ -271,15 +273,11 @@ class OIDBytes(OIDSpec):
     pass
 
 
-# The old API defines OID_END = 0.  Once we can drop the old API,
-# replace every occurence of this with OIDEnd.
-OIDEndCompat = int
-
-
-# We inherit from OIDEndCompat = int because we must be compatible with the
+# We inherit from int because we must be compatible with the
 # old APIs OID_END, OID_STRING and so on (in particular OID_END = 0).
-class OIDEnd(OIDEndCompat):
+class OIDEnd(int):
     """OID specification to get the end of the OID string
+
     When specifying an OID in an SNMPTree object, the parse function
     will be handed the corresponding value of that OID. If you use OIDEnd()
     instead, the parse function will be given the tailing portion of the
@@ -332,7 +330,17 @@ class SNMPTree:
         return oid_base
 
     @staticmethod
-    def _sanitize_oids(oids: SNMPTreeInputOIDs) -> List[Union[OIDSpec, OIDEndCompat]]:
+    def _sanitize_oids(oids: SNMPTreeInputOIDs) -> List[Union[OIDSpec, OIDEnd, int]]:
+        """Sanitize OIDs
+
+        Note that in fact, this function can deal with, and may return integers.
+        The old check_api not only allowed zero to be passed (which currently is the
+        same as OIDEnd()), but also three more special values, represented by the integers
+        -1 to -4. For the time being, we allow those.
+
+        However, we deliberately do not allow them in the type annotation of the __init__
+        method.
+        """
 
         # This check is stricter than the typization of oids. We do not want oids to be a str,
         # however, unfortunately, str == Iterable[str], so it is currently not possible to exclude
@@ -340,17 +348,19 @@ class SNMPTree:
         if not isinstance(oids, list):
             raise TypeError("oids must be a list")
 
-        # Remove the "int" once OIDEndCompat is not needed anymore.
-        # We must handle int, for legacy code. Typing should prevent us from
-        # adding new cases.
+        # We curently still handle the _LEGACY_SPECIAL_OIDS, for legacy check plugins.
+        # Typing should prevent us from adding new cases (and those are not part of the
+        # new API).
         typed_oids = [
-            oid if isinstance(oid, (OIDSpec, OIDEnd, int)) else OIDSpec(oid) for oid in oids
+            oid if isinstance(oid,
+                              (OIDSpec, OIDEnd)) or oid in _LEGACY_SPECIAL_OIDS else OIDSpec(oid)
+            for oid in oids
         ]
 
         # remaining validations only regard true OIDSpec objects
         oid_specs = [o for o in typed_oids if isinstance(o, OIDSpec)]
         if len(oid_specs) < 2:
-            return typed_oids  # type: ignore[return-value] # allow for legacy code
+            return typed_oids
 
         for oid in oid_specs:
             if str(oid).startswith('.'):
@@ -362,22 +372,24 @@ class SNMPTree:
         if count == len(oid_specs) and all(str(o) != head for o in oid_specs):
             raise ValueError("base can be extended by '.%s'" % head)
 
-        return typed_oids  # type: ignore[return-value] # allow for legacy code
+        return typed_oids
 
     @property
     def base(self) -> OIDSpec:
         return self._base
 
     @property
-    def oids(self) -> List[Union[OIDSpec, OIDEndCompat]]:
+    def oids(self) -> List[Union[OIDSpec, int]]:
         return self._oids
 
     @staticmethod
-    def _serialize_oid(oid: Union[OIDSpec, OIDEndCompat]) -> Tuple[str, Union[str, int]]:
+    def _serialize_oid(oid: Union[OIDSpec, int]) -> Tuple[str, Union[str, int]]:
         if isinstance(oid, OIDSpec):
             return type(oid).__name__, str(oid)
-        if isinstance(oid, OIDEndCompat):
+        if isinstance(oid, OIDEnd):
             return "OIDEnd", 0
+        if isinstance(oid, int):
+            return "int", oid
         raise TypeError(oid)
 
     @staticmethod
@@ -399,7 +411,8 @@ class SNMPTree:
                 "OIDSpec": OIDSpec,
                 "OIDBytes": OIDBytes,
                 "OIDCached": OIDCached,
-                "OIDEnd": OIDEndCompat,
+                "OIDEnd": OIDEnd,
+                "int": int,
             }[type_](value)
         except LookupError as exc:
             raise TypeError(type_) from exc

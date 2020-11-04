@@ -44,8 +44,7 @@ class TestSNMPDetectSpec:
     [
         ('1.2', ['1', '2']),  # base no leading dot
         ('.1.2', '12'),  # oids not a list
-        # TODO: this should fail once OIDEndCompat is not needed anymore
-        # ('.1.2', ['1', 2]),  # int in list
+        ('.1.2', ['1', 2]),  # int in list
         ('.1.2', ['42.1', '42.2']),  # 42 should be in base
     ])
 def test_snmptree_valid(base, oids):
@@ -68,12 +67,15 @@ def test_snmptree(base, oids):
         assert isinstance(oid, (OIDSpec, OIDEnd))
 
 
-@pytest.mark.parametrize("tree", [
-    SNMPTree(base=".1.2.3", oids=["4.5.6", "7.8.9"]),
-    SNMPTree(base=".1.2.3", oids=[OIDSpec("4.5.6"), OIDSpec("7.8.9")]),
-    SNMPTree(base=".1.2.3", oids=[OIDCached("4.5.6"), OIDBytes("7.8.9")]),
-    SNMPTree(base=".1.2.3", oids=[OIDSpec("4.5.6"), OIDEnd()]),
-    SNMPTree(base=OIDSpec(".1.2.3"), oids=[OIDBytes("4.5.6"), OIDEnd()]),
-])
+@pytest.mark.parametrize(
+    "tree",
+    [
+        SNMPTree(base=".1.2.3", oids=["4.5.6", "7.8.9"]),
+        SNMPTree(base=".1.2.3", oids=[OIDSpec("4.5.6"), OIDSpec("7.8.9")]),
+        SNMPTree(base=".1.2.3", oids=[OIDCached("4.5.6"), OIDBytes("7.8.9")]),
+        SNMPTree(base=".1.2.3", oids=[OIDSpec("4.5.6"), OIDEnd()]),
+        SNMPTree(base=OIDSpec(".1.2.3"), oids=[OIDBytes("4.5.6"), OIDEnd()]),
+        SNMPTree(base=".1.2.3", oids=[-3]),  # type: ignore[list-item]  # legacy OID_END_BIN
+    ])
 def test_serialize_snmptree(tree):
     assert tree.from_json(json.loads(json.dumps(tree.to_json()))) == tree

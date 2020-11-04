@@ -41,8 +41,8 @@ def _parameter_valuespec_hw_fans():
                     help=_("Upper levels for the fan speed of a hardware device"),
                     title=_("Upper levels"),
                     elements=[
-                        Integer(title=_("warning at"), unit=u"rpm", default_value=8000),
-                        Integer(title=_("critical at"), unit=u"rpm", default_value=8400),
+                        Integer(title=_("warning at"), unit=u"rpm"),
+                        Integer(title=_("critical at"), unit=u"rpm"),
                     ],
                 ),
             ),

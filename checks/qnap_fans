@@ -6,8 +6,8 @@
 
 from cmk.base.check_legacy_includes.fan import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings["qnap_fan_default_levels"] = {
-    "upper": (6000, 6500),
-    "lower": (None, None),
+    "upper": (None, None),
+    "lower": (2000, 1000),
 }
 
 

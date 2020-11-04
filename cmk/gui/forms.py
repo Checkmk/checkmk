@@ -111,6 +111,10 @@ def header(title: str,
     if g_header_open:
         end()
 
+    id_ = ensure_str(base64.b64encode(ensure_binary(title)))
+    treename = html.form_name or "nform"
+    isopen = html.foldable_container_is_open(treename, id_, isopen)
+
     html.open_table(id_=table_id if table_id else None,
                     class_=[
                         "nform",
@@ -121,8 +125,8 @@ def header(title: str,
                     ])
 
     _begin_foldable_nform_container(
-        treename=html.form_name if html.form_name else "nform",
-        id_=ensure_str(base64.b64encode(ensure_binary(title))),
+        treename=treename,
+        id_=id_,
         isopen=isopen,
         title=title,
         show_more_toggle=show_more_toggle,

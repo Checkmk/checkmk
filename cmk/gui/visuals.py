@@ -705,12 +705,22 @@ def get_context_specs(visual, info_handler):
     single_info_keys = [key for key in info_keys if key in visual['single_infos']]
     multi_info_keys = [key for key in info_keys if key not in single_info_keys]
 
+    def host_service_lead(val):
+        # Sort is stable in python, thus only prioritize host>service>rest
+        if val[0] == "host":
+            return 0
+        if val[0] == "service":
+            return 1
+        return 2
+
     # single infos first, the rest afterwards
-    return [(info_key, visual_spec_single(info_key))
-            for info_key in single_info_keys] + \
-           [(info_key, visual_spec_multi(info_key, single_info_keys))
-            for info_key in multi_info_keys
-            if visual_spec_multi(info_key, single_info_keys)]
+    context_specs = [(info_key, visual_spec_single(info_key))
+                     for info_key in single_info_keys] + \
+                    [(info_key, visual_spec_multi(info_key, single_info_keys))
+                     for info_key in multi_info_keys
+                     if visual_spec_multi(info_key, single_info_keys)]
+
+    return sorted(context_specs, key=host_service_lead)
 
 
 def visual_spec_single(info_key):

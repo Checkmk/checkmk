@@ -1123,17 +1123,17 @@ def _perform_host_label_discovery(
     else:
         return_host_labels = DiscoveredHostLabels()
 
+    new_host_labels = discovered_host_labels - return_host_labels
+
     new_host_labels_per_plugin: Counter[str] = Counter()
-    for label in discovered_host_labels.values():
+    for label in new_host_labels.values():
         return_host_labels.add_label(label)
         new_host_labels_per_plugin[label.plugin_name] += 1
 
     if discovery_parameters.save_labels:
         DiscoveredHostLabelsStore(hostname).save(return_host_labels.to_dict())
 
-    old_labels_set = {x.label for x in return_host_labels.to_list()}
-    new_labels_set = {x.label for x in discovered_host_labels.to_list()}
-    if new_labels_set - old_labels_set:
+    if new_host_labels:
         # Some check plugins like 'df' may discover services based on host labels.
         # A rule may look like:
         # [{

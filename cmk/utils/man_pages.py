@@ -64,6 +64,7 @@ catalog_titles = {
             "stulz"        : "STULZ",
             "teracom"      : "Teracom",
             "tinkerforge"  : "Tinkerforge",
+            "vutlan"       : "Vutlan EMS",
             "wagner"       : "WAGNER Group",
             "wut"          : "Wiesemann & Theis",
         "time"        : "Clock Devices",

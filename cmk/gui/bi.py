@@ -2595,16 +2595,6 @@ config.aggregation_functions['running_on'] = aggr_running_on
 #                 |___/
 
 
-# Just for debugging
-@cmk.gui.pages.register("bi_debug")
-def page_debug():
-    compile_forest()
-
-    html.header("BI Debug")
-    render_forest()
-    html.footer()
-
-
 # Just for debugging, as well
 @cmk.gui.pages.register("bi")
 def page_all():

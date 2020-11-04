@@ -1,0 +1,11 @@
+Title: Readd SLES 12 SP3
+Class: feature
+Compatible: incomp
+Component: distros
+Date: 1604481392
+Edition: cre
+Knowledge: undoc
+Level: 3
+Version: 2.0.0i2
+
+Readd Support for SLES 12 SP3, which was removed prematurly.

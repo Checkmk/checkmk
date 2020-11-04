@@ -1,0 +1,11 @@
+Title: vutlan_ems_smoke: new check to monitor Vutlan EMS smoke detectors
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1604499315
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i2
+
+This is a new check to monitor smoke detectors on Vutlan EMS devices.

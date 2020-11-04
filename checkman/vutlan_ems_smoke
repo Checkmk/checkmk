@@ -1,0 +1,18 @@
+title: Vutlan EMS Smoke
+catalog: hw/environment/vutlan
+agents: snmp
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the smoke sensors on Vutlan EMS devices.
+
+ The device reports whether smoke has been detected, in which case the service
+ returns a CRIT state. Otherwise, the service remains in OK state.
+
+item:
+ The name of the smoke sensor.
+
+inventory:
+ One service is created for each sensor.
+
+

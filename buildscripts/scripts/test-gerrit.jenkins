@@ -164,7 +164,7 @@ node (NODE) {
             CONDITION: true,
             DIR: '',
             ENV_VARS: [],
-            COMMAND: "make compile-neb-cmc &> ${RESULTS}/neb-cmc-compile.txt",
+            COMMAND: "make compile-neb-cmc-docker &> ${RESULTS}/neb-cmc-compile.txt",
             TEXT_ON_SKIP: ''
          )
 

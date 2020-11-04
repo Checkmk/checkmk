@@ -73,10 +73,10 @@ LOCK_FD := 200
 LOCK_PATH := .venv.lock
 
 .PHONY: all analyze build check check-binaries check-permissions check-version \
-        clean compile-neb-cmc cppcheck dist documentation format format-c \
-        format-python format-shell format-js GTAGS headers help install \
-        iwyu mrproper mrclean optimize-images packages setup setversion tidy version \
-        am--refresh skel openapi openapi-doc
+        clean compile-neb-cmc compile-neb-cmc-docker cppcheck dist documentation \
+        format format-c format-python format-shell format-js GTAGS headers help \
+        install iwyu mrproper mrclean optimize-images packages setup setversion \
+        tidy version am--refresh skel openapi openapi-doc
 
 
 help:
@@ -500,6 +500,9 @@ compile-neb-cmc: config.status
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core -j4
 endif
+
+compile-neb-cmc-docker:
+	scripts/run-in-docker.sh make compile-neb-cmc
 
 tidy: config.h
 	$(MAKE) -C livestatus/src tidy

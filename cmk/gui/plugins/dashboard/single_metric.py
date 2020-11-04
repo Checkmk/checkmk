@@ -65,7 +65,15 @@ class SingleMetricDataGenerator(ABCDataGenerator):
                                )),
                           ])),
                  ],
-                 default_value="current"))
+                 default_value="current")),
+            ("status_border",
+             DropdownChoice(title=_("Status border"),
+                            choices=[
+                                (False, _("Do not show any service status border")),
+                                ("not_ok", _("Draw a status border when service is not OK")),
+                                ("always", _("Always draw the service status on the border")),
+                            ],
+                            default_value="not_ok")),
         ]
 
     @classmethod
@@ -100,7 +108,11 @@ class SingleMetricDataGenerator(ABCDataGenerator):
 
         def svc_map(row):
             css_classes, status_name = paint_service_state_short(row)
-            return {"style": css_classes, "msg": _("Status: ") + status_name}
+            draw_status = properties.get("status_border", "not_ok")
+            if draw_status == "not_ok" and css_classes.endswith("state0"):
+                draw_status = False
+
+            return {"style": css_classes, "msg": _("Status: ") + status_name, "draw": draw_status}
 
         # Historic values are always added as plot_type area
         if properties["time_range"] != "current":

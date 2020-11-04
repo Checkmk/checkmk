@@ -610,6 +610,10 @@ export class FigureLegend {
 
 // Figure which inherited from FigureBase. Needs access to svg and size
 export function state_component(figurebase, state) {
+    if (!state.draw) {
+        figurebase.svg.selectAll(".state_component").remove();
+        return;
+    }
     //hard fix for the moment
     var border_width = 2;
     let font_size = 16;

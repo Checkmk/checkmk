@@ -1619,7 +1619,7 @@ class VisualFilter(ValueSpec):
         # kind of a hack to make the current/old filter API work. This should
         # be cleaned up some day
         if value is not None:
-            self._filter.set_value(value)
+            self.set_value(value)
 
         # A filter can not be used twice on a page, because the varprefix is not used
         show_filter(self._filter)
@@ -1639,6 +1639,18 @@ class VisualFilter(ValueSpec):
 
     def validate_value(self, value, varprefix):
         self._filter.validate_value(value)
+
+    def set_value(self, value):
+        """Is used to populate a value, for example loaded from persistance, into
+        the HTML context where it can be used by e.g. the display() method."""
+        if isinstance(value, str):
+            html.request.set_var(self._filter.htmlvars[0], value)
+            return
+
+        for varname in self._filter.htmlvars:
+            var_value = value.get(varname)
+            if var_value is not None:
+                html.request.set_var(varname, var_value)
 
 
 def SingleInfoSelection(info_keys: List[InfoName]) -> DualListChoice:

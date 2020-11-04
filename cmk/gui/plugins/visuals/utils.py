@@ -288,14 +288,6 @@ class Filter(metaclass=abc.ABCMeta):
             val[varname] = html.request.var(varname, '')
         return val
 
-    def set_value(self, value):
-        """Is used to populate a value, for example loaded from persistance, into
-        the HTML context where it can be used by e.g. the display() method."""
-        for varname in self.htmlvars:
-            var_value = value.get(varname)
-            if var_value is not None:
-                html.request.set_var(varname, var_value)
-
 
 class FilterTristate(Filter):
     def __init__(self,

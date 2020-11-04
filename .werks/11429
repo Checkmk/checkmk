@@ -1,0 +1,12 @@
+Title: Service Discovery for clusters: no longer removes services on nodes
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1605513777
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.6.0p19
+
+A service discovery on cluster could remove the services remaining on its nodes.
+This has been fixed.

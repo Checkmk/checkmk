@@ -1,0 +1,23 @@
+title: Vutlan EMS: Temperature
+agents: snmp
+catalog: hw/environment/vutlan
+license: GPL
+distribution: check_mk
+description:
+ This check monitors different temperature sensors on Vutlan EMS devices which
+ support the vutlan.mib.
+
+ The check returns a WARN or CRIT status if the temperature exceeds or falls
+ below the configurable levels. It is also possible to perform trend
+ computations. The upper limits are 35°C and 40°C for WARN/CRIT states, and
+ the lower limits are 0°C and -1°C for WARN/CRIT states by default.
+
+ The corresponding ruleset for configuring these levels is the
+ "Temperature" ruleset.
+
+item:
+ The name of the temperature sensor.
+
+inventory:
+ One service is created for each sensor.
+

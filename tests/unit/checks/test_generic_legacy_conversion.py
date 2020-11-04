@@ -2794,6 +2794,7 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'vmstat_aix',
         'vnx_quotas',
         'vnx_version',
+        'vutlan_ems_temp',
         'vxvm_enclosures',
         'vxvm_multipath',
         'vxvm_objstatus',

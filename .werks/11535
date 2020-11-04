@@ -1,0 +1,12 @@
+Title: vutlan_ems_temp: new check to monitor Vutlan EMS temperature sensors
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1604493583
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i2
+
+This is a new check to monitor temperature levels received from temperature
+sensors of Vutlan EMS devices. This is an SNMP-based check.

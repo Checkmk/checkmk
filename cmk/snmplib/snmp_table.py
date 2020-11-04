@@ -18,11 +18,6 @@ from cmk.utils.type_defs import HostName, SectionName
 from .type_defs import (
     ABCSNMPBackend,
     OID,
-    OID_BIN,
-    OID_END,
-    OID_END_BIN,
-    OID_END_OCTET_STRING,
-    OID_STRING,
     OIDBytes,
     OIDCached,
     OIDSpec,
@@ -33,6 +28,7 @@ from .type_defs import (
     SNMPTable,
     SNMPTree,
     SNMPValueEncoding,
+    SpecialColumn,
 )
 
 ResultColumnsUnsanitized = List[Tuple[OID, SNMPRowInfo, SNMPValueEncoding]]
@@ -50,21 +46,11 @@ def get_snmp_table_cached(section_name: Optional[SectionName], oid_info: SNMPTre
     return _get_snmp_table(section_name, oid_info, True, backend=backend)
 
 
-SPECIAL_COLUMNS = [
-    OID_END,
-    OID_STRING,
-    OID_BIN,
-    OID_END_BIN,
-    OID_END_OCTET_STRING,
-]
-
-
-# TODO: OID_END_OCTET_STRING is not used at all. Drop it.
 def _get_snmp_table(section_name: Optional[SectionName], tree: SNMPTree, use_snmpwalk_cache: bool,
                     *, backend: ABCSNMPBackend) -> SNMPTable:
 
     index_column = -1
-    index_format = None
+    index_format: Optional[SpecialColumn] = None
     columns: ResultColumnsUnsanitized = []
     # Detect missing (empty columns)
     max_len = 0
@@ -80,7 +66,7 @@ def _get_snmp_table(section_name: Optional[SectionName], tree: SNMPTree, use_snm
         # in later. If the column is OID_STRING or OID_BIN we do something
         # similar: we fill in the complete OID of the entry, either as
         # string or as binary UTF-8 encoded number string
-        if column in SPECIAL_COLUMNS:
+        if isinstance(column, SpecialColumn):
             if index_column >= 0 and index_column != len(columns):
                 raise MKGeneralException(
                     "Invalid SNMP OID specification in implementation of check. "
@@ -104,7 +90,7 @@ def _get_snmp_table(section_name: Optional[SectionName], tree: SNMPTree, use_snm
         max_len = max(max_len, len(rowinfo))
         columns.append((fetchoid, rowinfo, value_encoding))
 
-    if index_column != -1:
+    if index_format is not None:
         # Take end-oids of non-index columns as indices
         fetchoid, max_column, value_encoding = columns[max_len_col]
 
@@ -115,26 +101,26 @@ def _get_snmp_table(section_name: Optional[SectionName], tree: SNMPTree, use_snm
     return _make_table(columns, backend.config)
 
 
-def _value_encoding(column: Union[OIDSpec, int]) -> SNMPValueEncoding:
+def _value_encoding(column: Union[OIDSpec, SpecialColumn]) -> SNMPValueEncoding:
     return "binary" if isinstance(column, OIDBytes) else "string"
 
 
 def _make_index_rows(
     max_column: SNMPRowInfo,
-    index_format: Optional[Union[OIDSpec, int]],
+    index_format: SpecialColumn,
     fetchoid: OID,
 ) -> SNMPRowInfo:
     index_rows = []
     for o, _unused_value in max_column:
-        if index_format == OID_END:
+        if index_format is SpecialColumn.END:
             val = ensure_binary(_extract_end_oid(fetchoid, o))
-        elif index_format == OID_STRING:
+        elif index_format is SpecialColumn.STRING:
             val = ensure_binary(o)
-        elif index_format == OID_BIN:
+        elif index_format is SpecialColumn.BIN:
             val = _oid_to_bin(o)
-        elif index_format == OID_END_BIN:
+        elif index_format is SpecialColumn.END_BIN:
             val = _oid_to_bin(_extract_end_oid(fetchoid, o))
-        elif index_format == OID_END_OCTET_STRING:
+        elif index_format is SpecialColumn.END_OCTET_STRING:
             val = _oid_to_bin(_extract_end_oid(fetchoid, o))[1:]
         else:
             raise MKGeneralException("Invalid index format %r" % (index_format,))

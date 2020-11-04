@@ -208,13 +208,13 @@ class ABCSNMPBackend(metaclass=abc.ABCMeta):
         return []
 
 
-OID_END = 0  # Suffix-part of OID that was not specified
-OID_STRING = -1  # Complete OID as string ".1.3.6.1.4.1.343...."
-OID_BIN = -2  # Complete OID as binary string "\x01\x03\x06\x01..."
-OID_END_BIN = -3  # Same, but just the end part
-OID_END_OCTET_STRING = -4  # yet same, but omit first byte (assuming that is the length byte)
-
-_LEGACY_SPECIAL_OIDS = (OID_END, OID_STRING, OID_BIN, OID_END_BIN, OID_END_OCTET_STRING)
+class SpecialColumn(enum.IntEnum):
+    # Until we remove all but the first, its worth having an enum
+    END = 0  # Suffix-part of OID that was not specified
+    STRING = -1  # Complete OID as string ".1.3.6.1.4.1.343...."
+    BIN = -2  # Complete OID as binary string "\x01\x03\x06\x01..."
+    END_BIN = -3  # Same, but just the end part
+    END_OCTET_STRING = -4  # yet same, but omit first byte (assuming that is the length byte)
 
 
 class OIDSpec:
@@ -275,6 +275,8 @@ class OIDBytes(OIDSpec):
 
 # We inherit from int because we must be compatible with the
 # old APIs OID_END, OID_STRING and so on (in particular OID_END = 0).
+# We must make sure that `OIDEnd() == SpecialColumn.END.value`
+# TODO: move this to the API
 class OIDEnd(int):
     """OID specification to get the end of the OID string
 
@@ -289,7 +291,9 @@ class OIDEnd(int):
         return "OIDEnd()"
 
 
-SNMPTreeInputOIDs = Iterable[Union[str, OIDSpec, OIDEnd]]
+# FIXME: Needed for deserialization. This is exactly what we do *not* want.
+# see SNMPTree._sanitize_oids.
+SNMPTreeInputOIDs = Iterable[Union[str, OIDSpec, int]]
 
 
 class SNMPTree:
@@ -319,7 +323,7 @@ class SNMPTree:
     def from_json(cls, serialized: Dict[str, Any]) -> "SNMPTree":
         return cls(
             base=SNMPTree._deserialize_base(*serialized["base"]),
-            oids=[SNMPTree._deserialize_oids(*oid) for oid in serialized["oids"]],
+            oids=[SNMPTree._deserialize_oid(*oid) for oid in serialized["oids"]],
         )
 
     @staticmethod
@@ -330,7 +334,14 @@ class SNMPTree:
         return oid_base
 
     @staticmethod
-    def _sanitize_oids(oids: SNMPTreeInputOIDs) -> List[Union[OIDSpec, OIDEnd, int]]:
+    def _sanitize_single_oid(oid: Union[int, str, OIDSpec]) -> Union[OIDSpec, SpecialColumn]:
+        if isinstance(oid, OIDSpec):
+            return oid
+        if isinstance(oid, int):
+            return SpecialColumn(oid)
+        return OIDSpec(oid)
+
+    def _sanitize_oids(self, oids: SNMPTreeInputOIDs) -> List[Union[OIDSpec, SpecialColumn]]:
         """Sanitize OIDs
 
         Note that in fact, this function can deal with, and may return integers.
@@ -351,10 +362,8 @@ class SNMPTree:
         # We curently still handle the _LEGACY_SPECIAL_OIDS, for legacy check plugins.
         # Typing should prevent us from adding new cases (and those are not part of the
         # new API).
-        typed_oids = [
-            oid if isinstance(oid,
-                              (OIDSpec, OIDEnd)) or oid in _LEGACY_SPECIAL_OIDS else OIDSpec(oid)
-            for oid in oids
+        typed_oids: List[Union[OIDSpec, SpecialColumn]] = [  #
+            self._sanitize_single_oid(oid) for oid in oids
         ]
 
         # remaining validations only regard true OIDSpec objects
@@ -379,17 +388,15 @@ class SNMPTree:
         return self._base
 
     @property
-    def oids(self) -> List[Union[OIDSpec, int]]:
+    def oids(self) -> List[Union[OIDSpec, SpecialColumn]]:
         return self._oids
 
     @staticmethod
-    def _serialize_oid(oid: Union[OIDSpec, int]) -> Tuple[str, Union[str, int]]:
+    def _serialize_oid(oid: Union[OIDSpec, SpecialColumn]) -> Tuple[str, Union[str, int]]:
         if isinstance(oid, OIDSpec):
             return type(oid).__name__, str(oid)
-        if isinstance(oid, OIDEnd):
-            return "OIDEnd", 0
-        if isinstance(oid, int):
-            return "int", oid
+        if isinstance(oid, SpecialColumn):
+            return "SpecialColumn", oid.value
         raise TypeError(oid)
 
     @staticmethod
@@ -405,14 +412,13 @@ class SNMPTree:
             raise TypeError(type_) from exc
 
     @staticmethod
-    def _deserialize_oids(type_: str, value: Union[str, int]) -> Union[str, OIDSpec, OIDEnd]:
+    def _deserialize_oid(type_: str, value: Union[str, int]) -> Union[OIDSpec, SpecialColumn]:
         try:
             return {
                 "OIDSpec": OIDSpec,
                 "OIDBytes": OIDBytes,
                 "OIDCached": OIDCached,
-                "OIDEnd": OIDEnd,
-                "int": int,
+                "SpecialColumn": SpecialColumn,
             }[type_](value)
         except LookupError as exc:
             raise TypeError(type_) from exc

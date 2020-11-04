@@ -118,7 +118,7 @@ from cmk.utils.type_defs import (
 )
 
 from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-import
-    OID_BIN, OID_END, OID_END_BIN, OID_END_OCTET_STRING, OID_STRING, OIDBytes, OIDCached,
+    SpecialColumn as _SpecialColumn, OIDBytes, OIDCached,
 )
 
 import cmk.base.api.agent_based.register as _agent_based_register
@@ -178,6 +178,12 @@ core_state_names = _defines.short_service_state_names()
 # backwards compatibility: allow to pass integer.
 BINARY = lambda x: OIDBytes(str(x))
 CACHED_OID = lambda x: OIDCached(str(x))
+
+OID_BIN = _SpecialColumn.BIN
+OID_STRING = _SpecialColumn.STRING
+OID_END = _SpecialColumn.END
+OID_END_BIN = _SpecialColumn.END_BIN
+OID_END_OCTET_STRING = _SpecialColumn.END_OCTET_STRING
 
 
 def saveint(i: Any) -> int:

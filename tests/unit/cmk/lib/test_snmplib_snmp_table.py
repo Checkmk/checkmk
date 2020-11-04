@@ -18,6 +18,7 @@ from cmk.snmplib.type_defs import (
     SNMPHostConfig,
     SNMPTree,
     SNMPBackend,
+    SpecialColumn,
 )
 
 import cmk.base.config as config
@@ -48,7 +49,7 @@ class SNMPTestBackend(ABCSNMPBackend):
         return [("%s.%s" % (oid, r), b"C0FEFE") for r in (1, 2, 3)]
 
 
-@pytest.mark.parametrize("column", snmp_table.SPECIAL_COLUMNS)
+@pytest.mark.parametrize("column", SpecialColumn)
 def test_value_encoding(column):
     assert snmp_table._value_encoding(column) == "string"
 

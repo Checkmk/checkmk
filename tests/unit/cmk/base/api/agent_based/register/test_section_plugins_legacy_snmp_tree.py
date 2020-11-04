@@ -6,7 +6,8 @@
 
 import pytest  # type: ignore[import]
 
-from cmk.snmplib.type_defs import OID_END, OID_STRING, OIDEnd, SNMPTree
+from cmk.base.check_api import OID_END, OID_STRING
+from cmk.snmplib.type_defs import OIDEnd, SNMPTree, SpecialColumn
 
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
     _create_layout_recover_function,
@@ -77,8 +78,7 @@ def test_create_layout_recover_function(suboids_list, input_data, expected_outpu
         # not used in mainline code, but test it anyway:
         (
             (".1.2.3", [OID_STRING]),
-            # suppression: I know I should not pass an int. But I need to be able to.
-            [SNMPTree(base=".1.2.3", oids=[OID_STRING])],  # type: ignore[list-item]
+            [SNMPTree(base=".1.2.3", oids=[SpecialColumn.STRING])],
             None,
         ),
     ])

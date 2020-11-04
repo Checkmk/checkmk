@@ -12,10 +12,7 @@ from cmk.utils.type_defs import SectionName
 import cmk.snmplib.snmp_modes as snmp_modes
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.type_defs import (
-    OID_BIN,
-    OIDEnd,
-    OID_END_BIN,
-    OID_STRING,
+    SpecialColumn,
     SNMPTree,
     SNMPBackend,
 )
@@ -155,7 +152,7 @@ def test_get_simple_snmp_table(backend):
 def test_get_simple_snmp_table_oid_end(backend):
     oid_info = SNMPTree(
         base=".1.3.6.1.2.1.2.2.1",
-        oids=["1", "2", "3", OIDEnd()],
+        oids=["1", "2", "3", SpecialColumn.END],
     )
     table = snmp_table.get_snmp_table(
         section_name=SectionName("my_Section"),
@@ -173,7 +170,7 @@ def test_get_simple_snmp_table_oid_string(backend):
     oid_info = SNMPTree(
         base=".1.3.6.1.2.1.2.2.1",
         # deprecated with checkmk version 2.0
-        oids=["1", "2", "3", OID_STRING],  # type: ignore[list-item]
+        oids=["1", "2", "3", SpecialColumn.STRING],
     )
     table = snmp_table.get_snmp_table(
         section_name=SectionName("my_Section"),
@@ -191,7 +188,7 @@ def test_get_simple_snmp_table_oid_bin(backend):
     oid_info = SNMPTree(
         base=".1.3.6.1.2.1.2.2.1",
         # deprecated with checkmk version 2.0
-        oids=["1", "2", "3", OID_BIN],  # type: ignore[list-item]
+        oids=["1", "2", "3", SpecialColumn.BIN],
     )
     table = snmp_table.get_snmp_table(
         section_name=SectionName("my_Section"),
@@ -209,7 +206,7 @@ def test_get_simple_snmp_table_oid_end_bin(backend):
     oid_info = SNMPTree(
         base=".1.3.6.1.2.1.2.2.1",
         # deprecated with checkmk version 2.0
-        oids=["1", "2", "3", OID_END_BIN],  # type: ignore[list-item]
+        oids=["1", "2", "3", SpecialColumn.END_BIN],
     )
     table = snmp_table.get_snmp_table(
         section_name=SectionName("my_Section"),

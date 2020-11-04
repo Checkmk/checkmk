@@ -155,7 +155,6 @@ def test_registered_pages():
             'download_agent',
             'download_mkp',
             'download_stored_report',
-            'custom_combined_edit_filters',
             'edit_custom_graph',
             'edit_forecast_graph',
             'edit_graph_collection',

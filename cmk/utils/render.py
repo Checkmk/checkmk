@@ -299,7 +299,7 @@ def calculate_physical_precision(v: float, precision: int) -> Tuple[str, int, in
         -2: u"µ",
         -1: "m",
         0: "",
-        1: "K",
+        1: "k",
         2: "M",
         3: "G",
         4: "T",

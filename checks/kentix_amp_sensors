@@ -125,13 +125,17 @@ check_info['kentix_amp_sensors.humidity'] = {
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-kentix_amp_sensors_smoke_default_levels = (1, 5)
+kentix_amp_sensors_smoke_default_levels = {'levels': (1, 5)}
 
 
 def check_kentix_amp_sensors_smoke(item, params, parsed):
     if item in parsed:
         sensor_smoke = parsed[item]['smoke']
-        warn, crit = params
+
+        if isinstance(params, tuple):
+            warn, crit = params
+        else:
+            warn, crit = params['levels']
 
         if sensor_smoke >= crit:
             status = 2

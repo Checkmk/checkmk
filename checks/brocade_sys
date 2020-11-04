@@ -34,7 +34,7 @@ def inventory_brocade_sys_mem(parsed):
 def check_brocade_sys_mem(item, params, parsed):
     mem_used_percent = parsed["mem_used_percent"]
     infotext = "%s%%" % mem_used_percent
-    if params is None:
+    if not params:
         perfdata = [("mem_used_percent", mem_used_percent)]
         return 0, infotext, perfdata
     else:

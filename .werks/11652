@@ -1,0 +1,13 @@
+Title: Fixed "Invalid topic" error on opening manual pages
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1604588497
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+Opening of manual pages was only possible, if you manually navigated within the catalog of check plugins. Direct calling or searching resulted in an "Invalid topic" error.
+
+Manual pages can now be accessed from all designated locations.

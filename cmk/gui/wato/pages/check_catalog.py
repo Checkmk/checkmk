@@ -399,10 +399,19 @@ class ModeCheckManPage(WatoMode):
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeCheckPluginTopic
 
+    def breadcrumb(self) -> Breadcrumb:
+        # To be able to calculate the breadcrumb with ModeCheckPluginTopic as parent, we need to
+        # ensure that the topic is available.
+        with html.stashed_vars():
+            html.request.set_var("topic", self._manpage["header"]["catalog"])
+            return super().breadcrumb()
+
     def _from_vars(self):
         self._check_type = html.request.get_ascii_input_mandatory("check_type", "")
 
-        if not re.match("^[a-zA-Z0-9_.]+$", self._check_type):
+        builtin_check_types = ['check-mk', "check-mk-inventory"]
+        if not re.match("^[a-zA-Z0-9_.]+$", self._check_type) and \
+                self._check_type not in builtin_check_types:
             raise MKUserError("check_type", _("Invalid check type"))
 
         manpage = man_pages.load_man_page(self._check_type)
@@ -422,7 +431,7 @@ class ModeCheckManPage(WatoMode):
                 "type": "active",
                 **self._manpage,
             }
-        elif self._check_type in ['check-mk', "check-mk-inventory"]:
+        elif self._check_type in builtin_check_types:
             self._manpage = {
                 "type": "check_mk",
                 "service_description": "Check_MK%s" %

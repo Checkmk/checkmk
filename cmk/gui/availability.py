@@ -1550,6 +1550,8 @@ def layout_timeline(what, timeline_rows, considered_duration, avoptions, style):
                 })
                 if "log_output" in row and row["log_output"]:
                     table[-1]["log_output"] = row["log_output"]
+                if "long_log_output" in row and row["long_log_output"]:
+                    table[-1]["long_log_output"] = row["long_log_output"]
 
             # If the width is very small then we group several phases into
             # one single "chaos period".

@@ -1,0 +1,11 @@
+Title: Fixed empty columns for optional long output
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p19
+Date: 1604593322
+Class: fix
+
+The columns have been empty, regardless, if the option "Display long output
+in timeline" has been activated. The data has been fetched, but not displayed.

@@ -516,7 +516,7 @@ class ModeDistributedMonitoring(WatoMode):
 
     def action(self) -> ActionResult:
         delete_id = html.request.get_ascii_input("_delete")
-        if delete_id and html.transaction_valid():
+        if delete_id and html.check_transaction():
             self._action_delete(delete_id)
 
         logout_id = html.request.get_ascii_input("_logout")
@@ -528,7 +528,8 @@ class ModeDistributedMonitoring(WatoMode):
             return self._action_login(login_id)
         return None
 
-    def _action_delete(self, delete_id):
+    # Mypy wants the explicit return, pylint does not like it.
+    def _action_delete(self, delete_id) -> ActionResult:  # pylint: disable=useless-return
         # TODO: Can we delete this ancient code? The site attribute is always available
         # these days and the following code does not seem to have any effect.
         configured_sites = self._site_mgmt.load_sites()
@@ -559,18 +560,8 @@ class ModeDistributedMonitoring(WatoMode):
                   "assigned to it. You can use the <a href=\"%s\">host "
                   "search</a> to get a list of the hosts.") % search_url)
 
-        c = wato_confirm(
-            _("Confirm deletion of site %s") % html.render_tt(delete_id),
-            _("Do you really want to delete the connection to the site %s?") %
-            html.render_tt(delete_id))
-        if c:
-            self._site_mgmt.delete_site(delete_id)
-            return None
-
-        if c is False:
-            return ""
-
-        return None
+        self._site_mgmt.delete_site(delete_id)
+        return redirect(mode_url("sites"))
 
     def _action_logout(self, logout_id: str) -> ActionResult:
         configured_sites = self._site_mgmt.load_sites()
@@ -715,7 +706,10 @@ class ModeDistributedMonitoring(WatoMode):
         if site_id == config.omd_site():
             html.empty_icon_button()
         else:
-            delete_url = html.makeactionuri([("_delete", site_id)])
+            delete_url = html.confirm_link(
+                url=html.makeactionuri([("_delete", site_id)]),
+                msg=_("Do you really want to delete the connection to the site %s?") %
+                html.render_tt(site_id))
             html.icon_button(delete_url, _("Delete"), "delete")
 
         if _site_globals_editable(site_id, site):

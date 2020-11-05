@@ -152,6 +152,7 @@ export function confirm_dialog(optional_args, confirm_handler) {
     });
 }
 
+// Makes a form submittable after explicit confirmation
 export function add_confirm_on_submit(form_id, msg) {
     utils.add_event_handler(
         "submit",
@@ -163,4 +164,11 @@ export function add_confirm_on_submit(form_id, msg) {
         },
         document.getElementById(form_id)
     );
+}
+
+// Used as onclick handler on links to confirm following the link or not
+export function confirm_link(url, msg) {
+    confirm_dialog({html: msg}, () => {
+        location.href = url;
+    });
 }

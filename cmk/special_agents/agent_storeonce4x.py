@@ -152,14 +152,14 @@ def handler_simple(requester: Requester, uris: Sequence[str]) -> AnyGenerator:
     yield from (requester.get(uri) for uri in uris)
 
 
-def handler_nested(requester: Requester, uris: Sequence[str]) -> AnyGenerator:
+def handler_nested(requester: Requester, uris: Sequence[str], identifier: str) -> AnyGenerator:
     # Get all appliance UUIDs
     members = requester.get(uris[0])
     yield members
 
     # Get appliance's dashboard per UUID
     for member in members["members"]:
-        yield requester.get("%s/%s" % (uris[1], member["uuid"]))
+        yield requester.get("%s/%s" % (uris[1], member[identifier]))
 
 
 # REST API 4.2.3 endpoint definitions
@@ -196,6 +196,7 @@ SECTIONS: Sequence[Tuple[str, ResultFn]] = (
             BASE + "/management-services/federation/members",
             BASE + "/data-services/dashboard/appliance",
         ),
+        "uuid",
     )),
     ("licensing", lambda conn: handler_simple(
         conn,
@@ -203,6 +204,14 @@ SECTIONS: Sequence[Tuple[str, ResultFn]] = (
             BASE + "/management-services/licensing",
             BASE + "/management-services/licensing/licenses",
         ),
+    )),
+    ("cat_stores", lambda conn: handler_nested(
+        conn,
+        (
+            BASE + "/data-services/cat/stores",
+            BASE + "/data-services/cat/stores/store",
+        ),
+        "id",
     )),
 )
 

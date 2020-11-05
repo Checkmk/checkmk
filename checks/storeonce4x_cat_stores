@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+import json
+
+from cmk.base.check_legacy_includes.df import df_check_filesystem_list_coroutine
+
+
+def parse_storeonce4x_cat_stores(info):
+    return {
+        "%d - %s" % (elem["id"], elem["name"]): elem  #
+        for elem in json.loads(info[0][0])["members"]
+    }
+
+
+def discovery_storeonce4x_cat_stores(parsed):
+    yield from ((k, {}) for k in parsed)
+
+
+def check_storeonce4x_cat_stores(item, params, parsed):
+    if item not in parsed:
+        return
+
+    store = parsed[item]
+
+    mega = 1024 * 1024
+    store_status, store_status_str = store["storeStatus"], store["storeStatusString"]
+    dedup_ratio = store["dedupeRatio"]
+    size_available_mb = store["sizeOnDiskQuotaBytes"] / mega
+    size_used_mb = store["diskBytes"] / mega
+    user_bytes = store["userBytes"]
+    num_items = store["numItems"]
+
+    yield from df_check_filesystem_list_coroutine(
+        item, params, [(item, size_available_mb, size_available_mb - size_used_mb, 0)])
+
+    yield 0 if store_status == 2 else 2, "Status: %s" % store_status_str
+
+    yield 0, "Description: %s" % store["description"]
+    yield 0, "UserBytes: %s" % get_bytes_human_readable(user_bytes)
+    yield 0, "Dedup ratio: %.2f" % dedup_ratio, [("dedup_rate", dedup_ratio)]
+    yield 0, "Files: %d" % num_items, [("file_count", num_items)]
+
+
+check_info["storeonce4x_cat_stores"] = {
+    'parse_function': parse_storeonce4x_cat_stores,
+    'inventory_function': discovery_storeonce4x_cat_stores,
+    'check_function': check_storeonce4x_cat_stores,
+    'service_description': 'Catalyst Stores %s',
+    'group': "filesystem",
+    'has_perfdata': True,
+}

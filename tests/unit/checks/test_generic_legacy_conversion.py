@@ -2650,6 +2650,7 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'storeonce4x_appliances.license',
         'storeonce4x_appliances.summaries',
         'storeonce4x_d2d_services',
+        'storeonce4x_cat_stores',
         'storeonce_clusterinfo',
         'storeonce_clusterinfo.cluster',
         'storeonce_clusterinfo.space',

@@ -443,29 +443,20 @@ class ModeRenameHost(WatoMode):
 
         newname = html.request.var("newname")
         self._check_new_host_name("newname", newname)
-        c = wato_confirm(
-            _("Confirm renaming of host"),
-            _("Are you sure you want to rename the host <b>%s</b> into <b>%s</b>? "
-              "This involves a restart of the monitoring core!") % (self._host.name(), newname))
-        if c:
-            # Creating pending entry. That makes the site dirty and that will force a sync of
-            # the config to that site before the automation is being done.
-            host_renaming_job = RenameHostBackgroundJob(self._host,
-                                                        title=_("Renaming of %s -> %s") %
-                                                        (self._host.name(), newname))
-            renamings = [(watolib.Folder.current(), self._host.name(), newname)]
-            host_renaming_job.set_function(rename_hosts_background_job, renamings)
+        # Creating pending entry. That makes the site dirty and that will force a sync of
+        # the config to that site before the automation is being done.
+        host_renaming_job = RenameHostBackgroundJob(self._host,
+                                                    title=_("Renaming of %s -> %s") %
+                                                    (self._host.name(), newname))
+        renamings = [(watolib.Folder.current(), self._host.name(), newname)]
+        host_renaming_job.set_function(rename_hosts_background_job, renamings)
 
-            try:
-                host_renaming_job.start()
-            except background_job.BackgroundJobAlreadyRunning as e:
-                raise MKGeneralException(_("Another host renaming job is already running: %s") % e)
+        try:
+            host_renaming_job.start()
+        except background_job.BackgroundJobAlreadyRunning as e:
+            raise MKGeneralException(_("Another host renaming job is already running: %s") % e)
 
-            return redirect(host_renaming_job.detail_url())
-
-        if c is False:  # not yet confirmed
-            return FinalizeRequest(code=200)
-        return None
+        return redirect(host_renaming_job.detail_url())
 
     def _check_new_host_name(self, varname, host_name):
         if not host_name:
@@ -482,6 +473,10 @@ class ModeRenameHost(WatoMode):
               "of the monitoring core. You cannot rename a host while you have pending changes."))
 
         html.begin_form("rename_host", method="POST")
+        html.add_confirm_on_submit(
+            "rename_host",
+            _("Are you sure you want to rename the host <b>%s</b>? "
+              "This involves a restart of the monitoring core!") % (self._host.name()))
         forms.header(_("Rename host %s") % self._host.name())
         forms.section(_("Current name"))
         html.write_text(self._host.name())

@@ -1812,6 +1812,11 @@ class html(ABCHTMLGenerator):
         self.close_form()
         self.form_name = None
 
+    def add_confirm_on_submit(self, form_name: str, msg: str) -> None:
+        """Adds a confirm dialog to a form that is shown before executing a form submission"""
+        self.javascript("cmk.forms.add_confirm_on_submit(%s, %s)" %
+                        (json.dumps("form_%s" % form_name), json.dumps(escaping.escape_text(msg))))
+
     def in_form(self) -> bool:
         return self.form_name is not None
 

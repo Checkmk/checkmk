@@ -156,13 +156,17 @@ export function toggle_suggestions() {
 }
 
 export function form_submit(form_name, button_name) {
-    var oForm = document.getElementById("form_" + form_name);
+    var form = document.getElementById("form_" + form_name);
     var field = document.createElement("input");
     field.type = "hidden";
     field.name = button_name;
     field.value = "SET";
-    oForm.appendChild(field);
-    oForm.submit();
+    form.appendChild(field);
+
+    // Submit and also trigger the onsubmit events (to e.g. trigger confirm dialogs).
+    // form.submit() alone does not do that.
+    //form.submit();
+    form.dispatchEvent(new Event("submit", {cancelable: true}));
 }
 
 // Show / hide all entries of this group

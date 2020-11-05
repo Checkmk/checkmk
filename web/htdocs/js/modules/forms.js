@@ -132,18 +132,35 @@ export function textinput_enter_submit(e, submit) {
 
 // Helper function to display nice popup confirm dialogs
 // TODO: This needs to be styled to match the current user theme
-export function confirm_dialog(text, confirm_handler) {
-    Swal.fire({
-        text: text,
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonColor: "#444",
-        cancelButtonColor: "#444",
-        confirmButtonText: "Yes",
-        cancelButtonText: "No",
-    }).then(result => {
+export function confirm_dialog(optional_args, confirm_handler) {
+    let args = utils.merge_args(
+        {
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonColor: "#444",
+            cancelButtonColor: "#444",
+            confirmButtonText: "Yes",
+            cancelButtonText: "No",
+        },
+        optional_args
+    );
+
+    Swal.fire(args).then(result => {
         if (result.value) {
             confirm_handler();
         }
     });
+}
+
+export function add_confirm_on_submit(form_id, msg) {
+    utils.add_event_handler(
+        "submit",
+        e => {
+            confirm_dialog({html: msg}, () => {
+                document.getElementById(form_id).submit();
+            });
+            return utils.prevent_default_events(e);
+        },
+        document.getElementById(form_id)
+    );
 }

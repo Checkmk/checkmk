@@ -422,37 +422,25 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
         config_variable = config_variable_registry[varname]()
         def_value = self._default_values[varname]
 
-        if action == "reset" and not is_a_checkbox(config_variable.valuespec()):
-            c = wato_confirm(
-                _("Resetting configuration variable"),
-                _("Do you really want to reset the configuration variable <b>%s</b> "
-                  "back to the default value of <b><tt>%s</tt></b>?") %
-                (varname, config_variable.valuespec().value_to_text(def_value)))
+        if not html.check_transaction():
+            return None
+
+        if varname in self._current_settings:
+            self._current_settings[varname] = not self._current_settings[varname]
         else:
-            if not html.check_transaction():
-                return None
-            c = True  # no confirmation for direct toggle
+            self._current_settings[varname] = not def_value
+        msg = _("Changed Configuration variable %s to %s.") % (
+            varname, "on" if self._current_settings[varname] else "off")
+        watolib.save_global_settings(self._current_settings)
 
-        if c:
-            if varname in self._current_settings:
-                self._current_settings[varname] = not self._current_settings[varname]
-            else:
-                self._current_settings[varname] = not def_value
-            msg = _("Changed Configuration variable %s to %s.") % (
-                varname, "on" if self._current_settings[varname] else "off")
-            watolib.save_global_settings(self._current_settings)
+        watolib.add_change("edit-configvar",
+                           msg,
+                           domains=[config_variable.domain()],
+                           need_restart=config_variable.need_restart())
 
-            watolib.add_change("edit-configvar",
-                               msg,
-                               domains=[config_variable.domain()],
-                               need_restart=config_variable.need_restart())
-
-            if action == "_reset":
-                flash(msg)
-            return redirect(mode_url("globalvars"))
-        if c is False:
-            return FinalizeRequest(code=200)
-        return None
+        if action == "_reset":
+            flash(msg)
+        return redirect(mode_url("globalvars"))
 
     def page(self):
         self._show_configuration_variables(self._groups())

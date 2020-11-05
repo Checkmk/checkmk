@@ -311,6 +311,11 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "average_runnable_checker_tasks",
         "The average count of queued replies which have not yet been delivered to the checker helpers",
         offsets, [](const TableStatus & /*ts*/) { return 0.0; }));
+    addColumn(std::make_unique<TimeLambdaColumn<TableStatus>>(
+        "state_file_created", "The time when state file had been created",
+        offsets, [](const TableStatus& /*ts*/) {
+            return std::chrono::system_clock::from_time_t(0);
+        }));
 }
 
 void TableStatus::addCounterColumns(const std::string &name,

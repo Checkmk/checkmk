@@ -197,7 +197,7 @@ int TestMainServiceSelf(int Interval) {
         std::error_code ec;
 
         // give some time to start main thread
-        // this is tesing routine ergo so primitive method is ok
+        // this is testing routine ergo so primitive method is ok
         cma::tools::sleep(1000);
 
         while (!stop) {
@@ -576,12 +576,15 @@ int ExecVersion() {
     return 0;
 }
 
+constexpr bool g_use_colored_output_for_agent_updater = false;
+
 // params is a list of valid cmk-agent-updater commands
 // update -v for example
 int ExecCmkUpdateAgent(const std::vector<std::wstring>& params) {
     namespace fs = std::filesystem;
 
-    XLOG::setup::ColoredOutputOnStdio(true);
+    if (g_use_colored_output_for_agent_updater)
+        XLOG::setup::ColoredOutputOnStdio(true);
     XLOG::setup::DuplicateOnStdio(true);
 
     // find agent updater
@@ -624,10 +627,12 @@ int ExecCmkUpdateAgent(const std::vector<std::wstring>& params) {
 
     cma::cfg::SetupPluginEnvironment();
 
-    XLOG::setup::ColoredOutputOnStdio(false);
+    if (g_use_colored_output_for_agent_updater)
+        XLOG::setup::ColoredOutputOnStdio(false);
     XLOG::setup::DuplicateOnStdio(false);
     auto proc_id = cma::tools::RunStdCommand(to_run, true);
-    XLOG::setup::ColoredOutputOnStdio(true);
+    if (g_use_colored_output_for_agent_updater)
+        XLOG::setup::ColoredOutputOnStdio(true);
     XLOG::setup::DuplicateOnStdio(true);
     if (proc_id > 0) {
         XLOG::l.i("Agent Updater process [{}] started\n", proc_id);

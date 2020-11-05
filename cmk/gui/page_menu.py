@@ -26,6 +26,7 @@ from cmk.gui.utils.popups import MethodInline
 from cmk.gui.type_defs import CSSSpec
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_with_query
 from cmk.gui.config import user
+import cmk.gui.escaping as escaping
 
 
 def enable_page_menu_entry(name: str):
@@ -95,6 +96,13 @@ def make_javascript_action(javascript: str) -> str:
 def make_form_submit_link(form_name: str, button_name: str) -> PageMenuLink:
     return make_javascript_link("cmk.page_menu.form_submit(%s, %s)" %
                                 (json.dumps(form_name), json.dumps(button_name)))
+
+
+def make_confirmed_form_submit_link(*, form_name: str, button_name: str,
+                                    message: str) -> PageMenuLink:
+    return make_javascript_link(
+        "cmk.page_menu.confirmed_form_submit(%s, %s, %s)" %
+        (json.dumps(form_name), json.dumps(button_name), json.dumps(escaping.escape_text(message))))
 
 
 @dataclass

@@ -23,11 +23,10 @@ from cmk.gui.plugins.watolib.utils import (
 )
 from cmk.gui.plugins.wato.utils import mode_registry, get_search_expression
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect, mode_url
-from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
-from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError, FinalizeRequest
+from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
 from cmk.gui.breadcrumb import Breadcrumb
@@ -39,7 +38,7 @@ from cmk.gui.page_menu import (
     PageMenuCheckbox,
     PageMenuSearch,
     make_simple_link,
-    make_form_submit_link,
+    make_confirmed_form_submit_link,
     make_simple_form_page_menu,
     make_display_options_dropdown,
 )
@@ -227,7 +226,11 @@ class ABCEditGlobalSettingMode(WatoMode):
             PageMenuEntry(
                 title=_("Remove explicit setting") if value == defvalue else _("Reset to default"),
                 icon_name="reset",
-                item=make_form_submit_link(form_name="value_editor", button_name="_reset"),
+                item=make_confirmed_form_submit_link(
+                    form_name="value_editor",
+                    button_name="_reset",
+                    message=_("Do you really want to reset this configuration variable "
+                              "back to its default value?")),
                 is_enabled=reset_possible,
                 is_shortcut=True,
                 is_suggested=True,
@@ -237,16 +240,7 @@ class ABCEditGlobalSettingMode(WatoMode):
 
     def action(self) -> ActionResult:
         if html.request.var("_reset"):
-            if not is_a_checkbox(self._valuespec):
-                c = wato_confirm(
-                    _("Resetting configuration variable"),
-                    _("Do you really want to reset this configuration variable "
-                      "back to its default value?"))
-                if c is False:
-                    return FinalizeRequest(code=200)
-                if c is None:
-                    return None
-            elif not html.check_transaction():
+            if not html.check_transaction():
                 return None
 
             try:

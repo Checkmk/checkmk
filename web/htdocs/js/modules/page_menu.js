@@ -6,6 +6,7 @@ import * as utils from "utils";
 import "element-closest-polyfill";
 import * as foldable_container from "foldable_container";
 import * as popup_menu from "popup_menu";
+import * as forms from "forms";
 
 // Closes the active page menu dropdown
 export function close_active_dropdown() {
@@ -167,6 +168,18 @@ export function form_submit(form_name, button_name) {
     // form.submit() alone does not do that.
     //form.submit();
     form.dispatchEvent(new Event("submit", {cancelable: true}));
+}
+
+// Helper for building form submit links after confirming a dialog
+export function confirmed_form_submit(form_name, button_name, message) {
+    forms.confirm_dialog(
+        {
+            html: message,
+        },
+        () => {
+            form_submit(form_name, button_name);
+        }
+    );
 }
 
 // Show / hide all entries of this group

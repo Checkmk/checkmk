@@ -1516,7 +1516,8 @@ class html(ABCHTMLGenerator):
         )
 
     def confirm_link(self, *, url: str, msg: str) -> str:
-        return "javascript:cmk.forms.confirm_link(%s, %s)" % (json.dumps(url), json.dumps(msg))
+        return "javascript:cmk.forms.confirm_link(%s, %s)" % (json.dumps(url),
+                                                              json.dumps(escaping.escape_text(msg)))
 
     #
     # HTML heading and footer rendering

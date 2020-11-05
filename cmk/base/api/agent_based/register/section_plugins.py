@@ -133,14 +133,9 @@ def _validate_detect_spec(detect_spec: SNMPDetectBaseType) -> None:
 
 def _validate_type_list_snmp_trees(trees: List[SNMPTree]) -> None:
     """Validate that we have a list of SNMPTree instances """
-    type_error = TypeError(
-        "value of 'fetch' keyword must be SNMPTree or non-empty list of SNMPTrees")
-    if not isinstance(trees, list):
-        raise type_error
-    if not trees:
-        raise type_error
-    if any(not isinstance(element, SNMPTree) for element in trees):
-        raise type_error
+    if isinstance(trees, list) and trees and all(isinstance(t, SNMPTree) for t in trees):
+        return
+    raise TypeError("value of 'fetch' keyword must be SNMPTree or non-empty list of SNMPTrees")
 
 
 def _validate_fetch_spec(trees: List[SNMPTree]) -> None:
@@ -148,9 +143,8 @@ def _validate_fetch_spec(trees: List[SNMPTree]) -> None:
     # TODO: move validation of the elements of every tree here.
 
 
-def _noop_host_label_function(section: Any) -> Generator[HostLabel, None, None]:  # pylint: disable=unused-argument
-    return
-    yield  # pylint: disable=unreachable
+def _noop_host_label_function(section: Any) -> Generator[HostLabel, None, None]:
+    yield from ()
 
 
 def _create_host_label_function(

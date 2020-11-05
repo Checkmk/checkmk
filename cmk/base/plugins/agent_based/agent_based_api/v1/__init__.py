@@ -9,7 +9,7 @@ Version 1
 
 .. warning::
     This Version of the **Check API** is still under development
-    and may change untils checkmk version 2.0.0 is released.
+    and may change until Checkmk version 2.0.0 is released.
 
     Do not use it (yet) for production code.
     It may change at any time without notice.

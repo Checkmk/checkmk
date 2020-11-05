@@ -895,6 +895,7 @@ def page_edit_visual(what,
         title=_("General Properties"),
         render='form',
         optional_keys=False,
+        show_more_keys=["description", "add_context_to_title", "sort_index", "is_show_more"],
         elements=[
             single_infos_spec(single_infos),
             ('name',
@@ -912,9 +913,12 @@ def page_edit_visual(what,
                  size=50,
                  allow_empty=False)),
             ('title', TextUnicode(title=_('Title') + '<sup>*</sup>', size=50, allow_empty=False)),
-            ('description', TextAreaUnicode(title=_('Description') + '<sup>*</sup>',
-                                            rows=4,
-                                            cols=50)),
+            ('description',
+             TextAreaUnicode(
+                 title=_('Description') + '<sup>*</sup>',
+                 rows=4,
+                 cols=50,
+             )),
             ('add_context_to_title',
              Checkbox(
                  title=_('Context information'),
@@ -964,6 +968,7 @@ def page_edit_visual(what,
     if save_and_go or html.request.var("save") or html.request.var("search"):
         try:
             general_properties = vs_general.from_html_vars('general')
+
             vs_general.validate_value(general_properties, 'general')
 
             if not general_properties['topic']:

@@ -4568,6 +4568,7 @@ class Dictionary(ValueSpec):
         default_text: _Optional[str] = None,
         optional_keys: Union[bool, List[str]] = True,
         required_keys: _Optional[List[str]] = None,
+        show_more_keys: _Optional[List[str]] = None,
         ignored_keys: _Optional[List[str]] = None,
         default_keys: _Optional[List[str]] = None,
         hidden_keys: _Optional[List[str]] = None,
@@ -4594,6 +4595,7 @@ class Dictionary(ValueSpec):
         # the default values are shown.
         self._default_text = default_text
         self._required_keys = required_keys or []
+        self._show_more_keys = show_more_keys or []
         self._ignored_keys = ignored_keys or []
         self._default_keys = default_keys or []  # keys present in default value
         self._hidden_keys = hidden_keys or []
@@ -4750,7 +4752,10 @@ class Dictionary(ValueSpec):
 
     def render_input_form_header(self, varprefix, value, title, section_elements, as_part, css):
         if not as_part:
-            forms.header(title, isopen=self._form_isopen, narrow=self._form_narrow)
+            forms.header(title,
+                         isopen=self._form_isopen,
+                         narrow=self._form_narrow,
+                         show_more_toggle=bool(self._show_more_keys))
 
         for param, vs in self._get_elements():
             if param in self._hidden_keys:
@@ -4769,10 +4774,13 @@ class Dictionary(ValueSpec):
                     vp + "_USE",
                     deflt=visible,
                     onclick="cmk.valuespecs.toggle_option(this, %s)" % json.dumps(div_id))
-                forms.section(vs.title(), checkbox=checkbox_code, css=css)
+                forms.section(vs.title(),
+                              checkbox=checkbox_code,
+                              css=css,
+                              is_show_more=param in self._show_more_keys)
             else:
                 visible = True
-                forms.section(vs.title(), css=css)
+                forms.section(vs.title(), css=css, is_show_more=param in self._show_more_keys)
 
             html.open_div(id_=div_id, style="display:none;" if not visible else None)
             html.help(vs.help())

@@ -695,7 +695,7 @@ class ModeDistributedMonitoring(WatoMode):
         else:
             delete_url = html.confirm_link(
                 url=html.makeactionuri([("_delete", site_id)]),
-                msg=_("Do you really want to delete the connection to the site %s?") %
+                message=_("Do you really want to delete the connection to the site %s?") %
                 html.render_tt(site_id))
             html.icon_button(delete_url, _("Delete"), "delete")
 
@@ -758,7 +758,7 @@ class ModeDistributedMonitoring(WatoMode):
             if site.get("secret"):
                 logout_url = html.confirm_link(url=watolib.make_action_link([("mode", "sites"),
                                                                              ("_logout", site_id)]),
-                                               msg=_("Do you really want to log out of '%s'?") %
+                                               message=_("Do you really want to log out of '%s'?") %
                                                html.render_tt(site["alias"]))
                 html.icon_button(logout_url, _("Logout"), "autherr")
             else:

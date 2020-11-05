@@ -308,6 +308,10 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         [mc]() { return mc->licenseUsageHistoryPath(); },
         [](const TableStatus & /*r*/) { return std::filesystem::path{}; }));
     addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
+        "average_runnable_jobs_fetcher",
+        "The average count of scheduled fetcher jobs which have not yet been processed",
+        offsets, [](const TableStatus & /*ts*/) { return 0.0; }));
+    addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
         "average_runnable_checker_tasks",
         "The average count of queued replies which have not yet been delivered to the checker helpers",
         offsets, [](const TableStatus & /*ts*/) { return 0.0; }));

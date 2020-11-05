@@ -1,0 +1,11 @@
+Title: Several GUI styling fixes
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1604568937
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+The delete buttons in global settings are now visible due to a higher contrast.

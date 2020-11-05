@@ -1994,7 +1994,7 @@ class ListOf(ValueSpec):
 
     def _del_button(self, vp: str, nr: str) -> None:
         js = "cmk.valuespecs.listof_delete(%s, %s)" % (json.dumps(vp), json.dumps(nr))
-        html.icon_button("#", self._del_label, "close", onclick=js)
+        html.icon_button("#", self._del_label, "close", onclick=js, class_="delete_button")
 
     def canonical_value(self) -> List[Any]:
         return []

@@ -1492,3 +1492,7 @@ tr.hidden {
 .simplebar-scrollbar.simplebar-visible::before {
   opacity: 1;
 }
+
+body.main a.delete_button img {
+  filter: $inpage-close-button-filter;
+}

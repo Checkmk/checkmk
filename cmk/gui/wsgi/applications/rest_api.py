@@ -4,17 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import functools
-import io
 import json
 import logging
 import mimetypes
-import os.path
 import re
-import shutil
 import urllib.parse
-from typing import Dict, Type, TextIO
+from typing import Dict, Type, Any, Optional, Callable
 
-import yaml
+from apispec.yaml_utils import dict_to_yaml  # type: ignore[import]
 from swagger_ui_bundle import swagger_ui_3_path  # type: ignore[import]
 from werkzeug import Response
 from werkzeug.exceptions import HTTPException
@@ -23,12 +20,12 @@ from werkzeug.routing import Map, Submount, Rule
 
 from cmk.gui import config
 from cmk.gui.exceptions import MKUserError, MKAuthException
-from cmk.gui.openapi import ENDPOINT_REGISTRY
+from cmk.gui.openapi import ENDPOINT_REGISTRY, generate_data
 from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.wsgi.auth import verify_user, bearer_auth
 from cmk.gui.wsgi.middleware import with_context_middleware, OverrideRequestMethod
 from cmk.gui.wsgi.wrappers import ParameterDict
-from cmk.utils import paths, crash_reporting
+from cmk.utils import crash_reporting
 from cmk.utils.exceptions import MKException
 
 ARGS_KEY = 'CHECK_MK_REST_API_ARGS'
@@ -40,51 +37,7 @@ EXCEPTION_STATUS: Dict[Type[Exception], int] = {
     MKAuthException: 401,
 }
 
-
-def spec_file() -> TextIO:
-    spec_buffer = io.StringIO()
-    with open(openapi_spec_dir() + "/checkmk.yaml", "r") as yaml_file:
-        shutil.copyfileobj(yaml_file, spec_buffer)
-    spec_buffer.seek(0)
-    return spec_buffer
-
-
-def openapi_spec_dir():
-    return paths.web_dir + "/htdocs/openapi"
-
-
-def serve_content(file_handle: TextIO, content_type):
-    file_handle.seek(0)
-    content = file_handle.read()
-
-    resp = Response()
-    resp.content_type = content_type
-    resp.status_code = 200
-    resp.data = content
-    resp.freeze()
-
-    return resp
-
-
-def json_file(file_handle: TextIO) -> TextIO:
-    """
-
-    >>> yf = io.StringIO("data:\\n  foo:\\n  - bar\\n")
-    >>> json_file(yf).read()
-    '{"data": {"foo": ["bar"]}}'
-
-    Args:
-        file_handle:
-
-    Returns:
-
-    """
-    file_handle.seek(0)
-    data = yaml.safe_load(file_handle)
-    buffer = io.StringIO()
-    json.dump(data, buffer)
-    buffer.seek(0)
-    return buffer
+WSGIEnvironment = Dict[str, Any]
 
 
 class Authenticate:
@@ -116,51 +69,117 @@ class Authenticate:
 
 
 @functools.lru_cache
-def serve_file(file_path):
-    with open(file_path, "r") as fh:
-        file_size = os.path.getsize(file_path)
-        return serve_file_handle(fh, file_path, file_size)
+def serve_file(file_name: str, content: str) -> Response:
+    content_type, _ = mimetypes.guess_type(file_name)
 
-
-def serve_file_handle(fh, file_path, file_size=None):
-    resp = Response(fh)
+    resp = Response()
     resp.direct_passthrough = True
-    if file_size is not None:
-        resp.headers['Content-Length'] = file_size
-    content_type, _ = mimetypes.guess_type(file_path)
+    resp.data = content
     if content_type is not None:
         resp.headers['Content-Type'] = content_type
     resp.freeze()
     return resp
 
 
+def get_url(environ: WSGIEnvironment) -> str:
+    url = environ['wsgi.url_scheme'] + '://'
+
+    if environ.get('HTTP_HOST'):
+        url += environ['HTTP_HOST']
+    else:
+        url += environ['SERVER_NAME']
+
+        if environ['wsgi.url_scheme'] == 'https':
+            if environ['SERVER_PORT'] != '443':
+                url += ':' + environ['SERVER_PORT']
+        else:
+            if environ['SERVER_PORT'] != '80':
+                url += ':' + environ['SERVER_PORT']
+
+    url += urllib.parse.quote(environ.get('PATH_INFO', ''))
+
+    return url
+
+
+@functools.lru_cache(maxsize=512)
+def serve_spec(
+    site: str,
+    url: str,
+    content_type: str,
+    serializer: Callable[[Dict[str, Any]], str],
+) -> Response:
+    data = generate_data()
+    data.setdefault('servers', [])
+    data['servers'].append({
+        'url': url,
+        'description': f"Site: {site}",
+    })
+    response = Response(status=200)
+    response.data = serializer(data)
+    response.content_type = content_type
+    response.freeze()
+    return response
+
+
 class ServeSwaggerUI:
     def __init__(self, prefix=''):
         self.prefix = prefix
+        self.data: Optional[Dict[str, Any]] = None
 
-    def __call__(self, environ, start_response):
+    def _site(self, environ: WSGIEnvironment):
+        path_info = environ['PATH_INFO'].split("/")
+        return path_info[1]
+
+    def _url(self, environ: WSGIEnvironment):
+        return '/'.join(get_url(environ).split("/")[:-1])
+
+    def serve_json(self, environ: WSGIEnvironment, start_response):
+        return serve_spec(
+            site=self._site(environ),
+            url=self._url(environ),
+            content_type='application/json',
+            serializer=json.dumps,
+        )(environ, start_response)
+
+    def serve_yaml(self, environ: WSGIEnvironment, start_response):
+        return serve_spec(
+            site=self._site(environ),
+            url=self._url(environ),
+            content_type='application/x-yaml; charset=utf-8',
+            serializer=dict_to_yaml,
+        )(environ, start_response)
+
+    def _relative_path(self, environ: WSGIEnvironment):
         path_info = environ['PATH_INFO']
-        path = re.sub(self.prefix, '', path_info)
-        prefix = path_info[:-len(path)]
-        if prefix.endswith("/ui"):
-            prefix = prefix[:-3]
+        relative_path = re.sub(self.prefix, '', path_info)
+        if relative_path == "/":
+            relative_path = "/index.html"
+        return relative_path
 
-        if path == "/":
-            path = "/index.html"
+    def __call__(self, environ: WSGIEnvironment, start_response):
+        return self._serve_file(environ, start_response)
 
-        if path == "/index.html":
-            with open(swagger_ui_3_path + path) as fh:
-                content = fh.read()
-            content = content.replace("https://petstore.swagger.io/v2/swagger.json",
-                                      prefix + "/openapi.yaml")
-            resp = Response()
-            resp.content_type = 'text/html'
-            resp.status_code = 200
-            resp.data = content
-            resp.freeze()
-            return resp(environ, start_response)
+    def _serve_file(self, environ, start_response):
+        current_url = get_url(environ)
+        if current_url.endswith("/ui/"):
+            yaml_file = current_url[:-4] + "/openapi.yaml"
+        else:
+            yaml_file = current_url + "/openapi.yaml"
 
-        return serve_file(swagger_ui_3_path + path)(environ, start_response)
+        file_path = swagger_ui_3_path + self._relative_path(environ)
+
+        with open(file_path) as fh:
+            content = fh.read()
+
+        if file_path.endswith("/index.html"):
+            content = content.replace("<title>Swagger UI</title>",
+                                      "<title>REST-API Interactive GUI - Checkmk</title>")
+            content = content.replace("https://petstore.swagger.io/v2/swagger.json", yaml_file)
+            content = content.replace(
+                "        dom_id",
+                '        validatorUrl: null,\n        dom_id',
+            )
+        return serve_file(file_path, content)(environ, start_response)
 
 
 class CheckmkRESTAPI:
@@ -177,8 +196,7 @@ class CheckmkRESTAPI:
                      methods=[endpoint.method],
                      endpoint=Authenticate(endpoint.wrapped)))
 
-        spec_file_buffer = spec_file()
-        swagger_ui = ServeSwaggerUI(prefix="^/[^/]+/check_mk/api/[^/]+/ui")
+        swagger_ui = ServeSwaggerUI(prefix="/[^/]+/check_mk/api/[^/]+/ui")
 
         self.url_map = Map([
             Submount(
@@ -186,30 +204,18 @@ class CheckmkRESTAPI:
                 [
                     Rule("/ui/", endpoint=swagger_ui),
                     Rule("/ui/<path:path>", endpoint=swagger_ui),
-                    Rule(
-                        "/openapi.yaml",
-                        endpoint=serve_content(
-                            file_handle=spec_file_buffer,
-                            content_type='application/x-yaml; charset=utf-8',
-                        ),
-                    ),
-                    Rule(
-                        "/openapi.json",
-                        endpoint=serve_content(
-                            file_handle=json_file(spec_file_buffer),
-                            content_type='application/json',
-                        ),
-                    ),
+                    Rule("/openapi.yaml", endpoint=swagger_ui.serve_yaml),
+                    Rule("/openapi.json", endpoint=swagger_ui.serve_json),
                     *rules,
                 ],
             ),
         ])
         self.wsgi_app = with_context_middleware(OverrideRequestMethod(self._wsgi_app))
 
-    def __call__(self, environ, start_response):
+    def __call__(self, environ: WSGIEnvironment, start_response):
         return self.wsgi_app(environ, start_response)
 
-    def _wsgi_app(self, environ, start_response):
+    def _wsgi_app(self, environ: WSGIEnvironment, start_response):
         urls = self.url_map.bind_to_environ(environ)
         try:
             wsgi_app, path_args = urls.match()

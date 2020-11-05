@@ -19,14 +19,12 @@ from functools import lru_cache
 import pytest  # type: ignore[import]
 import webtest  # type: ignore[import]
 from mock import MagicMock
-from six import ensure_str
 from werkzeug.test import create_environ
 
 from testlib.utils import DummyApplication
 
 import cmk.utils.log
 import cmk.utils.paths as paths
-from cmk.utils import store
 
 import cmk.gui.config as config
 import cmk.gui.htmllib as htmllib
@@ -175,24 +173,6 @@ def with_admin_login(with_admin):
     user_id = with_admin[0]
     with login.UserContext(user_id):
         yield user_id
-
-
-# noinspection PyDefaultArgument
-@pytest.fixture(scope='function')
-def recreate_openapi_spec(mocker, _cache=[]):  # pylint: disable=dangerous-default-value
-    from cmk.gui.openapi import generate
-    spec_path = paths.omd_root + "/share/checkmk/web/htdocs/openapi"
-    openapi_spec_dir = mocker.patch('cmk.gui.wsgi.applications.rest_api')
-    openapi_spec_dir.return_value = spec_path
-
-    if not _cache:
-        with SPEC_LOCK:
-            if not _cache:
-                _cache.append(generate())
-
-    spec_data = ensure_str(_cache[0])
-    store.makedirs(spec_path)
-    store.save_text_to_file(spec_path + "/checkmk.yaml", spec_data)
 
 
 @pytest.fixture()

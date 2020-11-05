@@ -7,7 +7,9 @@
 import copy
 import json
 import sys
+from typing import Any, Dict
 
+from apispec.yaml_utils import dict_to_yaml  # type: ignore[import]
 from openapi_spec_validator import validate_spec  # type: ignore[import]
 from cmk.gui.plugins.openapi.restful_objects import SPEC
 from cmk.gui.plugins.openapi.restful_objects.decorators import Endpoint
@@ -23,35 +25,37 @@ if not version.is_raw_edition():
     import cmk.gui.cee.plugins.openapi  # noqa: F401 # pylint: disable=unused-import,no-name-in-module
 
 
-def generate(args=None):
-    if args is None:
-        args = [None]
-
+def generate_data() -> Dict[str, Any]:
     endpoint: Endpoint
     for endpoint in ENDPOINT_REGISTRY:
-        try:
-            SPEC.path(
-                path=endpoint.path,
-                operations=endpoint.to_operation_dict(),
-            )
-        except TypeError:
-            print(endpoint, file=sys.stderr)
-            raise
+        SPEC.path(
+            path=endpoint.path,
+            operations=endpoint.to_operation_dict(),
+        )
 
     # NOTE: deepcopy the dict because validate_spec modifies the SPEC in-place, leaving some
     # internal properties lying around, which leads to an invalid spec-file.
     check_dict = copy.deepcopy(SPEC.to_dict())
     validate_spec(check_dict)
+    # NOTE: We want to modify the thing afterwards. The SPEC object would be a global reference
+    # which would make modifying the spec very awkward, so we deepcopy again.
+    return copy.deepcopy(SPEC.to_dict())
 
+
+def generate(args=None):
+    if args is None:
+        args = [None]
+
+    data = generate_data()
     if args[-1] == '--json':
-        output = json.dumps(SPEC.to_dict(), indent=2).rstrip()
+        output = json.dumps(data, indent=2).rstrip()
     else:
-        output = SPEC.to_yaml().rstrip()
+        output = dict_to_yaml(data).rstrip()
 
     return output
 
 
-__all__ = ['ENDPOINT_REGISTRY']
+__all__ = ['ENDPOINT_REGISTRY', 'generate_data']
 
 if __name__ == '__main__':
     print(generate(sys.argv))

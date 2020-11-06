@@ -635,8 +635,11 @@ def _parameter_valuespec_if():
                      explicit=Integer(title=_("Other speed in bits per second"),
                                       label=_("Bits per second")))),
                 ("state",
-                 Optional(ListChoice(title=_("Allowed operational states:"),
-                                     choices=defines.interface_oper_states()),
+                 Optional(ListChoice(
+                     title=_("Allowed operational states:"),
+                     choices=defines.interface_oper_states(),
+                     allow_empty=False,
+                 ),
                           title=_("Operational state"),
                           help=_(
                               "If you activate the monitoring of the operational state "
@@ -649,7 +652,10 @@ def _parameter_valuespec_if():
                  ListOf(
                      Tuple(orientation="horizontal",
                            elements=[
-                               ListChoice(choices=defines.interface_oper_states()),
+                               ListChoice(
+                                   choices=defines.interface_oper_states(),
+                                   allow_empty=False,
+                               ),
                                MonitoringState()
                            ]),
                      title=_('Map operational states'),
@@ -658,7 +664,11 @@ def _parameter_valuespec_if():
                  )),
                 ("admin_state",
                  Optional(
-                     ListChoice(title=_("Allowed admin states:"), choices=_admin_states()),
+                     ListChoice(
+                         title=_("Allowed admin states:"),
+                         choices=_admin_states(),
+                         allow_empty=False,
+                     ),
                      title=_("Admin state (SNMP with 64-bit counters only)"),
                      help=_("If you activate the monitoring of the admin state "
                             "(<tt>ifAdminStatus</tt>), the check will go critical if the "
@@ -670,8 +680,13 @@ def _parameter_valuespec_if():
                 ("map_admin_states",
                  ListOf(
                      Tuple(orientation="horizontal",
-                           elements=[ListChoice(choices=_admin_states()),
-                                     MonitoringState()]),
+                           elements=[
+                               ListChoice(
+                                   choices=_admin_states(),
+                                   allow_empty=False,
+                               ),
+                               MonitoringState(),
+                           ]),
                      title=_('Map admin states (SNMP with 64-bit counters only)'),
                      help=_("Map the admin state (<tt>ifAdminStatus</tt>) to a monitoring state. " +
                             _note_for_admin_state_options()),

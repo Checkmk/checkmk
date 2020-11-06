@@ -210,6 +210,9 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
     def sort_index(cls):
         return 60
 
+    def is_show_more(self) -> bool:
+        return True
+
     def name(self):
         return "additional_ipv6addresses"
 

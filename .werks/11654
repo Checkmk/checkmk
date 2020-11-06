@@ -1,0 +1,13 @@
+Title: Fix show mode of "Additional IPv6 addresses" option in wato
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1604675580
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+The option was always visible but should only be shown if the user is in show more mode.
+
+This has been fixed.

@@ -33,7 +33,7 @@ clean:
 
 install:
 	dh_testdir
-	dh_testroot
+	#dh_testroot
 	# Keep the package installation directory for incremental builds. In case a
 	# fresh build is requested, debuild will be called with "clean"
 	dh_prep --exclude=`dh_listpackages`
@@ -84,8 +84,13 @@ install:
 
 binary-indep:
 
-# Build architecture-dependent files here.
-binary-arch: install
+# Please note: This target is run in context of "fakeroot" (see "man
+# dpkg-buildpackage") for further information.
+# In the past we used this phase for building our packages, but we experienced
+# some hardly reproducable random IO errors when executing our build in this
+# phase. For this reason we now build our stuff in the build-arch phase which
+# is executed in the current users context.
+binary-arch:
 	dh_testdir
 	dh_testroot
 	dh_installchangelogs
@@ -120,7 +125,6 @@ binary-arch: install
 	dh_md5sums
 	dh_builddeb
 
-# Still needed for debian8, ubuntu-14.04 and ubuntu-16.04
-build-arch:
+build-arch: install
 
 binary: binary-indep binary-arch

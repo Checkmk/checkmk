@@ -45,14 +45,12 @@ $(PYTHON3_CACHE_PKG_PROCESS): $(PYTHON3_CACHE_PKG_PATH)
 	$(call unpack_pkg_archive,$(PYTHON3_CACHE_PKG_PATH),$(PYTHON3_DIR))
 	$(call upload_pkg_archive,$(PYTHON3_CACHE_PKG_PATH),$(PYTHON3_DIR),$(PYTHON3_BUILD_ID))
 # Ensure that the rpath of the python binary and dynamic libs always points to the current version path
-	chmod +w $(PACKAGE_PYTHON3_LD_LIBRARY_PATH)/libpython3.8.so.1.0 $(PACKAGE_PYTHON3_LD_LIBRARY_PATH)/libpython3.so
 	for i in $(PACKAGE_PYTHON3_EXECUTABLE) \
 	         $(PACKAGE_PYTHON3_LD_LIBRARY_PATH)/libpython3.8.so.1.0 \
 	         $(PACKAGE_PYTHON3_LD_LIBRARY_PATH)/libpython3.so \
 	         $(PACKAGE_PYTHON3_PYTHONPATH)/lib-dynload/*.so ; do \
 	    chrpath -r "$(OMD_ROOT)/lib" $$i; \
 	done
-	chmod -w $(PACKAGE_PYTHON3_LD_LIBRARY_PATH)/libpython3.8.so.1.0 $(PACKAGE_PYTHON3_LD_LIBRARY_PATH)/libpython3.so
 # Native modules built based on this version need to use the correct rpath
 	sed -i 's|--rpath,/omd/versions/[^/]*/lib|--rpath,$(OMD_ROOT)/lib|g' \
 	    $(PACKAGE_PYTHON3_PYTHONPATH)/_sysconfigdata__linux_x86_64-linux-gnu.py

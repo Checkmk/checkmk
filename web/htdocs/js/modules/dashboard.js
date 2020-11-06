@@ -540,6 +540,14 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
             if (!is_dynamic(dashlet.w) && !is_dynamic(dashlet.h)) render_corner_resizers(controls);
         }
 
+        let create_a_button = function (className, title, onclick) {
+            let element = document.createElement("a");
+            element.className = className;
+            element.title = title;
+            element.onclick = onclick;
+            return element;
+        };
+
         // Create the anchors
         for (i = 0; i < 4; i++) {
             var anchor = document.createElement("a");
@@ -559,68 +567,46 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
 
             controls.appendChild(anchor);
         }
-
-        // Add edit dashlet button
-        var edit_button = document.createElement("a");
-        edit_button.className = "edit";
-        edit_button.title = "Edit properties of this dashlet";
-        edit_button.onclick = (function (dashlet_id, board_name) {
+        var click_actions = function (target) {
             return function () {
                 var back_url = utils.makeuri({}, window.location.href, "dashboard.py");
                 location.href = utils.makeuri_contextless(
                     {
-                        name: board_name,
-                        id: dashlet_id,
+                        name: dashboard_properties.dashboard_name,
+                        id: nr,
                         back: back_url,
                     },
-                    "edit_dashlet.py"
+                    target
                 );
             };
-        })(nr, dashboard_properties.dashboard_name);
-        controls.appendChild(edit_button);
+        };
+
+        let edits = document.createElement("div");
+        edits.className = "editor";
+        // Add edit dashlet button
+        edits.appendChild(
+            create_a_button(
+                "edit",
+                "Edit properties of this dashlet",
+                click_actions("edit_dashlet.py")
+            )
+        );
 
         // Add clone dashlet button
-        var clone = document.createElement("a");
-        clone.className = "clone";
-        clone.title = "Clone this dashlet";
-        clone.onclick = (function (dashlet_id, board_name) {
-            return function () {
-                var back_url = utils.makeuri({}, window.location.href, "dashboard.py");
-                location.href = utils.makeuri_contextless(
-                    {
-                        id: dashlet_id,
-                        name: board_name,
-                        back: back_url,
-                    },
-                    "clone_dashlet.py"
-                );
-            };
-        })(nr, dashboard_properties.dashboard_name);
-        controls.appendChild(clone);
+        edits.appendChild(
+            create_a_button("clone", "Clone this dashlet", click_actions("clone_dashlet.py"))
+        );
 
         // Add delete dashlet button
-        var del = document.createElement("a");
-        del.className = "del";
-        del.title = "Delete this dashlet";
-        del.onclick = (function (dashlet_id, board_name) {
-            return function () {
+        edits.appendChild(
+            create_a_button("del", "Delete this dashlet", () =>
                 forms.confirm_dialog(
                     {text: "Do you really want to delete this dashlet?"},
-                    function () {
-                        var back_url = utils.makeuri({}, window.location.href, "dashboard.py");
-                        location.href = utils.makeuri_contextless(
-                            {
-                                name: board_name,
-                                id: dashlet_id,
-                                back: back_url,
-                            },
-                            "delete_dashlet.py"
-                        );
-                    }
-                );
-            };
-        })(nr, dashboard_properties.dashboard_name);
-        controls.appendChild(del);
+                    click_actions("delete_dashlet.py")
+                )
+            )
+        );
+        controls.appendChild(edits);
     } else {
         // make the inner parts visible again
         utils.remove_class(dashlet_obj, "edit");

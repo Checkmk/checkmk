@@ -344,60 +344,65 @@ div.dashlet.edit {
     }
   }
 
-  /* dashlet edit button */
-  .edit {
+  .editor {
     position: absolute;
-    top: 4px;
-    left: 19px;
-    width: 14px;
-    height: 14px;
-    cursor: pointer;
-    /* background-color: rgba(0, 0, 0, 0.7); */
-    background-image: url("images/dashlet_edit_lo.png");
-    border-radius: 5px;
-    /* IE < 9 */
-    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    margin: auto;
+    height: 50px;
 
-    &:hover {
-      background-image: url("images/dashlet_edit_hi.png");
+    /* dashlet edit button */
+    .edit {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      /* background-color: rgba(0, 0, 0, 0.7); */
+      background-image: url("images/dashlet_edit_lo.png");
+      background-size: 20px;
+      border-radius: 5px;
+      display: block;
+      /* IE < 9 */
+      filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
+
+      &:hover {
+        background-image: url("images/dashlet_edit_hi.png");
+      }
     }
-  }
 
-  /* dashlet clone button */
-  .clone {
-    position: absolute;
-    top: 4px;
-    right: 34px;
-    width: 14px;
-    height: 14px;
-    cursor: pointer;
-    /* background-color: rgba(0, 0, 0, 0.7); */
-    background-image: url("images/dashlet_clone_lo.png");
-    border-radius: 5px;
-    /* IE < 9 */
-    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
+    /* dashlet clone button */
+    .clone {
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+      /* background-color: rgba(0, 0, 0, 0.7); */
+      background-image: url("images/dashlet_clone_lo.png");
+      border-radius: 5px;
+      display: block;
+      /* IE < 9 */
+      filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
 
-    &:hover {
-      background-image: url("images/dashlet_clone_hi.png");
+      &:hover {
+        background-image: url("images/dashlet_clone_hi.png");
+      }
     }
-  }
 
-  /* dashlet delete button */
-  .del {
-    position: absolute;
-    top: 4px;
-    right: 19px;
-    width: 14px;
-    height: 14px;
-    cursor: pointer;
-    /* background-color: rgba(0, 0, 0, 0.7); */
-    background-image: url("images/dashlet_del_lo.png");
-    border-radius: 5px;
-    /* IE < 9 */
-    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
+    /* dashlet delete button */
+    .del {
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+      /* background-color: rgba(0, 0, 0, 0.7); */
+      background-image: url("images/dashlet_del_lo.png");
+      border-radius: 5px;
+      display: block;
+      /* IE < 9 */
+      filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
 
-    &:hover {
-      background-image: url("images/dashlet_del_hi.png");
+      &:hover {
+        background-image: url("images/dashlet_del_hi.png");
+      }
     }
   }
 

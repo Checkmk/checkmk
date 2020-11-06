@@ -162,6 +162,7 @@ export function form_submit(form_name, button_name) {
     field.type = "submit";
     field.name = button_name;
     field.value = "SET";
+    field.style.display = "none";
     form.appendChild(field);
 
     field.click();

@@ -1,4 +1,4 @@
-Title: heartbeat_crm: fixed crash when checking pacemaker version 2.0.3
+Title: heartbeat_crm: fixed crash when checking pacemaker versions >= 1.1
 Knowledge: doc
 Level: 1
 Component: checks
@@ -9,5 +9,5 @@ State: unknown
 Version: 1.6.0p19
 Date: 1603096401
 
-The check heartbeat_crm crashed when checking pacemaker version 2.0.3 (CentOS8
-/ RHEL8). This has been fixed.
+The check heartbeat_crm crashed when checking pacemaker versions 1.1 (RHEL 7.9)
+and 2.0 (CentOS8/RHEL8). This has been fixed.

@@ -450,13 +450,13 @@ def upload_package(FILE_PATH, FILE_NAME, NAME, scm, JOB_BASE_NAME, RELEASE_KEY_P
                     ${ARCHIVE_BASE}/./${CMK_VERS}/${FILE_NAME} \
                     ${UPLOAD_DEST_OLD}
             """
-            //sh """
-            //    rsync -av \
-            //        --exclude '*dbgsym*.deb' \
-            //        -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_PATH} -p 52022" \
-            //        ${ARCHIVE_BASE}/./${CMK_VERS}/${FILE_NAME} \
-            //        ${UPLOAD_DEST}
-            //"""
+            sh """
+                rsync -av \
+                    --exclude '*dbgsym*.deb' \
+                    -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_PATH} -p 52022" \
+                    ${ARCHIVE_BASE}/./${CMK_VERS}/${FILE_NAME} \
+                    ${UPLOAD_DEST}
+            """
         } else {
             dir(FILE_BASE) {
                 // Multiple subsequent calls overwrite the previous artifacts. For this reason

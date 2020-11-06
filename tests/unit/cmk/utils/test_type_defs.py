@@ -24,22 +24,6 @@ def test_oidspec_invalid_value(value):
         _ = OIDSpec(value)
 
 
-@pytest.mark.parametrize("value", ["foo", 1])
-def test_oidspec_invalid_adding_type(value):
-    oid = OIDSpec(".1.2.3")
-    with pytest.raises(TypeError):
-        _ = oid + value
-
-
-@pytest.mark.parametrize("left, right", [
-    (OIDBytes("4.5"), OIDBytes("4.5")),
-    (OIDSpec(".1.2.3"), OIDSpec(".1.2.3")),
-])
-def test_oidspec_invalid_adding_value(left, right):
-    with pytest.raises(ValueError):
-        _ = left + right
-
-
 def test_oidspec():
     oid_base = OIDSpec(".1.2.3")
     oid_column = OIDBytes("4.5")
@@ -49,10 +33,6 @@ def test_oidspec():
 
     assert repr(oid_base) == "OIDSpec('.1.2.3')"
     assert repr(oid_column) == "OIDBytes('4.5')"
-
-    oid_sum = oid_base + oid_column
-    assert isinstance(oid_sum, OIDBytes)
-    assert str(oid_sum) == ".1.2.3.4.5"
 
 
 def test_evalable_float():

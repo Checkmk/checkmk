@@ -241,18 +241,6 @@ class OIDSpec:
             self.validate(value)
         self._value = value
 
-    def __add__(self, right: Any) -> "OIDSpec":
-        """Concatenate two OID specs
-        We only allow adding (left to right) a "base" (starting with a '.')
-        to an "column" (not starting with '.').
-        We preserve the type of the column, which may signal caching or byte encoding.
-        """
-        if not isinstance(right, OIDSpec):
-            raise TypeError("cannot add %r" % (right,))
-        if not self._value.startswith('.') or right._value.startswith('.'):
-            raise ValueError("can only add full OIDs to partial OIDs")
-        return right.__class__("%s.%s" % (self, right))
-
     def __eq__(self, other: Any) -> bool:
         if other.__class__ != self.__class__:
             return False

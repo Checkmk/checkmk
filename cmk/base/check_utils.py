@@ -100,26 +100,3 @@ class Service:
             self.parameters,
             self.service_labels.to_dict(),
         )
-
-
-# TODO (mo): *consider* using the type aliases.
-def get_default_parameters(
-    check_legacy_info: Dict[str, Any],
-    factory_settings: Dict[str, Dict[str, Any]],
-    check_context: Dict[str, Any],
-) -> Optional[Dict[str, Any]]:
-    """compute default parameters"""
-    params_variable_name = check_legacy_info.get("default_levels_variable")
-    if not params_variable_name:
-        return None
-
-    # factory_settings
-    fs_parameters = factory_settings.get(params_variable_name, {})
-
-    # global scope of check context
-    gs_parameters = check_context.get(params_variable_name)
-
-    return {
-        **fs_parameters,
-        **gs_parameters,
-    } if isinstance(gs_parameters, dict) else fs_parameters

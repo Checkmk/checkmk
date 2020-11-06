@@ -24,9 +24,6 @@ from cmk.base.api.agent_based.checking_classes import (
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import Parameters
-from cmk.base.check_api_utils import Service as LegacyService  # pylint: disable=cmk-module-layer-violation
-# TODO: see if this can be moved here!
-from cmk.base.check_utils import get_default_parameters  # pylint: disable=cmk-module-layer-violation
 
 # There are so many check_info keys, make sure we didn't miss one.
 CONSIDERED_KEYS = {
@@ -48,6 +45,28 @@ CONSIDERED_KEYS = {
 }
 
 
+def _get_default_parameters(
+    check_legacy_info: Dict[str, Any],
+    factory_settings: Dict[str, Dict[str, Any]],
+    check_context: Dict[str, Any],
+) -> Optional[Dict[str, Any]]:
+    """compute default parameters"""
+    params_variable_name = check_legacy_info.get("default_levels_variable")
+    if not params_variable_name:
+        return None
+
+    # factory_settings
+    fs_parameters = factory_settings.get(params_variable_name, {})
+
+    # global scope of check context
+    gs_parameters = check_context.get(params_variable_name)
+
+    return {
+        **fs_parameters,
+        **gs_parameters,
+    } if isinstance(gs_parameters, dict) else fs_parameters
+
+
 def _create_discovery_function(
     check_name: str,
     check_info_dict: Dict[str, Any],
@@ -67,13 +86,7 @@ def _create_discovery_function(
             return
 
         for element in original_discovery_result:
-            if isinstance(element, LegacyService):
-                yield Service(
-                    item=element.item,
-                    parameters=wrap_parameters(element.parameters or {}),
-                    labels=[ServiceLabel(l.name, l.value) for l in element.service_labels],
-                )
-            elif isinstance(element, tuple) and len(element) in (2, 3):
+            if isinstance(element, tuple) and len(element) in (2, 3):
                 parameters = _resolve_string_parameters(element[-1], check_name, get_check_context)
                 service = Service(
                     item=element[0] or None,
@@ -84,8 +97,15 @@ def _create_discovery_function(
                 service = service._replace(item=element[0])
                 yield service
             else:
-                # just let it through. Base must deal with bogus return types anyway.
-                yield element
+                try:
+                    yield Service(
+                        item=element.item,
+                        parameters=wrap_parameters(element.parameters or {}),
+                        labels=[ServiceLabel(l.name, l.value) for l in element.service_labels],
+                    )
+                except AttributeError:
+                    # just let it through. Base must deal with bogus return types anyway.
+                    yield element
 
     return discovery_migration_wrapper
 
@@ -247,7 +267,7 @@ def _create_wrapped_parameters(
     get_check_context: Callable,
 ) -> Dict[str, Any]:
     """compute default parameters and wrap them in a dictionary"""
-    default_parameters = get_default_parameters(
+    default_parameters = _get_default_parameters(
         check_info_dict,
         factory_settings,
         get_check_context(check_plugin_name),

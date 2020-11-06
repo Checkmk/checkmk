@@ -159,3 +159,51 @@ def test_create_check_plugin_from_legacy_with_params():
     }
     assert plugin.check_ruleset_name == RuleSetName("norris_rule")
     assert plugin.cluster_check_function.__name__ == "cluster_legacy_mode_from_hell"
+
+
+def test_get_default_params_clean_case():
+    # with params
+    assert check_plugins_legacy._get_default_parameters(
+        check_legacy_info={"default_levels_variable": "foo"},
+        factory_settings={"foo": {
+            "levels": (23, 42)
+        }},
+        check_context={},
+    ) == {
+        "levels": (23, 42)
+    }
+
+    # without params
+    assert check_plugins_legacy._get_default_parameters(
+        check_legacy_info={},
+        factory_settings={},
+        check_context={},
+    ) is None
+
+
+def test_get_default_params_with_user_update():
+    # with params
+    assert check_plugins_legacy._get_default_parameters(
+        check_legacy_info={"default_levels_variable": "foo"},
+        factory_settings={"foo": {
+            "levels": (23, 42),
+            "overwrite_this": None
+        }},
+        check_context={"foo": {
+            "overwrite_this": 3.14,
+            "more": "is better!"
+        }},
+    ) == {
+        "levels": (23, 42),
+        "overwrite_this": 3.14,
+        "more": "is better!",
+    }
+
+
+def test_get_default_params_ignore_user_defined_tuple():
+    # with params
+    assert check_plugins_legacy._get_default_parameters(
+        check_legacy_info={"default_levels_variable": "foo"},
+        factory_settings={},
+        check_context={"foo": (23, 42)},
+    ) == {}

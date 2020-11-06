@@ -652,10 +652,10 @@ class QuicksearchSnapin(SidebarSnapin):
     @classmethod
     def description(cls):
         return _(
-            "Interactive search field for direct access to hosts, services, host- and "
-            "servicegroups.<br>You can use the following filters:<br> <i>h:</i> Host, <i>s:</i> Service<br> "
-            "<i>hg:</i> Hostgroup, <i>sg:</i> Servicegroup<br><i>ad:</i> Address, <i>al:</i> Alias, <i>tg:</i> Hosttag"
-        )
+            "Interactive search field for direct access to monitoring instances (hosts, services, "
+            "host- and servicegroups).<br>You can use the following filters: <i>h:</i> Host,<br> "
+            "<i>s:</i> Service, <i>hg:</i> Hostgroup, <i>sg:</i> Servicegroup,<br><i>ad:</i> "
+            "Address, <i>al:</i> Alias, <i>tg:</i> Hosttag")
 
     def show(self):
         id_ = "mk_side_search_field"

@@ -549,9 +549,12 @@ div.spacertop {
     width: 100%;
     padding: 6px 0 6px $spacing;
     font-size: 14px;
+    color: $font-color-sidebar;
+    background-color: $sidebar-input-field-bg-color;
     background-image: url("images/icon_quicksearch.png");
     background-position: right $spacing bottom 6px;
     background-size: 15px;
+    border: none;
   }
 
   input::placeholder {
@@ -571,17 +574,18 @@ div.spacertop {
   position: absolute;
   z-index: 1;
   width: 223px;
-  padding: 12px;
+  padding: 8px;
   margin-top: 2px;
   font-size: 80%;
-  color: $font-color;
+  color: $font-color-sidebar;
+  background-color: $sidebar-input-field-bg-color;
 
   a {
     display: block;
     width: 217px;
     padding-left: 5px;
     margin-bottom: 5px;
-    color: $font-color;
+    color: $font-color-sidebar;
     text-align: left;
     text-decoration: none;
 

@@ -20,7 +20,7 @@ import cmk.gui.forms as forms
 import cmk.gui.plugins.wato.utils
 import cmk.gui.wato.mkeventd
 from cmk.gui.watolib.notifications import load_notification_rules
-from cmk.gui.exceptions import MKUserError, FinalizeRequest
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (
@@ -51,7 +51,6 @@ from cmk.gui.page_menu import (
 from cmk.gui.plugins.wato import (
     WatoMode,
     ActionResult,
-    wato_confirm,
     mode_registry,
     make_action_link,
     mode_url,
@@ -120,31 +119,29 @@ class ModeTimeperiods(WatoMode):
 
     def action(self) -> ActionResult:
         delname = html.request.var("_delete")
-        if delname and html.transaction_valid():
-            if delname in watolib.timeperiods.builtin_timeperiods():
-                raise MKUserError("_delete", _("Builtin timeperiods can not be modified"))
+        if not delname:
+            return redirect(mode_url("timeperiods"))
 
-            usages = self._find_usages_of_timeperiod(delname)
-            if usages:
-                message = "<b>%s</b><br>%s:<ul>" % \
-                            (_("You cannot delete this timeperiod."),
-                             _("It is still in use by"))
-                for title, link in usages:
-                    message += '<li><a href="%s">%s</a></li>\n' % (link, title)
-                message += "</ul>"
-                raise MKUserError(None, message)
+        if not html.check_transaction():
+            return redirect(mode_url("timeperiods"))
 
-            c = wato_confirm(
-                _("Confirm deletion of time period %s") % delname,
-                _("Do you really want to delete the time period '%s'? I've checked it: "
-                  "it is not being used by any rule or user profile right now.") % delname)
-            if c:
-                del self._timeperiods[delname]
-                watolib.timeperiods.save_timeperiods(self._timeperiods)
-                watolib.add_change("edit-timeperiods", _("Deleted timeperiod %s") % delname)
-            elif c is False:
-                return FinalizeRequest(code=200)
-        return None
+        if delname in watolib.timeperiods.builtin_timeperiods():
+            raise MKUserError("_delete", _("Builtin timeperiods can not be modified"))
+
+        usages = self._find_usages_of_timeperiod(delname)
+        if usages:
+            message = "<b>%s</b><br>%s:<ul>" % \
+                        (_("You cannot delete this timeperiod."),
+                         _("It is still in use by"))
+            for title, link in usages:
+                message += '<li><a href="%s">%s</a></li>\n' % (link, title)
+            message += "</ul>"
+            raise MKUserError(None, message)
+
+        del self._timeperiods[delname]
+        watolib.timeperiods.save_timeperiods(self._timeperiods)
+        watolib.add_change("edit-timeperiods", _("Deleted timeperiod %s") % delname)
+        return redirect(mode_url("timeperiods"))
 
     # Check if a timeperiod is currently in use and cannot be deleted
     # Returns a list of two element tuples (title, url) that refer to the single occurrances.
@@ -320,10 +317,12 @@ class ModeTimeperiods(WatoMode):
             ("mode", "edit_timeperiod"),
             ("clone", name),
         ])
-        delete_url = make_action_link([
-            ("mode", "timeperiods"),
-            ("_delete", name),
-        ])
+        delete_url = html.confirm_link(
+            url=make_action_link([
+                ("mode", "timeperiods"),
+                ("_delete", name),
+            ]),
+            message=_("Do you really want to delete the time period '%s'?" % name))
 
         html.icon_button(edit_url, _("Properties"), "edit")
         html.icon_button(clone_url, _("Create a copy"), "clone")

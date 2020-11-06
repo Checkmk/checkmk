@@ -66,7 +66,6 @@ from cmk.gui.plugins.wato import (
     WatoMode,
     ActionResult,
     mode_registry,
-    wato_confirm,
     make_action_link,
     add_change,
     redirect,
@@ -166,6 +165,9 @@ class ModeTags(ABCTagMode):
         )
 
     def action(self) -> ActionResult:
+        if not html.check_transaction():
+            return redirect(mode_url("tags"))
+
         if html.request.has_var("_delete"):
             return self._delete_tag_group()
 
@@ -174,7 +176,8 @@ class ModeTags(ABCTagMode):
 
         if html.request.var("_move") and html.check_transaction():
             return self._move_tag_group()
-        return None
+
+        return redirect(mode_url("tags"))
 
     def _delete_tag_group(self) -> ActionResult:
         del_id = html.get_item_input("_delete", dict(self._tag_config.get_tag_group_choices()))[1]
@@ -186,14 +189,8 @@ class ModeTags(ABCTagMode):
         else:
             message = _rename_tags_after_confirmation(self.breadcrumb(),
                                                       OperationRemoveTagGroup(del_id))
-            if message is True:  # no confirmation yet
-                c = wato_confirm(
-                    _("Confirm deletion of the tag group '%s'") % del_id,
-                    _("Do you really want to delete the tag group '%s'?") % del_id)
-                if c is False:
-                    return FinalizeRequest(code=200)
-                if c is None:
-                    return None
+            if message is False:
+                return FinalizeRequest(code=200)
 
         if message:
             self._tag_config.remove_tag_group(del_id)
@@ -205,8 +202,7 @@ class ModeTags(ABCTagMode):
             add_change("edit-tags", _("Removed tag group %s (%s)") % (message, del_id))
             if isinstance(message, str):
                 flash(message)
-            return redirect(mode_url("tags"))
-        return None
+        return redirect(mode_url("tags"))
 
     def _is_cleaning_up_user_tag_group_to_builtin(self, del_id):
         """The "Agent type" tag group was user defined in previous versions
@@ -247,14 +243,8 @@ class ModeTags(ABCTagMode):
                           "It is being used in the tag group <b>%s</b>.") % group.title)
 
         message = _rename_tags_after_confirmation(self.breadcrumb(), OperationRemoveAuxTag(del_id))
-        if message is True:  # no confirmation yet
-            c = wato_confirm(
-                _("Confirm deletion of the auxiliary tag '%s'") % del_id,
-                _("Do you really want to delete the auxiliary tag '%s'?") % del_id)
-            if c is False:
-                return FinalizeRequest(code=200)
-            if c is None:
-                return None
+        if message is False:
+            return FinalizeRequest(code=200)
 
         if message:
             self._tag_config.aux_tag_list.remove(del_id)
@@ -266,8 +256,7 @@ class ModeTags(ABCTagMode):
             add_change("edit-tags", _("Removed auxiliary tag %s (%s)") % (message, del_id))
             if isinstance(message, str):
                 flash(message)
-            return redirect(mode_url("tags"))
-        return None
+        return redirect(mode_url("tags"))
 
     # Mypy wants the explicit return, pylint does not like it.
     def _move_tag_group(self) -> ActionResult:  # pylint: disable=useless-return
@@ -366,7 +355,9 @@ class ModeTags(ABCTagMode):
 
         html.element_dragger_url("tr", base_url=make_action_link([("mode", "tags"), ("_move", nr)]))
 
-        delete_url = make_action_link([("mode", "tags"), ("_delete", tag_group.id)])
+        delete_url = html.confirm_link(
+            url=make_action_link([("mode", "tags"), ("_delete", tag_group.id)]),
+            message=_("Do you really want to delete the tag group '%s'?") % tag_group.id)
         html.icon_button(delete_url, _("Delete this tag group"), "delete")
 
     def _render_aux_tag_list(self) -> None:
@@ -401,7 +392,9 @@ class ModeTags(ABCTagMode):
             return
 
         edit_url = watolib.folder_preserving_link([("mode", "edit_auxtag"), ("edit", aux_tag.id)])
-        delete_url = make_action_link([("mode", "tags"), ("_del_aux", aux_tag.id)])
+        delete_url = html.confirm_link(
+            url=make_action_link([("mode", "tags"), ("_del_aux", aux_tag.id)]),
+            message=_("Do you really want to delete the auxiliary tag '%s'?") % aux_tag.id)
         html.icon_button(edit_url, _("Edit this auxiliary tag"), "edit")
         html.icon_button(delete_url, _("Delete this auxiliary tag"), "delete")
 
@@ -824,6 +817,11 @@ def _rename_tags_after_confirmation(breadcrumb: Breadcrumb,
 
     Find affected hosts, folders and rules. Remove or fix those rules according
     the users' wishes.
+
+    Returns:
+        True: Proceed, no "question" dialog shown
+        False: "Question dialog" shown
+        str: Action done after "question" dialog
     """
     repair_mode = html.request.var("_repair")
     if repair_mode is not None:

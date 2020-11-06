@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from typing import Callable, List, Optional, Set, Tuple, Union
+from typing import Callable, List, Optional, Set, Tuple
 
 from six import ensure_binary
 
@@ -18,9 +18,6 @@ from cmk.utils.type_defs import HostName, SectionName
 from .type_defs import (
     ABCSNMPBackend,
     OID,
-    OIDBytes,
-    OIDCached,
-    OIDSpec,
     SNMPDecodedValues,
     SNMPHostConfig,
     SNMPRawValue,
@@ -69,9 +66,8 @@ def _get_snmp_table(
     max_len = 0
     max_len_col = -1
 
-    for column in tree.oids:
-        fetchoid: OID = "%s.%s" % (tree.base, column)
-        value_encoding = _value_encoding(column)
+    for oid in tree.oids:
+        fetchoid: OID = "%s.%s" % (tree.base, oid.column)
         # column may be integer or string like "1.5.4.2.3"
         # if column is 0, we do not fetch any data from snmp, but use
         # a running counter as index. If the index column is the first one,
@@ -79,7 +75,7 @@ def _get_snmp_table(
         # in later. If the column is OID_STRING or OID_BIN we do something
         # similar: we fill in the complete OID of the entry, either as
         # string or as binary UTF-8 encoded number string
-        if isinstance(column, SpecialColumn):
+        if isinstance(oid.column, SpecialColumn):
             if index_column >= 0 and index_column != len(columns):
                 raise MKGeneralException(
                     "Invalid SNMP OID specification in implementation of check. "
@@ -87,35 +83,31 @@ def _get_snmp_table(
                     "and OID_END_OCTET_STRING.")
             rowinfo = []
             index_column = len(columns)
-            index_format = column
+            index_format = oid.column
         else:
             rowinfo = _get_snmpwalk(
                 section_name,
                 tree.base,
                 fetchoid,
                 use_snmpwalk_cache,
-                save_to_cache=isinstance(column, OIDCached),
+                save_to_cache=oid.save_to_cache,
                 backend=backend,
             )
             if len(rowinfo) > max_len:
                 max_len_col = len(columns)
 
         max_len = max(max_len, len(rowinfo))
-        columns.append((fetchoid, rowinfo, value_encoding))
+        columns.append((fetchoid, rowinfo, oid.encoding))
 
     if index_format is not None:
         # Take end-oids of non-index columns as indices
-        fetchoid, max_column, value_encoding = columns[max_len_col]
+        fetchoid, max_column, _value_encoding = columns[max_len_col]
 
         index_rows = _make_index_rows(max_column, index_format, fetchoid)
         index_encoding = columns[index_column][-1]
         columns[index_column] = fetchoid, index_rows, index_encoding
 
     return _make_table(columns, backend.config)
-
-
-def _value_encoding(column: Union[OIDSpec, SpecialColumn]) -> SNMPValueEncoding:
-    return "binary" if isinstance(column, OIDBytes) else "string"
 
 
 def _make_index_rows(

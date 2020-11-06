@@ -13,8 +13,8 @@ from cmk.utils.type_defs import SectionName
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.type_defs import (
     ABCSNMPBackend,
+    BackendOIDSpec,
     BackendSNMPTree,
-    OIDBytes,
     SNMPHostConfig,
     SNMPBackend,
     SpecialColumn,
@@ -48,18 +48,13 @@ class SNMPTestBackend(ABCSNMPBackend):
         return [("%s.%s" % (oid, r), b"C0FEFE") for r in (1, 2, 3)]
 
 
-@pytest.mark.parametrize("column", SpecialColumn)
-def test_value_encoding(column):
-    assert snmp_table._value_encoding(column) == "string"
-
-
 @pytest.mark.parametrize("snmp_info, expected_values", [
     (
         BackendSNMPTree(
             base='.1.3.6.1.4.1.13595.2.2.3.1',
             oids=[
-                SpecialColumn.END,
-                OIDBytes("16"),
+                BackendOIDSpec(SpecialColumn.END, "string", False),
+                BackendOIDSpec("16", "binary", False),
             ],
         ),
         [

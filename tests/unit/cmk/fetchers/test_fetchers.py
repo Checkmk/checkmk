@@ -20,8 +20,8 @@ from cmk.utils.type_defs import AgentRawData, result, SectionName
 
 from cmk.snmplib import snmp_table
 from cmk.snmplib.type_defs import (
+    BackendOIDSpec,
     BackendSNMPTree,
-    OIDSpec,
     SNMPDetectSpec,
     SNMPHostConfig,
     SNMPRawData,
@@ -289,10 +289,16 @@ class TestSNMPPluginStore:
         return SNMPPluginStore({
             SectionName("section0"): SNMPPluginStoreItem(
                 [
-                    BackendSNMPTree(base=".1.2.3", oids=[OIDSpec("4.5"),
-                                                         OIDSpec("9.7")]),
-                    BackendSNMPTree(base=".8.9.0", oids=[OIDSpec("1.2"),
-                                                         OIDSpec("3.4")]),
+                    BackendSNMPTree(base=".1.2.3",
+                                    oids=[
+                                        BackendOIDSpec("4.5", "string", False),
+                                        BackendOIDSpec("9.7", "string", False)
+                                    ]),
+                    BackendSNMPTree(base=".8.9.0",
+                                    oids=[
+                                        BackendOIDSpec("1.2", "string", False),
+                                        BackendOIDSpec("3.4", "string", False)
+                                    ]),
                 ],
                 SNMPDetectSpec([[
                     ("oid0", "regex0", True),
@@ -301,8 +307,13 @@ class TestSNMPPluginStore:
                 ]]),
             ),
             SectionName("section1"): SNMPPluginStoreItem(
-                [BackendSNMPTree(base=".1.2.3", oids=[OIDSpec("4.5"),
-                                                      OIDSpec("6.7.8")])],
+                [
+                    BackendSNMPTree(base=".1.2.3",
+                                    oids=[
+                                        BackendOIDSpec("4.5", "string", False),
+                                        BackendOIDSpec("6.7.8", "string", False)
+                                    ])
+                ],
                 SNMPDetectSpec([[
                     ("oid3", "regex3", True),
                     ("oid4", "regex4", False),
@@ -326,24 +337,34 @@ class ABCTestSNMPFetcher(ABC):
             file_cache,
             snmp_plugin_store=SNMPPluginStore({
                 SectionName("pim"): SNMPPluginStoreItem(
-                    trees=[BackendSNMPTree(base=".1.1.1", oids=[OIDSpec("1.2"),
-                                                                OIDSpec("3.4")])],
+                    trees=[
+                        BackendSNMPTree(base=".1.1.1",
+                                        oids=[
+                                            BackendOIDSpec("1.2", "string", False),
+                                            BackendOIDSpec("3.4", "string", False)
+                                        ])
+                    ],
                     detect_spec=SNMPDetectSpec([[("1.2.3.4", "pim device", True)]]),
                 ),
                 SectionName("pam"): SNMPPluginStoreItem(
                     trees=[
                         BackendSNMPTree(
                             base=".1.2.3",
-                            oids=[OIDSpec("4.5"), OIDSpec("6.7"),
-                                  OIDSpec("8.9")],
+                            oids=[
+                                BackendOIDSpec("4.5", "string", False),
+                                BackendOIDSpec("6.7", "string", False),
+                                BackendOIDSpec("8.9", "string", False)
+                            ],
                         ),
                     ],
                     detect_spec=SNMPDetectSpec([[("1.2.3.4", "pam device", True)]]),
                 ),
                 SectionName("pum"): SNMPPluginStoreItem(
                     trees=[
-                        BackendSNMPTree(base=".2.2.2", oids=[OIDSpec("2.2")]),
-                        BackendSNMPTree(base=".3.3.3", oids=[OIDSpec("2.2")]),
+                        BackendSNMPTree(base=".2.2.2",
+                                        oids=[BackendOIDSpec("2.2", "string", False)]),
+                        BackendSNMPTree(base=".3.3.3",
+                                        oids=[BackendOIDSpec("2.2", "string", False)]),
                     ],
                     detect_spec=SNMPDetectSpec([[]]),
                 ),

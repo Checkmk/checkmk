@@ -13,14 +13,18 @@ import cmk.snmplib.snmp_modes as snmp_modes
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.type_defs import (
     BackendSNMPTree,
-    OIDSpec,
+    BackendOIDSpec,
     SpecialColumn,
     SNMPBackend,
 )
 
 INFO_TREE = BackendSNMPTree(
     base=".1.3.6.1.2.1.1",
-    oids=[OIDSpec("1.0"), OIDSpec("2.0"), OIDSpec("5.0")],
+    oids=[
+        BackendOIDSpec("1.0", "string", False),
+        BackendOIDSpec("2.0", "string", False),
+        BackendOIDSpec("5.0", "string", False)
+    ],
 )
 
 
@@ -55,7 +59,7 @@ def test_get_data_types(backend, type_name, oid, expected_response):
     oid_start, oid_end = oid.rsplit(".", 1)
     table = snmp_table.get_snmp_table(
         section_name=SectionName("my_Section"),
-        oid_info=BackendSNMPTree(base=oid_start, oids=[OIDSpec(oid_end)]),
+        oid_info=BackendSNMPTree(base=oid_start, oids=[BackendOIDSpec(oid_end, "string", False)]),
         backend=backend,
     )
 
@@ -142,8 +146,12 @@ def test_get_simple_snmp_table(backend):
 def test_get_simple_snmp_table_oid_end(backend):
     oid_info = BackendSNMPTree(
         base=".1.3.6.1.2.1.2.2.1",
-        oids=[OIDSpec("1"), OIDSpec("2"),
-              OIDSpec("3"), SpecialColumn.END],
+        oids=[
+            BackendOIDSpec("1", "string", False),
+            BackendOIDSpec("2", "string", False),
+            BackendOIDSpec("3", "string", False),
+            BackendOIDSpec(SpecialColumn.END, "string", False),
+        ],
     )
     table = snmp_table.get_snmp_table(
         section_name=SectionName("my_Section"),
@@ -161,8 +169,12 @@ def test_get_simple_snmp_table_oid_string(backend):
     oid_info = BackendSNMPTree(
         base=".1.3.6.1.2.1.2.2.1",
         # deprecated with checkmk version 2.0
-        oids=[OIDSpec("1"), OIDSpec("2"),
-              OIDSpec("3"), SpecialColumn.STRING],
+        oids=[
+            BackendOIDSpec("1", "string", False),
+            BackendOIDSpec("2", "string", False),
+            BackendOIDSpec("3", "string", False),
+            BackendOIDSpec(SpecialColumn.STRING, "string", False),
+        ],
     )
     table = snmp_table.get_snmp_table(
         section_name=SectionName("my_Section"),
@@ -180,8 +192,12 @@ def test_get_simple_snmp_table_oid_bin(backend):
     oid_info = BackendSNMPTree(
         base=".1.3.6.1.2.1.2.2.1",
         # deprecated with checkmk version 2.0
-        oids=[OIDSpec("1"), OIDSpec("2"),
-              OIDSpec("3"), SpecialColumn.BIN],
+        oids=[
+            BackendOIDSpec("1", "string", False),
+            BackendOIDSpec("2", "string", False),
+            BackendOIDSpec("3", "string", False),
+            BackendOIDSpec(SpecialColumn.BIN, "string", False),
+        ],
     )
     table = snmp_table.get_snmp_table(
         section_name=SectionName("my_Section"),
@@ -199,8 +215,12 @@ def test_get_simple_snmp_table_oid_end_bin(backend):
     oid_info = BackendSNMPTree(
         base=".1.3.6.1.2.1.2.2.1",
         # deprecated with checkmk version 2.0
-        oids=[OIDSpec("1"), OIDSpec("2"),
-              OIDSpec("3"), SpecialColumn.END_BIN],
+        oids=[
+            BackendOIDSpec("1", "string", False),
+            BackendOIDSpec("2", "string", False),
+            BackendOIDSpec("3", "string", False),
+            BackendOIDSpec(SpecialColumn.END_BIN, "string", False),
+        ],
     )
     table = snmp_table.get_snmp_table(
         section_name=SectionName("my_Section"),
@@ -217,7 +237,7 @@ def test_get_simple_snmp_table_oid_end_bin(backend):
 def test_get_simple_snmp_table_with_hex_str(backend):
     oid_info = BackendSNMPTree(
         base=".1.3.6.1.2.1.2.2.1",
-        oids=[OIDSpec("6")],
+        oids=[BackendOIDSpec("6", "string", False)],
     )
 
     table = snmp_table.get_snmp_table(

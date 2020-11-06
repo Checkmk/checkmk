@@ -14,7 +14,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import ParsedSectionName, SectionName, SNMPDetectBaseType
 
-from cmk.snmplib.type_defs import OIDBytes, OIDSpec  # pylint: disable=cmk-module-layer-violation
+from cmk.snmplib.type_defs import OIDSpec  # pylint: disable=cmk-module-layer-violation
 
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
@@ -258,7 +258,7 @@ def create_snmp_section_plugin(
         _validate_fetch_spec(tree_list)
 
         if parse_function is not None:
-            needs_bytes = any(isinstance(oid, OIDBytes) for tree in tree_list for oid in tree.oids)
+            needs_bytes = any(oid.encoding == "binary" for tree in tree_list for oid in tree.oids)
             _validate_parse_function(
                 parse_function,
                 expected_annotation=_create_parse_annotation(

@@ -267,16 +267,6 @@ class BackendOIDSpec(NamedTuple):
     encoding: SNMPValueEncoding
     save_to_cache: bool
 
-    @classmethod  # TODO: change frontend, such that this becomes obsolete.
-    def from_frontend(cls, oid_spec: Union[int, str, OIDSpec]) -> 'BackendOIDSpec':
-        if isinstance(oid_spec, int):
-            return cls(SpecialColumn(oid_spec), "string", False)
-        if isinstance(oid_spec, OIDBytes):
-            return cls(str(oid_spec), "binary", False)
-        if isinstance(oid_spec, OIDCached):
-            return cls(str(oid_spec), "string", True)
-        return cls(str(oid_spec), "string", False)
-
     def _serialize(self) -> Union[Tuple[str, str, bool], Tuple[int, str, bool]]:
         if isinstance(self.column, SpecialColumn):
             return (int(self.column), self.encoding, self.save_to_cache)
@@ -307,11 +297,11 @@ class BackendSNMPTree(NamedTuple):
         cls,
         *,
         base: str,
-        oids: Iterable[Union[str, OIDSpec, int]],
+        oids: Iterable[Tuple[Union[str, int], SNMPValueEncoding, bool]],
     ) -> 'BackendSNMPTree':
         return cls(
             base=base,
-            oids=[BackendOIDSpec.from_frontend(oid) for oid in oids],
+            oids=[BackendOIDSpec.deserialize(*oid) for oid in oids],
         )
 
     def to_json(self) -> Dict[str, Any]:

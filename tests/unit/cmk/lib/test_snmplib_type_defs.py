@@ -16,6 +16,7 @@ from cmk.snmplib.type_defs import (
     SNMPDetectSpec,
     SpecialColumn,
 )
+from cmk.base.api.agent_based.type_defs import _create_oid_entry
 
 
 class TestSNMPDetectSpec:
@@ -35,7 +36,13 @@ def test_snmptree_from_frontend():
     base = "1.2"
     tree = BackendSNMPTree.from_frontend(
         base=base,
-        oids=['2', OIDCached('2'), OIDBytes('2'), SpecialColumn.END],
+        oids=[
+            # this function will vanish, still use it for a moment:
+            _create_oid_entry('2'),
+            _create_oid_entry(OIDCached('2')),
+            _create_oid_entry(OIDBytes('2')),
+            _create_oid_entry(SpecialColumn.END),
+        ],
     )
 
     assert tree.base == base

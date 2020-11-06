@@ -49,8 +49,8 @@ class ABCHostMode(WatoMode, metaclass=abc.ABCMeta):
         return ModeFolder
 
     @abc.abstractmethod
-    def _init_host(self):
-        raise NotImplementedError()
+    def _init_host(self) -> watolib.CREHost:
+        ...
 
     def __init__(self):
         self._host = self._init_host()
@@ -274,13 +274,14 @@ class ModeEditHost(ABCHostMode):
     def _breadcrumb_url(self) -> str:
         return self.mode_url(host=self._host.name())
 
-    def _init_host(self):
+    def _init_host(self) -> watolib.CREHost:
         hostname = html.request.get_ascii_input_mandatory("host")
-
-        if not watolib.Folder.current().has_host(hostname):
+        folder = watolib.Folder.current()
+        if not folder.has_host(hostname):
             raise MKUserError("host", _("You called this page with an invalid host name."))
-
-        return watolib.Folder.current().host(hostname)
+        host = folder.host(hostname)
+        host.need_permission("read")
+        return host
 
     def title(self):
         return _("Properties of host") + " " + self._host.name()
@@ -462,7 +463,7 @@ class CreateHostMode(ABCHostMode):
         else:
             self._mode = "new"
 
-    def _init_host(self):
+    def _init_host(self) -> watolib.CREHost:
         clonename = html.request.get_ascii_input("clone")
         if not clonename:
             return self._init_new_host_object()

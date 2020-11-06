@@ -94,6 +94,25 @@ SECTION_2: job.Section = {
     },
 }
 
+SECTION_3: job.Section = {
+    'process1minrtu': {
+        'running': False,
+        'start_time': 1560925321,
+        'exit_code': 0,
+        'metrics': {
+            'real_time': 2.63,
+            'user_time': 0.62,
+            'system_time': 0.31,
+            'reads': 90736,
+            'writes': 0,
+            'max_res_bytes': 109380000,
+            'avg_mem_bytes': 0,
+            'invol_context_switches': 203407,
+            'vol_context_switches': 2025,
+        },
+    },
+}
+
 TIME = 1594300620.0, "CET"
 
 
@@ -190,6 +209,36 @@ def test_job_parse_real_time(timestr, expected_result):
             ['vol_context_switches', '274'],
         ],
         SECTION_2,
+    ),
+    (
+        [
+            ['==>', 'process1minrtu', '<=='],
+            ['start_time', '1560925321'],
+            ['exit_code', '0'],
+            ['real_time', '0:02.63'],
+            ['user_time', '0.62'],
+            ['system_time', '0.31'],
+            ['reads', '90736'],
+            ['writes', '0'],
+            ['max_res_kbytes', '109380'],
+            ['avg_mem_kbytes', '0'],
+            ['invol_context_switches', '203407'],
+            ['vol_context_switches', '2025'],
+            ['==>', 'process1minrtu.30166running', '<=='],
+            ['start_time', '1560921361'],
+            ['Command', 'terminated', 'by', 'signal', '9'],
+            ['exit_code', '0'],
+            ['real_time', '1:32:44'],
+            ['user_time', '2249.08'],
+            ['system_time', '334.76'],
+            ['reads', '34325712'],
+            ['writes', '256'],
+            ['max_res_kbytes', '7404976'],
+            ['avg_mem_kbytes', '0'],
+            ['invol_context_switches', '510568'],
+            ['vol_context_switches', '1344324'],
+        ],
+        SECTION_3,
     ),
 ])
 def test_parse(string_table, expected_parsed_data):

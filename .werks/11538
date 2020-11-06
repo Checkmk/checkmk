@@ -1,0 +1,15 @@
+Title: job: treat killed jobs as a non-running job
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1604651544
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+The job check monitors processes on Linux. Killed jobs were falsely flagged as
+running jobs, wich could potentially lead to a crash with an obscure error
+message: raise ValueError("Cannot render negative timespan"). This has been
+fixed, so that killed jobs are shown as terminated jobs and are only reported
+if they are the latest instance of the job.

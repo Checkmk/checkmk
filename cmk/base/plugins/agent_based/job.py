@@ -85,24 +85,60 @@ def _job_parse_key_values(line: List[str]) -> Tuple[str, float]:
     return key, int(val)
 
 
+def _get_jobname_and_running_state(
+    jobname: str,
+    string_table: type_defs.StringTable,
+) -> Tuple[str, str]:
+    '''determine whether the job is running. some jobs are flagged as
+    running jobs, but are in fact not (i.e. they are pseudo running), for
+    example killed jobs.
+    returns a tuple containing the job name without the 'running' postfix
+    (if applicable) and one of three possible running states:
+        - 'running'
+        - 'not_running'
+        - 'pseudo_running'
+    '''
+
+    if not jobname.endswith("running"):
+        return jobname, 'not_running'
+
+    jobname = jobname.rsplit(".", 1)[0]
+    try:
+        # real running jobs only have the start time defined, then the
+        # next section begins
+        is_running = string_table[2][0] == '==>'
+    except IndexError:
+        return jobname, 'running'
+
+    if not is_running:
+        return jobname, 'pseudo_running'
+
+    return jobname, 'running'
+
+
 def parse_job(string_table: type_defs.StringTable) -> Section:
     parsed: Section = {}
+    pseudo_running_jobs: Section = {
+    }  # contains jobs that are flagged as running but are not, e.g. killed jobs
     job: Job = {}
-    for line in string_table:
+    for idx, line in enumerate(string_table):
         if line[0] == "==>" and line[-1] == "<==":
-            jobname = " ".join(line[1:-1])
-            running = jobname.endswith("running")
-            if running:
-                jobname = jobname.rsplit(".", 1)[0]
+            jobname, running_state = _get_jobname_and_running_state(
+                " ".join(line[1:-1]),
+                string_table[idx:],
+            )
+            running = running_state == 'running'
 
             metrics: Metrics = {}
-            job = parsed.setdefault(
-                jobname,
-                {
-                    "running": running,
-                    "metrics": metrics,
-                },
-            )
+            job_stats: Job = {
+                "running": running,
+                "metrics": metrics,
+            }
+            if running_state == 'pseudo_running':
+                job = pseudo_running_jobs.setdefault(jobname, job_stats)
+                continue
+
+            job = parsed.setdefault(jobname, job_stats)
 
         elif job and len(line) == 2:
             key, val = _job_parse_key_values(line)
@@ -115,6 +151,10 @@ def parse_job(string_table: type_defs.StringTable) -> Section:
             else:
                 assert key in _METRIC_SPECS
                 metrics[key] = val
+
+    for jobname, job_stats in pseudo_running_jobs.items():
+        if job_stats['start_time'] > parsed.get(jobname, {}).get('start_time', 0):
+            parsed[jobname] = job_stats
 
     return parsed
 

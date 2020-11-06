@@ -22,13 +22,13 @@ from typing import (
     Union,
 )
 import pprint
+import string
 
 from cmk.utils.type_defs import (
     ParsedSectionName,
     SectionName,
     SNMPDetectBaseType,
 )
-from cmk.snmplib.type_defs import OIDSpec, OIDCached, OIDBytes  # pylint: disable=cmk-module-layer-violation
 
 
 class PluginSuppliedLabel(NamedTuple("_LabelTuple", [("name", str), ("value", str)])):
@@ -59,21 +59,6 @@ class HostLabel(PluginSuppliedLabel):
     """
 
 
-# We must make sure that `SpecialColumn(OIDEnd()) == SpecialColumn.END`
-class OIDEnd(int):
-    """OID specification to get the end of the OID string
-
-    When specifying an OID in an SNMPTree object, the parse function
-    will be handed the corresponding value of that OID. If you use OIDEnd()
-    instead, the parse function will be given the tailing portion of the
-    OID (the part that you not already know).
-    """
-
-    # NOTE: The default constructor already does the right thing for our "glorified 0".
-    def __repr__(self):
-        return "OIDEnd()"
-
-
 class Parameters(Mapping):
     """Parameter objects are used to pass parameters to plugin functions"""
     def __init__(self, data):
@@ -101,16 +86,9 @@ class OIDSpecTuple(NamedTuple):
     encoding: Union[Literal["string"], Literal["binary"]]
     save_to_cache: bool
 
-
-# TODO: this must vanish after refactoring is done
-def _create_oid_entry(raw_oid: Union[int, str, OIDSpec]) -> OIDSpecTuple:
-    if isinstance(raw_oid, int):  # currently including OIDEnd
-        return OIDSpecTuple(raw_oid, "string", False)
-    if isinstance(raw_oid, OIDCached):
-        return OIDSpecTuple(str(raw_oid), "string", True)
-    if isinstance(raw_oid, OIDBytes):
-        return OIDSpecTuple(str(raw_oid), "binary", False)
-    return OIDSpecTuple(str(raw_oid), "string", False)
+    # we create a deepcopy in our unit tests, so support it.
+    def __deepcopy__(self, _memo) -> 'OIDSpecTuple':
+        return self
 
 
 class SNMPTreeTuple(NamedTuple):
@@ -118,7 +96,7 @@ class SNMPTreeTuple(NamedTuple):
     oids: Sequence[OIDSpecTuple]
 
 
-# TODO: move this out of this file.
+# TODO: move this to section_classes and elaborate docstring.
 class SNMPTree(SNMPTreeTuple):
     # This extends the basic tuple type by
     # * validation
@@ -139,12 +117,14 @@ class SNMPTree(SNMPTreeTuple):
         >>> _ = SNMPTree(
         ...     base=".1.2.3.4.5.6",
         ...     oids=[
-        ...         OIDEnd(),  # get the end oids of every entry
+        ...         # OIDEnd(),  # get the end oids of every entry
         ...         "7.8",  # just a regular entry
         ...     ],
         ... )
     """
-    def __new__(cls, base: str, oids: Sequence[Union[str, OIDSpec, OIDEnd]]) -> 'SNMPTree':
+    VALID_CHARACTERS = set(('.', *string.digits))
+
+    def __new__(cls, base: str, oids: Sequence[Union[str, OIDSpecTuple]]) -> 'SNMPTree':
         # TODO: we must validate list property before iterating over oids
         # (otherwise '123' will become ['1', '2', '3']).
         if not isinstance(oids, list):
@@ -153,19 +133,29 @@ class SNMPTree(SNMPTreeTuple):
         return super().__new__(
             cls,
             base=base,
-            oids=[_create_oid_entry(o) for o in oids],
+            oids=[
+                o if isinstance(o, OIDSpecTuple) else OIDSpecTuple(o, "string", False) for o in oids
+            ],
         )
 
     def validate(self) -> None:
         self._validate_base(self.base)
         self._validate_oids(self.oids)
 
-    @staticmethod
-    def _validate_common_oid_properties(raw: str) -> None:
-        _ = OIDSpec(raw)  # TODO: move validation here
+    @classmethod
+    def validate_oid_string(cls, value: str) -> None:
+        if not isinstance(value, str):
+            raise TypeError(f"expected a non-empty string: {value!r}")
+        if not value:
+            raise ValueError(f"expected a non-empty string: {value!r}")
+        if not cls.VALID_CHARACTERS.issuperset(value):
+            invalid_chars = ''.join(sorted(set(value).difference(cls.VALID_CHARACTERS)))
+            raise ValueError(f"invalid characters in OID descriptor: {invalid_chars!r}")
+        if value.endswith('.'):
+            raise ValueError(f"{value} should not end with '.'")
 
     def _validate_base(self, base: str) -> None:
-        self._validate_common_oid_properties(base)
+        self.validate_oid_string(base)
         if not base.startswith('.'):
             raise ValueError(f"{base!r} must start with '.'")
 
@@ -189,7 +179,7 @@ class SNMPTree(SNMPTreeTuple):
             if not isinstance(column, str):
                 raise ValueError(f"invalid OID column {column!r}")
 
-            self._validate_common_oid_properties(column)
+            self.validate_oid_string(column)
 
             if column.startswith('.'):
                 raise ValueError(f"{column!r} must not start with '.'")

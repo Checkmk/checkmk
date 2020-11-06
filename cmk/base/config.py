@@ -92,7 +92,7 @@ from cmk.utils.type_defs import (
 )
 
 from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-import; these are required in the modules' namespace to load the configuration!
-    OIDBytes, OIDCached, SNMPScanFunction, SNMPCredentials, SNMPHostConfig, SNMPTiming, SNMPBackend)
+    SNMPScanFunction, SNMPCredentials, SNMPHostConfig, SNMPTiming, SNMPBackend)
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks

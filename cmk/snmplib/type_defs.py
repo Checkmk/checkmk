@@ -8,7 +8,6 @@ import abc
 import enum
 import json
 import logging
-import string
 from typing import (
     Any,
     AnyStr,
@@ -216,50 +215,6 @@ class SpecialColumn(enum.IntEnum):
     BIN = -2  # Complete OID as binary string "\x01\x03\x06\x01..."
     END_BIN = -3  # Same, but just the end part
     END_OCTET_STRING = -4  # yet same, but omit first byte (assuming that is the length byte)
-
-
-class OIDSpec:
-    """Basic class for OID spec of the form ".1.2.3.4.5" or "2.3"
-    """
-    VALID_CHARACTERS = set(('.', *string.digits))
-
-    @classmethod
-    def validate(cls, value: str) -> None:
-        if not isinstance(value, str):
-            raise TypeError(f"expected a non-empty string: {value!r}")
-        if not value:
-            raise ValueError(f"expected a non-empty string: {value!r}")
-        if not cls.VALID_CHARACTERS.issuperset(value):
-            invalid_chars = ''.join(sorted(set(value).difference(cls.VALID_CHARACTERS)))
-            raise ValueError(f"invalid characters in OID descriptor: {invalid_chars!r}")
-        if value.endswith('.'):
-            raise ValueError(f"{value} should not end with '.'")
-
-    def __init__(self, value: Union["OIDSpec", str]) -> None:
-        if isinstance(value, OIDSpec):
-            value = str(value)
-        else:
-            self.validate(value)
-        self._value = value
-
-    def __eq__(self, other: Any) -> bool:
-        if other.__class__ != self.__class__:
-            return False
-        return self._value == other._value
-
-    def __str__(self) -> str:
-        return self._value
-
-    def __repr__(self) -> str:
-        return "%s(%r)" % (self.__class__.__name__, self._value)
-
-
-class OIDCached(OIDSpec):
-    pass
-
-
-class OIDBytes(OIDSpec):
-    pass
 
 
 class BackendOIDSpec(NamedTuple):

@@ -29,7 +29,6 @@ from cmk.base.caching import config_cache as _config_cache
 import cmk.base.config as config
 from cmk.base.check_utils import Service
 from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
-from cmk.snmplib.type_defs import OIDBytes, OIDCached
 
 
 def test_duplicate_hosts(monkeypatch):
@@ -2051,17 +2050,6 @@ def test_load_packed_config(serial):
     # Mypy does not understand that we add some new member for testing
     assert config.abc == 1  # type: ignore[attr-defined]
     del config.__dict__["abc"]
-
-
-# These types are currently imported into the cmk.base.config namespace, just to be able to load
-# objects of this type from the configuration
-def test_packed_config_able_to_load_snmp_types(serial):
-    config.PackedConfigStore(serial).write(
-        "test_var1 = OIDBytes('6')\n\ntest_var2 = OIDCached('6')\n\n")
-
-    config.load_packed_config(serial)
-    assert config.test_var1 == OIDBytes('6')  # type: ignore[attr-defined]
-    assert config.test_var2 == OIDCached('6')  # type: ignore[attr-defined]
 
 
 class TestPackedConfigStore:

@@ -7,7 +7,8 @@
 import pytest  # type: ignore[import]
 
 from cmk.snmplib.type_defs import SpecialColumn
-from cmk.base.api.agent_based.type_defs import OIDEnd, SNMPTree
+from cmk.base.api.agent_based.section_classes import OIDEnd
+from cmk.base.api.agent_based.type_defs import SNMPTree
 
 
 def test_oid_end_repr():
@@ -15,7 +16,7 @@ def test_oid_end_repr():
 
 
 def test_oid_end_compat_with_backend():
-    assert SpecialColumn(OIDEnd()) == SpecialColumn.END
+    assert OIDEnd().column == SpecialColumn.END
 
 
 @pytest.mark.parametrize(

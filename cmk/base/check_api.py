@@ -117,8 +117,11 @@ from cmk.utils.type_defs import (
     ServiceState,
 )
 
-from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-import
-    SpecialColumn as _SpecialColumn, OIDBytes, OIDCached,
+from cmk.snmplib.type_defs import SpecialColumn as _SpecialColumn
+
+from cmk.base.api.agent_based.section_classes import (
+    OIDBytes as _OIDBytes,
+    OIDCached as _OIDCached,
 )
 
 import cmk.base.api.agent_based.register as _agent_based_register
@@ -176,8 +179,8 @@ def get_check_api_context() -> _config.CheckContext:
 core_state_names = _defines.short_service_state_names()
 
 # backwards compatibility: allow to pass integer.
-BINARY = lambda x: OIDBytes(str(x))
-CACHED_OID = lambda x: OIDCached(str(x))
+BINARY = lambda x: _OIDBytes(str(x))
+CACHED_OID = lambda x: _OIDCached(str(x))
 
 OID_BIN = _SpecialColumn.BIN
 OID_STRING = _SpecialColumn.STRING

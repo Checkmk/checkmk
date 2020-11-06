@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# TODO (mo): move this where it belongs
+
 import json
 
 import pytest  # type: ignore[import]
@@ -11,12 +13,10 @@ import pytest  # type: ignore[import]
 from cmk.snmplib.type_defs import (
     BackendOIDSpec,
     BackendSNMPTree,
-    OIDCached,
-    OIDBytes,
     SNMPDetectSpec,
     SpecialColumn,
 )
-from cmk.base.api.agent_based.type_defs import _create_oid_entry
+from cmk.base.api.agent_based.type_defs import OIDSpecTuple
 
 
 class TestSNMPDetectSpec:
@@ -37,11 +37,10 @@ def test_snmptree_from_frontend():
     tree = BackendSNMPTree.from_frontend(
         base=base,
         oids=[
-            # this function will vanish, still use it for a moment:
-            _create_oid_entry('2'),
-            _create_oid_entry(OIDCached('2')),
-            _create_oid_entry(OIDBytes('2')),
-            _create_oid_entry(SpecialColumn.END),
+            OIDSpecTuple('2', "string", False),
+            OIDSpecTuple('2', "string", True),
+            OIDSpecTuple('2', "binary", False),
+            OIDSpecTuple(SpecialColumn.END, "string", False),
         ],
     )
 

@@ -407,44 +407,54 @@ div.dashlet.edit {
   }
 
   /* position anchors */
+  $corner-size: 26px;
   .anchor {
     position: absolute;
-    width: 14px;
-    height: 14px;
     cursor: auto;
-    /* background-color: rgba(255, 255, 255, 0.7); */
-    background-image: url("images/dashlet_anchor_lo.png");
-    border-radius: 5px;
     /* IE < 9 */
     filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
 
-    &.off {
-      cursor: pointer;
-      background-image: url("images/dashlet_anchor_off.png");
-
-      &:hover {
-        background-image: url("images/dashlet_anchor_hi.png");
-      }
-    }
+    // Edit with this tricks
+    // https://css-tricks.com/the-shapes-of-css/#triangle-top-left-shape
 
     &.anchor0 {
       top: 4px;
       left: 4px;
+      border-top: $corner-size solid #13d389;
+      border-right: $corner-size solid transparent;
+      &.off {
+        border-top: $corner-size solid #4e5d69;
+      }
     }
 
     &.anchor1 {
       top: 4px;
       right: 4px;
+      border-top: $corner-size solid #13d389;
+      border-left: $corner-size solid transparent;
+      &.off {
+        border-top: $corner-size solid #4e5d69;
+      }
     }
 
     &.anchor2 {
       right: 4px;
       bottom: 4px;
+      border-bottom: $corner-size solid #13d389;
+      border-left: $corner-size solid transparent;
+      &.off {
+        border-bottom: $corner-size solid #4e5d69;
+      }
     }
 
     &.anchor3 {
       bottom: 4px;
       left: 4px;
+      border-bottom: $corner-size solid #13d389;
+      border-right: $corner-size solid transparent;
+      &.off {
+        border-bottom: $corner-size solid #4e5d69;
+      }
     }
   }
 }

@@ -530,9 +530,8 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
         var anchor_id = get_anchor_id(dashlet);
 
         // Create the size / grow indicators and resizer control elements
-        var i;
         if (utils.has_class(dashlet_obj, "resizable")) {
-            for (i = 0; i < 2; i++) {
+            for (let i = 0; i < 2; i++) {
                 if (i == 0) render_sizer(controls, nr, i, anchor_id, dashlet.w);
                 else render_sizer(controls, nr, i, anchor_id, dashlet.h);
             }
@@ -549,22 +548,14 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
         };
 
         // Create the anchors
-        for (i = 0; i < 4; i++) {
-            var anchor = document.createElement("a");
-            anchor.className = "anchor anchor" + i;
-            anchor.title = "Currently growing from here";
+        for (let i = 0; i < 4; i++) {
+            let anchor = create_a_button("anchor anchor" + i, "Currently growing from here", () =>
+                toggle_anchor(nr, i)
+            );
             if (anchor_id != i) {
                 anchor.className += " off";
                 anchor.title = "Click to start growing from here";
             }
-
-            // js magic stuff - closures!
-            anchor.onclick = (function (dashlet_id, anchor_id) {
-                return function () {
-                    toggle_anchor(dashlet_id, anchor_id);
-                };
-            })(nr, i);
-
             controls.appendChild(anchor);
         }
         var click_actions = function (target) {

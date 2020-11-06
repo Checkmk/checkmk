@@ -159,15 +159,12 @@ export function toggle_suggestions() {
 export function form_submit(form_name, button_name) {
     var form = document.getElementById("form_" + form_name);
     var field = document.createElement("input");
-    field.type = "hidden";
+    field.type = "submit";
     field.name = button_name;
     field.value = "SET";
     form.appendChild(field);
 
-    // Submit and also trigger the onsubmit events (to e.g. trigger confirm dialogs).
-    // form.submit() alone does not do that.
-    //form.submit();
-    form.dispatchEvent(new Event("submit", {cancelable: true}));
+    field.click();
 }
 
 // Helper for building form submit links after confirming a dialog

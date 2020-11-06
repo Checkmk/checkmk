@@ -82,7 +82,7 @@ if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.dashboard  # pylint: disable=no-name-in-module
 
 from cmk.gui.plugins.views.utils import data_source_registry
-from cmk.gui.plugins.dashboard.utils import (builtin_dashboards, GROW, MAX, dashlet_types,
+from cmk.gui.plugins.dashboard.utils import (builtin_dashboards, GROW, dashlet_types,
                                              dashlet_registry, Dashlet, get_all_dashboards,
                                              save_all_dashboards, get_permitted_dashboards,
                                              copy_view_into_dashlet, dashboard_breadcrumb,
@@ -539,7 +539,6 @@ def draw_dashboard(name: DashboardName) -> None:
     html.close_div()
 
     dashboard_properties = {
-        "MAX": MAX,
         "GROW": GROW,
         "grid_size": raster,
         "header_height": header_height,

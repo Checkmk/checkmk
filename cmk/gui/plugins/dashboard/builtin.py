@@ -9,7 +9,6 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.dashboard import (
     builtin_dashboards,
     GROW,
-    MAX,
 )
 
 builtin_dashboards["main"] = {
@@ -99,7 +98,7 @@ builtin_dashboards["main"] = {
             "title": _("Service Problems (unhandled)"),
             "title_url": "view.py?view_name=svcproblems&is_service_acknowledged=0",
             "position": (1, 19),
-            "size": (GROW, MAX),
+            "size": (GROW, GROW),
             "show_title": True,
             'browser_reload': 30,
             'column_headers': 'pergroup',
@@ -240,7 +239,7 @@ builtin_dashboards["simple_problems"] = {
             "title_url": "view.py?view_name=svcproblems&is_service_acknowledged=0",
             "show_title": True,
             "position": (1, 19),
-            "size": (GROW, MAX),
+            "size": (GROW, GROW),
             'browser_reload': 30,
             'column_headers': 'pergroup',
             'datasource': 'services',

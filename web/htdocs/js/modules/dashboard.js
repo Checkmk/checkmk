@@ -143,7 +143,7 @@ function set_control_size(dash_controls, width, height) {
 }
 
 function is_dynamic(x) {
-    return x == dashboard_properties.MAX || x == dashboard_properties.GROW;
+    return x == dashboard_properties.GROW;
 }
 
 function align_to_grid(px) {
@@ -168,21 +168,11 @@ vec.prototype = {
             this.y < 0 ? this.y + size_v.y + 1 : this.y - 1
         );
     },
-    // Compute the initial size of the dashlet. If dashboard_properties.MAX is used,
-    // then the dashlet consumes all space in its growing direction,
-    // regardless of any other dashlets.
+    // Compute the initial size of the dashlet.
     initial_size: function (pos_v, grid_v) {
         return new vec(
-            this.x == dashboard_properties.MAX
-                ? grid_v.x - Math.abs(pos_v.x) + 1
-                : this.x == dashboard_properties.GROW
-                ? dashboard_properties.dashlet_min_size[0]
-                : this.x,
-            this.y == dashboard_properties.MAX
-                ? grid_v.y - Math.abs(pos_v.y) + 1
-                : this.y == dashboard_properties.GROW
-                ? dashboard_properties.dashlet_min_size[1]
-                : this.y
+            this.x <= dashboard_properties.GROW ? dashboard_properties.dashlet_min_size[0] : this.x,
+            this.y <= dashboard_properties.GROW ? dashboard_properties.dashlet_min_size[1] : this.y
         );
     },
     // return codes:
@@ -191,8 +181,8 @@ vec.prototype = {
     // -1: grow direction left, up
     compute_grow_by: function (size_v) {
         return new vec(
-            size_v.x != dashboard_properties.GROW ? 0 : this.x < 0 ? -1 : 1,
-            size_v.y != dashboard_properties.GROW ? 0 : this.y < 0 ? -1 : 1
+            size_v.x > dashboard_properties.GROW ? 0 : this.x < 0 ? -1 : 1,
+            size_v.y > dashboard_properties.GROW ? 0 : this.y < 0 ? -1 : 1
         );
     },
     toString: function () {
@@ -468,11 +458,7 @@ function render_sizer(controls, nr, i, anchor_id, size) {
     var sizer_lbl = document.createElement("div");
     sizer_lbl.className = "sizer_lbl sizer_lbl" + i + " anchor" + anchor_id;
 
-    if (size == dashboard_properties.MAX) {
-        sizer.className += " max";
-        //sizer_lbl.innerHTML = "MAX";
-        sizer.title = "Use maximum available space in this direction";
-    } else if (size == dashboard_properties.GROW) {
+    if (size <= dashboard_properties.GROW) {
         sizer.className += " grow";
         //sizer_lbl.innerHTML = "GROW";
         sizer.title = "Grow in this direction";
@@ -620,12 +606,7 @@ function toggle_sizer(nr, sizer_id) {
         if (dashlet.w > 0) {
             g_last_absolute_widths[nr] = dashlet.w;
             dashlet.w = dashboard_properties.GROW;
-        } else if (dashlet.w == dashboard_properties.GROW) {
-            if (!(nr in g_last_absolute_widths))
-                g_last_absolute_widths[nr] =
-                    dashlet_obj.clientWidth / dashboard_properties.grid_size;
-            dashlet.w = dashboard_properties.MAX;
-        } else if (dashlet.w == dashboard_properties.MAX) {
+        } else {
             if (nr in g_last_absolute_widths) dashlet.w = g_last_absolute_widths[nr];
             else dashlet.w = dashlet_obj.clientWidth / dashboard_properties.grid_size;
         }
@@ -633,12 +614,7 @@ function toggle_sizer(nr, sizer_id) {
         if (dashlet.h > 0) {
             g_last_absolute_heights[nr] = dashlet.h;
             dashlet.h = dashboard_properties.GROW;
-        } else if (dashlet.h == dashboard_properties.GROW) {
-            if (!(nr in g_last_absolute_heights))
-                g_last_absolute_heights[nr] =
-                    dashlet_obj.clientHeight / dashboard_properties.grid_size;
-            dashlet.h = dashboard_properties.MAX;
-        } else if (dashlet.h == dashboard_properties.MAX) {
+        } else {
             if (nr in g_last_absolute_heights) dashlet.h = g_last_absolute_heights[nr];
             else dashlet.h = dashlet_obj.clientHeight / dashboard_properties.grid_size;
         }

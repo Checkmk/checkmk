@@ -172,3 +172,151 @@ def test_openapi_bulk_hosts(wsgi_app, with_automation_user, suppress_automation_
         status=400,
         content_type='application/json',
     )
+
+
+def test_openapi_host_rename(
+    wsgi_app,
+    with_automation_user,
+    suppress_automation_calls,
+    monkeypatch,
+):
+    monkeypatch.setattr("cmk.gui.watolib.activate_changes.get_pending_changes_info", lambda: [])
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = '/NO_SITE/check_mk/api/v0'
+
+    wsgi_app.call_method(
+        'post',
+        base + "/domain-types/host_config/collections/all",
+        params='{"host_name": "foobar", "folder": "/"}',
+        status=200,
+        content_type='application/json',
+    )
+
+    resp = wsgi_app.call_method(
+        'get',
+        base + "/objects/host_config/foobar",
+        status=200,
+    )
+
+    _resp = wsgi_app.call_method(
+        'put',
+        base + "/objects/host_config/foobar/actions/rename/invoke",
+        params='{"new_name": "foobaz"}',
+        content_type='application/json',
+        headers={'If-Match': resp.headers['ETag']},
+        status=200,
+    )
+
+    _resp = wsgi_app.call_method(
+        'get',
+        base + "/objects/host_config/foobaz",
+        status=200,
+    )
+
+
+def test_openapi_host_rename_error_on_not_existing_host(
+    wsgi_app,
+    with_automation_user,
+    suppress_automation_calls,
+    monkeypatch,
+):
+    monkeypatch.setattr("cmk.gui.watolib.activate_changes.get_pending_changes_info", lambda: [])
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = '/NO_SITE/check_mk/api/v0'
+
+    wsgi_app.call_method(
+        'post',
+        base + "/domain-types/host_config/collections/all",
+        params='{"host_name": "foobar", "folder": "/"}',
+        status=200,
+        content_type='application/json',
+    )
+
+    resp = wsgi_app.call_method(
+        'get',
+        base + "/objects/host_config/foobar",
+        status=200,
+    )
+
+    _resp = wsgi_app.call_method(
+        'put',
+        base + "/objects/host_config/fooba/actions/rename/invoke",
+        params='{"new_name": "foobaz"}',
+        content_type='application/json',
+        headers={'If-Match': resp.headers['ETag']},
+        status=404,
+    )
+
+
+def test_openapi_host_rename_on_invalid_hostname(
+    wsgi_app,
+    with_automation_user,
+    suppress_automation_calls,
+    monkeypatch,
+):
+    monkeypatch.setattr("cmk.gui.watolib.activate_changes.get_pending_changes_info", lambda: [])
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = '/NO_SITE/check_mk/api/v0'
+
+    wsgi_app.call_method(
+        'post',
+        base + "/domain-types/host_config/collections/all",
+        params='{"host_name": "foobar", "folder": "/"}',
+        status=200,
+        content_type='application/json',
+    )
+
+    resp = wsgi_app.call_method(
+        'get',
+        base + "/objects/host_config/foobar",
+        status=200,
+    )
+
+    _resp = wsgi_app.call_method(
+        'put',
+        base + "/objects/host_config/foobar/actions/rename/invoke",
+        params='{"new_name": "foobar"}',
+        content_type='application/json',
+        headers={'If-Match': resp.headers['ETag']},
+        status=400,
+    )
+
+
+def test_openapi_host_rename_with_pending_activate_changes(
+    wsgi_app,
+    with_automation_user,
+    suppress_automation_calls,
+):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = '/NO_SITE/check_mk/api/v0'
+
+    wsgi_app.call_method(
+        'post',
+        base + "/domain-types/host_config/collections/all",
+        params='{"host_name": "foobar", "folder": "/"}',
+        status=200,
+        content_type='application/json',
+    )
+
+    resp = wsgi_app.call_method(
+        'get',
+        base + "/objects/host_config/foobar",
+        status=200,
+    )
+
+    _resp = wsgi_app.call_method(
+        'put',
+        base + "/objects/host_config/foobar/actions/rename/invoke",
+        params='{"new_name": "foobaz"}',
+        content_type='application/json',
+        headers={'If-Match': resp.headers['ETag']},
+        status=409,
+    )

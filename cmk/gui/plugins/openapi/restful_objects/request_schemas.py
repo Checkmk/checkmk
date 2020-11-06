@@ -5,6 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import urllib.parse
 
+import cmk.gui.valuespec as valuespec
+
 from marshmallow import ValidationError
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
@@ -44,6 +46,7 @@ class Hostname(fields.String):
     default_error_messages = {
         'should_exist': 'Host missing: {host_name!r}',
         'should_not_exist': 'Host {host_name!r} already exists.',
+        'invalid_name': 'The provided name for host {host_name!r} is invalid: {invalid_reason!r}',
     }
 
     def __init__(
@@ -72,6 +75,11 @@ class Hostname(fields.String):
             self.fail("should_exist", host_name=value)
         elif not self._should_exist and host:
             self.fail("should_not_exist", host_name=value)
+
+        try:
+            valuespec.Hostname().validate_value(value, self.name)
+        except MKUserError as e:
+            self.fail("invalid_name", host_name=value, invalid_reason=str(e))
 
 
 EXISTING_HOST_NAME = Hostname(
@@ -231,6 +239,15 @@ class BulkUpdateHost(BaseSchema):
             "host_name": "example.com",
             "attributes": {}
         }],
+    )
+
+
+class RenameHost(BaseSchema):
+    new_name = Hostname(
+        description="The new name of the existing host.",
+        required=True,
+        should_exist=False,
+        example="newhost",
     )
 
 

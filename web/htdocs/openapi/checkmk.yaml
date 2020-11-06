@@ -2189,6 +2189,16 @@ components:
       - id
       - links
       type: object
+    RenameHost:
+      properties:
+        new_name:
+          description: The new name of the existing host.
+          example: newhost
+          pattern: '[-0-9a-zA-Z_.]+'
+          type: string
+      required:
+      - new_name
+      type: object
     ServiceConditions:
       properties:
         host_folder:
@@ -6182,6 +6192,99 @@ paths:
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    entries='[{'host_name': 'example.com', 'attributes':\
           \ {}}]' \\\n    --json"
+  /objects/host_config/{host_name}/actions/rename/invoke:
+    put:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.host_config.rename_host
+      parameters:
+      - description: The ETag of the object to be modified. This value comes from
+          the ETag HTTP header whenever the object is displayed. To update this object
+          the currently stored ETag needs to be the same as the one sent.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          example: a20ceacf346041dc
+          type: string
+      - description: A hostname.
+        in: path
+        name: host_name
+        required: true
+        schema:
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RenameHost'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainObject'
+          description: The operation was done successfully.
+          headers:
+            ETag:
+              allowEmptyValue: false
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along in the "If-Match"
+                request-header for subsequent modifications.
+              example: a20ceacf346041dc
+              required: false
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+      summary: Rename a host
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.host_config
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.put(\n    f\"{API_URL}/objects/host_config/example.com/actions/rename/invoke\"\
+          ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
+          \ The ETag of the object to be modified.\n    },\n    json={'new_name':\
+          \ 'newhost'},\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/objects/host_config/example.com/actions/rename/invoke\"\
+          ,\n    method=\"PUT\",\n    headers={\n        \"Authorization\": f\"Bearer\
+          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
+          \        \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the\
+          \ object to be modified.\n    },\n    data=json.dumps({'new_name': 'newhost'}).encode('utf-8'),\n\
+          )\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X PUT \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\ \\\n    --data '{\n\
+          \          \"new_name\": \"newhost\"\n        }' \\\n    \"$API_URL/objects/host_config/example.com/actions/rename/invoke\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/host_config/example.com/actions/rename/invoke\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    new_name='newhost'\
+          \ \\\n    --json"
   /domain-types/host_config/actions/bulk-delete/invoke:
     delete:
       description: ''

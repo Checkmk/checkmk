@@ -32,6 +32,9 @@ from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.plugins.webapi import check_hostname
 from cmk.gui.watolib.utils import try_bake_agents_for_hosts
 
+from cmk.gui.watolib.host_rename import perform_rename_hosts
+import cmk.gui.watolib.activate_changes as activate_changes
+
 
 @Endpoint(constructors.collection_href('host_config'),
           'cmk/create',
@@ -206,6 +209,37 @@ def bulk_update_hosts(params):
     return _host_collection(hosts)
 
 
+@Endpoint(constructors.object_action_href('host_config', '{host_name}', action_name='rename'),
+          'cmk/rename',
+          method='put',
+          path_params=[HOST_NAME],
+          etag='both',
+          request_schema=request_schemas.RenameHost,
+          response_schema=response_schemas.DomainObject)
+def rename_host(params):
+    """Rename a host"""
+    if activate_changes.get_pending_changes_info():
+        return problem(
+            status=409,
+            title="Pending changes are present",
+            detail="Please activate all pending changes before executing a host rename process",
+        )
+    host_name = params['host_name']
+    host: watolib.CREHost = watolib.Host.host(host_name)
+    if host is None:
+        return _missing_host_problem(host_name)
+
+    new_name = params['body']["new_name"]
+    _, auth_problems = perform_rename_hosts([(host.folder(), host_name, new_name)])
+    if auth_problems:
+        return problem(
+            status=404,
+            title="Rename process failed",
+            detail=f"It was not possible to rename the host {host_name} to {new_name}",
+        )
+    return _serve_host(host)
+
+
 @Endpoint(constructors.object_href('host_config', '{host_name}'),
           '.../delete',
           method='delete',
@@ -286,4 +320,12 @@ def serialize_host(host):
             'is_offline': host.is_offline(),
             'cluster_nodes': host.cluster_nodes(),
         },
+    )
+
+
+def _missing_host_problem(host_name):
+    return problem(
+        404,
+        f'Host "{host_name}" is not known.',
+        'The host you asked for is not known. Please check for eventual misspellings.',
     )

@@ -60,6 +60,7 @@ CmkEndpointName = Literal[
     'cmk/download',
     'cmk/list',
     'cmk/move',
+    'cmk/rename',
     'cmk/show',
     'cmk/sign',
     'cmk/start',

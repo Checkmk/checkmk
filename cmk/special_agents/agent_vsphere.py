@@ -9,6 +9,7 @@ import argparse
 import collections
 import datetime
 import errno
+import json
 from pathlib import Path
 import re
 import socket
@@ -424,6 +425,9 @@ class SoapTemplates:
         '      <ns1:pathSet>guestHeartbeatStatus</ns1:pathSet>'
         '      <ns1:pathSet>name</ns1:pathSet>'
         '      <ns1:pathSet>summary.guest.hostName</ns1:pathSet>'
+        '      <ns1:pathSet>config.guestFullName</ns1:pathSet>' # Guest OS
+        '      <ns1:pathSet>config.version</ns1:pathSet>' # Compatibility
+        '      <ns1:pathSet>config.uuid</ns1:pathSet>'
         '      <ns1:pathSet>summary.quickStats.compressedMemory</ns1:pathSet>'
         '      <ns1:pathSet>summary.quickStats.swappedMemory</ns1:pathSet>'
         '      <ns1:pathSet>summary.quickStats.guestMemoryUsage</ns1:pathSet>'
@@ -1814,6 +1818,22 @@ def get_section_vm(vms, time_reference):
     return section_lines
 
 
+def get_section_virtual_machines(vms):
+    section_lines = ["<<<esx_vsphere_virtual_machines:sep(0)>>>"]
+    section_lines.extend(
+        json.dumps(
+            {
+                "vm_name": vm_name,
+                'hostsystem': vm_data.get('runtime.host', ''),
+                'powerstate': vm_data.get('runtime.powerState', ''),
+                'guest_os': vm_data.get('config.guestFullName', ''),
+                'compatibility': vm_data.get('config.version', ''),
+                'uuid': vm_data.get('config.uuid', ''),
+            },
+            separators=(',', ':')) for vm_name, vm_data in sorted(vms.items()))
+    return section_lines
+
+
 def get_sections_clusters(connection, vm_esx_host, opt):
     section_lines = []
     response = connection.query_server('datacenters')
@@ -1894,6 +1914,7 @@ def fetch_data(connection, opt):
         time_reference = _retrieve_system_time(connection)
         vms, vm_esx_host = fetch_virtual_machines(connection, hostsystems, datastores, opt)
         output += get_section_vm(vms, time_reference)
+        output += get_section_virtual_machines(vms)
 
         used_hostsystems = hostsystems if opt.snapshot_display == 'esxhost' else None
         output += get_sections_aggregated_snapshots(vms, used_hostsystems, time_reference)

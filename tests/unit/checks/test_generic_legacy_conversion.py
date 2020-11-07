@@ -17,7 +17,8 @@ from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_funct
     _explicit_conversions,
     create_detect_spec,
 )
-from cmk.base.api.agent_based.type_defs import AgentSectionPlugin, SNMPSectionPlugin, SNMPTree
+from cmk.base.api.agent_based.type_defs import AgentSectionPlugin, SNMPSectionPlugin
+from cmk.base.api.agent_based.section_classes import SNMPTree
 
 from cmk.base.check_legacy_includes.df_netapp import is_netapp_filer  # type: ignore[attr-defined]
 from cmk.base.check_legacy_includes.fsc import _is_fsc_or_windows, is_fsc  # type: ignore[attr-defined]

@@ -239,7 +239,7 @@ class BackendOIDSpec(NamedTuple):
 
 
 class BackendSNMPTree(NamedTuple):
-    """The 'working class' pentant to the check APIs 'SNMPTree'
+    """The 'working class' pendant to the check APIs 'SNMPTree'
 
     It mainly features (de)serialization. Validation is done during
     section registration, so we can assume sane values here.

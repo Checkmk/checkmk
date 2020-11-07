@@ -16,9 +16,9 @@ from cmk.base.api.agent_based.type_defs import (
     AgentSectionPlugin,
     SNMPParseFunction,
     SNMPSectionPlugin,
-    SNMPTree,
+    StringTable,
 )
-from cmk.base.api.agent_based.type_defs import StringTable
+from cmk.base.api.agent_based.section_classes import SNMPTree
 
 from .convert_scan_functions import create_detect_spec
 

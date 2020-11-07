@@ -14,6 +14,9 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import ParsedSectionName, SectionName, SNMPDetectBaseType
 
+from cmk.base.api.agent_based.register.utils import validate_function_arguments
+from cmk.base.api.agent_based.section_classes import (
+    SNMPTree,)
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
     AgentSectionPlugin,
@@ -22,11 +25,9 @@ from cmk.base.api.agent_based.type_defs import (
     SimpleSNMPParseFunction,
     SNMPParseFunction,
     SNMPSectionPlugin,
-    SNMPTree,
     StringByteTable,
     StringTable,
 )
-from cmk.base.api.agent_based.register.utils import validate_function_arguments
 
 
 def _create_parse_annotation(

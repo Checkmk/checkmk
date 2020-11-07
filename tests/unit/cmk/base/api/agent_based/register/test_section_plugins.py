@@ -16,11 +16,14 @@ import cmk.base.api.agent_based.register.section_plugins as section_plugins
 from cmk.base.api.agent_based.type_defs import (
     AgentSectionPlugin,
     SNMPSectionPlugin,
-    SNMPTree,
     StringTable,
     StringByteTable,
 )
-from cmk.base.api.agent_based.section_classes import OIDEnd, SNMPDetectSpecification
+from cmk.base.api.agent_based.section_classes import (
+    OIDEnd,
+    SNMPDetectSpecification,
+    SNMPTree,
+)
 
 
 def _generator_function():

@@ -7,8 +7,7 @@
 import pytest  # type: ignore[import]
 
 from cmk.snmplib.type_defs import SpecialColumn
-from cmk.base.api.agent_based.section_classes import OIDEnd
-from cmk.base.api.agent_based.type_defs import SNMPTree
+from cmk.base.api.agent_based.section_classes import OIDEnd, SNMPTree
 
 
 def test_oid_end_repr():

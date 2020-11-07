@@ -12,8 +12,7 @@ import pytest  # type: ignore[import]
 
 from cmk.utils.type_defs import EvalableFloat
 
-from cmk.base.api.agent_based.section_classes import OIDBytes, OIDCached
-from cmk.base.api.agent_based.type_defs import SNMPTree
+from cmk.base.api.agent_based.section_classes import OIDBytes, OIDCached, SNMPTree
 
 
 @pytest.mark.parametrize("value", [3, ("foo", "bar")])

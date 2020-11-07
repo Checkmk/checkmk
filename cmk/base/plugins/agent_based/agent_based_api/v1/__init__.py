@@ -29,8 +29,8 @@ from cmk.base.api.agent_based.checking_classes import (
     State,
 )
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
-from cmk.base.api.agent_based.section_classes import OIDBytes, OIDCached, OIDEnd
-from cmk.base.api.agent_based.type_defs import HostLabel, SNMPTree
+from cmk.base.api.agent_based.section_classes import OIDBytes, OIDCached, OIDEnd, SNMPTree
+from cmk.base.api.agent_based.type_defs import HostLabel
 from cmk.base.api.agent_based.utils import (
     all_of,
     any_of,

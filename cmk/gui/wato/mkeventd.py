@@ -94,6 +94,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     make_simple_link,
     make_simple_form_page_menu,
+    make_confirmed_form_submit_link,
 )
 from cmk.gui.wato.pages.global_settings import (
     ABCGlobalSettingsMode,
@@ -1074,32 +1075,37 @@ class ABCEventConsoleMode(WatoMode, metaclass=abc.ABCMeta):
         self._vs_mkeventd_event().render_input("event", event)
         forms.end()
         html.hidden_fields()
-        html.button("simulate", _("Try out"))
-        html.button("_generate", _("Generate Event!"))
+        html.button("_simulate", _("Try out"))
+        html.button("_generate", _("Generate event"))
         html.end_form()
         html.br()
 
-        if html.request.var("simulate") or html.request.var("_generate"):
+        if html.request.var("_simulate") or html.request.var("_generate"):
             return self._vs_mkeventd_event().from_html_vars("event")
         return None
 
-    def _event_simulation_action(self) -> _Optional[HTML]:
-        # Validation of input for rule simulation (no further action here)
-        if html.request.var("simulate") or html.request.var("_generate"):
-            vs = self._vs_mkeventd_event()
-            event = vs.from_html_vars("event")
-            vs.validate_value(event, "event")
-            config.user.save_file("simulated_event", event)
+    def _event_simulation_action(self) -> bool:
+        if not html.request.var("_simulate") and not html.request.var("_generate"):
+            return False
 
-        if html.request.has_var("_generate") and html.check_transaction():
-            if not event.get("application"):
-                raise MKUserError("event_p_application", _("Please specify an application name"))
-            if not event.get("host"):
-                raise MKUserError("event_p_host", _("Please specify a host name"))
-            rfc = cmk.gui.mkeventd.send_event(event)
-            return (_("Test event generated and sent to Event Console.") + html.render_br() +
-                    html.render_pre(rfc) + html.render_reload_sidebar())
-        return None
+        # Validation of input for rule simulation (no further action here)
+        vs = self._vs_mkeventd_event()
+        event = vs.from_html_vars("event")
+        vs.validate_value(event, "event")
+        config.user.save_file("simulated_event", event)
+
+        if html.request.var("_simulate"):
+            return True
+
+        if not event.get("application"):
+            raise MKUserError("event_p_application", _("Please specify an application name"))
+        if not event.get("host"):
+            raise MKUserError("event_p_host", _("Please specify a host name"))
+        rfc = cmk.gui.mkeventd.send_event(event)
+        flash(
+            _("Test event generated and sent to Event Console.") + html.render_br() +
+            html.render_pre(rfc) + html.render_reload_sidebar())
+        return True
 
     def _add_change(self, what, message):
         add_change(what,
@@ -1243,8 +1249,12 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     title=_("Reset counters"),
                     icon_name="resetcounters",
                     item=make_simple_link(
-                        make_action_link([("mode", "mkeventd_rule_packs"),
-                                          ("_reset_counters", "1")])),
+                        html.confirm_link(
+                            url=make_action_link([("mode", "mkeventd_rule_packs"),
+                                                  ("_reset_counters", "1")]),
+                            message=_("Do you really want to reset all rule hit counters "
+                                      "in <b>all rule packs</b> to zero?"),
+                        )),
                 ),
                 _page_menu_entry_status(),
             ],
@@ -1260,54 +1270,34 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         )
 
     def action(self) -> ActionResult:
-        action_outcome = self._event_simulation_action()
-        if action_outcome:
-            flash(action_outcome)
+        if not html.check_transaction():
+            return redirect(self.mode_url())
+
+        if self._event_simulation_action():
             return None
 
         # Deletion of rule packs
         if html.request.has_var("_delete"):
             nr = html.request.get_integer_input_mandatory("_delete")
             rule_pack = self._rule_packs[nr]
-            c = wato_confirm(
-                _("Confirm rule pack deletion"),
-                _("Do you really want to delete the rule pack <b>%s</b> <i>%s</i> with <b>%s</b> rules?"
-                 ) % (rule_pack["id"], rule_pack["title"], len(rule_pack["rules"])))
-            if c:
-                self._add_change("delete-rule-pack", _("Deleted rule pack %s") % rule_pack["id"])
-                del self._rule_packs[nr]
-                save_mkeventd_rules(self._rule_packs)
-            elif c is False:
-                return FinalizeRequest(code=200)
+            self._add_change("delete-rule-pack", _("Deleted rule pack %s") % rule_pack["id"])
+            del self._rule_packs[nr]
+            save_mkeventd_rules(self._rule_packs)
 
         # Reset all rule hit counteres
         elif html.request.has_var("_reset_counters"):
-            c = wato_confirm(
-                _("Confirm counter reset"),
-                _("Do you really want to reset all rule hit counters in <b>all rule packs</b> to zero?"
-                 ))
-            if c:
-                cmk.gui.mkeventd.execute_command("RESETCOUNTERS", site=config.omd_site())
-                self._add_change("counter-reset", _("Resetted all rule hit counters to zero"))
-            elif c is False:
-                return FinalizeRequest(code=200)
+            cmk.gui.mkeventd.execute_command("RESETCOUNTERS", site=config.omd_site())
+            self._add_change("counter-reset", _("Resetted all rule hit counters to zero"))
 
         # Copy rules from master
         elif html.request.has_var("_copy_rules"):
-            c = wato_confirm(
-                _("Confirm copying rules"),
-                _("Do you really want to copy all event rules from the master and "
-                  "replace your local configuration with them?"))
-            if c:
-                self._copy_rules_from_master()
-                self._add_change(
-                    "copy-rules-from-master",
-                    _("Copied the event rules from the master "
-                      "into the local configuration"))
-                flash(_("Copied rules from master"))
-                return None
-            if c is False:
-                return FinalizeRequest(code=200)
+            self._copy_rules_from_master()
+            self._add_change(
+                "copy-rules-from-master",
+                _("Copied the event rules from the master "
+                  "into the local configuration"))
+            flash(_("Copied rules from master"))
+            return redirect(self.mode_url())
 
         # Move rule packages
         elif html.request.has_var("_move"):
@@ -1372,9 +1362,9 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 "synchronize-rule-pack",
                 _("Synchronized MKP with the modified rule pack %s") % self._rule_packs[nr].id_)
 
-        # Update data strcuture after actions
+        # Update data structure after actions
         self._rule_packs = load_mkeventd_rules()
-        return None
+        return redirect(self.mode_url())
 
     def _copy_rules_from_master(self):
         answer = cmk.gui.mkeventd.query_ec_directly("REPLICATE 0")
@@ -1387,7 +1377,10 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         self._verify_ec_enabled()
         rep_mode = cmk.gui.mkeventd.replication_mode()
         if rep_mode in ["sync", "takeover"]:
-            copy_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_copy_rules", "1")])
+            copy_url = html.confirm_link(
+                url=make_action_link([("mode", "mkeventd_rule_packs"), ("_copy_rules", "1")]),
+                message=_("Do you really want to copy all event rules from the master and "
+                          "replace your local configuration with them?"))
             html.show_warning(
                 _("WARNING: This Event Console is currently running as a replication "
                   "slave. The rules edited here will not be used. Instead a copy of the rules of the "
@@ -1447,8 +1440,12 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 html.element_dragger_url("tr", base_url=drag_url)
 
                 if type_ == ec.RulePackType.internal:
-                    delete_url = make_action_link([("mode", "mkeventd_rule_packs"),
-                                                   ("_delete", nr)])
+                    delete_url = html.confirm_link(
+                        url=make_action_link([("mode", "mkeventd_rule_packs"), ("_delete", nr)]),
+                        message=_("Do you really want to delete the rule pack <b>%s</b> "
+                                  "<i>%s</i> with <b>%s</b> rules?") %
+                        (rule_pack["id"], rule_pack["title"], len(rule_pack["rules"])),
+                    )
                     html.icon_button(delete_url, _("Delete this rule pack"), "delete")
                 elif type_ == ec.RulePackType.exported:
                     dissolve_url = make_action_link([("mode", "mkeventd_rule_packs"),
@@ -1610,11 +1607,10 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         return super().mode_url(**kwargs)
 
     def _breadcrumb_url(self) -> str:
-        assert self._rule_pack_id is not None
         return self.mode_url(rule_pack=self._rule_pack_id)
 
     def _from_vars(self):
-        self._rule_pack_id = html.request.var("rule_pack")
+        self._rule_pack_id = html.request.get_ascii_input_mandatory("rule_pack")
         self._rule_pack_nr, self._rule_pack = self._rule_pack_with_id(self._rule_pack_id)
         self._rules = self._rule_pack["rules"]
 
@@ -1683,88 +1679,77 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         )
 
     def action(self) -> ActionResult:
+        if not html.check_transaction():
+            return redirect(self.mode_url(rule_pack=self._rule_pack_id))
+
         id_to_mkp = self._get_rule_pack_to_mkp_map()
         type_ = ec.RulePackType.type_of(self._rule_pack, id_to_mkp)
 
         if html.request.var("_move_to"):
-            if html.check_transaction():
-                for move_nr, rule in enumerate(self._rules):
-                    move_var = "_move_to_%s" % rule["id"]
-                    if html.request.var(move_var):
-                        other_pack_nr, other_pack = self._rule_pack_with_id(
-                            html.request.var(move_var))
+            for move_nr, rule in enumerate(self._rules):
+                move_var = "_move_to_%s" % rule["id"]
+                if html.request.var(move_var):
+                    other_pack_nr, other_pack = self._rule_pack_with_id(html.request.var(move_var))
 
-                        other_type_ = ec.RulePackType.type_of(other_pack, id_to_mkp)
-                        if other_type_ == ec.RulePackType.unmodified_mkp:
-                            ec.override_rule_pack_proxy(other_pack_nr, self._rule_packs)
+                    other_type_ = ec.RulePackType.type_of(other_pack, id_to_mkp)
+                    if other_type_ == ec.RulePackType.unmodified_mkp:
+                        ec.override_rule_pack_proxy(other_pack_nr, self._rule_packs)
 
-                        if type_ == ec.RulePackType.unmodified_mkp:
-                            ec.override_rule_pack_proxy(self._rule_pack_nr, self._rule_packs)
+                    if type_ == ec.RulePackType.unmodified_mkp:
+                        ec.override_rule_pack_proxy(self._rule_pack_nr, self._rule_packs)
 
-                        self._rule_packs[other_pack_nr]["rules"][0:0] = [rule]
-                        del self._rule_packs[self._rule_pack_nr]["rules"][move_nr]
+                    self._rule_packs[other_pack_nr]["rules"][0:0] = [rule]
+                    del self._rule_packs[self._rule_pack_nr]["rules"][move_nr]
 
-                        if other_type_ == ec.RulePackType.exported:
-                            export_mkp_rule_pack(other_pack)
-                        if type_ == ec.RulePackType.exported:
-                            export_mkp_rule_pack(self._rule_pack)
-                        save_mkeventd_rules(self._rule_packs)
+                    if other_type_ == ec.RulePackType.exported:
+                        export_mkp_rule_pack(other_pack)
+                    if type_ == ec.RulePackType.exported:
+                        export_mkp_rule_pack(self._rule_pack)
+                    save_mkeventd_rules(self._rule_packs)
 
-                        self._add_change(
-                            "move-rule-to-pack",
-                            _("Moved rule %s to pack %s") % (rule["id"], other_pack["id"]))
-                        flash(_("Moved rule %s to pack %s") % (rule["id"], other_pack["title"]))
-                        return None
+                    self._add_change("move-rule-to-pack",
+                                     _("Moved rule %s to pack %s") % (rule["id"], other_pack["id"]))
+                    flash(_("Moved rule %s to pack %s") % (rule["id"], other_pack["title"]))
+                    return None
 
-        action_outcome = self._event_simulation_action()
-        if action_outcome:
-            flash(action_outcome)
+        if self._event_simulation_action():
             return None
 
         if html.request.has_var("_delete"):
             nr = html.request.get_integer_input_mandatory("_delete")
             rules = self._rules
             rule = rules[nr]
-            c = wato_confirm(
-                _("Confirm rule deletion"),
-                _("Do you really want to delete the rule <b>%s</b> <i>%s</i>?") %
-                (rule["id"], rule.get("description", "")))
-            if c:
-                self._add_change("delete-rule", _("Deleted rule %s") % self._rules[nr]["id"])
-                if type_ == ec.RulePackType.unmodified_mkp:
-                    ec.override_rule_pack_proxy(self._rule_pack_nr, self._rule_packs)
-                    rules = self._rule_packs[self._rule_pack_nr]['rules']
+            self._add_change("delete-rule", _("Deleted rule %s") % self._rules[nr]["id"])
+            if type_ == ec.RulePackType.unmodified_mkp:
+                ec.override_rule_pack_proxy(self._rule_pack_nr, self._rule_packs)
+                rules = self._rule_packs[self._rule_pack_nr]['rules']
 
-                del rules[nr]
+            del rules[nr]
 
-                if type_ == ec.RulePackType.exported:
-                    export_mkp_rule_pack(self._rule_pack)
-                save_mkeventd_rules(self._rule_packs)
-            elif c is False:
-                return FinalizeRequest(code=200)
-            else:
-                return None
+            if type_ == ec.RulePackType.exported:
+                export_mkp_rule_pack(self._rule_pack)
+            save_mkeventd_rules(self._rule_packs)
+            return redirect(self.mode_url(rule_pack=self._rule_pack_id))
 
-        if html.check_transaction():
-            if html.request.has_var("_move"):
-                from_pos = html.request.get_integer_input_mandatory("_move")
-                to_pos = html.request.get_integer_input_mandatory("_index")
+        if html.request.has_var("_move"):
+            from_pos = html.request.get_integer_input_mandatory("_move")
+            to_pos = html.request.get_integer_input_mandatory("_index")
 
-                rules = self._rules
-                if type_ == ec.RulePackType.unmodified_mkp:
-                    ec.override_rule_pack_proxy(self._rule_pack_nr, self._rule_packs)
-                    rules = self._rule_packs[self._rule_pack_nr]['rules']
+            rules = self._rules
+            if type_ == ec.RulePackType.unmodified_mkp:
+                ec.override_rule_pack_proxy(self._rule_pack_nr, self._rule_packs)
+                rules = self._rule_packs[self._rule_pack_nr]['rules']
 
-                rule = rules[from_pos]
-                del rules[from_pos]  # make to_pos now match!
-                rules[to_pos:to_pos] = [rule]
+            rule = rules[from_pos]
+            del rules[from_pos]  # make to_pos now match!
+            rules[to_pos:to_pos] = [rule]
 
-                if type_ == ec.RulePackType.exported:
-                    export_mkp_rule_pack(self._rule_pack)
-                save_mkeventd_rules(self._rule_packs)
+            if type_ == ec.RulePackType.exported:
+                export_mkp_rule_pack(self._rule_pack)
+            save_mkeventd_rules(self._rule_packs)
 
-                self._add_change("move-rule", _("Changed position of rule %s") % rule["id"])
-        return None
+            self._add_change("move-rule", _("Changed position of rule %s") % rule["id"])
+        return redirect(self.mode_url(rule_pack=self._rule_pack_id))
 
     def page(self):
         self._verify_ec_enabled()
@@ -1800,8 +1785,12 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     css_matches_search = None
 
                 table.row(css=css_matches_search)
-                delete_url = make_action_link([("mode", "mkeventd_rules"),
-                                               ("rule_pack", self._rule_pack_id), ("_delete", nr)])
+                delete_url = html.confirm_link(
+                    url=make_action_link([("mode", "mkeventd_rules"),
+                                          ("rule_pack", self._rule_pack_id), ("_delete", nr)]),
+                    message=_("Do you really want to delete the rule <b>%s</b> <i>%s</i>?") %
+                    (nr, rule.get("description", "")),
+                )
                 drag_url = make_action_link([("mode", "mkeventd_rules"),
                                              ("rule_pack", self._rule_pack_id), ("_move", nr)])
                 edit_url = makeuri_contextless(
@@ -2141,7 +2130,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
 
     def action(self) -> ActionResult:
         if not html.check_transaction():
-            return redirect(mode_url("mkeventd_rules"))
+            return redirect(mode_url("mkeventd_rules", rule_pack=self._rule_pack["id"]))
 
         if not self._new:
             old_id = self._rule["id"]
@@ -2228,7 +2217,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
                              _("Modified event correlation rule %s") % self._rule["id"])
             # Reset hit counters of this rule
             cmk.gui.mkeventd.execute_command("RESETCOUNTERS", [self._rule["id"]], config.omd_site())
-        return redirect(mode_url("mkeventd_rules"))
+        return redirect(mode_url("mkeventd_rules", rule_pack=self._rule_pack["id"]))
 
     def page(self):
         self._verify_ec_enabled()
@@ -2542,6 +2531,24 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                                 ),
                             ],
                         ),
+                        PageMenuTopic(
+                            title=_("On selected MIBs"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Delete MIBs"),
+                                    shortcut_title=_("Delete selected MIBs"),
+                                    icon_name="delete",
+                                    item=make_confirmed_form_submit_link(
+                                        form_name="bulk_delete_form",
+                                        button_name="_bulk_delete_custom_mibs",
+                                        message=_(
+                                            "Do you really want to delete the selected MIBs?"),
+                                    ),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                            ],
+                        ),
                     ],
                 ),
                 PageMenuDropdown(
@@ -2559,24 +2566,20 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         )
 
     def action(self) -> ActionResult:
+        if not html.check_transaction():
+            return redirect(self.mode_url())
+
         if html.request.has_var("_delete"):
             filename = html.request.var("_delete")
             mibs = self._load_snmp_mibs(cmk.gui.mkeventd.mib_upload_dir())
             if filename in mibs:
-                c = wato_confirm(
-                    _("Confirm MIB deletion"),
-                    _("Do you really want to delete the MIB file <b>%s</b>?") % filename)
-                if c:
-                    self._delete_mib(filename, mibs[filename]["name"])
-                elif c is False:
-                    return FinalizeRequest(code=200)
-                else:
-                    return None
+                self._delete_mib(filename, mibs[filename]["name"])
         elif html.request.var("_bulk_delete_custom_mibs"):
-            return self._bulk_delete_custom_mibs_after_confirm()
-        return None
+            self._bulk_delete_custom_mibs_after_confirm()
 
-    def _bulk_delete_custom_mibs_after_confirm(self) -> ActionResult:
+        return redirect(self.mode_url())
+
+    def _bulk_delete_custom_mibs_after_confirm(self):
         custom_mibs = self._load_snmp_mibs(cmk.gui.mkeventd.mib_upload_dir())
         selected_custom_mibs = []
         for varname, _value in html.request.itervars(prefix="_c_mib_"):
@@ -2585,17 +2588,8 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                 if filename in custom_mibs:
                     selected_custom_mibs.append(filename)
 
-        if selected_custom_mibs:
-            c = wato_confirm(
-                _("Confirm deletion of selected MIBs"),
-                _("Do you really want to delete the selected %d MIBs?") % len(selected_custom_mibs))
-            if c:
-                for filename in selected_custom_mibs:
-                    self._delete_mib(filename, custom_mibs[filename]["name"])
-                return None
-            if c is False:
-                return FinalizeRequest(code=200)
-        return None
+        for filename in selected_custom_mibs:
+            self._delete_mib(filename, custom_mibs[filename]["name"])
 
     def _delete_mib(self, filename, mib_name):
         self._add_change("delete-mib", _("Deleted MIB %s") % filename)
@@ -2639,8 +2633,10 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
 
                 table.cell(_("Actions"), css="buttons")
                 if is_custom_dir:
-                    delete_url = make_action_link([("mode", "mkeventd_mibs"),
-                                                   ("_delete", filename)])
+                    delete_url = html.confirm_link(
+                        url=make_action_link([("mode", "mkeventd_mibs"), ("_delete", filename)]),
+                        message=_("Do you really want to delete the MIB file <b>%s</b>?") %
+                        filename)
                     html.icon_button(delete_url, _("Delete this MIB"), "delete")
 
                 table.text_cell(_("Filename"), filename)
@@ -2651,10 +2647,6 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                                 css="number")
 
         if is_custom_dir:
-            html.button("_bulk_delete_custom_mibs",
-                        _("Bulk Delete"),
-                        "submit",
-                        style="margin-top:10px")
             html.hidden_fields()
             html.end_form()
 

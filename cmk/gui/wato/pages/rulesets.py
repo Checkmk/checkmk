@@ -32,7 +32,7 @@ import cmk.gui.view_utils
 from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 from cmk.gui.htmllib import HTML
-from cmk.gui.exceptions import MKUserError, MKAuthException, FinalizeRequest
+from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
 from cmk.gui.valuespec import (
@@ -70,8 +70,8 @@ from cmk.gui.plugins.wato import (
     WatoMode,
     ActionResult,
     mode_registry,
-    wato_confirm,
     make_action_link,
+    make_confirm_link,
     add_change,
     may_edit_ruleset,
     search_form,
@@ -781,6 +781,9 @@ class ModeEditRuleset(WatoMode):
             )
 
     def action(self) -> ActionResult:
+        if not html.check_transaction():
+            return redirect(self.mode_url(varname=self._name))
+
         rule_folder = watolib.Folder.folder(html.request.var("_folder", html.request.var("folder")))
         rule_folder.need_permission("write")
         rulesets = watolib.FolderRulesets(rule_folder)
@@ -797,23 +800,9 @@ class ModeEditRuleset(WatoMode):
                                 "anymore."))
 
         action = html.request.get_ascii_input_mandatory("_action")
-
         if action == "delete":
-            c = wato_confirm(
-                _("Confirm"),
-                _("Delete rule number %d of folder '%s'?") % (rulenr + 1, rule_folder.alias_path()))
-            if c:
-                ruleset.delete_rule(rule)
-                rulesets.save()
-                return None
-            if c is False:  # not yet confirmed
-                return FinalizeRequest(code=200)
-            return None  # browser reload
-
-        if not html.check_transaction():
-            return None  # browser reload
-
-        if action == "up":
+            ruleset.delete_rule(rule)
+        elif action == "up":
             ruleset.move_rule_up(rule)
         elif action == "down":
             ruleset.move_rule_down(rule)
@@ -823,8 +812,9 @@ class ModeEditRuleset(WatoMode):
             ruleset.move_rule_to(rule, html.request.get_integer_input_mandatory("_index"))
         else:
             ruleset.move_rule_to_bottom(rule)
+
         rulesets.save()
-        return None
+        return redirect(self.mode_url(varname=self._name))
 
     def page(self):
         if not config.wato_hide_varnames:
@@ -946,7 +936,16 @@ class ModeEditRuleset(WatoMode):
         html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
 
         html.element_dragger_url("tr", base_url=self._action_url("move_to", folder, rulenr))
-        self._rule_button("delete", _("Delete this rule"), folder, rulenr)
+
+        html.icon_button(
+            url=make_confirm_link(
+                url=self._action_url("delete", folder, rulenr),
+                message=_("Delete rule number %d of folder '%s'?") %
+                (rulenr + 1, folder.alias_path()),
+            ),
+            title=_("Delete this rule"),
+            icon="delete",
+        )
 
     def _match(self, match_state, rule):
         reasons = [_("This rule is disabled")] if rule.is_disabled() else list(
@@ -997,9 +996,6 @@ class ModeEditRuleset(WatoMode):
             vars_.append(("service", watolib.mk_repr(self._service)))
 
         return make_action_link(vars_)
-
-    def _rule_button(self, action, title=None, folder=None, rulenr=0):
-        html.icon_button(self._action_url(action, folder, rulenr), title, action)
 
     # TODO: Refactor this whole method
     def _rule_cells(self, table, rule):

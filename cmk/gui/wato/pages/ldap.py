@@ -20,7 +20,7 @@ from cmk.gui.plugins.userdb.ldap_connector import (
 )
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
-from cmk.gui.exceptions import MKUserError, FinalizeRequest
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
 from cmk.gui.plugins.userdb.utils import load_connection_config, save_connection_config
@@ -41,7 +41,7 @@ from cmk.gui.plugins.wato import (
     mode_registry,
     add_change,
     make_action_link,
-    wato_confirm,
+    make_confirm_link,
     mode_url,
     redirect,
 )
@@ -125,28 +125,19 @@ class ModeLDAPConfig(LDAPMode):
         )
 
     def action(self) -> ActionResult:
+        if not html.check_transaction():
+            return redirect(self.mode_url())
+
         connections = load_connection_config(lock=True)
         if html.request.has_var("_delete"):
             index = html.request.get_integer_input_mandatory("_delete")
             connection = connections[index]
-            c = wato_confirm(
-                _("Confirm deletion of LDAP connection"),
-                _("Do you really want to delete the LDAP connection <b>%s</b>?") %
-                (connection["id"]))
-            if c:
-                self._add_change("delete-ldap-connection",
-                                 _("Deleted LDAP connection %s") % (connection["id"]))
-                del connections[index]
-                save_connection_config(connections)
-            elif c is False:
-                return FinalizeRequest(code=200)
-            else:
-                return None
+            self._add_change("delete-ldap-connection",
+                             _("Deleted LDAP connection %s") % (connection["id"]))
+            del connections[index]
+            save_connection_config(connections)
 
         elif html.request.has_var("_move"):
-            if not html.check_transaction():
-                return None
-
             from_pos = html.request.get_integer_input_mandatory("_move")
             to_pos = html.request.get_integer_input_mandatory("_index")
             connection = connections[from_pos]
@@ -156,7 +147,8 @@ class ModeLDAPConfig(LDAPMode):
             del connections[from_pos]  # make to_pos now match!
             connections[to_pos:to_pos] = [connection]
             save_connection_config(connections)
-        return None
+
+        return redirect(self.mode_url())
 
     def page(self):
         with table_element() as table:
@@ -166,7 +158,11 @@ class ModeLDAPConfig(LDAPMode):
                 table.cell(_("Actions"), css="buttons")
                 edit_url = watolib.folder_preserving_link([("mode", "edit_ldap_connection"),
                                                            ("id", connection["id"])])
-                delete_url = make_action_link([("mode", "ldap_config"), ("_delete", index)])
+                delete_url = make_confirm_link(
+                    url=make_action_link([("mode", "ldap_config"), ("_delete", index)]),
+                    message=_("Do you really want to delete the LDAP connection <b>%s</b>?") %
+                    connection["id"],
+                )
                 drag_url = make_action_link([("mode", "ldap_config"), ("_move", index)])
                 clone_url = watolib.folder_preserving_link([("mode", "edit_ldap_connection"),
                                                             ("clone", connection["id"])])

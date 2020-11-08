@@ -25,7 +25,14 @@ from cmk.gui.valuespec import (
 from cmk.gui.exceptions import FinalizeRequest
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import WatoMode, ActionResult, mode_registry, wato_confirm, flash
+from cmk.gui.plugins.wato import (
+    WatoMode,
+    ActionResult,
+    mode_registry,
+    flash,
+    redirect,
+    make_confirm_link,
+)
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
@@ -119,7 +126,11 @@ class ModeAuditLog(WatoMode):
             yield PageMenuEntry(
                 title=_("Clear log"),
                 icon_name="trash",
-                item=make_simple_link(html.makeactionuri([("_action", "clear")])),
+                item=make_simple_link(
+                    make_confirm_link(
+                        url=html.makeactionuri([("_action", "clear")]),
+                        message=_("Do you really want to clear the audit log?"),
+                    )),
             )
 
     def _page_menu_entries_export(self) -> Iterator[PageMenuEntry]:
@@ -386,15 +397,9 @@ class ModeAuditLog(WatoMode):
         )
 
     def _clear_audit_log_after_confirm(self) -> ActionResult:
-        c = wato_confirm(_("Confirm deletion of audit log"),
-                         _("Do you really want to clear the audit log?"))
-        if c:
-            self._clear_audit_log()
-            flash(_("Cleared audit log."))
-            return None
-        if c is False:  # not yet confirmed
-            return FinalizeRequest(code=200)
-        return None  # browser reload
+        self._clear_audit_log()
+        flash(_("Cleared audit log."))
+        return redirect(self.mode_url())
 
     def _clear_audit_log(self):
         if not self.log_path.exists():

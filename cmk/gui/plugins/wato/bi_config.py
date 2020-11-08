@@ -57,7 +57,6 @@ from cmk.gui.plugins.wato import (
     ABCMainModule,
     MainModuleTopicBI,
     add_change,
-    wato_confirm,
     PermissionSectionWATO,
     redirect,
     mode_url,
@@ -972,41 +971,17 @@ class ModeBIEditRule(ABCBIMode):
                                               self.bi_pack))
 
     def action(self) -> ActionResult:
+        if not html.check_transaction():
+            return redirect(mode_url("bi_rules", pack=self.bi_pack.id))
+
         self.verify_pack_permission(self.bi_pack)
-        vs_rule = self.valuespec()
+        vs_rule = self.valuespec(rule_id=self._rule_id)
         vs_rule_config = vs_rule.from_html_vars('rule')
 
         vs_rule.validate_value(copy.deepcopy(vs_rule_config), 'rule')
         new_bi_rule = BIRule(vs_rule_config)
-
-        if self._rule_id and self._rule_id != new_bi_rule.id:
-            return self._action_rename_rule(new_bi_rule)
-        if html.check_transaction():
-            return self._action_modify_rule(new_bi_rule)
-
-        return redirect(mode_url("bi_rules"))
-
-    def _action_rename_rule(self, new_bi_rule):
-        forbidden_packs = self._get_forbidden_packs_using_rule()
-        if forbidden_packs:
-            raise MKAuthException(
-                _("You have no permission for changes in BI packs <b>%s</b> "
-                  "which uses rule <b>%s</b>.") % (", ".join(forbidden_packs), self.rule_id))
-
-        new_rule_id = new_bi_rule.id
-        c = wato_confirm(
-            _("Confirm renaming existing BI rule"),
-            _("Do you really want to rename the existing BI rule <b>%s</b> to <b>%s</b>?") %
-            (self.rule_id, new_rule_id))
-
-        if c:
-            self._bi_packs.rename_rule_id(self.rule_id, new_bi_rule.id)
-            self._add_change("bi-edit-rule",
-                             _("Renamed BI rule from %s to %s") % (self.rule_id, new_rule_id))
-            self._bi_packs.save_config()
-            return redirect(mode_url("bi_rules", pack=self.bi_pack.id))
-
-        return False
+        self._action_modify_rule(new_bi_rule)
+        return redirect(mode_url("bi_rules", pack=self.bi_pack.id))
 
     def _action_modify_rule(self, new_bi_rule):
         if self._new:
@@ -1036,8 +1011,6 @@ class ModeBIEditRule(ABCBIMode):
             self._add_change("bi-new-rule", _("Add BI rule %s") % new_bi_rule.id)
         else:
             self._add_change("bi-edit-rule", _("Modified BI rule %s") % new_bi_rule.id)
-
-        return redirect(mode_url("bi_rules", pack=self.bi_pack.id))
 
     def _get_forbidden_packs_using_rule(self):
         forbidden_packs = set()
@@ -1084,7 +1057,7 @@ class ModeBIEditRule(ABCBIMode):
 
         html.begin_form("birule", method="POST")
         rule_vs_config = BIRuleSchema().dump(bi_rule)
-        self.valuespec().render_input("rule", rule_vs_config)
+        self.valuespec(rule_id=self._rule_id).render_input("rule", rule_vs_config)
         forms.end()
         html.hidden_fields()
         if self._new:
@@ -1127,18 +1100,25 @@ class ModeBIEditRule(ABCBIMode):
         return None
 
     @classmethod
-    def valuespec(cls):
+    def valuespec(cls, rule_id: _Optional[str]):
+        if rule_id:
+            id_valuespec: ValueSpec = FixedValue(
+                value=rule_id,
+                title=_("Rule ID"),
+            )
+        else:
+            id_valuespec = TextAscii(
+                title=_("Rule ID"),
+                help=_(
+                    "The ID of the rule must be a unique text. It will be used as an internal key "
+                    "when rules refer to each other. The rule IDs will not be visible in the status "
+                    "GUI. They are just used within the configuration."),
+                allow_empty=False,
+                size=80,
+            )
+
         elements = [
-            ("id",
-             TextAscii(
-                 title=_("Rule ID"),
-                 help=_(
-                     "The ID of the rule must be a unique text. It will be used as an internal key "
-                     "when rules refer to each other. The rule IDs will not be visible in the status "
-                     "GUI. They are just used within the configuration."),
-                 allow_empty=False,
-                 size=80,
-             )),
+            ("id", id_valuespec),
             ("title",
              TextUnicode(
                  title=_("Rule Title"),
@@ -1206,18 +1186,20 @@ class ModeBIEditRule(ABCBIMode):
              )),
             ("state_messages",
              Optional(
-                 Dictionary(
-                     elements=[(state,
-                                TextAscii(
-                                    title=_("Message when rule result is %s") % name,
-                                    default_value=None,
-                                    size=80,
-                                )) for state, name in [
-                                    ("0", "OK"),
-                                    ("1", "WARN"),
-                                    ("2", "CRIT"),
-                                    ("3", "UNKNOWN"),
-                                ]]),
+                 Dictionary(elements=[(state,
+                                       TextAscii(
+                                           title=_("Message when rule result is %s") % name,
+                                           default_value=None,
+                                           size=80,
+                                       )) for state, name in [
+                                           ("0", "OK"),
+                                           ("1",
+                                            "WARN"),
+                                           ("2",
+                                            "CRIT"),
+                                           ("3",
+                                            "UNKNOWN"),
+                                       ]]),
                  title=_("Additional messages describing rule state"),
                  help=
                  _("This option allows you to display an additional, freely configurable text, to the rule outcome, "
@@ -1293,7 +1275,7 @@ class AjaxBIRulePreview(AjaxPage):
         compiler.prepare_for_compilation(compiler.compute_current_configstatus()["online_sites"])
 
         # Create preview rule
-        vs = ModeBIEditRule.valuespec()
+        vs = ModeBIEditRule.valuespec(rule_id=None)
         varprefix = html.request.var("varprefix")
         preview_config = vs.from_html_vars(varprefix)
         preview_bi_rule = BIRule(preview_config)
@@ -1337,7 +1319,7 @@ class AjaxBIAggregationPreview(AjaxPage):
 
         # Create preview aggr
         varprefix = html.request.var("varprefix")
-        vs = BIModeEditAggregation.get_vs_aggregation()
+        vs = BIModeEditAggregation.get_vs_aggregation(aggregation_id=None)
         preview_config = vs.from_html_vars(varprefix)
         preview_bi_aggr = BIAggregation(preview_config)
 
@@ -1476,7 +1458,7 @@ class BIModeEditAggregation(ABCBIMode):
         if not html.check_transaction():
             return redirect(mode_url("bi_aggregations", pack=self.bi_pack.id))
 
-        vs_aggregation = self.get_vs_aggregation()
+        vs_aggregation = self.get_vs_aggregation(aggregation_id=self._bi_aggregation.id)
         vs_aggregation_config = vs_aggregation.from_html_vars('aggr')
         vs_aggregation.validate_value(vs_aggregation_config, 'aggr')
 
@@ -1511,7 +1493,8 @@ class BIModeEditAggregation(ABCBIMode):
         html.begin_form("biaggr", method="POST")
 
         aggr_vs_config = BIAggregationSchema().dump(self._bi_aggregation)
-        self.get_vs_aggregation().render_input("aggr", aggr_vs_config)
+        self.get_vs_aggregation(aggregation_id=self._bi_aggregation.id).render_input(
+            "aggr", aggr_vs_config)
         forms.end()
         html.hidden_fields()
         html.set_focus("aggr_p_groups_0")
@@ -1520,7 +1503,7 @@ class BIModeEditAggregation(ABCBIMode):
         self._add_rule_arguments_lookup()
 
     @classmethod
-    def get_vs_aggregation(cls):
+    def get_vs_aggregation(cls, aggregation_id: _Optional[str]):
         if cmk_version.is_managed_edition():
             cme_elements = managed.customer_choice_element()
         else:
@@ -1532,20 +1515,25 @@ class BIModeEditAggregation(ABCBIMode):
         for template_id in sorted(templates.keys()):
             visualization_choices.append((template_id, template_id))
 
+        if aggregation_id:
+            id_valuespec: ValueSpec = FixedValue(
+                value=aggregation_id,
+                title=_("Aggregation ID"),
+            )
+        else:
+            id_valuespec = TextAscii(
+                title=_("Aggregation ID"),
+                help=_("The ID of the aggregation must be a unique text. It will be as unique ID."),
+                allow_empty=False,
+                size=80,
+            )
+
         return BIAggregationForm(
             title=_("Aggregation Properties"),
             optional_keys=False,
             render="form",
             elements=cme_elements + [
-                ("id",
-                 TextAscii(
-                     title=_("Aggregation ID"),
-                     help=_(
-                         "The ID of the aggregation must be a unique text. It will be as unique ID."
-                     ),
-                     allow_empty=False,
-                     size=80,
-                 )),
+                ("id", id_valuespec),
                 ("groups", cls._get_vs_aggregation_groups()),
                 ("node", bi_valuespecs.get_bi_aggregation_node_choices()),
                 ("computation_options", cls._get_vs_computation_options()),

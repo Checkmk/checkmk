@@ -21,9 +21,8 @@ import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKUserError, FinalizeRequest
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.wato.utils.base_modes import (WatoMode, ActionResult, redirect, mode_url)
-from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 from cmk.gui.valuespec import (
     ID,
@@ -44,7 +43,7 @@ from cmk.gui.page_menu import (
     make_simple_link,
     make_simple_form_page_menu,
 )
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link
 from cmk.gui.utils.flashed_messages import flash
 
 
@@ -198,12 +197,8 @@ class SimpleListMode(SimpleWatoModeBase):
         if action_var != "delete":
             return self._handle_custom_action(action_var)
 
-        confirm = wato_confirm(_("Confirm deletion"), self._delete_confirm_message())
-        if confirm is False:
-            return FinalizeRequest(code=200)
-        if not confirm:
-            return None
-        html.check_transaction()  # invalidate transid
+        if not html.check_transaction():
+            return redirect(mode_url(self._mode_type.list_mode_name()))
 
         entries = self._store.load_for_modification()
 
@@ -267,11 +262,14 @@ class SimpleListMode(SimpleWatoModeBase):
         )
         html.icon_button(clone_url, _("Clone this %s") % self._mode_type.name_singular(), "clone")
 
-        delete_url = watolib.make_action_link([
-            ("mode", self._mode_type.list_mode_name()),
-            ("_action", "delete"),
-            ("_delete", ident),
-        ])
+        delete_url = make_confirm_link(
+            url=watolib.make_action_link([
+                ("mode", self._mode_type.list_mode_name()),
+                ("_action", "delete"),
+                ("_delete", ident),
+            ]),
+            message=self._delete_confirm_message(),
+        )
         html.icon_button(delete_url,
                          _("Delete this %s") % self._mode_type.name_singular(), "delete")
 

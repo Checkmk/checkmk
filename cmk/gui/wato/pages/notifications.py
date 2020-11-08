@@ -20,7 +20,7 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
 import cmk.gui.forms as forms
-from cmk.gui.exceptions import MKUserError, FinalizeRequest
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
 from cmk.gui.valuespec import (
@@ -50,7 +50,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.plugins.wato import (
     ABCEventsMode,
     mode_registry,
-    wato_confirm,
+    make_confirm_link,
     make_action_link,
     add_change,
     notification_parameter_registry,
@@ -248,7 +248,7 @@ class ABCNotificationsMode(ABCEventsMode):
 
                 if show_buttons and self._actions_allowed(rule):
                     table.cell(_("Actions"), css="buttons")
-                    links = self._rule_links(nr, profilemode, userid)
+                    links = self._rule_links(rule, nr, profilemode, userid)
                     html.icon_button(links.edit, _("Edit this notification rule"), "edit")
                     html.icon_button(links.clone, _("Create a copy of this notification rule"),
                                      "clone")
@@ -372,7 +372,7 @@ class ABCNotificationsMode(ABCEventsMode):
         return (permission_name not in permissions.permission_registry or
                 config.user.may(permission_name))
 
-    def _rule_links(self, nr, profilemode, userid):
+    def _rule_links(self, rule, nr, profilemode, userid):
         anavar = html.request.var("analyse", "")
 
         if profilemode:
@@ -389,11 +389,15 @@ class ABCNotificationsMode(ABCEventsMode):
         else:
             mode = "notification_rule"
 
-        delete_url = make_action_link([
-            ("mode", listmode),
-            ("user", userid),
-            ("_delete", nr),
-        ])
+        delete_url = make_confirm_link(
+            url=make_action_link([
+                ("mode", listmode),
+                ("user", userid),
+                ("_delete", nr),
+            ]),
+            message=_("Do you really want to delete the notification rule <b>%d</b> <i>%s</i>?") %
+            (nr, rule.get("description", "")),
+        )
         drag_url = make_action_link([
             ("mode", listmode),
             ("analyse", anavar),
@@ -801,39 +805,30 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
         return _("Custom notification table for user %s") % self._user_id()
 
     def action(self) -> ActionResult:
+        if not html.check_transaction():
+            return redirect(self.mode_url(user=self._user_id()))
+
         if html.request.has_var("_delete"):
             nr = html.request.get_integer_input_mandatory("_delete")
-            rule = self._rules[nr]
-            c = wato_confirm(
-                _("Confirm notification rule deletion"),
-                _("Do you really want to delete the notification rule <b>%d</b> <i>%s</i>?") %
-                (nr, rule.get("description", "")))
-            if c:
-                del self._rules[nr]
-                userdb.save_users(self._users)
-
-                self._add_change(
-                    "notification-delete-user-rule",
-                    _("Deleted notification rule %d of user %s") % (nr, self._user_id()))
-            elif c is False:
-                return FinalizeRequest(code=200)
-            else:
-                return None
+            del self._rules[nr]
+            userdb.save_users(self._users)
+            self._add_change("notification-delete-user-rule",
+                             _("Deleted notification rule %d of user %s") % (nr, self._user_id()))
 
         elif html.request.has_var("_move"):
-            if html.check_transaction():
-                from_pos = html.request.get_integer_input_mandatory("_move")
-                to_pos = html.request.get_integer_input_mandatory("_index")
-                rule = self._rules[from_pos]
-                del self._rules[from_pos]  # make to_pos now match!
-                self._rules[to_pos:to_pos] = [rule]
-                userdb.save_users(self._users)
+            from_pos = html.request.get_integer_input_mandatory("_move")
+            to_pos = html.request.get_integer_input_mandatory("_index")
+            rule = self._rules[from_pos]
+            del self._rules[from_pos]  # make to_pos now match!
+            self._rules[to_pos:to_pos] = [rule]
+            userdb.save_users(self._users)
 
-                self._add_change(
-                    "notification-move-user-rule",
-                    _("Changed position of notification rule %d of user %s") %
-                    (from_pos, self._user_id()))
-        return None
+            self._add_change(
+                "notification-move-user-rule",
+                _("Changed position of notification rule %d of user %s") %
+                (from_pos, self._user_id()))
+
+        return redirect(self.mode_url(user=self._user_id()))
 
     def page(self):
         if self._start_async_repl:

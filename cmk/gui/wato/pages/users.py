@@ -32,7 +32,7 @@ from cmk.gui.plugins.userdb.utils import (
     get_connection,
 )
 from cmk.gui.log import logger
-from cmk.gui.exceptions import MKUserError, FinalizeRequest
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _u, get_languages, get_language_alias
 from cmk.gui.globals import html, request
 from cmk.gui.valuespec import (
@@ -50,6 +50,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     make_simple_link,
     make_simple_form_page_menu,
+    make_confirmed_form_submit_link,
 )
 from cmk.gui.watolib.users import delete_users, edit_users
 from cmk.gui.watolib.groups import load_contact_group_information
@@ -59,7 +60,7 @@ from cmk.gui.plugins.wato import (
     WatoMode,
     ActionResult,
     mode_registry,
-    wato_confirm,
+    make_confirm_link,
     make_action_link,
     flash,
     redirect,
@@ -107,6 +108,24 @@ class ModeUsers(WatoMode):
                                     icon_name="new",
                                     item=make_simple_link(
                                         watolib.folder_preserving_link([("mode", "edit_user")])),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                            ],
+                        ),
+                        PageMenuTopic(
+                            title=_("On selected users"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Delete users"),
+                                    shortcut_title=_("Delete selected users"),
+                                    icon_name="delete",
+                                    item=make_confirmed_form_submit_link(
+                                        form_name="bulk_delete_form",
+                                        button_name="_bulk_delete_users",
+                                        message=_(
+                                            "Do you really want to delete the selected users?"),
+                                    ),
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
@@ -174,17 +193,13 @@ class ModeUsers(WatoMode):
         )
 
     def action(self) -> ActionResult:
-        if html.request.var('_delete'):
-            delid = html.request.get_unicode_input("_delete")
-            c = wato_confirm(
-                _("Confirm deletion of user %s") % delid,
-                _("Do you really want to delete the user %s?") % delid)
-            if c:
-                delete_users([delid])
-            elif c is False:
-                return FinalizeRequest(code=200)
+        if not html.check_transaction():
+            return redirect(self.mode_url())
 
-        elif html.request.var('_sync') and html.check_transaction():
+        if html.request.var('_delete'):
+            delete_users([html.request.get_unicode_input("_delete")])
+
+        elif html.request.var('_sync'):
             try:
 
                 job = userdb.UserSyncBackgroundJob()
@@ -206,17 +221,17 @@ class ModeUsers(WatoMode):
                 raise MKUserError(None, traceback.format_exc().replace('\n', '<br>\n'))
 
         elif html.request.var("_bulk_delete_users"):
-            return self._bulk_delete_users_after_confirm()
+            self._bulk_delete_users_after_confirm()
 
-        elif html.check_transaction():
+        else:
             action_handler = gui_background_job.ActionHandler(self.breadcrumb())
             action_handler.handle_actions()
             if action_handler.did_acknowledge_job():
                 self._job_snapshot = userdb.UserSyncBackgroundJob().get_status_snapshot()
                 flash(_("Synchronization job acknowledged"))
-        return None
+        return redirect(self.mode_url())
 
-    def _bulk_delete_users_after_confirm(self) -> ActionResult:
+    def _bulk_delete_users_after_confirm(self):
         selected_users = []
         users = userdb.load_users()
         for varname, _value in html.request.itervars(prefix="_c_user_"):
@@ -227,14 +242,7 @@ class ModeUsers(WatoMode):
                     selected_users.append(user)
 
         if selected_users:
-            c = wato_confirm(
-                _("Confirm deletion of %d users") % len(selected_users),
-                _("Do you really want to delete %d users?") % len(selected_users))
-            if c:
-                delete_users(selected_users)
-            elif c is False:
-                return FinalizeRequest(code=200)
-        return None
+            delete_users(selected_users)
 
     def page(self):
         if not self._job_snapshot.exists():
@@ -331,7 +339,10 @@ class ModeUsers(WatoMode):
                                                                 ("clone", uid)])
                     html.icon_button(clone_url, _("Create a copy of this user"), "clone")
 
-                delete_url = make_action_link([("mode", "users"), ("_delete", uid)])
+                delete_url = make_confirm_link(
+                    url=make_action_link([("mode", "users"), ("_delete", uid)]),
+                    message=_("Do you really want to delete the user %s?") % uid,
+                )
                 html.icon_button(delete_url, _("Delete"), "delete")
 
                 notifications_url = watolib.folder_preserving_link([("mode", "user_notifications"),
@@ -470,7 +481,6 @@ class ModeUsers(WatoMode):
                     table.cell(escaping.escape_attribute(_u(vs.title())))
                     html.write(vs.value_to_text(user.get(name, vs.default_value())))
 
-        html.button("_bulk_delete_users", _("Bulk Delete"), "submit", style="margin-top:10px")
         html.hidden_fields()
         html.end_form()
 

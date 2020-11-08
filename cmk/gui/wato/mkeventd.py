@@ -142,7 +142,7 @@ from cmk.gui.plugins.wato.check_mk_configuration import (
 )
 from cmk.gui.plugins.wato.globals_notification import ConfigVariableGroupNotifications
 
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link
 
 
 def _compiled_mibs_dir():
@@ -1249,7 +1249,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     title=_("Reset counters"),
                     icon_name="resetcounters",
                     item=make_simple_link(
-                        html.confirm_link(
+                        make_confirm_link(
                             url=make_action_link([("mode", "mkeventd_rule_packs"),
                                                   ("_reset_counters", "1")]),
                             message=_("Do you really want to reset all rule hit counters "
@@ -1377,7 +1377,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         self._verify_ec_enabled()
         rep_mode = cmk.gui.mkeventd.replication_mode()
         if rep_mode in ["sync", "takeover"]:
-            copy_url = html.confirm_link(
+            copy_url = make_confirm_link(
                 url=make_action_link([("mode", "mkeventd_rule_packs"), ("_copy_rules", "1")]),
                 message=_("Do you really want to copy all event rules from the master and "
                           "replace your local configuration with them?"))
@@ -1440,7 +1440,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 html.element_dragger_url("tr", base_url=drag_url)
 
                 if type_ == ec.RulePackType.internal:
-                    delete_url = html.confirm_link(
+                    delete_url = make_confirm_link(
                         url=make_action_link([("mode", "mkeventd_rule_packs"), ("_delete", nr)]),
                         message=_("Do you really want to delete the rule pack <b>%s</b> "
                                   "<i>%s</i> with <b>%s</b> rules?") %
@@ -1785,7 +1785,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     css_matches_search = None
 
                 table.row(css=css_matches_search)
-                delete_url = html.confirm_link(
+                delete_url = make_confirm_link(
                     url=make_action_link([("mode", "mkeventd_rules"),
                                           ("rule_pack", self._rule_pack_id), ("_delete", nr)]),
                     message=_("Do you really want to delete the rule <b>%s</b> <i>%s</i>?") %
@@ -2633,7 +2633,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
 
                 table.cell(_("Actions"), css="buttons")
                 if is_custom_dir:
-                    delete_url = html.confirm_link(
+                    delete_url = make_confirm_link(
                         url=make_action_link([("mode", "mkeventd_mibs"), ("_delete", filename)]),
                         message=_("Do you really want to delete the MIB file <b>%s</b>?") %
                         filename)

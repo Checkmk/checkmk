@@ -29,11 +29,12 @@ from cmk.gui.page_menu import (
     make_simple_form_page_menu,
 )
 
-from cmk.gui.plugins.wato import ActionResult
 from cmk.gui.plugins.wato import (
     WatoMode,
+    ActionResult,
     mode_registry,
     make_action_link,
+    make_confirm_link,
     redirect,
 )
 
@@ -150,7 +151,7 @@ class ModeIcons(WatoMode):
                 table.row()
 
                 table.cell(_("Actions"), css="buttons")
-                delete_url = html.confirm_link(
+                delete_url = make_confirm_link(
                     url=make_action_link([("mode", "icons"), ("_delete", icon_name)]),
                     message=_("Do you really want to delete the icon <b>%s</b>?") % icon_name,
                 )

@@ -49,6 +49,7 @@ from cmk.gui.watolib.groups import (
 from cmk.gui.plugins.wato import (
     WatoMode,
     ActionResult,
+    make_confirm_link,
     redirect,
     mode_url,
     mode_registry,
@@ -158,7 +159,7 @@ class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
         table.cell(_("Actions"), css="buttons")
         edit_url = watolib.folder_preserving_link([("mode", "edit_%s_group" % self.type_name),
                                                    ("edit", name)])
-        delete_url = html.confirm_link(
+        delete_url = make_confirm_link(
             url=html.makeactionuri([("_delete", name)]),
             message=_('Do you really want to delete the %s group "%s"?') % (self.type_name, name))
         clone_url = watolib.folder_preserving_link([("mode", "edit_%s_group" % self.type_name),

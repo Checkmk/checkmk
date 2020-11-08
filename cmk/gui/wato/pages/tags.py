@@ -67,6 +67,7 @@ from cmk.gui.plugins.wato import (
     ActionResult,
     mode_registry,
     make_action_link,
+    make_confirm_link,
     add_change,
     redirect,
     mode_url,
@@ -355,7 +356,7 @@ class ModeTags(ABCTagMode):
 
         html.element_dragger_url("tr", base_url=make_action_link([("mode", "tags"), ("_move", nr)]))
 
-        delete_url = html.confirm_link(
+        delete_url = make_confirm_link(
             url=make_action_link([("mode", "tags"), ("_delete", tag_group.id)]),
             message=_("Do you really want to delete the tag group '%s'?") % tag_group.id)
         html.icon_button(delete_url, _("Delete this tag group"), "delete")
@@ -392,7 +393,7 @@ class ModeTags(ABCTagMode):
             return
 
         edit_url = watolib.folder_preserving_link([("mode", "edit_auxtag"), ("edit", aux_tag.id)])
-        delete_url = html.confirm_link(
+        delete_url = make_confirm_link(
             url=make_action_link([("mode", "tags"), ("_del_aux", aux_tag.id)]),
             message=_("Do you really want to delete the auxiliary tag '%s'?") % aux_tag.id)
         html.icon_button(edit_url, _("Edit this auxiliary tag"), "edit")

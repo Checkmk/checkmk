@@ -55,6 +55,7 @@ from cmk.gui.plugins.wato import (
     ActionResult,
     mode_registry,
     make_action_link,
+    make_confirm_link,
     get_search_expression,
     redirect,
     mode_url,
@@ -201,7 +202,7 @@ class ModeRoles(RoleManagement, WatoMode):
                 table.cell(_("Actions"), css="buttons")
                 edit_url = watolib.folder_preserving_link([("mode", "edit_role"), ("edit", rid)])
                 clone_url = make_action_link([("mode", "roles"), ("_clone", rid)])
-                delete_url = html.confirm_link(
+                delete_url = make_confirm_link(
                     url=make_action_link([("mode", "roles"), ("_delete", rid)]),
                     message=_("Do you really want to delete the role %s?") % rid,
                 )

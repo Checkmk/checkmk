@@ -4,12 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 from typing import Optional, Sequence
+
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.http import Request
 
 from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.gui.utils.url_encoder import URLEncoder
+from cmk.gui.escaping import escape_text
 
 
 def requested_file_name(request: Request) -> str:
@@ -99,4 +102,11 @@ def makeuri_contextless_ruleset_group(
         request,
         [('group', group_name), ('mode', 'rulesets')],
         filename='wato.py',
+    )
+
+
+def make_confirm_link(*, url: str, message: str) -> str:
+    return "javascript:cmk.forms.confirm_link(%s, %s)" % (
+        json.dumps(url),
+        json.dumps(escape_text(message)),
     )

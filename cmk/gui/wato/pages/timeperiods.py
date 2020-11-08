@@ -53,6 +53,7 @@ from cmk.gui.plugins.wato import (
     ActionResult,
     mode_registry,
     make_action_link,
+    make_confirm_link,
     mode_url,
     redirect,
 )
@@ -317,7 +318,7 @@ class ModeTimeperiods(WatoMode):
             ("mode", "edit_timeperiod"),
             ("clone", name),
         ])
-        delete_url = html.confirm_link(
+        delete_url = make_confirm_link(
             url=make_action_link([
                 ("mode", "timeperiods"),
                 ("_delete", name),

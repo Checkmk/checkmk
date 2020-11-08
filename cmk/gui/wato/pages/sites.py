@@ -74,7 +74,7 @@ from cmk.gui.watolib.sites import is_livestatus_encrypted
 from cmk.gui.watolib.activate_changes import clear_site_replication_status
 from cmk.gui.wato.pages.global_settings import ABCGlobalSettingsMode, ABCEditGlobalSettingMode
 
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link
 
 
 def _site_globals_editable(site_id, site):
@@ -693,7 +693,7 @@ class ModeDistributedMonitoring(WatoMode):
         if site_id == config.omd_site():
             html.empty_icon_button()
         else:
-            delete_url = html.confirm_link(
+            delete_url = make_confirm_link(
                 url=html.makeactionuri([("_delete", site_id)]),
                 message=_("Do you really want to delete the connection to the site %s?") %
                 html.render_tt(site_id))
@@ -756,7 +756,7 @@ class ModeDistributedMonitoring(WatoMode):
 
         if site["replication"]:
             if site.get("secret"):
-                logout_url = html.confirm_link(url=watolib.make_action_link([("mode", "sites"),
+                logout_url = make_confirm_link(url=watolib.make_action_link([("mode", "sites"),
                                                                              ("_logout", site_id)]),
                                                message=_("Do you really want to log out of '%s'?") %
                                                html.render_tt(site["alias"]))

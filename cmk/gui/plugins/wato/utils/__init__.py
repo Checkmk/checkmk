@@ -29,7 +29,7 @@ from cmk.gui.pages import page_registry
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html, g
 from cmk.gui.htmllib import Choices, HTML
-from cmk.gui.exceptions import MKUserError, MKGeneralException, FinalizeRequest
+from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.utils.urls import make_confirm_link  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.utils.flashed_messages import flash  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
@@ -47,8 +47,7 @@ from cmk.gui.plugins.wato.utils.simple_modes import (  # noqa: F401 # pylint: di
     SimpleEditMode, SimpleListMode, SimpleModeType,
 )
 from cmk.gui.plugins.wato.utils.html_elements import (  # noqa: F401 # pylint: disable=unused-import
-    search_form, wato_confirm,
-)
+    search_form,)
 from cmk.gui.plugins.wato.utils.main_menu import (  # noqa: F401 # pylint: disable=unused-import
     MainMenu, ABCMainModule, MenuItem, WatoModule, main_module_registry, register_modules,
     MainModuleTopic, MainModuleTopicHosts, MainModuleTopicServices, MainModuleTopicBI,
@@ -1351,22 +1350,12 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
     def _add_change(self, log_what, log_text):
         raise NotImplementedError()
 
-    def _generic_rule_list_actions(self, rules, what, what_title, save_rules) -> ActionResult:
+    def _generic_rule_list_actions(self, rules, what, what_title, save_rules) -> None:
         if html.request.has_var("_delete"):
             nr = html.request.get_integer_input_mandatory("_delete")
-            rule = rules[nr]
-            c = wato_confirm(
-                _("Confirm deletion of %s") % what_title,
-                _("Do you really want to delete the %s <b>%d</b> <i>%s</i>?") %
-                (what_title, nr, rule.get("description", "")))
-            if c:
-                self._add_change(what + "-delete-rule", _("Deleted %s %d") % (what_title, nr))
-                del rules[nr]
-                save_rules(rules)
-            elif c is False:
-                return FinalizeRequest(code=200)
-            else:
-                return None
+            self._add_change(what + "-delete-rule", _("Deleted %s %d") % (what_title, nr))
+            del rules[nr]
+            save_rules(rules)
 
         elif html.request.has_var("_move"):
             if html.check_transaction():
@@ -1378,7 +1367,6 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
                 save_rules(rules)
                 self._add_change(what + "-move-rule",
                                  _("Changed position of %s %d") % (what_title, from_pos))
-        return None
 
 
 def sort_sites(sites: SiteConfigurations) -> List[_Tuple[SiteId, SiteConfiguration]]:

@@ -141,7 +141,6 @@ from cmk.gui.plugins.wato.utils import (
     UserIconOrAction,
     user_script_choices,
     user_script_title,
-    wato_confirm,
     wato_fileheader,
     register_hook,
     WatoMode,

@@ -30,7 +30,6 @@ from cmk.gui.plugins.wato.utils import (
     get_hostnames_from_checkboxes,
 )
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect, mode_url
-from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
 from cmk.gui.plugins.wato.utils.context_buttons import make_folder_status_link
 
@@ -39,7 +38,7 @@ from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.globals import html, request as global_request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKUserError, FinalizeRequest
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.valuespec import (
@@ -61,8 +60,9 @@ from cmk.gui.page_menu import (
     make_simple_form_page_menu,
     make_display_options_dropdown,
     make_form_submit_link,
+    make_confirmed_form_submit_link,
 )
-from cmk.gui.utils.urls import makeuri
+from cmk.gui.utils.urls import makeuri, make_confirm_link
 
 
 def make_folder_breadcrumb(folder: watolib.CREFolder) -> Breadcrumb:
@@ -296,9 +296,10 @@ class ModeFolder(WatoMode):
                 yield PageMenuEntry(
                     title=_("Delete hosts"),
                     icon_name="delete",
-                    item=make_form_submit_link(
+                    item=make_confirmed_form_submit_link(
                         form_name="hosts",
                         button_name="_bulk_delete",
+                        message=_("Do you really want to delete the selected hosts?"),
                     ),
                 )
 
@@ -353,9 +354,13 @@ class ModeFolder(WatoMode):
                     yield PageMenuEntry(
                         title=_("Move to target folders"),
                         icon_name="move",
-                        item=make_form_submit_link(
+                        item=make_confirmed_form_submit_link(
                             form_name="hosts",
                             button_name="_bulk_movetotarget",
+                            message=_('You are going to move the selected hosts to folders '
+                                      'representing their original folder location in the system '
+                                      'you did the import from. Please make sure that you have '
+                                      'done an <b>inventory</b> before moving the hosts.'),
                         ),
                     )
 
@@ -445,23 +450,24 @@ class ModeFolder(WatoMode):
         # Operations on SUBFOLDERS
 
         if html.request.var("_delete_folder"):
-            if html.transaction_valid():
-                return self._delete_subfolder_after_confirm(html.request.var("_delete_folder"))
-            return None
+            if html.check_transaction():
+                self._folder.delete_subfolder(html.request.var("_delete_folder"))
+            return redirect(mode_url("folder", folder=self._folder.path()))
 
         if html.request.has_var("_move_folder_to"):
             if html.check_transaction():
                 what_folder = watolib.Folder.folder(html.request.var("_ident"))
                 target_folder = watolib.Folder.folder(html.request.var("_move_folder_to"))
                 watolib.Folder.current().move_subfolder_to(what_folder, target_folder)
-            return None
+            return redirect(mode_url("folder", folder=self._folder.path()))
 
         # Operations on HOSTS
 
         # Deletion of single hosts
         delname = html.request.var("_delete_host")
         if delname and watolib.Folder.current().has_host(delname):
-            return delete_host_after_confirm(delname)
+            watolib.Folder.current().delete_hosts([delname])
+            return redirect(mode_url("folder", folder=self._folder.path()))
 
         # Move single hosts to other folders
         if html.request.has_var("_move_host_to"):
@@ -492,7 +498,7 @@ class ModeFolder(WatoMode):
 
         # Deletion
         if html.request.var("_bulk_delete"):
-            return self._delete_hosts_after_confirm(selected_host_names)
+            return self._delete_hosts(selected_host_names)
 
         # Move
         if html.request.var("_bulk_move"):
@@ -507,7 +513,8 @@ class ModeFolder(WatoMode):
 
         # Move to target folder (from import)
         if html.request.var("_bulk_movetotarget"):
-            return self._move_to_imported_folders(selected_host_names)
+            self._move_to_imported_folders(selected_host_names)
+            return None
 
         if html.request.var("_bulk_edit"):
             return redirect(mode_url("bulkedit", folder=watolib.Folder.current().path()))
@@ -516,24 +523,6 @@ class ModeFolder(WatoMode):
             return redirect(mode_url("bulkcleanup", folder=watolib.Folder.current().path()))
 
         return None
-
-    def _delete_subfolder_after_confirm(self, subfolder_name) -> ActionResult:
-        subfolder = self._folder.subfolder(subfolder_name)
-        msg = _("Do you really want to delete the folder %s?") % subfolder.title()
-        if not config.wato_hide_filenames:
-            msg += _(" Its directory is <tt>%s</tt>.") % subfolder.filesystem_path()
-        num_hosts = subfolder.num_hosts_recursively()
-        if num_hosts:
-            msg += _(
-                " The folder contains <b>%d</b> hosts, which will also be deleted!") % num_hosts
-        c = wato_confirm(_("Confirm folder deletion"), msg)
-
-        if c:
-            self._folder.delete_subfolder(subfolder_name)
-            return redirect(mode_url("folder", folder=self._folder.path()))
-        if c is False:  # not yet confirmed
-            return FinalizeRequest(code=200)
-        return None  # browser reload
 
     def page(self):
         if not self._folder.may("read"):
@@ -642,8 +631,20 @@ class ModeFolder(WatoMode):
         )
 
     def _show_subfolder_delete_button(self, subfolder):
+        msg = _("Do you really want to delete the folder %s?") % subfolder.title()
+        if not config.wato_hide_filenames:
+            msg += _(" Its directory is <tt>%s</tt>.") % subfolder.filesystem_path()
+        num_hosts = subfolder.num_hosts_recursively()
+        if num_hosts:
+            msg += _(
+                " The folder contains <b>%d</b> hosts, which will also be deleted!") % num_hosts
+
         html.icon_button(
-            watolib.make_action_link([("mode", "folder"), ("_delete_folder", subfolder.name())]),
+            make_confirm_link(
+                url=watolib.make_action_link([("mode", "folder"),
+                                              ("_delete_folder", subfolder.name())]),
+                message=msg,
+            ),
             _("Delete this folder"),
             "delete",
             id_='delete_' + subfolder.name(),
@@ -901,21 +902,17 @@ class ModeFolder(WatoMode):
             if config.user.may("wato.manage_hosts"):
                 if config.user.may("wato.clone_hosts"):
                     html.icon_button(host.clone_url(), _("Create a clone of this host"), "insert")
-                delete_url = watolib.make_action_link([("mode", "folder"),
-                                                       ("_delete_host", host.name())])
+                delete_url = make_confirm_link(
+                    url=watolib.make_action_link([("mode", "folder"),
+                                                  ("_delete_host", host.name())]),
+                    message=_("Do you really want to delete the host <tt>%s</tt>?") % host.name(),
+                )
                 html.icon_button(delete_url, _("Delete this host"), "delete")
 
-    def _delete_hosts_after_confirm(self, host_names) -> ActionResult:
-        c = wato_confirm(
-            _("Confirm deletion of %d hosts") % len(host_names),
-            _("Do you really want to delete the %d selected hosts?") % len(host_names))
-        if c:
-            self._folder.delete_hosts(host_names)
-            flash(_("Successfully deleted %d hosts") % len(host_names))
-            return redirect(mode_url("folder", folder=self._folder.path()))
-        if c is False:  # not yet confirmed
-            return FinalizeRequest(code=200)
-        return None  # browser reload
+    def _delete_hosts(self, host_names) -> ActionResult:
+        self._folder.delete_hosts(host_names)
+        flash(_("Successfully deleted %d hosts") % len(host_names))
+        return redirect(mode_url("folder", folder=self._folder.path()))
 
     def _render_bulk_move_form(self) -> str:
         with html.plugged():
@@ -936,18 +933,7 @@ class ModeFolder(WatoMode):
 
             return html.drain()
 
-    def _move_to_imported_folders(self, host_names_to_move) -> ActionResult:
-        c = wato_confirm(
-            _("Confirm moving hosts"),
-            _('You are going to move the selected hosts to folders '
-              'representing their original folder location in the system '
-              'you did the import from. Please make sure that you have '
-              'done an <b>inventory</b> before moving the hosts.'))
-        if c is False:  # not yet confirmed
-            return FinalizeRequest(code=200)
-        if not c:
-            return None  # browser reload
-
+    def _move_to_imported_folders(self, host_names_to_move) -> None:
         # Create groups of hosts with the same target folder
         target_folder_names: Dict[str, List[HostName]] = {}
         for host_name in host_names_to_move:
@@ -970,7 +956,6 @@ class ModeFolder(WatoMode):
             self._folder.move_hosts(host_names, target_folder)
 
         flash(_("Successfully moved hosts to their original folder destinations."))
-        return None
 
     def _create_target_folder_from_aliaspath(self, aliaspath):
         # The alias path is a '/' separated path of folder titles.
@@ -992,19 +977,6 @@ class ModeFolder(WatoMode):
                 parts = parts[1:]
 
         return folder
-
-
-# TODO: Move to WatoHostFolderMode() once mode_edit_host has been migrated
-def delete_host_after_confirm(delname) -> ActionResult:
-    c = wato_confirm(_("Confirm host deletion"),
-                     _("Do you really want to delete the host <tt>%s</tt>?") % delname)
-    if c:
-        watolib.Folder.current().delete_hosts([delname])
-        # Delete host files
-        return redirect(mode_url("folder", folder=watolib.Folder.current().path()))
-    if c is False:  # not yet confirmed
-        return FinalizeRequest(code=200)
-    return None  # browser reload
 
 
 # TODO: Split this into one base class and one subclass for folder and hosts

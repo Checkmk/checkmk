@@ -539,9 +539,9 @@ class ModeNotifications(ABCNotificationsMode):
                 return None
 
         else:
-            return self._generic_rule_list_actions(self._get_notification_rules(), "notification",
-                                                   _("notification rule"), save_notification_rules)
-        return None
+            self._generic_rule_list_actions(self._get_notification_rules(), "notification",
+                                            _("notification rule"), save_notification_rules)
+        return redirect(self.mode_url())
 
     def _get_notification_rules(self):
         return load_notification_rules()

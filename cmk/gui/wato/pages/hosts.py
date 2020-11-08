@@ -32,13 +32,14 @@ from cmk.gui.page_menu import (
 
 from cmk.gui.plugins.wato.utils import (
     mode_registry,
+    make_confirm_link,
     configure_attributes,
     ConfigHostname,
 )
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect, mode_url
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
 from cmk.gui.watolib.hosts_and_folders import CREHost
-from cmk.gui.wato.pages.folders import delete_host_after_confirm, ModeFolder
+from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.utils.flashed_messages import flash
 
 
@@ -317,9 +318,11 @@ class ModeEditHost(ABCHostMode):
         )
 
     def action(self) -> ActionResult:
+        folder = watolib.Folder.current()
+        if not html.check_transaction():
+            return redirect(mode_url("folder", folder=folder.path()))
+
         if html.request.var("_update_dns_cache"):
-            if not html.check_transaction():
-                return None
             config.user.need_permission("wato.update_dns_cache")
             num_updated, failed_hosts = watolib.check_mk_automation(self._host.site_id(),
                                                                     "update-dns-cache", [])
@@ -330,18 +333,14 @@ class ModeEditHost(ABCHostMode):
             flash(infotext)
             return None
 
-        folder = watolib.Folder.current()
-
         if html.request.var("delete"):  # Delete this host
-            if not html.transaction_valid():
-                return redirect(mode_url("folder", folder=folder.path()))
-            return delete_host_after_confirm(self._host.name())
+            folder.delete_hosts([self._host.name()])
+            return redirect(mode_url("folder", folder=folder.path()))
 
-        if html.check_transaction():
-            attributes = watolib.collect_attributes("host" if not self._is_cluster() else "cluster",
-                                                    new=False)
-            watolib.Host.host(self._host.name()).edit(attributes, self._get_cluster_nodes())
-            self._host = folder.host(self._host.name())
+        attributes = watolib.collect_attributes("host" if not self._is_cluster() else "cluster",
+                                                new=False)
+        watolib.Host.host(self._host.name()).edit(attributes, self._get_cluster_nodes())
+        self._host = folder.host(self._host.name())
 
         if html.request.var("services"):
             return redirect(mode_url("inventory", folder=folder.path(), host=self._host.name()))
@@ -433,7 +432,11 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
         yield PageMenuEntry(
             title=_("Delete"),
             icon_name="delete",
-            item=make_simple_link(html.makeactionuri([("delete", "1")])),
+            item=make_simple_link(
+                make_confirm_link(
+                    url=html.makeactionuri([("delete", "1")]),
+                    message=_("Do you really want to delete the host <tt>%s</tt>?") % host.name(),
+                )),
         )
 
 

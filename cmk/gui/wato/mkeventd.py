@@ -80,7 +80,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.i18n import _, _l
 from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML, Choices
-from cmk.gui.exceptions import MKUserError, MKGeneralException, FinalizeRequest
+from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.permissions import (
     Permission,
     permission_registry,
@@ -125,7 +125,6 @@ from cmk.gui.plugins.wato.utils import (
     main_module_registry,
     ABCMainModule,
     MainModuleTopicEvents,
-    wato_confirm,
     site_neutral_path,
     SampleConfigGenerator,
     sample_config_generator_registry,
@@ -2274,16 +2273,10 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
             new_mode = "sync"
         else:
             new_mode = "takeover"
-        c = wato_confirm(_("Confirm switching replication mode"),
-                         _("Do you really want to switch the event daemon to %s mode?") % new_mode)
-        if c:
-            cmk.gui.mkeventd.execute_command("SWITCHMODE", [new_mode], config.omd_site())
-            watolib.log_audit(None, "mkeventd-switchmode",
-                              _("Switched replication slave mode to %s") % new_mode)
-            flash(_("Switched to %s mode") % new_mode)
-            return None
-        if c is False:
-            return FinalizeRequest(code=200)
+        cmk.gui.mkeventd.execute_command("SWITCHMODE", [new_mode], config.omd_site())
+        watolib.log_audit(None, "mkeventd-switchmode",
+                          _("Switched replication slave mode to %s") % new_mode)
+        flash(_("Switched to %s mode") % new_mode)
         return None
 
     def page(self):
@@ -2332,6 +2325,8 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
 
         if config.user.may("mkeventd.switchmode"):
             html.begin_form("switch")
+            html.add_confirm_on_submit("switch",
+                                       _("Do you really want to switch the event daemon mode?"))
             if repl_mode == "sync":
                 html.button("_switch_takeover", _("Switch to Takeover mode!"))
             elif repl_mode == "takeover":

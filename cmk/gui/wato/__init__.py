@@ -335,7 +335,6 @@ from cmk.gui.plugins.watolib.utils import (
 modes: Dict[Any, Any] = {}
 
 from cmk.gui.plugins.wato.utils.html_elements import (
-    wato_confirm,
     wato_html_head,
     initialize_wato_html_head,
     wato_html_footer,

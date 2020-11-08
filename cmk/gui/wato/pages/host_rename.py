@@ -41,6 +41,7 @@ from cmk.gui.watolib.notifications import (
 )
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
+from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
 
 from cmk.gui.valuespec import (
     Hostname,
@@ -60,7 +61,6 @@ from cmk.gui.plugins.wato import (
     ActionResult,
     mode_registry,
     add_change,
-    wato_confirm,
     redirect,
     flash,
 )
@@ -179,7 +179,7 @@ class ModeBulkRenameHost(WatoMode):
             message += u"<tr><td>%s</td><td> → %s</td></tr>" % (host_name, target_name)
         message += "</table>"
 
-        c = wato_confirm(_("Confirm renaming of %d hosts") % len(renamings), HTML(message))
+        c = _confirm(_("Confirm renaming of %d hosts") % len(renamings), HTML(message))
         if c:
             title = _("Renaming of %s") % ", ".join(u"%s → %s" % x[1:] for x in renamings)
             host_renaming_job = RenameHostsBackgroundJob(title=title)
@@ -355,6 +355,13 @@ class ModeBulkRenameHost(WatoMode):
                            Hostname(title=_("new host name"), allow_empty=False),
                        ])),
             ])
+
+
+def _confirm(html_title, message):
+    if not html.request.has_var("_do_confirm") and not html.request.has_var("_do_actions"):
+        # TODO: get the breadcrumb from all call sites
+        wato_html_head(title=html_title, breadcrumb=Breadcrumb())
+    return html.confirm(message)
 
 
 def rename_hosts_background_job(renamings, job_interface=None):

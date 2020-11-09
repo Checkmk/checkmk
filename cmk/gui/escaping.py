@@ -71,7 +71,7 @@ def escape_attribute(value: EscapableEntity) -> str:
     if isinstance(attr_type, bytes):  # TODO: Not in the signature!
         return html_escape(ensure_str(value), quote=True)
     # TODO: What is this case for? Exception?
-    return html_escape(u"%s" % value, quote=True)  # TODO: Not in the signature!
+    return html_escape(str(value), quote=True)  # TODO: Not in the signature!
 
 
 def unescape_attributes(value: str) -> str:

@@ -159,7 +159,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters
                     cached=None,
                     item="With Spaces",
                     state=0,
-                    text="",
+                    text="Check with spaces",
                     perfdata=[
                     ],
                 )

@@ -246,6 +246,7 @@ def check_smart_stats(item: str, params: Mapping[str, int], section: Section) ->
 
 register.check_plugin(
     name="smart_stats",
+    sections=["smart"],
     service_name="SMART %s Stats",
     discovery_function=discover_smart_stats,
     check_function=check_smart_stats,

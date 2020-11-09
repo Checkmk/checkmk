@@ -93,12 +93,17 @@ def test_parse_docker_container_status(string_table, parse_type):
     assert isinstance(actual_parsed, parse_type)
 
 
-def test_discovery_docker_container_status():
-    expected_discovery = [
-        Service(item=None, parameters={}, labels=[]),
-    ]
+def _test_discovery(discovery_function, section, expected_discovery):
+    for status in ['running', 'exited']:
+        assert list(discovery_function({**section, 'Status': status})) == expected_discovery
 
-    assert list(docker.discover_docker_container_status(PARSED)) == expected_discovery
+
+def test_discovery_docker_container_status():
+    _test_discovery(
+        docker.discover_docker_container_status,
+        PARSED,
+        [Service(item=None, parameters={}, labels=[])],
+    )
 
 
 def test_check_docker_container_status():
@@ -119,8 +124,11 @@ def test_check_docker_container_status():
     ),
 ])
 def test_discovery_docker_container_status_uptime(section_uptime, expected_services):
-    assert list(docker.discover_docker_container_status_uptime(PARSED,
-                                                               section_uptime)) == expected_services
+    _test_discovery(
+        lambda parsed: docker.discover_docker_container_status_uptime(parsed, section_uptime),
+        PARSED,
+        expected_services,
+    )
 
 
 @pytest.mark.parametrize("params, expected_results", [
@@ -155,10 +163,11 @@ def test_check_docker_container_status_uptime(params, expected_results):
 
 
 def test_discover_docker_container_status_health():
-
-    yielded_services = list(docker.discover_docker_container_status_health(PARSED))
-    expected_services = [Service()]
-    assert yielded_services == expected_services
+    _test_discovery(
+        docker.discover_docker_container_status_health,
+        PARSED,
+        [Service()],
+    )
 
 
 @pytest.mark.parametrize("section, expected", [

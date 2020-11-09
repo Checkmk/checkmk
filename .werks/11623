@@ -1,0 +1,15 @@
+Title: Docker container status: discover exited containers
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1604994092
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i2
+
+The checks monitoring the status of docker containers will now
+also discover exited containers. Since piggyback data is delivered
+also for exited containers, the DCD will create hosts for them.
+Thus, in order to properly display a host state for such hosts,
+we need to discover the corresponding checks.

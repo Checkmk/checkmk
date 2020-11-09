@@ -39,7 +39,7 @@ HEALTH_STATUS_MAP = {
 
 def _is_active_container(section: Dict[str, Any]) -> bool:
     '''return wether container is or should be running'''
-    if section.get("Status") == "running":
+    if section.get("Status") in ("running", "exited"):
         return True
     restart_policy_name = section.get("RestartPolicy", {}).get("Name")
     return restart_policy_name in RESTART_POLICIES_TO_DISCOVER

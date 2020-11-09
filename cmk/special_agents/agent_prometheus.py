@@ -1216,13 +1216,16 @@ class PrometheusServer:
         if promql_result is None:
             raise ApiError("Missing Prometheus version")
 
-        if len(promql_result.promql_metrics) > 1:
-            raise ApiError("Multiple Prometheus instances connected")
-
         try:
             version = promql_result.promql_metrics[0]["labels"]["version"]
         except IndexError:
             return ""
+
+        if len(promql_result.promql_metrics) > 1:
+            for prometheus_instance in promql_result.promql_metrics:
+                if prometheus_instance["labels"]["version"] != version:
+                    raise ApiError(
+                        "Multiple Prometheus instances with different versions connected")
 
         return version
 

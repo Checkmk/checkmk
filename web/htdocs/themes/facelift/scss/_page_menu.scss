@@ -444,11 +444,10 @@ div#top_heading {
 }
 
 div#page_menu_popups {
-  margin: 0 $spacing $spacing 0;
-
   div.page_menu_popup {
     position: relative;
     display: none;
+    margin-bottom: $spacing;
     background-color: $base-color;
     border: none;
     border-radius: $popup-filters-border-radius;
@@ -498,14 +497,6 @@ div#page_menu_popups {
     form span.checkbox {
       padding-right: $spacing;
       white-space: initial;
-    }
-
-    select,
-    .tagify__input,
-    span.select2 .select2-selection,
-    input[type="checkbox"] + label::before,
-    input:not(.reset):not([type="submit"]) {
-      background-color: $bg-color;
     }
 
     input.button {

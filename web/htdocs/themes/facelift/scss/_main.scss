@@ -1160,45 +1160,47 @@ table.modifydowntimes > tbody > tr {
 
 div.vs_autocomplete {
   height: 22px;
-}
 
-div.vs_autocomplete .error {
-  padding: 0.5em 2em;
-  margin: 0;
-}
+  .error {
+    padding: 0.5em 2em;
+    margin: 0;
+  }
 
-span.vs_autocomplete .select2-dropdown {
-  position: inherit;
-  border: none;
-}
-
-span.vs_autocomplete .select2-dropdown--below {
-  top: -7px;
-  border-radius: $theme-border-radius;
-}
-
-span.vs_autocomplete .select2-search--dropdown {
-  padding: 0;
-  margin: 0;
-}
-
-span.vs_autocomplete .select2-search__field {
-  height: 22px;
-  padding-left: 6px;
-  border-radius: 4px;
-}
-
-span.vs_autocomplete .select2-results__options {
-  border: 1px solid $button-bg-color-default;
-  border-radius: 4px;
+  & > .select2-container--below > .selection > span {
+    display: none;
+  }
 }
 
 div.metricchoice div.vs_autocomplete .select2-dropdown--below {
   top: -11px;
 }
 
-div.vs_autocomplete > .select2-container--below > .selection > span {
-  display: none;
+span.vs_autocomplete {
+  .select2-dropdown {
+    position: inherit;
+    border: none;
+  }
+
+  .select2-dropdown--below {
+    top: -7px;
+    border-radius: $theme-border-radius;
+  }
+
+  .select2-search--dropdown {
+    padding: 0;
+    margin: 0;
+  }
+
+  .select2-search__field {
+    height: 22px;
+    padding-left: 6px;
+    border-radius: 4px;
+  }
+
+  .select2-results__options {
+    border: 1px solid $button-bg-color-default;
+    border-radius: 4px;
+  }
 }
 
 div.vs_age.inline {

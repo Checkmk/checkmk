@@ -1,5 +1,6 @@
 // library for calculation of version numbers
 import java.text.SimpleDateFormat
+import groovy.transform.Field
 
 // TODO: Add the rules to exclude mkp-able folder regarding ntop integration under "managed"
 @Field

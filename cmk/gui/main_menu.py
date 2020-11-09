@@ -75,7 +75,7 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
             items=[
                 TopicMenuItem(
                     name="rest_api_redoc",
-                    title=_("REST-API Documentation"),
+                    title=_("REST API documentation"),
                     url="openapi/",
                     target="_blank",
                     sort_index=30,
@@ -83,10 +83,18 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                 ),
                 TopicMenuItem(
                     name="rest_api_swagger_ui",
-                    title=_("REST-API Interactive GUI"),
+                    title=_("REST API interactive GUI"),
                     url="api/v0/ui/",
                     target="_blank",
                     sort_index=30,
+                    icon=None,  # TODO(CMK-5773): add an icon
+                ),
+                TopicMenuItem(
+                    name="plugin_api",
+                    title=_("Plugin API documentation"),
+                    url="plugin-api/",
+                    target="_blank",
+                    sort_index=40,
                     icon=None,  # TODO(CMK-5773): add an icon
                 ),
             ]),
@@ -105,7 +113,7 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                 ),
                 TopicMenuItem(
                     name="youtube_channel",
-                    title=_("Youtube"),
+                    title=_("YouTube"),
                     url="https://www.youtube.com/checkmk-channel",
                     target="_blank",
                     sort_index=30,

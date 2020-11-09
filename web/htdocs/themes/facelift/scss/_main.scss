@@ -1113,6 +1113,7 @@ table.modifydowntimes > tbody > tr {
 
 .select2-container .select2-selection--single {
   height: 23px;
+  border: none;
 }
 
 .select2-container--default {
@@ -1135,7 +1136,7 @@ table.modifydowntimes > tbody > tr {
 
   .select2-dropdown {
     background-color: $select2-dropdown-bg-color;
-    border: $button-bg-color-default;
+    border: 1px solid $button-bg-color-default;
   }
 
   .select2-results__option {
@@ -1172,7 +1173,8 @@ span.vs_autocomplete .select2-dropdown {
 }
 
 span.vs_autocomplete .select2-dropdown--below {
-  top: -8px;
+  top: -7px;
+  border-radius: $theme-border-radius;
 }
 
 span.vs_autocomplete .select2-search--dropdown {
@@ -1187,8 +1189,7 @@ span.vs_autocomplete .select2-search__field {
 }
 
 span.vs_autocomplete .select2-results__options {
-  border: 1px solid #aaa;
-  border-top: 0;
+  border: 1px solid $button-bg-color-default;
   border-radius: 4px;
 }
 

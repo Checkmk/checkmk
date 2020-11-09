@@ -6,7 +6,7 @@
 
 import time
 
-from cmk.base.check_legacy_includes.df import df_check_filesystem_single_coroutine, df_inventory
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.plugins.agent_based.utils.df import mountpoints_in_group
 
 # <<<netapp_api_volumes:sep(9)>>>

@@ -4,9 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_legacy_includes.df import df_inventory, df_check_filesystem_list
-from cmk.base.check_legacy_includes.diskstat import check_diskstat_dict, inventory_diskstat_generic
-from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-import,unused-wildcard-import
 import cmk.base.plugins.agent_based.esx_vsphere_counters as esx_vsphere_counters
 
 # Example output:

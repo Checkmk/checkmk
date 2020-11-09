@@ -1,0 +1,13 @@
+Title: esx_vsphere_counters
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1604927995
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+This werk fixes a bug in the legacy check esx_vsphere_counters, which
+prevented this check from being discovered and crashed already
+discovered services.
